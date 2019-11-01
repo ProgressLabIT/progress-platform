@@ -1,0 +1,87 @@
+# =========================
+# Planning
+# =========================
+
+# WorkOrderLine
+  _key: str (random)
+  wo_code: str
+  wo_line_no: str
+  priority: bool
+  global_queue_position: int
+  customer_order_code: str
+  customer_code: str
+  customer_name: str
+  product: rel (1:1 --outputs--> 0:N)
+  planned_qt: float
+  completed_qt: float # corresponds to the sum of the released qt of the jobs in the last phase 
+  status: str [created, planned, released, closed] (???)
+  active: bool
+  start_time: ISOdts
+  end_time: ISOdts
+  notes: str
+
+# Job
+  _key: str (random)
+  
+  ## relationship to master data
+  wo_line: str + rel (1:N --belongs_to--> 1:N)
+  phase: str + rel (1:1 --belongs_to--> 0:N)
+  product: rel (1:1 --outputs--> 0:N)
+    code: str
+    description: str
+  operation: str + rel (1:1 --requires--> 0:N)
+  user: rel (0:N --assigned_to--> 0:N)
+    - sequence: int
+    - assigned_by: str
+    - assigned_at: ISOdts
+  department: rel (0:N --assigned_to--> 0:N)
+    - sequence: int
+    - assigned_by: str
+    - assigned_at: ISOdts
+  items: rel (0:N --requires--> 0:N)
+    - qt_required: float
+    - qt_available: float # this is defined in the preparation phase
+
+  ## Planning variables
+  parameters:
+    material_check_mandatory: bool
+    step_check: str [(see specs for options)]
+      # default = single
+    step_check_force_order: bool
+    release_style: str [(see specs for options)]
+    job_sequence: str [fixed, flex, dynamic]
+    complete_batch_qt: float 
+      # if step_check === Single: 1, not modifiable
+      # if step_check === job, job planned_qt, fixed
+      # else phase default_batch_qt, 
+      #   fixed if step_check === fixed_batch
+      #   otherwise modifiable
+    release_batch_qt: float
+      # if release_style === (continuous | session): 0
+      # if release_style === batch, phase release_batch_qt, fix
+      # if release_style === manual: phase release_batch_qt, modifiable
+      # if release_style === job: job planned_qt, fixed
+  downstream_jobs: rel (0:N --feeds--> 0:N)
+  upstream_jobs: rel (0:N <--feeds--Job 0:N)
+  
+  ## Own data
+  stage: str [unconfirmed, queued, started, completed]
+  active: bool
+  critical: bool
+  notes: str
+  last_work_session: str (external _key)
+  progress:
+    qt_planned: float
+    qt_completed: float
+    qt_released: float
+    current_step: int # 0 if step_check === "None"
+  forecast:
+    on_time: bool
+    estimated_completion: ISOdts
+
+
+
+
+
+
+

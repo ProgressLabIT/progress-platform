@@ -1,0 +1,114 @@
+# THIS WAS A FIRST DRAFT OF A KPI DB IN ARANGODB
+# FURTHER ANALYSIS RECOMMENDS THE USE OF A TIME-SERIES DB, LIKELY INFLUXDB
+# TO STORE AND QUERY KPIS NOT JUST AS FIRST/LAST/CUMULATIVE, BUT AT ANY GRANULARITY 
+# AND TO ALLOW COMPARISON BETWEEN PERIODS
+# ===================================================
+
+# KPIs are stored on a different DB, 
+# each entity has its own dedicated collection
+# Direct link between the DBs is not necessary, but
+# records must have the same _key as the entity they refer to
+
+
+# ProductKPI
+  observations_count: int
+  first_observation: 
+    time: ISOdts
+    event: str
+  last_observation: 
+    time: ISOdts
+    event: str
+
+  unit_processing_time:
+    target: float
+    observations_count: int
+    first_observation: 
+      time: ISOdts
+      event: str
+      value: float
+    last_observation: 
+      time: ISOdts
+      event: str
+      value: float     
+    avg: float
+    sdev: float
+    max: float
+    min: float
+
+  unit_throughput_time:
+    target: float
+    observations_count: int
+    first_observation: 
+      time: ISOdts
+      event: str
+      value: float
+    last_observation: 
+      time: ISOdts
+      event: str
+      value: float
+    avg: float
+    sdev: float
+    max: float
+    min: float
+
+# Phase
+  takt_time:
+    target: float
+    observations_count: int
+    first_observation: 
+      time: ISOdts
+      event: str
+      value: float
+    last_observation: 
+      time: ISOdts
+      event: str
+      value: float
+    avg: float
+    sdev: float
+    max: float
+    min: float
+
+# Resource
+  overall_equipment_efficiency:
+    target: float
+    observations_count: int
+    first_observation: 
+      time: ISOdts
+      event: str
+      value: float
+    last_observation: 
+      time: ISOdts
+      event: str
+      value: float
+    avg: float
+    min: float
+    max: float
+
+# Task
+  execution_time:
+    target: float
+    first_observation: 
+      time: ISOdts
+      event: str
+      value: float
+    last_observation: 
+      time: ISOdts
+      event: str
+      value: float
+    avg: float
+    sdev: float
+    max: float
+    min: float
+
+# WorkOrder
+  total_lead_time: float
+  total_troughput_time: float
+  total_processing_time: float
+  line: list(int)
+    - lead_time: float
+    - troughput_time: float
+    - processing_time: float
+
+      
+
+

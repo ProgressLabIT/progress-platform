@@ -1,0 +1,33 @@
+# =======================
+# QUALITY
+# =======================
+
+# IssueType
+  name: str
+  description: str
+  icon: str
+
+# Issue
+  type: str (indexed foreign key)
+  open: bool
+  critical: bool
+  user: rel (1:1 --created_by--> 0:N)
+  job: str + rel (1:1 --refers_to--> 0:N)
+  product: str + rel (1:1 --refers_to--> 0:N)
+  wo_line: str + rel (1:1 --refers_to--> 0:N)
+  operation: str + rel (1:1 --refers_to--> 0:N)
+  title: str
+  description: str
+  created_at: ISOdts
+    # When issues are created by an operator, 
+    # they are associated directly with the "active" entities: 
+    # job, product, work order line, operation
+    #
+    # When issues are created by a planner/manager, 
+    # such relationships must be associated explicitly
+
+# IssueUpdate
+  issue: str (indexed foregin key)
+  user: rel (1:1 --created_by--> 0:N)
+  content: str
+
