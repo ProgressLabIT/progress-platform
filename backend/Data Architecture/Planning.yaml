@@ -68,17 +68,22 @@
   stage: str [unconfirmed, queued, started, completed]
   active: bool
   critical: bool
+  start: ISOdts
+  end: ISOdts
+  duration: float
+  processing_time: float
   notes: str
-  last_work_session: str (external _key)
+  last_work_session_started: str (external _key)
   progress:
     qt_planned: float
     qt_completed: float
     qt_released: float
     current_step: int # 0 if step_check === "None"
   forecast:
+    # this part is updated after each Run (if stepc_check active) or after each declaration
     on_time: bool
+    estimated_remaining_time: float
     estimated_completion: ISOdts
-
 
 
 

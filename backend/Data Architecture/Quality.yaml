@@ -25,6 +25,8 @@
     #
     # When issues are created by a planner/manager, 
     # such relationships must be associated explicitly
+  closed_at: ISOdts
+  opened_for: duration
 
 # IssueUpdate
   issue: str (indexed foregin key)
