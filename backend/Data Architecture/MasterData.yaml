@@ -83,6 +83,10 @@
   # experience: rel (0:N --carries_out--> 0:N)
   #   - exp_level: float
 
+# Customers
+  _key: str (customer code)
+  name: str
+
 # ResourceClass
 	name: str
 	description: str

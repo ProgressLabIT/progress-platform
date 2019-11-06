@@ -15,6 +15,24 @@
   end: ISOdts
   duration: float # seconds
 
+# WorkOrderLine
+  wo_code: str
+  wo_line_no: int
+  product: _key
+  qt_planned: float
+  qt_produced: float
+  qt_scrapped: float
+  created_at: ISOdts
+  started_at: ISOdts
+  planned_at: ISOdts
+  finished_at: ISOdts
+  due_by: ISOdts
+  lead_time: float
+  delay: float
+  troughput_time: float
+  processing_time: float
+
+
 # Run
   job: str + rel (1:1 --belongs_to--> 1:N)
   run_no: int
@@ -35,6 +53,8 @@
   # task_data is populated only when the job step_check parameter is not "none"
   _from: Run
   _to: Task
+  evid: str
+  job: _key
   completed: ISOdts
   <field_name_1>: <field_value_1>
   ...

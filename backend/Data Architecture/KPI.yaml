@@ -100,14 +100,18 @@
     max: float
     min: float
 
-# WorkOrder
-  total_lead_time: float
-  total_troughput_time: float
-  total_processing_time: float
-  line: list(int)
-    - lead_time: float
-    - troughput_time: float
-    - processing_time: float
+# WorkOrderLine
+  wo_code: str
+  line_no: int
+  created_at: ISOdts
+  started_at: ISOdts
+  planned_at: ISOdts
+  finished_at: ISOdts
+  lead_time: float
+  delay: float
+  troughput_time: float
+  processing_time: float
+  
 
       
 
