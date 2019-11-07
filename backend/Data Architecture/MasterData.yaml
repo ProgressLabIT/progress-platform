@@ -80,6 +80,7 @@
 	login_code: str
 	psw_hash: str
 	status: str [logged_in, working, logged_out]
+  last_user_session: _key
   # experience: rel (0:N --carries_out--> 0:N)
   #   - exp_level: float
 
@@ -105,9 +106,17 @@
 # Department
 	name: str
 	code: str
-	user: rel (0:N <--assigned_to-- 0:N)
-	equipment: rel (0:N <--belongs_to-- Resource N:N)
-	operation: rel (0:N --carries_out--> 0:N)
+	# user: rel (0:N <--assigned_to-- 0:N)
+	# equipment: rel (0:N <--belongs_to-- Resource N:N)
+	# operation: rel (0:N --carries_out--> 0:N)
 	# site: rel (1:1 --belongs_to--> 0:N)
 
+# ProductionItem
+  type: str
+  code: str
+  description: str
+  # rel 1:1 --belongs_to--> 0:N ProductionItemClass
 
+# ProductionItemClass
+  name: str
+  description: str

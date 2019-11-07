@@ -16,7 +16,7 @@
   product: _key
   planned_qt: float
   completed_qt: float # corresponds to the sum of the released qt of the jobs in the last phase 
-  status: str [created, planned, released, closed] (???)
+  status: str [created, planned, running, closed] (???)
   active: bool
   due_by: ISOdts
   notes: str
@@ -29,15 +29,11 @@
   phase: str + rel (1:1 --belongs_to--> 0:N)
   product: _key
   operation: str + rel (1:1 --requires--> 0:N)
-  # > user: rel (0:N --assigned_to--> 0:N)
+  # rel (0:N --assigned_to--> 0:N) User / Department
     - sequence: int
     - assigned_by: str
     - assigned_at: ISOdts
-  # > department: rel (0:N --assigned_to--> 0:N)
-    - sequence: int
-    - assigned_by: str
-    - assigned_at: ISOdts
-  # > items: rel (0:N --requires--> 0:N)
+  # rel (0:N --requires--> 0:N) ProductionItems
     - qt_required: float
     - qt_available: float # this is defined in the preparation phase
 
@@ -64,14 +60,12 @@
   # > upstream_jobs: rel (0:N <--feeds--Job 0:N)
   
   ## Own data
-  stage: str [unconfirmed, queued, started, completed]
+  stage: str [unconfirmed, queued, started, closed]
   active: bool
   critical: bool
+  notes: str
   start: ISOdts
   end: ISOdts
-  duration: float
-  processing_time: float
-  notes: str
   last_work_session_started: str (external _key)
   progress:
     qt_planned: float

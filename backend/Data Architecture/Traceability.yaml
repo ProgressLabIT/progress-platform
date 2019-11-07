@@ -3,22 +3,22 @@
   login: ISOdts
   logout: ISOdts
   duration: float # seconds
-  user: str + rel (1:1 --belongs_to--> 0:N)
+  # rel 1:1 --belongs_to--> 0:N User
 
 # WorkSession (rel)
   _from: UserSession
   _to: Job
   _key: str (random)
-  user: str
+  * user: str
   master_session: bool
   start: ISOdts
   end: ISOdts
   duration: float # seconds
 
 # WorkOrderLine
-  wo_code: str
+  * wo_code: str
   wo_line_no: int
-  product: _key
+  * product: _key
   qt_planned: float
   qt_produced: float
   qt_scrapped: float
@@ -27,14 +27,30 @@
   planned_at: ISOdts
   finished_at: ISOdts
   due_by: ISOdts
-  lead_time: float
   delay: float
-  troughput_time: float
-  processing_time: float
+  lead_time: float
+  troughput_time: 
+    target: float
+    value: float
+    perf_vs_target: float
+  processing_time: 
+    target: float
+    value: float
+    perf_vs_target: float
 
+# JobPerf
+  lead_time: float
+  throughput_time: 
+    target: float
+    value: float
+    perf_vs_target: float
+  processing_time:
+    target: float 
+    value: float
+    perf_vs_target: float
 
 # Run
-  job: str + rel (1:1 --belongs_to--> 1:N)
+  * job: str
   run_no: int
   start: ISOdts
   end: ISOdts
@@ -54,7 +70,7 @@
   _from: Run
   _to: Task
   evid: str
-  job: _key
+  * job: _key
   completed: ISOdts
   <field_name_1>: <field_value_1>
   ...
