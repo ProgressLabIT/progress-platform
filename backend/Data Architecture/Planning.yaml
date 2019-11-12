@@ -25,10 +25,10 @@
   _key: str (random)
   
   ## relationship to master data
-  wo_line: str + rel (1:N --belongs_to--> 1:N)
-  phase: str + rel (1:1 --belongs_to--> 0:N)
-  product: _key
-  operation: str + rel (1:1 --requires--> 0:N)
+  * wo_line: str + rel (1:N --belongs_to--> 1:N)
+  * phase: str + rel (1:1 --belongs_to--> 0:N)
+  * product: _key
+  * operation: str + rel (1:1 --requires--> 0:N)
   # rel (0:N --assigned_to--> 0:N) User / Department
     - sequence: int
     - assigned_by: str
@@ -39,12 +39,15 @@
 
   ## Planning variables
   parameters:
-    material_check_mandatory: bool
+    # material_check_mandatory: bool
+    # missing_items_allowed: book
     step_check: str [(see specs for options)]
       # default = single
     step_check_force_order: bool
     release_style: str [(see specs for options)]
     job_sequence: str [fixed, flex, dynamic]
+      # Is this relevant at the job level?
+      # How do we keep track of WIP location?
     complete_batch_qt: float 
       # if step_check === Single: 1, not modifiable
       # if step_check === job, job planned_qt, fixed

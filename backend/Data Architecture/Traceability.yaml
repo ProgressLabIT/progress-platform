@@ -1,3 +1,12 @@
+# WIP
+  _from: _key (Phase)
+  _to: _key (Phase)
+  * wo_line: _key
+  * product: _key
+  total_qt: float
+  released_qt: float
+  value: float
+
 # UserSession
   _key: str (random)
   login: ISOdts
@@ -58,7 +67,7 @@
   batch_qt: float
   pass_qt: float
   scrap_qt: float
-  serial_number: str
+  # serial_number: str
     # actual product serial numbers will not be included in the first version
     # this field holds "fake" SNs in the form of an underscore + sequence number in the job
     # such as _1, _2, _3, etc. to distinguish from actual serial numbers 

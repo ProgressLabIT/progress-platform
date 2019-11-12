@@ -3,6 +3,7 @@
 # =======================
 
 # IssueType
+  _key: str (manual insertion code)
   name: str
   description: str
   icon: str
@@ -11,11 +12,11 @@
   type: str (indexed foreign key)
   open: bool
   critical: bool
-  user: rel (1:1 --created_by--> 0:N)
-  job: str + rel (1:1 --refers_to--> 0:N)
-  product: str + rel (1:1 --refers_to--> 0:N)
-  wo_line: str + rel (1:1 --refers_to--> 0:N)
-  operation: str + rel (1:1 --refers_to--> 0:N)
+  * user: _key #rel (1:1 --created_by--> 0:N)
+  * job: _key #rel (1:1 --refers_to--> 0:N)
+  * product: _key #rel (1:1 --refers_to--> 0:N)
+  * wo_line: _key #rel (1:1 --refers_to--> 0:N)
+  * operation: _key # rel (1:1 --refers_to--> 0:N)
   title: str
   description: str
   created_at: ISOdts

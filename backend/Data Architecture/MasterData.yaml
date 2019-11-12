@@ -18,46 +18,53 @@
     code: str
     valid_from: ISOdts
     valid_until: ISOdts 
-	target_cost: float 
-	wip:
-		qt: float
-		value: float //considers only target cost
+	cost:
+    target: float
+    average: float
+  sale_price: float
+  margin:
+    target: float
+    average: float
 	
 # Operation
 	code: str
 	description: str
 	value_adding: bool
+  hourly_cost: float
 
 # Phase
 	name: str
   product: rel (1:1 --belongs_to--> 1:N)
 		- sequence: int
 	product: rel (0:N --requires--> 0:N) 	# e.g. for sub-assemblies
-		- qt: float
+		- required_qt: float
 	operation: rel (1:1 --requires--> 0:N)
     - std_processing_time: float
 	checklist: bool
-  items: rel (0:N --requires--> 0:N)
+  # rel 0:N --requires--> 0:N Items (BomItems)
     - required_qt: float
   resource: rel (0:N --requires--> 0:N)
   params:
-    missing_items_allowed: bool
+    # material_check_mandatory: bool
+    # missing_items_allowed: bool
     parallel_job_allowed: bool
     step_check: str [(see specs for options)]
     step_check_force_order: bool
     job_sequence: str [fixed, flex, dynamic]
+      # ??? Does it make sense at the phase level?
     release_style: str [(see specs for options)]
     complete_batch_qt: float
     release_batch_qt: float
 
 # Task
-  phase: rel (1:1 --belongs_to--> 0:N)
-    - sequence: int
+  * phase: _key
+  sequence: int
   title: str
   description: str 
   doc: list(str) # doc title
-  type: str [instruction, form]
-  form_fields: rel (0:N --belongs_to-->field_type 0:N)
+  type: str [pictext, markdown, json-form]
+  form_fields: 
+    - field_type: _key
     - field_name: str
     - field_desc: str
     # - validation_rules: str
@@ -99,9 +106,9 @@
 	brand: str
   model: str
 	serial: str
-	department: rel (0:N --belongs_to--> 0:N)
-	operation: rel (0:N <--requires-- 0:N)
-	user: rel (1:N <--has_access_to-- 0:N)
+	# rel 0:N --belongs_to--> 0:N Department
+	# rel 0:N <--requires-- 0:N Operation
+	# rel 1:N <--has_access_to-- 0:N User
 
 # Department
 	name: str
@@ -112,11 +119,11 @@
 	# site: rel (1:1 --belongs_to--> 0:N)
 
 # ProductionItem
-  type: str
   code: str
   description: str
-  # rel 1:1 --belongs_to--> 0:N ProductionItemClass
+  * class: _key (ProductionItemClass)
 
 # ProductionItemClass
   name: str
   description: str
+  # rel 0:1 --belongs_to--> 1:N ProductionItemClass (Recursive)
