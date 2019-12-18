@@ -1,0 +1,54 @@
+#app .no-transition {
+  transition: none !important;
+}
+
+#app .truncate-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.display {
+  position: relative;
+  font-family: 'Orbitron';
+  letter-spacing: .05em !important;
+  color: rgba(255,255,255,.6);
+  text-transform: uppercase;
+  vertical-align: text-bottom;
+}
+
+.weight-medium {
+  font-weight: 500;
+}
+
+.weight-bold {
+  font-weight: bold;
+}
+
+.surface-1 {
+  background-color: #1F2A2D;
+}
+
+.parapraph {
+  font-family: 'Red Hat Text';
+  letter-spacing: .03em;
+  color: rgba(255,255,255,.6);
+}
+
+.highlight {
+  color: rgba(255,255,255,.87);
+  /*font-weight: bold;*/
+}
+
+.solid-white {
+  color: white !important;
+}
+
+.smaller {
+  font-size: .7em;
+}
+
+.fill {
+  height: 100%;
+  width: 100%;
+}
