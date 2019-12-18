@@ -4,6 +4,9 @@ import Vuetify from 'vuetify/lib';
 Vue.use(Vuetify);
 
 const opts = {
+	icons: {
+		iconfont: 'md'
+	},
 	theme: {
 		dark:true,
 		options: {
