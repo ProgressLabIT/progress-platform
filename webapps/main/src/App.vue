@@ -6,7 +6,7 @@
     <v-content class="px-6">
       <!-- <HelloWorld/> -->
       <v-row justify="start" >
-        <v-col cols="12" sm="4" md="3" v-for="product in products" :key="product.id">
+        <v-col cols="12" sm="4" md="3" xl="2" v-for="product in products" :key="product.id">
           <ProductCard :product="product" />
         </v-col>
       </v-row>
