@@ -21,6 +21,9 @@ yarn-error.log*
 *.sw?
 
 # Media and font files
-.jpeg
-.woff
-.woff2
+*.jpeg
+*.jpg
+*.pdf
+*.svg
+*.woff
+*.woff2
