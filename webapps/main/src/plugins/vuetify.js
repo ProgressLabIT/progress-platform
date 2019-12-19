@@ -21,7 +21,9 @@ const opts = {
 						2: '#242E31'
 					},
 					blue: '#22AED1',
+					primary: '#22AED1',
 					green: '#0DAB76',
+					secondary: '#0DAB76',
 					red: '#E71D36',
 					orange: '#FF9F1C',
 				},

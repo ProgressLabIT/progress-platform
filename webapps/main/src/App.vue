@@ -5,22 +5,48 @@
 
     <v-content class="px-6">
       <!-- <HelloWorld/> -->
-      <v-row>
+      <v-row class="py-0">
+        <v-col cols="12" sm="5" lg="3">
           <v-text-field
+            hide-details
+            single-line
+            autocomplete="false"
             name="search"
             label="PRODUCTS FILTER/SEARCH"
             value="search"
             v-model="searchString"
-            single-line
-            class="smaller"
-          />
+            class="ma-0 pa-0">
+            <template v-slot:append>
+              <span class="material-icons">search</span>
+            </template>
+          </v-text-field>
+        </v-col>
+        <v-spacer></v-spacer>
+        <v-col class="flex-grow-0">
+          <v-checkbox
+            color="primary" 
+            hide-details
+            label="Active only" 
+            v-model="filterInactive" 
+            value="false"
+            class="ma-0 pa-0 nowrap"/>
+        </v-col>    
+        <v-col class="flex-grow-0">
+          <v-checkbox 
+            color="primary"
+            hide-details
+            label="Show pictures" 
+            v-model="showImages" 
+            value="false"
+            class="ma-0 pa-0 nowrap"/>
+        </v-col>  
       </v-row>
       <v-row >
         <v-col cols="12" sm="4" md="3" xl="2" 
           v-for="product in products" 
           :key="product.id" 
           v-show="match(product)">
-          <ProductCard :product="product"/>
+          <ProductCard :product="product" :image="showImages"/>
         </v-col>
       </v-row>
     </v-content>
@@ -49,7 +75,7 @@ export default {
       {
         id: 1,
         code: 'AAA123',
-        description: 'This is a sample product card is a sample product card This is a sample product card This is a sample card This is a sample product',
+        description: 'This is a sample product card is a sample product card This is This is a sample product card is a sample product card This is a a sample product',
         active: true,
         trash: false
       },
@@ -90,6 +116,7 @@ export default {
       },
     ],
     searchString: '',
+    showImages: false,
   }),
 
   methods: {

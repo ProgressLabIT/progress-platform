@@ -2,7 +2,7 @@
   transition: none !important;
 }
 
-#app .truncate-text {
+#app .nowrap {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

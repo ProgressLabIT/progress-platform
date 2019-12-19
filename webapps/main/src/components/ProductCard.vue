@@ -1,9 +1,9 @@
 <template>
 
-  <v-card height="160px" outlined elevation="4" class="surface-1"
+  <v-card :height="image ? '160px' : '120px'" outlined elevation="4" class="surface-1"
     @mouseover="overCard = true"
     @mouseleave="overCard = false">
-    <v-img :src="`pics/products/${product.id}.jpeg`" class="fill">
+    <v-img :src="image ? `pics/products/${product.id}.jpeg` : ''" class="fill">
       <v-container class="pa-0 d-flex flex-column" style="height:100%">
         <!-- <v-row class="pa-0"> -->
           <!-- <v-col class="pa-0"> -->
@@ -20,13 +20,13 @@
           <!-- the dynamic class truncate-text allows to show or hide 
           the full description on hover -->
           <v-card-subtitle 
-            :class="['px-0 pb-1', overDesc ? '' : 'truncate-text']">
+            :class="['px-0 pb-1', overDesc ? '' : 'nowrap']">
             {{ product.description }}
           </v-card-subtitle>
         </v-sheet>
         <v-spacer></v-spacer>
         <v-expand-transition>
-          <ProductActions :product="product" v-show="overCard"/>
+          <ProductActions :product="product" v-show="showActions"/>
         </v-expand-transition>
       </v-container>
     </v-img>
@@ -39,7 +39,7 @@ import ProductActions from '@/components/ProductActions'
 export default {
 
   name: 'ProductCard',
-  props: ['product'],
+  props: ['product', 'image'],
 
   components: {
     ProductActions
@@ -49,6 +49,11 @@ export default {
     return {
       overCard: false,
       overDesc: false,
+    }
+  },
+  computed: {
+    showActions() {
+      return this.image ? this.overCard : true
     }
   }
 

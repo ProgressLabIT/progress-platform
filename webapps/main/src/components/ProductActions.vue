@@ -9,6 +9,7 @@
             
             <v-switch 
               flat dense hide-details
+              color="primary"
               v-model="product.active"
               v-on="on"
               class="pa-2 ma-0"/>
