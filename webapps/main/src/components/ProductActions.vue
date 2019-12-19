@@ -2,18 +2,20 @@
   <v-sheet class="surface-1">
     <v-row class="pa-0">
       <v-col class="py-0">
-        <v-tooltip top color="primary">
+        <v-tooltip top 
+          color="primary"
+          open-delay="300">
           <template v-slot:activator="{on}">
             
-        <v-switch 
-          @mouseover="overSwitch = true"
-          @mouseleave="overSwitch = false"
-          flat dense hide-details
-          v-model="product.active"
-          v-on="on"
-          class="pa-2 ma-0"/>
+            <v-switch 
+              flat dense hide-details
+              v-model="product.active"
+              v-on="on"
+              class="pa-2 ma-0"/>
           </template>
-          <span class="no-transition">{{ product.active ? 'Deactivate' : 'Activate' }}</span>
+          <span class="no-transition">
+            {{ product.active ? 'Deactivate' : 'Activate' }}
+          </span>
         </v-tooltip>
       </v-col>
       <v-spacer></v-spacer>
@@ -48,20 +50,20 @@ export default {
   props: ['product'],
   data () {
     return {
-      overSwitch: false
+      // overSwitch: false
     }
   },
 
   computed: {
-    switchLabel() {
-      if (this.overSwitch) {
-        if (this.product.active) {
-          return 'Deactivate'
-        }
-        else return 'Activate'
-      }
-      else return ''
-    }
+    // switchLabel() {
+    //   if (this.overSwitch) {
+    //     if (this.product.active) {
+    //       return 'Deactivate'
+    //     }
+    //     else return 'Activate'
+    //   }
+    //   else return ''
+    // }
   }
 }
 </script>

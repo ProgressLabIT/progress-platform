@@ -5,9 +5,22 @@
 
     <v-content class="px-6">
       <!-- <HelloWorld/> -->
-      <v-row justify="start" >
-        <v-col cols="12" sm="4" md="3" xl="2" v-for="product in products" :key="product.id">
-          <ProductCard :product="product" />
+      <v-row>
+          <v-text-field
+            name="search"
+            label="PRODUCTS FILTER/SEARCH"
+            value="search"
+            v-model="searchString"
+            single-line
+            class="smaller"
+          />
+      </v-row>
+      <v-row >
+        <v-col cols="12" sm="4" md="3" xl="2" 
+          v-for="product in products" 
+          :key="product.id" 
+          v-show="match(product)">
+          <ProductCard :product="product"/>
         </v-col>
       </v-row>
     </v-content>
@@ -18,9 +31,9 @@
 
 <script>
 // import HelloWorld from './components/HelloWorld';
-import AppBar from './components/AppBar'
-import ProductCard from './components/ProductCard'
-import AppFooter from './components/AppFooter'
+import AppBar from '@/components/AppBar'
+import ProductCard from '@/components/ProductCard'
+import AppFooter from '@/components/AppFooter'
 
 export default {
   name: 'App',
@@ -76,16 +89,26 @@ export default {
         trash: false
       },
     ],
-    desc_limit: 40,
-    desc_trunc: 30
+    searchString: '',
   }),
 
   methods: {
-    truncate(string, limit, len) {
-      if (string.length > limit) {
-        return string.substring(0,len) + "..."
-      }
-      else return string
+    match(product) {
+      // create the list of search terms removing duplicates
+      let searchTerms = [...new Set(this.searchString.toLowerCase().split(' '))]
+
+      // create the list of words to search in, removing duplicates
+      let matchString = (product.code + ' ' + product.description).toLowerCase()
+      let matchContext = [...new Set(matchString.split(' '))]
+
+      // make sure that all search terms are included in at least one word
+      let match = searchTerms.every(searchTerm => {
+        let termMatch = matchContext.some(matchTerm => matchTerm.includes(searchTerm))
+        return termMatch
+      })
+
+      // return true (show card) if search matches or if search box empty 
+      return match || this.searchString === ''
     }
   }
 };
