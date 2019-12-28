@@ -1,6 +1,6 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Home from "../views/Home.vue";
+import ProductList from "@/views/ProductList.vue";
 
 Vue.use(VueRouter);
 
@@ -8,7 +8,14 @@ const routes = [
   {
     path: "/",
     name: "home",
-    component: Home
+    component: ProductList,
+    children: [
+      {
+        path: "new-product",
+        name: "newProduct",
+        component: () => import("@/views/NewProduct.vue")
+      }
+    ]
   },
   {
     path: "/about",

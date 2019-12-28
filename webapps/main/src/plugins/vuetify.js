@@ -14,16 +14,14 @@ const opts = {
 		},
 		themes: {
 			dark: {
+				primary: '#22AED1',
+				secondary: '#0DAB76',
 				colors: {
-					background: {
-						0: '#131E21',
-						1: '#1F2A2D',
-						2: '#242E31'
-					},
+					background: '#131E21',
+					surface1: '#1F2A2D',
+					surface2: '#242E31',
 					blue: '#22AED1',
-					primary: '#22AED1',
 					green: '#0DAB76',
-					secondary: '#0DAB76',
 					red: '#E71D36',
 					orange: '#FF9F1C',
 				},

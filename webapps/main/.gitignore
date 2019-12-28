@@ -20,6 +20,11 @@ yarn-error.log*
 *.sln
 *.sw?
 
+# Sublime files
+*.sublime-project
+*.sublime-workspace
+
+
 # Media and font files
 *.jpeg
 *.jpg

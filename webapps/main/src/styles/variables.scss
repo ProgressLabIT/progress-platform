@@ -1,5 +1,5 @@
 @import '~vuetify/src/styles/styles.sass';
-@import '~vuetify/src/styles/settings/_variables.scss';
+@import '~vuetify/src/components/VBtn/_variables.scss';
 
 $background: #131E21;
 
@@ -24,7 +24,6 @@ $headings: map-deep-merge(
 );
 
 
-
 $material-dark: map-merge($material-dark, ( app-bar: $background ));
 $material-dark: map-merge($material-dark, ( background: $background ));
 $material-dark: map-deep-merge(
@@ -42,9 +41,12 @@ $material-dark: map-deep-merge(
 	)
 );
 
+// BUTTONS
+$btn-border-radius: 4px;
+
+@import '~vuetify/src/styles/settings/_variables.scss';
 
 
-// $material-dark: map-merge();
 
 
 

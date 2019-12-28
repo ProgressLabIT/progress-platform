@@ -8,7 +8,7 @@
           <template v-slot:activator="{on}">
             
             <v-switch 
-              flat dense hide-details
+              flat hide-details
               color="primary"
               v-model="product.active"
               v-on="on"
