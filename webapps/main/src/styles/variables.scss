@@ -2,6 +2,8 @@
 @import '~vuetify/src/components/VBtn/_variables.scss';
 
 $background: #131E21;
+$surface1: #1F2A2D;
+$surface2: #242E31;
 
 $high-emphasis: .87;
 $low-emphasis: .6;
@@ -34,7 +36,9 @@ $material-dark: map-deep-merge(
 			'secondary': rgba(255,255,255, $low-emphasis),
 			'disabled': rgba(255,255,255, $disabled-emphasis),
 		),
-		'cards': #1F2A2D,
+		'cards': $surface1,
+		'bg-color': $background,
+
 		'primary-text-percent': $high-emphasis,
 		'secondary-text-percent': $low-emphasis,
 		'disabledORhints-text-percent': $disabled-emphasis,

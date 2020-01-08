@@ -2,7 +2,7 @@
   <v-content class="px-6">
 
     <!-- Header row with product filter and view controls -->
-    <v-row class="">
+    <v-row>
 
       <!-- Text field for product filter and search -->
       <v-col cols="12" sm="5" lg="3">
@@ -22,7 +22,7 @@
       </v-col>
 
       <!-- View controls -->
-      <v-col class="flex-grow-0">
+      <v-col cols="auto">
         <v-checkbox
           :ripple="false"
           color="primary" 
@@ -31,7 +31,7 @@
           v-model="filterInactive" 
           class="ma-0 pa-0 nowrap"/>
       </v-col>    
-      <v-col class="flex-grow-0">
+      <v-col cols="auto">
         <v-checkbox 
           :ripple="false"
           color="primary"
@@ -43,7 +43,7 @@
 
       <v-spacer></v-spacer>
 
-      <v-col>
+      <v-col cols="auto">
         <v-btn color="primary"
           @click="$router.push('new-product')">
           new product

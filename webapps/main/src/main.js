@@ -5,6 +5,16 @@ import store from "./store";
 import vuetify from './plugins/vuetify';
 
 Vue.config.productionTip = false;
+Vue.prototype.$theme = {
+  background: '#131E21',
+  surface1: '#1F2A2D',
+  surface2: '#242E31',
+  grey: '#707070',
+  blue: '#22AED1',
+  green: '#0DAB76',
+  red: '#E71D36',
+  orange: '#FF9F1C',
+}
 
 new Vue({
   router,

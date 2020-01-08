@@ -24,15 +24,15 @@
         <TooltipIcon
           icon="assignment"
           tooltip="Documents"
-          :color="$vuetify.theme.themes.dark.colors.green"/>
+          :color="$theme.green"/>
         <TooltipIcon
           icon="edit"
           tooltip="Details"
-          :color="$vuetify.theme.themes.dark.colors.blue"/>
+          :color="$theme.blue"/>
         <TooltipIcon
           icon="delete"
           tooltip="Delete"
-          :color="$vuetify.theme.themes.dark.colors.red"/>
+          :color="$theme.red"/>
       </v-col>
     </v-row>
   </v-sheet>

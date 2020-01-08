@@ -4,9 +4,13 @@ import Vuetify from 'vuetify/lib';
 Vue.use(Vuetify);
 
 const opts = {
+	global: {
+		ripples: false,
+	},
 	icons: {
 		iconfont: 'md'
 	},
+
 	theme: {
 		dark:true,
 		options: {
@@ -16,15 +20,6 @@ const opts = {
 			dark: {
 				primary: '#22AED1',
 				secondary: '#0DAB76',
-				colors: {
-					background: '#131E21',
-					surface1: '#1F2A2D',
-					surface2: '#242E31',
-					blue: '#22AED1',
-					green: '#0DAB76',
-					red: '#E71D36',
-					orange: '#FF9F1C',
-				},
 				text_color: {
 					highlight: 'rgba(255,255,255,0.87)',
 					normal: 'rgba(255,255,255,0.6)',
