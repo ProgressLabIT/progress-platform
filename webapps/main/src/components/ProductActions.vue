@@ -10,8 +10,9 @@
             <v-switch 
               flat hide-details
               color="primary"
-              v-model="product.active"
+              :input-value="product.active"
               v-on="on"
+              @change="toggleActive(product._key)"
               class="pa-2 ma-0"/>
           </template>
           <span class="no-transition">
@@ -40,7 +41,7 @@
 
 <script>
 import TooltipIcon from '@/components/TooltipIcon'
-
+import { mapActions } from 'vuex'
 export default {
 
   name: 'ProductActions',
@@ -55,16 +56,12 @@ export default {
     }
   },
 
-  computed: {
-    // switchLabel() {
-    //   if (this.overSwitch) {
-    //     if (this.product.active) {
-    //       return 'Deactivate'
-    //     }
-    //     else return 'Activate'
-    //   }
-    //   else return ''
-    // }
+  methods: {
+    ...mapActions(['switchActiveState']),
+
+    toggleActive(product_key) {
+      this.switchActiveState(product_key)
+    }
   }
 }
 </script>

@@ -3,7 +3,7 @@
   <v-card :height="image ? '160px' : '120px'" outlined elevation="4" class="surface-1"
     @mouseover="overCard = true"
     @mouseleave="overCard = false">
-    <v-img :src="image ? `pics/products/${product.id}.jpeg` : ''" class="fill">
+    <v-img :src="image ? `pics/products/${product._key}.jpeg` : ''" class="fill">
       <v-container class="pa-0 d-flex flex-column" style="height:100%">
         <!-- <v-row class="pa-0"> -->
           <!-- <v-col class="pa-0"> -->
