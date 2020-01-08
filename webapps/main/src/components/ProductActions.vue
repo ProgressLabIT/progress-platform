@@ -1,7 +1,9 @@
 <template>
   <v-sheet class="surface-1">
     <v-row class="pa-0">
-      <v-col class="py-0">
+
+      <!-- ACTIVE TOGGLE -->
+      <v-col class="py-0">        
         <v-tooltip top 
           color="primary"
           open-delay="300">
@@ -20,20 +22,25 @@
           </span>
         </v-tooltip>
       </v-col>
+
       <v-spacer></v-spacer>
+
+      <!-- OPTIONS -->
       <v-col class="d-flex py-0 align-center justify-end">
         <TooltipIcon
           icon="assignment"
-          tooltip="Documents"
+          tooltip="documents"
           :color="$theme.green"/>
         <TooltipIcon
           icon="edit"
-          tooltip="Details"
+          tooltip="details"
           :color="$theme.blue"/>
         <TooltipIcon
           icon="delete"
-          tooltip="Delete"
-          :color="$theme.red"/>
+          tooltip="delete"
+          :color="$theme.red"
+          @delete="confirmDelete"
+          />
       </v-col>
     </v-row>
   </v-sheet>
@@ -59,8 +66,13 @@ export default {
   methods: {
     ...mapActions(['switchActiveState']),
 
-    toggleActive(product_key) {
-      this.switchActiveState(product_key)
+    toggleActive(product) {
+      this.switchActiveState(product)
+    },
+
+    confirmDelete() {
+      console.log("TRASH CLICKED!")
+      this.$emit('showDelete')
     }
   }
 }

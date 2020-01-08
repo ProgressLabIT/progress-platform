@@ -65,18 +65,35 @@ export default new Vuex.Store({
   mutations: {
     SWTICH_ACTIVE_STATE(state, key) {
       updateProduct(state.products, key, product => {
-        console.log('Changing active state for product key: ' + key)
-        console.log('Previous state: ' + product.active)
-        console.log('New state: ' + !product.active)
         Vue.set(product, 'active', !product.active)
+      }) 
+    },
+
+    MOVE_TO_TRASH(state, key) {
+      updateProduct(state.products, key, product => {
+        Vue.set(product, 'trash', true)
+      }) 
+    },
+
+    RESTORE_PRODUCT(state, key) {
+      updateProduct(state.products, key, product => {
+        Vue.set(product, 'trash', false)
       }) 
     }
   },
 
   actions: {
-    switchActiveState({ commit }, productKey) {
-      commit('SWTICH_ACTIVE_STATE', productKey)
-    }
+    switchActiveState({ commit }, product) {
+      commit('SWTICH_ACTIVE_STATE', product._key)
+    },
+
+    moveToTrash({ commit }, product) {
+      commit('MOVE_TO_TRASH', product._key)
+    },
+
+    restoreProduct({ commit }, productKey) {
+      commit('RESTORE_PRODUCT', productKey)
+    },
   },
 
   modules: {}

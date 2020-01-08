@@ -57,16 +57,42 @@
         v-for="product in notInTrash()" 
         :key="product._key" 
         v-show="(!filterInactive || product.active) && match(product)">
-        <ProductCard :product="product" :image="showImages"/>
+        <ProductCard 
+          :product="product" 
+          :image="showImages" 
+          @delete="deleteNotify(product)"
+          />
       </v-col>
     </v-row>
+
+
+    <!-- DELETE/RESTORE NOTIFICATION -->
+    <v-snackbar id="delete-notification" bottom left 
+      v-model="deleteSnackbar.show" 
+      :timeout="deleteSnackbar.timeout">
+      <v-layout column wrap>
+        <v-flex>
+          Product {{ deleteSnackbar.code }} deleted  
+          <v-btn text color="primary" @click.native="deleteSnackbar.show = false; ">CONFIRM</v-btn>
+          <v-btn text color="warning" @click.native="undoDelete">UNDO</v-btn>
+        </v-flex>
+        <v-flex>
+          <v-progress-linear height="2" v-model="deleteSnackbar.remain" />
+        </v-flex>
+      </v-layout>
+    </v-snackbar>
+
+
+    <!-- New Product Modal entry point -->
     <router-view></router-view>
+
+
   </v-content>
 </template>
 
 <script>
 import ProductCard from '@/components/ProductCard'  
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
 export default {
 
@@ -80,6 +106,13 @@ export default {
     filterInactive: false,
     searchString: '',
     showImages: true,
+    deleteSnackbar: {
+      _key: null,
+      code: '',
+      timeout: 6200,
+      show: false,
+      remain: 100,
+    }
   }),
 
   computed: {
@@ -87,6 +120,9 @@ export default {
   },
 
   methods: {
+
+    ...mapActions(['restoreProduct']),
+
     match(product) {
       // create the list of search terms removing duplicates
       let searchTerms = [...new Set(this.searchString.toLowerCase().split(' '))]
@@ -103,7 +139,29 @@ export default {
 
       // return true (show card) if search matches or if search box empty 
       return match || this.searchString === ''
+    },
+
+    deleteNotify(product) {
+      const snackbar = this.deleteSnackbar
+      snackbar._key = product._key
+      snackbar.code = product.code
+      snackbar.remain = 100
+      snackbar.show = true
+      let countdown = setInterval(() => {
+        if (snackbar.show) {
+          snackbar.remain -= 1
+        }
+        else {
+         clearInterval(countdown)
+        }
+      }, 60)
+    },
+
+    undoDelete() {
+      this.restoreProduct(this.deleteSnackbar._key)
+      this.deleteSnackbar.show = false
     }
+
   },
 };
 </script>

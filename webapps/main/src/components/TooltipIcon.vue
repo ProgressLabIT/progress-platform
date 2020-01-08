@@ -5,9 +5,10 @@
       	v-on="on" 
       	dense class="mx-2 hover-color"
       	:style="hoverColor"
+        @click="emit"
       	>{{ icon }}</v-icon>
       </template>
-    <span>{{ tooltip }}</span>
+    <span>{{ tooltip | capitalize }}</span>
   </v-tooltip>
 </template>
 
@@ -26,6 +27,17 @@ export default {
   			'--hover-color': this.color
   		}
   	}
+  },
+
+  methods: {
+
+    /* 
+    On the parent element, this allows to bubble up the click event correctly 
+    with the event name equal to the tolltip text passed down
+    */
+    emit() {
+      this.$emit(this.tooltip)
+    }
   }
 }
 </script>
