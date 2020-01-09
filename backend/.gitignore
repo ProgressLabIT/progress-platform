@@ -1,2 +1,8 @@
 # Virtual Environments
 venv/
+
+# Test files
+Test/
+
+# Compiled files
+*.pyc
