@@ -1,0 +1,695 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"produc",
+				"producer_config"
+			],
+			[
+				"kafka",
+				"kafka_ip"
+			],
+			[
+				"server",
+				"server_name"
+			],
+			[
+				"session",
+				"sessionProduct"
+			],
+			[
+				"product",
+				"productId"
+			],
+			[
+				"produ",
+				"productId"
+			],
+			[
+				"get",
+				"getProductData"
+			],
+			[
+				"milli",
+				"millisecondsPer"
+			],
+			[
+				"remain",
+				"remainFromMinutes"
+			],
+			[
+				"minu",
+				"minutes"
+			],
+			[
+				"hour",
+				"hours"
+			],
+			[
+				"millisec",
+				"millisecondsPer"
+			],
+			[
+				"durat",
+				"durationString"
+			],
+			[
+				"seco",
+				"secondsString"
+			],
+			[
+				"days",
+				"daysString"
+			],
+			[
+				"seconds",
+				"secondsTrue"
+			],
+			[
+				"hours",
+				"hoursTrue"
+			],
+			[
+				"show",
+				"showDocsModal"
+			],
+			[
+				"render",
+				"renderPage"
+			],
+			[
+				"curr",
+				"currentDoc"
+			],
+			[
+				"curre",
+				"currentDoc"
+			],
+			[
+				"curren",
+				"currentPage"
+			],
+			[
+				"current",
+				"currentDoc"
+			],
+			[
+				"HTTp",
+				"HTTP_200"
+			],
+			[
+				"HTTP_",
+				"HTTP_500"
+			],
+			[
+				"EDI",
+				"EDIT_PRODUCT_DOCS"
+			],
+			[
+				"doc",
+				"docName"
+			],
+			[
+				"prod",
+				"product_path"
+			],
+			[
+				"sear",
+				"searchString"
+			],
+			[
+				"search",
+				"searchText"
+			],
+			[
+				"pro",
+				"productDeleteSnackbar"
+			],
+			[
+				"reset",
+				"resetForm"
+			],
+			[
+				"new",
+				"newProduct"
+			],
+			[
+				"upload",
+				"uploadMonitor"
+			],
+			[
+				"docs",
+				"docsCopy"
+			],
+			[
+				"border",
+				"border-radius\tproperty"
+			],
+			[
+				"body",
+				"body1\tbody-1 - Vuetify"
+			],
+			[
+				"Nav",
+				"navLinks"
+			],
+			[
+				"data",
+				"dataTransfer"
+			],
+			[
+				"local",
+				"localDatetime"
+			],
+			[
+				"mx",
+				"mx-4\tmargin horizontal by 4 - Vuetify"
+			],
+			[
+				"Npro",
+				"NProgress"
+			],
+			[
+				"last",
+				"lastHistoryRecord"
+			],
+			[
+				"store",
+				"storeHistory"
+			],
+			[
+				"log",
+				"logObject"
+			],
+			[
+				"Sna",
+				"snapshotSaved"
+			],
+			[
+				"todel",
+				"toDeleteCount"
+			],
+			[
+				"tode",
+				"toDeleteCount"
+			],
+			[
+				"toDe",
+				"toDeleteList"
+			],
+			[
+				"Cleaner",
+				"CleanerWorker"
+			],
+			[
+				"event",
+				"eventsToSync"
+			],
+			[
+				"sync",
+				"syncBufferedEvents"
+			],
+			[
+				"e",
+				"endpoint"
+			],
+			[
+				"events",
+				"eventsToSync"
+			],
+			[
+				"count",
+				"countError"
+			],
+			[
+				"to",
+				"TOGGLE_ONLINE"
+			],
+			[
+				"post",
+				"postMessage"
+			],
+			[
+				"sessionCount",
+				"sessionCountHidden"
+			],
+			[
+				"se",
+				"sessionCountClosed"
+			],
+			[
+				"sessionqu",
+				"sessionQuantityActive"
+			],
+			[
+				"total",
+				"totalActive"
+			],
+			[
+				"sess",
+				"sessionCountClosed"
+			],
+			[
+				"ne",
+				"nextAction"
+			],
+			[
+				"in",
+				"incrementQt"
+			],
+			[
+				"sta",
+				"status"
+			],
+			[
+				"addSe",
+				"addSessionTrigger"
+			],
+			[
+				"start",
+				"startSession"
+			],
+			[
+				"Session",
+				"SessionData"
+			],
+			[
+				"add",
+				"ADD_SESSION"
+			],
+			[
+				"SET",
+				"SET_EVENT"
+			],
+			[
+				"Event",
+				"EventServices"
+			],
+			[
+				"vuec",
+				"vuec\tVue component"
+			],
+			[
+				"Even",
+				"EventCreate"
+			],
+			[
+				"vue",
+				"Vue"
+			],
+			[
+				"vu",
+				"vued\tVue directive"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"pytho",
+				"Set Syntax: Python"
+			],
+			[
+				"yaml",
+				"Set Syntax: YAML"
+			],
+			[
+				"json",
+				"Set Syntax: JSON"
+			],
+			[
+				"docker",
+				"Set Syntax: Dockerfile"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"javasc",
+				"Set Syntax: JavaScript"
+			],
+			[
+				"html",
+				"HTMLBeautify"
+			],
+			[
+				"color",
+				"Color Picker"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"beau",
+				"HTMLBeautify"
+			],
+			[
+				"indent",
+				"Auto indent"
+			],
+			[
+				"remove",
+				"Package Control: Remove Package"
+			],
+			[
+				"vue",
+				"Snippet: Vue component"
+			],
+			[
+				"inst",
+				"Package Control: Install Package"
+			],
+			[
+				"brow",
+				"Preferences: Browse Packages"
+			],
+			[
+				"terminus",
+				"Terminus: Toggle Panel"
+			],
+			[
+				"i",
+				"Package Control: Install Package"
+			],
+			[
+				"ins",
+				"Package Control: Install Package"
+			],
+			[
+				"instal",
+				"Package Control: Install Package"
+			],
+			[
+				"insr",
+				"Install Package Control"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 180.0,
+		"history":
+		[
+			"cd ..",
+			"cd Dropbox",
+			"npm run serve"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Volumes/MyFiles/DEV/Progress/Backend/Data Architecture/Traceability.yaml",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/components/SessionData.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/components/ProductCard.vue",
+		"/Volumes/MyFiles/DEV/Progress/Backend/DB Queries/OperatorView.py",
+		"/Volumes/MyFiles/DEV/Progress/Backend/Data Architecture/Performance.yaml",
+		"/Volumes/MyFiles/DEV/Progress/Backend/Data Architecture/KPI.yaml",
+		"/Volumes/MyFiles/DEV/Progress/Backend/Data Architecture/Planning.yaml",
+		"/Volumes/MyFiles/DEV/Progress/Backend/Data Architecture/MasterData.yaml",
+		"/Volumes/MyFiles/DEV/Progress/Backend/Data Architecture/Quality.yaml",
+		"/Volumes/MyFiles/DEV/Progress/Backend/Data Architecture/Execution.yaml",
+		"/Volumes/MyFiles/Google Drive/Work History/Essegi/ProTrack Elettronica/Note DB/Note Bozza DB v0.6 20190420.txt",
+		"/Volumes/MyFiles/Dropbox/ProjectQ/Design/Data Architecture/MasterData.yaml",
+		"/Volumes/MyFiles/Dropbox/ProjectQ/Design/Data Architecture/Quality.yaml",
+		"/Volumes/MyFiles/Dropbox/ProjectQ/Design/Data Architecture/Execution.yaml",
+		"/Volumes/MyFiles/Dropbox/ProjectQ/Design/Data Architecture/Planning.yaml",
+		"/Volumes/MyFiles/Dropbox/ProjectQ/Design/Data Architecture/KPI.yaml",
+		"/Volumes/MyFiles/Dropbox/ProjectQ/Design/Data Architecture.yaml",
+		"/Volumes/MyFiles/DEV/simplesession/Backend/backend/endpoints/feedback.py",
+		"/Volumes/MyFiles/DEV/simplesession/Backend/backend/endpoints/backend.py",
+		"/Volumes/MyFiles/DEV/simplesession/Backend/backend/endpoints/product.py",
+		"/Volumes/MyFiles/DEV/simplesession/Backend/backend/endpoints/session.py",
+		"/Volumes/MyFiles/DEV/simplesession/Backend/backend/services/event_service.py",
+		"/Volumes/MyFiles/DEV/simplesession/Backend/backend/db/models.py",
+		"/Volumes/MyFiles/DEV/simplesession/Docker/event-feedback.df",
+		"/Volumes/MyFiles/DEV/simplesession/Docker/event-service.df",
+		"/Volumes/MyFiles/DEV/simplesession/branch-notes.md",
+		"/Volumes/MyFiles/DEV/simplesession/Docker/event-endpoint.df",
+		"/Volumes/MyFiles/DEV/simplesession/Docker/falcon-endpoint.df",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/modules/sessions.js",
+		"/Volumes/MyFiles/DEV/simplesession/nginx/nginx.conf",
+		"/Volumes/MyFiles/DEV/simplesession/Backend/backend/backend.py",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/views/Products.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/workers/DataSync.js",
+		"/Volumes/MyFiles/DEV/simplesession/Docker/docker-compose.yml",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/modules/products.js",
+		"/Volumes/MyFiles/DEV/simplesession/.gitignore",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/GetFeedback.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/modules/events.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/components/DocsViewer.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/components/ProductDetailModal.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/FileUpload.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/Logger.js",
+		"/Volumes/MyFiles/DEV/Kafka/API/consumer.py",
+		"/Volumes/MyFiles/DEV/Kafka/API/producer.py",
+		"/Volumes/MyFiles/DEV/simplesession/Backend/API/backend.py",
+		"/Volumes/MyFiles/DEV/ArangoDB/Code/ArangoTest.py",
+		"/Users/Luca/Library/Application Support/Sublime Merge/Packages/User/Preferences.sublime-settings",
+		"/anaconda2/lib/python2.7/site-packages/pip/_internal/wheel.py",
+		"/Volumes/MyFiles/DEV/Kafka/code/producer.py",
+		"/Volumes/MyFiles/DEV/Kafka/Zookeeper.sh",
+		"/Volumes/MyFiles/DEV/Kafka/KafkaServer.sh",
+		"/Volumes/MyFiles/DEV/Kafka/code/producer.log",
+		"/Volumes/MyFiles/DEV/Kafka/confluent-5.3.1/etc/kafka/log4j.properties",
+		"/Volumes/MyFiles/DEV/Kafka/confluent-5.3.1/etc/kafka/zookeeper.properties",
+		"/Volumes/MyFiles/Dropbox/ProjectQ/Kafka/Courses/Beginners/code/0-start-kafka/macosx/macosx-setup.sh",
+		"/Volumes/MyFiles/Dropbox/ProjectQ/Kafka/Kafka Udemy Courses/Beginners/code/0-start-kafka/macosx/macosx-setup.sh",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/router.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/views/Sessions.vue",
+		"/Volumes/MyFiles/Dropbox/ProjectQ/Design/UX/DATA/BoM.csv",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/components/DocsModal.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/components/TopNav.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/App.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/main.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/ListUpdate.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/modules/persistence.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/filters/datetime.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/plugins/StoreHistory.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/workers/Cleaner.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/pdfjs-dist/build/pdf.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/webpack/package.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/components/PDFViewer.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/plugins/vuetify.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/babel-loader/3540b787a5d41a854f7934d39e23aceb.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/babel-loader/b3bf16f6256e9f77b080163424b8c827.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/0f0b2abcbae52908c0f60864142a2918.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/1a6aab80297e64a38e81fedb06e9a4ae.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/5f8ca1a2aec6a064671f3d5ec6c4fe21.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/77038f5889e7e0bf52ef1a55a850ab4f.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/a7062f336a642cf609fb97f31ae255af.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/vuetify/dist/vuetify.css",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/vuetify/dist/vuetify.css.map",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/vuetify/dist/vuetify.min.css",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/views/Detail.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/vue.config.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/fe7107ce4217e8a170ee998f796b65ee.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/babel-loader/81d314e225c0c0bcfc31cd1c7e87e6f9.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/babel-loader/9c548ae118a2a68f65c9bd7074333c78.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/15de50db7f3087c81dbca97b01d712de.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/2047b481409e83b32e9b8d54d96dd864.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/5d4eddcf99e47c8b9ca2127fd5d9383b.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/61470db3fb0aa4acec44e6516f8b65d1.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/7e683ec5e3348018394919458464fffa.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/af54e0ea04ab9f997b2ef6d9e9e31515.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/b136ec5f63dbd1f40548f07523ca7dd5.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/bf2a2f0ef7226898ae7e2b6a63660950.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/df545b5d61a1138f884e730f0460094c.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/.cache/vue-loader/fb3cd34d3d05f5a4936f29b1de3cb90e.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/InitFilesDB.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/components/NewProductModal.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/InitHistoryDB.js",
+		"/Users/Luca/Desktop/untitled.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/ResetForm.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/store.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/InitProductDB.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/modules/online.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/modules/actions.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/modules/mutations.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/views/Home.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/components/Draggable.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/components/Droppable.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/components/StateRestorePrompt.vue",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/mixins/DateFilters.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/node_modules/eslint/lib/rules/newline-after-var.js",
+		"/Volumes/MyFiles/Dropbox/DEV/Vue/realvue/src/router.js",
+		"/Volumes/MyFiles/Dropbox/DEV/Vue/realvue/src/main.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/LogObject.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/InitBufferDB.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/InitBuffer.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/InitIDB.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/EventBuffer.js",
+		"/Volumes/MyFiles/Dropbox/ProjectQ/Design/Client event flow.svg",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/lib/Test.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/public/WebWorkers/HeartBeat.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/public/index.html",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/package.json",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/src/vue.config.js",
+		"/Volumes/MyFiles/DEV/simplesession/Frontend/babel.config.js",
+		"/Volumes/MyFiles/Dropbox/New music submission/I took piano lessons for 8 years reaching near-pro"
+	],
+	"find":
+	{
+		"height": 28.0
+	},
+	"find_in_files":
+	{
+		"height": 160.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": true,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 28.0
+	},
+	"input":
+	{
+		"height": 56.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.SublimeLinter":
+	{
+		"height": 0.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "Traceability.sublime-project",
+	"replace":
+	{
+		"height": 52.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"nav",
+				"Frontend/node_modules/eslint/lib/rules/newline-after-var.js"
+			],
+			[
+				"webpack-dev-",
+				"node_modules/.bin/webpack-dev-server"
+			],
+			[
+				"sock",
+				"node_modules/sockjs/lib/sockjs.js"
+			],
+			[
+				"app.js",
+				"node_modules/@vue/cli-service/lib/config/app.js"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 368.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 712.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 306.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

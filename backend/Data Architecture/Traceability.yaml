@@ -3,6 +3,7 @@
   _to: _key (Phase)
   * wo_line: _key
   * product: _key
+  release_type: str [continuous, batch, session, manual, job]
   total_qt: float
   released_qt: float
   value: float
@@ -80,10 +81,13 @@
   _to: Task
   evid: str
   * job: _key
+  * user: _key
   completed: ISOdts
-  <field_name_1>: <field_value_1>
-  ...
-  <field_name_N>: <field_value_N> 
+  time: float
+  data: obj
+    - <field_name_1>: <field_value_1>
+    - ...
+    - <field_name_N>: <field_value_N> 
 
 
 

@@ -17,6 +17,7 @@
   planned_qt: float
   completed_qt: float # corresponds to the sum of the released qt of the jobs in the last phase 
   status: str [created, planned, running, closed] (???)
+  on_time: bool
   active: bool
   due_by: ISOdts
   notes: str
