@@ -30,11 +30,12 @@
             accept="image/*"
             prepend-icon=""
             append-icon="image"
+            show-size
             v-model="new_product_pic"
             />
         <v-row class="mt-6">
           <v-col>
-            <v-btn block depressed color="primary">salva</v-btn>
+            <v-btn block depressed color="primary" @click="postNewProduct">salva</v-btn>
           </v-col>
           <v-col>    
             <v-btn block depressed :color="$theme.grey" @click="$router.back()">annulla</v-btn>
@@ -47,6 +48,9 @@
 </template>
 
 <script>
+import axios from 'axios'
+import { mapActions } from 'vuex'
+
 export default {
 
   name: 'NewProduct',
@@ -55,8 +59,44 @@ export default {
     return {
       new_product_code: '',
       new_product_desc: '',
-      new_product_pic: []  
+      new_product_pic: null  
     };
+  },
+
+  methods: {
+
+    ...mapActions(['addNewProduct']),
+
+    postNewProduct() {
+      // console.log("Preparing form data...")
+      let body = new FormData()
+      body.set("code", this.new_product_code)
+      body.set("description", this.new_product_desc)
+
+      if (this.new_product_pic) {
+        // console.log("found image! Adding to body...")
+        const image = this.new_product_pic
+        body.append("image", image, image.name)
+      }
+      
+      // console.log("Posting form data...")
+      axios({
+          method: 'post', 
+          url: 'http://127.0.0.1:8000/product',
+          data: body,
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        .then(resp => {
+          console.log(resp)
+          // Go back to product list
+          const newProductData = resp.data.data
+          this.addNewProduct(newProductData)
+          this.$router.push({ name: 'productList'})
+        })
+        .catch(error => console.log(error.response))
+    }
   }
 };
 </script>

@@ -121,7 +121,7 @@ export default {
 
   methods: {
 
-    ...mapActions(['restoreProduct']),
+    ...mapActions(['restoreProduct', 'loadProductList']),
 
     match(product) {
       // create the list of search terms removing duplicates
@@ -163,6 +163,11 @@ export default {
     }
 
   },
+
+  created() {
+    // console.log("Loading products...")
+    this.loadProductList()
+  }
 };
 </script>
 

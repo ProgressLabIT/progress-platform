@@ -14,7 +14,7 @@
               color="primary"
               :input-value="product.active"
               v-on="on"
-              @change="toggleActive(product._key)"
+              @change="toggleActive(product)"
               class="pa-2 ma-0"/>
           </template>
           <span class="no-transition">
@@ -71,7 +71,7 @@ export default {
     },
 
     confirmDelete() {
-      console.log("TRASH CLICKED!")
+      // console.log("TRASH CLICKED!")
       this.$emit('showDelete')
     }
   }
