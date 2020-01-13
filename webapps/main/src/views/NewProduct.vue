@@ -91,11 +91,11 @@ export default {
         .then(resp => {
           console.log(resp)
           // Go back to product list
-          const newProductData = resp.data.data
+          const newProductData = resp.data.detail
           this.addNewProduct(newProductData)
-          this.$router.push({ name: 'productList'})
         })
         .catch(error => console.log(error.response))
+        .finally(this.$router.back())
     }
   }
 };
