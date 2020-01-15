@@ -1,5 +1,6 @@
 <template>
-  <v-container fluid class="ma-0 py-2">
+  <v-app-bar app fixed flat dense :color="$theme.background">
+  <!-- <v-container fluid class="ma-0 py-2"> -->
     <v-row cols=12>
       <v-app-bar-nav-icon style="color: rgba(255,255,255,.6);"></v-app-bar-nav-icon>
       <h3 class="d-flex align-center display">Library</h3>
@@ -9,7 +10,8 @@
         <img src="pics/users/Josh White.jpg">
       </v-avatar>
     </v-row>
-  </v-container>
+  </v-app-bar>
+  <!-- </v-container> -->
 </template>
 
 <script>

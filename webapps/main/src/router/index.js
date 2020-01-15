@@ -1,12 +1,18 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import ProductList from "@/views/ProductList.vue";
+import ModalScreen from "@/components/ModalScreen.vue";
+
 
 Vue.use(VueRouter);
 
 const routes = [
   {
     path: "/",
+    redirect: { name: 'productList' }
+  },
+  {
+    path: "/product",
     name: "productList",
     component: ProductList,
     children: [
@@ -14,9 +20,33 @@ const routes = [
         path: "new-product",
         name: "newProduct",
         component: () => import("@/views/NewProduct.vue")
+      },
+      {
+        path: ":product_key",
+        redirect: { name: "productHome" },
+        component: ModalScreen,
+        props: true,
+        children: [
+          {
+            path: "home",
+            name: "productHome",
+            component: () => import("@/views/ProductHome.vue")
+          },
+          {
+            path: "process",
+            name: "productionProcess",
+            component: () => import("@/views/ProductionProcess.vue")
+          },
+          {
+            path: "bom",
+            name: "bom",
+            component: () => import("@/views/BillOfMaterials.vue")
+          }
+        ]
       }
-    ]
+    ] 
   },
+  
   
 ];
 

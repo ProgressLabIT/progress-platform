@@ -22,7 +22,7 @@
       </v-col>
 
       <!-- View controls -->
-      <v-col cols="auto">
+      <v-col cols="auto" class="d-flex align-center">
         <v-checkbox
           :ripple="false"
           color="primary" 
@@ -31,7 +31,7 @@
           v-model="filterInactive" 
           class="ma-0 pa-0 nowrap"/>
       </v-col>    
-      <v-col cols="auto">
+      <v-col cols="auto" class="d-flex align-center">
         <v-checkbox 
           :ripple="false"
           color="primary"
@@ -45,7 +45,7 @@
 
       <v-col cols="auto">
         <v-btn color="primary"
-          @click="$router.push('new-product')">
+          @click="$router.push('product/s')">
           new product
         </v-btn>
       </v-col>
@@ -82,10 +82,8 @@
       </v-layout>
     </v-snackbar>
 
-
-    <!-- New Product Modal entry point -->
+    <!-- Product Modals entry point -->
     <router-view></router-view>
-
 
   </v-content>
 </template>

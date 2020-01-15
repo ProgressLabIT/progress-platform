@@ -49,6 +49,10 @@
   word-break: break-word;
 }
 
+.medium {
+  font-size: .89rem;
+}
+
 .weight-medium {
   font-weight: 500;
 }
@@ -83,4 +87,21 @@
 .fill {
   height: 100%;
   width: 100%;
+}
+
+.flex-fill {
+  /*flex: 1 1 auto;*/
+  height: 300px;
+}
+
+.v-dialog.fill {
+  max-height: 100% !important;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding-top: 8px;
+  padding-bottom: 24px;
+}
+
+span .display {
+  line-height: .8rem;
 }

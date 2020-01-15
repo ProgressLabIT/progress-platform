@@ -5,6 +5,7 @@ import store from "./store";
 import vuetify from './plugins/vuetify';
 
 Vue.config.productionTip = false;
+
 Vue.prototype.$theme = {
   background: '#131E21',
   surface1: '#1F2A2D',
@@ -14,6 +15,8 @@ Vue.prototype.$theme = {
   green: '#0DAB76',
   red: '#E71D36',
   orange: '#FF9F1C',
+  whitelow: 'rgba(255,255,255,.6)',
+  whitehigh: 'rgba(255,255,255,.87)' 
 }
 
 Vue.filter('capitalize', function (value) {

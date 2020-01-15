@@ -1,5 +1,5 @@
 <template>
-	<v-footer>
+	<v-footer fixed>
 	  <v-row cols=12 class="align-center justify-space-between my-0 py-0 px-2">
 	    <v-col class="text-left pa-0">
 	    	<span class="display smaller">ACME CORP - PROGRESS</span>
