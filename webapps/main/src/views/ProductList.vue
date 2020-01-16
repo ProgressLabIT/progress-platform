@@ -83,7 +83,7 @@
     </v-snackbar>
 
     <!-- Product Modals entry point -->
-    <router-view></router-view>
+    <router-view :links="['home', 'process', 'bom']" title="Product ID:"></router-view>
 
   </v-content>
 </template>

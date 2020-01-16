@@ -22,7 +22,7 @@ const routes = [
         component: () => import("@/views/NewProduct.vue")
       },
       {
-        path: ":product_key",
+        path: ":item_key",
         redirect: { name: "productHome" },
         component: ModalScreen,
         props: true,

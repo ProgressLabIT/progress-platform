@@ -3,15 +3,16 @@
     value="true"
     fullscreen
     class="py-0">
-    <v-card :color="$theme.background">
+    <v-card :color="$theme.black">
       <v-container fluid class="d-flex flex-column pt-2 px-5" style="height:100vh"> 
         <v-row dense justify="start" align="center" class="my-0 pl-1 flex-grow-0">
+
+          <!-- SCREEN HEADER -->
           <v-icon small @click="$router.push(previousPage)">close</v-icon>
-          <span class="ml-4 display medium highlight weight-medium">TITLE</span>
+          <span class="ml-4 display medium highlight weight-medium">{{ title }} {{ item_key }}</span>
+          
+          <!-- DYNAMIC INTERNAL LINKS -->
           <v-col cols="auto" class="ml-auto">
-            <!-- <router-link v-for="(page, index) in links" :key="index" :to="page" class="display mx-2">
-              {{ page }}
-            </router-link> -->
             <v-tabs 
               v-model="activePageIndex"
               active-class="weight-bold"
@@ -22,7 +23,7 @@
               <v-tab 
                 v-for="(page, index) in links" 
                 :key="index" 
-                :to="`/product/${product_key}/${page}`"
+                :to="`/product/${item_key}/${page}`"
                 class="display" >
                 <span >{{ page }}</span>
               </v-tab>
@@ -30,7 +31,8 @@
           </v-col>  
         </v-row>  
 
-        <v-card outlined elevation="4" class="flex-grow-1">
+        <!-- WINDOW CONTAINER -->
+        <v-card outlined tile class="flex-grow-1" :style="'background-color:' + $theme.background">
             <router-view></router-view>
         </v-card>
 
@@ -43,13 +45,15 @@
 export default {
 
   name: 'ModalScreen',
-  props: ['product_key', 'title'],
+  props: [
+    'item_key',    // route param from url
+    'title',          // from parent prop
+    'links'           // from parent prop
+  ],
 
   data() {
     return {
       previousPage: '',
-      activePageIndex: 0,
-      links: ['home', 'process', 'bom']
     };
   },
 

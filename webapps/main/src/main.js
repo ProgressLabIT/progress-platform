@@ -7,6 +7,7 @@ import vuetify from './plugins/vuetify';
 Vue.config.productionTip = false;
 
 Vue.prototype.$theme = {
+  black: '#090C0D',
   background: '#131E21',
   surface1: '#1F2A2D',
   surface2: '#242E31',
