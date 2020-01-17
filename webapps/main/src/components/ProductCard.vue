@@ -5,9 +5,10 @@
     outlined 
     elevation="4" class="surface-1"
     @mouseover="overCard = true"
-    @mouseleave="overCard = false">
+    @mouseleave="overCard = false"
+    @dblclick="$router.push('product/'+product._key)">
     <v-img 
-      :src="image ? `pics/products/${product._key}.jpeg` : ''" 
+      :src="image ? `/pics/products/${product._key}.jpeg` : ''" 
       class="fill" 
       :style="product.active ? '' : 'filter:grayscale(1)'">
       <v-container 

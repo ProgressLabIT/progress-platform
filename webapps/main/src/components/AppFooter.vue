@@ -3,7 +3,7 @@
 	  <v-row no-gutter class="align-center justify-space-between px-2">
 	    <v-col class="text-left pa-0">
 	    	<span class="display smaller">ACME CORP - PROGRESS</span>
-	    	<span class="material-icons smaller ml-1">info</span>
+	    	<span class="material-icons smaller ml-2">info</span>
 	    	<!-- <v-icon size="18" class="smaller ml-1">info</v-icon> -->
 	    </v-col>
 	    <v-col cols="1" class="text-center pa-0">
@@ -46,7 +46,7 @@ export default {
 
 <style lang="css" scoped>
 .material-icons.smaller {
-	font-size: .8em;
-	vertical-align: middle
+	font-size: .9em;
+	vertical-align: bottom
 }
 </style>

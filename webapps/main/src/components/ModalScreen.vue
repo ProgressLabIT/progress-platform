@@ -14,7 +14,6 @@
           <!-- DYNAMIC INTERNAL LINKS -->
           <v-col cols="auto" class="ml-auto">
             <v-tabs 
-              v-model="activePageIndex"
               active-class="weight-bold"
               background-color="transparent"
               :color="$theme.whitehigh"
@@ -32,8 +31,8 @@
         </v-row>  
 
         <!-- WINDOW CONTAINER -->
-        <v-card outlined tile class="flex-grow-1" :style="'background-color:' + $theme.background">
-            <router-view></router-view>
+        <v-card outlined tile class="flex-grow-1 scroll" :style="'background-color:' + $theme.background">
+            <router-view :item_key="item_key"></router-view>
         </v-card>
 
       </v-container>

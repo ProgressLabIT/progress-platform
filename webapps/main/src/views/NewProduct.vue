@@ -94,8 +94,12 @@ export default {
           const newProductData = resp.data.detail
           this.addNewProduct(newProductData)
         })
-        .catch(error => console.log(error.response))
-        .finally(this.$router.back())
+        .catch(error => {
+          console.log(error.response)
+          window.alert("Couldn't save product, try again.")
+        })
+        
+      this.$router.back()
     }
   }
 };
