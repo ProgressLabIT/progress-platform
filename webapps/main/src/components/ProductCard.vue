@@ -4,7 +4,7 @@
     :height="image ? '160px' : '120px'" 
     outlined 
     elevation="4" class="surface-1"
-    @mouseover="overCard = true"
+    @mouseenter="overCard = true"
     @mouseleave="overCard = false"
     @dblclick="$router.push('product/'+product._key)">
     <v-img 
@@ -19,7 +19,7 @@
         <v-sheet 
           color="rgba(0,0,0,.7)" 
           class="px-2 py-0"
-          @mouseover="overDesc = true" 
+          @mouseenter="overDesc = true" 
           @mouseleave="overDesc = false" >      
           <v-card-title class="display highlight px-0 pt-0 pb-3">
             {{ product.code }}
