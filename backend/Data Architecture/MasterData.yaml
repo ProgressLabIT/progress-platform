@@ -41,9 +41,9 @@
 
 
 # Phase
-	name: str
-  # rel 1:1 --belongs_to--> 1:N Product (ProductPhase)
-		- sequence: int
+	alias: str
+  # rel 1:1 <--requires-- 1:N Product (ProductPhase)
+		-   sequence: int
 	# rel 0:N --requires--> 0:N Product (SubAssembly)	# e.g. for sub-assemblies
 		- required_qt: float
 	# rel 1:1 --requires--> 0:N Operation (PhaseOp)
@@ -62,13 +62,13 @@
     production_batch_qt: float
     release_batch_qt: float
 
-# Task
+# Step
   * phase: _key
   sequence: int
   title: str
   description: str 
   doc: list(str) # doc title
-  type: str [instruction, form]
+  type: str [instruction, form, checklist]
   form_fields: list(obj)
     - field_type: str [(see specs)]
     - field_name: str
@@ -77,8 +77,8 @@
     # - validation_rules: str
 
 # ProductionItems (Items)
-  * item_code: str
-  * type: str [part, consumable, tool]
+  * code: str
+  * type: str [part, consumable, tool, safety]
   *ft description: str
   standard_cost: float
 

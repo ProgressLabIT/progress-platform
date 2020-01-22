@@ -8,7 +8,7 @@ router = APIRouter()
 
 product_db = db.collection('Product')
 
-class HTTPResponse(BaseModel):
+class APIResponse(BaseModel):
   status: str = 200
   message: str = None
   # error: str = None
@@ -64,6 +64,7 @@ async def get_product_list(
     FOR p IN Product
       FILTER !p.trash && LIKE(p.code, search, true)
       LIMIT @limit
+      SORT p.code
       RETURN p
     """, bind_vars={"code": code, "limit": limit})
 
@@ -150,7 +151,7 @@ async def create_product(
   # Close request and return response
   status_code = 200
   message = "Product created"
-  response = HTTPResponse(
+  response = APIResponse(
     status_code=status_code,
     message=message,
     # Arango replies by sending a json that includes id, key, rev and 
@@ -171,7 +172,7 @@ async def delete_product(product_key):
       { '_key': product_key, 'trash': True}, 
       return_new=True
     )['new']
-    response = HTTPResponse(
+    response = APIResponse(
       status_code=200,
       message=f"Product {updated_product['code']} (KEY: {product_key}) moved to trash",
       detail=updated_product
@@ -204,7 +205,7 @@ async def udpate_product(
       return_new=True
     )['new']
     print(updated_product)
-    response = HTTPResponse(
+    response = APIResponse(
       status=200,
       message=f"Product {updated_product['code']} (KEY: {updated_product['_key']}) updated",
       detail=updated_product
@@ -224,6 +225,8 @@ async def udpate_product(
     )  
 
 
-
+@router.get("/{product_key}")
+async def get_product_data(product_key: str):
+  return product_db.get(product_key)
 
 
