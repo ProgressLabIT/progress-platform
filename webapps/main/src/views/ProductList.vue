@@ -103,7 +103,7 @@ export default {
   data: () => ({
     filterInactive: false,
     searchString: '',
-    showImages: true,
+    showImages: false,
     deleteSnackbar: {
       _key: null,
       code: '',

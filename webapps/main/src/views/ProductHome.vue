@@ -3,39 +3,8 @@
     <v-row class="fill-height mx-0">
       
       <!-- LEFT COLUMN -->
-      <v-col cols="4" class="d-flex flex-column">
-
-        <!-- PRODUCT IMAGE -->
-        <v-card outlined :img="`/pics/products/${item_key}.jpeg`" height="30vh"/> 
-        
-        <!-- PRODUCT CODE -->
-        <h4 class="weight-bold medium mt-6">CODICE PRODOTTO</h4>
-        <h1 class="display highlight">{{ product_data.code }}</h1>
-
-        <!-- PRODUCT DESCRIPTION -->
-        <h4 class="weight-bold medium mt-10">DESCRIZIONE</h4>
-        <h3 class="highlight mt-1">{{ product_data.description }}</h3>      
-
-        <v-spacer></v-spacer>
-        <!-- PRODUCT TAGS -->
-        <h4 class="weight-bold medium">TAG</h4>
-        <v-row justify="start" class="mx-0 pt-2">            
-          <v-chip small
-            v-for="tag in product_data.tags" 
-            :key="tag"
-            class="mr-2"
-            >
-          {{ tag }}
-        </v-chip>
-        </v-row>  
-
-
-        <!-- <v-select solo flat background-color="transparent"
-           multiple single-line small-chips
-          :items="product_data.tags"
-          v-model="value"
-          label="label"
-        ></v-select> -->
+      <v-col cols="4">
+        <ProductAside :product="product_data"/>
       </v-col>  
     
       <!-- PRODUCT DATA -->
@@ -101,28 +70,37 @@
 </template>
 
 <script>
-import {api} from '@/lib/apiCall.js'
+// import {api} from '@/lib/apiCall.js'
+import ProductAside from '@/components/ProductAside.vue'
+import { mapState, mapActions } from 'vuex'
 
 export default {
 
   name: 'ProductHome',
+  
+  components: {
+    ProductAside
+  },
 
   props: ['item_key'],
 
-
   data() {
     return {
-      product_data: {}
     };
   },
 
+  computed: {
+    ...mapState({
+      product_data: state => state.current_product.metadata
+    })
+  },
+
+  methods: {
+    ...mapActions(['loadProductDetails'])
+  },
+
   created() {
-    api
-      .get('product/'+this.item_key)
-      .then(resp => {
-        console.log({resp})
-        this.product_data = resp.data
-      })
+    this.loadProductDetails(this.item_key)
   }
 
 };

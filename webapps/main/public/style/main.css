@@ -127,5 +127,28 @@ span .display {
 }
 
 .scroll {
-  overflow: scroll !important;
+  overflow: auto !important;
+  flex-wrap: nowrap !important;
 }
+
+/* Highlight color on hover for VDataTable rows */
+.v-data-table tr:hover:not(.v-data-table__expanded__content) {
+  background-color: rgba(39,174,209, .4) !important;
+  -webkit-box-shadow: 0px 0px 20px 0px rgba(34,174,209,1);
+  -moz-box-shadow:  0px 0px 20px 0px rgba(34,174,209,1);
+  box-shadow:  0px 0px 20px 0px rgba(34,174,209,1);
+}
+
+
+/*  Make Vertical tabs take all the width available 
+    Not possible using properties or inline style
+    because the component generates an inner element 
+    (.v-item-group) which not directly targetable
+    from the parent component itself
+*/
+.v-tabs--vertical.v-tabs--grow .v-item-group {
+  flex: 1 1 auto !important;
+}
+
+
+

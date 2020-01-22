@@ -42,6 +42,10 @@ $material-dark: map-deep-merge(
 		'cards': $surface1,
 		'bg-color': $background,
 
+		'table': (
+			'hover': rgba(39,174,209, .3)
+		),
+
 		'primary-text-percent': $high-emphasis,
 		'secondary-text-percent': $low-emphasis,
 		'disabledORhints-text-percent': $disabled-emphasis,

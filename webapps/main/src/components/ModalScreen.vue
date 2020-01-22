@@ -1,20 +1,21 @@
 <template>
   <v-dialog
-    value="true"
+    :value="showModal"
     fullscreen
-    class="py-0">
+    class="py-0"
+    @input="exit">
+
     <v-card :color="$theme.black">
       <v-container fluid class="d-flex flex-column pt-2 px-5" style="height:100vh"> 
         <v-row dense justify="start" align="center" class="my-0 pl-1 flex-grow-0">
 
           <!-- SCREEN HEADER -->
-          <v-icon small @click="$router.push(previousPage)">close</v-icon>
+          <v-icon small @click="showModal=false; exit()">close</v-icon>
           <span class="ml-4 display medium highlight weight-medium">{{ title }} {{ item_key }}</span>
           
           <!-- DYNAMIC INTERNAL LINKS -->
           <v-col cols="auto" class="ml-auto">
             <v-tabs 
-              active-class="weight-bold"
               background-color="transparent"
               :color="$theme.whitehigh"
               hide-slider right
@@ -24,7 +25,7 @@
                 :key="index" 
                 :to="`/product/${item_key}/${page}`"
                 class="display" >
-                <span >{{ page }}</span>
+                {{ page }}
               </v-tab>
             </v-tabs>
           </v-col>  
@@ -52,8 +53,21 @@ export default {
 
   data() {
     return {
+      showModal: true,
       previousPage: '',
     };
+  },
+
+  methods: {
+    exit() {
+      /* 
+       * the delay allows for a nice closing animation of 
+       * the modal  before going back to the previous route
+       */
+      setTimeout(() => {
+        this.$router.push(this.previousPage)
+      }, 500)
+    }
   },
 
   beforeRouteEnter (to, from, next) {
