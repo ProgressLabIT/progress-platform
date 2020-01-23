@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from modules import product, flow
+from modules import product, process, bom
 
 
 app = FastAPI()
@@ -21,7 +21,8 @@ app.add_middleware(
 
 
 app.include_router(product.router, prefix="/product", tags=["product"])
-app.include_router(flow.router, tags=["flow"])
+app.include_router(bom.router, prefix="/product", tags=["product"])
+app.include_router(process.router, tags=["process"])
 
 if __name__ == "__main__":
   app.main()

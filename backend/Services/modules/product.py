@@ -1,18 +1,14 @@
 from typing import List, Optional
 from fastapi import APIRouter, UploadFile, HTTPException, Form, File
 from pydantic import BaseModel, Field
-from .db import db
+from utils.db import db
+from utils.api import APIResponse
 import os
 import traceback
 router = APIRouter()
 
 product_db = db.collection('Product')
 
-class APIResponse(BaseModel):
-  status: str = 200
-  message: str = None
-  # error: str = None
-  detail: dict = None
 
 class ProductBase(BaseModel):
   code: str
@@ -52,7 +48,7 @@ class ProductNew(ProductBase):
 
 
 
-
+# ALL ROUTES BEGIN WITH 'product'
 @router.get("/")
 async def get_product_list(
   limit: int = None, # return a limited number of results
