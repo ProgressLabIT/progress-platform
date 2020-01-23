@@ -143,8 +143,8 @@ span .display {
 /*  Make Vertical tabs take all the width available 
     Not possible using properties or inline style
     because the component generates an inner element 
-    (.v-item-group) which not directly targetable
-    from the parent component itself
+    (.v-item-group) which is not directly targetable
+    from the parent component
 */
 .v-tabs--vertical.v-tabs--grow .v-item-group {
   flex: 1 1 auto !important;

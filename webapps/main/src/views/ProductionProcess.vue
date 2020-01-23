@@ -18,7 +18,7 @@
           background-color="transparent"
         >
           <v-tab 
-            v-for="(phase, sequence) in process_data" 
+            v-for="(phase, sequence) in process" 
             :key="sequence" 
             class="d-flex justify-start pl-1"
             style="height:38px; width: 100%"
@@ -39,7 +39,7 @@
 
         <v-select
           id="operations"
-          :items="operations"
+          :items="process"
           label="ADD A PHASE"
           hide-details
           single-line
@@ -123,14 +123,14 @@ export default {
   },
 
   computed: {
-    ...mapState({
-      product: state => state.current_product.metadata, 
-      process_data: state => state.current_product.process_data
-    }),
-
+    
     current_phase: {
       get() {
-        return this.$store.state.products.find(p => p._key == this.product._key).last_phase
+        console.log("Getting current_phase...")
+        let product_list_item = this.$store.state.products.find(p => p._key == this.item_key)
+        console.log(product_list_item)
+        if (product_list_item) return product_list_item.last_phase
+        else return 0
       },
 
       set(value) {
@@ -141,18 +141,10 @@ export default {
       }
     },
 
-    // tab: {
-    //   get() {
-    //     return this.$store.state.products.find(p => p._key == this.product._key).last_process_tab
-    //   },
-
-    //   set(value) {
-    //     this.$store.commit(
-    //       'UPDATE_PRODUCT',
-    //       { _key: this.product._key, last_process_tab: value }
-    //     )
-    //   }
-    // }
+    ...mapState({
+      product: state => state.current_product.metadata, 
+      process: state => state.current_product.process
+    }),
 
   },
 
@@ -160,17 +152,30 @@ export default {
     ...mapActions(['loadProductDetails'])
   },
 
-  created() {
-    this.loadProductDetails(this.item_key)
-  },
+
 
   beforeRouteEnter(to, from, next) {
+    console.log("Before entering route...")
     api.get('operation').then(resp => {
       let op_list = []
       resp.data.forEach(obj => op_list.push(obj.description))
       next(component => component.operations = op_list)
     })
+  },
+
+  created() {
+    this.loadProductDetails(this.item_key)
+    console.log("Component created!")
+  },
+
+  beforeMount() {
+    console.log("Rendering component...")
+  },
+
+  mounted() {
+    console.log("Component mounted!")
   }
+
 
 };
 </script>

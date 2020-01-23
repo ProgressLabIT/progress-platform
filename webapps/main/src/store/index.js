@@ -1,5 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import axios from 'axios';
 
 Vue.use(Vuex);
 
@@ -15,74 +16,74 @@ export default new Vuex.Store({
       products: [],
       current_product: { 
         metadata: {},
-        process_data: [
-          { 
-            operation: 'picking',
-            steps: [
-              { title: '1Primo step', description: 'prova di procedura', type: 'instruction' },
-              { title: '1Secondo step', description: 'prova di procedura', type: 'checklist' },
-              { title: '1Terzo step', description: 'prova di procedura', type: 'instruction' },
-              { title: '1Quarto step', description: 'prova di procedura', type: 'instruction' },
-              { title: '1Quinto step', description: 'prova di procedura', type: 'form' },
-              { title: '1Sesto step', description: 'prova di procedura', type: 'form' },
-              { title: '1Settimo step', description: 'prova di procedura', type: 'checklist' },
+        process: [
+          // { 
+          //   operation: 'picking',
+          //   steps: [
+          //     { title: '1Primo step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: '1Secondo step', description: 'prova di procedura', type: 'checklist' },
+          //     { title: '1Terzo step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: '1Quarto step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: '1Quinto step', description: 'prova di procedura', type: 'form' },
+          //     { title: '1Sesto step', description: 'prova di procedura', type: 'form' },
+          //     { title: '1Settimo step', description: 'prova di procedura', type: 'checklist' },
 
-            ]
-          },
-          { 
-            operation: 'assembly',
-            steps: [
-              { title: '2Primo step', description: 'prova di procedura', type: 'instruction' },
-              { title: '2Secondo step', description: 'prova di procedura', type: 'checklist' },
-              { title: '22Terzo step', description: 'prova di procedura', type: 'instruction' },
-              { title: 'Q2uarto step', description: 'prova di procedura', type: 'instruction' },
-              { title: 'Q2uinto step', description: 'prova di procedura', type: 'form' },
-              { title: 'S2esto step', description: 'prova di procedura', type: 'form' },
-              { title: 'S2ettimo step', description: 'prova di procedura', type: 'checklist' },
-            ]
-          },
-          { 
-            operation: 'testing',
-            steps: [
-              { title: 'Primo step', description: 'prova di procedura', type: 'instruction' },
-              { title: 'Secondo step', description: 'prova di procedura', type: 'checklist' },
-              { title: 'Terzo step', description: 'prova di procedura', type: 'instruction' },
-              { title: 'Quarto step', description: 'prova di procedura', type: 'instruction' },
-              { title: 'Quinto step', description: 'prova di procedura', type: 'form' },
-              { title: 'Sesto step', description: 'prova di procedura', type: 'form' },
-              { title: 'Settimo step', description: 'prova di procedura', type: 'checklist' },
-            ]
-          },
-          { 
-            operation: 'shipping',
-            steps: [
-              { title: '3Primo step', description: 'prova di procedura', type: 'instruction' },
-              { title: '3Secondo step', description: 'prova di procedura', type: 'checklist' },
-              { title: '3Terzo step', description: 'prova di procedura', type: 'instruction' },
-              { title: 'Q3uarto step', description: 'prova di procedura', type: 'instruction' },
-              { title: '3Quinto step', description: 'prova di procedura', type: 'form' },
-              { title: '3Sesto step', description: 'prova di procedura', type: 'form' },
-              { title: '3Settimo step', description: 'prova di procedura', type: 'checklist' },
-            ]
-          }
+          //   ]
+          // },
+          // { 
+          //   operation: 'assembly',
+          //   steps: [
+          //     { title: '2Primo step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: '2Secondo step', description: 'prova di procedura', type: 'checklist' },
+          //     { title: '22Terzo step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: 'Q2uarto step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: 'Q2uinto step', description: 'prova di procedura', type: 'form' },
+          //     { title: 'S2esto step', description: 'prova di procedura', type: 'form' },
+          //     { title: 'S2ettimo step', description: 'prova di procedura', type: 'checklist' },
+          //   ]
+          // },
+          // { 
+          //   operation: 'testing',
+          //   steps: [
+          //     { title: 'Primo step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: 'Secondo step', description: 'prova di procedura', type: 'checklist' },
+          //     { title: 'Terzo step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: 'Quarto step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: 'Quinto step', description: 'prova di procedura', type: 'form' },
+          //     { title: 'Sesto step', description: 'prova di procedura', type: 'form' },
+          //     { title: 'Settimo step', description: 'prova di procedura', type: 'checklist' },
+          //   ]
+          // },
+          // { 
+          //   operation: 'shipping',
+          //   steps: [
+          //     { title: '3Primo step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: '3Secondo step', description: 'prova di procedura', type: 'checklist' },
+          //     { title: '3Terzo step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: 'Q3uarto step', description: 'prova di procedura', type: 'instruction' },
+          //     { title: '3Quinto step', description: 'prova di procedura', type: 'form' },
+          //     { title: '3Sesto step', description: 'prova di procedura', type: 'form' },
+          //     { title: '3Settimo step', description: 'prova di procedura', type: 'checklist' },
+          //   ]
+          // }
         ], // list of phases
         bom: [
-          { code: 'K100-25-014', description: 'SPALLA SX ASSE Y ACS2000', qt: 1, unit: 'pcs', type: 'assembly' },
-          { code: 'K100-71-132', description: 'PIASTRA FERMO CINGHIA PER REGISTRO ASSE Y ACS1500/2000', qt: 2, unit: 'pcs', type: 'assembly' },
-          { code: 'S100-27-034', description: 'BLOCCHETTO REGOLAZIONE ASSE Y 1500/2000', qt: 2, unit: 'pcs', type: 'component' },
-          { code: 'S100-27-041', description: 'GUIDA LINEARE ASSE Y SMD1500', qt: 2, unit: 'pcs', type: 'component' },
-          { code: 'S100-27-055', description: 'TENDI CINGHIA MOTORE ASSE Y TETTO ACS1100', qt: 1, unit: 'pcs', type: 'assembly' },
-          { code: 'S100-42-053', description: 'RUOTE CONCENTRICHE D=30 ACCIAIO C208 135', qt: 4, unit: 'pcs', type: 'component' },
-          { code: 'S100-42-055', description: 'CINGHIA T10 L=16HF POLIETILENE CON ANIMA ACCIAIO', qt: 5, unit: 'pcs', type: 'component' },
-          { code: 'S300-01-020', description: 'CAVO KONTEK ASSE Y BK34010422CTM', qt: 1, unit: 'pcs', type: 'assembly' },
-          { code: 'K100-25-013', description: 'SPALLA DX ASSE Y + ACCUM. ACS2000', qt: 2, unit: 'm', type: 'component' },
-          { code: 'K100-25-016', description: 'CONTRAPPESO ACS 2000', qt: 2, unit: 'kg', type: 'component' },
-          { code: 'K100-71-134', description: 'STAFFA BLOCCA CINGHIA CONTRAP. ACS1500/2000', qt: 2, unit: 'pcs', type: 'component' },
-          { code: 'S100-27-036', description: 'ASTA CONTRAPPESO SMD1500', qt: 2, unit: 'pcs', type: 'component' },
-          { code: 'S100-27-042', description: 'CONTRAPPESO AGGIUNTIVO ACS2000', qt: 4, unit: 'lt', type: 'component' },
-          { code: 'S100-27-064', description: 'BOCCOLA PER CONTRAPPESO 1500/2000', qt: null, unit: '', type: 'consumable' },
-          { code: 'S100-42-054', description: 'RUOTE ECCENTRICHE D=30 ACCIAIO E208-135', qt: null, unit: '', type: 'consumable' },
-          { code: 'S100-73-026', description: 'PIASTRA SUPPORTO SCHEDA RESET SPINTORE 1500/2000 + ASSE X', qt: null, unit: '', type: 'consumable' },
+          // { code: 'K100-25-014', description: 'SPALLA SX ASSE Y ACS2000', qt: 1, unit: 'pcs', type: 'assembly' },
+          // { code: 'K100-71-132', description: 'PIASTRA FERMO CINGHIA PER REGISTRO ASSE Y ACS1500/2000', qt: 2, unit: 'pcs', type: 'assembly' },
+          // { code: 'S100-27-034', description: 'BLOCCHETTO REGOLAZIONE ASSE Y 1500/2000', qt: 2, unit: 'pcs', type: 'component' },
+          // { code: 'S100-27-041', description: 'GUIDA LINEARE ASSE Y SMD1500', qt: 2, unit: 'pcs', type: 'component' },
+          // { code: 'S100-27-055', description: 'TENDI CINGHIA MOTORE ASSE Y TETTO ACS1100', qt: 1, unit: 'pcs', type: 'assembly' },
+          // { code: 'S100-42-053', description: 'RUOTE CONCENTRICHE D=30 ACCIAIO C208 135', qt: 4, unit: 'pcs', type: 'component' },
+          // { code: 'S100-42-055', description: 'CINGHIA T10 L=16HF POLIETILENE CON ANIMA ACCIAIO', qt: 5, unit: 'pcs', type: 'component' },
+          // { code: 'S300-01-020', description: 'CAVO KONTEK ASSE Y BK34010422CTM', qt: 1, unit: 'pcs', type: 'assembly' },
+          // { code: 'K100-25-013', description: 'SPALLA DX ASSE Y + ACCUM. ACS2000', qt: 2, unit: 'm', type: 'component' },
+          // { code: 'K100-25-016', description: 'CONTRAPPESO ACS 2000', qt: 2, unit: 'kg', type: 'component' },
+          // { code: 'K100-71-134', description: 'STAFFA BLOCCA CINGHIA CONTRAP. ACS1500/2000', qt: 2, unit: 'pcs', type: 'component' },
+          // { code: 'S100-27-036', description: 'ASTA CONTRAPPESO SMD1500', qt: 2, unit: 'pcs', type: 'component' },
+          // { code: 'S100-27-042', description: 'CONTRAPPESO AGGIUNTIVO ACS2000', qt: 4, unit: 'lt', type: 'component' },
+          // { code: 'S100-27-064', description: 'BOCCOLA PER CONTRAPPESO 1500/2000', qt: null, unit: '', type: 'consumable' },
+          // { code: 'S100-42-054', description: 'RUOTE ECCENTRICHE D=30 ACCIAIO E208-135', qt: null, unit: '', type: 'consumable' },
+          // { code: 'S100-73-026', description: 'PIASTRA SUPPORTO SCHEDA RESET SPINTORE 1500/2000 + ASSE X', qt: null, unit: '', type: 'consumable' },
         ],          // 
         issues: [],       // { }
         docs: []          // { name, size, type }
@@ -137,7 +138,7 @@ export default new Vuex.Store({
        *  Currently this only sets the product metadata.
        *  Data about process, bom, issues must be added.
        */
-      Vue.set(state.current_product, 'metadata', productDetails)
+      Vue.set(state, 'current_product', productDetails)
     },
 
   },
@@ -265,11 +266,33 @@ export default new Vuex.Store({
     },
 
     loadProductDetails({ commit }, product_key) {
-      api
-        .get(`product/${product_key}`)
-        .then(resp => {
-          commit('LOAD_PRODUCT_DETAILS', resp.data)
+      axios.all([
+          api.get(`product/${product_key}`),
+          api.get(`product/${product_key}/bom`),
+          api.get(`product/${product_key}/process`)
+      ])
+      .then(axios.spread((meta, bom, process) => {
+        commit('LOAD_PRODUCT_DETAILS', {
+          metadata: meta.data,
+          bom: bom.data,
+          process: process.data
         })
+      }))
+
+      //  api.get(`product/${product_key}`)
+      //   .then( resp => { 
+      //     commit('LOAD_PRODUCT_DETAILS', { metadata: resp.data })
+      //   })
+      
+      // api.get(`product/${product_key}/bom`)
+      //   .then( resp => {
+      //     commit('LOAD_PRODUCT_DETAILS', { bom: resp.data })
+      //   })
+
+      // api.get(`product/${product_key}/process`)
+      //   .then( resp => {
+      //     commit('LOAD_PRODUCT_DETAILS', { process: resp.data })
+      //   })
     }
   },
 

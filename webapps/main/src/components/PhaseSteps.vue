@@ -90,7 +90,7 @@ export default {
       get() {
         return this.$store.state
                             .current_product
-                            .process_data[this.current_phase]
+                            .process[this.current_phase]
                             .steps
       }
     },
@@ -98,7 +98,8 @@ export default {
     current_steps: {
       get() {
         let product = this.$store.state.products.find(p => p._key == this.product_key)
-        return product.last_steps
+        if (product) return product.last_steps
+        else return [0]
       },
 
       set(value) {

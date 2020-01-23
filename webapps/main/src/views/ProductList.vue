@@ -89,7 +89,9 @@
 </template>
 
 <script>
-import ProductCard from '@/components/ProductCard'  
+import ProductCard from '@/components/ProductCard' 
+import multiMatch from '@/lib/MultiFieldSearch.js'
+
 import { mapGetters, mapActions } from 'vuex'
 
 export default {
@@ -122,21 +124,10 @@ export default {
     ...mapActions(['restoreProduct', 'loadProductList']),
 
     match(product) {
-      // create the list of search terms removing duplicates
-      let searchTerms = [...new Set(this.searchString.toLowerCase().split(' '))]
+      let activeFilter = !this.filterInactive || product.active
+      let searchFilter = multiMatch(this.searchString, product, ['code', 'description'])
 
-      // create the list of words to search in, removing duplicates
-      let matchString = (product.code + ' ' + product.description).toLowerCase()
-      let matchContext = [...new Set(matchString.split(' '))]
-
-      // make sure that all search terms are included in at least one word
-      let match = searchTerms.every(searchTerm => {
-        let termMatch = matchContext.some(matchTerm => matchTerm.includes(searchTerm))
-        return termMatch
-      })
-
-      // return true (show card) if search matches or if search box empty 
-      return match || this.searchString === ''
+      return activeFilter && searchFilter
     },
 
     deleteNotify(product) {

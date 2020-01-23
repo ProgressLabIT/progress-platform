@@ -45,11 +45,17 @@
         <v-data-table
           :headers="bom_headers"
           :items="filtered_bom"
+          loading-text="Recupero dati in corso..."
+          sort-by="code"
           fixed-header  
           item-key="code"
           disable-pagination
           hide-default-footer
         >
+          <template v-slot:item.code="{item}">
+            <div class="nowrap">{{ item.code }}</div>
+          </template>
+          
           <template v-slot:footer>
             <v-divider></v-divider>
             <v-row justify="center" align="center">
@@ -69,6 +75,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
+import multiMatch from '@/lib/MultiFieldSearch.js'
 // import ProductAside from '@/components/ProductAside.vue'
 
 export default {
@@ -84,8 +91,8 @@ export default {
   data() {
     return {
       search: '',
-      bom_types: ['assembly', 'material', 'consumable'],
-      item_type_filter: ['assembly', 'material', 'consumable'],
+      bom_types: ['assembly', 'component', 'consumable'],
+      item_type_filter: ['assembly', 'component', 'consumable'],
     };
   },
 
@@ -98,24 +105,27 @@ export default {
     filtered_bom() {
       return this.bom.filter(item => {
         let type_check = this.item_type_filter.includes(item.type.toLowerCase())
-        let search_context = (item.code + ' ' + item.description).toLowerCase()
-        let search_match = this.search.length ? search_context.includes(this.search.toLowerCase()) : true
 
-        return type_check && search_match
+        return type_check && multiMatch(this.search, item, ['code', 'description'])
       })
     },
 
     bom_headers() {
       let headers = []
       Object.keys(this.bom[0]).forEach(header => {
-        headers.push({ text: header, value: header })
+        // exclude '_key' and 'phase_seq' fields
+        if (['_key', 'phase_seq'].includes(header)) return 
+
+        let header_params = { text: header, value: header }
+        // if (header == 'description') header_params.class='nowrap'
+        headers.push(header_params)
       })
       return headers
     },
   },
 
   methods: {
-    ...mapActions(['loadProductDetails'])
+    ...mapActions(['loadProductDetails']),
   },
 
   created() {
