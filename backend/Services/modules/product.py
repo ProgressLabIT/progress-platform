@@ -45,6 +45,7 @@ class ProductNew(ProductBase):
   economic_order_qt: float = 0
   minimum_order_qt: float = 0
   tags: List[str] = []
+  process_phases: List[str] = [] 
 
 
 

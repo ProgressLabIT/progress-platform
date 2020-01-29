@@ -26,9 +26,14 @@ class Step(BaseModel):
   checks: List[str] = None
   input_fields: List[InputField] = None
 
+
+class Operation(BaseModel):
+  key: str = Field(..., alias="_key")
+  name: str
+  description: str = None
+
 class PhaseData(BaseModel):
-  sequence: int
-  operation: str
+  operation: Operation
   steps: List[Step] = []
 
 
@@ -46,26 +51,29 @@ async def get_operation_list():
 async def get_production_process(product_key):
 
   try:
-    process_data = db.aql.execute("""
+    process_data = db.aql.execute(""" 
 
-        FOR v1, e1 IN 1..1 OUTBOUND CONCAT('Product/', @product_key) requires
-        FILTER e1.type == 'ProductPhase'
-        SORT e1.sequence
-        LET phase_data =  
-          {
-            sequence: e1.sequence,
-            operation: (
-                FOR v2,e2 IN OUTBOUND Document(e1._to) requires
-                FILTER e2.type == 'PhaseOperation'
-                RETURN v2.name)[0],
-            steps: (
-                FOR step IN Step
-                FILTER step.phase_id == v1._key
-                SORT step.sequence
-                RETURN step
-            )
-          }
-        RETURN phase_data
+        LET phases = (
+          FOR p in Product
+          FILTER p._key == @product_key
+          RETURN p.process_phases
+          )[0]
+
+        FOR phase_key in phases
+          LET phase_data =  
+            {
+              operation: (
+                  FOR v,e IN OUTBOUND DOCUMENT(CONCAT('Phase/', phase_key)) requires
+                  FILTER e.type == 'PhaseOperation'
+                  RETURN v)[0],
+              steps: (
+                  FOR step IN Step
+                  FILTER step.phase_id == phase_key
+                  SORT step.sequence
+                  RETURN step
+              )
+            }
+          RETURN phase_data
 
       """, bind_vars={'product_key': product_key})
 

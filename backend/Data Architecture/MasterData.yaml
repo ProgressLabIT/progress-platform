@@ -26,6 +26,7 @@
   minimum_order_qt: float
   tags: list(str)
     - tag_key: _key
+  process_phases: list(str)
 
 # Tag:
   *ft name: str
@@ -78,7 +79,7 @@
 
 # ProductionItems (Items)
   * code: str
-  * type: str [part, consumable, tool, safety]
+  * type: str [component, consumable, tool, safety]
   *ft description: str
   standard_cost: float
 
@@ -125,7 +126,3 @@
 	# operation: rel (0:N --carries_out--> 0:N)
 	# site: rel (1:1 --belongs_to--> 0:N)
 
-# ProductionItem
-  code: str
-  description: str
-  type: str [material, consumable, tool, safety]
