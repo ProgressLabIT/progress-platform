@@ -82,14 +82,17 @@ export default {
     ProductAside
   },
 
-  props: ['item_key'],
-
   data() {
     return {
     };
   },
 
   computed: {
+
+    product_key() {
+      return this.$route.params.item_key
+    },
+
     ...mapState({
       product_data: state => state.current_product.metadata
     })
@@ -100,7 +103,7 @@ export default {
   },
 
   created() {
-    this.loadProductDetails(this.item_key)
+    this.loadProductDetails(this.product_key)
   }
 
 };

@@ -1,7 +1,6 @@
-@import '~vuetify/src/styles/styles.sass';
-@import '~vuetify/src/components/VBtn/_variables.scss';
-@import '~vuetify/src/components/VTabs/_variables.scss';
-
+/* V2 by suggestion of KAEL, removing all imports and map-deep-merge.
+	 Just define maps. Everything is merged automatically.
+*/
 
 $background: #131E21;
 $surface1: #1F2A2D;
@@ -17,39 +16,32 @@ $border-radius-root: 0px;
 $line-height-root: 1.2;
 
 
-$headings: map-deep-merge(
-	$headings,
-	(
-		'h3': (
-			'font-weight': 400,
-			'letter-spacing': .05em,
-			'text-tranform': uppercase
-		)
+$headings: (
+	'h3': (
+		'font-weight': 400,
+		'letter-spacing': .05em,
+		'text-tranform': uppercase
 	)
 );
 
+$material-dark: (
+	'app-bar': $background,
+	'background': $background, 
+	'text': (
+		'primary': rgba(255,255,255, $low-emphasis),
+		'secondary': rgba(255,255,255, $low-emphasis),
+		'disabled': rgba(255,255,255, $disabled-emphasis),
+	),
+	'cards': $surface1,
+	'bg-color': $background,
 
-$material-dark: map-merge($material-dark, ( app-bar: $background ));
-$material-dark: map-merge($material-dark, ( background: $background ));
-$material-dark: map-deep-merge(
-	$material-dark,
-	( 
-		'text': (
-			'primary': rgba(255,255,255, $low-emphasis),
-			'secondary': rgba(255,255,255, $low-emphasis),
-			'disabled': rgba(255,255,255, $disabled-emphasis),
-		),
-		'cards': $surface1,
-		'bg-color': $background,
+	'table': (
+		'hover': rgba(39,174,209, .3)
+	),
 
-		'table': (
-			'hover': rgba(39,174,209, .3)
-		),
-
-		'primary-text-percent': $high-emphasis,
-		'secondary-text-percent': $low-emphasis,
-		'disabledORhints-text-percent': $disabled-emphasis,
-	)
+	'primary-text-percent': $high-emphasis,
+	'secondary-text-percent': $low-emphasis,
+	'disabledORhints-text-percent': $disabled-emphasis,
 );
 
 // BUTTONS
@@ -58,7 +50,13 @@ $btn-border-radius: 4px;
 // TABS
 $tabs-bar-height: 30px;
 
-@import '~vuetify/src/styles/settings/_variables.scss';
+
+
+
+
+
+
+
 
 
 

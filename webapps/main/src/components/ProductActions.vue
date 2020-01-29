@@ -39,7 +39,7 @@
           icon="delete"
           tooltip="delete"
           :color="$theme.red"
-          @delete="confirmDelete"
+          @iconClick="confirmDelete"
           />
       </v-col>
     </v-row>

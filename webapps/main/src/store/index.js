@@ -118,12 +118,6 @@ export default new Vuex.Store({
       })
     },
 
-    // UDPATE_PRODUCT_NAV_STATE(state, product_key, item, value) {
-    //   updateProduct(state.products, product_key, product => {
-    //     Vue.set(product, item, value)
-    //   })
-    // }
-
     ADD_NEW_PRODUCT(state, newProductData) {
       state.products.push(newProductData)
     },
@@ -141,15 +135,16 @@ export default new Vuex.Store({
       Vue.set(state, 'current_product', productDetails)
     },
 
+    UPDATE_STEP_DETAILS(state,  { phase_no, step_no, field, value })  {
+      let process = state.current_product.process
+      let phase = process[phase_no]
+      let step = phase.steps[step_no]
+      Vue.set(step, field, value)
+    }
   },
 
   actions: {
     switchActiveState({ commit }, product) {
-      // axios({
-      //   method: 'patch',
-      //   url: `http://127.0.0.1:8000/product/${product._key}`,
-      //   data: { active: !product.active }
-      // })
       api.patch(
         `product/${product._key}`,
         { active: !product.active }
@@ -161,12 +156,6 @@ export default new Vuex.Store({
     },
 
     moveToTrash({ commit }, product) {
-      // commit('MOVE_TO_TRASH', product._key)
-      // axios({
-      //   method: 'patch',
-      //   url: `http://127.0.0.1:8000/product/${product._key}`,
-      //   data: { trash: true }
-      // })
       api.patch(
         'product/' + product._key,
         { trash: true }
@@ -177,12 +166,6 @@ export default new Vuex.Store({
     },
 
     restoreProduct({ commit }, product_key) {
-      // commit('RESTORE_PRODUCT', product_key)
-      // axios({
-      //   method: 'patch',
-      //   url: `http://127.0.0.1:8000/product/${product_key}`,
-      //   data: { trash: false }
-      // })
       api.patch(
         'product/' + product_key,
         { trash: false }
@@ -197,10 +180,6 @@ export default new Vuex.Store({
     },
 
     loadProductList({ commit }) {
-      // axios({
-      //   method: 'get', 
-      //   url: 'http://127.0.0.1:8000/product/'
-      // })
       api
         .get('product')
         .then(resp => {
@@ -272,27 +251,14 @@ export default new Vuex.Store({
           api.get(`product/${product_key}/process`)
       ])
       .then(axios.spread((meta, bom, process) => {
-        commit('LOAD_PRODUCT_DETAILS', {
+        let product_details = {
           metadata: meta.data,
           bom: bom.data,
           process: process.data
-        })
+        }
+        // console.log("loading product details", product_details)
+        commit('LOAD_PRODUCT_DETAILS', product_details)
       }))
-
-      //  api.get(`product/${product_key}`)
-      //   .then( resp => { 
-      //     commit('LOAD_PRODUCT_DETAILS', { metadata: resp.data })
-      //   })
-      
-      // api.get(`product/${product_key}/bom`)
-      //   .then( resp => {
-      //     commit('LOAD_PRODUCT_DETAILS', { bom: resp.data })
-      //   })
-
-      // api.get(`product/${product_key}/process`)
-      //   .then( resp => {
-      //     commit('LOAD_PRODUCT_DETAILS', { process: resp.data })
-      //   })
     }
   },
 

@@ -6,8 +6,8 @@
       <!-- ASIDE - PHASE LIST -->            
       <v-col cols="3" class="d-flex flex-column">
 
-        <h1 class="display highlight mb-2">{{ product.code }}</h1>
-        <p>{{ product.description }}</p>
+        <h1 class="display highlight mb-2">{{ productData.code }}</h1>
+        <p>{{ productData.description }}</p>
 
         <h5 class="mt-12 mb-6">FASI PROCESSO</h5>
         <v-tabs
@@ -68,12 +68,7 @@
       </v-row>  
         <v-card elevation="0" class="scroll flex-grow-1">
           <keep-alive>
-            <v-component 
-              :is="views[tab].component" 
-              :product_key="item_key"
-              :current_phase="current_phase"
-              >
-            </v-component>
+            <v-component :is="views[tab].component"></v-component>
           </keep-alive>
         </v-card>
       </v-col>  
@@ -82,7 +77,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapActions } from 'vuex'
 import { api } from '@/lib/apiCall.js'
 import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
@@ -93,8 +88,6 @@ export default {
 
 
   name: 'ProductionProcess',
-
-  props: ['item_key'],
 
   components: {
     PhaseParameters,
@@ -124,27 +117,32 @@ export default {
 
   computed: {
     
+    product_key() {
+      return this.$route.params.item_key
+    }, 
+
+    productData() {
+      return this.$store.getters.productData(this.product_key)
+    },
+
     current_phase: {
       get() {
-        console.log("Getting current_phase...")
-        let product_list_item = this.$store.state.products.find(p => p._key == this.item_key)
-        console.log(product_list_item)
-        if (product_list_item) return product_list_item.last_phase
-        else return 0
+        return this.productData.last_phase
       },
 
       set(value) {
         this.$store.commit(
           'UPDATE_PRODUCT', 
-          { _key: this.product._key, last_phase: value}
+          { _key: this.product_key, last_phase: value}
         )
       }
     },
 
-    ...mapState({
-      product: state => state.current_product.metadata, 
-      process: state => state.current_product.process
-    }),
+    process: {
+      get() {
+        return this.$store.state.current_product.process
+      }
+    },
 
   },
 
@@ -155,7 +153,7 @@ export default {
 
 
   beforeRouteEnter(to, from, next) {
-    console.log("Before entering route...")
+    // console.log("Before entering route...")
     api.get('operation').then(resp => {
       let op_list = []
       resp.data.forEach(obj => op_list.push(obj.description))
@@ -164,18 +162,8 @@ export default {
   },
 
   created() {
-    this.loadProductDetails(this.item_key)
-    console.log("Component created!")
+    this.loadProductDetails(this.product_key)
   },
-
-  beforeMount() {
-    console.log("Rendering component...")
-  },
-
-  mounted() {
-    console.log("Component mounted!")
-  }
-
 
 };
 </script>

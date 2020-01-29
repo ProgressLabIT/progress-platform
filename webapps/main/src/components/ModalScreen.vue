@@ -33,7 +33,7 @@
 
         <!-- WINDOW CONTAINER -->
         <v-card outlined tile class="flex-grow-1 scroll" :style="'background-color:' + $theme.background">
-            <router-view :item_key="item_key"></router-view>
+            <router-view></router-view>
         </v-card>
 
       </v-container>

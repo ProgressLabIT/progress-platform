@@ -1,4 +1,6 @@
 <template>
+  <div>
+  <slot name="before"></slot>
 	<v-tooltip top :color="color" open-delay="200">
     <template v-slot:activator="{on}">
       <v-icon 
@@ -6,10 +8,13 @@
       	dense class="mx-2 hover-color"
       	:style="hoverColor"
         @click="emit"
-      	>{{ icon }}</v-icon>
-      </template>
+      	>{{ icon }}
+      </v-icon>
+    </template>
     <span>{{ tooltip | capitalize }}</span>
   </v-tooltip>
+      <slot name="after"></slot>
+  </div>
 </template>
 
 <script>
@@ -36,7 +41,7 @@ export default {
     with the event name equal to the tolltip text passed down
     */
     emit() {
-      this.$emit(this.tooltip)
+      this.$emit('iconClick')
     }
   }
 }

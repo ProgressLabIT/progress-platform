@@ -150,5 +150,10 @@ span .display {
   flex: 1 1 auto !important;
 }
 
+/*Make step tabs not grow beyond container*/
+.v-tabs.v-tabs--grow .v-tabs-bar__content {
+  width: 100%;
+  height: 100%;
+}
 
 
