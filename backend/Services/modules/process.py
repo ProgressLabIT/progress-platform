@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import List, Optional
 from fastapi import APIRouter, UploadFile, HTTPException, Form, File
 from pydantic import BaseModel, Field
@@ -9,11 +10,21 @@ import traceback
 
 router = APIRouter()
 
+class InputFieldType(str, Enum):
+  short = "short"
+  long = "long"
+
+class InputField(BaseModel):
+  type: InputFieldType
+  name: str = None
+
 class Step(BaseModel):
   key: str = Field(..., alias="_key")
   title: str
   description: str = None
   type: str
+  checks: List[str] = None
+  input_fields: List[InputField] = None
 
 class PhaseData(BaseModel):
   sequence: int
@@ -51,13 +62,8 @@ async def get_production_process(product_key):
                 FOR step IN Step
                 FILTER step.phase_id == v1._key
                 SORT step.sequence
-                RETURN { 
-                  _key: step._key,
-                  title: step.title, 
-                  description: step.description,
-                  type: step.type
-                  }
-                )
+                RETURN step
+            )
           }
         RETURN phase_data
 
