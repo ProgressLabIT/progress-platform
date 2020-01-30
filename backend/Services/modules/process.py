@@ -23,8 +23,8 @@ class Step(BaseModel):
   title: str
   description: str = None
   type: str
-  checks: List[str] = None
-  input_fields: List[InputField] = None
+  checks: List[str] = []
+  input_fields: List[InputField] = []
 
 
 class Operation(BaseModel):
