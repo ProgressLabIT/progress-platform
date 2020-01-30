@@ -1,27 +1,29 @@
 <template>
-  <v-container fluid fill-height class="px-0">
+  <v-container fluid class="px-0 fill">
     <v-row class="fill mx-0 pl-3">      
       
 
       <!-- ASIDE - PHASE LIST -->            
-      <v-col cols="3" class="d-flex flex-column">
+      <v-col cols="3" class="d-flex flex-column fill">
 
         <h1 class="display highlight mb-2">{{ productData.code }}</h1>
         <p>{{ productData.description }}</p>
 
         <h5 class="mt-12 mb-6">FASI PROCESSO</h5>
         <v-tabs
-          vertical 
+          vertical grow
           v-model="current_phase"
           hide-slider
           :color="$theme.whitehigh"
           background-color="transparent"
+          style="max-height: 70%"
+          class="scroll"
         >
           <v-tab 
             v-for="(phase, sequence) in process" 
             :key="sequence" 
             class="d-flex justify-start pl-1"
-            style="height:38px; width: 100%"
+            style="max-height:40px; width: 100%"
             >
             <v-avatar size="20"
               :color="current_phase == sequence ? $theme.blue : $theme.grey"
@@ -30,20 +32,26 @@
             </v-avatar>
             <h4 class="display weight-medium" 
               :class="current_phase == sequence ? 'highlight weight-bold' : ''">
-              {{ phase.operation }}
+              {{ phase.operation.name }}
             </h4>
           </v-tab>
         </v-tabs>
         
         <v-spacer></v-spacer>
 
+        <!-- ADD PHASE -->
         <v-select
-          id="operations"
-          :items="process"
+          id="add_phase"
+          ref="add_phase"
+          :items="operations"
+          :item-text="'description'"
+          return-object
+          v-model="new_op"
           label="ADD A PHASE"
           hide-details
           single-line
           class="align-end"
+          @input="addPhase($event)"
           ></v-select>
 
       <!-- PHASE DETAILS -->
@@ -111,7 +119,9 @@ export default {
           component: 'PhaseAssignments'
         } 
       ],
-      tab:0
+      tab:0,
+      operations:[],
+      new_op: null
     }
   },
 
@@ -147,16 +157,25 @@ export default {
   },
 
   methods: {
-    ...mapActions(['loadProductDetails'])
-  },
+    ...mapActions(['loadProductDetails']),
 
+    addPhase(new_operation) {
+      let new_process = this.process
+      new_process.push({ operation: new_operation, steps: []})
+      this.$store.commit('UPDATE_PROCESS', new_process)
+      setTimeout(() => {
+        this.new_op = null
+        this.$refs.add_phase.blur()
+      }, 1)
+    }
+  },
 
 
   beforeRouteEnter(to, from, next) {
     // console.log("Before entering route...")
     api.get('operation').then(resp => {
       let op_list = []
-      resp.data.forEach(obj => op_list.push(obj.description))
+      resp.data.forEach(obj => op_list.push(obj))
       next(component => component.operations = op_list)
     })
   },

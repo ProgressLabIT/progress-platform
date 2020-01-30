@@ -67,10 +67,13 @@ export default {
       return this.$route.params.item_key
     },
 
+    current_step() {
+      let procedure = this.$store.state.current_product.process[this.phase_no].steps
+      return procedure[this.step_no]
+    },
+
     step_checks() {
-      const procedure = this.$store.state.current_product.process[this.phase_no].steps
-      const current_step = procedure[this.step_no]
-      return current_step.checks
+      return this.current_step.checks
     }
   },
 
@@ -80,11 +83,11 @@ export default {
       let phase_no = this.phase_no
       let step_no = this.step_no
 
+      let new_step = this.current_step
+      new_step.checks.push('')
       // Handle cases in which step_checks is null
-      let new_checklist = this.step_checks ? this.step_checks : []
 
-      new_checklist.push('')
-      this.$store.commit('UPDATE_STEP_DETAILS', { phase_no, step_no, field: 'checks', value: new_checklist })
+      this.$store.commit('ADD_OR_UPDATE_STEP', { phase_no, step_no, step_data: new_step })
     },
 
     udpateCheck(index, text) {

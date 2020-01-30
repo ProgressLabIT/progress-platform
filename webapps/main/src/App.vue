@@ -19,7 +19,10 @@ export default {
     AppFooter,
   },
 
-  data: () => ({})
+  created() {
+    // document.documentElement.requestFullscreen()
+  }
+
 
 };
 </script>

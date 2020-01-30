@@ -1,17 +1,21 @@
 <template>
   <v-container class="fill scroll">
     <v-row class="fill-height">
+
+      <!-- LEFT COLUMN -->
       <v-col cols="4" ref="step_list"
         class="d-flex flex-column px-6 fill">
+        
+        <!-- STEPS LIST -->
         <h5>SEQUENZA PASSI</h5>
-
         <v-tabs
+          v-if="procedure.length"
           vertical dark hide-slider grow
           v-model="current_steps_map[current_phase]"
           :color="$theme.whitehigh"
           background-color="transparent"
-          class="mt-12"
-          style="max-width: 100%"
+          class="mt-8 scroll"
+          style="max-width: 100%; max-height: 70%"
           >
 
           <v-tab
@@ -19,7 +23,7 @@
             :key="index"
             class="d-flex justify-start align-center pl-1 pr-0"
             :class="current_steps_map[current_phase] == index ? 'weight-bold' : 'font-weight-regular'"
-            style="width: 100%; height: 30px; text-transform: none !important; letter-spacing: normal"
+            style="width: 100%; max-height: 40px; text-transform: none !important; letter-spacing: normal"
             @mouseover="overRow=index"
             @mouseleave="overRow=null"
             >
@@ -34,7 +38,7 @@
               </v-col>  
               <v-col cols="9" class="text-left text-truncate">
                 <span style="max-width: 80%">
-                  {{ step.title }}
+                  {{ step.title.length ? step.title : '(nessun titolo)' }}
                 </span>
               </v-col>
               <v-spacer></v-spacer>
@@ -49,19 +53,45 @@
             </v-row>    
            </v-tab>
         </v-tabs>
+
+        <!-- NO STEPS IN PROCEDURE -->
+        <v-col v-else>
+          <v-row justify="center" align="end" class="mt-12 pb-6">
+            <v-icon 
+              x-large 
+              :color="$theme.whitelow"
+              >
+              error_outline
+            </v-icon>
+          </v-row>
+          <div class="text-center">
+            <h3>NESSUNA PROCEDURA</h3>
+            <p>Comincia ad aggiungere passi</p>
+          </div>
+        </v-col>  
+
         <v-spacer></v-spacer>
+        
+        <!-- ADD STEPS -->
         <div v-for="type in step_types" :key="type" class="d-flex justify-space-between">
           <button
             :color="$theme.whitehigh"
             class="py-1 weight-medium highlight"
-            style="font-size: 14px">
+            style="font-size: 14px"
+            @click="addStep(type)">
             + Add {{ type }}
           </button>
           <v-icon class="ml-6">{{ stepIcon(type) }}</v-icon>
         </div>
+
+
       </v-col>  
+
       <v-divider vertical ></v-divider>
+      
+      <!-- RIGHT SECTION: STEP DETAILS -->
       <v-col 
+        v-if="procedure.length"
         :style="`height: ${detail_box_height}`"
         class="px-6 scroll">
 
@@ -207,6 +237,19 @@ export default {
       // console.log(`Committing new description at phase ${phase_no}, step ${step_no}. New value: ${value}`)
       this.$store.commit('UPDATE_STEP_DETAILS', { phase_no, step_no, field: 'description', value })
     },
+
+    addStep(type) {
+      let phase_no = this.current_phase
+      let step_no = this.procedure.length
+      let step_data = {
+        type: type,
+        title: '',
+        description: '', 
+        checks: [],
+        input_fields: [],
+      }
+      this.$store.commit('ADD_OR_UPDATE_STEP', { phase_no, step_no, step_data})
+    }
   },
 };
 </script>
