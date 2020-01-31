@@ -76,6 +76,10 @@ export default new Vuex.Store({
       Vue.set(state.current_product, 'process', process)
     },
 
+    UPDATE_PROCEDURE(state, { phase_no, procedure }) {
+      Vue.set(state.current_product.process[phase_no], 'steps', procedure)
+    },
+
     UPDATE_STEP_DETAILS(state,  { phase_no, step_no, field, value })  {
       let process = state.current_product.process
       let phase = process[phase_no]

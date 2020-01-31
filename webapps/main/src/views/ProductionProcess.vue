@@ -19,92 +19,87 @@
           style="max-height: 70%"
           class="scroll"
         >
-          <v-tab 
-            v-for="(phase, index) in process" 
-            :key="index" 
-            class="d-flex justify-start pl-1 pr-0"
-            style="max-height:40px; width: 100%"
-            >
-            <v-row 
-              align="center" 
-              style="width: 100%" 
-              no-gutters 
-              @mouseover="overPhase=index"
-              @mouseleave="overPhase=null"
-              class="pr-1">
+          <draggable v-model="process" @change="updateActivePhaseIndex($event)">
+            <v-tab 
+              v-for="(phase, index) in process" 
+              :key="index" 
+              class="d-flex justify-start pl-1 pr-0"
+              style="max-height:40px; width: 100%"
+              >
+              <v-row 
+                align="center" 
+                style="width: 100%" 
+                no-gutters 
+                @mouseover="overPhase=index"
+                @mouseleave="overPhase=null"
+                class="pr-1">
 
-              <v-col cols="1" class="mr-3">
-                <v-avatar size="20"
-                  :color="current_phase == index ? $theme.blue : $theme.grey"
-                  class="display smaller weight-bold">
-                  {{ index + 1 }}
-                </v-avatar>
-              </v-col>  
+                <v-col cols="1" class="mr-3">
+                  <v-avatar size="20"
+                    :color="current_phase == index ? $theme.blue : $theme.grey"
+                    class="display smaller weight-bold">
+                    {{ index + 1 }}
+                  </v-avatar>
+                </v-col>  
 
-              <v-col cols="auto" class="text-left text-truncate">
-                <h4 class="display weight-medium" 
-                  :class="current_phase == index ? 'highlight weight-bold' : ''">
-                  {{ phase.operation.name }}
-                </h4>
-              </v-col>
+                <v-col cols="auto" class="text-left text-truncate">
+                  <h4 class="display weight-medium" 
+                    :class="current_phase == index ? 'highlight weight-bold' : ''">
+                    {{ phase.operation.name }}
+                  </h4>
+                </v-col>
 
-              <v-spacer></v-spacer>
-              
-              <v-col cols="1" v-show="overPhase==index">
-                <v-icon>menu</v-icon>  
-              </v-col>  
-              
-              <v-col cols="1">
-              </v-col>  
-              
-              <v-col cols="1" v-show="overPhase==index" class="mr-2">
-                <TooltipIcon
-                  icon="delete"
-                  tooltip="Elimina fase"
-                  :color="$theme.red"
-                  @iconClick="confirmingDelete = index"
-                ></TooltipIcon>
-              </v-col>  
-
-            </v-row>  
-
-            <!-- CONFIRM DELETE PHASE -->
-            <v-row 
-              v-if="confirmingDelete == index"
-              style="position:absolute" 
-              class="fill mx-n1" >
-              
-              <v-card outlined elevation="4" class="fill">
-                <v-row no-gutters align="center" class="fill">  
-
-                  <v-col cols="auto" class="pl-3">
-                    <span class="display highlight weight-bold">Confermi?</span>
-                  </v-col>  
+                <v-spacer></v-spacer> 
                 
-                  <v-spacer></v-spacer>
+                <v-col cols="1" v-show="overPhase==index" class="mr-2">
+                  <TooltipIcon
+                    icon="delete"
+                    tooltip="Elimina fase"
+                    :color="$theme.red"
+                    @iconClick="confirmingDelete = index"
+                  ></TooltipIcon>
+                </v-col>  
+
+              </v-row>  
+
+              <!-- CONFIRM DELETE PHASE -->
+              <v-row 
+                v-if="confirmingDelete == index"
+                style="position:absolute" 
+                class="fill mx-n1" >
                 
-                  <v-col cols="2">
-                    <v-btn 
-                      x-small :color="$theme.red" 
-                      @click.stop="deletePhase(index)">
-                      <v-icon small >delete</v-icon>
-                    </v-btn>
-                  </v-col>  
-                
-                  <v-col cols="2">
-                    <v-btn 
-                      x-small :color="$theme.grey"
-                      @click.stop="confirmingDelete=null">
-                      <v-icon small>close</v-icon>
-                    </v-btn>
-                  </v-col>  
+                <v-card outlined elevation="4" class="fill">
+                  <v-row no-gutters align="center" class="fill">  
 
-                </v-row>  
-              </v-card>
+                    <v-col cols="auto" class="pl-3">
+                      <span class="display highlight weight-bold">Confermi?</span>
+                    </v-col>  
+                  
+                    <v-spacer></v-spacer>
+                  
+                    <v-col cols="2">
+                      <v-btn 
+                        x-small :color="$theme.red" 
+                        @click.stop="deletePhase(index)">
+                        <v-icon small >delete</v-icon>
+                      </v-btn>
+                    </v-col>  
+                  
+                    <v-col cols="2">
+                      <v-btn 
+                        x-small :color="$theme.grey"
+                        @click.stop="confirmingDelete=null">
+                        <v-icon small>close</v-icon>
+                      </v-btn>
+                    </v-col>  
 
-            </v-row>  
+                  </v-row>  
+                </v-card>
 
-          </v-tab>
+              </v-row>  
+
+            </v-tab>
+          </draggable>
         </v-tabs>
         
         <v-spacer></v-spacer>

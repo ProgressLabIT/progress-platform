@@ -17,42 +17,47 @@
           class="mt-8 scroll"
           style="max-width: 100%; max-height: 70%"
           >
-          <v-tab
-            v-for="(step, index) in procedure"
-            :key="index"
-            class="d-flex justify-start align-center pl-1 pr-0"
-            :class="current_step_no == index ? 'weight-bold' : 'font-weight-regular'"
-            style="width: 100%; max-height: 40px; text-transform: none !important; letter-spacing: normal"
-            @mouseover="overRow=index"
-            @mouseleave="overRow=null"
-            >
-            <v-row align="center" style="width: 100%" no-gutters class="pr-1">
-              <v-col cols="1" class="mr-3">        
-                <v-avatar
-                  size="20"
-                  :color="current_step_no == index ? $theme.blue : $theme.grey"
-                  class="d-flex text-center smaller weight-bold"
-                  >{{ index + 1 }}
-                </v-avatar>
-              </v-col>  
-              <v-col cols="9" class="text-left text-truncate">
-                <span style="max-width: 80%">
-                  {{ step.title.length ? step.title : '(nessun titolo)' }}
-                </span>
-              </v-col>
+          <!--  -->
+          <draggable v-model="procedure" @change="updateTabIndex($event)">
+            <transition-group >
+              <v-tab
+                v-for="(step, index) in procedure"
+                :key="index"
+                class="d-flex justify-start align-center pl-1 pr-0"
+                :class="current_step_no == index ? 'weight-bold' : 'font-weight-regular'"
+                style="width: 100%; max-height: 40px; text-transform: none !important; letter-spacing: normal"
+                >
+                <v-row align="center" style="width: 100%" no-gutters class="pr-1">
 
-              <v-spacer></v-spacer>
-              
-              <v-col cols="1">
-                <v-icon 
-                  :id="`icon-${index}`"
-                  class="ml-auto"
-                  :color="current_step_no == index ? $theme.whitehigh : $theme.whitelow">
-                  {{ stepIcon(step.type) }}
-                </v-icon>
-              </v-col>    
-            </v-row>    
-          </v-tab>
+                  <v-col cols="1" class="mr-3">        
+                    <v-avatar
+                      size="20"
+                      :color="current_step_no == index ? $theme.blue : $theme.grey"
+                      class="d-flex text-center smaller weight-bold"
+                      >{{ index + 1 }}
+                    </v-avatar>
+                  </v-col>  
+
+                  <v-col cols="9" class="text-left text-truncate">
+                    <span style="max-width: 80%">
+                      {{ step.title.length ? step.title : '(nessun titolo)' }}
+                    </span>
+                  </v-col>
+
+                  <v-spacer></v-spacer>
+
+                  <v-col cols="1">
+                    <v-icon 
+                      :id="`icon-${index}`"
+                      class="ml-auto"
+                      :color="current_step_no == index ? $theme.whitehigh : $theme.whitelow">
+                      {{ stepIcon(step.type) }}
+                    </v-icon>
+                  </v-col>    
+                </v-row>    
+              </v-tab>
+            </transition-group>
+          </draggable>
         </v-tabs>
 
         <!-- NO STEPS IN PROCEDURE -->
@@ -183,8 +188,7 @@
 import StepInstruction from '@/components/StepInstruction.vue'
 import StepChecklist from '@/components/StepChecklist.vue'
 import StepForm from '@/components/StepForm.vue'
-
-
+import draggable from 'vuedraggable'
 
 export default {
 
@@ -193,14 +197,14 @@ export default {
   components: {
     StepInstruction,
     StepChecklist,
-    StepForm
+    StepForm,
+    draggable
   },
 
   data() {
     return {
       step_types: ['instruction', 'checklist', 'form'],
       detail_box_height: '79vh',
-      overRow: null,
       overDelete: false,
       confirmingDelete: false,
     };
@@ -239,6 +243,11 @@ export default {
     procedure: {
       get() {
         return this.$store.state.current_product.process[this.current_phase].steps
+      },
+
+      set(value) {
+        let phase_no = this.current_phase
+        this.$store.commit('UPDATE_PROCEDURE', { phase_no, procedure: value })
       }
     },
 
@@ -315,6 +324,23 @@ export default {
       const phase_no = this.current_phase
       this.$store.commit('DELETE_STEP', { phase_no, step_no })
       this.confirmingDelete = false
+    },
+
+    updateTabIndex(event) {
+      let moved = event.moved
+      if (this.current_step_no == moved.oldIndex) {
+        this.$set(this.current_steps_map, this.current_phase, moved.newIndex)
+      }
+      else if ( moved.oldIndex < this.current_step_no 
+                && moved.newIndex > this.current_step_no ) {
+        let new_step_no = this.current_step_no - 1
+        this.$set(this.current_steps_map, this.current_phase, new_step_no)
+      }
+      else if ( moved.oldIndex > this.current_step_no 
+                && moved.newIndex < this.current_step_no ) {
+        let new_step_no = this.current_step_no + 1
+        this.$set(this.current_steps_map, this.current_phase, new_step_no)
+      }
     }
   },
 };
