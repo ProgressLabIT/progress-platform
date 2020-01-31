@@ -87,6 +87,16 @@ export default new Vuex.Store({
       let process = state.current_product.process
       let procedure = process[phase_no].steps
       Vue.set(procedure, step_no, step_data)
+    },
+
+    DELETE_STEP(state, { phase_no, step_no }) {
+      let procedure = state.current_product.process[phase_no].steps
+      procedure.splice(step_no, 1)
+    },
+
+    DELETE_PHASE(state, phase_no) {
+      let process = state.current_product.process
+      process.splice(phase_no, 1)
     }
 
   },

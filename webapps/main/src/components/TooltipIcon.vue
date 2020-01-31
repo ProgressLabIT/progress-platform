@@ -7,7 +7,7 @@
       	v-on="on" 
       	dense class="mx-2 hover-color"
       	:style="hoverColor"
-        @click="emit"
+        @click.stop="emit"
       	>{{ icon }}
       </v-icon>
     </template>

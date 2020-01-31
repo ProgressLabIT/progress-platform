@@ -17,12 +17,11 @@
           class="mt-8 scroll"
           style="max-width: 100%; max-height: 70%"
           >
-
           <v-tab
             v-for="(step, index) in procedure"
             :key="index"
             class="d-flex justify-start align-center pl-1 pr-0"
-            :class="current_steps_map[current_phase] == index ? 'weight-bold' : 'font-weight-regular'"
+            :class="current_step_no == index ? 'weight-bold' : 'font-weight-regular'"
             style="width: 100%; max-height: 40px; text-transform: none !important; letter-spacing: normal"
             @mouseover="overRow=index"
             @mouseleave="overRow=null"
@@ -31,7 +30,7 @@
               <v-col cols="1" class="mr-3">        
                 <v-avatar
                   size="20"
-                  :color="current_steps_map[current_phase] == index ? $theme.blue : $theme.grey"
+                  :color="current_step_no == index ? $theme.blue : $theme.grey"
                   class="d-flex text-center smaller weight-bold"
                   >{{ index + 1 }}
                 </v-avatar>
@@ -41,17 +40,19 @@
                   {{ step.title.length ? step.title : '(nessun titolo)' }}
                 </span>
               </v-col>
+
               <v-spacer></v-spacer>
+              
               <v-col cols="1">
                 <v-icon 
                   :id="`icon-${index}`"
                   class="ml-auto"
-                  :color="current_steps_map[current_phase] == index ? $theme.whitehigh : $theme.whitelow">
+                  :color="current_step_no == index ? $theme.whitehigh : $theme.whitelow">
                   {{ stepIcon(step.type) }}
                 </v-icon>
               </v-col>    
             </v-row>    
-           </v-tab>
+          </v-tab>
         </v-tabs>
 
         <!-- NO STEPS IN PROCEDURE -->
@@ -121,12 +122,60 @@
         <component 
           :is="step_component()" 
           :phase_no="current_phase" 
-          :step_no="current_steps_map[current_phase]"
+          :step_no="current_step_no"
           class="mt-6"
           />
 
+
+        <!-- DELETE SECTION -->
+        <div style="position: absolute; bottom: 16px; right: 16px; height:12vh; width: 40vw">
+          <v-container class="fill">
+            <v-row class="fill" align="center" justify="end" v-if="confirmingDelete==false">
+              <span 
+                class="display smaller weight-bold mr-3" 
+                v-show="overDelete"
+                :style="'color: ' + $theme.red">
+                elimina passo    
+              </span>
+              <v-btn 
+                fab :color="overDelete ? $theme.red : $theme.grey"
+                @mouseover="overDelete = true"
+                @mouseleave="overDelete = false"
+                @click="showConfirmDelete">
+                <v-icon>delete</v-icon>
+              </v-btn>
+            </v-row>  
+
+
+            <!-- STEP DELETE/RESTORE CONFIRMATION -->
+
+            <v-card outlined v-else elevation="4" class="fill">
+                <v-row align="center" class="fill px-4" no-gutters>
+                  <v-col cols="auto">
+                    <span class="display highlight weight-bold">confermi?</span>
+                  </v-col>  
+                  <v-spacer></v-spacer>
+                  <v-col cols="2">
+                    <v-btn 
+                      class="mx-2" :color="$theme.red" 
+                      @click="deleteStep(current_step_no)">
+                      <v-icon>delete</v-icon>
+                    </v-btn>
+                  </v-col> 
+                  <v-col cols="auto" class="ml-4">
+                    <v-btn :color="$theme.grey" @click="confirmingDelete = false">
+                      <v-icon>close</v-icon>
+                    </v-btn>
+                  </v-col>   
+                </v-row>
+            </v-card>
+
+          </v-container>
+        </div>
+        
       </v-col>  
     </v-row>  
+
   </v-container>
 </template>
 
@@ -152,6 +201,8 @@ export default {
       step_types: ['instruction', 'checklist', 'form'],
       detail_box_height: '79vh',
       overRow: null,
+      overDelete: false,
+      confirmingDelete: false,
     };
   },
 
@@ -181,6 +232,10 @@ export default {
       }
     },
 
+    current_step_no() {
+      return this.current_steps_map[this.current_phase]
+    },
+
     procedure: {
       get() {
         return this.$store.state.current_product.process[this.current_phase].steps
@@ -188,7 +243,7 @@ export default {
     },
 
     current_step() {
-      const last_step_viewed = this.procedure[this.current_steps_map[this.current_phase]]
+      const last_step_viewed = this.procedure[this.current_step_no]
       return typeof last_step_viewed === 'undefined' ? 0 : last_step_viewed
     },
 
@@ -249,6 +304,17 @@ export default {
         input_fields: [],
       }
       this.$store.commit('ADD_OR_UPDATE_STEP', { phase_no, step_no, step_data})
+    },
+
+    showConfirmDelete() {
+      this.confirmingDelete = true
+      this.overDelete = false
+    },
+
+    deleteStep(step_no) {
+      const phase_no = this.current_phase
+      this.$store.commit('DELETE_STEP', { phase_no, step_no })
+      this.confirmingDelete = false
     }
   },
 };

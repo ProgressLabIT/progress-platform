@@ -20,20 +20,90 @@
           class="scroll"
         >
           <v-tab 
-            v-for="(phase, sequence) in process" 
-            :key="sequence" 
-            class="d-flex justify-start pl-1"
+            v-for="(phase, index) in process" 
+            :key="index" 
+            class="d-flex justify-start pl-1 pr-0"
             style="max-height:40px; width: 100%"
             >
-            <v-avatar size="20"
-              :color="current_phase == sequence ? $theme.blue : $theme.grey"
-              class="display smaller weight-bold mr-3">
-              {{ sequence + 1 }}
-            </v-avatar>
-            <h4 class="display weight-medium" 
-              :class="current_phase == sequence ? 'highlight weight-bold' : ''">
-              {{ phase.operation.name }}
-            </h4>
+            <v-row 
+              align="center" 
+              style="width: 100%" 
+              no-gutters 
+              @mouseover="overPhase=index"
+              @mouseleave="overPhase=null"
+              class="pr-1">
+
+              <v-col cols="1" class="mr-3">
+                <v-avatar size="20"
+                  :color="current_phase == index ? $theme.blue : $theme.grey"
+                  class="display smaller weight-bold">
+                  {{ index + 1 }}
+                </v-avatar>
+              </v-col>  
+
+              <v-col cols="auto" class="text-left text-truncate">
+                <h4 class="display weight-medium" 
+                  :class="current_phase == index ? 'highlight weight-bold' : ''">
+                  {{ phase.operation.name }}
+                </h4>
+              </v-col>
+
+              <v-spacer></v-spacer>
+              
+              <v-col cols="1" v-show="overPhase==index">
+                <v-icon>menu</v-icon>  
+              </v-col>  
+              
+              <v-col cols="1">
+              </v-col>  
+              
+              <v-col cols="1" v-show="overPhase==index" class="mr-2">
+                <TooltipIcon
+                  icon="delete"
+                  tooltip="Elimina fase"
+                  :color="$theme.red"
+                  @iconClick="confirmingDelete = index"
+                ></TooltipIcon>
+              </v-col>  
+
+            </v-row>  
+
+            <!-- CONFIRM DELETE PHASE -->
+            <v-row 
+              v-if="confirmingDelete == index"
+              style="position:absolute" 
+              class="fill mx-n1" >
+              
+              <v-card outlined elevation="4" class="fill">
+                <v-row no-gutters align="center" class="fill">  
+
+                  <v-col cols="auto" class="pl-3">
+                    <span class="display highlight weight-bold">Confermi?</span>
+                  </v-col>  
+                
+                  <v-spacer></v-spacer>
+                
+                  <v-col cols="2">
+                    <v-btn 
+                      x-small :color="$theme.red" 
+                      @click.stop="deletePhase(index)">
+                      <v-icon small >delete</v-icon>
+                    </v-btn>
+                  </v-col>  
+                
+                  <v-col cols="2">
+                    <v-btn 
+                      x-small :color="$theme.grey"
+                      @click.stop="confirmingDelete=null">
+                      <v-icon small>close</v-icon>
+                    </v-btn>
+                  </v-col>  
+
+                </v-row>  
+              </v-card>
+
+            </v-row>  
+
           </v-tab>
         </v-tabs>
         
@@ -90,6 +160,7 @@ import { api } from '@/lib/apiCall.js'
 import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
 import PhaseAssignments from '@/components/PhaseAssignments.vue'
+import TooltipIcon from '@/components/TooltipIcon.vue'
 
 
 export default {
@@ -100,7 +171,8 @@ export default {
   components: {
     PhaseParameters,
     PhaseSteps,
-    PhaseAssignments
+    PhaseAssignments,
+    TooltipIcon
   },
 
   data() {
@@ -121,7 +193,9 @@ export default {
       ],
       tab:0,
       operations:[],
-      new_op: null
+      new_op: null,
+      overPhase: null,
+      confirmingDelete: null
     }
   },
 
@@ -167,6 +241,11 @@ export default {
         this.new_op = null
         this.$refs.add_phase.blur()
       }, 1)
+    },
+
+    deletePhase(phase_index) {
+      this.$store.commit('DELETE_PHASE', phase_index)
+      this.confirmingDelete = null
     }
   },
 
