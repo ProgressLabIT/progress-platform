@@ -156,6 +156,7 @@ import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
 import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import TooltipIcon from '@/components/TooltipIcon.vue'
+import draggable from 'vuedraggable'
 
 
 export default {
@@ -167,7 +168,8 @@ export default {
     PhaseParameters,
     PhaseSteps,
     PhaseAssignments,
-    TooltipIcon
+    TooltipIcon,
+    draggable,
   },
 
   data() {
@@ -220,6 +222,10 @@ export default {
     process: {
       get() {
         return this.$store.state.current_product.process
+      },
+
+      set(value) {
+        this.$store.commit('UPDATE_PROCESS', value)
       }
     },
 
@@ -241,6 +247,21 @@ export default {
     deletePhase(phase_index) {
       this.$store.commit('DELETE_PHASE', phase_index)
       this.confirmingDelete = null
+    },
+
+    updateActivePhaseIndex(event) {
+      let moved = event.moved
+      if (this.current_phase == moved.oldIndex) {
+        this.current_phase = moved.newIndex
+      }
+      else if ( moved.oldIndex < this.current_phase 
+                && moved.newIndex > this.current_phase ) {
+        this.current_phase = this.current_phase - 1
+      }
+      else if ( moved.oldIndex > this.current_phase 
+                && moved.newIndex < this.current_phase ) {
+        this.current_phase = this.current_phase + 1
+      }
     }
   },
 
