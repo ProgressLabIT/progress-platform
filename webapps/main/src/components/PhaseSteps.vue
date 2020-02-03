@@ -9,7 +9,7 @@
         <!-- STEPS LIST -->
         <h5>SEQUENZA PASSI</h5>
         <v-tabs
-          v-if="procedure.length"
+          v-if="render_steps"
           vertical dark hide-slider grow
           v-model="current_steps_map[current_phase]"
           :color="$theme.whitehigh"
@@ -77,7 +77,7 @@
           </v-row>
           <div class="text-center">
             <h3>NESSUNA PROCEDURA</h3>
-            <p>Comincia ad aggiungere passi</p>
+            <p>Comincia ad aggiungere fasi o passi</p>
           </div>
         </v-col>  
 
@@ -102,7 +102,7 @@
       
       <!-- RIGHT SECTION: STEP DETAILS -->
       <v-col 
-        v-if="procedure.length"
+        v-if="render_steps"
         :style="`height: ${detail_box_height}`"
         class="px-6 scroll">
 
@@ -248,13 +248,26 @@ export default {
 
     procedure: {
       get() {
-        return this.$store.state.current_product.process[this.current_phase].steps
+        try { return this.$store.state.current_product.process[this.current_phase].steps }
+        catch {
+          return null
+        }
       },
 
       set(value) {
         let phase_no = this.current_phase
         this.$store.commit('UPDATE_PROCEDURE', { phase_no, procedure: value })
       }
+    },
+
+    render_steps() {
+      if (this.procedure != null) {
+        if (this.procedure.length) {
+          return true
+        }
+        else return false
+      }
+      else return false
     },
 
     current_step() {
@@ -291,7 +304,7 @@ export default {
 
     step_component() {
 
-      let step = this.current_steps_map[this.current_phase] || 0
+      let step = 0 || this.current_steps_map[this.current_phase]
 
       switch (this.procedure[step].type) {
         case 'instruction': return 'StepInstruction';
@@ -310,7 +323,7 @@ export default {
 
     addStep(type) {
       let phase_no = this.current_phase
-      let step_no = this.procedure.length
+      let step_no = this.procedure ? this.procedure.length : 0
       let step_data = {
         type: type,
         title: '',
