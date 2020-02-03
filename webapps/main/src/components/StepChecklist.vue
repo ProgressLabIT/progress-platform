@@ -1,6 +1,7 @@
 <template>
   <div>
     <h5 class="mb-6 text-uppercase">Lista di controllo</h5>
+    <draggable v-model="step_checks">
       <v-row no-gutters 
         v-for="(check, index) in step_checks" 
         :key="index"
@@ -31,6 +32,7 @@
             @iconClick="deleteCheck(index)"/>
         </v-col>  
       </v-row>  
+    </draggable>
     <button
         :color="$theme.whitehigh"
         class="py-1 weight-medium highlight"
@@ -44,13 +46,15 @@
 <script>
 // import {debounce as _debounce} from 'lodash/fp'
 import TooltipIcon from '@/components/TooltipIcon'
+import draggable from 'vuedraggable'
 
 export default {
 
   name: 'StepChecklist',
 
   components: {
-    TooltipIcon
+    TooltipIcon,
+    draggable
   },
 
   props: ['phase_no', 'step_no'],
@@ -72,8 +76,17 @@ export default {
       return procedure[this.step_no]
     },
 
-    step_checks() {
-      return this.current_step.checks
+    step_checks: {
+      get() {
+        return this.current_step.checks
+      },
+
+      set(value) {
+        let phase_no = this.phase_no
+        let step_no = this.step_no
+
+        this.$store.commit('UPDATE_STEP_DETAILS', { phase_no, step_no, field: 'checks', value })
+      }
     }
   },
 
