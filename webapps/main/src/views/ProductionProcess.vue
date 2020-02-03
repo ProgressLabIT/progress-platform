@@ -19,7 +19,13 @@
           style="max-height: 70%"
           class="scroll"
         >
-          <draggable v-model="process" @change="updateActivePhaseIndex($event)">
+          <draggable 
+            v-model="process" 
+            @change="updateActivePhaseIndex($event)"
+            @start="drag = true" 
+            @end="drag = false"
+            v-bind="$store.state.drag_options">
+            <transition-group type="transition" :name="!drag ? 'flip-list' : null">
             <v-tab 
               v-for="(phase, index) in process" 
               :key="index" 
@@ -99,6 +105,7 @@
               </v-row>  
 
             </v-tab>
+          </transition-group>
           </draggable>
         </v-tabs>
         
@@ -192,7 +199,8 @@ export default {
       operations:[],
       new_op: null,
       overPhase: null,
-      confirmingDelete: null
+      confirmingDelete: null,
+      drag: false,
     }
   },
 

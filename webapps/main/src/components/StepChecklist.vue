@@ -1,7 +1,11 @@
 <template>
   <div>
     <h5 class="mb-6 text-uppercase">Lista di controllo</h5>
-    <draggable v-model="step_checks">
+    <draggable v-model="step_checks"
+      @start="drag = true" 
+      @end="drag = false"
+      v-bind="$store.state.drag_options">
+      <transition-group type="transition" :name="!drag ? 'flip-list' : null">
       <v-row no-gutters 
         v-for="(check, index) in step_checks" 
         :key="index"
@@ -32,6 +36,7 @@
             @iconClick="deleteCheck(index)"/>
         </v-col>  
       </v-row>  
+    </transition-group>
     </draggable>
     <button
         :color="$theme.whitehigh"
@@ -61,7 +66,8 @@ export default {
 
   data() {
     return {
-      overRow: null
+      overRow: null,
+      drag: false,
     }
   },
 

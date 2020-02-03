@@ -18,8 +18,13 @@
           style="max-width: 100%; max-height: 70%"
           >
           <!--  -->
-          <draggable v-model="procedure" @change="updateTabIndex($event)">
-            <transition-group >
+          <draggable 
+            v-model="procedure" 
+            @change="updateTabIndex($event)"
+            @start="drag = true" 
+            @end="drag = false"
+            v-bind="$store.state.drag_options">
+            <transition-group type="transition" :name="!drag ? 'flip-list' : null">
               <v-tab
                 v-for="(step, index) in procedure"
                 :key="index"
@@ -133,7 +138,7 @@
 
 
         <!-- DELETE SECTION -->
-        <div style="position: absolute; bottom: 16px; right: 16px; height:12vh; width: 40vw">
+        <div style="position: absolute; bottom: 0px; right: 0px; height:12vh; width: 40vw">
           <v-container class="fill">
             <v-row class="fill" align="center" justify="end" v-if="confirmingDelete==false">
               <span 
@@ -143,7 +148,7 @@
                 elimina passo    
               </span>
               <v-btn 
-                fab :color="overDelete ? $theme.red : $theme.grey"
+                fab small :color="overDelete ? $theme.red : $theme.grey"
                 @mouseover="overDelete = true"
                 @mouseleave="overDelete = false"
                 @click="showConfirmDelete">
@@ -207,6 +212,7 @@ export default {
       detail_box_height: '79vh',
       overDelete: false,
       confirmingDelete: false,
+      drag: false,
     };
   },
 

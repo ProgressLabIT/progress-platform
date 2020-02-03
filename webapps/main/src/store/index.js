@@ -13,6 +13,10 @@ export default new Vuex.Store({
   
   state() {
     return {
+      drag_options: {
+        animation: 200,
+        ghostClass: "ghost"
+      },
       products: [],
       current_product: { 
         metadata: {},

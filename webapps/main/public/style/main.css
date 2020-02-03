@@ -157,4 +157,7 @@ span .display {
   overflow-y: auto;
 }
 
-
+/* Draggable ghost class */
+.ghost {
+  opacity: 0.2;
+}

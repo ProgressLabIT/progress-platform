@@ -2,7 +2,11 @@
   <div>
     <h5 class="mt-6 mb-6 text-uppercase">Campi modulo</h5>
     
-    <draggable v-model="input_fields">
+    <draggable v-model="input_fields" 
+      @start="drag = true" 
+      @end="drag = false"
+      v-bind="$store.state.drag_options">
+      <transition-group type="transition" :name="!drag ? 'flip-list' : null">
       <v-row 
         v-for="(field, index) in input_fields" :key="index"
         dense no-gutters class="mb-6">
@@ -61,6 +65,7 @@
           </v-col>  
         </v-hover>
       </v-row>
+    </transition-group>
     </draggable>
 
     <button
@@ -87,6 +92,12 @@ export default {
   },
 
   props: ['phase_no', 'step_no'],
+
+  data() {
+    return {
+      drag: false,
+    }
+  },
 
   computed: {
 
@@ -160,4 +171,5 @@ export default {
 </script>
 
 <style lang="css" scoped>
+
 </style>
