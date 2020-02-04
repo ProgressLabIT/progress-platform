@@ -246,6 +246,8 @@ export default {
       let new_process = this.process
       new_process.push({ operation: new_operation, steps: []})
       this.$store.commit('UPDATE_PROCESS', new_process)
+      this.current_phase = new_process.length - 1
+
       setTimeout(() => {
         this.new_op = null
         this.$refs.add_phase.blur()

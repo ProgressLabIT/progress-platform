@@ -11,7 +11,7 @@
         <v-tabs
           v-if="render_steps"
           vertical dark hide-slider grow
-          v-model="current_steps_map[current_phase]"
+          v-model="current_step_no"
           :color="$theme.whitehigh"
           background-color="transparent"
           class="mt-8 scroll px-n4"
@@ -247,8 +247,13 @@ export default {
       }
     },
 
-    current_step_no() {
-      return this.current_steps_map[this.current_phase]
+    current_step_no: {
+      get() {
+        return this.current_steps_map[this.current_phase]
+      },
+      set(value) {
+        this.$set(this.current_steps_map, this.current_phase, value)
+      }
     },
 
     procedure: {
@@ -338,6 +343,8 @@ export default {
         input_fields: [],
       }
       this.$store.commit('ADD_OR_UPDATE_STEP', { phase_no, step_no, step_data})
+      let new_step_index = this.procedure.length - 1
+      this.current_step_no = new_step_index
     },
 
     showConfirmDelete() {
