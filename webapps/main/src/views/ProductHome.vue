@@ -94,7 +94,7 @@ export default {
     },
 
     ...mapState({
-      product_data: state => state.current_product.metadata
+      product_data: state => state.product.details
     })
   },
 

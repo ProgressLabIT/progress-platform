@@ -6,8 +6,8 @@
       <!-- ASIDE - PHASE LIST -->            
       <v-col cols="3" class="d-flex flex-column fill">
 
-        <h1 class="display highlight mb-2">{{ productData.code }}</h1>
-        <p>{{ productData.description }}</p>
+        <h1 class="display highlight mb-2">{{ product_data.code }}</h1>
+        <p>{{ product_data.description }}</p>
 
         <h5 class="mt-12 mb-6">FASI PROCESSO</h5>
         <v-tabs
@@ -36,8 +36,8 @@
                 align="center" 
                 style="width: 100%" 
                 no-gutters 
-                @mouseover="overPhase=index"
-                @mouseleave="overPhase=null"
+                @mouseover="over_phase=index"
+                @mouseleave="over_phase=null"
                 class="pr-1">
 
                 <v-col cols="1" class="mr-3">
@@ -57,12 +57,12 @@
 
                 <v-spacer></v-spacer> 
                 
-                <v-col cols="1" v-show="overPhase==index" class="mr-2">
+                <v-col cols="1" v-show="over_phase==index" class="mr-2">
                   <TooltipIcon
                     icon="delete"
                     tooltip="Elimina fase"
                     :color="$theme.red"
-                    @iconClick="confirmingDelete = index"
+                    @iconClick="confirming_delete = index"
                   ></TooltipIcon>
                 </v-col>  
 
@@ -70,7 +70,7 @@
 
               <!-- CONFIRM DELETE PHASE -->
               <v-row 
-                v-if="confirmingDelete == index"
+                v-if="confirming_delete == index"
                 style="position:absolute" 
                 class="fill mx-n1" >
                 
@@ -94,7 +94,7 @@
                     <v-col cols="2">
                       <v-btn 
                         x-small :color="$theme.grey"
-                        @click.stop="confirmingDelete=null">
+                        @click.stop="confirming_delete=null">
                         <v-icon small>close</v-icon>
                       </v-btn>
                     </v-col>  
@@ -198,8 +198,8 @@ export default {
       tab:0,
       operations:[],
       new_op: null,
-      overPhase: null,
-      confirmingDelete: null,
+      over_phase: null,
+      confirming_delete: null,
       drag: false,
     }
   },
@@ -210,13 +210,13 @@ export default {
       return this.$route.params.item_key
     }, 
 
-    productData() {
+    product_data() {
       return this.$store.getters.productData(this.product_key)
     },
 
     current_phase: {
       get() {
-        return this.productData.last_phase
+        return this.product_data.last_phase
       },
 
       set(value) {
@@ -229,7 +229,7 @@ export default {
 
     process: {
       get() {
-        return this.$store.state.current_product.process
+        return this.$store.state.process.phases
       },
 
       set(value) {
@@ -254,7 +254,7 @@ export default {
 
     deletePhase(phase_index) {
       this.$store.commit('DELETE_PHASE', phase_index)
-      this.confirmingDelete = null
+      this.confirming_delete = null
     },
 
     updateActivePhaseIndex(event) {
@@ -270,6 +270,12 @@ export default {
                 && moved.newIndex < this.current_phase ) {
         this.current_phase = this.current_phase + 1
       }
+      // ADD HERE REORDERING OF last_steps MAP
+      let new_steps_map = this.product_data.last_steps
+      new_steps_map.splice(moved.oldIndex, 1)
+      new_steps_map.splice(moved.newIndex, 0, moved.element)
+
+      this.$store.commit('UPDATE_PRODUCT', { last_steps: new_steps_map })
     }
   },
 

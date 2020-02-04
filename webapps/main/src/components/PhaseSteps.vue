@@ -14,7 +14,7 @@
           v-model="current_steps_map[current_phase]"
           :color="$theme.whitehigh"
           background-color="transparent"
-          class="mt-8 scroll"
+          class="mt-8 scroll px-n4"
           style="max-width: 100%; max-height: 70%"
           >
           <!--  -->
@@ -84,15 +84,20 @@
         <v-spacer></v-spacer>
         
         <!-- ADD STEPS -->
-        <div v-for="type in step_types" :key="type" class="d-flex justify-space-between">
-          <button
-            :color="$theme.whitehigh"
-            class="py-1 weight-medium highlight"
-            style="font-size: 14px"
+        <div v-for="type in step_types" :key="type" class="mx-n4">
+        <v-hover v-slot:default="{ hover }">
+            
+          <v-btn text block small
+            class="pr-6 pl-8"
+            :color="hover ? $theme.blue : $theme.whitehigh"
             @click="addStep(type)">
-            + Add {{ type }}
-          </button>
-          <v-icon class="ml-6">{{ stepIcon(type) }}</v-icon>
+            <v-row justify="space-between" align="center">
+              <span>+ Add {{ type }}</span>
+              <v-icon>{{ stepIcon(type) }}</v-icon>
+          </v-row>
+          </v-btn>
+          
+        </v-hover>
         </div>
 
 
@@ -140,17 +145,17 @@
         <!-- DELETE SECTION -->
         <div style="position: absolute; bottom: 0px; right: 0px; height:12vh; width: 40vw">
           <v-container class="fill">
-            <v-row class="fill" align="center" justify="end" v-if="confirmingDelete==false">
+            <v-row class="fill" align="center" justify="end" v-if="confirming_delete==false">
               <span 
                 class="display smaller weight-bold mr-3" 
-                v-show="overDelete"
+                v-show="over_delete"
                 :style="'color: ' + $theme.red">
                 elimina passo    
               </span>
               <v-btn 
-                fab small :color="overDelete ? $theme.red : $theme.grey"
-                @mouseover="overDelete = true"
-                @mouseleave="overDelete = false"
+                fab small :color="over_delete ? $theme.red : $theme.grey"
+                @mouseover="over_delete = true"
+                @mouseleave="over_delete = false"
                 @click="showConfirmDelete">
                 <v-icon>delete</v-icon>
               </v-btn>
@@ -173,7 +178,7 @@
                     </v-btn>
                   </v-col> 
                   <v-col cols="auto" class="ml-4">
-                    <v-btn :color="$theme.grey" @click="confirmingDelete = false">
+                    <v-btn :color="$theme.grey" @click="confirming_delete = false">
                       <v-icon>close</v-icon>
                     </v-btn>
                   </v-col>   
@@ -210,8 +215,8 @@ export default {
     return {
       step_types: ['instruction', 'checklist', 'form'],
       detail_box_height: '79vh',
-      overDelete: false,
-      confirmingDelete: false,
+      over_delete: false,
+      confirming_delete: false,
       drag: false,
     };
   },
@@ -221,17 +226,17 @@ export default {
       return this.$route.params.item_key
     },
 
-    productData() {
+    product_data() {
       return this.$store.getters.productData(this.product_key)
     },
 
     current_phase() {
-      return this.productData.last_phase
+      return this.product_data.last_phase
     },
 
     current_steps_map: {
       get() {
-        return this.productData.last_steps
+        return this.product_data.last_steps
       },
 
       set(value) {
@@ -248,7 +253,7 @@ export default {
 
     procedure: {
       get() {
-        try { return this.$store.state.current_product.process[this.current_phase].steps }
+        try { return this.$store.state.process.phases[this.current_phase].steps }
         catch {
           return null
         }
@@ -304,7 +309,8 @@ export default {
 
     step_component() {
 
-      let step = 0 || this.current_steps_map[this.current_phase]
+      const step_no = this.current_steps_map[this.current_phase]
+      const step = typeof step_no == 'undefined' ? 0 : step_no
 
       switch (this.procedure[step].type) {
         case 'instruction': return 'StepInstruction';
@@ -335,14 +341,14 @@ export default {
     },
 
     showConfirmDelete() {
-      this.confirmingDelete = true
-      this.overDelete = false
+      this.confirming_delete = true
+      this.over_delete = false
     },
 
     deleteStep(step_no) {
       const phase_no = this.current_phase
       this.$store.commit('DELETE_STEP', { phase_no, step_no })
-      this.confirmingDelete = false
+      this.confirming_delete = false
     },
 
     updateTabIndex(event) {

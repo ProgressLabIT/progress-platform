@@ -53,15 +53,45 @@
         
         <v-hover v-slot:default="{ hover }">
           <v-col cols="auto" align-self="end">                
-            <button @click="deleteField(index)">
+            <button 
+              v-if="confirming_delete != index"  
+              @click="confirming_delete = index"
+              >
               <span 
-              :style="`color: ${hover ? $theme.red : $theme.whitelow}`"
-              class="body-2"
-              >Elimina campo</span>
-            <v-icon
-              :color="hover ? $theme.red : $theme.whitelow"
-              >close</v-icon>
+                :style="`color: ${hover ? $theme.red : $theme.whitelow}`"
+                class="body-2"
+                >Elimina campo</span>
+              <v-icon
+                :color="hover ? $theme.red : $theme.whitelow"
+                >close</v-icon>
             </button>
+
+            <v-row v-if="confirming_delete == index" justify="end" class="fill-height"> 
+              <v-col cols="auto">
+                <v-btn 
+                  x-small :color="$theme.red" 
+                  @click.stop="deleteField(index)">
+                  <v-icon small >delete</v-icon>
+                </v-btn>
+              </v-col>  
+
+              <v-col cols="auto" class="pl-3">
+                <span class="body-2">Confermi?</span>
+              </v-col>  
+            
+              <!-- <v-spacer></v-spacer> -->
+            
+            
+            
+              <v-col cols="auto">
+                <v-btn 
+                  x-small :color="$theme.grey"
+                  @click.stop="confirming_delete=null">
+                  <v-icon small>close</v-icon>
+                </v-btn>
+              </v-col>  
+
+            </v-row>  
           </v-col>  
         </v-hover>
       </v-row>
@@ -96,6 +126,7 @@ export default {
   data() {
     return {
       drag: false,
+      confirming_delete: null
     }
   },
 
@@ -107,7 +138,7 @@ export default {
 
     input_fields: {
       get() {
-        const procedure = this.$store.state.current_product.process[this.phase_no].steps
+        const procedure = this.$store.state.process.phases[this.phase_no].steps
         const current_step = procedure[this.step_no]
         return current_step.input_fields
       },
@@ -165,6 +196,7 @@ export default {
       let new_field_list = this.input_fields
       new_field_list.splice(index, 1)
       this.$store.commit('UPDATE_STEP_DETAILS', { phase_no, step_no, field: 'checks', value: new_field_list }) 
+      this.confirming_delete = null
     }
   }
 };

@@ -98,8 +98,8 @@ export default {
 
   computed: {
     ...mapState({
-      product_metadata: state => state.current_product.metadata, 
-      bom: state => state.current_product.bom
+      product_metadata: state => state.product.details, 
+      bom: state => state.bom.items
     }),
 
     filtered_bom() {

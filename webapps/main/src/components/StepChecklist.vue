@@ -9,9 +9,9 @@
       <v-row no-gutters 
         v-for="(check, index) in step_checks" 
         :key="index"
-        @mouseover="overRow=index"
-        @mouseleave="overRow=null">
-        <v-col cols="11">  
+        @mouseover="over_row=index"
+        @mouseleave="over_row=null">
+        <v-col cols="11" v-if="confirming_delete != index">  
           <v-textarea 
             filled single-line dense auto-grow
             rows="1"
@@ -25,19 +25,53 @@
             <template v-slot:prepend>
               <v-icon :color="$theme.whitelow">check_box_outline_blank</v-icon>
             </template>
+
+            
           </v-textarea> 
         </v-col>  
+
         <v-spacer></v-spacer>
-        <v-col class="pt-2" v-show="overRow==index">
+        
+        <!-- DELETE ICON -->
+        <v-col class="pt-2" v-show="over_row==index" v-if="confirming_delete != index">
           <TooltipIcon
             icon="delete"
             tooltip="Rimuovi controllo"
             :color="$theme.red"
-            @iconClick="deleteCheck(index)"/>
+            @iconClick="confirming_delete = index"/>
         </v-col>  
+
+        <!-- DELETE CHECK CONFIRMATION -->
+        <v-card outlined class="fill mb-6" v-if="confirming_delete == index">
+          <v-row justify="end" class="fill"> 
+
+            <v-col cols="auto" class="pl-3">
+              <span class="body-2">Confermi?</span>
+            </v-col>  
+            <v-col cols="auto">
+              <v-btn 
+                x-small :color="$theme.red" 
+                @click.stop="deleteCheck(index)">
+                <v-icon small >delete</v-icon>
+              </v-btn>
+            </v-col>  
+                        
+            <v-col cols="auto">
+              <v-btn 
+                x-small :color="$theme.grey"
+                @click.stop="confirming_delete=null">
+                <v-icon small>close</v-icon>
+              </v-btn>
+            </v-col>  
+
+          </v-row>  
+        </v-card>
+
       </v-row>  
     </transition-group>
     </draggable>
+
+    <!-- ADD CHECK -->
     <button
         :color="$theme.whitehigh"
         class="py-1 weight-medium highlight"
@@ -45,6 +79,7 @@
         @click="addCheck">
         + Aggiungi controllo
     </button>
+    
   </div>
 </template>
 
@@ -66,8 +101,9 @@ export default {
 
   data() {
     return {
-      overRow: null,
+      over_row: null,
       drag: false,
+      confirming_delete: null
     }
   },
 
@@ -78,7 +114,7 @@ export default {
     },
 
     current_step() {
-      let procedure = this.$store.state.current_product.process[this.phase_no].steps
+      let procedure = this.$store.state.process.phases[this.phase_no].steps
       return procedure[this.step_no]
     },
 
