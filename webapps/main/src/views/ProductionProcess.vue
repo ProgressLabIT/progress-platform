@@ -4,7 +4,7 @@
       
 
       <!-- ASIDE - PHASE LIST -->            
-      <v-col cols="3" class="d-flex flex-column fill">
+      <v-col cols="3" class="d-flex flex-column fill pt-1">
 
         <h1 class="display highlight mb-2">{{ product_data.code }}</h1>
         <p>{{ product_data.description }}</p>
@@ -166,6 +166,12 @@ import TooltipIcon from '@/components/TooltipIcon.vue'
 import draggable from 'vuedraggable'
 
 
+const views_map = [
+        { name: 'procedura', component: 'PhaseSteps' },
+        { name: 'parametri', component: 'PhaseParameters' },
+        { name:  'assegnazioni', component: 'PhaseAssignments' } 
+      ]
+
 export default {
 
 
@@ -181,20 +187,7 @@ export default {
 
   data() {
     return {
-      views: [
-        {
-          name: 'procedura',
-          component: 'PhaseSteps',
-        },
-        {
-          name: 'parametri',
-          component: 'PhaseParameters',
-        },
-        {
-          name:  'assegnazioni',
-          component: 'PhaseAssignments'
-        } 
-      ],
+      views: views_map,
       tab:0,
       operations:[],
       new_op: null,
@@ -221,7 +214,7 @@ export default {
 
       set(value) {
         this.$store.commit(
-          'UPDATE_PRODUCT', 
+          'UPDATE_PRODUCT_NAV_STATE', 
           { _key: this.product_key, last_phase: value}
         )
       }
@@ -277,7 +270,7 @@ export default {
       new_steps_map.splice(moved.oldIndex, 1)
       new_steps_map.splice(moved.newIndex, 0, moved.element)
 
-      this.$store.commit('UPDATE_PRODUCT', { last_steps: new_steps_map })
+      this.$store.commit('UPDATE_PRODUCT_NAV_STATE', { last_steps: new_steps_map })
     }
   },
 

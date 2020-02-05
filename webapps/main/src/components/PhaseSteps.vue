@@ -241,7 +241,7 @@ export default {
 
       set(value) {
         this.$store.commit(
-          'UPDATE_PRODUCT', 
+          'UPDATE_PRODUCT_NAV_STATE', 
           { _key: this.product_key, last_steps: value}
         )
       }

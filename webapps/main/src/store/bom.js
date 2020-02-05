@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import { api } from '@/lib/apiCall.js'
 
 const bom = {
 
@@ -13,7 +14,7 @@ const bom = {
   },
 
   actions: {
-
+    
   },
 
   getters: {

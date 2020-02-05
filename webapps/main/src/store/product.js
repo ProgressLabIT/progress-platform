@@ -3,6 +3,7 @@ import axios from "axios"
 import { api } from '@/lib/apiCall.js'
 import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js' 
 
+
 const product = {
 
   state: {
@@ -22,8 +23,23 @@ const product = {
       })
     },
 
-    ADD_NEW_PRODUCT(state, newProductData) {
-      state.list.push(newProductData)
+    /**
+     * The mutation below is the exact copy of the one above. 
+     * The duplication is to semantically separate the update
+     * of fields that do not need backend sync from those that do
+     */
+    UPDATE_PRODUCT_NAV_STATE(state, updated_product) {
+      updateProduct(state.list, updated_product._key, product => {
+        for (const field in updated_product) {
+          if (field != '_key') {
+            Vue.set(product, field, updated_product[field])
+          }
+        }
+      })
+    },
+
+    ADD_NEW_PRODUCT(state, new_product_data) {
+      state.list.push(new_product_data)
     },
 
     LOAD_PRODUCT_LIST(state, product_list) {
@@ -71,10 +87,6 @@ const product = {
       .then( resp => {
         commit('UPDATE_PRODUCT', resp.data.detail )
       })
-    },
-
-    addNewProduct({ commit }, newProductData) {
-      commit('ADD_NEW_PRODUCT', newProductData)
     },
 
     loadProductList({ commit }) {

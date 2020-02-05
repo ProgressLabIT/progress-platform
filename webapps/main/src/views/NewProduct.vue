@@ -48,8 +48,7 @@
 </template>
 
 <script>
-import axios from 'axios'
-import { mapActions } from 'vuex'
+import { api } from '@/lib/apiCall.js'
 
 export default {
 
@@ -65,8 +64,6 @@ export default {
 
   methods: {
 
-    ...mapActions(['addNewProduct']),
-
     postNewProduct() {
       // console.log("Preparing form data...")
       let body = new FormData()
@@ -80,9 +77,7 @@ export default {
       }
       
       // console.log("Posting form data...")
-      axios({
-          method: 'post', 
-          url: 'http://127.0.0.1:8000/product',
+      api.post('product', {
           data: body,
           headers: {
             'Content-Type': 'multipart/form-data'
@@ -91,8 +86,8 @@ export default {
         .then(resp => {
           console.log(resp)
           // Go back to product list
-          const newProductData = resp.data.detail
-          this.addNewProduct(newProductData)
+          const new_product_data = resp.data.detail
+          this.$store.commit('ADD_NEW_PRODUCT', new_product_data)
         })
         .catch(error => {
           console.log(error.response)
