@@ -51,7 +51,7 @@
                 <v-col cols="auto" class="text-left text-truncate">
                   <h4 class="display weight-medium" 
                     :class="current_phase == index ? 'highlight weight-bold' : ''">
-                    {{ phase.operation.name }}
+                    {{ phase.alias }}
                   </h4>
                 </v-col>
 
@@ -158,7 +158,6 @@
 
 <script>
 import { mapActions } from 'vuex'
-import { api } from '@/lib/apiCall.js'
 import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
 import PhaseAssignments from '@/components/PhaseAssignments.vue'
@@ -189,7 +188,6 @@ export default {
     return {
       views: views_map,
       tab:0,
-      operations:[],
       new_op: null,
       over_phase: null,
       confirming_delete: null,
@@ -205,6 +203,10 @@ export default {
 
     product_data() {
       return this.$store.getters.productData(this.product_key)
+    },
+
+    operations() {
+      return this.$store.state.process.operations
     },
 
     current_phase: {
@@ -237,7 +239,7 @@ export default {
 
     addPhase(new_operation) {
       let new_process = this.process
-      new_process.push({ operation: new_operation, steps: []})
+      new_process.push({ alias: new_operation.name, steps: []})
       this.$store.commit('UPDATE_PROCESS', new_process)
       this.current_phase = new_process.length - 1
 
@@ -274,17 +276,8 @@ export default {
     }
   },
 
-
-  beforeRouteEnter(to, from, next) {
-    // console.log("Before entering route...")
-    api.get('operation').then(resp => {
-      let op_list = []
-      resp.data.forEach(obj => op_list.push(obj))
-      next(component => component.operations = op_list)
-    })
-  },
-
   created() {
+    this.$store.dispatch('getOperations')
     this.loadProductDetails(this.product_key)
   },
 

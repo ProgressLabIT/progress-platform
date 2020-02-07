@@ -159,6 +159,7 @@ export default {
       let new_checklist = this.step_checks
       new_checklist.splice(index, 1)
       this.$store.commit('UPDATE_STEP_DETAILS', { phase_no, step_no, field: 'checks', value: new_checklist }) 
+      this.confirming_delete = null
     }
   },
 };

@@ -1,9 +1,11 @@
 import Vue from 'vue'
+import { api } from '@/lib/apiCall.js'
 
 const process = {
 
   state: {
-    phases: []
+    phases: [],
+    operations: [],
   },
 
   mutations: {
@@ -37,16 +39,24 @@ const process = {
 
     DELETE_PHASE(state, phase_no) {
       state.phases.splice(phase_no, 1)
+    },
+
+    LOAD_OPERATIONS(state, op_list) {
+      Vue.set(state, 'operations', op_list)
     }
 
   },
 
   actions: {
-
+    getOperations({commit}) {
+      api.get('operation').then(resp => {
+        commit('LOAD_OPERATIONS', resp.data)
+      })
+    }
   },
 
   getters: {
-
+    
   }
 }
 

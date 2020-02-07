@@ -161,3 +161,8 @@ span .display {
 .ghost {
   opacity: 0.2;
 }
+
+/* Style bom rows for deletion */
+#bom .v-data-table__selected {
+  background-color: transparent !important
+}
