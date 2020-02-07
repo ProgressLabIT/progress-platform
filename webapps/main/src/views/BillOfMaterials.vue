@@ -34,11 +34,37 @@
 
         <v-btn 
           class="mt-auto" 
-          :color="edit_table ? $theme.green : $theme.blue"
+          v-if="!edit_table"
           @click="toggleEdit"
+          :color="$theme.blue"
           >
-          {{ edit_table ? 'SALVA DISTINTA' : 'MODIFICA DISTINTA' }}
+          MODIFICA DISTINTA
         </v-btn>
+
+        <div v-else>
+          <v-btn block class="mb-2" :color="$theme.green" @click="saveChanges">SALVA</v-btn>
+          <v-btn block :color="$theme.grey" @click="cancelChanges">ANNULLA</v-btn>
+        </div>  
+
+        <!-- CANCEL CONFIRMATION -->
+        <v-snackbar
+          top :timeout="2000"
+          :color="$theme.grey"
+          v-model="show_cancel_confirmation">
+          Modifiche annullate
+          <v-btn text @click.native="show_cancel_confirmation = false">OK</v-btn>
+        </v-snackbar>
+
+        <!-- SAVE NOTIFICATION -->
+        <v-snackbar
+          top :timeout="0"
+          :color="saving_progress ? $theme.blue : $theme.green"
+          v-model="show_save_snackbar"
+        >
+          {{ saving_progress ? "Salvataggio in corso" : "Distinta aggiornata" }}
+          <v-btn v-if="!saving_progress" text :color="$theme.white" @click.native="show_save_snackbar = false">Close</v-btn>
+          <v-progress-circular :color="$theme.white" indeterminate v-show="saving_progress"></v-progress-circular>
+        </v-snackbar>
 
       </v-col>  
   
@@ -46,14 +72,14 @@
        <v-col class="fill pa-0 pl-6" cols="9">          
         <v-data-table
           id="bom"
-          :headers="bom_headers"
+          :headers="table_headers"
           :items="filtered_bom"
           :show-select="edit_table"
           v-model="delete_items"
           loading-text="Recupero dati in corso..."
           sort-by="code"
           fixed-header  
-          item-key="code"
+          item-key="table_key"
           disable-pagination
           hide-default-footer
           :height="table_height"
@@ -91,12 +117,15 @@
             <v-row align="center" class="mx-0" style="height: 52px">
 
               <v-col cols="4">
-                <v-btn v-if="edit_table && delete_items.length" small :color="$theme.red">
+                <v-btn small
+                  v-if="edit_table && delete_items.length"  
+                  :color="$theme.red"
+                  @click="removeSelectedItems">
                   <v-icon small>delete</v-icon>elimina selezionati</v-btn>
               </v-col>  
               
               <v-col cols="4" class="smaller text-center">
-                {{ filtered_bom.length }} di {{ bom.length }} ELEMENTI
+                {{ filtered_bom.length }} di {{ temp_bom.length }} ELEMENTI
               </v-col>
               
               <v-col cols="4" class="d-flex justify-end" >
@@ -118,7 +147,7 @@
 
     <v-dialog
       v-model="show_item_catalog"
-      max-width="500px"
+      max-width="600px"
       transition="dialog-transition"
       value="true" 
       :overlay-color="$theme.black"
@@ -131,7 +160,21 @@
           <v-card-text>
             
           <v-row>
-            <v-col cols="9">
+            <v-col>
+              <v-autocomplete
+                v-model="new_item_phase"
+                :items="$store.state.process.phases"
+                item-value="_id"
+                item-text="alias"
+                single-line
+                return-object
+                label="Inserisci fase">
+                <template v-slot:selection="data">
+                  {{ data.item.alias }}
+                </template>
+              </v-autocomplete>
+            </v-col>  
+            <v-col cols="4">
               <v-autocomplete
                 v-model="new_item"
                 :items="item_catalog"
@@ -197,19 +240,31 @@ export default {
       item_type_filter: ['assembly', 'component', 'consumable'],
       table_height: '85vh',
       edit_table: false,
+      table_headers: [
+        {  value:'code', text:'CODE' },
+        {  value:'description', text:'DESCRIPTION' },
+        {  value:'type', text:'ITEM TYPE' },
+        {  value:'phase_name', text:'PHASE' },
+        {  value:'qt', text:'QT' },
+      ],
+      temp_bom: [],
       delete_items: [],
       show_item_catalog: false,
       catalog_loading: false,
       item_catalog: [],
       new_item: {},
+      new_item_phase: {},
       new_item_qt: null,
+      show_cancel_confirmation: false,
+      show_save_snackbar: false,
+      saving_progress: false,
     };
   },
 
   computed: {
     ...mapState({
-      product_metadata: state => state.product.details, 
-      bom: state => state.bom.items
+      product_metadata: state => state.product.details,
+      saved_bom: state => state.bom.items 
     }),
 
     product_key() {
@@ -217,24 +272,24 @@ export default {
     },
 
     filtered_bom() {
-      return this.bom.filter(item => {
+      return this.temp_bom.filter(item => {
         let type_check = this.item_type_filter.includes(item.type.toLowerCase())
 
         return type_check && multiMatch(this.search, item, ['code', 'description'])
       })
     },
 
-    bom_headers() {
-      let headers = []
-      Object.keys(this.bom[0]).forEach(header => {
-        // exclude fields not necessary in the table
-        if (['_key', 'rel_id', 'operation', 'phase_key', 'phase_seq'].includes(header)) return 
+    // bom_headers() {
+    //   let headers = []
+    //   Object.keys(this.saved_bom[0]).forEach(header => {
+    //     // exclude fields not necessary in the table
+    //     if (['item_id', 'rel_id', 'phase_id'].includes(header)) return 
 
-        let header_params = { text: header, value: header }
-        headers.push(header_params)
-      })
-      return headers
-    },
+    //     let header_params = { text: header, value: header }
+    //     headers.push(header_params)
+    //   })
+    //   return headers
+    // },
 
     deleteIconTooltip() {
       if (this.delete_items.length) {
@@ -246,6 +301,15 @@ export default {
 
   methods: {
     ...mapActions(['loadProductDetails', 'getItemsCatalog']),
+
+    loadTempBom() {
+      this.temp_bom = this.saved_bom.map(i => { 
+        return {
+          ...i, 
+          table_key: i.code + i.phase_id
+        }
+      })
+    },
 
     toggleEdit() {
       if (this.edit_table == false) {
@@ -264,34 +328,79 @@ export default {
       else this.delete_items = this.filtered_bom
     },
 
+    removeSelectedItems() {
+      this.temp_bom = this.temp_bom.filter( item => !this.delete_items.includes(item) )
+      this.delete_items = []
+    },
+
     openItemSearch() {
       this.catalog_loading = true
       this.show_item_catalog = true
       
       api.get('item').then( resp => {
+        
         this.item_catalog = resp.data
       })
       this.catalog_loading = false
     },
 
-    addItem() {
-      const new_item = {
-        ...this.new_item,
-        qt: this.new_item_qt,
-        rel_id: ''
+    async addItem() {
+      const is_duplicate = this.temp_bom.some(item => 
+        item.code == this.new_item.code 
+        && item.phase_id == this.new_item_phase._id
+      )
+
+      if (!is_duplicate) {
+        
+        const new_item = {
+          /** 
+           * Cannot simply add ...new_item because it would 
+           * contain an _id field that, when sent to the db would refer
+           * to the relationship and raise an error.
+           */ 
+          item_id: this.new_item._id,
+          code: this.new_item.code,
+          description: this.new_item.description,
+          type: this.new_item.type,
+          qt: this.new_item_qt,
+          phase_name: this.new_item_phase.alias,
+          phase_id: this.new_item_phase._id,
+          table_key: this.new_item.code + this.new_item_phase._id
+        }
+        this.temp_bom.push(new_item)
+        this.show_item_catalog = false
       }
-      console.log({new_item})
-      let new_bom = this.bom
-      new_bom.push(new_item)
-      this.$store.commit('UPDATE_BOM', new_bom)
-      this.new_item = null
-      this.new_item_qt = null
-      this.show_item_catalog = false
-    }
+      else {
+        window.alert("Articolo già presente in distinta")
+      }
+    },
+
+    cancelChanges() {
+      this.temp_bom = [...this.saved_bom]
+      this.edit_table = false
+      this.delete_items = []
+      this.show_cancel_confirmation = true
+    },
+
+    async saveChanges() {
+      this.saving_progress = true
+      this.show_save_snackbar = true
+      const action_payload = {
+        product_key: this.product_key,
+        new_bom: this.temp_bom
+      }
+      await this.$store.dispatch('updateBom', action_payload)
+      this.loadTempBom()
+      this.saving_progress = false
+      this.edit_table = false
+      setTimeout(() => this.show_save_snackbar = false, 2500)
+    },
   },
 
   created() {
+    this.$store.dispatch('getOperations')
     this.loadProductDetails(this.product_key)
+    this.loadTempBom()
   },
 
   mounted() {
@@ -300,6 +409,15 @@ export default {
      * plus the footer height
      */ 
     this.table_height = this.$refs.container.clientHeight - 24 - 52
+  },
+
+  watch: {
+    // Reset form when closing/opening modal
+    show_item_catalog() {
+      this.new_item = null
+      this.new_item_qt = null
+      this.new_item_phase = null
+    },
   }
 };
 </script>
