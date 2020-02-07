@@ -1,51 +1,12 @@
-from typing import List, Optional
 from fastapi import APIRouter, UploadFile, HTTPException, Form, File
-from pydantic import BaseModel, Field
 from utils.db import db
 from utils.api import APIResponse
+from .models import ProductListItem, ProductFull
 import os
 import traceback
 router = APIRouter()
 
 product_db = db.collection('Product')
-
-
-class ProductBase(BaseModel):
-  code: str
-  description: Optional[str] = None
-
-class ProductListItem(ProductBase):
-  """ 
-  Represents the subset of the Product DB schema necessary 
-  for use in the product list view
-  """
-
-  # the _key field must be aliased because pydantic will not 
-  # accept fields with leading underscore
-  key: str = Field(..., alias="_key")
-  active: bool = True
-  trash: bool = False
-
-
-class TargetAverageData(BaseModel):
-  target: float = 0
-  average: float = 0
-
-class ProductNew(ProductBase):
-  """
-  Extends the ProductBase class to represents 
-  the full DB schema of the product
-  """
-  active: bool = True
-  trash: bool = False
-  cost: TargetAverageData = TargetAverageData()
-  sale_price: float = 0
-  margin: TargetAverageData = TargetAverageData()
-  technical_batch_qt: float = 0
-  economic_order_qt: float = 0
-  minimum_order_qt: float = 0
-  tags: List[str] = []
-  process_phases: List[str] = [] 
 
 
 
@@ -78,8 +39,11 @@ async def create_product(
   
   # Map form data
   try:
-    new_product = ProductNew(code=code, description=description)
+    new_product = ProductFull(code=code, description=description)
+    print("New product: ", new_product, type(new_product))
     new_product_json = new_product.json(by_alias=True)
+    print("New product json: ", new_product_json, type(new_product_json))
+
   except Exception as e:
     error_str = traceback.format_exc()
     raise HTTPException(
@@ -101,7 +65,7 @@ async def create_product(
 
   # Insert into database
   try:
-    db_response = product_db.insert(new_product_json, return_new=True)
+    db_response = product_db.insert(new_product, return_new=True)
   except Exception:
     status_code = 500
     error_str = traceback.format_exc()

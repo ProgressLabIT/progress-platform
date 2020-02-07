@@ -4,47 +4,19 @@ from fastapi import APIRouter, UploadFile, HTTPException, Form, File
 from pydantic import BaseModel, Field
 from utils.db import db
 from utils.api import APIResponse
-
+from .models import PhaseData
 import os
 import traceback
 
 router = APIRouter()
 
-class InputFieldType(str, Enum):
-  short = "short"
-  long = "long"
-
-class InputField(BaseModel):
-  type: InputFieldType
-  name: str = None
-
-class Step(BaseModel):
-  key: str = Field(..., alias="_key")
-  title: str
-  description: str = None
-  type: str
-  checks: List[str] = []
-  input_fields: List[InputField] = []
-
-
-class Operation(BaseModel):
-  key: str = Field(..., alias="_key")
-  name: str
-  description: str = None
-
-class PhaseData(BaseModel):
-  operation: Operation
-  steps: List[Step] = []
-
-
 operation_db = db.collection('Operation')
+
+
 
 @router.get('/operation')
 async def get_operation_list():
   return [o for o in operation_db.all()]
-
-
-
 
 
 @router.get("/product/{product_key}/process")
@@ -60,19 +32,16 @@ async def get_production_process(product_key):
           )[0]
 
         FOR phase_key in phases
-          LET phase_data =  
-            {
-              operation: (
-                  FOR v,e IN OUTBOUND DOCUMENT(CONCAT('Phase/', phase_key)) requires
-                  FILTER e.type == 'PhaseOperation'
-                  RETURN v)[0],
+          LET phase_data =  MERGE(
+            DOCUMENT(CONCAT('Phase/', phase_key)),
+            { 
               steps: (
                   FOR step IN Step
                   FILTER step.phase_id == phase_key
                   SORT step.sequence
                   RETURN step
               )
-            }
+            })
           RETURN phase_data
 
       """, bind_vars={'product_key': product_key})

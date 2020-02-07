@@ -1,59 +1,36 @@
 from utils.db import db
 from utils.api import APIResponse
-
-from typing import List, Optional
-from pydantic import BaseModel, Field
 from fastapi import APIRouter, UploadFile, HTTPException, Form, File
+from fastapi.encoders import jsonable_encoder
+from typing import List
+from .models import BomItemRead, BomItemWrite
+import json
 
 import os, traceback
 
 
 router = APIRouter()
 
-class BomItem(BaseModel):
-  key: str = Field(..., alias="_key")
-  code: str
-  description: str
-  type: str
-  phase_seq: int = None
-  operation: str = None
-  qt = 0
-
-
-
-
 @router.get("/{product_key}/bom")
 async def get_product_bom(product_key):
   try: 
     bom = db.aql.execute("""
-      FOR v,e,p IN 1..2 OUTBOUND @product requires
-
-      FILTER v._id like 'ProductionItem/%'
-      
-      /*  check if last edge to ProductionItem started from Phase or directly from Product
-          if yes, get the phase sequence from the ProductPhase relationship, which
-          is the first of the two edges of the path.
-          
-          (this might be simplified storing the sequence on the Phase document
-          rather than in its relationship to the product)
-      */
-      LET phase_seq = e._from like 'Phase/%' ? p.edges[0].sequence : null 
+      FOR v,e IN 2..2 OUTBOUND @product requires
+      FILTER e.rel_type like 'BomItem'
+      LET phase = e._from
       
       RETURN {
-          _key: v._key,
+          item_id: v._id,
+          rel_id: e._id,
           code: v.code,
           description: v.description,
           type: v.type,
-          phase_seq: phase_seq,
-          // get operation name
-          operation: (FOR op, r in 1..1 OUTBOUND DOCUMENT(e._from) requires FILTER r.type == 'PhaseOperation' RETURN op.description)[0]
-          // missing the required quantity: not stored in the test data
+          phase_id: phase,
+          phase_name: DOCUMENT(phase).alias,
+          qt: e.qt
       }
     """, bind_vars={ 'product': f'Product/{product_key}' })
 
-    results = [BomItem(**i) for i in bom]
-
-    return results
 
   except Exception as e:
     status_code = 500
@@ -67,3 +44,78 @@ async def get_product_bom(product_key):
       status_code=status_code,
       detail=response
     )
+  
+  try:
+    results = [BomItemRead(**i) for i in bom]
+    return results
+
+  except Exception as e:
+    status_code = 500
+    error_str = traceback.format_exc()
+    response = {
+      "status": status_code,
+      "message": "There was a problem with the data fetched from the db",
+      "error": error_str 
+    }
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
+
+
+@router.put('/{product_key}/bom')
+async def update_bom(product_key: str, new_bom: List[BomItemWrite]):
+  """
+  First draft will blatantly delete existing bom and
+  replace it with the new one
+  """
+
+  # Begin transaction
+  txn = db.begin_transaction(write="requires")
+  
+  try:
+
+    # Remove old bom
+    deleted_items = txn.aql.execute("""
+      FOR v,e IN 2..2 OUTBOUND @product requires
+      FILTER e.rel_type=="BomItem"
+      REMOVE e IN requires
+    """, bind_vars={ "product": f'Product/{product_key}'})
+    print("Deleted items: ", [i for i in deleted_items])
+
+    # Insert new bom
+    def insert_item(txn, item):
+      prepped_item = jsonable_encoder(item, include_none=False)
+      print(prepped_item)
+      return txn.collection('requires').insert(prepped_item, return_new=True)
+
+    saved_bom = [ insert_item(txn, i) for i in new_bom ]
+    
+    print(saved_bom)
+
+    # Commit transaction
+    txn.commit_transaction()
+    print("Transaction committed!")
+    return saved_bom
+
+  except Exception as e:
+    print("Error!")
+    error_str = traceback.format_exc()
+    status_code = 500
+    print("Setting response...")
+
+    response = {
+      "status": status_code,
+      "message": "There was a problem updating the bom. Transaction has been aborted.",
+      "error": error_str 
+    }
+    print("Aborting transaction...")
+    txn.abort_transaction()
+    print("Transaction aborted. Raising exception...")
+    print(error_str)
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
+
+
