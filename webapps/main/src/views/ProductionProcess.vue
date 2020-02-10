@@ -9,7 +9,9 @@
         <h1 class="display highlight mb-2">{{ product_data.code }}</h1>
         <p>{{ product_data.description }}</p>
 
+      
         <h5 class="mt-12 mb-6">FASI PROCESSO</h5>
+
         <v-tabs
           vertical grow
           v-model="current_phase"
@@ -21,6 +23,7 @@
         >
           <draggable 
             v-model="process" 
+            :disabled="!edit_mode"
             @change="updateActivePhaseIndex($event)"
             @start="drag = true" 
             @end="drag = false"
@@ -109,22 +112,41 @@
           </draggable>
         </v-tabs>
         
-        <v-spacer></v-spacer>
 
-        <!-- ADD PHASE -->
+
+        <!-- ADD PHASE SELECT -->
         <v-select
           id="add_phase"
           ref="add_phase"
+          v-if="edit_mode"
           :items="operations"
           :item-text="'description'"
           return-object
           v-model="new_op"
-          label="ADD A PHASE"
+          label="Aggiungi fase"
           hide-details
           single-line
-          class="align-end"
           @input="addPhase($event)"
+          class="flex-grow-0 mt-6 mb"
           ></v-select>
+
+        <v-spacer></v-spacer>
+
+
+        <!-- EDIT / SAVE / CANCEL BUTTONS -->
+        <v-btn 
+          class="mt-auto" 
+          v-if="!edit_mode"
+          @click="toggleEdit"
+          :color="$theme.blue"
+          >
+          MODIFICA PROCESSO
+        </v-btn>
+
+        <div v-else>
+          <v-btn block class="mb-2" :color="$theme.green" @click="saveChanges">SALVA</v-btn>
+          <v-btn block :color="$theme.grey" @click="cancelChanges">ANNULLA</v-btn>
+        </div>  
 
       <!-- PHASE DETAILS -->
       </v-col>  
@@ -148,7 +170,10 @@
       </v-row>  
         <v-card elevation="0" class="scroll flex-grow-1">
           <keep-alive>
-            <v-component :is="views[tab].component"></v-component>
+            <v-component 
+              :is="views[tab].component" 
+              :edit_mode="edit_mode">
+            </v-component>
           </keep-alive>
         </v-card>
       </v-col>  
@@ -192,6 +217,7 @@ export default {
       over_phase: null,
       confirming_delete: null,
       drag: false,
+      edit_mode: true,
     }
   },
 
@@ -236,6 +262,14 @@ export default {
 
   methods: {
     ...mapActions(['loadProductDetails']),
+
+    toggleEdit() {
+      this.edit_mode = true
+    },
+
+    cancelChanges() {
+      this.edit_mode = false
+    },
 
     addPhase(new_operation) {
       let new_process = this.process

@@ -20,6 +20,7 @@
           <!--  -->
           <draggable 
             v-model="procedure" 
+            :disabled="!edit_mode"
             @change="updateTabIndex($event)"
             @start="drag = true" 
             @end="drag = false"
@@ -84,20 +85,22 @@
         <v-spacer></v-spacer>
         
         <!-- ADD STEPS -->
-        <div v-for="type in step_types" :key="type" class="mx-n4">
-        <v-hover v-slot:default="{ hover }">
-            
-          <v-btn text block small
-            class="pr-6 pl-8"
-            :color="hover ? $theme.blue : $theme.whitehigh"
-            @click="addStep(type)">
-            <v-row justify="space-between" align="center">
-              <span>+ Add {{ type }}</span>
-              <v-icon>{{ stepIcon(type) }}</v-icon>
-          </v-row>
-          </v-btn>
-          
-        </v-hover>
+        <div v-if="edit_mode">
+          <v-hover 
+            v-for="type in step_types" 
+            :key="type"  
+            v-slot:default="{ hover }">    
+            <v-btn text small
+              class="pr-6 pl-6 ml-n2"
+              style="width: 105%"
+              :color="hover ? $theme.blue : $theme.whitehigh"
+              @click="addStep(type)">
+              <v-row justify="space-between" align="center">
+                <span>+ Add {{ type }}</span>
+                <v-icon>{{ stepIcon(type) }}</v-icon>
+              </v-row>
+            </v-btn>
+          </v-hover>
         </div>
 
 
@@ -113,6 +116,7 @@
 
         <h5 class="mb-2">Titolo</h5>
         <v-text-field
+          v-if="edit_mode"
           filled dense
           name="step_title"
           label="Titolo"
@@ -120,9 +124,11 @@
           v-model="step_title"
           class="body-2"
         ></v-text-field>
+        <p v-else class="mb-10 mt-4">{{ step_title }}</p>
 
         <h5 class="mb-2">Descrizione</h5>
         <v-textarea
+          v-if="edit_mode"
           filled single-line dense auto-grow
           rows="2"
           row-height="36px"
@@ -132,18 +138,21 @@
           @change="updateDesc($event)"
           class="body-2"
         ></v-textarea>
+        <p v-else class="mb-10 mt-4">{{ step_desc }}</p>
+
 
 
         <component 
           :is="step_component()" 
           :phase_no="current_phase" 
           :step_no="current_step_no"
+          :edit_mode="edit_mode"
           class="mt-6"
           />
 
 
         <!-- DELETE SECTION -->
-        <div style="position: absolute; bottom: 0px; right: 0px; height:12vh; width: 40vw">
+        <div v-if="edit_mode" style="position: absolute; bottom: 0px; right: 0px; height:12vh; width: 35%">
           <v-container class="fill">
             <v-row class="fill" align="center" justify="end" v-if="confirming_delete==false">
               <span 
@@ -164,26 +173,26 @@
 
             <!-- STEP DELETE/RESTORE CONFIRMATION -->
 
-            <v-card outlined v-else elevation="4" class="fill">
-                <v-row align="center" class="fill px-4" no-gutters>
+            <!-- <v-card outlined v-else elevation="4" class="fill"> -->
+                <v-row v-else align="center" justify="end" class="fill px-4" no-gutters>
                   <v-col cols="auto">
                     <span class="display highlight weight-bold">confermi?</span>
                   </v-col>  
-                  <v-spacer></v-spacer>
+                  <!-- <v-spacer></v-spacer> -->
                   <v-col cols="2">
-                    <v-btn 
+                    <v-btn fab small
                       class="mx-2" :color="$theme.red" 
                       @click="deleteStep(current_step_no)">
                       <v-icon>delete</v-icon>
                     </v-btn>
                   </v-col> 
                   <v-col cols="auto" class="ml-4">
-                    <v-btn :color="$theme.grey" @click="confirming_delete = false">
+                    <v-btn fab small :color="$theme.grey" @click="confirming_delete = false">
                       <v-icon>close</v-icon>
                     </v-btn>
                   </v-col>   
                 </v-row>
-            </v-card>
+            <!-- </v-card> -->
 
           </v-container>
         </div>
@@ -203,6 +212,8 @@ import draggable from 'vuedraggable'
 export default {
 
   name: 'PhaseSteps',
+
+  props: ['edit_mode'],
 
   components: {
     StepInstruction,
@@ -313,7 +324,6 @@ export default {
     },
 
     step_component() {
-
       const step_no = this.current_steps_map[this.current_phase]
       const step = typeof step_no == 'undefined' ? 0 : step_no
 
@@ -354,8 +364,13 @@ export default {
 
     deleteStep(step_no) {
       const phase_no = this.current_phase
+      // if step to be deleted is last, set next step index to second to last
+      if (step_no == this.procedure.length-1) {
+        this.$set(this.current_steps_map, this.current_phase, this.procedure.length-2)
+      }
       this.$store.commit('DELETE_STEP', { phase_no, step_no })
       this.confirming_delete = false
+
     },
 
     updateTabIndex(event) {

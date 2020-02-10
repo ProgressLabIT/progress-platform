@@ -7,7 +7,7 @@
           <v-img src="http://source.unsplash.com/300x200?product"/>
         </v-card>
       </v-col>  
-      <v-col cols="3" class="align-self-center text-center">
+      <v-col v-if="edit_mode" cols="3" class="align-self-center text-center">
         <v-icon :color="$theme.whitelow">add_a_photo</v-icon>              
         <p class="smaller text-uppercase mt-2">Aggiungi immagini</p>
       </v-col>  
@@ -21,7 +21,7 @@ export default {
 
   name: 'StepInstruction',
 
-  props: ['phase_no', 'step_no'],
+  props: ['phase_no', 'step_no', 'edit_mode'],
 
   computed: {
 

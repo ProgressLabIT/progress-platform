@@ -3,11 +3,14 @@
     <h5 class="mt-6 mb-6 text-uppercase">Campi modulo</h5>
     
     <draggable v-model="input_fields" 
+      :disabled="!edit_mode"
+      handle=".handle"
       @start="drag = true" 
       @end="drag = false"
       v-bind="$store.state.drag_options">
       <transition-group type="transition" :name="!drag ? 'flip-list' : null">
       <v-row 
+        justify="space-between"
         v-for="(field, index) in input_fields" :key="index"
         dense no-gutters class="mb-6">
         <v-col cols="12" class="py-0">
@@ -34,7 +37,7 @@
           ></v-textarea>
         </v-col> 
         
-        <v-col align-self="start">
+        <v-col align-self="start" cols="auto">
           <v-switch 
             dense hide-details  flat
             :input-value="multilineCheck(field.type)"
@@ -49,8 +52,17 @@
           </v-switch>
         </v-col>  
 
-        <v-spacer></v-spacer> 
-        
+        <v-col class="d-flex align-end" cols="auto">
+          <v-hover v-slot:default="{ hover }">
+            <v-icon 
+              class="handle"
+              :color="$theme.whitelow"
+              :style="drag ? 'cursor: grabbing' : 'cursor: grab'">
+              drag_handle
+            </v-icon>
+          </v-hover>
+        </v-col>  
+
         <v-hover v-slot:default="{ hover }">
           <v-col cols="auto" align-self="end">                
             <button 
@@ -98,14 +110,14 @@
     </transition-group>
     </draggable>
 
-    <button
-        :color="$theme.whitehigh"
-        class="py-1 weight-medium highlight"
-        style="font-size: 14px"
-        @click="addField"
-        >
-        + Aggiungi campo
-    </button>
+    <v-hover v-slot:default="{ hover }">    
+      <v-btn text small class="ml-n3"
+        v-if="edit_mode"
+        :color="hover ? $theme.blue : $theme.whitehigh"
+        @click="addField">
+         + Aggiungi campo
+      </v-btn>
+    </v-hover>
 
   </div>
 </template>
@@ -121,7 +133,7 @@ export default {
     draggable
   },
 
-  props: ['phase_no', 'step_no'],
+  props: ['phase_no', 'step_no', 'edit_mode'],
 
   data() {
     return {
