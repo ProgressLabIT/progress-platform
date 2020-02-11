@@ -112,3 +112,8 @@ class PhaseData(BaseModel):
   alias: str
   description: str = None
   steps: List[Step] = []
+
+
+class PhaseSequence(BaseModel):
+  product_key: str = Field(..., alias='_key')
+  process_phases: List[str]

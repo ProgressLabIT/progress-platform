@@ -40,9 +40,7 @@ async def create_product(
   # Map form data
   try:
     new_product = ProductFull(code=code, description=description)
-    print("New product: ", new_product, type(new_product))
     new_product_json = new_product.json(by_alias=True)
-    print("New product json: ", new_product_json, type(new_product_json))
 
   except Exception as e:
     error_str = traceback.format_exc()
