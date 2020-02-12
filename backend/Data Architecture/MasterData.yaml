@@ -54,7 +54,7 @@
   # rel 0:N --requires--> 0:N EquipmentClass (PhaseEquipment)
     - default_equipment_id: _key
   # rel 0:N --assigned_to--> 0:N UserGroup / User
-  std_processing_time: float
+  std_processing_time: int # milliseconds
   step_sequence: List[str] # Step _id
   params:
     # material_check_mandatory: bool
@@ -72,9 +72,7 @@
   description: str 
   # doc: List[str] # doc title
   type: str [instruction, form, checklist]
-  checks: List[obj]
-    - type: enum[short, long]
-    - name: str
+  checks: List[str]
   input_fields: list[obj]
     - field_type: str [(see specs)]
     - field_name: str

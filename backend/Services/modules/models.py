@@ -42,9 +42,9 @@ class ProductFull(ProductBase):
   cost: TargetAverageData = TargetAverageData()
   sale_price: float = 0
   margin: TargetAverageData = TargetAverageData()
-  technical_batch_qt: float = 0
-  economic_order_qt: float = 0
-  minimum_order_qt: float = 0
+  technical_batch_qt: int = 0
+  economic_order_qt: int = 0
+  minimum_order_qt: int = 0
   tags: List[str] = []
   process_phases: List[str] = [] 
 
@@ -90,30 +90,66 @@ class BomItemWrite(BaseModel):
 # PROCESS
 # ==================================
 
-class InputFieldType(str, Enum):
-  short = "short"
-  long = "long"
-
-class InputField(BaseModel):
-  type: InputFieldType
-  name: str = None
-
-class Step(BaseModel):
-  key: str = Field(..., alias="_key")
-  title: str
-  description: str = None
-  type: str
-  checks: List[str] = []
-  input_fields: List[InputField] = []
-
-
 class PhaseData(BaseModel):
   id: str = Field(..., alias="_id")
   alias: str
   description: str = None
   steps: List[Step] = []
 
+class StepCheck(Enum):
+  NONE = 'None'
+  SINGLE = 'Single'
+  FIXED_BATCH = 'Fixed batch'
+  MANUAL_BATCH = 'Manual batch'
+  JOB = 'Job'
 
-class PhaseSequence(BaseModel):
+class ReleaseStyle(Enum):
+  CONTINUOUS = 'Continuous'
+  BATCH = 'Batch'
+  SESSION = 'Session'
+  MANUAL = 'Manual'
+  JOB = 'Job'
+
+class PhaseParameters(BaseModel):
+  parallel_job_allowed: bool = True
+  step_check: StepCheck = StepCheck.SINGLE
+  step_check_force_order: bool = False
+  release_style: ReleaseStyle = ReleaseStyle.JOB
+  production_batch_qt: int = 1
+  release_batch_qt: int = 1
+
+class PhaseUpdate(BaseModel):
+  id: str = Field(..., alias="_id")
+  alias: str = None
+  description: str = None  
+  std_processing_time: int = None, # in milliseconds
+  params: PhaseParameters = None,
+  step_sequence: List[str] = None
+
+class StepType(Enum):
+  INSTRUCTION = 'i'
+  FORM = 'f'
+  CHECKLIST = 'c'
+
+class FieldType(Enum):
+  SHORT = 'short'
+  LONG = 'long'
+
+class InputField(BaseModel):
+  field_type: FieldType = 'short'
+  field_name: str = None
+  # Add mandatory flag and field description
+
+class Step(FlexModel):
+  id: str = Field(None, alias="_id")
+  title: str = None
+  description: str = None
+  type: StepType = 'i'
+  checks: List[str] = []
+  input_fields: List[InputField] = []
+
+class ProcessUpdate(BaseModel):
   product_key: str = Field(..., alias='_key')
-  process_phases: List[str]
+  process_phases: List[str] = None
+  phase_update_data: List[PhaseUpdate] = None
+  step_update_data: List[Step] = None

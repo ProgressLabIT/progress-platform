@@ -76,75 +76,8 @@ async def get_production_process(product_key):
   return results
 
 
-@router.put("product/{product_key}/process/phase-sequence")
-async def update_phase_sequence(process_phases):
+@router.post("product/{product_key}/process-update")
+async def update_process(process_update):
+  return true
   
-  try:
-    new_sequence = PhaseSequence(product_key, process_phases)
-  except Exception as e:
-    status_code = 422
-    message = "The data provided doesn't match the required format"
-    error_str = traceback.format_exc()
-    response = {
-      'status': status_code,
-      'message': message,
-      'error': error_str
-    }
-    raise HTTPException(
-      status_code = status_code,
-      detail = response
-    )
-
-  phase_db = db.collection('Phase')
-  for phase in sequence.process_phases:
-    if phase not in phase_db:
-      status_code = 400
-      message = f"At least one phase key is not correctly registered in the db, e.g.: { phase }"
-      response = {
-       'status': status_code,
-       'message': message
-      }
-      raise HTTPException(
-        status_code = status_code,
-        detail = response
-      )
-
-  product_db = db.collection('Product')
-  if product_key not in product_db:
-    status_code = 404
-    message = f"The product with key {product_key} does not exist in the database."
-    response = {
-      'status': status_code,
-      'message': message
-    }
-    raise HTTPException(
-      status_code = status_code,
-      detail = response
-    )
-
-  try:
-    product_db.update(new_sequence)
-  except Exception as e:
-    status_code = 500
-    message = "Could not update the db"
-    error_str = traceback.format_exc()
-    response = {
-      'status': status_code,
-      'message': message,
-      'error': error_str
-    }
-    raise HTTPException(
-      status_code = status_code,
-      detail = response
-    )
-
-  response_details = {
-    'product_key': new_sequence.product_key,
-    'process_phases': new_sequence.process_phases
-  }
-
-  return APIResponse(
-    status_code = 200,
-    message = "Process sequence updated",
-    details = response_details
-  )
+  
