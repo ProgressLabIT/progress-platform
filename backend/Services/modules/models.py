@@ -90,12 +90,6 @@ class BomItemWrite(BaseModel):
 # PROCESS
 # ==================================
 
-class PhaseData(BaseModel):
-  id: str = Field(..., alias="_id")
-  alias: str
-  description: str = None
-  steps: List[Step] = []
-
 class StepCheck(Enum):
   NONE = 'None'
   SINGLE = 'Single'
@@ -147,6 +141,14 @@ class Step(FlexModel):
   type: StepType = 'i'
   checks: List[str] = []
   input_fields: List[InputField] = []
+
+
+class PhaseData(BaseModel):
+  id: str = Field(..., alias="_id")
+  alias: str
+  description: str = None
+  steps: List[Step] = []
+
 
 class ProcessUpdate(BaseModel):
   product_key: str = Field(..., alias='_key')
