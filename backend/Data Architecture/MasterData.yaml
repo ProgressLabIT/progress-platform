@@ -24,9 +24,9 @@
   technical_batch_qt: float
   economic_order_qt: float
   minimum_order_qt: float
-  tags: list(str)
+  tags: list[str]
     - tag_key: _key
-  process_phases: list(str)
+  process_phases: list[str]
 
 # Tag:
   *ft name: str
@@ -43,16 +43,19 @@
 
 # Phase
 	alias: str
+  description: str
+  product: str # _id
   # rel 1:1 <--requires-- 1:N Product (ProductPhase)
-		-   sequence: int
 	# rel 0:N --requires--> 0:N Product (SubAssembly)	# e.g. for sub-assemblies
 		- required_qt: float
 	# rel 1:1 --requires--> 0:N Operation (PhaseOp)
-    - std_processing_time: float
   # rel 0:N --requires--> 0:N Items (BomItems)
     - required_qt: float
   # rel 0:N --requires--> 0:N EquipmentClass (PhaseEquipment)
     - default_equipment_id: _key
+  # rel 0:N --assigned_to--> 0:N UserGroup / User
+  std_processing_time: int # milliseconds
+  step_sequence: List[str] # Step _id
   params:
     # material_check_mandatory: bool
     # missing_items_allowed: bool
@@ -64,13 +67,13 @@
     release_batch_qt: float
 
 # Step
-  * phase: _key
-  sequence: int
+  phase: _key
   title: str
   description: str 
-  doc: list(str) # doc title
+  # doc: List[str] # doc title
   type: str [instruction, form, checklist]
-  form_fields: list(obj)
+  checks: List[str]
+  input_fields: list[obj]
     - field_type: str [(see specs)]
     - field_name: str
     - field_desc: str
@@ -96,8 +99,15 @@
 	psw_hash: str
 	status: str [logged_in, working, logged_out]
   last_user_session: _key
+  # rel 0:N --belongs_to--> 0:N Group (UserGroup)
+  # rel 0:N <--assigned_to-- 0:N Phase/Job (PhaseOwner, JobOwner)
   # experience: rel (0:N --carries_out--> 0:N)
   #   - exp_level: float
+
+# Group
+  code: str
+  name: str
+  # 0:N <--assigned_to-- 0:N Phase/Job (PhaseOwner, JobOwner)
 
 # Customers
   _key: str (customer code)
@@ -117,6 +127,8 @@
 	# rel 0:N --belongs_to--> 0:N Department (ResourceDepartment)
 	# rel 0:N <--requires-- 0:N Operation (ResourceOperation)
   # rel 1:N <--has_access_to-- 0:N User (ResourceUser)
+
+
 
 # Department
 	name: str

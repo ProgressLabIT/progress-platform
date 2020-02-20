@@ -9,10 +9,22 @@ router = APIRouter()
 items_db = db.collection('ProductionItem')
 
 @router.get('/item')
-async def get_item_catalog(item_code: str = None):
+async def get_bom_catalog(item_code: str = None):
   
   try: 
-    item_list = items_db.all()
+    item_list = [i for i in items_db.all()]
+    product_list = db.aql.execute("""
+      FOR p IN Product
+      RETURN {
+        type: 'subassembly',
+        _id: p._id,
+        code: p.code,
+        description: p.description
+      }
+    """)
+
+    for p in product_list:
+      item_list.append(p)
 
   except Exception as e:
     error_str = traceback.format_exc()
