@@ -9,7 +9,9 @@
         <h1 class="display highlight mb-2">{{ product_data.code }}</h1>
         <p>{{ product_data.description }}</p>
 
+      
         <h5 class="mt-12 mb-6">FASI PROCESSO</h5>
+
         <v-tabs
           vertical grow
           v-model="current_phase"
@@ -18,9 +20,10 @@
           background-color="transparent"
           style="max-height: 70%"
           class="scroll"
-        >
+          >
           <draggable 
             v-model="process" 
+            :disabled="!edit_mode"
             @change="updateActivePhaseIndex($event)"
             @start="drag = true" 
             @end="drag = false"
@@ -31,6 +34,7 @@
               :key="index" 
               class="d-flex justify-start pl-1 pr-0"
               style="max-height:40px; width: 100%"
+              @click="confirming_delete = null"
               >
               <v-row 
                 align="center" 
@@ -57,7 +61,8 @@
 
                 <v-spacer></v-spacer> 
                 
-                <v-col cols="1" v-show="over_phase==index" class="mr-2">
+                <v-col cols="1" 
+                  v-if="edit_mode" v-show="over_phase==index" class="mr-2">
                   <TooltipIcon
                     icon="delete"
                     tooltip="Elimina fase"
@@ -109,22 +114,54 @@
           </draggable>
         </v-tabs>
         
-        <v-spacer></v-spacer>
 
-        <!-- ADD PHASE -->
+
+        <!-- ADD PHASE SELECT -->
         <v-select
           id="add_phase"
           ref="add_phase"
+          v-if="edit_mode"
           :items="operations"
           :item-text="'description'"
           return-object
           v-model="new_op"
-          label="ADD A PHASE"
+          label="Aggiungi fase"
           hide-details
           single-line
-          class="align-end"
           @input="addPhase($event)"
+          class="flex-grow-0 mt-6 mb"
           ></v-select>
+
+        <v-spacer></v-spacer>
+
+
+        <!-- EDIT / SAVE / CANCEL BUTTONS -->
+        <v-btn 
+          class="mt-auto" 
+          v-if="!edit_mode"
+          @click="toggleEdit"
+          :color="$theme.blue"
+          >
+          MODIFICA PROCESSO
+        </v-btn>
+
+        <div v-else>
+          <v-btn block 
+            class="mb-2" 
+            :color="$theme.green" 
+            @click="saveChanges">
+            <div v-if="!saving">
+              SALVA
+            </div>
+            <v-progress-circular v-else indeterminate :color="$theme.white"/>
+          </v-btn>
+          <v-btn block 
+            :color="$theme.grey"
+            :disabled="saving"  
+            @click="cancelChanges">
+            ANNULLA
+          </v-btn>
+        </div>  
 
       <!-- PHASE DETAILS -->
       </v-col>  
@@ -148,7 +185,10 @@
       </v-row>  
         <v-card elevation="0" class="scroll flex-grow-1">
           <keep-alive>
-            <v-component :is="views[tab].component"></v-component>
+            <v-component 
+              :is="views[tab].component" 
+              :edit_mode="edit_mode">
+            </v-component>
           </keep-alive>
         </v-card>
       </v-col>  
@@ -191,7 +231,9 @@ export default {
       new_op: null,
       over_phase: null,
       confirming_delete: null,
+      saving: false,
       drag: false,
+      edit_mode: false,
     }
   },
 
@@ -224,7 +266,7 @@ export default {
 
     process: {
       get() {
-        return this.$store.state.process.phases
+        return this.$store.state.process.temp
       },
 
       set(value) {
@@ -237,12 +279,26 @@ export default {
   methods: {
     ...mapActions(['loadProductDetails']),
 
+    toggleEdit() {
+      this.edit_mode = true
+    },
+
+    cancelChanges() {
+      this.$store.commit('CANCEL_PROCESS_CHANGES')
+      this.edit_mode = false
+    },
+
     addPhase(new_operation) {
       let new_process = this.process
-      new_process.push({ alias: new_operation.name, steps: []})
+      new_process.push({ 
+        alias: new_operation.name, 
+        operation_id: new_operation._id, 
+        steps: []
+      })
       this.$store.commit('UPDATE_PROCESS', new_process)
       this.current_phase = new_process.length - 1
 
+      // push blur to the end of the stack to let animation run properly
       setTimeout(() => {
         this.new_op = null
         this.$refs.add_phase.blur()
@@ -273,12 +329,33 @@ export default {
       new_steps_map.splice(moved.newIndex, 0, moved.element)
 
       this.$store.commit('UPDATE_PRODUCT_NAV_STATE', { last_steps: new_steps_map })
+    },
+
+    saveChanges() {
+      this.saving = true
+      let process_update = {
+        product_key: this.product_key,
+        new_process: this.process
+      }
+      this.$store.dispatch('saveTempProcess', process_update)
+        .then(() => {
+        // Show progress long enough the let user notice something is going on
+        // even if the update is instantaneous
+          setTimeout(() => {
+            this.saving = false
+            this.edit_mode = false
+          }, 1500)
+        }).catch(err => {
+          window.alert(err)
+          this.saving = false
+          this.edit_mode = false
+        })
     }
   },
 
   created() {
+    this.$store.dispatch('getProcess', this.product_key)
     this.$store.dispatch('getOperations')
-    this.loadProductDetails(this.product_key)
   },
 
 };

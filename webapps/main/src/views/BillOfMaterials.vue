@@ -12,7 +12,7 @@
         <v-text-field
           hide-details
           single-line
-          autocomplete="false"
+          autocomplete="off"
           name="search"
           label="Codice o Descrizione"
           v-model="search"
@@ -59,9 +59,10 @@
         <v-snackbar
           top :timeout="0"
           :color="saving_progress ? $theme.blue : $theme.green"
-          v-model="show_save_snackbar"
-        >
+          v-model="show_save_snackbar">
+
           {{ saving_progress ? "Salvataggio in corso" : "Distinta aggiornata" }}
+          
           <v-btn v-if="!saving_progress" text :color="$theme.white" @click.native="show_save_snackbar = false">Close</v-btn>
           <v-progress-circular :color="$theme.white" indeterminate v-show="saving_progress"></v-progress-circular>
         </v-snackbar>
@@ -163,7 +164,7 @@
             <v-col>
               <v-autocomplete
                 v-model="new_item_phase"
-                :items="$store.state.process.phases"
+                :items="$store.state.process.temp"
                 item-value="_id"
                 item-text="alias"
                 single-line
@@ -398,9 +399,9 @@ export default {
   },
 
   created() {
-    this.$store.dispatch('getOperations')
-    this.loadProductDetails(this.product_key)
+    this.$store.dispatch('getBom', this.product_key)
     this.loadTempBom()
+    this.$store.dispatch('getOperations')
   },
 
   mounted() {

@@ -26,7 +26,7 @@ const bom = {
       })
     },
 
-    loadBom({ commit }, product_key) {
+    getBom({ commit }, product_key) {
       return new Promise(resolve => {
         api
           .get(`product/${product_key}/bom`)

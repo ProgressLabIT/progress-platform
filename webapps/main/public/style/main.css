@@ -127,16 +127,16 @@ span .display {
 }
 
 .scroll {
-  overflow: auto !important;
+  overflow: scroll !important;
   flex-wrap: nowrap !important;
 }
 
 /* Highlight color on hover for VDataTable rows */
 .v-data-table tr:hover:not(.v-data-table__expanded__content) {
   background-color: rgba(39,174,209, .4) !important;
-  -webkit-box-shadow: 0px 0px 20px 0px rgba(34,174,209,1);
+  /*-webkit-box-shadow: 0px 0px 20px 0px rgba(34,174,209,1);
   -moz-box-shadow:  0px 0px 20px 0px rgba(34,174,209,1);
-  box-shadow:  0px 0px 20px 0px rgba(34,174,209,1);
+  box-shadow:  0px 0px 20px 0px rgba(34,174,209,1);*/
 }
 
 
