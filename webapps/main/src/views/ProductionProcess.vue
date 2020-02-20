@@ -20,7 +20,7 @@
           background-color="transparent"
           style="max-height: 70%"
           class="scroll"
-        >
+          >
           <draggable 
             v-model="process" 
             :disabled="!edit_mode"
@@ -34,6 +34,7 @@
               :key="index" 
               class="d-flex justify-start pl-1 pr-0"
               style="max-height:40px; width: 100%"
+              @click="confirming_delete = null"
               >
               <v-row 
                 align="center" 
@@ -60,7 +61,8 @@
 
                 <v-spacer></v-spacer> 
                 
-                <v-col cols="1" v-show="over_phase==index" class="mr-2">
+                <v-col cols="1" 
+                  v-if="edit_mode" v-show="over_phase==index" class="mr-2">
                   <TooltipIcon
                     icon="delete"
                     tooltip="Elimina fase"
@@ -144,8 +146,21 @@
         </v-btn>
 
         <div v-else>
-          <v-btn block class="mb-2" :color="$theme.green" @click="saveChanges">SALVA</v-btn>
-          <v-btn block :color="$theme.grey" @click="cancelChanges">ANNULLA</v-btn>
+          <v-btn block 
+            class="mb-2" 
+            :color="$theme.green" 
+            @click="saveChanges">
+            <div v-if="!saving">
+              SALVA
+            </div>
+            <v-progress-circular v-else indeterminate :color="$theme.white"/>
+          </v-btn>
+          <v-btn block 
+            :color="$theme.grey"
+            :disabled="saving"  
+            @click="cancelChanges">
+            ANNULLA
+          </v-btn>
         </div>  
 
       <!-- PHASE DETAILS -->
@@ -216,8 +231,9 @@ export default {
       new_op: null,
       over_phase: null,
       confirming_delete: null,
+      saving: false,
       drag: false,
-      edit_mode: true,
+      edit_mode: false,
     }
   },
 
@@ -250,7 +266,7 @@ export default {
 
     process: {
       get() {
-        return this.$store.state.process.phases
+        return this.$store.state.process.temp
       },
 
       set(value) {
@@ -268,15 +284,21 @@ export default {
     },
 
     cancelChanges() {
+      this.$store.commit('CANCEL_PROCESS_CHANGES')
       this.edit_mode = false
     },
 
     addPhase(new_operation) {
       let new_process = this.process
-      new_process.push({ alias: new_operation.name, steps: []})
+      new_process.push({ 
+        alias: new_operation.name, 
+        operation_id: new_operation._id, 
+        steps: []
+      })
       this.$store.commit('UPDATE_PROCESS', new_process)
       this.current_phase = new_process.length - 1
 
+      // push blur to the end of the stack to let animation run properly
       setTimeout(() => {
         this.new_op = null
         this.$refs.add_phase.blur()
@@ -307,12 +329,33 @@ export default {
       new_steps_map.splice(moved.newIndex, 0, moved.element)
 
       this.$store.commit('UPDATE_PRODUCT_NAV_STATE', { last_steps: new_steps_map })
+    },
+
+    saveChanges() {
+      this.saving = true
+      let process_update = {
+        product_key: this.product_key,
+        new_process: this.process
+      }
+      this.$store.dispatch('saveTempProcess', process_update)
+        .then(() => {
+        // Show progress long enough the let user notice something is going on
+        // even if the update is instantaneous
+          setTimeout(() => {
+            this.saving = false
+            this.edit_mode = false
+          }, 1500)
+        }).catch(err => {
+          window.alert(err)
+          this.saving = false
+          this.edit_mode = false
+        })
     }
   },
 
   created() {
+    this.$store.dispatch('getProcess', this.product_key)
     this.$store.dispatch('getOperations')
-    this.loadProductDetails(this.product_key)
   },
 
 };

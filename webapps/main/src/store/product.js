@@ -1,5 +1,6 @@
 import Vue from "vue"
 import axios from "axios"
+import { cloneDeep as cd } from 'lodash'
 import { api } from '@/lib/apiCall.js'
 import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js' 
 
@@ -52,7 +53,8 @@ const product = {
        *  Data about process, bom, issues must be added.
        */
       Vue.set(state, 'details', product_details.metadata)
-      Vue.set(this.state.process, 'phases', product_details.process)
+      Vue.set(this.state.process, 'temp', cd(product_details.process))
+      Vue.set(this.state.process, 'saved', cd(product_details.process))
       Vue.set(this.state.bom, 'items', product_details.bom)
     },
   },

@@ -126,7 +126,7 @@ export default {
     },
 
     current_step() {
-      let procedure = this.$store.state.process.phases[this.phase_no].steps
+      let procedure = this.$store.state.process.temp[this.phase_no].steps
       return procedure[this.step_no]
     },
 

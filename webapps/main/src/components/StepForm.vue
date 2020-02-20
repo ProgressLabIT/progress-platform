@@ -2,7 +2,8 @@
   <div>
     <h5 class="mt-6 mb-6 text-uppercase">Campi modulo</h5>
     
-    <draggable v-model="input_fields" 
+    <draggable 
+      v-model="input_fields" 
       :disabled="!edit_mode"
       handle=".handle"
       @start="drag = true" 
@@ -18,6 +19,7 @@
           <v-text-field
             filled single-line dense hide-details
             v-if="field.type=='short'"
+            :disabled="!edit_mode"
             :label="`Nome campo ${index + 1}`"
             :name="`field-${index + 1}`"
             :value="field.name"
@@ -29,6 +31,7 @@
             filled single-line dense auto-grow hide-details
             v-if="field.type=='long'"
             rows="4"
+            :disabled="!edit_mode"
             :label="`Nome campo ${index + 1}`"
             :name="`field-${index + 1}`"
             :value="field.name"
@@ -37,7 +40,7 @@
           ></v-textarea>
         </v-col> 
         
-        <v-col align-self="start" cols="auto">
+        <v-col align-self="start" cols="auto" v-if="edit_mode">
           <v-switch 
             dense hide-details  flat
             :input-value="multilineCheck(field.type)"
@@ -52,7 +55,7 @@
           </v-switch>
         </v-col>  
 
-        <v-col class="d-flex align-end" cols="auto">
+        <v-col class="d-flex align-end" cols="auto" v-if="edit_mode">
           <v-hover v-slot:default="{ hover }">
             <v-icon 
               class="handle"
@@ -63,7 +66,7 @@
           </v-hover>
         </v-col>  
 
-        <v-hover v-slot:default="{ hover }">
+        <v-hover v-slot:default="{ hover }" v-if="edit_mode">
           <v-col cols="auto" align-self="end">                
             <button 
               v-if="confirming_delete != index"  
@@ -91,10 +94,6 @@
                 <span class="body-2">Confermi?</span>
               </v-col>  
             
-              <!-- <v-spacer></v-spacer> -->
-            
-            
-            
               <v-col cols="auto">
                 <v-btn 
                   x-small :color="$theme.grey"
@@ -110,7 +109,7 @@
     </transition-group>
     </draggable>
 
-    <v-hover v-slot:default="{ hover }">    
+    <v-hover v-slot:default="{ hover }" v-if="edit_mode">    
       <v-btn text small class="ml-n3"
         v-if="edit_mode"
         :color="hover ? $theme.blue : $theme.whitehigh"
@@ -150,7 +149,7 @@ export default {
 
     input_fields: {
       get() {
-        const procedure = this.$store.state.process.phases[this.phase_no].steps
+        const procedure = this.$store.state.process.temp[this.phase_no].steps
         const current_step = procedure[this.step_no]
         return current_step.input_fields
       },

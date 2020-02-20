@@ -32,6 +32,7 @@
                 class="d-flex justify-start align-center pl-1 pr-0"
                 :class="current_step_no == index ? 'weight-bold' : 'font-weight-regular'"
                 style="width: 100%; max-height: 40px; text-transform: none !important; letter-spacing: normal"
+                @click="confirming_delete = false"
                 >
                 <v-row align="center" style="width: 100%" no-gutters class="pr-1">
 
@@ -155,10 +156,10 @@
         <div v-if="edit_mode" style="position: absolute; bottom: 0px; right: 0px; height:12vh; width: 35%">
           <v-container class="fill">
             <v-row class="fill" align="center" justify="end" v-if="confirming_delete==false">
-              <span 
-                class="display smaller weight-bold mr-3" 
+              <span
+                class="display smaller weight-bold mr-3 pa-2" 
                 v-show="over_delete"
-                :style="'color: ' + $theme.red">
+                :style="'color: white; background-color: ' + $theme.red">
                 elimina passo    
               </span>
               <v-btn 
@@ -173,26 +174,27 @@
 
             <!-- STEP DELETE/RESTORE CONFIRMATION -->
 
-            <!-- <v-card outlined v-else elevation="4" class="fill"> -->
-                <v-row v-else align="center" justify="end" class="fill px-4" no-gutters>
+            <v-card v-else outlined elevation="4">
+                <v-row align="center" justify="space-between" class="px-4">
                   <v-col cols="auto">
-                    <span class="display highlight weight-bold">confermi?</span>
+                    <span class="display medium highlight weight-bold">confermi?</span>
                   </v-col>  
                   <!-- <v-spacer></v-spacer> -->
-                  <v-col cols="2">
+                  <v-col cols="auto">
                     <v-btn fab small
-                      class="mx-2" :color="$theme.red" 
-                      @click="deleteStep(current_step_no)">
+                      :color="$theme.red" 
+                      @click="deleteStep(current_step_no)"
+                      class="mr-2">
                       <v-icon>delete</v-icon>
                     </v-btn>
-                  </v-col> 
-                  <v-col cols="auto" class="ml-4">
-                    <v-btn fab small :color="$theme.grey" @click="confirming_delete = false">
+                    <v-btn fab small 
+                      :color="$theme.grey" 
+                      @click="confirming_delete = false">
                       <v-icon>close</v-icon>
                     </v-btn>
                   </v-col>   
                 </v-row>
-            <!-- </v-card> -->
+            </v-card>
 
           </v-container>
         </div>
@@ -269,7 +271,7 @@ export default {
 
     procedure: {
       get() {
-        try { return this.$store.state.process.phases[this.current_phase].steps }
+        try { return this.$store.state.process.temp[this.current_phase].steps }
         catch {
           return null
         }
@@ -364,9 +366,11 @@ export default {
 
     deleteStep(step_no) {
       const phase_no = this.current_phase
+      const len = this.procedure.length
       // if step to be deleted is last, set next step index to second to last
-      if (step_no == this.procedure.length-1) {
-        this.$set(this.current_steps_map, this.current_phase, this.procedure.length-2)
+      if (step_no == len-1) {
+        const next_step_no = len > 1 ? len - 2 : 0
+        this.$set(this.current_steps_map, this.current_phase, next_step_no)
       }
       this.$store.commit('DELETE_STEP', { phase_no, step_no })
       this.confirming_delete = false
