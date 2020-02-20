@@ -70,11 +70,11 @@ class ProductionItem(FlexModel):
 class BomItemRead(BaseModel):
   item_id: str
   rel_id: str
-  phase_id: str
+  phase_id: str = None
   code: str
   description: str
   type: str = None
-  phase_name: str
+  phase_name: str = None
   qt: float
 
 class BomItemWrite(BaseModel):
@@ -91,18 +91,22 @@ class BomItemWrite(BaseModel):
 # ==================================
 
 class StepCheck(Enum):
-  NONE = 'None'
-  SINGLE = 'Single'
-  FIXED_BATCH = 'Fixed batch'
-  MANUAL_BATCH = 'Manual batch'
-  JOB = 'Job'
+  NONE = 'none'
+  SINGLE = 'single'
+  FIXED_BATCH = 'fixed_batch'
+  MANUAL_BATCH = 'manual_batch'
+  JOB = 'job'
 
 class ReleaseStyle(Enum):
-  CONTINUOUS = 'Continuous'
-  BATCH = 'Batch'
-  SESSION = 'Session'
-  MANUAL = 'Manual'
-  JOB = 'Job'
+  CONTINUOUS = 'continuous'
+  BATCH = 'batch'
+  SESSION = 'session'
+  MANUAL = 'manual'
+  JOB = 'job'
+
+class WIPAccess(Enum):
+  LINE = 'line'
+  BUFFER = 'buffer'
 
 class PhaseParameters(BaseModel):
   parallel_job_allowed: bool = True
@@ -111,47 +115,48 @@ class PhaseParameters(BaseModel):
   release_style: ReleaseStyle = ReleaseStyle.JOB
   production_batch_qt: int = 1
   release_batch_qt: int = 1
-
-class PhaseUpdate(BaseModel):
-  id: str = Field(..., alias="_id")
-  alias: str = None
-  description: str = None  
-  std_processing_time: int = None, # in milliseconds
-  params: PhaseParameters = None,
-  step_sequence: List[str] = None
+  # wip_flow: WIPFlow = WIPFlow.BUFFER
 
 class StepType(Enum):
-  INSTRUCTION = 'i'
-  FORM = 'f'
-  CHECKLIST = 'c'
+  INSTRUCTION = 'instruction'
+  FORM = 'form'
+  CHECKLIST = 'checklist'
 
 class FieldType(Enum):
   SHORT = 'short'
   LONG = 'long'
 
 class InputField(BaseModel):
-  field_type: FieldType = 'short'
-  field_name: str = None
+  type: FieldType = 'short'
+  name: str = None
   # Add mandatory flag and field description
 
 class Step(FlexModel):
   id: str = Field(None, alias="_id")
   title: str = None
   description: str = None
-  type: StepType = 'i'
+  type: StepType = 'instruction'
   checks: List[str] = []
   input_fields: List[InputField] = []
 
 
-class PhaseData(BaseModel):
-  id: str = Field(..., alias="_id")
+class PhaseProcedure(FlexModel):
+  id: str = Field(None, alias="_id")
   alias: str
   description: str = None
+  operation_id: str = None
   steps: List[Step] = []
+  params: PhaseParameters = PhaseParameters()
+  std_processing_time: int = 0 # in milliseconds
 
+class PhaseUpdate(PhaseProcedure):
+  step_sequence: List[Optional[str]] = []
 
 class ProcessUpdate(BaseModel):
+  # this is the output model for the event logging (after DB update)
   product_key: str = Field(..., alias='_key')
   process_phases: List[str] = None
-  phase_update_data: List[PhaseUpdate] = None
-  step_update_data: List[Step] = None
+  new_phases: List[str] = None
+  deleted_phases: List[str]
+  phase_data: List[PhaseUpdate] = None
+  step_data: List[Step] = None

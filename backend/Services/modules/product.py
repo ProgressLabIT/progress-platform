@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, HTTPException, Form, File
+from fastapi.encoders import jsonable_encoder
 from utils.db import db
 from utils.api import APIResponse
 from .models import ProductListItem, ProductFull
@@ -40,7 +41,7 @@ async def create_product(
   # Map form data
   try:
     new_product = ProductFull(code=code, description=description)
-    new_product_json = new_product.json(by_alias=True)
+    prepped_data = jsonable_encoder(new_product, by_alias=True)
 
   except Exception as e:
     error_str = traceback.format_exc()
@@ -63,7 +64,7 @@ async def create_product(
 
   # Insert into database
   try:
-    db_response = product_db.insert(new_product, return_new=True)
+    db_response = product_db.insert(prepped_data, return_new=True)
   except Exception:
     status_code = 500
     error_str = traceback.format_exc()
