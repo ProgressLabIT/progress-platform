@@ -117,7 +117,7 @@
 
 
         <!-- ADD PHASE SELECT -->
-        <v-select
+        <v-autocomplete
           id="add_phase"
           ref="add_phase"
           v-if="edit_mode"
@@ -130,7 +130,7 @@
           single-line
           @input="addPhase($event)"
           class="flex-grow-0 mt-6 mb"
-          ></v-select>
+          ></v-autocomplete>
 
         <v-spacer></v-spacer>
 

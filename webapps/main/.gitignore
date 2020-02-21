@@ -30,6 +30,8 @@ yarn-error.log*
 *.jpg
 *.pdf
 *.svg
+*.png
+*.gif
 *.woff
 *.woff2
 

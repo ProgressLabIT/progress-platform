@@ -166,3 +166,17 @@ span .display {
 #bom .v-data-table__selected {
   background-color: transparent !important
 }
+
+/*.v-autocomplete__content {
+  background-color: var(--surface-2) !important;
+  border-color: var(--box-border) !important;
+}*/
+
+
+.v-menu__content {
+  border: 1px solid var(--box-border);
+}
+
+.v-menu__content .v-card .v-list.v-sheet {
+  background-color: var(--surface-2);
+}
