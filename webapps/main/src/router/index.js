@@ -2,6 +2,8 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import ProductList from "@/views/ProductList.vue";
 import ModalScreen from "@/components/ModalScreen.vue";
+import Login from "@/views/Login.vue";
+
 
 
 Vue.use(VueRouter);
@@ -9,7 +11,12 @@ Vue.use(VueRouter);
 const routes = [
   {
     path: "/",
-    redirect: { name: 'productList' }
+    redirect: { name: 'login' }
+  },
+  {
+    path: "/login",
+    name: "login",
+    component: Login
   },
   {
     path: "/product",

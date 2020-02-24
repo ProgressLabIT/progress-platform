@@ -6,9 +6,9 @@
       <h3 class=" display">Library</h3>
 
       <!-- USER NAME & BADGE -->
-      <h5 class=" display highlight ml-auto">Josh White</h5>
+      <h5 class=" display highlight ml-auto">{{ username }}</h5>
       <v-avatar size="28" class="my-auto mr-3 ml-2">
-        <img src="pics/users/Josh White.jpg">
+        <v-img :src="avatar_url"></v-img>
       </v-avatar>
       
   </v-app-bar>
@@ -21,9 +21,28 @@ export default {
 
   data () {
     return {
-
     }
-  }
+  },
+
+  computed: {
+      
+    user() {
+      return this.$store.state.user.user
+    },
+
+    username() {
+      return this.user.name + ' ' + this.user.surname
+    },
+
+    avatar_name() {
+      return this.user.pic
+    },
+
+    avatar_url() {
+      return "/pics/users/" + this.avatar_name + '.jpg'
+    }
+  },
+
 }
 </script>
 

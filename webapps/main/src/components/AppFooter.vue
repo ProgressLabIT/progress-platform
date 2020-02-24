@@ -2,7 +2,7 @@
 	<v-footer app fixed :color="$theme.black">
 	  <v-row no-gutter class="align-center justify-space-between px-2">
 	    <v-col class="text-left pa-0">
-	    	<span class="display smaller">ACME CORP - PROGRESS</span>
+	    	<span class="display smaller">ESSEGI AUTOMATION - PROGRESS</span>
 	    	<span class="material-icons smaller ml-2">info</span>
 	    	<!-- <v-icon size="18" class="smaller ml-1">info</v-icon> -->
 	    </v-col>
@@ -31,7 +31,7 @@ export default {
 
   computed: {
   	time() { return this.now.toLocaleString(DateTime.TIME_SIMPLE) },
-  	date() { return this.now.toLocaleString(DateTime.DATE_HUGE) }
+  	date() { return this.now.setLocale("it").toLocaleString(DateTime.DATE_HUGE) }
   },
 
   created() {

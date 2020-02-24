@@ -4,6 +4,8 @@ import Vuex from "vuex";
 import product from "@/store/product"
 import process from "@/store/process"
 import bom from "@/store/bom"
+import user from "@/store/user"
+
 
 
 
@@ -236,6 +238,7 @@ export default new Vuex.Store({
   modules: {
     product,
     process,
-    bom
+    bom,
+    user
   }
 });

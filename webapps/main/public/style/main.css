@@ -180,3 +180,17 @@ span .display {
 .v-menu__content .v-card .v-list.v-sheet {
   background-color: var(--surface-2);
 }
+
+
+/* TRANSITIONS */
+.slide-fade-enter-active, .fade-enter-active {
+  transition: all .3s ease;
+}
+.slide-fade-leave-active, .fade-leave-active {
+  transition: all .3s ease;
+}
+.slide-fade-enter, .fade-enter, .slide-fade-leave-to, .fade-leave-to
+/* .slide-fade-leave-active for <2.1.8 */ {
+  transform: translateX(10px);
+  opacity: 0;
+}
