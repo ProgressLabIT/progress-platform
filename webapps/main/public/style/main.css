@@ -58,7 +58,7 @@
 }
 
 .weight-bold {
-  font-weight: bold;
+  font-weight: bold !important;
 }
 
 .surface-1 {
@@ -193,4 +193,10 @@ span .display {
 /* .slide-fade-leave-active for <2.1.8 */ {
   transform: translateX(10px);
   opacity: 0;
+}
+
+
+/* UPPERCASE STYLING FOR VUETIFY INPUTS */
+.input-uppercase input {
+  text-transform: uppercase;
 }

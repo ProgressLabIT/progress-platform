@@ -10,18 +10,18 @@
     <v-img 
       :src="image ? `/pics/products/${product._key}.jpeg` : ''" 
       class="fill" 
-      :style="product.active ? '' : 'filter:grayscale(1)'">
+      :style="product.active ? '' : 'filter:grayscale(1) brightness(.5)'">
       <v-container 
         class="pa-0 d-flex flex-column" 
         style="height:100%">
       
         <!-- Title and description overlay -->
         <v-sheet 
-          color="rgba(0,0,0,.7)" 
+          :color="image ? 'rgba(0,0,0,.7)' : 'transparent' " 
           class="px-2 py-0"
           @mouseenter="overDesc = true" 
           @mouseleave="overDesc = false" >      
-          <v-card-title class="display highlight px-0 pt-0 pb-3">
+          <v-card-title class="display highlight px-0 pt-0 pb-3 nowrap">
             {{ product.code }}
           </v-card-title>
          

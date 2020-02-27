@@ -3,6 +3,7 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 import vuetify from './plugins/vuetify';
+import { durationFromMillisec } from '@/lib/duration.js'
 
 Vue.config.productionTip = false;
 
@@ -17,15 +18,16 @@ Vue.prototype.$theme = {
   red: '#E71D36',
   orange: '#FF9F1C',
   whitelow: 'rgba(255,255,255,.6)',
-  whitehigh: 'rgba(255,255,255,.87)' 
+  whitehigh: 'rgba(255,255,255,.87)'
 }
 
-Vue.filter('capitalize', function (value) {
+Vue.filter('capitalize', function(value) {
   if (!value) return ''
   value = value.toString()
   return value.charAt(0).toUpperCase() + value.slice(1)
 })
 
+Vue.filter('duration', durationFromMillisec)
 
 new Vue({
   router,

@@ -33,7 +33,9 @@
 
         <!-- WINDOW CONTAINER -->
         <v-card outlined tile class="flex-grow-1 scroll" :style="'background-color:' + $theme.background">
+          <keep-alive>
             <router-view></router-view>
+          </keep-alive>
         </v-card>
 
       </v-container>
@@ -60,7 +62,7 @@ export default {
 
   methods: {
     exit() {
-      /* 
+      /** 
        * the delay allows for a nice closing animation of 
        * the modal  before going back to the previous route
        */

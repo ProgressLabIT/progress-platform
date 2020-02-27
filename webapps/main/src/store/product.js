@@ -1,14 +1,15 @@
 import Vue from "vue"
 import axios from "axios"
-import { cloneDeep as cd } from 'lodash'
+import { cloneDeep as _cloneDeep } from 'lodash'
 import { api } from '@/lib/apiCall.js'
 import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js' 
-
+// import { durationFromMillisec as duration } from '@/lib/duration.js'
 
 const product = {
 
   state: {
-    details: {},
+    saved: {},
+    temp: {},
     list: []
   },
 
@@ -39,6 +40,14 @@ const product = {
       })
     },
 
+    UPDATE_TEMP_PARAMETER(state, { param, new_value }) {
+      Vue.set(state.temp, param, new_value)
+    },
+
+    UPDATE_TEMP_TARGET(state, { param, new_target} ) {
+      Vue.set(state.temp[param], 'target', new_target)
+    },
+
     ADD_NEW_PRODUCT(state, new_product_data) {
       state.list.push(new_product_data)
     },
@@ -52,11 +61,23 @@ const product = {
        *  Currently this only sets the product metadata.
        *  Data about process, bom, issues must be added.
        */
-      Vue.set(state, 'details', product_details.metadata)
-      Vue.set(this.state.process, 'temp', cd(product_details.process))
-      Vue.set(this.state.process, 'saved', cd(product_details.process))
+      Vue.set(state, 'saved', _cloneDeep(product_details.metadata))
+      Vue.set(state, 'temp', _cloneDeep(product_details.metadata))
+
+      Vue.set(this.state.process, 'saved', _cloneDeep(product_details.process))
+      Vue.set(this.state.process, 'temp', _cloneDeep(product_details.process))
+      
       Vue.set(this.state.bom, 'items', product_details.bom)
     },
+
+    SAVE_PRODUCT_CHANGES(state, updated_product) {
+      Vue.set(state, 'saved', _cloneDeep(updated_product))
+      Vue.set(state, 'temp', _cloneDeep(updated_product))
+    },
+
+    CANCEL_PRODUCT_CHANGES(state) {
+      Vue.set(state, 'temp', _cloneDeep(state.saved))
+    }
   },
 
   actions: {
@@ -125,7 +146,18 @@ const product = {
         // console.log("loading product details", product_details)
         commit('LOAD_PRODUCT_DETAILS', product_details)
       }))
-    }
+    },
+
+
+    saveProductChanges({ commit }, data) {
+      // return api
+      //   .patch(`product/${data.product_key}`, data.updated_product)
+      //   .then( resp => {
+      //     commit('SAVE_PRODUCT_CHANGES', resp.data)
+      //   })
+      commit('SAVE_PRODUCT_CHANGES', data.updated_product)
+
+    },
 
   },
 

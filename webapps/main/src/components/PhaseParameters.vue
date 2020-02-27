@@ -46,6 +46,12 @@ export default {
 
   name: 'PhaseParameters',
 
+  data() {
+    return {
+      expansion_map: []
+    }
+  },
+
   computed: {
     
     product_key() {
