@@ -1,6 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from enum import Enum
+from random import randrange, uniform
 
 class FlexModel(BaseModel):
   class Config:
@@ -28,9 +29,15 @@ class ProductListItem(ProductBase):
   trash: bool = False
 
 
-class TargetAverageData(BaseModel):
-  target: float = 0
-  average: float = 0
+class TargetAverageCost(BaseModel):
+  target: float = randrange(500, 120000, 100)
+  average: float = target * (1 + uniform(-0.2, 0.2))
+
+
+class TargetAverageTime(TargetAverageCost):
+  target: float = randrange(900000, 216000000, 705267)
+  average: float = target * (1 + uniform(-0.2, 0.2))
+
 
 class ProductFull(ProductBase):
   """
@@ -39,14 +46,17 @@ class ProductFull(ProductBase):
   """
   active: bool = True
   trash: bool = False
-  cost: TargetAverageData = TargetAverageData()
-  sale_price: float = 0
-  margin: TargetAverageData = TargetAverageData()
+  cost: TargetAverageCost = TargetAverageCost()
+  # sale_price: float = 0
+  # margin: TargetAverageData = TargetAverageData()
   technical_batch_qt: int = 0
-  economic_order_qt: int = 0
+  # economic_order_qt: int = 0   ----> Doesn't make sense in a MTO/ATO context: only for purchases or MTS
   minimum_order_qt: int = 0
-  tags: List[str] = []
+  # tags: List[str] = []
   process_phases: List[str] = [] 
+  lead_time: TargetAverageTime = TargetAverageTime()
+  throughput_time: TargetAverageTime = TargetAverageTime()
+  processing_time: TargetAverageTime = TargetAverageTime()
 
 
 

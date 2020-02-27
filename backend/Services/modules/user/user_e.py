@@ -16,8 +16,6 @@ router = APIRouter()
 @router.post("/user-session")
 async def start_user_session(user: UserCredentials):
 
-  print(user)
-
   try:
     user = db.collection('User').find(jsonable_encoder(user)).next()
   

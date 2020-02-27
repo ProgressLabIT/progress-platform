@@ -185,7 +185,7 @@ async def udpate_product(
     )  
 
 
-@router.get("/{product_key}")
+@router.get("/{product_key}", response_model=ProductFull)
 async def get_product_data(product_key: str):
   return product_db.get(product_key)
 
