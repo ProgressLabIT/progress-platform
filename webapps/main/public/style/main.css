@@ -200,3 +200,8 @@ span .display {
 .input-uppercase input {
   text-transform: uppercase;
 }
+
+/* hover highlight */
+.hover-highlight {
+  background-color: #293437;
+}

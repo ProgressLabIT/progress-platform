@@ -42,8 +42,21 @@
         </v-btn>
 
         <div v-else>
-          <v-btn block class="mb-2" :color="$theme.green" @click="saveChanges">SALVA</v-btn>
-          <v-btn block :color="$theme.grey" @click="cancelChanges">ANNULLA</v-btn>
+          <v-btn block class="mb-2" :color="$theme.green" @click="saveChanges">
+            <span v-if="!saving">SALVA</span>
+            <v-progress-circular 
+              v-else 
+              indeterminate
+              :color="$theme.white">
+            </v-progress-circular>
+          </v-btn>
+
+          <v-btn block 
+            :disabled="saving" 
+            :color="$theme.grey" 
+            @click="cancelChanges">
+            ANNULLA
+          </v-btn>
         </div>  
 
         <!-- CANCEL CONFIRMATION -->
@@ -57,14 +70,13 @@
 
         <!-- SAVE NOTIFICATION -->
         <v-snackbar
-          top :timeout="0"
-          :color="saving_progress ? $theme.blue : $theme.green"
-          v-model="show_save_snackbar">
-
-          {{ saving_progress ? "Salvataggio in corso" : "Distinta aggiornata" }}
-          
-          <v-btn v-if="!saving_progress" text :color="$theme.white" @click.native="show_save_snackbar = false">Close</v-btn>
-          <v-progress-circular :color="$theme.white" indeterminate v-show="saving_progress"></v-progress-circular>
+          top :timeout="2000"
+          :color="$theme.green"
+          v-model="show_save_confirmation">
+          Distinta aggiornata
+          <v-btn text :color="$theme.white" @click.native="show_save_confirmation = false">
+            <v-icon>close</v-icon>
+          </v-btn>
         </v-snackbar>
 
       </v-col>  
@@ -94,7 +106,8 @@
               hide-details dense
               type="number"
               min="0"
-              v-model="item.qt"
+              :value="item.qt"
+              @blur="updateItemQt(item.table_key, $event.target.value)"
               style="width:70px"
             ></v-text-field>            
           </template>
@@ -248,7 +261,7 @@ export default {
         {  value:'phase_name', text:'PHASE' },
         {  value:'qt', text:'QT' },
       ],
-      temp_bom: [],
+      // temp_bom: [],
       delete_items: [],
       show_item_catalog: false,
       catalog_loading: false,
@@ -257,19 +270,34 @@ export default {
       new_item_phase: {},
       new_item_qt: null,
       show_cancel_confirmation: false,
-      show_save_snackbar: false,
-      saving_progress: false,
+      show_save_confirmation: false,
+      saving: false,
     };
   },
 
   computed: {
     ...mapState({
-      product_metadata: state => state.product.details,
-      saved_bom: state => state.bom.items 
+      // product_metadata: state => state.product.temp,
+      saved_bom: state => state.bom.saved
     }),
 
     product_key() {
       return this.$route.params.item_key
+    },
+
+    product_metadata() {
+      return this.$store.getters.productData(this.product_key)
+    },
+
+    temp_bom: {
+      get() {
+        return this.$store.state.bom.temp.map( i => { 
+          return { ...i, table_key: i.code + i.phase_id }
+        })
+      },
+      set(new_bom) {
+        this.$store.commit('UPDATE_TEMP_BOM', new_bom)
+      }
     },
 
     filtered_bom() {
@@ -303,14 +331,14 @@ export default {
   methods: {
     ...mapActions(['loadProductDetails', 'getItemsCatalog']),
 
-    loadTempBom() {
-      this.temp_bom = this.saved_bom.map(i => { 
-        return {
-          ...i, 
-          table_key: i.code + i.phase_id
-        }
-      })
-    },
+    // loadTempBom() {
+    //   this.temp_bom = this.saved_bom.map(i => { 
+    //     return {
+    //       ...i, 
+    //       table_key: i.code + i.phase_id
+    //     }
+    //   })
+    // },
 
     toggleEdit() {
       if (this.edit_table == false) {
@@ -329,11 +357,6 @@ export default {
       else this.delete_items = this.filtered_bom
     },
 
-    removeSelectedItems() {
-      this.temp_bom = this.temp_bom.filter( item => !this.delete_items.includes(item) )
-      this.delete_items = []
-    },
-
     openItemSearch() {
       this.catalog_loading = true
       this.show_item_catalog = true
@@ -343,6 +366,20 @@ export default {
         this.item_catalog = resp.data
       })
       this.catalog_loading = false
+    },
+
+    updateItemQt(table_key, qt) {
+      let new_bom = [...this.temp_bom]
+      new_bom.find( i => i.table_key === table_key).qt = qt
+      this.$store.commit('UPDATE_TEMP_BOM', new_bom)
+    },
+
+    removeSelectedItems() {
+      const new_bom = this.temp_bom.filter( 
+        item => !this.delete_items.includes(item) 
+      )
+      this.$store.commit('UPDATE_TEMP_BOM', new_bom)
+      this.delete_items = []
     },
 
     async addItem() {
@@ -368,7 +405,9 @@ export default {
           phase_id: this.new_item_phase._id,
           table_key: this.new_item.code + this.new_item_phase._id
         }
-        this.temp_bom.push(new_item)
+
+        // This will trigger computed setter and commit mutation
+        this.$store.commit('UPDATE_TEMP_BOM', [...this.temp_bom, new_item])
         this.show_item_catalog = false
       }
       else {
@@ -383,25 +422,27 @@ export default {
       this.show_cancel_confirmation = true
     },
 
-    async saveChanges() {
-      this.saving_progress = true
-      this.show_save_snackbar = true
+    saveChanges() {
+      this.saving = true
       const action_payload = {
         product_key: this.product_key,
         new_bom: this.temp_bom
       }
-      await this.$store.dispatch('updateBom', action_payload)
-      this.loadTempBom()
-      this.saving_progress = false
-      this.edit_table = false
-      setTimeout(() => this.show_save_snackbar = false, 2500)
+      this.$store.dispatch('saveBomChanges', action_payload).then(() => {
+        setTimeout(() => {
+          this.show_save_confirmation = true
+          this.saving_progress = false
+          this.edit_table = false
+        }, 1500)  
+      })
+      
     },
   },
 
   created() {
     this.$store.dispatch('getBom', this.product_key)
-    this.loadTempBom()
-    this.$store.dispatch('getOperations')
+    // this.temp_bom = [...this.saved_bom]
+    this.$store.dispatch('getProcess', this.product_key)
   },
 
   mounted() {

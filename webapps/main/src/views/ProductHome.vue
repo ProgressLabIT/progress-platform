@@ -19,8 +19,7 @@
           <v-text-field v-else 
             hide-details
             :value="temp_code"
-            @keyup="this.code = this.code.toUpperCase()"
-            @blur="updateField('code', $event.target.value)"
+            @blur="updateField('code', $event.target.value.toUpperCase())"
             class="input-uppercase">
           </v-text-field>
         </div>
@@ -55,7 +54,7 @@
           :color="$theme.blue"
           @click="activateEditMode"
           >
-          ATTIVA MODIFICHE
+          MODIFICA PARAMETRI
         </v-btn>
 
         <div v-else>
@@ -65,8 +64,29 @@
             </div>
             <v-progress-circular v-else indeterminate :color="$theme.white"/>
           </v-btn>
-          <v-btn block :color="$theme.grey" @click="cancelChanges">ANNULLA</v-btn>
+          <v-btn block :color="$theme.grey" :disabled="saving" @click="cancelChanges">ANNULLA</v-btn>
         </div>  
+
+        <!-- CANCEL CONFIRMATION -->
+        <v-snackbar
+          top :timeout="2000"
+          :color="$theme.grey"
+          v-model="show_cancel_confirmation">
+          Modifiche annullate
+          <v-btn text @click.native="show_cancel_confirmation = false">OK</v-btn>
+        </v-snackbar>
+
+        <!-- SAVE NOTIFICATION -->
+        <v-snackbar
+          top :timeout="2000"
+          :color="$theme.green"
+          v-model="show_save_confirmation">
+          Prodotto aggiornato
+          <v-btn text :color="$theme.white" @click.native="show_save_confirmation = false">
+            <v-icon>close</v-icon>
+          </v-btn>
+        </v-snackbar>
+
       </v-col>  
     
       <!-- PRODUCT DATA -->
@@ -187,6 +207,8 @@ export default {
     return {
       saving: false,
       edit_mode: false,
+      show_cancel_confirmation: false,
+      show_save_confirmation: false,
     };
   },
 
@@ -240,25 +262,27 @@ export default {
       this.saving = true
       let product_update = {
         product_key: this.product_key,
-        updated_product: this.product
+        new_product_data: this.product
       }
       this.$store.dispatch('saveProductChanges', product_update)
-        // .then(() => {
+        .then(() => {
         // Show progress long enough the let user notice something is going on
         // even if the update is instantaneous
           setTimeout(() => {
+            this.show_save_confirmation = true
             this.saving = false
             this.edit_mode = false
           }, 1500)
-        // }).catch(err => {
-        //   window.alert(err)
-        //   this.saving = false
-        //   this.edit_mode = false
-        // })
+        }).catch(err => {
+          window.alert(err)
+          this.saving = false
+          this.edit_mode = false
+        })
     },
 
     cancelChanges() {
       this.$store.commit('CANCEL_PRODUCT_CHANGES')
+      this.show_cancel_confirmation = true
       this.edit_mode = false
     }
   },

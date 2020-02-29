@@ -163,6 +163,26 @@
           </v-btn>
         </div>  
 
+        <!-- CANCEL CONFIRMATION -->
+        <v-snackbar
+          top :timeout="2000"
+          :color="$theme.grey"
+          v-model="show_cancel_confirmation">
+          Modifiche annullate
+          <v-btn text @click.native="show_cancel_confirmation = false">OK</v-btn>
+        </v-snackbar>
+
+        <!-- SAVE NOTIFICATION -->
+        <v-snackbar
+          top :timeout="2000"
+          :color="$theme.green"
+          v-model="show_save_confirmation">
+          Processo aggiornato
+          <v-btn text :color="$theme.white" @click.native="show_save_confirmation = false">
+            <v-icon>close</v-icon>
+          </v-btn>
+        </v-snackbar>
+
       <!-- PHASE DETAILS -->
       </v-col>  
       <v-col cols="9" class="fill d-flex flex-column pl-6 py-0">
@@ -234,6 +254,8 @@ export default {
       saving: false,
       drag: false,
       edit_mode: false,
+      show_save_confirmation: false,
+      show_cancel_confirmation: false,
     }
   },
 
@@ -285,6 +307,7 @@ export default {
 
     cancelChanges() {
       this.$store.commit('CANCEL_PROCESS_CHANGES')
+      this.show_cancel_confirmation = true
       this.edit_mode = false
     },
 
@@ -342,6 +365,7 @@ export default {
         // Show progress long enough the let user notice something is going on
         // even if the update is instantaneous
           setTimeout(() => {
+            this.show_save_confirmation = true
             this.saving = false
             this.edit_mode = false
           }, 1500)

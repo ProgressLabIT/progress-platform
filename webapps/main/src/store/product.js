@@ -1,5 +1,4 @@
 import Vue from "vue"
-import axios from "axios"
 import { cloneDeep as _cloneDeep } from 'lodash'
 import { api } from '@/lib/apiCall.js'
 import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js' 
@@ -57,23 +56,14 @@ const product = {
     },
 
     LOAD_PRODUCT_DETAILS(state, product_details) {
-      /* 
-       *  Currently this only sets the product metadata.
-       *  Data about process, bom, issues must be added.
-       */
-      Vue.set(state, 'saved', _cloneDeep(product_details.metadata))
-      Vue.set(state, 'temp', _cloneDeep(product_details.metadata))
-
-      Vue.set(this.state.process, 'saved', _cloneDeep(product_details.process))
-      Vue.set(this.state.process, 'temp', _cloneDeep(product_details.process))
-      
-      Vue.set(this.state.bom, 'items', product_details.bom)
+      Vue.set(state, 'saved', _cloneDeep(product_details))
+      Vue.set(state, 'temp', _cloneDeep(product_details))      
     },
 
-    SAVE_PRODUCT_CHANGES(state, updated_product) {
-      Vue.set(state, 'saved', _cloneDeep(updated_product))
-      Vue.set(state, 'temp', _cloneDeep(updated_product))
-    },
+    // SAVE_PRODUCT_CHANGES(state, updated_product) {
+    //   Vue.set(state, 'saved', _cloneDeep(updated_product))
+    //   Vue.set(state, 'temp', _cloneDeep(updated_product))
+    // },
 
     CANCEL_PRODUCT_CHANGES(state) {
       Vue.set(state, 'temp', _cloneDeep(state.saved))
@@ -113,8 +103,7 @@ const product = {
     },
 
     loadProductList({ commit }) {
-      api
-        .get('product')
+      api.get('product')
         .then(resp => {
           // console.log(resp)
           const productList = resp.data
@@ -132,31 +121,22 @@ const product = {
     },
 
     loadProductDetails({ commit }, product_key) {
-      axios.all([
-          api.get(`product/${product_key}`),
-          api.get(`product/${product_key}/bom`),
-          api.get(`product/${product_key}/process`)
-      ])
-      .then(axios.spread((meta, bom, process) => {
-        let product_details = {
-          metadata: meta.data,
-          bom: bom.data,
-          process: process.data
-        }
-        // console.log("loading product details", product_details)
-        commit('LOAD_PRODUCT_DETAILS', product_details)
-      }))
+      api.get(`product/${product_key}`)
+        .then( resp => {
+          commit('LOAD_PRODUCT_DETAILS', resp.data)
+        })
     },
 
 
     saveProductChanges({ commit }, data) {
-      // return api
-      //   .patch(`product/${data.product_key}`, data.updated_product)
-      //   .then( resp => {
-      //     commit('SAVE_PRODUCT_CHANGES', resp.data)
-      //   })
-      commit('SAVE_PRODUCT_CHANGES', data.updated_product)
-
+      return new Promise ( resolve => {
+        api
+          .put(`product/${data.product_key}`, data.new_product_data)
+          .then( resp => {
+            commit('LOAD_PRODUCT_DETAILS', resp.data)
+            resolve()
+          })
+        })
     },
 
   },
