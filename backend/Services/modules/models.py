@@ -12,21 +12,21 @@ class FlexModel(BaseModel):
 # PRODUCT
 # ==================================
 
-class ProductBase(BaseModel):
-  code: str
-  description: Optional[str] = None
+# class ProductBase(BaseModel):
+#   code: str
+#   description: Optional[str] = None
 
-class ProductListItem(ProductBase):
-  """ 
-  Represents the subset of the Product DB schema necessary 
-  for use in the product list view
-  """
+# class ProductListItem(ProductBase):
+#   """ 
+#   Represents the subset of the Product DB schema necessary 
+#   for use in the product list view
+#   """
 
-  # the _key field must be aliased because pydantic will not 
-  # accept fields with leading underscore
-  key: str = Field(..., alias="_key")
-  active: bool = True
-  trash: bool = False
+#   # the _key field must be aliased because pydantic will not 
+#   # accept fields with leading underscore
+#   key: str = Field(..., alias="_key")
+#   active: bool = True
+#   trash: bool = False
 
 
 class TargetAverageCost(BaseModel):
@@ -39,11 +39,14 @@ class TargetAverageTime(TargetAverageCost):
   average: float = target * (1 + uniform(-0.2, 0.2))
 
 
-class ProductFull(ProductBase):
+class ProductFull(BaseModel):
   """
   Extends the ProductBase class to represents 
   the full DB schema of the product
   """
+  key: str = Field(None, alias="_key")
+  code: str
+  description: Optional[str] = None
   active: bool = True
   trash: bool = False
   cost: TargetAverageCost = TargetAverageCost()

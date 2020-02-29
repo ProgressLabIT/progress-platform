@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, HTTPException, Form, File
 from fastapi.encoders import jsonable_encoder
 from utils.db import db
 from utils.api import APIResponse
-from .models import ProductListItem, ProductFull
+from .models import ProductFull
 import os
 import traceback
 router = APIRouter()
@@ -27,7 +27,7 @@ async def get_product_list(
       RETURN p
     """, bind_vars={"code": code, "limit": limit})
 
-  results = [ProductListItem(**p) for p in list]
+  results = [ProductFull(**p) for p in list]
   return results
 
 
@@ -41,7 +41,7 @@ async def create_product(
   # Map form data
   try:
     new_product = ProductFull(code=code, description=description)
-    prepped_data = jsonable_encoder(new_product, by_alias=True)
+    prepped_data = jsonable_encoder(new_product, by_alias=True, include_none=False )
 
   except Exception as e:
     error_str = traceback.format_exc()
@@ -164,7 +164,7 @@ async def udpate_product(
       { '_key': product_key, **updated_fields }, 
       return_new=True
     )['new']
-    print(updated_product)
+    # print(updated_product)
     response = APIResponse(
       status=200,
       message=f"Product {updated_product['code']} (KEY: {updated_product['_key']}) updated",
@@ -183,6 +183,13 @@ async def udpate_product(
       status_code=status_code,
       detail=response
     )  
+
+@router.put("/{product_key}")
+async def replace_product(product_key: str, new_product_data: ProductFull):
+  new_product_data.key = product_key
+  prepped_data = jsonable_encoder(new_product_data, by_alias=True)
+  saved_product = product_db.replace(prepped_data, return_new=True)['new']
+  return saved_product
 
 
 @router.get("/{product_key}", response_model=ProductFull)

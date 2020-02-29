@@ -4,17 +4,15 @@ from fastapi import APIRouter, UploadFile, HTTPException, Form, File
 from fastapi.encoders import jsonable_encoder
 from typing import List
 from .models import BomItemRead, BomItemWrite
-import json
+import json, requests
 
 import os, traceback
 
 
 router = APIRouter()
 
-@router.get("/{product_key}/bom")
-async def get_product_bom(product_key):
-  try: 
-    bom = db.aql.execute("""
+def get_bom_from_db(db, product_key):
+  return db.aql.execute("""
       FOR v,e IN 2..2 OUTBOUND @product requires
       FILTER e.rel_type like 'BomItem'
       LET phase = e._from
@@ -31,6 +29,11 @@ async def get_product_bom(product_key):
       }
     """, bind_vars={ 'product': f'Product/{product_key}' })
 
+
+@router.get("/{product_key}/bom")
+async def get_product_bom(product_key):
+  try: 
+    bom = get_bom_from_db(db, product_key)
 
   except Exception as e:
     status_code = 500
@@ -81,21 +84,22 @@ async def update_bom(product_key: str, new_bom: List[BomItemWrite]):
       FILTER e.rel_type=="BomItem"
       REMOVE e IN requires
     """, bind_vars={ "product": f'Product/{product_key}'})
-    print("Deleted items: ", [i for i in deleted_items])
+    # print("Deleted items: ", [i for i in deleted_items])
 
     # Insert new bom
-    def insert_item(txn, item):
+    for item in new_bom:
+    # def insert_item(txn, item):
       prepped_item = jsonable_encoder(item, include_none=False)
-      print(prepped_item)
-      return txn.collection('requires').insert(prepped_item, return_new=True)
+      # print(prepped_item)
+      txn.collection('requires').insert(prepped_item, silent=True)
 
-    saved_bom = [ insert_item(txn, i) for i in new_bom ]
+    saved_bom = get_bom_from_db(txn, product_key)
     
-    print(saved_bom)
+    # print(saved_bom)
 
     # Commit transaction
     txn.commit_transaction()
-    print("Transaction committed!")
+    # print("Transaction committed!")
     return saved_bom
 
   except Exception as e:
