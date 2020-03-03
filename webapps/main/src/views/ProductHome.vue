@@ -103,83 +103,103 @@
               </v-card>
             </v-col>  
 
-            <!-- #PERFORMANCE -->
-            <!-- <v-col cols="6">
-              <v-card flat height="35vh"> 
-                <v-container class="px-5 py-4">                  
-                  <v-row justify="space-between" no-gutters>
-                    <v-col cols="auto">
-                    
-                    <h4 class="display medium highlight mb-4">performance</h4>
-                    </v-col>
-                    <v-spacer></v-spacer>
-                    <v-col cols="auto">
-                    
-                      <span class="medium">Media 12m | Var. Obiettivo</span> -->
-                    <!-- <v-icon>arrow_drop_down</v-icon> -->
-                  <!--   </v-col>
+            <!-- DOCS -->
+            <v-col cols="6">
+              <v-card flat> 
+                <v-container class="px-5 py-4 fill">
+                  <h5 class="display medium highlight mb-6">
+                    Documenti
+                  </h5>
+                  <v-hover v-slot:default="{ hover }"
+                    v-for="(doc, index) in docs" :key="index">
+                    <v-row 
+                      :style="hover ? `background: var(--hover-bg-blue)` : `` "
+                      style="cursor: pointer;"
+                      class="body-2"
+                      @click="showDoc(index)">
+                      <v-col cols="auto">
+                          <span :class="'temp' in doc ? 'font-italic' : ''">
+                            {{ doc.name }}{{ 'temp' in doc ? ' (non salvato)' : ''}}
+                          </span>
+                      </v-col>
+                      <v-hover v-slot:default="{ hover: closeHover }">
+                        <v-col cols="1" @click.stop="deleteDoc(index)">
+                          <v-icon small 
+                            v-show="hover"
+                            :style="closeHover ? `color: ${$theme.red}` : ''"
+                            >close</v-icon>
+                        </v-col>
+                      </v-hover>
+                      <v-spacer></v-spacer>
+                      <v-col cols="auto" class="text-right">
+                        {{ doc.size | bytes }}
+                      </v-col>
+                    </v-row >
+                  </v-hover>
+                  <v-row v-if="edit_mode" class="mt-4">                    
+                    <input multiple 
+                      type="file"
+                      ref="upload"
+                      style="display: none"
+                      accept="application/pdf"
+                      @change="addFiles($event.target.files)"/>
+                    <v-hover v-slot:default="{ hover }">
+                        <v-btn text block class="pl-6 medium"
+                          :color="hover ? $theme.blue : $theme.whitelow"
+                          @click="$refs.upload.click()">
+                          <v-row justify="space-between" align="center">
+                            aggiungi documento
+                            <v-icon>attach_file</v-icon>
+                          </v-row>
+                        </v-btn>
+                    </v-hover>
                   </v-row>
-                  <v-row v-for="(p, key) in perf_list" :key="key" >
-                    <v-col cols="2">
-                      <span class="text-uppercase smaller weight-bold">
-                        {{ p.name }}
-                      </span>
-                    </v-col>
-
-                    <v-spacer></v-spacer>
-
-                    <v-col cols="4">
-                      <span v-if="!key.includes('cost')">
-                        {{ p.average | duration }}
-                      </span>
-                      <span v-else>
-                        {{ p.average }}
-                      </span>
-                    </v-col>
-                    <v-spacer></v-spacer>
-                    <v-col cols="5" >
-                      <span v-if="!key.includes('cost')">
-                       {{ p.delta_abs > 0 ? '+' : ''}}{{ p.delta_abs | duration }} {{ deltaPcString(p) }}
-                      </span>   
-                      <span v-else>
-                        {{ p.delta_abs > 0 ? '+' : ''}}{{ p.delta_abs }} EUR {{ deltaPcString(p) }}
-                      </span>
-                    </v-col> -->
-                 <!--  </v-row>
-
                 </v-container>
               </v-card>
             </v-col>  
- -->
-            <!-- KPIs 
-            <v-col cols="6">
-              <v-card flat height="35vh"> 
-                <v-container class="px-5 py-4">                  
-                  <h4 class="display medium highlight">ordini</h4>
-                </v-container>
-              </v-card>
-            </v-col>  
-
-            ISSUES
-            <v-col cols="6">
-              <v-card flat height="35vh"> 
-                <v-container class="px-5 py-4">                  
-                  <h4 class="display medium highlight">segnalazioni</h4>
-                </v-container>
-              </v-card>
-            </v-col> -->  
           </v-row> 
 
+          <v-dialog 
+            :value="show_doc >= 0"
+            fullscreen
+            class="py-0"
+            @input="show_doc = -1"
+            transition="scale-transition"
+            >
+            <v-lazy>
+            <v-card :color="$theme.black">
+              <v-container fluid class="d-flex flex-column pt-2 px-5" style="height:100vh"> 
+                <v-row dense justify="start" align="center" class="my-0 pl-1 flex-grow-0">
+                  <v-icon small @click="show_doc=-1">close</v-icon>
+                  <span class="ml-4 medium highlight">{{ doc_name }}</span>
+
+                  <v-col cols="auto" class="ml-auto display medium highlight weight-medium">
+                    PRODUCT CODE: {{ product.code }}
+                  </v-col>
+                </v-row>
+          
+              <v-card outlined tile class="flex-grow-1 scroll" :style="'background-color:' + $theme.background">
+                <embed 
+                  :src="getDocSource()"
+                  type="application/pdf"
+                  width="100%"
+                  height="100%" />
+                </v-card>
+              </v-container>
+            </v-card>
+          </v-lazy>
+          </v-dialog>
+
+
           <v-spacer></v-spacer>
+
           <!-- PRODUCT ACTIONS -->
           <v-row class="mt-auto flex-grow-0">
             <v-spacer></v-spacer>
             <v-col cols="auto" class="pb-0">
               <v-btn :color="$theme.blue">Crea ordine</v-btn>
             </v-col>  
-            <v-col cols="auto"  class="pb-0">
-              <v-btn :color="$theme.blue">Crea segnalazione</v-btn>
-            </v-col>  
+          
             <v-col cols="auto"  class="pb-0">
               <v-btn :color="$theme.red">Elimina</v-btn>
             </v-col>  
@@ -206,9 +226,12 @@ export default {
   data() {
     return {
       saving: false,
-      edit_mode: false,
+      edit_mode: true,
       show_cancel_confirmation: false,
       show_save_confirmation: false,
+      show_doc: -1,
+      new_files: null,
+      new_image: null,
     };
   },
 
@@ -232,6 +255,15 @@ export default {
 
     temp_desc() {
       return this.product.description
+    },
+
+    docs() {
+      return this.product.docs
+    },
+
+    doc_name() {
+      if (this.show_doc == -1) { return '' }
+      else { return this.docs[this.show_doc].name }
     }
 
   },
@@ -258,11 +290,44 @@ export default {
       })
     },
 
+    addFiles(file_list) {
+      const files = Array.from(file_list)
+      this.$store.commit('ADD_TEMP_DOCS', files)
+    },
+
+    deleteDoc(index) {
+      this.$store.commit('DELETE_TEMP_DOC', index)
+    },
+
+    showDoc(index) {
+      // const is_temp_file = 'temp' in this.docs[index]
+      // if (is_temp_file) {
+      //   return
+      // }
+      // else 
+        this.show_doc = index
+    },
+
+    getDocSource() {
+      if (this.show_doc >= 0) {
+        const doc = this.docs[this.show_doc]
+        let path = ''
+        if (doc.temp) {
+          path = window.URL.createObjectURL(doc.data)
+          console.log({path})
+        }
+        else path = `/docs/${this.product_key}/${encodeURI(this.doc_name)}`
+
+        return path.concat('#toolbar=0')
+      }
+    },
+
     saveChanges() {
       this.saving = true
       let product_update = {
-        product_key: this.product_key,
-        new_product_data: this.product
+        new_product_data: this.product,
+        new_docs: this.new_files,
+        new_image: this.new_image,
       }
       this.$store.dispatch('saveProductChanges', product_update)
         .then(() => {
@@ -284,7 +349,8 @@ export default {
       this.$store.commit('CANCEL_PRODUCT_CHANGES')
       this.show_cancel_confirmation = true
       this.edit_mode = false
-    }
+    },
+
   },
 
   created() {

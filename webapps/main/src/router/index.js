@@ -48,7 +48,7 @@ const routes = [
             path: "bom",
             name: "bom",
             component: () => import("@/views/BillOfMaterials.vue")
-          }
+          },
         ]
       }
     ] 

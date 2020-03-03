@@ -9,7 +9,7 @@ const product = {
   state: {
     saved: {},
     temp: {},
-    list: []
+    list: [],
   },
 
   mutations: {
@@ -45,6 +45,26 @@ const product = {
 
     UPDATE_TEMP_TARGET(state, { param, new_target} ) {
       Vue.set(state.temp[param], 'target', new_target)
+    },
+
+    ADD_TEMP_DOCS(state, files_to_add) {
+      console.log({files_to_add})
+      files_to_add.forEach( f => {
+        state.temp.docs.push({
+          name: f.name,
+          size: f.size,
+          data: f,
+          temp: true
+        })
+      })
+    },
+
+    DELETE_TEMP_DOC(state, doc_index) {
+      state.temp.docs.splice(doc_index, 1)
+    },
+
+    UPDATE_TEMP_IMAGE(state, new_image) {
+      Vue.set(state.temp_files, 'image', new_image)
     },
 
     ADD_NEW_PRODUCT(state, new_product_data) {
@@ -130,8 +150,9 @@ const product = {
 
     saveProductChanges({ commit }, data) {
       return new Promise ( resolve => {
+        const product_key = data.new_product_data._key
         api
-          .put(`product/${data.product_key}`, data.new_product_data)
+          .put(`product/${product_key}`, data)
           .then( resp => {
             commit('LOAD_PRODUCT_DETAILS', resp.data)
             resolve()

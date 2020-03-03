@@ -10,32 +10,41 @@
         <v-row dense justify="start" align="center" class="my-0 pl-1 flex-grow-0">
 
           <!-- SCREEN HEADER -->
-          <v-icon small @click="showModal=false; exit()">close</v-icon>
-          <span class="ml-4 display medium highlight weight-medium">{{ title }} {{ item_key }}</span>
-          
+          <slot name="close">
+            <v-icon small @click="showModal=false; exit()">close</v-icon>
+          </slot>
+
+          <slot name="title">
+            <span class="ml-4 display medium highlight weight-medium">{{ title }} {{ item_key }}</span>
+          </slot>
+
           <!-- DYNAMIC INTERNAL LINKS -->
-          <v-col cols="auto" class="ml-auto">
-            <v-tabs 
-              background-color="transparent"
-              :color="$theme.whitehigh"
-              hide-slider right
-              >
-              <v-tab 
-                v-for="(page, index) in links" 
-                :key="index" 
-                :to="`/product/${item_key}/${page}`"
-                class="display" >
-                {{ page }}
-              </v-tab>
-            </v-tabs>
-          </v-col>  
+          <slot name="links">
+            <v-col cols="auto" class="ml-auto">
+              <v-tabs 
+                background-color="transparent"
+                :color="$theme.whitehigh"
+                hide-slider right
+                >
+                <v-tab 
+                  v-for="(page, index) in links" 
+                  :key="index" 
+                  :to="`/product/${item_key}/${page}`"
+                  class="display" >
+                  {{ page }}
+                </v-tab>
+              </v-tabs>
+            </v-col>  
+          </slot>
         </v-row>  
 
         <!-- WINDOW CONTAINER -->
         <v-card outlined tile class="flex-grow-1 scroll" :style="'background-color:' + $theme.background">
-          <keep-alive>
-            <router-view></router-view>
-          </keep-alive>
+          <slot name="content">
+            <keep-alive>
+              <router-view></router-view>
+            </keep-alive>
+          </slot>
         </v-card>
 
       </v-container>
