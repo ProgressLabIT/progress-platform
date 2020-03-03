@@ -1,6 +1,6 @@
 <template>
   <v-container fluid>
-      <v-expansion-panels flat hover tile accordion>
+      <v-expansion-panels flat hover tile accordion :disabled="!edit_mode" v-model="expansion_map">
         
         <v-expansion-panel 
           v-for="(p_value, p_key) in phase_params" :key="p_key"
@@ -11,7 +11,7 @@
               <v-container>
                 <v-row>
                   <v-col cols="auto">
-                    <h5 class="text-uppercase mb-3">{{ paramHumanName(p_key, p_value) }}</h5>
+                    <h5 class="text-uppercase mb-3" :color="$theme.whitelow">{{ paramHumanName(p_key, p_value) }}</h5>
                     
                     <h3 v-if="!edit_mode || paramType(p_key) != 'int'" class="highlight mb-6">{{ paramHumanValue(p_key, p_value) }}</h3>
                     <v-text-field v-else 
@@ -63,7 +63,7 @@ export default {
 
   data() {
     return {
-      expansion_map: []
+      expansion_map: null
     }
   },
 
@@ -134,8 +134,14 @@ export default {
         param: param_key,
         value: value,
       })
-    }
+    },
+  },
 
+  watch: {
+    edit_mode: function (newValue, oldValue) {
+      if (newValue == false && oldValue == true)
+      this.expansion_map = null 
+    }
   }
 };
 </script>
