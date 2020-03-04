@@ -1,8 +1,10 @@
+from typing import List
 from fastapi import APIRouter, UploadFile, HTTPException, Form, File
 from fastapi.encoders import jsonable_encoder
 from utils.db import db
 from utils.api import APIResponse
-from .models import ProductFull
+from .models import ProductData, ProductDoc, ProductFull
+from utils.file import UserFile
 import os
 import traceback
 router = APIRouter()
@@ -27,10 +29,15 @@ async def get_product_list(
       RETURN p
     """, bind_vars={"code": code, "limit": limit})
 
-  results = [ProductFull(**p) for p in list]
+  results = [ProductData(**p) for p in list]
   return results
 
 
+
+
+# =================================================
+#  POST
+# =================================================
 @router.post("/")
 async def create_product(
   code: str = Form(...),
@@ -40,7 +47,7 @@ async def create_product(
   
   # Map form data
   try:
-    new_product = ProductFull(code=code, description=description)
+    new_product = ProductDoc(code=code, description=description)
     prepped_data = jsonable_encoder(new_product, by_alias=True, include_none=False )
 
   except Exception as e:
@@ -51,7 +58,7 @@ async def create_product(
     )
   
   # Check if code is present
-  if product_db.find({'code': code}).count():
+  if product_db.find({'code': code, 'trash': False}).count():
     status_code = 400
     response = {
       "status": status_code,
@@ -81,7 +88,7 @@ async def create_product(
   # Save image
   if image:
 
-    media_directory = "/Volumes/MyFiles/DEV/Progress/WebApps/Library/public/pics/products"
+    media_directory = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/pics/products"
     new_product_key = db_response['_key']
     # Define product docs folder (named after product ID within the Product folder)
     product_path = os.path.join(
@@ -123,6 +130,11 @@ async def create_product(
   return response
 
 
+
+
+# =================================================
+#  DELETE
+# =================================================
 @router.delete("/{product_key}")
 async def delete_product(product_key):  
   product_to_trash = product_db.get(product_key)
@@ -151,7 +163,9 @@ async def delete_product(product_key):
       detail=response
     )
 
-
+# =================================================
+#  PATCH
+# =================================================
 @router.patch("/{product_key}")
 async def udpate_product(
   product_key: str = None,
@@ -184,16 +198,112 @@ async def udpate_product(
       detail=response
     )  
 
+
+# =================================================
+#  PUT (PRODUCT)
+# =================================================
 @router.put("/{product_key}")
-async def replace_product(product_key: str, new_product_data: ProductFull):
-  new_product_data.key = product_key
+async def replace_product(
+  product_key: str, 
+  new_product_data: ProductData,
+):
+
+  # new_product_data.key = product_key
+  # can comment the above out, since the key is already included in the data
   prepped_data = jsonable_encoder(new_product_data, by_alias=True)
   saved_product = product_db.replace(prepped_data, return_new=True)['new']
+
   return saved_product
 
 
+# =================================================
+#  POST (DOCS)
+# =================================================
+@router.post("/{product_key}/doc")
+async def update_docs(
+  product_key: str,
+  new_doc: UploadFile =  File(...)
+):
+
+  print(new_doc)
+  doc = UserFile.product_doc(
+    append_path=product_key,
+    file=new_doc,
+    name=new_doc.filename
+  )
+  try:
+    await doc.write_file()
+  except:
+    error_str = traceback.format_exc()
+    status_code = 400
+    response = {
+      'status': status_code,
+      'message': 'There was an error writing the file to disk',
+      'error_str': error_str
+    }
+    raise HTTPException(
+      status_code = status_code,
+      detail = response
+    )
+
+  return doc.name
+
+# =================================================
+#  DELETE (DOCS)
+# =================================================
+@router.delete("/{product_key}/doc/{doc_name}")
+async def delete_doc(
+  product_key: str,
+  doc_name: str
+):
+  print(doc_name)
+  doc = UserFile.product_doc(
+    append_path=product_key, 
+    name=doc_name
+  )
+
+  doc.delete_file()
+
+
+# =================================================
+#  PUT (IMAGE)
+# =================================================
+# @router.put("/{product_key}")
+
+
+
+# =================================================
+#  GET
+# =================================================
 @router.get("/{product_key}", response_model=ProductFull)
 async def get_product_data(product_key: str):
-  return product_db.get(product_key)
+  product = ProductFull(**product_db.get(product_key))
+
+
+  # All the following can be removed if doc names are included in the DB
+  media_directory = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/docs"
+  docs_path = os.path.join(media_directory, product_key)
+
+  def check_pdf(filename):
+    return filename.name.split('.')[-1] == 'pdf'
+
+  if os.path.isdir(docs_path):
+    doc_list = [ doc for doc in os.scandir(docs_path) if check_pdf(doc) ]
+  else:
+    doc_list = []
+
+  def doc_data(doc):
+    return ProductDoc(
+      name=doc.name, 
+      size=doc.stat().st_size
+    )
+
+  product.docs = list(map(doc_data, doc_list))
+
+  return product
+  
+
+
+
 
 

@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ByteSize
 from enum import Enum
 from random import randrange, uniform
 
@@ -39,11 +39,7 @@ class TargetAverageTime(TargetAverageCost):
   average: float = target * (1 + uniform(-0.2, 0.2))
 
 
-class ProductFull(BaseModel):
-  """
-  Extends the ProductBase class to represents 
-  the full DB schema of the product
-  """
+class ProductData(FlexModel):
   key: str = Field(None, alias="_key")
   code: str
   description: Optional[str] = None
@@ -61,7 +57,12 @@ class ProductFull(BaseModel):
   throughput_time: TargetAverageTime = TargetAverageTime()
   processing_time: TargetAverageTime = TargetAverageTime()
 
+class ProductDoc(BaseModel):
+  name: str
+  size: ByteSize
 
+class ProductFull(ProductData):
+  docs: List[ProductDoc] = []
 
 # ==================================
 # ITEMS AND BOM
