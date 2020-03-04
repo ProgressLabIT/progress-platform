@@ -113,18 +113,21 @@
                   <v-hover v-slot:default="{ hover }"
                     v-for="(doc, index) in docs" :key="index">
                     <v-row 
+                      no-gutters
                       :style="hover ? `background: var(--hover-bg-blue)` : `` "
                       style="cursor: pointer;"
-                      class="body-2"
+                      class="body-2 pa-2 mx-n2 flex-nowrap"
                       @click="showDoc(index)">
                       <v-col cols="auto">
-                          <span :class="'temp' in doc ? 'font-italic' : ''">
-                            {{ doc.name }}{{ 'temp' in doc ? ' (non salvato)' : ''}}
-                          </span>
+                        <span  :class="'temp' in doc ? 'font-italic' : ''">
+                          {{ doc.name }} {{ 'temp' in doc ? ' (non salvato)' : ''}}
+                        </span>
                       </v-col>
-                      <v-hover v-slot:default="{ hover: closeHover }">
-                        <v-col cols="1" @click.stop="deleteDoc(index)">
-                          <v-icon small 
+                      <v-hover 
+                        v-if="edit_mode" 
+                        v-slot:default="{ hover: closeHover }">
+                        <v-col  @click.stop="deleteDoc(index)" cols="auto">
+                          <v-icon small class="ml-2"
                             v-show="hover"
                             :style="closeHover ? `color: ${$theme.red}` : ''"
                             >close</v-icon>
@@ -261,6 +264,10 @@ export default {
       return this.product.docs
     },
 
+    saved_docs() {
+      return this.$store.state.product.saved.docs
+    },
+
     doc_name() {
       if (this.show_doc == -1) { return '' }
       else { return this.docs[this.show_doc].name }
@@ -292,7 +299,18 @@ export default {
 
     addFiles(file_list) {
       const files = Array.from(file_list)
-      this.$store.commit('ADD_TEMP_DOCS', files)
+      // Don't add files already in the list
+      files.forEach( (f, i) => {
+        const already_in_list = this.docs.some( d => f.name == d.name )
+        if (already_in_list) {
+          const replace = window.confirm(`Esiste già un documento con nome “${f.name}", vuoi sostituirlo?`)
+          if (replace) { this.$store.commit('DELETE_TEMP_DOC', i) }
+          else { return }
+        }
+        this.$store.commit('ADD_TEMP_DOC', f)
+      })
+
+      
     },
 
     deleteDoc(index) {
@@ -324,24 +342,30 @@ export default {
 
     saveChanges() {
       this.saving = true
+      const old_doc_list = this.$store.state.product.saved.docs
+      const new_doc_list = this.product.docs
       let product_update = {
         new_product_data: this.product,
-        new_docs: this.new_files,
+        new_docs: new_doc_list.filter( d => 'temp' in d ),
+        deleted_docs: old_doc_list.filter( 
+          o => !new_doc_list.some( n => n.name === o.name)
+        ),
         new_image: this.new_image,
       }
       this.$store.dispatch('saveProductChanges', product_update)
         .then(() => {
         // Show progress long enough the let user notice something is going on
         // even if the update is instantaneous
-          setTimeout(() => {
+          // setTimeout(() => {
             this.show_save_confirmation = true
-            this.saving = false
             this.edit_mode = false
-          }, 1500)
-        }).catch(err => {
+          // }, 1500)
+        })
+        .catch(err => {
           window.alert(err)
+        })
+        .finally(() => {
           this.saving = false
-          this.edit_mode = false
         })
     },
 

@@ -2,6 +2,7 @@ import Vue from "vue"
 import { cloneDeep as _cloneDeep } from 'lodash'
 import { api } from '@/lib/apiCall.js'
 import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js' 
+import axios from 'axios'
 // import { durationFromMillisec as duration } from '@/lib/duration.js'
 
 const product = {
@@ -47,16 +48,23 @@ const product = {
       Vue.set(state.temp[param], 'target', new_target)
     },
 
-    ADD_TEMP_DOCS(state, files_to_add) {
-      console.log({files_to_add})
-      files_to_add.forEach( f => {
-        state.temp.docs.push({
-          name: f.name,
-          size: f.size,
-          data: f,
-          temp: true
-        })
-      })
+    ADD_TEMP_DOC(state, file) {     
+      // check if the file is not already saved but temporarily deleted
+      const already_saved = state.saved.docs.some( d => d.name == file.name)
+      
+      // simply restore metadata if the file is already saved
+      const file_to_add = {
+        name: file.name,
+        size: file.size,
+      }
+
+      // if not, add file content and temp flag
+      if (!already_saved) {
+        file_to_add.data = file
+        file_to_add.temp = true
+      }
+
+      state.temp.docs.push(file_to_add)
     },
 
     DELETE_TEMP_DOC(state, doc_index) {
@@ -135,8 +143,8 @@ const product = {
           })
           commit('LOAD_PRODUCT_LIST', productList)
         })
-        .catch(error => {        
-          window.alert(`Couldn't fetch data from db. Error:\n ${error}`)
+        .catch(err => {        
+          window.alert(`Couldn't fetch data from db:\n ${err}`)
         })
     },
 
@@ -148,16 +156,64 @@ const product = {
     },
 
 
-    saveProductChanges({ commit }, data) {
-      return new Promise ( resolve => {
-        const product_key = data.new_product_data._key
-        api
-          .put(`product/${product_key}`, data)
-          .then( resp => {
-            commit('LOAD_PRODUCT_DETAILS', resp.data)
-            resolve()
-          })
+    async saveProductChanges({ dispatch }, {
+      new_product_data,
+      new_docs,
+      deleted_docs,
+      new_image
+    }) {
+
+      /**
+       * this action queues up as many api calls as needed 
+       * to add/delete product docs and finally to update
+       * product parameters. Then returns a promise which resolves
+       * only after successfully making all calls and re-fetching
+       * updated product data.
+       */
+      const product_key = new_product_data._key
+      
+      // Initialize requests queue
+      const api_calls = []
+
+      // Queue api calls to delete product docs
+      if (deleted_docs != null) {
+        deleted_docs.forEach( d => {
+          api_calls.push(api.delete(`product/${product_key}/doc/${d.name}`))
         })
+      }
+
+      // Queue api calls to add product docs
+      if (new_docs != null) {
+        new_docs.forEach( d => {
+          const body = new FormData()
+          body.append('new_doc', d.data)
+          api_calls.push(
+            api.post(`product/${product_key}/doc`, body, {
+              headers: {
+              'Content-type': 'multipart/form-data'
+              }
+            })
+          )
+        })
+      }
+
+      // Queue request to update product image
+      if (new_image != null) {
+        api_calls.push(api.put(`product/${product_key}/image`, new_image))
+      }
+
+      // Queue request to update product metadata
+      api_calls.push(api.put(`product/${product_key}`, new_product_data))
+
+      // Execute requests returning a promise
+      return new Promise ( (resolve, reject) => {
+        axios.all(api_calls)
+        .then(() => {
+          dispatch('loadProductDetails', product_key)
+        })
+        .then(resolve())
+        .catch(err => reject(err))
+      })
     },
 
   },
