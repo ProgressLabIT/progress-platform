@@ -20,7 +20,12 @@ const process = {
     },
 
     LOAD_SAVED_PROCESS(state, process) {
-      Vue.set(state, 'saved', process)
+      Vue.set(state, 'saved', _cloneDeep(process))
+      Vue.set(state, 'temp', _cloneDeep(process))
+    },
+
+    UPDATE_PHASE_PARAMS(state, { phase_no, param, value }) {
+      Vue.set(state.temp[phase_no].params, param, value)
     },
 
     UPDATE_PROCEDURE(state, { phase_no, procedure }) {
@@ -51,11 +56,6 @@ const process = {
       Vue.set(state, 'operations', op_list)
     },
 
-    SAVE_PROCESS_CHANGES(state, new_process) {
-      Vue.set(state, 'saved', _cloneDeep(new_process))
-      Vue.set(state, 'temp', _cloneDeep(new_process))
-    },
-
     CANCEL_PROCESS_CHANGES(state) {
       const deep_copy = _cloneDeep(state.saved)
       Vue.set(state, 'temp', deep_copy)
@@ -70,21 +70,19 @@ const process = {
     },
 
     getProcess({ commit }, product_key) {
-      return new Promise(resolve => {
-        api
-          .get(`product/${product_key}/process`)
-          .then( resp => {
-            commit('LOAD_SAVED_PROCESS', resp.data) 
-            resolve()
-          })
-      }) 
+      api
+        .get(`product/${product_key}/process`)
+        .then( resp => {
+          commit('LOAD_SAVED_PROCESS', resp.data) 
+
+        })
     },
 
     saveTempProcess({ commit }, data) {
       return api
         .put(`product/${data.product_key}/process`, data.new_process)
         .then( resp => {
-          commit('SAVE_PROCESS_CHANGES', resp.data)
+          commit('LOAD_SAVED_PROCESS', resp.data)
         })
     }
   },

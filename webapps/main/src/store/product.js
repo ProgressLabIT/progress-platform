@@ -1,18 +1,29 @@
 import Vue from "vue"
-import axios from "axios"
-import { cloneDeep as cd } from 'lodash'
+import { cloneDeep as _cloneDeep } from 'lodash'
 import { api } from '@/lib/apiCall.js'
 import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js' 
-
+import axios from 'axios'
+// import { durationFromMillisec as duration } from '@/lib/duration.js'
 
 const product = {
 
   state: {
-    details: {},
-    list: []
+    saved: {},
+    temp: {},
+    list: [],
+    edit_modes: {
+      product: false,
+      process: false,
+      bom: false
+    }
   },
 
   mutations: {
+
+    TOGGLE_EDIT_MODE(state, { view, value }) {
+      Vue.set(state.edit_modes, view, value)
+    },
+
     UPDATE_PRODUCT(state, updated_product) {
       // console.log({updated_product})
       updateProduct(state.list, updated_product._key, product => {
@@ -39,6 +50,41 @@ const product = {
       })
     },
 
+    UPDATE_TEMP_PARAMETER(state, { param, new_value }) {
+      Vue.set(state.temp, param, new_value)
+    },
+
+    UPDATE_TEMP_TARGET(state, { param, new_target} ) {
+      Vue.set(state.temp[param], 'target', new_target)
+    },
+
+    ADD_TEMP_DOC(state, file) {     
+      // check if the file is not already saved but temporarily deleted
+      const already_saved = state.saved.docs.some( d => d.name == file.name)
+      
+      // simply restore metadata if the file is already saved
+      const file_to_add = {
+        name: file.name,
+        size: file.size,
+      }
+
+      // if not, add file content and temp flag
+      if (!already_saved) {
+        file_to_add.data = file
+        file_to_add.temp = true
+      }
+
+      state.temp.docs.push(file_to_add)
+    },
+
+    DELETE_TEMP_DOC(state, doc_index) {
+      state.temp.docs.splice(doc_index, 1)
+    },
+
+    UPDATE_TEMP_IMAGE(state, new_image) {
+      Vue.set(state.temp_files, 'image', new_image)
+    },
+
     ADD_NEW_PRODUCT(state, new_product_data) {
       state.list.push(new_product_data)
     },
@@ -48,15 +94,18 @@ const product = {
     },
 
     LOAD_PRODUCT_DETAILS(state, product_details) {
-      /* 
-       *  Currently this only sets the product metadata.
-       *  Data about process, bom, issues must be added.
-       */
-      Vue.set(state, 'details', product_details.metadata)
-      Vue.set(this.state.process, 'temp', cd(product_details.process))
-      Vue.set(this.state.process, 'saved', cd(product_details.process))
-      Vue.set(this.state.bom, 'items', product_details.bom)
+      Vue.set(state, 'saved', _cloneDeep(product_details))
+      Vue.set(state, 'temp', _cloneDeep(product_details))      
     },
+
+    // SAVE_PRODUCT_CHANGES(state, updated_product) {
+    //   Vue.set(state, 'saved', _cloneDeep(updated_product))
+    //   Vue.set(state, 'temp', _cloneDeep(updated_product))
+    // },
+
+    CANCEL_PRODUCT_CHANGES(state) {
+      Vue.set(state, 'temp', _cloneDeep(state.saved))
+    }
   },
 
   actions: {
@@ -92,8 +141,7 @@ const product = {
     },
 
     loadProductList({ commit }) {
-      api
-        .get('product')
+      api.get('product')
         .then(resp => {
           // console.log(resp)
           const productList = resp.data
@@ -105,27 +153,90 @@ const product = {
           })
           commit('LOAD_PRODUCT_LIST', productList)
         })
-        .catch(error => {        
-          window.alert(`Couldn't fetch data from db. Error:\n ${error}`)
+        .catch(err => {        
+          window.alert(`Couldn't fetch data from db:\n ${err}`)
         })
     },
 
     loadProductDetails({ commit }, product_key) {
-      axios.all([
-          api.get(`product/${product_key}`),
-          api.get(`product/${product_key}/bom`),
-          api.get(`product/${product_key}/process`)
-      ])
-      .then(axios.spread((meta, bom, process) => {
-        let product_details = {
-          metadata: meta.data,
-          bom: bom.data,
-          process: process.data
-        }
-        // console.log("loading product details", product_details)
-        commit('LOAD_PRODUCT_DETAILS', product_details)
-      }))
-    }
+      api.get(`product/${product_key}`)
+        .then( resp => {
+          commit('LOAD_PRODUCT_DETAILS', resp.data)
+        })
+    },
+
+
+    async saveProductChanges({ dispatch }, {
+      new_product_data,
+      new_docs,
+      deleted_docs,
+      image
+    }) {
+
+      /**
+       * this action queues up as many api calls as needed 
+       * to add/delete product docs and finally to update
+       * product parameters. Then returns a promise which resolves
+       * only after successfully making all calls and re-fetching
+       * updated product data.
+       */
+      const product_key = new_product_data._key
+      
+      // Initialize requests queue
+      const api_calls = []
+
+      // Queue api calls to delete product docs
+      if (deleted_docs != null) {
+        deleted_docs.forEach( d => {
+          api_calls.push(api.delete(`product/${product_key}/doc/${d.name}`))
+        })
+      }
+
+      // Queue api calls to add product docs
+      if (new_docs != null) {
+        new_docs.forEach( d => {
+          const body = new FormData()
+          body.append('new_doc', d.data)
+          api_calls.push(
+            api.post(`product/${product_key}/doc`, body, {
+              headers: {
+              'Content-type': 'multipart/form-data'
+              }
+            })
+          )
+        })
+      }
+
+      // Queue request to delete or update product image
+      if (image.delete) {
+        api_calls.push(api.delete(`product/${product_key}/image`))
+      }
+
+      if (image.new) {
+        const body = new FormData()
+        body.append('new_image', image.new)
+        api_calls.push(
+          api.put(`product/${product_key}/image`, body, {
+            headers: {
+              'Content-type': 'multipart/form-data'
+            }
+          })
+        )
+      }
+
+      // Queue request to update product metadata
+      api_calls.push(api.put(`product/${product_key}`, new_product_data))
+
+      // Execute requests returning a promise
+      return new Promise ( (resolve, reject) => {
+        axios.all(api_calls)
+        .then(() => {
+          dispatch('loadProductDetails', product_key)
+        })
+        .then(resolve())
+        .catch(err => reject(err))
+      })
+    },
 
   },
 

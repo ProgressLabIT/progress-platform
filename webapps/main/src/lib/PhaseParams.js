@@ -5,28 +5,28 @@ export const release_style = {
   values: new Map([
 
     ['continuous', {
-      value_name: `Continua`,
-      value_desc: `Tutti i prodotti di questa fase sono immediatamente disponibili alla fase successiva o a magazzino al momento della dichiarazione di produzione.`
+      name: `Continua`,
+      description: `Tutti i prodotti di questa fase sono immediatamente disponibili alla fase successiva o a magazzino al momento della dichiarazione di produzione.`
     }],
 
     ['batch', {
-      value_name: `Lotto`,
-      value_desc: `I prodotti di una fase sono disponibili alla fase successiva o a magazzino dopo la produzione di una quantità prefissata definita nel parametro "Lotto di rilascio". Tale quantità è valida per tutto il lavoro, con l'eccezione dell'ultimo rilascio, che potrebbe essere inferiore al lotto definito`
+      name: `Lotto`,
+      description: `I prodotti di una fase sono disponibili alla fase successiva o a magazzino dopo la produzione di una quantità prefissata definita nel parametro "Lotto di rilascio". Tale quantità è valida per tutto il lavoro, con l'eccezione dell'ultimo rilascio, che potrebbe essere inferiore al lotto definito`
     }],
 
     ['session', {
-      value_name: `Sessione di lavoro`,
-      value_desc: `I prodotti sono resi disponibili alla fase a valle o a magazzino alla fine della sessione di lavoro (es. fine turno).`
+      name: `Sessione di lavoro`,
+      description: `I prodotti sono resi disponibili alla fase a valle o a magazzino alla fine della sessione di lavoro (es. fine turno).`
     }],
 
     ['manual', {
-      value_name: `Manuale`,
-      value_desc: `I prodotti di una fase già dichiarati diventano disponibili alla fase a valle quando segnalato dall'operatore tramite pulsante "RILASCIA"`
+      name: `Manuale`,
+      description: `I prodotti di una fase già dichiarati diventano disponibili alla fase a valle quando segnalato dall'operatore tramite pulsante "RILASCIA"`
     }],
 
     ['job', {
-      value_name: `Lavoro`,
-      value_desc: `I prodotti sono rilasciati solo a completamento del lavoro`
+      name: `Lavoro`,
+      description: `I prodotti sono rilasciati solo a completamento del lavoro`
     }]
   ])
 }
@@ -38,28 +38,28 @@ export const step_check = {
   type: 'select',
   values: new Map([
     ['none', {
-      value_name: `Nessuno`,
-      value_desc: `Nessun controllo step. Eventuali procedure registrate vengono utilizzate solo a scopo di consultazione per l'utente, senza nessun tracciamento o vincolo. È l'operatore che decide quando dichiarazione la produzione dei pezzi.`
+      name: `Nessuno`,
+      description: `Nessun controllo step. Eventuali procedure registrate vengono utilizzate solo a scopo di consultazione per l'utente, senza nessun tracciamento o vincolo. È l'operatore che decide quando dichiarazione la produzione dei pezzi.`
     }],
 
     ['single', {
-      value_name: `Passo singolo`,
-      value_desc: `A fine procedura viene dichiarata la produzione di un singolo pezzo.`
+      name: `Passo singolo`,
+      description: `A fine procedura viene dichiarata la produzione di un singolo pezzo.`
     }],
 
     ['fixed_batch', {
-      value_name: `Lotto fisso`,
-      value_desc: `A fine procedura viene dichiarata la produzione di un lotto di avanzamento fisso, definito nel parametro "Quantità lotto di produzione".`  
+      name: `Lotto fisso`,
+      description: `A fine procedura viene dichiarata la produzione di un lotto di avanzamento fisso, definito nel parametro "Quantità lotto di produzione".`  
     }],
 
     ['manual_batch', {
-      value_name: `Lotto manuale`,
-      value_desc: `A fine procedura viene dichiarata la produzione di un lotto di produzione definito di volta in volta dall'operatore.`
+      name: `Lotto manuale`,
+      description: `A fine procedura viene dichiarata la produzione di un lotto di produzione definito di volta in volta dall'operatore.`
     }],
 
     ['job', {
-      value_name: `Lavoro`,
-      value_desc: `A fine procedura viene dichiarata la produzione dell'intera quantità pianificata per il lavoro (lavoro a ciclo unico).`
+      name: `Lavoro`,
+      description: `A fine procedura viene dichiarata la produzione dell'intera quantità pianificata per il lavoro (lavoro a ciclo unico).`
     }]
   ])
 }
@@ -70,13 +70,13 @@ export const parallel_job_allowed = {
   type: 'bool',
   values: new Map([
     [true, {
-      value_name: `Autorizzato`,
-      value_desc: `In questa fase è possibile creare più lavori per un dato Ordine di Produzione, che possono essere eseguiti in parallelo da più operatori.`
+      name: `Autorizzato`,
+      description: `In questa fase è possibile creare più lavori per un dato Ordine di Produzione, che possono essere eseguiti in parallelo da più operatori.`
     }],
 
     [false, {
-      value_name: `Non autorizzato`,
-      value_desc: `Questa fase deve essere eseguita in un unico lavoro.`
+      name: `Non autorizzato`,
+      description: `Questa fase deve essere eseguita in un unico lavoro.`
     }]
   ])
 }
@@ -87,13 +87,13 @@ export const step_check_force_order = {
   type: 'bool',
   values: new Map([
     [true, {
-      value_name: `Sì`,
-      value_desc: `I passi possono essere validati solo nella sequenza indicata.`
+      name: `Sì`,
+      description: `I passi possono essere validati solo nella sequenza indicata.`
     }],
 
     [false, {
-      value_name: `No`,
-      value_desc: `Ciascun passo può essere validato in maniera autonoma dagli altri.`
+      name: `No`,
+      description: `Ciascun passo può essere validato in maniera autonoma dagli altri.`
     }]
   ])
 }
@@ -116,13 +116,13 @@ export const wip_flow = {
   type: `select`,
   values: new Map([
     ['line', {
-      value_name: `Linea`,
-      value_desc: `Ciascun lavoro in questa fase rilascia semilavorati per uno solo dei lavori a valle.`
+      name: `Linea`,
+      description: `Ciascun lavoro in questa fase rilascia semilavorati per uno solo dei lavori a valle.`
     }],
 
     ['buffer', {
-      value_name: `Magazzino di fase`,
-      value_desc: `I semilavorati rilasciati da questa fase confluiscono in un unico raggruppamento virtuale, a cui i lavori della fase successiva (se esistente) attingono liberamente.`
+      name: `Magazzino di fase`,
+      description: `I semilavorati rilasciati da questa fase confluiscono in un unico raggruppamento virtuale, a cui i lavori della fase successiva (se esistente) attingono liberamente.`
     }]
   ])
 }

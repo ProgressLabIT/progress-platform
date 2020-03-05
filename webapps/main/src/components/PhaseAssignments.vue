@@ -12,10 +12,15 @@
               v-for="ec in assigned_eq_classes" :key="ec._id"
               :src="`/pics/equipment/${ec.src}`"
               :title="ec.name"
-              subtitle="Classe di attrezzature">
+              subtitle="Classe di attrezzature"
+              :edit="edit_mode"
+              tooltip="Rimuovi assegnazione"
+              :color="$theme.red"
+              icon="close"
+              @iconClick="cancelAssignment(ec._id)">
             </ListAvatarElement>
 
-            <v-divider></v-divider>
+            <v-divider class="mt-2 mb-3"></v-divider>
             
             <v-subheader>Attrezzature</v-subheader>
 
@@ -23,7 +28,12 @@
               v-for="e in assigned_equipment" :key="e._id"
               :src="`/pics/equipment/${e.src}`"
               :title="e.name"
-              :subtitle="e.class">
+              :subtitle="e.class"
+              :edit="edit_mode"
+              tooltip="Rimuovi assegnazione"
+              :color="$theme.red"
+              icon="close"
+              @iconClick="cancelAssignment(e._id)">
             </ListAvatarElement>
 
           </v-list>
@@ -31,6 +41,7 @@
 
         <v-autocomplete
           ref="assign_equipment"
+          v-if="edit_mode"
           v-model="new_assignment"
           :items="add_equipment_list"
           item-value="_id"
@@ -67,12 +78,17 @@
               <ListAvatarElement 
                 :src="null"
                 :title="d.name"
-                subtitle="Reparto">
+                subtitle="Reparto"
+                :edit="edit_mode"
+                tooltip="Rimuovi assegnazione"
+                :color="$theme.red"
+                icon="close"
+                @iconClick="cancelAssignment(d._id)">
               </ListAvatarElement>
             </v-col>
           </v-row>          
 
-          <v-divider></v-divider>
+          <v-divider class="mb-3"></v-divider>
           
           <v-subheader>Operatori</v-subheader>
 
@@ -83,7 +99,12 @@
               <ListAvatarElement
                 :src="`/pics/users/${o.src}`"
                 :title="o.name"
-                :subtitle="operatorDepartmentName(o.department)">
+                :subtitle="operatorDepartmentName(o.department)"
+                :edit="edit_mode"
+                tooltip="Rimuovi assegnazione"
+                :color="$theme.red"
+                icon="close"
+                @iconClick="cancelAssignment(o._id)">
               </ListAvatarElement>
             </v-col>
 
@@ -93,6 +114,7 @@
 
         <v-autocomplete
           ref="assign_operator"
+          v-if="edit_mode"
           v-model="new_assignment"
           :items="add_operator_list"
           item-value="_id"
@@ -125,7 +147,7 @@ export default {
 
   name: 'PhaseAssignments',
 
-  props: ['phase'],
+  props: ['phase', 'edit_mode'],
 
   components: {
     ListAvatarElement
@@ -169,6 +191,13 @@ export default {
         equipment: ['e/a', 'e/b'],
         departments: ['d/1'],
         operators: ['o/1','o/3'] 
+      },
+
+      id_root_map: {
+        'ec': 'equipment_classes',
+        'e': 'equipment',
+        'o': 'operators',
+        'd': 'departments',
       },
 
       new_assignment: null,
@@ -240,21 +269,22 @@ export default {
 
     addAssignment(assignee) {
 
-      const id_root_map = {
-        'ec': 'equipment_classes',
-        'e': 'equipment',
-        'o': 'operators',
-        'd': 'departments',
-      }
-      const assign_list = id_root_map[assignee._id.split("/")[0]]
+      const assignment_list_name = this.id_root_map[assignee._id.split("/")[0]]
 
-      this.assignments[assign_list].push(assignee._id)
+      this.assignments[assignment_list_name].push(assignee._id)
       
       setTimeout(() => {
         this.new_assignment = null
         this.$refs.assign_equipment.blur()
         this.$refs.assign_operator.blur()
       }, 1)
+    },
+
+    cancelAssignment(assignee_id) {
+      const assignment_list_name = this.id_root_map[assignee_id.split("/")[0]]
+      let assignment_list = this.assignments[assignment_list_name]
+      const assignment_index = assignment_list.indexOf(assignee_id)
+      assignment_list.splice(assignment_index, 1)
     }
   },
 }

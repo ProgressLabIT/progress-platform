@@ -14,6 +14,7 @@
   --theme-green: #0DAB76;
   --theme-orange: #FF9F1C;
   --theme-red: #E71D36;
+  --hover-bg-blue: rgba(30,52,58,1);
 }
 
 
@@ -58,7 +59,7 @@
 }
 
 .weight-bold {
-  font-weight: bold;
+  font-weight: bold !important;
 }
 
 .surface-1 {
@@ -193,4 +194,15 @@ span .display {
 /* .slide-fade-leave-active for <2.1.8 */ {
   transform: translateX(10px);
   opacity: 0;
+}
+
+
+/* UPPERCASE STYLING FOR VUETIFY INPUTS */
+.input-uppercase input {
+  text-transform: uppercase;
+}
+
+/* hover highlight */
+.hover-highlight {
+  background-color: #293437;
 }

@@ -70,20 +70,17 @@
     <v-snackbar id="delete-notification" bottom left 
       v-model="deleteSnackbar.show" 
       :timeout="deleteSnackbar.timeout">
-      <v-row column wrap>
+      <v-row>
         <v-col>
           Product {{ deleteSnackbar.code }} deleted  
           <v-btn text color="primary" @click.native="deleteSnackbar.show = false; ">CONFIRM</v-btn>
           <v-btn text color="warning" @click.native="undoDelete">UNDO</v-btn>
         </v-col>
-        <v-col>
+        <v-col cols="12">
           <v-progress-linear height="2" v-model="deleteSnackbar.remain" />
         </v-col>
       </v-row>
     </v-snackbar>
-
-    <!-- Product Modals entry point -->
-    <router-view :links="['home', 'process', 'bom']" title="Product ID:"></router-view>
 
   </v-content>
 </template>

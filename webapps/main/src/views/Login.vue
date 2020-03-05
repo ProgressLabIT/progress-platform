@@ -25,7 +25,10 @@
                         LOGIN
                     </v-card-title>
                     <v-card-text>
-                      <v-text-field v-model="credentials.login" label="Nome utente"/>
+                      <v-text-field 
+                        v-model="credentials.login" 
+                        label="Nome utente"
+                        autocomplete="off"/>
                       <v-text-field v-model="credentials.psw" type="password" label="Password"/>
                     </v-card-text>
                     <v-card-actions>

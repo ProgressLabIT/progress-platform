@@ -16,6 +16,7 @@
             counter="20"
             label="Codice"
             v-model="new_product_code"
+            class="input-uppercase"
             />
           <v-textarea
             clearable
@@ -67,7 +68,7 @@ export default {
     postNewProduct() {
       // console.log("Preparing form data...")
       let body = new FormData()
-      const code = this.new_product_code
+      const code = this.new_product_code.toUpperCase()
       const desc = this.new_product_desc
 
       console.log({code}, {desc})
@@ -94,7 +95,7 @@ export default {
           // Go back to product list
           const new_product_data = resp.data.detail
           this.$store.commit('ADD_NEW_PRODUCT', new_product_data)
-          this.loadProductDetails(new_product_data._key)
+          this.$store.commit('LOAD_PRODUCT_DETAILS', new_product_data)
           this.$router.push({ 
             name: 'productHome', 
             params: { item_key: new_product_data._key }

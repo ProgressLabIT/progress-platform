@@ -1,39 +1,26 @@
 <template>
   <v-dialog
-    :value="showModal"
-    fullscreen
+    :value="show"
+    fullscreen persistent no-click-animation
     class="py-0"
-    @input="exit">
+    @input="$emit('close')">
 
     <v-card :color="$theme.black">
       <v-container fluid class="d-flex flex-column pt-2 px-5" style="height:100vh"> 
         <v-row dense justify="start" align="center" class="my-0 pl-1 flex-grow-0">
 
           <!-- SCREEN HEADER -->
-          <v-icon small @click="showModal=false; exit()">close</v-icon>
-          <span class="ml-4 display medium highlight weight-medium">{{ title }} {{ item_key }}</span>
-          
-          <!-- DYNAMIC INTERNAL LINKS -->
-          <v-col cols="auto" class="ml-auto">
-            <v-tabs 
-              background-color="transparent"
-              :color="$theme.whitehigh"
-              hide-slider right
-              >
-              <v-tab 
-                v-for="(page, index) in links" 
-                :key="index" 
-                :to="`/product/${item_key}/${page}`"
-                class="display" >
-                {{ page }}
-              </v-tab>
-            </v-tabs>
-          </v-col>  
+          <slot name="close">
+            <v-icon small @click="$emit('close')">close</v-icon>
+          </slot>
+
+          <slot name="header">
+          </slot>
         </v-row>  
 
         <!-- WINDOW CONTAINER -->
         <v-card outlined tile class="flex-grow-1 scroll" :style="'background-color:' + $theme.background">
-            <router-view></router-view>
+          <slot name="content"></slot>
         </v-card>
 
       </v-container>
@@ -45,36 +32,8 @@
 export default {
 
   name: 'ModalScreen',
-  props: [
-    'item_key',    // route param from url
-    'title',          // from parent prop
-    'links'           // from parent prop
-  ],
+  props: ['show'],
 
-  data() {
-    return {
-      showModal: true,
-      previousPage: '',
-    };
-  },
-
-  methods: {
-    exit() {
-      /* 
-       * the delay allows for a nice closing animation of 
-       * the modal  before going back to the previous route
-       */
-      setTimeout(() => {
-        this.$router.push(this.previousPage)
-      }, 500)
-    }
-  },
-
-  beforeRouteEnter (to, from, next) {
-    next(component => {
-      component.previousPage = from.path
-    })
-  }
 };
 </script>
 
