@@ -70,7 +70,7 @@ export default {
   computed: {
     
     product_key() {
-      return this.$route.params.item_key
+      return this.$route.params.product_key
     },
 
     product_data() {

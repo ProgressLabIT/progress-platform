@@ -11,9 +11,19 @@ const product = {
     saved: {},
     temp: {},
     list: [],
+    edit_modes: {
+      product: false,
+      process: false,
+      bom: false
+    }
   },
 
   mutations: {
+
+    TOGGLE_EDIT_MODE(state, { view, value }) {
+      Vue.set(state.edit_modes, view, value)
+    },
+
     UPDATE_PRODUCT(state, updated_product) {
       // console.log({updated_product})
       updateProduct(state.list, updated_product._key, product => {
@@ -160,7 +170,7 @@ const product = {
       new_product_data,
       new_docs,
       deleted_docs,
-      new_image
+      image
     }) {
 
       /**
@@ -197,9 +207,21 @@ const product = {
         })
       }
 
-      // Queue request to update product image
-      if (new_image != null) {
-        api_calls.push(api.put(`product/${product_key}/image`, new_image))
+      // Queue request to delete or update product image
+      if (image.delete) {
+        api_calls.push(api.delete(`product/${product_key}/image`))
+      }
+
+      if (image.new) {
+        const body = new FormData()
+        body.append('new_image', image.new)
+        api_calls.push(
+          api.put(`product/${product_key}/image`, body, {
+            headers: {
+              'Content-type': 'multipart/form-data'
+            }
+          })
+        )
       }
 
       // Queue request to update product metadata

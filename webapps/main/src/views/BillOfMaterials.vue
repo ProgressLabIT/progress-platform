@@ -34,7 +34,7 @@
 
         <v-btn 
           class="mt-auto" 
-          v-if="!edit_table"
+          v-if="!edit_mode"
           @click="toggleEdit"
           :color="$theme.blue"
           >
@@ -87,7 +87,7 @@
           id="bom"
           :headers="table_headers"
           :items="filtered_bom"
-          :show-select="edit_table"
+          :show-select="edit_mode"
           v-model="delete_items"
           loading-text="Recupero dati in corso..."
           sort-by="code"
@@ -101,7 +101,7 @@
             <div class="nowrap">{{ item.code }}</div>
           </template>
 
-          <template v-slot:item.qt="{item}" v-if="edit_table">
+          <template v-slot:item.qt="{item}" v-if="edit_mode">
             <v-text-field
               hide-details dense
               type="number"
@@ -132,7 +132,7 @@
 
               <v-col cols="4">
                 <v-btn small
-                  v-if="edit_table && delete_items.length"  
+                  v-if="edit_mode && delete_items.length"  
                   :color="$theme.red"
                   @click="removeSelectedItems">
                   <v-icon small>delete</v-icon>elimina selezionati</v-btn>
@@ -144,7 +144,7 @@
               
               <v-col cols="4" class="d-flex justify-end" >
                 <v-btn small 
-                  v-if="edit_table" 
+                  v-if="edit_mode" 
                   :color="$theme.blue"
                   @click="openItemSearch">
                   <v-icon small class="mr-2 pl-0">add</v-icon>
@@ -253,7 +253,6 @@ export default {
       bom_types: ['assembly', 'component', 'consumable'],
       item_type_filter: ['assembly', 'component', 'consumable'],
       table_height: '85vh',
-      edit_table: false,
       table_headers: [
         {  value:'code', text:'CODE' },
         {  value:'description', text:'DESCRIPTION' },
@@ -261,7 +260,6 @@ export default {
         {  value:'phase_name', text:'PHASE' },
         {  value:'qt', text:'QT' },
       ],
-      // temp_bom: [],
       delete_items: [],
       show_item_catalog: false,
       catalog_loading: false,
@@ -281,8 +279,17 @@ export default {
       saved_bom: state => state.bom.saved
     }),
 
+    edit_mode: {
+      get() {
+        return this.$store.state.product.edit_modes.bom
+      },
+      set(value) {
+        this.$store.commit('TOGGLE_EDIT_MODE', { view: 'bom', value })
+      }
+    },
+
     product_key() {
-      return this.$route.params.item_key
+      return this.$route.params.product_key
     },
 
     product_metadata() {
@@ -341,11 +348,11 @@ export default {
     // },
 
     toggleEdit() {
-      if (this.edit_table == false) {
-        this.edit_table = true
+      if (this.edit_mode == false) {
+        this.edit_mode = true
       }
       else {
-        this.edit_table = false
+        this.edit_mode = false
         this.delete_items = []
       }
     },
@@ -417,7 +424,7 @@ export default {
 
     cancelChanges() {
       this.temp_bom = [...this.saved_bom]
-      this.edit_table = false
+      this.edit_mode = false
       this.delete_items = []
       this.show_cancel_confirmation = true
     },
@@ -432,17 +439,11 @@ export default {
         setTimeout(() => {
           this.show_save_confirmation = true
           this.saving_progress = false
-          this.edit_table = false
+          this.edit_mode = false
         }, 1500)  
       })
       
     },
-  },
-
-  created() {
-    this.$store.dispatch('getBom', this.product_key)
-    // this.temp_bom = [...this.saved_bom]
-    this.$store.dispatch('getProcess', this.product_key)
   },
 
   mounted() {

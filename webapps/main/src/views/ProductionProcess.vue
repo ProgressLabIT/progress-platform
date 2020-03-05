@@ -236,6 +236,7 @@ export default {
 
   name: 'ProductionProcess',
 
+
   components: {
     PhaseParameters,
     PhaseSteps,
@@ -253,7 +254,6 @@ export default {
       confirming_delete: null,
       saving: false,
       drag: false,
-      edit_mode: false,
       show_save_confirmation: false,
       show_cancel_confirmation: false,
     }
@@ -262,11 +262,20 @@ export default {
   computed: {
     
     product_key() {
-      return this.$route.params.item_key
+      return this.$route.params.product_key
     }, 
 
     product_data() {
       return this.$store.getters.productData(this.product_key)
+    },
+
+    edit_mode: {
+      get() {
+        return this.$store.state.product.edit_modes.process
+      },
+      set(value) {
+        this.$store.commit('TOGGLE_EDIT_MODE', { view: 'process', value })
+      }
     },
 
     operations() {
@@ -376,12 +385,6 @@ export default {
         })
     }
   },
-
-  created() {
-    this.$store.dispatch('getProcess', this.product_key)
-    this.$store.dispatch('getOperations')
-  },
-
 };
 </script>
 

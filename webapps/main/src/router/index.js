@@ -1,7 +1,7 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import ProductList from "@/views/ProductList.vue";
-import ModalScreen from "@/components/ModalScreen.vue";
+import ProductScreen from "@/components/ProductScreen.vue";
 import Login from "@/views/Login.vue";
 
 
@@ -28,34 +28,33 @@ const routes = [
         name: "newProduct",
         component: () => import("@/views/NewProduct.vue")
       },
-      {
-        path: ":item_key",
-        redirect: { name: "productHome" },
-        component: ModalScreen,
-        props: true,
-        children: [
-          {
-            path: "home",
-            name: "productHome",
-            component: () => import("@/views/ProductHome.vue")
-          },
-          {
-            path: "process",
-            name: "productionProcess",
-            component: () => import("@/views/ProductionProcess.vue")
-          },
-          {
-            path: "bom",
-            name: "bom",
-            component: () => import("@/views/BillOfMaterials.vue")
-          },
-        ]
-      }
-    ] 
+    ]
   },
-  
-  
-];
+  {
+    path: "/product/:product_key",
+    redirect: { name: "productHome" },
+    component: ProductScreen,
+    props: true,
+    children: [
+      {
+        path: "home",
+        name: "productHome",
+        component: () => import("@/views/ProductHome.vue")
+      },
+      {
+        path: "process",
+        name: "productionProcess",
+        component: () => import("@/views/ProductionProcess.vue")
+      },
+      {
+        path: "bom",
+        name: "bom",
+        component: () => import("@/views/BillOfMaterials.vue")
+      },
+    ]
+  }
+] 
+ 
 
 const router = new VueRouter({
   mode: "history",

@@ -8,7 +8,46 @@
         <v-card outlined>
           <v-img height="30vh"
             :src="img_src" 
-            :style="product.active ? '' : 'filter:grayscale(1) brightness(.5)'">
+            :gradient="product.active ? '' : 'to top right, rgba(100,100,100,.33), rgba(25,25,25,.7)'">
+            <template v-slot:placeholder>
+              <v-row class="fill-height" align="center" justify="center">
+                <v-progress-circular indeterminate :color="$theme.gray"></v-progress-circular>
+              </v-row>
+            </template>
+            
+            <v-container v-if="edit_mode" class="pa-0 fill d-flex flex-column justify-space-between">
+              <v-sheet class="surface-1 text-center smaller display weight-bold">
+                modifica immagine
+              </v-sheet>
+
+              <!-- <v-sheet class="surface-1"> -->
+                <v-row align="end" class="ma-2">
+                  <v-btn v-if="new_image || new_image_url == 'placeholder'"
+                    small :color="$theme.orange"
+                    @click="clearTempImg">
+                    ripristina originale
+                  </v-btn>
+                  <v-btn v-else-if="product.img_name != null"
+                    small
+                    :color="$theme.red" 
+                    @click="deleteImg">
+                    Elimina
+                  </v-btn>
+                  <v-spacer></v-spacer>
+                  <input 
+                    type="file"
+                    ref="upload_img"
+                    style="display: none"
+                    accept="image/*"
+                    @change="updateImg($event.target.files[0])"/>
+                  <v-btn small
+                    :color="$theme.grey" 
+                    @click="$refs.upload_img.click()">
+                    Carica
+                  </v-btn>
+                </v-row>
+              <!-- </v-sheet> -->
+            </v-container>
           </v-img>
         </v-card>
 
@@ -142,14 +181,14 @@
                   <v-row v-if="edit_mode" class="mt-4">                    
                     <input multiple 
                       type="file"
-                      ref="upload"
+                      ref="upload_doc"
                       style="display: none"
-                      accept="application/pdf"
+                      accept="application/pdf, image/*"
                       @change="addFiles($event.target.files)"/>
                     <v-hover v-slot:default="{ hover }">
                         <v-btn text block class="pl-6 medium"
                           :color="hover ? $theme.blue : $theme.whitelow"
-                          @click="$refs.upload.click()">
+                          @click="$refs.upload_doc.click()">
                           <v-row justify="space-between" align="center">
                             aggiungi documento
                             <v-icon>attach_file</v-icon>
@@ -172,10 +211,21 @@
             <v-lazy>
             <v-card :color="$theme.black">
               <v-container fluid class="d-flex flex-column pt-2 px-5" style="height:100vh"> 
-                <v-row dense justify="start" align="center" class="my-0 pl-1 flex-grow-0">
-                  <v-icon small @click="show_doc=-1">close</v-icon>
-                  <span class="ml-4 medium highlight">{{ doc_name }}</span>
-
+                <v-row dense justify="center" align="center" class="my-0 pl-1 flex-grow-0">
+                  <v-col >
+                    <v-icon small @click="show_doc=-1">close</v-icon>
+                    <span class="ml-4 medium highlight">{{ doc_name }}</span>
+                  </v-col>
+                  <v-spacer></v-spacer>
+                  <!-- <v-slider
+                    v-model="zoom"
+                    max="400"
+                    min="1"
+                    append-icon="zoom_in"
+                    prepend-icon="zoom_out"
+                    @click:append="zoomIn"
+                    @click:prepend="zoomOut"
+                  ></v-slider> -->
                   <v-col cols="auto" class="ml-auto display medium highlight weight-medium">
                     PRODUCT CODE: {{ product.code }}
                   </v-col>
@@ -183,7 +233,7 @@
           
               <v-card outlined tile class="flex-grow-1 scroll" :style="'background-color:' + $theme.background">
                 <embed 
-                  :src="getDocSource()"
+                  :src="docSource"
                   type="application/pdf"
                   width="100%"
                   height="100%" />
@@ -214,7 +264,6 @@
 </template>
 
 <script>
-// import {api} from '@/lib/apiCall.js'
 import ProductParamsCard from '@/components/ProductParamsCard.vue'
 import { mapState, mapActions } from 'vuex'
 
@@ -229,28 +278,42 @@ export default {
   data() {
     return {
       saving: false,
-      edit_mode: true,
       show_cancel_confirmation: false,
       show_save_confirmation: false,
       show_doc: -1,
       new_files: null,
       new_image: null,
+      new_image_url: '',
+      // zoom: 100
     };
   },
 
   computed: {
 
     product_key() {
-      return this.$route.params.item_key
+      return this.$route.params.product_key
     },
 
-    img_src() {
-      return `/pics/products/${this.product_key}.jpeg`
-    },
-    
     ...mapState({
       product: state => state.product.temp
     }),
+
+    edit_mode: {
+      get() {
+        return this.$store.state.product.edit_modes.product
+      },
+      set(value) {
+        this.$store.commit('TOGGLE_EDIT_MODE', { view: 'product', value })
+      }
+    },
+
+    saved_img_path() {
+      return `/pics/products/${this.product.img_name}`
+    },
+
+    img_src() {
+      return this.new_image_url ? this.new_image_url : this.saved_img_path
+    },
 
     temp_code() {
       return this.product.code
@@ -271,23 +334,56 @@ export default {
     doc_name() {
       if (this.show_doc == -1) { return '' }
       else { return this.docs[this.show_doc].name }
-    }
+    },
+
+    docSource() {
+      if (this.show_doc >= 0) {
+        const doc = this.docs[this.show_doc]
+        let path = ''
+        if (doc.temp) {
+          path = window.URL.createObjectURL(doc.data)
+          console.log({path})
+        }
+        else path = `/docs/${this.product_key}/${encodeURI(this.doc_name)}`
+
+        return path.concat(`#toolbar=0`)
+      }
+      else return null
+    },
 
   },
 
   methods: {
     ...mapActions(['loadProductDetails']),
 
-    deltaPcString(p) {
-      let pc_sign = p.delta_pc > 0 ? '+' : ''
-      return '('.concat(pc_sign, p.delta_pc, '%)')
-    },
+    // deltaPcString(p) {
+    //   let pc_sign = p.delta_pc > 0 ? '+' : ''
+    //   return '('.concat(pc_sign, p.delta_pc, '%)')
+    // },
 
     activateEditMode() {
       this.temp_code = this.product.code
       this.temp_desc = this.product.description
 
       this.edit_mode = true
+    },
+
+    updateImg(img) {
+      // let url = this.new_image_url
+      // if (url) window.URL.revokeObjectURL(url)
+      this.new_image_url = window.URL.createObjectURL(img)
+      this.new_image = img
+    },
+
+    clearTempImg() {
+      window.URL.revokeObjectURL(this.new_image_url)
+      this.new_image_url = null
+      this.new_image = null
+    },
+
+    deleteImg() {
+      // this is a fake URL to make v-img show placeholder
+      this.new_image_url = 'placeholder' 
     },
 
     updateField(field, value) {
@@ -308,9 +404,7 @@ export default {
           else { return }
         }
         this.$store.commit('ADD_TEMP_DOC', f)
-      })
-
-      
+      }) 
     },
 
     deleteDoc(index) {
@@ -326,19 +420,12 @@ export default {
         this.show_doc = index
     },
 
-    getDocSource() {
-      if (this.show_doc >= 0) {
-        const doc = this.docs[this.show_doc]
-        let path = ''
-        if (doc.temp) {
-          path = window.URL.createObjectURL(doc.data)
-          console.log({path})
-        }
-        else path = `/docs/${this.product_key}/${encodeURI(this.doc_name)}`
-
-        return path.concat('#toolbar=0')
-      }
-    },
+    // zoomOut () {
+    //   this.zoom = (this.zoom - 10) || 1
+    // },
+    // zoomIn () {
+    //   this.zoom = (this.zoom + 10) || 400
+    // },
 
     saveChanges() {
       this.saving = true
@@ -350,7 +437,10 @@ export default {
         deleted_docs: old_doc_list.filter( 
           o => !new_doc_list.some( n => n.name === o.name)
         ),
-        new_image: this.new_image,
+        image: {
+          new: this.new_image,
+          delete: this.new_image_url === 'placeholder'
+        }
       }
       this.$store.dispatch('saveProductChanges', product_update)
         .then(() => {
@@ -359,6 +449,7 @@ export default {
           // setTimeout(() => {
             this.show_save_confirmation = true
             this.edit_mode = false
+            this.clearTempImg()
           // }, 1500)
         })
         .catch(err => {
@@ -376,11 +467,6 @@ export default {
     },
 
   },
-
-  created() {
-    this.loadProductDetails(this.product_key)
-  },
-
 };
 </script>
 
