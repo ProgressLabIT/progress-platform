@@ -39,7 +39,7 @@ export default {
     },
 
     avatar_url() {
-      return "/pics/users/" + this.avatar_name + '.jpg'
+      return "/media/user/" + this.avatar_name + '.jpg'
     }
   },
 

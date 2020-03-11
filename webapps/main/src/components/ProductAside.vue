@@ -1,7 +1,7 @@
 <template>
   <div class="fill-height d-flex flex-column">
    <!-- PRODUCT IMAGE -->
-    <v-card outlined :img="`/pics/products/${product._key}.jpeg`" height="30vh"/> 
+    <v-card outlined :img="`/media/product/${product._key}/image.jpeg`" height="30vh"/> 
     
     <!-- PRODUCT CODE -->
     <h4 class="weight-bold medium mt-6">CODICE PRODOTTO</h4>

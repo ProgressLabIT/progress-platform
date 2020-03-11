@@ -8,7 +8,7 @@
     @mouseleave="overCard = false"
     @dblclick="$router.push('product/'+product._key)">
     <v-img 
-      :src="image ? `/pics/products/${product._key}.jpeg` : ''" 
+      :src="image ? `/media/product/${product._key}/image.jpg` : ''" 
       class="fill" 
       :style="product.active ? '' : 'filter:grayscale(1) brightness(.5)'">
       <v-container 

@@ -9,7 +9,7 @@
         <v-row justify="center" align="center">
           
           <v-col cols="12" lg="5" class="d-flex justify-end">
-            <v-img max-width="300px" src="/pics/Essegi.png"></v-img>
+            <v-img max-width="300px" src="/media/company/logo.jpg"></v-img>
           </v-col>
           
           <v-divider vertical inset class="mx-4"></v-divider>
@@ -50,7 +50,7 @@
 
                 <v-container v-else-if="verified" key="success">
                   <v-avatar size="90" class="ml-3">
-                    <v-img :src="`/pics/users/${user.pic}.jpg`"></v-img>
+                    <v-img :src="`/media/user/${user.pic}.jpg`"></v-img>
                   </v-avatar>
                     
                   <transition name="slide-fade" mode="out-in"> 

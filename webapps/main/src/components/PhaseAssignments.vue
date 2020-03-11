@@ -10,7 +10,7 @@
             
             <ListAvatarElement 
               v-for="ec in assigned_eq_classes" :key="ec._id"
-              :src="`/pics/equipment/${ec.src}`"
+              :src="`/media/equipment/${ec.src}`"
               :title="ec.name"
               subtitle="Classe di attrezzature"
               :edit="edit_mode"
@@ -26,7 +26,7 @@
 
             <ListAvatarElement
               v-for="e in assigned_equipment" :key="e._id"
-              :src="`/pics/equipment/${e.src}`"
+              :src="`/media/equipment/${e.src}`"
               :title="e.name"
               :subtitle="e.class"
               :edit="edit_mode"
@@ -56,7 +56,7 @@
           >
           <template v-slot:item="{ item }">
             <ListAvatarElement
-              :src="`/pics/equipment/${item.src}`"
+              :src="`/media/equipment/${item.src}`"
               :title="item.name"
               :subtitle="item.class">
             </ListAvatarElement>
@@ -97,7 +97,7 @@
               v-for="o in assigned_operators" :key="o._id"
               class="flex-shrink-1">   
               <ListAvatarElement
-                :src="`/pics/users/${o.src}`"
+                :src="`/media/user/${o.src}`"
                 :title="o.name"
                 :subtitle="operatorDepartmentName(o.department)"
                 :edit="edit_mode"
@@ -129,7 +129,7 @@
           >
           <template v-slot:item="{ item }">
             <ListAvatarElement
-              :src="`/pics/users/${item.src}`"
+              :src="`/media/user/${item.src}`"
               :title="item.name"
               :subtitle="item.class">
             </ListAvatarElement>

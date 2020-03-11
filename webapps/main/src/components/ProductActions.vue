@@ -27,14 +27,14 @@
 
       <!-- OPTIONS -->
       <v-col class="d-flex py-0 align-center justify-end">
-        <TooltipIcon
+       <!--  <TooltipIcon
           icon="assignment"
           tooltip="documents"
           :color="$theme.green"/>
         <TooltipIcon
           icon="edit"
           tooltip="details"
-          :color="$theme.blue"/>
+          :color="$theme.blue"/> -->
         <TooltipIcon
           icon="delete"
           tooltip="delete"

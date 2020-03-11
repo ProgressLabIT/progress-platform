@@ -250,7 +250,6 @@ const product = {
     },
 
     productData: (state) => (product_key) => {
-      console.log("Getter: getting product data...")
       return state.list.find( p => p._key == product_key)
     }
   }

@@ -277,7 +277,7 @@ export default {
     },
 
     saved_img_path() {
-      return `/pics/products/${this.product.img_name}`
+      return `/media/product/${this.product_key}/image.jpg`
     },
 
     img_src() {
@@ -313,7 +313,7 @@ export default {
           path = window.URL.createObjectURL(doc.data)
           console.log({path})
         }
-        else path = `/docs/${this.product_key}/${encodeURI(this.doc_name)}`
+        else path = `/media/product/${this.product_key}/doc/${encodeURI(this.doc_name)}`
 
         return path.concat(`#toolbar=0`)
       }
