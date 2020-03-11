@@ -5,8 +5,9 @@ from utils.db import db
 from utils.api import APIResponse
 from .models import ProductData, ProductDoc, ProductFull
 from utils.file import UserFile
-import os
-import traceback
+import os, traceback
+from fnmatch import fnmatch
+
 router = APIRouter()
 
 product_db = db.collection('Product')
@@ -14,6 +15,10 @@ product_db = db.collection('Product')
 
 
 # ALL ROUTES BEGIN WITH 'product'
+
+# =================================================
+#  GET / : GET PRODUCT LIST
+# =================================================
 @router.get("/")
 async def get_product_list(
   limit: int = None, # return a limited number of results
@@ -36,7 +41,7 @@ async def get_product_list(
 
 
 # =================================================
-#  POST
+#  POST / : CREATE PRODUCT
 # =================================================
 @router.post("/")
 async def create_product(
@@ -133,7 +138,7 @@ async def create_product(
 
 
 # =================================================
-#  DELETE
+#  DELETE /PRODUCT_KEY : DELETE PRODUCT
 # =================================================
 @router.delete("/{product_key}")
 async def delete_product(product_key):  
@@ -164,7 +169,7 @@ async def delete_product(product_key):
     )
 
 # =================================================
-#  PATCH
+#  PATCH /PRODUCT_KEY : UPDATE PRODUCT (SPECIFC PROPERTIES)
 # =================================================
 @router.patch("/{product_key}")
 async def udpate_product(
@@ -200,7 +205,7 @@ async def udpate_product(
 
 
 # =================================================
-#  PUT (PRODUCT)
+#  PUT /PRODUCT_KEY : REPLACE PRODUCT
 # =================================================
 @router.put("/{product_key}")
 async def replace_product(
@@ -217,15 +222,14 @@ async def replace_product(
 
 
 # =================================================
-#  POST (DOCS)
+#  POST /PRODUCT_KEY/DOCS : SAVE DOC
 # =================================================
 @router.post("/{product_key}/doc")
-async def update_docs(
+async def save_doc(
   product_key: str,
   new_doc: UploadFile =  File(...)
 ):
 
-  print(new_doc)
   doc = UserFile.product_doc(
     append_path=product_key,
     file=new_doc,
@@ -256,7 +260,7 @@ async def delete_doc(
   product_key: str,
   doc_name: str
 ):
-  print(doc_name)
+
   doc = UserFile.product_doc(
     append_path=product_key, 
     name=doc_name
@@ -268,21 +272,40 @@ async def delete_doc(
 # =================================================
 #  PUT (IMAGE)
 # =================================================
-# @router.put("/{product_key}")
-
+@router.put("/{product_key}/image")
+async def replace_product_image(
+  product_key: str,
+  new_image: UploadFile = File(...)
+):
+  # extension = new_image.filename.split('.')[-1]
+  img = UserFile.product_image(new_image)
+  filename = f'{product_key}.jpeg'
+  await img.write_file(filename)
 
 
 # =================================================
-#  GET
+#  DELETE (IMAGE)
+# =================================================
+@router.delete("/{product_key}/image")
+async def replace_product_image(
+  product_key: str,
+  new_image: UploadFile = File(...)
+):
+  # extension = new_image.filename.split('.')[-1]
+  img = UserFile.product_image(new_image)
+  img.write_file(filename)
+
+
+# =================================================
+#  GET /PRODUCT_KEY : GET PRODUCT DATA
 # =================================================
 @router.get("/{product_key}", response_model=ProductFull)
 async def get_product_data(product_key: str):
   product = ProductFull(**product_db.get(product_key))
 
-
-  # All the following can be removed if doc names are included in the DB
-  media_directory = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/docs"
-  docs_path = os.path.join(media_directory, product_key)
+  # Get product docs info
+  docs_directory = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/docs"
+  docs_path = os.path.join(docs_directory, product_key)
 
   def check_pdf(filename):
     return filename.name.split('.')[-1] == 'pdf'
@@ -299,6 +322,16 @@ async def get_product_data(product_key: str):
     )
 
   product.docs = list(map(doc_data, doc_list))
+
+  # Get product image path
+  image_dir = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/pics/products"
+  image_list = os.listdir(image_dir)
+  match = f'{product_key}.*'
+  
+  for n in image_list:
+    if fnmatch(n, match):
+      product.img_name = n
+      break
 
   return product
   

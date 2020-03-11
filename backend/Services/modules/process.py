@@ -7,7 +7,10 @@ from utils.db import db
 from utils.api import APIResponse
 from utils import dt
 from .models import PhaseProcedure, PhaseUpdate, Step, ProcessUpdate
+from utils.file import UserFile
+from fnmatch import fnmatch
 import os, traceback
+
 
 router = APIRouter()
 
@@ -18,6 +21,21 @@ operation_db = db.collection('Operation')
 @router.get('/operation')
 async def get_operation_list():
   return [o for o in operation_db.all()]
+
+
+@router.get("/step/{step_key}/media")
+async def get_step_media(step_key: str):
+
+  step_media = UserFile.step_media(step_key)
+
+  media_folder_exists = os.path.isdir(step_media.folder_path)
+
+  if (media_folder_exists):
+    return step_media.get_folder_contents()
+
+  else:
+    return []
+
 
 
 @router.get("/product/{product_key}/process")
@@ -62,7 +80,6 @@ async def get_production_process(product_key):
       status_code=status_code,
       detail=response
     )
-
   
   try:
     results = [PhaseProcedure(**phase) for phase in process_data]
@@ -197,6 +214,62 @@ async def update_process(process: List[PhaseUpdate], product_key):
     )
 
 
+
+
+@router.post("/step/{step_key}/media")
+async def save_step_media(
+  step_key: str,
+  media_file: UploadFile = File(...)
+):
   
+  new_media = UserFile.step_media(
+    append_path=step_key,
+    file=media_file,
+    name=media_file.filename
+  )
+  
+  try:
+    await new_media.write_file()
+  except:
+    error_str = traceback.format_exc()
+    status_code = 400
+    response = {
+      'status': status_code,
+      'message': 'There was an error writing the file to disk',
+      'error_str': error_str
+    }
+    raise HTTPException(
+      status_code = status_code,
+      detail = response
+    )
+
+  return new_media.name
+
 
   
+
+@router.delete("/step/{step_key}/media/{filename}")
+async def delete_step_media(
+  step_key: str,
+  filename: str
+):
+
+  media_to_delete = UserFile.step_media(
+    append_path=step_key,
+    name=filename
+  )
+  
+  try:
+    media_to_delete.delete_file()
+  except:
+    error_str = traceback.format_exc()
+    status_code = 400
+    response = {
+      'status': status_code,
+      'message': 'There was an error deleting the file',
+      'error_str': error_str
+    }
+    raise HTTPException(
+      status_code = status_code,
+      detail = response
+    )

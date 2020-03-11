@@ -63,6 +63,7 @@ class ProductDoc(BaseModel):
 
 class ProductFull(ProductData):
   docs: List[ProductDoc] = []
+  img_name: str = None
 
 # ==================================
 # ITEMS AND BOM
@@ -149,9 +150,15 @@ class Step(FlexModel):
   id: str = Field(None, alias="_id")
   title: str = None
   description: str = None
-  type: StepType = 'instruction'
+  type: StepType = StepType.INSTRUCTION
   checks: List[str] = []
   input_fields: List[InputField] = []
+
+class Media(BaseModel):
+  name: str
+
+class StepWithMediaInfo(Step):
+  media: List[Media] = None
 
 
 class PhaseProcedure(FlexModel):

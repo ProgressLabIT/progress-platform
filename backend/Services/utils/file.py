@@ -2,32 +2,48 @@ import os
 
 class UserFile:
 
+  public_path = "/Volumes/Luca/DEV/Progress/WebApps/Library/public"
+
   def __init__(self, base_path, append_path=None, file=None, name=None):
+   
     if append_path:
-      self.folder_path = os.path.join(base_path, append_path)
+      self.folder_path = os.path.join(self.public_path, base_path, append_path)
+    else:
+      self.folder_path = os.path.join(self.public_path, base_path)
     
     if file:
       self.file = file
 
     if name:
       self.name = name
+    elif file:
+      self.name = file.filename
+    else:
+      self.name = None
 
+
+  def __repr__(self):
+    return f'UserFile object:\nfolder_path: {self.folder_path}\nfilename: {self.name}'
 
   @classmethod
-  def product_image(cls, append_path, file=None):
-    base_path = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/pics/product"
-    return cls(base_path, append_path, file)
+  def product_image(cls, file=None, name=None):
+    base_path = "pics/products"
+    return cls(base_path, file=file, name=name)
 
   @classmethod
   def product_doc(cls, append_path, file=None, name=None):
-    base_path = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/docs"
+    base_path = "docs"
     return cls(base_path, append_path, file, name)
 
   @classmethod
   def user_pic(cls, append_path, file):
-    base_path = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/pics/users"
+    base_path = "media/users"
     return cls(base_path, append_path, file)
 
+  @classmethod
+  def step_media(cls, append_path, file=None, name=None):
+    base_path = "media/step"
+    return cls(base_path, append_path, file, name)
 
   async def write_file(self, custom_name=None): 
     if not os.path.isdir(self.folder_path):
@@ -47,3 +63,10 @@ class UserFile:
 
     file_path = os.path.join(self.folder_path, self.name)
     os.remove(file_path)
+
+
+  def get_folder_contents(self, append_path=None):
+    if append_path:
+      self.folder_path = os.path.join(self.folder_path, append_path)
+  
+    return [ f.name for f in os.scandir(self.folder_path) ]
