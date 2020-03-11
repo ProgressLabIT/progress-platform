@@ -147,7 +147,7 @@ export default {
 
   name: 'PhaseAssignments',
 
-  props: ['phase', 'edit_mode'],
+  props: ['phase', 'edit_mode', 'product_data'],
 
   components: {
     ListAvatarElement

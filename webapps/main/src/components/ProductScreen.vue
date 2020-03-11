@@ -64,36 +64,31 @@ export default {
   },
 
   computed: {
+    edit_modes() {
+      return this.$store.state.product.edit_modes
+    },
     user_is_editing() {
-      const edit_modes = this.$store.state.product.edit_modes
-      return Object.values(edit_modes).some( v => v === true )
+      return Object.values(this.edit_modes).some( v => v === true )
     }
   },
 
   methods: {
     exit() {
-      /** 
-       * the delay allows for a nice closing animation of 
-       * the modal  before going back to the previous route
-       */
       if (this.user_is_editing) {
-        window.alert("Salva o annulla le modifiche prima di cambiare pagina")
+        window.alert(`Salva o annulla le modifiche in tutte le sezioni prima di uscire.`)
       }
       else {
         this.show_modal = false
-        // setTimeout(() => {
         this.$router.push({ name: this.root })
-        // }, 1)
-        // return true
       }
     }
   },
 
   created() {
     let actions = [
-      'loadProductDetails',
       'getProcess',
       'getBom',
+      'loadProductDetails',
       'getOperations'
     ]
     

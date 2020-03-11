@@ -241,15 +241,16 @@ const product = {
   },
 
   getters: {
-    productList: (state) => () => {
-      return state.list
-    },
+    // productList: (state) => () => {
+    //   return state.list
+    // },
 
     notInTrash: (state) => () => {
       return state.list.filter( p => !p.trash )
     },
 
     productData: (state) => (product_key) => {
+      console.log("Getter: getting product data...")
       return state.list.find( p => p._key == product_key)
     }
   }

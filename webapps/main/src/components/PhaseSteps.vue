@@ -215,7 +215,7 @@ export default {
 
   name: 'PhaseSteps',
 
-  props: ['edit_mode'],
+  props: ['edit_mode', 'phase', 'product_data'],
 
   components: {
     StepInstruction,
@@ -237,10 +237,6 @@ export default {
   computed: {
     product_key() {
       return this.$route.params.product_key
-    },
-
-    product_data() {
-      return this.$store.getters.productData(this.product_key)
     },
 
     current_phase() {
@@ -271,10 +267,7 @@ export default {
 
     procedure: {
       get() {
-        try { return this.$store.state.process.temp[this.current_phase].steps }
-        catch {
-          return null
-        }
+        return this.phase.steps
       },
 
       set(value) {

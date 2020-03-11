@@ -201,48 +201,15 @@
             </v-col>  
           </v-row> 
 
-          <v-dialog 
-            :value="show_doc >= 0"
-            fullscreen
-            class="py-0"
-            @input="show_doc = -1"
-            transition="scale-transition"
-            >
-            <v-lazy>
-            <v-card :color="$theme.black">
-              <v-container fluid class="d-flex flex-column pt-2 px-5" style="height:100vh"> 
-                <v-row dense justify="center" align="center" class="my-0 pl-1 flex-grow-0">
-                  <v-col >
-                    <v-icon small @click="show_doc=-1">close</v-icon>
-                    <span class="ml-4 medium highlight">{{ doc_name }}</span>
-                  </v-col>
-                  <v-spacer></v-spacer>
-                  <!-- <v-slider
-                    v-model="zoom"
-                    max="400"
-                    min="1"
-                    append-icon="zoom_in"
-                    prepend-icon="zoom_out"
-                    @click:append="zoomIn"
-                    @click:prepend="zoomOut"
-                  ></v-slider> -->
-                  <v-col cols="auto" class="ml-auto display medium highlight weight-medium">
-                    PRODUCT CODE: {{ product.code }}
-                  </v-col>
-                </v-row>
-          
-              <v-card outlined tile class="flex-grow-1 scroll" :style="'background-color:' + $theme.background">
-                <embed 
-                  :src="docSource"
-                  type="application/pdf"
-                  width="100%"
-                  height="100%" />
-                </v-card>
-              </v-container>
-            </v-card>
-          </v-lazy>
-          </v-dialog>
-
+          <MediaViewer 
+            :show="show_doc >= 0" 
+            @close="show_doc = -1" 
+            :media_name="doc_name"
+            :media_src="docSource">
+            <template v-slot:context-title>
+             PRODUCT CODE: {{ product.code }}
+            </template>
+          </MediaViewer>
 
           <v-spacer></v-spacer>
 
@@ -266,13 +233,15 @@
 <script>
 import ProductParamsCard from '@/components/ProductParamsCard.vue'
 import { mapState, mapActions } from 'vuex'
+import MediaViewer from '@/components/MediaViewer.vue'
 
 export default {
 
   name: 'ProductHome',
   
   components: {
-    ProductParamsCard
+    ProductParamsCard,
+    MediaViewer
   },
 
   data() {
@@ -348,7 +317,7 @@ export default {
 
         return path.concat(`#toolbar=0`)
       }
-      else return null
+      else return ''
     },
 
   },

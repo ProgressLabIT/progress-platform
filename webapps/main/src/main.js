@@ -5,6 +5,8 @@ import store from "./store";
 import vuetify from './plugins/vuetify';
 import { durationFromMillisec } from '@/lib/duration.js'
 import bytes from 'bytes'
+import 'material-design-icons-iconfont/dist/material-design-icons.css' // Ensure you are using css-loader 
+
 
 Vue.config.productionTip = false;
 

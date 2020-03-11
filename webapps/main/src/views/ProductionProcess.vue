@@ -207,6 +207,8 @@
           <keep-alive>
             <v-component 
               :is="views[tab].component" 
+              :phase="process[current_phase]"
+              :product_data="product_data"
               :edit_mode="edit_mode">
             </v-component>
           </keep-alive>
@@ -254,6 +256,7 @@ export default {
       confirming_delete: null,
       saving: false,
       drag: false,
+
       show_save_confirmation: false,
       show_cancel_confirmation: false,
     }
@@ -381,9 +384,8 @@ export default {
         }).catch(err => {
           window.alert(err)
           this.saving = false
-          this.edit_mode = false
         })
-    }
+    },
   },
 };
 </script>

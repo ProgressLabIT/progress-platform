@@ -59,7 +59,7 @@ export default {
 
   name: 'PhaseParameters',
 
-  props: ['edit_mode'],
+  props: ['edit_mode', 'phase', 'product_data'],
 
   data() {
     return {
@@ -71,10 +71,6 @@ export default {
     
     product_key() {
       return this.$route.params.product_key
-    },
-
-    product_data() {
-      return this.$store.getters.productData(this.product_key)
     },
 
     current_phase() {
@@ -100,7 +96,6 @@ export default {
     },
 
     paramHumanValue(param_key, value_key) {
-      // const param_value = this.phase_params[param_key]
       if (this.paramType(param_key) == 'int') {
         return this.phase_params[param_key]
       }
@@ -118,7 +113,6 @@ export default {
     paramOtherValues(param_key, param_value) {
       /* must update to keep map structure so that keys can be used when 
          updating param */
-      // const param_current_value = this.phase_params[param_key]
       const param_all_values = params_map[param_key].values
       const param_alternative_values = new Map(
         [...param_all_values.keys()]

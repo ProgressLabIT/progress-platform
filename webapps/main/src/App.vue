@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <AppBar/>      
+    <AppBar/>    
       <router-view />
     <AppFooter />
   </v-app>
@@ -20,9 +20,9 @@ export default {
   },
 
   created() {
+    this.$store.dispatch('loadProductList')
     // document.documentElement.requestFullscreen()
   }
-
 
 };
 </script>

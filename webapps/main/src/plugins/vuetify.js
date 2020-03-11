@@ -12,9 +12,9 @@ const opts = {
 	global: {
 		ripples: false,
 	},
-	icons: {
-		iconfont: 'md'
-	},
+	// icons: {
+	// 	iconfont: 'md'
+	// },
 
 	theme: {
 		dark:true,

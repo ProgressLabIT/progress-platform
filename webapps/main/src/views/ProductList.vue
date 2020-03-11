@@ -118,7 +118,7 @@ export default {
 
   methods: {
 
-    ...mapActions(['restoreProduct', 'loadProductList']),
+    ...mapActions(['restoreProduct']),
 
     match(product) {
       let activeFilter = !this.filterInactive || product.active
@@ -149,11 +149,6 @@ export default {
     }
 
   },
-
-  created() {
-    // console.log("Loading products...")
-    this.loadProductList()
-  }
 };
 </script>
 
