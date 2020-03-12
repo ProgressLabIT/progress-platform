@@ -1,7 +1,9 @@
 <template>
   <v-app>
     <AppBar/>    
-      <router-view />
+      <transition name="fade">
+        <router-view />
+      </transition>
     <AppFooter />
   </v-app>
 </template>

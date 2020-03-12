@@ -3,7 +3,7 @@
 
       <!-- MENU ICON AND WINDOW TITLE -->
       <v-app-bar-nav-icon style="color: rgba(255,255,255,.6);" />
-      <h3 class=" display">Library</h3>
+      <h3 class=" display">Libreria prodotti</h3>
 
       <!-- USER NAME & BADGE -->
       <h5 class=" display highlight ml-auto">{{ username }}</h5>

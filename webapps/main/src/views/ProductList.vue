@@ -9,12 +9,12 @@
         <v-text-field
           hide-details
           single-line
-          autocomplete="false"
+          autocomplete="off"
           name="search"
-          label="PRODUCTS FILTER/SEARCH"
+          label="Filtra/Cerca prodotti"
           value="search"
           v-model="searchString"
-          class="ma-0 pa-0">
+          class="ma-0 pa-0 text-uppercase">
           <template v-slot:append>
             <span class="material-icons">search</span>
           </template>
@@ -27,7 +27,7 @@
           :ripple="false"
           color="primary" 
           hide-details
-          label="Active only" 
+          label="Solo attivi" 
           v-model="filterInactive" 
           class="ma-0 pa-0 nowrap"/>
       </v-col>    
@@ -36,7 +36,7 @@
           :ripple="false"
           color="primary"
           hide-details
-          label="Show pictures" 
+          label="Mostra immagini" 
           v-model="showImages" 
           class="ma-0 pa-0 nowrap"/>
       </v-col>  
@@ -45,8 +45,8 @@
 
       <v-col cols="auto">
         <v-btn color="primary"
-          @click="$router.push('new-product')">
-          new product
+          @click="$router.push({ name: 'newProduct' })">
+          Crea nuovo
         </v-btn>
       </v-col>
     </v-row>
