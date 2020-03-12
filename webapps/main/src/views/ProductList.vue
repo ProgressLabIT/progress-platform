@@ -45,7 +45,7 @@
 
       <v-col cols="auto">
         <v-btn color="primary"
-          @click="$router.push('product/new-product')">
+          @click="$router.push('new-product')">
           new product
         </v-btn>
       </v-col>
@@ -81,6 +81,8 @@
         </v-col>
       </v-row>
     </v-snackbar>
+
+    <router-view></router-view>
 
   </v-content>
 </template>

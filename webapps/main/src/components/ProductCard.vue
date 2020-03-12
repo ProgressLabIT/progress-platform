@@ -6,7 +6,7 @@
     elevation="4" class="surface-1"
     @mouseenter="overCard = true"
     @mouseleave="overCard = false"
-    @dblclick="$router.push('product/'+product._key)">
+    @dblclick="$router.push(to_product_route)">
     <v-img 
       :src="image ? `/media/product/${product._key}/image.jpg` : ''" 
       class="fill" 
@@ -86,6 +86,15 @@ export default {
       overCard: false,
       overDesc: false,
       showDelete: false,
+      to_product_route: {
+        name: 'productHome',
+        params: {
+          product_key: this.product._key
+        },
+        query: {
+          back_to: 'productList'
+        }
+      }
     }
   },
 
