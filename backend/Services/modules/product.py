@@ -93,12 +93,12 @@ async def create_product(
   # Save image
   if image:
 
-    media_directory = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/pics/products"
+    media_directory = f"/Volumes/Luca/DEV/Progress/WebApps/Library/public/media/product"
     new_product_key = db_response['_key']
     # Define product docs folder (named after product ID within the Product folder)
     product_path = os.path.join(
       media_directory, 
-      #db_response['_key']
+      new_product_key
       )
 
     # If product folder is not present, create it
@@ -107,7 +107,7 @@ async def create_product(
     
     # Try saving file
     try: 
-      filename = f'{new_product_key}.jpeg'
+      filename = 'image.jpg'
 
       with open(os.path.join(product_path, filename), 'wb+') as f:
         image_data = await image.read()
@@ -230,8 +230,8 @@ async def save_doc(
   new_doc: UploadFile =  File(...)
 ):
 
-  doc = UserFile.product_doc(
-    append_path=product_key,
+  doc = UserFile.product_media(
+    append_path=f"{product_key}/doc",
     file=new_doc,
     name=new_doc.filename
   )
@@ -261,8 +261,8 @@ async def delete_doc(
   doc_name: str
 ):
 
-  doc = UserFile.product_doc(
-    append_path=product_key, 
+  doc = UserFile.product_media(
+    append_path=f'{product_key}/doc', 
     name=doc_name
   )
 
@@ -278,8 +278,8 @@ async def replace_product_image(
   new_image: UploadFile = File(...)
 ):
   # extension = new_image.filename.split('.')[-1]
-  img = UserFile.product_image(new_image)
-  filename = f'{product_key}.jpeg'
+  img = UserFile.product_media(new_image)
+  filename = 'image.jpg'
   await img.write_file(filename)
 
 
@@ -292,8 +292,8 @@ async def replace_product_image(
   new_image: UploadFile = File(...)
 ):
   # extension = new_image.filename.split('.')[-1]
-  img = UserFile.product_image(new_image)
-  img.write_file(filename)
+  img = UserFile.product_media(new_image)
+  img.write_file('image.jpg')
 
 
 # =================================================
@@ -304,16 +304,20 @@ async def get_product_data(product_key: str):
   product = ProductFull(**product_db.get(product_key))
 
   # Get product docs info
-  docs_directory = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/docs"
-  docs_path = os.path.join(docs_directory, product_key)
+  # media_directory = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/media/product"
+  # docs_path = os.path.join(media_directory, product_key, 'doc')
+  # print(docs_path)
 
-  def check_pdf(filename):
-    return filename.name.split('.')[-1] == 'pdf'
+  # # def check_pdf(filename):
+  # #   return filename.name.split('.')[-1] == 'pdf'
 
-  if os.path.isdir(docs_path):
-    doc_list = [ doc for doc in os.scandir(docs_path) if check_pdf(doc) ]
-  else:
-    doc_list = []
+  # if os.path.isdir(docs_path):
+  #   doc_list = [ doc for doc in os.scandir(docs_path) ]
+  # else:
+  #   doc_list = []
+
+  folder_obj = UserFile.product_media(product_key)
+  doc_list = folder_obj.get_folder_contents('doc', name_only=False)
 
   def doc_data(doc):
     return ProductDoc(
@@ -324,14 +328,14 @@ async def get_product_data(product_key: str):
   product.docs = list(map(doc_data, doc_list))
 
   # Get product image path
-  image_dir = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/pics/products"
-  image_list = os.listdir(image_dir)
-  match = f'{product_key}.*'
+  # image_dir = "/Volumes/Luca/DEV/Progress/WebApps/Library/public/media/product"
+  # image_list = os.listdir(image_dir)
+  # match = f'{product_key}.*'
   
-  for n in image_list:
-    if fnmatch(n, match):
-      product.img_name = n
-      break
+  # for n in image_list:
+  #   if fnmatch(n, match):
+  #     product.img_name = n
+  #     break
 
   return product
   

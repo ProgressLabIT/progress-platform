@@ -2,7 +2,7 @@ import os
 
 class UserFile:
 
-  public_path = "/Volumes/Luca/DEV/Progress/WebApps/Library/public"
+  public_path = "/Volumes/Luca/DEV/Progress/WebApps/ManagerApp/public"
 
   def __init__(self, base_path, append_path=None, file=None, name=None):
    
@@ -25,14 +25,14 @@ class UserFile:
   def __repr__(self):
     return f'UserFile object:\nfolder_path: {self.folder_path}\nfilename: {self.name}'
 
-  @classmethod
-  def product_image(cls, file=None, name=None):
-    base_path = "pics/products"
-    return cls(base_path, file=file, name=name)
+  # @classmethod
+  # def product_image(cls, file=None, name=None):
+  #   base_path = "media/product"
+  #   return cls(base_path, file=file, name=name)
 
   @classmethod
-  def product_doc(cls, append_path, file=None, name=None):
-    base_path = "docs"
+  def product_media(cls, append_path, file=None, name=None):
+    base_path = "media/product"
     return cls(base_path, append_path, file, name)
 
   @classmethod
@@ -65,8 +65,13 @@ class UserFile:
     os.remove(file_path)
 
 
-  def get_folder_contents(self, append_path=None):
+  def get_folder_contents(self, append_path=None, name_only=True):
     if append_path:
       self.folder_path = os.path.join(self.folder_path, append_path)
   
-    return [ f.name for f in os.scandir(self.folder_path) ]
+    contents = os.scandir(self.folder_path)
+
+    if name_only:
+      return [ f.name for f in contents ]
+    else:
+      return [ f for f in contents]

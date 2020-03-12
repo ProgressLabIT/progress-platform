@@ -27,7 +27,6 @@ async def get_operation_list():
 async def get_step_media(step_key: str):
 
   step_media = UserFile.step_media(step_key)
-
   media_folder_exists = os.path.isdir(step_media.folder_path)
 
   if (media_folder_exists):
