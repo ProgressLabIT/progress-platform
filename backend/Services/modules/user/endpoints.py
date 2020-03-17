@@ -3,7 +3,7 @@ from utils.api import APIResponse
 from fastapi import APIRouter, UploadFile, HTTPException, Form, File, Body
 from fastapi.encoders import jsonable_encoder
 from typing import List
-from .user_m import UserCredentials, User
+from .models import UserCredentials, User
 
 import json
 

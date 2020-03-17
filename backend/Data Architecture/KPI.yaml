@@ -100,7 +100,7 @@
     max: float
     min: float
 
-# WorkOrderLine
+# WorkOrder
   wo_code: str
   line_no: int
   created_at: ISOdts

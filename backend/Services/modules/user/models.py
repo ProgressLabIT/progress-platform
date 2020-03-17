@@ -1,7 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from enum import Enum
-from ..models import FlexModel
+from utils.flex_model import FlexModel
 
 class UserCredentials(FlexModel):
   login: str = None

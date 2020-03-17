@@ -131,8 +131,9 @@
 
 
 # Department
-	name: str
 	code: str
+  name: str
+	description: str
 	# user: rel (0:N <--assigned_to-- 0:N)
 	# equipment: rel (0:N <--belongs_to-- Resource N:N)
 	# operation: rel (0:N --carries_out--> 0:N)

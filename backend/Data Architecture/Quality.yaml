@@ -15,7 +15,7 @@
   * user: _key #rel (1:1 --created_by--> 0:N)
   * job: _key #rel (1:1 --refers_to--> 0:N)
   * product: _key #rel (1:1 --refers_to--> 0:N)
-  * wo_line: _key #rel (1:1 --refers_to--> 0:N)
+  * work_order: _key #rel (1:1 --refers_to--> 0:N)
   * operation: _key # rel (1:1 --refers_to--> 0:N)
   title: str
   description: str

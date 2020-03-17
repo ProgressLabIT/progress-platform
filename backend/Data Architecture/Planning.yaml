@@ -2,23 +2,27 @@
 # Planning
 # =========================
 
-# WorkOrderLine
+# Queues
+
+
+
+# WorkOrder
   _key: str (random)
   wo_code: str
   wo_line_no: str
   priority: bool
-  global_queue_position: int
+  # global_queue_position: int
   customer_data: 
     id: _key 
     order_code: str
     po_code: str
     line: int
-  product: _key
+  * product: _key
   planned_qt: float
   completed_qt: float # corresponds to the sum of the released qt of the jobs in the last phase 
-  status: str [created, planned, running, closed] (???)
-  on_time: bool
-  active: bool
+  * status: str [created, planned, started, closed] (???)
+  * on_time: bool
+  * active: bool
   due_by: ISOdts
   notes: str
 
@@ -26,12 +30,12 @@
   _key: str (random)
   
   ## relationship to master data
-  * wo_line: str + rel (1:N --belongs_to--> 1:N)
+  * work_order: str + rel (1:N --belongs_to--> 1:N)
   * phase: str + rel (1:1 --belongs_to--> 0:N)
   * product: _key
   * operation: str + rel (1:1 --requires--> 0:N)
   # rel (0:N --assigned_to--> 0:N) User / Department
-    - sequence: int
+    # - sequence: int >>> move to queues
     - assigned_by: str
     - assigned_at: ISOdts
   # rel (0:N --requires--> 0:N) ProductionItems
@@ -75,6 +79,7 @@
     qt_planned: float
     qt_completed: float
     qt_released: float
+    current_run: int
     current_step: int # 0 if step_check === "None"
   forecast:
     # this part is updated after each Run (if stepc_check active) or after each declaration
