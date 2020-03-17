@@ -1,26 +1,26 @@
 <template>
   <div>
-  <slot name="before"></slot>
-	<v-tooltip top :color="color" open-delay="200">
-    <template v-slot:activator="{on}">
-      <v-icon 
-      	v-on="on" 
-      	dense class="mx-2 hover-color"
-      	:style="hoverColor"
-        @click.stop="emit"
-      	>{{ icon }}
-      </v-icon>
-    </template>
-    <span>{{ tooltip | capitalize }}</span>
-  </v-tooltip>
-      <slot name="after"></slot>
+    <slot name="before"></slot>
+  	<v-tooltip top :color="color" open-delay="200">
+      <template v-slot:activator="{on}">
+        <v-icon 
+        	v-on="on" 
+        	dense class="mx-2 hover-color"
+        	:style="hoverColor"
+          @click.stop="emit"
+        	>{{ icon }}
+        </v-icon>
+      </template>
+      <span>{{ tooltip | capitalize }}</span>
+    </v-tooltip>
+    <slot name="after"></slot>
   </div>
 </template>
 
 <script>
 export default {
 
-  name: 'TooltipIcon',
+  name: 'BaseTooltipIcon',
   props: ['icon', 'tooltip', 'color'],
   data () {
     return {

@@ -27,15 +27,15 @@
 
       <!-- OPTIONS -->
       <v-col class="d-flex py-0 align-center justify-end">
-       <!--  <TooltipIcon
+       <!--  <BaseTooltipIcon
           icon="assignment"
           tooltip="documents"
           :color="$theme.green"/>
-        <TooltipIcon
+        <BaseTooltipIcon
           icon="edit"
           tooltip="details"
           :color="$theme.blue"/> -->
-        <TooltipIcon
+        <BaseTooltipIcon
           icon="delete"
           tooltip="delete"
           :color="$theme.red"
@@ -47,13 +47,13 @@
 </template>
 
 <script>
-import TooltipIcon from '@/components/TooltipIcon'
+import BaseTooltipIcon from '@/components/BaseTooltipIcon'
 import { mapActions } from 'vuex'
 export default {
 
-  name: 'ProductActions',
+  name: 'ProductCardActions',
   components: {
-    TooltipIcon
+    BaseTooltipIcon
   },
 
   props: ['product'],

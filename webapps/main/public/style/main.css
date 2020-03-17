@@ -174,11 +174,11 @@ span .display {
 }*/
 
 
-.v-menu__content {
+input .v-menu__content {
   border: 1px solid var(--box-border);
 }
 
-.v-menu__content .v-card .v-list.v-sheet {
+input .v-menu__content .v-card .v-list.v-sheet {
   background-color: var(--surface-2);
 }
 
@@ -205,4 +205,12 @@ span .display {
 /* hover highlight */
 .hover-highlight {
   background-color: #293437;
+},
+
+.theme-bg-color {
+  background-color: var(--bg-color)
+}
+
+.opaque {
+  opacity: 1;
 }

@@ -24,12 +24,17 @@ export default new Vuex.Store({
         animation: 200,
         ghostClass: "ghost"
       },
+      screen_title: ''
     }
   },
 
   getters: {},
 
-  mutations: {},
+  mutations: {
+    UPDATE_SCREEN_TITLE(state, new_title) {
+      Vue.set(state, 'screen_title', new_title)
+    }
+  },
 
   actions: {},
 

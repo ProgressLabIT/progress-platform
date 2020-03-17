@@ -1,8 +1,7 @@
 <template>
   <BaseModalScreen :show="show_modal" @close="exit()">
-
     <template v-slot:header>
-      <span class="ml-4 display medium highlight weight-medium">ID PRODOTTO: {{ product_key }}</span>
+      <span class="ml-4 display medium highlight weight-medium">ID ORDINE DI PRODUZIONE: {{ wo_key }}</span>
 
       <v-col cols="auto" class="ml-auto">
         <v-tabs 
@@ -31,68 +30,50 @@
 </template>
 
 <script>
-import BaseModalScreen from '@/components/BaseModalScreen'
+import BaseModalScreen from '@/components/BaseModalScreen.vue'
+
 export default {
 
-  name: 'ProductScreen',
-
-  props: ['product_key'],
+  name: 'WorkOrderScreen',
 
   components: {
     BaseModalScreen
   },
 
+  props: ['wo_key'],
+
   data () {
-    return {
-      root: "productList",
+    return { 
       show_modal: true,
       links: [
         {
-          name: 'productHome',
-          title: 'parametri'
+          name: 'workOrderHome',
+          title: 'panoramica',
         },
         {
-          name: 'productionProcess',
-          title: 'processo'
+          name: 'workOrderJobs',
+          title: 'lavori'
         },
         {
-          name: 'bom',
-          title: 'distinta'
+          name: 'workOrderHistory',
+          title: 'storico'
         }
       ]
-    }
-  },
 
-  computed: {
-    edit_modes() {
-      return this.$store.state.product.edit_modes
-    },
-    user_is_editing() {
-      return Object.values(this.edit_modes).some( v => v === true )
     }
   },
 
   methods: {
+
     exit() {
-      if (this.user_is_editing) {
-        window.alert(`Salva o annulla le modifiche in tutte le sezioni prima di uscire.`)
-      }
-      else {
+      // if (this.user_is_editing) {
+      //   window.alert(`Salva o annulla le modifiche in tutte le sezioni prima di uscire.`)
+      // }
+      // else {
         this.show_modal = false
         this.$router.push({ name: this.$route.query.back_to })
-      }
+      // }
     }
-  },
-
-  created() {
-    let actions = [
-      'getProcess',
-      'getBom',
-      'loadProductDetails',
-      'getOperations'
-    ]
-    
-    actions.forEach( a => this.$store.dispatch(a, this.product_key))
   }
 }
 </script>

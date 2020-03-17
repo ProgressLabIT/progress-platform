@@ -37,7 +37,7 @@
 
         <!-- ACTIONS BAR -->
         <v-expand-transition>
-          <ProductActions 
+          <ProductCardActions 
             :product="product" 
             v-show="showActions" 
             @showDelete="showDelete = true"
@@ -69,7 +69,7 @@
 </template>
 
 <script>
-import ProductActions from '@/components/ProductActions'
+import ProductCardActions from '@/components/ProductCardActions'
 import { mapActions } from 'vuex'
 
 export default {
@@ -78,7 +78,7 @@ export default {
   props: ['product', 'image'],
 
   components: {
-    ProductActions
+    ProductCardActions
   },
 
   data () {

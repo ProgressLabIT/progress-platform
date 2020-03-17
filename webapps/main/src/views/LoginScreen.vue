@@ -79,7 +79,7 @@
 import { api } from '@/lib/apiCall.js'
 export default {
 
-  name: 'Login',
+  name: 'LoginScreen',
 
   data () {
     return {

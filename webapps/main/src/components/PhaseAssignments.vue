@@ -8,7 +8,7 @@
 
             <v-subheader>Classi di attrezzature</v-subheader>
             
-            <ListAvatarElement 
+            <BaseAvatarListElement 
               v-for="ec in assigned_eq_classes" :key="ec._id"
               :src="`/media/equipment/${ec.src}`"
               :title="ec.name"
@@ -18,13 +18,13 @@
               :color="$theme.red"
               icon="close"
               @iconClick="cancelAssignment(ec._id)">
-            </ListAvatarElement>
+            </BaseAvatarListElement>
 
             <v-divider class="mt-2 mb-3"></v-divider>
             
             <v-subheader>Attrezzature</v-subheader>
 
-            <ListAvatarElement
+            <BaseAvatarListElement
               v-for="e in assigned_equipment" :key="e._id"
               :src="`/media/equipment/${e.src}`"
               :title="e.name"
@@ -34,7 +34,7 @@
               :color="$theme.red"
               icon="close"
               @iconClick="cancelAssignment(e._id)">
-            </ListAvatarElement>
+            </BaseAvatarListElement>
 
           </v-list>
         </div>
@@ -55,11 +55,11 @@
           @blur="new_assignment = null"
           >
           <template v-slot:item="{ item }">
-            <ListAvatarElement
+            <BaseAvatarListElement
               :src="`/media/equipment/${item.src}`"
               :title="item.name"
               :subtitle="item.class">
-            </ListAvatarElement>
+            </BaseAvatarListElement>
           </template>
         </v-autocomplete>
 
@@ -75,7 +75,7 @@
           <v-row>
             <v-col cols="auto"
               v-for="d in assigned_departments" :key="d._id">
-              <ListAvatarElement 
+              <BaseAvatarListElement 
                 :src="null"
                 :title="d.name"
                 subtitle="Reparto"
@@ -84,7 +84,7 @@
                 :color="$theme.red"
                 icon="close"
                 @iconClick="cancelAssignment(d._id)">
-              </ListAvatarElement>
+              </BaseAvatarListElement>
             </v-col>
           </v-row>          
 
@@ -96,7 +96,7 @@
             <v-col cols="auto" 
               v-for="o in assigned_operators" :key="o._id"
               class="flex-shrink-1">   
-              <ListAvatarElement
+              <BaseAvatarListElement
                 :src="`/media/user/${o.src}`"
                 :title="o.name"
                 :subtitle="operatorDepartmentName(o.department)"
@@ -105,7 +105,7 @@
                 :color="$theme.red"
                 icon="close"
                 @iconClick="cancelAssignment(o._id)">
-              </ListAvatarElement>
+              </BaseAvatarListElement>
             </v-col>
 
           </v-row>
@@ -128,11 +128,11 @@
           @blur="new_assignment = null"
           >
           <template v-slot:item="{ item }">
-            <ListAvatarElement
+            <BaseAvatarListElement
               :src="`/media/user/${item.src}`"
               :title="item.name"
               :subtitle="item.class">
-            </ListAvatarElement>
+            </BaseAvatarListElement>
           </template>
         </v-autocomplete>
       </v-col>
@@ -141,7 +141,7 @@
 </template>
 
 <script>
-import ListAvatarElement from '@/components/ListAvatarElement'
+import BaseAvatarListElement from '@/components/BaseAvatarListElement'
 
 export default {
 
@@ -150,7 +150,7 @@ export default {
   props: ['phase', 'edit_mode', 'product_data'],
 
   components: {
-    ListAvatarElement
+    BaseAvatarListElement
   },
 
   data () {

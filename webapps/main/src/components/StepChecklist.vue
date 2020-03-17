@@ -44,7 +44,7 @@
           
           <!-- DELETE ICON -->
           <v-col cols="1" v-show="over_row==index" v-if="edit_mode && confirming_delete != index">
-            <TooltipIcon
+            <BaseTooltipIcon
               icon="delete"
               tooltip="Rimuovi controllo"
               :color="$theme.red"
@@ -97,7 +97,7 @@
 
 <script>
 // import {debounce as _debounce} from 'lodash/fp'
-import TooltipIcon from '@/components/TooltipIcon'
+import BaseTooltipIcon from '@/components/BaseTooltipIcon'
 import draggable from 'vuedraggable'
 
 export default {
@@ -105,7 +105,7 @@ export default {
   name: 'StepChecklist',
 
   components: {
-    TooltipIcon,
+    BaseTooltipIcon,
     draggable
   },
 

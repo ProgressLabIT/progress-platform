@@ -23,12 +23,12 @@
       
       <v-list-item-action v-if="edit">
         <slot name="actions">
-          <TooltipIcon
+          <BaseTooltipIcon
             :icon="icon"
             :tooltip="tooltip"
             :color="color"
             @iconClick="emit">
-          </TooltipIcon>
+          </BaseTooltipIcon>
         </slot>
       </v-list-item-action>
 
@@ -36,11 +36,11 @@
 </template>
 
 <script>
-import TooltipIcon from '@/components/TooltipIcon.vue'
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 
 export default {
 
-  name: 'ListAvatarElement',
+  name: 'BaseAvatarListElement',
 
   props: { 
     src: String,
@@ -55,7 +55,7 @@ export default {
     color: String,
   },
 
-  components: {TooltipIcon},
+  components: {BaseTooltipIcon},
 
   methods: {
     emit() {

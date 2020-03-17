@@ -63,12 +63,12 @@
                 
                 <v-col cols="1" 
                   v-if="edit_mode" v-show="over_phase==index" class="mr-2">
-                  <TooltipIcon
+                  <BaseTooltipIcon
                     icon="delete"
                     tooltip="Elimina fase"
                     :color="$theme.red"
                     @iconClick="confirming_delete = index"
-                  ></TooltipIcon>
+                  ></BaseTooltipIcon>
                 </v-col>  
 
               </v-row>  
@@ -192,17 +192,15 @@
             background-color="transparent"
             :color="$theme.whitehigh"
             hide-slider right
-            class="flex-shrink-1 flex-grow-0"
-          >
-        <v-tab 
-          v-for="(view, idx) in views" 
-          :key="idx"
-          class="display"
-          >
-          {{ view.name }}
-        </v-tab>
-        </v-tabs>
-      </v-row>  
+            class="flex-shrink-1 flex-grow-0">
+            <v-tab 
+              v-for="(view, idx) in views" 
+              :key="idx"
+              class="display">
+              {{ view.name }}
+            </v-tab>
+          </v-tabs>
+        </v-row>  
         <v-card elevation="0" class="scroll flex-grow-1">
           <keep-alive>
             <v-component 
@@ -223,7 +221,7 @@ import { mapActions } from 'vuex'
 import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
 import PhaseAssignments from '@/components/PhaseAssignments.vue'
-import TooltipIcon from '@/components/TooltipIcon.vue'
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 import draggable from 'vuedraggable'
 
 
@@ -243,7 +241,7 @@ export default {
     PhaseParameters,
     PhaseSteps,
     PhaseAssignments,
-    TooltipIcon,
+    BaseTooltipIcon,
     draggable,
   },
 

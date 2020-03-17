@@ -1,8 +1,8 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import ProductList from "@/views/ProductList.vue";
-import ProductScreen from "@/components/ProductScreen.vue";
-import Login from "@/views/Login.vue";
+// import ProductList from "@/views/ProductList.vue";
+// import ProductScreen from "@/components/ProductScreen.vue";
+// import Login from "@/views/Login.vue";
 
 
 
@@ -16,12 +16,12 @@ const routes = [
   {
     path: "/login",
     name: "login",
-    component: Login
+    component: () => import("@/views/LoginScreen.vue")
   },
   {
     path: "/product",
     name: "productList",
-    component: ProductList,
+    component: () => import("@/views/ProductList.vue"),
     children: [
       {
         path: "new-product",
@@ -33,7 +33,7 @@ const routes = [
   {
     path: "/product/:product_key",
     redirect: { name: "productHome" },
-    component: ProductScreen,
+    component: () => import ("@/components/ProductScreen.vue"),
     props: true,
     children: [
       {
@@ -52,6 +52,43 @@ const routes = [
         component: () => import("@/views/BillOfMaterials.vue")
       },
     ]
+  },
+  {
+    path: "/production",
+    name: "productionOverview",
+    redirect: { name: 'workOrderList' },
+    component: () => import("@/views/ProductionOverview.vue"),
+    children: [
+      {
+        path: "work-orders",
+        name: 'workOrderList',
+        component: () => import ("@/components/WorkOrderList.vue"),
+      },
+      {
+        path: "jobs/:department?",
+        name: 'jobList',
+        component: () => import ("@/components/JobList.vue"),
+      }
+    ]
+  },
+  {
+    path: "/production/:wo_key",
+    name: "workOrderScreen",
+    redirect: { name: "workOrderHome"},
+    component: () => import ("@/components/WorkOrderScreen.vue"),
+    props: true,
+    children: [
+      {
+        path: "home",
+        name: "workOrderHome",
+        component: () => import ("@/views/WorkOrderHome.vue")
+      }
+    ]
+  },
+  {
+    path: "*",
+    name: "notFound",
+    component: () => import ("@/views/404_NotFound.vue")
   }
 ] 
  

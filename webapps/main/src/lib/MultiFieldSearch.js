@@ -7,7 +7,13 @@ export default function multiFieldSearch(searchString, testItem, fieldList) {
 
   // create the list of words to search in, removing duplicates
   let matchString = ''
-  fieldList.forEach( field => matchString += testItem[field] + ' ' )
+  fieldList.forEach( field => {
+    // handle both string and arrays of strings. 
+    // If field is array, consider each item as a term in itself
+    let field_content = testItem[field]
+    if (typeof field_content === 'object') field_content = ''.concat(...field_content.map( i => i + ' ' ))
+    matchString += field_content + ' '
+  })
 
   let matchContext = [...new Set(matchString.toLowerCase().split(' '))]
 

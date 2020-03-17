@@ -113,13 +113,13 @@
           </template>
 
           <template v-slot:header.data-table-select="">
-            <TooltipIcon small 
+            <BaseTooltipIcon small 
               :color="$theme.red" 
               icon="delete"
               :tooltip="deleteIconTooltip"
               @iconClick="toggleAll"
               class="mx-n1">
-            </TooltipIcon>
+            </BaseTooltipIcon>
           </template>
           
           <template v-slot:item.data-table-select="{ isSelected, select }">
@@ -236,7 +236,7 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import multiMatch from '@/lib/MultiFieldSearch.js'
-import TooltipIcon from '@/components/TooltipIcon'
+import BaseTooltipIcon from '@/components/BaseTooltipIcon'
 import { api } from '@/lib/apiCall.js'
 
 export default {
@@ -244,7 +244,7 @@ export default {
   name: 'BillOfMaterials',
 
   components: {
-    TooltipIcon
+    BaseTooltipIcon
   },
 
   data() {
@@ -254,10 +254,10 @@ export default {
       item_type_filter: ['assembly', 'component', 'consumable'],
       table_height: '85vh',
       table_headers: [
-        {  value:'code', text:'CODE' },
-        {  value:'description', text:'DESCRIPTION' },
-        {  value:'type', text:'ITEM TYPE' },
-        {  value:'phase_name', text:'PHASE' },
+        {  value:'code', text:'CODICE' },
+        {  value:'description', text:'DESCRIZIONE' },
+        {  value:'type', text:'TIPO' },
+        {  value:'phase_name', text:'FASE' },
         {  value:'qt', text:'QT' },
       ],
       delete_items: [],

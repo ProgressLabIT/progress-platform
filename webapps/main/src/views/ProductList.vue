@@ -1,5 +1,5 @@
 <template>
-  <v-content class="px-6">
+  <v-container fluid class="px-6 fill scroll">
 
     <!-- Header row with product filter and view controls -->
     <v-row>
@@ -84,7 +84,7 @@
 
     <router-view></router-view>
 
-  </v-content>
+  </v-container>
 </template>
 
 <script>
@@ -151,6 +151,10 @@ export default {
     }
 
   },
+
+  beforeCreate() {
+    this.$store.commit("UPDATE_SCREEN_TITLE", 'Libreria prodotti')
+  }
 };
 </script>
 
