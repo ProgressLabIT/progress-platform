@@ -98,7 +98,8 @@ export default {
           this.$store.commit('LOAD_PRODUCT_DETAILS', new_product_data)
           this.$router.push({ 
             name: 'productHome', 
-            params: { item_key: new_product_data._key }
+            params: { item_key: new_product_data._key },
+            query: { back_to: 'productList' }
           })
         })
         .catch(error => {

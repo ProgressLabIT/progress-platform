@@ -8,6 +8,17 @@
             <v-img 
               :src="media.src" 
               aspect-ratio="1.7778">
+
+              <template v-slot:placeholder>
+                <v-row v-if="media.filename.endsWith('.pdf')"
+                  align="center" justify="center" class="fill-height">
+                  <v-icon x-large :color="$theme.whitelow">mdi-file-document-outline</v-icon>
+                </v-row>
+
+                <v-row v-else align="center" justify="center" class="fill-height">
+                  <v-progress-circular indeterminate></v-progress-circular>
+                </v-row>
+              </template>
               
               <v-sheet color="rgba(100,100,100,.8)">
                 <v-row v-if="media.temp" align="start" justify="center" class="mx-1">
@@ -33,14 +44,27 @@
                   align="center" 
                   justify="space-between">
 
+                  <!-- MEDIA TITLE -->
+                  <v-tooltip top>
+                    <template v-slot:activator="{on}">
+                      <v-btn fab x-small :color="$theme.grey" v-on="on">
+                        <v-icon>info</v-icon>
+                      </v-btn>
+                    </template>
+                    <span >
+                      {{media.filename}}
+                    </span>
+                  </v-tooltip>
+
                   <!-- SHOW MEDIA SCREEN -->
                   <v-btn 
+                    v-on="on"
                     fab x-small 
                     :color="$theme.grey" 
                     @click.stop="showMedia(media)">
                     <v-icon>search</v-icon>
-                  </v-btn>
-
+                  </v-btn>  
+                  
                   <!-- DELETE MEDIA -->
                   <v-btn 
                     v-if="edit_mode && !media.trash"
@@ -76,7 +100,7 @@
             type="file" multiple
             ref="upload"
             style="display: none"
-            accept="image/*"
+            accept="image/*, application/pdf"
             @change="addMedia($event.target.files)"/>
           <v-icon :color="hover2 ? $theme.whitehigh : $theme.whitelow">add_a_photo</v-icon>              
           <p class="smaller text-uppercase mt-2">Aggiungi media</p>
@@ -89,7 +113,6 @@
         :show="show_media_screen"
         :media_name="selected_media.filename"
         :media_src="selected_media.src"
-        type="img"
         @close="show_media_screen=false">
       </MediaViewer>
     </v-lazy>

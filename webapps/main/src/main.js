@@ -8,6 +8,12 @@ import bytes from 'bytes'
 import 'material-design-icons-iconfont/dist/material-design-icons.css' // Ensure you are using css-loader 
 
 
+function capitalize(value) {
+  if (!value) return ''
+  value = value.toString()
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 Vue.config.productionTip = false;
 
 Vue.prototype.$theme = {
@@ -24,10 +30,12 @@ Vue.prototype.$theme = {
   whitehigh: 'rgba(255,255,255,.87)'
 }
 
-Vue.filter('capitalize', function(value) {
+Vue.filter('capitalize', capitalize)
+
+Vue.filter('capitalize_all', value => {
   if (!value) return ''
-  value = value.toString()
-  return value.charAt(0).toUpperCase() + value.slice(1)
+  let words = value.split(" ")
+  return "".concat(...words.map( w => capitalize(w) + ' ')).trim()
 })
 
 Vue.filter('bytes', function(byte_size) {

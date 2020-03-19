@@ -6,49 +6,87 @@
       <v-col cols="4" class="fill-height d-flex flex-column justify-space-between">
         <!-- PRODUCT IMAGE -->
         <v-card outlined>
-          <v-img height="30vh"
-            :src="img_src" 
-            :gradient="product.active ? '' : 'to top right, rgba(100,100,100,.33), rgba(25,25,25,.7)'">
-            <template v-slot:placeholder>
-              <v-row class="fill-height" align="center" justify="center">
-                <v-progress-circular indeterminate :color="$theme.gray"></v-progress-circular>
-              </v-row>
-            </template>
-            
-            <v-container v-if="edit_mode" class="pa-0 fill d-flex flex-column justify-space-between">
-              <v-sheet class="surface-1 text-center smaller display weight-bold">
-                modifica immagine
-              </v-sheet>
+          <v-hover v-slot="{ hover }">
+            <v-img height="30vh"
+              :src="img_src" 
+              :gradient="product.active ? '' : 'to top right, rgba(100,100,100,.33), rgba(25,25,25,.7)'">
 
-              <!-- <v-sheet class="surface-1"> -->
-                <v-row align="end" class="ma-2">
-                  <v-btn v-if="new_image || new_image_url == 'placeholder'"
-                    small :color="$theme.orange"
-                    @click="clearTempImg">
-                    ripristina originale
-                  </v-btn>
-                  <v-btn v-else-if="product.img_name != null"
-                    small
-                    :color="$theme.red" 
-                    @click="deleteImg">
-                    Elimina
-                  </v-btn>
-                  <v-spacer></v-spacer>
-                  <input 
-                    type="file"
-                    ref="upload_img"
-                    style="display: none"
-                    accept="image/*"
-                    @change="updateImg($event.target.files[0])"/>
-                  <v-btn small
-                    :color="$theme.grey" 
-                    @click="$refs.upload_img.click()">
-                    Carica
-                  </v-btn>
-                </v-row>
-              <!-- </v-sheet> -->
-            </v-container>
-          </v-img>
+              <v-row 
+                class="fill-height" 
+                align="center" 
+                justify="center">
+
+                <v-btn absolute bottom right
+                  v-show="hover && !edit_mode && !no_image"
+                  small
+                  :color="$theme.grey" 
+                  @click.stop="showMedia('img')"
+                  class="">
+                  <v-icon>search</v-icon>
+                </v-btn>
+
+                <v-col cols="auto" v-if="no_image" class="text-center">
+                  <v-icon x-large :color="$theme.whitelow">
+                    mdi-image-off-outline
+                  </v-icon>
+                  <p class="display smaller mt-2">
+                    Nessuna immagine
+                  </p>
+                </v-col>
+
+
+                <!-- IMAGE LOADING -->
+                <template v-slot:placeholder>
+                  <!-- If file exists, show loading indication -->
+                  <v-progress-circular indeterminate :color="$theme.gray"></v-progress-circular>
+                </template>
+
+
+                <v-container v-if="edit_mode" 
+                  style="position:absolute"
+                  class="pa-0 fill d-flex flex-column justify-space-between">
+                  <v-sheet class="surface-1 text-center smaller display weight-bold">
+                    modifica immagine
+                  </v-sheet>
+
+                  <!-- <v-sheet class="surface-1"> -->
+                  <v-row align="end" class="ma-2">
+                    <v-btn v-if="new_image || new_image_url === 'deleted'"
+                      small :color="$theme.orange"
+                      @click="clearTempImg">
+                      ripristina originale
+                    </v-btn>
+                    <v-btn v-else-if="!no_image"
+                      small
+                      :color="$theme.red" 
+                      @click="deleteImg">
+                      <v-icon>delete</v-icon>
+                    </v-btn>
+                    <v-spacer></v-spacer>
+                    <input 
+                      type="file"
+                      ref="upload_img"
+                      style="display: none"
+                      accept="image/*"
+                      @change="updateImg($event.target.files[0])"/>
+                    <v-btn small
+                      :color="$theme.grey" 
+                      @click="$refs.upload_img.click()">
+                      <v-icon>mdi-upload</v-icon>
+                    </v-btn>
+                    <v-btn 
+                      v-if="img_src != ''"
+                      small 
+                      :color="$theme.grey" 
+                      @click.stop="showMedia('img')"
+                      class="ml-2">
+                      <v-icon>search</v-icon>
+                    </v-btn>
+                  </v-row>  
+                </v-container>
+              </v-row>  
+            </v-img>
+          </v-hover>
         </v-card>
 
         <!-- PRODUCT CODE -->
@@ -93,7 +131,7 @@
           :color="$theme.blue"
           @click="activateEditMode"
           >
-          MODIFICA PARAMETRI
+          MODIFICA
         </v-btn>
 
         <div v-else>
@@ -156,8 +194,8 @@
                       :style="hover ? `background: var(--hover-bg-blue)` : `` "
                       style="cursor: pointer;"
                       class="body-2 pa-2 mx-n2 flex-nowrap"
-                      @click="showDoc(index)">
-                      <v-col cols="auto">
+                      @click="showMedia(index)">
+                      <v-col cols="8">
                         <span  :class="'temp' in doc ? 'font-italic' : ''">
                           {{ doc.name }} {{ 'temp' in doc ? ' (non salvato)' : ''}}
                         </span>
@@ -201,15 +239,16 @@
             </v-col>  
           </v-row> 
 
-          <MediaViewer 
-            :show="show_doc >= 0" 
-            @close="show_doc = -1" 
-            :media_name="doc_name"
-            :media_src="docSource">
-            <template v-slot:context-title>
-             PRODUCT CODE: {{ product.code }}
-            </template>
-          </MediaViewer>
+          <v-lazy>
+            <MediaViewer 
+              :show="show_media >= 0 || show_media === 'img' " 
+              @close="show_media = -1" 
+              v-bind="{ media_name, media_src}">
+              <template v-slot:context-title>
+               PRODUCT CODE: {{ product.code }}
+              </template>
+            </MediaViewer>
+          </v-lazy>
 
           <v-spacer></v-spacer>
 
@@ -249,10 +288,11 @@ export default {
       saving: false,
       show_cancel_confirmation: false,
       show_save_confirmation: false,
-      show_doc: -1,
+      show_media: -1,
       new_files: null,
       new_image: null,
       new_image_url: '',
+      no_image: false
       // zoom: 100
     };
   },
@@ -284,6 +324,10 @@ export default {
       return this.new_image_url ? this.new_image_url : this.saved_img_path
     },
 
+    // no_image() {
+    //   return this.img_src.length === 0 || this.new_image_url === 'deleted'
+    // },
+
     temp_code() {
       return this.product.code
     },
@@ -300,24 +344,32 @@ export default {
       return this.$store.state.product.saved.docs
     },
 
-    doc_name() {
-      if (this.show_doc == -1) { return '' }
-      else { return this.docs[this.show_doc].name }
+    media_name() {
+      if (this.show_media == -1) { return '' }
+      else if (this.show_media === 'img') { return 'Product image'}
+      else { return this.docs[this.show_media].name }
     },
 
-    docSource() {
-      if (this.show_doc >= 0) {
-        const doc = this.docs[this.show_doc]
+    media_src() {
+      
+      if (this.show_media === 'img') {
+        return this.img_src
+      }
+
+      else if (this.show_media >= 0) {
+        const doc = this.docs[this.show_media]
         let path = ''
+
         if (doc.temp) {
           path = window.URL.createObjectURL(doc.data)
           console.log({path})
         }
-        else path = `/media/product/${this.product_key}/doc/${encodeURI(this.doc_name)}`
+        else path = `/media/product/${this.product_key}/doc/${encodeURI(this.media_name)}`
 
-        return path.concat(`#toolbar=0`)
+        return path
       }
-      else return ''
+
+      else return null
     },
 
   },
@@ -342,17 +394,19 @@ export default {
       // if (url) window.URL.revokeObjectURL(url)
       this.new_image_url = window.URL.createObjectURL(img)
       this.new_image = img
+      this.no_image = false
     },
 
     clearTempImg() {
       window.URL.revokeObjectURL(this.new_image_url)
       this.new_image_url = null
       this.new_image = null
+      this.no_image = false
     },
 
     deleteImg() {
       // this is a fake URL to make v-img show placeholder
-      this.new_image_url = 'placeholder' 
+      this.new_image_url = 'deleted'
     },
 
     updateField(field, value) {
@@ -380,21 +434,9 @@ export default {
       this.$store.commit('DELETE_TEMP_DOC', index)
     },
 
-    showDoc(index) {
-      // const is_temp_file = 'temp' in this.docs[index]
-      // if (is_temp_file) {
-      //   return
-      // }
-      // else 
-        this.show_doc = index
+    showMedia(value) {
+        this.show_media = value
     },
-
-    // zoomOut () {
-    //   this.zoom = (this.zoom - 10) || 1
-    // },
-    // zoomIn () {
-    //   this.zoom = (this.zoom + 10) || 400
-    // },
 
     saveChanges() {
       this.saving = true
@@ -402,30 +444,33 @@ export default {
       const new_doc_list = this.product.docs
       let product_update = {
         new_product_data: this.product,
-        new_docs: new_doc_list.filter( d => 'temp' in d ),
         deleted_docs: old_doc_list.filter( 
           o => !new_doc_list.some( n => n.name === o.name)
         ),
         image: {
           new: this.new_image,
-          delete: this.new_image_url === 'placeholder'
+          delete: this.new_image_url === 'deleted'
         }
       }
+
+      if (this.new_docs){
+        product_update.new_docs = new_doc_list.filter( d => 'temp' in d )
+      }
+
       this.$store.dispatch('saveProductChanges', product_update)
-        .then(() => {
+        .then(async () => {
         // Show progress long enough the let user notice something is going on
         // even if the update is instantaneous
           // setTimeout(() => {
+            await this.$store.dispatch('loadProductDetails', this.product_key)
             this.show_save_confirmation = true
             this.edit_mode = false
             this.clearTempImg()
+            this.saving = false
           // }, 1500)
         })
         .catch(err => {
           window.alert(err)
-        })
-        .finally(() => {
-          this.saving = false
         })
     },
 
@@ -436,6 +481,17 @@ export default {
     },
 
   },
+
+  watch: {
+    img_src() {
+      let test = new XMLHttpRequest()
+      test.open('HEAD', this.img_src, false)
+      test.send()
+      if (test.status === 404) {
+        this.no_image = true
+      }
+    }
+  }
 };
 </script>
 

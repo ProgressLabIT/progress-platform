@@ -346,6 +346,7 @@ export default {
         description: '', 
         checks: [],
         input_fields: [],
+        media: []
       }
       this.$store.commit('ADD_OR_UPDATE_STEP', { phase_no, step_no, step_data})
       let new_step_index = this.procedure.length - 1

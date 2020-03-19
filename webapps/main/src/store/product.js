@@ -87,6 +87,9 @@ const product = {
 
     ADD_NEW_PRODUCT(state, new_product_data) {
       state.list.push(new_product_data)
+      state.list.sort( (a,b) => {
+        return a.code > b.code ? 1 : -1
+      })
     },
 
     LOAD_PRODUCT_LIST(state, product_list) {
@@ -166,7 +169,7 @@ const product = {
     },
 
 
-    async saveProductChanges({ dispatch }, {
+    saveProductChanges(context, {
       new_product_data,
       new_docs,
       deleted_docs,
@@ -231,9 +234,8 @@ const product = {
       return new Promise ( (resolve, reject) => {
         axios.all(api_calls)
         .then(() => {
-          dispatch('loadProductDetails', product_key)
+          resolve()
         })
-        .then(resolve())
         .catch(err => reject(err))
       })
     },

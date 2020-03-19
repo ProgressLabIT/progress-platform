@@ -122,7 +122,8 @@
           ref="add_phase"
           v-if="edit_mode"
           :items="operations"
-          :item-text="'description'"
+          item-value="_id"
+          item-text="name"
           return-object
           v-model="new_op"
           label="Aggiungi fase"
@@ -130,7 +131,23 @@
           single-line
           @input="addPhase($event)"
           class="flex-grow-0 mt-6 mb"
-          ></v-autocomplete>
+          >
+          <template v-slot:item="{item}">
+            <div> 
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title class="highlight weight-medium">
+                    {{ item.name | capitalize_all }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle>
+                    {{ item.description }}
+                  </v-list-item-subtitle>
+                </v-list-item-content>                
+              </v-list-item>
+            </div>
+          </template>
+            
+        </v-autocomplete>
 
         <v-spacer></v-spacer>
 
@@ -280,7 +297,7 @@ export default {
     },
 
     operations() {
-      return this.$store.state.process.operations
+      return this.$store.state.process.operations.slice().sort()
     },
 
     current_phase: {

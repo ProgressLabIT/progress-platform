@@ -55,7 +55,7 @@
     <v-row >
       <v-col cols="12" sm="6" md="3" xl="2" 
         v-for="product in notInTrash()" 
-        :key="product._key" 
+        :key="product.code" 
         v-show="(!filterInactive || product.active) && match(product)">
         <ProductCard 
           :product="product" 
@@ -76,9 +76,9 @@
           <v-btn text color="primary" @click.native="deleteSnackbar.show = false; ">CONFIRM</v-btn>
           <v-btn text color="warning" @click.native="undoDelete">UNDO</v-btn>
         </v-col>
-        <v-col cols="12">
+        <!-- <v-col cols="12">
           <v-progress-linear height="2" v-model="deleteSnackbar.remain" />
-        </v-col>
+        </v-col> -->
       </v-row>
     </v-snackbar>
 
@@ -133,16 +133,16 @@ export default {
       const snackbar = this.deleteSnackbar
       snackbar._key = product._key
       snackbar.code = product.code
-      snackbar.remain = 100
+      // snackbar.remain = 100
       snackbar.show = true
-      let countdown = setInterval(() => {
-        if (snackbar.show) {
-          snackbar.remain -= 1
-        }
-        else {
-         clearInterval(countdown)
-        }
-      }, 60)
+      // let countdown = setInterval(() => {
+      //   if (snackbar.show) {
+      //     snackbar.remain -= 1
+      //   }
+      //   else {
+      //    clearInterval(countdown)
+      //   }
+      // }, 60)
     },
 
     undoDelete() {

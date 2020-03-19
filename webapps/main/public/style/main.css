@@ -174,11 +174,11 @@ span .display {
 }*/
 
 
-input .v-menu__content {
+.v-menu__content {
   border: 1px solid var(--box-border);
 }
 
-input .v-menu__content .v-card .v-list.v-sheet {
+.v-menu__content .v-card .v-list.v-sheet {
   background-color: var(--surface-2);
 }
 

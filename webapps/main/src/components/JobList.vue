@@ -1,7 +1,7 @@
 <template>
   <v-container>
-    <v-row align="end">
-      LISTA LAVORI
+    <v-row>
+      
     </v-row>
   </v-container>
 
