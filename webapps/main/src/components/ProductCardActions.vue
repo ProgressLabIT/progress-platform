@@ -3,7 +3,7 @@
     <v-row class="pa-0">
 
       <!-- ACTIVE TOGGLE -->
-      <v-col class="py-0">        
+      <v-col cols="6" class="py-0">        
         <v-tooltip top 
           color="primary"
           open-delay="300">
@@ -15,10 +15,16 @@
               :input-value="product.active"
               v-on="on"
               @change="toggleActive(product)"
-              class="pa-2 ma-0"/>
+              class="pa-2 ma-0">
+              <template v-slot:label>
+                <span class="body-2 text-truncate">
+                  {{ product.active ? 'Attivo' : 'Inattivo' }}
+                </span>
+              </template>
+            </v-switch>
           </template>
           <span class="no-transition">
-            {{ product.active ? 'Deactivate' : 'Activate' }}
+            {{ product.active ? 'Disattiva' : 'Riattiva' }}
           </span>
         </v-tooltip>
       </v-col>
@@ -26,18 +32,25 @@
       <v-spacer></v-spacer>
 
       <!-- OPTIONS -->
-      <v-col class="d-flex py-0 align-center justify-end">
-       <!--  <BaseTooltipIcon
-          icon="assignment"
-          tooltip="documents"
-          :color="$theme.green"/>
+      <v-col cols="6" class="d-flex py-0 align-center justify-end">
         <BaseTooltipIcon
-          icon="edit"
-          tooltip="details"
-          :color="$theme.blue"/> -->
+          icon="assignment"
+          tooltip="Dettagli"
+          :color="$theme.blue"
+          @iconClick="goToProductPage('productHome')"/>
+        <BaseTooltipIcon
+          icon="mdi-chevron-triple-right"
+          tooltip="Processo"
+          :color="$theme.blue"
+          @iconClick="goToProductPage('productionProcess')"/>
+        <BaseTooltipIcon
+          icon="mdi-clipboard-list"
+          tooltip="Componenti"
+          :color="$theme.blue"
+          @iconClick="goToProductPage('bom')"/>
         <BaseTooltipIcon
           icon="delete"
-          tooltip="delete"
+          tooltip="Elimina"
           :color="$theme.red"
           @iconClick="confirmDelete"
           />
@@ -68,6 +81,18 @@ export default {
 
     toggleActive(product) {
       this.switchActiveState(product)
+    },
+
+    goToProductPage(page) {
+      this.$router.push({
+        name: page,
+        params: {
+          product_key: this.product._key
+        },
+        query: {
+          back_to: 'productList'
+        }
+      })
     },
 
     confirmDelete() {
