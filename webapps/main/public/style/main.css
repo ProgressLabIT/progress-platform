@@ -214,3 +214,7 @@ span .display {
 .opaque {
   opacity: 1;
 }
+
+.v-data-table-header th {
+  white-space: nowrap;
+}

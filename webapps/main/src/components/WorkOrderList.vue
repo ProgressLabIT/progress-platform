@@ -44,7 +44,7 @@
                 </div>
               </v-tooltip>
 
-              <span v-else>{{ item.active_phases }}</span>
+              <span v-else class="text-truncate">{{ item.active_phases }}</span>
             </template>
 
             <template v-else>{{ item[header.value] }}</template>
@@ -69,7 +69,7 @@ export default {
   data () {
     return {
       table_headers: [
-        { value: 'wo_code', text: 'OP'},
+        { value: 'wo_code', text: 'CODICE'},
         { value: 'wo_line', text: 'RIGA', },
         { value: 'product_code', text: 'PRODOTTO'},
         { value: 'progress', text: 'AVANZAMENTO', width: '30%' },
@@ -77,6 +77,7 @@ export default {
         { value: 'total_qt', text: 'QT', align: 'end'},
         { value: 'remaining_qt', text: 'QR', align: 'end'},
         { value: 'active_phases', text: 'FASE'},
+        { value: 'due_by', text: 'ENTRO'}
       ],
       table_height: '85vh',
       wo_list: wo_list,
