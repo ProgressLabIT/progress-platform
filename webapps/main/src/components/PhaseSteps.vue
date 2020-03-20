@@ -86,7 +86,7 @@
         <v-spacer></v-spacer>
         
         <!-- ADD STEPS -->
-        <div v-if="edit_mode">
+        <div v-if="edit_mode && typeof phase != 'undefined'">
           <v-hover 
             v-for="type in step_types" 
             :key="type"  
@@ -267,7 +267,7 @@ export default {
 
     procedure: {
       get() {
-        return this.phase.steps
+        return this.phase ? this.phase.steps : null
       },
 
       set(value) {
