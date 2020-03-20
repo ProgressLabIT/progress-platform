@@ -395,7 +395,7 @@ export default {
             this.show_save_confirmation = true
             this.saving = false
             this.edit_mode = false
-          }, 1500)
+          }, 500)
         }).catch(err => {
           window.alert(err)
           this.saving = false

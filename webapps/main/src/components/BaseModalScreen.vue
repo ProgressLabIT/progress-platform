@@ -1,8 +1,9 @@
 <template>
   <v-dialog
     :value="show"
-    fullscreen
+    fullscreen persistent no-click-animation
     class="py-0"
+    @keydown.esc="$emit('close')"
     @input="$emit('close')">
       <v-card :color="$theme.black">
         <v-container fluid class="d-flex flex-column pt-2 px-5" style="height:100vh"> 

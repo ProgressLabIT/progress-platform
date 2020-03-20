@@ -76,6 +76,7 @@ export default {
     exit() {
       if (this.user_is_editing) {
         window.alert(`Salva o annulla le modifiche in tutte le sezioni prima di uscire.`)
+        this.show_modal = true
       }
       else {
         this.show_modal = false
