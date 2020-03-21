@@ -52,7 +52,7 @@ async def create_product(
   
   # Map form data
   try:
-    new_product = ProductDoc(code=code, description=description)
+    new_product = ProductData(code=code, description=description)
     prepped_data = jsonable_encoder(new_product, by_alias=True, include_none=False )
 
   except Exception as e:
@@ -93,7 +93,9 @@ async def create_product(
   # Save image
   if image:
 
-    media_directory = f"/Volumes/Luca/DEV/Progress/WebApps/Library/public/media/product"
+
+
+    media_directory = f"/Volumes/Luca/DEV/Progress/WebApps/ManagerApp/public/media/product"
     new_product_key = db_response['_key']
     # Define product docs folder (named after product ID within the Product folder)
     product_path = os.path.join(
@@ -278,7 +280,7 @@ async def replace_product_image(
   new_image: UploadFile = File(...)
 ):
   # extension = new_image.filename.split('.')[-1]
-  img = UserFile.product_media(new_image)
+  img = UserFile.product_media(append_path=product_key, file=new_image)
   filename = 'image.jpg'
   await img.write_file(filename)
 
@@ -287,13 +289,10 @@ async def replace_product_image(
 #  DELETE (IMAGE)
 # =================================================
 @router.delete("/{product_key}/image")
-async def replace_product_image(
-  product_key: str,
-  new_image: UploadFile = File(...)
-):
+async def replace_product_image(product_key: str):
   # extension = new_image.filename.split('.')[-1]
-  img = UserFile.product_media(new_image)
-  img.write_file('image.jpg')
+  img = UserFile.product_media(append_path=product_key)
+  img.delete_file('image.jpg')
 
 
 # =================================================

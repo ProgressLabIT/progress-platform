@@ -69,7 +69,7 @@ class UserFile:
     if append_path:
       self.folder_path = os.path.join(self.folder_path, append_path)
   
-    contents = os.scandir(self.folder_path)
+    contents = os.scandir(self.folder_path) if os.path.isdir(self.folder_path) else []
 
     if name_only:
       return [ f.name for f in contents ]

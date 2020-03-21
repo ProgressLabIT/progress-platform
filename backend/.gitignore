@@ -4,5 +4,8 @@ venv/
 # Test files
 Test/
 
+# Temp files
+temp/
+
 # Compiled files
 *.pyc

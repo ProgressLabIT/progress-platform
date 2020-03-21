@@ -13,7 +13,7 @@
   priority: bool
   # global_queue_position: int
   customer_data: 
-    id: _key 
+    customer_id: _key 
     order_code: str
     po_code: str
     line: int
@@ -23,7 +23,8 @@
   * status: str [created, planned, started, closed] (???)
   * on_time: bool
   * active: bool
-  due_by: ISOdts
+  * critical: bool
+  due_before: ISOdts
   notes: str
 
 # Job

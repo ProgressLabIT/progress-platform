@@ -1,5 +1,5 @@
 from pydantic import Field
-from utils.flex_model import FlexModel
+from utils.base_models import FlexModel
 
 
 class BomItemRead(FlexModel):

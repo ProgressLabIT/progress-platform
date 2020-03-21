@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from modules import product, process, bom, item, user
+from modules import product, process, bom, item, user, production
 
 
 
@@ -24,11 +24,12 @@ app.add_middleware(
 Each package __init__ file imports the router object from the 
 relative endpoint.py module, so it's easily available here
 """
-app.include_router(product.router, prefix="/product", tags=["product"])
-app.include_router(bom.router, prefix="/product", tags=["product"])
-app.include_router(process.router, tags=["process"])
-app.include_router(item.router, tags=["product"])
-app.include_router(user.router, tags=["user"])
+app.include_router(product.router, prefix="/product", tags=['Product'])
+app.include_router(bom.router, prefix="/product", tags=['Product'])
+app.include_router(process.router, tags=['Process'])
+app.include_router(item.router, tags=['Library'])
+app.include_router(user.router, tags=['User'])
+app.include_router(production.router, tags=['Production'])
 
 
 if __name__ == "__main__":

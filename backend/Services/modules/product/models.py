@@ -1,7 +1,7 @@
 from pydantic import Field, ByteSize
 from typing import List, Optional
 from random import randrange, uniform
-from utils.flex_model import FlexModel
+from utils.base_models import FlexModel
 
 
 

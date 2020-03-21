@@ -1,4 +1,4 @@
-from utils.flex_model import FlexModel
+from utils.base_models import FlexModel
 from pydantic import Field
 
 # class ProductionItemType(str, Enum):
