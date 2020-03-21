@@ -1,0 +1,130 @@
+from typing import List
+from utils.base_models import FlexModel
+from pydantic import Field, validator
+from modules.process.models import PhaseParameters
+from enum import Enum
+from datetime import datetime, timedelta
+from dateutil import tz
+
+
+
+class CustomerData(FlexModel):
+  customer_id: str = None
+  order_code: str = None
+  po_code: str = None
+  line: int = None
+
+class TimeDeltaInfo(FlexModel):
+  absolute: timedelta = None
+  relative: float = None
+
+  @validator('relative')
+  def above_minus_100percent(cls, v):
+    if v <= -1:
+      raise ValueError("Relative time delta must be above -100%")
+    return v
+
+class TargetActualTimeDelta(FlexModel):
+  target: timedelta = None
+  actual: timedelta = None
+  delta: TimeDeltaInfo = TimeDeltaInfo()
+
+# class TargetActualTime(FlexModel):
+#   target: datetime = None
+#   actual: datetime = None
+#   delta: timedelta = None
+
+
+class WorkStatus(Enum):
+  CREATED = 'created'
+  PLANNED = 'planned'
+  STARTED = 'started'
+  COMPLETED = 'completed'
+  CANCELED = 'canceled'
+
+
+class WorkOrderNew(FlexModel):
+  wo_code: str
+  wo_line_no: int = 1
+  product_id: str
+  customer_data: CustomerData = CustomerData()
+  qt_planned: float
+  priority: bool = False
+  due_before: datetime = None
+  
+
+class WorkOrderFull(WorkOrderNew):
+  id: str = Field(None, alias="_id")
+    
+  qt_completed: float = 0
+  status: WorkStatus = WorkStatus.CREATED
+  on_time: bool = None
+  active: bool = False
+  critical: bool = False
+  
+  created: datetime = datetime.now(tz.UTC)
+  start: datetime = None
+  end: datetime = None
+  
+  lead_time: TargetActualTimeDelta = TargetActualTimeDelta()
+  throughput_time: TargetActualTimeDelta = TargetActualTimeDelta()
+  processing_time: TargetActualTimeDelta = TargetActualTimeDelta()
+  
+  notes: str = None
+
+
+class RequiredAvailableQt(FlexModel):
+  required: float = None
+  available: float = None
+  stockout: bool = None
+
+class Job(FlexModel):
+  id: str = Field(None, alias="_id")
+  wo_id: str
+  phase_id: str
+  phase_alias: str
+  product_id: str
+  # operation_id: str >>> TODO: Fix Phase API to add op_id during creation
+
+  parameters: PhaseParameters = None
+  
+  stage: WorkStatus = WorkStatus.CREATED
+  active: bool = False
+  critical: bool = False
+  start: datetime = None
+  end: datetime = None
+  last_work_session_started: str = None
+
+  qt_planned: float
+  qt_completed: float = 0
+  qt_released: float = 0
+  current_run: int = None
+  current_step: int = None
+  progress: float = 0
+
+  on_time: bool = True
+  estimated_remaining_time: timedelta = None
+  estimated_completion: datetime = None
+
+  jobs_upstream: List[str] = []
+  jobs_downstream: List[str] = []
+
+  @validator('progress')
+  def between_0_and_100_percent(cls, v):
+    if v < 0 or v > 1:
+      raise ValueError("Progress must be between 0 and 100%")
+    return v
+
+  @validator('qt_released')
+  def released_less_than_completed(cls, qt_released, values):
+    if qt_released > values['qt_completed']:
+      raise ValueError("Released quantity cannot exceed completed quantity")
+    return qt_released
+
+  @validator('jobs_downstream', 'jobs_upstream', each_item=True)
+  def check_job_id_root(cls, job_id):
+    if not job_id.startswith("Job/"):
+      raise ValueError("Job id must be fully specified and must start with 'Job/'")
+    return job_id
+
+
