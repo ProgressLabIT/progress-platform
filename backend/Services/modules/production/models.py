@@ -1,18 +1,20 @@
-from typing import List
+from typing import List, Union
 from utils.base_models import FlexModel
 from pydantic import Field, validator
 from modules.process.models import PhaseParameters
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil import tz
 
 
 
 class CustomerData(FlexModel):
   customer_id: str = None
+  customer_name: str = None
+  delivery_address: str = None
   order_code: str = None
+  order_line: int = None
   po_code: str = None
-  line: int = None
 
 class TimeDeltaInfo(FlexModel):
   absolute: timedelta = None
@@ -47,20 +49,22 @@ class WorkOrderNew(FlexModel):
   wo_code: str
   wo_line_no: int = 1
   product_id: str
+  product_code: str
   customer_data: CustomerData = CustomerData()
   qt_planned: float
   priority: bool = False
-  due_before: datetime = None
+  due_by: Union[datetime, date] = None
   
 
 class WorkOrderFull(WorkOrderNew):
   id: str = Field(None, alias="_id")
     
-  qt_completed: float = 0
   status: WorkStatus = WorkStatus.CREATED
+  qt_completed: float = 0
   on_time: bool = None
   active: bool = False
   critical: bool = False
+  progress: int = Field(0, ge=0, le=100)
   
   created: datetime = datetime.now(tz.UTC)
   start: datetime = None
@@ -81,9 +85,12 @@ class RequiredAvailableQt(FlexModel):
 class Job(FlexModel):
   id: str = Field(None, alias="_id")
   wo_id: str
+  wo_code: str
+  wo_line_no: int
   phase_id: str
   phase_alias: str
   product_id: str
+  product_code: str
   # operation_id: str >>> TODO: Fix Phase API to add op_id during creation
 
   parameters: PhaseParameters = None
@@ -100,7 +107,7 @@ class Job(FlexModel):
   qt_released: float = 0
   current_run: int = None
   current_step: int = None
-  progress: float = 0
+  progress: int = Field(0, ge=0, le=100)
 
   on_time: bool = True
   estimated_remaining_time: timedelta = None
@@ -109,11 +116,11 @@ class Job(FlexModel):
   jobs_upstream: List[str] = []
   jobs_downstream: List[str] = []
 
-  @validator('progress')
-  def between_0_and_100_percent(cls, v):
-    if v < 0 or v > 1:
-      raise ValueError("Progress must be between 0 and 100%")
-    return v
+  # @validator('progress')
+  # def between_0_and_100_percent(cls, v):
+  #   if v < 0 or v > 1:
+  #     raise ValueError("Progress must be between 0 and 100%")
+  #   return v
 
   @validator('qt_released')
   def released_less_than_completed(cls, qt_released, values):

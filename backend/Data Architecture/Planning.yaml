@@ -17,7 +17,8 @@
     order_code: str
     po_code: str
     line: int
-  * product: _key
+  * product_id: _key
+  * product_code: str
   planned_qt: float
   completed_qt: float # corresponds to the sum of the released qt of the jobs in the last phase 
   * status: str [created, planned, started, closed] (???)
@@ -31,9 +32,13 @@
   _key: str (random)
   
   ## relationship to master data
-  * work_order: str + rel (1:N --belongs_to--> 1:N)
-  * phase: str + rel (1:1 --belongs_to--> 0:N)
-  * product: _key
+  * wo_id: str + rel (1:N --belongs_to--> 1:N)
+    wo_code: str
+    wo_line_no: str
+  * phase_id: str + rel (1:1 --belongs_to--> 0:N)
+    phase_alias: str
+  * product_id: _key
+    product_code: str
   * operation: str + rel (1:1 --requires--> 0:N)
   # rel (0:N --assigned_to--> 0:N) User / Department
     # - sequence: int >>> move to queues
