@@ -22,11 +22,15 @@ const routes = [
     path: "/product",
     name: "productList",
     component: () => import("@/views/ProductList.vue"),
+    // props: (route) => ({
+    //   show_images: route.query.show_images,
+    //   filter_inactive: route.query.filter_inactive
+    // }),
     children: [
       {
-        path: "new-product",
+        path: "new",
         name: "newProduct",
-        component: () => import("@/views/NewProduct.vue")
+        component: () => import("@/views/ProductNew.vue")
       },
     ]
   },
@@ -49,7 +53,7 @@ const routes = [
       {
         path: "bom",
         name: "bom",
-        component: () => import("@/views/BillOfMaterials.vue")
+        component: () => import("@/views/ProductBom.vue")
       },
     ]
   },
@@ -60,12 +64,17 @@ const routes = [
     component: () => import("@/views/ProductionOverview.vue"),
     children: [
       {
-        path: "work-orders",
+        path: "work-order",
         name: 'workOrderList',
         component: () => import ("@/components/WorkOrderList.vue"),
       },
       {
-        path: "jobs/:department?",
+        path: "work-order/new",
+        name: "newWorkOrder",
+        component: () => import("@/views/WorkOrderNew.vue")
+      },
+      {
+        path: "job/:department?",
         name: 'jobList',
         component: () => import ("@/components/JobList.vue"),
       }

@@ -27,29 +27,42 @@
 
           <v-spacer></v-spacer>
           <v-col cols="auto" >
-            <v-btn small :color="$theme.blue">crea ordine</v-btn>
+            <v-btn small 
+              :color="$theme.blue"
+              @click="$router.push({ name: 'newWorkOrder'})">
+              crea ordine
+            </v-btn>
           </v-col>
         </v-row>
 
         <!-- MAIN CONTENT -->
         <div class="scroll flex-grow-1">
-          <keep-alive>
+          <!-- <keep-alive> -->
             <!-- <v-component
               :is="views[current_view].component" 
               v-bind="{ filters }"
               @showDetails="showWorkOrderScreen($event)"/> -->
-            <router-view v-bind="{filters}"></router-view>
-          </keep-alive>
+            <router-view 
+              v-bind="{filters}"
+              @lateOnly="showLateOnly"
+              @criticalOnly="showCriticalOnly">
+            </router-view>
+
+          <!-- </keep-alive> -->
         </div>
           
       </v-col>
+
+      
+
+
 
 
       <!-- DIVIDER -->
       <v-divider vertical inset></v-divider>
 
-<!-- FILTERS -->
-      <v-col cols="3" class="pa-6">
+      <!-- FILTERS -->
+      <v-col cols="3" class="pa-6 d-flex flex-column">
         <h5 class="highlight text-uppercase">filtri</h5>
         
         <!-- Search box: instructions shows on mouse over info icon, in turn shown only on mouse over input -->
@@ -62,7 +75,7 @@
             label="Ricerca"
             value="search"
             v-model="search_string"
-            class="mt-6 mb-12 body-2 text-uppercase">
+            class="mb-6 body-2 text-uppercase flex-grow-0">
             <template v-slot:append>
               
               <v-tooltip bottom content-class="opaque">
@@ -98,15 +111,23 @@
         </v-hover>
 
         <!-- Checkboxes -->
-        <v-checkbox dense hide-details :color="$theme.blue"
+        <v-checkbox dense hide-details 
+          :color="$theme.blue"
           v-for="(filter, key) in bool_filters" 
           :key="key" 
           :label="filter.label"
           v-model="filter.value">
         </v-checkbox>
+
+        <v-spacer></v-spacer>
+        <!-- FILTERS RESET -->
+        <v-btn :color="$theme.blue"
+          v-show="filters_active"
+          @click="resetFilters">
+          ELIMINA FILTRI
+        </v-btn>
+
       </v-col>
-
-
     </v-row>
   </v-container>
 </template>
@@ -148,7 +169,7 @@ export default {
         not_critical: { label: 'Non critico', value: true}
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       },
-      search_string: ''
+      search_string: '',
     }
   },
 
@@ -160,6 +181,11 @@ export default {
         bools_map[k] = v.value
       }
       return { search_string, ...bools_map }
+    },
+
+    filters_active() {
+      return Object.values(this.bool_filters).some(f => f.value === false) 
+        || this.search_string != ''
     }
   },
 
@@ -167,13 +193,31 @@ export default {
     updateHeight() {
       this.content_height = document.documentElement.clientHeight - header_plus_footer_height
     },
+
+    showLateOnly() {
+      this.bool_filters.on_time.value = false
+    },
+
+    showCriticalOnly() {
+      this.bool_filters.not_critical.value = false
+    },
+
+    resetFilters() {
+      this.search_string = ''
+      for (let filter of Object.values(this.bool_filters)) {
+        filter.value = true
+      }
+    }
   },
 
   beforeCreate() {
     this.$store.commit("UPDATE_SCREEN_TITLE", "monitoraggio produzione")
+    this.$store.dispatch("loadWorkOrders")
+    this.$store.dispatch("loadJobs")
   },
 
   // created() {
+
      
   //   Resize app content with window: see also another solution at https://www.html5rocks.com/en/tutorials/speed/animations/ 
     

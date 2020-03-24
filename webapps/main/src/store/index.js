@@ -5,6 +5,8 @@ import product from "@/store/product"
 import process from "@/store/process"
 import bom from "@/store/bom"
 import user from "@/store/user"
+import workorder from "@/store/workorder"
+import job from "@/store/job"
 
 
 
@@ -42,6 +44,8 @@ export default new Vuex.Store({
     product,
     process,
     bom,
-    user
+    user,
+    workorder,
+    job
   }
 });

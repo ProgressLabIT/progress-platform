@@ -5,6 +5,7 @@
       dense
       :headers="table_headers"
       :items="filtered_wo_list"
+      :options="{sortBy: ['due_by', 'wo_code']}"
       loading-text="Recupero dati in corso..."
       fixed-header  
       :height="table_height"
@@ -14,39 +15,63 @@
 
       <template v-slot:item="{ item }">
         <!-- <tr @dblclick="$emit('showDetails', item.wo_code)"> -->
-        <tr @dblclick="showWorkOrderScreen(item.wo_code)">
-          <td v-for="(header, index) in table_headers" :key="index"
+        <tr 
+          @dblclick="showWorkOrderScreen(item.wo_code)">
+          <td 
+            v-for="(header, index) in table_headers" :key="index"
             :class="header.value.includes('qt') ? 'text-right' : '' ">
             
             <template v-if="header.value === 'progress'">
               <v-row no-gutters align="center" >
-                <v-col>
+                <v-col cols="9">
                   <v-progress-linear 
                     dense 
                     :value="item.progress"
                     :color="woBarColor(item)">
                   </v-progress-linear>
                 </v-col>
-                <v-col cols="auto" class="ml-4">
+                <v-col cols="2" class="pl-4 text-right">
                   {{ item.progress }}%
+                </v-col>
+                <v-col cols="1" class="text-right pl-2">
+                  <v-icon small 
+                    v-if="item.critical" 
+                    :color="$theme.red"
+                    @click="$emit('criticalOnly')">
+                    mdi-alert-octagon
+                  </v-icon>
+                  <v-icon small 
+                    v-else-if="!item.on_time" 
+                    :color="$theme.orange"
+                    @click="$emit('lateOnly')">
+                    mdi-alert
+                  </v-icon>
                 </v-col>
               </v-row>
             </template>
             
-            <template v-else-if="header.value === 'active_phases'">
+            <!-- <template v-else-if="header.value === 'active_phases'">
               
-              <v-tooltip bottom v-if="typeof item.active_phases === 'object'">
+              <v-tooltip bottom v-if="item.active_phases.length > 1">
                 <template v-slot:activator="{on}">
                   <span class="font-italic" v-on="on">Multiple</span>
                 </template>
                 <div v-for="(phase, phase_index) in item.active_phases" :key="phase_index">
-                  {{ phase }}
+                  {{ phase | capitalize_all }}
                 </div>
               </v-tooltip>
 
-              <span v-else class="text-truncate">{{ item.active_phases }}</span>
+              <span v-else class="text-truncate">
+                {{ item.active_phases[0] | capitalize_all }}
+              </span>
+            </template>
+ -->
+            <!-- DUE BY - with date formatting -->
+            <template v-else-if="header.value==='due_by'">
+              {{ item[header.value] | shortDateString('it') }}
             </template>
 
+            <!-- OTHER FIELDS -->
             <template v-else>{{ item[header.value] }}</template>
           </td>
         </tr>
@@ -58,7 +83,7 @@
 
 <script>
 import multiMatch from '@/lib/MultiFieldSearch.js'
-import wo_list from '@/dummy_data/WorkOrders.json'
+// import wo_list from '@/dummy_data/WorkOrders.json'
 
 export default {
 
@@ -70,32 +95,41 @@ export default {
     return {
       table_headers: [
         { value: 'wo_code', text: 'CODICE'},
-        { value: 'wo_line', text: 'RIGA', },
+        { value: 'wo_line_no', text: 'RIGA', },
         { value: 'product_code', text: 'PRODOTTO'},
         { value: 'progress', text: 'AVANZAMENTO', width: '30%' },
-        { value: 'completed_qt', text: 'QC', align: 'end'},
-        { value: 'total_qt', text: 'QT', align: 'end'},
-        { value: 'remaining_qt', text: 'QR', align: 'end'},
-        { value: 'active_phases', text: 'FASE'},
-        { value: 'due_by', text: 'ENTRO'}
+        { value: 'qt_completed', text: 'QC', align: 'end'},
+        { value: 'qt_planned', text: 'QP', align: 'end'},
+        { value: 'qt_remaining', text: 'QR', align: 'end'},
+        // { value: 'active_phases', text: 'FASE'},
+        { value: 'due_by', text: 'ENTRO', }
       ],
       table_height: '85vh',
-      wo_list: wo_list,
+      // wo_list: wo_list,
     }
   },
 
   computed: {
+
+    wo_list() {
+      return this.$store.state.workorder.wo_list
+    },
+
+    // filter_match_map() {
+    //   let filter_match_map
+    // },
+
     filtered_wo_list() {
       return this.wo_list.filter( wo => {
         
         // Define wo fields to use with the text search
-        const search_fields = ['wo_code', 'wo_line', 'product_code', 'active_phases']
+        const search_fields = ['wo_code', 'wo_line_no', 'product_code']
         
         /* 
         Initialize filter results. 
         If any false will be found in this array the filter function will return false
         */
-        const filter_match_map = []
+        let filter_match_map = []
 
         for (const [filter, value] of Object.entries(this.filters)) {
         // for (const filter of Object.keys(this.filters)) {
@@ -112,11 +146,27 @@ export default {
               break
 
             case 'started':
-            case 'not_started':
-            case 'on_tme':
-            case 'late':
-            case 'critical':
+              if (!value && wo.status === 'started') match = false
+              break
+
             case 'queued':
+              if (!value && ['created', 'planned'].includes(wo.status)) match = false
+              break
+
+            case 'on_time':
+              if (!value && wo.on_time) match = false
+              break 
+
+            case 'late':
+              if (!value && !wo.on_time) match = false
+              break
+
+            case 'critical':
+              if (!value && wo.critical) match = false
+              break
+
+            case 'not_critical':
+              if (!value && !wo.critical) match = false
               break
 
             case 'active':

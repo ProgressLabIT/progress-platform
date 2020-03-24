@@ -6,7 +6,7 @@ import vuetify from './plugins/vuetify';
 import { durationFromMillisec } from '@/lib/duration.js'
 import bytes from 'bytes'
 import 'material-design-icons-iconfont/dist/material-design-icons.css' // Ensure you are using css-loader 
-
+import {shortDateString} from '@/lib/TimeHandling.js'
 
 function capitalize(value) {
   if (!value) return ''
@@ -23,9 +23,12 @@ Vue.prototype.$theme = {
   surface2: '#242E31',
   grey: '#707070',
   blue: '#22AED1',
+  blue_bg: 'rgba(39,174,209, .3)',
   green: '#0DAB76',
   red: '#E71D36',
+  red_bg: 'rgba(213,29,54,.3)',
   orange: '#FF9F1C',
+  orange_bg: 'rgba(255,159,28,.3)',
   whitelow: 'rgba(255,255,255,.6)',
   whitehigh: 'rgba(255,255,255,.87)'
 }
@@ -48,6 +51,7 @@ Vue.filter('bytes', function(byte_size) {
 })
 
 Vue.filter('duration', durationFromMillisec)
+Vue.filter('shortDateString', shortDateString)
 
 new Vue({
   router,

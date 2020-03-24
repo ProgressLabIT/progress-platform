@@ -28,7 +28,7 @@
           color="primary" 
           hide-details
           label="Solo attivi" 
-          v-model="filterInactive" 
+          v-model="filter_inactive" 
           class="ma-0 pa-0 nowrap"/>
       </v-col>    
       <v-col cols="auto" class="d-flex align-center">
@@ -37,7 +37,7 @@
           color="primary"
           hide-details
           label="Mostra immagini" 
-          v-model="showImages" 
+          v-model="show_images" 
           class="ma-0 pa-0 nowrap"/>
       </v-col>  
 
@@ -56,10 +56,10 @@
       <v-col cols="12" sm="6" md="4" lg="3" xl="2" 
         v-for="product in notInTrash()" 
         :key="product.code" 
-        v-show="(!filterInactive || product.active) && match(product)">
+        v-show="(!filter_inactive || product.active) && match(product)">
         <ProductCard 
           :product="product" 
-          :image="showImages" 
+          :image="show_images" 
           @delete="deleteNotify(product)"
           />
       </v-col>
@@ -101,10 +101,13 @@ export default {
     ProductCard
   },
 
+  // followingi props passed in router query string
+  // props: ['show_images', 'filter_inactive'],
+
   data: () => ({
-    filterInactive: false,
+    // filter_inactive: false,
     searchString: '',
-    showImages: false,
+    // show_images: false,
     deleteSnackbar: {
       _key: null,
       code: '',
@@ -116,6 +119,38 @@ export default {
 
   computed: {
     ...mapGetters(['notInTrash']),
+
+    show_images: {
+      get() {
+        // return this.show_images
+        return this.$route.query.show_images
+      },
+      set(value) {
+        this.$router.replace({ 
+          // name: this.$route.name, 
+          query: { 
+            filter_inactive: this.filter_inactive,
+            show_images: value 
+          }
+        })
+      }
+    },
+
+    filter_inactive: {
+      get() {
+        // return this.filter_inactive
+        return this.$route.query.filter_inactive
+      },
+      set(value) {
+        this.$router.replace({
+          // name: this.$route.name,
+          query: { 
+            filter_inactive: value,
+            show_images: this.show_images
+          }
+        })
+      }
+    }
   },
 
   methods: {
@@ -123,7 +158,7 @@ export default {
     ...mapActions(['restoreProduct']),
 
     match(product) {
-      let activeFilter = !this.filterInactive || product.active
+      let activeFilter = !this.filter_inactive || product.active
       let searchFilter = multiMatch(this.searchString, product, ['code', 'description'])
 
       return activeFilter && searchFilter
