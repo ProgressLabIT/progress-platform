@@ -114,7 +114,7 @@
           </draggable>
         </v-tabs>
         
-
+        <v-spacer></v-spacer>
 
         <!-- ADD PHASE SELECT -->
         <v-autocomplete
@@ -130,7 +130,7 @@
           hide-details
           single-line
           @input="addPhase($event)"
-          class="flex-grow-0 mt-6 mb"
+          class="flex-grow-0 mt-6 mb-4"
           >
           <template v-slot:item="{item}">
             <div> 
@@ -148,8 +148,6 @@
           </template>
             
         </v-autocomplete>
-
-        <v-spacer></v-spacer>
 
 
         <!-- EDIT / SAVE / CANCEL BUTTONS -->

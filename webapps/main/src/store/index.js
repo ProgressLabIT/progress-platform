@@ -5,8 +5,12 @@ import product from "@/store/product"
 import process from "@/store/process"
 import bom from "@/store/bom"
 import user from "@/store/user"
+import session from "@/store/session"
 import workorder from "@/store/workorder"
 import job from "@/store/job"
+import org from "@/store/org"
+import nav from "@/store/nav"
+
 
 
 
@@ -45,7 +49,10 @@ export default new Vuex.Store({
     process,
     bom,
     user,
+    session,
     workorder,
-    job
+    job,
+    org,
+    nav
   }
 });

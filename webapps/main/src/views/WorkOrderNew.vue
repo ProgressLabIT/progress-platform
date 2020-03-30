@@ -158,6 +158,7 @@ export default {
           wo_line_no: index + 1,
           product_id: 'Product/' + line.product._key,
           product_code: line.product.code,
+          product_description: line.product.description,
           qt_planned: line.qt_planned,
           due_by: line.due_by
         }

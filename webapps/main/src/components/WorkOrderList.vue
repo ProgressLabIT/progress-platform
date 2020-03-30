@@ -89,7 +89,23 @@ export default {
 
   name: 'WorkOrderList',
 
-  props: ['filters'],
+  props: {
+    filters: {
+      type: Object,
+      required: true,
+      default: () => { return {
+        "search_string":"",
+        "started":true,
+        "queued":true,
+        "on_time":true,
+        "late":true,
+        "active":true,
+        "idle":true,
+        "critical":true,
+        "not_critical":true
+      }}
+    }
+  },
 
   data () {
     return {

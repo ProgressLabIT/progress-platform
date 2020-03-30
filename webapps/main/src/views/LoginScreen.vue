@@ -26,7 +26,7 @@
                     </v-card-title>
                     <v-card-text>
                       <v-text-field 
-                        v-model="credentials.login" 
+                        v-model="credentials.username" 
                         label="Nome utente"
                         autocomplete="off"/>
                       <v-text-field v-model="credentials.psw" type="password" label="Password"/>
@@ -84,7 +84,7 @@ export default {
   data () {
     return {
       credentials: {
-        login: null,
+        username: null,
         psw: null,
         // verified: false,
       },
@@ -96,7 +96,7 @@ export default {
 
   computed: {
     user() {
-      return this.$store.state.user.user
+      return this.$store.state.session.user
     }
   },
 
@@ -121,7 +121,7 @@ export default {
         })
         .catch( err => {
           this.logging_in = false
-          this.credentials.login = null
+          this.credentials.username = null
           this.credentials.psw = null
           window.alert(err)
         })

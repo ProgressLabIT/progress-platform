@@ -35,7 +35,7 @@ export default {
     },
 
     user() {
-      return this.$store.state.user.user
+      return this.$store.state.session.user
     },
 
     username() {
@@ -43,7 +43,7 @@ export default {
     },
 
     avatar_name() {
-      return this.user.pic
+      return (this.user.name + this.user.surname).replace(/\s+/g, '').toLowerCase()
     },
 
     avatar_url() {
