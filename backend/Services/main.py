@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from modules import product, process, bom, item, user, production
+from modules import product, process, bom, item, user, production, org
 
 
 
@@ -30,6 +30,7 @@ app.include_router(process.router, tags=['Process'])
 app.include_router(item.router, tags=['Library'])
 app.include_router(user.router, tags=['User'])
 app.include_router(production.router, tags=['Production'])
+app.include_router(org.router, tags=['Organisational Structure'])
 
 
 if __name__ == "__main__":

@@ -49,7 +49,8 @@ class WorkOrderNew(FlexModel):
   wo_code: str
   wo_line_no: int = 1
   product_id: str
-  product_code: str
+  product_code: str = None
+  product_description: str = None
   customer_data: CustomerData = CustomerData()
   qt_planned: float
   priority: bool = False
@@ -58,7 +59,7 @@ class WorkOrderNew(FlexModel):
 
 class WorkOrderFull(WorkOrderNew):
   id: str = Field(None, alias="_id")
-    
+
   status: WorkStatus = WorkStatus.CREATED
   qt_completed: float = 0
   on_time: bool = None
@@ -91,6 +92,7 @@ class Job(FlexModel):
   phase_alias: str
   product_id: str
   product_code: str
+  product_description: str
   # operation_id: str >>> TODO: Fix Phase API to add op_id during creation
 
   parameters: PhaseParameters = None
@@ -135,3 +137,22 @@ class Job(FlexModel):
     return job_id
 
 
+class JobAssignment(FlexModel):
+  id: str = Field(..., alias="_id")
+  key: str = Field(..., alias="_key")
+  job: str = Field(..., alias="_from")
+  operator: str = Field(..., alias="_to")
+
+
+class Operator(FlexModel):
+  id: str = Field(..., alias="_id")
+  name: str
+  surname: str
+
+class OperatorAssignments(FlexModel):
+  operator: Operator
+  assigned_jobs: List[Job]
+
+class AssignmentsResponse(FlexModel):
+  assigned_jobs_by_operator: List[OperatorAssignments]
+  unassigned_jobs: List[Job]

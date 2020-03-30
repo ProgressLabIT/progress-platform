@@ -30,4 +30,13 @@ async def start_user_session(user: UserCredentials):
       detail=response
     )
 
-  return user
+  return User(**user.dict())
+
+
+
+@router.get("/user")
+async def get_user_list():
+
+  user_list = [User(**u) for u in db.collection('User').find({ 'active': True })]
+
+  return APIResponse(detail=user_list)

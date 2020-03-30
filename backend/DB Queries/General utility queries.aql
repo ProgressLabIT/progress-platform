@@ -1,0 +1,98 @@
+// Get work order products and relative process
+FOR product in (
+    FOR w IN WorkOrder
+    RETURN DISTINCT(w.product_id)
+    )
+LET p = DOCUMENT(product)
+LET phases = (FOR phase in p.process_phases RETURN DOCUMENT(phase).alias)
+RETURN { code: p.code, description: p.description, phases: phases }
+
+
+
+
+// GENERATE RANDOM PRODUCTION DATA
+
+// Set job completed/released quantity & overall progress
+FOR w in WorkOrder
+  FILTER j.wo_id == w._id 
+  SORT 
+  LET d
+
+    LET zero_or_progress = [
+      0, 
+      MAX([
+        MIN([ (RAND()-0.3) *300, 100]), 
+        0
+      ])
+    ]
+
+    LET progress = FLOOR(zero_or_progress[CEIL(RAND()-0.6)])
+
+    LET qc = FLOOR(j.qt_planned * progress)
+    LET qr_rand = RAND()*2-0.6
+    LET qr = qr_rand < 0 ? 0 : MIN([ROUND(qc * qr_rand), qc])
+
+    LET critical = RAND()-0.99 > 0
+    LET on_time = RAND()-0.05 > 0
+    LET active = RAND()-0.9 > 0
+
+    UPDATE j WITH { 
+      qt_completed: qc, 
+      qt_released: qr, 
+      progress: progress, 
+      critical: critical,
+      on_time: on_time,
+      active: active
+    } in Job
+
+
+// Set wo completed quantity & progress
+FOR w IN WorkOrder
+
+  LET zero_or_progress = [
+      0, 
+      MAX([
+        MIN([ (RAND()-0.3) *300, 100]), 
+        0
+      ])
+    ]
+
+  LET progress = FLOOR(zero_or_progress[CEIL(RAND()-0.6)])
+  LET qc = FLOOR(w.qt_planned * progress * RAND() / 100)
+  LET critical = RAND()-0.95 > 0
+  LET on_time = RAND()-0.1 > 0
+  LET active = RAND()-0.7 > 0
+
+  UPDATE w WITH {
+    progress: wo_progress,
+    qt_completed: completed,
+    active: active,
+    on_time: on_time,
+    critical: critical
+  } in WorkOrder
+
+
+
+// Assign jobs
+FOR j in Job
+FILTER j.product_code LIKE 'ISM%'
+LET user = FIRST(
+    FOR u in User
+    FILTER 
+        DOCUMENT(u.department_id).code LIKE '%2' 
+        && POSITION(u.operations, j.phase_alias)
+    SORT RAND()
+    RETURN u
+)
+    
+INSERT {
+    _from: j._id,
+    _to: user._id,
+    rel_type: 'JobOperator'
+} in assigned_to
+
+
+
+
+
+

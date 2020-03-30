@@ -88,16 +88,17 @@
 
 # User
 	active: bool
-  permissions:
+  roles:
 		admin: bool
 		planner: bool
 		operator: bool
-		resource: rel (0:N --has_access_to--> 1:N)
+	# resource: rel (0:N --has_access_to--> 1:N)
 	name: str (index)
 	surname: str (index)
-	login_code: str
+	username: str
 	psw_hash: str
-	status: str [logged_in, working, logged_out]
+	# status: str [logged_in, working, logged_out]
+  logged_in: bool
   last_user_session: _key
   # rel 0:N --belongs_to--> 0:N Group (UserGroup)
   # rel 0:N <--assigned_to-- 0:N Phase/Job (PhaseOwner, JobOwner)

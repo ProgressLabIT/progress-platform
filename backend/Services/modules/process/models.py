@@ -65,6 +65,7 @@ class PhaseProcedure(FlexModel):
   alias: str
   description: str = None
   operation_id: str = None
+  operation_name: str = None
   steps: List[Step] = []
   params: PhaseParameters = PhaseParameters()
   std_processing_time: int = 0 # in milliseconds

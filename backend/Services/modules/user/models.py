@@ -4,13 +4,25 @@ from enum import Enum
 from utils.base_models import FlexModel
 
 class UserCredentials(FlexModel):
-  login: str = None
+  username: str = None
   psw: str = None
 
-class User(UserCredentials):
-	id: str = Field(None, alias="_id")
-	name: str = None
-	surname: str = None
-	pic: str = None
+
+class UserRoles(BaseModel):
+  admin: bool = False
+  operator: bool = False
+  manager: bool = False
+
+
+class User(FlexModel):
+  id: str = Field(None, alias="_id")
+  active = True
+  name: str = None
+  surname: str = None
+  # pic: str = None
+  roles: UserRoles = UserRoles()
+  last_user_session: str = None
+  logged_in: bool = False
+
 
 
