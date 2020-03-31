@@ -29,7 +29,7 @@
             align="center" 
             no-gutters 
             class="mt-2">
-            <v-col cols="6">
+            <v-col cols="auto">
               <v-avatar size="36">
                 <v-img :src="getPicPath(o.operator)">
                   <template v-slot:placeholder>
@@ -41,8 +41,14 @@
                 {{ o.operator.name + ' ' + o.operator.surname }}
               </span>
             </v-col>
-            <v-col >
-            
+            <v-spacer></v-spacer>
+            <v-col cols="auto">
+              <v-chip small>
+                <span class="weight-medium solid-white mr-1">{{ o.filtered_jobs.length }}</span>
+                di 
+                <span class="weight-medium solid-white ml-1">{{ o.assigned_jobs.length }}</span>
+
+              </v-chip>
             </v-col>
           </v-row>        
 
@@ -51,6 +57,7 @@
             :headers="job_data"
             hide-default-footer
             dense
+            disable-pagination
             no-data-text="Nessun lavoro assegnato"
             class="assignment-list mt-4 ml-n3"
             >  
@@ -167,9 +174,16 @@ export default {
     filtered_assignments() {
       return this.assignments.map( a => {
         const filtered_jobs = a.assigned_jobs.filter(this.matchJobToFilters)
+
+        function sortActiveJobFirst(job1, job2) {
+          if (!job1.active && job2.active) return 1
+          else return -1
+        }
+
         return {
           operator: a.operator,
-          filtered_jobs
+          assigned_jobs: a.assigned_jobs.sort(sortActiveJobFirst),
+          filtered_jobs: filtered_jobs.sort(sortActiveJobFirst)
         }
       })
     },
@@ -181,55 +195,16 @@ export default {
 
     operators_without_jobs_to_show() {
       return this.filtered_assignments
-        .filter( operator => operator.assigned_jobs.length == 0 )
+        .filter( operator => operator.filtered_jobs.length == 0 )
         .map( o => o.operator._id )
     },
 
     unassigned_jobs() {
       return this.$store.state.job.unassigned_job_list
     },
-
-    // job_list() {
-    //   return this.$store.state.job.job_list
-    // },
-
-    // job_map() {
-    //   return this.job_list.reduce((result, job) => {
-    //     result[job._id] = job
-    //     return result
-    //   }, {})
-    // },
-
-    // job_list_by_operator() {
-    //   return this.operator_list.reduce( (obj, operator) => {
-    //     let operator_jobs = this.getOperatorJobs(operator._id)
-    //     obj[operator._id] = operator_jobs
-    //   }, {})
-    // },
-
-    // jobs_by_operator() {
-    //   let map = {}
-
-    //   for (const a of this.assignment_list) {
-    //     const job_data = this.job_map[a._from]
-    //     if (matchJobToFilters(job_data, this.filters, this.search_fields)) {
-    //       if (a._to in map) map[a._to].push(job_data)
-    //       else map[a._to] = [job_data]
-    //     } 
-    //     else {
-    //       continue
-    //     }
-    //   }
-    //   return map
-    // }
   },
 
   methods: {
-    // getOperatorJobs(operator_id) {
-    //   return this.assignment_list
-    //     .filter( a => a._to === operator_id )
-    //     .map( a => this.filtered_job_list[a._from])
-    // },
 
     matchJobToFilters(job) {
       return matchJobToFilters(job, this.filters, this.search_fields)
