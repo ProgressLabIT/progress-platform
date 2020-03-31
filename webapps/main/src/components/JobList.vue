@@ -21,74 +21,88 @@
     
 
     <div class="flex-grow-1 scroll">
-      <v-container v-for="o in assignments" :key="o.operator._id">
-        <v-row justify="start" align="center" no-gutters class="mt-2">
-          <v-col cols="12">
-          
-          <v-avatar size="36">
-            <v-img :src="getPicPath(o.operator)">
-              <template v-slot:placeholder>
-                <v-icon x-large>mdi-account-circle</v-icon>
-              </template>
-            </v-img>
-          </v-avatar>
-          <span class="ml-4 solid-white weight-medium medium">
-            {{ o.operator.name + ' ' + o.operator.surname }}
-          </span>
-          </v-col>
-        </v-row>        
+      <v-container 
+        v-for="(o, index) in operators_with_jobs_to_show" 
+        :key="index">
+          <v-row 
+            justify="start" 
+            align="center" 
+            no-gutters 
+            class="mt-2">
+            <v-col cols="6">
+              <v-avatar size="36">
+                <v-img :src="getPicPath(o.operator)">
+                  <template v-slot:placeholder>
+                    <v-icon x-large>mdi-account-circle</v-icon>
+                  </template>
+                </v-img>
+              </v-avatar>
+              <span class="ml-4 solid-white weight-medium medium">
+                {{ o.operator.name + ' ' + o.operator.surname }}
+              </span>
+            </v-col>
+            <v-col >
+            
+            </v-col>
+          </v-row>        
 
-        <v-data-table 
-          :items="o.assigned_jobs"
-          :headers="job_data"
-          hide-default-footer
-          dense
-          no-data-text="Nessun lavoro assegnato"
-          class="assignment-list mt-4 ml-n3"
-          >  
-          <template v-slot:item="{ item: job }">
-            <tr v-if="matchJobToFilters(job)">
-              <td 
-                v-for="(header, index) in job_data" 
-                :key="index"
-                :class="header.value.includes('qt') ? 'text-right' : ''">
-                <template v-if="header.value ==='progress'">
-                  <v-row no-gutters align="center">
-                    <v-col cols="9">
-                      <v-progress-linear 
-                        dense 
-                        :value="job.progress"
-                        :color="job.active ? $theme.blue : $theme.grey">
-                      </v-progress-linear>
-                    </v-col>
-                    <v-col cols="2" class="pl-4 text-right">
-                      {{ job.progress }}%
-                    </v-col>
-                    <v-col cols="1" class="text-right pl-2">
-                      <v-icon small 
-                        v-if="job.critical" 
-                        :color="$theme.red"
-                        @click="$emit('criticalOnly')">
-                        mdi-alert-octagon
-                      </v-icon>
-                      <v-icon small 
-                        v-else-if="!job.on_time" 
-                        :color="$theme.orange"
-                        @click="$emit('lateOnly')">
-                        mdi-alert
-                      </v-icon>
-                    </v-col>
-                  </v-row>
-                </template>
+          <v-data-table 
+            :items="o.filtered_jobs"
+            :headers="job_data"
+            hide-default-footer
+            dense
+            no-data-text="Nessun lavoro assegnato"
+            class="assignment-list mt-4 ml-n3"
+            >  
+            <template v-slot:item="{ item: job }">
+              <tr>
+                <td 
+                  v-for="(header, index) in job_data" 
+                  :key="index"
+                  :class="header.value.includes('qt') ? 'text-right' : ''"
+                  @click="setSearch(header.value, job[header.value])">
+                  <template v-if="header.value ==='progress'">
+                    <v-row no-gutters align="center">
+                      <v-col cols="9">
+                        <v-progress-linear 
+                          dense 
+                          :value="job.progress"
+                          :color="job.active ? $theme.blue : $theme.grey">
+                        </v-progress-linear>
+                      </v-col>
+                      <v-col cols="2" class="pl-4 text-right">
+                        {{ job.progress }}%
+                      </v-col>
+                      <v-col cols="1" class="text-right pl-2">
+                        <v-icon small 
+                          v-if="job.critical" 
+                          :color="$theme.red"
+                          @click="$emit('criticalOnly')">
+                          mdi-alert-octagon
+                        </v-icon>
+                        <v-icon small 
+                          v-else-if="!job.on_time" 
+                          :color="$theme.orange"
+                          @click="$emit('lateOnly')">
+                          mdi-alert
+                        </v-icon>
+                      </v-col>
+                    </v-row>
+                  </template>
 
-                <template v-else>{{ job[header.value] | capitalize_all }}</template>
+                  <template v-else>
+                    <div 
+                      :class="filter_fields.includes(header.value) ? 'filter-field' : ''"
+                      >
+                      {{ job[header.value] | capitalize_all }}
+                    </div>
+                  </template>
 
-              </td>
-            </tr>
-          </template>
-        </v-data-table>
-
-      <v-divider class="mt-4"></v-divider>
+                </td>
+              </tr>
+            </template>
+          </v-data-table>
+          <v-divider class="mt-4"></v-divider>
       </v-container>
     </div>
   </v-container>
@@ -139,34 +153,36 @@ export default {
         'product_code',
         'product_description',
         'phase_alias',
-      ]
+      ],
+      filter_fields: ['wo_code', 'product_code', 'phase_alias']
     }
   },
 
   computed: {
-    // department_list() {
-    //   return [
-    //     { name: 'tutti'}, 
-    //     ...this.$store.state.org.departments,
-    //     { name: 'non assegnati'} 
-    //   ]
-    // },
-    
-    // active_dep: {
-    //   get() {
-    //     let dep = this.$store.state.job.nav_state.active_dep
-    //     return dep ? dep : 0
-    //   },
-    //   set(dep_code) {
-    //     this.$store.commit('UPDATE_JOB_DEP_NAV_STATE', dep_code)
-    //   }
-    // }
-    // operator_list() {
-    //   return this.$store.getters.operator_list()
-    // },
 
     assignments() {
       return this.$store.state.job.assigned_job_list
+    },
+
+    filtered_assignments() {
+      return this.assignments.map( a => {
+        const filtered_jobs = a.assigned_jobs.filter(this.matchJobToFilters)
+        return {
+          operator: a.operator,
+          filtered_jobs
+        }
+      })
+    },
+
+    operators_with_jobs_to_show() {
+      return this.filtered_assignments
+        .filter( operator => operator.filtered_jobs.length > 0 )
+    },
+
+    operators_without_jobs_to_show() {
+      return this.filtered_assignments
+        .filter( operator => operator.assigned_jobs.length == 0 )
+        .map( o => o.operator._id )
     },
 
     unassigned_jobs() {
@@ -223,6 +239,12 @@ export default {
       let user_pic_folder = '/media/user/'
       let filename = (operator.name + operator.surname).replace(/\s+/,'').toLowerCase()
       return user_pic_folder + filename + '.jpg'
+    },
+
+    setSearch(field, text) {
+      if (this.filter_fields.includes(field)) {
+        this.$emit('setSearch', text)
+      }
     }
   }
 }
@@ -240,6 +262,11 @@ export default {
 
 .assignment-list >>> th {
   border: none !important;
+}
+
+.filter-field {
+  /*text-decoration: underline;*/
+  cursor: pointer;
 }
 
 </style>

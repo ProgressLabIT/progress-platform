@@ -45,7 +45,8 @@
             <router-view 
               v-bind="{filters}"
               @lateOnly="showLateOnly"
-              @criticalOnly="showCriticalOnly">
+              @criticalOnly="showCriticalOnly"
+              @setSearch="setSearch($event)">
             </router-view>
 
           <!-- </keep-alive> -->
@@ -200,6 +201,10 @@ export default {
 
     showCriticalOnly() {
       this.bool_filters.not_critical.value = false
+    },
+
+    setSearch(text) {
+      this.search_string = text
     },
 
     resetFilters() {
