@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
-from .models import WorkOrderNew, WorkOrderFull, TargetActualTimeDelta, Job, JobAssignment, AssignmentsResponse
+from .models import WorkOrderNew, WorkOrderFull, TargetActualTimeDelta, Job, JobAssignment, AssignmentsResponse, WorkOrderDetails
 from modules.process.models import PhaseProcedure
 from utils.db import db
 from utils.api import APIResponse
@@ -101,12 +101,10 @@ async def get_wo_list():
   query = """
     FOR wo IN WorkOrder
       LET qt_remaining = wo.qt_planned - wo.qt_completed
-      LET active_phases = (
-        FOR j IN Job
-        FILTER j.wo_id == wo._id && j.active == true
-        RETURN DISTINCT j.phase_alias
-      )
-      RETURN MERGE ([wo, { qt_remaining: qt_remaining, active_phases: active_phases }])
+      LET jobs = ( FOR j IN Job FILTER j.wo_id == wo._id RETURN j)
+      LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_alias )
+      LET active = TO_BOOL(SUM(FOR j IN jobs FILTER j.active RETURN 1))
+      RETURN MERGE ([wo, { qt_remaining: qt_remaining, phases: phases, active: active }])  
   """
 
   # wo_list = [WorkOrderFull(**wo) for wo in db.collection('WorkOrder').all()]
@@ -114,10 +112,56 @@ async def get_wo_list():
   return APIResponse(detail=wo_list)
 
 
+@router.get('/work-order/{wo_key}')
+async def get_wo_data(wo_key: str):
+  
+  query = """
+    FOR wo IN WorkOrder
+      FILTER wo._key == @wo_key
+      
+      LET qt_remaining = wo.qt_planned - wo.qt_completed
+      
+      // get phases in order from product data
+      LET phases = FIRST( FOR p IN Product FILTER p._id == wo.product_id RETURN p.process_phases )
+
+      // get job data
+      LET phase_jobs = MERGE( 
+        FOR j IN Job
+        FILTER j.wo_id == wo._id
+        COLLECT phase_id = j.phase_id, alias = j.phase_alias INTO jobs = j
+        LET active = TO_BOOL(COUNT(FOR j IN jobs FILTER j.active RETURN 1))
+        RETURN { 
+          [phase_id] : { phase_alias: alias, active: active, jobs: jobs } 
+        }
+      )
+
+      // check if any job is active
+      LET active = TO_BOOL(COUNT(FOR j IN Job FILTER j.wo_id == wo._id && j.active RETURN 1))
+
+      // Return enriched wo data
+      RETURN MERGE ([
+        wo, { 
+        qt_remaining: qt_remaining, 
+        phases: phases, 
+        phase_jobs: phase_jobs, 
+        active: active 
+      }])
+  """
+
+  wo_data = db.aql.execute(query, bind_vars={ 'wo_key': wo_key }).next()
+  return APIResponse(detail=WorkOrderDetails(**wo_data))
+
 @router.get('/job')
 async def get_job_list():
 
+  # db_resp = db.aql.execute("""
+  #   FOR j IN Job
+  #   LET assignee = FIRST(FOR v in 1..1 OUTBOUND j assigned_to RETURN v)
+  #   RETURN MERGE(j, { assigned_to: assignee })
+  # """)
+
   job_list = [Job(**j) for j in db.collection('Job').all()]
+
   return APIResponse(detail=job_list)
 
 

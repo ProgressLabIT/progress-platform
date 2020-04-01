@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Dict
 from utils.base_models import FlexModel
 from pydantic import Field, validator
 from modules.process.models import PhaseParameters
@@ -83,6 +83,12 @@ class RequiredAvailableQt(FlexModel):
   available: float = None
   stockout: bool = None
 
+class Operator(FlexModel):
+  id: str = Field(..., alias="_id")
+  name: str
+  surname: str
+
+
 class Job(FlexModel):
   id: str = Field(None, alias="_id")
   wo_id: str
@@ -118,6 +124,8 @@ class Job(FlexModel):
   jobs_upstream: List[str] = []
   jobs_downstream: List[str] = []
 
+  assigned_to: Operator = None
+
   # @validator('progress')
   # def between_0_and_100_percent(cls, v):
   #   if v < 0 or v > 1:
@@ -137,17 +145,23 @@ class Job(FlexModel):
     return job_id
 
 
+class PhaseJobs(FlexModel):
+  phase_alias: str
+  active: bool
+  jobs: List[Job] 
+
+
+class WorkOrderDetails(WorkOrderFull):
+  phase_jobs: Dict[str, PhaseJobs]
+
+
+
 class JobAssignment(FlexModel):
   id: str = Field(..., alias="_id")
   key: str = Field(..., alias="_key")
   job: str = Field(..., alias="_from")
   operator: str = Field(..., alias="_to")
 
-
-class Operator(FlexModel):
-  id: str = Field(..., alias="_id")
-  name: str
-  surname: str
 
 class OperatorAssignments(FlexModel):
   operator: Operator
