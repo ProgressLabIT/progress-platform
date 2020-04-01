@@ -17,12 +17,11 @@
           {{ dep.name }}
         </v-tab>
       </v-tabs>
-    </v-row> -->
-    
+    </v-row> -->    
 
     <div class="flex-grow-1 scroll">
       <v-container 
-        v-for="(o, index) in operators_with_jobs_to_show" 
+        v-for="(o, index) in jobs_view" 
         :key="index">
           <v-row 
             justify="start" 
@@ -31,7 +30,7 @@
             class="mt-2">
             <v-col cols="auto">
               <v-avatar size="36">
-                <v-img :src="getPicPath(o.operator)">
+                <v-img eager :src="getPicPath(o.operator)">
                   <template v-slot:placeholder>
                     <v-icon x-large>mdi-account-circle</v-icon>
                   </template>
@@ -62,50 +61,55 @@
             class="assignment-list mt-4 ml-n3"
             >  
             <template v-slot:item="{ item: job }">
-              <tr>
-                <td 
-                  v-for="(header, index) in job_data" 
-                  :key="index"
-                  :class="header.value.includes('qt') ? 'text-right' : ''"
-                  @click="setSearch(header.value, job[header.value])">
-                  <template v-if="header.value ==='progress'">
-                    <v-row no-gutters align="center">
-                      <v-col cols="9">
-                        <v-progress-linear 
-                          dense 
-                          :value="job.progress"
-                          :color="job.active ? $theme.blue : $theme.grey">
-                        </v-progress-linear>
-                      </v-col>
-                      <v-col cols="2" class="pl-4 text-right">
-                        {{ job.progress }}%
-                      </v-col>
-                      <v-col cols="1" class="text-right pl-2">
-                        <v-icon small 
-                          v-if="job.critical" 
-                          :color="$theme.red"
-                          @click="$emit('criticalOnly')">
-                          mdi-alert-octagon
-                        </v-icon>
-                        <v-icon small 
-                          v-else-if="!job.on_time" 
-                          :color="$theme.orange"
-                          @click="$emit('lateOnly')">
-                          mdi-alert
-                        </v-icon>
-                      </v-col>
-                    </v-row>
-                  </template>
+              <tr @dblclick="showWorkOrderScreen(job.wo_id)">
+                <!-- <v-hover v-slot:default="{ hover }"> -->
+                  <td 
+                    v-for="(header, index) in job_data" 
+                    :key="index"
+                    :class="header.value.includes('qt') ? 'text-right' : ''"
+                    @click="setSearch(header.value, job[header.value])">
+                    <template v-if="header.value ==='progress'">
+                      <v-row no-gutters align="center">
+                        <v-col cols="9">
+                          <v-progress-linear 
+                            dense 
+                            :value="job.progress"
+                            :color="job.active ? $theme.blue : $theme.grey">
+                          </v-progress-linear>
+                        </v-col>
+                        <v-col cols="2" class="pl-4 text-right">
+                          {{ job.progress }}%
+                        </v-col>
+                        <v-col cols="1" class="text-right pl-2">
+                          <v-icon small 
+                            v-if="job.critical" 
+                            :color="$theme.red"
+                            @click="$emit('criticalOnly')">
+                            mdi-alert-octagon
+                          </v-icon>
+                          <v-icon small 
+                            v-else-if="!job.on_time" 
+                            :color="$theme.orange"
+                            @click="$emit('lateOnly')">
+                            mdi-alert
+                          </v-icon>
+                        </v-col>
+                      </v-row>
+                    </template>
 
-                  <template v-else>
-                    <div 
-                      :class="filter_fields.includes(header.value) ? 'filter-field' : ''"
-                      >
-                      {{ job[header.value] | capitalize_all }}
-                    </div>
-                  </template>
+                    <template v-else>
+                      <v-hover v-slot:default="{ hover }">
+                      <div 
+                        :class="filter_fields.includes(header.value) ? 'filter-field' : ''"
+                        :style="filter_fields.includes(header.value) && hover ? 'text-decoration: underline' : ''"
+                        >
+                        {{ job[header.value] | capitalize_all }}
+                      </div>
+                      </v-hover>
+                    </template>
 
-                </td>
+                  </td>
+                <!-- </v-hover> -->
               </tr>
             </template>
           </v-data-table>
@@ -202,6 +206,21 @@ export default {
     unassigned_jobs() {
       return this.$store.state.job.unassigned_job_list
     },
+
+    jobs_view() {
+      return [
+        ...this.operators_with_jobs_to_show, 
+        {
+          operator: {
+            _id: 'unassigned',
+            name: 'Lavori',
+            surname: 'non assegnati'
+          },
+          assigned_jobs: this.unassigned_jobs,
+          filtered_jobs: this.unassigned_jobs.filter(this.matchJobToFilters)
+        }
+      ]
+    }
   },
 
   methods: {
@@ -220,6 +239,15 @@ export default {
       if (this.filter_fields.includes(field)) {
         this.$emit('setSearch', text)
       }
+    },
+
+    showWorkOrderScreen(wo_id) {
+      let data_to_emit = {
+        wo_key: wo_id.split('/')[1],
+        back_to_route_name: this.$route.name
+      }
+      console.log({data_to_emit})
+      this.$emit('itemDblClick', data_to_emit)
     }
   }
 }
@@ -240,7 +268,6 @@ export default {
 }
 
 .filter-field {
-  /*text-decoration: underline;*/
   cursor: pointer;
 }
 

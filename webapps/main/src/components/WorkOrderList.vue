@@ -16,7 +16,7 @@
       <template v-slot:item="{ item }">
         <!-- <tr @dblclick="$emit('showDetails', item.wo_code)"> -->
         <tr 
-          @dblclick="showWorkOrderScreen(item.wo_code)">
+          @dblclick="showWorkOrderScreen(item._key)">
           <td 
             v-for="(header, index) in table_headers" :key="index"
             :class="header.value.includes('qt') ? 'text-right' : '' ">
@@ -214,18 +214,10 @@ export default {
     },
 
     showWorkOrderScreen(wo_key) {
-      // const this_route = this.$route
-      const to_route = {
-        name: 'workOrderHome',
-        params: {
-          wo_key: wo_key,
-        },
-        query: {
-          back_to: this.$route.name
-        }
-      }
-      // console.log({this_route}, {to_route})
-      this.$router.push(to_route)
+      this.$emit('itemDblClick', {
+        wo_key,
+        back_to_route_name: this.$route.name
+      })
     },
   },
 

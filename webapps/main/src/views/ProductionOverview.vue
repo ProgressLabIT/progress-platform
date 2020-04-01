@@ -46,7 +46,8 @@
               v-bind="{filters}"
               @lateOnly="showLateOnly"
               @criticalOnly="showCriticalOnly"
-              @setSearch="setSearch($event)">
+              @setSearch="setSearch($event)"
+              @itemDblClick="showWorkOrderScreen($event)">
             </router-view>
 
           <!-- </keep-alive> -->
@@ -212,7 +213,22 @@ export default {
       for (let filter of Object.values(this.bool_filters)) {
         filter.value = true
       }
-    }
+    },
+
+    showWorkOrderScreen({wo_key, back_to_route_name}) {
+      // const this_route = this.$route
+      const to_route = {
+        name: 'workOrderJobs',
+        params: {
+          wo_key: wo_key,
+        },
+        query: {
+          back_to: back_to_route_name
+        }
+      }
+      // console.log({this_route}, {to_route})
+      this.$router.push(to_route)
+    },
   },
 
   beforeCreate() {

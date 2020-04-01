@@ -83,15 +83,20 @@ const routes = [
   {
     path: "/production/:wo_key",
     name: "workOrderScreen",
-    redirect: { name: "workOrderHome"},
+    redirect: { name: "workOrderJobs"},
     component: () => import ("@/components/WorkOrderScreen.vue"),
     props: true,
     children: [
       {
-        path: "home",
-        name: "workOrderHome",
-        component: () => import ("@/views/WorkOrderHome.vue")
-      }
+        path: "job-list",
+        name: "workOrderJobs",
+        component: () => import ("@/views/WorkOrderJobs.vue")
+      },
+      // {
+      //   path: 'history',
+      //   name: "workOrderHistory",
+      //   component: () => import ("@/views/WorkOrderHistory.vue")
+      // }
     ]
   },
   {

@@ -1,5 +1,5 @@
 <template>
-  <BaseModalScreen :show="show_modal" @close="exit()">
+  <BaseModalScreen :show="show_modal" @close="exit()" @input="exit()">
     <template v-slot:header>
       <span class="ml-4 display medium highlight weight-medium">ID ORDINE DI PRODUZIONE: {{ wo_key }}</span>
 
@@ -21,9 +21,20 @@
     </template>
 
     <template v-slot:content>
-      <keep-alive>
-        <router-view></router-view>
-      </keep-alive>
+      <v-container fluid>
+        <v-row no-gutters>
+          <v-col cols="3" class="fill-height">
+            <WorkOrderDataColumn v-bind="{ wo_data, job_data }">
+            </WorkOrderDataColumn>
+          </v-col>    
+
+          <v-col>
+            <keep-alive>
+              <router-view></router-view>
+            </keep-alive>
+          </v-col>
+        </v-row>
+      </v-container>
     </template>
 
   </BaseModalScreen>
@@ -31,13 +42,15 @@
 
 <script>
 import BaseModalScreen from '@/components/BaseModalScreen.vue'
+import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue'
 
 export default {
 
   name: 'WorkOrderScreen',
 
   components: {
-    BaseModalScreen
+    BaseModalScreen,
+    WorkOrderDataColumn,
   },
 
   props: ['wo_key'],
@@ -46,10 +59,10 @@ export default {
     return { 
       show_modal: true,
       links: [
-        {
-          name: 'workOrderHome',
-          title: 'panoramica',
-        },
+        // {
+        //   name: 'workOrderHome',
+        //   title: 'panoramica',
+        // },
         {
           name: 'workOrderJobs',
           title: 'lavori'
@@ -61,6 +74,20 @@ export default {
       ]
 
     }
+  },
+
+  computed: {
+    wo_id() {
+      return 'WorkOrder/' + this.wo_key
+    },
+
+    wo_data() {
+      return this.$store.state.workorder.wo_list.filter( wo => wo._id == this.wo_id)[0]
+    },
+
+    job_data() {
+      return this.$store.state.job.job_list.filter( job => job.wo_id == this.wo_id)
+    },
   },
 
   methods: {
