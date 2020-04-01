@@ -27,10 +27,12 @@
             <WorkOrderDataColumn v-bind="{ wo_data, job_data }">
             </WorkOrderDataColumn>
           </v-col>    
-
+          <v-col cols="auto" class="pl-3">
+            <v-divider vertical></v-divider>
+          </v-col>
           <v-col>
             <keep-alive>
-              <router-view></router-view>
+              <router-view v-bind="{ wo_data, job_data }"></router-view>
             </keep-alive>
           </v-col>
         </v-row>
@@ -43,6 +45,7 @@
 <script>
 import BaseModalScreen from '@/components/BaseModalScreen.vue'
 import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue'
+import {api} from '@/lib/apiCall.js'
 
 export default {
 
@@ -71,7 +74,8 @@ export default {
           name: 'workOrderHistory',
           title: 'storico'
         }
-      ]
+      ],
+      wo_data: { phase_jobs: [] }
 
     }
   },
@@ -79,10 +83,6 @@ export default {
   computed: {
     wo_id() {
       return 'WorkOrder/' + this.wo_key
-    },
-
-    wo_data() {
-      return this.$store.state.workorder.wo_list.filter( wo => wo._id == this.wo_id)[0]
     },
 
     job_data() {
@@ -101,6 +101,12 @@ export default {
         this.$router.push({ name: this.$route.query.back_to })
       // }
     }
+  },
+
+  created() {
+    api.get(`/work-order/${this.wo_key}`).then( resp => {
+      this.wo_data = resp.data.detail
+    })
   }
 }
 </script>
