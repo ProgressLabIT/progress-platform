@@ -75,6 +75,7 @@ class WorkOrderFull(WorkOrderNew):
   throughput_time: TargetActualTimeDelta = TargetActualTimeDelta()
   processing_time: TargetActualTimeDelta = TargetActualTimeDelta()
   
+  phase_sequence: List[str]
   notes: str = None
 
 

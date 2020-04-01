@@ -104,7 +104,7 @@ async def get_wo_list():
       LET jobs = ( FOR j IN Job FILTER j.wo_id == wo._id RETURN j)
       LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_alias )
       LET active = TO_BOOL(SUM(FOR j IN jobs FILTER j.active RETURN 1))
-      RETURN MERGE ([wo, { qt_remaining: qt_remaining, phases: phases, active: active }])  
+      RETURN MERGE ([wo, { qt_remaining: qt_remaining, phase_sequence: phases, active: active }])  
   """
 
   # wo_list = [WorkOrderFull(**wo) for wo in db.collection('WorkOrder').all()]
@@ -142,7 +142,7 @@ async def get_wo_data(wo_key: str):
       RETURN MERGE ([
         wo, { 
         qt_remaining: qt_remaining, 
-        phases: phases, 
+        phase_sequence: phases, 
         phase_jobs: phase_jobs, 
         active: active 
       }])
