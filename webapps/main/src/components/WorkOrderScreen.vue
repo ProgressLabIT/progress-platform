@@ -21,16 +21,16 @@
     </template>
 
     <template v-slot:content>
-      <v-container fluid>
-        <v-row no-gutters>
+      <v-container fluid class="fill">
+        <v-row no-gutters class="fill-height">
           <v-col cols="3" class="fill-height">
             <WorkOrderDataColumn v-bind="{ wo_data, job_data }">
             </WorkOrderDataColumn>
           </v-col>    
-          <v-col cols="auto" class="pl-3">
-            <v-divider vertical></v-divider>
+          <v-col cols="auto" class="px-3 py-0">
+            <v-divider vertical ></v-divider>
           </v-col>
-          <v-col>
+          <v-col class="py-0">
             <keep-alive>
               <router-view v-bind="{ wo_data, job_data }"></router-view>
             </keep-alive>
@@ -75,7 +75,7 @@ export default {
           title: 'storico'
         }
       ],
-      wo_data: { phase_jobs: [] }
+      wo_data: { phase_sequence: [] }
 
     }
   },
