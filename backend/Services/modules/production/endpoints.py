@@ -173,7 +173,7 @@ async def get_assignment_list():
       )
       
       RETURN {
-        operator: KEEP(o, '_id', 'name', 'surname', 'active'),
+        operator: KEEP(o, '_id', 'name', 'surname', 'active', 'department_id'),
         assigned_jobs: assigned_jobs
       }
     )

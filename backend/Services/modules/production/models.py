@@ -89,6 +89,7 @@ class Operator(FlexModel):
   name: str
   surname: str
   active: bool = None
+  department_id: str = None
 
 
 class Job(FlexModel):
@@ -178,11 +179,11 @@ class WorkOrderDetails(WorkOrderFull):
 
 
 
-class JobAssignment(FlexModel):
-  id: str = Field(..., alias="_id")
-  key: str = Field(..., alias="_key")
-  job: str = Field(..., alias="_from")
-  operator: str = Field(..., alias="_to")
+# class JobAssignment(FlexModel):
+#   id: str = Field(..., alias="_id")
+#   key: str = Field(..., alias="_key")
+#   job: str = Field(..., alias="_from")
+#   operator: str = Field(..., alias="_to")
 
 
 class OperatorAssignments(FlexModel):
