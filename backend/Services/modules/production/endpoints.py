@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, Dict
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
-from .models import WorkOrderNew, WorkOrderFull, TargetActualTimeDelta, Job, JobAssignment, AssignmentsResponse, WorkOrderDetails
+from .models import *
 from modules.process.models import PhaseProcedure
 from utils.db import db
 from utils.api import APIResponse
@@ -101,9 +101,9 @@ async def get_wo_list():
   query = """
     FOR wo IN WorkOrder
       LET qt_remaining = wo.qt_planned - wo.qt_completed
-      LET jobs = ( FOR j IN Job FILTER j.wo_id == wo._id RETURN j)
-      LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_alias )
-      LET active = TO_BOOL(SUM(FOR j IN jobs FILTER j.active RETURN 1))
+      LET jobs = ( FOR j IN Job FILTER !j.trash && j.wo_id == wo._id RETURN j)
+      LET phases = ( FOR j IN jobs FILTER !j.trash RETURN DISTINCT j.phase_alias )
+      LET active = TO_BOOL(SUM(FOR j IN jobs FILTER !j.trash && j.active RETURN 1))
       RETURN MERGE ([wo, { qt_remaining: qt_remaining, phase_sequence: phases, active: active }])  
   """
 
@@ -119,31 +119,30 @@ async def get_wo_data(wo_key: str):
     FOR wo IN WorkOrder
       FILTER wo._key == @wo_key
       
-      LET qt_remaining = wo.qt_planned - wo.qt_completed
+      // LET qt_remaining = wo.qt_planned - wo.qt_completed
       
       // get phases in order from product data
       LET phases = FIRST( FOR p IN Product FILTER p._id == wo.product_id RETURN p.process_phases )
 
+      
+
       // get job data
-      LET phase_jobs = MERGE( 
+      LET jobs =  ( 
         FOR j IN Job
-        FILTER j.wo_id == wo._id
-        COLLECT phase_id = j.phase_id, alias = j.phase_alias INTO jobs = j
-        LET active = TO_BOOL(COUNT(FOR j IN jobs FILTER j.active RETURN 1))
-        RETURN { 
-          [phase_id] : { phase_alias: alias, active: active, jobs: jobs } 
-        }
+        FILTER j.wo_id == wo._id && !j.trash
+        LET operator = KEEP(DOCUMENT(j.assigned_to), '_id', 'name', 'surname', 'active')
+        RETURN MERGE( j, { assigned_to: operator } )
       )
 
       // check if any job is active
-      LET active = TO_BOOL(COUNT(FOR j IN Job FILTER j.wo_id == wo._id && j.active RETURN 1))
+      LET active = TO_BOOL(COUNT(FOR j IN Job FILTER !j.trash && j.wo_id == wo._id && j.active RETURN 1))
 
       // Return enriched wo data
       RETURN MERGE ([
         wo, { 
-        qt_remaining: qt_remaining, 
+        // qt_remaining: qt_remaining, 
         phase_sequence: phases, 
-        phase_jobs: phase_jobs, 
+        jobs: jobs, 
         active: active 
       }])
   """
@@ -154,13 +153,8 @@ async def get_wo_data(wo_key: str):
 @router.get('/job')
 async def get_job_list():
 
-  # db_resp = db.aql.execute("""
-  #   FOR j IN Job
-  #   LET assignee = FIRST(FOR v in 1..1 OUTBOUND j assigned_to RETURN v)
-  #   RETURN MERGE(j, { assigned_to: assignee })
-  # """)
-
-  job_list = [Job(**j) for j in db.collection('Job').all()]
+  db_resp = db.aql.execute("FOR j IN Job FILTER !j.trash RETURN j")
+  job_list = [Job(**j) for j in db_resp]
 
   return APIResponse(detail=job_list)
 
@@ -173,25 +167,20 @@ async def get_assignment_list():
       FOR o IN User
       FILTER o.roles.operator == true
       LET assigned_jobs = (    
-        FOR v,e IN 1..1 INBOUND o assigned_to
-        FILTER e.rel_type == 'JobOperator'
-        RETURN v
+        FOR j in Job
+        FILTER !j.trash && j.assigned_to == o._id
+        RETURN j
       )
       
       RETURN {
-        operator: o,
+        operator: KEEP(o, '_id', 'name', 'surname', 'active'),
         assigned_jobs: assigned_jobs
       }
     )
 
     LET unassigned_jobs = (
       FOR j in Job
-      LET assignments = SUM(
-        FOR a IN assigned_to 
-        FILTER a.rel_type == 'JobOperator' && a._from == j._id
-        RETURN 1
-      )
-      FILTER assignments == 0
+      FILTER !j.trash && j.assigned_to == null
       RETURN j
     )
 
@@ -205,3 +194,69 @@ async def get_assignment_list():
   # cursor = db.collection('assigned_to').find({ 'rel_type': 'JobOperator'})
   # assignment_list = [JobAssignment(**a) for a in cursor]
   # return APIResponse(detail=assignment_list)
+
+
+
+@router.patch('/job/{job_key}')
+async def update_job(job_key: str, job_data: dict):
+  # print(**job_data)
+
+  try:
+    db_resp = db.collection('Job').update({ '_key': job_key, **job_data }, return_new=True)
+  except:
+    status_code = 500
+    response = {
+     'status_code': status_code,
+     'message': "Couldn't update Job on the db",
+     'error': traceback.format_exc()
+    }
+    raise HTTPException(status_code=status_code, detail=response)
+
+  status_code = 200
+  response = {
+    'message': f"Job {job_key} updated correctly",
+    'detail': db_resp['new']
+  }
+  return APIResponse(**response)
+
+
+@router.post('/job/update')
+async def update_jobs(job_updates:List[JobUpdate]):
+
+  print(job_updates)
+  tx = db.begin_transaction(write=['Job'])
+  job_db = tx.collection('Job')
+
+  results = []
+  
+  try:
+    for u in job_updates:
+
+      if u.action == JobUpdateType.INSERT:
+        new_job_record = jsonable_encoder(Job(**u.data), by_alias=True, include_none=False)
+        db_resp = job_db.insert(new_job_record, return_new=True)['new']
+
+      elif u.action == JobUpdateType.UPDATE:
+        db_resp = job_db.update(u.data, return_new=True)['new']
+
+      elif u.action == JobUpdateType.DELETE:
+        db_resp = job_db.update({ **u.data, 'trash': True })['new']
+
+      results.append(db_resp)
+    
+    tx.commit_transaction()
+    return APIResponse(detail=db_resp, message="Jobs updated successfully")
+
+  except: 
+    status_code = 500
+    error_str = traceback.format_exc()
+
+    response = {
+      'status_code': status_code,
+      'message': "There was an error saving the updates",
+      'error': error_str 
+    }
+
+    raise HTTPException(status_code=status_code, detail=response)
+
+

@@ -88,6 +88,7 @@ class Operator(FlexModel):
   id: str = Field(..., alias="_id")
   name: str
   surname: str
+  active: bool = None
 
 
 class Job(FlexModel):
@@ -125,7 +126,7 @@ class Job(FlexModel):
   jobs_upstream: List[str] = []
   jobs_downstream: List[str] = []
 
-  assigned_to: Operator = None
+  assigned_to: Union[str, Operator] = None
 
   # @validator('progress')
   # def between_0_and_100_percent(cls, v):
@@ -146,14 +147,34 @@ class Job(FlexModel):
     return job_id
 
 
-class PhaseJobs(FlexModel):
-  phase_alias: str
-  active: bool
-  jobs: List[Job] 
+# class PhaseJobs(FlexModel):
+#   phase_alias: str
+#   active: bool
+#   jobs: List[Job] 
+
+class JobUpdateType(Enum):
+  INSERT = 'insert'
+  UPDATE = 'update'
+  DELETE = 'delete'
+
+class JobUpdate(FlexModel):
+  action: JobUpdateType
+  data: dict
+
+  # @validator('action')
+  # def check_key_or_id(cls, action, values):
+  #   # If action is delete or update, data must contain _id or _key field
+  #   id_key = ['_id', '_key']
+  #   print(cls, action, values)
+  #   if action != JobUpdateType.INSERT and any([k in values['data'] for k in id_key]):
+  #     raise ValueError("Job Update and Delete operations require Job key")
+  #   return action
+
+
 
 
 class WorkOrderDetails(WorkOrderFull):
-  phase_jobs: Dict[str, PhaseJobs]
+  jobs: List[Job]
 
 
 

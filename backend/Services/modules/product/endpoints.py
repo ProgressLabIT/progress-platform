@@ -19,7 +19,7 @@ product_db = db.collection('Product')
 # =================================================
 #  GET / : GET PRODUCT LIST
 # =================================================
-@router.get("/")
+@router.get("")
 async def get_product_list(
   limit: int = None, # return a limited number of results
   code: str = None, # filter by code
@@ -43,7 +43,7 @@ async def get_product_list(
 # =================================================
 #  POST / : CREATE PRODUCT
 # =================================================
-@router.post("/")
+@router.post("")
 async def create_product(
   code: str = Form(...),
   description: str = Form(''),
