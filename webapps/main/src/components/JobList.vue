@@ -133,15 +133,16 @@ export default {
       type: Object,
       required: true,
       default: () => { return {
-        "search_string":"",
-        "started":true,
-        "queued":true,
-        "on_time":true,
-        "late":true,
-        "active":true,
-        "idle":true,
-        "critical":true,
-        "not_critical":true
+        search_string:"",
+        started:true,
+        queued:true,
+        on_time:true,
+        late:true,
+        active:true,
+        idle:true,
+        critical:true,
+        not_critical:true,
+        department: '' 
       }}
     }
   },
@@ -176,32 +177,40 @@ export default {
     },
 
     filtered_assignments() {
-      return this.assignments.map( a => {
-        const filtered_jobs = a.assigned_jobs.filter(this.matchJobToFilters)
 
-        function sortActiveJobFirst(job1, job2) {
-          if (!job1.active && job2.active) return 1
-          else return -1
+      let list = []
+      // return this.assignments.map( a => {
+      for (let i = 0; i < this.assignments.length; i++) {
+        let a = this.assignments[i]
+        // Check if operator is in department selected or no department filter is set
+        if ([a.operator.department_id, ''].includes(this.filters.department)) {
+
+          const filtered_jobs = a.assigned_jobs.filter(this.matchJobToFilters)
+          
+          if (filtered_jobs.length) {
+            const operator_filtered_assignments = {
+              operator: a.operator,
+              assigned_jobs_count: a.assigned_jobs.length,
+              filtered_jobs: filtered_jobs.sort(this.sortActiveJobFirst)
+            }
+            list.push(operator_filtered_assignments)
+          }
         }
+      }
 
-        return {
-          operator: a.operator,
-          assigned_jobs_count: a.assigned_jobs.length,
-          filtered_jobs: filtered_jobs.sort(sortActiveJobFirst)
-        }
-      })
+      return list
     },
 
-    operators_with_jobs_to_show() {
-      return this.filtered_assignments
-        .filter( operator => operator.filtered_jobs.length > 0 )
-    },
+    // operators_to_show() {
+    //   return this.filtered_assignments
+    //     .filter( operator => operator.filtered_jobs.length > 0 )
+    // },
 
-    operators_without_jobs_to_show() {
-      return this.filtered_assignments
-        .filter( operator => operator.filtered_jobs.length == 0 )
-        .map( o => o.operator._id )
-    },
+    // operators_to_hide() {
+    //   return this.filtered_assignments
+    //     .filter( operator => operator.filtered_jobs.length == 0 )
+    //     .map( o => o.operator._id )
+    // },
 
     unassigned_jobs() {
       return this.$store.state.job.unassigned_job_list
@@ -209,7 +218,7 @@ export default {
 
     jobs_view() {
       return [
-        ...this.operators_with_jobs_to_show, 
+        ...this.filtered_assignments, 
         {
           operator: {
             _id: 'unassigned',
@@ -225,8 +234,20 @@ export default {
 
   methods: {
 
+    // checkDepartment(dep_id) {
+    //   // Return true if filter is not set or equal to the department checked
+    //   return [dep_id, ''].includes(this.filters.department_id)
+    //     ? true
+    //     : false
+    // },
+
     matchJobToFilters(job) {
       return matchJobToFilters(job, this.filters, this.search_fields)
+    },
+
+    sortActiveJobFirst(job1, job2) {
+      if (!job1.active && job2.active) return 1
+      else return -1
     },
 
     getPicPath(operator) {

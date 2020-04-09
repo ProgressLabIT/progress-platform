@@ -26,8 +26,9 @@
           </v-col>
 
           <v-spacer></v-spacer>
-          <v-col cols="auto" >
-            <v-btn small 
+          <v-col cols="auto">
+            <!-- CREATE NEW WORK ORDER -->
+            <v-btn small v-if="$route.name == 'workOrderList'"
               :color="$theme.blue"
               @click="$router.push({ name: 'newWorkOrder'})">
               crea ordine
@@ -67,6 +68,25 @@
       <v-col cols="3" class="pa-6 d-flex flex-column">
         <h5 class="highlight text-uppercase">filtri</h5>
         
+
+        <!-- FILTER JOBS BY DEPARTMENT -->
+        <v-autocomplete v-if="$route.name == 'jobList'"
+          autocomplete="off"
+          v-model="department"
+          :items="$store.state.org.departments"
+          item-value="_id"
+          single-line hide-details
+          :filter="filterOperator"
+          label="Dipartimento"
+          class="mb-6 flex-grow-0">
+          <template v-slot:item="{ item: list_item }">
+            {{ list_item.name }}
+          </template>
+          <template v-slot:selection="{ item: selection }">
+            {{ selection.name }}
+          </template>
+        </v-autocomplete>
+
         <!-- Search box: instructions shows on mouse over info icon, in turn shown only on mouse over input -->
         <v-hover v-slot:default="{ hover }">
           <v-text-field
@@ -111,14 +131,15 @@
             </template>
           </v-text-field>
         </v-hover>
-
+        
         <!-- Checkboxes -->
         <v-checkbox dense hide-details 
           :color="$theme.blue"
           v-for="(filter, key) in bool_filters" 
           :key="key" 
           :label="filter.label"
-          v-model="filter.value">
+          v-model="filter.value"
+          class="mt-2">
         </v-checkbox>
 
         <v-spacer></v-spacer>
@@ -172,22 +193,25 @@ export default {
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       },
       search_string: '',
+      department: ''
     }
   },
 
   computed: {
     filters() {
-      const search_string = this.search_string || ''
+      const search_string = this.search_string
       const bools_map = {}
       for (const [k,v] of Object.entries(this.bool_filters)) {
         bools_map[k] = v.value
       }
-      return { search_string, ...bools_map }
+      const department = this.department
+      return { search_string, ...bools_map, department }
     },
 
     filters_active() {
       return Object.values(this.bool_filters).some(f => f.value === false) 
-        || this.search_string != ''
+        || this.search_string != '' 
+        || this. department != ''
     }
   },
 
