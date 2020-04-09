@@ -45,7 +45,7 @@
               <v-chip small>
                 <span class="weight-medium solid-white mr-1">{{ o.filtered_jobs.length }}</span>
                 di 
-                <span class="weight-medium solid-white ml-1">{{ o.assigned_jobs.length }}</span>
+                <span class="weight-medium solid-white ml-1">{{ o.assigned_jobs_count }}</span>
 
               </v-chip>
             </v-col>
@@ -186,7 +186,7 @@ export default {
 
         return {
           operator: a.operator,
-          assigned_jobs: a.assigned_jobs.sort(sortActiveJobFirst),
+          assigned_jobs_count: a.assigned_jobs.length,
           filtered_jobs: filtered_jobs.sort(sortActiveJobFirst)
         }
       })

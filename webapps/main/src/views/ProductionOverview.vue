@@ -234,7 +234,7 @@ export default {
   beforeCreate() {
     this.$store.commit("UPDATE_SCREEN_TITLE", "monitoraggio produzione")
     this.$store.dispatch("loadWorkOrders")
-    this.$store.dispatch("loadJobs")
+    // this.$store.dispatch("loadJobs")
     this.$store.dispatch("loadDepartments")
     this.$store.dispatch("loadJobAssignments")
     this.$store.dispatch("loadUsers")

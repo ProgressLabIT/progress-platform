@@ -3,7 +3,11 @@
 
       <v-list-item-avatar v-if="src">
         <slot name="avatar">
-          <v-img :src="src"></v-img>
+          <v-img :src="src">
+            <template v-slot:placeholder>
+              <slot name="placeholder"></slot>
+            </template>
+          </v-img>
         </slot>
       </v-list-item-avatar>
       
@@ -60,7 +64,7 @@ export default {
   methods: {
     emit() {
       this.$emit('iconClick')
-    }
+    },
   }
 }
 </script>

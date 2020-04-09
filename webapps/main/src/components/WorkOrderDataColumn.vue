@@ -33,23 +33,6 @@
     </v-progress-linear>
 
     <v-row dense class="ml-0 mb-6 mt-4" justify="space-between">
-      <!-- <v-tabs
-        background-color="transparent"
-        v-model="current_view"
-        :color="$theme.whitehigh"
-        hide-slider
-        active-class="highlight font-weight-bold"
-        class="mr-n2">
-        <v-tab 
-          v-for="(tab, index) in views" 
-          :key="tab.name" 
-          :id="tab.name"
-          class="text-uppercase pa-0 ma-0">
-          <h5 :class="index != current_view ? 'font-weight-medium' : ''">
-            {{ tab.text }}
-          </h5>
-        </v-tab>
-      </v-tabs> -->
       <div 
         v-for="(tab, index) in views" 
         :key="index">
@@ -80,7 +63,7 @@
             <span class="highlight weight-medium">{{ woInfoValue(i.name) }}</span>
           </v-row>
         </v-tab-item>
-        <v-tab-item key="people">
+        <v-tab-item key="people" class="ml-n2">
           <BaseAvatarListElement 
             v-for="operator in assignments"
             :key="operator._id"
@@ -95,7 +78,6 @@
 </template>
 
 <script>
-// import { formatDateString } from '@/lib/TimeHandling.js'
 import { getPicPath } from '@/lib/media.js'
 import { durationFromMillisec } from '@/lib/duration.js'
 import { DateTime as DT } from 'luxon'
@@ -114,10 +96,6 @@ export default {
       type: Object,
       required: true,
     },
-    job_data: {
-      type: Array,
-      required: true
-    }
   },
 
   data () {
@@ -145,10 +123,10 @@ export default {
   computed: {
     assignments() {
       let assignments = {}
-      this.job_data.forEach( j => {
+      this.wo_data.jobs.forEach( j => {
         if (j.assigned_to == null) {
           if ('unassigned' in assignments) assignments.unassigned.jobs.push(j)
-          else assignments.unassigned.jobs = [j]
+          else assignments.unassigned = { jobs: [j] }
         }
 
         else {
@@ -249,7 +227,7 @@ export default {
     },
 
     panelHeight() {
-      let height = document.body.clientHeight - 380
+      let height = document.body.clientHeight - 360
       return height + 'px'
     }
   }

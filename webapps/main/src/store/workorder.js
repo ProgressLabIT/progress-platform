@@ -7,12 +7,17 @@ const workorder = {
 
   state: {
     wo_list: [],
+    wo_data: {},
   },
 
   mutations: {
     LOAD_WORK_ORDERS(state, list) {
       Vue.set(state, 'wo_list', list)
     },
+
+    LOAD_WORK_ORDER_DATA(state, wo_data) {
+      Vue.set(state, 'wo_data', wo_data)
+    }
   },
 
   actions: {
@@ -35,6 +40,18 @@ const workorder = {
           .then(resolve())
         })
         .catch( err => reject(err))
+      })
+    },
+
+    loadWorkOrderData({ commit }, wo_key) {
+      return new Promise( (resolve, reject) => {
+        api
+        .get(`/work-order/${wo_key}`)
+        .then( resp => {
+          commit('LOAD_WORK_ORDER_DATA', resp.data.detail)
+          resolve()
+        })
+        .catch( err => reject(err) )
       })
     }
   }

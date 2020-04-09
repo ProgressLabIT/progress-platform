@@ -6,7 +6,8 @@ const job = {
   state: {
     job_list: [],
     assigned_job_list: [],
-    unassigned_job_list: []
+    unassigned_job_list: [],
+    temp_job_data: {},
   },
 
   mutations: {
@@ -23,10 +24,13 @@ const job = {
 
   actions: {
     loadJobs({ commit }) {
-      api
-        .get('job')
-        .then( resp => {
-          commit('LOAD_JOBS', resp.data.detail)
+      return new Promise((resolve, reject) => {
+        api.get('job')
+          .then( resp => {
+            commit('LOAD_JOBS', resp.data.detail)
+            resolve()
+          })
+          .catch(err => reject(err))
         })
     },
 
@@ -36,6 +40,19 @@ const job = {
         .then(resp => {
           commit('LOAD_ASSIGNMENTS', resp.data.detail)
         })
+    },
+
+    updateJobs({ dispatch }, { job_updates, wo_key }) {
+      return new Promise((resolve, reject) => {
+        console.log(wo_key)
+        api.post(`job/update`, job_updates)
+        .then( () => {
+          console.log(wo_key)
+          dispatch('loadWorkOrderData', wo_key)
+          .then( () => resolve() )
+        })
+        .catch( err => reject(err))
+      })
     }
   }
 }

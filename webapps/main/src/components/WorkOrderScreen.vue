@@ -23,18 +23,23 @@
     <template v-slot:content>
       <v-container fluid class="fill">
         <v-row no-gutters class="fill-height">
-          <v-col cols="3" class="fill-height">
-            <WorkOrderDataColumn v-bind="{ wo_data, job_data }">
-            </WorkOrderDataColumn>
+          
+          <v-col cols="4" lg="3" class="fill-height pr-9" style="position:fixed">
+            <v-row>
+              <v-col class="py-0">
+                <WorkOrderDataColumn v-bind="{ wo_data }">
+                </WorkOrderDataColumn>
+              </v-col>
+              <v-divider vertical ></v-divider>
+            </v-row>
           </v-col>    
-          <v-col cols="auto" class="px-3 py-0">
-            <v-divider vertical ></v-divider>
-          </v-col>
-          <v-col class="py-0">
+
+          <v-col cols="8"  lg="9" offset="4" offset-lg="3" class="py-0 fill-height">
             <keep-alive>
-              <router-view v-bind="{ wo_data, job_data }"></router-view>
+              <router-view v-bind="{ wo_data }"></router-view>
             </keep-alive>
           </v-col>
+
         </v-row>
       </v-container>
     </template>
@@ -45,7 +50,6 @@
 <script>
 import BaseModalScreen from '@/components/BaseModalScreen.vue'
 import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue'
-import {api} from '@/lib/apiCall.js'
 
 export default {
 
@@ -62,10 +66,6 @@ export default {
     return { 
       show_modal: true,
       links: [
-        // {
-        //   name: 'workOrderHome',
-        //   title: 'panoramica',
-        // },
         {
           name: 'workOrderJobs',
           title: 'lavori'
@@ -75,8 +75,6 @@ export default {
           title: 'storico'
         }
       ],
-      wo_data: { phase_sequence: [] }
-
     }
   },
 
@@ -85,9 +83,13 @@ export default {
       return 'WorkOrder/' + this.wo_key
     },
 
-    job_data() {
-      return this.$store.state.job.job_list.filter( job => job.wo_id == this.wo_id)
-    },
+    // job_data() {
+    //   return this.$store.state.job.job_list.filter( job => job.wo_id == this.wo_id)
+    // },
+
+    wo_data() {
+      return this.$store.state.workorder.wo_data || { phase_sequence: []}
+    }
   },
 
   methods: {
@@ -100,13 +102,14 @@ export default {
         this.show_modal = false
         this.$router.push({ name: this.$route.query.back_to })
       // }
-    }
+    },
+
+    
   },
 
   created() {
-    api.get(`/work-order/${this.wo_key}`).then( resp => {
-      this.wo_data = resp.data.detail
-    })
+    this.$store.dispatch('loadWorkOrderData', this.wo_key)
+    this.$store.dispatch('loadUsers')
   }
 }
 </script>

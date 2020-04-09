@@ -21,7 +21,21 @@
 export default {
 
   name: 'BaseTooltipIcon',
-  props: ['icon', 'tooltip', 'color'],
+  props: {
+    icon: {
+      type: String,
+      required: true,
+    },
+    tooltip: {
+      type: String,
+      required: true,
+    },    
+    color: {
+      type: String,
+      default: 'grey'
+    }
+  },
+
   data () {
     return {
     }

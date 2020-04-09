@@ -19,6 +19,7 @@ const org = {
         .get('department')
         .then( resp => commit('LOAD_DEPARTMENTS', resp.data.detail))
     },
+
   }
 }
 
