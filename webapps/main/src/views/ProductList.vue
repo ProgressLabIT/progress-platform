@@ -184,12 +184,7 @@ export default {
       this.restoreProduct(this.deleteSnackbar._key)
       this.deleteSnackbar.show = false
     }
-
   },
-
-  beforeCreate() {
-    this.$store.commit("UPDATE_SCREEN_TITLE", 'Libreria prodotti')
-  }
 };
 </script>
 
