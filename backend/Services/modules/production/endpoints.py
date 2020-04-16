@@ -202,6 +202,67 @@ async def get_assignment_list(user_id: str = None):
   # return APIResponse(detail=assignment_list)
 
 
+@router.get('/job/{job_key}')
+async def get_job_data(job_key: str):
+
+  try:
+    job_data = db.collection('Job').get(job_key)
+  except:
+    status_code=500
+    response = {
+      'status_code': status_code,
+      'message': "Couldn't retrieve data from the DB",
+      'error': traceback.format_exc()
+    }
+    raise HTTPException(status_code=status_code, detail=response)
+  
+  # print(job_data)
+  if job_data['stage'] == 'created':
+  # job hasn't been started yet. Retrieve latest procedure
+    query = """
+      FOR p IN Phase
+      FILTER p._id == @phase_id
+        FOR s IN p.step_sequence
+        RETURN DOCUMENT(s)
+    """
+    bind_vars = { 'phase_id': job_data['phase_id'] }
+    
+    try:
+      # db_steps = db.collection('Step').find({ 'phase_id': job_data['phase_id'] })
+      db_steps = db.aql.execute(query, bind_vars=bind_vars)
+      job_steps = [s for s in db_steps]
+      # print(job_steps)
+    except:
+      status_code=500
+      response = {
+        'status_code': status_code,
+        'message': "Couldn't retrieve data from the DB",
+        'error': traceback.format_exc()
+      }
+      raise HTTPException(status_code=status_code, detail=response)
+
+    for s in job_steps:
+      try: 
+        filenames = search_step_media(s['_key'])
+        s['media'] = [media_name for media_name in filenames]
+        # print(s)
+      except:
+        status_code=500
+        response = {
+          'status_code': status_code,
+          'message': f"Error while retrieving media info about {s['_id']}",
+          'error': traceback.format_exc()
+        }
+        raise HTTPException(status_code=status_code, detail=response)
+
+    job_data['step_sequence'] = job_steps
+    print(job_data)
+
+    response = {
+      'message': f"Retrieved data for Job/{job_key}",
+      'detail': JobWithProcedure(**job_data)
+    }
+    return APIResponse(**response)
 
 
   

@@ -180,6 +180,9 @@ class WorkOrderDetails(WorkOrderFull):
   jobs: List[Job]
 
 
+class JobWithProcedure(Job):
+  step_sequence: List[StepWithMediaInfo] = []
+
 
 # class JobAssignment(FlexModel):
 #   id: str = Field(..., alias="_id")
