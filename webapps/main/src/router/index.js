@@ -100,6 +100,40 @@ const routes = [
     ]
   },
   {
+    path: "/worksession/select-job",
+    name: "userJobs",
+    component: () => import ("@/views/UserJobs.vue")
+  },
+  {
+    path: "/worksession/job/:job_key",
+    name: "workSession",
+    component: () => import ("@/views/WorkSessionScreen.vue"),
+    props: true,
+    redirect: { name: "jobSteps" },
+    children: [
+      {
+        path: "steps",
+        name: "jobSteps",
+        component: () => import ("@/views/WorkSessionSteps.vue"),
+      },
+    //   {
+    //     path: "docs",
+    //     name: "jobDocs",
+    //     component: () => import ("@/views/WorkSessionDocs.vue"),
+    //   },
+    //   {
+    //     path: "bom",
+    //     name: "jobBom",
+    //     component: () => import ("@/views/WorkSessionBom.vue"),
+    //   },
+      // {
+      //   path: "issues",
+      //   name: "jobIssues",
+      //   component: () => import ("@/views/WorkSessionIssues.vue")
+      // }
+    ]
+  },
+  {
     path: "*",
     name: "notFound",
     component: () => import ("@/views/404_NotFound.vue")

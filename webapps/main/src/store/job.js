@@ -7,7 +7,6 @@ const job = {
     job_list: [],
     assigned_job_list: [],
     unassigned_job_list: [],
-    temp_job_data: {},
   },
 
   mutations: {
@@ -34,12 +33,17 @@ const job = {
         })
     },
 
-    loadJobAssignments({ commit }) {
-      api
-        .get('job-assignment')
+    loadJobAssignments({ commit }, operator_id) {
+      return new Promise((resolve) => {
+        api
+        .get('job-assignment', {
+          params: { user_id: operator_id }
+        })
         .then(resp => {
           commit('LOAD_ASSIGNMENTS', resp.data.detail)
+          resolve()
         })
+      })
     },
 
     updateJobs({ dispatch }, { job_updates, wo_key }) {

@@ -10,6 +10,7 @@ import workorder from "@/store/workorder"
 import job from "@/store/job"
 import org from "@/store/org"
 import nav from "@/store/nav"
+import worksession from "@/store/worksession"
 
 
 
@@ -53,6 +54,7 @@ export default new Vuex.Store({
     workorder,
     job,
     org,
-    nav
+    nav,
+    worksession
   }
 });
