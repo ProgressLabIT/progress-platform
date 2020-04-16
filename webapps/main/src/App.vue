@@ -4,17 +4,23 @@
 
     <v-navigation-drawer 
       temporary 
+      :color="$theme.surface1"
       app width="400"
       v-model="show_drawer">
       <v-container>
-        <v-tabs vertical :color="$theme.whitehigh">
+        <v-tabs vertical background-color="transparent">
+          
           <v-tab :to="{ name: 'productList'}" class="display mb-2">
             Libreria prodotti
           </v-tab>
-          <v-tab :to="{ name: 'productionOverview'}" class="display">
+          
+          <v-tab :to="{ name: 'productionOverview'}" class="display mb-2">
             Monitoraggio produzione
           </v-tab>
 
+          <v-tab :to="{ name: 'userJobs'}" class="display">
+            Sessione di lavoro
+          </v-tab>
           
         </v-tabs>
       </v-container>
@@ -47,7 +53,7 @@ export default {
     AppFooter,
   },
 
- data() {
+  data() {
     return {
       show_drawer: false,
     }

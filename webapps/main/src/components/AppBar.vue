@@ -3,16 +3,22 @@
 
       <!-- MENU ICON AND WINDOW TITLE -->
       <v-app-bar-nav-icon 
+      ref="icon"
         style="color: rgba(255,255,255,.6);" 
         @click="$emit('showDrawer')"/>
       <h3 class=" display">{{ screen_title }}</h3>
 
       <!-- USER NAME & BADGE -->
       <h5 class=" display highlight ml-auto">{{ username }}</h5>
-      <v-avatar size="28" class="my-auto mr-3 ml-2">
-        <v-img :src="avatar_url"></v-img>
-      </v-avatar>
-
+      <v-hover  v-slot:default="{ hover }">
+        <v-avatar size="28" class="my-auto mr-3 ml-2">
+          <v-img v-if="!hover" :src="avatar_url"></v-img>
+          <v-icon v-else 
+            @click="$router.push({name: 'login'})">
+            mdi-exit-to-app
+          </v-icon>
+        </v-avatar>
+      </v-hover>
       
   </v-app-bar>
 </template>
@@ -25,13 +31,20 @@ export default {
   data() {
     return {
       show_drawer: false,
+      sections: {
+        product: 'Libreria prodotti',
+        production: 'monitoraggio produzione',
+        worksession: 'sessione di lavoro'
+      }
     }
   },
 
   computed: {
     
     screen_title() {
-      return this.$store.state.screen_title
+      // return this.$store.state.screen_title
+      const section = this.$route.path.split('/')[1]
+      return this.sections[section]
     },
 
     user() {
