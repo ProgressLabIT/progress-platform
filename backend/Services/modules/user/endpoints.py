@@ -32,7 +32,7 @@ async def start_user_session(user: UserCredentials):
       detail=response
     )
 
-  return User(**user.dict())
+  return User(**user)
 
 
 
