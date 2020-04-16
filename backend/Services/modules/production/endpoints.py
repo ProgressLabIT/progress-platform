@@ -163,13 +163,15 @@ async def get_job_list():
   return APIResponse(detail=job_list)
 
 
+
 @router.get('/job-assignment')
-async def get_assignment_list():
+async def get_assignment_list(user_id: str = None):
 
   result = db.aql.execute("""
     LET assigned_jobs_by_operator = (
+      LET user_id = @user_id ? : '*'
       FOR o IN User
-      FILTER o.roles.operator == true
+      FILTER o.roles.operator == true && o._id LIKE user_id
       LET assigned_jobs = (    
         FOR j in Job
         FILTER !j.trash && j.assigned_to == o._id
@@ -192,12 +194,22 @@ async def get_assignment_list():
       assigned_jobs_by_operator: assigned_jobs_by_operator,
       unassigned_jobs: unassigned_jobs
     }  
-  """).next()
+  """, bind_vars= { "user_id": user_id}).next()
 
   return APIResponse(detail=AssignmentsResponse(**result))
   # cursor = db.collection('assigned_to').find({ 'rel_type': 'JobOperator'})
   # assignment_list = [JobAssignment(**a) for a in cursor]
   # return APIResponse(detail=assignment_list)
+
+
+
+
+  
+  
+    
+
+ 
+
 
 
 
