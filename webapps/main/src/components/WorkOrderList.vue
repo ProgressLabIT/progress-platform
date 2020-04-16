@@ -111,7 +111,7 @@ export default {
     return {
       table_headers: [
         { value: 'wo_code', text: 'CODICE'},
-        { value: 'wo_line_no', text: 'RIGA', },
+        { value: 'wo_line', text: 'RIGA', },
         { value: 'product_code', text: 'PRODOTTO'},
         { value: 'progress', text: 'AVANZAMENTO', width: '30%' },
         { value: 'qt_completed', text: 'QC', align: 'end'},
@@ -139,7 +139,7 @@ export default {
       return this.wo_list.filter( wo => {
         
         // Define wo fields to use with the text search
-        const search_fields = ['wo_code', 'wo_line_no', 'product_code']
+        const search_fields = ['wo_code', 'wo_line', 'product_code']
         
         /* 
         Initialize filter results. 

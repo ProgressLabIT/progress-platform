@@ -142,9 +142,9 @@ export default {
 
       wo_data: [
         { name: 'wo_code', text: 'codice op' },
-        { name: 'wo_line_no', text: 'riga op' },
+        { name: 'wo_line', text: 'riga op' },
         { name: 'phase_alias', text: 'fase' },
-      ]
+      ],
     }
   },
 

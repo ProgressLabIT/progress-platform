@@ -6,7 +6,7 @@
     </v-row>
     <v-row dense justify="space-between" class="display highlight weight-bold mx-0">
       <h3>{{ wo_data.wo_code }}</h3>
-      <h3>{{ wo_data.wo_line_no }}</h3>
+      <h3>{{ wo_data.wo_line }}</h3>
     </v-row>
     <v-row dense justify="space-between" class="text-uppercase mx-0 mt-6">
       <h5>prodotto</h5>

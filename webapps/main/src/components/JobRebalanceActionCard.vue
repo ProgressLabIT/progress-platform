@@ -194,7 +194,7 @@ export default {
       new_job_keys: [
         'wo_id', 
         'wo_code', 
-        'wo_line_no', 
+        'wo_line', 
         'phase_id', 
         'phase_alias',
         'product_id',

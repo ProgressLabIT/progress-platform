@@ -109,7 +109,7 @@ export default {
     draggable
   },
 
-  props: ['phase_no', 'step_no', 'edit_mode'],
+  props: ['phase_index', 'step_index', 'edit_mode'],
 
   data() {
     return {
@@ -126,8 +126,8 @@ export default {
     },
 
     current_step() {
-      let procedure = this.$store.state.process.temp[this.phase_no].steps
-      return procedure[this.step_no]
+      let procedure = this.$store.state.process.temp[this.phase_index].steps
+      return procedure[this.step_index]
     },
 
     step_checks: {
@@ -136,10 +136,10 @@ export default {
       },
 
       set(value) {
-        let phase_no = this.phase_no
-        let step_no = this.step_no
+        let phase_index = this.phase_index
+        let step_index = this.step_index
 
-        this.$store.commit('UPDATE_STEP_DETAILS', { phase_no, step_no, field: 'checks', value })
+        this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value })
       }
     }
   },
@@ -147,30 +147,30 @@ export default {
   methods: {
 
     addCheck() {
-      let phase_no = this.phase_no
-      let step_no = this.step_no
+      let phase_index = this.phase_index
+      let step_index = this.step_index
 
       let new_step = this.current_step
       new_step.checks.push('')
       // Handle cases in which step_checks is null
 
-      this.$store.commit('ADD_OR_UPDATE_STEP', { phase_no, step_no, step_data: new_step })
+      this.$store.commit('ADD_OR_UPDATE_STEP', { phase_index, step_index, step_data: new_step })
     },
 
     udpateCheck(index, text) {
-        let phase_no = this.phase_no
-        let step_no = this.step_no
+        let phase_index = this.phase_index
+        let step_index = this.step_index
         let new_checklist = this.step_checks
         new_checklist[index] = text
-        this.$store.commit('UPDATE_STEP_DETAILS', { phase_no, step_no, field: 'checks', value: new_checklist })
+        this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value: new_checklist })
     },
 
     deleteCheck(index) {
-      let phase_no = this.phase_no
-      let step_no = this.step_no
+      let phase_index = this.phase_index
+      let step_index = this.step_index
       let new_checklist = this.step_checks
       new_checklist.splice(index, 1)
-      this.$store.commit('UPDATE_STEP_DETAILS', { phase_no, step_no, field: 'checks', value: new_checklist }) 
+      this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value: new_checklist }) 
       this.confirming_delete = null
     }
   },

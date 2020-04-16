@@ -127,7 +127,7 @@ export default {
 
   name: 'StepInstruction',
 
-  props: ['phase_no', 'step_no', 'edit_mode'],
+  props: ['phase_index', 'step_index', 'edit_mode'],
 
   components: {
     MediaViewer
@@ -143,13 +143,13 @@ export default {
 
   computed: {
 
-    pic_no() {
+    pic_index() {
       const rand = Math.random()*5
       return Math.ceil(rand)
     },
 
     step_data() {
-      return this.$store.state.process.temp[this.phase_no].steps[this.step_no]
+      return this.$store.state.process.temp[this.phase_index].steps[this.step_index]
     },
 
     media_list() {
@@ -173,8 +173,8 @@ export default {
       media.forEach( m => {
         const temp_src = window.URL.createObjectURL(m)
         this.$store.commit("ADD_TEMP_MEDIA", { 
-          phase_no: this.phase_no,
-          step_no: this.step_no,
+          phase_index: this.phase_index,
+          step_index: this.step_index,
           media: {
             filename: m.name,
             src: temp_src,
@@ -190,15 +190,15 @@ export default {
       const media_to_delete = this.media_list[index]
       if (media_to_delete.temp) {
         this.$store.commit('DELETE_TEMP_MEDIA', {
-          phase_no: this.phase_no,
-          step_no: this.step_no,
+          phase_index: this.phase_index,
+          step_index: this.step_index,
           index: index
         })
       } 
       else {
         this.$store.commit('DELETE_SAVED_MEDIA', {
-          phase_no: this.phase_no,
-          step_no: this.step_no,
+          phase_index: this.phase_index,
+          step_index: this.step_index,
           index: index
         })
       }
@@ -206,8 +206,8 @@ export default {
 
     restoreMedia(index) {
       this.$store.commit('RESTORE_SAVED_MEDIA', {
-        phase_no: this.phase_no,
-        step_no: this.step_no,
+        phase_index: this.phase_index,
+        step_index: this.step_index,
         index: index
       })
     },  

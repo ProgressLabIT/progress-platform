@@ -25,58 +25,58 @@ const process = {
       Vue.set(state, 'temp', _cloneDeep(process))
     },
 
-    UPDATE_PHASE_PARAMS(state, { phase_no, param, value }) {
-      Vue.set(state.temp[phase_no].params, param, value)
+    UPDATE_PHASE_PARAMS(state, { phase_index, param, value }) {
+      Vue.set(state.temp[phase_index].params, param, value)
     },
 
-    UPDATE_PROCEDURE(state, { phase_no, procedure }) {
-      Vue.set(state.temp[phase_no], 'steps', procedure)
+    UPDATE_PROCEDURE(state, { phase_index, procedure }) {
+      Vue.set(state.temp[phase_index], 'steps', procedure)
     },
 
-    UPDATE_STEP_DETAILS(state,  { phase_no, step_no, field, value })  {
-      let phase = state.temp[phase_no]
-      let step = phase.steps[step_no]
+    UPDATE_STEP_DETAILS(state,  { phase_index, step_index, field, value })  {
+      let phase = state.temp[phase_index]
+      let step = phase.steps[step_index]
       Vue.set(step, field, value)
     },
 
-    ADD_TEMP_MEDIA(state, { phase_no, step_no, media }) {
-      let phase = state.temp[phase_no]
-      let step = phase.steps[step_no]
+    ADD_TEMP_MEDIA(state, { phase_index, step_index, media }) {
+      let phase = state.temp[phase_index]
+      let step = phase.steps[step_index]
       step.media.push(media)
     },
 
-    DELETE_SAVED_MEDIA(state, { phase_no, step_no, index }) {
-      let phase = state.temp[phase_no]
-      let step = phase.steps[step_no]
+    DELETE_SAVED_MEDIA(state, { phase_index, step_index, index }) {
+      let phase = state.temp[phase_index]
+      let step = phase.steps[step_index]
       let media = step.media[index]
       Vue.set(media, 'trash', true)
     },
 
-    RESTORE_SAVED_MEDIA(state, { phase_no, step_no, index }) {
-      let phase = state.temp[phase_no]
-      let step = phase.steps[step_no]
+    RESTORE_SAVED_MEDIA(state, { phase_index, step_index, index }) {
+      let phase = state.temp[phase_index]
+      let step = phase.steps[step_index]
       let media = step.media[index]
       Vue.set(media, 'trash', false)
     },
 
-    DELETE_TEMP_MEDIA(state, { phase_no, step_no, index }) {
-      let phase = state.temp[phase_no]
-      let media_list = phase.steps[step_no].media
+    DELETE_TEMP_MEDIA(state, { phase_index, step_index, index }) {
+      let phase = state.temp[phase_index]
+      let media_list = phase.steps[step_index].media
       media_list.splice(index, 1)
     },
 
-    ADD_OR_UPDATE_STEP(state, { phase_no, step_no, step_data}) {
-      let procedure = state.temp[phase_no].steps
-      Vue.set(procedure, step_no, step_data)
+    ADD_OR_UPDATE_STEP(state, { phase_index, step_index, step_data}) {
+      let procedure = state.temp[phase_index].steps
+      Vue.set(procedure, step_index, step_data)
     },
 
-    DELETE_STEP(state, { phase_no, step_no }) {
-      let procedure = state.temp[phase_no].steps
-      procedure.splice(step_no, 1)
+    DELETE_STEP(state, { phase_index, step_index }) {
+      let procedure = state.temp[phase_index].steps
+      procedure.splice(step_index, 1)
     },
 
-    DELETE_PHASE(state, phase_no) {
-      state.temp.splice(phase_no, 1)
+    DELETE_PHASE(state, phase_index) {
+      state.temp.splice(phase_index, 1)
     },
 
     LOAD_OPERATIONS(state, op_list) {

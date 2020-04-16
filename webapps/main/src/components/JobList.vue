@@ -151,7 +151,7 @@ export default {
     return {
       job_data: [
         { text: 'OP', value: 'wo_code', },
-        { text: 'RIGA', value: 'wo_line_no', },
+        { text: 'RIGA', value: 'wo_line', },
         { text: 'PRODOTTO', value: 'product_code', },
         { text: 'FASE', value: 'phase_alias', },
         { text: 'PROGRESSO', value: 'progress', width: '30%'},
@@ -161,7 +161,7 @@ export default {
       ],
       search_fields: [
         'wo_code', 
-        'wo_line_no', 
+        'wo_line', 
         'product_code',
         'product_description',
         'phase_alias',

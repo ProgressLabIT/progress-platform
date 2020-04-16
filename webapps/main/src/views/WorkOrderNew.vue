@@ -155,7 +155,7 @@ export default {
       let new_records = this.wo_lines.map( (line, index) => {
         return {
           wo_code: this.wo_code,
-          wo_line_no: index + 1,
+          wo_line: index + 1,
           product_id: 'Product/' + line.product._key,
           product_code: line.product.code,
           product_description: line.product.description,

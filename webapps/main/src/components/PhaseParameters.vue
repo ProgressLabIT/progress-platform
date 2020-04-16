@@ -124,7 +124,7 @@ export default {
 
     updateParam(param_key, value) {
       this.$store.commit('UPDATE_PHASE_PARAMS', {
-        phase_no: this.current_phase,
+        phase_index: this.current_phase,
         param: param_key,
         value: value,
       })
