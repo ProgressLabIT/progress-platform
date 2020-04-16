@@ -29,7 +29,7 @@
                         v-model="credentials.username" 
                         label="Nome utente"
                         autocomplete="off"/>
-                      <v-text-field v-model="credentials.psw" type="password" label="Password"/>
+                      <v-text-field v-model="credentials.password" type="password" label="Password"/>
                     </v-card-text>
                     <v-card-actions>
                       <v-btn block type="submit" :color="$theme.blue">
@@ -49,12 +49,15 @@
                 </v-container>
 
                 <v-container v-else-if="verified" key="success">
-                  <v-avatar size="90" class="ml-3">
-                    <v-img :src="`/media/user/${user.pic}.jpg`"></v-img>
-                  </v-avatar>
+                  <BaseUserAvatar 
+                    size="90" 
+                    :user="user" 
+                    :show_name="false"
+                    class="ml-3">
+                  </BaseUserAvatar>
                     
                   <transition name="slide-fade" mode="out-in"> 
-                    <span class="highlight text-uppercase ml-6" :key="user_message"> 
+                    <span class="highlight text-uppercase ml-6" :key="user_message">
                       {{ user_message }}
                     </span>
                   </transition>
@@ -77,15 +80,19 @@
 
 <script>
 import { api } from '@/lib/apiCall.js'
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
+
 export default {
 
   name: 'LoginScreen',
+
+  components: { BaseUserAvatar },
 
   data () {
     return {
       credentials: {
         username: null,
-        psw: null,
+        password: null,
         // verified: false,
       },
       logging_in: false,
@@ -122,7 +129,7 @@ export default {
         .catch( err => {
           this.logging_in = false
           this.credentials.username = null
-          this.credentials.psw = null
+          this.credentials.password = null
           window.alert(err)
         })
     }
