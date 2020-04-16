@@ -192,8 +192,9 @@ export default {
     }
   },
 
-  created() {
-    this.$store.dispatch('loadJobData', this.job_key)
+  beforeMount() {
+    const job_key = this.job_key
+    this.$store.dispatch('loadJobData', {job_key})
   }
 }
 </script>

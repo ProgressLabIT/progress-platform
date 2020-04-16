@@ -218,3 +218,7 @@ span .display {
 .v-data-table-header th {
   white-space: nowrap;
 }
+
+.pointer {
+  cursor: pointer;
+}

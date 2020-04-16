@@ -114,6 +114,7 @@ const routes = [
       {
         path: "steps",
         name: "jobSteps",
+        props: true,
         component: () => import ("@/views/WorkSessionSteps.vue"),
       },
     //   {
