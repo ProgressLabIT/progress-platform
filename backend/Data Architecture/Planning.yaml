@@ -9,7 +9,7 @@
 # WorkOrder
   _key: str (random)
   wo_code: str
-  wo_line_no: str
+  wo_line: int
   priority: bool
   # global_queue_position: int
   customer_data: 
@@ -34,7 +34,7 @@
   ## relationship to master data
   * wo_id: str + rel (1:N --belongs_to--> 1:N)
     wo_code: str
-    wo_line_no: str
+    wo_line: int
   * phase_id: str + rel (1:1 --belongs_to--> 0:N)
     phase_alias: str
   * product_id: _key

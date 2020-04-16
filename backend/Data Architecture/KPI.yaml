@@ -102,7 +102,7 @@
 
 # WorkOrder
   wo_code: str
-  line_no: int
+  wo_line: int
   created_at: ISOdts
   started_at: ISOdts
   planned_at: ISOdts
