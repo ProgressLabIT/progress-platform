@@ -1,12 +1,15 @@
+import os
+import traceback
 from typing import List
-from fastapi import APIRouter, UploadFile, HTTPException, Form, File
-from fastapi.encoders import jsonable_encoder
-from utils.db import db
-from utils.api import APIResponse
-from .models import ProductData, ProductDoc, ProductFull
-from utils.file import UserFile
-import os, traceback
 from fnmatch import fnmatch
+
+from fastapi import APIRouter, Form, File, HTTPException, UploadFile
+from fastapi.encoders import jsonable_encoder
+
+from .models import ProductData, ProductDoc, ProductFull
+from utils.api import APIResponse
+from utils.db import db
+from utils.file import UserFile
 
 router = APIRouter()
 

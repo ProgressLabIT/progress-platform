@@ -1,6 +1,8 @@
-from typing import List, Optional
-from pydantic import Field
 from enum import Enum
+from typing import List, Optional, Union
+
+from pydantic import Field
+
 from utils.base_models import FlexModel
 
 

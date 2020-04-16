@@ -1,11 +1,15 @@
-from typing import List, Dict
+import traceback
+from typing import Dict, List
+
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
+
 from .models import *
 from modules.process.models import PhaseProcedure
+from modules.process.endpoints import search_step_media
 from utils.db import db
 from utils.api import APIResponse
-import traceback
+
 
 router = APIRouter()
 # work_orders = db.collection('WorkOrder')

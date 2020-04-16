@@ -1,15 +1,18 @@
+import os
+import traceback
 from enum import Enum
 from typing import List, Optional
-from fastapi import APIRouter, UploadFile, HTTPException, Form, File
+from fnmatch import fnmatch
+
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
-from utils.db import db
-from utils.api import APIResponse
+
+from .models import *
 from utils import dt
-from .models import PhaseProcedure, PhaseUpdate, Step, ProcessUpdate
+from utils.api import APIResponse
+from utils.db import db
 from utils.file import UserFile
-from fnmatch import fnmatch
-import os, traceback
 
 
 router = APIRouter()
@@ -23,8 +26,7 @@ async def get_operation_list():
   return [o for o in operation_db.all()]
 
 
-@router.get("/step/{step_key}/media")
-async def get_step_media(step_key: str):
+def search_step_media(step_key: str):
 
   step_media = UserFile.step_media(step_key)
   media_folder_exists = os.path.isdir(step_media.folder_path)
@@ -34,6 +36,11 @@ async def get_step_media(step_key: str):
 
   else:
     return []
+
+
+@router.get("/step/{step_key}/media")
+async def get_step_media(step_key: str):
+  return search_step_media(step_key)
 
 
 
@@ -213,6 +220,27 @@ async def update_process(process: List[PhaseUpdate], product_key):
     )
 
 
+@router.get('/procedure/{phase_id}')
+async def get_phase_procedure(phase_id: str):
+
+  query = """
+    LET step_sequence = FIRST(
+      FOR p IN Phase
+      FILTER p._id == @phase_id
+      RETURN p.step_sequence
+    )
+
+    FOR s in step_sequence
+    RETURN s
+  """
+
+  db_steps = db.aql.execute(query, bind_vars={ 'phase_id': phase_id })
+
+  async def get_full_step_data(step_from_db):
+    step_from_db['media'] = search_step_media(step['_id'])
+    return StepWithMediaInfo(**step_from_db)
+
+  return [await get_full_step_data(step) for step in db_steps]
 
 
 @router.post("/step/{step_key}/media")

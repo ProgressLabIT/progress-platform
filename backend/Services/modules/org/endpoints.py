@@ -1,9 +1,11 @@
+import traceback
 from typing import List
+
 from fastapi import APIRouter, HTTPException
+
+from .models import Department
 from utils.api import APIResponse
 from utils.db import db
-import traceback
-from .models import Department
 
 router = APIRouter()
 

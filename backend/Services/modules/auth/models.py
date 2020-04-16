@@ -1,6 +1,8 @@
 from typing import List
-from utils.base_models import ArangoDocument
+
 from pydantic import BaseModel
+
+from utils.base_models import ArangoDocument
 
 
 class Token(BaseModel):

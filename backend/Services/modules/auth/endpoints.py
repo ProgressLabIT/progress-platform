@@ -1,8 +1,10 @@
-from datetime import timedelta, datetime
-from fastapi import Depends, APIRouter, HTTPException, status
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
-from .models import User, Token, TokenData
+
+from .models import Token, TokenData, User
 from utils.db import db
 
 

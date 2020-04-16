@@ -1,6 +1,8 @@
-from pydantic import Field, ByteSize
-from typing import List, Optional
 from random import randrange, uniform
+from typing import List, Optional
+
+from pydantic import ByteSize, Field
+
 from utils.base_models import FlexModel
 
 

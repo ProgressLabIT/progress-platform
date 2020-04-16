@@ -1,9 +1,11 @@
-from utils.db import db
-from utils.api import APIResponse
-from fastapi import APIRouter, UploadFile, HTTPException, Form, File, Body
-from fastapi.encoders import jsonable_encoder
 from typing import List
-from .models import UserCredentials, User
+
+from fastapi import APIRouter, Body, File, Form, HTTPException, UploadFile
+from fastapi.encoders import jsonable_encoder
+
+from .models import User, UserCredentials
+from utils.api import APIResponse
+from utils.db import db
 
 import json
 
