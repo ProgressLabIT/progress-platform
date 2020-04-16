@@ -137,7 +137,7 @@
                   <BaseUserAvatar v-if="job.assigned_to" :user="job.assigned_to" />
                   <v-btn v-else-if="selected_jobs.length === 0" small
                     :color="$theme.blue" 
-                    @click="updateSelectedJobData(job, true); edit_mode = 'assign'">
+                    @click="updateSelectedJobData(job, true); edit_mode = 'modify'">
                     ASSEGNA
                   </v-btn>
                 </template>
