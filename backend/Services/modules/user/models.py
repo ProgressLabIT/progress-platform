@@ -8,7 +8,7 @@ from utils.base_models import FlexModel
 
 class UserCredentials(FlexModel):
   username: str = None
-  psw: str = None
+  password: str = None
 
 
 class UserRoles(BaseModel):
