@@ -6,7 +6,7 @@ from pydantic import Field
 from utils.base_models import FlexModel
 
 
-class StepCheck(Enum):
+class StepCheckBatch(Enum):
   NONE = 'none'
   SINGLE = 'single'
   FIXED_BATCH = 'fixed_batch'
@@ -26,7 +26,7 @@ class WIPAccess(Enum):
 
 class PhaseParameters(FlexModel):
   parallel_job_allowed: bool = True
-  step_check: StepCheck = StepCheck.SINGLE
+  step_check: StepCheckBatch = StepCheckBatch.SINGLE
   step_check_force_order: bool = False
   release_style: ReleaseStyle = ReleaseStyle.JOB
   production_batch_qt: int = 1
@@ -59,7 +59,7 @@ class Media(FlexModel):
   name: str
 
 class StepWithMediaInfo(Step):
-  media: List[Media] = None
+  media: List[Union[Media, str]] = None
 
 
 class PhaseProcedure(FlexModel):

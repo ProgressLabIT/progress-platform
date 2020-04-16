@@ -77,7 +77,7 @@ class WorkOrderFull(WorkOrderNew):
   throughput_time: TargetActualTimeDelta = TargetActualTimeDelta()
   processing_time: TargetActualTimeDelta = TargetActualTimeDelta()
   
-  phase_sequence: List[str]
+  phase_sequence: List[str] = None
   notes: str = None
 
 
@@ -118,8 +118,8 @@ class Job(FlexModel):
   qt_planned: float
   qt_completed: float = 0
   qt_released: float = 0
-  current_run: int = None
-  current_step: int = None
+  current_run: str = None # run _id
+  # current_step: int = None
   progress: int = Field(0, ge=0, le=100)
 
   on_time: bool = True
