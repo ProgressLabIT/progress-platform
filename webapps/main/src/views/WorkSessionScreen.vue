@@ -34,21 +34,28 @@
       <!-- RIGHT COLUMN: JOB DATA & ACTIONS -->
       <!-- ################################ -->
 
-      <v-col cols="4" class="fill-height">
+      <v-col cols="4" class="fill-height d-flex flex-column pr-4">
 
         <!-- PRODUCT CODE & DESCRIPTION -->
         <h2 class="display highlight text-uppercase">{{ j.product_code }}</h2>
         <p class="mt-2 mb-6">{{ j.product_description }}</p>
 
-        <!-- WORK ORDER DATA -->
-        <v-row dense v-for="field in wo_data" :key="field.name" align="end">
-          <v-col cols="4" class="text-uppercase font-weight-medium">
-            <h5>{{ field.text }}</h5>
-          </v-col>
-          <v-col cols="8">
-            <span>{{ j[field.name] | capitalize_all }}</span>
-          </v-col>
-        </v-row>
+        <!-- JOB DATA -->
+        <template v-for="field in job_info" >
+          <v-row 
+            v-if="j[field.name] != undefined"
+            :key="field.name" 
+            dense 
+            align="end"
+            class="flex-grow-0">
+            <v-col cols="4" class="text-uppercase font-weight-medium">
+              <h5>{{ field.text }}</h5>
+            </v-col>
+            <v-col cols="8">
+              <span>{{ j[field.name] | capitalize_all }}</span>
+            </v-col>
+          </v-row>
+        </template>
 
         <!-- JOB PROGRESS / STATUS -->
         <v-progress-linear 
@@ -56,17 +63,18 @@
           :value="j.progress" 
           :color="job_color" 
           class="mt-6 mb-1"/>
-        <v-row class="ma-0" justify="space-between" align="end">
+        <v-row class="ma-0 flex-grow-0" justify="space-between" align="end">
           <h5 class="weight-bold">PROGRESS</h5>
           <span>{{ j.qt_completed }} / {{ j.qt_planned }}</span>
         </v-row>
 
+
         <!-- JOB ACTIONS -->
         <v-btn 
           :color="$theme.surface1"
-          block tile
-          height="17%" 
-          class="mt-12"
+          block tile 
+          height="auto"
+          class="flex-shrink-0 flex-grow-1 mt-12"
           @click="startWorkSession">
           <v-row class="fill-height mx-0" align="center" justify="center">
             <v-col cols="3" class="text-right">
@@ -83,8 +91,8 @@
         <v-btn 
           :color="$theme.surface1"
           block tile
-          height="17%" 
-          class="mt-2"
+          height="auto"
+          class="mt-2 flex-shrink-0 flex-grow-1"
           @click="progress_button.action">
           <v-row class="fill-height mx-0" align="center" justify="center">
             <v-col cols="3" class="text-right">
@@ -101,8 +109,8 @@
         <v-btn 
           :color="$theme.surface1"
           block tile
-          height="17%" 
-          class="mt-2"
+          height="auto"
+          class="mt-2 flex-shrink-0 flex-grow-1"
           @click="startWorkSession">
           <v-row class="fill-height mx-0" align="center" justify="center">
             <v-col cols="3" class="text-right">
@@ -114,7 +122,7 @@
               ELENCO LAVORI
             </v-col>
           </v-row>
-        </v-btn>               
+        </v-btn>  
       </v-col>
     </v-row>
   </v-container>
@@ -152,6 +160,15 @@ export default {
     // job_data
     j() {
       return this.$store.state.worksession.session_job_data
+    },
+
+    job_info() {
+      const iteration_index = { name: 'iteration_index', text: 'iterazione' }
+      const step_index = { name: 'step_index', text: 'passo' }
+
+      let result = [...this.wo_data, iteration_index]
+      if (this.j.parameters.step_check) result.push(step_index)
+      return result
     },
 
     job_color() {
