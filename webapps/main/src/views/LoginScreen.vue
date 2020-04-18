@@ -113,7 +113,7 @@ export default {
 
       api.post("/user-session", this.credentials)
         .then( resp => {
-          this.$store.commit('START_SESSION', resp.data)
+          this.$store.commit('START_USER_SESSION', resp.data)
           setTimeout(() => {
             this.logging_in = false
             this.verified = true

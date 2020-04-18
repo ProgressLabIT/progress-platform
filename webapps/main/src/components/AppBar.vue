@@ -11,7 +11,7 @@
       <!-- USER NAME & BADGE -->
       <h5 class=" display highlight ml-auto">{{ username }}</h5>
       <v-hover  v-slot:default="{ hover }">
-        <v-avatar size="28" class="my-auto mr-3 ml-2">
+        <v-avatar size="28" class="my-auto ml-2">
           <v-img v-if="!hover" :src="avatar_url"></v-img>
           <v-icon v-else 
             @click="$router.push({name: 'login'})">
@@ -48,7 +48,7 @@ export default {
     },
 
     user() {
-      return this.$store.state.session.user
+      return this.$store.state.traceability.user
     },
 
     username() {

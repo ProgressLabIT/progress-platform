@@ -10,7 +10,7 @@ import workorder from "@/store/workorder"
 import job from "@/store/job"
 import org from "@/store/org"
 import nav from "@/store/nav"
-import worksession from "@/store/worksession"
+import traceability from "@/store/traceability"
 
 
 
@@ -50,11 +50,10 @@ export default new Vuex.Store({
     process,
     bom,
     user,
-    session,
     workorder,
     job,
     org,
     nav,
-    worksession
+    traceability
   }
 });

@@ -129,7 +129,7 @@
 </template>
 
 <script>
-import { DateTime as DT } from 'luxon'
+// import { DateTime as DT } from 'luxon'
 
 export default {
 
@@ -159,7 +159,7 @@ export default {
   computed: {
     // job_data
     j() {
-      return this.$store.state.worksession.session_job_data
+      return this.$store.state.traceability.working_job_data
     },
 
     job_info() {
@@ -172,7 +172,10 @@ export default {
     },
 
     job_color() {
-      return this.$theme.blue
+      if (this.j.critical) return this.$theme.red
+      else if (!this.j.on_time) return this.$theme.orange
+      else if (this.j.active) return this.$theme.blue
+      else return this.$theme.grey
     },
 
     progress_button() {
@@ -196,8 +199,9 @@ export default {
 
   methods: {
     startWorkSession() {
-      let now = DT.utc()
-      console.log(`Started! ${now.toLocal().toLocaleString(DT.DATETIME_FULL)}`)
+      // let now = DT.utc()
+      // console.log(`Started! ${now.toLocal().toLocaleString(DT.DATETIME_FULL)}`)
+      this.$store.dispatch('startJob')
     },
 
     markStepComplete() {

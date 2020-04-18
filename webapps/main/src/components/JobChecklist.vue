@@ -1,6 +1,5 @@
 <template>
   <v-container fluid class="scroll pt-12 px-12" :style="'max-height:'+height+'px'">
-          
     <template v-for="(check, index) in step_checks" >
       <v-row 
         :key="index"
