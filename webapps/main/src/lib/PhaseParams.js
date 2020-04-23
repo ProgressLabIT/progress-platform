@@ -42,10 +42,10 @@ export const step_check = {
       description: `Nessun controllo step. Eventuali procedure registrate vengono utilizzate solo a scopo di consultazione per l'utente, senza nessun tracciamento o vincolo. È l'operatore che decide quando dichiarazione la produzione dei pezzi.`
     }],
 
-    ['single', {
-      name: `Passo singolo`,
-      description: `A fine procedura viene dichiarata la produzione di un singolo pezzo.`
-    }],
+    // ['single', {
+    //   name: `Passo singolo`,
+    //   description: `A fine procedura viene dichiarata la produzione di un singolo pezzo.`
+    // }],
 
     ['fixed_batch', {
       name: `Lotto fisso`,
