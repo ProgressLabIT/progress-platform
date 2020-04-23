@@ -9,7 +9,7 @@
       <v-col cols="8" class="fill d-flex flex-column pt-0">
         <v-row class="flex-grow-0 mx-0 pb-1">
           <v-tabs 
-            :color="$theme.whitehigh"
+            :color="$theme.white_high"
             background-color="transparent"
             hide-slider>
             <v-tab 

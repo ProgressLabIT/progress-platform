@@ -26,7 +26,7 @@
                 </v-btn>
 
                 <v-col cols="auto" v-if="no_image" class="text-center">
-                  <v-icon x-large :color="$theme.whitelow">
+                  <v-icon x-large :color="$theme.white_low">
                     mdi-image-off-outline
                   </v-icon>
                   <p class="display smaller mt-2">
@@ -225,7 +225,7 @@
                       @change="addFiles($event.target.files)"/>
                     <v-hover v-slot:default="{ hover }">
                         <v-btn text block class="pl-6 medium"
-                          :color="hover ? $theme.blue : $theme.whitelow"
+                          :color="hover ? $theme.blue : $theme.white_low"
                           @click="$refs.upload_doc.click()">
                           <v-row justify="space-between" align="center">
                             aggiungi documento
