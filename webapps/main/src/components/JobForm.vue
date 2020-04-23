@@ -35,6 +35,10 @@ export default {
     step: {
       type: Object,
       required: true,
+    },
+    height: {
+      type: Number,
+      required: true
     }
   },
 
