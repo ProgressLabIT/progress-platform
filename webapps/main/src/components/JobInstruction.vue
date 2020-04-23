@@ -11,7 +11,7 @@
       <v-img eager :src="displayed_image_src" :height="height">
 
         <template v-slot:placeholder>
-          NO IMAGE
+          <v-progress-circular size="60" indeterminate></v-progress-circular>
         </template>
 
         <template v-if="step_media.length > 1">
@@ -49,7 +49,7 @@ export default {
   props: {
     step: {
       type: Object,
-      required: true,
+      default: () => {}
     },
     height: {
       type: Number,
@@ -66,7 +66,8 @@ export default {
 
   computed: {
     step_media() {
-      return this.step.media
+      if (this.step != undefined) return this.step.media
+      else return []
     },
 
     media_base_path() {

@@ -22,10 +22,7 @@
           </v-tabs>
         </v-row>
 
-        <router-view 
-          :procedure="j.step_sequence"
-          :parameters="j.parameters">
-        </router-view>
+        <router-view :job="j"></router-view>
 
       </v-col>
 
@@ -60,7 +57,7 @@
         <!-- JOB PROGRESS / STATUS -->
         <v-progress-linear 
           height="8" 
-          :value="j.progress" 
+          :value="progress_value" 
           :color="job_color" 
           class="mt-6 mb-1"/>
         <v-row class="ma-0 flex-grow-0" justify="space-between" align="end">
@@ -71,11 +68,11 @@
 
         <!-- JOB ACTIONS -->
         <v-btn 
-          :color="$theme.surface1"
+          :color="$theme.surface2"
           block tile 
           height="auto"
           class="flex-shrink-0 flex-grow-1 mt-12"
-          @click="startWorkSession">
+          @click="startPauseResumeJob.action()">
           <v-row class="fill-height mx-0" align="center" justify="center">
             <v-col cols="3" class="text-right">
               <v-icon x-large>
@@ -83,35 +80,38 @@
               </v-icon>
             </v-col>
             <v-col class="display highlight medium text-left">
-              {{ j.active ? 'PAUSA':'INIZIA' }}
+              {{ startPauseResumeJob.text }}
             </v-col>
           </v-row>
         </v-btn>
 
         <v-btn 
-          :color="$theme.surface1"
+          id="progress_button"
+          :color="j.active ? $theme.surface2 : $theme.background"
           block tile
+          :disabled="!j.active || current_step_status"
           height="auto"
           class="mt-2 flex-shrink-0 flex-grow-1"
-          @click="progress_button.action">
+          :class="{ disabled: !j.active, completed: current_step_status }"
+          @click="progress_button.action()">
           <v-row class="fill-height mx-0" align="center" justify="center">
             <v-col cols="3" class="text-right">
               <v-icon x-large>
                 {{ progress_button.icon }}
               </v-icon>
             </v-col>
-            <v-col class="display highlight medium text-left">
+            <v-col class="display medium text-left" :class="{ highlight: j.active}">
               {{ progress_button.text }}
             </v-col>
           </v-row>
         </v-btn>
 
         <v-btn 
-          :color="$theme.surface1"
+          :color="$theme.surface2"
           block tile
           height="auto"
           class="mt-2 flex-shrink-0 flex-grow-1"
-          @click="startWorkSession">
+          @click="exitJob">
           <v-row class="fill-height mx-0" align="center" justify="center">
             <v-col cols="3" class="text-right">
               <v-icon x-large>
@@ -119,7 +119,7 @@
               </v-icon>
             </v-col>
             <v-col class="display highlight medium text-left">
-              ELENCO LAVORI
+              TORNA A ELENCO LAVORI
             </v-col>
           </v-row>
         </v-btn>  
@@ -130,6 +130,7 @@
 
 <script>
 // import { DateTime as DT } from 'luxon'
+import { mapState } from 'vuex'
 
 export default {
 
@@ -153,21 +154,27 @@ export default {
         { name: 'wo_line', text: 'riga op' },
         { name: 'phase_alias', text: 'fase' },
       ],
+
+      vuex_ready: false
     }
   },
 
   computed: {
-    // job_data
-    j() {
-      return this.$store.state.traceability.working_job_data
-    },
 
+    ...mapState({
+      j: state => state.traceability.working_job_data,
+      ws_list: state => state.traceability.work_session_list,
+      iteration_data: state => state.traceability.current_iteration_data.procedure,
+    }),
+
+    
     job_info() {
       const iteration_index = { name: 'iteration_index', text: 'iterazione' }
       const step_index = { name: 'step_index', text: 'passo' }
-
+  
       let result = [...this.wo_data, iteration_index]
-      if (this.j.parameters.step_check) result.push(step_index)
+      const step_check = this.j.parameters ? this.j.parameters.step_check : 'none'
+      if (step_check != 'none') result.push(step_index)
       return result
     },
 
@@ -179,46 +186,169 @@ export default {
     },
 
     progress_button() {
-      const step_check = {
+
+      const complete_step = {
         icon: 'mdi-check',
-        text: 'passo completato',
-        action: this.markStepComplete
+        text: 'completa passo',
+        action: this.completeStep
       }
 
-      const piece_add = {
+      const declare_batch = {
         icon: 'mdi-plus',
-        text: 'pezzo completato',
-        action: this.declarePieceCompleted
+        text: 'completa lotto',
+        action: this.declareBatch
+      }
+      
+      if ('parameters' in this.j) {
+        return this.j.parameters.step_check != 'none' && !this.current_step_is_last 
+            ? complete_step 
+            : declare_batch
+      }
+      else return declare_batch
+    },
+
+    production_batch() {
+      let production_batch = 1
+      if (this.j.parameters) {
+        switch (this.j.parameters.step_check) {
+          case 'fixed_batch':
+            production_batch = this.j.parameters.production_batch_qt
+            break
+          case 'job':
+            production_batch = this.j.qt_planned
+            break
+        }
+        // The last iteration could include less pieces than the production batch
+        const qt_remaining = this.j.qt_planned - this.j.qt_completed
+        return Math.min(production_batch, qt_remaining)
+      }
+      else return production_batch
+    },
+
+    current_step_index() {
+      const step_index = this.$route.query.step - 1
+      return step_index ? step_index : 0
+    },
+
+    completed_steps_count() {
+      return this.iteration_data 
+        ? this.iteration_data.reduce( (total, current) => total + current.done, 0)
+        : 0
+    },
+
+    current_step_is_last() {
+      return this.completed_steps_count === this.j.step_sequence.length - 1
+    },
+
+    current_iteration_is_last() {
+      const remaining_qt = this.j.qt_planned - this.j.qt_completed
+      return this.production_batch === remaining_qt
+    },
+
+    current_step_status() {
+      let current_step = this.iteration_data ? this.iteration_data[this.current_step_index] : null
+      return current_step ? current_step.done : null
+    },
+
+    progress_value() {
+      if ('parameters' in this.j) {
+        const completed_iterations_progress = this.j.qt_completed / this.j.qt_planned
+        const current_iteration_total_value = this.j.qt_planned / this.production_batch
+        const step_progress_value = current_iteration_total_value / this.j.step_sequence.length
+        const current_iteration_current_value = step_progress_value * this.completed_steps_count
+        const total_progress = completed_iterations_progress + current_iteration_current_value
+
+        // console.log({
+        //   completed_iterations_progress,
+        //   current_iteration_total_value,
+        //   step_progress_value,
+        //   current_iteration_current_value,
+        //   total_progress
+        // })
+
+        return Math.floor( 100 * total_progress )
+      }
+      else return 0
+
+    },
+
+    disabled_button_style() {
+      if (this.j.active) return ''
+      else return {
+        backgroundColor: this.$theme.surface1,
+        color: this.$theme.white_disabled
+      }
+    },
+
+    startPauseResumeJob() {
+      const result = {
+        text: null,
+        action: null
       }
 
-      return this.j.parameters.step_check != 'none'
-      ? step_check
-      : piece_add
-    }
+      if (this.j.active) {
+        result.text = 'PAUSA'
+        result.action = () => this.$store.dispatch('closeWorkSession')
+        return result
+      }
+
+      else {
+        // Check if progress has already been made or user has already started
+        if (this.ws_list.length || this.j.progress ) {
+          result.text = 'RIPRENDI'
+          result.action = () => this.$store.dispatch('resumeJob')
+          return result          
+        }
+        else {
+          result.text = 'INIZIA'
+          result.action = () => this.$store.dispatch('startJob')
+          return result
+        }
+      }
+    },
   },
 
   methods: {
-    startWorkSession() {
-      // let now = DT.utc()
-      // console.log(`Started! ${now.toLocal().toLocaleString(DT.DATETIME_FULL)}`)
-      this.$store.dispatch('startJob')
+
+    async completeStep() {
+      await this.$store.dispatch('completeStep', this.current_step_index)
+      // Go to first step that is not done.
+      // This works with both force_order mode active or not
+      const next_step_index = this.iteration_data.findIndex( step => !step.done )
+      this.goToStep(next_step_index + 1)
     },
 
-    markStepComplete() {
-      console.log("step complete!")
+    async declareBatch() {
+      await this.$store.dispatch('declareBatch', this.production_batch)
+      if (this.current_iteration_is_last) this.exitJob()
+      else if (this.step_check != 'none') this.goToStep(1)
     },
 
-    declarePieceCompleted() {
-      console.log("piece completed!")
+    goToStep(step_sequence) {
+      this.$router.push({ query: { step: step_sequence }})
+    },
+
+    exitJob() {
+      this.$store.dispatch('closeWorkSession')
+      .then(() => this.$router.push('userJobs'))
     }
   },
 
   beforeMount() {
     const job_key = this.job_key
-    this.$store.dispatch('loadJobData', {job_key})
+    this.$store.dispatch('loadJobData', job_key)
+    .then(() => this.vuex_ready = true)
   }
 }
 </script>
 
 <style lang="css" scoped>
+#progress_button.disabled {
+  background-color: var(--surface-1) !important;
+  color: var(--theme-grey) !important;
+}
+#progress_button.completed {
+  background-color: var(--surface-1) !important;
+  color: var(--theme-green) !important; 
+}
 </style>

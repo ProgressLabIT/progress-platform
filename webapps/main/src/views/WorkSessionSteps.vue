@@ -1,52 +1,52 @@
 <template>
-  <!-- <v-card class="flex-grow-1 scroll" color="transparent"> -->
-    <v-container fluid class="pa-0 fill" ref="step_card">
+  <v-container fluid class="pa-0 fill" ref="step_card">
 
-      <v-card class="fill d-flex flex-column" max-height="100%" >
-        <v-toolbar dense class="flex-grow-0">
-          <v-row align="center" class="fill-height mx-0" ref="stepper">
-            <!-- <v-col cols="auto">
-              <h5 class="highlight text-uppercase mr-6">lotto n. {{ 3 }}</h5>
-            </v-col> -->
-            <template v-for="(step, index) in procedure">
-              <v-col 
-                cols="auto" 
-                class="px-1"
-                :key="step._id">
-                <v-avatar 
-                  :color="current_step_index == index ? $theme.blue : 'transparent'" 
-                  size="20" 
-                  class="d-flex text-center smaller font-weight-medium pointer"
-                  @click="current_step_index = index">
-                  <span :class="current_step_index == index ? 'solid-white weight-bold': ''">{{ index + 1 }}</span>
-                </v-avatar>
-              </v-col>
-              <v-divider 
-                v-if="index < procedure.length - 1"
-                :key="index">
-              </v-divider>
-            </template>
-            <!-- <v-col cols="auto">
-              <h5 class="ml-6 highlight text-uppercase">
-                passo {{ current_step_index + 1 }} / {{ procedure.length}}
-              </h5>
-            </v-col> -->
-          </v-row>
-        </v-toolbar>
-        
-        <component 
-          :is="step_component" 
-          :step="current_step" 
-          :height="image_height">
-        </component>
+    <v-card class="fill d-flex flex-column" max-height="100%" >
+      <v-toolbar dense class="flex-grow-0">
+        <v-row align="center" class="fill-height mx-0" ref="stepper">
+          <!-- <v-col cols="auto">
+            <h5 class="highlight text-uppercase mr-6">lotto n. {{ 3 }}</h5>
+          </v-col> -->
+          <template v-for="(step, index) in procedure">
+            <v-col 
+              cols="auto" 
+              class="px-1"
+              :key="step._id">
+              <v-avatar  
+                size="20" 
+                :style="stepStyle(index)"
+                class="d-flex text-center smaller font-weight-medium pointer"
+                @click="current_step_index = index">
+                <span :class="current_step_index == index ? 'solid-white weight-bold': ''">
+                  {{ index + 1 }}
+                </span>
+              </v-avatar>
+            </v-col>
+            <v-divider 
+              v-if="index < procedure.length - 1"
+              :key="index">
+            </v-divider>
+          </template>
+          <!-- <v-col cols="auto">
+            <h5 class="ml-6 highlight text-uppercase">
+              passo {{ current_step_index + 1 }} / {{ procedure.length}}
+            </h5>
+          </v-col> -->
+        </v-row>
+      </v-toolbar>
+      
+      <component 
+        :is="step_component" 
+        :step="current_step" 
+        :height="image_height">
+      </component>
 
-      </v-card>
-    </v-container>
-  <!-- </v-card> -->
+    </v-card>
+  </v-container>
 </template>
 
 <script>
-import { cloneDeep as _cloneDeep } from 'lodash'
+// import { cloneDeep as _cloneDeep } from 'lodash'
 
 import JobInstruction from '@/components/JobInstruction.vue'
 import JobForm from '@/components/JobForm.vue'
@@ -63,60 +63,99 @@ export default {
   },
 
   props: {
-    parameters: {
+    job: {
       type: Object,
-      default: () => {
-        return { 
-          step_check: 'single',
-          step_check_force_order: false,
-          release_style: 'job',
-          production_batch_qt: 1,        
-        }
-      }
-    },
-
-    procedure: {
-      type: Array,
-      default: () => []
+      required: true
     },
   },
 
   data () {
     return {
-      current_step_index: 0,
       stepper_height: 0,
       image_height: 0,
     }
   },
 
   computed: {
+
+    current_step_index: {
+      get() {
+        const step_index = this.$route.query.step - 1
+        return step_index ? step_index : 0
+      },
+      set(value) {
+        if (value != this.current_step_index)
+          this.$router.push({ query: { step: value + 1 }})
+      }
+    },
+
+    procedure() {
+      return this.job.step_sequence
+    },
+
     current_step() {
-      return this.procedure[this.current_step_index]
+      if (this.procedure) {
+        return this.procedure[this.current_step_index]
+      }
+      else return {}
     },
 
     step_component() {
-      let component = ''
-      switch (this.current_step.type) {
-        case 'instruction':
-          component = 'JobInstruction'
-          break
-        case 'checklist':
-          component = 'JobChecklist'
-          break
-        case 'form':
-          component = 'JobForm'
-          break
+      let component = 'JobInstruction'
+      if (this.current_step) {
+        switch (this.current_step.type) {
+          case 'checklist':
+            component = 'JobChecklist'
+            break
+          case 'form':
+            component = 'JobForm'
+            break
+        }
       }
       return component
     },
+
+    iteration_data() {
+      return this.$store.state.traceability.current_iteration_data.procedure
+    },
+
    
   },
 
   methods: {
-    startRun() {
-      this.runs.push(_cloneDeep(this.procedure))
-    },
+    stepStyle(index) {
+      const step_active = this.current_step_index === index
+      let step_done = false
+      let step_critical = false
+      let color = ''
+      
+      if (this.iteration_data) {
+        step_done = this.iteration_data[index].done
+        step_critical = this.iteration_data[index].critical
+      }
+
+      if (step_critical) {
+        color = step_active ? this.$theme.red : this.$theme.red_bg
+      }
+
+      else if (step_done) {
+        color = step_active ? this.$theme.green : this.$theme.green_bg
+      }
+
+      else if (step_active) {
+        color = this.job.active ? this.$theme.blue : this.$theme.grey
+      }
+
+      else {
+        color = 'transparent'
+      }
+
+      return {
+        backgroundColor: color
+      }
+    }
   },
+
 
   mounted() {
     const stepper_height = this.$refs.stepper.clientHeight
