@@ -3,8 +3,7 @@
 	  <v-row no-gutter class="align-center justify-space-between px-2">
 	    <v-col class="text-left pa-0">
 	    	<span class="display smaller">ESSEGI AUTOMATION - PROGRESS</span>
-	    	<span class="material-icons smaller ml-2">info</span>
-	    	<!-- <v-icon size="18" class="smaller ml-1">info</v-icon> -->
+	    	<!-- <span class="material-icons smaller ml-2">info</span> -->
 	    </v-col>
 	    <v-col cols="1" class="text-center pa-0">
 	    	<span class="display smaller">{{ time }}</span>
