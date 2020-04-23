@@ -6,7 +6,7 @@
       <v-tabs
         background-color="transparent"
         v-model="active_dep"
-        :color="$theme.whitehigh"
+        :color="$theme.white_high"
         hide-slider
         class="flex-shrink-1 flex-grow-0 pl-2">
         <v-tab 

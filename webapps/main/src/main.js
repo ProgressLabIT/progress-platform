@@ -35,12 +35,14 @@ Vue.prototype.$theme = {
   blue: '#22AED1',
   blue_bg: 'rgba(39,174,209, .3)',
   green: '#0DAB76',
+  green_bg: 'rgba(13,171,118, .3)',
   red: '#E71D36',
   red_bg: 'rgba(213,29,54,.3)',
   orange: '#FF9F1C',
   orange_bg: 'rgba(255,159,28,.3)',
-  whitelow: 'rgba(255,255,255,.6)',
-  whitehigh: 'rgba(255,255,255,.87)'
+  white_low: 'rgba(255,255,255,.6)',
+  white_high: 'rgba(255,255,255,.87)',
+  white_disabled: 'rgba(255,255,255,.3)'
 }
 
 Vue.filter('capitalize', capitalize)

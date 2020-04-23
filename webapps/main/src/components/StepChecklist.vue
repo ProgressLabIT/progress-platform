@@ -16,14 +16,14 @@
           @mouseleave="over_row=null"> 
           <v-col cols="auto" class="pr-0">
             <v-icon v-if="edit_mode" 
-              :color="$theme.whitelow"
+              :color="$theme.white_low"
               :style="drag? 'cursor: grabbing' : 'cursor: grab'"
               class="handle">
               drag_handle
             </v-icon>
             
             <v-icon v-else 
-              :color="$theme.whitelow">
+              :color="$theme.white_low">
               check_box_outline_blank
             </v-icon>
           </v-col> 
@@ -86,7 +86,7 @@
     <v-hover v-slot:default="{ hover }">    
       <v-btn text small class="ml-n3"
         v-if="edit_mode"
-        :color="hover ? $theme.blue : $theme.whitehigh"
+        :color="hover ? $theme.blue : $theme.white_high"
         @click="addCheck">
          + Aggiungi controllo
       </v-btn>

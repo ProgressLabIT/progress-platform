@@ -7,7 +7,7 @@
       <v-col cols="auto" class="ml-auto">
         <v-tabs 
           background-color="transparent"
-          :color="$theme.whitehigh"
+          :color="$theme.white_high"
           hide-slider right
           >
           <v-tab 

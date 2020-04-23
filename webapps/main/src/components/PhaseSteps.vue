@@ -12,7 +12,7 @@
           v-if="render_steps"
           vertical dark hide-slider grow
           v-model="current_step_index"
-          :color="$theme.whitehigh"
+          :color="$theme.white_high"
           background-color="transparent"
           class="mt-8 scroll px-n4"
           style="max-width: 100%; max-height: 70%"
@@ -57,7 +57,7 @@
                     <v-icon 
                       :id="`icon-${index}`"
                       class="ml-auto"
-                      :color="current_step_index == index ? $theme.whitehigh : $theme.whitelow">
+                      :color="current_step_index == index ? $theme.white_high : $theme.white_low">
                       {{ stepIcon(step.type) }}
                     </v-icon>
                   </v-col>    
@@ -72,7 +72,7 @@
           <v-row justify="center" align="end" class="mt-12 pb-6">
             <v-icon 
               x-large 
-              :color="$theme.whitelow"
+              :color="$theme.white_low"
               >
               error_outline
             </v-icon>
@@ -94,7 +94,7 @@
             <v-btn text small
               class="pr-6 pl-6 ml-n2"
               style="width: 105%"
-              :color="hover ? $theme.blue : $theme.whitehigh"
+              :color="hover ? $theme.blue : $theme.white_high"
               @click="addStep(type)">
               <v-row justify="space-between" align="center">
                 <span>+ Add {{ type }}</span>

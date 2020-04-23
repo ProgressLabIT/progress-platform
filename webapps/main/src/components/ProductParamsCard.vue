@@ -22,7 +22,7 @@
             class="ma-0 pa-0">
           </v-switch>   
         </v-col>
-        <v-col cols="4" class="body-2 highlight text-right" :style="`color: ${$theme.whitehigh}`">
+        <v-col cols="4" class="body-2 highlight text-right" :style="`color: ${$theme.white_high}`">
           <div v-if="temp_params[key].value">Attivo</div>
           <div v-else>Disattivato</div>
         </v-col>
@@ -92,7 +92,7 @@
       </v-col>
 
       <v-col cols="auto">
-        <v-icon x-small :color="$theme.whitelow">info</v-icon>
+        <v-icon x-small :color="$theme.white_low">info</v-icon>
       </v-col>
     </v-row>                    
 

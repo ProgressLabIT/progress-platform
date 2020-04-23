@@ -59,7 +59,7 @@
           <v-hover v-slot:default="{ hover }">
             <v-icon 
               class="handle"
-              :color="$theme.whitelow"
+              :color="$theme.white_low"
               :style="drag ? 'cursor: grabbing' : 'cursor: grab'">
               drag_handle
             </v-icon>
@@ -73,11 +73,11 @@
               @click="confirming_delete = index"
               >
               <span 
-                :style="`color: ${hover ? $theme.red : $theme.whitelow}`"
+                :style="`color: ${hover ? $theme.red : $theme.white_low}`"
                 class="body-2"
                 >Elimina campo</span>
               <v-icon
-                :color="hover ? $theme.red : $theme.whitelow"
+                :color="hover ? $theme.red : $theme.white_low"
                 >close</v-icon>
             </button>
 
@@ -112,7 +112,7 @@
     <v-hover v-slot:default="{ hover }" v-if="edit_mode">    
       <v-btn text small class="ml-n3"
         v-if="edit_mode"
-        :color="hover ? $theme.blue : $theme.whitehigh"
+        :color="hover ? $theme.blue : $theme.white_high"
         @click="addField">
          + Aggiungi campo
       </v-btn>
