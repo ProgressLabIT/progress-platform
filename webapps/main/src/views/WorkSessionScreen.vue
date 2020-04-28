@@ -67,11 +67,12 @@
 
 
         <!-- JOB ACTIONS -->
+        <v-row class="mx-0 mt-12">
+        
         <v-btn 
           :color="$theme.surface2"
           block tile 
           height="auto"
-          class="flex-shrink-0 flex-grow-1 mt-12"
           @click="startPauseResumeJob.action()">
           <v-row class="fill-height mx-0" align="center" justify="center">
             <v-col cols="3" class="text-right">
@@ -84,14 +85,16 @@
             </v-col>
           </v-row>
         </v-btn>
+        </v-row>
 
+        <v-row class="mx-0 mt-2">
+        
         <v-btn 
           id="progress_button"
           :color="j.active ? $theme.surface2 : $theme.background"
           block tile
           :disabled="!j.active || current_step_status"
           height="auto"
-          class="mt-2 flex-shrink-0 flex-grow-1"
           :class="{ disabled: !j.active, completed: current_step_status }"
           @click="progress_button.action()">
           <v-row class="fill-height mx-0" align="center" justify="center">
@@ -105,24 +108,48 @@
             </v-col>
           </v-row>
         </v-btn>
+        </v-row>
+        
+        <v-row class="mt-2 mx-0" justify="space-between">
+            <v-btn 
+              :color="$theme.surface2"
+              tile
+              height="auto" width="32%"
+              @click="goToPreviousStep"
+              class="py-3">
+              <!-- <v-row class="fill-height mx-0" align="center" justify="center"> -->
+                  <v-icon x-large>
+                    mdi-skip-previous
+                  </v-icon>
+              <!-- </v-row> -->
+            </v-btn>  
 
-        <v-btn 
-          :color="$theme.surface2"
-          block tile
-          height="auto"
-          class="mt-2 flex-shrink-0 flex-grow-1"
-          @click="exitJob">
-          <v-row class="fill-height mx-0" align="center" justify="center">
-            <v-col cols="3" class="text-right">
-              <v-icon x-large>
-                mdi-keyboard-return
-              </v-icon>
-            </v-col>
-            <v-col class="display highlight medium text-left">
-              TORNA A ELENCO LAVORI
-            </v-col>
-          </v-row>
-        </v-btn>  
+            <v-btn 
+              :color="$theme.surface2"
+              tile
+              height="auto" width="32%"
+              @click="goToNextStep"
+              class="py-3">
+<!--               <v-row class="fill-height mx-0" align="center" justify="center">
+ -->                  <v-icon x-large>
+                    mdi-skip-next
+                  </v-icon>
+              <!-- </v-row> -->
+            </v-btn>  
+
+            <v-btn 
+              :color="$theme.surface2"
+              tile
+              height="auto" width="32%"
+              @click="exitJob"
+              class="py-3">
+              <!-- <v-row class="fill-height mx-0" align="center" justify="center"> -->
+                  <v-icon x-large>
+                    mdi-keyboard-return
+                  </v-icon>
+              <!-- </v-row> -->
+            </v-btn>  
+        </v-row>
       </v-col>
     </v-row>
   </v-container>
@@ -164,15 +191,15 @@ export default {
     ...mapState({
       j: state => state.traceability.working_job_data,
       ws_list: state => state.traceability.work_session_list,
-      iteration_data: state => state.traceability.current_iteration_data.procedure,
+      batch_data: state => state.traceability.current_batch_data.procedure,
     }),
 
     
     job_info() {
-      const iteration_index = { name: 'iteration_index', text: 'iterazione' }
+      const batch_index = { name: 'batch_index', text: 'iterazione' }
       const step_index = { name: 'step_index', text: 'passo' }
   
-      let result = [...this.wo_data, iteration_index]
+      let result = [...this.wo_data, batch_index]
       const step_check = this.j.parameters ? this.j.parameters.step_check : 'none'
       if (step_check != 'none') result.push(step_index)
       return result
@@ -218,7 +245,7 @@ export default {
             production_batch = this.j.qt_planned
             break
         }
-        // The last iteration could include less pieces than the production batch
+        // The last batch could include less pieces than the production batch
         const qt_remaining = this.j.qt_planned - this.j.qt_completed
         return Math.min(production_batch, qt_remaining)
       }
@@ -231,8 +258,8 @@ export default {
     },
 
     completed_steps_count() {
-      return this.iteration_data 
-        ? this.iteration_data.reduce( (total, current) => total + current.done, 0)
+      return this.batch_data 
+        ? this.batch_data.reduce( (total, current) => total + current.done, 0)
         : 0
     },
 
@@ -240,29 +267,29 @@ export default {
       return this.completed_steps_count === this.j.step_sequence.length - 1
     },
 
-    current_iteration_is_last() {
+    current_batch_is_last() {
       const remaining_qt = this.j.qt_planned - this.j.qt_completed
       return this.production_batch === remaining_qt
     },
 
     current_step_status() {
-      let current_step = this.iteration_data ? this.iteration_data[this.current_step_index] : null
+      let current_step = this.batch_data ? this.batch_data[this.current_step_index] : null
       return current_step ? current_step.done : null
     },
 
     progress_value() {
       if ('parameters' in this.j) {
-        const completed_iterations_progress = this.j.qt_completed / this.j.qt_planned
-        const current_iteration_total_value = this.j.qt_planned / this.production_batch
-        const step_progress_value = current_iteration_total_value / this.j.step_sequence.length
-        const current_iteration_current_value = step_progress_value * this.completed_steps_count
-        const total_progress = completed_iterations_progress + current_iteration_current_value
+        const completed_batchs_progress = this.j.qt_completed / this.j.qt_planned
+        const current_batch_total_value = this.j.qt_planned / this.production_batch
+        const step_progress_value = current_batch_total_value / this.j.step_sequence.length
+        const current_batch_current_value = step_progress_value * this.completed_steps_count
+        const total_progress = completed_batchs_progress + current_batch_current_value
 
         // console.log({
-        //   completed_iterations_progress,
-        //   current_iteration_total_value,
+        //   completed_batchs_progress,
+        //   current_batch_total_value,
         //   step_progress_value,
-        //   current_iteration_current_value,
+        //   current_batch_current_value,
         //   total_progress
         // })
 
@@ -288,13 +315,13 @@ export default {
 
       if (this.j.active) {
         result.text = 'PAUSA'
-        result.action = () => this.$store.dispatch('closeWorkSession')
+        result.action = () => this.$store.dispatch('pauseJob')
         return result
       }
 
       else {
         // Check if progress has already been made or user has already started
-        if (this.ws_list.length || this.j.progress ) {
+        if (this.j.stage == 'started' ) {
           result.text = 'RIPRENDI'
           result.action = () => this.$store.dispatch('resumeJob')
           return result          
@@ -314,23 +341,35 @@ export default {
       await this.$store.dispatch('completeStep', this.current_step_index)
       // Go to first step that is not done.
       // This works with both force_order mode active or not
-      const next_step_index = this.iteration_data.findIndex( step => !step.done )
-      this.goToStep(next_step_index + 1)
+      const next_step_index = this.batch_data.findIndex( step => !step.done )
+      this.goToStep(next_step_index)
     },
 
     async declareBatch() {
       await this.$store.dispatch('declareBatch', this.production_batch)
-      if (this.current_iteration_is_last) this.exitJob()
-      else if (this.step_check != 'none') this.goToStep(1)
+      if (this.current_batch_is_last) this.exitJob()
+      else if (this.step_check != 'none') this.goToStep(0)
     },
 
     goToStep(step_sequence) {
-      this.$router.push({ query: { step: step_sequence }})
+      this.$router.push({ query: { step: step_sequence + 1 }})
+    },
+
+    goToNextStep() {
+      const last_index = this.j.step_sequence.length - 1
+      if (this.current_step_index === last_index) this.goToStep(0)
+      else this.goToStep(this.current_step_index + 1) 
+    },
+
+    goToPreviousStep() {
+      const last_index = this.j.step_sequence.length - 1
+      if (this.current_step_index === 0) this.goToStep(last_index)
+      else this.goToStep(this.current_step_index - 1)
     },
 
     exitJob() {
-      this.$store.dispatch('closeWorkSession')
-      .then(() => this.$router.push('userJobs'))
+      this.$store.dispatch('pauseJob')
+      .then(() => this.$router.push({ name: 'userJobs'}))
     }
   },
 

@@ -38,7 +38,7 @@
       <component 
         :is="step_component" 
         :step="current_step" 
-        :height="image_height">
+        :height="step_content_height">
       </component>
 
     </v-card>
@@ -46,7 +46,7 @@
 </template>
 
 <script>
-// import { cloneDeep as _cloneDeep } from 'lodash'
+import { throttle as _throttle } from 'lodash'
 
 import JobInstruction from '@/components/JobInstruction.vue'
 import JobForm from '@/components/JobForm.vue'
@@ -72,7 +72,7 @@ export default {
   data () {
     return {
       stepper_height: 0,
-      image_height: 0,
+      step_content_height: 0,
     }
   },
 
@@ -115,8 +115,8 @@ export default {
       return component
     },
 
-    iteration_data() {
-      return this.$store.state.traceability.current_iteration_data.procedure
+    batch_data() {
+      return this.$store.state.traceability.current_batch_data.procedure
     },
 
    
@@ -129,9 +129,9 @@ export default {
       let step_critical = false
       let color = ''
       
-      if (this.iteration_data) {
-        step_done = this.iteration_data[index].done
-        step_critical = this.iteration_data[index].critical
+      if (this.batch_data) {
+        step_done = this.batch_data[index].done
+        step_critical = this.batch_data[index].critical
       }
 
       if (step_critical) {
@@ -153,14 +153,23 @@ export default {
       return {
         backgroundColor: color
       }
+    },
+    setContentHeight() {
+      const card_height = this.$refs.step_card.clientHeight
+      const stepper_height = this.$refs.stepper.clientHeight
+      this.step_content_height = card_height - stepper_height
     }
   },
 
 
   mounted() {
-    const stepper_height = this.$refs.stepper.clientHeight
-    const card_height = this.$refs.step_card.clientHeight
-    this.image_height = card_height - stepper_height
+    this.setContentHeight()
+    const resizeContent = _throttle(this.setContentHeight, 200)
+    window.addEventListener('resize', resizeContent)
+  },
+
+  updated() {
+    this.setContentHeight()
   },
 
 }

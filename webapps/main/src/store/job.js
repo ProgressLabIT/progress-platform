@@ -48,10 +48,10 @@ const job = {
 
     updateJobs({ dispatch }, { job_updates, wo_key }) {
       return new Promise((resolve, reject) => {
-        console.log(wo_key)
+        // console.log(wo_key)
         api.post(`job/update`, job_updates)
         .then( () => {
-          console.log(wo_key)
+          // console.log(wo_key)
           dispatch('loadWorkOrderData', wo_key)
           .then( () => resolve() )
         })

@@ -24,7 +24,7 @@
             :key="`no${index}`"
             x-large depressed
             :text="values[index]!=-1" 
-            :disabled="!job_active"
+            :disabled="!job_active || batch_step.done"
             :color="$theme.red"
             @click="toggleCheck(index, -1)"
             >
@@ -33,7 +33,7 @@
           <v-btn 
             x-large depressed
             :key="`yes${index}`"
-            :disabled="!job_active"
+            :disabled="!job_active || batch_step.done"
             :text="values[index]!=1" 
             :color="$theme.green"
             @click="toggleCheck(index, 1)"
@@ -82,16 +82,13 @@ export default {
       return this.$store.state.traceability.working_job_data.active
     },
 
+    batch_step() {
+      return this.$store.getters.getBatchStep(this.step._id)
+    },
+    
     values() {
-      // const iteration_data = this.$store.state.traceability.current_iteration_data
-      // if (iteration_data.procedure) {
-      //   const step_id = this.step._id
-      //   const step_iteration = iteration_data.procedure.find( step => step._id = step_id)
-      //   const value_list = step_iteration.user_data
-      //   return value_list
-      // }
-      // else return []
-      return this.$store.getters.getIterationStepUserData(this.step._id)
+      const data = this.batch_step.user_data
+      return data ? data : []
     },
   },
 

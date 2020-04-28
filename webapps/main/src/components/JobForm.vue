@@ -3,9 +3,10 @@
     <template v-for="(field, index) in step_form">
       <v-text-field 
         :value="field_data[index]"
+        @change="updateField(index, $event)"
         @input="debouncedFieldUpdate(index, $event)"
         outlined
-        :disabled="!job_active"
+        :disabled="!job_active  || batch_step.done"
         v-if="field.type=='short'" 
         :label="field.name"
         :key="index">
@@ -13,9 +14,10 @@
       
       <v-textarea 
         :value="field_data[index]"
+        @change="updateField(index, $event)"
         @input="debouncedFieldUpdate(index, $event)"
         outlined
-        :disabled="!job_active"
+        :disabled="!job_active || batch_step.done"
         v-if="field.type=='long'" 
         :label="field.name"
         :key="index">
@@ -57,8 +59,13 @@ export default {
       return this.$store.state.traceability.working_job_data.active
     },
 
+    batch_step() {
+      return this.$store.getters.getBatchStep(this.step._id)
+    },
+
     field_data() {
-      return this.$store.getters.getIterationStepUserData(this.step._id)
+      const data = this.batch_step.user_data
+      return data ? data : []
     }
   },
 
