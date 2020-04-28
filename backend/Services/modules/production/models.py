@@ -49,7 +49,7 @@ class WorkStatus(Enum):
 
 class WorkOrderNew(FlexModel):
   wo_code: str
-  wo_line_no: int = 1
+  wo_line: int = 1
   product_id: str
   product_code: str = None
   product_description: str = None
@@ -96,9 +96,10 @@ class Operator(FlexModel):
 
 class Job(FlexModel):
   id: str = Field(None, alias="_id")
+  key: str = Field(None, alias="_key")
   wo_id: str
   wo_code: str
-  wo_line_no: int
+  wo_line: int
   phase_id: str
   phase_alias: str
   product_id: str

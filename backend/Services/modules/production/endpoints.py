@@ -60,7 +60,7 @@ async def create_work_order(new_wo: WorkOrderNew):
     new_job_record = Job(
       wo_id = new_wo_record.id,
       wo_code = new_wo_record.wo_code,
-      wo_line_no = new_wo_record.wo_line_no,
+      wo_line = new_wo_record.wo_line,
       phase_id = phase_id,
       phase_alias = phase.alias,
       product_id = wo_data.product_id,
