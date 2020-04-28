@@ -191,7 +191,7 @@ export default {
     ...mapState({
       j: state => state.traceability.working_job_data,
       ws_list: state => state.traceability.work_session_list,
-      batch_data: state => state.traceability.current_batch_data.procedure,
+      batch_data: state => state.traceability.current_batch_data.step_data,
     }),
 
     

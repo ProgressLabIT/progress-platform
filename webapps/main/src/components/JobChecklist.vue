@@ -102,7 +102,7 @@ export default {
         value_index: index,
         value
       }
-      this.$store.commit('UPDATE_USER_DATA', check_data)
+      this.$store.commit('UPDATE_STEP_USER_DATA', check_data)
     },
   },
 

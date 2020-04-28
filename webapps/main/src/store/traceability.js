@@ -28,9 +28,10 @@ function createBatch(state, startDT) {
   }
 
   const procedure = state.working_job_data.step_sequence
-  if (procedure.length) new_batch.procedure = procedure.map( step => {
+  if (procedure.length) new_batch.step_data = procedure.map( step => {
     return {
       _id: step._id,
+      type: step.type,
       done: false,
       critical: false,
       user_data: []
@@ -38,6 +39,24 @@ function createBatch(state, startDT) {
   })
 
   return new_batch
+}
+
+function createEvent(state, { event_type, timestamp, step_id, user_data }) {
+  const user_id = state.user._id
+  const job = state.working_job_data
+
+  const event = {
+    event_type,
+    user_id,
+    user_session_id: state.user_session._id,
+    job_id: job._id,
+    phase_id: job.phase_id,
+    step_id,
+    user_data,
+    timestamp // ISO format
+  }
+
+  return event
 }
 
 function getClosedWorkSessionData(state, endDT) {
@@ -74,7 +93,7 @@ const traceability = {
 
   getters: {
     getBatchStep: state => step_id => {
-      const batch_procedure = state.current_batch_data.procedure
+      const batch_procedure = state.current_batch_data.step_data
       if (batch_procedure) {
         const batch_step = batch_procedure.find( step => step._id === step_id )
         return batch_step
@@ -89,9 +108,10 @@ const traceability = {
       Vue.set(state, 'user', session_data)
     },
 
-    LOAD_WORKING_JOB_DATA(state, job_data) {
+    LOAD_WORKING_JOB_DATA(state, {job_data, batch_data}) {
       Vue.set(state, 'working_job_data', job_data)
-    },
+      if (batch_data) Vue.set(state, 'current_batch_data', batch_data)
+    },  
 
     START_JOB(state, {new_work_session, new_batch, updated_job_data}) {
       // get timestamp and state metadata
@@ -117,12 +137,13 @@ const traceability = {
     },
 
     COMPLETE_STEP(state, step_index) {
-      Vue.set(state.current_batch_data.procedure[step_index], 'done', true)
+      Vue.set(state.current_batch_data.step_data[step_index], 'done', true)
     },
 
-    UPDATE_USER_DATA(state, { step_id, value_index, value }) {
-      const batch_data = state.current_batch_data
-      const step_data = batch_data.procedure.find( step => step._id === step_id )
+    UPDATE_STEP_USER_DATA(state, { step_id, value_index, value }) {
+      const step_data = this.getters.getBatchStep(step_id)
+      console.log(step_data)
+      
       Vue.set(step_data.user_data, value_index, value)
     },
 
@@ -149,13 +170,21 @@ const traceability = {
 
   actions: {
     loadJobData({ commit }, job_key) {
-      return new Promise( resolve => {
-        api.get(`job/${job_key}`)
-        .then( resp => {
-          commit('LOAD_WORKING_JOB_DATA', resp.data.detail) 
-          resolve() 
-        })
-        .catch( err => window.alert(err) )
+      return new Promise( async resolve => {
+        // Get job data
+        const job_resp = await api.get(`job/${job_key}`)
+        const job_data = job_resp.data.detail
+
+        // Get active batch data (if any)
+        let batch_data = null
+        const active_batch_id = job_data.current_batch
+        if (active_batch_id) {
+          const batch_key = active_batch_id.split('/')[1]
+          const batch_resp = await api.get(`batch/${batch_key}`)
+          batch_data = batch_resp.data.detail
+        }     
+        commit('LOAD_WORKING_JOB_DATA', {job_data, batch_data}) 
+        resolve() 
       })
     },
 
@@ -186,7 +215,7 @@ const traceability = {
         timestamp: now.toISO()
       }
 
-      api.post('/event', event).then(() => {
+      api.post('event', event).then(() => {
         const payload = {
           new_work_session, 
           new_batch, 
@@ -215,7 +244,7 @@ const traceability = {
           timestamp: now.toISO()
         }
 
-        api.post('/event', event).then(() => {
+        api.post('event', event).then(() => {
           commit('CLOSE_WORK_SESSION', updated_work_session)
           resolve()
         })
@@ -240,22 +269,31 @@ const traceability = {
           timestamp: now.toISO()
         }
 
-        api.post('/event', event).then( () => {
+        api.post('event', event).then( () => {
           commit('RESUME_JOB', new_work_session) 
           resolve()
         })
       })
     },
 
-    completeStep({ commit }, step_index) {
+    completeStep({ commit, state }, step_index) {
       return new Promise( resolve => {
         const now = DT.utc()
 
         /* INSERT EVENT CREATION HERE */
-        
+        const step_data = state.current_batch_data.step_data[step_index]
 
-        commit('COMPLETE_STEP', step_index)
-        resolve()
+        const event = createEvent(state, {
+          event_type: 'STEP_COMPLETED',
+          step_id: step_data._id,
+          timestamp: now.toISO(),
+          user_data: step_data.user_data
+        })
+
+        api.post('event', event).then(() => {
+          commit('COMPLETE_STEP', step_index)
+          resolve()
+        })
       })
     },
 

@@ -116,7 +116,7 @@ export default {
     },
 
     batch_data() {
-      return this.$store.state.traceability.current_batch_data.procedure
+      return this.$store.state.traceability.current_batch_data.step_data
     },
 
    
