@@ -49,18 +49,25 @@
                 </v-container>
 
                 <v-container v-else-if="verified" key="success">
-                  <BaseUserAvatar 
-                    size="90" 
-                    :user="user" 
-                    :show_name="false"
-                    class="ml-3">
-                  </BaseUserAvatar>
+                  <v-row align="center">
                     
-                  <transition name="slide-fade" mode="out-in"> 
-                    <span class="highlight text-uppercase ml-6" :key="user_message">
-                      {{ user_message }}
-                    </span>
-                  </transition>
+                    <v-col cols="auto" class="ml-5">
+                      <BaseUserAvatar 
+                        size="90" 
+                        :user="user" 
+                        :show_name="false">
+                      </BaseUserAvatar>
+                    </v-col>
+
+                    <v-col>
+                      <transition name="slide-fade" mode="out-in"> 
+                        <span class="highlight text-uppercase" :key="user_message">
+                          {{ user_message }}
+                        </span>
+                      </transition>
+                    </v-col>
+
+                  </v-row>
                 </v-container>
 
 
@@ -103,7 +110,7 @@ export default {
 
   computed: {
     user() {
-      return this.$store.state.session.user
+      return this.$store.state.traceability.user
     }
   },
 
