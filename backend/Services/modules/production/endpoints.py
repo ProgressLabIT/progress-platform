@@ -92,7 +92,7 @@ async def create_work_order(new_wo: WorkOrderNew):
   tx.commit_transaction()
   return APIResponse(
     message="Work order and jobs created",
-    details={
+    detail={
       'work_order': new_wo_record,
       'jobs': new_job_records
     }
@@ -169,9 +169,9 @@ async def get_assignment_list(user_id: str = None):
 
   result = db.aql.execute("""
     LET assigned_jobs_by_operator = (
-      LET user_id = @user_id ? : '*'
+      LET user_id = @user_id ? : '%'
       FOR o IN User
-      FILTER o.roles.operator == true && o._id LIKE user_id
+      FILTER o.roles.operator == true && LIKE(o._id, user_id)
       LET assigned_jobs = (    
         FOR j in Job
         FILTER !j.trash && j.assigned_to == o._id
