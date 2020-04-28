@@ -81,17 +81,16 @@
   start: ISOdts
   end: ISOdts
   last_work_session_started: str (external _key)
-  progress:
-    qt_planned: float
-    qt_completed: float
-    qt_released: float
-    current_run: int
-    current_step: int # 0 if step_check === "None"
-  forecast:
-    # this part is updated after each Run (if stepc_check active) or after each declaration
-    on_time: bool
-    estimated_remaining_time: float
-    estimated_completion: ISOdts
+  qt_planned: float
+  qt_completed: float
+  qt_released: float
+  current_iteration: _id
+  # current_step: int # 0 if step_check === "None"
+  
+  # this part is updated after each Iteration (if stepc_check active) or after each declaration
+  on_time: bool
+  estimated_remaining_time: float
+  estimated_completion: ISOdts
 
 
 

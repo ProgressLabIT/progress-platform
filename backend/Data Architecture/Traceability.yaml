@@ -1,52 +1,50 @@
 # WIP
-  _from: _key (Phase)
-  _to: _key (Phase)
-  * wo_line: _key
-  * product: _key
+  _from: _id (Phase)
+  _to: _id (Phase)
+  * wo_id: _id
+  * product: _id
   release_type: str [continuous, batch, session, manual, job]
   total_qt: float
   released_qt: float
   value: float
 
 # UserSession
-  _key: str (random)
+  * user: _id
   login: ISOdts
   logout: ISOdts
   duration: float # seconds
-  # rel 1:1 --belongs_to--> 0:N User
 
 # WorkSession (rel)
-  _from: UserSession
-  _to: Job
-  _key: str (random)
-  * user: str
+  * user_session: _id
+  * job: _id
+  * user: _id
   master_session: bool
   start: ISOdts
   end: ISOdts
-  duration: float # seconds
+  duration: int
 
-# WorkOrderLine
-  * wo_code: str
-  wo_line_no: int
-  * product: _key
-  qt_planned: float
-  qt_produced: float
-  qt_scrapped: float
-  created_at: ISOdts
-  started_at: ISOdts
-  planned_at: ISOdts
-  finished_at: ISOdts
-  due_by: ISOdts
-  delay: float
-  lead_time: float
-  troughput_time: 
-    target: float
-    value: float
-    perf_vs_target: float
-  processing_time: 
-    target: float
-    value: float
-    perf_vs_target: float
+# # WorkOrderLine
+#   * wo_code: str
+#   wo_line: int
+#   * product: _key
+#   qt_planned: float
+#   qt_produced: float
+#   qt_scrapped: float
+#   created_at: ISOdts
+#   started_at: ISOdts
+#   planned_at: ISOdts
+#   finished_at: ISOdts
+#   due_by: ISOdts
+#   delay: float
+#   lead_time: float
+#   troughput_time: 
+#     target: float
+#     value: float
+#     perf_vs_target: float
+#   processing_time: 
+#     target: float
+#     value: float
+#     perf_vs_target: float
 
 # JobPerf
   lead_time: float
@@ -59,15 +57,21 @@
     value: float
     perf_vs_target: float
 
-# Run
-  * job: str
-  run_no: int
+# Batch
+  * job: _id
+  work_session_list: list(_id)
+  # iteration_index: int
   start: ISOdts
   end: ISOdts
   duration: float
-  batch_qt: float
+  # batch_qt: float
   pass_qt: float
   scrap_qt: float
+  shown_step_index: int 
+  steps: list(step)
+    - _id
+    - ...
+    - status: ['to_do', 'completed', 'critical']
   # serial_number: str
     # actual product serial numbers will not be included in the first version
     # this field holds "fake" SNs in the form of an underscore + sequence number in the job
@@ -75,19 +79,30 @@
     # that may be introduced in the near future.
     # in case of multi-item batches, the SN will be in the form _n:m
 
-# TaskData (rel)
+# StepData
   # task_data is populated only when the job step_check parameter is not "none"
-  _from: Run
-  _to: Task
   evid: str
-  * job: _key
-  * user: _key
+  * job: _id
+  * user: _id
+  * work_session: _id
+  * batch: _id
+  * step: _id
   completed: ISOdts
-  time: float
-  data: obj
+  duration: float
+  user_data: obj
     - <field_name_1>: <field_value_1>
     - ...
     - <field_name_N>: <field_value_N> 
 
+# WorkSessionBatchTiming
+  * batch_id: str
+  * ws_id: str
+  duration: float
 
+
+
+
+
+
+# StepTiming
 

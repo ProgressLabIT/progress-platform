@@ -32,3 +32,4 @@ class User(FlexModel):
 class UserSession(FlexModel):
   user: str = Field(None, alias="_id")
   login_at: datetime = None
+  logout_at: datetime = None

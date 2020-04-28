@@ -119,7 +119,7 @@ class Job(FlexModel):
   qt_planned: float
   qt_completed: float = 0
   qt_released: float = 0
-  current_run: str = None # run _id
+  current_batch: str = None # iteration _id
   # current_step: int = None
   progress: int = Field(0, ge=0, le=100)
 
