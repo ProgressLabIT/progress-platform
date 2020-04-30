@@ -107,8 +107,8 @@
                     <v-col cols="9">
                       <v-progress-linear 
                         dense 
-                        :value="phase.progress"
-                        :color="phase.active ? $theme.blue : $theme.grey">
+                        :value="job.progress"
+                        :color="job.active ? $theme.blue : $theme.grey">
                       </v-progress-linear>
                     </v-col>
                     <v-col class="pl-4 text-right body-2">
