@@ -1,6 +1,12 @@
 <template>
   <v-container fluid class="fill py-0">
-    <v-row class="fill-height">
+
+    <v-card v-if="job_closed">
+      <h1>ATTENZIONE LAVORO CHIUSO. REINDIRIZZAMENTO IN CORSO</h1>
+      <v-progress-circular indeterminate :color="$theme.blue"></v-progress-circular>
+    </v-card>
+
+    <v-row class="fill-height" v-else>
 
       <!-- ################################ -->
       <!--          JOB DETAILS             -->
@@ -65,92 +71,93 @@
           <span>{{ j.qt_completed }} / {{ j.qt_planned }}</span>
         </v-row>
 
-
-        <!-- JOB ACTIONS -->
+        
+        <!-- ************************** -->
+        <!-- JOB ACTIONS                -->
+        <!-- ************************** -->
+        
+        <!-- START/PAUSE BUTTOM -->
         <v-row class="mx-0 mt-12">
-        
-        <v-btn 
-          :color="$theme.surface2"
-          block tile 
-          height="auto"
-          @click="startPauseResumeJob().action()">
-          <v-row class="fill-height mx-0" align="center" justify="center">
-            <v-col cols="3" class="text-right">
-              <v-icon x-large>
-                {{ j.active ? 'mdi-pause':'mdi-play' }}
-              </v-icon>
-            </v-col>
-            <v-col class="display highlight medium text-left">
-              {{ startPauseResumeJob().text }}
-            </v-col>
-          </v-row>
-        </v-btn>
+          <v-btn 
+            :color="$theme.surface2"
+            block tile 
+            height="auto"
+            @click="startPauseResumeJob().action()">
+            <v-row class="fill-height mx-0" align="center" justify="center">
+              <v-col cols="3" class="text-right">
+                <v-icon x-large>
+                  {{ j.active ? 'mdi-pause':'mdi-play' }}
+                </v-icon>
+              </v-col>
+              <v-col class="display highlight medium text-left">
+                {{ startPauseResumeJob().text }}
+              </v-col>
+            </v-row>
+          </v-btn>
         </v-row>
 
+        <!-- PROGRESS BUTTON -->
         <v-row class="mx-0 mt-2">
-        
-        <v-btn 
-          id="progress_button"
-          :color="j.active ? $theme.surface2 : $theme.background"
-          block tile
-          :disabled="!j.active || current_step_status"
-          height="auto"
-          :class="{ disabled: !j.active, completed: current_step_status }"
-          @click="progress_button.action()">
-          <v-row class="fill-height mx-0" align="center" justify="center">
-            <v-col cols="3" class="text-right">
-              <v-icon x-large>
-                {{ progress_button.icon }}
-              </v-icon>
-            </v-col>
-            <v-col class="display medium text-left" :class="{ highlight: j.active}">
-              {{ progress_button.text }}
-            </v-col>
-          </v-row>
-        </v-btn>
+          <v-btn 
+            id="progress_button"
+            :color="j.active ? $theme.surface2 : $theme.background"
+            block tile
+            :disabled="!j.active || current_step_status"
+            height="auto"
+            :class="{ disabled: !j.active, completed: current_step_status }"
+            @click="progress_button.action()">
+            <v-row class="fill-height mx-0" align="center" justify="center">
+              <v-col cols="3" class="text-right">
+                <v-icon x-large>
+                  {{ progress_button.icon }}
+                </v-icon>
+              </v-col>
+              <v-col class="display medium text-left" :class="{ highlight: j.active}">
+                {{ progress_button.text }}
+              </v-col>
+            </v-row>
+          </v-btn>
         </v-row>
-        
+      
+        <!-- PREV/NEXT STEP AND EXIT BUTTONS -->
         <v-row class="mt-2 mx-0" justify="space-between">
-            <v-btn 
-              :color="$theme.surface2"
-              tile
-              height="auto" width="32%"
-              @click="goToPreviousStep"
-              class="py-3">
-              <!-- <v-row class="fill-height mx-0" align="center" justify="center"> -->
-                  <v-icon x-large>
-                    mdi-skip-previous
-                  </v-icon>
-              <!-- </v-row> -->
-            </v-btn>  
 
-            <v-btn 
-              :color="$theme.surface2"
-              tile
-              height="auto" width="32%"
-              @click="goToNextStep"
-              class="py-3">
-<!--               <v-row class="fill-height mx-0" align="center" justify="center">
- -->                  <v-icon x-large>
-                    mdi-skip-next
-                  </v-icon>
-              <!-- </v-row> -->
-            </v-btn>  
+          <v-btn 
+            :color="$theme.surface2"
+            tile
+            height="auto" width="32%"
+            @click="goToPreviousStep"
+            class="py-3">
+            <v-icon x-large>
+              mdi-skip-previous
+            </v-icon>
+          </v-btn>  
 
-            <v-btn 
-              :color="$theme.surface2"
-              tile
-              height="auto" width="32%"
-              @click="exitJob"
-              class="py-3">
-              <!-- <v-row class="fill-height mx-0" align="center" justify="center"> -->
-                  <v-icon x-large>
-                    mdi-keyboard-return
-                  </v-icon>
-              <!-- </v-row> -->
-            </v-btn>  
+          <v-btn 
+            :color="$theme.surface2"
+            tile
+            height="auto" width="32%"
+            @click="goToNextStep"
+            class="py-3">
+            <v-icon x-large>
+              mdi-skip-next
+            </v-icon>
+          </v-btn>  
+
+          <v-btn 
+            :color="$theme.surface2"
+            tile
+            height="auto" width="32%"
+            @click="exitJob"
+            class="py-3">
+            <v-icon x-large>
+              mdi-keyboard-return
+            </v-icon>
+          </v-btn>  
         </v-row>
+
       </v-col>
+
     </v-row>
   </v-container>
 </template>
@@ -183,6 +190,7 @@ export default {
       ],
 
       vuex_ready: false,
+      job_closed: false
     }
   },
 
@@ -272,7 +280,7 @@ export default {
     },
 
     current_step_is_last() {
-      return this.completed_steps_count === this.j.step_sequence.length - 1
+      return this.completed_steps_count === this.j.step_sequence.length -1
     },
 
     current_batch_is_last() {
@@ -336,22 +344,60 @@ export default {
         }
       }
     },
-  },
-
-  methods: {
 
     async completeStep() {
-      await this.$store.dispatch('completeStep', this.current_step_index)
-      // Go to first step that is not done.
-      // This works with both force_order mode active or not
-      const next_step_index = this.batch_data.findIndex( step => !step.done )
-      this.goToStep(next_step_index)
+      let can_proceed = true
+
+      // Values will change after committing mutation save to use for navigation later on
+      const current_step_was_last = this.current_step_is_last
+      const current_batch_was_last = this.current_batch_is_last
+
+      if (this.current_step_is_last) {
+        can_proceed = window.confirm(this.confirm_batch_done_message)
+        
+        if (can_proceed && this.current_batch_is_last) {
+          can_proceed = window.confirm(this.confirm_job_done_message)
+        }
+      }
+
+
+      if (can_proceed) {
+        await this.$store.dispatch('completeStep', {
+          step_index: this.current_step_index,
+          last_step: this.current_step_is_last,
+          batch_qt: this.production_batch,
+          last_batch: this.current_batch_is_last
+        })
+
+        if (current_step_was_last && current_batch_was_last) {
+          this.$router.push({ name: 'userJobs' })
+        }
+        else if (current_step_was_last) {
+          this.goToStep(0)
+        }
+        else if (this.j.parameters.step_check != 'none') {
+          // Go to first step that is not done.
+          // This works with both force_order mode active or not
+          this.goToNextUndoneStep()
+        }
+      }
     },
 
     async declareBatch() {
-      await this.$store.dispatch('declareBatch', this.production_batch)
-      if (this.current_batch_is_last) this.exitJob()
-      else if (this.step_check != 'none') this.goToStep(0)
+      let can_proceed = true
+
+      if (this.current_batch_is_last) {
+        can_proceed = window.confirm(this.confirm_job_done_message)
+      }
+
+      if (can_proceed) {
+        await this.$store.dispatch('declareBatch', {
+          batch_qt: this.production_batch,
+          last_batch: this.current_batch_is_last
+        })
+        if (this.current_batch_is_last) this.exitJob()
+        else if (this.j.parameters.step_check != 'none') this.goToStep(0)
+      }
     },
 
     goToStep(step_sequence) {
@@ -360,6 +406,13 @@ export default {
 
     goToNextUndoneStep() {
       if (this.batch_data) {
+        const procedure_length = this.j.step_sequence.length
+        for (let i = this.current_step_index; i < procedure_length ; i++) {
+          if (!this.batch_data[i].done) {
+            this.goToStep(i)
+            return
+          }
+        }
         const next_step_index = this.batch_data.findIndex( step => !step.done )
         this.goToStep(next_step_index)
       }
@@ -383,12 +436,29 @@ export default {
     }
   },
 
-  beforeMount() {
+  created() {
+    // Load job data
     const job_key = this.job_key
     this.$store.dispatch('loadJobData', job_key)
     .then(() => {
-      this.vuex_ready = true
-      this.goToNextUndoneStep()
+      const data = this.$store.state.traceability
+      const job_data = data.working_job_data
+
+      // If job is closed, redirect to 
+      this.job_closed = job_data.stage == 'closed'
+
+      if (this.job_closed) {
+        setTimeout(() => {
+          this.$router.push({ name: 'userJobs'})
+        }, 6000)
+      }
+      else {
+        this.vuex_ready = true  
+        if (data.batch_data) {
+          const next_step_index = this.batch_data.findIndex( step => !step.done )
+          this.$router.replace({ query: { step: next_step_index + 1 }})
+        }
+      }
     })
   },
 }
