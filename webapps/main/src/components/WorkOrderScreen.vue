@@ -21,13 +21,13 @@
     </template>
 
     <template v-slot:content>
-      <v-container fluid class="fill">
+      <v-container fluid class="fill" ref="container">
         <v-row no-gutters class="fill-height">
           
           <v-col cols="4" lg="3" class="fill-height pr-9" style="position:fixed">
             <v-row>
               <v-col class="py-0">
-                <WorkOrderDataColumn v-bind="{ wo_data }">
+                <WorkOrderDataColumn v-if="vuex_ready" v-bind="{ wo_data }">
                 </WorkOrderDataColumn>
               </v-col>
               <v-divider vertical ></v-divider>
@@ -36,7 +36,7 @@
 
           <v-col cols="8"  lg="9" offset="4" offset-lg="3" class="py-0 fill-height">
             <keep-alive>
-              <router-view v-bind="{ wo_data }"></router-view>
+              <router-view v-if="vuex_ready" v-bind="{ wo_data }"></router-view>
             </keep-alive>
           </v-col>
 
@@ -75,6 +75,8 @@ export default {
           title: 'storico'
         }
       ],
+      vuex_ready: false,
+      column_height: '80vh'
     }
   },
 
@@ -103,14 +105,14 @@ export default {
         this.$router.push({ name: this.$route.query.back_to })
       // }
     },
-
-    
   },
 
   created() {
     this.$store.dispatch('loadWorkOrderData', this.wo_key)
+    .then(() => this.vuex_ready = true)
+    
     this.$store.dispatch('loadUsers')
-  }
+  },
 }
 </script>
 
