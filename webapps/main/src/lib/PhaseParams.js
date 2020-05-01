@@ -34,12 +34,12 @@ export const release_style = {
 
 export const step_check = {
 
-  title: `Controllo passi`,
+  title: `Lotto di controllo`,
   type: 'select',
   values: new Map([
     ['none', {
       name: `Nessuno`,
-      description: `Nessun controllo step. Eventuali procedure registrate vengono utilizzate solo a scopo di consultazione per l'utente, senza nessun tracciamento o vincolo. È l'operatore che decide quando dichiarazione la produzione dei pezzi.`
+      description: `Nessun controllo dei passi. Eventuali procedure registrate vengono mostrate a scopo puramente illustrativo per l'utente, senza nessun tracciamento o vincolo. È l'operatore che decide quando dichiarazione la produzione dei pezzi.`
     }],
 
     // ['single', {
@@ -49,7 +49,7 @@ export const step_check = {
 
     ['fixed_batch', {
       name: `Lotto fisso`,
-      description: `A fine procedura viene dichiarata la produzione di un lotto di avanzamento fisso, definito nel parametro "Quantità lotto di produzione".`  
+      description: `I passi della procedura vengono considerati come eseguiti in contemporanea su un numero fisso di prodotti definito nel parametro "Lotto di Produzione". Al completamento di tutti i passi viene dichiarata conclusa la produzione dell'intero lotto.`  
     }],
 
     // ['manual_batch', {
@@ -59,7 +59,7 @@ export const step_check = {
 
     ['job', {
       name: `Lavoro`,
-      description: `A fine procedura viene dichiarata la produzione dell'intera quantità pianificata per il lavoro (lavoro a ciclo unico).`
+      description: `I passi della procedura vengono considerati come eseguiti in contemporanea su tutti i pezzi pianificati per il lavoro in corso. Al completamento di tutti i passi viene dichiarata conclusa la produzione di tutti i pezzi previsti (lavoro a ciclo unico).`
     }]
   ])
 }
@@ -83,17 +83,17 @@ export const parallel_job_allowed = {
 
 
 export const step_check_force_order = {
-  title: `Sequenza passi obbligata`,
+  title: `Sequenza passi obbligata *`,
   type: 'bool',
   values: new Map([
     [true, {
       name: `Sì`,
-      description: `I passi possono essere validati solo nella sequenza indicata.`
+      description: `I passi possono essere validati solo nella sequenza indicata. (* Valido solo con lotto di controllo)`
     }],
 
     [false, {
       name: `No`,
-      description: `Ciascun passo può essere validato in maniera autonoma dagli altri.`
+      description: `Ciascun passo può essere validato in maniera autonoma dagli altri. (* Valido solo con lotto di controllo)`
     }]
   ])
 }
