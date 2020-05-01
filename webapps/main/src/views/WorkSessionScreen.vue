@@ -73,7 +73,7 @@
           :color="$theme.surface2"
           block tile 
           height="auto"
-          @click="startPauseResumeJob.action()">
+          @click="startPauseResumeJob().action()">
           <v-row class="fill-height mx-0" align="center" justify="center">
             <v-col cols="3" class="text-right">
               <v-icon x-large>
@@ -81,7 +81,7 @@
               </v-icon>
             </v-col>
             <v-col class="display highlight medium text-left">
-              {{ startPauseResumeJob.text }}
+              {{ startPauseResumeJob().text }}
             </v-col>
           </v-row>
         </v-btn>
@@ -182,7 +182,7 @@ export default {
         { name: 'phase_alias', text: 'fase' },
       ],
 
-      vuex_ready: false
+      vuex_ready: false,
     }
   },
 
@@ -194,6 +194,13 @@ export default {
       batch_data: state => state.traceability.current_batch_data.step_data,
     }),
 
+    confirm_batch_done_message() {
+      return "Hai completato l'ultimo passo della procedura. Confermi il completamento dei pezzi in lavorazione?"
+    },
+    
+    confirm_job_done_message() {
+      return "Hai completato tutti i pezzi previsti dal lavoro. Ne confermi la chiusura?"
+    },
     
     job_info() {
       const batch_index = { name: 'batch_index', text: 'iterazione' }
@@ -227,7 +234,8 @@ export default {
       }
       
       if ('parameters' in this.j) {
-        return this.j.parameters.step_check != 'none' && !this.current_step_is_last 
+        return this.j.parameters.step_check != 'none' 
+        // && !this.current_step_is_last 
             ? complete_step 
             : declare_batch
       }
@@ -279,19 +287,11 @@ export default {
 
     progress_value() {
       if ('parameters' in this.j) {
-        const completed_batchs_progress = this.j.qt_completed / this.j.qt_planned
-        const current_batch_total_value = this.j.qt_planned / this.production_batch
+        const completed_batch_progress = this.j.qt_completed / this.j.qt_planned
+        const current_batch_total_value = this.production_batch / this.j.qt_planned
         const step_progress_value = current_batch_total_value / this.j.step_sequence.length
         const current_batch_current_value = step_progress_value * this.completed_steps_count
-        const total_progress = completed_batchs_progress + current_batch_current_value
-
-        // console.log({
-        //   completed_batchs_progress,
-        //   current_batch_total_value,
-        //   step_progress_value,
-        //   current_batch_current_value,
-        //   total_progress
-        // })
+        const total_progress = completed_batch_progress + current_batch_current_value
 
         return Math.floor( 100 * total_progress )
       }
@@ -306,6 +306,9 @@ export default {
         color: this.$theme.white_disabled
       }
     },
+  },
+
+  methods: {
 
     startPauseResumeJob() {
       const result = {
@@ -355,6 +358,13 @@ export default {
       this.$router.push({ query: { step: step_sequence + 1 }})
     },
 
+    goToNextUndoneStep() {
+      if (this.batch_data) {
+        const next_step_index = this.batch_data.findIndex( step => !step.done )
+        this.goToStep(next_step_index)
+      }
+    },
+
     goToNextStep() {
       const last_index = this.j.step_sequence.length - 1
       if (this.current_step_index === last_index) this.goToStep(0)
@@ -376,8 +386,11 @@ export default {
   beforeMount() {
     const job_key = this.job_key
     this.$store.dispatch('loadJobData', job_key)
-    .then(() => this.vuex_ready = true)
-  }
+    .then(() => {
+      this.vuex_ready = true
+      this.goToNextUndoneStep()
+    })
+  },
 }
 </script>
 

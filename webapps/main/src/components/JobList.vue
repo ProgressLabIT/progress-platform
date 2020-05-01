@@ -156,7 +156,7 @@ export default {
         { text: 'FASE', value: 'phase_alias', },
         { text: 'PROGRESSO', value: 'progress', width: '30%'},
         { text: 'QComp', value: 'qt_completed', align: 'end'},
-        { text: 'QRil', value: 'qt_released', align: 'end' },
+        // { text: 'QRil', value: 'qt_released', align: 'end' },
         { text: 'QTot', value: 'qt_planned', align: 'end' },
       ],
       search_fields: [

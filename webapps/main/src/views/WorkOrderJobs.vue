@@ -237,7 +237,7 @@ export default {
         { value: 'phase_alias', text: 'FASE', cols: 2, width: '20%'},
         { value: 'progress', text: 'AVANZAMENTO', cols: 4, width: '30%'},
         { value: 'qt_completed', text: 'QComp', align: 'end', cols: false, width: 'auto'},
-        { value: 'qt_released', text: 'QRil', align: 'end', cols: false, width: 'auto'},
+        // { value: 'qt_released', text: 'QRil', align: 'end', cols: false, width: 'auto'},
         { value: 'qt_remaining', text: 'QRim', align: 'end', cols: false, width: 'auto'},
         { value: 'assigned_to', text: 'ASSEGNATO A', align: 'end', cols: '3', width: '30%'},
       ],
@@ -256,7 +256,7 @@ export default {
         const params = jobs[0].parameters
         const phase_alias = jobs[0].phase_alias
         const total_completed = jobs.reduce( (sum, job) => sum + job.qt_completed, 0)
-        const total_released = jobs.reduce( (sum, job) => sum + job.qt_released, 0 )
+        // const total_released = jobs.reduce( (sum, job) => sum + job.qt_released, 0 )
         const total_remaining = jobs.reduce( (sum, job) => sum + job.qt_planned - job.qt_completed, 0 )
         const total_progress = Math.floor(
           jobs.reduce( (sum, job) => sum + job.progress, 0) / jobs.length
@@ -273,7 +273,7 @@ export default {
           editing,
           active,
           ...params,
-          qt_released: total_released,
+          // qt_released: total_released,
           qt_completed: total_completed,
           qt_remaining: total_remaining,
           progress: total_progress,

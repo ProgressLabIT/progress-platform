@@ -9,20 +9,20 @@ export const release_style = {
       description: `Tutti i prodotti di questa fase sono immediatamente disponibili alla fase successiva o a magazzino al momento della dichiarazione di produzione.`
     }],
 
-    ['batch', {
-      name: `Lotto`,
+    ['release_batch', {
+      name: `Lotto di rilascio`,
       description: `I prodotti di una fase sono disponibili alla fase successiva o a magazzino dopo la produzione di una quantità prefissata definita nel parametro "Lotto di rilascio". Tale quantità è valida per tutto il lavoro, con l'eccezione dell'ultimo rilascio, che potrebbe essere inferiore al lotto definito`
     }],
 
-    ['session', {
-      name: `Sessione di lavoro`,
-      description: `I prodotti sono resi disponibili alla fase a valle o a magazzino alla fine della sessione di lavoro (es. fine turno).`
-    }],
+    // ['session', {
+    //   name: `Sessione di lavoro`,
+    //   description: `I prodotti sono resi disponibili alla fase a valle o a magazzino alla fine della sessione di lavoro (es. fine turno).`
+    // }],
 
-    ['manual', {
-      name: `Manuale`,
-      description: `I prodotti di una fase già dichiarati diventano disponibili alla fase a valle quando segnalato dall'operatore tramite pulsante "RILASCIA"`
-    }],
+    // ['manual', {
+    //   name: `Manuale`,
+    //   description: `I prodotti di una fase già dichiarati diventano disponibili alla fase a valle quando segnalato dall'operatore tramite pulsante "RILASCIA"`
+    // }],
 
     ['job', {
       name: `Lavoro`,
@@ -52,10 +52,10 @@ export const step_check = {
       description: `A fine procedura viene dichiarata la produzione di un lotto di avanzamento fisso, definito nel parametro "Quantità lotto di produzione".`  
     }],
 
-    ['manual_batch', {
-      name: `Lotto manuale`,
-      description: `A fine procedura viene dichiarata la produzione di un lotto di produzione definito di volta in volta dall'operatore.`
-    }],
+    // ['manual_batch', {
+    //   name: `Lotto manuale`,
+    //   description: `A fine procedura viene dichiarata la produzione di un lotto di produzione definito di volta in volta dall'operatore.`
+    // }],
 
     ['job', {
       name: `Lavoro`,
@@ -129,11 +129,11 @@ export const wip_flow = {
 */
 
 export default {
-  release_style,
+  // release_style,
   step_check,
   step_check_force_order,
   parallel_job_allowed,
   production_batch_qt,
-  release_batch_qt,
+  // release_batch_qt,
   // wip_flow
 }
