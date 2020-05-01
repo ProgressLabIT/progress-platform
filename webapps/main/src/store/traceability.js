@@ -2,7 +2,6 @@ import Vue from 'vue'
 import { api } from '@/lib/apiCall.js'
 import { DateTime as DT } from 'luxon'
 
-
 function createWorkSession(state, startDT) {
   const job_id = state.working_job_data._id
   const user_id = state.user._id
@@ -41,7 +40,7 @@ function createBatch(state, startDT) {
   return new_batch
 }
 
-function createEvent(state, { event_type, timestamp, step_id, user_data }) {
+function createEvent(state, { event_type, timestamp, step_id, user_data, completed_batch_qt }) {
   const user_id = state.user._id
   const job = state.working_job_data
 
@@ -53,6 +52,7 @@ function createEvent(state, { event_type, timestamp, step_id, user_data }) {
     phase_id: job.phase_id,
     step_id,
     user_data,
+    completed_batch_qt,
     timestamp // ISO format
   }
 
@@ -98,7 +98,7 @@ const traceability = {
         const batch_step = batch_procedure.find( step => step._id === step_id )
         return batch_step
       }
-      else return {}
+      else return []
     }
   },
 
@@ -110,7 +110,7 @@ const traceability = {
 
     LOAD_WORKING_JOB_DATA(state, {job_data, batch_data}) {
       Vue.set(state, 'working_job_data', job_data)
-      if (batch_data) Vue.set(state, 'current_batch_data', batch_data)
+      Vue.set(state, 'current_batch_data', batch_data)
     },  
 
     START_JOB(state, {new_work_session, new_batch, updated_job_data}) {
@@ -143,7 +143,7 @@ const traceability = {
     UPDATE_STEP_USER_DATA(state, { step_id, value_index, value }) {
       const step_data = this.getters.getBatchStep(step_id)
       console.log(step_data)
-      
+
       Vue.set(step_data.user_data, value_index, value)
     },
 
@@ -152,16 +152,15 @@ const traceability = {
       Vue.set(state, 'current_batch_data', new_batch)
     },
 
-    COMPLETE_JOB(state, endDT) {
+    CLOSE_JOB(state, endDT) {
       const job = state.working_job_data
       const updated_job = {
         ...job,
-        qt_completed: job.qt_planned,
-        stage: 'completed',
+        stage: 'closed',
         end: endDT.toISO(),
         active: false,
         current_batch: null,
-        qt_released: job.qt_planned,
+        // qt_released: job.qt_planned,
         progress: 100 
       }
       Vue.set(state, 'working_job_data', updated_job)
@@ -176,7 +175,7 @@ const traceability = {
         const job_data = job_resp.data.detail
 
         // Get active batch data (if any)
-        let batch_data = null
+        let batch_data = {}
         const active_batch_id = job_data.current_batch
         if (active_batch_id) {
           const batch_key = active_batch_id.split('/')[1]
@@ -227,7 +226,6 @@ const traceability = {
 
     pauseJob({ commit, state }) {
       return new Promise( resolve => {
-
         const now = DT.utc()
         const updated_work_session = getClosedWorkSessionData(state, now)
 
@@ -276,56 +274,83 @@ const traceability = {
       })
     },
 
-    completeStep({ commit, state }, step_index) {
+    completeStep({ commit, state }, { step_index, last_step, last_batch, batch_qt }) {
       return new Promise( resolve => {
         const now = DT.utc()
 
-        /* INSERT EVENT CREATION HERE */
+        const job = state.working_job_data
         const step_data = state.current_batch_data.step_data[step_index]
+
+        const commitChanges = () => {
+          commit('COMPLETE_STEP', step_index)
+          if (last_step) {
+           
+            const new_batch = last_batch ? {} : createBatch(state, now)
+            const new_completed_qt = job.qt_completed + batch_qt
+            commit('COMPLETE_BATCH', { qt_completed: new_completed_qt, new_batch })
+           
+            if (last_batch) {
+              commit('CLOSE_JOB', now)
+            }
+          }
+        }
 
         const event = createEvent(state, {
           event_type: 'STEP_COMPLETED',
           step_id: step_data._id,
           timestamp: now.toISO(),
-          user_data: step_data.user_data
+          user_data: step_data.user_data,
+          completed_batch_qt: batch_qt
         })
-
         api.post('event', event).then(() => {
-          commit('COMPLETE_STEP', step_index)
+          commitChanges()
           resolve()
         })
       })
     },
 
-    declareBatch({ commit, state }, batch_qt) {
+    declareBatch({ commit, state }, { batch_qt, last_batch }) {
       return new Promise( resolve => {
         const now = DT.utc()
-
         const job = state.working_job_data
-        const remaining_qt = job.qt_planned - job.qt_completed
-        const batch_is_last = batch_qt === remaining_qt
-        
+        const commitChanges = () => {
+          const new_completed_qt = job.qt_completed + batch_qt
+          const new_batch = last_batch ? {} : createBatch(state, now)
+          commit('COMPLETE_BATCH', { qt_completed: new_completed_qt, new_batch })
+
+          if (last_batch) {
+            commit('CLOSE_JOB', now)
+          }
+        }
+
 
         /* INSERT EVENT CREATION HERE */ 
+        const event = createEvent(state, {
+          event_type: 'BATCH_COMPLETED',
+          timestamp: now.toISO(),
+          completed_batch_qt: batch_qt
+        })
 
-        
-        if (batch_is_last) {
-          const updated_work_session = getClosedWorkSessionData(state, now)
-          commit('COMPLETE_JOB', now)
-          commit('CLOSE_WORK_SESSION', updated_work_session)
-        }
-        else {
-          const new_batch = createBatch(state, now)
-          const new_completed_qt = job.qt_completed + batch_qt
-          const payload = {
-            qt_completed: new_completed_qt,
-            new_batch
-          }
-          commit('COMPLETE_BATCH', payload)
-        }
-        resolve()
+        api.post('event', event).then(() => {
+          commitChanges()
+          resolve()
+        })
       })
-    }
+    },
+
+    // closeJob({ commit, state }, { now }) {
+    //   return new Promise( resolve => {
+    //     const event = createEvent(state, { 
+    //       event_type: 'JOB_CLOSED',
+    //       timestamp: now.toISO() 
+    //     })
+    //     api.post('event', event).then(() => {
+    //       commit('CLOSE_WORK_SESSION')
+    //       commit('COMPLETE_JOB', now)
+    //       resolve()
+    //     })
+    //   })
+    // }
   }
 }
 
