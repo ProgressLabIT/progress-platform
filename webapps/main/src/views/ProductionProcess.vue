@@ -235,7 +235,7 @@
 import { mapActions } from 'vuex'
 import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
-import PhaseAssignments from '@/components/PhaseAssignments.vue'
+// import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 import draggable from 'vuedraggable'
 
@@ -243,7 +243,7 @@ import draggable from 'vuedraggable'
 const views_map = [
         { name: 'procedura', component: 'PhaseSteps' },
         { name: 'parametri', component: 'PhaseParameters' },
-        { name:  'assegnazioni', component: 'PhaseAssignments' } 
+        // { name:  'assegnazioni', component: 'PhaseAssignments' } 
       ]
 
 export default {
@@ -255,7 +255,7 @@ export default {
   components: {
     PhaseParameters,
     PhaseSteps,
-    PhaseAssignments,
+    // PhaseAssignments,
     BaseTooltipIcon,
     draggable,
   },

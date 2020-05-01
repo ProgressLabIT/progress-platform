@@ -103,7 +103,7 @@ export default {
       views: [
         { name: 'info', text: 'INFO', align: 'start' },
         { name: 'people', text: 'PERSONE', align: 'start' },
-        { name: 'equipment', text: 'MACCHINARI', align: 'end' },
+        // { name: 'equipment', text: 'MACCHINARI', align: 'end' },
       ],
       current_view: 0,
       wo_info: [
