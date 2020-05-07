@@ -122,23 +122,26 @@ export default {
 
   computed: {
     assignments() {
-      let assignments = {}
-      this.wo_data.jobs.forEach( j => {
-        if (j.assigned_to == null) {
-          if ('unassigned' in assignments) assignments.unassigned.jobs.push(j)
-          else assignments.unassigned = { jobs: [j] }
-        }
-
-        else {
-          const id = j.assigned_to._id
-          if (id in assignments) assignments[id].jobs.push(j)
-          else {
-            assignments[id] = this.$store.getters.user_data(id)
-            assignments[id].jobs = [j]
+      if (typeof this.wo_data != 'undefined') {
+        let assignments = {}
+        this.wo_data.jobs.forEach( j => {
+          if (j.assigned_to == null) {
+            if ('unassigned' in assignments) assignments.unassigned.jobs.push(j)
+            else assignments.unassigned = { jobs: [j] }
           }
-        }
-      })
-      return assignments
+
+          else {
+            const id = j.assigned_to._id
+            if (id in assignments) assignments[id].jobs.push(j)
+            else {
+              assignments[id] = this.$store.getters.user_data(id)
+              assignments[id].jobs = [j]
+            }
+          }
+        })
+        return assignments
+      }
+      else return {}
     }
   },
 
