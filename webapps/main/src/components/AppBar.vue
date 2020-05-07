@@ -34,6 +34,7 @@ export default {
       sections: {
         product: 'Libreria prodotti',
         production: 'monitoraggio produzione',
+        'select-job': 'Selezione lavoro',
         worksession: 'sessione di lavoro'
       }
     }
