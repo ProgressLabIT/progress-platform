@@ -5,7 +5,7 @@
       dense
       :headers="table_headers"
       :items="filtered_wo_list"
-      :options="{sortBy: ['due_by', 'wo_code']}"
+      :options="{sortBy: ['due_by', 'wo_code', 'wo_line']}"
       loading-text="Recupero dati in corso..."
       fixed-header  
       :height="table_height"
@@ -102,7 +102,7 @@ export default {
         { value: 'qt_planned', text: 'QP', align: 'end'},
         { value: 'qt_remaining', text: 'QR', align: 'end'},
         // { value: 'active_phases', text: 'FASE'},
-        { value: 'due_by', text: 'ENTRO', }
+        { value: 'due_by', text: 'ENTRO', sort: this.sortDate}
       ],
       table_height: '85vh',
       // wo_list: wo_list,
@@ -202,6 +202,25 @@ export default {
         back_to_route_name: this.$route.name
       })
     },
+
+    sortDate(a,b) {
+      // equal items sort equally
+      if (a === b) {
+          return 0
+      }
+      // nulls sort after anything else
+      else if (a === null) {
+          return 1
+      }
+      else if (b === null) {
+          return -1
+      }
+      // standard sorting
+      else { 
+          return a < b ? 1 : -1
+      }
+
+    }
   },
 
   mounted() {
