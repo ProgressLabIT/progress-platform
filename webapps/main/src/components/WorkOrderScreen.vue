@@ -42,6 +42,9 @@
 
         </v-row>
       </v-container>
+
+      <LoadingSignal v-else></LoadingSignal>
+
     </template>
 
   </BaseModalScreen>
@@ -50,6 +53,7 @@
 <script>
 import BaseModalScreen from '@/components/BaseModalScreen.vue'
 import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue'
+import LoadingSignal from '@/components/LoadingSignal'
 
 export default {
 
@@ -57,6 +61,7 @@ export default {
 
   components: {
     BaseModalScreen,
+    LoadingSignal,
     WorkOrderDataColumn,
   },
 

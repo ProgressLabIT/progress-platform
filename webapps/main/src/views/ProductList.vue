@@ -66,6 +66,9 @@
     </v-row>
 
 
+    <LoadingSignal v-else></LoadingSignal>   
+
+
     <!-- DELETE/RESTORE NOTIFICATION -->
     <v-snackbar id="delete-notification" bottom left 
       v-model="deleteSnackbar.show" 
@@ -89,6 +92,7 @@
 
 <script>
 import ProductCard from '@/components/ProductCard' 
+import LoadingSignal from '@/components/LoadingSignal'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 
 import { mapGetters, mapActions } from 'vuex'
@@ -98,7 +102,8 @@ export default {
   name: 'ProductList',
   
   components: {
-    ProductCard
+    ProductCard,
+    LoadingSignal
   },
 
   // followingi props passed in router query string
