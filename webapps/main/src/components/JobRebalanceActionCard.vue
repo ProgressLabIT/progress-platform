@@ -41,7 +41,7 @@
               type="number"
               :value="j.qt_remaining"
               :min="0"
-              :max="total_remaining"
+              :max="qt_to_allocate"
               @input="updateRemainingQt(index, $event)">
             </v-text-field>
           </template>
@@ -104,8 +104,8 @@
           </template>
 
           <template v-if="col.value === 'qt_remaining'">
-            <span class="body-1">{{ total_remaining }} / </span>
-            <span class="body-1" :style="remaining_style">{{ new_total }}</span>
+            <span class="body-1">{{ qt_to_allocate }} / </span>
+            <span class="body-1" :style="remaining_style">{{ working_total_remaining }}</span>
             <span class="caption ml-4 mr-n10">({{ remaining_delta }})</span>
           </template>        
         </v-col>
@@ -187,7 +187,7 @@ export default {
         { value: 'assigned_to', cols: 3, offset: 1, text: 'Assegnato a'}
       ],
       temp_jobs: [],
-      new_total: 0,
+      working_total_remaining: 0,
       saving: false,
 
       // Metadata to carry over from existing jobs to new ones
@@ -212,12 +212,12 @@ export default {
       return this.$route.params.wo_key
     }, 
 
-    total_remaining() {
+    qt_to_allocate() {
       return Object.values(this.jobs).reduce( (sum, job) => sum + job.qt_planned - job.qt_completed, 0)
     },
 
     remaining_match() {
-      return this.new_total === this.total_remaining 
+      return this.working_total_remaining === this.qt_to_allocate 
     },
 
     remaining_style() {
@@ -227,7 +227,7 @@ export default {
     },
 
     remaining_delta() {
-      const delta = this.new_total - this.total_remaining
+      const delta = this.working_total_remaining - this.qt_to_allocate
       const sign = delta < 0 ? '' : '+'
       return `${sign}${delta}`
     }
@@ -239,7 +239,7 @@ export default {
     },
 
     updateNewTotal() {
-      this.new_total = this.temp_jobs
+      this.working_total_remaining = this.temp_jobs
         .filter(j => !j.trash)
         .reduce( (sum, job) => sum + job.qt_remaining, 0)
     },
@@ -277,12 +277,12 @@ export default {
     rebalanceJobs() {
       // check if quantity is divisible by the number of jobs considered
       let jobs = this.temp_jobs.filter(j => !j.trash)
-      let remainder = this.total_remaining % jobs.length
+      let remainder = this.qt_to_allocate % jobs.length
 
       // Spread remaining quantity among all jobs, excluding started jobs to be closed
       for (let j of this.temp_jobs) {
 
-        if (!j.trash) j.qt_remaining = Math.floor(this.total_remaining / jobs.length)
+        if (!j.trash) j.qt_remaining = Math.floor(this.qt_to_allocate / jobs.length)
       }
 
       // assign remainder starting from the first job, excluding started jobs to be closed
@@ -326,7 +326,13 @@ export default {
     save() {
 
       // Check if overall job quantity matches original remaining quantity
-      if (!this.remaining_match) window.alert('Le quantità non combaciano')
+      if (!this.remaining_match) {
+        window.alert('Le quantità non combaciano')
+      }
+
+      else if (this.temp_jobs.some( j => !('assigned_to' in j) )) {
+        window.alert('Assegna un operatore ai nuovi lavori')
+      }
 
       else {
         this.saving = true
