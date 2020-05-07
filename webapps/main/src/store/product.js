@@ -25,7 +25,6 @@ const product = {
     },
 
     UPDATE_PRODUCT(state, updated_product) {
-      // console.log({updated_product})
       updateProduct(state.list, updated_product._key, product => {
         for (const field in updated_product) {
           if (field != '_key') {
@@ -118,7 +117,6 @@ const product = {
         { active: !product.active }
       )
       .then( resp => {
-        // commit('SWTICH_ACTIVE_STATE', product._key)
         commit('UPDATE_PRODUCT', resp.data.detail )
       })
     },

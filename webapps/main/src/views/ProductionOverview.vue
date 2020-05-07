@@ -250,7 +250,6 @@ export default {
           back_to: back_to_route_name
         }
       }
-      // console.log({this_route}, {to_route})
       this.$router.push(to_route)
     },
   },
@@ -263,9 +262,7 @@ export default {
     this.$store.dispatch("loadUsers")
   },
 
-  // created() {
-
-     
+  // created() {     
   //   Resize app content with window: see also another solution at https://www.html5rocks.com/en/tutorials/speed/animations/ 
     
   //   this.updateHeight()

@@ -26,7 +26,6 @@ export default function productionFilterMatch(item, filters, search_fields) {
       // Perform text search in the defined fields
       case 'search_string':
         match = multiMatch(filters.search_string, item, search_fields)
-        // console.log({item}, "Search string: ", this.filters.search_string, {match})
         break
 
       case 'started':

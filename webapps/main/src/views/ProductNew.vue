@@ -66,32 +66,25 @@ export default {
   methods: {
 
     postNewProduct() {
-      // console.log("Preparing form data...")
       let body = new FormData()
       const code = this.new_product_code.toUpperCase()
       const desc = this.new_product_desc
 
-      console.log({code}, {desc})
 
       body.append("code", code)
       body.append("description", desc)
 
       if (this.new_product_pic) {
-        // console.log("found image! Adding to body...")
         const image = this.new_product_pic
         body.append("image", image, image.name)
       }
       
-      console.log("Posting form data...")
-      console.log({body})
-
       api.post('product', body, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         })
         .then(resp => {
-          console.log(resp)
           // Go back to product list
           const new_product_data = resp.data.detail
           this.$store.commit('ADD_NEW_PRODUCT', new_product_data)
@@ -103,7 +96,6 @@ export default {
           })
         })
         .catch(error => {
-          console.log(error.response)
           window.alert("Couldn't save product, try again.")
           this.$router.back()
         })

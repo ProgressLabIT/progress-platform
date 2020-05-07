@@ -142,8 +142,6 @@ const traceability = {
 
     UPDATE_STEP_USER_DATA(state, { step_id, value_index, value }) {
       const step_data = this.getters.getBatchStep(step_id)
-      console.log(step_data)
-
       Vue.set(step_data.user_data, value_index, value)
     },
 
@@ -337,20 +335,6 @@ const traceability = {
         })
       })
     },
-
-    // closeJob({ commit, state }, { now }) {
-    //   return new Promise( resolve => {
-    //     const event = createEvent(state, { 
-    //       event_type: 'JOB_CLOSED',
-    //       timestamp: now.toISO() 
-    //     })
-    //     api.post('event', event).then(() => {
-    //       commit('CLOSE_WORK_SESSION')
-    //       commit('COMPLETE_JOB', now)
-    //       resolve()
-    //     })
-    //   })
-    // }
   }
 }
 

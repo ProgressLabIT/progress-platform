@@ -50,22 +50,6 @@
               </v-row>
             </template>
             
-            <!-- <template v-else-if="header.value === 'active_phases'">
-              
-              <v-tooltip bottom v-if="item.active_phases.length > 1">
-                <template v-slot:activator="{on}">
-                  <span class="font-italic" v-on="on">Multiple</span>
-                </template>
-                <div v-for="(phase, phase_index) in item.active_phases" :key="phase_index">
-                  {{ phase | capitalize_all }}
-                </div>
-              </v-tooltip>
-
-              <span v-else class="text-truncate">
-                {{ item.active_phases[0] | capitalize_all }}
-              </span>
-            </template>
- -->
             <!-- DUE BY - with date formatting -->
             <template v-else-if="header.value==='due_by'">
               {{ item[header.value] | shortDateString('it') }}
@@ -158,7 +142,6 @@ export default {
             // Perform text search in the defined fields
             case 'search_string':
               match = multiMatch(this.filters.search_string, wo, search_fields)
-              // console.log({wo}, "Search string: ", this.filters.search_string, {match})
               break
 
             case 'started':

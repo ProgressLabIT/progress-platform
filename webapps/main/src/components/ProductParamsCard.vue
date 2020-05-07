@@ -232,13 +232,11 @@ export default {
   methods: {
 
     getTargetTime(event) {
-      console.log(event)
       const msPerMinute = 1000 * 60
       const msPerHour = msPerMinute * 60
 
       // $refs returns an array
       const [param, hm] = event.target.id.split('/')
-      console.log({hm})
 
       let hours = null
       let minutes = null

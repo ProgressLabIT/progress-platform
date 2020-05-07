@@ -45,26 +45,12 @@
                     <v-col class="pl-4 text-right">
                       {{ phase.progress }}%
                     </v-col>
-                    <!-- <v-col cols="1" class="text-right pl-2">
-                      <v-icon small 
-                        v-if="item.critical" 
-                        :color="$theme.red"
-                        @click="$emit('criticalOnly')">
-                        mdi-alert-octagon
-                      </v-icon>
-                      <v-icon small 
-                        v-else-if="!item.on_time" 
-                        :color="$theme.orange"
-                        @click="$emit('lateOnly')">
-                        mdi-alert
-                      </v-icon>
-                    </v-col> -->
                   </v-row>
                 </template>
                 <!-- END OF PHASE PROGRESS -->
 
                 <!-- OTHER PHASE DATA -->
-                <template v-else>
+                <template v-else-if="header.value != 'assigned_to' ">
                   {{ phase[header.value] | capitalize_all }}
                 </template>
               </v-col>
@@ -277,7 +263,6 @@ export default {
           qt_completed: total_completed,
           qt_remaining: total_remaining,
           progress: total_progress,
-          assigned_to: '' //assignments
         }
       })
     },

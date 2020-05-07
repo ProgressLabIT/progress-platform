@@ -1,23 +1,5 @@
 <template>
-  <v-container class="fill pa-0 ">
-    
-    <!-- DEPARTMENT TABS -->
-<!--     <v-row class="flex-grow-0">
-      <v-tabs
-        background-color="transparent"
-        v-model="active_dep"
-        :color="$theme.white_high"
-        hide-slider
-        class="flex-shrink-1 flex-grow-0 pl-2">
-        <v-tab 
-          v-for="dep in department_list"
-          :key="dep.code"
-          class="display">
-          <span v-if="dep.code">{{ dep.code + ':' }}</span>
-          {{ dep.name }}
-        </v-tab>
-      </v-tabs>
-    </v-row> -->    
+  <v-container class="fill pa-0 ">  
 
     <div class="flex-grow-1 scroll">
       <v-container 
@@ -267,7 +249,6 @@ export default {
         wo_key: wo_id.split('/')[1],
         back_to_route_name: this.$route.name
       }
-      console.log({data_to_emit})
       this.$emit('itemDblClick', data_to_emit)
     }
   }

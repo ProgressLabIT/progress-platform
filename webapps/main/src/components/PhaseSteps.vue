@@ -333,7 +333,6 @@ export default {
     updateDesc(value) {
       let phase_index = this.current_phase
       let step_index = this.current_steps_map[phase_index]
-      // console.log(`Committing new description at phase ${phase_index}, step ${step_index}. New value: ${value}`)
       this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'description', value })
     },
 

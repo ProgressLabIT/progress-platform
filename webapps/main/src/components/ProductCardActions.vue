@@ -96,7 +96,6 @@ export default {
     },
 
     confirmDelete() {
-      // console.log("TRASH CLICKED!")
       this.$emit('showDelete')
     }
   }

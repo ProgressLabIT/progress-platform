@@ -362,7 +362,6 @@ export default {
 
         if (doc.temp) {
           path = window.URL.createObjectURL(doc.data)
-          console.log({path})
         }
         else path = `/media/product/${this.product_key}/doc/${encodeURI(this.media_name)}`
 
