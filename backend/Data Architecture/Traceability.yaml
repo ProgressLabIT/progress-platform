@@ -79,7 +79,7 @@
     # that may be introduced in the near future.
     # in case of multi-item batches, the SN will be in the form _n:m
 
-# StepData
+# StepExecutionData
   # task_data is populated only when the job step_check parameter is not "none"
   evid: str
   * job: _id
