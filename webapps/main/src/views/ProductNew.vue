@@ -96,7 +96,7 @@ export default {
           })
         })
         .catch(error => {
-          window.alert("Couldn't save product, try again.")
+          window.alert("Couldn't save product, try again.", error)
           this.$router.back()
         })
         

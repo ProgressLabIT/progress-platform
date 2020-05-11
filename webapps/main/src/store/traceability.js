@@ -77,9 +77,9 @@ const traceability = {
 
   state: {
     user: {
-      name: 'Cristian',
-      surname: 'Colombara',
-      _id: 'User/12005330'
+      name: 'Paolo',
+      surname: 'Marangon',
+      _id: 'User/11681276'
     },
     user_session: {
       _id: 'UserSession/123456',

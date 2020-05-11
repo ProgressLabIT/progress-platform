@@ -58,7 +58,6 @@
 
                   <!-- SHOW MEDIA SCREEN -->
                   <v-btn 
-                    v-on="on"
                     fab x-small 
                     :color="$theme.grey" 
                     @click.stop="showMedia(media)">

@@ -6,9 +6,9 @@ const session = {
 
   state: {
     user: {
-      name: 'Cristian',
-      surname: 'Colombara',
-      _id: 'User/12005330'
+      name: 'Paolo',
+      surname: 'Marangon',
+      _id: 'User/11681276'
     },
     session: null,
     permissions: null

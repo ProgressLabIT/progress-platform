@@ -454,7 +454,7 @@ export default {
       }
       else {
         this.vuex_ready = true  
-        if (data.batch_data) {
+        if (data.current_batch_data) {
           const next_step_index = this.batch_data.findIndex( step => !step.done )
           this.$router.replace({ query: { step: next_step_index + 1 }})
         }
