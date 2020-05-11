@@ -8,14 +8,14 @@
       <v-container class="fill d-flex align-center"> 
         <v-row justify="center" align="center">
           
-          <v-col cols="12" lg="5" class="d-flex justify-end">
+          <v-col cols="12" md="5" class="d-flex justify-center justify-md-end">
             <v-img max-width="300px" src="/media/company/logo.jpg"></v-img>
           </v-col>
           
           <v-divider vertical inset class="mx-4"></v-divider>
           
-          <v-col cols="12" lg="6" class="d-flex flex-column justify-center">
-            <v-card :color="$theme.background" max-width="500px" class="ml-6">
+          <v-col cols="12" md="5" class="d-flex justify-center justify-md-start px-6">
+            <v-card :color="$theme.background" width="100%" max-width="500px">
               
               <!-- <transition name="fade" mode="out-in">  -->
                 
