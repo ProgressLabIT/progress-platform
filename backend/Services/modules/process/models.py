@@ -28,9 +28,9 @@ class PhaseParameters(FlexModel):
   parallel_job_allowed: bool = True
   step_check: StepCheckBatch = StepCheckBatch.SINGLE
   step_check_force_order: bool = False
-  release_style: ReleaseStyle = ReleaseStyle.JOB
+  # release_style: ReleaseStyle = ReleaseStyle.JOB
   production_batch_qt: int = 1
-  release_batch_qt: int = 1
+  # release_batch_qt: int = 1
   # wip_flow: WIPFlow = WIPFlow.BUFFER
 
 class StepType(Enum):
