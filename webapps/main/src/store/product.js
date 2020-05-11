@@ -142,21 +142,23 @@ const product = {
     },
 
     loadProductList({ commit }) {
-      api.get('product')
+      return new Promise( (resolve, reject) => {
+        api.get('product')
         .then(resp => {
-          // console.log(resp)
           const productList = resp.data
           productList.forEach( p => {
             p.last_page = 'home'
-            // p.last_process_tab = 0
             p.last_phase = 0,
             p.last_steps = [0]
           })
           commit('LOAD_PRODUCT_LIST', productList)
+          resolve()
         })
         .catch(err => {        
           window.alert(`Couldn't fetch data from db:\n ${err}`)
+          reject()
         })
+      })
     },
 
     loadProductDetails({ commit }, product_key) {
@@ -245,8 +247,15 @@ const product = {
     //   return state.list
     // },
 
-    notInTrash: (state) => () => {
-      return state.list.filter( p => !p.trash )
+    productCatalog: (state) => (options) => {
+      return state.list.filter( p => {
+        const deleted = p.trash 
+        let filter_inactive = false
+        if (options) {
+           filter_inactive = options.active_only && !p.active
+        }
+        return !deleted && !filter_inactive
+      })
     },
 
     productData: (state) => (product_key) => {
