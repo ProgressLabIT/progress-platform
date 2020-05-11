@@ -37,7 +37,7 @@ class Batch(FlexModel):
 
   start: datetime
   end: datetime = None
-  duration: timedelta = None
+  # duration: timedelta = None
   active: bool = True
 
   qt_pass: float = None
@@ -80,8 +80,11 @@ class ProductionEvent(FlexModel):
   job_id: str = None
   work_session_id: str = None
   phase_id: str = None
-  batch_id: str = None
+  current_batch_id: str = None
   step_id: str = None
+  completed_batch_id: str = None
+  completed_batch_qt: float = None
+  new_batch_id: str = None
   timestamp: datetime
   user_data: Any
 
