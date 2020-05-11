@@ -431,8 +431,11 @@ export default {
     },
 
     exitJob() {
-      this.$store.dispatch('pauseJob')
-      .then(() => this.$router.push({ name: 'userJobs'}))
+      if (this.j.active) {
+        this.$store.dispatch('pauseJob')
+        .then(() => this.$router.push({ name: 'userJobsAll'}))
+      }
+      else this.$router.push({ name: 'userJobsAll'})
     }
   },
 
