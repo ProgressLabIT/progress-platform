@@ -61,7 +61,7 @@ export default {
 
 
   beforeCreate() {
-    this.$store.dispatch('loadProductList')
+    // this.$store.dispatch('loadProductList')
     // document.documentElement.requestFullscreen()
   },
 

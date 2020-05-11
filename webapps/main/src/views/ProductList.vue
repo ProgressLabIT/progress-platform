@@ -52,9 +52,9 @@
     </v-row>
 
     <!-- Product List -->
-    <v-row >
+    <v-row v-if="vuex_ready">
       <v-col cols="12" sm="6" md="4" lg="3" xl="2" 
-        v-for="product in notInTrash()" 
+        v-for="product in productCatalog()" 
         :key="product.code" 
         v-show="(!filter_inactive || product.active) && match(product)">
         <ProductCard 
@@ -119,11 +119,12 @@ export default {
       timeout: 6200,
       show: false,
       remain: 100,
-    }
+    },
+    vuex_ready: false
   }),
 
   computed: {
-    ...mapGetters(['notInTrash']),
+    ...mapGetters(['productCatalog']),
 
     show_images: {
       get() {
@@ -190,6 +191,10 @@ export default {
       this.deleteSnackbar.show = false
     }
   },
+
+  created() {
+    this.$store.dispatch('loadProductList').then(() => this.vuex_ready = true)
+  }
 };
 </script>
 
