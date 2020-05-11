@@ -1,17 +1,23 @@
 <template>
-  <v-container fluid class="fill scroll">
-    <v-card 
-      v-for="j in user_jobs" 
-      :key="j._id" 
-      class="mt-2" 
-      @dblclick="$router.push(routeTo(j._id))">
-      <v-container>
-        <v-row v-for="e in Object.entries(j)" :key="e[0]" cols="auto">
-          <v-col cols="2">{{ e[0] }}</v-col>
-          <v-col >{{ e[1] }}</v-col>
-        </v-row>
-      </v-container>
-    </v-card>
+  <v-container  fluid class="fill scroll">
+    
+    <transition name="slide-fade" mode="out-in" v-if="vuex_ready">
+      <router-view  v-bind="{ first_job, job_list }">
+      </router-view>
+    </transition>
+
+    <v-row v-else align="center" justify="center">
+      <v-col cols="auto" class="d-flex flex-column align-center">
+        <p>Recupero dati...</p>
+        <v-progress-circular 
+          indeterminate 
+          size="40" 
+          :color="$theme.blue"
+          class="mt-6">
+        </v-progress-circular>
+      </v-col>
+    </v-row>
+
   </v-container>
 </template>
 
@@ -22,7 +28,7 @@ export default {
 
   data () {
     return {
-      vuex_ready: false
+      vuex_ready: false,
     }
   },
 
@@ -34,22 +40,34 @@ export default {
         : []
     },
 
+    first_job() {
+      return this.$route.query.job === 'first'
+    },
+
     unassigned_jobs() {
       return this.vuex_ready
         ? this.$store.state.job.unassigned_job_list
         : []
-    }
-  },
+    },
 
-  methods: {
-    routeTo(job_id) {
-      return {
-        name: 'workSession',
-        params: {
-          job_key: job_id.split('/')[1]
+    job_list() {
+      const assigned_jobs = this.user_jobs.map( j => {
+        return {
+          assigned: true,
+          ...j
         }
-      }
-    }
+      })
+
+      const unassigned_jobs = this.unassigned_jobs.map( j => {
+        return {
+          assigned: false,
+          ...j
+        }
+      })
+
+      let list = [...assigned_jobs, ...unassigned_jobs]
+      return list
+    },
   },
 
   created() {
@@ -62,4 +80,16 @@ export default {
 </script>
 
 <style lang="css" scoped>
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.slide-fade-enter,
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-5%);
+}
+
+
 </style>

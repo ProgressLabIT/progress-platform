@@ -100,9 +100,22 @@ const routes = [
     ]
   },
   {
-    path: "/worksession/select-job",
+    path: "/select-job",
     name: "userJobs",
-    component: () => import ("@/views/UserJobs.vue")
+    redirect: { name: "userJobsSelected" , query: { job: 'first' }},
+    component: () => import ("@/views/UserJobs.vue"),
+    children: [
+      {
+        path: "confirm",
+        name: "userJobsSelected",
+        component: () => import ("@/views/UserJobsSelected.vue")
+      },
+      {
+        path: "all",
+        name: "userJobsAll",
+        component: () => import ("@/views/UserJobsAll.vue")
+      }
+    ],
   },
   {
     path: "/worksession/job/:job_key",
