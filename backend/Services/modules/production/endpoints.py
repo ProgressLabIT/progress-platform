@@ -1,7 +1,8 @@
 import traceback
 from typing import Dict, List
+from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from .models import *
@@ -99,6 +100,25 @@ async def create_work_order(new_wo: WorkOrderNew):
   )
 
 
+@router.patch('/work-order/{wo_key}')
+async def update_work_order(
+  wo_key: str, 
+  new_due_date: str = Body(None),
+  new_qt: float = Body(None)
+  ):
+  
+  update = { '_key': wo_key, }
+  
+  if new_due_date:
+    update['due_by'] = new_due_date 
+    
+  if new_qt:
+    update['qt_planned'] = new_qt
+
+  updated_wo_data = db.collection('WorkOrder').update(update, return_new=True)['new']
+  return APIResponse(detail=updated_wo_data)
+
+
 @router.get('/work-order')
 async def get_wo_list():
 
@@ -122,13 +142,9 @@ async def get_wo_data(wo_key: str):
   query = """
     FOR wo IN WorkOrder
       FILTER wo._key == @wo_key
-      
-      // LET qt_remaining = wo.qt_planned - wo.qt_completed
-      
+            
       // get phases in order from product data
       LET phases = FIRST( FOR p IN Product FILTER p._id == wo.product_id RETURN p.process_phases )
-
-      
 
       // get job data
       LET jobs =  ( 
@@ -144,7 +160,6 @@ async def get_wo_data(wo_key: str):
       // Return enriched wo data
       RETURN MERGE ([
         wo, { 
-        // qt_remaining: qt_remaining, 
         phase_sequence: phases, 
         jobs: jobs, 
         active: active 
@@ -152,7 +167,7 @@ async def get_wo_data(wo_key: str):
   """
 
   wo_data = db.aql.execute(query, bind_vars={ 'wo_key': wo_key }).next()
-  return APIResponse(detail=WorkOrderDetails(**wo_data))
+  return APIResponse(detail=wo_data)
 
 @router.get('/job')
 async def get_job_list():
@@ -174,7 +189,7 @@ async def get_assignment_list(user_id: str = None):
       FILTER o.roles.operator == true && LIKE(o._id, user_id)
       LET assigned_jobs = (    
         FOR j in Job
-        FILTER !j.trash && j.assigned_to == o._id
+        FILTER !j.trash && j.stage != 'closed' && j.assigned_to == o._id
         RETURN j
       )
       
@@ -323,7 +338,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
         db_resp = job_db.update(u.data, return_new=True)['new']
 
       elif u.action == JobUpdateType.DELETE:
-        db_resp = job_db.update({ **u.data, 'trash': True })['new']
+        db_resp = job_db.update({ **u.data, 'trash': True }, return_new=True)['new']
 
       results.append(db_resp)
     

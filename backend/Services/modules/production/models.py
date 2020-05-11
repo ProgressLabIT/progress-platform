@@ -43,8 +43,7 @@ class WorkStatus(Enum):
   CREATED = 'created'
   PLANNED = 'planned'
   STARTED = 'started'
-  COMPLETED = 'completed'
-  CANCELED = 'canceled'
+  CLOSED = 'closed'
 
 
 class WorkOrderNew(FlexModel):
@@ -61,6 +60,7 @@ class WorkOrderNew(FlexModel):
 
 class WorkOrderFull(WorkOrderNew):
   id: str = Field(None, alias="_id")
+  key: str = Field(None, alias="_key")
 
   status: WorkStatus = WorkStatus.CREATED
   qt_completed: float = 0
