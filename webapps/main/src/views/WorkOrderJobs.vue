@@ -191,6 +191,103 @@
         </v-expansion-panel>
       </v-expansion-panels>
     </div>
+
+    <v-spacer></v-spacer>
+
+    <v-row v-if="!wo_data.active" justify="space-between" class="pb-2 mx-0 flex-grow-0">
+      
+      <v-btn :color="$theme.blue" @click="edit_qt = true">MODIFICA QUANTITÀ</v-btn>
+      <v-btn 
+        :color="$theme.blue" 
+        :loading="saving"
+        @click="edit_due_date = true">
+        MODIFICA DATA SCADENZA
+      </v-btn>
+      <v-btn :color="$theme.red">CHIUDI ORDINE</v-btn>
+    </v-row>
+
+    <!-- EDIT DUE DATE -->
+    <v-dialog 
+      :value="edit_due_date" 
+      @click:outside="closeEditDialogs"
+      @keydown.esc="closeEditDialogs"
+      width="300px">
+      <v-date-picker
+        :color="$theme.blue"
+        show-week no-title
+        locale="it-it"
+        first-day-of-week="1"
+        width="300px"
+        :value="wo_data.due_by"
+        @change="new_due_date = $event">
+        <v-row justify="space-between" class="mx-0">
+          <v-btn small text
+            :color="$theme.grey" 
+            @click="closeEditDialogs">
+            ANNULLA
+          </v-btn>
+          <v-btn small text v-if="new_due_date"
+            :color="$theme.blue"
+            @click="saveWorkOrderUpdate">
+            SALVA
+          </v-btn>
+        </v-row>
+      </v-date-picker>
+    </v-dialog>
+
+
+    <!-- EDIT QT -->
+    <v-dialog 
+      :value="edit_qt" 
+      @click:outside="closeEditDialogs"
+      @keydown.esc="closeEditDialogs"
+      width="300px">
+      <v-card elevation="8">
+        <v-container>
+          <v-row class="mx-0" align="center">  
+            <v-col cols="7">
+              <h4 class="display highlight text-uppercase">
+                nuova quantità
+              </h4>      
+            </v-col> 
+            <v-col cols="5" class="d-flex align-center">
+              <v-text-field
+                ref="new_qt" 
+                class="pa-0 ma-0" 
+                label="Nuova quantità"
+                single-line 
+                hide-details
+                reverse
+                type="number"
+                :value="wo_data.qt_planned"
+                @input="new_qt = $event">
+              </v-text-field>
+            </v-col>       
+          </v-row>
+          <v-card-actions class="justify-space-between">
+            <v-btn small text
+              :color="$theme.grey" 
+              @click="closeEditDialogs">
+              ANNULLA
+            </v-btn>
+            <v-btn small text v-if="new_qt != wo_data.qt_planned"
+              :color="$theme.blue"
+              @click="rebalanceJobQtOrSave">
+              SALVA
+            </v-btn>
+          </v-card-actions>    
+        </v-container>
+      </v-card>
+    </v-dialog>
+    
+      
+    <template v-if="show_job_qt_rebalance">
+    <WorkOrderJobQtRebalance 
+      v-bind="{ new_wo_qt: parseInt(new_qt), phase_data, wo_key: wo_data._key }"
+      @close="closeEditDialogs">    
+    </WorkOrderJobQtRebalance>
+    </template>
+  
   </v-container>
 </template>
 
@@ -219,6 +316,7 @@ export default {
 
   data () {
     return {
+      saving: false,
       headers: [
         { value: 'phase_alias', text: 'FASE', cols: 2, width: '20%'},
         { value: 'progress', text: 'AVANZAMENTO', cols: 4, width: '30%'},
@@ -231,6 +329,11 @@ export default {
       job_select_model: {},
       jobs_temp_data: {},
       edit_mode: 'actions',
+      edit_qt: false,
+      new_qt: null,
+      edit_due_date: false,
+      new_due_date: null,
+      show_job_qt_rebalance: false
       // selected_jobs: []
     }
   },
@@ -293,6 +396,38 @@ export default {
       }
       else this.$delete(this.job_select_model, job._id)
     },
+
+    closeEditDialogs() {
+      this.edit_due_date = false
+      this.edit_qt = false
+      this.new_due_date = null
+      this.new_qt = null
+      this.show_job_qt_rebalance = false
+      setTimeout(() => {
+        this.$refs.new_qt.internalValue = this.wo_data.qt_planned
+      }, 500)
+    },
+
+    rebalanceJobQtOrSave() {
+      const wo_has_parallel_jobs = this.wo_data.jobs.length > this.phase_data.length
+      if (wo_has_parallel_jobs) {
+        this.show_job_qt_rebalance = true
+      }
+      else this.saveWorkOrderUpdate()
+    },
+
+    async saveWorkOrderUpdate() {
+      this.saving = true
+
+      const wo_update = {
+        wo_key: this.wo_data._key,
+        new_qt: this.new_qt,
+        new_due_date: this.new_due_date
+      }
+      await this.$store.dispatch('updateWorkOrder', wo_update)
+      this.closeEditDialogs()
+      setTimeout(() => this.saving = false, 1000)
+    }
 
   },
 

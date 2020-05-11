@@ -46,10 +46,28 @@ const workorder = {
     loadWorkOrderData({ commit }, wo_key) {
       return new Promise( (resolve, reject) => {
         api
-        .get(`/work-order/${wo_key}`)
+        .get(`work-order/${wo_key}`)
         .then( resp => {
           commit('LOAD_WORK_ORDER_DATA', resp.data.detail)
           resolve()
+        })
+        .catch( err => reject(err) )
+      })
+    },
+
+    updateWorkOrder({ dispatch }, { wo_key, new_qt, new_due_date, job_updates }) {
+      return new Promise( (resolve, reject) => {
+        const updates = []
+        updates.push( api.patch(`work-order/${wo_key}`, { new_qt, new_due_date }) )
+        
+        if (new_qt && job_updates) {
+          updates.push(api.post(`job/update`, job_updates))
+        }
+
+        axios.all(updates)
+        .then( () => {
+          dispatch('loadWorkOrderData', wo_key)
+          .then(() => resolve())
         })
         .catch( err => reject(err) )
       })
