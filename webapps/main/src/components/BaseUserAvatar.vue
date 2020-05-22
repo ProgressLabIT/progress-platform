@@ -4,7 +4,13 @@
       <v-avatar :color="$theme.grey" :size="size">
         <v-img :src="avatar_src">
           <template v-slot:placeholder>
-            <v-row align="end" justify="center">{{ initials }}</v-row>
+            <v-row 
+              class="fill-height weight-bold highlight" 
+              align="center" 
+              justify="center"
+              :style="`font-size: ${size}`">
+              {{ initials }}
+            </v-row>
           </template>
         </v-img>
       </v-avatar>
