@@ -138,7 +138,7 @@ export default {
 
   computed: {
     product_list() {
-      return this.$store.getters.notInTrash()
+      return this.$store.getters.productCatalog()
     }
   },
 
@@ -187,6 +187,7 @@ export default {
   },
 
   created() {
+    this.$store.dispatch('loadProductList')
     let today = new Date()
     this.wo_line_info.due_by.initial_value =  '' 
       + today.getFullYear()
