@@ -10,6 +10,10 @@
       <v-container>
         <v-tabs vertical background-color="transparent">
           
+          <v-tab :to="{ name: 'adminPanel'}" class="display mb-2">
+            Amminitrazione di sistema
+          </v-tab>
+          
           <v-tab :to="{ name: 'productList'}" class="display mb-2">
             Libreria prodotti
           </v-tab>

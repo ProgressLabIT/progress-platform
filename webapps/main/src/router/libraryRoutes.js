@@ -1,0 +1,43 @@
+const libraryRoutes = [
+  {
+    path: "/product",
+    name: "productList",
+    component: () => import("@/views/ProductList.vue"),
+    // props: (route) => ({
+    //   show_images: route.query.show_images,
+    //   filter_inactive: route.query.filter_inactive
+    // }),
+    children: [
+      {
+        path: "new",
+        name: "newProduct",
+        component: () => import("@/views/ProductNew.vue")
+      },
+    ]
+  },
+  {
+    path: "/product/:product_key",
+    redirect: { name: "productHome" },
+    component: () => import ("@/components/ProductScreen.vue"),
+    props: true,
+    children: [
+      {
+        path: "home",
+        name: "productHome",
+        component: () => import("@/views/ProductHome.vue")
+      },
+      {
+        path: "process",
+        name: "productionProcess",
+        component: () => import("@/views/ProductionProcess.vue")
+      },
+      {
+        path: "bom",
+        name: "bom",
+        component: () => import("@/views/ProductBom.vue")
+      },
+    ]
+  },
+]
+
+export default libraryRoutes

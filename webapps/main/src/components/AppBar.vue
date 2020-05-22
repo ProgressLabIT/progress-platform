@@ -35,7 +35,8 @@ export default {
         product: 'Libreria prodotti',
         production: 'monitoraggio produzione',
         'select-job': 'Selezione lavoro',
-        worksession: 'sessione di lavoro'
+        worksession: 'sessione di lavoro',
+        'admin': 'pannello amministrazione'
       }
     }
   },
