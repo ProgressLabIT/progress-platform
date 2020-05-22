@@ -21,7 +21,7 @@
     </template>
 
     <template v-slot:content>
-      <v-container fluid class="fill" ref="container">
+      <v-container v-if="vuex_ready" fluid class="fill" ref="container">
         <v-row no-gutters class="fill-height">
           
           <v-col cols="4" lg="3" class="fill-height pr-9" style="position:fixed">
@@ -51,6 +51,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 import BaseModalScreen from '@/components/BaseModalScreen.vue'
 import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue'
 import LoadingSignal from '@/components/LoadingSignal'
@@ -113,10 +114,12 @@ export default {
   },
 
   created() {
-    this.$store.dispatch('loadWorkOrderData', this.wo_key)
+    axios.all([
+      this.$store.dispatch('loadWorkOrderData', this.wo_key),
+      this.$store.dispatch('loadUsers')
+    ])
     .then(() => this.vuex_ready = true)
     
-    this.$store.dispatch('loadUsers')
   },
 }
 </script>
