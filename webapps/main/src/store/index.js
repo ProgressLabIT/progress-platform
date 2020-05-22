@@ -1,16 +1,16 @@
 import Vue from "vue";
 import Vuex from "vuex";
 
-import product from "@/store/product"
-import process from "@/store/process"
-import bom from "@/store/bom"
-import user from "@/store/user"
-import session from "@/store/session"
-import workorder from "@/store/workorder"
-import job from "@/store/job"
-import org from "@/store/org"
-import nav from "@/store/nav"
-import traceability from "@/store/traceability"
+import product from "./product"
+import process from "./process"
+import bom from "./bom"
+import user from "./user"
+// import session from "./session"
+import workorder from "./workorder"
+import job from "./job"
+import org from "./org"
+import nav from "./nav"
+import traceability from "./traceability"
 
 
 
