@@ -15,9 +15,14 @@ const org = {
 
   actions: {
     loadDepartments({ commit }) {
-      api
-        .get('department')
-        .then( resp => commit('LOAD_DEPARTMENTS', resp.data.detail))
+      return new Promise(resolve => {
+        api
+          .get('department')
+          .then( resp => {
+            commit('LOAD_DEPARTMENTS', resp.data.detail)
+            resolve()
+          })
+      })
     },
 
   }

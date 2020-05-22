@@ -26,11 +26,14 @@ const user = {
 
   actions: {
     loadUsers({ commit }) {
-      api
-        .get('user')
-        .then( resp => {
-          commit('LOAD_USERS', resp.data.detail)
-        })
+      return new Promise( resolve=> {
+        api
+          .get('user')
+          .then( resp => {
+            commit('LOAD_USERS', resp.data.detail)
+            resolve()
+          })
+      })
     }
   }
 
