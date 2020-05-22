@@ -80,16 +80,4 @@ export default {
 </script>
 
 <style lang="css" scoped>
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: opacity 0.3s, transform 0.3s;
-}
-
-.slide-fade-enter,
-.slide-fade-leave-to {
-  opacity: 0;
-  transform: translateX(-5%);
-}
-
-
 </style>

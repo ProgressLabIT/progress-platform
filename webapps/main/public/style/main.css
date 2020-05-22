@@ -184,15 +184,30 @@ span .display {
 
 
 /* TRANSITIONS */
-.slide-fade-enter-active, .fade-enter-active {
+/*.slide-fade-enter-active, .fade-enter-active {
   transition: all .3s ease;
 }
 .slide-fade-leave-active, .fade-leave-active {
   transition: all .3s ease;
 }
 .slide-fade-enter, .fade-enter, .slide-fade-leave-to, .fade-leave-to
-/* .slide-fade-leave-active for <2.1.8 */ {
-  transform: translateX(10px);
+{
+  transform: translateX(-10px);
+  opacity: 0;
+}*/
+
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: opacity 0.2s, transform 0.3s;
+}
+
+.slide-fade-leave-to {
+  transform: translateX(-15px);
+  opacity: 0;
+}
+
+.slide-fade-enter {
+  transform: translateX(15px);
   opacity: 0;
 }
 
