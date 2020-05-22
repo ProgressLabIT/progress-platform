@@ -118,7 +118,7 @@ export default {
     login() {
       this.logging_in = true
 
-      api.post("/user-session", this.credentials)
+      api.post("user-session", this.credentials)
         .then( resp => {
           this.$store.commit('START_USER_SESSION', resp.data)
           setTimeout(() => {
@@ -130,7 +130,7 @@ export default {
             this.user_message = "Buon lavoro!"
           }, 4000)
           setTimeout(() => {
-            this.$router.push({ name: "productList" })
+            this.$router.push({ name: "userJobs" })
           }, 6000)
         })
         .catch( err => {
