@@ -9,11 +9,13 @@
     :loading="loading"  
     :items="department_list"
     single-line
-    item-value="_id"
-    label="Dipartimento">
+    item-value="_id">
+    <template v-slot:label>
+      <span :class="text_classes">Dipartimento</span>
+    </template>
     <template v-slot:item="{ item: list_item }">
       <v-row align="center" justify="space-between" class="mx-0">
-        <span >
+        <span :class="text_classes">
           {{ list_item.name }}
         </span>
         <span class="text-right smaller">
@@ -31,6 +33,12 @@
 export default {
 
   name: 'FilterDepartment',
+
+  props: {
+    text_classes: {
+      type: String
+    }
+  },
 
   data () {
     return {

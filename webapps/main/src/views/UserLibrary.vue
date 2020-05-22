@@ -4,82 +4,102 @@
     <LoadingSignal v-if="!vuex_ready" />
 
     <v-row v-else no-gutters class="fill-height">
-      <v-col class="fill-height pa-0 d-flex flex-column justify-content-start">
+      <v-col cols="3" class="fill-height d-flex flex-column">
         
-        <v-container class="pa-5">
-          <h5>FILTRI</h5>
-
-          <FilterDepartment 
-            @select="setDepartment($event)" 
-            class="pt-0 my-4">
-          </FilterDepartment>
-            
+        <div class="px-5">
+          <!-- <h5>FILTRI</h5> -->
           <v-text-field
-            label="Cerca per nome" 
             append-icon="mdi-magnify"
             hide-details
             single-line
             clearable
             v-model="search_text">
+            <template v-slot:label>
+              <span class="medium">Cerca per nome</span>
+            </template>
           </v-text-field>
           
-          <v-row dense class="mt-6"
-            v-for="(check, index) in bool_filters" 
-            :key="index">  
-            <v-checkbox 
-              dense
-              hide-details
-              class="ma-0 pa-0"
-              v-model="check.value"
-              :label="check.label">
-            </v-checkbox>
-          </v-row>
-    
-        </v-container>
-      </v-col>
 
-      <v-divider vertical></v-divider>
+          <v-expansion-panels flat hover v-model="filter_panel" class="mt-2">
+            <v-expansion-panel>
+              <v-expansion-panel-header>
+                <span v-if="filter_panel === undefined" class=" medium">Più filtri</span>
+                <span v-else class="medium">Meno filtri</span>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content>
+                <FilterDepartment 
+                  @select="setDepartment($event)" 
+                  class="pt-0 my-4"
+                  text_classes="medium">
+                </FilterDepartment>
 
-      <v-col class="d-flex flex-column fill-height">
-        <v-row class="mx-0 pt-2 flex-grow-0">
-          <v-col cols="6" class="pl-5">
-            <h5>NOME</h5>
-          </v-col>
-          <v-col cols="6" class="pl-2">
-            <h5>COGNOME</h5>
-          </v-col>
-        </v-row>
-
-        <v-divider></v-divider>
-        <div class="flex-grow-1 scroll" style="overflow-x: hidden">
-          <v-row v-ripple 
-            v-for="(user, index) in filtered_users" :key="index"
-            class="pointer align-items-start"
-            style="white-space: nowrap"
-            :class="{ 'alternate-row': index % 2 == 0 }"
-            :style="user._id == selected_user._id ? `background-color: ${$theme.blue_bg}` : '' "
-            @click="selected_user = user">
-            <v-col cols="6" class="pl-8 pr-2 medium">
-              {{ user.name }}
-            </v-col>
-            <v-col cols="6" class="pl-2 medium">
-              {{ user.surname }}
-            </v-col>
-          </v-row>
-          <v-divider></v-divider>
-          <v-row 
-            align="center" 
-            justify="center" 
-            class="smaller py-2">
-            {{ filtered_users.length }} di {{ user_list.length }}
-          </v-row>
+            
+                <v-row dense class="mt-6"> 
+                  <v-col v-for="(check, index) in bool_filters" 
+                  :key="index">
+                    <v-checkbox 
+                      dense
+                      hide-details
+                      class="ma-0 pa-0"
+                      v-model="check.value">
+                      <template v-slot:label>
+                        <span class="medium">{{ check.label }}</span>
+                      </template>
+                    </v-checkbox>
+                  </v-col> 
+                </v-row>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-expansion-panels>  
         </div>
 
+          <v-row dense class="pt-2 flex-grow-0">
+            <v-col cols="6" class="pl-6 pb-1">
+              <h6>NOME</h6>
+            </v-col>
+            <v-col cols="6">
+              <h6>COGNOME</h6>
+            </v-col>
+          </v-row>
+
+          <v-divider></v-divider>
+
+          <div class="flex-grow-1 scroll" style="overflow-x: hidden">
+            <v-row v-ripple dense
+              v-for="(user, index) in filtered_users" :key="index"
+              class="pointer"
+              style="white-space: nowrap"
+              :class="{ 'alternate-row': index % 2 == 0 }"
+              :style="user._id == selected_user._id ? `background-color: ${$theme.blue_bg}` : '' "
+              @click="selected_user = user">
+              <v-col cols="6" class="pl-6 pr-2 medium">
+                {{ user.name }}
+              </v-col>
+              <v-col cols="6" class="medium">
+                {{ user.surname }}
+              </v-col>
+            </v-row>
+            <v-divider></v-divider>
+            <v-row 
+              align="center" 
+              justify="center" 
+              class="smaller py-2">
+              {{ filtered_users.length }} di {{ user_list.length }}
+            </v-row>
+          </div>
+
+        <v-spacer></v-spacer>
+        
+        <v-divider></v-divider>
+        
+        <v-btn :color="$theme.blue" class="ma-2">
+          AGGIUNGI UTENTE
+        </v-btn>
       </v-col>
 
       <v-divider vertical></v-divider>
-      
-      <v-col cols="7">
+
+      <v-col cols="7" class="fill-height scroll">
         <transition name="slide-fade" mode="out-in"> 
           <UserInfoScreen 
             :user="selected_user" 
@@ -88,9 +108,6 @@
           </UserInfoScreen>
         </transition>
       </v-col>
-    <v-btn fixed fab bottom right class="mb-12 mr-4" :color="$theme.blue">
-      <v-icon x-large>mdi-plus</v-icon>
-    </v-btn>
 
     </v-row>
 
@@ -127,7 +144,8 @@ export default {
         { name: 'show_disabled', label: 'Inabilitati', value: true },
         { name: 'show_logged_in', label: 'Attivi', value: true },
         { name: 'show_logged_out', label: 'Inattivi', value: true }
-      ]
+      ],
+      filter_panel: undefined,
     }
   },
 
@@ -195,7 +213,7 @@ export default {
       })
 
       return list
-    }
+    },
 
   },
 
@@ -217,5 +235,13 @@ export default {
 <style lang="css" scoped>
 .alternate-row {
   background-color: rgba(255,255,255, .03)
+}
+
+.v-expansion-panel-header {
+  padding: 0px;
+}
+
+.v-expansion-pane-content__wrap {
+  padding: 0px;
 }
 </style>  

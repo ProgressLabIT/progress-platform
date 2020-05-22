@@ -7,6 +7,7 @@ import { durationFromMillisec } from '@/lib/duration.js'
 import bytes from 'bytes'
 import 'material-design-icons-iconfont/dist/material-design-icons.css' // Ensure you are using css-loader 
 import {shortDateString} from '@/lib/TimeHandling.js'
+import { formatDateTime } from '@/lib/TimeHandling.js'
 
 function capitalize(value) {
   if (value === '') return value
@@ -60,6 +61,7 @@ Vue.filter('bytes', function(byte_size) {
 
 Vue.filter('duration', durationFromMillisec)
 Vue.filter('shortDateString', shortDateString)
+Vue.filter('dtFormat', formatDateTime)
 
 new Vue({
   router,
