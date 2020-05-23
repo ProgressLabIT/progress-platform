@@ -72,6 +72,10 @@
   color: var(--low-white);
 }
 
+.base-white {
+ color: var(--low-white);
+}
+
 .highlight {
   color: var(--high-white);
   /*font-weight: bold;*/

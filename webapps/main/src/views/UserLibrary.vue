@@ -99,7 +99,7 @@
 
       <v-divider vertical></v-divider>
 
-      <v-col cols="7" class="fill-height scroll">
+      <v-col class="fill-height scroll">
         <transition name="slide-fade" mode="out-in"> 
           <UserInfoScreen 
             :user="selected_user" 
