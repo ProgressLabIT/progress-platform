@@ -5,13 +5,15 @@
     clearable
     hide-selected
     hide-details
+    :value="value"
+    :return-object="return_object"
     @change="$emit('select', $event)"
     :loading="loading"  
     :items="department_list"
     single-line
     item-value="_id">
     <template v-slot:label>
-      <span :class="text_classes">Dipartimento</span>
+      <span :class="text_classes">Seleziona</span>
     </template>
     <template v-slot:item="{ item: list_item }">
       <v-row align="center" justify="space-between" class="mx-0">
@@ -24,7 +26,7 @@
       </v-row>
     </template>
     <template v-slot:selection="{ item: selection }">
-      {{ selection.name }}
+      <span :class="text_classes">{{ selection.name }}</span>
     </template>
   </v-autocomplete>
 </template>
@@ -32,17 +34,28 @@
 <script>
 export default {
 
-  name: 'FilterDepartment',
+  name: 'BaseAutocompleteDepartment',
 
   props: {
     text_classes: {
       type: String
+    },
+    return_object: {
+      type: Boolean,
+      default: false
+    },
+    load_departments: {
+      type: Boolean,
+      default: true
+    },
+    value: {
+      deafult: null
     }
   },
 
   data () {
     return {
-      loading: true
+      loading: false
     }
   },
 
@@ -53,7 +66,10 @@ export default {
   },
 
   created() {
-    this.$store.dispatch('loadDepartments').then(this.loading = false)
+    if (this.load_departments) {
+      this.loading = true
+      this.$store.dispatch('loadDepartments').then(this.loading = false)
+    }
   }
 }
 </script>
