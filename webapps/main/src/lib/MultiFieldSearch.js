@@ -11,10 +11,15 @@ export default function multiFieldSearch(searchString, testItem, fieldList) {
     // handle both string and arrays of strings. 
     // If field is array, consider each item as a term in itself
     let field_content = testItem[field]
-    if (typeof field_content === 'object') field_content = ''.concat(...field_content.map( i => i + ' ' ))
+
+    // Check both "nonnullity" via truthyness and type, since typeof null === 'object' 
+    if (field_content && typeof field_content === 'object') {
+      field_content = ''.concat(...field_content.map( i => i + ' ' ))
+    }
     matchString += field_content + ' '
   })
 
+  // Create array of words to search in, removing duplicates
   let matchContext = [...new Set(matchString.toLowerCase().split(' '))]
 
   // make sure that all search terms are included in at least one word
