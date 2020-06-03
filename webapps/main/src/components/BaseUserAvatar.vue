@@ -2,21 +2,23 @@
   <v-row dense align="center" :class="name_first ? 'flex-row-reverse' : ''">
     <v-col cols="auto">
       <v-avatar :color="$theme.grey" :size="size">
-        <v-img :src="avatar_src">
-          <template v-slot:placeholder>
-            <v-row 
-              class="fill-height weight-bold highlight" 
-              align="center" 
-              justify="center"
-              :style="`font-size: ${size}`">
-              {{ initials }}
-            </v-row>
-          </template>
-        </v-img>
+        <slot name="content">
+          <v-img :src="avatar_src">
+            <template v-slot:placeholder>
+              <v-row 
+                class="fill-height weight-bold highlight" 
+                align="center" 
+                justify="center"
+                :style="`font-size: ${size}`">
+                {{ initials }}
+              </v-row>
+            </template>
+          </v-img>
+        </slot>
       </v-avatar>
     </v-col>
     <v-col cols="auto">
-      <component v-if="show_name" :is="name_el" :class="name_class">
+      <component v-if="show_name" :is="name_el" :class="name_class" :style="name_style">
         {{ full_name | capitalize_all }}
       </component>
     </v-col>
@@ -57,6 +59,10 @@ export default {
     name_class: {
       type: String,
       default: 'body-2'
+    },
+
+    name_style: {
+      type: String
     }
   },
 
