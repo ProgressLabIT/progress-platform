@@ -113,7 +113,7 @@ export default {
 
   methods:{
     resetPassword() {
-      api.put(`user/${this.user._key}/password`).then( resp => {
+      api.delete(`user/${this.user._key}/password`).then( resp => {
         this.temp_psw = resp.data.detail.temp_psw
         this.stage = 'show_psw'
       })
