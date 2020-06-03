@@ -25,6 +25,10 @@ function capitalizeAll(value) {
   return "".concat(...words.map( w => capitalize(w) + ' ')).trim()
 }
 
+function numberFormat(value, locale) {
+  return new Intl.NumberFormat(locale).format(value)
+}
+
 Vue.config.productionTip = false;
 
 Vue.prototype.$theme = {
@@ -62,6 +66,7 @@ Vue.filter('bytes', function(byte_size) {
 Vue.filter('duration', durationFromMillisec)
 Vue.filter('shortDateString', shortDateString)
 Vue.filter('dtFormat', formatDateTime)
+Vue.filter('numberFormat', numberFormat)
 
 new Vue({
   router,
