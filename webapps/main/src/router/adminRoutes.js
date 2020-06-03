@@ -6,10 +6,35 @@ const adminRoutes = [
     redirect: { name: 'userLibrary' },
     children: [
       {
-        path: 'user-list',
+        path: 'users',
         name: 'userLibrary',
-        component: () => import("@/views/UserLibrary.vue")
-      }
+        component: () => import("@/views/UserLibrary.vue"),
+        children: [
+          {
+            path: ':user_key',
+            name: 'userInfo',
+            component: () => import("@/components/UserInfoScreen.vue")
+          },
+          {
+            path: 'new',
+            name: 'newUser',
+            component: () => import ("@/views/UserNew.vue")
+          },
+          {
+            path: ':user_key/reset-password',
+            name: 'passwordReset',
+            component: () => import ("@/views/UserPasswordReset.vue"),
+            props: true
+          },
+          {
+            path: ':user_key/delete',
+            name: 'userDelete',
+            component: () => import ("@/views/UserDelete.vue"),
+            props: true
+          }
+        ]
+      },
+      
     ]
   }
 ]

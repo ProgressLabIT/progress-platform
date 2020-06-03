@@ -15,7 +15,7 @@
             clearable
             v-model="search_text">
             <template v-slot:label>
-              <span class="medium">Cerca per nome</span>
+              <span class="medium">Cerca</span>
             </template>
           </v-text-field>
           
@@ -27,11 +27,11 @@
                 <span v-else class="medium">Meno filtri</span>
               </v-expansion-panel-header>
               <v-expansion-panel-content>
-                <FilterDepartment 
+                <BaseAutocompleteDepartment 
                   @select="setDepartment($event)" 
                   class="pt-0 my-4"
                   text_classes="medium">
-                </FilterDepartment>
+                </BaseAutocompleteDepartment>
 
             
                 <v-row dense class="mt-6"> 
@@ -70,8 +70,8 @@
               class="pointer"
               style="white-space: nowrap"
               :class="{ 'alternate-row': index % 2 == 0 }"
-              :style="user._id == selected_user._id ? `background-color: ${$theme.blue_bg}` : '' "
-              @click="selected_user = user">
+              :style="user._key == selected_user_key ? `background-color: ${$theme.blue_bg}` : '' "
+              @click="showUser(user)">
               <v-col cols="6" class="pl-6 pr-2 medium">
                 {{ user.name }}
               </v-col>
@@ -92,7 +92,7 @@
         
         <v-divider></v-divider>
         
-        <v-btn :color="$theme.blue" class="ma-2">
+        <v-btn :color="$theme.blue" class="ma-2" @click="openUserNew">
           AGGIUNGI UTENTE
         </v-btn>
       </v-col>
@@ -101,11 +101,12 @@
 
       <v-col class="fill-height scroll">
         <transition name="slide-fade" mode="out-in"> 
-          <UserInfoScreen 
-            :user="selected_user" 
-            :key="selected_user._id" 
-            v-if="selected_user != {}">
-          </UserInfoScreen>
+          <!-- <UserInfoScreen  -->
+          <router-view
+            :user="getUserData()" 
+            :key="selected_user_key">
+          </router-view>
+          <!-- </UserInfoScreen> -->
         </transition>
       </v-col>
 
@@ -117,8 +118,8 @@
 <script>
 // import axios from 'axios'
 import LoadingSignal from "@/components/LoadingSignal.vue"
-import FilterDepartment from "@/components/FilterDepartment.vue"
-import UserInfoScreen from "@/components/UserInfoScreen.vue"
+import BaseAutocompleteDepartment from "@/components/BaseAutocompleteDepartment.vue"
+// import UserInfoScreen from "@/components/UserInfoScreen.vue"
 import multiMatch from "@/lib/MultiFieldSearch.js"
 
 
@@ -127,8 +128,8 @@ export default {
   name: 'UserLibrary',
 
   components: { 
-    UserInfoScreen,
-    FilterDepartment,
+    // UserInfoScreen,
+    BaseAutocompleteDepartment,
     LoadingSignal
   },
 
@@ -138,7 +139,7 @@ export default {
       user_index: 0,
       search_text: '',
       department_filter: null,
-      selected_user: {},
+      // selected_user_key: null,
       bool_filters: [
         { name: 'show_enabled', label: 'Abilitati', value: true },
         { name: 'show_disabled', label: 'Inabilitati', value: true },
@@ -152,6 +153,10 @@ export default {
   computed: {
     user_list() {
       return this.$store.state.user.user_list
+    },
+
+    selected_user_key() {
+      return this.$route.params.user_key
     },
 
     filtered_users() {
@@ -174,28 +179,12 @@ export default {
         }
           
         const user_match = this.search_text
-          ? multiMatch(this.search_text, user, ['name', 'surname'])
+          ? multiMatch(this.search_text, user, ['name', 'surname', 'username', 'email'])
           : true
 
 
         let match_map = this.bool_filters.map( filter => {
           let bool_match = true
-          // switch (filter.name) {
-          //   case 'show_enabled': 
-          //     if (!filter.value && user.active) match = false
-          //     break;
-
-          //   case 'show_disabled':
-          //     if (!filter.value && !user.active) match = false
-          //     break;
-
-          //   case 'show_logged_in':
-          //     if (!filter.value && user.logged_in) match = false
-          //     break;
-
-          //   case 'show_logged_out':
-          //     if (!filter.value && !user.logged_in) match = false
-          // } 
 
           if (
             !filter.value && (
@@ -220,12 +209,27 @@ export default {
   methods: {
     setDepartment(event) {
       this.department_filter = event
+    },
+
+    showUser(user) {
+      this.selected_user_key = user._id
+      this.$router.push({ 
+        name: 'userInfo', 
+        params: { user_key: user._key }
+      })
+    },
+
+    getUserData() {
+      return this.user_list.find( user => user._key === this.selected_user_key)
+    },
+
+    openUserNew() {
+      this.$router.push({ name: 'newUser' })
     }
   },
 
   created() {
     this.$store.dispatch('loadUsers').then(() => {
-      this.selected_user = this.user_list[0]
       this.vuex_ready = true
     })
   }

@@ -14,7 +14,7 @@
       </v-card-title>
 
       <v-card-text>
-        <v-form @submit="$emit('submit')">  
+        <v-form @submit="$emit('submit')" lazy-validation v-model="valid">  
           <slot name="form"></slot>
           <v-row class="mt-6">
             <slot name="actions">
@@ -46,7 +46,8 @@ export default {
 
   data () {
     return {
-
+      saving: false,
+      valid: true
     }
   },
 }
