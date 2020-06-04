@@ -286,6 +286,8 @@ async def replace_product_image(
   img = UserFile.product_media(append_path=product_key, file=new_image)
   filename = 'image.jpg'
   await img.write_file(filename)
+  return APIResponse(message="File saved correctly")
+  
 
 
 # =================================================

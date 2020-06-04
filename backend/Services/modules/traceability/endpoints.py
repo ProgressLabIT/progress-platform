@@ -61,5 +61,9 @@ async def get_batch_execution_data(batch_key: str):
     RETURN MERGE(batch, { step_data: batch_step_data })
   """
 
-  batch_data = db.aql.execute(query, bind_vars={ 'batch_key': batch_key }).next()
+  db_resp = db.aql.execute(query, bind_vars={ 'batch_key': batch_key })
+  try:
+    batch_data = db_resp.next()
+  except StopIteration:
+    batch_data = {}
   return APIResponse(detail=batch_data)
