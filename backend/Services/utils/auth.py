@@ -1,0 +1,154 @@
+import secrets
+import traceback
+from time import time
+
+import jwt
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from passlib.context import CryptContext
+from starlette import status
+
+from models.auth import *
+from models.org import User
+from utils.db import db
+from utils.exceptions import *
+
+
+scopes_description = {
+  "admin.users": "User can read and modify data about other users",
+  "lib:r": "User can read library data such as products, processes and bills of materials",
+  "lib:w": "User can read, add, modify and delete library data such as products, processes and bills of materials",
+  "prod:r": "User can read production plans, job queues, and work order details",
+  "prod:w": "User can read, add, modify and delete data related to production plans, job queues and work orders",
+  "operator": "User can access the operator panel and make production declarations"
+}
+
+TOKEN_SECRET = "0ac33c11e3f6c4903f6f30c03edfda07e513288884a8d573690eb6d916fca034"
+ALGORITHM = "HS256"
+
+
+bearer_token = OAuth2PasswordBearer(tokenUrl="/auth", scopes=scopes_description)
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+credentials_exception = HTTPException(
+  status_code=status.HTTP_401_UNAUTHORIZED,
+  detail="Could not validate credentials",
+  headers={"WWW-Authenticate": "Bearer"},
+)
+
+# ----------------------------------------------------------------------
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+# ----------------------------------------------------------------------
+
+def verify_password(plain_password, hashed_password):
+  return pwd_context.verify(plain_password, hashed_password)
+
+
+# ----------------------------------------------------------------------
+
+def verify_token(token_str: str = Depends(bearer_token), db=db):
+  print(token_str)
+  try: 
+    try:
+      token_json = jwt.decode(token_str, TOKEN_SECRET, algorithms=[ALGORITHM])
+    except jwt.ExpiredSignatureError:
+      print('Token expired')
+    except:
+      print('TokenSignatureVerificationError')
+      raise TokenSignatureVerificationError
+    
+    try:  
+      token_data = TokenData(**token_json)
+    except:
+      print(traceback.format_exc())
+      raise Exception
+
+    try:
+      token_record = TokenRecord( **db.collection('Token').get(token_data.token_key) )
+    except:
+      print('TokenNotFoundError')
+      raise TokenNotFoundError
+
+    if not token_str.split('.')[2] == token_record.signature:
+      print('TokenSignatureMismatchError')
+      raise TokenSignatureMismatchError
+
+    if token_record.revoked:
+      print('TokenRevokedError')
+      raise TokenRevokedError
+
+  except Exception as e:
+    print(e)
+    print(traceback.format_exc())
+    raise credentials_exception
+
+  return token_data
+
+# ----------------------------------------------------------------------
+
+def revoke_token(token_key, db=db):
+  db.collection('Token').update({ '_key': token_key, revoked: True })
+
+# ----------------------------------------------------------------------
+
+
+def issue_token(
+  consumer_key: str,
+  seconds_until_expired: int,
+  scope: str = None,
+  issued_at: datetime = datetime.utcnow(),
+  consumer_type: ConsumerType = ConsumerType.USER,
+  context: TokenContext = TokenContext.USER_SESSION,
+):
+  
+  token_key = secrets.token_hex(6)
+  access_token_data = TokenData(
+    token_key = token_key,
+    consumer_key = consumer_key, 
+    consumer_type = consumer_type, 
+    context = context,
+    scope = scope,
+    issued_at = issued_at,
+    expires_at = issued_at + timedelta(seconds=seconds_until_expired)
+  )
+
+  access_token = jwt.encode(
+    access_token_data.dict(by_alias=True, exclude_none=True), 
+    TOKEN_SECRET, 
+    algorithm=ALGORITHM
+  ).decode('UTF-8')
+
+  return access_token, access_token_data
+
+
+# ----------------------------------------------------------------------
+
+
+# class UserAuthRequest:
+
+#   def __init__(self, username, password, db=db): 
+
+def verify_user(username, password, db=db):
+  # Verify User exists in DB
+  try:
+    user = User( **db.collection('User').find({ 'username': username }).next() )
+  except StopIteration:
+    raise UserNotFoundError
+
+  #Verify use is enabled
+  if not user.active or user.trash:
+    raise UserDisabledError
+ 
+  # Verify password
+  if not verify_password(password, user.psw_hash):
+    raise USerPasswordMismatchError
+
+  # Verify user is not already logged in
+  if user.logged_in:
+    raise UserAlreadyLoggedInError
+
+  return user

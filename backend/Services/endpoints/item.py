@@ -2,7 +2,7 @@ import traceback
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
-from .models import ProductionItem
+from models.item import ProductionItem
 
 from utils.api import APIResponse
 from utils.db import db

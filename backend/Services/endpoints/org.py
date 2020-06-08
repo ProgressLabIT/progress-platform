@@ -2,11 +2,11 @@ import secrets
 import traceback
 from typing import List
 
-from fastapi import APIRouter, Body, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile
 from starlette import status
 
-from .models import *
-from modules.auth import helpers
+from models.org import *
+from utils import auth
 from utils.api import APIResponse
 from utils.db import db
 from utils.file import UserFile
@@ -60,7 +60,7 @@ async def create_user(new_user: UserNew):
     raise HTTPException(status_code=409, detail="A user with the provided username already exists")
 
   temp_psw = secrets.token_hex(4)
-  new_user_data.psw_hash = helpers.get_password_hash(temp_psw)
+  new_user_data.psw_hash = auth.get_password_hash(temp_psw)
   new_user_data.reset_password = True
 
   new_user_record = db.collection('User').insert(new_user_data, return_new=True)['new']
@@ -117,7 +117,7 @@ async def update_user_image(
 async def delete_user_password(user_key: str):
   try:
     temp_psw = secrets.token_hex(4)
-    new_hash = helpers.get_password_hash(temp_psw)
+    new_hash = auth.get_password_hash(temp_psw)
     db.collection('User').update({ '_key': user_key, 'psw_hash': new_hash, 'reset_password': True })
     return APIResponse(message="Password updated correctly", detail={ 'temp_psw': temp_psw })
 
@@ -133,9 +133,17 @@ async def delete_user_password(user_key: str):
 # ----------------------------------------------------
 
 @router.put("/user/{user_key}/password")
-async def reset_user_password(user_key: str, new_password: str = Body(...)):
+async def reset_user_password(
+  user_key: str, 
+  token: str = Depends(auth.verify_token),
+  new_password: str = Body(..., embed=True)
+):
+  print(new_password)
+  if not user_key == token.consumer_key:
+    raise auth.credentials_exception
+
   try:
-    new_hash = helpers.get_password_hash(new_password)
+    new_hash = auth.get_password_hash(new_password)
     db.collection('User').update({ '_key': user_key, 'psw_hash': new_hash, 'reset_password': False })
     return APIResponse(message="Password updated correctly")
 

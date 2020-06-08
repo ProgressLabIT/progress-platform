@@ -7,7 +7,7 @@ from typing import List
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.encoders import jsonable_encoder
 
-from .models import BomItemRead, BomItemWrite
+from models.bom import BomItemRead, BomItemWrite
 from utils.db import db
 from utils.api import APIResponse
 

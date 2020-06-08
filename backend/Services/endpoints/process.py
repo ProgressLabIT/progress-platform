@@ -8,7 +8,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 
-from .models import *
+from models.process import *
 from utils import dt
 from utils.api import APIResponse
 from utils.db import db

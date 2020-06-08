@@ -1,6 +1,7 @@
-from .models import *
-from modules.production.models import Job, WorkStatus
+from models.traceability import *
+from models.production import Job, WorkStatus
 from utils.db import db
+
 
 class Event:
 

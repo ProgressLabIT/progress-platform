@@ -6,7 +6,7 @@ from fnmatch import fnmatch
 from fastapi import APIRouter, Form, File, HTTPException, UploadFile
 from fastapi.encoders import jsonable_encoder
 
-from .models import ProductData, ProductDoc, ProductFull
+from models.product import ProductData, ProductDoc, ProductFull
 from utils.api import APIResponse
 from utils.db import db
 from utils.file import UserFile

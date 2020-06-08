@@ -5,9 +5,9 @@ from datetime import datetime
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 
-from .models import *
-from modules.process.models import PhaseProcedure
-from modules.process.endpoints import search_step_media
+from models.production import *
+from models.process import PhaseProcedure
+from endpoints.process import search_step_media
 from utils.db import db
 from utils.api import APIResponse
 
@@ -15,6 +15,9 @@ from utils.api import APIResponse
 router = APIRouter()
 # work_orders = db.collection('WorkOrder')
 # jobs = db.collection('Job')
+
+
+# ----------------------------------------------------------------------
 
 
 @router.post('/work-order')
@@ -100,6 +103,9 @@ async def create_work_order(new_wo: WorkOrderNew):
   )
 
 
+# ----------------------------------------------------------------------
+
+
 @router.patch('/work-order/{wo_key}')
 async def update_work_order(
   wo_key: str, 
@@ -117,6 +123,9 @@ async def update_work_order(
 
   updated_wo_data = db.collection('WorkOrder').update(update, return_new=True)['new']
   return APIResponse(detail=updated_wo_data)
+
+
+# ----------------------------------------------------------------------
 
 
 @router.get('/work-order')
@@ -169,6 +178,10 @@ async def get_wo_data(wo_key: str):
   wo_data = db.aql.execute(query, bind_vars={ 'wo_key': wo_key }).next()
   return APIResponse(detail=wo_data)
 
+
+# ----------------------------------------------------------------------
+
+
 @router.get('/job')
 async def get_job_list():
 
@@ -177,6 +190,8 @@ async def get_job_list():
 
   return APIResponse(detail=job_list)
 
+
+# ----------------------------------------------------------------------
 
 
 @router.get('/job-assignment')
@@ -215,6 +230,8 @@ async def get_assignment_list(user_id: str = None):
   # cursor = db.collection('assigned_to').find({ 'rel_type': 'JobOperator'})
   # assignment_list = [JobAssignment(**a) for a in cursor]
   # return APIResponse(detail=assignment_list)
+
+# ----------------------------------------------------------------------
 
 
 @router.get('/job/{job_key}')
@@ -284,15 +301,9 @@ async def get_job_data(job_key: str):
 
   # print(response)
   return APIResponse(**response)
-
-
-  
-  
-    
-
  
 
-
+# ----------------------------------------------------------------------
 
 
 @router.patch('/job/{job_key}')
@@ -316,6 +327,9 @@ async def update_job(job_key: str, job_data: dict):
     'detail': db_resp['new']
   }
   return APIResponse(**response)
+
+
+# ----------------------------------------------------------------------
 
 
 @router.post('/job/update')

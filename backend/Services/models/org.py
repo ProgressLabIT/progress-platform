@@ -62,7 +62,7 @@ class User(ArangoDocument):
   last_login: datetime = None
   logged_in: bool = False
 
-  trash: False
+  trash: bool = False
 
   # active_token_signature: str = None #active token signature
   # permissions: Permissions = None

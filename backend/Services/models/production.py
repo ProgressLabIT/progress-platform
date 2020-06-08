@@ -5,7 +5,7 @@ from typing import Dict, List, Union
 
 from pydantic import Field, validator
 
-from modules.process.models import PhaseParameters, StepWithMediaInfo
+from models.process import PhaseParameters, StepWithMediaInfo
 from utils.base_models import FlexModel
 
 

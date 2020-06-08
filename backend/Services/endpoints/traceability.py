@@ -2,8 +2,8 @@ import traceback
 
 from fastapi import APIRouter, HTTPException
 
-from .classes import Event
-from .models import *
+from models.traceability import *
+from utils.event import Event
 from utils.api import APIResponse
 from utils.db import db
 

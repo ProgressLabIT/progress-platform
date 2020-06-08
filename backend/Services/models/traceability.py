@@ -4,7 +4,7 @@ from typing import Any, List
 
 from pydantic import Field
 
-from modules.process.models import StepWithMediaInfo
+from models.process import StepWithMediaInfo
 from utils.base_models import FlexModel
 
 
