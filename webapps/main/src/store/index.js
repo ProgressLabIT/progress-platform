@@ -31,7 +31,8 @@ export default new Vuex.Store({
         animation: 200,
         ghostClass: "ghost"
       },
-      screen_title: ''
+      screen_title: '',
+      auth_token: ''
     }
   },
 
@@ -40,6 +41,10 @@ export default new Vuex.Store({
   mutations: {
     UPDATE_SCREEN_TITLE(state, new_title) {
       Vue.set(state, 'screen_title', new_title)
+    },
+
+    UPDATE_AUTH_TOKEN(state, new_token) {
+      Vue.set(state, 'auth_token', new_token)
     }
   },
 

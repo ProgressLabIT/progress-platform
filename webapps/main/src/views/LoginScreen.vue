@@ -17,10 +17,10 @@
           <v-col cols="12" md="5" class="d-flex justify-center justify-md-start px-6">
             <v-card :color="$theme.background" width="100%" max-width="500px">
               
-              <!-- <transition name="fade" mode="out-in">  -->
+              <transition name="fade" mode="out-in"> 
                 
-                <v-container v-if="!logging_in && !verified" key="form">
-                  <v-form @submit="login">
+                <v-container v-if="!logging_in && !verified && !reset_password" key="form">
+                  <v-form @submit.prevent="login">
                     <v-card-title class="display">
                         LOGIN
                     </v-card-title>
@@ -28,8 +28,13 @@
                       <v-text-field 
                         v-model="credentials.username" 
                         label="Nome utente"
-                        autocomplete="off"/>
-                      <v-text-field v-model="credentials.password" type="password" label="Password"/>
+                        autocomplete="off">
+                      </v-text-field>
+                      <v-text-field 
+                        v-model="credentials.password" 
+                        type="password" 
+                        label="Password">
+                      </v-text-field>
                     </v-card-text>
                     <v-card-actions>
                       <v-btn block type="submit" :color="$theme.blue">
@@ -71,11 +76,40 @@
                 </v-container>
 
 
-                <v-container v-else key="fail"> 
-                  Couldn't login. Try again.
+                <v-container v-else-if="reset_password" key="reset_password">
+                  <v-form @submit.prevent="resetPassword">
+                    <v-card-title class="display">
+                      REIMPOSTA PASSWORD
+                    </v-card-title>
+
+                    <v-card-text>
+                      <v-text-field 
+                        v-model="new_password.first" 
+                        type="password"
+                        label="Nuova password"
+                        autocomplete="off">
+                      </v-text-field>
+
+                      <v-text-field 
+                        v-model="new_password.second" 
+                        type="password" 
+                        label="Password"
+                        autocomplete="off">
+                      </v-text-field>
+                    </v-card-text>
+
+                    <v-card-actions>
+                      <v-btn block type="submit" :color="$theme.blue">
+                        Salva password e inizia sessione
+                      </v-btn>
+                    </v-card-actions>
+
+                  </v-form>
                 </v-container>
 
-              <!-- </transition> -->
+               
+
+              </transition>
 
             </v-card>
           </v-col>
@@ -87,6 +121,7 @@
 
 <script>
 import { api } from '@/lib/apiCall.js'
+import jwt from 'jsonwebtoken'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 
 export default {
@@ -100,10 +135,15 @@ export default {
       credentials: {
         username: null,
         password: null,
-        // verified: false,
+      },
+      user_key: '',
+      new_password: {
+        first: '',
+        second: ''
       },
       logging_in: false,
       verified: false,
+      reset_password: false,
       user_message: ''
     }
   },
@@ -118,28 +158,79 @@ export default {
     login() {
       this.logging_in = true
 
-      api.post("user-session", this.credentials)
+      api.post("auth", this.credentials)
         .then( resp => {
-          this.$store.commit('START_USER_SESSION', resp.data)
-          setTimeout(() => {
-            this.logging_in = false
-            this.verified = true
-            this.user_message = `Benvenuto ${this.user.name} ${ this.user.surname }`
-          }, 2000)
-          setTimeout(() => {
-            this.user_message = "Buon lavoro!"
-          }, 4000)
-          setTimeout(() => {
-            this.$router.push({ name: "userJobs" })
-          }, 6000)
+          const token = resp.data.detail.token
+          this.$store.commit('UPDATE_AUTH_TOKEN', token)
+          this.user_key = jwt.decode(token).sub
+
+          switch (resp.data.detail.action) {
+            case 'start_session': {
+              this.startSession()
+              break
+            }
+
+            case 'reset_password': {
+              this.reset_password = true
+              this.logging_in = false
+              break
+            }
+          }
         })
         .catch( err => {
           this.logging_in = false
           this.credentials.username = null
           this.credentials.password = null
-          window.alert(err)
+          if (err.response.status === 409) {
+            window.alert("Utente attivo su un'altra sessione.")
+          }
+          else {
+            window.alert(err)
+          }
         })
+    },
+
+    startSession() {
+      this.logging_in = true
+
+      api.post(`user/${this.user_key}/session`)
+      .then(resp => {
+        this.$store.commit('START_USER_SESSION', resp.data.detail)
+        setTimeout(() => {
+          this.user_message = `Benvenuto ${this.user.name} ${ this.user.surname }`
+          this.verified = true
+          this.logging_in = false
+        }, 1000)
+        setTimeout(() => {
+          this.user_message = "Buon lavoro!"
+        }, 3000)
+        setTimeout(() => {
+          this.$router.push({ name: "userJobs" })
+        }, 5000)
+      })
+    },
+
+    resetPassword() {
+      this.logging_in = true
+
+      api.put(`user/${this.user_key}/password`, 
+        { new_password: this.new_password.first }, 
+        { 
+          headers: { 'Content-type': 'application/json' }
+        }
+      )
+      .then( () => {
+        this.credentials.password = this.new_password.first
+        this.login()
+      })
+      .catch( err => {
+        this.logging_in = false
+        this.new_password.first = null
+        this.new_password.second = null
+        window.alert(err)
+      })
     }
+
   }
 }
 </script>

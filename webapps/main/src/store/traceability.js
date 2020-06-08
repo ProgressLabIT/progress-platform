@@ -77,15 +77,15 @@ const traceability = {
 
   state: {
     user: {
-      name: 'Paolo',
-      surname: 'Marangon',
-      _id: 'User/11681276'
+      name: '',
+      surname: '',
+      _id: '',
     },
     user_session: {
-      _id: 'UserSession/123456',
-      _key: '123456'
+      _id: '',
+      scope: ''
     },
-    permissions: null,
+    scope: null,
     working_job_data: {},
     work_session_list: [],
     current_batch_data: {},
@@ -104,8 +104,12 @@ const traceability = {
 
   mutations: {
 
-    START_USER_SESSION(state, session_data) {
-      Vue.set(state, 'user', session_data)
+    START_USER_SESSION(state, data) {
+      const user_data = { name: data.name, surname: data.surname, _id: data.user_id }
+      Vue.set(state, 'user', user_data)
+      
+      const session_data = { _id: data.session_id, scope: data.scope }
+      Vue.set(state, 'user_session', session_data)
     },
 
     LOAD_WORKING_JOB_DATA(state, {job_data, batch_data}) {
