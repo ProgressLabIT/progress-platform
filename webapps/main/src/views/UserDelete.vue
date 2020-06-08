@@ -24,7 +24,6 @@
             class="my-8">
           </BaseUserAvatar>
 
-          <!-- <p>I dati dell'utente verranno effettivamente eliminati SOLO nel caso in cui non ci siano eventi di tracciabilità associati ad esso. In questo caso l'utente verrà semplicemente archiviato: non verrà visualizzato nell'elenco degli utenti, ma potrà essere ripristinato dalla sezione archivio e i suoi dati saranno visibili in caso di analisi dello storico.</p> -->
           <p>I dati dell'utente non verranno effettivamente eliminati ma solo archiviati: l'utente non verrà visualizzato negli elenchi, ma potrà essere ripristinato dalla sezione archivio e i suoi dati saranno visibili in caso di analisi dello storico.</p>
           
         </v-row>
