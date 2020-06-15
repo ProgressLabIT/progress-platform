@@ -150,7 +150,14 @@ export default {
 
   computed: {
     user() {
-      return this.$store.state.traceability.user
+      return this.$store.state.session.user
+    },
+
+    go_to_location() {
+      const redirect = this.$route.query.redirect_to
+      return redirect 
+        ? { path: redirect } 
+        : { name: this.$store.getters.userHomepage }
     }
   },
 
@@ -193,9 +200,11 @@ export default {
     startSession() {
       this.logging_in = true
 
-      api.post(`user/${this.user_key}/session`)
+      api.post(`session`, { user_key: this.user_key })
       .then(resp => {
         this.$store.commit('START_USER_SESSION', resp.data.detail)
+        this.$store.dispatch('setSessionTimeout')
+
         setTimeout(() => {
           this.user_message = `Benvenuto ${this.user.name} ${ this.user.surname }`
           this.verified = true
@@ -205,7 +214,7 @@ export default {
           this.user_message = "Buon lavoro!"
         }, 3000)
         setTimeout(() => {
-          this.$router.push({ name: "userJobs" })
+          this.$router.push(this.go_to_location)
         }, 5000)
       })
     },

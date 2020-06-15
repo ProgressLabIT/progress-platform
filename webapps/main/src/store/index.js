@@ -1,16 +1,19 @@
 import Vue from "vue";
 import Vuex from "vuex";
 
+// import { persistSession } from "@/plugins/persistence"
+import { resetSessionTimeoutAtStoreChange } from "@/plugins/session"
+
 import product from "./product"
 import process from "./process"
 import bom from "./bom"
 import user from "./user"
-// import session from "./session"
 import workorder from "./workorder"
 import job from "./job"
 import org from "./org"
 import nav from "./nav"
 import traceability from "./traceability"
+import session from "./session"
 
 
 
@@ -18,12 +21,7 @@ import traceability from "./traceability"
 
 Vue.use(Vuex);
 
-// import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js'
-// import axios from 'axios'
-// import { api } from '@/lib/apiCall.js'
-
-
-export default new Vuex.Store({
+const store = new Vuex.Store({
   
   state() {
     return {
@@ -32,23 +30,19 @@ export default new Vuex.Store({
         ghostClass: "ghost"
       },
       screen_title: '',
-      auth_token: ''
     }
   },
-
-  getters: {},
 
   mutations: {
     UPDATE_SCREEN_TITLE(state, new_title) {
       Vue.set(state, 'screen_title', new_title)
     },
-
-    UPDATE_AUTH_TOKEN(state, new_token) {
-      Vue.set(state, 'auth_token', new_token)
-    }
   },
 
   actions: {},
+  getters: {},
+
+  plugins: [resetSessionTimeoutAtStoreChange],
 
   modules: {
     product,
@@ -59,6 +53,17 @@ export default new Vuex.Store({
     job,
     org,
     nav,
-    traceability
+    traceability,
+    session
   }
 });
+
+export default store
+
+const persistedState = window.localStorage.getItem('TEMP_SESSION')
+
+if (persistedState) {
+  store.replaceState(JSON.parse(persistedState))
+  store.commit('TOGGLE_SESSION_LOCK', true)
+  window.localStorage.removeItem('TEMP_SESSION')
+}

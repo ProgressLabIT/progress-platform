@@ -1,9 +1,12 @@
+
+
 const adminRoutes = [
   {
     path: '/admin',
     name: 'adminPanel',
     component: () => import("@/views/AdminSection.vue"),
     redirect: { name: 'userLibrary' },
+    meta: { scope: 'admin' },
     children: [
       {
         path: 'users',

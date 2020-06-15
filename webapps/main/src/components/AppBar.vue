@@ -14,7 +14,7 @@
         <v-avatar size="28" class="my-auto ml-2">
           <v-img v-if="!hover" :src="avatar_url"></v-img>
           <v-icon v-else 
-            @click="$router.push({name: 'login'})">
+            @click="logout">
             mdi-exit-to-app
           </v-icon>
         </v-avatar>
@@ -49,22 +49,36 @@ export default {
       return this.sections[section]
     },
 
+    session_data() {
+      return this.$store.state.session
+    },
+
     user() {
-      return this.$store.state.traceability.user
+      return this.session_data.user
     },
 
     username() {
-      return this.user.name + ' ' + this.user.surname
+      return this.user ? this.user.name + ' ' + this.user.surname : ''
     },
 
     avatar_name() {
-      return (this.user.name + this.user.surname).replace(/\s+/g, '').toLowerCase()
+      return this.user ? (this.user.name + this.user.surname).replace(/\s+/g, '').toLowerCase() : ''
     },
 
     avatar_url() {
-      return "/media/user/" + this.avatar_name + '.jpg'
-    }
+      return this.user ? "/media/user/" + this.avatar_name + '.jpg' : ''
+    },
+
   },
+
+  methods: {
+    async logout() {
+      const confirm = window.confirm('Sicuro di voler terminare la sessione?')
+      if (confirm) {
+        await this.$store.dispatch('logout')
+      }
+    }
+  }
 
 }
 </script>
