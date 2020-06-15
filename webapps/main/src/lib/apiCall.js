@@ -12,7 +12,7 @@ api.interceptors.request.use( config => {
 
   config.headers.common = { 
     ...config.headers.commons,
-    'Authorization': `Bearer ${ (() => store.state.auth_token)() }`
+    'Authorization': `Bearer ${ store.getters.getToken }`
   }
   return config
 })
