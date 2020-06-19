@@ -59,9 +59,14 @@ const session = {
           await dispatch('pauseJob')
         }
         api.delete(`session/${state.session_key}`)
-        .then(() => {
+        .then( async () => {
           commit('CLOSE_USER_SESSION')
           router.push({ name: 'login' })
+
+          if (state.session_locked) {
+            await dispatch('unlockSession')
+          }
+          
           resolve()
         })
       })
