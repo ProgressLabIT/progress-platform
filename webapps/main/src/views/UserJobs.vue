@@ -67,8 +67,7 @@ export default {
   },
 
   created() {
-    // this.$store.commit('UPDATE_SCREEN_TITLE', 'SESSIONE DI LAVORO')
-    const user_id = this.$store.state.traceability.user._id
+    const user_id = this.$store.state.session.user._id
     this.$store.dispatch('loadJobAssignments', user_id)
     .then(() => this.vuex_ready = true)
   }
