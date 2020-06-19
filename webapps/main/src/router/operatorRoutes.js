@@ -10,6 +10,7 @@ const operatorRoutes = [
         path: "select-job",
         name: "userJobs",
         component: () => import ("@/views/UserJobs.vue"),
+        meta: { screen_title: 'Selezione lavoro' },
         children: [
           {
             path: "confirm",
@@ -29,6 +30,7 @@ const operatorRoutes = [
         component: () => import ("@/views/WorkSessionScreen.vue"),
         props: true,
         redirect: { name: "jobSteps" },
+        meta: { screen_title: 'Sessione di lavoro' },
         children: [
           {
             path: "steps",

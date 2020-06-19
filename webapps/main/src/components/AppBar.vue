@@ -31,24 +31,12 @@ export default {
   data() {
     return {
       show_drawer: false,
-      sections: {
-        product: 'Libreria prodotti',
-        production: 'monitoraggio produzione',
-        'select-job': 'Selezione lavoro',
-        worksession: 'sessione di lavoro',
-        'admin': 'pannello amministrazione'
-      }
+      screen_title: 'Progress'
     }
   },
 
   computed: {
     
-    screen_title() {
-      // return this.$store.state.screen_title
-      const section = this.$route.path.split('/')[1]
-      return this.sections[section]
-    },
-
     session_data() {
       return this.$store.state.session
     },
@@ -76,6 +64,15 @@ export default {
       const confirm = window.confirm('Sicuro di voler terminare la sessione?')
       if (confirm) {
         await this.$store.dispatch('logout')
+      }
+    }
+  },
+
+  watch: {
+    $route (to) {
+      const route_with_title = to.matched.slice().reverse().find( r => r.meta.screen_title )
+      if (route_with_title) {
+        this.screen_title = route_with_title.meta.screen_title || 'PROGRESS'
       }
     }
   }

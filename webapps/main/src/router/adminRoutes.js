@@ -6,7 +6,7 @@ const adminRoutes = [
     name: 'adminPanel',
     component: () => import("@/views/AdminSection.vue"),
     redirect: { name: 'userLibrary' },
-    meta: { scope: 'admin' },
+    meta: { scope: 'admin', screen_title: 'Amministrazione di sistema' },
     children: [
       {
         path: 'users',
