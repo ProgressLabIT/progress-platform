@@ -43,6 +43,10 @@ const session = {
       Vue.set(state, 'session_key', null)
       Vue.set(state, 'scope', null)
       Vue.set(state, 'auth_token', null)
+      
+      // Make sure to cancel any residual locking mechanism after logout
+      clearTimeout(state.session_timer)
+      Vue.set(state, 'session_locked', false)
     },
 
     TOGGLE_SESSION_LOCK(state, locked) {
