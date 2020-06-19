@@ -195,10 +195,10 @@
                 hide-details
                 multiple
                 :disabled='!edit_mode'
-                v-for="check in permissions" 
+                v-for="check in scopes" 
                 :key="check.name"
                 :value="check.name"
-                v-model="temp_data.permissions">
+                v-model="user_permissions">
                 <template v-slot:label>
                   <span class="body-2 base-white">{{check.label}}</span>
                 </template>                
@@ -242,7 +242,7 @@ export default {
       locale: 'it',
       edit_mode: false,
       saving: false, 
-      permissions: scopes_list,
+      scopes: scopes_list,
       base_path: '/media/user/',
       new_image_url: null,
       new_image: null,
@@ -254,7 +254,7 @@ export default {
         surname: '',
         username: '',
         email: '', 
-        permissions: [],
+        scope: '',
         department: {},
         hourly_cost: 0,
       }
@@ -277,6 +277,16 @@ export default {
     full_name() {
       return this.user ? this.user.name + ' ' + this.user.surname : 'Codice utente errato'
     },
+
+    user_permissions: {
+      get() {
+        return this.temp_data.scope.split(' ')
+      },
+
+      set(value) {
+        this.$set(this.temp_data, 'scope', value.join(' ')) 
+      }
+    }
   },
 
   methods: {
