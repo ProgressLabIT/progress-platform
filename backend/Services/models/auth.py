@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field
 from utils.base_models import ArangoDocument, FlexModel
 
 
+
+
 class ConsumerType(str, Enum):
   PROGRESS_APP = 'app'
   EQUIPMENT = 'equipment'
@@ -66,12 +68,12 @@ class UserSession(ArangoDocument):
   surname: str
 
 class NewSessionData(BaseModel):
-  session_id: str
-  user_id: str
+  session_key: str
+  user_key: str
   name: str
   surname: str
   scope: str
-
+  timeout: timedelta = timedelta(minutes=30)
 
 class GrantType(Enum):
   AUTHORIZATION_CODE: 'authorization_code'
@@ -82,7 +84,7 @@ class ConsumerCredentials(BaseModel):
   username: str = Form(...)
   password: str = Form(...)
   # auth_code: str = None
-  grant_type: GrantType = Form(None)
+  # grant_type: GrantType = Form(None)
 
 
 

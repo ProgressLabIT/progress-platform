@@ -23,11 +23,11 @@ class UserListItem(ArangoDocument):
   surname: str = None
   username: str
   email: str = None
-  scopes: List[str] = []
+  scope: str = None
   logged_in: bool = False
   hourly_cost: float = None
   department: Department = None
-  roles: UserRoles = UserRoles()
+  # roles: UserRoles = UserRoles()
   created_at: datetime = None
   last_login: datetime = None
 
@@ -60,7 +60,7 @@ class User(ArangoDocument):
   
   last_user_session: str = None
   last_login: datetime = None
-  logged_in: bool = False
+  # logged_in: bool = False
 
   trash: bool = False
 

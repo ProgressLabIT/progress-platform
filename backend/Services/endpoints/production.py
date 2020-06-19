@@ -195,13 +195,13 @@ async def get_job_list():
 
 
 @router.get('/job-assignment')
-async def get_assignment_list(user_id: str = None):
+async def get_assignment_list(user_key: str = None):
 
   result = db.aql.execute("""
     LET assigned_jobs_by_operator = (
-      LET user_id = @user_id ? : '%'
+      LET user_key = @user_key ? : '%'
       FOR o IN User
-      FILTER o.roles.operator == true && LIKE(o._id, user_id)
+      FILTER CONTAINS(o.scope, 'operator') && LIKE(o._key, user_key)
       LET assigned_jobs = (    
         FOR j in Job
         FILTER !j.trash && j.stage != 'closed' && j.assigned_to == o._id
@@ -224,7 +224,7 @@ async def get_assignment_list(user_id: str = None):
       assigned_jobs_by_operator: assigned_jobs_by_operator,
       unassigned_jobs: unassigned_jobs
     }  
-  """, bind_vars= { "user_id": user_id}).next()
+  """, bind_vars= { "user_key": user_key }).next()
 
   return APIResponse(detail=AssignmentsResponse(**result))
   # cursor = db.collection('assigned_to').find({ 'rel_type': 'JobOperator'})
@@ -335,7 +335,6 @@ async def update_job(job_key: str, job_data: dict):
 @router.post('/job/update')
 async def update_jobs(job_updates:List[JobUpdate]):
 
-  print(job_updates)
   tx = db.begin_transaction(write=['Job'])
   job_db = tx.collection('Job')
 

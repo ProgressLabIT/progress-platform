@@ -62,8 +62,8 @@ class Event:
   def create_work_session(self):
     new_work_session_in = WorkSession(
       job_id=self.info.job_id,
-      user_id=self.info.user_id,
-      user_session_id=self.info.user_session_id,
+      user_id=f'User/{self.info.user_key}',
+      user_session_id=f'UserSession/{self.info.user_session_key}',
       start=self.info.timestamp,
       active=True
     )
@@ -77,7 +77,6 @@ class Event:
       'job_id': self.info.job_id,
       'active': True
     }
-    print(match)
     data_from_db = self.tx.collection('WorkSession').find(match).next()
     work_session = WorkSession(**data_from_db)
     return work_session
@@ -234,7 +233,7 @@ class Event:
       'last_work_session_started': self.info.work_session_id,
       'current_batch': self.info.current_batch_id,
       'active': True,
-      'assigned_to': self.info.user_id
+      'assigned_to': f'User/{self.info.user_key}'
     }
     self.tx.collection('Job').update(job_update)
 

@@ -75,8 +75,8 @@ class ProductionEvent(FlexModel):
   id: str = Field(None, alias="_id")
   key: str = Field(None, alias="_key")
   event_type: EventType
-  user_id: str
-  user_session_id: str
+  user_key: str
+  user_session_key: str
   job_id: str = None
   work_session_id: str = None
   phase_id: str = None

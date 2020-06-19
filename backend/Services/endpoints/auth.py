@@ -2,6 +2,7 @@ import secrets
 import traceback
 from time import time
 from datetime import datetime, timedelta
+from dateutil import tz
 from typing import Optional
 
 import jwt
@@ -15,15 +16,7 @@ from starlette.responses import JSONResponse
 from models.auth import *
 from models.org import User
 from utils.api import APIResponse
-from utils.auth import (
-  credentials_exception,
-  get_password_hash, 
-  issue_token,
-  revoke_token,
-  verify_password,
-  verify_token,
-  verify_user
-)
+from utils import auth
 from utils.db import db
 from utils.exceptions import *
 
@@ -34,30 +27,37 @@ user_db = db.collection('User')
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440 # 24 hours
 RESET_PASSWORD_TOKEN_EXPIRE_MINUTES = 5
 
+USER_SESSION_TIMEOUT_MINUTES = 15
 
 
 # ----------------------------------------------------------------------
 
 
 @router.post("/auth")
-async def authenticate_user(username: str = Body(...), password: str = Body(...)):
+async def authenticate_user(
+  username: str = Body(...), 
+  password: str = Body(...)
+):
 
   try: 
-    user = verify_user(username, password, db)
+    user = auth.verify_user(username=username, password=password, db=db)
 
-  except (UserNotFoundError, UserDisabledError, UserPasswordMismatchError):
-    raise credentials_exception
+  except Exception as e:
+    traceback.print_exc()
+    raise auth.credentials_exception
 
-  except UserAlreadyLoggedInError:
-    raise HTTPException(
-      status_code=status.HTTP_409_CONFLICT,
-      detail="User already logged in. Logout of any other session before trying again."
-    )
-    
+  # Verify user has no other active session. If yes, close them.
+  active_user_sessions = db.collection('UserSession').find({ 'user_id': user.id, 'active': True })
+  if active_user_sessions.count():
+    for session in active_user_sessions:
+      _, token_key = session['token_id'].split('/')
+      auth.close_session(session['_key'], token_key)
+
+
   # Check if user should reset the password
   if user.reset_password:
     
-    token, token_data = issue_token(
+    token, token_data = auth.issue_token(
       consumer_key = user.key,
       context = TokenContext.PASSWORD_RESET,
       seconds_until_expired = RESET_PASSWORD_TOKEN_EXPIRE_MINUTES * 60
@@ -70,7 +70,7 @@ async def authenticate_user(username: str = Body(...), password: str = Body(...)
 
   else:
     # Issue session token with action 'session_start'
-    token, token_data = issue_token(
+    token, token_data = auth.issue_token(
       consumer_key = user.key,
       scope = user.scope,
       seconds_until_expired = ACCESS_TOKEN_EXPIRE_MINUTES * 60,
@@ -109,9 +109,29 @@ async def authenticate_user(username: str = Body(...), password: str = Body(...)
 
 # ----------------------------------------------------------------------
 
+@router.post('/user/{user_key}/verify')
+async def verify_user_password(
+  user_key: str, 
+  password: str = Body(..., embed=True),
+  token: TokenData = Depends(auth.verify_token)
+):
+  try:
+    auth.verify_user(user_key=user_key, password=password)
+  except:
+    raise auth.credentials_exception
 
-@router.post("/user/{user_key}/session")
-async def start_user_session(user_key: str, token: TokenData = Depends(verify_token)):
+  return APIResponse(detail="User credentials verified.")
+
+
+
+# ----------------------------------------------------------------------
+
+
+@router.post("/session")
+async def start_user_session(
+  user_key: str = Body(..., embed=True), 
+  token: TokenData = Depends(auth.verify_token)
+):
 
   # Check all token data matches the use for session creation
   if not (
@@ -119,8 +139,8 @@ async def start_user_session(user_key: str, token: TokenData = Depends(verify_to
     and token.consumer_type == ConsumerType.USER
     and token.context == TokenContext.USER_SESSION
   ):
-    revoke_token(token.token_key)
-    raise credentials_exception
+    auth.revoke_token(token.token_key)
+    raise auth.credentials_exception
   
 
   try:
@@ -139,7 +159,7 @@ async def start_user_session(user_key: str, token: TokenData = Depends(verify_to
       LET session_data = {
         active: true,
         token_id: @token_id,
-        user_id: @user_id,
+        user_id: u._id,
         login_at: DATE_ISO8601(DATE_NOW()),
         logout_at: null,
         scope: u.scope,
@@ -156,8 +176,12 @@ async def start_user_session(user_key: str, token: TokenData = Depends(verify_to
 
     try:
       new_session_data = tx.aql.execute(new_session_query, bind_vars=query_params).next()
-      print(new_session_data)
-      new_user_session = UserSession(**new_session_data)
+      new_user_session = UserSession(
+        **new_session_data, 
+        user_key=user_key,
+        timeout = timedelta(minutes=USER_SESSION_TIMEOUT_MINUTES)
+      )
+
     except:
       status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
       response = {
@@ -171,7 +195,6 @@ async def start_user_session(user_key: str, token: TokenData = Depends(verify_to
     user_update = { 
       '_id': user_id, 
       'last_user_session': new_user_session.id,
-      'logged_in': True,
       'last_login': new_user_session.login_at
     }
     new_user_data = tx.collection('User').update(user_update, return_new=True)['new']
@@ -190,13 +213,12 @@ async def start_user_session(user_key: str, token: TokenData = Depends(verify_to
       detail=response
     )
 
-  print(vars(new_user_session))
   # Prepare response 
   response_details = NewSessionData( 
-    user_id=user_id,
+    user_key=user_key,
     name=updated_user.name,
     surname=updated_user.surname,
-    session_id=new_user_session.id,
+    session_key=new_user_session.key,
     scope=updated_user.scope
   )
 
@@ -205,6 +227,35 @@ async def start_user_session(user_key: str, token: TokenData = Depends(verify_to
   # TRANSACTION ENDS
   # -----------------------------------
 
-  return APIResponse(detail=new_user_session)
+  return APIResponse(detail=response_details)
 
 # ----------------------------------------------------------------------
+
+@router.delete("/session/{session_key}")
+async def close_user_session(
+  session_key: str, 
+  token: TokenData = Depends(auth.verify_token)
+):
+
+  try:
+    session = db.collection('UserSession').get(session_key)
+    _, session_token_key = session['token_id'].split('/')
+    if not session_token_key == token.token_key:
+      raise auth.credentials_exception
+
+    else:
+      auth.close_session(session_key, session_token_key)
+
+  except:
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    response = dict(
+      status=status_code,
+      message="Error while closing the session on the db.",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
+
+  return APIResponse(detail="Session closed successfully")

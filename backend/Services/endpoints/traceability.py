@@ -13,7 +13,6 @@ router = APIRouter()
 
 @router.post('/event')
 async def apply_production_event(data: ProductionEvent):
-  print(data)
   try:
     event = Event(data)
     event.save()
@@ -35,7 +34,6 @@ async def apply_production_event(data: ProductionEvent):
 @router.get('/batch/{batch_key}')
 async def get_batch_execution_data(batch_key: str):
 
-  print(batch_key)
   query = """
     LET batch = FIRST( FOR b IN Batch FILTER b._key == @batch_key RETURN b )
     LET job = FIRST( FOR j IN Job FILTER j._id == batch.job_id RETURN j )
