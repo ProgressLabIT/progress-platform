@@ -33,11 +33,11 @@ const job = {
         })
     },
 
-    loadJobAssignments({ commit }, operator_id) {
+    loadJobAssignments({ commit }, operator_key) {
       return new Promise((resolve) => {
         api
         .get('job-assignment', {
-          params: { user_id: operator_id }
+          params: { user_id: operator_key }
         })
         .then(resp => {
           commit('LOAD_ASSIGNMENTS', resp.data.detail)

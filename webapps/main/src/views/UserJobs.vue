@@ -2,7 +2,7 @@
   <v-container  fluid class="fill scroll">
     
     <transition name="slide-fade" mode="out-in" v-if="vuex_ready">
-      <router-view  v-bind="{ first_job, job_list }">
+      <router-view  v-bind="{ job_list }">
       </router-view>
     </transition>
 
@@ -38,10 +38,6 @@ export default {
       return this.vuex_ready
         ? this.$store.state.job.assigned_job_list[0].assigned_jobs
         : []
-    },
-
-    first_job() {
-      return this.$route.query.job === 'first'
     },
 
     unassigned_jobs() {

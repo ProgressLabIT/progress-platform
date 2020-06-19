@@ -38,10 +38,6 @@ export default {
   components: { JobCard },
 
   props: {
-    first_job: {
-      type: Boolean,
-      required: true
-    },
     job_list: {
       type: Array,
       required: true
@@ -64,16 +60,20 @@ export default {
       }
     },
 
+    job_query_param() {
+      return this.$route.query.job
+    },
+
     message() {
-      return this.first_job 
-        ? "Il prossimo lavoro in coda è il seguente"
-        : "Il lavoro selezionato è il seguente"
+      return this.job_query_param 
+        ? "Il lavoro selezionato è il seguente"
+        : "Il prossimo lavoro in coda è il seguente"
     },
 
     selected_job() {
-      return this.first_job
+      return this.job_query_param === 'first'
         ? this.job_list[0]
-        : this.job_list.filter(j => j._key === this.$route.query.job)[0]
+        : this.job_list.filter(j => j._key === this.job_query_param)[0]
     }
 
 
@@ -91,6 +91,12 @@ export default {
 
     goToJobList() {
       this.$router.push({ name: "userJobsAll"})
+    }
+  },
+
+  created() {
+    if (!this.job_query_param) {
+      this.$router.replace({ query: 'first' })
     }
   }
  
