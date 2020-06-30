@@ -41,6 +41,7 @@ async def create_work_order(new_wo: WorkOrderNew):
     product_data = product_coll.get(new_wo.product_id)
     new_wo.product_code = product_data['code']
     new_wo.product_description = product_data['description']
+    new_wo.phase_sequence = product_data['process_phases']
     new_wo_record = create_wo_record(new_wo, wo_coll)
   except:
     status_code=500
@@ -151,9 +152,6 @@ async def get_wo_data(wo_key: str):
   query = """
     FOR wo IN WorkOrder
       FILTER wo._key == @wo_key
-            
-      // get phases in order from product data
-      LET phases = FIRST( FOR p IN Product FILTER p._id == wo.product_id RETURN p.process_phases )
 
       // get job data
       LET jobs =  ( 
@@ -169,7 +167,6 @@ async def get_wo_data(wo_key: str):
       // Return enriched wo data
       RETURN MERGE ([
         wo, { 
-        phase_sequence: phases, 
         jobs: jobs, 
         active: active 
       }])
