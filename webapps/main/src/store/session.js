@@ -78,16 +78,9 @@ const session = {
 
     setSessionTimeout({ commit, state }) {
       clearTimeout(state.session_timer)
-      // clearTimeout(state.logout_timer)
-
-      // const forceLogout = async () => {
-      //   await dispatch('logout')
-      //   commit('TOGGLE_SESSION_LOCK', false)
-      // }
 
       const lockSession = () => {
         commit('TOGGLE_SESSION_LOCK', true)
-        // Vue.set(state, 'logout_timer', setTimeout(forceLogout, state.hard_timeout * 60 * 1000))
       }
 
       Vue.set(state, 'session_timer', setTimeout(lockSession, state.session_timeout * 60 * 1000))

@@ -67,8 +67,8 @@ export default {
   },
 
   created() {
-    const user_id = this.$store.state.session.user._id
-    this.$store.dispatch('loadJobAssignments', user_id)
+    const user_key = this.$store.state.session.user._key
+    this.$store.dispatch('loadJobAssignments', user_key)
     .then(() => this.vuex_ready = true)
   }
 }

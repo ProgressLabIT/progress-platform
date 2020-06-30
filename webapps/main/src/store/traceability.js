@@ -2,17 +2,17 @@ import Vue from 'vue'
 import { api } from '@/lib/apiCall.js'
 import { DateTime as DT } from 'luxon'
 
-function createWorkSession(state, startDT) {
+function createWorkSession(state, session_state, startDT) {
   const job_id = state.working_job_data._id
-  const user_id = state.user._id
-  const user_session_id = state.user_session._id
+  const user_key = session_state.user._key
+  const user_session_key = session_state.user_session_key
   
   const ws_start = startDT.toISO()
   
   return {
     start: ws_start,
-    user_session_id,
-    user_id,
+    user_session_key,
+    user_key,
     job_id,
     active: true
   }
@@ -40,14 +40,14 @@ function createBatch(state, startDT) {
   return new_batch
 }
 
-function createEvent(state, { event_type, timestamp, step_id, user_data, completed_batch_qt }) {
-  const user_id = state.user._id
+function createEvent(state, session_state, { event_type, timestamp, step_id, user_data, completed_batch_qt }) {
+  const user_key = session_state.user._key
   const job = state.working_job_data
 
   const event = {
     event_type,
-    user_id,
-    user_session_id: state.user_session._id,
+    user_key,
+    user_session_key: session_state.session_key,
     job_id: job._id,
     phase_id: job.phase_id,
     step_id,
@@ -76,16 +76,16 @@ function getClosedWorkSessionData(state, endDT) {
 const traceability = {
 
   state: {
-    user: {
-      name: '',
-      surname: '',
-      _id: '',
-    },
-    user_session: {
-      _id: '',
-      scope: ''
-    },
-    scope: null,
+    // user: {
+    //   name: '',
+    //   surname: '',
+    //   _id: '',
+    // },
+    // user_session: {
+    //   _id: '',
+    //   scope: ''
+    // },
+    // scope: null,
     working_job_data: {},
     work_session_list: [],
     current_batch_data: {},
@@ -189,10 +189,10 @@ const traceability = {
       })
     },
 
-    startJob({ commit, state }) {
+    startJob({ commit, state, rootState }) {
       const now = DT.utc()
       
-      const new_work_session = createWorkSession(state, now)
+      const new_work_session = createWorkSession(state, rootState.session, now)
       const new_batch = createBatch(state, now)
 
       // job update
@@ -205,12 +205,12 @@ const traceability = {
       const updated_job_data = {...state.working_job_data, ...job_update}
 
       /* INSERT EVENT CREATION HERE */
-      const user_id = state.user._id
+      const user_key = rootState.session.user._key
       const job = state.working_job_data
       const event = {
         event_type: 'JOB_STARTED',
-        user_id,
-        user_session_id: state.user_session._id,
+        user_key,
+        user_session_key: rootState.session.session_key,
         job_id: job._id,
         phase_id: job.phase_id,
         timestamp: now.toISO()
@@ -226,19 +226,19 @@ const traceability = {
       })
     },
 
-    pauseJob({ commit, state }) {
+    pauseJob({ commit, state, rootState }) {
       return new Promise( resolve => {
         const now = DT.utc()
         const updated_work_session = getClosedWorkSessionData(state, now)
 
         /* INSERT EVENT CREATION HERE */
-        const user_id = state.user._id
+        const user_key = rootState.session.user._key
         const job = state.working_job_data
 
         const event = {
           event_type: 'JOB_PAUSED',
-          user_id,
-          user_session_id: state.user_session._id,
+          user_key,
+          user_session_key: rootState.session.session_key,
           job_id: job._id,
           phase_id: job.phase_id,
           timestamp: now.toISO()
@@ -251,19 +251,19 @@ const traceability = {
       })
     },
 
-    resumeJob({ commit, state }) {
+    resumeJob({ commit, state, rootState }) {
       return new Promise( resolve => {
         const now = DT.utc()
         const new_work_session = createWorkSession(state, now)
         
         /* INSERT EVENT CREATION HERE */
-        const user_id = state.user._id
+        const user_key = rootState.session.user._key
         const job = state.working_job_data
 
         const event = {
           event_type: 'JOB_RESUMED',
-          user_id,
-          user_session_id: state.user_session._id,
+          user_key,
+          user_session_key: rootState.session.session_key,
           job_id: job._id,
           phase_id: job.phase_id,
           timestamp: now.toISO()
@@ -276,7 +276,7 @@ const traceability = {
       })
     },
 
-    completeStep({ commit, state }, { step_index, last_step, last_batch, batch_qt }) {
+    completeStep({ commit, state, rootState }, { step_index, last_step, last_batch, batch_qt }) {
       return new Promise( resolve => {
         const now = DT.utc()
 
@@ -297,7 +297,7 @@ const traceability = {
           }
         }
 
-        const event = createEvent(state, {
+        const event = createEvent(state, rootState.session, {
           event_type: 'STEP_COMPLETED',
           step_id: step_data._id,
           timestamp: now.toISO(),
@@ -311,7 +311,7 @@ const traceability = {
       })
     },
 
-    declareBatch({ commit, state }, { batch_qt, last_batch }) {
+    declareBatch({ commit, state, rootState }, { batch_qt, last_batch }) {
       return new Promise( resolve => {
         const now = DT.utc()
         const job = state.working_job_data
@@ -327,7 +327,7 @@ const traceability = {
 
 
         /* INSERT EVENT CREATION HERE */ 
-        const event = createEvent(state, {
+        const event = createEvent(state, rootState.session, {
           event_type: 'BATCH_COMPLETED',
           timestamp: now.toISO(),
           completed_batch_qt: batch_qt
