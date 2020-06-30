@@ -13,7 +13,7 @@
       <v-card-text class="mt-6">
         <!-- <v-col class="pa-0"> -->
           <p><strong>Ciao {{ user.name }} {{ user.surname }}.</strong></p>
-          <p>La sessione è stata inattiva per più di {{ lock_timeout }} minuti ed è stata quindi sospesa per la tua sicurezza. Inserisci la password per riprendere la sessione, o esci per iniziarne una con un utente diverso.</p>
+          <p>La sessione è stata sospesa per la tua sicurezza o perché inattiva per più di {{ session_timeout }} minuti o a causa di un ricaricamento della pagina. Inserisci la password per riprendere la sessione. Se vuoi cambiare utente, chiudi e inizia una nuova sessione.</p>
           <v-form @submit.prevent="verifyUser">
             <v-text-field
               v-model="password"
@@ -64,13 +64,9 @@ export default {
       return this.$store.state.session.user
     },
 
-    lock_timeout() {
-      return this.$store.state.session.soft_timeout
+    session_timeout() {
+      return this.$store.state.session.session_timeout
     },
-
-    logout_timeout() {
-      return this.$store.state.session.hard_timeout
-    }
   },
 
   methods: {
