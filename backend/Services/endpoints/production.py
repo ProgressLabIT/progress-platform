@@ -24,7 +24,7 @@ router = APIRouter()
 async def create_work_order(new_wo: WorkOrderNew):
 
   # Initialize transaction
-  tx = db.begin_transaction(write=['WorkOrder', 'Job'], read=['Phase', 'Product'])
+  tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue'], read=['Phase', 'Product'])
   wo_coll = tx.collection('WorkOrder')
   job_coll = tx.collection('Job')
   product_coll = tx.collection('Product')
@@ -93,6 +93,28 @@ async def create_work_order(new_wo: WorkOrderNew):
       detail=response
     )
 
+  # Add work order to default site queue
+  try:
+    query = """
+      FOR q IN Queue
+      FILTER q.type == 's' && q.site_key = '0'
+      UPDATE q WITH { work_orders: PUSH(q.work_orders, @new_wo_key) } IN Queue
+    """
+
+    tx.aql.execute(query, bind_vars=dict(new_wo_key=new_wo_record.key))
+    
+  except:
+    status_code=500
+    response = {
+      'status': status_code,
+      'message': "There was a problem adding the work order to the queue",
+      'error': traceback.format_exc()
+    }
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
+
   # Commit transaction
   tx.commit_transaction()
   return APIResponse(
@@ -125,25 +147,30 @@ async def update_work_order(
   updated_wo_data = db.collection('WorkOrder').update(update, return_new=True)['new']
   return APIResponse(detail=updated_wo_data)
 
-
 # ----------------------------------------------------------------------
 
-
-@router.get('/work-order')
-async def get_wo_list():
+@router.get('/queue/site/{site_key}')
+async def get_site_queue(site_key: str):
 
   query = """
-    FOR wo IN WorkOrder
+    LET queue = FIRST(
+      FOR q IN Queue
+      FILTER q.type == 's' && q.site_key == @site_key 
+      RETURN q.work_orders
+    )
+
+    FOR wo_key IN queue
+      LET wo = DOCUMENT(WorkOrder, wo_key)
       LET qt_remaining = wo.qt_planned - wo.qt_completed
       LET jobs = ( FOR j IN Job FILTER !j.trash && j.wo_id == wo._id RETURN j)
-      LET phases = ( FOR j IN jobs FILTER !j.trash RETURN DISTINCT j.phase_alias )
+      // LET phases = ( FOR j IN jobs FILTER !j.trash RETURN DISTINCT j.phase_alias )
       LET active = TO_BOOL(SUM(FOR j IN jobs FILTER !j.trash && j.active RETURN 1))
-      RETURN MERGE ([wo, { qt_remaining: qt_remaining, phase_sequence: phases, active: active }])  
+      RETURN MERGE ([wo, { qt_remaining: qt_remaining, active: active }])  
   """
+  cursor = db.aql.execute(query, bind_vars=dict(site_key=site_key))
+  return APIResponse(detail=[wo for wo in cursor])
 
-  # wo_list = [WorkOrderFull(**wo) for wo in db.collection('WorkOrder').all()]
-  wo_list = [wo for wo in db.aql.execute(query)]
-  return APIResponse(detail=wo_list)
+# ----------------------------------------------------------------------
 
 
 @router.get('/work-order/{wo_key}')
@@ -175,6 +202,31 @@ async def get_wo_data(wo_key: str):
   wo_data = db.aql.execute(query, bind_vars={ 'wo_key': wo_key }).next()
   return APIResponse(detail=wo_data)
 
+
+# ----------------------------------------------------------------------
+
+@router.put('/queue')
+async def update_queue(queue_update: Queue):
+  print(queue_update)
+  try:
+    match = dict(type=queue_update.type, site_key=queue_update.site_key)
+    
+    subqueue = queue_update.subqueue_target_id
+    if subqueue:
+      match['subqueue_target_id'] = subqueue
+
+    db.collection('Queue').update_match(match, queue_update, keep_none=False)
+    
+  except:
+    status_code = 500
+    response = dict(
+      status=status_code,
+      message="Could not update queue on the DB",
+      error_str=traceback.format_exc()
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+  return APIResponse(detail="Queue updated")
 
 # ----------------------------------------------------------------------
 
