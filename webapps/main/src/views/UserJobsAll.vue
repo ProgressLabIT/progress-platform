@@ -1,6 +1,6 @@
 <template>
   <v-container fluid class="py-0">
-   <v-row>
+   <v-row align="center">
 
       <!-- Text field for product filter and search -->
       <v-col cols="12" sm="5" lg="3">
@@ -29,24 +29,42 @@
           v-model="started_only" 
           class="ma-0 pa-0 nowrap"/>
       </v-col>    
-      </v-row> 
+      <v-col cols="auto" class="d-flex align-center">
+        <v-checkbox
+          :ripple="false"
+          color="primary" 
+          hide-details
+          label="Solo assegnati a me" 
+          v-model="assigned_to_me" 
+          class="ma-0 pa-0 nowrap"/>
+      </v-col>  
+
+      <v-spacer></v-spacer>
+      <v-col cols="auto">
+        <v-chip small :color="$theme.grey" class="solid-white">
+          <span class="weight-medium  mr-1">{{ filtered_jobs_length }}</span>
+          lavori visualizzati su 
+          <span class="weight-medium solid-white mx-1">{{ job_list.length }}</span>
+          disponibili
+        </v-chip>
+      </v-col>
+    </v-row> 
 
     <v-row >
-    
-    <v-col cols="12" sm="6" md="4" lg="3" 
-      v-for="j in job_list" 
-      :key="j._id"
-      @click="goToSelectedJob(j._key)"
-      v-show="(!started_only || j.stage==='started') && match(j)">
-      <v-hover v-slot:default="{ hover }">
-        <JobCard
-          :background="hover ? $theme.surface2 : $theme.surface1"
-          :job="j"
-          class="pointer"
-          v-ripple>
-        </JobCard>
-      </v-hover>
-    </v-col>
+      <v-col cols="12" sm="6" md="4" lg="3" 
+        v-for="j in job_list" 
+        :key="j._id"
+        v-show="match(j)"
+        @click="goToSelectedJob(j._key)">
+        <v-hover v-slot:default="{ hover }">
+          <JobCard
+            :background="hover ? $theme.surface2 : $theme.surface1"
+            :job="j"
+            class="pointer"
+            v-ripple>
+          </JobCard>
+        </v-hover>
+      </v-col>
     </v-row>
 
   </v-container>
@@ -73,14 +91,25 @@ export default {
   data() {
     return {
       search_string: '',
-      started_only: false
+      started_only: false,
+      assigned_to_me: false,
+    }
+  },
+
+  computed: {
+    filtered_jobs_length() {
+      return this.job_list.filter( j => this.match(j) ).length
     }
   },
 
   methods: {
     match(job) {
       const fields_to_search = ['wo_code', 'product_code', 'product_description']
-      return multiMatch(this.search_string, job, fields_to_search)
+      return (
+        multiMatch(this.search_string, job, fields_to_search) 
+        && (!this.started_only || job.stage==='started') 
+        && (!this.assigned_to_me || job.assigned) 
+      )
     },
 
     goToSelectedJob(job_key) {
