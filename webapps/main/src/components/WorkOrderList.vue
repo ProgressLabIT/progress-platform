@@ -5,7 +5,7 @@
       dense
       :headers="table_headers"
       :items="filtered_wo_list"
-      :options="{sortBy: ['due_by', 'wo_code', 'wo_line']}"
+      :options="{sortBy: ['priority']}"
       loading-text="Recupero dati in corso..."
       fixed-header  
       :height="table_height"
@@ -16,7 +16,7 @@
       <template v-slot:item="{ item }">
         <!-- <tr @dblclick="$emit('showDetails', item.wo_code)"> -->
         <tr 
-          @dblclick="showWorkOrderScreen(item._key)">
+          @dblclick="showWorkOrderScreen(item._key)" :key="item._key">
           <td 
             v-for="(header, index) in table_headers" :key="index"
             :class="header.value.includes('qt') ? 'text-right' : '' ">
@@ -66,6 +66,7 @@
 </template>
 
 <script>
+import Sortable from 'sortablejs'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 // import wo_list from '@/dummy_data/WorkOrders.json'
 
@@ -94,6 +95,7 @@ export default {
   data () {
     return {
       table_headers: [
+        { value: 'sequence', text: 'SEQ'},
         { value: 'wo_code', text: 'CODICE'},
         { value: 'wo_line', text: 'RIGA', },
         { value: 'product_code', text: 'PRODOTTO'},
@@ -105,19 +107,14 @@ export default {
         { value: 'due_by', text: 'ENTRO', sort: this.sortDate}
       ],
       table_height: '85vh',
-      // wo_list: wo_list,
     }
   },
 
   computed: {
 
     wo_list() {
-      return this.$store.state.workorder.wo_list
+      return this.$store.state.workorder.temp_wo_list
     },
-
-    // filter_match_map() {
-    //   let filter_match_map
-    // },
 
     filtered_wo_list() {
       return this.wo_list.filter( wo => {
@@ -228,6 +225,19 @@ export default {
     const resizeTable = () => this.table_height = this.$refs.container.clientHeight
     resizeTable()
     window.onresize = resizeTable
+
+    // make the table rows draggable
+    let table = document.querySelector(".v-data-table tbody")
+    const _self = this
+    Sortable.create(table, {
+      ..._self.$store.state.drag_options,
+      // use onEnd event provided by SortableJs library
+      onEnd: ({ newIndex, oldIndex }) => {
+        console.log({_self})
+        _self.$emit('editing')
+        _self.$store.commit('UPDATE_TEMP_QUEUE', { newIndex, oldIndex })
+      }
+    })
   },
 }
 </script>
