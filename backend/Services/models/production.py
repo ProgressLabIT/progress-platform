@@ -161,6 +161,7 @@ class JobUpdateType(Enum):
   INSERT = 'insert'
   UPDATE = 'update'
   DELETE = 'delete'
+  REORDER = 'reorder'
 
 class JobUpdate(FlexModel):
   action: JobUpdateType
