@@ -234,8 +234,11 @@ async def start_user_session(
 @router.delete("/session/{session_key}")
 async def close_user_session(
   session_key: str, 
-  token: TokenData = Depends(auth.verify_token)
+  token_str: str = Depends(auth.bearer_token)
 ):
+
+  token_json = jwt.decode(token_str, auth.TOKEN_SECRET, algorithms=[auth.ALGORITHM], verify_expiration=False)
+  token = TokenData(**token_json)
 
   try:
     session = db.collection('UserSession').get(session_key)

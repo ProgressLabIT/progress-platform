@@ -37,8 +37,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 debugging_info = dict(
   message="Could not validate credentials.",
-  stacktrace = traceback.format_exc(),
-  data=dir()
+  stacktrace=traceback.format_exc()
 )
 
 credentials_exception = HTTPException(
@@ -65,11 +64,17 @@ def verify_token(token_str: str = Depends(bearer_token), db=db):
   try: 
     try:
       token_json = jwt.decode(token_str, TOKEN_SECRET, algorithms=[ALGORITHM])
+    
     except jwt.ExpiredSignatureError:
       print('Token expired')
+      raise TokenExpiredError
+
     except jwt.InvalidSignatureError:
       print('TokenSignatureVerificationError')
       raise TokenSignatureVerificationError
+    
+    except:
+      raise Exception(traceback.format_exc())
     
     try:  
       token_data = TokenData(**token_json)
@@ -102,9 +107,11 @@ def verify_token(token_str: str = Depends(bearer_token), db=db):
 def revoke_token(token_key, db=db):
   try:
     db.collection('Token').update({ '_key': token_key, 'revoked': True })
+  except DocumentUpdateError:
+    pass
   except:
     traceback.print_exc()
-    print(dir())
+    print(vars())
 
 # ----------------------------------------------------------------------
 
@@ -113,11 +120,10 @@ def issue_token(
   consumer_key: str,
   seconds_until_expired: int,
   scope: str = None,
-  issued_at: datetime = datetime.utcnow(),
   consumer_type: ConsumerType = ConsumerType.USER,
   context: TokenContext = TokenContext.USER_SESSION,
 ):
-  
+  now = datetime.utcnow()
   token_key = secrets.token_hex(6)
   access_token_data = TokenData(
     token_key = token_key,
@@ -125,8 +131,8 @@ def issue_token(
     consumer_type = consumer_type, 
     context = context,
     scope = scope,
-    issued_at = issued_at,
-    expires_at = issued_at + timedelta(seconds=seconds_until_expired)
+    issued_at = now,
+    expires_at = now + timedelta(seconds=seconds_until_expired)
   )
 
   access_token = jwt.encode(

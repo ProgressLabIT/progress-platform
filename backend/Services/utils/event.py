@@ -35,6 +35,8 @@ class Event:
   def __init__(self, event: ProductionEvent, database=db):
     self.db = database
     self.info = event
+    self.info.user_id = f'User/{event.user_key}'
+    self.info.user_session_id = f'UserSession/{event.user_session_key}'
 
     # define action to be taken based on the event type
     self.action = getattr(self, self.info.event_type.value)

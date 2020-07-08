@@ -10,6 +10,8 @@ class TokenSignatureMismatchError(Exception): pass
 
 class TokenRevokedError(Exception): pass
 
+class TokenExpiredError(Exception): pass
+
 class TokenSignatureVerificationError(Exception): pass
 
 class TokenNotFoundError(Exception): pass

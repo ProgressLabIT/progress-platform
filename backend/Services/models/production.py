@@ -47,12 +47,13 @@ class WorkStatus(Enum):
 
 
 class WorkOrderNew(FlexModel):
+  customer_data: CustomerData = CustomerData()
   wo_code: str
   wo_line: int = 1
   product_id: str
   product_code: str = None
   product_description: str = None
-  customer_data: CustomerData = CustomerData()
+  phase_sequence: List[str] = []
   qt_planned: float
   # priority: bool = False
   due_by: Union[datetime, date] = None
