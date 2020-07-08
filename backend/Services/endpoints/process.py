@@ -50,8 +50,7 @@ async def get_production_process(product_key):
   try:
     process_data = db.aql.execute(""" 
 
-      LET product_id = CONCAT("Product/", @product_key)
-      LET phases = DOCUMENT(product_id).process_phases
+      LET phases = DOCUMENT(Product, @product_key).process_phases
 
       FOR phase_id in phases
           

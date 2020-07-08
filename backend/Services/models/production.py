@@ -6,7 +6,7 @@ from typing import Dict, List, Union
 from pydantic import Field, validator
 
 from models.process import PhaseParameters, StepWithMediaInfo
-from utils.base_models import FlexModel
+from utils.base_models import FlexModel, ArangoDocument
 
 
 
@@ -54,7 +54,7 @@ class WorkOrderNew(FlexModel):
   product_description: str = None
   customer_data: CustomerData = CustomerData()
   qt_planned: float
-  priority: bool = False
+  # priority: bool = False
   due_by: Union[datetime, date] = None
   
 
@@ -85,6 +85,7 @@ class RequiredAvailableQt(FlexModel):
   required: float = None
   available: float = None
   stockout: bool = None
+
 
 class Operator(FlexModel):
   id: str = Field(..., alias="_id")
@@ -160,6 +161,7 @@ class JobUpdateType(Enum):
   INSERT = 'insert'
   UPDATE = 'update'
   DELETE = 'delete'
+  REORDER = 'reorder'
 
 class JobUpdate(FlexModel):
   action: JobUpdateType
@@ -196,6 +198,21 @@ class OperatorAssignments(FlexModel):
   operator: Operator
   assigned_jobs: List[Job]
 
+
 class AssignmentsResponse(FlexModel):
   assigned_jobs_by_operator: List[OperatorAssignments]
   unassigned_jobs: List[Job]
+
+
+class QueueType(Enum):
+  OPERATOR = 'o'
+  EQUIPMENT = 'e'
+  SITE = 's'
+
+
+class Queue(ArangoDocument):
+  type: QueueType #What the queue refers to.
+  site_key: str = None
+  subqueue_target_id: str = None # id of operator / equipment
+  work_orders: List[str] = None # the list of Wo keys ordered by priority.
+  jobs: List[str] = None # the list of job keys ordered by priority

@@ -7,15 +7,19 @@ from pydantic import BaseModel, Field
 from utils.base_models import ArangoDocument
 
 
+class Site(ArangoDocument):
+  code: str
+  name: str
+  description: str
+  address: str
+  iso_country_code: str
+
+
 class Department(ArangoDocument):
   name: str
   code: str = None
   description: str = None  
 
-class UserRoles(BaseModel):
-  admin: bool = False
-  manager: bool = False
-  operator: bool = False
 
 class UserListItem(ArangoDocument):
   active: bool = True

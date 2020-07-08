@@ -8,14 +8,12 @@ from fastapi.encoders import jsonable_encoder
 from models.production import *
 from models.process import PhaseProcedure
 from endpoints.process import search_step_media
-from utils.db import db
 from utils.api import APIResponse
+from utils.db import db
+from utils.production import Queries
 
 
 router = APIRouter()
-# work_orders = db.collection('WorkOrder')
-# jobs = db.collection('Job')
-
 
 # ----------------------------------------------------------------------
 
@@ -24,7 +22,7 @@ router = APIRouter()
 async def create_work_order(new_wo: WorkOrderNew):
 
   # Initialize transaction
-  tx = db.begin_transaction(write=['WorkOrder', 'Job'], read=['Phase', 'Product'])
+  tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue'], read=['Phase', 'Product'])
   wo_coll = tx.collection('WorkOrder')
   job_coll = tx.collection('Job')
   product_coll = tx.collection('Product')
@@ -34,7 +32,9 @@ async def create_work_order(new_wo: WorkOrderNew):
     data_in = jsonable_encoder(wo)
     new_wo_record = WorkOrderFull(**data_in)
     prepped = jsonable_encoder(new_wo_record, by_alias=True, include_none=False)
-    new_wo_record.id = collection.insert(prepped)['_id']
+    db_resp = collection.insert(prepped)
+    new_wo_record.id = db_resp['_id']
+    new_wo_record.key = db_resp['_key']
     return new_wo_record
 
   try:
@@ -56,10 +56,7 @@ async def create_work_order(new_wo: WorkOrderNew):
     )
 
 
-  # Get phase data from products & phase parameters from phase
-  # Create Jobs
-  process = tx.document(new_wo_record.product_id)['process_phases']
-
+  # Get phase data from products, phase parameters from phase & Create Jobs
   def create_job_record(wo_data, phase_id, collection):
     phase = PhaseProcedure(**tx.document(phase_id))
     new_job_record = Job(
@@ -80,12 +77,29 @@ async def create_work_order(new_wo: WorkOrderNew):
     return new_job_record
   
   try:
-    new_job_records = [create_job_record(new_wo_record, p_id, job_coll) for p_id in process]
+    new_job_records = [create_job_record(new_wo_record, p_id, job_coll) for p_id in new_wo_record.phase_sequence]
+    print(new_job_records)
   except:
     status_code=500
     response = {
       'status': status_code,
       'message': "There was a problem creating job records in the db",
+      'error': traceback.format_exc()
+    }
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
+
+  # Add work order to default site queue
+  try:
+    tx.aql.execute(Queries.ADD_WORK_ORDER_TO_QUEUE, bind_vars=dict(new_wo_key=new_wo_record.key))
+    
+  except:
+    status_code=500
+    response = {
+      'status': status_code,
+      'message': "There was a problem adding the work order to the queue",
       'error': traceback.format_exc()
     }
     raise HTTPException(
@@ -129,52 +143,51 @@ async def update_work_order(
 # ----------------------------------------------------------------------
 
 
-@router.get('/work-order')
-async def get_wo_list():
+@router.get('/queue/site/{site_key}')
+async def get_site_queue(site_key: str):
 
-  query = """
-    FOR wo IN WorkOrder
-      LET qt_remaining = wo.qt_planned - wo.qt_completed
-      LET jobs = ( FOR j IN Job FILTER !j.trash && j.wo_id == wo._id RETURN j)
-      LET phases = ( FOR j IN jobs FILTER !j.trash RETURN DISTINCT j.phase_alias )
-      LET active = TO_BOOL(SUM(FOR j IN jobs FILTER !j.trash && j.active RETURN 1))
-      RETURN MERGE ([wo, { qt_remaining: qt_remaining, phase_sequence: phases, active: active }])  
-  """
+  cursor = db.aql.execute(Queries.GET_SITE_WORK_ORDER_DATA, bind_vars=dict(site_key=site_key))
+  return APIResponse(detail=[wo for wo in cursor])
 
-  # wo_list = [WorkOrderFull(**wo) for wo in db.collection('WorkOrder').all()]
-  wo_list = [wo for wo in db.aql.execute(query)]
-  return APIResponse(detail=wo_list)
+
+# ----------------------------------------------------------------------
 
 
 @router.get('/work-order/{wo_key}')
 async def get_wo_data(wo_key: str):
-  
-  query = """
-    FOR wo IN WorkOrder
-      FILTER wo._key == @wo_key
 
-      // get job data
-      LET jobs =  ( 
-        FOR j IN Job
-        FILTER j.wo_id == wo._id && !j.trash
-        LET operator = KEEP(DOCUMENT(j.assigned_to), '_id', 'name', 'surname', 'active')
-        RETURN MERGE( j, { assigned_to: operator } )
-      )
-
-      // check if any job is active
-      LET active = TO_BOOL(COUNT(FOR j IN Job FILTER !j.trash && j.wo_id == wo._id && j.active RETURN 1))
-
-      // Return enriched wo data
-      RETURN MERGE ([
-        wo, { 
-        jobs: jobs, 
-        active: active 
-      }])
-  """
-
-  wo_data = db.aql.execute(query, bind_vars={ 'wo_key': wo_key }).next()
+  wo_data = db.aql.execute(Queries.GET_WORK_ORDER_DATA, bind_vars={ 'wo_key': wo_key }).next()
   return APIResponse(detail=wo_data)
 
+
+# ----------------------------------------------------------------------
+
+@router.put('/queue')
+async def update_queue(queue_update: Queue):
+
+  try:
+    match = dict(type=queue_update.type, site_key=queue_update.site_key)
+    
+    subqueue = queue_update.subqueue_target_id
+    if subqueue:
+      match['subqueue_target_id'] = subqueue
+
+    db.collection('Queue').update_match(match, queue_update, keep_none=False, sync=True)
+    
+    # If updating the work order queue, reorder all job queues too
+    if not subqueue:
+      db.aql.execute(Queries.REORDER_JOB_QUEUES)
+
+  except:
+    status_code = 500
+    response = dict(
+      status=status_code,
+      message="Could not update queue on the DB",
+      error_str=traceback.format_exc()
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+  return APIResponse(detail="Queue updated")
 
 # ----------------------------------------------------------------------
 
@@ -194,39 +207,10 @@ async def get_job_list():
 @router.get('/job-assignment')
 async def get_assignment_list(user_key: str = None):
 
-  result = db.aql.execute("""
-    LET assigned_jobs_by_operator = (
-      LET user_key = @user_key ? : '%'
-      FOR o IN User
-      FILTER CONTAINS(o.scope, 'operator') && LIKE(o._key, user_key)
-      LET assigned_jobs = (    
-        FOR j in Job
-        FILTER !j.trash && j.stage != 'closed' && j.assigned_to == o._id
-        RETURN j
-      )
-      
-      RETURN {
-        operator: KEEP(o, '_id', 'name', 'surname', 'active', 'department_id'),
-        assigned_jobs: assigned_jobs
-      }
-    )
-
-    LET unassigned_jobs = (
-      FOR j in Job
-      FILTER !j.trash && j.assigned_to == null
-      RETURN j
-    )
-
-    RETURN {
-      assigned_jobs_by_operator: assigned_jobs_by_operator,
-      unassigned_jobs: unassigned_jobs
-    }  
-  """, bind_vars= { "user_key": user_key }).next()
+  result = db.aql.execute(Queries.GET_ASSIGNMENT_LIST, bind_vars= { "user_key": user_key }).next()
 
   return APIResponse(detail=AssignmentsResponse(**result))
-  # cursor = db.collection('assigned_to').find({ 'rel_type': 'JobOperator'})
-  # assignment_list = [JobAssignment(**a) for a in cursor]
-  # return APIResponse(detail=assignment_list)
+
 
 # ----------------------------------------------------------------------
 
@@ -245,23 +229,12 @@ async def get_job_data(job_key: str):
     }
     raise HTTPException(status_code=status_code, detail=response)
   
-  # print(job_data)
-  # if job_data['stage'] == 'created':
-  # job hasn't been started yet. Retrieve latest procedure
-    # print("Job still to be started. Getting procedure...")
-  query = """
-    FOR p IN Phase
-    FILTER p._id == @phase_id
-      FOR s IN p.step_sequence
-      RETURN DOCUMENT(s)
-  """
+
   bind_vars = { 'phase_id': job_data['phase_id'] }
   
   try:
-    # db_steps = db.collection('Step').find({ 'phase_id': job_data['phase_id'] })
-    db_steps = db.aql.execute(query, bind_vars=bind_vars)
+    db_steps = db.aql.execute(Queries.GET_PHASE_STEP_DATA, bind_vars=bind_vars)
     job_steps = [s for s in db_steps]
-    # print(job_steps)
   except:
     status_code=500
     response = {
@@ -287,44 +260,14 @@ async def get_job_data(job_key: str):
 
   job_data['step_sequence'] = job_steps
   job_with_procedure = JobWithProcedure(**job_data)
-  # print(jsonable_encoder(job_with_procedure))
-
-  # print(job_with_procedure)
 
   response = {
     'message': f"Retrieved data for Job/{job_key}",
     'detail': jsonable_encoder(job_with_procedure)
   }
 
-  # print(response)
   return APIResponse(**response)
  
-
-# ----------------------------------------------------------------------
-
-
-@router.patch('/job/{job_key}')
-async def update_job(job_key: str, job_data: dict):
-  # print(**job_data)
-
-  try:
-    db_resp = db.collection('Job').update({ '_key': job_key, **job_data }, return_new=True)
-  except:
-    status_code = 500
-    response = {
-     'status_code': status_code,
-     'message': "Couldn't update Job on the db",
-     'error': traceback.format_exc()
-    }
-    raise HTTPException(status_code=status_code, detail=response)
-
-  status_code = 200
-  response = {
-    'message': f"Job {job_key} updated correctly",
-    'detail': db_resp['new']
-  }
-  return APIResponse(**response)
-
 
 # ----------------------------------------------------------------------
 
@@ -332,7 +275,26 @@ async def update_job(job_key: str, job_data: dict):
 @router.post('/job/update')
 async def update_jobs(job_updates:List[JobUpdate]):
 
-  tx = db.begin_transaction(write=['Job'])
+  def update_target_queue(job_id, target_id, action, tx):
+
+    try:
+      if action == 'remove':
+        tx.aql.execute(Queries.REMOVE_JOB_FROM_QUEUE, bind_vars=dict(job_id=job_id))
+
+      if action == 'add':
+        tx.aql.execute(Queries.ADD_JOB_TO_QUEUE, bind_vars=dict(target_id=target_id, job_id=job_id))
+
+    except:
+      status_code = 500
+      response = {
+       'status_code': status_code,
+       'message': "Couldn't update queue on the db",
+       'error': traceback.format_exc()
+      }
+      raise HTTPException(status_code=status_code, detail=response)
+
+
+  tx = db.begin_transaction(write=['Job', 'Queue'])
   job_db = tx.collection('Job')
 
   results = []
@@ -342,15 +304,41 @@ async def update_jobs(job_updates:List[JobUpdate]):
 
       if u.action == JobUpdateType.INSERT:
         new_job_record = jsonable_encoder(Job(**u.data), by_alias=True, include_none=False)
-        db_resp = job_db.insert(new_job_record, return_new=True)['new']
+        new_job_data = job_db.insert(new_job_record, return_new=True)['new']
 
       elif u.action == JobUpdateType.UPDATE:
-        db_resp = job_db.update(u.data, return_new=True)['new']
+        db_resp = job_db.update(u.data, return_new=True, return_old=True)
+        new_job_data = db_resp['new']
+        old_job_data = db_resp['old']
 
+        if 'assigned_to' in u.data:  
+          update_target_queue(
+            job_id=u.data['_id'], 
+            target_id=u.data['assigned_to'],
+            action='add',
+            tx=tx
+          )
+
+          if 'assigned_to' in old_job_data:
+            update_target_queue(
+              job_id=u.data['_id'],
+              target_id=old_job_data['assigned_to'],
+              action='remove',
+              tx=tx    
+            )
+          
       elif u.action == JobUpdateType.DELETE:
-        db_resp = job_db.update({ **u.data, 'trash': True }, return_new=True)['new']
+        new_job_data = job_db.update({ **u.data, 'trash': True }, return_new=True)['new']
+        
+        if new_job_data['assigned_to']:
+          update_target_queue(
+            job_id=u.data['_id'],
+            target_id=new_job_data['assigned_to'],
+            action='remove',
+            tx=tx
+          )
 
-      results.append(db_resp)
+      results.append(new_job_data)
     
     tx.commit_transaction()
     return APIResponse(detail=db_resp, message="Jobs updated successfully")
