@@ -103,7 +103,10 @@ const workorder = {
         api
         .put('queue', queue_update)
         .then( async () => {
-          await dispatch('loadWorkOrders')
+          await axios.all([
+            dispatch('loadWorkOrders'),
+            dispatch('loadJobAssignments')
+          ])
           resolve()
         })
       })

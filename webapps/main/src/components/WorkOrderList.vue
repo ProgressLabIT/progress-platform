@@ -233,7 +233,6 @@ export default {
       ..._self.$store.state.drag_options,
       // use onEnd event provided by SortableJs library
       onEnd: ({ newIndex, oldIndex }) => {
-        console.log({_self})
         _self.$emit('editing')
         _self.$store.commit('UPDATE_TEMP_QUEUE', { newIndex, oldIndex })
       }
