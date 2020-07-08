@@ -170,10 +170,16 @@ export default {
           const filtered_jobs = a.assigned_jobs.filter(this.matchJobToFilters)
           
           if (filtered_jobs.length) {
+            const active_jobs = []
+            const queued_jobs = []
+            filtered_jobs.forEach( j => {
+              j.active ? active_jobs.push(j) : queued_jobs.push(j)
+            })
+
             const operator_filtered_assignments = {
               operator: a.operator,
               assigned_jobs_count: a.assigned_jobs.length,
-              filtered_jobs: filtered_jobs.sort(this.sortActiveJobFirst)
+              filtered_jobs: [...active_jobs, ...queued_jobs]
             }
             list.push(operator_filtered_assignments)
           }
@@ -225,11 +231,6 @@ export default {
 
     matchJobToFilters(job) {
       return matchJobToFilters(job, this.filters, this.search_fields)
-    },
-
-    sortActiveJobFirst(job1, job2) {
-      if (!job1.active && job2.active) return 1
-      else return -1
     },
 
     getPicPath(operator) {

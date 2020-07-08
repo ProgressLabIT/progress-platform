@@ -26,14 +26,44 @@
           </v-col>
 
           <v-spacer></v-spacer>
-          <v-col cols="auto">
-            <!-- CREATE NEW WORK ORDER -->
-            <v-btn small v-if="$route.name == 'workOrderList'"
-              :color="$theme.blue"
-              @click="$router.push({ name: 'newWorkOrder'})">
-              crea ordine
-            </v-btn>
-          </v-col>
+          
+          <!-- CREATE NEW WORK ORDER -->
+          <template v-if="$route.name == 'workOrderList'">
+            <v-col cols="auto" v-if="!editing">
+              <v-btn small 
+                :color="$theme.blue"
+                @click="$router.push({ name: 'newWorkOrder'})">
+                crea ordine
+              </v-btn>
+            </v-col>
+    
+            <template v-else>
+
+              <!-- REORDER WORK ORDER QUEUE -->
+              <v-col cols="auto">
+                <v-btn small
+                  :color="$theme.orange"
+                  :loading="saving"
+                  @click="updateQueue"
+                  class="ml-3">
+                  SALVA NUOVA SEQUENZA
+                </v-btn>
+              </v-col>
+
+              <!-- CANCEL CHANGES -->
+              <v-col cols="auto">
+                <v-btn small
+                  :color="$theme.grey"
+                  @click="cancelQueueChanges"
+                  class="ml-2">
+                  ANNULLA MODIFICHE
+                </v-btn>
+              </v-col>
+
+            </template>
+
+          </template>
+
         </v-row>
 
         <!-- MAIN CONTENT -->
@@ -48,7 +78,8 @@
               @lateOnly="showLateOnly"
               @criticalOnly="showCriticalOnly"
               @setSearch="setSearch($event)"
-              @itemDblClick="showWorkOrderScreen($event)">
+              @itemDblClick="showWorkOrderScreen($event)"
+              @editing="editing = true">
             </router-view>
 
           <!-- </keep-alive> -->
@@ -193,7 +224,9 @@ export default {
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       },
       search_string: '',
-      department: ''
+      department: '',
+      editing: false,
+      saving: false,
     }
   },
 
@@ -252,6 +285,18 @@ export default {
       }
       this.$router.push(to_route)
     },
+
+    async updateQueue() {
+      this.saving = true
+      await this.$store.dispatch('saveQueueChanges')
+      this.saving = false
+      this.editing = false
+    },
+
+    cancelQueueChanges() {
+      this.$store.commit('SET_TEMP_QUEUE')
+      this.editing = false
+    }
   },
 
   beforeCreate() {
