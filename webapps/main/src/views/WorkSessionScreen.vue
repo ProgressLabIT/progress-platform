@@ -102,9 +102,9 @@
             id="progress_button"
             :color="j.active ? $theme.surface2 : $theme.background"
             block tile
-            :disabled="!j.active || current_step_status"
+            :disabled="!j.active || current_step_done"
             height="auto"
-            :class="{ disabled: !j.active, completed: current_step_status }"
+            :class="{ disabled: !j.active, completed: current_step_done }"
             @click="progress_button.action()">
             <v-row class="fill-height mx-0" align="center" justify="center">
               <v-col cols="3" class="text-right">
@@ -136,6 +136,7 @@
           <v-btn 
             :color="$theme.surface2"
             tile
+            :disabled="!allow_step_forward"
             height="auto" width="32%"
             @click="goToNextStep"
             class="py-3">
@@ -201,6 +202,10 @@ export default {
       ws_list: state => state.traceability.work_session_list,
       batch_data: state => state.traceability.current_batch_data.step_data,
     }),
+
+    force_order() {
+      return this.j.parameters.step_check_force_order
+    },
 
     confirm_batch_done_message() {
       return "Hai completato l'ultimo passo della procedura. Confermi il completamento dei pezzi in lavorazione?"
@@ -288,7 +293,7 @@ export default {
       return this.production_batch === remaining_qt
     },
 
-    current_step_status() {
+    current_step_done() {
       let current_step = this.batch_data ? this.batch_data[this.current_step_index] : null
       return current_step ? current_step.done : null
     },
@@ -314,6 +319,14 @@ export default {
         color: this.$theme.white_disabled
       }
     },
+
+    allow_step_forward() {
+      let allow = true 
+      if (this.force_order && !this.current_step_done) {
+        allow = false
+      }
+      return allow
+    }
   },
 
   methods: {

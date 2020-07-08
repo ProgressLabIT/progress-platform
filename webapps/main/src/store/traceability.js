@@ -254,7 +254,7 @@ const traceability = {
     resumeJob({ commit, state, rootState }) {
       return new Promise( resolve => {
         const now = DT.utc()
-        const new_work_session = createWorkSession(state, now)
+        const new_work_session = createWorkSession(state, rootState.session, now)
         
         /* INSERT EVENT CREATION HERE */
         const user_key = rootState.session.user._key
