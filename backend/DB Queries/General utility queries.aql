@@ -93,6 +93,20 @@ INSERT {
 
 
 
+// Remove closed jobs from Operator queues
+FOR o IN User
+FILTER REGEX_TEST(o.scope, '(^|\\s)operator($|\\s)')
+LET closed_jobs = (
+    FOR j IN Job
+    FILTER j.stage == 'closed' && j.assigned_to == o._id
+    RETURN j._key
+)
+
+FOR q in Queue
+FILTER q.subqueue_target_id == 'User/11681276'
+UPDATE q WITH { jobs: REMOVE_VALUES(q.jobs, closed_jobs) } in Queue
+
+
 
 
 
