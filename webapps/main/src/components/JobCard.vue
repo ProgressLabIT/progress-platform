@@ -13,6 +13,10 @@
             <h5>RIGA</h5>
             <h3 class="display highlight">{{ job.wo_line }}</h3>
           </v-col>
+          <v-spacer></v-spacer>
+          <v-col cols="auto">
+            <v-icon>{{ job.assigned ? 'mdi-account-check' : 'mdi-account-question' }}</v-icon>
+          </v-col>
         </v-row>
 
         <!-- PRODUCT DATA -->
@@ -46,6 +50,7 @@
         </v-progress-linear>  
 
       </v-col>  
+      <v-overlay absolute opacity=".2" :value="true"></v-overlay>
     </v-container>
   </v-card>
 </template>

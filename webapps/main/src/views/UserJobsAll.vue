@@ -29,32 +29,53 @@
           v-model="started_only" 
           class="ma-0 pa-0 nowrap"/>
       </v-col>    
-      <v-col cols="auto" class="d-flex align-center">
-        <v-checkbox
-          :ripple="false"
-          color="primary" 
-          hide-details
-          label="Solo assegnati a me" 
-          v-model="assigned_to_me" 
-          class="ma-0 pa-0 nowrap"/>
-      </v-col>  
-
-      <v-spacer></v-spacer>
-      <v-col cols="auto">
-        <v-chip small :color="$theme.grey" class="solid-white">
-          <span class="weight-medium  mr-1">{{ filtered_jobs_length }}</span>
-          lavori visualizzati su 
-          <span class="weight-medium solid-white mx-1">{{ job_list.length }}</span>
-          disponibili
-        </v-chip>
-      </v-col>
     </v-row> 
+
+
+    <!-- ASSIGNED JOBS -->
+    <v-row class="mx-0 mt-4" align="center">
+      <span class="highlight">Assegnati a me</span>
+      <v-divider class="mx-3"></v-divider>
+      <v-chip small color="transparent" class="highlight">
+        <span class="weight-medium solid-white mr-1">{{ filtered_assigned_to_user.length }}</span>
+        lavori visualizzati su 
+        <span class="weight-medium solid-white mx-1">{{ assigned_to_user.length }}</span>
+        disponibili
+      </v-chip>
+    </v-row>
 
     <v-row >
       <v-col cols="12" sm="6" md="4" lg="3" 
-        v-for="j in job_list" 
+        v-for="j in filtered_assigned_to_user" 
         :key="j._id"
-        v-show="match(j)"
+        @click="goToSelectedJob(j._key)">
+        <v-hover v-slot:default="{ hover }">
+          <JobCard
+            :background="hover ? $theme.surface2 : $theme.surface1"
+            :job="j"
+            class="pointer"
+            v-ripple>
+          </JobCard>
+        </v-hover>
+      </v-col>
+    </v-row>
+
+    <!-- UNASSIGNED JOBS -->
+    <v-row class="mx-0 mt-12" align="center">
+      <div class="highlight bold">Non assegnati</div>
+      <v-divider class="mx-3"></v-divider>
+      <v-chip small color="transparent" class="highlight">
+        <span class="weight-medium solid-white mr-1">{{ filtered_unassigned.length }}</span>
+        lavori visualizzati su 
+        <span class="weight-medium solid-white mx-1">{{ unassigned.length }}</span>
+        disponibili
+      </v-chip>
+    </v-row>
+
+    <v-row >
+      <v-col cols="12" sm="6" md="4" lg="3" 
+        v-for="j in filtered_unassigned" 
+        :key="j._id"
         @click="goToSelectedJob(j._key)">
         <v-hover v-slot:default="{ hover }">
           <JobCard
@@ -92,13 +113,24 @@ export default {
     return {
       search_string: '',
       started_only: false,
-      assigned_to_me: false,
     }
   },
 
   computed: {
-    filtered_jobs_length() {
-      return this.job_list.filter( j => this.match(j) ).length
+    assigned_to_user() {
+      return this.job_list.filter( j => j.assigned )
+    },
+
+    unassigned() {
+      return this.job_list.filter( j => !j.assigned )
+    },
+
+    filtered_assigned_to_user() {
+      return this.assigned_to_user.filter( j => this.match(j) )
+    },
+
+    filtered_unassigned() {
+      return this.unassigned.filter( j => this.match(j) )
     }
   },
 
@@ -108,7 +140,6 @@ export default {
       return (
         multiMatch(this.search_string, job, fields_to_search) 
         && (!this.started_only || job.stage==='started') 
-        && (!this.assigned_to_me || job.assigned) 
       )
     },
 
