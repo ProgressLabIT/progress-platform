@@ -15,8 +15,8 @@
               <v-avatar  
                 size="20" 
                 :style="stepStyle(index)"
-                class="d-flex text-center smaller font-weight-medium pointer"
-                @click="current_step_index = index">
+                class="d-flex text-center smaller font-weight-medium"
+                @click="stepClick(index)">
                 <span :class="current_step_index == index ? 'solid-white weight-bold': ''">
                   {{ index + 1 }}
                 </span>
@@ -27,11 +27,6 @@
               :key="index">
             </v-divider>
           </template>
-          <!-- <v-col cols="auto">
-            <h5 class="ml-6 highlight text-uppercase">
-              passo {{ current_step_index + 1 }} / {{ procedure.length}}
-            </h5>
-          </v-col> -->
         </v-row>
       </v-toolbar>
       
@@ -119,6 +114,10 @@ export default {
       return this.$store.state.traceability.current_batch_data.step_data
     },
 
+    force_order() {
+      return this.job.parameters.step_check_force_order
+    }
+
    
   },
 
@@ -128,6 +127,7 @@ export default {
       let step_done = false
       let step_critical = false
       let color = ''
+      let cursor = this.allowClick(index) ? 'pointer' : 'not-allowed'
       
       if (this.batch_data) {
         step_done = this.batch_data[index].done
@@ -151,13 +151,32 @@ export default {
       }
 
       return {
-        backgroundColor: color
+        backgroundColor: color,
+        cursor,
       }
     },
+
     setContentHeight() {
       const card_height = this.$refs.step_card.clientHeight
       const stepper_height = this.$refs.stepper.clientHeight
       this.step_content_height = card_height - stepper_height
+    },
+
+    allowClick(index) {
+      let allow = true 
+      if (this.force_order) {
+        for (let i = 0; i < index; i++) {
+          allow *= this.batch_data[i].done
+        }
+      }
+
+      return allow
+    },
+
+    stepClick(index) {
+      if (this.allowClick(index)) {
+        this.current_step_index = index
+      }
     }
   },
 
