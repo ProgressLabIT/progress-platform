@@ -477,6 +477,22 @@ export default {
       }
     })
   },
+
+  beforeRouteLeave (to, from, next) {
+    if (this.j.active) {
+      const confirm = window.confirm("Vuoi davvero lasciare questa pagina? Il lavoro verrà messo in pausa")
+      if (confirm) {
+        this.$store.dispatch('pauseJob')
+        next()
+      }
+      else {
+        next(false)
+      }
+    }
+    else {
+      next()
+    }
+  }
 }
 </script>
 
