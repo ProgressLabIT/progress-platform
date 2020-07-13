@@ -63,6 +63,8 @@ router.beforeEach((to, from, next) => {
       next(false)
     }
     else {
+      // Consider the navigation as an interaction > Reset session timeout
+      store.dispatch('setSessionTimeout')
       next()
     }
   }

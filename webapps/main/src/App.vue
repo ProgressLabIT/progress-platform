@@ -58,9 +58,10 @@
 </template>
 
 <script>
+import { DateTime as DT } from 'luxon'
+
 import AppBar from '@/components/AppBar'
 import AppFooter from '@/components/AppFooter'
-// import LoginScreen from '@/views/LoginScreen'
 import SessionLock from '@/views/SessionLock'
 
 export default {
@@ -69,7 +70,6 @@ export default {
   components: {
     AppBar,
     AppFooter,
-    // LoginScreen,
     SessionLock
   },
 
@@ -94,6 +94,7 @@ export default {
     window.onbeforeunload = async (event) => {
       if (this.$route.name != 'login') {
         event.preventDefault()
+        this.$store.state.last_interaction = DT.utc().toMillis()
         localStorage.setItem('TEMP_SESSION', JSON.stringify(this.$store.state))
         if (this.is_authenticated) {
           await this.$store.dispatch('logout')
