@@ -1,5 +1,15 @@
 <template>
-  <v-container fluid class="scroll pt-12 px-12" :style="'max-height:'+height+'px'">
+  <v-container fluid class="scroll pt-8 px-12" :style="'max-height:'+height+'px'">
+    
+    <v-card-title class="display highlight px-0 pt-0 pb-3 nowrap">
+      {{ step.title }}
+    </v-card-title>
+    <v-card-subtitle 
+      class="px-0 pb-1 mb-6">
+      {{ step.description }}
+    </v-card-subtitle>
+
+
     <template v-for="(field, index) in step_form">
       <v-text-field 
         :value="field_data[index]"

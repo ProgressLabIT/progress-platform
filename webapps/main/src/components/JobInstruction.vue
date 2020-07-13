@@ -9,33 +9,52 @@
       eager
       class="no-transition">
       <v-img eager :src="displayed_image_src" :height="height">
-
         <template v-slot:placeholder>
           <v-progress-circular size="60" indeterminate></v-progress-circular>
         </template>
 
-        <template v-if="step_media.length > 1">
+        <div class="d-flex flex-column fill">
+
+          <!-- STEP TITLE AND DESCRIPTION -->
+          <v-sheet 
+            color="rgba(0,0,0,.7)" 
+            class="px-4 pt-2 pb-1">      
+            <v-card-title class="display highlight px-0 pt-0 pb-3 nowrap">
+              {{ step.title }}
+            </v-card-title>
+            <v-card-subtitle 
+              :class="['px-0 pb-1', 'nowrap']">
+              {{ step.description }}
+            </v-card-subtitle>
+          </v-sheet>
+          
+          <!-- INVISIBLE IMAGE SWITCH CONTROLS -->
           <v-row no-gutters
-            class="fill mx-0" 
-            style="position:absolute">
+            v-if="step_media.length > 1"
+            class="mx-0">
             <v-col cols="6" @click="show('prev')">
             </v-col>
             <v-col cols="6" @click="show('next')">
             </v-col>
+            <v-col align-self="end" style="position: absolute">
+              <v-row justify="center">
+                <v-card tile raised
+                  v-for="(media, index) in step_media" 
+                  :key="index" 
+                  height="50px" 
+                  width="70px"
+                  class="ma-2"
+                  :style="step_image_index == index ? 'border-bottom: solid 3px' + $theme.blue : ''"
+                  :img="media_base_path + '/' + media"
+                  @mouseenter="step_image_index = index">
+                </v-card>
+              </v-row>
+            </v-col>  
           </v-row>
-          <v-row class="fill-height" justify="center" align="end">
-            <v-card tile raised
-              v-for="(media, index) in step_media" 
-              :key="index" 
-              height="50px" 
-              width="70px"
-              class="ma-2"
-              :style="step_image_index == index ? 'border-bottom: solid 3px' + $theme.blue : ''"
-              :img="media_base_path + '/' + media"
-              @mouseenter="step_image_index = index">
-            </v-card>
-          </v-row>
-        </template>
+        </div>
+          
+
+        
       </v-img>
     </v-window-item>
   </v-window>
