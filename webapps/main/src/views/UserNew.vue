@@ -165,7 +165,14 @@ export default {
         department_id: '',
         hourly_cost: null,
         scopes: [], // permissions list
+        scope: ''
       }
+    }
+  },
+
+  watch: {
+    'new_user_data.scopes': function(value) {
+      this.$set(this.new_user_data, 'scope', value.join(' ')) 
     }
   },
 

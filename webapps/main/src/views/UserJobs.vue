@@ -47,19 +47,17 @@ export default {
     },
 
     job_list() {
-      const assigned_jobs = this.user_jobs.map( j => {
-        return {
-          assigned: true,
-          ...j
-        }
-      })
+      const assigned_jobs = this.user_jobs 
+        ? this.user_jobs.map( j => {
+            return { assigned: true, ...j }
+          })
+        : []
 
-      const unassigned_jobs = this.unassigned_jobs.map( j => {
-        return {
-          assigned: false,
-          ...j
-        }
-      })
+      const unassigned_jobs = this.unassigned_jobs 
+        ? this.unassigned_jobs.map( j => {
+            return { assigned: false, ...j }
+          })
+        : []
 
       let list = [...assigned_jobs, ...unassigned_jobs]
       return list
