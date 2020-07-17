@@ -1,5 +1,6 @@
 from models.traceability import *
 from models.production import Job, WorkStatus
+from queries.production import REMOVE_JOB_FROM_QUEUE
 from utils.db import db
 
 
@@ -15,6 +16,7 @@ class Event:
     'BatchTimeRecord', 
     'Event', 
     'Job', 
+    'Queue',
     'StepExecutionData', 
     'WorkSession'
   ]
@@ -378,7 +380,7 @@ class Event:
   def close_job(self):
     # Close job
     # Query allows for single call to DB to get and update job data
-    query = """
+    CLOSE_JOB_QUERY = """
       FOR j IN Job
       FILTER j._id == @job_id
       UPDATE j WITH {
@@ -396,7 +398,8 @@ class Event:
       'end': self.info.timestamp
     }
 
-    self.tx.aql.execute(query, bind_vars=bind_vars)
+    self.tx.aql.execute(CLOSE_JOB_QUERY, bind_vars=bind_vars)
+    self.tx.aql.execute(REMOVE_JOB_FROM_QUEUE, bind_vars=dict(job_id=self.info.job_id))
 
     # Close work session
     if not self.info.work_session_id:

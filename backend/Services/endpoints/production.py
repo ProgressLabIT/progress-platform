@@ -306,6 +306,14 @@ async def update_jobs(job_updates:List[JobUpdate]):
         new_job_record = jsonable_encoder(Job(**u.data), by_alias=True, include_none=False)
         new_job_data = job_db.insert(new_job_record, return_new=True)['new']
 
+        if 'assigned_to' in u.data:
+          update_target_queue(
+            job_id=new_job_data['_id'], 
+            target_id=new_job_data['assigned_to'],
+            action='add',
+            tx=tx
+          )
+
       elif u.action == JobUpdateType.UPDATE:
         db_resp = job_db.update(u.data, return_new=True, return_old=True)
         new_job_data = db_resp['new']
