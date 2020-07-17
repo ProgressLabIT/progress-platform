@@ -40,6 +40,7 @@ class UserNew(BaseModel):
   name: str = None
   surname: str = None
   username: str
+  site_key: str = '0'
   department_id: str = None
   hourly_cost: float = None
   email: str = None
@@ -48,6 +49,7 @@ class UserNew(BaseModel):
 
 class User(ArangoDocument):
   created_at: datetime = datetime.now(tz.UTC)
+  site_key: str = '0'
   active: bool = True  # change to 'enabled'
   
   name: str = None
