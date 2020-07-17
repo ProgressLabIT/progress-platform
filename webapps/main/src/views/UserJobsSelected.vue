@@ -65,9 +65,9 @@ export default {
     },
 
     message() {
-      return this.job_query_param 
-        ? "Il lavoro selezionato è il seguente"
-        : "Il prossimo lavoro in coda è il seguente"
+      return this.job_query_param == 'first'
+        ? "Il prossimo lavoro in coda è il seguente"
+        : "Il lavoro selezionato è il seguente"
     },
 
     selected_job() {

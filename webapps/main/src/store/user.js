@@ -42,9 +42,9 @@ const user = {
       return new Promise((resolve, reject) => {
         api
           .post('user', new_user_data)
-          .then( async () => {
+          .then( async (resp) => {
             await dispatch('loadUsers')
-            resolve()
+            resolve(resp.data.detail.temp_psw)
           })
           .catch( err => reject(err) )
       })

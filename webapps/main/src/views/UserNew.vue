@@ -104,7 +104,7 @@
               <v-col cols="auto">
                 <v-sheet :color="$theme.background" class="pa-3">
                   <v-row justify="center" align="center" class="mx-0">
-                    <h2 class="highlight">{{ new_user_data.temp_psw }}</h2>
+                    <h2 class="highlight">{{ temp_psw }}</h2>
                   </v-row>
                 </v-sheet>
               </v-col>
@@ -155,17 +155,24 @@ export default {
       
       stage: 'form',
       valid: true,
+      temp_psw: '',
       
       new_user_data: {
         name: '',
         surname: '',
         username: '',
-        // temp_psw: '',
         email: '',
         department_id: '',
         hourly_cost: null,
         scopes: [], // permissions list
+        scope: ''
       }
+    }
+  },
+
+  watch: {
+    'new_user_data.scopes': function(value) {
+      this.$set(this.new_user_data, 'scope', value.join(' ')) 
     }
   },
 
@@ -184,7 +191,10 @@ export default {
         // this.new_user_data.temp_psw = generateTempPassword(8)
         
         this.$store.dispatch('createUser', this.new_user_data)
-        .then( () => this.stage = 'show_psw')
+        .then( (temp_psw) => {
+          this.stage = 'show_psw'
+          this.temp_psw = temp_psw
+        })
         .catch( err => {
           if (err.response.status === 409) {
             window.alert("Nome utente già in uso")
