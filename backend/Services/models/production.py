@@ -197,12 +197,12 @@ class JobWithProcedure(Job):
 
 class OperatorAssignments(FlexModel):
   operator: Operator
-  assigned_jobs: List[Job]
+  assigned_jobs: List[Job] = None
 
 
 class AssignmentsResponse(FlexModel):
-  assigned_jobs_by_operator: List[OperatorAssignments]
-  unassigned_jobs: List[Job]
+  assigned_jobs_by_operator: List[OperatorAssignments] = None
+  unassigned_jobs: List[Job] = None
 
 
 class QueueType(Enum):

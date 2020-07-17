@@ -64,7 +64,7 @@ async def create_user(new_user: UserNew):
   new_user_data.reset_password = True
 
   new_user_record = db.collection('User').insert(new_user_data, return_new=True)['new']
-  response_data = { temp_psw }
+  response_data = dict(temp_psw=temp_psw)
   return APIResponse(status_code=201, message='User created', detail=response_data)
     
 # ----------------------------------------------------

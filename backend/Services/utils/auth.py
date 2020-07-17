@@ -3,7 +3,7 @@ import traceback
 from time import time
 
 import jwt
-from arango.exceptions import DocumentGetError
+from arango.exceptions import DocumentGetError, DocumentUpdateError
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext

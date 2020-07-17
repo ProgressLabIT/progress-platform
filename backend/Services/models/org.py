@@ -43,7 +43,7 @@ class UserNew(BaseModel):
   department_id: str = None
   hourly_cost: float = None
   email: str = None
-  scopes: List[str] = []
+  scope: str
 
 
 class User(ArangoDocument):
