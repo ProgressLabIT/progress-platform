@@ -8,24 +8,38 @@
       :key="index" 
       eager
       class="no-transition">
-      <v-img eager :src="displayed_image_src" :height="height">
+      <v-img eager 
+        :src="displayed_image_src" 
+        :height="height">
         <template v-slot:placeholder>
           <v-progress-circular size="60" indeterminate></v-progress-circular>
         </template>
 
         <div class="d-flex flex-column fill">
-
           <!-- STEP TITLE AND DESCRIPTION -->
-          <v-sheet 
-            color="rgba(0,0,0,.7)" 
-            class="px-4 pt-2 pb-1">      
-            <v-card-title class="display highlight px-0 pt-0 pb-3 nowrap">
-              {{ step.title }}
-            </v-card-title>
-            <v-card-subtitle 
-              :class="['px-0 pb-1', 'nowrap']">
-              {{ step.description }}
-            </v-card-subtitle>
+          <v-btn absolute right top fab small
+            @click="show_details = !show_details"
+            :color="show_details ? null : $theme.blue"
+            class="mt-12">
+            <v-icon>
+              {{ show_details ? 'close' : 'mdi-information-variant' }}
+            </v-icon>
+          </v-btn>
+          
+          <v-sheet v-show="show_details" color="rgba(0,0,0,.7)">  
+            <v-container>
+              <v-row justify="space-between" no-gutters>
+                <v-col cols="11">
+                  <v-card-title class="display highlight px-0 pt-0">
+                    {{ step.title }}
+                  </v-card-title>
+                  <v-card-subtitle 
+                    class="px-0 pb-1">
+                    {{ step.description }}
+                  </v-card-subtitle>
+                </v-col>
+              </v-row>    
+            </v-container>
           </v-sheet>
           
           <!-- INVISIBLE IMAGE SWITCH CONTROLS -->
@@ -52,10 +66,10 @@
             </v-col>  
           </v-row>
         </div>
-          
-
         
       </v-img>
+
+
     </v-window-item>
   </v-window>
 </template>
@@ -79,7 +93,8 @@ export default {
   data () {
     return {
       media_root_path: '/media/step/',
-      step_image_index: 0
+      step_image_index: 0,
+      show_details: false,
     }
   },
 

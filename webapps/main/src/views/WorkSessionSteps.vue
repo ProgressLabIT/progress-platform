@@ -4,9 +4,7 @@
     <v-card class="fill d-flex flex-column" max-height="100%" >
       <v-toolbar dense class="flex-grow-0">
         <v-row align="center" class="fill-height mx-0" ref="stepper">
-          <!-- <v-col cols="auto">
-            <h5 class="highlight text-uppercase mr-6">lotto n. {{ 3 }}</h5>
-          </v-col> -->
+         
           <template v-for="(step, index) in procedure">
             <v-col 
               cols="auto" 
