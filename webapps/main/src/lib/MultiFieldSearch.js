@@ -3,7 +3,8 @@
 
 export default function multiFieldSearch(searchString, testItem, fieldList) {
   // create the list of search terms removing duplicates
-  let searchTerms = [...new Set(searchString.toLowerCase().split(' '))]
+  const user_searching = !!searchString
+  let searchTerms = user_searching ? [...new Set(searchString.toLowerCase().split(' '))] : []
 
   // create the list of words to search in, removing duplicates
   let matchString = ''

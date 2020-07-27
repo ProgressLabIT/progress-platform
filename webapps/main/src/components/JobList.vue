@@ -28,7 +28,6 @@
                 <span class="weight-medium solid-white mr-1">{{ o.filtered_jobs.length }}</span>
                 di 
                 <span class="weight-medium solid-white ml-1">{{ o.assigned_jobs_count }}</span>
-
               </v-chip>
             </v-col>
           </v-row>        
@@ -124,7 +123,7 @@ export default {
         idle:true,
         critical:true,
         not_critical:true,
-        department: '' 
+        department: undefined 
       }}
     }
   },
@@ -161,13 +160,12 @@ export default {
     filtered_assignments() {
 
       let list = []
-      // return this.assignments.map( a => {
       for (let i = 0; i < this.assignments.length; i++) {
         let a = this.assignments[i]
         // Check if operator is in department selected or no department filter is set
-        if ([a.operator.department_id, ''].includes(this.filters.department)) {
+        if ([a.operator.department_id, undefined].includes(this.filters.department)) {
 
-          const filtered_jobs = a.assigned_jobs.filter(this.matchJobToFilters)
+          const filtered_jobs = a.assigned_jobs ? a.assigned_jobs.filter(this.matchJobToFilters) : []
           
           if (filtered_jobs.length) {
             const active_jobs = []
@@ -205,18 +203,22 @@ export default {
     },
 
     jobs_view() {
-      return [
-        ...this.filtered_assignments, 
-        {
+      const result = [...this.filtered_assignments]
+      const filtered_unassigned_jobs = this.unassigned_jobs.filter(this.matchJobToFilters)
+
+      if (filtered_unassigned_jobs.length) {
+        result.push({
           operator: {
             _id: 'unassigned',
             name: 'Lavori',
             surname: 'non assegnati'
           },
-          assigned_jobs: this.unassigned_jobs,
-          filtered_jobs: this.unassigned_jobs.filter(this.matchJobToFilters)
-        }
-      ]
+          assigned_jobs_count: this.unassigned_jobs.length,    
+          filtered_jobs: filtered_unassigned_jobs
+        })
+      }
+
+      return result
     }
   },
 

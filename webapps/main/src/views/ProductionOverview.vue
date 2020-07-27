@@ -106,8 +106,7 @@
           v-model="department"
           :items="$store.state.org.departments"
           item-value="_id"
-          single-line hide-details
-          :filter="filterOperator"
+          single-line hide-details clearable
           label="Dipartimento"
           class="mb-6 flex-grow-0">
           <template v-slot:item="{ item: list_item }">
@@ -121,6 +120,7 @@
         <!-- Search box: instructions shows on mouse over info icon, in turn shown only on mouse over input -->
         <v-hover v-slot:default="{ hover }">
           <v-text-field
+            clearable
             hide-details
             single-line
             autocomplete="off"
@@ -223,8 +223,8 @@ export default {
         not_critical: { label: 'Non critico', value: true}
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       },
-      search_string: '',
-      department: '',
+      search_string: undefined,
+      department: undefined,
       editing: false,
       saving: false,
     }
@@ -243,8 +243,8 @@ export default {
 
     filters_active() {
       return Object.values(this.bool_filters).some(f => f.value === false) 
-        || this.search_string != '' 
-        || this. department != ''
+        || this.search_string != undefined 
+        || this.department != undefined
     }
   },
 
@@ -266,7 +266,8 @@ export default {
     },
 
     resetFilters() {
-      this.search_string = ''
+      this.search_string = undefined
+      this.department = undefined
       for (let filter of Object.values(this.bool_filters)) {
         filter.value = true
       }
