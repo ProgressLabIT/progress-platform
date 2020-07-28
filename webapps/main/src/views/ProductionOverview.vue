@@ -227,6 +227,7 @@ export default {
       department: undefined,
       editing: false,
       saving: false,
+      polling_instance: undefined
     }
   },
 
@@ -274,7 +275,6 @@ export default {
     },
 
     showWorkOrderScreen({wo_key, back_to_route_name}) {
-      // const this_route = this.$route
       const to_route = {
         name: 'workOrderJobs',
         params: {
@@ -295,25 +295,27 @@ export default {
     },
 
     cancelQueueChanges() {
-      this.$store.commit('SET_TEMP_QUEUE')
+      this.$store.commit('RESET_TEMP_QUEUE')
       this.editing = false
     }
   },
 
   beforeCreate() {
-    this.$store.dispatch("loadWorkOrders")
-    // this.$store.dispatch("loadJobs")
     this.$store.dispatch("loadDepartments")
-    this.$store.dispatch("loadJobAssignments")
     this.$store.dispatch("loadUsers")
+    this.$store.dispatch("loadWorkOrders")
   },
 
-  // created() {     
-  //   Resize app content with window: see also another solution at https://www.html5rocks.com/en/tutorials/speed/animations/ 
-    
-  //   this.updateHeight()
-  //   window.addEventListener('resize', this.updateHeight, false)
-  // }
+  created() {
+    this.polling_instance = setInterval(() => {
+      this.$store.dispatch("updateWorkOrdersProgress")
+      this.$store.dispatch("loadJobAssignments")
+    }, 10000)
+  },
+
+  beforeDestroy() {
+    clearInterval(this.polling_instance)
+  }
 }
 </script>
 

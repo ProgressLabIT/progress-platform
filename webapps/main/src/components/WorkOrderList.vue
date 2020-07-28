@@ -23,7 +23,7 @@
             
             <template v-if="header.value === 'progress'">
               <v-row no-gutters align="center" >
-                <v-col cols="9">
+                <v-col cols="8">
                   <v-progress-linear 
                     dense 
                     :value="item.progress"
@@ -33,7 +33,7 @@
                 <v-col cols="2" class="pl-4 text-right">
                   {{ item.progress }}%
                 </v-col>
-                <v-col cols="1" class="text-right pl-2">
+                <v-col cols="2" class="text-right pl-2 pointer">
                   <v-icon small 
                     v-if="item.critical" 
                     :color="$theme.red"
@@ -99,7 +99,7 @@ export default {
         { value: 'wo_code', text: 'CODICE'},
         { value: 'wo_line', text: 'RIGA', },
         { value: 'product_code', text: 'PRODOTTO'},
-        { value: 'progress', text: 'AVANZAMENTO', width: '30%' },
+        { value: 'progress', text: 'AVANZAMENTO', width: '40%' },
         { value: 'qt_completed', text: 'QC', align: 'end'},
         { value: 'qt_planned', text: 'QP', align: 'end'},
         { value: 'qt_remaining', text: 'QR', align: 'end'},
@@ -111,9 +111,16 @@ export default {
   },
 
   computed: {
+    temp_queue() {
+      return this.$store.state.workorder.temp_queue
+    },
+
+    wo_data_map() {
+      return this.$store.state.workorder.wo_map
+    },
 
     wo_list() {
-      return this.$store.state.workorder.temp_wo_list
+      return this.temp_queue.map( wo_key => this.wo_data_map[wo_key])
     },
 
     filtered_wo_list() {
