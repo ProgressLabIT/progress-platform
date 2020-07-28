@@ -2,7 +2,7 @@
   <v-container fluid class="pa-0 fill" ref="step_card">
 
     <v-card class="fill d-flex flex-column" max-height="100%" >
-      <v-toolbar dense class="flex-grow-0">
+      <v-toolbar dense class="flex-grow-0" v-if="procedure.length">
         <v-row align="center" class="fill-height mx-0" ref="stepper">
          
           <template v-for="(step, index) in procedure">
@@ -28,11 +28,26 @@
         </v-row>
       </v-toolbar>
       
-      <component 
+      <component
+        v-if="procedure.length" 
         :is="step_component" 
         :step="current_step" 
         :height="step_content_height">
       </component>
+
+      <!-- NO PROCEDURE -->
+      <template v-else>
+        <v-row justify="center" align="center">
+          <v-col class="text-center">
+            <v-icon x-large :color="$theme.white_low">
+              error_outline
+            </v-icon>
+            <div class="text-center mt-6">
+              <h3>NESSUNA PROCEDURA</h3>
+            </div>
+          </v-col>
+        </v-row>
+      </template>
 
     </v-card>
   </v-container>
