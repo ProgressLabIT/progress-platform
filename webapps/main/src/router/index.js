@@ -64,7 +64,10 @@ router.beforeEach((to, from, next) => {
     }
     else {
       // Consider the navigation as an interaction > Reset session timeout
-      store.dispatch('setSessionTimeout')
+      if (!ignore_route) {
+        store.dispatch('setSessionTimeout')
+      }
+      
       next()
     }
   }

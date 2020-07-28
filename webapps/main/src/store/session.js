@@ -51,7 +51,6 @@ const session = {
 
     TOGGLE_SESSION_LOCK(state, locked) {
       Vue.set(state, 'session_locked', locked)
-
     },
   },
 
