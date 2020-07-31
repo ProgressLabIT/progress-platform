@@ -1,5 +1,6 @@
 <template>
   <v-autocomplete
+    :outlined="outlined"
     autocomplete="off"
     auto-select-first
     clearable
@@ -13,7 +14,7 @@
     single-line
     item-value="_id">
     <template v-slot:label>
-      <span :class="text_classes">Seleziona</span>
+      <span :class="text_classes">{{ label }}</span>
     </template>
     <template v-slot:item="{ item: list_item }">
       <v-row align="center" justify="space-between" class="mx-0">
@@ -37,6 +38,10 @@ export default {
   name: 'BaseAutocompleteDepartment',
 
   props: {
+    label: {
+      type: String,
+      default: 'Seleziona'
+    },
     text_classes: {
       type: String
     },
@@ -50,6 +55,9 @@ export default {
     },
     value: {
       deafult: null
+    },
+    outlined: {
+      type: Boolean
     }
   },
 

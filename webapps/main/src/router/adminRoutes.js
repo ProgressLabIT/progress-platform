@@ -37,6 +37,28 @@ const adminRoutes = [
           }
         ]
       },
+      {
+        path: 'operations',
+        name: 'operationLibrary',
+        component: () => import("@/views/OperationLibrary.vue"),
+        children: [
+          {
+            path: ':operation_key',
+            name: 'operationDetail',
+            component: () => import ("@/views/OperationDetail.vue")
+          },
+          {
+            path: 'new',
+            name: 'newOperation',
+            component: () => import("@/views/OperationNew.vue")
+          },
+          {
+            path: ':operation_key/delete',
+            name: 'operationDelete',
+            component: () => import("@/views/OperationDelete")
+          }
+        ]
+      }
       
     ]
   }

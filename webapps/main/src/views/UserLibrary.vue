@@ -237,10 +237,6 @@ export default {
 </script>
 
 <style lang="css" scoped>
-.alternate-row {
-  background-color: rgba(255,255,255, .03)
-}
-
 .v-expansion-panel-header {
   padding: 0px;
 }

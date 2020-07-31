@@ -40,6 +40,10 @@ export default {
           name: 'Utenti',
           component: 'UserLibrary',
           route_name: 'userLibrary'
+        },
+        {
+          name: 'Operazioni',
+          route_name: 'operationLibrary'
         }
       ]
     }
