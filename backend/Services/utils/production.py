@@ -16,9 +16,17 @@ class Queries:
       LET wo = DOCUMENT(WorkOrder, wo_key)
       LET qt_remaining = wo.qt_planned - wo.qt_completed
       LET jobs = ( FOR j IN Job FILTER !j.trash && j.wo_id == wo._id RETURN j)
-      // LET phases = ( FOR j IN jobs FILTER !j.trash RETURN DISTINCT j.phase_alias )
-      LET active = TO_BOOL(SUM(FOR j IN jobs FILTER !j.trash && j.active RETURN 1))
-      RETURN MERGE ([wo, { qt_remaining: qt_remaining, active: active }])  
+      LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_id )
+      LET progress = FLOOR(AVERAGE(
+        FOR phase IN phases 
+          RETURN AVERAGE(
+            FOR j IN jobs
+            FILTER j.phase_id == phase
+            RETURN j.progress
+          )
+      ))
+      LET active = TO_BOOL(SUM(FOR j IN jobs FILTER j.active RETURN 1))
+      RETURN MERGE ([wo, { qt_remaining: qt_remaining, active: active, progress: progress }])  
   """
 
   GET_WORK_ORDER_DATA = """
@@ -34,13 +42,26 @@ class Queries:
       )
 
       // check if any job is active
-      LET active = TO_BOOL(COUNT(FOR j IN Job FILTER !j.trash && j.wo_id == wo._id && j.active RETURN 1))
+      LET active = TO_BOOL(COUNT(FOR j IN jobs FILTER j.active RETURN 1))
+
+      // calculate overall progress
+
+      LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_id )
+      LET progress = FLOOR(AVERAGE(
+        FOR phase IN phases 
+          RETURN AVERAGE(
+            FOR j IN jobs
+            FILTER j.phase_id == phase
+            RETURN j.progress
+          )
+      ))
 
       // Return enriched wo data
       RETURN MERGE ([
         wo, { 
         jobs: jobs, 
-        active: active 
+        active: active,
+        progress: progress
       }])
   """
 
