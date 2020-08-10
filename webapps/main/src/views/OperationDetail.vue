@@ -83,6 +83,16 @@
               class="pt-0">
             </v-textarea>
 
+
+            <!-- PRODUCTS USING OPERATION -->
+            <!-- <h5 class="mt-8 mb-2">ESEGUITA PER</h5>
+            <router-link 
+              v-for="product in products_using_operation" 
+              :key="product.code" 
+              :to="goToProductProcess(product._key)"
+              class="body-2">
+              {{ product.code }}
+            </router-link> -->
           </v-col>  
 
           <v-col class="d-flex flex-column flex-grow-1 pl-12 pr-0">
@@ -160,12 +170,15 @@
 <script>
 import params_map from '@/lib/PhaseParams.js'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon'
+import NonExistentOperationGuard from '@/mixins/NonExistentOperationGuard'
 
 export default {
 
   name: 'OperationDetail',
 
   components: { BaseTooltipIcon },
+
+  mixins: [NonExistentOperationGuard],
 
   props: {
     operation: {
@@ -192,6 +205,12 @@ export default {
     }
   },
 
+  computed: {
+    products_using_operation() {
+      return this.operation.used_for
+    }
+  },  
+
 
   methods: {
     setTempData(){
@@ -206,6 +225,17 @@ export default {
           this.$set(this.temp_params, key, saved_params[key])
         }
       })
+    },
+
+    goToProductProcess(product_key) {
+      return {
+        name: 'productionProcess',
+        params: { product_key },
+        query: {
+          back_to: this.$route.name, 
+          param: `operation_key:${this.operation._key}`
+        }
+      }
     },
 
     paramHumanName(param_key) {
@@ -269,10 +299,16 @@ export default {
     },
 
     showDelete() {
-      this.$router.push({
-        name: 'operationDelete',
-        params: { user_key: this.user._key }
-      })
+      if (this.products_using_operation.length) {
+        const product_codes = this.products_using_operation.map( o => o.code )
+        window.alert("Questa operazione non può essere cancellata perché attiva nei processi dei seguenti prodotti: " +  product_codes)
+      }
+      else {
+        this.$router.push({
+          name: 'operationDelete',
+          params: { operation_key: this.operation._key }
+        })
+      }
     },
   },
 

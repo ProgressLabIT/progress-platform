@@ -100,6 +100,17 @@ const process = {
       }) 
     },
 
+    createOperation({ dispatch }, new_operation_data) {
+      return new Promise(resolve => {
+        api
+        .post(`operation`, new_operation_data)
+        .then( async () => {
+          await dispatch('getOperations')
+          resolve()
+        })
+      })
+    },
+
     updateOperation({ dispatch }, { key, update }) {
       return new Promise( resolve => {
         api

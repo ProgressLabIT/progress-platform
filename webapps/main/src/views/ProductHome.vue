@@ -324,10 +324,6 @@ export default {
       return this.new_image_url ? this.new_image_url : this.saved_img_path
     },
 
-    // no_image() {
-    //   return this.img_src.length === 0 || this.new_image_url === 'deleted'
-    // },
-
     temp_code() {
       return this.product.code
     },

@@ -35,10 +35,10 @@
               :class="{ 'alternate-row': index % 2 == 0 }"
               :style="operation._key == selected_operation_key ? `background-color: ${$theme.blue_bg}` : '' "
               @click="showOperationDetail(operation)">
-              <v-col cols="6" class="pl-6 pr-2 medium">
+              <v-col cols="8" class="pl-6 pr-2 medium">
                 {{ operation.name | capitalize }}
               </v-col>
-              <v-col cols="6" class="medium">
+              <v-col cols="4" class="medium">
                 {{ operation.code }}
               </v-col>
             </v-row>

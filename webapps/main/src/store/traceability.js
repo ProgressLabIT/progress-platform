@@ -227,7 +227,7 @@ const traceability = {
     },
 
     pauseJob({ commit, state, rootState }) {
-      return new Promise( resolve => {
+      return new Promise( (resolve, reject) => {
         const now = DT.utc()
         const updated_work_session = getClosedWorkSessionData(state, now)
 
@@ -247,6 +247,9 @@ const traceability = {
         api.post('event', event).then(() => {
           commit('CLOSE_WORK_SESSION', updated_work_session)
           resolve()
+        })
+        .catch(() => {
+          reject()
         })
       })
     },
