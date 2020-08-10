@@ -30,7 +30,8 @@
                 <BaseAutocompleteDepartment 
                   @select="setDepartment($event)" 
                   class="pt-0 my-4"
-                  text_classes="medium">
+                  text_classes="medium"
+                  label="Reparto">
                 </BaseAutocompleteDepartment>
 
             
