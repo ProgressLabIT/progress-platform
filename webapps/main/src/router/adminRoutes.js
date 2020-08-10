@@ -2,11 +2,11 @@
 
 const adminRoutes = [
   {
-    path: '/admin',
+    path: 'admin',
     name: 'adminPanel',
     component: () => import("@/views/AdminSection.vue"),
     redirect: { name: 'userLibrary' },
-    meta: { scope: 'admin', screen_title: 'Amministrazione di sistema' },
+    meta: { scope: 'admin', screen_title: 'Impostazioni' },
     children: [
       {
         path: 'users',
@@ -37,6 +37,28 @@ const adminRoutes = [
           }
         ]
       },
+      {
+        path: 'operations',
+        name: 'operationLibrary',
+        component: () => import("@/views/OperationLibrary.vue"),
+        children: [
+          {
+            path: ':operation_key',
+            name: 'operationDetail',
+            component: () => import ("@/views/OperationDetail.vue")
+          },
+          {
+            path: 'new',
+            name: 'operationNew',
+            component: () => import("@/views/OperationNew.vue")
+          },
+          {
+            path: ':operation_key/delete',
+            name: 'operationDelete',
+            component: () => import("@/views/OperationDelete")
+          }
+        ]
+      }
       
     ]
   }

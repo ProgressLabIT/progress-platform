@@ -341,6 +341,7 @@ export default {
       new_process.push({ 
         alias: new_operation.name, 
         operation_id: new_operation._id, 
+        params: new_operation.default_phase_parameters,
         steps: []
       })
       this.$store.commit('UPDATE_PROCESS', new_process)

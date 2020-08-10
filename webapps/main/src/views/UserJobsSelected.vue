@@ -1,10 +1,10 @@
 <template>
   <v-row 
-      class="fill-heigth" 
+      class="fill-height" 
       align="center" 
       justify="center">
-      <v-col cols="12" sm="8" md="6" xl="4">      
-        <div class="mt-12 mb-8 text-center">
+      <v-col cols="12" sm="8" md="6" xl="4" class="mt-n8">      
+        <div class="mb-8 text-center">
           {{ greeting }}. {{ message }}.
         </div>
 

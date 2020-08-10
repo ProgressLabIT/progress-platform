@@ -1,10 +1,6 @@
 <template>
-  <v-app style="height: 100vh">
+  <div style="height: 100vh">
     
-    <!-- <template v-if="!session_locked && !is_authenticated">
-      <LoginScreen></LoginScreen>
-    </template> -->
-
     <!-- Use v-if to fully remove html from DOM in case of session lock. 
     This avoids access to content by tweaking SessionLock component visibility in the browser inspector -->
     <template v-if="!session_locked">
@@ -54,7 +50,7 @@
     <!-- Pass session_locked as prop instead of computing it locally inside the component since it's already needed for the v-if -->
     <SessionLock v-else v-bind="{session_locked}"></SessionLock>
     
-  </v-app>
+  </div>
 </template>
 
 <script>
@@ -86,11 +82,12 @@ export default {
 
     session_locked() {
       return this.$store.state.session.session_locked
-    },  
+    }
   },
     
 
   created() {
+    
     window.onbeforeunload = async (event) => {
       if (this.$route.name != 'login') {
         event.preventDefault()

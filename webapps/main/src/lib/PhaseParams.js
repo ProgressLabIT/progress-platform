@@ -101,7 +101,7 @@ export const step_check_force_order = {
 export const production_batch_qt = {
   title: `Lotto di produzione`,
   type: `int`,
-  description: `Quantità di avanzamento produzione a fine ciclo. Questo parametro ha efficacia solo se il controllo passi è impostato con valore "Lotto fisso" o "Lotto variabile". Nel caso di lotto fisso, la quantità indicata non può essere modificata dall'operatore ed è valida per tutto il lavoro, con l'eccezione dell'ultimo rilascio, che potrebbe essere inferiore al lotto definito. Nel caso di lotto variabile, la quantità indicata è quella che il sistema propone all'operatore.`
+  description: `Quantità di avanzamento produzione a fine ciclo. Questo parametro ha efficacia solo se il controllo passi è impostato con valore "Lotto fisso". Nel caso di lotto fisso, la quantità indicata non può essere modificata dall'operatore ed è valida per tutto il lavoro, con l'eccezione dell'ultimo rilascio, che potrebbe essere inferiore al lotto definito.`
 }
 
 export const release_batch_qt = {

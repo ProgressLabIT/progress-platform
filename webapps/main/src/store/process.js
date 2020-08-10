@@ -80,7 +80,7 @@ const process = {
     },
 
     LOAD_OPERATIONS(state, op_list) {
-      Vue.set(state, 'operations', op_list)
+      state.operations = op_list
     },
 
     CANCEL_PROCESS_CHANGES(state) {
@@ -90,8 +90,35 @@ const process = {
 
   actions: {
     getOperations({commit}) {
-      api.get('operation').then(resp => {
-        commit('LOAD_OPERATIONS', resp.data)
+      return new Promise( resolve => {
+        api
+        .get('operation')
+        .then(resp => {
+          commit('LOAD_OPERATIONS', resp.data)
+          resolve()
+        })
+      }) 
+    },
+
+    createOperation({ dispatch }, new_operation_data) {
+      return new Promise(resolve => {
+        api
+        .post(`operation`, new_operation_data)
+        .then( async () => {
+          await dispatch('getOperations')
+          resolve()
+        })
+      })
+    },
+
+    updateOperation({ dispatch }, { key, update }) {
+      return new Promise( resolve => {
+        api
+        .patch(`operation/${key}`, update)
+        .then( async () => {
+          await dispatch('getOperations')
+          resolve()
+        })
       })
     },
 

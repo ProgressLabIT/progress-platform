@@ -241,3 +241,7 @@ span .display {
 .pointer {
   cursor: pointer;
 }
+
+.alternate-row {
+  background-color: rgba(255,255,255, .03)
+}

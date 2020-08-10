@@ -64,7 +64,7 @@
             </v-row>
 
             <h5 class="mt-8">PERMESSI</h5>
-            <v-row >
+            <v-row>
               <v-col 
                 cols="6"
                 v-for="check in permissions" 

@@ -15,9 +15,9 @@ const session = {
     auth_token: '',
     scope: '',
     
-    session_timeout: 15, // minutes
-    session_timer: null,
+    max_idle_minutes: 15, // minutes
     session_locked: false,
+    session_timer: undefined
     
     // hard_timeout: 2,
     // logout_timer: null,
@@ -59,17 +59,21 @@ const session = {
       return new Promise( async (resolve) => {
         const is_working = rootState.traceability.work_session_list.some( ws => ws.active )
         if (is_working) {
-          await dispatch('pauseJob')
+          try {
+            await dispatch('pauseJob')
+          }
+          catch {
+            /* 
+            Some edge cases caused by unknown bugs may leave active work sessions
+            in the vuex store, triggering the puaseJob action, which will cause error
+            because there are no active work sessions in the backend
+            */
+          }
         }
         api.delete(`session/${state.session_key}`)
         .then( async () => {
           commit('CLOSE_USER_SESSION')
-          router.push({ name: 'login' })
-
-          if (state.session_locked) {
-            await dispatch('unlockSession')
-          }
-          
+          router.push({ name: 'login' })          
           resolve()
         })
       })
@@ -81,8 +85,8 @@ const session = {
       const lockSession = () => {
         commit('TOGGLE_SESSION_LOCK', true)
       }
-
-      Vue.set(state, 'session_timer', setTimeout(lockSession, state.session_timeout * 60 * 1000))
+    
+      Vue.set(state, 'session_timer', setTimeout(lockSession, state.max_idle_minutes * 60 * 1000))
     },
 
     unlockSession({ commit, dispatch }) {

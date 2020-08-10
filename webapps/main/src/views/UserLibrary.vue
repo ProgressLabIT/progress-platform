@@ -30,7 +30,8 @@
                 <BaseAutocompleteDepartment 
                   @select="setDepartment($event)" 
                   class="pt-0 my-4"
-                  text_classes="medium">
+                  text_classes="medium"
+                  label="Reparto">
                 </BaseAutocompleteDepartment>
 
             
@@ -237,10 +238,6 @@ export default {
 </script>
 
 <style lang="css" scoped>
-.alternate-row {
-  background-color: rgba(255,255,255, .03)
-}
-
 .v-expansion-panel-header {
   padding: 0px;
 }
