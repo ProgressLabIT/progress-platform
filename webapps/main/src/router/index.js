@@ -21,12 +21,21 @@ const routes = [
     name: 'login',
     component: () => import("@/views/LoginScreen.vue")
   },
-  
-  ...admin,
-  ...library,
-  ...production,
-  ...operator,
-
+  // {
+  //   path: "/session-locked",
+  //   name: "sessionLocked",
+  //   component: () => import("/component/SessionLocked.vue")
+  // },
+  {
+    path: "/app",
+    component: () => import("@/views/App.vue"),
+    children: [
+      ...admin,
+      ...library,
+      ...production,
+      ...operator,
+    ]
+  },
   {
     path: "*",
     name: "notFound",

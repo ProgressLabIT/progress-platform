@@ -94,17 +94,21 @@
 
           <template v-else>
             <v-col cols="3" class="px-0">
+              <h5 class="mb-2">NOME</h5>
               <v-text-field 
-                hide-details 
-                label="Nome" 
-                v-model="temp_data.name">
+                single-line
+                hide-details  
+                v-model="temp_data.name"
+                class="pt-0">
               </v-text-field>
             </v-col>
             <v-col cols="3" offset="1" class="px-0">
+              <h5 class="mb-2">COGNOME</h5>
               <v-text-field 
+                single-line
                 hide-details 
-                label="Cognome" 
-                v-model="temp_data.surname">
+                v-model="temp_data.surname"
+                class="pt-0">
               </v-text-field>
             </v-col>
 
@@ -126,6 +130,7 @@
           <v-row class="mx-0">
             <v-col cols="4" class="pa-0">
 
+              <!-- USERNAME -->
               <h5 class="mb-2">NOME UTENTE</h5>
               <span v-if="!edit_mode" class="mt-2 body-2">
                 {{ user.username || '-' }}
@@ -137,7 +142,7 @@
                 class="pt-0">
               </v-text-field>
 
-
+              <!-- EMAIL -->
               <h5 class="mt-8 mb-2">EMAIL</h5>
               <span v-if="!edit_mode" class="mt-2 body-2">
                 {{ user.email || '-' }}
@@ -149,6 +154,8 @@
                 class="pt-0">
               </v-text-field>
 
+
+              <!-- DEPARTMENT -->
               <h5 class="mt-8 mb-2">DIPARTIMENTO</h5>
               <span v-if="!edit_mode" class="body-2">{{ temp_data.department ? temp_data.department.name : '-'}}</span>
               <BaseAutocompleteDepartment 
@@ -162,6 +169,7 @@
               </BaseAutocompleteDepartment>
 
 
+              <!-- HOURLY COST -->
               <h5 class="mt-8 mb-2">COSTO ORARIO</h5>
               <span v-if="!edit_mode" class="body-2">€ {{ (temp_data.hourly_cost || '-') | numberFormat(locale) }}</span>
               <v-text-field v-else
@@ -175,8 +183,11 @@
               </v-text-field>
 
             </v-col>
+
+
             <v-col cols="6" offset="2" class="pa-0">
 
+              <!-- STATUS -->
               <h5>STATO</h5>
               <v-switch 
                 dense hide-details
@@ -190,6 +201,7 @@
                 </template>
               </v-switch>
 
+              <!-- SCOPE (PERMISSIONS) -->
               <h5 class="mt-6 mb-4">PERMESSI</h5>
               <v-checkbox class="mt-2"
                 hide-details
@@ -203,6 +215,7 @@
                   <span class="body-2 base-white">{{check.label}}</span>
                 </template>                
               </v-checkbox>
+
             </v-col>
           </v-row>
         </v-container>

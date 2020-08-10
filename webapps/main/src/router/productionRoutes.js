@@ -1,6 +1,6 @@
 const productionRoutes = [
   {
-    path: "/production",
+    path: "production",
     name: "productionRoot",
     component: () => import('@/components/BaseEmptyParentRoute.vue'),
     meta: { scope: 'production', screen_title: 'Monitoraggio produzione' },
@@ -29,7 +29,7 @@ const productionRoutes = [
         ]
       },
       {
-        path: "/production/:wo_key",
+        path: "production/:wo_key",
         name: "workOrderScreen",
         redirect: { name: "workOrderJobs"},
         component: () => import ("@/components/WorkOrderScreen.vue"),

@@ -2,11 +2,11 @@
 
 const adminRoutes = [
   {
-    path: '/admin',
+    path: 'admin',
     name: 'adminPanel',
     component: () => import("@/views/AdminSection.vue"),
     redirect: { name: 'userLibrary' },
-    meta: { scope: 'admin', screen_title: 'Amministrazione di sistema' },
+    meta: { scope: 'admin', screen_title: 'Impostazioni' },
     children: [
       {
         path: 'users',
@@ -49,7 +49,7 @@ const adminRoutes = [
           },
           {
             path: 'new',
-            name: 'newOperation',
+            name: 'operationNew',
             component: () => import("@/views/OperationNew.vue")
           },
           {
