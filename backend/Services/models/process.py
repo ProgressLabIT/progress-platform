@@ -3,7 +3,9 @@ from typing import List, Optional, Union
 
 from pydantic import Field
 
-from utils.base_models import FlexModel
+from utils.base_models import FlexModel, ArangoDocument
+
+
 
 
 class StepCheckBatch(Enum):
@@ -26,26 +28,37 @@ class WIPAccess(Enum):
 
 class PhaseParameters(FlexModel):
   parallel_job_allowed: bool = True
-  step_check: StepCheckBatch = StepCheckBatch.SINGLE
+  step_check: StepCheckBatch = StepCheckBatch.NONE
   step_check_force_order: bool = False
-  # release_style: ReleaseStyle = ReleaseStyle.JOB
   production_batch_qt: int = 1
+  # release_style: ReleaseStyle = ReleaseStyle.JOB
   # release_batch_qt: int = 1
   # wip_flow: WIPFlow = WIPFlow.BUFFER
+
+
+class Operation(ArangoDocument):
+  name: str
+  code: str = None
+  description: str = None
+  default_phase_parameters: PhaseParameters = PhaseParameters()
+
 
 class StepType(Enum):
   INSTRUCTION = 'instruction'
   FORM = 'form'
   CHECKLIST = 'checklist'
 
+
 class FieldType(Enum):
   SHORT = 'short'
   LONG = 'long'
+
 
 class InputField(FlexModel):
   type: FieldType = 'short'
   name: str = None
   # Add mandatory flag and field description
+
 
 class Step(FlexModel):
   id: str = Field(None, alias="_id")
@@ -55,14 +68,16 @@ class Step(FlexModel):
   checks: List[str] = []
   input_fields: List[InputField] = []
 
+
 class Media(FlexModel):
   name: str
+
 
 class StepWithMediaInfo(Step):
   media: List[Union[Media, str]] = None
 
 
-class PhaseProcedure(FlexModel):
+class PhaseData(FlexModel):
   id: str = Field(None, alias="_id")
   alias: str
   description: str = None
@@ -72,7 +87,7 @@ class PhaseProcedure(FlexModel):
   params: PhaseParameters = PhaseParameters()
   std_processing_time: int = 0 # in milliseconds
 
-class PhaseUpdate(PhaseProcedure):
+class PhaseUpdate(PhaseData):
   step_sequence: List[Optional[str]] = []
 
 class ProcessUpdate(FlexModel):

@@ -13,6 +13,7 @@ from utils import dt
 from utils.api import APIResponse
 from utils.db import db
 from utils.file import UserFile
+from utils.process import search_step_media, get_products_using_operation
 
 
 router = APIRouter()
@@ -21,22 +22,87 @@ operation_db = db.collection('Operation')
 
 
 
+
 @router.get('/operation')
 async def get_operation_list():
-  return [o for o in operation_db.all()]
+  
+  def enrich_op_data(op_data):
+    op_data['used_for'] = get_products_using_operation(op_data['_key'])
+    return op_data
+
+  db_list = [enrich_op_data(o) for o in operation_db.all()]
+  # Sort by operation name
+  return sorted(db_list, key=lambda o: o['name'].lower())
 
 
-def search_step_media(step_key: str):
 
-  step_media = UserFile.step_media(step_key)
-  media_folder_exists = os.path.isdir(step_media.folder_path)
+@router.post('/operation')
+async def create_operation(new_op_data: Operation):
 
-  if (media_folder_exists):
-    return step_media.get_folder_contents()
+  try:
+    new_op_record = operation_db.insert(new_op_data, return_new=True)['new']
+    return APIResponse(detail=new_op_record, message="Operation created successfully")
+
+  except:
+    status_code = 500
+    message = "Could not save new operation, please contact the administrator."
+    error_str = traceback.format_exc()
+    response = dict(
+      status=status_code,
+      message=message,
+      error=error_str
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+
+@router.patch('/operation/{op_key}')
+async def update_operation(op_key: str, op_update: dict):
+  
+  try:
+    updated_op_record = operation_db.update({'_key': op_key, **op_update}, return_new=True)['new']
+    return APIResponse(message="Operation updated successfully", detail=updated_op_record)
+
+  except:
+    status_code = 500
+    response=dict(
+      status_code=status_code,
+      message="Could not update Operation in the db. Please contact the administrator.",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+
+
+@router.delete('/operation/{op_key}')
+async def delete_operation(op_key: str):
+
+  try: 
+    is_used_for_products = [p.code for p in get_products_using_operation(op_key)]
+
+  except:
+    status_code = 500
+    response = dict(
+      status_code=status_code,
+      message="Couldn't delete Operation from DB due to a server error. Please contact the administrator.",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+  # Delete operation only if is not used
+  if len(is_used_for_products):
+    status_code = 403
+    response = dict(
+      status_code=status_code,
+      message=f"Operation cannot be deleted because it is in use in the process of the following products.",
+      product_codes=is_used_for_products
+    )
+    raise HTTPException(status_code=status_code, detail=response)
 
   else:
-    return []
+    removed_op = db.collection('Operation').delete(dict(_key=op_key), return_old=True)['old']
+    return APIResponse(message="Operation successfully deleted", detail=removed_op)
 
+  
 
 @router.get("/step/{step_key}/media")
 async def get_step_media(step_key: str):
@@ -87,7 +153,7 @@ async def get_production_process(product_key):
     )
   
   try:
-    results = [PhaseProcedure(**phase) for phase in process_data]
+    results = [PhaseData(**phase) for phase in process_data]
     
   except Exception as e:
     status_code = 500

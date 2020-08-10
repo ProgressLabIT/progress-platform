@@ -6,7 +6,7 @@ from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from models.production import *
-from models.process import PhaseProcedure
+from models.process import PhaseData
 from endpoints.process import search_step_media
 from utils.api import APIResponse
 from utils.db import db
@@ -58,7 +58,7 @@ async def create_work_order(new_wo: WorkOrderNew):
 
   # Get phase data from products, phase parameters from phase & Create Jobs
   def create_job_record(wo_data, phase_id, collection):
-    phase = PhaseProcedure(**tx.document(phase_id))
+    phase = PhaseData(**tx.document(phase_id))
     new_job_record = Job(
       wo_id = new_wo_record.id,
       wo_code = new_wo_record.wo_code,

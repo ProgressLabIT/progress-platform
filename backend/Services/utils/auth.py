@@ -59,7 +59,7 @@ def verify_password(plain_password, hashed_password):
 
 # ----------------------------------------------------------------------
 
-def verify_token(token_str: str = Depends(bearer_token), db=db):
+def verify_token(token_str: str = Depends(bearer_token)):
 
   try: 
     try:

@@ -1,6 +1,6 @@
 from models.traceability import *
 from models.production import Job, WorkStatus
-from queries.production import REMOVE_JOB_FROM_QUEUE
+from utils.production import Queries
 from utils.db import db
 
 
@@ -399,7 +399,7 @@ class Event:
     }
 
     self.tx.aql.execute(CLOSE_JOB_QUERY, bind_vars=bind_vars)
-    self.tx.aql.execute(REMOVE_JOB_FROM_QUEUE, bind_vars=dict(job_id=self.info.job_id))
+    self.tx.aql.execute(Queries.REMOVE_JOB_FROM_QUEUE, bind_vars=dict(job_id=self.info.job_id))
 
     # Close work session
     if not self.info.work_session_id:
