@@ -12,7 +12,7 @@ class Queries:
 
     LET batch_step_data = (
       FOR step_key IN procedure
-      LET step_data = KEEP(DOCUMENT(step_key), '_key', 'type')
+      LET step_data = KEEP(DOCUMENT(Step, step_key), '_key', 'type')
       LET execution_data = FIRST(
         FOR s IN StepExecutionData 
         FILTER s.batch_key == batch._key && s.step_key == step_key
