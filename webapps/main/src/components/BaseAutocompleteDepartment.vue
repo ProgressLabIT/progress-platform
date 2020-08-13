@@ -12,7 +12,7 @@
     :loading="loading"  
     :items="department_list"
     single-line
-    item-value="_id">
+    item-value="_key">
     <template v-slot:label>
       <span :class="text_classes">{{ label }}</span>
     </template>
@@ -69,7 +69,7 @@ export default {
 
   computed: {
     department_list() {
-      return [ ...this.$store.state.org.departments, { name: 'Non assegnato', _id: 'none', code: '-' }]
+      return [ ...this.$store.state.org.departments, { name: 'Non assegnato', _key: 'none', code: '-' }]
     }
   },
 

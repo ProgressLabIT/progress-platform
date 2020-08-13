@@ -15,8 +15,8 @@ const user = {
     operator_list: (state) => () => {
       return state.user_list.filter( u => u.scope.includes('operator') )
     },
-    user_data: (state) => (user_id) => {
-      return state.user_list.filter( u => u._id == user_id)[0]
+    user_data: (state) => (user_key) => {
+      return state.user_list.filter( u => u._key == user_key)[0]
     }
   },
 

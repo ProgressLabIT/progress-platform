@@ -164,7 +164,6 @@
                 :return_object="true"
                 :value="temp_data.department"
                 @select="updateTempDep($event)"
-                :load_departments="false"
                 class="pt-0">
               </BaseAutocompleteDepartment>
 

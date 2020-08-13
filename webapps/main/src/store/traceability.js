@@ -3,7 +3,7 @@ import { api } from '@/lib/apiCall.js'
 import { DateTime as DT } from 'luxon'
 
 function createWorkSession(state, session_state, startDT) {
-  const job_id = state.working_job_data._id
+  const job_key = state.working_job_data._key
   const user_key = session_state.user._key
   const user_session_key = session_state.user_session_key
   
@@ -13,23 +13,23 @@ function createWorkSession(state, session_state, startDT) {
     start: ws_start,
     user_session_key,
     user_key,
-    job_id,
+    job_key,
     active: true
   }
 }
 
 function createBatch(state, startDT) {
   const job = state.working_job_data
-  const job_id = job._id
+  const job_key = job._key
   const new_batch = {
-    job_id,
+    job_key,
     start: startDT.toISO(),
   }
 
   const procedure = state.working_job_data.step_sequence
   if (procedure.length) new_batch.step_data = procedure.map( step => {
     return {
-      _id: step._id,
+      _key: step._key,
       type: step.type,
       done: false,
       critical: false,
@@ -40,7 +40,7 @@ function createBatch(state, startDT) {
   return new_batch
 }
 
-function createEvent(state, session_state, { event_type, timestamp, step_id, user_data, completed_batch_qt }) {
+function createEvent(state, session_state, { event_type, timestamp, step_key, user_data, completed_batch_qt }) {
   const user_key = session_state.user._key
   const job = state.working_job_data
 
@@ -48,9 +48,9 @@ function createEvent(state, session_state, { event_type, timestamp, step_id, use
     event_type,
     user_key,
     user_session_key: session_state.session_key,
-    job_id: job._id,
-    phase_id: job.phase_id,
-    step_id,
+    job_key: job._key,
+    phase_key: job.phase_key,
+    step_key,
     user_data,
     completed_batch_qt,
     timestamp // ISO format
@@ -76,26 +76,16 @@ function getClosedWorkSessionData(state, endDT) {
 const traceability = {
 
   state: {
-    // user: {
-    //   name: '',
-    //   surname: '',
-    //   _id: '',
-    // },
-    // user_session: {
-    //   _id: '',
-    //   scope: ''
-    // },
-    // scope: null,
     working_job_data: {},
     work_session_list: [],
     current_batch_data: {},
   },
 
   getters: {
-    getBatchStep: state => step_id => {
+    getBatchStep: state => step_key => {
       const batch_procedure = state.current_batch_data.step_data
       if (batch_procedure) {
-        const batch_step = batch_procedure.find( step => step._id === step_id )
+        const batch_step = batch_procedure.find( step => step._key === step_key )
         return batch_step
       }
       else return []
@@ -105,10 +95,10 @@ const traceability = {
   mutations: {
 
     START_USER_SESSION(state, data) {
-      const user_data = { name: data.name, surname: data.surname, _id: data.user_id }
+      const user_data = { name: data.name, surname: data.surname, _key: data.user_key }
       Vue.set(state, 'user', user_data)
       
-      const session_data = { _id: data.session_id, scope: data.scope }
+      const session_data = { _key: data.session_key, scope: data.scope }
       Vue.set(state, 'user_session', session_data)
     },
 
@@ -144,8 +134,8 @@ const traceability = {
       Vue.set(state.current_batch_data.step_data[step_index], 'done', true)
     },
 
-    UPDATE_STEP_USER_DATA(state, { step_id, value_index, value }) {
-      const step_data = this.getters.getBatchStep(step_id)
+    UPDATE_STEP_USER_DATA(state, { step_key, value_index, value }) {
+      const step_data = this.getters.getBatchStep(step_key)
       Vue.set(step_data.user_data, value_index, value)
     },
 
@@ -178,9 +168,9 @@ const traceability = {
 
         // Get active batch data (if any)
         let batch_data = {}
-        const active_batch_id = job_data.current_batch
-        if (active_batch_id) {
-          const batch_key = active_batch_id.split('/')[1]
+        const active_batch_key = job_data.current_batch
+        if (active_batch_key) {
+          const batch_key = active_batch_key.split('/')[1]
           const batch_resp = await api.get(`batch/${batch_key}`)
           batch_data = batch_resp.data.detail
         }     
@@ -211,8 +201,8 @@ const traceability = {
         event_type: 'JOB_STARTED',
         user_key,
         user_session_key: rootState.session.session_key,
-        job_id: job._id,
-        phase_id: job.phase_id,
+        job_key: job._key,
+        phase_key: job.phase_key,
         timestamp: now.toISO()
       }
 
@@ -239,8 +229,8 @@ const traceability = {
           event_type: 'JOB_PAUSED',
           user_key,
           user_session_key: rootState.session.session_key,
-          job_id: job._id,
-          phase_id: job.phase_id,
+          job_key: job._key,
+          phase_key: job.phase_key,
           timestamp: now.toISO()
         }
 
@@ -267,8 +257,8 @@ const traceability = {
           event_type: 'JOB_RESUMED',
           user_key,
           user_session_key: rootState.session.session_key,
-          job_id: job._id,
-          phase_id: job.phase_id,
+          job_key: job._key,
+          phase_key: job.phase_key,
           timestamp: now.toISO()
         }
 
@@ -302,7 +292,7 @@ const traceability = {
 
         const event = createEvent(state, rootState.session, {
           event_type: 'STEP_COMPLETED',
-          step_id: step_data._id,
+          step_key: step_data._key,
           timestamp: now.toISO(),
           user_data: step_data.user_data,
           completed_batch_qt: batch_qt

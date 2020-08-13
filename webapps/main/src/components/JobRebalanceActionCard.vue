@@ -21,7 +21,7 @@
           :offset="col.offset" 
           class="body-2">
           <template v-if="col.value === 'key'">
-            {{ getKeyFromId(j._id) }}
+            {{ j._key || 'NUOVO' }}
             <v-chip v-if="j.trash" 
               small label close 
               :color="$theme.orange"
@@ -59,7 +59,7 @@
                 autocomplete="off"
                 :value="j.assigned_to"
                 :items="$store.getters.operator_list()"
-                item-value="_id"
+                item-value="_key"
                 single-line hide-details
                 return-object
                 :filter="filterOperator"
@@ -192,12 +192,12 @@ export default {
 
       // Metadata to carry over from existing jobs to new ones
       new_job_keys: [
-        'wo_id', 
+        'wo_key', 
         'wo_code', 
         'wo_line', 
-        'phase_id', 
+        'phase_key', 
         'phase_alias',
-        'product_id',
+        'product_key',
         'product_code',
         'product_description',
         'parameters'
@@ -234,10 +234,7 @@ export default {
   },
 
   methods: {
-    getKeyFromId(id) {
-      return id ? id.split('/')[1] : 'NUOVO'
-    },
-
+   
     updateNewTotal() {
       this.working_total_remaining = this.temp_jobs
         .filter(j => !j.trash)
@@ -260,7 +257,7 @@ export default {
     },
 
     removeJob(index) {
-      if (this.temp_jobs[index]._id) {
+      if (this.temp_jobs[index]._key) {
         this.$set(this.temp_jobs[index], 'trash', true)
       }
       else this.temp_jobs.splice(index, 1)
@@ -297,10 +294,10 @@ export default {
     resetJobs() {
       // restore already existing jobs to their original quantity and reset to 0 those that are being created now
       this.temp_jobs.forEach( j => {
-        if (!j._id) j.qt_remaining = 0
+        if (!j._key) j.qt_remaining = 0
         else {
           j.trash = false
-          const original = this.jobs[j._id]
+          const original = this.jobs[j._key]
           j.qt_remaining = original.qt_planned - original.qt_completed
         }
       })
@@ -319,8 +316,8 @@ export default {
       this.$delete(this.temp_jobs[job_index], 'assigned_to')
     },
     
-    setAssignment(job_index, operator_id) {
-      this.$set(this.temp_jobs[job_index], 'assigned_to', operator_id)
+    setAssignment(job_index, operator) {
+      this.$set(this.temp_jobs[job_index], 'assigned_to', operator)
     },
 
     save() {
@@ -340,16 +337,16 @@ export default {
           
           // Delete job
           if (j.trash) {
-            return { action: 'delete', data: { _id: j._id } }
+            return { action: 'delete', data: { _key: j._key } }
           }
 
           // Update to existing job
-          else if (j._id) {
+          else if (j._key) {
             const new_planned_qt = j.qt_completed + j.qt_remaining
-            const assignee = j.assigned_to._id
+            const assignee = j.assigned_to._key
             return { 
               action: 'update', 
-              data: { _id: j._id, qt_planned: new_planned_qt, assigned_to: assignee }
+              data: { _key: j._key, qt_planned: new_planned_qt, assigned_to: assignee }
             }
           }
 
@@ -360,7 +357,7 @@ export default {
               // Use all metadata from template overriding what's necessary
               ...j, 
               qt_planned: j.qt_remaining, 
-              assigned_to: j.assigned_to._id 
+              assigned_to: j.assigned_to._key 
             }
           }
         })

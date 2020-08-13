@@ -42,13 +42,11 @@
         </v-btn>
 
         <div v-else>
-          <v-btn block class="mb-2" :color="$theme.green" @click="saveChanges">
-            <span v-if="!saving">SALVA</span>
-            <v-progress-circular 
-              v-else 
-              indeterminate
-              :color="$theme.white">
-            </v-progress-circular>
+          <v-btn block class="mb-2" 
+            :color="$theme.green" 
+            @click="saveChanges"
+            :loading="saving">
+            SALVA
           </v-btn>
 
           <v-btn block 
@@ -177,14 +175,19 @@
             <v-col>
               <v-autocomplete
                 v-model="new_item_phase"
-                :items="$store.state.process.temp"
-                item-value="_id"
+                :items="$store.state.process.saved"
+                item-value="_key"
                 item-text="alias"
                 single-line
                 return-object
                 label="Inserisci fase">
                 <template v-slot:selection="data">
-                  {{ data.item.alias }}
+                  {{ data.item.alias | capitalize }}
+                </template>
+                <template v-slot:item="data">
+                  <v-list-item-content>
+                    <v-list-item-title>{{ data.item.alias | capitalize }}</v-list-item-title>
+                  </v-list-item-content>
                 </template>
               </v-autocomplete>
             </v-col>  
@@ -201,8 +204,8 @@
               >
                 <template v-slot:item="data">
                   <v-list-item-content>
-                    <v-list-item-title class="display" v-html="data.item.code"></v-list-item-title>
-                    <v-list-item-subtitle v-html="data.item.description"></v-list-item-subtitle>
+                    <v-list-item-title class="display">{{ data.item.code }}</v-list-item-title>
+                    <v-list-item-subtitle>{{ data.item.description }}</v-list-item-subtitle>
                   </v-list-item-content>
                 </template>
 
@@ -238,6 +241,7 @@ import { mapState, mapActions } from 'vuex'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon'
 import { api } from '@/lib/apiCall.js'
+import { throttle as _throttle } from 'lodash'
 
 export default {
 
@@ -256,7 +260,7 @@ export default {
       table_headers: [
         {  value:'code', text:'CODICE' },
         {  value:'description', text:'DESCRIZIONE' },
-        {  value:'type', text:'TIPO' },
+        {  value:'item_type', text:'TIPO' },
         {  value:'phase_name', text:'FASE' },
         {  value:'qt', text:'QT' },
       ],
@@ -299,7 +303,7 @@ export default {
     temp_bom: {
       get() {
         return this.$store.state.bom.temp.map( i => { 
-          return { ...i, table_key: i.code + i.phase_id }
+          return { ...i, table_key: i.code + i.phase_key }
         })
       },
       set(new_bom) {
@@ -309,23 +313,11 @@ export default {
 
     filtered_bom() {
       return this.temp_bom.filter(item => {
-        let type_check = this.item_type_filter.includes(item.type.toLowerCase())
+        let type_check = this.item_type_filter.includes(item.item_type.toLowerCase())
 
         return type_check && multiMatch(this.search, item, ['code', 'description'])
       })
     },
-
-    // bom_headers() {
-    //   let headers = []
-    //   Object.keys(this.saved_bom[0]).forEach(header => {
-    //     // exclude fields not necessary in the table
-    //     if (['item_id', 'rel_id', 'phase_id'].includes(header)) return 
-
-    //     let header_params = { text: header, value: header }
-    //     headers.push(header_params)
-    //   })
-    //   return headers
-    // },
 
     deleteIconTooltip() {
       if (this.delete_items.length) {
@@ -337,15 +329,6 @@ export default {
 
   methods: {
     ...mapActions(['loadProductDetails', 'getItemsCatalog']),
-
-    // loadTempBom() {
-    //   this.temp_bom = this.saved_bom.map(i => { 
-    //     return {
-    //       ...i, 
-    //       table_key: i.code + i.phase_id
-    //     }
-    //   })
-    // },
 
     toggleEdit() {
       if (this.edit_mode == false) {
@@ -392,7 +375,7 @@ export default {
     async addItem() {
       const is_duplicate = this.temp_bom.some(item => 
         item.code == this.new_item.code 
-        && item.phase_id == this.new_item_phase._id
+        && item.phase_key == this.new_item_phase._key
       )
 
       if (!is_duplicate) {
@@ -403,18 +386,17 @@ export default {
            * contain an _id field that, when sent to the db would refer
            * to the relationship and raise an error.
            */ 
-          item_id: this.new_item._id,
+          item_key: this.new_item._key,
           code: this.new_item.code,
           description: this.new_item.description,
-          type: this.new_item.type,
+          item_type: this.new_item.type,
           qt: this.new_item_qt,
           phase_name: this.new_item_phase.alias,
-          phase_id: this.new_item_phase._id,
-          table_key: this.new_item.code + this.new_item_phase._id
+          phase_key: this.new_item_phase._key,
+          table_key: this.new_item.code + this.new_item_phase._key
         }
 
-        // This will trigger computed setter and commit mutation
-        this.$store.commit('UPDATE_TEMP_BOM', [...this.temp_bom, new_item])
+        this.temp_bom = [...this.temp_bom, new_item]
         this.show_item_catalog = false
       }
       else {
@@ -435,14 +417,18 @@ export default {
         product_key: this.product_key,
         new_bom: this.temp_bom
       }
-      this.$store.dispatch('saveBomChanges', action_payload).then(() => {
+      this.$store.dispatch('saveBomChanges', action_payload)
+      .then(() => {
         setTimeout(() => {
           this.show_save_confirmation = true
-          this.saving_progress = false
+          this.saving = false
           this.edit_mode = false
         }, 1500)  
       })
-      
+      .catch( err => {
+        window.alert(err)
+        this.saving = false
+      })
     },
   },
 
@@ -451,7 +437,10 @@ export default {
      * remove from container its padding and that of the column,
      * plus the footer height
      */ 
-    this.table_height = this.$refs.container.clientHeight - 24 - 52
+    this.onresize
+    const resizeTable = () => this.table_height = this.$refs.container.clientHeight - 24 - 52
+    resizeTable()
+    window.onresize = _throttle(resizeTable, 100)
   },
 
   watch: {

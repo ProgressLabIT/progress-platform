@@ -171,7 +171,7 @@ export default {
           if (u_dep) {
             // Selected users with no department assigned
             // Filter out all users that have a department
-            if (dep_filter != u_dep._id) department_match = false
+            if (dep_filter != u_dep._key) department_match = false
           }
           else {
             // Filter out users with department different from the one selected
@@ -213,7 +213,7 @@ export default {
     },
 
     showUser(user) {
-      this.selected_user_key = user._id
+      this.selected_user_key = user._key
       this.$router.push({ 
         name: 'userInfo', 
         params: { user_key: user._key }

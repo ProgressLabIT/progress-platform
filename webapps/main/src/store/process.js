@@ -126,15 +126,14 @@ const process = {
     async getProcess({ commit }, product_key) {
       
       function get_step_media(step) {
-        const step_key = step._id.split('/')[1]
         return new Promise( resolve => {
           api
-          .get(`step/${step_key}/media`)
+          .get(`step/${step._key}/media`)
           .then( resp => {
             const media_list = resp.data.map( filename => {
               return {
                 filename,
-                src: `/media/step/${step_key}/${filename}`,
+                src: `/media/step/${step._key}/${filename}`,
                 temp: false,
                 trash: false
               }
@@ -176,12 +175,12 @@ const process = {
 
           step.media.forEach( media => {
             if (media.trash) deleted_media.push({
-              step_key: step._id.split('/')[1],
+              step_key: step._key,
               filename: media.filename
             })
 
             if (media.temp) new_media.push({
-              step_key: step._id.split('/')[1],
+              step_key: step._key,
               media_file: media.data
             })
           })

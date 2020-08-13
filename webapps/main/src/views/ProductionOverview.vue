@@ -105,7 +105,7 @@
           autocomplete="off"
           v-model="department"
           :items="$store.state.org.departments"
-          item-value="_id"
+          item-value="_key"
           single-line hide-details clearable
           label="Dipartimento"
           class="mb-6 flex-grow-0">

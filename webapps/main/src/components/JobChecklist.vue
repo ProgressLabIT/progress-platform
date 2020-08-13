@@ -92,7 +92,7 @@ export default {
     },
 
     batch_step() {
-      return this.$store.getters.getBatchStep(this.step._id)
+      return this.$store.getters.getBatchStep(this.step._key)
     },
     
     values() {
@@ -107,7 +107,7 @@ export default {
       let value = check_value
       if (this.values[index] == check_value) value = 0
       const check_data = {
-        step_id: this.step._id,
+        step_key: this.step._key,
         value_index: index,
         value
       }

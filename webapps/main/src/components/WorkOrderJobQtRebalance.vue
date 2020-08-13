@@ -10,27 +10,27 @@
       </v-card-title>
 
       <v-card-text class="mt-6">
-        <div v-for="(phase, index) in phases_to_rebalance" :key="phase.phase_id">
+        <div v-for="(phase, index) in phases_to_rebalance" :key="phase.phase_key">
           <v-divider v-if="index != 0"></v-divider>
 
           <!-- Phase header -->
           <v-row class="mx-0" justify="space-between" align="center">
             <span class="display highlight font-weight-medium text-uppercase">{{phase.phase_alias}}</span>
-            <v-chip small :color="phases_delta[phase.phase_id] ? $theme.orange :  $theme.green">
+            <v-chip small :color="phases_delta[phase.phase_key] ? $theme.orange :  $theme.green">
               <!-- delta to allocate in orange or check in green if delta == 0 -->
               <span 
-                v-if="phases_delta[phase.phase_id]"
+                v-if="phases_delta[phase.phase_key]"
                 class="solid-white font-weight-medium text-uppercase">
-                {{ phases_delta[phase.phase_id] > 0 ? 'aumenta   +' : 'riduci   ' }}  {{ phases_delta[phase.phase_id] }}
+                {{ phases_delta[phase.phase_key] > 0 ? 'aumenta   +' : 'riduci   ' }}  {{ phases_delta[phase.phase_key] }}
               </span>
               <v-icon class="solid-white weight-bold" v-else>mdi-check</v-icon>
             </v-chip>
           </v-row>
 
           <!-- Phase jobs -->
-          <v-row v-for="job in phase.jobs" :key="job._id">
+          <v-row v-for="job in phase.jobs" :key="job._key">
             <v-col cols="3">
-              {{ job._id }}
+              {{ job._key }}
             </v-col>
             <v-col cols="4" offset="1">
               <BaseUserAvatar :user="job.assigned_to"/>
@@ -43,7 +43,7 @@
                 single-line
                 hide-details
                 type="number"
-                v-model.number="job_updates[job._id].new_remaining"
+                v-model.number="job_updates[job._key].new_remaining"
                 min="0"
                 :max="new_wo_qt">
               </v-text-field>
@@ -103,7 +103,7 @@ export default {
   data () {
     return {
       phase_index: 0,
-      job_updates: {}, // job_id => qt
+      job_updates: {}, // job_key => qt
       saving: false
     }
   },
@@ -117,8 +117,8 @@ export default {
       if (this.job_updates != {}) {
         const self = this
         const delta_map = this.phases_to_rebalance.reduce( (obj, phase) => {
-          const phase_temp_remaining = phase.jobs.reduce( (sum, job) => sum + self.job_updates[job._id].new_remaining, 0)
-          obj[phase.phase_id] = self.new_wo_qt - (phase.qt_completed + phase_temp_remaining)
+          const phase_temp_remaining = phase.jobs.reduce( (sum, job) => sum + self.job_updates[job._key].new_remaining, 0)
+          obj[phase.phase_key] = self.new_wo_qt - (phase.qt_completed + phase_temp_remaining)
           return obj
         }, {})
         return delta_map
@@ -138,10 +138,10 @@ export default {
     save() {
       if (this.can_save) {
         this.saving = true
-        const updates = Object.entries(this.job_updates).map( ([job_id, data]) => {
+        const updates = Object.entries(this.job_updates).map( ([job_key, data]) => {
           const job_update =  {
             action: 'update',
-            data: { _id: job_id, qt_planned: data.completed + data.new_remaining }
+            data: { _key: job_key, qt_planned: data.completed + data.new_remaining }
           }
           return job_update
         })
@@ -164,7 +164,7 @@ export default {
   created() {
     this.job_updates = this.phases_to_rebalance.reduce( (obj, phase) => {
       phase.jobs.forEach( j => {
-        obj[j._id] = {
+        obj[j._key] = {
           new_remaining: j.qt_planned - j.qt_completed,
           completed: j.qt_completed
         }

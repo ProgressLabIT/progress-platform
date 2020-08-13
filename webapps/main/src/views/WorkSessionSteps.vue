@@ -9,7 +9,7 @@
             <v-col 
               cols="auto" 
               class="px-1"
-              :key="step._id">
+              :key="step._key">
               <v-avatar  
                 size="20" 
                 :style="stepStyle(index)"
