@@ -68,6 +68,8 @@
 <script>
 import Sortable from 'sortablejs'
 import multiMatch from '@/lib/MultiFieldSearch.js'
+import { throttle as _throttle } from 'lodash'
+
 // import wo_list from '@/dummy_data/WorkOrders.json'
 
 export default {
@@ -231,7 +233,7 @@ export default {
     // set table height explicitly and resize with window
     const resizeTable = () => this.table_height = this.$refs.container.clientHeight
     resizeTable()
-    window.onresize = resizeTable
+    window.onresize = _throttle(resizeTable, 100)
 
     // make the table rows draggable
     let table = document.querySelector(".v-data-table tbody")

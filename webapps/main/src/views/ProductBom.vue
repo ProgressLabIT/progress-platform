@@ -238,6 +238,7 @@ import { mapState, mapActions } from 'vuex'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon'
 import { api } from '@/lib/apiCall.js'
+import { throttle as _throttle } from 'lodash'
 
 export default {
 
@@ -442,7 +443,11 @@ export default {
      * remove from container its padding and that of the column,
      * plus the footer height
      */ 
-    this.table_height = this.$refs.container.clientHeight - 24 - 52
+    this.onresize
+    const resizeTable = () => this.table_height = this.$refs.container.clientHeight - 24 - 52
+    resizeTable()
+    window.onresize = _throttle(resizeTable, 100)
+  },
   },
 
   watch: {
