@@ -294,6 +294,7 @@
 <script>
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import JobRebalanceActionCard from '@/components/JobRebalanceActionCard.vue'
+import WorkOrderJobQtRebalance from '@/components/WorkOrderJobQtRebalance.vue'
 
 export default {
 
@@ -301,7 +302,8 @@ export default {
 
   components: {
     BaseUserAvatar,
-    JobRebalanceActionCard
+    JobRebalanceActionCard,
+    WorkOrderJobQtRebalance
   },
 
   props: {
