@@ -170,7 +170,7 @@ const traceability = {
         let batch_data = {}
         const active_batch_key = job_data.current_batch
         if (active_batch_key) {
-          const batch_key = active_batch_key.split('/')[1]
+          const batch_key = active_batch_key
           const batch_resp = await api.get(`batch/${batch_key}`)
           batch_data = batch_resp.data.detail
         }     
