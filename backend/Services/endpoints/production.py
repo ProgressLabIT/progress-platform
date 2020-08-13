@@ -7,7 +7,7 @@ from fastapi.encoders import jsonable_encoder
 
 from models.production import *
 from models.process import PhaseData
-from endpoints.process import search_step_media
+from utils.process import search_step_media
 from utils.api import APIResponse
 from utils.db import db
 from utils.production import Queries
@@ -38,18 +38,18 @@ async def create_work_order(new_wo: WorkOrderNew):
     return new_wo_record
 
   try:
-    product_data = product_coll.get(new_wo.product_id)
+    product_data = product_coll.get(new_wo.product_key)
     new_wo.product_code = product_data['code']
     new_wo.product_description = product_data['description']
     new_wo.phase_sequence = product_data['process_phases']
     new_wo_record = create_wo_record(new_wo, wo_coll)
   except:
     status_code=500
-    response = {
-      'status': status_code,
-      'message': "There was a problem creating the work order record in the db",
-      'error': traceback.format_exc()
-    }
+    response = dict(
+      status=status_code,
+      message="There was a problem creating the work order record in the db",
+      error=traceback.format_exc()
+    )
     raise HTTPException(
       status_code=status_code,
       detail=response
@@ -57,35 +57,35 @@ async def create_work_order(new_wo: WorkOrderNew):
 
 
   # Get phase data from products, phase parameters from phase & Create Jobs
-  def create_job_record(wo_data, phase_id, collection):
-    phase = PhaseData(**tx.document(phase_id))
+  def create_job_record(wo_data, phase_key, collection):
+    phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
     new_job_record = Job(
-      wo_id = new_wo_record.id,
+      wo_key = new_wo_record.key,
       wo_code = new_wo_record.wo_code,
       wo_line = new_wo_record.wo_line,
-      phase_id = phase_id,
+      phase_key = phase_key,
       phase_alias = phase.alias,
-      product_id = wo_data.product_id,
+      product_key = wo_data.product_key,
       product_code = wo_data.product_code,
       product_description = wo_data.product_description,
-      operation_id = phase.operation_id,
+      operation_key = phase.operation_key,
       parameters = phase.params,
       qt_planned = wo_data.qt_planned
     )
     prepped = jsonable_encoder(new_job_record, by_alias=True, include_none=False)
-    new_job_record.id = collection.insert(prepped)['_id']
+    new_job_record.key = collection.insert(prepped)['_key']
     return new_job_record
   
   try:
-    new_job_records = [create_job_record(new_wo_record, p_id, job_coll) for p_id in new_wo_record.phase_sequence]
-    print(new_job_records)
+    new_job_records = [create_job_record(new_wo_record, phase_key, job_coll) for phase_key in new_wo_record.phase_sequence]
+
   except:
     status_code=500
-    response = {
-      'status': status_code,
-      'message': "There was a problem creating job records in the db",
-      'error': traceback.format_exc()
-    }
+    response = dict(
+      status=status_code,
+      message="There was a problem creating job records in the db",
+      error=traceback.format_exc()
+    )
     raise HTTPException(
       status_code=status_code,
       detail=response
@@ -97,11 +97,11 @@ async def create_work_order(new_wo: WorkOrderNew):
     
   except:
     status_code=500
-    response = {
-      'status': status_code,
-      'message': "There was a problem adding the work order to the queue",
-      'error': traceback.format_exc()
-    }
+    response = dict(
+      status=status_code,
+      message="There was a problem adding the work order to the queue",
+      error=traceback.format_exc()
+    )
     raise HTTPException(
       status_code=status_code,
       detail=response
@@ -111,10 +111,7 @@ async def create_work_order(new_wo: WorkOrderNew):
   tx.commit_transaction()
   return APIResponse(
     message="Work order and jobs created",
-    detail={
-      'work_order': new_wo_record,
-      'jobs': new_job_records
-    }
+    detail=dict(work_order=new_wo_record, jobs=new_job_records)
   )
 
 
@@ -128,7 +125,7 @@ async def update_work_order(
   new_qt: float = Body(None)
   ):
   
-  update = { '_key': wo_key, }
+  update = dict(_key=wo_key)
   
   if new_due_date:
     update['due_by'] = new_due_date 
@@ -156,7 +153,7 @@ async def get_site_queue(site_key: str):
 @router.get('/work-order/{wo_key}')
 async def get_wo_data(wo_key: str):
 
-  wo_data = db.aql.execute(Queries.GET_WORK_ORDER_DATA, bind_vars={ 'wo_key': wo_key }).next()
+  wo_data = db.aql.execute(Queries.GET_WORK_ORDER_DATA, bind_vars=dict(wo_key=wo_key)).next()
   return APIResponse(detail=wo_data)
 
 
@@ -168,9 +165,9 @@ async def update_queue(queue_update: Queue):
   try:
     match = dict(type=queue_update.type, site_key=queue_update.site_key)
     
-    subqueue = queue_update.subqueue_target_id
+    subqueue = queue_update.subqueue_target_key
     if subqueue:
-      match['subqueue_target_id'] = subqueue
+      match['subqueue_target_key'] = subqueue
 
     db.collection('Queue').update_match(match, queue_update, keep_none=False, sync=True)
     
@@ -207,7 +204,7 @@ async def get_job_list():
 @router.get('/job-assignment')
 async def get_assignment_list(user_key: str = None):
 
-  result = db.aql.execute(Queries.GET_ASSIGNMENT_LIST, bind_vars= { "user_key": user_key }).next()
+  result = db.aql.execute(Queries.GET_ASSIGNMENT_LIST, bind_vars=dict(user_key=user_key)).next()
 
   return APIResponse(detail=AssignmentsResponse(**result))
 
@@ -222,26 +219,27 @@ async def get_job_data(job_key: str):
     job_data = db.collection('Job').get(job_key)
   except:
     status_code=500
-    response = {
-      'status_code': status_code,
-      'message': "Couldn't retrieve data from the DB",
-      'error': traceback.format_exc()
-    }
+    response=dict(
+      status_code=status_code,
+      message="Couldn't retrieve data from the DB",
+      error=traceback.format_exc()
+    )
     raise HTTPException(status_code=status_code, detail=response)
   
-
-  bind_vars = { 'phase_id': job_data['phase_id'] }
-  
   try:
-    db_steps = db.aql.execute(Queries.GET_PHASE_STEP_DATA, bind_vars=bind_vars)
+    db_steps = db.aql.execute(
+      Queries.GET_PHASE_STEP_DATA, 
+      bind_vars=dict(phase_key=job_data['phase_key'])
+    )
     job_steps = [s for s in db_steps]
+
   except:
     status_code=500
-    response = {
-      'status_code': status_code,
-      'message': "Couldn't retrieve data from the DB",
-      'error': traceback.format_exc()
-    }
+    response=dict(
+      status_code=status_code,
+      message="Couldn't retrieve data from the DB",
+      error=traceback.format_exc()
+    )
     raise HTTPException(status_code=status_code, detail=response)
 
   for s in job_steps:
@@ -251,20 +249,20 @@ async def get_job_data(job_key: str):
       # print(s)
     except:
       status_code=500
-      response = {
-        'status_code': status_code,
-        'message': f"Error while retrieving media info about {s['_id']}",
-        'error': traceback.format_exc()
-      }
+      response=dict(
+        status_code=status_code,
+        message=f"Error while retrieving media info about Step {s['_key']}",
+        error=traceback.format_exc()
+      )
       raise HTTPException(status_code=status_code, detail=response)
 
   job_data['step_sequence'] = job_steps
   job_with_procedure = JobWithProcedure(**job_data)
 
-  response = {
-    'message': f"Retrieved data for Job/{job_key}",
-    'detail': jsonable_encoder(job_with_procedure)
-  }
+  response=dict(
+    message=f"Retrieved data for Job/{job_key}",
+    detail=jsonable_encoder(job_with_procedure)
+  )
 
   return APIResponse(**response)
  
@@ -275,22 +273,28 @@ async def get_job_data(job_key: str):
 @router.post('/job/update')
 async def update_jobs(job_updates:List[JobUpdate]):
 
-  def update_target_queue(job_id, target_id, action, tx):
+  def update_target_queue(job_key, target_key, action, tx):
 
     try:
       if action == 'remove':
-        tx.aql.execute(Queries.REMOVE_JOB_FROM_QUEUE, bind_vars=dict(job_id=job_id))
+        tx.aql.execute(
+          Queries.REMOVE_JOB_FROM_QUEUE, 
+          bind_vars=dict(job_key=job_key)
+        )
 
       if action == 'add':
-        tx.aql.execute(Queries.ADD_JOB_TO_QUEUE, bind_vars=dict(target_id=target_id, job_id=job_id))
+        tx.aql.execute(
+          Queries.ADD_JOB_TO_QUEUE, 
+          bind_vars=dict(target_key=target_key, job_key=job_key)
+        )
 
     except:
       status_code = 500
-      response = {
-       'status_code': status_code,
-       'message': "Couldn't update queue on the db",
-       'error': traceback.format_exc()
-      }
+      response =dict(
+       status_code=status_code,
+       message="Couldn't update queue on the db",
+       error=traceback.format_exc()
+      )
       raise HTTPException(status_code=status_code, detail=response)
 
 
@@ -308,8 +312,8 @@ async def update_jobs(job_updates:List[JobUpdate]):
 
         if 'assigned_to' in u.data:
           update_target_queue(
-            job_id=new_job_data['_id'], 
-            target_id=new_job_data['assigned_to'],
+            job_key=new_job_data['_key'], 
+            target_key=new_job_data['assigned_to'],
             action='add',
             tx=tx
           )
@@ -320,28 +324,28 @@ async def update_jobs(job_updates:List[JobUpdate]):
         old_job_data = db_resp['old']
 
         if 'assigned_to' in u.data:  
-          update_target_queue(
-            job_id=u.data['_id'], 
-            target_id=u.data['assigned_to'],
-            action='add',
-            tx=tx
-          )
-
           if 'assigned_to' in old_job_data:
             update_target_queue(
-              job_id=u.data['_id'],
-              target_id=old_job_data['assigned_to'],
+              job_key=u.data['_key'],
+              target_key=old_job_data['assigned_to'],
               action='remove',
               tx=tx    
             )
           
+          update_target_queue(
+            job_key=u.data['_key'], 
+            target_key=u.data['assigned_to'],
+            action='add',
+            tx=tx
+          ) 
+          
       elif u.action == JobUpdateType.DELETE:
-        new_job_data = job_db.update({ **u.data, 'trash': True }, return_new=True)['new']
+        new_job_data = job_db.update(dict(**u.data, trash=True), return_new=True)['new']
         
         if new_job_data['assigned_to']:
           update_target_queue(
-            job_id=u.data['_id'],
-            target_id=new_job_data['assigned_to'],
+            job_key=u.data['_key'],
+            target_key=new_job_data['assigned_to'],
             action='remove',
             tx=tx
           )
@@ -355,11 +359,11 @@ async def update_jobs(job_updates:List[JobUpdate]):
     status_code = 500
     error_str = traceback.format_exc()
 
-    response = {
-      'status_code': status_code,
-      'message': "There was an error saving the updates",
-      'error': error_str 
-    }
+    response=dict(
+      status_code=status_code,
+      message="There was an error saving the updates",
+      error=error_str 
+    )
 
     raise HTTPException(status_code=status_code, detail=response)
 

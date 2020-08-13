@@ -15,13 +15,13 @@ class Queries:
     FOR wo_key IN queue
       LET wo = DOCUMENT(WorkOrder, wo_key)
       LET qt_remaining = wo.qt_planned - wo.qt_completed
-      LET jobs = ( FOR j IN Job FILTER !j.trash && j.wo_id == wo._id RETURN j)
-      LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_id )
+      LET jobs = ( FOR j IN Job FILTER !j.trash && j.wo_key == wo._key RETURN j)
+      LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_key )
       LET progress = FLOOR(AVERAGE(
         FOR phase IN phases 
           RETURN AVERAGE(
             FOR j IN jobs
-            FILTER j.phase_id == phase
+            FILTER j.phase_key == phase
             RETURN j.progress
           )
       ))
@@ -36,8 +36,8 @@ class Queries:
       // get job data
       LET jobs =  ( 
         FOR j IN Job
-        FILTER j.wo_id == wo._id && !j.trash
-        LET operator = KEEP(DOCUMENT(j.assigned_to), '_id', 'name', 'surname', 'active')
+        FILTER j.wo_key == wo._key && !j.trash
+        LET operator = KEEP(DOCUMENT(User, j.assigned_to), '_key', 'name', 'surname', 'active')
         RETURN MERGE( j, { assigned_to: operator } )
       )
 
@@ -46,12 +46,12 @@ class Queries:
 
       // calculate overall progress
 
-      LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_id )
+      LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_key )
       LET progress = FLOOR(AVERAGE(
         FOR phase IN phases 
           RETURN AVERAGE(
             FOR j IN jobs
-            FILTER j.phase_id == phase
+            FILTER j.phase_key == phase
             RETURN j.progress
           )
       ))
@@ -74,7 +74,7 @@ class Queries:
     FILTER q.type != 's' && q.site_key == '0' && LENGTH(q.jobs)
         LET jobs = (
             FOR j IN q.jobs
-            LET wo_key = PARSE_IDENTIFIER(DOCUMENT('Job', j).wo_id).key
+            LET wo_key = DOCUMENT('Job', j).wo_key
             RETURN { 
                 job_key: j, 
                 wo_key, 
@@ -102,13 +102,13 @@ class Queries:
       
       LET assigned_jobs = FIRST(    
         FOR q in Queue
-        FILTER q.subqueue_target_id == o._id
+        FILTER q.subqueue_target_key == o._key
         LET jobs = ( FOR j IN q.jobs RETURN DOCUMENT(Job, j) )
         RETURN jobs
       )
       
       RETURN {
-        operator: KEEP(o, '_id', 'name', 'surname', 'active', 'department_id'),
+        operator: KEEP(o, '_key', 'name', 'surname', 'active', 'department_key'),
         assigned_jobs: assigned_jobs
       }
     )
@@ -127,27 +127,25 @@ class Queries:
 
   GET_PHASE_STEP_DATA = """
     FOR p IN Phase
-    FILTER p._id == @phase_id
+    FILTER p._key == @phase_key
       FOR s IN p.step_sequence
-      RETURN DOCUMENT(s)
+      RETURN DOCUMENT(Step, s)
   """
 
   REMOVE_JOB_FROM_QUEUE = """
     FOR j IN Job
-    LET job_key = PARSE_IDENTIFIER(@job_id).key 
-    FILTER j._key == job_key
+    FILTER j._key == @job_key
     LET assignee = j.assigned_to
     
     FOR q IN Queue
-    FILTER q.subqueue_target_id == assignee
-    UPDATE q WITH { jobs: REMOVE_VALUE(q.jobs, job_key) } in Queue
+    FILTER q.subqueue_target_key == assignee
+    UPDATE q WITH { jobs: REMOVE_VALUE(q.jobs, @job_key) } in Queue
   """
 
   ADD_JOB_TO_QUEUE = """
-    LET job_key = PARSE_IDENTIFIER(@job_id).key 
     FOR q IN Queue
-    FILTER q.subqueue_target_id == @target_id
+    FILTER q.subqueue_target_key == @target_key
     
     // the third parameter = true makes sure the job is added only if not already present
-    UPDATE q WITH { jobs: PUSH(q.jobs, job_key, true) } in Queue
+    UPDATE q WITH { jobs: PUSH(q.jobs, @job_key, true) } in Queue
   """

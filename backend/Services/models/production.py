@@ -11,7 +11,7 @@ from utils.base_models import FlexModel, ArangoDocument
 
 
 class CustomerData(FlexModel):
-  customer_id: str = None
+  customer_key: str = None
   customer_name: str = None
   delivery_address: str = None
   order_code: str = None
@@ -50,7 +50,7 @@ class WorkOrderNew(FlexModel):
   customer_data: CustomerData = CustomerData()
   wo_code: str
   wo_line: int = 1
-  product_id: str
+  product_key: str
   product_code: str = None
   product_description: str = None
   phase_sequence: List[str] = []
@@ -60,7 +60,6 @@ class WorkOrderNew(FlexModel):
   
 
 class WorkOrderFull(WorkOrderNew):
-  id: str = Field(None, alias="_id")
   key: str = Field(None, alias="_key")
 
   status: WorkStatus = WorkStatus.CREATED
@@ -89,25 +88,24 @@ class RequiredAvailableQt(FlexModel):
 
 
 class Operator(FlexModel):
-  id: str = Field(..., alias="_id")
+  key: str = Field(..., alias="_key")
   name: str
   surname: str
   active: bool = None
-  department_id: str = None
+  department_key: str = None
 
 
 class Job(FlexModel):
-  id: str = Field(None, alias="_id")
   key: str = Field(None, alias="_key")
-  wo_id: str
+  wo_key: str
   wo_code: str
   wo_line: int
-  phase_id: str
+  phase_key: str
   phase_alias: str
-  product_id: str
+  product_key: str
   product_code: str
   product_description: str
-  # operation_id: str >>> TODO: Fix Phase API to add op_id during creation
+  # operation_key: str >>> TODO: Fix Phase API to add op_id during creation
 
   parameters: PhaseParameters = None
   
@@ -121,7 +119,7 @@ class Job(FlexModel):
   qt_planned: float
   qt_completed: float = 0
   qt_released: float = 0
-  current_batch: str = None # iteration _id
+  current_batch: str = None # batch _key
   # current_step: int = None
   progress: int = Field(0, ge=0, le=100)
 
@@ -146,11 +144,11 @@ class Job(FlexModel):
       raise ValueError("Released quantity cannot exceed completed quantity")
     return qt_released
 
-  @validator('jobs_downstream', 'jobs_upstream', each_item=True)
-  def check_job_id_root(cls, job_id):
-    if not job_id.startswith("Job/"):
-      raise ValueError("Job id must be fully specified and must start with 'Job/'")
-    return job_id
+  # @validator('jobs_downstream', 'jobs_upstream', each_item=True)
+  # def check_job_id_root(cls, job_id):
+  #   if not job_id.startswith("Job/"):
+  #     raise ValueError("Job id must be fully specified and must start with 'Job/'")
+  #   return job_id
 
 
 # class PhaseJobs(FlexModel):
@@ -188,12 +186,6 @@ class JobWithProcedure(Job):
   step_sequence: List[StepWithMediaInfo] = []
 
 
-# class JobAssignment(FlexModel):
-#   id: str = Field(..., alias="_id")
-#   key: str = Field(..., alias="_key")
-#   job: str = Field(..., alias="_from")
-#   operator: str = Field(..., alias="_to")
-
 
 class OperatorAssignments(FlexModel):
   operator: Operator
@@ -214,6 +206,6 @@ class QueueType(Enum):
 class Queue(ArangoDocument):
   type: QueueType #What the queue refers to.
   site_key: str = None
-  subqueue_target_id: str = None # id of operator / equipment
+  subqueue_target_key: str = None # id of operator / equipment
   work_orders: List[str] = None # the list of Wo keys ordered by priority.
   jobs: List[str] = None # the list of job keys ordered by priority

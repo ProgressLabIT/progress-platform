@@ -21,11 +21,11 @@ async def apply_production_event(data: ProductionEvent):
   except:
     status_code=500
     error_str = traceback.format_exc()
-    response = {
-      'status': status_code,
-      'message': "There was a problem saving the event in the db",
-      'error': error_str
-    }
+    response = dict(
+      status=status_code,
+      message="There was a problem saving the event in the db",
+      error=error_str
+    )
     print(error_str)
     raise HTTPException(
       status_code=status_code,
@@ -36,9 +36,9 @@ async def apply_production_event(data: ProductionEvent):
 @router.get('/batch/{batch_key}')
 async def get_batch_execution_data(batch_key: str):
 
-  db_resp = db.aql.execute(Queries.GET_BATCH_EXECUTION_DATA, bind_vars={ 'batch_key': batch_key })
+  db_resp = db.aql.execute(Queries.GET_BATCH_EXECUTION_DATA, bind_vars=dict(batch_key=batch_key))
   try:
     batch_data = db_resp.next()
   except StopIteration:
-    batch_data = {}
+    batch_data = dict()
   return APIResponse(detail=batch_data)

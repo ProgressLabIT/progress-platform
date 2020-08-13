@@ -1,12 +1,22 @@
+from enum import Enum
 from pydantic import Field
 
-from utils.base_models import FlexModel
+from utils.base_models import ArangoDocument
 
 
-class BomItemRead(FlexModel):
-  item_id: str
-  rel_id: str
-  phase_id: str = None
+
+class BomLineType(Enum):
+  COMPONENT = 'component'
+  SUBASSEMBLY = 'subassembly'
+  CONSUMABLE = 'consumable'
+  TOOL = 'tool'
+  SAFETY = 'safety'
+
+
+class BomLineRead(ArangoDocument):
+  item_key: str
+  bom_line_key: str
+  phase_key: str = None
   code: str
   description: str
   type: str = None
@@ -14,10 +24,15 @@ class BomItemRead(FlexModel):
   qt: float
 
 
+class BomLineWriteIn(ArangoDocument):
+  item_key: str
+  item_type: BomLineType
+  qt: float
+  phase_key: str
+  type: str = 'BomItem'
 
-class BomItemWrite(FlexModel):
+class BomLineWriteOut(ArangoDocument):
   item_id: str = Field(..., alias="_to")
   qt: float
   phase_id: str = Field(..., alias="_from")
-  rel_type: str = 'BomItem'
-  rel_id: str = Field(None, alias="_id")
+  type: str = 'BomItem'

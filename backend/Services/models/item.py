@@ -10,7 +10,7 @@ from utils.base_models import FlexModel
 #   safety = "safety"
 
 class ProductionItem(FlexModel):
-  item_id: str = Field(..., alias="_id")
+  item_key: str = Field(..., alias="_key")
   code: str
   description: str
   type: str = None

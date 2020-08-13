@@ -59,8 +59,8 @@ class AuthResponse(BaseModel):
 
 class UserSession(ArangoDocument):
   active: bool
-  user_id: str
-  token_id: str
+  user_key: str
+  token_key: str
   login_at: datetime = datetime.now(tz.UTC)
   logout_at: datetime = None
   scope: str
