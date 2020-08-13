@@ -42,7 +42,7 @@
             class="assignment-list mt-4 ml-n3"
             >  
             <template v-slot:item="{ item: job }">
-              <tr @dblclick="showWorkOrderScreen(job.wo_id)">
+              <tr @dblclick="showWorkOrderScreen(job.wo_key)">
                 <!-- <v-hover v-slot:default="{ hover }"> -->
                   <td 
                     v-for="(header, index) in job_data" 
@@ -163,7 +163,7 @@ export default {
       for (let i = 0; i < this.assignments.length; i++) {
         let a = this.assignments[i]
         // Check if operator is in department selected or no department filter is set
-        if ([a.operator.department_id, undefined].includes(this.filters.department)) {
+        if ([a.operator.department_key, undefined].includes(this.filters.department)) {
 
           const filtered_jobs = a.assigned_jobs ? a.assigned_jobs.filter(this.matchJobToFilters) : []
           
@@ -187,17 +187,6 @@ export default {
       return list
     },
 
-    // operators_to_show() {
-    //   return this.filtered_assignments
-    //     .filter( operator => operator.filtered_jobs.length > 0 )
-    // },
-
-    // operators_to_hide() {
-    //   return this.filtered_assignments
-    //     .filter( operator => operator.filtered_jobs.length == 0 )
-    //     .map( o => o.operator._id )
-    // },
-
     unassigned_jobs() {
       return this.$store.state.job.unassigned_job_list
     },
@@ -209,7 +198,7 @@ export default {
       if (filtered_unassigned_jobs.length) {
         result.push({
           operator: {
-            _id: 'unassigned',
+            _key: 'unassigned',
             name: 'Lavori',
             surname: 'non assegnati'
           },
@@ -223,13 +212,6 @@ export default {
   },
 
   methods: {
-
-    // checkDepartment(dep_id) {
-    //   // Return true if filter is not set or equal to the department checked
-    //   return [dep_id, ''].includes(this.filters.department_id)
-    //     ? true
-    //     : false
-    // },
 
     matchJobToFilters(job) {
       return matchJobToFilters(job, this.filters, this.search_fields)
@@ -247,9 +229,9 @@ export default {
       }
     },
 
-    showWorkOrderScreen(wo_id) {
+    showWorkOrderScreen(wo_key) {
       let data_to_emit = {
-        wo_key: wo_id.split('/')[1],
+        wo_key,
         back_to_route_name: this.$route.name
       }
       this.$emit('itemDblClick', data_to_emit)

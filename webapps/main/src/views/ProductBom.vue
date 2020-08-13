@@ -178,7 +178,7 @@
               <v-autocomplete
                 v-model="new_item_phase"
                 :items="$store.state.process.temp"
-                item-value="_id"
+                item-value="_key"
                 item-text="alias"
                 single-line
                 return-object
@@ -299,7 +299,7 @@ export default {
     temp_bom: {
       get() {
         return this.$store.state.bom.temp.map( i => { 
-          return { ...i, table_key: i.code + i.phase_id }
+          return { ...i, table_key: i.code + i.phase_key }
         })
       },
       set(new_bom) {
@@ -337,15 +337,6 @@ export default {
 
   methods: {
     ...mapActions(['loadProductDetails', 'getItemsCatalog']),
-
-    // loadTempBom() {
-    //   this.temp_bom = this.saved_bom.map(i => { 
-    //     return {
-    //       ...i, 
-    //       table_key: i.code + i.phase_id
-    //     }
-    //   })
-    // },
 
     toggleEdit() {
       if (this.edit_mode == false) {
@@ -392,7 +383,7 @@ export default {
     async addItem() {
       const is_duplicate = this.temp_bom.some(item => 
         item.code == this.new_item.code 
-        && item.phase_id == this.new_item_phase._id
+        && item.phase_key == this.new_item_phase._key
       )
 
       if (!is_duplicate) {
@@ -403,14 +394,14 @@ export default {
            * contain an _id field that, when sent to the db would refer
            * to the relationship and raise an error.
            */ 
-          item_id: this.new_item._id,
+          item_key: this.new_item._key,
           code: this.new_item.code,
           description: this.new_item.description,
           type: this.new_item.type,
           qt: this.new_item_qt,
           phase_name: this.new_item_phase.alias,
-          phase_id: this.new_item_phase._id,
-          table_key: this.new_item.code + this.new_item_phase._id
+          phase_key: this.new_item_phase._key,
+          table_key: this.new_item.code + this.new_item_phase._key
         }
 
         // This will trigger computed setter and commit mutation

@@ -156,7 +156,7 @@ export default {
     },
 
     step_key() {
-      return this.step_data._id.split("/")[1]
+      return this.step_data._key
     },
   },
 

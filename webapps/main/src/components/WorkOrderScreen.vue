@@ -87,14 +87,6 @@ export default {
   },
 
   computed: {
-    wo_id() {
-      return 'WorkOrder/' + this.wo_key
-    },
-
-    // job_data() {
-    //   return this.$store.state.job.job_list.filter( job => job.wo_id == this.wo_id)
-    // },
-
     wo_data() {
       return this.$store.state.workorder.wo_data || { phase_sequence: []}
     }

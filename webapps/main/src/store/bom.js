@@ -23,10 +23,16 @@ const bom = {
   },
 
   actions: {
-    saveBomChanges({ commit }, { product_key, new_bom }) {
-      api
+    saveBomChanges({ dispatch }, { product_key, new_bom }) {
+      return new Promise ( (resolve, reject) => {
+        api
         .put(`product/${product_key}/bom`, new_bom)
-        .then( resp => commit('LOAD_SAVED_BOM', resp.data))
+        .then( () => {
+          dispatch('getBom', product_key)
+          resolve()
+        })
+        .catch( err => reject(err) )
+      })
     },
 
     getBom({ commit }, product_key) {

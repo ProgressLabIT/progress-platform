@@ -70,7 +70,7 @@ export default {
     },
 
     batch_step() {
-      return this.$store.getters.getBatchStep(this.step._id)
+      return this.$store.getters.getBatchStep(this.step._key)
     },
 
     field_data() {
@@ -82,7 +82,7 @@ export default {
   methods: {
     updateField(index, value) {
       const field_data = {
-        step_id: this.step._id,
+        step_key: this.step._key,
         value_index: index,
         value
       }

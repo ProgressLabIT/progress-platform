@@ -47,7 +47,7 @@
     <v-row >
       <v-col cols="12" sm="6" md="4" lg="3" 
         v-for="j in filtered_assigned_to_user" 
-        :key="j._id"
+        :key="j._key"
         @click="goToSelectedJob(j._key)">
         <v-hover v-slot:default="{ hover }">
           <JobCard
@@ -75,7 +75,7 @@
     <v-row >
       <v-col cols="12" sm="6" md="4" lg="3" 
         v-for="j in filtered_unassigned" 
-        :key="j._id"
+        :key="j._key"
         @click="goToSelectedJob(j._key)">
         <v-hover v-slot:default="{ hover }">
           <JobCard

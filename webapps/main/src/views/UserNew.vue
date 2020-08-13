@@ -43,7 +43,7 @@
                 <h5 class="mt-2">DIPARTIMENTO</h5>
                 <BaseAutocompleteDepartment 
                   text_classes="body-2"
-                  @select="new_user_data.department_id = $event"
+                  @select="new_user_data.department_key = $event"
                   class="pt-0">
                 </BaseAutocompleteDepartment>
               </v-col>  
@@ -162,7 +162,7 @@ export default {
         surname: '',
         username: '',
         email: '',
-        department_id: '',
+        department_key: '',
         hourly_cost: null,
         scopes: [], // permissions list
         scope: ''

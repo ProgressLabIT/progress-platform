@@ -122,7 +122,7 @@
           ref="add_phase"
           v-if="edit_mode"
           :items="operations"
-          item-value="_id"
+          item-value="_key"
           item-text="name"
           return-object
           v-model="new_op"
@@ -340,7 +340,7 @@ export default {
       let new_process = this.process
       new_process.push({ 
         alias: new_operation.name, 
-        operation_id: new_operation._id, 
+        operation_key: new_operation._key, 
         params: new_operation.default_phase_parameters,
         steps: []
       })

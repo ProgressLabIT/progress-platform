@@ -105,7 +105,7 @@ export default {
     },
 
     media_base_path() {
-      return this.media_root_path + this.step._id.split('/')[1]
+      return this.media_root_path + this.step._key
     },
 
     displayed_image_src() {

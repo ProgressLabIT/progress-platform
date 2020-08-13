@@ -66,7 +66,7 @@
         <v-tab-item key="people" class="ml-n2">
           <BaseAvatarListElement 
             v-for="operator in assignments"
-            :key="operator._id"
+            :key="operator._key"
             :src="getPicPath(operator)"
             :title="operator.name + ' ' + operator.surname"
             :subtitle="getAssignedPhases(operator) | capitalize_all">
@@ -131,11 +131,11 @@ export default {
           }
 
           else {
-            const id = j.assigned_to._id
-            if (id in assignments) assignments[id].jobs.push(j)
+            const key = j.assigned_to._key
+            if (key in assignments) assignments[key].jobs.push(j)
             else {
-              assignments[id] = this.$store.getters.user_data(id)
-              assignments[id].jobs = [j]
+              assignments[key] = this.$store.getters.user_data(key)
+              assignments[key].jobs = [j]
             }
           }
         })

@@ -18,7 +18,7 @@
       <v-expansion-panels flat v-model="expanded_phase">
         <v-expansion-panel 
           v-for="(phase, index) in phase_data" 
-          :key="phase.phase_id"
+          :key="phase.phase_key"
           color="transparent">
           
           <!-- PHASE SUMMARY DATA -->
@@ -67,9 +67,9 @@
 
             <!-- JOB DATA -->
             <v-row 
-              :id="job._id"
+              :id="job._key"
               v-for="job in phase.jobs" 
-              :key="job._id" 
+              :key="job._key" 
               align="center">
 
               <v-col v-for="header in headers" 
@@ -82,7 +82,7 @@
                 <template v-if="header.value === 'phase_alias'">
                   <v-checkbox 
                     :color="$theme.blue"
-                    :value="job_select_model[job._id]"
+                    :value="job_select_model[job._key]"
                     @change="updateSelectedJobData(job, $event)">
                   </v-checkbox>
                 </template>
@@ -340,8 +340,8 @@ export default {
 
   computed: {
     phase_data() {
-      return this.wo_data.phase_sequence.map( phase_id => {
-        const jobs = this.wo_data.jobs.filter( j => j.phase_id === phase_id )
+      return this.wo_data.phase_sequence.map( phase_key => {
+        const jobs = this.wo_data.jobs.filter( j => j.phase_key === phase_key )
         const params = jobs[0].parameters
         const phase_alias = jobs[0].phase_alias
         const total_completed = jobs.reduce( (sum, job) => sum + job.qt_completed, 0)
@@ -351,13 +351,13 @@ export default {
           jobs.reduce( (sum, job) => sum + job.progress, 0) / jobs.length
         )
         const active = jobs.reduce( (count, job) => count + job.active, 0)
-        const editing = jobs.some( j => this.selected_jobs.includes(j._id) )
+        const editing = jobs.some( j => this.selected_jobs.includes(j._key) )
 
         // const assignments = jobs.map( job => job.assigned_to )
 
         return {
           jobs,
-          phase_id,
+          phase_key,
           phase_alias,
           editing,
           active,
@@ -386,15 +386,15 @@ export default {
         this.job_select_model = {}
       }
       else phase.jobs.forEach( j => {
-        this.$set(this.job_select_model, j._id, j)
+        this.$set(this.job_select_model, j._key, j)
       })
     },
 
     updateSelectedJobData(job, selected) {
       if (selected) {
-        this.$set(this.job_select_model, job._id, job) 
+        this.$set(this.job_select_model, job._key, job) 
       }
-      else this.$delete(this.job_select_model, job._id)
+      else this.$delete(this.job_select_model, job._key)
     },
 
     closeEditDialogs() {
