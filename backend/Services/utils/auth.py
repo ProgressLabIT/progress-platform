@@ -106,7 +106,7 @@ def verify_token(token_str: str = Depends(bearer_token)):
 
 def revoke_token(token_key, db=db):
   try:
-    db.collection('Token').update({ '_key': token_key, 'revoked': True })
+    db.collection('Token').update(dict(_key=token_key, revoked=True))
   except DocumentUpdateError:
     pass
   except:
@@ -151,7 +151,7 @@ def verify_user(password, username=None, user_key=None, db=db):
   # Verify User exists in DB
   if username:
     try:
-      user = User( **db.collection('User').find({ 'username': username }).next() )
+      user = User( **db.collection('User').find(dict(username=username)).next() )
     except StopIteration:
       raise UserNotFoundError
   
@@ -187,3 +187,24 @@ def close_session(session_key, token_key, db=db):
   tx.collection('UserSession').update(session_update, return_new=True)['new']
   revoke_token(token_key, tx)
   tx.commit_transaction()
+
+
+
+
+class Queries:
+
+  INSERT_USER_SESSION = """
+    FOR u IN User
+      FILTER u._key == @user_key
+      LET session_data = {
+        active: true,
+        token_key: @token_key,
+        user_key: u._key,
+        login_at: DATE_ISO8601(DATE_NOW()),
+        logout_at: null,
+        scope: u.scope,
+        name: u.name,
+        surname: u.surname
+      }
+      INSERT session_data IN UserSession RETURN NEW
+  """

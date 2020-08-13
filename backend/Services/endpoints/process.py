@@ -13,7 +13,7 @@ from utils import dt
 from utils.api import APIResponse
 from utils.db import db
 from utils.file import UserFile
-from utils.process import search_step_media, get_products_using_operation
+from utils.process import *
 
 
 router = APIRouter()
@@ -59,7 +59,7 @@ async def create_operation(new_op_data: Operation):
 async def update_operation(op_key: str, op_update: dict):
   
   try:
-    updated_op_record = operation_db.update({'_key': op_key, **op_update}, return_new=True)['new']
+    updated_op_record = operation_db.update(dict(_key=op_key, **op_update), return_new=True)['new']
     return APIResponse(message="Operation updated successfully", detail=updated_op_record)
 
   except:
@@ -114,39 +114,20 @@ async def get_step_media(step_key: str):
 async def get_production_process(product_key):
 
   try:
-    process_data = db.aql.execute(""" 
-
-      LET phases = DOCUMENT(Product, @product_key).process_phases
-
-      FOR phase_id in phases
-          
-        LET phase = DOCUMENT(phase_id)
-        LET operation_id = (
-          FOR v,e IN 1..1 OUTBOUND phase_id requires
-          FILTER e.type == 'PhaseOperation'
-          RETURN e._to
-        )[0]
-
-        LET phase_data =  MERGE(
-          phase,
-          { 
-            operation_id: operation_id,
-            steps: DOCUMENT(phase.step_sequence)[*]
-          }
-        )
-        RETURN phase_data
-
-      """, bind_vars={'product_key': product_key})
+    process_data = db.aql.execute(
+      Queries.GET_PRODUCTION_PROCESS, 
+      bind_vars=dict(product_key=product_key)
+    )
 
   except Exception as e:
     status_code = 500
     message = "Couldn't fetch data from the db"
     error_str = traceback.format_exc()
-    response = {
-      'status': status_code,
-      'message': message,
-      'error': error_str
-    }
+    response = dict(
+      status=status_code,
+      message=message,
+      error=error_str
+    )
     raise HTTPException(
       status_code=status_code,
       detail=response
@@ -159,11 +140,11 @@ async def get_production_process(product_key):
     status_code = 500
     message = "Error validating data from DB"
     error_str = traceback.format_exc()
-    response = {
-      'status': status_code,
-      'message': message,
-      'error': error_str
-    }
+    response = dict(
+      status=status_code,
+      message=message,
+      error=error_str
+    )
     raise HTTPException(
       status_code=status_code,
       detail=response
@@ -190,60 +171,58 @@ async def update_process(process: List[PhaseUpdate], product_key):
 
       # Insert/replace steps
       for index, s in enumerate(phase.steps):
-        exclude_set = { 'id' } if s.id == None else None
+        exclude_set = { 'key' } if s.key == None else None
         prepped_step_data = jsonable_encoder(s, by_alias=True, exclude=exclude_set)
 
         step_update = tx_db.insert_document('Step', 
           prepped_step_data, overwrite=True, return_new=True )
 
         phase.steps[index] = step_update['new']
-        phase.step_sequence.append(step_update['_id'])
+        phase.step_sequence.append(step_update['_key'])
 
       # Flag removed steps for deletion by TTL 
-      old_step_sequence = tx_db.document(phase.id)['step_sequence'] if phase.id else []
+      old_step_sequence = tx_db.document('Phase', phase.key)['step_sequence'] if phase.key else []
       removed_steps = [s for s in old_step_sequence if s not in phase.step_sequence]
 
       for r in removed_steps:
-        tx_db.update_document({ '_id': r, 'trashed': timestamp })
+        tx_db.collection('Step').update(dict(_key=r, trashed=timestamp))
 
       # Insert/replace phase
-      exclude_set = { 'steps', 'operation_id' }
+      exclude_set = { 'steps', 'operation_key' }
       # do not 'export' _id field with value null if none is set, so that the DB 
       # will set it automatically
-      new_phase = True if phase.id == None else False
+      new_phase = True if phase.key == None else False
 
-      if new_phase: exclude_set.add('id')
+      if new_phase: exclude_set.add('key')
       prepped_phase_data = jsonable_encoder(phase, by_alias=True, exclude=exclude_set)
       
       phase_update = tx_db.insert_document('Phase', 
         prepped_phase_data, return_new=True, overwrite=True )
       
-      new_phase_id = phase_update['_id']
-      
       if new_phase:
         # Insert new ProductPhase relationship
-        tx_db.insert_document('requires', {
-          '_from': f'Product/{product_key}',
-          '_to': new_phase_id,
-          'type': 'ProductPhase'
-        })
+        tx_db.insert_document('requires', dict(
+          _from=f'Product/{product_key}',
+          _to=phase_update['_id'],
+          type='ProductPhase'
+        ))
 
         # Insert new PhaseOperation relationship
-        tx_db.insert_document('requires', {
-          '_from': new_phase_id,
-          '_to': phase.operation_id,
-          'type': 'PhaseOperation'
-        })
+        tx_db.insert_document('requires', dict(
+          _from=new_phase_id,
+          _to=f'Operation/{phase.operation_key}',
+          type='PhaseOperation'
+        ))
 
-        process[seq].id = phase_update['_id']
+        process[seq].key = phase_update['_key']
 
-      new_phase_sequence.append(new_phase_id)
+      new_phase_sequence.append(phase_update['_key'])
 
     # Update new sequence, returning old one for deletion check
-    phase_sequence_update = tx_db.collection('Product').update({ 
-      '_key': product_key, 
-      'process_phases': new_phase_sequence 
-    }, return_old=True)
+    phase_sequence_update = tx_db.collection('Product').update(dict(
+      _key=product_key, 
+      process_phases=new_phase_sequence 
+    ), return_old=True)
 
     # Flag removed phases (and relationships) for deletion by TTL index
     old_phase_sequence = phase_sequence_update['old']['process_phases']
@@ -251,18 +230,13 @@ async def update_process(process: List[PhaseUpdate], product_key):
 
     for p in removed_phases:
       # Flag phase document
-      tx_db.update_document({ '_id': p, 'trashed': timestamp })
+      tx_db.collection('Phase').update(dict(_key=p, trashed=timestamp))
       
       # Flag phase relationships
-      rel_flag_query = """
-        FOR r IN requires 
-        FILTER r._to == @phase_id || r._from == @phase_id
-        UPDATE r WITH { trashed: @timestamp } IN requires
-      """
-      tx_db.aql.execute(rel_flag_query, bind_vars={
-        'phase_id': p,
-        'timestamp': timestamp
-      })
+      tx_db.aql.execute(
+        Queries.TRASH_FLAG_PHASE_RELATIONSHIP, 
+        bind_vars=dict(phase_key=p, timestamp=timestamp)
+      )
 
     # Commit transaction
     tx_db.commit_transaction()
@@ -272,11 +246,11 @@ async def update_process(process: List[PhaseUpdate], product_key):
   except Exception as e:
     tx_id = tx_db.transaction_id
     error_str = traceback.format_exc()
-    response = {
-      'exception': e,
-      'transaction': tx_id,
-      'error_str': error_str
-    }
+    response = dict(
+      exception=e,
+      transaction=tx_id,
+      error_str=error_str
+    )
     tx_db.abort_transaction()
     print(error_str)
     raise HTTPException(
@@ -285,24 +259,16 @@ async def update_process(process: List[PhaseUpdate], product_key):
     )
 
 
-@router.get('/procedure/{phase_id}')
-async def get_phase_procedure(phase_id: str):
+@router.get('/procedure/{phase_key}')
+async def get_phase_procedure(phase_key: str):
 
-  query = """
-    LET step_sequence = FIRST(
-      FOR p IN Phase
-      FILTER p._id == @phase_id
-      RETURN p.step_sequence
-    )
-
-    FOR s in step_sequence
-    RETURN s
-  """
-
-  db_steps = db.aql.execute(query, bind_vars={ 'phase_id': phase_id })
+  db_steps = db.aql.execute(
+    Queries.GET_PHASE_PROCEDURE, 
+    bind_vars=dict(phase_key=phase_key)
+  )
 
   async def get_full_step_data(step_from_db):
-    step_from_db['media'] = search_step_media(step['_id'])
+    step_from_db['media'] = search_step_media(step['_key'])
     return StepWithMediaInfo(**step_from_db)
 
   return [await get_full_step_data(step) for step in db_steps]
@@ -325,11 +291,11 @@ async def save_step_media(
   except:
     error_str = traceback.format_exc()
     status_code = 400
-    response = {
-      'status': status_code,
-      'message': 'There was an error writing the file to disk',
-      'error_str': error_str
-    }
+    response = dict(
+      status=status_code,
+      message='There was an error writing the file to disk',
+      error_str=error_str
+    )
     raise HTTPException(
       status_code = status_code,
       detail = response
@@ -356,11 +322,11 @@ async def delete_step_media(
   except:
     error_str = traceback.format_exc()
     status_code = 400
-    response = {
-      'status': status_code,
-      'message': 'There was an error deleting the file',
-      'error_str': error_str
-    }
+    response = dict(
+      status=status_code,
+      message='There was an error deleting the file',
+      error_str=error_str
+    )
     raise HTTPException(
       status_code = status_code,
       detail = response

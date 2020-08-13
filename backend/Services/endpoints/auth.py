@@ -47,10 +47,13 @@ async def authenticate_user(
     raise auth.credentials_exception
 
   # Verify user has no other active session. If yes, close them.
-  active_user_sessions = db.collection('UserSession').find({ 'user_id': user.id, 'active': True })
+  active_user_sessions = db.collection('UserSession').find(dict(
+    user_key=user.key, 
+    active=True
+  ))
   if active_user_sessions.count():
     for session in active_user_sessions:
-      _, token_key = session['token_id'].split('/')
+      token_key = session['token_key']
       auth.close_session(session['_key'], token_key)
 
 
@@ -150,64 +153,45 @@ async def start_user_session(
     tx = db.begin_transaction(write=['User', 'UserSession'])
 
     # Create Session record
-    user_id = f'User/{user_key}'
-    token_id = f'Token/{token.token_key}'
-
-    new_session_query = """
-      FOR u IN User
-      FILTER u._id == @user_id
-      LET session_data = {
-        active: true,
-        token_id: @token_id,
-        user_id: u._id,
-        login_at: DATE_ISO8601(DATE_NOW()),
-        logout_at: null,
-        scope: u.scope,
-        name: u.name,
-        surname: u.surname
-      }
-      INSERT session_data IN UserSession RETURN NEW
-    """
-
-    query_params = {
-      'token_id': token_id,
-      'user_id': user_id
-    }
+    query_params = dict(
+      token_key=token.token_key,
+      user_key=user_key
+    )
 
     try:
-      new_session_data = tx.aql.execute(new_session_query, bind_vars=query_params).next()
+      new_session_data = tx.aql.execute(auth.Queries.INSERT_USER_SESSION, bind_vars=query_params).next()
       new_user_session = UserSession(
         **new_session_data, 
-        user_key=user_key,
         timeout = timedelta(minutes=USER_SESSION_TIMEOUT_MINUTES)
       )
 
     except:
       status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-      response = {
-        'status_code': status_code,
-        'message': "There was an error opening the session. Please contact the administrator.",
-        'error': traceback.format_exc()
-      }
+      response=dict(
+        status_code=status_code,
+        message="There was an error opening the session. Please contact the administrator.",
+        error=traceback.format_exc()
+      )
       raise HTTPException(status_code, detail=response)
 
     # Update User data
-    user_update = { 
-      '_id': user_id, 
-      'last_user_session': new_user_session.id,
-      'last_login': new_user_session.login_at
-    }
+    user_update = dict( 
+      _key=user_key, 
+      last_user_session=new_user_session.key,
+      last_login=new_user_session.login_at
+    )
+
     new_user_data = tx.collection('User').update(user_update, return_new=True)['new']
     updated_user = User(**new_user_data)
 
   except Exception as e:
     tx.abort_transaction()
     status_code = 500
-    response = {
-      "status": status_code,
-      "message": "Errore durante la creazione della sessione utente",
-      "error": traceback.format_exc()
-    }
+    response=dict(
+      status=status_code,
+      message="Errore durante la creazione della sessione utente",
+      error=traceback.format_exc()
+    )
     raise HTTPException(
       status_code=status_code,
       detail=response
@@ -242,7 +226,7 @@ async def close_user_session(
 
   try:
     session = db.collection('UserSession').get(session_key)
-    _, session_token_key = session['token_id'].split('/')
+    session_token_key = session['token_key']
     if not session_token_key == token.token_key:
       raise auth.credentials_exception
 

@@ -41,7 +41,7 @@ class UserNew(BaseModel):
   surname: str = None
   username: str
   site_key: str = '0'
-  department_id: str = None
+  department_key: str = None
   hourly_cost: float = None
   email: str = None
   scope: str
@@ -57,7 +57,7 @@ class User(ArangoDocument):
   username: str
   email: str = None
   
-  department_id: str = None
+  department_key: str = None
   hourly_cost: float = None
 
   psw_hash: str = None

@@ -7,7 +7,8 @@ from typing import List
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.encoders import jsonable_encoder
 
-from models.bom import BomItemRead, BomItemWrite
+from models.bom import *
+from utils.bom import *
 from utils.db import db
 from utils.api import APIResponse
 
@@ -15,23 +16,7 @@ from utils.api import APIResponse
 
 router = APIRouter()
 
-def get_bom_from_db(db, product_key):
-  return db.aql.execute("""
-      FOR v,e IN 2..2 OUTBOUND @product requires
-      FILTER e.rel_type like 'BomItem'
-      LET phase = e._from
-      
-      RETURN {
-          item_id: v._id,
-          rel_id: e._id,
-          code: v.code,
-          description: v.description,
-          type: v.type,
-          phase_id: phase,
-          phase_name: DOCUMENT(phase).alias,
-          qt: e.qt
-      }
-    """, bind_vars={ 'product': f'Product/{product_key}' })
+
 
 
 @router.get("/{product_key}/bom")
@@ -42,28 +27,28 @@ async def get_product_bom(product_key):
   except Exception as e:
     status_code = 500
     error_str = traceback.format_exc()
-    response = {
-      "status": status_code,
-      "message": "Couldn't fetch bom from db",
-      "error": error_str 
-    }
+    response=dict(
+      status=status_code,
+      message="Couldn't fetch bom from db",
+      error=error_str 
+    )
     raise HTTPException(
       status_code=status_code,
       detail=response
     )
   
   try:
-    results = [BomItemRead(**i) for i in bom]
+    results = [BomLineRead(**i) for i in bom]
     return results
 
   except Exception as e:
     status_code = 500
     error_str = traceback.format_exc()
-    response = {
-      "status": status_code,
-      "message": "There was a problem with the data fetched from the db",
-      "error": error_str 
-    }
+    response=dict(
+      status=status_code,
+      message="There was a problem with the data fetched from the db",
+      error=error_str 
+    )
     raise HTTPException(
       status_code=status_code,
       detail=response
@@ -71,7 +56,7 @@ async def get_product_bom(product_key):
 
 
 @router.put('/{product_key}/bom')
-async def update_bom(product_key: str, new_bom: List[BomItemWrite]):
+async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
   """
   First draft will blatantly delete existing bom and
   replace it with the new one
@@ -83,43 +68,32 @@ async def update_bom(product_key: str, new_bom: List[BomItemWrite]):
   try:
 
     # Remove old bom
-    deleted_items = txn.aql.execute("""
-      FOR v,e IN 2..2 OUTBOUND @product requires
-      FILTER e.rel_type=="BomItem"
-      REMOVE e IN requires
-    """, bind_vars={ "product": f'Product/{product_key}'})
+    deleted_items = txn.aql.execute(
+      Queries.DELETE_PRODUCT_BOM, 
+      bind_vars=dict(product_key=product_key)
+    )
     # print("Deleted items: ", [i for i in deleted_items])
 
+    # Enrich data
+    bom_to_db = [define_bom_line_for_db(line).dict() for line in new_bom]
+    print(bom_to_db)
     # Insert new bom
-    for item in new_bom:
-    # def insert_item(txn, item):
-      prepped_item = jsonable_encoder(item, include_none=False)
-      # print(prepped_item)
-      txn.collection('requires').insert(prepped_item, silent=True)
-
-    saved_bom = get_bom_from_db(txn, product_key)
-    
-    # print(saved_bom)
-
-    # Commit transaction
+    txn.collection('requires').insert_many(new_bom, silent=True)    
     txn.commit_transaction()
-    # print("Transaction committed!")
-    return saved_bom
+    
+    return APIResponse(message="BoM updated correctly")
 
   except Exception as e:
-    print("Error!")
     error_str = traceback.format_exc()
     status_code = 500
-    print("Setting response...")
 
-    response = {
-      "status": status_code,
-      "message": "There was a problem updating the bom. Transaction has been aborted.",
-      "error": error_str 
-    }
-    print("Aborting transaction...")
+    response=dict(
+      status=status_code,
+      message="There was a problem updating the bom. Transaction has been aborted.",
+      error=error_str 
+    )
+    print("Error! Aborting transaction...")
     txn.abort_transaction()
-    print("Transaction aborted. Raising exception...")
     print(error_str)
     raise HTTPException(
       status_code=status_code,

@@ -61,7 +61,7 @@ class InputField(FlexModel):
 
 
 class Step(FlexModel):
-  id: str = Field(None, alias="_id")
+  key: str = Field(None, alias="_key")
   title: str = None
   description: str = None
   type: StepType = StepType.INSTRUCTION
@@ -78,10 +78,10 @@ class StepWithMediaInfo(Step):
 
 
 class PhaseData(FlexModel):
-  id: str = Field(None, alias="_id")
+  key: str = Field(None, alias="_key")
   alias: str
   description: str = None
-  operation_id: str = None
+  operation_key: str = None
   operation_name: str = None
   steps: List[Step] = []
   params: PhaseParameters = PhaseParameters()
