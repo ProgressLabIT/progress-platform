@@ -7,7 +7,7 @@ from utils.base_models import ArangoDocument
 
 class BomLineType(Enum):
   COMPONENT = 'component'
-  SUBASSEMBLY = 'subassembly'
+  ASSEMBLY = 'assembly'
   CONSUMABLE = 'consumable'
   TOOL = 'tool'
   SAFETY = 'safety'

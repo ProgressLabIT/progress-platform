@@ -1,8 +1,8 @@
 from models.traceability import *
-from models.production import Job, WorkStatus
+from models.production import Job, WorkOrderFull, WorkStatus
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
-from utils.db import db
+from utils.db import db, model_to_db_dict
 
 
 class Event:
@@ -19,6 +19,7 @@ class Event:
     'Job', 
     'Queue',
     'StepExecutionData', 
+    'WorkOrder',
     'WorkSession'
   ]
   # read_collections = ['Phase', 'Product', 'Step
@@ -59,6 +60,10 @@ class Event:
   ######################################################################
   # HELPER METHODS (Updates to specific collections)
   ######################################################################
+
+  # ....................................................................
+  # WorkSession
+  # ....................................................................
 
   def create_work_session(self):
     new_work_session_in = WorkSession(
@@ -203,6 +208,16 @@ class Event:
     self.tx.collection('Job').update(job_update)
 
 
+  # ....................................................................
+  # WorkOrder
+  # ....................................................................
+
+  def get_work_order_data(self):
+    wo_data = self.tx.collection('WorkOrder').get(self.info.work_order_key)
+    wo_data_out = WorkOrderFull(**wo_data)
+    return wo_data_out
+
+
   ######################################################################
   # EVENT ACTIONS
   ######################################################################
@@ -216,11 +231,21 @@ class Event:
     self.batch = self.create_batch()
     self.info.current_batch_key = self.batch.key 
 
-    # Craete batch timing record
+    # Create batch timing record
     self.create_batch_time_record(
       batch_key=self.info.current_batch_key, 
       ws_key=self.info.work_session_key
     )
+
+    # Update WorkOrder status
+    wo = self.get_work_order_data()
+
+    if wo.status == WorkStatus.CREATED:
+      wo.status = WorkStatus.STARTED
+      wo.start = self.info.timestamp
+      wo_update = model_to_db_dict(wo)
+      self.tx.collection('WorkOrder').update(wo_update)
+
     
     # Update job
     job_update=dict(
@@ -234,6 +259,27 @@ class Event:
     )
     self.tx.collection('Job').update(job_update)
 
+    # Update queue
+    queue_match = dict(
+      subqueue_target_key=self.info.user_key,
+      site_key='0'
+    )
+    operator_queue_exists = self.tx.collection('Queue').find(queue_match).count()
+
+    if operator_queue_exists:
+      self.tx.aql.execute(
+        ProductionQueries.ADD_JOB_TO_QUEUE,
+        bind_vars=dict(
+          target_key=self.info.user_key, 
+          job_key=self.info.job_key
+        )
+      )
+
+    else:
+      self.tx.collection('Queue').insert(dict(
+        **queue_match,
+        jobs=[self.info.job_key]
+      ))
 
   # ....................................................................
 

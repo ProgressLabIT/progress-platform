@@ -65,6 +65,7 @@ class Queries:
       }])
   """
 
+
   REORDER_JOB_QUEUES = """
     FOR q1 IN Queue
     FILTER q1.type == 's' && q1.site_key == '0'

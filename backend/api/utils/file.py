@@ -2,7 +2,7 @@ import os
 
 class UserFile:
 
-  public_path = "/Volumes/Luca/DEV/Progress/WebApps/ManagerApp/public"
+  public_path = "/Users/luca/dev/progress/frontend/public"
 
   def __init__(self, base_path, append_path=None, file=None, name=None):
    

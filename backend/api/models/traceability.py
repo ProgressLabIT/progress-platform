@@ -75,6 +75,8 @@ class ProductionEvent(FlexModel):
   user_session_key: str
   work_session_key: str = None
   job_key: str = None
+  product_key: str = None
+  work_order_key: str = None
   phase_key: str = None
   current_batch_key: str = None
   step_key: str = None

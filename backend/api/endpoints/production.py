@@ -31,7 +31,7 @@ async def create_work_order(new_wo: WorkOrderNew):
   def create_wo_record(wo: WorkOrderNew, collection):
     data_in = jsonable_encoder(wo)
     new_wo_record = WorkOrderFull(**data_in)
-    prepped = jsonable_encoder(new_wo_record, by_alias=True, include_none=False)
+    prepped = jsonable_encoder(new_wo_record, by_alias=True)
     db_resp = collection.insert(prepped)
     new_wo_record.id = db_resp['_id']
     new_wo_record.key = db_resp['_key']
@@ -72,7 +72,7 @@ async def create_work_order(new_wo: WorkOrderNew):
       parameters = phase.params,
       qt_planned = wo_data.qt_planned
     )
-    prepped = jsonable_encoder(new_job_record, by_alias=True, include_none=False)
+    prepped = jsonable_encoder(new_job_record, by_alias=True)
     new_job_record.key = collection.insert(prepped)['_key']
     return new_job_record
   
@@ -283,10 +283,23 @@ async def update_jobs(job_updates:List[JobUpdate]):
         )
 
       if action == 'add':
-        tx.aql.execute(
-          Queries.ADD_JOB_TO_QUEUE, 
-          bind_vars=dict(target_key=target_key, job_key=job_key)
+        queue_match = dict(
+          subqueue_target_key=target_key,
+          site_key='0'
         )
+        operator_queue_exists = tx.collection('Queue').find(queue_match).count()
+
+        if operator_queue_exists:
+          tx.aql.execute(
+            Queries.ADD_JOB_TO_QUEUE, 
+            bind_vars=dict(target_key=target_key, job_key=job_key)
+          )
+
+        else:
+          tx.collection('Queue').insert(dict(
+            **queue_match,
+            jobs=[job_key]
+          ))
 
     except:
       status_code = 500
@@ -307,7 +320,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
     for u in job_updates:
 
       if u.action == JobUpdateType.INSERT:
-        new_job_record = jsonable_encoder(Job(**u.data), by_alias=True, include_none=False)
+        new_job_record = jsonable_encoder(Job(**u.data), by_alias=True)
         new_job_data = job_db.insert(new_job_record, return_new=True)['new']
 
         if 'assigned_to' in u.data:

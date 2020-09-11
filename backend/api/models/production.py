@@ -22,11 +22,11 @@ class TimeDeltaInfo(FlexModel):
   absolute: timedelta = None
   relative: float = None
 
-  @validator('relative')
-  def above_minus_100percent(cls, v):
-    if v <= -1:
-      raise ValueError("Relative time delta must be above -100%")
-    return v
+  # @validator('relative')
+  # def above_minus_100percent(cls, v):
+  #   if v <= -1:
+  #     raise ValueError("Relative time delta must be above -100%")
+  #   return v
 
 class TargetActualTimeDelta(FlexModel):
   target: timedelta = None
@@ -46,7 +46,7 @@ class WorkStatus(Enum):
   CLOSED = 'closed'
 
 
-class WorkOrderNew(FlexModel):
+class WorkOrderNew(ArangoDocument):
   customer_data: CustomerData = CustomerData()
   wo_code: str
   wo_line: int = 1

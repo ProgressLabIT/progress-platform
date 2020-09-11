@@ -1,3 +1,5 @@
+from fastapi.encoders import jsonable_encoder
+
 from models.bom import *
 
 class Queries:
@@ -33,15 +35,17 @@ def get_bom_from_db(db, product_key):
   )
 
 
-def define_bom_line_for_db(bom_line):
-  if bom_line.item_type == 'subassembly':
+def define_bom_line_for_db(bom_line_in):
+  if bom_line_in.item_type == 'assembly':
     target_collection = 'Product'  
   else:
     target_collection = 'ProductionItem'
   
-  return BomLineWriteOut(
-    item_id=f"{target_collection}/{bom_line.item_key}",
-    phase_id=f"Phase/{bom_line.phase_key}",
-    qt=bom_line.qt
+  bom_line_out = BomLineWriteOut(
+    item_id=f"{target_collection}/{bom_line_in.item_key}",
+    phase_id=f"Phase/{bom_line_in.phase_key}",
+    qt=bom_line_in.qt
   )
+
+  return jsonable_encoder(bom_line_out, by_alias=True, exclude_none=True)
 

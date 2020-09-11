@@ -181,7 +181,7 @@ async def update_process(process: List[PhaseUpdate], product_key):
         phase.step_sequence.append(step_update['_key'])
 
       # Flag removed steps for deletion by TTL 
-      old_step_sequence = tx_db.document('Phase', phase.key)['step_sequence'] if phase.key else []
+      old_step_sequence = tx_db.document(f'Phase/{phase.key}')['step_sequence'] if phase.key else []
       removed_steps = [s for s in old_step_sequence if s not in phase.step_sequence]
 
       for r in removed_steps:
@@ -201,9 +201,10 @@ async def update_process(process: List[PhaseUpdate], product_key):
       
       if new_phase:
         # Insert new ProductPhase relationship
+        new_phase_id=f"Phase/{phase_update['_key']}"
         tx_db.insert_document('requires', dict(
           _from=f'Product/{product_key}',
-          _to=phase_update['_id'],
+          _to=new_phase_id,
           type='ProductPhase'
         ))
 

@@ -75,10 +75,10 @@ async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
     # print("Deleted items: ", [i for i in deleted_items])
 
     # Enrich data
-    bom_to_db = [define_bom_line_for_db(line).dict() for line in new_bom]
+    bom_to_db = [define_bom_line_for_db(line) for line in new_bom]
     print(bom_to_db)
     # Insert new bom
-    txn.collection('requires').insert_many(new_bom, silent=True)    
+    txn.collection('requires').insert_many(bom_to_db, silent=True)    
     txn.commit_transaction()
     
     return APIResponse(message="BoM updated correctly")

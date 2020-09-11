@@ -4,7 +4,7 @@ class Queries:
     FOR p IN Product
     FILTER p.active
     RETURN {
-      type: 'subassembly',
+      type: 'assembly',
       _key: p._key,
       code: p.code,
       description: p.description

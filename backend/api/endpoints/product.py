@@ -43,7 +43,7 @@ async def get_product_list(
 # =================================================
 #  POST / : CREATE PRODUCT
 # =================================================
-@router.post("")
+@router.post("", status_code=201)
 async def create_product(
   code: str = Form(...),
   description: str = Form(''),
@@ -53,7 +53,7 @@ async def create_product(
   # Map form data
   try:
     new_product = ProductData(code=code, description=description)
-    prepped_data = jsonable_encoder(new_product, by_alias=True, include_none=False )
+    prepped_data = jsonable_encoder(new_product, by_alias=True, exclude_none=True )
 
   except Exception as e:
     error_str = traceback.format_exc()
@@ -93,25 +93,31 @@ async def create_product(
   # Save image
   if image:
 
-    media_directory = f"/Volumes/Luca/DEV/Progress/WebApps/ManagerApp/public/media/product"
-    new_product_key = db_response['_key']
-    # Define product docs folder (named after product ID within the Product folder)
-    product_path = os.path.join(
-      media_directory, 
-      new_product_key
+    product_image = UserFile.product_media(
+      append_path=db_response['_key'],
+      file=image,
     )
+    
+    # media_directory = f"/Volumes/Luca/DEV/Progress/WebApps/ManagerApp/public/media/product"
+    # new_product_key = db_response['_key']
+    # # Define product docs folder (named after product ID within the Product folder)
+    # product_path = os.path.join(
+    #   media_directory, 
+    #   new_product_key
+    # )
 
     # If product folder is not present, create it
-    if not os.path.isdir(product_path):
-      os.mkdir(product_path)
+    # if not os.path.isdir(product_path):
+    #   os.mkdir(product_path)
     
     # Try saving file
     try: 
-      filename = 'image.jpg'
+      # filename = 'image.jpg'
 
-      with open(os.path.join(product_path, filename), 'wb+') as f:
-        image_data = await image.read()
-        f.write(image_data)
+      # with open(os.path.join(product_path, filename), 'wb+') as f:
+      #   image_data = await image.read()
+      #   f.write(image_data)
+      product_image.write_file('image.jpg')
       
     except:
       raise HTTPException(

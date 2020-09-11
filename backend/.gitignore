@@ -1,5 +1,7 @@
 # Virtual Environments
 venv/
+.pyenv
+.python-version
 
 # Test files
 Test/
@@ -9,3 +11,7 @@ temp/
 
 # Compiled files
 *.pyc
+
+
+# Finder
+.DS_Store

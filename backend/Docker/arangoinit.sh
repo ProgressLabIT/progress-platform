@@ -3,7 +3,7 @@ docker run -d \
   -p 8529:8529 \
   --name arango \
   --mount type=volume,source=arango-persist,target=/var/lib/arangodb3 \
-  --mount type=bind,source=/Volumes/Luca/DEV/Progress/Backup/PROGRESS_TEST,target=/backup \
+  --mount type=bind,source=${HOME}/dev/Progress/db_backup/PROGRESS_TEST,target=/backup \
   \
   arangodb \
   --rocksdb.max-total-wal-size 1024000 \
