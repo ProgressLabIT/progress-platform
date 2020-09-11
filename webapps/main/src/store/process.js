@@ -124,7 +124,6 @@ const process = {
 
     
     async getProcess({ commit }, product_key) {
-      
       function get_step_media(step) {
         return new Promise( resolve => {
           api
@@ -144,7 +143,8 @@ const process = {
         })
       }
 
-      api
+      return new Promise( (resolve) => {
+        api
         .get(`product/${product_key}/process`)
         .then( async resp => {
           let phases = resp.data
@@ -157,68 +157,69 @@ const process = {
             }
           }
           await Promise.all(promises)
-          commit('LOAD_SAVED_PROCESS', phases) 
+          commit('LOAD_SAVED_PROCESS', phases)
+          resolve() 
         })
-
+      }) 
     },
 
     saveTempProcess({ dispatch }, data) {
+      return new Promise( (resolve, reject) => {
 
-      // map added/deleted media
-      let new_media = []
-      let deleted_media = []
+        // map added/deleted media
+        let new_media = []
+        let deleted_media = []
 
-      data.new_process.forEach( phase => {
-        phase.steps.forEach( step => {
-          
-          if (typeof step.media == 'undefined') return
+        data.new_process.forEach( phase => {
+          phase.steps.forEach( step => {
+            
+            if (typeof step.media == 'undefined') return
 
-          step.media.forEach( media => {
-            if (media.trash) deleted_media.push({
-              step_key: step._key,
-              filename: media.filename
-            })
+            step.media.forEach( media => {
+              if (media.trash) deleted_media.push({
+                step_key: step._key,
+                filename: media.filename
+              })
 
-            if (media.temp) new_media.push({
-              step_key: step._key,
-              media_file: media.data
+              if (media.temp) new_media.push({
+                step_key: step._key,
+                media_file: media.data
+              })
             })
           })
         })
-      })
 
-      // set up api calls
-      let api_calls = []
+        // set up api calls
+        let api_calls = []
 
-      deleted_media.forEach( ({ step_key, filename }) => {
-        api_calls.push( 
-          api.delete(`step/${step_key}/media/${filename}`)
-        )
-      })
-
-      new_media.forEach( ({ step_key, media_file }) => {
-        let body = new FormData()
-        body.append('media_file', media_file)
-        api_calls.push(
-          api.post(
-            `step/${step_key}/media`, 
-            body, 
-            { headers: { 'Content-type': 'multipart/form-data' } }
+        deleted_media.forEach( ({ step_key, filename }) => {
+          api_calls.push( 
+            api.delete(`step/${step_key}/media/${filename}`)
           )
-        )
-      })
-
-      api_calls.push(
-        api.put(`product/${data.product_key}/process`, data.new_process)
-      )
-
-      // update process data
-      return new Promise( (resolve, reject) => {
-        axios.all(api_calls)
-        .then(() => {
-          dispatch('getProcess', data.product_key)
         })
-        .then(resolve())
+
+        new_media.forEach( ({ step_key, media_file }) => {
+          let body = new FormData()
+          body.append('media_file', media_file)
+          api_calls.push(
+            api.post(
+              `step/${step_key}/media`, 
+              body, 
+              { headers: { 'Content-type': 'multipart/form-data' } }
+            )
+          )
+        })
+
+        api_calls.push(
+          api.put(`product/${data.product_key}/process`, data.new_process)
+        )
+
+        // update process data
+        axios.all(api_calls)
+        .then(async () => {
+          await dispatch('getProcess', data.product_key)
+          resolve()
+        })
         .catch(err => reject(err))
       })
     }

@@ -1,5 +1,10 @@
 module.exports = {
-  "transpileDependencies": [
+  transpileDependencies: [
     "vuetify"
-  ]
+  ],
+  devServer: {
+  	watchOptions: {
+  		ignored: ['public/docs/**', 'public/media/**']
+  	}
+  }
 }

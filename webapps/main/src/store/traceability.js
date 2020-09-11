@@ -40,7 +40,7 @@ function createBatch(state, startDT) {
   return new_batch
 }
 
-function createEvent(state, session_state, { event_type, timestamp, step_key, user_data, completed_batch_qt }) {
+function createEvent(state, session_state, { event_type, timestamp, step_key=null, user_data=null, completed_batch_qt=null }) {
   const user_key = session_state.user._key
   const job = state.working_job_data
 
@@ -49,6 +49,8 @@ function createEvent(state, session_state, { event_type, timestamp, step_key, us
     user_key,
     user_session_key: session_state.session_key,
     job_key: job._key,
+    product_key: job.product_key,
+    work_order_key: job.wo_key,
     phase_key: job.phase_key,
     step_key,
     user_data,
@@ -195,16 +197,11 @@ const traceability = {
       const updated_job_data = {...state.working_job_data, ...job_update}
 
       /* INSERT EVENT CREATION HERE */
-      const user_key = rootState.session.user._key
-      const job = state.working_job_data
-      const event = {
+      // const job = state.working_job_data
+      const event = createEvent(state, rootState.session, {
         event_type: 'JOB_STARTED',
-        user_key,
-        user_session_key: rootState.session.session_key,
-        job_key: job._key,
-        phase_key: job.phase_key,
         timestamp: now.toISO()
-      }
+      })
 
       api.post('event', event).then(() => {
         const payload = {
