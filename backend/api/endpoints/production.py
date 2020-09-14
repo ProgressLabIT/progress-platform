@@ -57,6 +57,40 @@ async def create_work_order(new_wo: WorkOrderNew):
 
 
   # Get phase data from products, phase parameters from phase & Create Jobs
+  def get_procedure_for_new_job(phase_key):
+    try:
+      db_steps = db.aql.execute(
+        Queries.GET_PHASE_STEP_DATA, 
+        bind_vars=dict(phase_key=phase_key)
+      )
+      job_steps = [s for s in db_steps]
+
+    except:
+      status_code=500
+      response=dict(
+        status_code=status_code,
+        message=f"Couldn't retrieve data from the DB about Phase {phase_key}",
+        error=traceback.format_exc()
+      )
+      raise HTTPException(status_code=status_code, detail=response)
+
+    for s in job_steps:
+      try: 
+        filenames = search_step_media(s['_key'])
+        s['media'] = [media_name for media_name in filenames]
+        # print(s)
+      except:
+        status_code=500
+        response=dict(
+          status_code=status_code,
+          message=f"Error while retrieving media info about Step {s['_key']}",
+          error=traceback.format_exc()
+        )
+        raise HTTPException(status_code=status_code, detail=response)
+
+    return job_steps
+
+
   def create_job_record(wo_data, phase_key, collection):
     phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
     new_job_record = Job(
@@ -70,8 +104,10 @@ async def create_work_order(new_wo: WorkOrderNew):
       product_description = wo_data.product_description,
       operation_key = phase.operation_key,
       parameters = phase.params,
-      qt_planned = wo_data.qt_planned
+      qt_planned = wo_data.qt_planned,
+      step_sequence = get_procedure_for_new_job(phase_key)
     )
+
     prepped = jsonable_encoder(new_job_record, by_alias=True)
     new_job_record.key = collection.insert(prepped)['_key']
     return new_job_record
@@ -226,42 +262,10 @@ async def get_job_data(job_key: str):
     )
     raise HTTPException(status_code=status_code, detail=response)
   
-  try:
-    db_steps = db.aql.execute(
-      Queries.GET_PHASE_STEP_DATA, 
-      bind_vars=dict(phase_key=job_data['phase_key'])
-    )
-    job_steps = [s for s in db_steps]
-
-  except:
-    status_code=500
-    response=dict(
-      status_code=status_code,
-      message="Couldn't retrieve data from the DB",
-      error=traceback.format_exc()
-    )
-    raise HTTPException(status_code=status_code, detail=response)
-
-  for s in job_steps:
-    try: 
-      filenames = search_step_media(s['_key'])
-      s['media'] = [media_name for media_name in filenames]
-      # print(s)
-    except:
-      status_code=500
-      response=dict(
-        status_code=status_code,
-        message=f"Error while retrieving media info about Step {s['_key']}",
-        error=traceback.format_exc()
-      )
-      raise HTTPException(status_code=status_code, detail=response)
-
-  job_data['step_sequence'] = job_steps
-  job_with_procedure = JobWithProcedure(**job_data)
 
   response=dict(
     message=f"Retrieved data for Job/{job_key}",
-    detail=jsonable_encoder(job_with_procedure)
+    detail=jsonable_encoder(job_data)
   )
 
   return APIResponse(**response)
@@ -298,6 +302,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
         else:
           tx.collection('Queue').insert(dict(
             **queue_match,
+            type='o',
             jobs=[job_key]
           ))
 
