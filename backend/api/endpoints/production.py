@@ -1,15 +1,16 @@
 import traceback
-from typing import Dict, List
 from datetime import datetime
+from typing import Dict, List
 
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 
-from models.production import *
 from models.process import PhaseData
-from utils.process import search_step_media
+from models.product import ProductData
+from models.production import *
 from utils.api import APIResponse
 from utils.db import db
+from utils.process import search_step_media
 from utils.production import Queries
 
 
@@ -38,11 +39,17 @@ async def create_work_order(new_wo: WorkOrderNew):
     return new_wo_record
 
   try:
-    product_data = product_coll.get(new_wo.product_key)
-    new_wo.product_code = product_data['code']
-    new_wo.product_description = product_data['description']
-    new_wo.phase_sequence = product_data['process_phases']
+    product_data = ProductData(**product_coll.get(new_wo.product_key))
+    new_wo.product_code = product_data.code
+    new_wo.product_description = product_data.description
+
+    if len(product_data.process_phases):
+      new_wo.phase_sequence = product_data.process_phases
+    else:
+      new_wo.phase_sequence = ['default']
+
     new_wo_record = create_wo_record(new_wo, wo_coll)
+
   except:
     status_code=500
     response = dict(
@@ -59,7 +66,7 @@ async def create_work_order(new_wo: WorkOrderNew):
   # Get phase data from products, phase parameters from phase & Create Jobs
   def get_procedure_for_new_job(phase_key):
     try:
-      db_steps = db.aql.execute(
+      db_steps = tx.aql.execute(
         Queries.GET_PHASE_STEP_DATA, 
         bind_vars=dict(phase_key=phase_key)
       )
@@ -92,7 +99,11 @@ async def create_work_order(new_wo: WorkOrderNew):
 
 
   def create_job_record(wo_data, phase_key, collection):
-    phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
+    if phase_key == 'default':
+      phase = PhaseData(alias='default')
+    else:
+      phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
+
     new_job_record = Job(
       wo_key = new_wo_record.key,
       wo_code = new_wo_record.wo_code,
