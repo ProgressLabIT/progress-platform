@@ -48,7 +48,9 @@ class Queries:
       active: false,
       stage: @stage,
       current_batch: null,
-      qt_released: j.qt_completed,
+      qt_completed: @qt_completed,
+      qt_released: @qt_completed,
+      progress: ROUND(100 * @qt_completed / j.qt_planned),
       end: @end
     } IN Job
   """

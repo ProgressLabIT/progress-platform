@@ -30,7 +30,7 @@ class Event:
   JOB_RESUMED = 'resume_job'
   JOB_CLOSED = 'close_job' 
   STEP_COMPLETED = 'complete_step'
-  BATCH_COMPLETED = 'declare_production'
+  BATCH_COMPLETED = 'complete_batch'
 
   ######################################################################
   # INIT & SAVE
@@ -207,6 +207,25 @@ class Event:
     )
     self.tx.collection('Job').update(job_update)
 
+  # ....................................................................
+
+  def close_job(self, completed_qt):
+    # Close job
+    # Query allows for single call to DB to get and update job data
+
+    bind_vars=dict(
+      job_key=self.info.job_key,
+      stage=WorkStatus.CLOSED,
+      qt_completed=completed_qt,
+      end=self.info.timestamp,
+    )
+    self.tx.aql.execute(TraceabilityQueries.CLOSE_JOB, bind_vars=bind_vars)
+    
+    self.tx.aql.execute(
+      ProductionQueries.REMOVE_JOB_FROM_QUEUE, 
+      bind_vars=dict(job_key=self.info.job_key)
+    )
+
 
   # ....................................................................
   # WorkOrder
@@ -373,6 +392,9 @@ class Event:
     # Get job data
     self.job = self.get_job_data()
 
+    # Create new batch if there is a remaining quantity
+    new_qt_completed = self.job.qt_completed + self.info.completed_batch_qt
+
     # Complete batch
     batch_update=dict(
       _key=self.info.completed_batch_key,
@@ -382,62 +404,32 @@ class Event:
     )
     self.tx.collection('Batch').update(batch_update, check_rev=False)
 
-    # Update BatchTimeRecord
-    self.update_batch_time_record(full_session=False)
 
-    # Create new batch if there is a remaining quantity
-    new_qt_completed = self.job.qt_completed + self.info.completed_batch_qt
-
-    batch_is_last = new_qt_completed == self.job.qt_planned
+    batch_is_last = new_qt_completed >= self.job.qt_planned
 
     if batch_is_last:
-      self.close_job()
+      self.close_job(new_qt_completed)
+      self.close_work_session()
+      self.update_batch_time_record(full_session=True)
 
     else:
+      # Update BatchTimeRecord
+      self.update_batch_time_record(full_session=False)
+
       new_batch = self.create_batch()
       self.info.new_batch_key = new_batch.key
       self.create_batch_time_record(batch_key=new_batch.key, ws_key=self.info.work_session_key)
 
-    # Update job qt_completed and progress
-    new_progress = round(100 * new_qt_completed / self.job.qt_planned)
-    job_update=dict(
-      _key=self.info.job_key,
-      current_batch=self.info.new_batch_key,
-      qt_completed=new_qt_completed,
-      qt_released=new_qt_completed,
-      progress=new_progress
-    )
-    self.tx.collection('Job').update(job_update, check_rev=False)
+      # Update job qt_completed and progress
+      new_progress = round(100 * new_qt_completed / self.job.qt_planned)
+      job_update=dict(
+        _key=self.info.job_key,
+        current_batch=self.info.new_batch_key,
+        qt_completed=new_qt_completed,
+        qt_released=new_qt_completed,
+        progress=new_progress
+      )
+      self.tx.collection('Job').update(job_update, check_rev=False)
 
 
-  # ....................................................................
-
-  def close_job(self):
-    # Close job
-    # Query allows for single call to DB to get and update job data
-
-    bind_vars=dict(
-      job_key=self.info.job_key,
-      stage=WorkStatus.CLOSED,
-      end=self.info.timestamp
-    )
-    self.tx.aql.execute(TraceabilityQueries.CLOSE_JOB, bind_vars=bind_vars)
-    
-    self.tx.aql.execute(
-      ProductionQueries.REMOVE_JOB_FROM_QUEUE, 
-      bind_vars=dict(job_key=self.info.job_key)
-    )
-
-    # Close work session
-    if not self.info.work_session_key:
-      self.work_session = self.get_current_work_session()
-      self.info.work_session_key = self.work_session.key
-
-    self.close_work_session()
-
-    # Update batch time record
-    if not self.batch:
-      self.batch = self.get_current_batch()
-
-    full_session = self.work_session.start >= self.batch.start
-    self.update_batch_time_record(full_session=full_session)
+  
