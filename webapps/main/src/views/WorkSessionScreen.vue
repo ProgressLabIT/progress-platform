@@ -301,12 +301,15 @@ export default {
     progress_value() {
       if ('parameters' in this.j) {
         const completed_batch_progress = this.j.qt_completed / this.j.qt_planned
-        const current_batch_total_value = this.production_batch / this.j.qt_planned
-        const step_progress_value = current_batch_total_value / this.j.step_sequence.length
-        const current_batch_current_value = step_progress_value * this.completed_steps_count
-        const total_progress = completed_batch_progress + current_batch_current_value
-
-        return Math.floor( 100 * total_progress )
+        
+        if (this.j.parameters.step_check != 'none') {
+          const current_batch_total_value = this.production_batch / this.j.qt_planned
+          const step_progress_value = current_batch_total_value / this.j.step_sequence.length
+          const current_batch_current_value = step_progress_value * this.completed_steps_count
+          const total_progress = completed_batch_progress + current_batch_current_value
+          return Math.floor( 100 * total_progress )
+        }
+        else return Math.floor(100 * completed_batch_progress)
       }
       else return 0
 
@@ -408,7 +411,7 @@ export default {
           batch_qt: this.production_batch,
           last_batch: this.current_batch_is_last
         })
-        if (this.current_batch_is_last) this.exitJob()
+        if (this.j.qt_completed >= this.j.qt_planned) this.exitJob()
         else if (this.j.parameters.step_check != 'none') this.goToStep(0)
       }
     },
