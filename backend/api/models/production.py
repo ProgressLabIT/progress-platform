@@ -132,6 +132,8 @@ class Job(FlexModel):
 
   assigned_to: Union[str, Operator] = None
 
+  step_sequence: List[StepWithMediaInfo] = []
+
   # @validator('progress')
   # def between_0_and_100_percent(cls, v):
   #   if v < 0 or v > 1:
@@ -182,19 +184,14 @@ class WorkOrderDetails(WorkOrderFull):
   jobs: List[Job]
 
 
-class JobWithProcedure(Job):
-  step_sequence: List[StepWithMediaInfo] = []
-
-
-
 class OperatorAssignments(FlexModel):
   operator: Operator
-  assigned_jobs: List[Job] = None
+  assigned_jobs: List[Job] = []
 
 
 class AssignmentsResponse(FlexModel):
-  assigned_jobs_by_operator: List[OperatorAssignments] = None
-  unassigned_jobs: List[Job] = None
+  assigned_jobs_by_operator: List[OperatorAssignments] = []
+  unassigned_jobs: List[Job] = []
 
 
 class QueueType(Enum):
