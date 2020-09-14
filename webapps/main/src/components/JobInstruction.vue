@@ -3,11 +3,40 @@
     continuous
     :show-arrows="false"
     v-model="step_image_index">
+
+    <!-- STEP TITLE AND DESCRIPTION -->
+    <v-btn absolute right top fab small
+      @click="show_details = !show_details"
+      :color="show_details ? null : $theme.blue"
+      style="z-index: 10"
+      class="mt-12">
+      <v-icon>
+        {{ show_details ? 'close' : 'mdi-information-variant' }}
+      </v-icon>
+    </v-btn>
+            
+    <v-sheet v-show="show_details" style="position: absolute; width: 100%; z-index: 9" color="rgba(0,0,0,.7)">  
+      <v-container>
+        <v-row justify="space-between" no-gutters>
+          <v-col cols="11">
+            <v-card-title class="display highlight px-0 pt-0">
+              {{ step.title }}
+            </v-card-title>
+            <v-card-subtitle 
+              class="px-0 pb-1">
+              {{ step.description }}
+            </v-card-subtitle>
+          </v-col>
+        </v-row>    
+      </v-container>
+    </v-sheet>
+
     <v-window-item 
       v-for="(img, index) in step_media" 
       :key="index" 
       eager
-      class="no-transition">
+      class="no-transition"
+      style="position: absolute; width: 100%">
       <v-img eager 
         :src="displayed_image_src" 
         :height="height">
@@ -16,32 +45,7 @@
         </template>
 
         <div class="d-flex flex-column fill">
-          <!-- STEP TITLE AND DESCRIPTION -->
-          <v-btn absolute right top fab small
-            @click="show_details = !show_details"
-            :color="show_details ? null : $theme.blue"
-            class="mt-12">
-            <v-icon>
-              {{ show_details ? 'close' : 'mdi-information-variant' }}
-            </v-icon>
-          </v-btn>
-          
-          <v-sheet v-show="show_details" color="rgba(0,0,0,.7)">  
-            <v-container>
-              <v-row justify="space-between" no-gutters>
-                <v-col cols="11">
-                  <v-card-title class="display highlight px-0 pt-0">
-                    {{ step.title }}
-                  </v-card-title>
-                  <v-card-subtitle 
-                    class="px-0 pb-1">
-                    {{ step.description }}
-                  </v-card-subtitle>
-                </v-col>
-              </v-row>    
-            </v-container>
-          </v-sheet>
-          
+                    
           <!-- INVISIBLE IMAGE SWITCH CONTROLS -->
           <v-row no-gutters
             v-if="step_media.length > 1"
