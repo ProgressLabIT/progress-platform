@@ -123,6 +123,16 @@ export default {
     },
 
     updateParam(param_key, value) {
+
+      if (param_key === 'step_check') {
+        if (!this.phase_data.steps.length && value != 'none') {
+          window.alert('Aggiungi dei passi alla procedura per modificare il valore di questo parametro')
+          this.expansion_map = null
+          return
+        }
+      }
+
+
       this.$store.commit('UPDATE_PHASE_PARAMS', {
         phase_index: this.current_phase,
         param: param_key,
