@@ -186,7 +186,7 @@ class WorkOrderDetails(WorkOrderFull):
 
 class OperatorAssignments(FlexModel):
   operator: Operator
-  assigned_jobs: List[Job] = []
+  assigned_jobs: List[Job] = None
 
 
 class AssignmentsResponse(FlexModel):
