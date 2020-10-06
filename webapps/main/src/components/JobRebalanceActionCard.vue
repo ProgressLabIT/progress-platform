@@ -200,7 +200,8 @@ export default {
         'product_key',
         'product_code',
         'product_description',
-        'parameters'
+        'parameters',
+        'step_sequence'
       ],
       job_template: {}
     }
