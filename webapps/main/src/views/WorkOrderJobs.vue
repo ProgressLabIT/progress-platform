@@ -259,6 +259,7 @@
                 hide-details
                 reverse
                 type="number"
+                :min="min_allowable_wo_qt"
                 :value="wo_data.qt_planned"
                 @input="new_qt = $event">
               </v-text-field>
@@ -272,7 +273,7 @@
             </v-btn>
             <v-btn small text v-if="new_qt != wo_data.qt_planned"
               :color="$theme.blue"
-              @click="rebalanceJobQtOrSave">
+              @click="show_job_qt_rebalance = true">
               SALVA
             </v-btn>
           </v-card-actions>    
@@ -379,6 +380,10 @@ export default {
           return array 
         }, [])
     },
+
+    min_allowable_wo_qt() {
+      return Math.max(this.wo_data.jobs.map(j => j.qt_completed))
+    }
   },
 
   methods: {
@@ -408,14 +413,6 @@ export default {
       setTimeout(() => {
         this.$refs.new_qt.internalValue = this.wo_data.qt_planned
       }, 500)
-    },
-
-    rebalanceJobQtOrSave() {
-      const wo_has_parallel_jobs = this.wo_data.jobs.length > this.phase_data.length
-      if (wo_has_parallel_jobs) {
-        this.show_job_qt_rebalance = true
-      }
-      else this.saveWorkOrderUpdate()
     },
 
     async saveWorkOrderUpdate() {
