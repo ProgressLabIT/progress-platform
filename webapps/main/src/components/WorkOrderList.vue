@@ -70,8 +70,6 @@ import Sortable from 'sortablejs'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import { throttle as _throttle } from 'lodash'
 
-// import wo_list from '@/dummy_data/WorkOrders.json'
-
 export default {
 
   name: 'WorkOrderList',
@@ -105,7 +103,6 @@ export default {
         { value: 'qt_completed', text: 'QC', align: 'end'},
         { value: 'qt_planned', text: 'QP', align: 'end'},
         { value: 'qt_remaining', text: 'QR', align: 'end'},
-        // { value: 'active_phases', text: 'FASE'},
         { value: 'due_by', text: 'ENTRO', sort: this.sortDate}
       ],
       table_height: '85vh',
@@ -137,14 +134,11 @@ export default {
         */
         let filter_match_map = []
 
-        for (const [filter, value] of Object.entries(this.filters)) {
-        // for (const filter of Object.keys(this.filters)) {
-          
+        for (const [filter, value] of Object.entries(this.filters)) {          
           // by default show wo in the list
           let match = true
           
           switch (filter) {
-
             // Perform text search in the defined fields
             case 'search_string':
               match = multiMatch(this.filters.search_string, wo, search_fields)
@@ -196,7 +190,6 @@ export default {
   },
 
   methods: {
-    // Temporarily unused, until on_time data will be available
     woBarColor(wo) {
       if (wo.active === false) return this.$theme.grey
       else return this.$theme.blue

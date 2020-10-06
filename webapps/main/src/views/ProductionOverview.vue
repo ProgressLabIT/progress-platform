@@ -202,11 +202,6 @@ export default {
 
   name: 'ProductionOverview',
 
-  // components: {
-  //   WorkOrderList,
-  //   JobList
-  // },
-
   data () {
     return {
       // content_height: 0,
@@ -304,13 +299,14 @@ export default {
     this.$store.dispatch("loadDepartments")
     this.$store.dispatch("loadUsers")
     this.$store.dispatch("loadWorkOrders")
+    this.$store.dispatch("loadJobAssignments")
   },
 
   created() {
     this.polling_instance = setInterval(() => {
       this.$store.dispatch("updateWorkOrdersProgress")
       this.$store.dispatch("loadJobAssignments")
-    }, 10000)
+    }, 5000)
   },
 
   beforeDestroy() {
