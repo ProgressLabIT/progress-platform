@@ -294,7 +294,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
       if action == 'remove':
         tx.aql.execute(
           Queries.REMOVE_JOB_FROM_QUEUE, 
-          bind_vars=dict(job_key=job_key)
+          bind_vars=dict(job_key=job_key, target_key=target_key)
         )
 
       if action == 'add':

@@ -132,12 +132,8 @@ class Queries:
   """
 
   REMOVE_JOB_FROM_QUEUE = """
-    FOR j IN Job
-    FILTER j._key == @job_key
-    LET assignee = j.assigned_to
-    
     FOR q IN Queue
-    FILTER q.subqueue_target_key == assignee
+    FILTER q.subqueue_target_key == @target_key
     UPDATE q WITH { jobs: REMOVE_VALUE(q.jobs, @job_key) } in Queue
   """
 
