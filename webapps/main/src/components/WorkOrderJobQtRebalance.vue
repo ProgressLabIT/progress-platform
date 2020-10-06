@@ -10,7 +10,7 @@
       </v-card-title>
 
       <v-card-text class="mt-6">
-        <div v-for="(phase, index) in phases_to_rebalance" :key="phase.phase_key">
+        <div v-for="(phase, index) in phase_data" :key="phase.phase_key">
           <v-divider v-if="index != 0"></v-divider>
 
           <!-- Phase header -->
@@ -109,14 +109,14 @@ export default {
   },
 
   computed: {
-    phases_to_rebalance() {
-      return this.phase_data.filter( p => p.jobs.length > 1 )
-    },
+    // phases_to_rebalance() {
+    //   return this.phase_data.filter( p => p.jobs.length > 1 )
+    // },
 
     phases_delta() {
       if (this.job_updates != {}) {
         const self = this
-        const delta_map = this.phases_to_rebalance.reduce( (obj, phase) => {
+        const delta_map = this.phase_data.reduce( (obj, phase) => {
           const phase_temp_remaining = phase.jobs.reduce( (sum, job) => sum + self.job_updates[job._key].new_remaining, 0)
           obj[phase.phase_key] = self.new_wo_qt - (phase.qt_completed + phase_temp_remaining)
           return obj
@@ -162,7 +162,7 @@ export default {
   },
 
   created() {
-    this.job_updates = this.phases_to_rebalance.reduce( (obj, phase) => {
+    this.job_updates = this.phase_data.reduce( (obj, phase) => {
       phase.jobs.forEach( j => {
         obj[j._key] = {
           new_remaining: j.qt_planned - j.qt_completed,
