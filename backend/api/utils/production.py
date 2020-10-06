@@ -45,15 +45,13 @@ class Queries:
       LET active = TO_BOOL(COUNT(FOR j IN jobs FILTER j.active RETURN 1))
 
       // calculate overall progress
-
-      LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_key )
       LET progress = FLOOR(AVERAGE(
-        FOR phase IN phases 
-          RETURN AVERAGE(
+        FOR phase IN wo.phase_sequence
+          RETURN SUM(
             FOR j IN jobs
             FILTER j.phase_key == phase
-            RETURN j.progress
-          )
+            RETURN j.progress * j.qt_planned
+          ) / wo.qt_planned
       ))
 
       // Return enriched wo data
@@ -73,26 +71,26 @@ class Queries:
 
     FOR q IN Queue
     FILTER q.type != 's' && q.site_key == '0' && LENGTH(q.jobs)
-        LET jobs = (
-            FOR j IN q.jobs
-            LET wo_key = DOCUMENT('Job', j).wo_key
-            RETURN { 
-                job_key: j, 
-                wo_key, 
-                wo_in_queue: POSITION(wo_queue, wo_key)
-            }
-        )
-            
-            
-        LET new_queue = REMOVE_VALUE(
-            FLATTEN( 
-                FOR wo_key IN wo_queue
-                LET wo_job = (FOR j IN jobs FILTER j.wo_key == wo_key RETURN j.job_key)
-                RETURN wo_job
-            ), null
-        )
-        
-        UPDATE q WITH { jobs: new_queue } IN Queue
+      LET jobs = (
+        FOR j IN q.jobs
+        LET wo_key = DOCUMENT('Job', j).wo_key
+        RETURN { 
+            job_key: j, 
+            wo_key, 
+            wo_in_queue: POSITION(wo_queue, wo_key)
+        }
+      )
+          
+          
+      LET new_queue = REMOVE_VALUE(
+        FLATTEN( 
+          FOR wo_key IN wo_queue
+          LET wo_job = (FOR j IN jobs FILTER j.wo_key == wo_key RETURN j.job_key)
+          RETURN wo_job
+        ), null
+      )
+      
+      UPDATE q WITH { jobs: new_queue } IN Queue
   """
 
   GET_ASSIGNMENT_LIST = """

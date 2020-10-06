@@ -49,6 +49,7 @@ class Event:
     
     # Apply updates to global application state
     getattr(self, self.action)()
+    self.update_work_order()
     
     # Save event as is
     self.tx.collection('Event').insert(self.info)
@@ -236,6 +237,12 @@ class Event:
     wo_data_out = WorkOrderFull(**wo_data)
     return wo_data_out
 
+
+  def update_work_order(self):
+    self.tx.aql.execute(
+      TraceabilityQueries.UPDATE_WORK_ORDER, 
+      bind_vars=dict(wo_key=self.info.work_order_key)
+    )
 
   ######################################################################
   # EVENT ACTIONS
