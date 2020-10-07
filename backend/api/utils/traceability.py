@@ -91,6 +91,30 @@ class Queries:
     UPDATE wo WITH { progress, active, qt_completed } IN WorkOrder
   """ 
 
+  UPDATE_JOB_PROGRESS = """
+    LET j = DOCUMENT(Job, @job_key)
+    LET should_count_step_progress = j.parameters.step_check && TO_BOOL(j.current_batch)
+
+    LET step_progress = !should_count_step_progress ? 0 : FIRST(
+      LET default_batch = j.parameters.production_batch_qt
+      LET remaining_qt = j.qt_planned - j.qt_completed
+      LET batch_qt = MIN([default_batch, remaining_qt])
+      LET current_batch_total_value = batch_qt / j.qt_planned
+      LET step_progress_value = current_batch_total_value / LENGTH(j.step_sequence)
+      LET step_done_count = SUM(
+        FOR s IN StepExecutionData
+        FILTER s.batch_key == j.current_batch && s.status == 'done'
+        RETURN 1
+      )
+      RETURN step_progress_value * step_done_count
+    )
+
+    LET batch_progress = j.qt_completed / j.qt_planned
+    LET progress = ROUND(100*(batch_progress + step_progress))
+
+    UPDATE j WITH { progress } in Job
+  """
+
   NO_MORE_OPEN_JOBS_FOR_WORK_ORDER = """
     LET any_open_job = TO_BOOL(SUM(
       FOR j IN Job
@@ -132,6 +156,10 @@ def get_job_progress(job_key, db):
     progress += step_progress_value * step_done_count
 
   return round(progress*100)
+
+
+def update_job_progress(db, job_key):
+  db.aql.execute(Queries.UPDATE_JOB_PROGRESS, bind_vars=dict(job_key=job_key))
 
 
 

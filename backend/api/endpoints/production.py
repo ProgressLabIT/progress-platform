@@ -12,6 +12,7 @@ from utils.api import APIResponse
 from utils.db import db
 from utils.process import search_step_media
 from utils.production import Queries
+from utils.traceability import update_job_progress
 
 
 router = APIRouter()
@@ -348,9 +349,13 @@ async def update_jobs(job_updates:List[JobUpdate]):
           )
 
       elif u.action == JobUpdateType.UPDATE:
+
         db_resp = job_db.update(u.data, return_new=True, return_old=True)
         new_job_data = db_resp['new']
         old_job_data = db_resp['old']
+
+        if 'qt_planned' in u.data:
+          update_job_progress(db=tx, job_key=db_resp['_key'])
 
         if 'assigned_to' in u.data:  
           if 'assigned_to' in old_job_data:
