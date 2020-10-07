@@ -351,7 +351,7 @@ export default {
         // const total_released = jobs.reduce( (sum, job) => sum + job.qt_released, 0 )
         const total_remaining = jobs.reduce( (sum, job) => sum + job.qt_planned - job.qt_completed, 0 )
         const total_progress = Math.floor(
-          jobs.reduce( (sum, job) => sum + job.progress, 0) / jobs.length
+          jobs.reduce( (sum, job) => sum + job.progress * job.qt_planned, 0) / this.wo_data.qt_planned
         )
         const active = jobs.reduce( (count, job) => count + job.active, 0)
         const editing = jobs.some( j => this.selected_jobs.includes(j._key) )
