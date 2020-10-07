@@ -65,7 +65,7 @@ class Queries:
     LET jobs = (FOR j IN Job FILTER j.wo_key == @wo_key RETURN j)
 
     // Update progress
-    LET progress = FLOOR(AVERAGE(
+    LET progress = ROUND(AVERAGE(
       FOR phase IN wo.phase_sequence
       RETURN SUM(
         FOR j IN jobs

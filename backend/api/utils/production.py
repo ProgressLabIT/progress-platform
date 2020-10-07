@@ -17,16 +17,8 @@ class Queries:
       LET qt_remaining = wo.qt_planned - wo.qt_completed
       LET jobs = ( FOR j IN Job FILTER !j.trash && j.wo_key == wo._key RETURN j)
       LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_key )
-      LET progress = FLOOR(AVERAGE(
-        FOR phase IN phases 
-          RETURN AVERAGE(
-            FOR j IN jobs
-            FILTER j.phase_key == phase
-            RETURN j.progress
-          )
-      ))
       LET active = TO_BOOL(SUM(FOR j IN jobs FILTER j.active RETURN 1))
-      RETURN MERGE ([wo, { qt_remaining: qt_remaining, active: active, progress: progress }])  
+      RETURN MERGE ([wo, { qt_remaining: qt_remaining, active: active }])  
   """
 
   GET_WORK_ORDER_DATA = """
@@ -41,26 +33,8 @@ class Queries:
         RETURN MERGE( j, { assigned_to: operator } )
       )
 
-      // check if any job is active
-      LET active = TO_BOOL(COUNT(FOR j IN jobs FILTER j.active RETURN 1))
-
-      // calculate overall progress
-      LET progress = FLOOR(AVERAGE(
-        FOR phase IN wo.phase_sequence
-          RETURN SUM(
-            FOR j IN jobs
-            FILTER j.phase_key == phase
-            RETURN j.progress * j.qt_planned
-          ) / wo.qt_planned
-      ))
-
       // Return enriched wo data
-      RETURN MERGE ([
-        wo, { 
-        jobs: jobs, 
-        active: active,
-        progress: progress
-      }])
+      RETURN MERGE(wo, { jobs })
   """
 
 
