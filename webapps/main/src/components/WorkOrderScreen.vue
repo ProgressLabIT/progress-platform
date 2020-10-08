@@ -82,7 +82,8 @@ export default {
         }
       ],
       vuex_ready: false,
-      column_height: '80vh'
+      column_height: '80vh',
+      polling_instance: undefined
     }
   },
 
@@ -103,16 +104,23 @@ export default {
         this.$router.push({ name: this.$route.query.back_to })
       // }
     },
+    get_wo_data() {
+      axios.all([
+        this.$store.dispatch('loadWorkOrderData', this.wo_key),
+        this.$store.dispatch('loadUsers')
+      ])
+      .then(() => this.vuex_ready = true)
+    }
   },
 
   created() {
-    axios.all([
-      this.$store.dispatch('loadWorkOrderData', this.wo_key),
-      this.$store.dispatch('loadUsers')
-    ])
-    .then(() => this.vuex_ready = true)
-    
+    this.get_wo_data()
+    this.polling_instance = setInterval(this.get_wo_data, 3000)
   },
+
+  beforeDestroy() {
+    clearInterval(this.polling_instance)
+  }
 }
 </script>
 
