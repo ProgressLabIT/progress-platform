@@ -82,6 +82,7 @@
                 <template v-if="header.value === 'phase_alias'">
                   <v-checkbox 
                     :color="$theme.blue"
+                    :disabled="job.active"
                     :value="job_select_model[job._key]"
                     @change="updateSelectedJobData(job, $event)">
                   </v-checkbox>
