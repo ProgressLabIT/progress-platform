@@ -224,7 +224,10 @@ class Event:
     
     self.tx.aql.execute(
       ProductionQueries.REMOVE_JOB_FROM_QUEUE, 
-      bind_vars=dict(job_key=self.info.job_key)
+      bind_vars=dict(
+        job_key=self.info.job_key,
+        target_key=self.info.user_key
+      )
     )
 
 
