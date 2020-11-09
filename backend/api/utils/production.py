@@ -17,16 +17,8 @@ class Queries:
       LET qt_remaining = wo.qt_planned - wo.qt_completed
       LET jobs = ( FOR j IN Job FILTER !j.trash && j.wo_key == wo._key RETURN j)
       LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_key )
-      LET progress = FLOOR(AVERAGE(
-        FOR phase IN phases 
-          RETURN AVERAGE(
-            FOR j IN jobs
-            FILTER j.phase_key == phase
-            RETURN j.progress
-          )
-      ))
       LET active = TO_BOOL(SUM(FOR j IN jobs FILTER j.active RETURN 1))
-      RETURN MERGE ([wo, { qt_remaining: qt_remaining, active: active, progress: progress }])  
+      RETURN MERGE ([wo, { qt_remaining: qt_remaining, active: active }])  
   """
 
   GET_WORK_ORDER_DATA = """
@@ -41,28 +33,8 @@ class Queries:
         RETURN MERGE( j, { assigned_to: operator } )
       )
 
-      // check if any job is active
-      LET active = TO_BOOL(COUNT(FOR j IN jobs FILTER j.active RETURN 1))
-
-      // calculate overall progress
-
-      LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_key )
-      LET progress = FLOOR(AVERAGE(
-        FOR phase IN phases 
-          RETURN AVERAGE(
-            FOR j IN jobs
-            FILTER j.phase_key == phase
-            RETURN j.progress
-          )
-      ))
-
       // Return enriched wo data
-      RETURN MERGE ([
-        wo, { 
-        jobs: jobs, 
-        active: active,
-        progress: progress
-      }])
+      RETURN MERGE(wo, { jobs })
   """
 
 
@@ -73,26 +45,26 @@ class Queries:
 
     FOR q IN Queue
     FILTER q.type != 's' && q.site_key == '0' && LENGTH(q.jobs)
-        LET jobs = (
-            FOR j IN q.jobs
-            LET wo_key = DOCUMENT('Job', j).wo_key
-            RETURN { 
-                job_key: j, 
-                wo_key, 
-                wo_in_queue: POSITION(wo_queue, wo_key)
-            }
-        )
-            
-            
-        LET new_queue = REMOVE_VALUE(
-            FLATTEN( 
-                FOR wo_key IN wo_queue
-                LET wo_job = (FOR j IN jobs FILTER j.wo_key == wo_key RETURN j.job_key)
-                RETURN wo_job
-            ), null
-        )
-        
-        UPDATE q WITH { jobs: new_queue } IN Queue
+      LET jobs = (
+        FOR j IN q.jobs
+        LET wo_key = DOCUMENT('Job', j).wo_key
+        RETURN { 
+            job_key: j, 
+            wo_key, 
+            wo_in_queue: POSITION(wo_queue, wo_key)
+        }
+      )
+          
+          
+      LET new_queue = REMOVE_VALUE(
+        FLATTEN( 
+          FOR wo_key IN wo_queue
+          LET wo_job = (FOR j IN jobs FILTER j.wo_key == wo_key RETURN j.job_key)
+          RETURN wo_job
+        ), null
+      )
+      
+      UPDATE q WITH { jobs: new_queue } IN Queue
   """
 
   GET_ASSIGNMENT_LIST = """
@@ -134,12 +106,8 @@ class Queries:
   """
 
   REMOVE_JOB_FROM_QUEUE = """
-    FOR j IN Job
-    FILTER j._key == @job_key
-    LET assignee = j.assigned_to
-    
     FOR q IN Queue
-    FILTER q.subqueue_target_key == assignee
+    FILTER q.subqueue_target_key == @target_key
     UPDATE q WITH { jobs: REMOVE_VALUE(q.jobs, @job_key) } in Queue
   """
 
@@ -149,4 +117,10 @@ class Queries:
     
     // the third parameter = true makes sure the job is added only if not already present
     UPDATE q WITH { jobs: PUSH(q.jobs, @job_key, true) } in Queue
+  """
+
+  REMOVE_WORK_ORDER_FROM_QUEUE = """
+    FOR q IN Queue
+    FILTER q.type == 's' && q.site_key == '0'
+    UPDATE q WITH { work_orders: REMOVE_VALUE(q.work_orders, @wo_key) } in Queue
   """
