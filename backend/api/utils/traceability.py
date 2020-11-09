@@ -88,8 +88,15 @@ class Queries:
       RETURN j.qt_released
     )
 
-    UPDATE wo WITH { progress, active, qt_completed } IN WorkOrder
+    LET status = qt_completed == wo.qt_planned ? 'closed' : 'started'
+
+    UPDATE wo WITH { progress, active, qt_completed, status } IN WorkOrder
+
+    // Return updated work order to allow further processing based on update
+    LET updated_wo = NEW
+    RETURN updated_wo
   """ 
+
 
   UPDATE_JOB_PROGRESS = """
     LET j = DOCUMENT(Job, @job_key)

@@ -242,10 +242,16 @@ class Event:
 
 
   def update_work_order(self):
-    self.tx.aql.execute(
+    updated_wo = self.tx.aql.execute(
       TraceabilityQueries.UPDATE_WORK_ORDER, 
       bind_vars=dict(wo_key=self.info.work_order_key)
-    )
+    ).next()
+
+    if updated_wo['status'] == WorkStatus.CLOSED.value:
+      self.tx.aql.execute(
+        ProductionQueries.REMOVE_WORK_ORDER_FROM_QUEUE,
+        bind_vars=dict(wo_key=self.info.work_order_key)
+      )
 
   ######################################################################
   # EVENT ACTIONS

@@ -118,3 +118,9 @@ class Queries:
     // the third parameter = true makes sure the job is added only if not already present
     UPDATE q WITH { jobs: PUSH(q.jobs, @job_key, true) } in Queue
   """
+
+  REMOVE_WORK_ORDER_FROM_QUEUE = """
+    FOR q IN Queue
+    FILTER q.type == 's' && q.site_key == '0'
+    UPDATE q WITH { work_orders: REMOVE_VALUE(q.work_orders, @wo_key) } in Queue
+  """
