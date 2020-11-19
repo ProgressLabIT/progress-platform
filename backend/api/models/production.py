@@ -102,7 +102,6 @@ class Job(FlexModel):
   wo_line: int
   phase_key: str
   phase_alias: str
-  first_phase: bool = None
   product_key: str
   product_code: str
   product_description: str
@@ -110,6 +109,9 @@ class Job(FlexModel):
 
   parameters: PhaseParameters = None
   
+  first_phase: bool = None
+  input_available: bool = None
+
   stage: WorkStatus = WorkStatus.CREATED
   active: bool = False
   critical: bool = False

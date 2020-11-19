@@ -99,21 +99,22 @@ class BatchTimeRecord(FlexModel):
 
 
 
-class Serial(ArangoDocument):
-  wo_key: str
-  counter: int
-  product_key: str
-  start: datetime = None
-  end: datetime = None
-  accept: bool = True
-  batches: List[str]
-  value: float = None
+# class Serial(ArangoDocument):
+#   wo_key: str
+#   counter: int
+#   product_key: str
+#   start: datetime = None
+#   end: datetime = None
+#   accept: bool = True
+#   batches: List[str]
+#   value: float = None
 
 
 class WIP(ArangoEdge):
   batch_key: str
   wo_key: str
   product_key: str
-  value: float = None
-  serial_numbers: List[str] = None
+  value: float = 0
+  quantity: float = 0
+  # serial_numbers: List[str] = None
 

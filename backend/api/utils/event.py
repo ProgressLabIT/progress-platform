@@ -18,7 +18,7 @@ class Event:
     'Event', 
     'Job', 
     'Queue',
-    'Serial',
+    # 'Serial',
     'StepExecutionData', 
     'WIP',
     'WorkOrder',
@@ -105,43 +105,43 @@ class Event:
   # Serial
   # ....................................................................
 
-  def create_serial(self, counter, batch_key):
-    new_serial = Serial(
-      start=self.info.timestamp,
-      wo_key=self.info.work_order_key,
-      counter=counter,
-      product_key=self.info.product_key,
-      batches=[batch_key]
-    )
-    new_serial_key = self.tx.collection('Serial').insert(new_serial)['_key']
+  # def create_serial(self, counter, batch_key):
+  #   new_serial = Serial(
+  #     start=self.info.timestamp,
+  #     wo_key=self.info.work_order_key,
+  #     counter=counter,
+  #     product_key=self.info.product_key,
+  #     batches=[batch_key]
+  #   )
+  #   new_serial_key = self.tx.collection('Serial').insert(new_serial)['_key']
 
-    return new_serial_key
+  #   return new_serial_key
 
 
-  def create_batch_serial_records(self):
-    if not self.job:
-      self.job = self.get_job_data()
+  # def create_batch_serial_records(self):
+  #   if not self.job:
+  #     self.job = self.get_job_data()
 
-    default_batch = self.job.parameters.production_batch_qt
-    remaining_qt = self.job.qt_planned - self.job.qt_completed
-    batch_qt = min([default_batch, remaining_qt])
+  #   default_batch = self.job.parameters.production_batch_qt
+  #   remaining_qt = self.job.qt_planned - self.job.qt_completed
+  #   batch_qt = min([default_batch, remaining_qt])
 
-    next_serial = self.tx.aql.execute(
-      TraceabilityQueries.GET_NEXT_SERIAL_NUMBER_FOR_WORK_ORDER, 
-      bind_vars=dict(wo_key=self.info.work_order_key)
-    ).next()
+  #   next_serial = self.tx.aql.execute(
+  #     TraceabilityQueries.GET_NEXT_SERIAL_NUMBER_FOR_WORK_ORDER, 
+  #     bind_vars=dict(wo_key=self.info.work_order_key)
+  #   ).next()
 
-    batch_serials = range(next_serial, next_serial + batch_qt)
+  #   batch_serials = range(next_serial, next_serial + batch_qt)
 
-    serial_keys = [
-      self.create_serial(counter=i, batch_key=self.info.current_batch_key) 
-      for i in batch_serials
-    ]
+  #   serial_keys = [
+  #     self.create_serial(counter=i, batch_key=self.info.current_batch_key) 
+  #     for i in batch_serials
+  #   ]
 
-    self.tx.collection('Batch').update(dict(
-      _key=self.info.current_batch_key, 
-      serial_numbers=serial_keys
-    ))
+  #   self.tx.collection('Batch').update(dict(
+  #     _key=self.info.current_batch_key, 
+  #     serial_numbers=serial_keys
+  #   ))
 
 
   
@@ -150,6 +150,13 @@ class Event:
   # ....................................................................
 
   def create_batch(self):
+
+    self.job = self.get_job_data()
+
+    # Book wip from buffer
+    if not self.job.first_phase:
+      self.book_wip()
+
     new_batch_in = Batch(
       job_key=self.info.job_key,
       start=self.info.timestamp,
@@ -159,11 +166,6 @@ class Event:
 
     batch = Batch(**new_batch_out)
     self.info.current_batch_key = batch.key
-
-    self.job = self.get_job_data()
-
-    if self.job.create_serial:
-      self.create_batch_serial_records()
 
     return batch
 
@@ -229,20 +231,90 @@ class Event:
   # WIP
   # ....................................................................
 
-  def create_wip_record(self):
+  def declare_wip(self):
+    if not self.job:
+      self.job = self.get_job_data()
+
+    if not self.job.first_phase:
+      wip_match_filter=dict(_to=f'Job/{self.info.job_key}')
+      self.tx.collection('WIP').delete_match(wip_match_filter)
+
     new_wip = WIP(
       _from=f'Phase/{self.info.phase_key}',
       _to=f'Phase/{self.info.next_phase}',
       batch_key=self.info.completed_batch_key,
       wo_key=self.info.work_order_key,
       product_key=self.info.product_key,
-      serial_numbers=self.completed_batch.serial_numbers
+      quantity=self.info.completed_batch_qt
     )
 
-    self.tx.collection('WIP').insert(new_wip)
+    self.tx.collection('WIP').insert(new_wip)    
 
 
-  
+  def book_wip(self):
+    if not self.job:
+      self.job = self.get_job_data()
+
+    # batches have no predefined qt, this is so that in the future qt may be user defined if necessary. However to monitor the WIP 
+    booking_qt = min([
+      self.job.qt_planned - self.job.qt_completed, 
+      self.job.parameters.production_batch_qt
+    ])
+
+    available_batches_cursor = self.tx.aql.execute(
+      TraceabilityQueries.RETRIEVE_AVAILABLE_WIP,
+      bind_vars=dict(phase=self.info.phase_key)
+    )
+
+    available_batches = [WIP(**b) for b in available_batches_cursor]
+
+    for b in available_batches:
+      if b.quantity <= booking_qt:
+        # Book entire batch for job
+        self.tx.collection('WIP').update(dict(_key=b.key, _to=f'Job/{self.info.job_key}'))
+        # Decrease booking quantity
+        booking_qt -= b.quantity
+        if not booking_qt:
+          break
+
+      else:
+        # Book only booking_qt
+        booking_percentage = booking_qt / b.quantity
+        self.tx.collection('WIP').update(dict(
+          _key=b.key, 
+          quantity=b.quantity - booking_qt, 
+          value=b.value * (1 - booking_percentage)
+        ))
+
+        # Add wip record with partially booked batch 
+        new_wip = WIP(
+          from_doc=b.from_doc,
+          to_doc=f'Job/{self.info.job_key}',
+          wo_key=b.wo_key, 
+          batch_key=b.batch_key,
+          product_key=b.product_key,
+          quantity=booking_qt, 
+          value=b.quantity * booking_percentage
+        )
+        self.tx.collection('WIP').insert(new_wip)
+
+        break
+
+
+  # def check_input_availability(self):
+  #   if not self.job:
+  #     self.job = self.get_job_data()
+
+  #   if not (self.job.first_phase or self.job.input_available):
+  #     status_code = 409
+  #     message = "Cannot start work session, not enough input material available."
+  #     response = dict(
+  #       status=status_code,
+  #       message=message,
+  #     )
+  #     raise HTTPException(status_code=status_code, detail=response)
+
+
   # ....................................................................
   # Job
   # ....................................................................
@@ -280,7 +352,6 @@ class Event:
     )
     self.tx.collection('Job').update(job_update)
 
-  # ....................................................................
 
   def close_job(self, completed_qt):
     # Close job
@@ -330,13 +401,13 @@ class Event:
   ######################################################################
 
   def start_job(self):
-    # Create new WorkSession and store _key in Event.info
-    self.work_session = self.create_work_session()
-    self.info.work_session_key = self.work_session.key
-
     # Create new batch and store _key in Event.info
     self.batch = self.create_batch()
     self.info.current_batch_key = self.batch.key 
+
+    # Create new WorkSession and store _key in Event.info
+    self.work_session = self.create_work_session()
+    self.info.work_session_key = self.work_session.key
 
     # Create batch timing record
     self.create_batch_time_record(
@@ -493,9 +564,7 @@ class Event:
 
     # Create new batch if there is a remaining quantity
     self.job = self.get_job_data()
-
     new_qt_completed = self.job.qt_completed + self.info.completed_batch_qt
-
     batch_is_last = new_qt_completed >= self.job.qt_planned
 
     if batch_is_last:
@@ -522,15 +591,26 @@ class Event:
       )
       self.tx.collection('Job').update(job_update, check_rev=False)
 
+    # Update input availability for jobs in this phase
+    self.tx.aql.execute(
+      TraceabilityQueries.UPDATE_INPUT_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase=self.info.phase_key)
+    )   
+
     # Release WIP
     self.info.next_phase = self.tx.aql.execute(
       TraceabilityQueries.GET_NEXT_PHASE_IN_WORK_ORDER,
       bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
     ).next()
     
-    # is next_phase is `none` then the job was for the last phase and should not generate a WIP record
+    # is next_phase generate a WIP record and update job input availability state
     if self.info.next_phase:
-      self.create_wip_record()
+      self.declare_wip()
+      self.tx.aql.execute(
+        TraceabilityQueries.UPDATE_INPUT_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
+        bind_vars=dict(wo_key=self.info.work_order_key, phase=self.info.next_phase)
+      )   
+
 
 
   
