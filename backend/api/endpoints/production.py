@@ -105,7 +105,7 @@ async def create_work_order(new_wo: WorkOrderNew):
     else:
       phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
 
-    create_serial = phase_key == wo_data.phase_sequence[0]
+    first_phase = phase_key == wo_data.phase_sequence[0]
 
     new_job_record = Job(
       wo_key = new_wo_record.key,
@@ -113,7 +113,7 @@ async def create_work_order(new_wo: WorkOrderNew):
       wo_line = new_wo_record.wo_line,
       phase_key = phase_key,
       phase_alias = phase.alias,
-      create_serial = create_serial,
+      first_phase = first_phase,
       product_key = wo_data.product_key,
       product_code = wo_data.product_code,
       product_description = wo_data.product_description,
