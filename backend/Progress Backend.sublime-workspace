@@ -4,8 +4,172 @@
 		"selected_items":
 		[
 			[
+				"created",
+				"created_by"
+			],
+			[
 				"new",
-				"new_phase_id"
+				"new_serial"
+			],
+			[
+				"serial",
+				"serial_records_data"
+			],
+			[
+				"current_ba",
+				"current_batch_key"
+			],
+			[
+				"current",
+				"current_batch"
+			],
+			[
+				"complete",
+				"complete_batch"
+			],
+			[
+				"comple",
+				"completed_batch_key"
+			],
+			[
+				"get_bat",
+				"get_current_batch"
+			],
+			[
+				"ser",
+				"serial_records_data"
+			],
+			[
+				"cur",
+				"current_batch"
+			],
+			[
+				"produ",
+				"product_key"
+			],
+			[
+				"next",
+				"next_phase"
+			],
+			[
+				"curren",
+				"current_phase"
+			],
+			[
+				"get",
+				"get_current_batch"
+			],
+			[
+				"Aran",
+				"ArangoEdge"
+			],
+			[
+				"create_abt",
+				"create_batch_serial_records"
+			],
+			[
+				"create",
+				"create_serial"
+			],
+			[
+				"create_batch_",
+				"create_batch_serial_records"
+			],
+			[
+				"batch",
+				"batch_qt"
+			],
+			[
+				"Tra",
+				"TraceabilityQueries"
+			],
+			[
+				"production",
+				"production_batch_qt"
+			],
+			[
+				"update",
+				"updated_wo_status"
+			],
+			[
+				"statu",
+				"status_code"
+			],
+			[
+				"updat",
+				"updated_wo_data"
+			],
+			[
+				"UPDATE",
+				"UPDATE_JOB_PROGRESS"
+			],
+			[
+				"old",
+				"old_job_data"
+			],
+			[
+				"db",
+				"db_resp"
+			],
+			[
+				"trasn",
+				"transaction_id"
+			],
+			[
+				"job",
+				"job_was_last"
+			],
+			[
+				"work_",
+				"work_order_key"
+			],
+			[
+				"phase",
+				"phase_weighted_average_progress"
+			],
+			[
+				"get_job",
+				"get_job_progress"
+			],
+			[
+				"step",
+				"step_done_count"
+			],
+			[
+				"get_",
+				"get_job_data"
+			],
+			[
+				"GET",
+				"GET_BATCH_STEP_DONE_COUNT"
+			],
+			[
+				"coll",
+				"collections"
+			],
+			[
+				"Work",
+				"WorkOrder"
+			],
+			[
+				"Bat",
+				"Batch"
+			],
+			[
+				"Batch",
+				"BatchTimeRecord"
+			],
+			[
+				"full",
+				"full_session"
+			],
+			[
+				"upda",
+				"update_batch_time_record"
+			],
+			[
+				"close",
+				"close_work_session"
 			],
 			[
 				"model",
@@ -22,10 +186,6 @@
 			[
 				"Star",
 				"STARTED"
-			],
-			[
-				"Work",
-				"WorkStatus"
 			],
 			[
 				"started",
@@ -48,64 +208,65 @@
 	"buffers":
 	[
 		{
-			"file": "/Users/Luca/dev/progress/backend/app/endpoints/production.py",
+			"file": "/Users/Luca/dev/progress/backend/api/models/production.py",
 			"settings":
 			{
-				"buffer_size": 10759,
+				"buffer_size": 5271,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/Users/Luca/dev/progress/backend/app/utils/production.py",
+			"file": "/Users/Luca/dev/progress/backend/api/utils/event.py",
 			"settings":
 			{
-				"buffer_size": 4219,
+				"buffer_size": 16141,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/Users/Luca/dev/progress/backend/app/utils/event.py",
+			"file": "/Users/Luca/dev/progress/backend/api/utils/traceability.py",
 			"settings":
 			{
-				"buffer_size": 13547,
+				"buffer_size": 5839,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/Users/Luca/dev/progress/backend/app/utils/db.py",
+			"file": "/Users/Luca/dev/progress/backend/api/models/traceability.py",
 			"settings":
 			{
-				"buffer_size": 602,
+				"buffer_size": 2456,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/Users/Luca/dev/progress/backend/app/models/traceability.py",
+			"contents": "# =======================\n# QUALITY\n# =======================\n\n# IssueType\n  _key: str\n  code: str (optional)\n  name: str\n  description: str\n  icon: str\n\n# Issue\n  type: str (indexed foreign key)\n  open: bool\n  critical: bool\n  status: enum(open, working_on, closed)\n  user_key: str\n  job_key: str\n  product_key: str\n  work_order_key: str\n  phase_key: str\n  operation_key: str\n  title: str\n  description: str\n  created_at: ISOdts\n    # When issues are created by an operator, \n    # they are associated directly with the \"active\" entities: \n    # job, product, work order line, operation\n    #\n    # When issues are created by a planner/manager, \n    # such relationships must be associated explicitly\n  closed_at: ISOdts\n  opened_for: duration\n\n# IssueUpdate\n  * issue: str (indexed foregin key)\n  * created_by_user_key: str\n  content: str\n  status_change: bool\n  status_before_update: enum(open, working_on, closed)\n  status_after_update: enum(open, working_on, closed)\n  created_at: ISOdts\n\n",
+			"file": "/Users/Luca/dev/progress/backend/Data Architecture/Quality.yaml",
+			"file_size": 939,
+			"file_write_time": 132424760181002110,
 			"settings":
 			{
-				"buffer_size": 2044,
-				"encoding": "UTF-8",
+				"buffer_size": 994,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/Users/Luca/dev/progress/backend/app/models/production.py",
+			"contents": "",
 			"settings":
 			{
-				"buffer_size": 5277,
-				"encoding": "UTF-8",
+				"buffer_size": 0,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/Users/Luca/dev/progress/backend/app/endpoints/process.py",
+			"file": "/Users/Luca/dev/progress/backend/Data Architecture/Traceability.yaml",
 			"settings":
 			{
-				"buffer_size": 9142,
+				"buffer_size": 2298,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
@@ -122,6 +283,14 @@
 		"last_filter": "",
 		"selected_items":
 		[
+			[
+				"json",
+				"Pretty JSON: Format and Sort JSON"
+			],
+			[
+				"pyth",
+				"Set Syntax: Python"
+			],
 			[
 				"isntal",
 				"Package Control: Install Package"
@@ -196,17 +365,49 @@
 	"expanded_folders":
 	[
 		"/Users/Luca/dev/progress/backend",
-		"/Users/Luca/dev/progress/backend/.pyenv",
-		"/Users/Luca/dev/progress/backend/app",
-		"/Users/Luca/dev/progress/backend/app/endpoints",
-		"/Users/Luca/dev/progress/backend/app/models",
-		"/Users/Luca/dev/progress/backend/app/utils",
+		"/Users/Luca/dev/progress/backend/api",
+		"/Users/Luca/dev/progress/backend/api/endpoints",
+		"/Users/Luca/dev/progress/backend/api/models",
+		"/Users/Luca/dev/progress/backend/api/utils",
 		"/Users/Luca/dev/progress/backend/Data Architecture",
-		"/Users/Luca/dev/progress/backend/DB Queries"
+		"/Users/Luca/dev/progress/backend/DB Queries",
+		"/Users/Luca/dev/progress/backend/scripts"
 	],
 	"file_history":
 	[
+		"/Users/luca/dev/progress/backend/api/endpoints/production.py",
+		"/Users/Luca/dev/progress/backend/api/models/traceability.py",
+		"/Users/Luca/dev/progress/backend/api/endpoints/production.py",
+		"/Users/Luca/dev/progress/backend/api/utils/traceability.py",
+		"/Users/Luca/dev/progress/backend/api/endpoints/traceability.py",
+		"/Users/Luca/dev/progress/backend/api/utils/event.py",
+		"/Users/Luca/dev/progress/backend/Data Architecture/Traceability.yaml",
+		"/Users/luca/dev/progress/backend/api/utils/event.py",
+		"/Users/Luca/dev/progress/backend/api/models/process.py",
+		"/Users/Luca/dev/progress/backend/api/models/production.py",
+		"/Users/luca/dev/progress/website_template/documentation/assets/plugins/elegant_font/images/SVG/social_spotify.svg",
+		"/Users/Luca/dev/progress/backend/api/utils/production.py",
+		"/Users/luca/dev/progress/backend/api/models/production.py",
+		"/Users/luca/dev/progress/website_nuxt/website_nuxt.sublime-project",
+		"/Users/Luca/dev/progress/backend/api/utils/config.py",
+		"/Users/Luca/dev/progress/backend/api/utils/process.py",
+		"/Users/Luca/dev/progress/backend/api/utils/product.py",
+		"/Users/Luca/dev/progress/backend/api/endpoints/process.py",
+		"/Users/luca/Library/Application Support/Sublime Text 3/Packages/Terminal/Default (OSX).sublime-keymap",
+		"/Users/luca/Library/Application Support/Sublime Text 3/Packages/User/Terminal.sublime-settings",
+		"/Users/luca/Library/Application Support/Sublime Text 3/Packages/Terminal/Terminal.sublime-settings",
+		"/Users/luca/Library/Application Support/Sublime Merge/Packages/User/Preferences.sublime-settings",
+		"/Users/Luca/dev/progress/backend/api/endpoints/product.py",
+		"/Users/luca/dev/progress/backend/scripts/reset_prod_and_trace_data.py",
+		"/Users/Luca/dev/progress/backend/api/models/product.py",
+		"/Users/Luca/dev/progress/backend/.gitignore",
+		"/Users/Luca/dev/progress/backend/app/models/traceability.py",
 		"/Users/Luca/dev/progress/backend/app/models/production.py",
+		"/Users/Luca/dev/progress/backend/app/utils/db.py",
+		"/Users/Luca/dev/progress/backend/app/endpoints/process.py",
+		"/Users/Luca/dev/progress/backend/app/utils/production.py",
+		"/Users/Luca/dev/progress/backend/app/utils/event.py",
+		"/Users/Luca/dev/progress/backend/app/endpoints/production.py",
 		"/Users/luca/dev/progress/frontend/src/lib/apiCall.js",
 		"/Users/luca/dev/progress/frontend/src/components/ProductScreen.vue",
 		"/Users/luca/dev/progress/frontend/src/router/libraryRoutes.js",
@@ -235,6 +436,8 @@
 		"height": 160.0,
 		"where_history":
 		[
+			"/Users/luca/dev/progress/backend/api",
+			"/Users/luca/dev/progress/backend"
 		]
 	},
 	"find_state":
@@ -242,14 +445,70 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			": _key",
+			"_key",
+			":",
+			"423",
+			"get_wo",
+			"wo_key",
+			"create_batch_se",
+			"create_batch_s",
+			"create_batch_se",
+			"create_se",
+			"start_job",
+			"batch_qt",
+			"create_bat",
+			"create_serial",
+			"_status",
+			"closed+",
+			"queue",
+			"remove",
+			"update_work_order",
+			"UPDATE_WORK_ORDER",
+			"UDPATE_WORK_ORDER",
+			"close",
+			"start",
+			"started",
+			"transa",
+			"close",
+			"release",
+			"GET_WORK_ORDER_DATA",
+			"get_job_progress",
+			"work_order",
+			"work_session\\(\\)",
+			"work_session",
+			"close",
+			"job_was_last",
+			"qt_completed",
+			"\\\\n",
+			"\\n",
+			"get_batch_step_done_count",
+			"TO_BOOL",
+			"active",
+			"get_job_step",
+			"current_step_was_last_to_do",
+			"get_job_step",
+			"get_batch_step_done",
+			"current_step_was_last_to_do",
+			"get_batch_step_done_count",
+			"get_job_step",
+			"get_job_data",
+			"progress",
+			"start",
+			"progress",
+			"ProcessUpdate",
+			"start",
+			"JobWithProcedure",
+			"complete_step",
 			"new_phase_id"
 		],
 		"highlight": true,
 		"in_selection": false,
 		"preserve_case": false,
-		"regex": false,
+		"regex": true,
 		"replace_history":
 		[
+			"\\n"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -265,170 +524,19 @@
 			[
 				{
 					"buffer": 0,
-					"file": "/Users/Luca/dev/progress/backend/app/endpoints/production.py",
+					"file": "/Users/Luca/dev/progress/backend/api/models/production.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 10759,
+						"buffer_size": 5271,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								8485,
-								8485
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": -1,
-								"modified": true,
-								"selection": true,
-								"status": -1,
-								"syntax": "python"
-							},
-							"syntax": "Packages/Python/Python.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "/Users/Luca/dev/progress/backend/app/utils/production.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 4219,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1948,
-								1948
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": -1,
-								"modified": true,
-								"selection": true,
-								"status": -1,
-								"syntax": "python"
-							},
-							"syntax": "Packages/Python/Python.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 908.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "/Users/Luca/dev/progress/backend/app/utils/event.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 13547,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								6653,
-								6653
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": -1,
-								"modified": true,
-								"selection": true,
-								"status": -1,
-								"syntax": "python"
-							},
-							"syntax": "Packages/Python/Python.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 8391.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "/Users/Luca/dev/progress/backend/app/utils/db.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 602,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								463,
-								463
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": -1,
-								"modified": true,
-								"selection": true,
-								"status": -1,
-								"syntax": "python"
-							},
-							"syntax": "Packages/Python/Python.sublime-syntax",
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "/Users/Luca/dev/progress/backend/app/models/traceability.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2044,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1645,
-								1645
+								2464,
+								2464
 							]
 						],
 						"settings":
@@ -453,20 +561,20 @@
 					"type": "text"
 				},
 				{
-					"buffer": 5,
-					"file": "/Users/Luca/dev/progress/backend/app/models/production.py",
+					"buffer": 1,
+					"file": "/Users/Luca/dev/progress/backend/api/utils/event.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 5277,
+						"buffer_size": 16141,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								572,
-								735
+								6819,
+								6819
 							]
 						],
 						"settings":
@@ -484,48 +592,240 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 204.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "/Users/Luca/dev/progress/backend/api/utils/traceability.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5839,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4577,
+								4577
+							]
+						],
+						"settings":
+						{
+							"WordCount":
+							{
+								"changes": -1,
+								"modified": true,
+								"selection": true,
+								"status": -1,
+								"syntax": "python"
+							},
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/Users/Luca/dev/progress/backend/api/models/traceability.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2456,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								878,
+								874
+							]
+						],
+						"settings":
+						{
+							"WordCount":
+							{
+								"changes": -1,
+								"modified": true,
+								"selection": true,
+								"status": -1,
+								"syntax": "python"
+							},
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "/Users/Luca/dev/progress/backend/api/utils/event.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 16141,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								268,
+								268
+							]
+						],
+						"settings":
+						{
+							"WordCount":
+							{
+								"changes": -1,
+								"modified": true,
+								"selection": true,
+								"status": -1,
+								"syntax": "python"
+							},
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "/Users/Luca/dev/progress/backend/Data Architecture/Quality.yaml",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 994,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								862,
+								843
+							]
+						],
+						"settings":
+						{
+							"WordCount":
+							{
+								"changes": 441,
+								"count": 101,
+								"modified": false,
+								"selection": false,
+								"status": -1,
+								"syntax": "plain text"
+							},
+							"syntax": "Packages/YAML/YAML.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
 					"type": "text"
 				},
 				{
-					"buffer": 6,
-					"file": "/Users/Luca/dev/progress/backend/app/endpoints/process.py",
+					"buffer": 5,
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 9142,
+						"buffer_size": 0,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								5922,
-								5922
+								0,
+								0
 							]
 						],
 						"settings":
 						{
 							"WordCount":
 							{
-								"changes": -1,
-								"modified": true,
-								"selection": true,
+								"changes": 2,
+								"count": 0,
+								"modified": false,
+								"selection": false,
 								"status": -1,
-								"syntax": "python"
+								"syntax": "plain text"
 							},
-							"syntax": "Packages/Python/Python.sublime-syntax",
+							"auto_name": "",
+							"default_dir": "/Users/Luca/dev/progress/backend/Data Architecture",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "/Users/Luca/dev/progress/backend/Data Architecture/Traceability.yaml",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2298,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								442,
+								442
+							]
+						],
+						"settings":
+						{
+							"WordCount":
+							{
+								"changes": 469,
+								"count": 254,
+								"modified": false,
+								"selection": false,
+								"status": -1,
+								"syntax": "plain text"
+							},
+							"syntax": "Packages/YAML/YAML.sublime-syntax",
 							"tab_size": 2,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 3865.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 7,
 					"type": "text"
 				}
 			]
@@ -580,12 +880,36 @@
 		"selected_items":
 		[
 			[
-				"traceabili",
-				"app/models/traceability.py"
+				"",
+				"api/utils/event.py"
+			],
+			[
+				"even",
+				"api/utils/event.py"
+			],
+			[
+				"process",
+				"api/models/process.py"
 			],
 			[
 				"production",
-				"app/models/production.py"
+				"api/endpoints/production.py"
+			],
+			[
+				"produ",
+				"api/models/production.py"
+			],
+			[
+				"productio",
+				"api/utils/production.py"
+			],
+			[
+				"proce",
+				"api/endpoints/process.py"
+			],
+			[
+				"traceabili",
+				"app/models/traceability.py"
 			],
 			[
 				"event",

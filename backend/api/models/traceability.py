@@ -5,7 +5,7 @@ from typing import Any, List
 from pydantic import Field
 
 from models.process import StepWithMediaInfo
-from utils.base_models import FlexModel
+from utils.base_models import FlexModel, ArangoDocument, ArangoEdge
 
 
 
@@ -37,6 +37,7 @@ class Batch(FlexModel):
   end: datetime = None
   # duration: timedelta = None
   active: bool = True
+  serial_numbers: List[str] = None
 
   qt_pass: float = None
   qt_scrap: float = None
@@ -78,6 +79,7 @@ class ProductionEvent(FlexModel):
   product_key: str = None
   work_order_key: str = None
   phase_key: str = None
+  next_phase: str = None
   current_batch_key: str = None
   step_key: str = None
   completed_batch_key: str = None
@@ -96,4 +98,22 @@ class BatchTimeRecord(FlexModel):
   end: datetime = None
 
 
+
+class Serial(ArangoDocument):
+  wo_key: str
+  counter: int
+  product_key: str
+  start: datetime = None
+  end: datetime = None
+  accept: bool = True
+  batches: List[str]
+  value: float = None
+
+
+class WIP(ArangoEdge):
+  batch_key: str
+  wo_key: str
+  product_key: str
+  value: float = None
+  serial_numbers: List[str] = None
 

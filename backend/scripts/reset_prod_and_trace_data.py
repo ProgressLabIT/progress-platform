@@ -4,13 +4,15 @@ client = ArangoClient(hosts='http://localhost:8529')
 db = client.db('PROGRESS_TEST', username='root', password='')
 
 collections = [
-	'WorkSession',
-	'Event',
-	'StepExecutionData',
-	'BatchTimeRecord',
 	'Batch',
+	'BatchTimeRecord',
+	'Event',
 	'Job',
-	'WorkOrder'
+	'Serial',
+	'StepExecutionData',
+	'WIP',
+	'WorkOrder',
+	'WorkSession',
 ]
 
 tx = db.begin_transaction(write=collections + ['Queue'])

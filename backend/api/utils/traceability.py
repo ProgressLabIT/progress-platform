@@ -131,6 +131,26 @@ class Queries:
     RETURN !any_open_job
   """
 
+  GET_NEXT_SERIAL_NUMBER_FOR_WORK_ORDER = """
+    LET wo_serials = (
+      FOR s IN Serial
+      FILTER s.wo_key == @wo_key
+      RETURN s.counter
+    )
+    RETURN MAX(wo_serials) + 1
+  """
+
+  GET_NEXT_PHASE_IN_WORK_ORDER = """
+    FOR wo IN WorkOrder
+    FILTER wo._key == @wo_key
+    LET next_phase_index = POSITION(wo.phase_sequence, @phase_key, true) + 1
+    
+    // if last phase of process return null
+    RETURN next_phase_index < LENGTH(wo.phase_sequence) 
+      ? wo.phase_sequence[next_phase_index]
+      : null
+  """
+
 
 # ------------- END OF QUERIES CLASS ----------------------------------
 

@@ -102,6 +102,7 @@ class Job(FlexModel):
   wo_line: int
   phase_key: str
   phase_alias: str
+  create_serial: bool = None
   product_key: str
   product_code: str
   product_description: str

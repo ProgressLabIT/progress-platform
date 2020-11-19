@@ -18,7 +18,9 @@ class Event:
     'Event', 
     'Job', 
     'Queue',
+    'Serial',
     'StepExecutionData', 
+    'WIP',
     'WorkOrder',
     'WorkSession'
   ]
@@ -100,6 +102,50 @@ class Event:
     
 
   # ....................................................................
+  # Serial
+  # ....................................................................
+
+  def create_serial(self, counter, batch_key):
+    new_serial = Serial(
+      start=self.info.timestamp,
+      wo_key=self.info.work_order_key,
+      counter=counter,
+      product_key=self.info.product_key,
+      batches=[batch_key]
+    )
+    new_serial_key = self.tx.collection('Serial').insert(new_serial)['_key']
+
+    return new_serial_key
+
+
+  def create_batch_serial_records(self):
+    if not self.job:
+      self.job = self.get_job_data()
+
+    default_batch = self.job.parameters.production_batch_qt
+    remaining_qt = self.job.qt_planned - self.job.qt_completed
+    batch_qt = min([default_batch, remaining_qt])
+
+    next_serial = self.tx.aql.execute(
+      TraceabilityQueries.GET_NEXT_SERIAL_NUMBER_FOR_WORK_ORDER, 
+      bind_vars=dict(wo_key=self.info.work_order_key)
+    ).next()
+
+    batch_serials = range(next_serial, next_serial + batch_qt)
+
+    serial_keys = [
+      self.create_serial(counter=i, batch_key=self.info.current_batch_key) 
+      for i in batch_serials
+    ]
+
+    self.tx.collection('Batch').update(dict(
+      _key=self.info.current_batch_key, 
+      serial_numbers=serial_keys
+    ))
+
+
+  
+  # ....................................................................
   # Batch
   # ....................................................................
 
@@ -110,7 +156,15 @@ class Event:
       active=True
     )
     new_batch_out = self.tx.collection('Batch').insert(new_batch_in, return_new=True)['new']
+
     batch = Batch(**new_batch_out)
+    self.info.current_batch_key = batch.key
+
+    self.job = self.get_job_data()
+
+    if self.job.create_serial:
+      self.create_batch_serial_records()
+
     return batch
 
 
@@ -169,6 +223,24 @@ class Event:
       full_session=full_session
     )
     self.tx.collection('BatchTimeRecord').update_match(match, update)
+
+
+  # ....................................................................
+  # WIP
+  # ....................................................................
+
+  def create_wip_record(self):
+    new_wip = WIP(
+      _from=f'Phase/{self.info.phase_key}',
+      _to=f'Phase/{self.info.next_phase}',
+      batch_key=self.info.completed_batch_key,
+      wo_key=self.info.work_order_key,
+      product_key=self.info.product_key,
+      serial_numbers=self.completed_batch.serial_numbers
+    )
+
+    self.tx.collection('WIP').insert(new_wip)
+
 
   
   # ....................................................................
@@ -271,6 +343,9 @@ class Event:
       batch_key=self.info.current_batch_key, 
       ws_key=self.info.work_session_key
     )
+
+    # Create batch serials
+    # self.create_batch_serial_records()
 
     # Update WorkOrder status
     wo = self.get_work_order_data()
@@ -399,17 +474,12 @@ class Event:
       self.info.work_session_key = self.work_session.key
 
     # Get completed batch data
+    self.completed_batch = self.get_current_batch()
+    
     if not self.info.current_batch_key:
-      self.completed_batch = self.get_current_batch()
       self.info.completed_batch_key = self.completed_batch.key
     else:
       self.info.completed_batch_key = self.info.current_batch_key
-
-    # Get job data
-    self.job = self.get_job_data()
-
-    # Create new batch if there is a remaining quantity
-    new_qt_completed = self.job.qt_completed + self.info.completed_batch_qt
 
     # Complete batch
     batch_update=dict(
@@ -420,6 +490,11 @@ class Event:
     )
     self.tx.collection('Batch').update(batch_update, check_rev=False)
 
+
+    # Create new batch if there is a remaining quantity
+    self.job = self.get_job_data()
+
+    new_qt_completed = self.job.qt_completed + self.info.completed_batch_qt
 
     batch_is_last = new_qt_completed >= self.job.qt_planned
 
@@ -446,6 +521,16 @@ class Event:
         progress=new_progress
       )
       self.tx.collection('Job').update(job_update, check_rev=False)
+
+    # Release WIP
+    self.info.next_phase = self.tx.aql.execute(
+      TraceabilityQueries.GET_NEXT_PHASE_IN_WORK_ORDER,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
+    ).next()
+    
+    # is next_phase is `none` then the job was for the last phase and should not generate a WIP record
+    if self.info.next_phase:
+      self.create_wip_record()
 
 
   
