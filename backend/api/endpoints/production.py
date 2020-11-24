@@ -105,12 +105,15 @@ async def create_work_order(new_wo: WorkOrderNew):
     else:
       phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
 
+    first_phase = phase_key == wo_data.phase_sequence[0]
+
     new_job_record = Job(
       wo_key = new_wo_record.key,
       wo_code = new_wo_record.wo_code,
       wo_line = new_wo_record.wo_line,
       phase_key = phase_key,
       phase_alias = phase.alias,
+      first_phase = first_phase,
       product_key = wo_data.product_key,
       product_code = wo_data.product_code,
       product_description = wo_data.product_description,
@@ -184,7 +187,7 @@ async def update_work_order(
 
   updated_wo_data = tx.collection('WorkOrder').update(update, return_new=True)['new']
   
-  if new_qt and updated_wo_data['status'] != WorkStatus.CREATED:
+  if new_qt and updated_wo_data['status'] != WorkStatus.CREATED.value:
     status_code = 423
     response = dict(
       status=status_code,

@@ -1,12 +1,21 @@
-# WIP
-  _from: _id (Phase)
-  _to: _id (Phase)
-  * wo_id: _id
-  * product: _id
-  release_type: str [continuous, batch, session, manual, job]
-  total_qt: float
-  released_qt: float
+# Serial
+  * wo_key: _key
+  * counter: int
+  * product_key: _key
+  start: ISOdts
+  end: ISOdts
+  pass: bool
+  batches: list
   value: float
+
+# WIP
+  _from: _key (Phase or Job)
+  _to: _key (Phase or Job)
+  batch_key: _key
+  * wo_key: _key
+  * product_key: _key
+  value: float
+  serial_numbers: list
 
 # UserSession
   * user: _id

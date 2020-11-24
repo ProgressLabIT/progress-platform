@@ -109,6 +109,9 @@ class Job(FlexModel):
 
   parameters: PhaseParameters = None
   
+  first_phase: bool = None
+  input_available: bool = None
+
   stage: WorkStatus = WorkStatus.CREATED
   active: bool = False
   critical: bool = False

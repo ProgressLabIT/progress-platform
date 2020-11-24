@@ -88,7 +88,9 @@ class Queries:
       RETURN j.qt_released
     )
 
-    LET status = qt_completed == wo.qt_planned ? 'closed' : 'started'
+    // Check if any WO Job is still open
+    LET still_open = TO_BOOL(COUNT(FOR j IN jobs FILTER j.stage != 'closed' RETURN 1))
+    LET status = still_open ? 'started' : 'closed'
 
     UPDATE wo WITH { progress, active, qt_completed, status } IN WorkOrder
 
@@ -129,6 +131,47 @@ class Queries:
       RETURN 1
     ))
     RETURN !any_open_job
+  """
+
+  GET_NEXT_SERIAL_NUMBER_FOR_WORK_ORDER = """
+    LET wo_serials = (
+      FOR s IN Serial
+      FILTER s.wo_key == @wo_key
+      RETURN s.counter
+    )
+    RETURN MAX(wo_serials) + 1
+  """
+
+  GET_NEXT_PHASE_IN_WORK_ORDER = """
+    FOR wo IN WorkOrder
+    FILTER wo._key == @wo_key
+    LET next_phase_index = POSITION(wo.phase_sequence, @phase_key, true) + 1
+    
+    // if last phase of process return null
+    RETURN next_phase_index < LENGTH(wo.phase_sequence) 
+      ? wo.phase_sequence[next_phase_index]
+      : null
+  """
+
+  UPDATE_INPUT_AVAILABLE_STATE_FOR_JOBS_IN_PHASE = """
+    LET input_for_this_phase = SUM(
+      FOR wip IN WIP
+      FILTER wip.wo_key == @wo_key && wip._to == CONCAT('Phase/', @phase)
+      RETURN wip.quantity
+    )
+
+    FOR j IN Job
+    FILTER j.wo_key == @wo_key && j.phase_key == @phase
+    LET next_batch_qt = MIN([j.qt_planned - j.qt_completed, j.parameters.production_batch_qt])
+    LET input_available = next_batch_qt <= input_for_this_phase
+    UPDATE j WITH { input_available } IN Job
+  """
+
+  RETRIEVE_AVAILABLE_WIP = """
+    FOR wip IN WIP
+    FILTER wip._to == CONCAT('Phase/', @phase)
+    SORT wip.batch_key
+    RETURN wip
   """
 
 
