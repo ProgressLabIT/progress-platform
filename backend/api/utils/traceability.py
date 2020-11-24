@@ -88,7 +88,9 @@ class Queries:
       RETURN j.qt_released
     )
 
-    LET status = qt_completed == wo.qt_planned ? 'closed' : 'started'
+    // Check if any WO Job is still open
+    LET still_open = TO_BOOL(COUNT(FOR j IN jobs FILTER j.stage != 'closed' RETURN 1))
+    LET status = still_open ? 'started' : 'closed'
 
     UPDATE wo WITH { progress, active, qt_completed, status } IN WorkOrder
 
