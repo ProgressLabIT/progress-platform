@@ -37,13 +37,19 @@ class Batch(FlexModel):
   end: datetime = None
   # duration: timedelta = None
   active: bool = True
-  serial_numbers: List[str] = None
+  # serial_numbers: List[str] = None
 
-  qt_pass: float = None
-  qt_scrap: float = None
+  qt_pass: float = 0
+  qt_scrap: float = 0
+
+  unit_processing_time: float = 0
+  unit_processing_cost: float = 0
+  unit_material_cost: float = 0
+  value: float = 0
 
   # next_step: int = None
   step_data: List[StepExecutionData] = None
+  
 
 
 class WorkSession(FlexModel):
@@ -56,8 +62,7 @@ class WorkSession(FlexModel):
   end: datetime = None
   # duration: timedelta = None
   active: bool
-
-
+  hourly_cost: float = None
 
 
 class EventType(Enum):
@@ -93,9 +98,16 @@ class BatchTimeRecord(FlexModel):
   key: str = Field(None, alias="_key")
   batch_key: str
   work_session_key: str
-  full_ws: bool = None
+  full_session: bool = None
   start: datetime
   end: datetime = None
+  duration: float = None
+  value: float = None
+  active: bool = None
+  product_key: str = None
+  work_order_key: str = None
+  phase_key: str = None
+
 
 
 
