@@ -74,6 +74,8 @@ class Queries:
   """
 
   UPDATE_WORK_ORDER = """
+    LET now = DATE_NOW()
+
     FOR wo IN WorkOrder
     FILTER wo._key == @wo_key
     LET jobs = (FOR j IN Job FILTER j.wo_key == @wo_key RETURN j)
@@ -119,6 +121,12 @@ class Queries:
     LET still_open = TO_BOOL(COUNT(FOR j IN jobs FILTER j.stage != 'closed' RETURN 1))
     LET status = still_open ? 'started' : 'closed'
 
+    LET end = still_open ? null : DATE_ISO8601(now)
+
+    // Calculate Throughput Time and Lead Time at Work order Closure
+    LET lead_time = still_open ? null : DATE_DIFF(wo.created, now)
+    LET throughput_time = still_open ? null : DATE_DIFF(wo.start, now)
+
     // Apply changes and return updated record
     UPDATE wo WITH { 
 
@@ -126,8 +134,11 @@ class Queries:
       active, 
       qt_completed, 
       status, 
+      end,
       processing_time, 
-      processing_cost 
+      processing_cost,
+      throughput_time,
+      lead_time
 
     } IN WorkOrder RETURN NEW
   """ 

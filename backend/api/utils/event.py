@@ -159,6 +159,8 @@ class Event:
 
     new_batch_in = Batch(
       job_key=self.info.job_key,
+      phase_key=self.info.phase_key,
+      work_order_key=self.info.work_order_key,
       start=self.info.timestamp,
       active=True
     )

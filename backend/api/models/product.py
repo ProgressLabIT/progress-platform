@@ -1,3 +1,4 @@
+from enum import Enum
 from random import randrange, uniform
 from typing import List, Optional
 
@@ -17,6 +18,11 @@ class TargetAverageTime(TargetAverageCost):
   average: float = target * (1 + uniform(-0.2, 0.2))
 
 
+class KPIWindowType(Enum):
+  TIME = 'time'
+  COUNT = 'count'
+
+
 class ProductData(FlexModel):
   key: str = Field(None, alias="_key")
   code: str
@@ -31,9 +37,13 @@ class ProductData(FlexModel):
   minimum_order_qt: int = 0
   # tags: List[str] = []
   process_phases: List[str] = [] 
+  
   lead_time: TargetAverageTime = TargetAverageTime()
   throughput_time: TargetAverageTime = TargetAverageTime()
   processing_time: TargetAverageTime = TargetAverageTime()
+
+  kpi_window_size: int = None # if time, expressed in days, in 'count' in number of work orders
+  kpi_window_type: Optional[KPIWindowType] = KPIWindowType.COUNT 
 
 class ProductDoc(FlexModel):
   name: str
