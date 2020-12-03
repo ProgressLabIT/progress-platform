@@ -38,9 +38,9 @@ class ProductData(FlexModel):
   # tags: List[str] = []
   process_phases: List[str] = [] 
   
-  lead_time: TargetAverageTime = TargetAverageTime()
-  throughput_time: TargetAverageTime = TargetAverageTime()
-  processing_time: TargetAverageTime = TargetAverageTime()
+  lead_time_target: float = None #TargetAverageTime = TargetAverageTime()
+  throughput_time_target: float = None #TargetAverageTime = TargetAverageTime()
+  processing_time_target: float = None #TargetAverageTime = TargetAverageTime()
 
   kpi_window_size: int = None # if time, expressed in days, in 'count' in number of work orders
   kpi_window_type: Optional[KPIWindowType] = KPIWindowType.COUNT 
