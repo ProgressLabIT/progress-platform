@@ -72,6 +72,7 @@ class Event:
     new_work_session = self.tx.aql.execute(
       TraceabilityQueries.CREATE_WORK_SESSION, bind_vars=dict(
         job_key=self.info.job_key,
+        work_order_key=self.info.work_order_key,
         user_key=self.info.user_key,
         user_session_key=self.info.user_session_key,
         start=self.info.timestamp,

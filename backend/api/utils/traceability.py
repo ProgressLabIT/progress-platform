@@ -15,6 +15,7 @@ class Queries:
       user_key: @user_key,
       hourly_cost: DOCUMENT(User, @user_key).hourly_cost,
       user_session_key: @user_session_key,
+      work_order_key: @work_order_key,
       start: @start,
       active: true
     } 
@@ -124,8 +125,8 @@ class Queries:
     LET end = still_open ? null : DATE_ISO8601(now)
 
     // Calculate Throughput Time and Lead Time at Work order Closure
-    LET lead_time = still_open ? null : DATE_DIFF(wo.created, now)
-    LET throughput_time = still_open ? null : DATE_DIFF(wo.start, now)
+    LET lead_time = still_open ? null : DATE_DIFF(wo.created, now, 'f')
+    LET throughput_time = still_open ? null : DATE_DIFF(wo.start, now, 'f')
 
     // Apply changes and return updated record
     UPDATE wo WITH { 
