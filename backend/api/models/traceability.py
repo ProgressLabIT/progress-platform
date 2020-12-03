@@ -58,6 +58,7 @@ class WorkSession(FlexModel):
   key: str = Field(None, alias="_key")
   user_session_key: str
   job_key: str
+  work_order_key: str = None
   user_key: str
   # master_session: bool
   start: datetime = None
