@@ -95,7 +95,6 @@ export default {
           this.$router.back()
         }
         else {
-          console.log(err)
           window.alert("An error occurred while deleting the operation. Please contact the administrator")
         }
       })

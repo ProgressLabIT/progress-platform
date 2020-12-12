@@ -354,7 +354,6 @@ export default {
         new_image: this.new_image 
       }
 
-      console.log({user_update})
       this.$store.dispatch('updateUser', action_payload)
       .then(() => {
         this.setTempData()
