@@ -81,7 +81,9 @@
 import { getPicPath } from '@/lib/media.js'
 import { durationFromMillisec } from '@/lib/duration.js'
 import { DateTime as DT } from 'luxon'
+
 import BaseAvatarListElement from '@/components/BaseAvatarListElement.vue'
+import { roundFloat } from '@/lib/filters.js'
 
 export default {
 
@@ -107,15 +109,17 @@ export default {
       ],
       current_view: 0,
       wo_info: [
-        { name: 'created', text: 'Data creazione', value: '' },
-        { name: 'start', text: 'Data inizio' },
-        { name: 'end', text: 'Data chiusura' },
         { name: 'due_by', text: 'Scadenza' },
         { name: 'status', text: 'Stato' },
-        { name: 'processing_time', text: 'T. lavorazione' },
-        { name: 'idle_time', text: 'T. attesa' },
+        { name: 'created', text: 'Data creazione', value: '' },
+        { name: 'start', text: 'Data inizio' },
         { name: 'queueing_time', text: 'T. coda' },
+        { name: 'end', text: 'Data chiusura' },
+        { name: 'processing_time', text: 'T. lavorazione' },
         { name: 'lead_time', text: 'T. evasione' },
+        { name: 'processing_cost', text: 'Costo lavorazione' },
+        { name: 'material_cost', text: 'Costo materiali' },
+        { name: 'total_cost', text: 'Costo totale' },
       ]
     }
   },
@@ -162,7 +166,7 @@ export default {
       switch (info_name) {
         case 'status': {
           let active_text = 'Attivo'
-          let inactive_text = 'In coda'
+          let inactive_text = 'In attesa'
           let on_time_text = 'Puntuale'
           let late_text = 'In ritardo'
           let critical_text = 'Critico'
@@ -185,19 +189,8 @@ export default {
                
 
         case 'processing_time': {
-          const processing_time = this.wo_data.processing_time.actual
-          return processing_time ? durationFromMillisec(processing_time, { precision: 'm'}) : '-'
-        }
-
-        case 'idle_time': {
-          const processing_time = this.wo_data.processing_time.actual
-          const start = DT.fromISO(this.wo_data.start)
-          const end = DT.fromISO(this.wo_data.end)
-          const benchmark = end ? end : DT.utc()
-          return processing_time && start 
-            ? durationFromMillisec(benchmark - start - processing_time
-                                  , { precision: 'm' })
-            : '-'
+          const processing_time = this.wo_data.processing_time
+          return processing_time ? durationFromMillisec(processing_time, { precision: 's'}) : '-'
         }
 
         case 'queueing_time': {
@@ -215,6 +208,18 @@ export default {
           return this.wo_data.end 
             ? durationFromMillisec(end - created, {precision: 'h'}) 
             : '-'
+        }
+
+        case 'processing_cost': {
+          return roundFloat(this.wo_data.processing_cost || 0, 1) || '-'
+        }
+
+        case 'material_cost': {
+          return roundFloat(this.wo_data.material_cost || 0, 1) || '-'
+        }
+
+        case 'total_cost': {
+          return roundFloat(this.wo_data.total_cost || 0, 1) || '-'
         }
 
       }

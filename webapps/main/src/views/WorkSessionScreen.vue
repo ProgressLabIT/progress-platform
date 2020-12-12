@@ -259,11 +259,11 @@ export default {
       let production_batch = 1
       if (this.j.parameters) {
         switch (this.j.parameters.step_check) {
-          case 'fixed_batch':
-            production_batch = this.j.parameters.production_batch_qt
-            break
           case 'job':
             production_batch = this.j.qt_planned
+            break
+          default:
+            production_batch = this.j.parameters.production_batch_qt
             break
         }
         // The last batch could include less pieces than the production batch
@@ -449,9 +449,9 @@ export default {
     exitJob() {
       if (this.j.active) {
         this.$store.dispatch('pauseJob')
-        .then(() => this.$router.push({ name: 'userJobsAll'}))
+        .then(() => this.$router.push({ name: 'userJobs'}))
       }
-      else this.$router.push({ name: 'userJobsAll'})
+      else this.$router.push({ name: 'userJobs'})
     }
   },
 

@@ -7,14 +7,14 @@ import { durationFromMillisec } from '@/lib/duration.js'
 
 
 
-function capitalize(value) {
+export function capitalize(value) {
   if (value === '') return value
   if (typeof value === "number") return value
   value = value.toString()
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-function capitalizeAll(value) {
+export function capitalizeAll(value) {
   if (typeof value === "number") return value
 
   // The added space makes sure no error is thrown if value is a single word only
@@ -23,8 +23,12 @@ function capitalizeAll(value) {
   return "".concat(...words.map( w => capitalize(w) + ' ')).trim()
 }
 
-function numberFormat(value, locale) {
+export function numberFormat(value, locale) {
   return new Intl.NumberFormat(locale).format(value)
+}
+
+export function roundFloat(value, decimals) {
+  return +(value.toPrecision(decimals))
 }
 
 
@@ -45,3 +49,4 @@ Vue.filter('duration', durationFromMillisec)
 Vue.filter('shortDateString', shortDateString)
 Vue.filter('dtFormat', formatDateTime)
 Vue.filter('numberFormat', numberFormat)
+Vue.filter('roundFloat', roundFloat)

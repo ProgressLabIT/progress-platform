@@ -220,17 +220,22 @@ const traceability = {
         const updated_work_session = getClosedWorkSessionData(state, now)
 
         /* INSERT EVENT CREATION HERE */
-        const user_key = rootState.session.user._key
-        const job = state.working_job_data
+        // const user_key = rootState.session.user._key
+        // const job = state.working_job_data
 
-        const event = {
+        // const event = {
+        //   event_type: 'JOB_PAUSED',
+        //   user_key,
+        //   user_session_key: rootState.session.session_key,
+        //   job_key: job._key,
+        //   phase_key: job.phase_key,
+        //   timestamp: now.toISO()
+        // }
+
+        const event = createEvent(state, rootState.session, {
           event_type: 'JOB_PAUSED',
-          user_key,
-          user_session_key: rootState.session.session_key,
-          job_key: job._key,
-          phase_key: job.phase_key,
           timestamp: now.toISO()
-        }
+        })
 
         api.post('event', event).then(() => {
           commit('CLOSE_WORK_SESSION', updated_work_session)
@@ -248,17 +253,22 @@ const traceability = {
         const new_work_session = createWorkSession(state, rootState.session, now)
         
         /* INSERT EVENT CREATION HERE */
-        const user_key = rootState.session.user._key
-        const job = state.working_job_data
+        // const user_key = rootState.session.user._key
+        // const job = state.working_job_data
 
-        const event = {
+        // const event = {
+        //   event_type: 'JOB_RESUMED',
+        //   user_key,
+        //   user_session_key: rootState.session.session_key,
+        //   job_key: job._key,
+        //   phase_key: job.phase_key,
+        //   timestamp: now.toISO()
+        // }
+
+        const event = createEvent(state, rootState.session, {
           event_type: 'JOB_RESUMED',
-          user_key,
-          user_session_key: rootState.session.session_key,
-          job_key: job._key,
-          phase_key: job.phase_key,
           timestamp: now.toISO()
-        }
+        })
 
         api.post('event', event).then( () => {
           commit('RESUME_JOB', new_work_session) 
