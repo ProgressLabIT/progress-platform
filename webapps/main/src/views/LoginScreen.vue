@@ -1,3 +1,4 @@
+
 <template>
   <v-dialog
     value="true"
@@ -9,8 +10,8 @@
         <v-row justify="center" align="center">
           
           <v-col cols="12" md="5" class="d-flex justify-center justify-md-end">
-            <!-- <v-img max-width="300px" src="/media/company/logo.png">
-              <template v-slot:placeholder> -->
+            <v-img max-width="200px" src="/media/company/progresslab.svg">
+              <template v-slot:placeholder>
                 <v-avatar size="180" color="primary">
                   <v-col class="text-center highlight">
                     <div>IL</div> 
@@ -18,8 +19,8 @@
                     <div>LOGO</div>
                   </v-col>
                 </v-avatar>
-              <!-- </template>
-            </v-img> -->
+              </template>
+            </v-img>
           </v-col>
           
           <v-divider vertical inset class="mx-4"></v-divider>

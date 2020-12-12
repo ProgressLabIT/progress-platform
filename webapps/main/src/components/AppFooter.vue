@@ -2,7 +2,7 @@
 	<v-footer app fixed :color="$theme.black">
 	  <v-row no-gutter class="align-center justify-space-between px-2">
 	    <v-col class="text-left pa-0">
-	    	<span class="display smaller">ESSEGI AUTOMATION - PROGRESS</span>
+	    	<span class="display smaller">PROGRESS PLATFORM</span>
 	    	<!-- <span class="material-icons smaller ml-2">info</span> -->
 	    </v-col>
 	    <v-col cols="1" class="text-center pa-0">
