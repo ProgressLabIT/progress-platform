@@ -14,3 +14,4 @@ class ProductionItem(FlexModel):
   code: str
   description: str
   type: str = None
+  value: float = None

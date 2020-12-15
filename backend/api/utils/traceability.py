@@ -9,6 +9,21 @@ class Queries:
     FILTER e.wo_key
   """
 
+  CREATE_WORK_SESSION = """
+    LET new_ws = {
+      job_key: @job_key,
+      user_key: @user_key,
+      hourly_cost: DOCUMENT(User, @user_key).hourly_cost,
+      user_session_key: @user_session_key,
+      work_order_key: @work_order_key,
+      start: @start,
+      active: true
+    } 
+
+    INSERT new_ws INTO WorkSession RETURN NEW
+  """
+
+
   GET_BATCH_EXECUTION_DATA = """
     LET batch = FIRST( FOR b IN Batch FILTER b._key == @batch_key RETURN b )
     LET job = FIRST( FOR j IN Job FILTER j._key == batch.job_key RETURN j )
@@ -60,6 +75,8 @@ class Queries:
   """
 
   UPDATE_WORK_ORDER = """
+    LET now = DATE_NOW()
+
     FOR wo IN WorkOrder
     FILTER wo._key == @wo_key
     LET jobs = (FOR j IN Job FILTER j.wo_key == @wo_key RETURN j)
@@ -88,15 +105,43 @@ class Queries:
       RETURN j.qt_released
     )
 
+    // Update PT and Cost
+    LET processing_time = SUM(
+      FOR r IN BatchTimeRecord
+      FILTER r.work_order_key == @wo_key
+      RETURN r.duration
+    )
+
+    LET processing_cost = SUM(
+      FOR r IN BatchTimeRecord
+      FILTER r.work_order_key == @wo_key
+      RETURN r.value
+    )
+
     // Check if any WO Job is still open
     LET still_open = TO_BOOL(COUNT(FOR j IN jobs FILTER j.stage != 'closed' RETURN 1))
     LET status = still_open ? 'started' : 'closed'
 
-    UPDATE wo WITH { progress, active, qt_completed, status } IN WorkOrder
+    LET end = still_open ? null : DATE_ISO8601(now)
 
-    // Return updated work order to allow further processing based on update
-    LET updated_wo = NEW
-    RETURN updated_wo
+    // Calculate Throughput Time and Lead Time at Work order Closure
+    LET lead_time = still_open ? null : DATE_DIFF(wo.created, now, 'f')
+    LET throughput_time = still_open ? null : DATE_DIFF(wo.start, now, 'f')
+
+    // Apply changes and return updated record
+    UPDATE wo WITH { 
+
+      progress, 
+      active, 
+      qt_completed, 
+      status, 
+      end,
+      processing_time, 
+      processing_cost,
+      throughput_time,
+      lead_time
+
+    } IN WorkOrder RETURN NEW
   """ 
 
 
@@ -124,23 +169,60 @@ class Queries:
     UPDATE j WITH { progress } in Job
   """
 
-  NO_MORE_OPEN_JOBS_FOR_WORK_ORDER = """
-    LET any_open_job = TO_BOOL(SUM(
-      FOR j IN Job
-      FILTER j.wo_key == @wo_key && j.status != 'closed'
-      RETURN 1
-    ))
-    RETURN !any_open_job
+
+  COMPLETE_BATCH = """
+    LET b = DOCUMENT(Batch, @batch_key)
+    
+    LET unit_processing_time = SUM(
+      FOR r IN BatchTimeRecord
+      FILTER r.batch_key == @batch_key
+      RETURN r.duration
+    ) / @qt_pass
+
+    LET processing_cost = SUM(
+      FOR r IN BatchTimeRecord
+      FILTER r.batch_key == @batch_key
+      RETURN r.value
+    )
+
+    // To be added when material cost will be handled
+    LET material_cost = 0
+    
+    UPDATE b WITH {
+      qt_pass: @qt_pass,
+      active: false,
+      end: @end,
+      unit_processing_time,
+      unit_processing_cost: processing_cost / @qt_pass,
+      value: processing_cost + material_cost
+    } in Batch
   """
 
-  GET_NEXT_SERIAL_NUMBER_FOR_WORK_ORDER = """
-    LET wo_serials = (
-      FOR s IN Serial
-      FILTER s.wo_key == @wo_key
-      RETURN s.counter
-    )
-    RETURN MAX(wo_serials) + 1
+
+  UPDATE_BATCH_TIME_RECORD = """
+    FOR r IN BatchTimeRecord
+    FILTER r.batch_key == @batch_key && r.work_session_key == @ws_key
+    LET duration = DATE_DIFF(r.start, @end, "f")
+    LET milliseconds_in_one_hour = 3600000
+    LET value = DOCUMENT(WorkSession, r.work_session_key).hourly_cost * duration / milliseconds_in_one_hour
+
+    UPDATE r WITH {
+      end: @end,
+      full_session: @full_session,
+      duration,
+      value,
+      active: false
+    } in BatchTimeRecord
   """
+
+  # GET_NEXT_SERIAL_NUMBER_FOR_WORK_ORDER = """
+  #   LET wo_serials = (
+  #     FOR s IN Serial
+  #     FILTER s.wo_key == @wo_key
+  #     RETURN s.counter
+  #   )
+  #   RETURN MAX(wo_serials) + 1
+  # """
 
   GET_NEXT_PHASE_IN_WORK_ORDER = """
     FOR wo IN WorkOrder

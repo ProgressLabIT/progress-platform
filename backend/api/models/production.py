@@ -73,9 +73,13 @@ class WorkOrderFull(WorkOrderNew):
   start: datetime = None
   end: datetime = None
   
-  lead_time: TargetActualTimeDelta = TargetActualTimeDelta()
-  throughput_time: TargetActualTimeDelta = TargetActualTimeDelta()
-  processing_time: TargetActualTimeDelta = TargetActualTimeDelta()
+  lead_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
+  throughput_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
+  processing_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
+
+  processing_cost: float = None
+  material_cost: float = None
+  total_cost: float = None
   
   phase_sequence: List[str] = None
   notes: str = None
