@@ -1,0 +1,34 @@
+---
+
+# Base docker-compose config to define the system services
+
+version: '3.7'
+
+x-template:
+  common: &common
+    image: api
+    build:
+      context: .
+      dockerfile: Docker/api.Dockerfile
+    restart: unless-stopped
+
+services:
+  api_server:
+    <<: *common
+    command: >
+      uvicorn main:app --host 0.0.0.0 --port 80
+
+    depends_on:
+      - arangodb
+
+  arangodb:
+    image: arangodb
+    restart: unless-stopped
+    volumes:
+      - arangodb:/var/lib/arangodb3
+      - ./db_backup:/db_backup
+    environment:
+      ARANGO_NO_AUTH: "1"
+
+volumes:
+  arangodb:

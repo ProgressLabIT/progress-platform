@@ -1,0 +1,43 @@
+---
+
+# Overlay docker-compose config for a local development environment
+#
+version: '3.7'
+
+x-template:
+  comune: &comune
+    volumes:
+      # Mounting volume to allow auto-reload on dev env
+      - ./api:/api
+    env_file:
+      # Use these environment variables to define dev runtime
+      - Docker/env.dev
+
+services:
+  api_server:
+    <<: *comune
+    command: >
+      uvicorn main:app --host 0.0.0.0 --port 80 --reload --log-level=debug
+    ports:
+      # This is the only port exposed to the host
+      # (the db doesn't have it because talking across docker images just works)
+      - "80:80"
+
+  arangodb:
+    command: >
+      arangod --server.authentication=false --config /tmp/arangod.conf
+
+      --rocksdb.max-total-wal-size 1024000
+      --rocksdb.write-buffer-size 2048000
+      --rocksdb.max-write-buffer-number 2
+      --rocksdb.total-write-buffer-size 81920000
+      --rocksdb.dynamic-level-bytes false
+
+      --rocksdb.block-cache-size 2560000
+      --rocksdb.enforce-block-cache-size-limit true
+      --cache.size 10485760
+
+      --server.statistics false
+
+      --javascript.v8-contexts 2
+      --javascript.v8-max-heap 512

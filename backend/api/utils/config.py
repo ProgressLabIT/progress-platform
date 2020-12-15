@@ -1,10 +1,15 @@
-from secrets import token_hex
+from functools import lru_cache
 
-from Pydantic import BaseSettings, DirectoryPath
+from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-  TOKEN_KEY: str = 
-  CUSTOMER_NAME: str
-  DOMAIN_NAME: str
-  CERT_FOLDER: DirectoryPath
+    arango_url: str = 'http://localhost:8529'
+
+    class Config:
+        env_prefix = "progress_"
+
+
+@lru_cache()
+def get_config() -> Settings:
+    return Settings()
