@@ -8,10 +8,10 @@ x-template:
   comune: &comune
     volumes:
       # Mounting volume to allow auto-reload on dev env
-      - ./api:/api
+      - ./backend/api:/api
     env_file:
       # Use these environment variables to define dev runtime
-      - Docker/env.dev
+      - docker/env.dev
 
 services:
   api_server:
