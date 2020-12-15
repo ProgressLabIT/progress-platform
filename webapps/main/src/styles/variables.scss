@@ -1,0 +1,64 @@
+/* V2 by suggestion of KAEL, removing all imports and map-deep-merge.
+	 Just define maps. Everything is merged automatically.
+*/
+
+$background: #131E21;
+$surface1: #1F2A2D;
+$surface2: #242E31;
+
+$high-emphasis: .87;
+$low-emphasis: .6;
+$disabled-emphasis: .3;
+
+$body-font-family: 'Red Hat Text', sans-serif !important;
+$heading-font-family: 'Orbitron', serif !important;
+$border-radius-root: 0px;
+$line-height-root: 1.2;
+
+
+$headings: (
+	'h3': (
+		'font-weight': 400,
+		'letter-spacing': .05em,
+		'text-tranform': uppercase
+	)
+);
+
+$material-dark: (
+	'app-bar': $background,
+	'background': $background, 
+	'text': (
+		'primary': rgba(255,255,255, $low-emphasis),
+		'secondary': rgba(255,255,255, $low-emphasis),
+		'disabled': rgba(255,255,255, $disabled-emphasis),
+	),
+	'cards': $surface1,
+	'bg-color': $background,
+
+	'table': (
+		'hover': rgba(39,174,209, .3)
+	),
+
+	'primary-text-percent': $high-emphasis,
+	'secondary-text-percent': $low-emphasis,
+	'disabledORhints-text-percent': $disabled-emphasis,
+);
+
+// BUTTONS
+$btn-border-radius: 4px;
+
+// TABS
+$tabs-bar-height: 30px;
+
+
+
+
+
+
+
+
+
+
+
+
+
