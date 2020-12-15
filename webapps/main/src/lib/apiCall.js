@@ -3,7 +3,7 @@ import store from '@/store/index.js'
 
 const api_url = process.env.NODE_ENV === 'production'
 	? 'https://' + window.location.hostname + '/api/v1/'
-	: 'http://' + window.location.hostname + ':8000'
+	: 'http://' + window.location.hostname + ':80'
 
 
 const api = axios.create({  

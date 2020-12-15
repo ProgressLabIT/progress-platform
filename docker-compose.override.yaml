@@ -23,6 +23,11 @@ services:
       # (the db doesn't have it because talking across docker images just works)
       - "80:80"
 
+  webapp_main:
+    volumes:
+      # Mounting volume to allow auto-reload on dev env
+      - ./webapps/main/src:/main/src
+
   arangodb:
     command: >
       arangod --server.authentication=false --config /tmp/arangod.conf

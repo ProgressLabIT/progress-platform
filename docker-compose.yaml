@@ -21,6 +21,14 @@ services:
     depends_on:
       - arangodb
 
+  webapp_main:
+    build:
+      context: webapps/main
+      dockerfile: Dockerfile
+    command: npm run serve
+    ports:
+      - "8080:8080"
+
   arangodb:
     image: arangodb
     restart: unless-stopped
