@@ -17,16 +17,17 @@ services:
   api_server:
     <<: *comune
     command: >
-      uvicorn main:app --host 0.0.0.0 --port 80 --reload --log-level=debug
-    ports:
-      # This is the only port exposed to the host
-      # (the db doesn't have it because talking across docker images just works)
-      - "80:80"
+      uvicorn main:app --host 0.0.0.0 --port 80 --root-path /api
+      --reload --log-level=debug
 
   webapp_main:
     volumes:
       # Mounting volume to allow auto-reload on dev env
       - ./webapps/main/src:/main/src
+
+  nginx:
+    volumes:
+      - ./docker/nginx-dev.conf:/etc/nginx/nginx.conf
 
   arangodb:
     command: >
