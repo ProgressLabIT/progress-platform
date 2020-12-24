@@ -1,0 +1,9 @@
+log-level = "info"
+
+[api]
+insecure = true
+dashboard = true
+debug = true
+
+[providers]
+docker = true
