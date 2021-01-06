@@ -94,7 +94,14 @@ export default {
 
   data () {
     return {
-      table_headers: [
+      table_height: '85vh',
+    }
+  },
+
+  computed: {
+
+    table_headers() {
+      return [
         { 
           value: 'sequence', 
           text: this.$tc('work_order.list_headers.sequence').toUpperCase()},
@@ -126,13 +133,11 @@ export default {
         { 
           value: 'due_by', 
           text: this.$tc('work_order.list_headers.due_by').toUpperCase(), 
-          sort: this.sortDate}
-      ],
-      table_height: '85vh',
-    }
-  },
+          sort: this.sortDate
+        }
+      ]
+    },
 
-  computed: {
     temp_queue() {
       return this.$store.state.workorder.temp_queue
     },

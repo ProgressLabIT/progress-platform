@@ -45,7 +45,7 @@
                       <v-text-field 
                         v-model="credentials.password" 
                         type="password" 
-                        :label="$tc('password') | capitalize">
+                        :label="$tc('user.password') | capitalize">
                       </v-text-field>
                     </v-card-text>
                     <v-card-actions>

@@ -23,7 +23,7 @@
           <v-form @submit.prevent="verifyUser">
             <v-text-field
               v-model="password"
-              :label="$tc('password') | capitalize"
+              :label="$tc('user.password') | capitalize"
               type="password"
               single-line>
             </v-text-field>

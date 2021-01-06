@@ -118,7 +118,15 @@ export default {
   data () {
     return {
       wo_code: '',
-      wo_line_info: {
+      wo_lines: [],
+      show_picker: -1,
+      loading: false
+    }
+  },
+
+  computed: {
+    wo_line_info() {
+      return {
         product: {
           label: this.$tc('product.label'),
           type: Object,
@@ -137,14 +145,9 @@ export default {
           cols: 3,
           initial_value: ''
         }
-      },
-      wo_lines: [],
-      show_picker: -1,
-      loading: false
-    }
-  },
+      }
+    },
 
-  computed: {
     product_list() {
       return this.$store.getters.productCatalog()
     }

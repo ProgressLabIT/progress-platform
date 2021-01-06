@@ -34,7 +34,6 @@
                 <v-text-field
                   autocomplete="null"
                   :required="field.model === 'username' "
-                  :rules="field.rules"
                   single-line 
                   v-model="new_user_data[field.model]"
                   class="pt-0 body-2">
@@ -161,7 +160,7 @@ export default {
       text_fields: [
         { model: 'name' },
         { model: 'surname' },
-        { model: 'username', rules: [v => !!v || this.$tc('user.alerts.username_missing')] },
+        { model: 'username' },
         { model: 'email' },
       ],
       permissions: user_scopes,

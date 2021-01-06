@@ -160,10 +160,10 @@ export default {
   },
   "personnel": "personale",
   "phase": {
+    "add": "aggiungi fase",
     "add_check": "aggiungi controllo",
     "add_field": "aggiungi campo",
     "add_media": "aggiungi media",
-    "add_phase": "aggiungi fase",
     "add_steps": "comincia ad aggiungere fasi o passi",
     "alerts": {
       "add_steps_first": "Aggiungi dei passi alla procedura per modificare il valore di questo parametro"
@@ -387,6 +387,7 @@ export default {
     "new_password": "nuova password",
     "new_password_save_action": "salva password e inizia sessione",
     "new_success": "Utente creato con successo. Prendi nota della password temporanea per l'utente. Non verrà mostrata di nuovo. Al prossimo accesso l'utente dovrà sostituirla con una privata.",
+    "password": "password",
     "permissions": {
       "admin": "amministratore",
       "library": "area prodotti",

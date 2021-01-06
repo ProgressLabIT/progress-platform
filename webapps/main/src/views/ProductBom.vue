@@ -262,13 +262,6 @@ export default {
       bom_types: ['assembly', 'component', 'consumable'],
       item_type_filter: ['assembly', 'component', 'consumable'],
       table_height: '85vh',
-      table_headers: [
-        {  value:'code', text: this.$tc('code').toUpperCase() },
-        {  value:'description', text: this.$tc('description').toUpperCase() },
-        {  value:'item_type', text: this.$tc('type').toUpperCase() },
-        {  value:'phase_name', text: this.$tc('phase.name', 1).toUpperCase() },
-        {  value:'qt', text: this.$tc('quantity.short').toUpperCase() },
-      ],
       delete_items: [],
       show_item_catalog: false,
       catalog_loading: false,
@@ -287,6 +280,16 @@ export default {
       // product_metadata: state => state.product.temp,
       saved_bom: state => state.bom.saved
     }),
+
+    table_headers() {
+      return [
+        {  value:'code', text: this.$tc('code').toUpperCase() },
+        {  value:'description', text: this.$tc('description').toUpperCase() },
+        {  value:'item_type', text: this.$tc('type').toUpperCase() },
+        {  value:'phase_name', text: this.$tc('phase.name', 1).toUpperCase() },
+        {  value:'qt', text: this.$tc('quantity.short').toUpperCase() },
+      ]
+    },
 
     edit_mode: {
       get() {

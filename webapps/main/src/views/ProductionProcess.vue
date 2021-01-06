@@ -130,7 +130,7 @@
           item-text="name"
           return-object
           v-model="new_op"
-          :label="$tc('process.add_phase') | capitalize"
+          :label="$tc('phase.add') | capitalize"
           hide-details
           single-line
           @input="addPhase($event)"

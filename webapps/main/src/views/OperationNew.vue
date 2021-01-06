@@ -106,9 +106,9 @@ export default {
       stage: 'form',
       valid: true,
       fields: [
-        { title: 'nome', required: true, model: 'name', component: 'v-text-field' },
-        { title: 'codice', required: false, model: 'code', component: 'v-text-field' },
-        { title: 'descrizione', required: true, model: 'description', component: 'v-textarea' },
+        { required: true, model: 'name', component: 'v-text-field' },
+        { required: false, model: 'code', component: 'v-text-field' },
+        { required: true, model: 'description', component: 'v-textarea' },
       ],
       new_operation_data: {
         name: undefined,

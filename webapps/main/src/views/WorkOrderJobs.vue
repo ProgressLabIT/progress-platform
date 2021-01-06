@@ -325,7 +325,23 @@ export default {
   data () {
     return {
       saving: false,
-      headers: [
+      expanded_phase: null,
+      job_select_model: {},
+      jobs_temp_data: {},
+      edit_mode: 'actions',
+      edit_qt: false,
+      new_qt: null,
+      edit_due_date: false,
+      new_due_date: null,
+      show_job_qt_rebalance: false
+      // selected_jobs: []
+    }
+  },
+
+  computed: {
+
+    headers() {
+      return [
         { 
           value: 'phase_alias', 
           text: this.$tc('phase.short').toUpperCase(), 
@@ -360,21 +376,9 @@ export default {
           cols: '3', 
           width: '30%'
         },
-      ],
-      expanded_phase: null,
-      job_select_model: {},
-      jobs_temp_data: {},
-      edit_mode: 'actions',
-      edit_qt: false,
-      new_qt: null,
-      edit_due_date: false,
-      new_due_date: null,
-      show_job_qt_rebalance: false
-      // selected_jobs: []
-    }
-  },
+      ]
+    },
 
-  computed: {
     phase_data() {
       return this.wo_data.phase_sequence.map( phase_key => {
         const jobs = this.wo_data.jobs.filter( j => j.phase_key === phase_key )

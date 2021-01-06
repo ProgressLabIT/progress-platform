@@ -48,7 +48,13 @@ export default {
     return {
       root: "productList",
       show_modal: true,
-      links: [
+    }
+  },
+
+  computed: {
+
+    links() {
+      return [
         {
           name: 'productHome',
           title: this.$tc('product.tabs.home')
@@ -62,10 +68,8 @@ export default {
           title: this.$tc('product.tabs.bom')
         }
       ]
-    }
-  },
+    },
 
-  computed: {
     edit_modes() {
       return this.$store.state.product.edit_modes
     },

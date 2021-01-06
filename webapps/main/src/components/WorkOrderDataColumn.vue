@@ -106,7 +106,14 @@ export default {
 
   data () {
     return {
-      views: [
+      current_view: 0,
+    }
+  },
+
+  computed: {
+
+    views() {
+      return [
         { 
           name: 'info', 
           text: this.$tc('info'), 
@@ -118,9 +125,11 @@ export default {
           align: 'start' 
         },
         // { name: 'equipment', text: 'MACCHINARI', align: 'end' },
-      ],
-      current_view: 0,
-      wo_info: [
+      ]
+    },
+
+    wo_info() {
+      return [
         { 
           name: 'due_by', 
           text: this.$tc('due_by') 
@@ -164,10 +173,8 @@ export default {
           text: this.$tc('total_cost')
         },
       ]
-    }
-  },
+    },
 
-  computed: {
     assignments() {
       if (typeof this.wo_data != 'undefined') {
         let assignments = {}

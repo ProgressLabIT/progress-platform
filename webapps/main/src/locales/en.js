@@ -157,10 +157,10 @@ export default {
   },
   "personnel": "personnel",
   "phase": {
+    "add": "add phase",
     "add_check": "add check",
     "add_field": "add field",
     "add_media": "add media",
-    "add_phase": "add phase",
     "add_steps": "start adding phases or steps",
     "alerts": {
       "add_steps_first": "Add steps to the procedure first to set this parameter"
@@ -385,6 +385,7 @@ export default {
     "new_password": "new password",
     "new_password_save_action": "sve password and start session",
     "new_success": "user successfully created. Take note of the temporary password for the user. It will not be shown again. The user must change it with a private one during his next access.",
+    "password": "password",
     "permissions": {
       "admin": "administrator",
       "library": "products area",
