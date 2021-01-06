@@ -5,7 +5,7 @@ import store from '@/store/index.js'
 // 	? 'https://' + window.location.hostname + '/api/v1/'
 // 	: 'http://' + window.location.hostname + ':80'
 
-const api_url = process.env.VUE_APP_API_BASE_URL
+const api_url = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8000'
 
 const api = axios.create({  
   baseURL: api_url
