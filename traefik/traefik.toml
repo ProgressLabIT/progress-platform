@@ -1,4 +1,4 @@
-log-level = "info"
+log-level = "INFO"
 
 [api]
 insecure = true
@@ -7,3 +7,9 @@ debug = true
 
 [providers]
 docker = true
+
+
+[accessLog]
+
+[accessLog.fields]
+defaultMode = "keep"

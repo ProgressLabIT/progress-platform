@@ -1,5 +1,6 @@
 import secrets
 import traceback
+
 from time import time
 from datetime import datetime, timedelta
 from dateutil import tz
@@ -42,9 +43,17 @@ async def authenticate_user(
   try: 
     user = auth.verify_user(username=username, password=password, db=db)
 
+  except (UserNotFoundError, UserDisabledError, UserPasswordMismatchError):
+    raise auth.credentials_exception
+
   except Exception as e:
     traceback.print_exc()
-    raise auth.credentials_exception
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    response=dict(
+      status_code=status_code,
+      error=traceback.format_exc()
+    )
+    raise HTTPException(status_code, detail=response)
 
   # Verify user has no other active session. If yes, close them.
   active_user_sessions = db.collection('UserSession').find(dict(

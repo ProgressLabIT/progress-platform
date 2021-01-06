@@ -3,21 +3,17 @@ docker run -d \
   -p 8529:8529 \
   --name arango \
   --mount type=volume,source=arango-persist,target=/var/lib/arangodb3 \
-  --mount type=bind,source=${HOME}/dev/Progress/db_backup/PROGRESS_TEST,target=/backup \
-  \
+  --mount type=bind,source=${HOME}/dev/Progress/progress-platform/db/backup/PROGRESS_TEST,target=/backup \
   arangodb \
   --rocksdb.max-total-wal-size 1024000 \
   --rocksdb.write-buffer-size 2048000 \
   --rocksdb.max-write-buffer-number 2 \
   --rocksdb.total-write-buffer-size 81920000 \
   --rocksdb.dynamic-level-bytes false \
-  \
   --rocksdb.block-cache-size 2560000 \
   --rocksdb.enforce-block-cache-size-limit true \
   --cache.size 10485760 \
-  \
   --server.statistics false \
-  \
   --javascript.v8-contexts 2 \
   --javascript.v8-max-heap 512
 

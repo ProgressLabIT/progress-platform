@@ -1,48 +1,90 @@
----
+version: '3'
 
-# Base docker-compose config to define the system services
-
-version: '3.7'
-
-x-template:
-  common: &common
-    image: api
-    build:
-      context: backend
-      dockerfile: Docker/api.Dockerfile
-    restart: unless-stopped
+volumes:
+  arango-persist:
+    external: true
 
 services:
-  api_server:
-    <<: *common
-    command: >
-      uvicorn main:app --host 0.0.0.0 --port 80 --root-path /api
 
-    depends_on:
-      - arangodb
+  reverse-proxy:
+    image: traefik:v2.3
+    restart: unless-stopped
+    volumes: 
+      # So that Traefik can listen to the Docker events
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - ./traefik/traefik.toml:/etc/traefik/traefik.toml
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
 
-  webapp_main:
+  app:
     build:
       context: webapps/main
-      dockerfile: Dockerfile
-    command: npm run serve
+      dockerfile: webapp.dev.Dockerfile
+    command: >
+      npm run serve -- --host 0.0.0.0
+    volumes:
+      - "./webapps/main/public:/main/public"
+      - "./webapps/main/src:/main/src"
+    environment:
+      - VUE_APP_API_BASE_URL=http://api.progress.localhost
+      - VUE_APP_I18N_LOCALE=it
+      - VUE_APP_I18N_FALLBACK_LOCALE=it
+      # - DEBUG=express:*
+    ports:
+      - "8080"
+    labels:
+      - traefik.http.routers.app.rule=Host(`progress.localhost`)
 
-  arangodb:
+  api:
+    image: api
+    build:
+      context: backend #root folder for build
+      dockerfile: api.dev.Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000"
+    volumes:
+      - ./backend/api:/api    
+    working_dir: /api
+    environment:
+      - PROGRESS_ARANGO_URL=http://db.progress.localhost
+      # - PROGRESS_ROOT_PATH=/api
+    command: >
+      uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
+    labels:
+      - "traefik.http.routers.api.rule=Host(`api.progress.localhost`)"
+      # - "traefik.http.routers.api.rule=(Host(`progress.localhost`) && PathPrefix(`/api`))"
+      # - "traefik.http.routers.api.middlewares=api-stripprefix"
+      # - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
+
+  mock:
+    image: api
+    restart: unless-stopped
+    ports:
+      - "8000"
+    volumes:
+      - ./backend/mock:/api
+    working_dir: /api  
+    command: >
+        uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
+    labels:
+        - "traefik.http.routers.mock.rule=Host(`mock.progress.localhost`)"
+
+  db:
     image: arangodb
     restart: unless-stopped
     volumes:
-      - arangodb:/var/lib/arangodb3
-      - ./backend/db_backup:/db_backup
-    environment:
-      ARANGO_NO_AUTH: "1"
-
-  nginx:
-    image: nginx:1.18
-    restart: unless-stopped
-    volumes:
-      - ./docker/nginx.conf:/etc/nginx/nginx.conf
+      - arango-persist:/var/lib/arangodb3
+      - ./db/backup:/db_backup
+      - ./db/arango.conf:/etc/arangodb3/arangod.conf
     ports:
-      - "80:80"
+      - "8529"
+    environment:
+      - ARANGO_NO_AUTH=1
+    labels:
+      - "traefik.http.routers.db.rule=Host(`db.progress.localhost`)"
+      
 
-volumes:
-  arangodb:

@@ -154,6 +154,15 @@ def verify_user(password, username=None, user_key=None, db=db):
       user = User( **db.collection('User').find(dict(username=username)).next() )
     except StopIteration:
       raise UserNotFoundError
+    except Exception as e:
+      raise HTTPException(
+        status_code=500,
+        detail=dict(
+          message="Error while validating credentials.",
+          error=e,
+          stacktrace=traceback.format_exc()
+        ),
+      )
   
   elif user_key:
     try: 
