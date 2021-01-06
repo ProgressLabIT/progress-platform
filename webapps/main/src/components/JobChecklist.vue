@@ -37,7 +37,7 @@
             :color="$theme.red"
             @click="toggleCheck(index, -1)"
             >
-            NO
+            {{ $tc('no') }}
           </v-btn>
           <v-btn 
             x-large depressed
@@ -48,7 +48,7 @@
             @click="toggleCheck(index, 1)"
             class="ml-3"
             >
-            SI
+            {{ $tc('yes') }}
           </v-btn>
         </v-col>        
       </v-row>

@@ -23,7 +23,7 @@
             @click="$refs.upload_image.click()">
             <v-icon small>mdi-camera</v-icon>
             <span class="ml-2">
-              modifica
+              {{ $tc('edit') }}
             </span>
             <input 
               type="file"
@@ -39,20 +39,30 @@
             @click="clearTempImg">
             <v-icon small>mdi-restore</v-icon>
             <span class="ml-2">
-              Ripristina
+              {{ $tc('restore') }}
             </span>
           </v-btn>
         </template>
 
 
-        <h5 class="mt-6">CODICE UTENTE</h5>
+        <h5 class="mt-6 text-uppercase">
+          {{ $tc('user.key') }}    
+        </h5>
         <span class="body-2">{{ user._key }}</span>
 
-        <h5 class="mt-6">DATA CREAZIONE</h5>
-        <span class="body-2">{{ user.created_at | dtFormat(locale, 'dd LLL yyyy') }}</span>
+        <h5 class="mt-6 text-uppercase">
+          {{ $tc('user.creation_date') }}    
+        </h5>
+        <span class="body-2">
+          {{ user.created_at | dtFormat(locale, 'dd LLL yyyy') }}
+        </span>
 
-        <h5 class="mt-6">ULTIMO LOGIN</h5>
-        <span class="body-2">{{ user.last_login | dtFormat(locale, 'dd LLL yyyy HH:mm') }}</span>
+        <h5 class="mt-6 text-uppercase">
+          {{ $tc('user.last_login') }}    
+        </h5>
+        <span class="body-2">
+          {{ user.last_login | dtFormat(locale, 'dd LLL yyyy HH:mm') }}
+        </span>
 
       </v-col>
 
@@ -71,21 +81,21 @@
 
             <BaseTooltipIcon
               icon="mdi-pencil"
-              tooltip="Modifica"
+              :tooltip="$tc('edit') | capitalize"
               :color="$theme.blue"
               @iconClick="edit_mode=true">
             </BaseTooltipIcon>
 
             <BaseTooltipIcon
               icon="mdi-lock-reset"
-              tooltip="Reimposta password"
+              :tooltip="$tc('reset_password') | capitalize"
               :color="$theme.orange"
               @iconClick="showPasswordReset">
             </BaseTooltipIcon>
 
             <BaseTooltipIcon
               icon="mdi-delete"
-              tooltip="Archivia"
+              :tooltip="$tc('archive') | capitalize"
               :color="$theme.red"
               @iconClick="showDelete">
             </BaseTooltipIcon>            
@@ -94,7 +104,9 @@
 
           <template v-else>
             <v-col cols="3" class="px-0">
-              <h5 class="mb-2">NOME</h5>
+              <h5 class="mb-2 text-uppercase">
+                {{ $tc('user.name') }}
+              </h5>
               <v-text-field 
                 single-line
                 hide-details  
@@ -103,7 +115,9 @@
               </v-text-field>
             </v-col>
             <v-col cols="3" offset="1" class="px-0">
-              <h5 class="mb-2">COGNOME</h5>
+              <h5 class="mb-2 text-uppercase">
+                {{ $tc('user.surname') }}
+              </h5>
               <v-text-field 
                 single-line
                 hide-details 
@@ -115,10 +129,10 @@
             <v-spacer></v-spacer>
             
             <v-btn small :color="$theme.blue" @click="save" :loading="saving">
-              SALVA
+              {{ $tc('save') }}
             </v-btn>
             <v-btn small :color="$theme.grey" @click="cancel" class="ml-2">
-              ANNULLA
+              {{ $tc('cancel') }}
             </v-btn>
             
           </template>
@@ -131,7 +145,9 @@
             <v-col cols="4" class="pa-0">
 
               <!-- USERNAME -->
-              <h5 class="mb-2">NOME UTENTE</h5>
+              <h5 class="mb-2 text-uppercase">
+                {{ $tc('user.username') }}
+              </h5>
               <span v-if="!edit_mode" class="mt-2 body-2">
                 {{ user.username || '-' }}
               </span>
@@ -143,7 +159,9 @@
               </v-text-field>
 
               <!-- EMAIL -->
-              <h5 class="mt-8 mb-2">EMAIL</h5>
+              <h5 class="mt-8 mb-2 text-uppercase">
+                {{ $tc('user.email') }}
+              </h5>
               <span v-if="!edit_mode" class="mt-2 body-2">
                 {{ user.email || '-' }}
               </span>
@@ -156,8 +174,12 @@
 
 
               <!-- DEPARTMENT -->
-              <h5 class="mt-8 mb-2">DIPARTIMENTO</h5>
-              <span v-if="!edit_mode" class="body-2">{{ temp_data.department ? temp_data.department.name : '-'}}</span>
+              <h5 class="mt-8 mb-2 text-uppercase">
+                {{ $tc( 'user.department' )}}
+              </h5>
+              <span v-if="!edit_mode" class="body-2">
+                {{ temp_data.department ? temp_data.department.name : '-'}}
+              </span>
               <BaseAutocompleteDepartment 
                 v-else
                 text_classes="body-2"
@@ -169,8 +191,12 @@
 
 
               <!-- HOURLY COST -->
-              <h5 class="mt-8 mb-2">COSTO ORARIO</h5>
-              <span v-if="!edit_mode" class="body-2">€ {{ (temp_data.hourly_cost || '-') | numberFormat(locale) }}</span>
+              <h5 class="mt-8 mb-2 text-uppercase">
+                {{ $tc('user.hourly_cost') }}
+              </h5>
+              <span v-if="!edit_mode" class="body-2">
+                € {{ (temp_data.hourly_cost || '-') | numberFormat(locale) }}
+              </span>
               <v-text-field v-else
                 type="number"
                 single-line 
@@ -187,7 +213,9 @@
             <v-col cols="6" offset="2" class="pa-0">
 
               <!-- STATUS -->
-              <h5>STATO</h5>
+              <h5 class="text-uppercase">
+                {{ $tc('user.status_title') }}
+              </h5>
               <v-switch 
                 dense hide-details
                 :disabled="!edit_mode"
@@ -195,13 +223,15 @@
                 class="mt-2">
                 <template v-slot:label>
                   <span class="body-2 base-white">
-                    {{ temp_data.active ? 'Abilitato' : 'Disabilitato' }}
+                    {{ user_active_text | capitalize }}
                   </span>
                 </template>
               </v-switch>
 
               <!-- SCOPE (PERMISSIONS) -->
-              <h5 class="mt-6 mb-4">PERMESSI</h5>
+              <h5 class="mt-6 mb-4 text-uppercase">
+                {{ $tc('user.permissions.title') }}
+              </h5>
               <v-checkbox class="mt-2"
                 hide-details
                 multiple
@@ -211,7 +241,9 @@
                 :value="check.name"
                 v-model="user_permissions">
                 <template v-slot:label>
-                  <span class="body-2 base-white">{{check.label}}</span>
+                  <span class="body-2 base-white">
+                    {{ $tc(`user.permissions.${check.name}`) | capitalize }}
+                  </span>
                 </template>                
               </v-checkbox>
 
@@ -287,7 +319,15 @@ export default {
     },
 
     full_name() {
-      return this.user ? this.user.name + ' ' + this.user.surname : 'Codice utente errato'
+      return this.user 
+        ? this.user.name + ' ' + this.user.surname 
+        : this.$options.filters.capitalize(this.$tc('user.wrong_user_key'))
+    },
+
+    user_active_text() {
+      return this.temp_data.active
+        ? this.$tc('user.enabled')
+        : this.$tc('user.disabled')
     },
 
     user_permissions: {

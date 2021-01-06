@@ -2,7 +2,7 @@ const libraryRoutes = [
   {
     path: "library",
     name: "libraryRoot",
-    meta: { scope: "library", screen_title: 'Libreria' },
+    meta: { scope: "library", screen_title: true },
     component: () => import("@/components/BaseEmptyParentRoute.vue"),
     redirect: { name: 'productList' },
     children: [

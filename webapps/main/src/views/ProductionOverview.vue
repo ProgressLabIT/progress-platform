@@ -20,7 +20,7 @@
               :key="index"
               :to="{ name: view.route_name }"
               class="display">
-              {{ view.name }}
+              {{ $tc(`views.${view.route_name}`) }}
             </v-tab>
           </v-tabs>
           </v-col>
@@ -33,7 +33,7 @@
               <v-btn small 
                 :color="$theme.blue"
                 @click="$router.push({ name: 'newWorkOrder'})">
-                crea ordine
+                {{ $tc('create_order') }}
               </v-btn>
             </v-col>
     
@@ -46,7 +46,7 @@
                   :loading="saving"
                   @click="updateQueue"
                   class="ml-3">
-                  SALVA NUOVA SEQUENZA
+                  {{ $tc('production.save_new_sequence') }}
                 </v-btn>
               </v-col>
 
@@ -56,7 +56,7 @@
                   :color="$theme.grey"
                   @click="cancelQueueChanges"
                   class="ml-2">
-                  ANNULLA MODIFICHE
+                  {{ $tc('cancel_changes') }}
                 </v-btn>
               </v-col>
 
@@ -88,16 +88,12 @@
       </v-col>
 
       
-
-
-
-
       <!-- DIVIDER -->
       <v-divider vertical inset></v-divider>
 
       <!-- FILTERS -->
       <v-col cols="3" class="pa-6 d-flex flex-column">
-        <h5 class="highlight text-uppercase">filtri</h5>
+        <h5 class="highlight text-uppercase">{{ $tc('filter', 2) }}</h5>
         
 
         <!-- FILTER JOBS BY DEPARTMENT -->
@@ -107,7 +103,7 @@
           :items="$store.state.org.departments"
           item-value="_key"
           single-line hide-details clearable
-          label="Dipartimento"
+          :label="$tc('department', 1) | capitalize"
           class="mb-6 flex-grow-0">
           <template v-slot:item="{ item: list_item }">
             {{ list_item.name }}
@@ -125,7 +121,7 @@
             single-line
             autocomplete="off"
             name="search"
-            label="Ricerca"
+            :label="$tc('search') | capitalize"
             value="search"
             v-model="search_string"
             class="mb-6 body-2 text-uppercase flex-grow-0">
@@ -142,18 +138,15 @@
                   </v-icon>
                 </template>
                 <span>
-                  Ricerca termini in uno o più dei seguenti campi:
+                  {{ $tc('production.search_explainer') | capitalize }}:
                 </span>
                 <ul>
-                  <li>Codice prodotto</li>
-                  <li>Ordine di produzione</li>
-                  <li>Riga ordine di produzione</li>
-                  <li>Nome cliente</li>
-                  <li>Numero ordine/PO cliente</li>
-                  <li>Fase di lavorazione</li>
-                  <li>Dipartimento</li>
-                  <li>Nome operatore</li>
-                  <li>Nome attrezzatura</li>
+                  <li>{{ $tc('product_code') | capitalize }}</li>
+                  <li>{{ $tc('work_order.long') | capitalize }}</li>
+                  <li>{{ $tc('work_order.wo_line.long') | capitalize }}</li>
+                  <li>{{ $tc('phase.long') | capitalize }}</li>
+                  <li>{{ $tc('department', 1) | capitalize }}</li>
+                  <li>{{ $tc('operator', 1) | capitalize }}</li>
                 </ul>
               </v-tooltip>
 
@@ -168,7 +161,7 @@
           :color="$theme.blue"
           v-for="(filter, key) in bool_filters" 
           :key="key" 
-          :label="filter.label"
+          :label="$tc(`production.filters.${key}`) | capitalize"
           v-model="filter.value"
           class="mt-2">
         </v-checkbox>
@@ -178,7 +171,7 @@
         <v-btn :color="$theme.blue"
           v-show="filters_active"
           @click="resetFilters">
-          ELIMINA FILTRI
+          {{ $tc('reset_filters') }}
         </v-btn>
 
       </v-col>
@@ -192,8 +185,8 @@
 
 
 const production_views = [
-  { name: 'ordini di produzione', component: 'WorkOrderList', route_name: 'workOrderList' },
-  { name: 'lavori', component: 'JobList', route_name: 'jobList' },
+  { component: 'WorkOrderList', route_name: 'workOrderList' },
+  { component: 'JobList', route_name: 'jobList' },
 ]
 
 const header_plus_footer_height = 80
@@ -208,14 +201,14 @@ export default {
       views: production_views,
       current_view: 0,
       bool_filters: {
-        started: { label: 'Iniziato', value: true, },
-        queued: { label: 'In coda', value: true, },
-        on_time: { label: 'In tempo', value: true, },
-        late: { label: 'In ritardo', value: true, },
-        active: { label: 'Attivo', value: true, },
-        idle: { label: 'Non attivo', value: true},
-        critical: { label: 'Critico', value: true, },
-        not_critical: { label: 'Non critico', value: true}
+        started: { value: true },
+        queued: { value: true },
+        on_time: { value: true },
+        late: { value: true },
+        active: { value: true },
+        idle: { value: true },
+        critical: { value: true },
+        not_critical: { value: true }
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       },
       search_string: undefined,

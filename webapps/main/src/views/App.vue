@@ -11,26 +11,56 @@
         :color="$theme.surface1"
         app width="400"
         v-model="show_drawer">
-        <v-container>
-          <v-tabs vertical background-color="transparent">
-            
-            <v-tab :to="{ name: 'adminPanel'}" class="display mb-2">
-              Amminitrazione di sistema
-            </v-tab>
-            
-            <v-tab :to="{ name: 'libraryRoot'}" class="display mb-2">
-              Libreria prodotti
-            </v-tab>
-            
-            <v-tab :to="{ name: 'productionRoot'}" class="display mb-2">
-              Monitoraggio produzione
-            </v-tab>
+        <v-container class="fill-height">
+          <v-row class="fill-height">
+            <v-col class="d-flex flex-column">
+              
+              <v-tabs vertical background-color="transparent">
+                
+                <v-tab 
+                  v-for="tab in tab_routes" 
+                  :to="{ name: tab }" 
+                  :key="tab"
+                  class="menu display mb-2">
+                  {{ $tc(`views.${tab}`) }}
+                </v-tab>
+                
+                <!-- <v-tab :to="{ name: tab 'adminPanel'}" class="display mb-2">
+                  Amminitrazione di sistema
+                </v-tab>
+                
+                <v-tab :to="{ name: 'libraryRoot'}" class="display mb-2">
+                  Libreria prodotti
+                </v-tab>
+                
+                <v-tab :to="{ name: 'productionRoot'}" class="display mb-2">
+                  Monitoraggio produzione
+                </v-tab>
 
-            <v-tab :to="{ name: 'operatorRoot'}" class="display">
-              Sessione di lavoro
-            </v-tab>
-            
-          </v-tabs>
+                <v-tab :to="{ name: 'operatorRoot'}" class="display">
+                  Sessione di lavoro
+                </v-tab> -->
+                
+              </v-tabs>
+
+              <v-spacer></v-spacer>
+              <v-row class="flex-grow-0 mx-0">
+                <v-col cols="auto" class="align-self-center">
+                  <span class="display medium">{{ $tc('language') }}</span>
+                </v-col>
+                <v-spacer></v-spacer>
+                <v-col>
+                  <v-tabs right v-model="locale_index">
+                    <v-tab 
+                      v-for="(lang, i) in locale_list" 
+                      :key="i">
+                      {{ lang }}
+                    </v-tab>
+                  </v-tabs>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
         </v-container>
       </v-navigation-drawer>
 
@@ -66,25 +96,35 @@ export default {
   components: {
     AppBar,
     AppFooter,
-    SessionLock
+    SessionLock,
   },
 
   data() {
     return {
       show_drawer: false,
+      tab_routes: ['adminPanel', 'libraryRoot', 'productionRoot', 'userJobs'],
+      locale_index: null,
+      locale_list: this.$root.$i18n.availableLocales,
     }
   },
 
   computed: {
+    
     user_key() {
       return this.$store.state.session.user._key
     },
 
     session_locked() {
       return this.$store.state.session.session_locked
+    },
+  },
+
+  watch: {
+    locale_index(new_locale_index) {
+      this.$root.$i18n.locale = this.locale_list[new_locale_index]
+      this.$store.state.locale = this.locale_list[new_locale_index]
     }
   },
-    
 
   created() {
     
@@ -101,11 +141,20 @@ export default {
       else { event.returnValue = '' }
     }
   },
+
+  beforeMount() {
+    let locale = this.$root.$i18n.locale
+    const saved_locale = this.$store.state.locale
+    if (saved_locale) {
+      locale = this.$root.$i18n.locale = saved_locale
+    }
+    this.locale_index = this.locale_list.findIndex(loc => loc == locale)
+  }
 }
 </script>
 
 <style type="text/css" scoped>
-.v-tab {
+.v-tab.menu {
   justify-content: flex-start;
 }
 </style>

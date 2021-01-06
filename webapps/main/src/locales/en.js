@@ -1,0 +1,452 @@
+export default {
+  "404": {
+    "alert": "this page does not exists",
+    "productList": "product library",
+    "productionOverview": "production monitoring",
+    "userJobs": "work session"
+  },
+  "active": "active",
+  "add": "add",
+  "add_equipment": "add equipment",
+  "add_operator": "add operator | add operators",
+  "all": "all",
+  "and": "and",
+  "archive": "archive",
+  "assign": "assign",
+  "bom": {
+    "add_item": "add item | add items",
+    "alerts": {
+      "phase_item_exists": "Item already used in this phase"
+    },
+    "delete_selected": "delete selected",
+    "edit": "edit",
+    "updated": "bill of materials updated"
+  },
+  "by": "by",
+  "cancel": "cancel",
+  "cancel_changes": "cancel changes",
+  "change": "change",
+  "close": "close",
+  "closed": "closed",
+  "code": "code",
+  "component": "component",
+  "confirm": "confirm",
+  "confirm_question": "confirm?",
+  "cost": {
+    "label": "cost",
+    "material": "material cost",
+    "process": "processsing cost",
+    "total": "total cost"
+  },
+  "create": "create",
+  "create_order": "create order",
+  "creation_date": "creation date",
+  "critical": "critical",
+  "deactivate": "deactivate",
+  "decrease": "decrease",
+  "delete": "delete",
+  "department": "department",
+  "description": "description",
+  "deselect_all": "deselect all",
+  "document": {
+    "add": "add document | add documents",
+    "label": "document | documents"
+  },
+  "due_by": "due by",
+  "edit": "edit",
+  "element": "element",
+  "end_date": "end date",
+  "equipment": "equipment",
+  "equipment_class": "equipment class | equipment classes",
+  "errors": {
+    "save_err": "Could not save updates"
+  },
+  "filter": "filter",
+  "greeting": {
+    "afternoon": "good afternoon",
+    "evening": "good evening",
+    "morning": "good morning"
+  },
+  "image": "image",
+  "inactive": "inactive",
+  "increase": "increase",
+  "info": "info",
+  "item": "item",
+  "job": {
+    "add": "add job",
+    "alerts": {
+      "batch_confirm": "You completed the last step of the procedure. Do you confirm the completion of the piece/batch?",
+      "confirm_exit": "Do you really want to leave this page? If you do, the job will be paused.",
+      "job_closed": "This job has been closed. Redirecting...",
+      "job_complete_confirm": "You completed all the pieces planned for this job. Do you confirm it can be closed?",
+      "rebalance_qt_mismatch": "Quantities do not match",
+      "rebalance_unassigned_jobs": "Assign an operator to the new jobs"
+    },
+    "assign_to": "assign to",
+    "assigned_to": "assigned to",
+    "assigned_to_me": "assigned to me",
+    "complete_batch": "complete batch",
+    "complete_step": "complete step",
+    "filters": {
+      "started_only": "started only"
+    },
+    "key": "Job ID",
+    "next_job_message": "the next job in queue is the following",
+    "no_job_assigned": "no job assigned",
+    "pause": "pause",
+    "rebalance": {
+      "reset": "restore initial quantities",
+      "spread": "distribute quantities"
+    },
+    "resume": "resume",
+    "selected_job_message": "you selected the following job",
+    "shown_jobs_message": "{shown} jobs shown of {total} available",
+    "start": "start",
+    "unassigned": "unassigned",
+    "unassigned_jobs": "unassigned jobs"
+  },
+  "language": "language",
+  "late": "late",
+  "lead_time": "lead time",
+  "loading_text": "getting data...",
+  "material_cost": "material cost",
+  "name": "name",
+  "new": "new",
+  "no_class": "no class",
+  "no_department": "no department",
+  "of": "of",
+  "on_time": "on time",
+  "operation": {
+    "add_op": "add operation",
+    "alerts": {
+      "delete_general_error": "there was an error during the operation. Please contact the system administrator.",
+      "op_in_use": "The operation cannot be deleted because is included in the production process of the following products",
+      "op_name_missing": "please indicate a name for the operation",
+      "op_name_used": "name already used for another operation"
+    },
+    "default_params_explainer": "New phases associated with this operation will be created with the parameters indicated here. You will be able to set different phase-specific parameters after the creation",
+    "default_params_title": "default parameters",
+    "delete_question": "do you really want to delete this operation",
+    "delete_success": "operation successfully deleted",
+    "delete_title": "delete operation",
+    "new": "new",
+    "new_success": "new operation successfully created"
+  },
+  "operator": "operator | operators",
+  "or": "or",
+  "order": "order | orders",
+  "people": "people",
+  "performance": {
+    "actual": "actual",
+    "lead_time": {
+      "long": "lead time",
+      "medium": "lead time",
+      "short": "LT"
+    },
+    "processing_time": {
+      "long": "processing time",
+      "medium": "proc. time",
+      "short": "PT"
+    },
+    "target": "target",
+    "throughput_time": {
+      "long": "throughput time",
+      "medium": "throughput",
+      "short": "TT"
+    }
+  },
+  "personnel": "personnel",
+  "phase": {
+    "add_check": "add check",
+    "add_field": "add field",
+    "add_media": "add media",
+    "add_phase": "add phase",
+    "add_steps": "start adding phases or steps",
+    "alerts": {
+      "add_steps_first": "Add steps to the procedure first to set this parameter"
+    },
+    "checklist_title": "checklist",
+    "delete": "delete phase | delete phases",
+    "delete_check": "delete check",
+    "delete_field": "delete field",
+    "field_name": "field name {field_index}",
+    "form_title": "form fields",
+    "instruction_title": "instructions",
+    "label": "procedure",
+    "long": "process phase | process phases",
+    "media_deleted": "deleted",
+    "media_not_saved": "unsaved",
+    "multiline_field": "multiline",
+    "no_procedure": "no procedure",
+    "params": {
+      "parallel_job_allowed": {
+        "false": {
+          "desc": "This fase must be executed in a single job",
+          "title": "Not allowed"
+        },
+        "title": "parallel processing",
+        "true": {
+          "desc": "Multiple jobs can be created for this phase, meaning that the work can be carried out by multiple operators concurrently.",
+          "title": "Allowed"
+        }
+      },
+      "production_batch_qt": {
+        "desc": "Quantity declared complete at the end of a procedure. This parameter is effective only if the step check is set as \"Fixed batch\". In this case, the quantity indicated cannot be changed by the operator and is valid until the completion of the job, with the exception of the last batch, which could have a smaller quantity than defined here.",
+        "title": "Production batch"
+      },
+      "release_batch_qt": {
+        "desc": "Release quantity of wip/finished products. This parameter is effective only if the release style is set as \"Fixed batch\" or \"Flexible batch\". In case of fixed batch, the quantity cannot be changed by the operator and is valid until the completion of the job, with the exception of the last batch, which could have a smaller quantity than defined here. In case of flexible batch, the quantity indicated here is the quantity that the system will propose to the operator.",
+        "title": "Release batch"
+      },
+      "release_style": {
+        "continuous": {
+          "desc": "The output of this phase is immediately available to the next or to the final warehouse as soon as it is declared completed.",
+          "title": "Continuous"
+        },
+        "job": {
+          "desc": "The output of this phase is considered available to the next phase or to the final warehouse only at the end of the job.",
+          "title": "Job"
+        },
+        "release_batch": {
+          "desc": "The output of this phase is made available to the next or to the final warehouse after the completion of a fixed quantity indicated in the \"Release batch\" parameter. Such quantity is valid until the completion of the job, with the exception of the last batch, which could have a smaller quantity than indicated here.",
+          "title": "title"
+        },
+        "title": "Release mode"
+      },
+      "step_check": {
+        "fixed_batch": {
+          "desc": "When a step in the procedure is declared as done, it will be considered executed on a fixed number of pieces indicated in the \"Production batch\" parameter. After the completion of all the steps in the procedure, the whole batch will be considered completed.",
+          "title": "Fixed batch"
+        },
+        "job": {
+          "desc": "When a step in the procedure is declared as done, it will be considered executed on all the pieces planned for the job. After the completion of all the steps in the procedure, all the pieces planned for the job will be considered completed.",
+          "title": "Job"
+        },
+        "none": {
+          "desc": "No step check. If a procedure is set for this phase it will be shown purely for informational purposes, without any check or control. The operator will declare directly the completion of the piece or production batch.",
+          "title": "None"
+        },
+        "title": "Step check batch"
+      },
+      "step_check_force_order": {
+        "false": {
+          "desc": "Each step can be completed indipendently of any other. (* Valid only when the parameter \"Step check batch\" is not \"None\")",
+          "title": "No"
+        },
+        "title": "Forced step sequence",
+        "true": {
+          "desc": "Steps must be completed only in the sequence in which they are indicated. (* Valid only when the parameter \"Step check batch\" is not \"None\")",
+          "title": "Yes"
+        }
+      }
+    },
+    "short": "phase | phases",
+    "step_types": {
+      "checklist": "checklist",
+      "form": "form",
+      "instruction": "instructions"
+    }
+  },
+  "procedure": "procedure",
+  "process": "process",
+  "processing_cost": "processing cost",
+  "processing_time": "processing time",
+  "product": {
+    "actions": {
+      "active": "active",
+      "components": "components",
+      "details": "details",
+      "inactive": "inactive",
+      "process": "process",
+      "reactivate": "reactivate"
+    },
+    "alerts": {
+      "doc_name_exists": "a document with name {filename} already exists for this product. Do you want to overwrite it?",
+      "save_before_exit": "Save or cancel changes in each section before leaving."
+    },
+    "code": "product code",
+    "confirm_delete_question": "Do you really want to delete this product?",
+    "filters": {
+      "active_only": "active only",
+      "show_images": "show images"
+    },
+    "key": "product ID",
+    "label": "product | products",
+    "minimum_order": "minimum order",
+    "new_modal_title": "new product",
+    "no_image": "no image",
+    "restore_image": "restore image",
+    "snackbars": {
+      "delete_confirmed": "product {code} deleted"
+    },
+    "tabs": {
+      "bom": "components",
+      "home": "parameters",
+      "process": "process"
+    },
+    "technical_batch": "technical batch",
+    "update_image": "update image"
+  },
+  "production": {
+    "filters": {
+      "active": "active",
+      "critical": "critical",
+      "idle": "idle",
+      "late": "late",
+      "not_critical": "not critical",
+      "on_time": "on time",
+      "queued": "queued",
+      "started": "started"
+    },
+    "save_new_sequence": "save new sequence",
+    "search_explainer": "search terms in one or more of the following fields"
+  },
+  "progress": "progress",
+  "quantity": {
+    "completed": {
+      "short": "CQ"
+    },
+    "completed_total": "Comp. - Tot. Qt.",
+    "long": "quantity",
+    "planned": {
+      "short": "PQ"
+    },
+    "released": {
+      "short": "RELQ"
+    },
+    "remaining": {
+      "short": "REMQ"
+    },
+    "short": "qt",
+    "update": "update quantity"
+  },
+  "reactivate": "reactivate",
+  "remove_assignment": "remove assignment",
+  "reset_filters": "reset filters",
+  "restore": "restore",
+  "resume": "resume",
+  "save": "save",
+  "search": "search",
+  "select": "select",
+  "select_all": "select all",
+  "session": {
+    "alerts": {
+      "close_session": "do you really want to close this session?"
+    },
+    "close_session": "close session",
+    "lock_explainer": "The session has been paused for your security either because it hasn't been active for more than {timeout} minutes or due to a page refresh. Please enter your password to resume the session. If you want to change user, close the session and start a new one.",
+    "lock_salutation": "hello {name} {surname}",
+    "lock_title": "session paused",
+    "login_title": "login",
+    "login_welcome_message_1": "welcome {name} {surname}",
+    "login_welcome_message_2": "Getting ready for work...",
+    "start_session": "start session"
+  },
+  "show_all": "show all",
+  "snackbars": {
+    "changes_canceled": "changes canceled",
+    "process_updated": "process updated",
+    "product_updated": "product updated"
+  },
+  "start_date": "start date",
+  "start_end_totals": "start/end total",
+  "status": "status",
+  "step_sequence": "step sequence",
+  "total_cost": "total cost",
+  "type": "type",
+  "unassigned": "unassigned",
+  "undo": "undo",
+  "update": "update",
+  "user": {
+    "add": "add user",
+    "alerts": {
+      "permission_missing": "Check at least a permission",
+      "username_already_exists": "username already in use",
+      "username_missing": "username required",
+      "wrong_user_key": "wrong user ID"
+    },
+    "archive_action": "archive user",
+    "archive_explainer": "Data related to this user will not be deleted, but only archived: the user will not be shown in standard lists, but you will be able to restore them from the archive section and their data will be included in traceability analyses.",
+    "archive_success": "user archived successfully",
+    "creation_date": "creation date",
+    "department": "department",
+    "disabled": "disabled",
+    "email": "email",
+    "enabled": "enabled",
+    "hourly_cost": "hourly cost",
+    "key": "user ID",
+    "last_login": "last login",
+    "less_filters": "less filters",
+    "logged_in": "logged in",
+    "logged_out": "logged out",
+    "more_filters": "more filters",
+    "name": "name",
+    "new": "new",
+    "new_password": "new password",
+    "new_password_save_action": "sve password and start session",
+    "new_success": "user successfully created. Take note of the temporary password for the user. It will not be shown again. The user must change it with a private one during his next access.",
+    "permissions": {
+      "admin": "administrator",
+      "library": "products area",
+      "operator": "operator",
+      "production": "production area",
+      "title": "permissions"
+    },
+    "reset_password": "reset password",
+    "reset_password_success": "Password reset successful. Take note of the temporary password for the user. It will not be shown again. The user must change it with a private one during his next access.",
+    "status_title": "status",
+    "surname": "surname",
+    "temp_password": "temporary password",
+    "username": "username"
+  },
+  "views": {
+    "PhaseParameters": "parameters",
+    "PhaseSteps": "procedure",
+    "adminPanel": "settings",
+    "jobList": "jobs",
+    "libraryRoot": "product library",
+    "operationLibrary": "operations",
+    "workSession": "work session",
+    "productionRoot": "production monitoring",
+    "userLibrary": "users",
+    "userJobs": "job selection",
+    "workOrderList": "work orders"
+  },
+  "waiting": "waiting",
+  "work_order": {
+    "add_line": "add line | add lines",
+    "alerts": {
+      "assign_workload_first": "Assign the whole workload before saving"
+    },
+    "close": "close",
+    "key": "work order ID",
+    "list_headers": {
+      "due_by": "due by",
+      "product_code": "product",
+      "progress": "progress",
+      "qt_completed": "cq",
+      "qt_planned": "pq",
+      "qt_remaining": "rq",
+      "sequence": "seq",
+      "wo_code": "code",
+      "wo_line": "line"
+    },
+    "long": "work order",
+    "new": "new work order",
+    "new_quantity": "new quantity",
+    "qt_rebalance_title": "assign the new workload",
+    "short": "wo",
+    "tabs": {
+      "workOrderHistory": "history",
+      "workOrderJobs": "jobs"
+    },
+    "update_due_date": "change due date",
+    "wo_code": "wo code",
+    "wo_line": {
+      "line_only": "line",
+      "long": "work order line",
+      "medium": "order line",
+      "short": "wo line | wo lines"
+    }
+  }
+}

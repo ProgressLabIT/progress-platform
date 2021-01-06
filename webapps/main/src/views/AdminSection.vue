@@ -14,7 +14,7 @@
             :key="index"
             :to="{ name: view.route_name }"
             class="display">
-            {{ view.name }}
+            {{ $tc(`views.${view.route_name}`) }}
           </v-tab>
         </v-tabs>
       </v-row>
@@ -38,7 +38,6 @@ export default {
       admin_views: [
         {
           name: 'Utenti',
-          component: 'UserLibrary',
           route_name: 'userLibrary'
         },
         {

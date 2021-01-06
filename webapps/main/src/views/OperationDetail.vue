@@ -15,14 +15,14 @@
 
             <BaseTooltipIcon
               icon="mdi-pencil"
-              tooltip="Modifica"
+              :tooltip="$tc('edit') | capitalize"
               :color="$theme.blue"
               @iconClick="edit_mode=true">
             </BaseTooltipIcon>
 
             <BaseTooltipIcon
               icon="mdi-delete"
-              tooltip="Archivia"
+              :tooltip="$tc('archive') | capitalize"
               :color="$theme.red"
               @iconClick="showDelete">
             </BaseTooltipIcon>            
@@ -31,7 +31,7 @@
 
           <template v-else>
             <v-col cols="4" class="px-0">
-              <h5 class="mb-2">NOME</h5>        
+              <h5 class="mb-2">{{ $tc('name') }}</h5>        
               <v-text-field 
                 single-line
                 hide-details 
@@ -43,10 +43,10 @@
             <v-spacer></v-spacer>
             
             <v-btn small :color="$theme.blue" @click="save" :loading="saving">
-              SALVA
+              {{ $tc('save') }}
             </v-btn>
             <v-btn small :color="$theme.grey" @click="cancel" class="ml-2">
-              ANNULLA
+              {{ $tc('cancel') }}
             </v-btn>
             
           </template>
@@ -56,7 +56,7 @@
           <v-col cols="4" class="d-flex flex-column px-0">
 
             <!-- OPERATION CODE -->
-            <h5 class="mb-2">CODICE</h5>        
+            <h5 class="mb-2 text-uppercase">{{ $tc('code') }}</h5>        
             <span v-if="!edit_mode" class="mt-2 body-2">
               {{ operation.code || '-' }}
             </span>
@@ -70,7 +70,7 @@
 
 
             <!-- DESCRIPTION -->
-            <h5 class="mt-8 mb-2">DESCRIZIONE</h5>
+            <h5 class="mt-8 mb-2 text-uppercase">{{ $tc('description') }}</h5>
             <span v-if="!edit_mode" class="mt-2 body-2">
               {{ operation.description || '-' }}
             </span>
@@ -96,67 +96,74 @@
           </v-col>  
 
           <v-col class="d-flex flex-column flex-grow-1 pl-12 pr-0">
-            <h5>PARAMETRI DI DEFAULT</h5>
-            <p class='medium mt-2'>Le nuove fasi associate a questa operazione verranno create con i parametri indicati qui. I parametri specifici della fase potranno essere modificati in maniera indipendente dopo la creazione.</p>
-              <v-expansion-panels flat hover tile accordion 
-                :disabled="!edit_mode" 
-                v-model="expansion_map">
-                
-                <v-expansion-panel 
-                  v-for="(p_value, p_key) in temp_params" :key="p_key"
-                  :readonly="paramType(p_key) == 'int'">
-                  
-                  <v-expansion-panel-header 
-                    :hide-actions="paramType(p_key) == 'int'"
-                    class="px-0 mx-n3">
-                    <template v-slot:default="{ open }">
-                      <v-container>
-                        <v-row>
-                          <v-col cols="auto">
-                            <h5 class="text-uppercase mb-3" :color="$theme.white_low">
-                              {{ paramHumanName(p_key, p_value) }}
-                            </h5>
-                            
-                            <h3 
-                              v-if="!edit_mode || paramType(p_key) != 'int'" 
-                              class="highlight mb-6">
-                              {{ paramHumanValue(p_key, p_value) }}
-                            </h3>
-                            <v-text-field v-else 
-                              type="number" min="1"
-                              :value="paramHumanValue(p_key)"
-                              @blur="updateParam(p_key, $event.target.value)">                        
-                            </v-text-field>
-                            
-                            <p>{{ paramValueDesc(p_key, p_value) }}</p>  
-                          </v-col>
-                        </v-row>
-                      </v-container>
-                    </template> 
-                  </v-expansion-panel-header>
-                  
-                  <v-expansion-panel-content v-if="paramType(p_key) != 'int'">
-                    <v-container>
-                      <v-hover v-slot:default="{ hover }" 
-                        v-for="[v_key, value] in paramOtherValues(p_key, p_value)" :key="v_key">  
-                        <v-row 
-                          :class="hover && edit_mode ? 'hover-highlight' : ''"
-                          :style="edit_mode ? 'cursor:pointer' : '' "
-                          @click="edit_mode ? updateParam(p_key, v_key) : null">
-                          <v-col cols="auto" >
-                            <h5 class="highlight mb-1">{{ value.name }}</h5>
-                            <p class="body-2">{{ value.description }}</p>
-                          </v-col>
-                        </v-row>
-                      </v-hover>
-                    </v-container>
-                  </v-expansion-panel-content>
-          
-                  <v-divider></v-divider>
-                
-                </v-expansion-panel>
+            
+            <h5 class="text-uppercase">
+              {{ $tc('operation.default_params_title') }}
+            </h5>
+            
+            <p class='medium mt-2'>
+              {{ $tc('operation.default_params_explainer') }}
+            </p>
 
-              </v-expansion-panels>
+            <v-expansion-panels flat hover tile accordion 
+              :disabled="!edit_mode" 
+              v-model="expansion_map">
+              
+              <v-expansion-panel 
+                v-for="(p_value, p_key) in temp_params" :key="p_key"
+                :readonly="paramType(p_key) == 'int'">
+                
+                <v-expansion-panel-header 
+                  :hide-actions="paramType(p_key) == 'int'"
+                  class="px-0 mx-n3">
+                  <template v-slot:default="{ open }">
+                    <v-container>
+                      <v-row>
+                        <v-col cols="auto">
+                          <h5 class="text-uppercase mb-3" :color="$theme.white_low">
+                            {{ paramHumanName(p_key, p_value) }}
+                          </h5>
+                          
+                          <h3 
+                            v-if="!edit_mode || paramType(p_key) != 'int'" 
+                            class="highlight mb-6">
+                            {{ paramHumanValue(p_key, p_value) }}
+                          </h3>
+                          <v-text-field v-else 
+                            type="number" min="1"
+                            :value="paramHumanValue(p_key)"
+                            @blur="updateParam(p_key, $event.target.value)">                        
+                          </v-text-field>
+                          
+                          <p>{{ paramValueDesc(p_key, p_value) }}</p>  
+                        </v-col>
+                      </v-row>
+                    </v-container>
+                  </template> 
+                </v-expansion-panel-header>
+                
+                <v-expansion-panel-content v-if="paramType(p_key) != 'int'">
+                  <v-container>
+                    <v-hover v-slot:default="{ hover }" 
+                      v-for="[v_key, value] in paramOtherValues(p_key, p_value)" :key="v_key">  
+                      <v-row 
+                        :class="hover && edit_mode ? 'hover-highlight' : ''"
+                        :style="edit_mode ? 'cursor:pointer' : '' "
+                        @click="edit_mode ? updateParam(p_key, v_key) : null">
+                        <v-col cols="auto" >
+                          <h5 class="highlight mb-1">{{ value.name }}</h5>
+                          <p class="body-2">{{ value.description }}</p>
+                        </v-col>
+                      </v-row>
+                    </v-hover>
+                  </v-container>
+                </v-expansion-panel-content>
+        
+                <v-divider></v-divider>
+              
+              </v-expansion-panel>
+
+            </v-expansion-panels>
           
           </v-col>
         </v-row>
@@ -168,6 +175,7 @@
 </template>
 
 <script>
+import {capitalize as c} from '@/lib/filters.js'
 import params_map from '@/lib/PhaseParams.js'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon'
 import NonExistentOperationGuard from '@/mixins/NonExistentOperationGuard'
@@ -301,7 +309,7 @@ export default {
     showDelete() {
       if (this.products_using_operation.length) {
         const product_codes = this.products_using_operation.map( o => o.code )
-        window.alert("Questa operazione non può essere cancellata perché attiva nei processi dei seguenti prodotti: " +  product_codes)
+        window.alert(c(this.$tc('operation.alerts.op_in_use') + ": " +  product_codes))
       }
       else {
         this.$router.push({

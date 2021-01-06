@@ -6,11 +6,11 @@
         <!-- OP CODE/LINE -->
         <v-row class="text-uppercase">
           <v-col cols="auto" style="max-width: 60%">
-            <h6>CODICE OP</h6>
+            <h6 class="text-uppercase">{{ $tc("work_order.wo_code") }}</h6>
             <h4 class="display highlight text-truncate">{{ job.wo_code }}</h4>
           </v-col>
           <v-col cols="auto" class="text-right">
-            <h6>RIGA</h6>
+            <h6 class="text-uppercase">{{ $tc("work_order.wo_line.line_only", 1) }}</h6>
             <h4 class="display highlight">{{ job.wo_line }}</h4>
           </v-col>
           <v-spacer></v-spacer>
@@ -22,12 +22,12 @@
         <!-- PRODUCT DATA -->
         <v-row justify="space-between">
           <v-col cols="12">
-            <h6>PRODOTTO</h6>
+            <h6 class="text-uppercase">{{ $tc("product.label", 1) }}</h6>
             <h4 class="display highlight text-uppercase">{{ job.product_code }}</h4>
             <div class="body-2 text-truncate">{{ job.product_description }}</div>
           </v-col>
           <v-col cols="12">
-            <h6>FASE</h6>
+            <h6 class="text-uppercase">{{ $tc("phase.short", 1) }}</h6>
             <h4 class="display highlight">{{ job.phase_alias }}</h4>
           </v-col>
         </v-row>
@@ -37,11 +37,11 @@
         <!-- PROGRESS -->
         <v-row>
           <v-col cols="auto" class="text-uppercase">
-            <h6>QT COMPL. - TOT.</h6>
+            <h6 class="text-uppercase">{{ $tc("quantity.completed_total") }}</h6>
             <h4 class="display highlight">{{ job.qt_completed }} / {{ job.qt_planned }}</h4>
           </v-col>
           <v-col cols="auto" class="text-uppercase text-right ml-auto">
-            <h6>AVANZAMENTO</h6>
+            <h6 class="text-uppercase">{{ $tc("progress") }}</h6>
             <h4 class="display highlight">{{ job.progress }}%</h4>
           </v-col>
         </v-row>

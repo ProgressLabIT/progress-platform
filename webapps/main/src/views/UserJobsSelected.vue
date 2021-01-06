@@ -5,7 +5,7 @@
       justify="center">
       <v-col cols="12" sm="8" md="6" xl="4" class="mt-n8">      
         <div class="mb-8 text-center">
-          {{ greeting }}. {{ message }}.
+          {{ greeting | capitalize }}. {{ message | capitalize }}.
         </div>
 
         <JobCard :job="selected_job"></JobCard>
@@ -15,13 +15,13 @@
             large
             :color="$theme.grey"
             @click="goToJobList">
-            VEDI TUTTI
+            {{ $tc('show_all') }}
           </v-btn>
           <v-btn 
             large
             :color="$theme.blue"
             @click="goToJob">
-            SELEZIONA
+            {{ $tc('select') }}
           </v-btn>
         </v-row>
       </v-col>
@@ -50,13 +50,13 @@ export default {
       const current_hour = today.getHours()
 
       if (current_hour < 12) {
-        return 'Buongiorno'
+        return this.$tc('greeting.morning')
       }
       else if (current_hour < 18) {
-        return 'Buon pomeriggio'
+        return this.$tc('greeting.afternoon')
       }
       else {
-        return 'Buonasera'
+        return this.$tc('greeting.evening')
       }
     },
 
@@ -66,8 +66,8 @@ export default {
 
     message() {
       return this.job_query_param == 'first'
-        ? "Il prossimo lavoro in coda è il seguente"
-        : "Il lavoro selezionato è il seguente"
+        ? this.$tc('job.next_job_message')
+        : this.$tc('job.selected_job_message')
     },
 
     selected_job() {

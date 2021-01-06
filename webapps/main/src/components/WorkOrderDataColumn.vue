@@ -1,16 +1,16 @@
 <template>
   <v-container>
     <v-row dense justify="space-between" class="text-uppercase mx-0">
-      <h5>codice op</h5>
-      <h5>riga</h5>
+      <h5>{{ $tc('work_order.wo_code') }}</h5>
+      <h5>{{ $tc('work_order.wo_line.line_only', 1) }}</h5>
     </v-row>
     <v-row dense justify="space-between" class="display highlight weight-bold mx-0">
       <h3>{{ wo_data.wo_code }}</h3>
       <h3>{{ wo_data.wo_line }}</h3>
     </v-row>
     <v-row dense justify="space-between" class="text-uppercase mx-0 mt-6">
-      <h5>prodotto</h5>
-      <h5>qt</h5>
+      <h5>{{ $tc('product.label') }}</h5>
+      <h5>{{ $tc('quantity.short') }}</h5>
     </v-row>
     <v-row dense justify="space-between">
       <v-col cols="9">
@@ -23,7 +23,7 @@
     </v-row>
 
     <v-row dense justify="space-between" align="end" class="mt-4 mx-0 mb-2">
-      <h5 class="weight-bold text-uppercase">progresso</h5>
+      <h5 class="weight-bold text-uppercase">{{ $tc('progress') }}</h5>
       <h3 class="weight-bold text-uppercase highlight">{{ wo_data.progress}}%</h3>
     </v-row>
 
@@ -43,7 +43,7 @@
             style="cursor: pointer"
             :style="hover ? 'text-decoration: underline' : ''"
             :class="current_view === index ? 'font-weight-black highlight' : ''">
-              {{ tab.text }}
+              {{ tabever.text }}
           </span>
         </v-hover>
       </div>
@@ -59,8 +59,12 @@
             justify="space-between"
             align="end"
             class="mx-0 mb-2">
-            <span class="text-uppercase caption">{{ i.text }}</span>
-            <span class="highlight weight-medium">{{ woInfoValue(i.name) }}</span>
+            <span class="text-uppercase caption">
+              {{ i.text }}
+            </span>
+            <span class="highlight weight-medium">
+              {{ woInfoValue(i.name) | capitalize }}
+            </span>
           </v-row>
         </v-tab-item>
         <v-tab-item key="people" class="ml-n2">
@@ -103,23 +107,62 @@ export default {
   data () {
     return {
       views: [
-        { name: 'info', text: 'INFO', align: 'start' },
-        { name: 'people', text: 'PERSONE', align: 'start' },
+        { 
+          name: 'info', 
+          text: this.$tc('info'), 
+          align: 'start' 
+        },
+        { 
+          name: 'people', 
+          text: this.$tc('people'), 
+          align: 'start' 
+        },
         // { name: 'equipment', text: 'MACCHINARI', align: 'end' },
       ],
       current_view: 0,
       wo_info: [
-        { name: 'due_by', text: 'Scadenza' },
-        { name: 'status', text: 'Stato' },
-        { name: 'created', text: 'Data creazione', value: '' },
-        { name: 'start', text: 'Data inizio' },
-        { name: 'queueing_time', text: 'T. coda' },
-        { name: 'end', text: 'Data chiusura' },
-        { name: 'processing_time', text: 'T. lavorazione' },
-        { name: 'lead_time', text: 'T. evasione' },
-        { name: 'processing_cost', text: 'Costo lavorazione' },
-        { name: 'material_cost', text: 'Costo materiali' },
-        { name: 'total_cost', text: 'Costo totale' },
+        { 
+          name: 'due_by', 
+          text: this.$tc('due_by') 
+        },
+        { 
+          name: 'status', 
+          text: this.$tc('status')
+        },
+        { 
+          name: 'created', 
+          text: this.$tc('creation_date'), 
+          value: '' 
+        },
+        { 
+          name: 'start', 
+          text: this.$tc('start_date')
+        },
+        // { name: 'queueing_time', text: 'T. coda' },
+        { 
+          name: 'end', 
+          text: this.$tc('end_date') 
+        },
+        { 
+          name: 'processing_time', 
+          text: this.$tc('processing_time')
+        },
+        { 
+          name: 'lead_time', 
+          text: this.$tc('lead_time')
+        },
+        { 
+          name: 'processing_cost', 
+          text: this.$tc('processing_cost') 
+        },
+        { 
+          name: 'material_cost', 
+          text: this.$tc('material_cost')
+        },
+        { 
+          name: 'total_cost', 
+          text: this.$tc('total_cost')
+        },
       ]
     }
   },
@@ -150,6 +193,7 @@ export default {
   },
 
   methods: {
+
     woInfoValue(info_name) {
       function formatDate(timestamp) {
         if (timestamp) {
@@ -165,11 +209,11 @@ export default {
 
       switch (info_name) {
         case 'status': {
-          let active_text = 'Attivo'
-          let inactive_text = 'In attesa'
-          let on_time_text = 'Puntuale'
-          let late_text = 'In ritardo'
-          let critical_text = 'Critico'
+          let active_text = this.$tc('active')
+          let inactive_text = this.$tc('waiting')
+          let on_time_text = this.$tc('on_time')
+          let late_text = this.$tc('late')
+          let critical_text = this.$tc('critical')
           let active = this.wo_data.active ? active_text : inactive_text
 
           let state = ''

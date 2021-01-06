@@ -2,7 +2,9 @@
   <BaseModalScreen :show="show_modal" @close="exit()">
 
     <template v-slot:header>
-      <span class="ml-4 display medium highlight weight-medium">ID PRODOTTO: {{ product_key }}</span>
+      <span class="ml-4 display medium highlight weight-medium">
+        {{ $tc('product.key') }}: {{ product_key }}
+      </span>
 
       <v-col cols="auto" class="ml-auto">
         <v-tabs 
@@ -49,15 +51,15 @@ export default {
       links: [
         {
           name: 'productHome',
-          title: 'parametri'
+          title: this.$tc('product.tabs.home')
         },
         {
           name: 'productionProcess',
-          title: 'processo'
+          title: this.$tc('product.tabs.process')
         },
         {
           name: 'bom',
-          title: 'distinta'
+          title: this.$tc('product.tabs.bom')
         }
       ]
     }
@@ -75,7 +77,7 @@ export default {
   methods: {
     exit() {
       if (this.user_is_editing) {
-        window.alert(`Salva o annulla le modifiche in tutte le sezioni prima di uscire.`)
+        window.alert(this.$tc('product.alerts.save_before_exit'))
         this.show_modal = true
       }
       else {

@@ -9,7 +9,7 @@
           single-line
           autocomplete="off"
           name="search"
-          label="Filtra/Cerca lavori"
+          :label="$tc('search') | capitalize"
           value="search"
           v-model="search_string"
           class="ma-0 pa-0 text-uppercase">
@@ -25,7 +25,7 @@
           :ripple="false"
           color="primary" 
           hide-details
-          label="Solo iniziati" 
+          :label="$tc('job.filters.started_only') | capitalize"
           v-model="started_only" 
           class="ma-0 pa-0 nowrap"/>
       </v-col>    
@@ -34,14 +34,29 @@
 
     <!-- ASSIGNED JOBS -->
     <v-row class="mx-0 mt-4" align="center">
-      <span class="highlight">Assegnati a me</span>
+      
+      <span class="highlight">
+        {{ $tc('job.assigned_to_me') | capitalize }}
+      </span>
+
       <v-divider class="mx-3"></v-divider>
+      
+      <!-- Assigned jobs shown vs total -->
       <v-chip small color="transparent" class="highlight">
-        <span class="weight-medium solid-white mr-1">{{ filtered_assigned_to_user.length }}</span>
-        lavori visualizzati su 
-        <span class="weight-medium solid-white mx-1">{{ assigned_to_user.length }}</span>
-        disponibili
+        <i18n path="job.shown_jobs_message">
+          <template v-slot:shown>
+            <span class="weight-medium solid-white mr-1">
+              {{ filtered_assigned_to_user.length }}
+            </span>
+          </template>
+          <template v-slot:total>
+            <span class="weight-medium solid-white mx-1">
+              {{ assigned_to_user.length }}
+            </span>
+          </template>
+        </i18n>
       </v-chip>
+
     </v-row>
 
     <v-row >
@@ -62,14 +77,29 @@
 
     <!-- UNASSIGNED JOBS -->
     <v-row class="mx-0 mt-12" align="center">
-      <div class="highlight bold">Non assegnati</div>
+
+      <div class="highlight bold">
+        {{ $tc('unassigned') }}
+      </div>
+      
       <v-divider class="mx-3"></v-divider>
+
+      <!-- Jobs shown vs total -->
       <v-chip small color="transparent" class="highlight">
-        <span class="weight-medium solid-white mr-1">{{ filtered_unassigned.length }}</span>
-        lavori visualizzati su 
-        <span class="weight-medium solid-white mx-1">{{ unassigned.length }}</span>
-        disponibili
+        <i18n path="job.shown_jobs_message">
+          <template v-slot:shown>
+            <span class="weight-medium solid-white mr-1">
+              {{ filtered_unassigned.length }}
+            </span>
+          </template>
+          <template v-slot:total>
+            <span class="weight-medium solid-white mx-1">
+              {{ unassigned.length }}
+            </span>
+          </template>
+        </i18n>
       </v-chip>
+
     </v-row>
 
     <v-row >

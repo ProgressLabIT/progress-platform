@@ -14,7 +14,7 @@
     single-line
     item-value="_key">
     <template v-slot:label>
-      <span :class="text_classes">{{ label }}</span>
+      <span :class="text_classes">{{ label ? label : $tc('select') | capitalize }}</span>
     </template>
     <template v-slot:item="{ item: list_item }">
       <v-row align="center" justify="space-between" class="mx-0">
@@ -40,7 +40,7 @@ export default {
   props: {
     label: {
       type: String,
-      default: 'Seleziona'
+      default: null
     },
     text_classes: {
       type: String
@@ -69,7 +69,11 @@ export default {
 
   computed: {
     department_list() {
-      return [ ...this.$store.state.org.departments, { name: 'Non assegnato', _key: 'none', code: '-' }]
+      return [ ...this.$store.state.org.departments, { 
+        name: this.$tc("unassigned", 1), 
+        _key: 'none', 
+        code: '-' 
+      }]
     }
   },
 

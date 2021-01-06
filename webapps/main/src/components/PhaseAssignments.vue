@@ -2,19 +2,23 @@
   <v-container class="fill">
     <v-row class="fill-height">
       <v-col cols="4" class="px-10 py-6 d-flex flex-column fill-height">
-        <h5 class="text-uppercase mb-8">Attrezzature</h5>
+        <h5 class="text-uppercase mb-8">
+          {{ $tc("equipment", 2) }}
+        </h5>
         <div class="fill-height scroll">
           <v-list two-line>
 
-            <v-subheader>Classi di attrezzature</v-subheader>
+            <v-subheader>
+              {{ $tc("equipment_class", 2) | capitalize }}
+            </v-subheader>
             
             <BaseAvatarListElement 
               v-for="ec in assigned_eq_classes" :key="ec._id"
               :src="`/media/equipment/${ec.src}`"
               :title="ec.name"
-              subtitle="Classe di attrezzature"
+              :subtitle="$tc('equipment_class', 1) | capitalize"
               :edit="edit_mode"
-              tooltip="Rimuovi assegnazione"
+              :tooltip="$tc('remove_assignment') | capitalize"
               :color="$theme.red"
               icon="close"
               @iconClick="cancelAssignment(ec._id)">
@@ -30,7 +34,7 @@
               :title="e.name"
               :subtitle="e.class"
               :edit="edit_mode"
-              tooltip="Rimuovi assegnazione"
+              :tooltip="$tc('remove_assignment') | capitalize"
               :color="$theme.red"
               icon="close"
               @iconClick="cancelAssignment(e._id)">
@@ -48,7 +52,7 @@
           item-text="name"
           single-line hide-details
           return-object
-          label="Aggiungi attrezzature"
+          :label="$tc('add_equipment') | capitalize"
           :menu-props="{ top: true, offsetY: true }"
           class="mt-auto flex-grow-0"
           @input="addAssignment($event)"
@@ -67,10 +71,14 @@
       </v-col> 
       <v-divider vertical inset></v-divider>
       <v-col class="px-10 py-6 d-flex flex-column fill-height">
-        <h5 class="text-uppercase mb-8">Personale</h5>
+        <h5 class="text-uppercase mb-8">
+          {{ $tc('personnel') | capitalize }}
+        </h5>
 
         <div class="fill-height scroll">
-          <v-subheader>Reparti</v-subheader>
+          <v-subheader>
+            {{ $tc('department', 2) | capitalize }}
+          </v-subheader>
           
           <v-row>
             <v-col cols="auto"
@@ -78,9 +86,9 @@
               <BaseAvatarListElement 
                 :src="null"
                 :title="d.name"
-                subtitle="Reparto"
+                :subtitle="$tc('department', 1) | capitalize"
                 :edit="edit_mode"
-                tooltip="Rimuovi assegnazione"
+                :tooltip="$tc('remove_assignment') | capitalize"
                 :color="$theme.red"
                 icon="close"
                 @iconClick="cancelAssignment(d._id)">
@@ -90,7 +98,9 @@
 
           <v-divider class="mb-3"></v-divider>
           
-          <v-subheader>Operatori</v-subheader>
+          <v-subheader>
+            {{ $tc('operator', 2) | capitalize }}
+          </v-subheader>
 
           <v-row >
             <v-col cols="auto" 
@@ -101,7 +111,7 @@
                 :title="o.name"
                 :subtitle="operatorDepartmentName(o.department)"
                 :edit="edit_mode"
-                tooltip="Rimuovi assegnazione"
+                :tooltip="$tc('remove_assignment') | capitalize"
                 :color="$theme.red"
                 icon="close"
                 @iconClick="cancelAssignment(o._id)">
@@ -121,7 +131,7 @@
           item-text="name"
           single-line hide-details
           return-object
-          label="Aggiungi operatori"
+          :label="$tc('add_operator', 2)"
           :menu-props="{ top: true, offsetY: true }"
           class="mt-auto flex-grow-0"
           @input="addAssignment($event)"
@@ -223,19 +233,19 @@ export default {
 
     add_equipment_list() {
       return [
-        { header: 'Classi di attrezzatura' },
+        { header: this.capitalize(this.$tc('equipment_class', 2) },
         ...this.equipment_classes.map(c => { 
           return {
              ...c, 
-             'class': 'Classe di attrezzature'
+             'class': this.capitalize(this.$tc('equipment_class', 1))
           } 
         }),
         { divider: true },
-        { header: 'Attrezzature' },
+        { header: this.capitalize(this.$tc('equipment')) },
         ...this.equipment.map( e => {
           return {
             ...e,
-            'class': e.class ? e.class : 'Nessuna classe'
+            'class': e.class ? e.class : this.capitalize($tc('no_class'))
           }
         })
       ]
@@ -243,19 +253,19 @@ export default {
 
     add_operator_list() {
       return [
-        { header: 'Reparti' },
+        { header: this.capitalize($tc('department', 2)) },
         ...this.departments.map(d => { 
           return {
              ...d, 
-             'department': 'Reparto'
+             'department': this.capitalize($tc('department', 1))
           } 
         }),
         { divider: true },
-        { header: 'Operatori' },
+        { header: this.capitalize($tc('operator', 2)) },
         ...this.operators.map( o => {
           return {
             ...o,
-            'department': o.department ? o.department : 'Nessun reparto'
+            'department': o.department ? o.department : this.capitalize($tc('no_department'))
           }
         })
       ]
@@ -263,6 +273,10 @@ export default {
   },
 
   methods: {
+    capitalize(string) {
+      return this.$options.filters.capitalize(string)
+    },
+
     operatorDepartmentName(dep_id) {
       return this.departments.find(d => d._id == dep_id).name
     },

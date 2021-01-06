@@ -10,7 +10,7 @@
         <v-row justify="center" align="center">
           
           <v-col cols="12" md="5" class="d-flex justify-center justify-md-end">
-            <v-img max-width="200px" src="/media/company/progresslab.svg">
+            <v-img max-width="300px" src="/media/company/progresslab.svg">
               <template v-slot:placeholder>
                 <v-avatar size="180" color="primary">
                   <v-col class="text-center highlight">
@@ -33,23 +33,24 @@
                 <v-container v-if="!logging_in && !verified && !reset_password" key="form">
                   <v-form @submit.prevent="login">
                     <v-card-title class="display">
-                        LOGIN
+                      {{ $tc('session.login_title') }}
                     </v-card-title>
                     <v-card-text>
                       <v-text-field 
                         v-model="credentials.username" 
-                        label="Nome utente"
+                        :label="$tc('username') | capitalize"
                         autocomplete="off">
                       </v-text-field>
+                      
                       <v-text-field 
                         v-model="credentials.password" 
                         type="password" 
-                        label="Password">
+                        :label="$tc('password') | capitalize">
                       </v-text-field>
                     </v-card-text>
                     <v-card-actions>
                       <v-btn block type="submit" :color="$theme.blue">
-                        inizia sessione
+                        {{ $tc('session.start_session') }}
                       </v-btn>
                     </v-card-actions>
                   </v-form>
@@ -90,14 +91,14 @@
                 <v-container v-else-if="reset_password" key="reset_password">
                   <v-form @submit.prevent="resetPassword">
                     <v-card-title class="display">
-                      REIMPOSTA PASSWORD
+                      {{ $tc('user.reset_password') }}
                     </v-card-title>
 
                     <v-card-text>
                       <v-text-field 
                         v-model="new_password.first" 
                         type="password"
-                        label="Nuova password"
+                        :label="$tc('user.new_password') | capitalize"
                         autocomplete="off">
                       </v-text-field>
 
@@ -111,7 +112,7 @@
 
                     <v-card-actions>
                       <v-btn block type="submit" :color="$theme.blue">
-                        Salva password e inizia sessione
+                        {{ $tc('user.new_password_save_action') | capitalize }}
                       </v-btn>
                     </v-card-actions>
 
@@ -199,12 +200,12 @@ export default {
           this.logging_in = false
           this.credentials.username = null
           this.credentials.password = null
-          if (err.response.status === 409) {
-            window.alert("Utente attivo su un'altra sessione.")
-          }
-          else {
+          // if (err.response.status === 409) {
+          //   window.alert("Utente attivo su un'altra sessione.")
+          // }
+          // else {
             window.alert(err)
-          }
+          // }
         })
     },
 
@@ -217,12 +218,15 @@ export default {
         this.$store.dispatch('setSessionTimeout')
 
         setTimeout(() => {
-          this.user_message = `Benvenuto ${this.user.name} ${ this.user.surname }`
+          this.user_message = this.$tc('session.login_welcome_message_1', 1, {
+            name: this.user.name,
+            surname: this.user.surname
+          })
           this.verified = true
           this.logging_in = false
         }, 1000)
         setTimeout(() => {
-          this.user_message = "Buon lavoro!"
+          this.user_message = this.$tc('session.login_welcome_message_2')
         }, 3000)
         setTimeout(() => {
           this.$router.push(this.go_to_location)

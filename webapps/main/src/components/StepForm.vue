@@ -1,6 +1,8 @@
 <template>
   <div>
-    <h5 class="mt-6 mb-6 text-uppercase">Campi modulo</h5>
+    <h5 class="mt-6 mb-6 text-uppercase">
+      {{ $tc('phase.form_title') }}
+    </h5>
     
     <draggable 
       v-model="input_fields" 
@@ -20,7 +22,7 @@
             filled single-line dense hide-details
             v-if="field.type=='short'"
             :disabled="!edit_mode"
-            :label="`Nome campo ${index + 1}`"
+            :label="$tc('phase.field_name',1, { field_index: index + 1}) | capitalize"
             :name="`field-${index + 1}`"
             :value="field.name"
             class="body-2"
@@ -32,7 +34,7 @@
             v-if="field.type=='long'"
             rows="4"
             :disabled="!edit_mode"
-            :label="`Nome campo ${index + 1}`"
+            :label="$tc('phase.field_name',1, { field_index: index + 1}) | capitalize"
             :name="`field-${index + 1}`"
             :value="field.name"
             class="body-2"
@@ -49,7 +51,7 @@
             @change="updateFieldType(index, $event)">
             <template v-slot:label>
               <span class="body-2">
-                Multiriga
+                {{ $tc('phase.multiline_field') | capitalize }}
               </span>
             </template>
           </v-switch>
@@ -70,15 +72,13 @@
           <v-col cols="auto" align-self="end">                
             <button 
               v-if="confirming_delete != index"  
-              @click="confirming_delete = index"
-              >
+              @click="confirming_delete = index">
               <span 
                 :style="`color: ${hover ? $theme.red : $theme.white_low}`"
-                class="body-2"
-                >Elimina campo</span>
-              <v-icon
-                :color="hover ? $theme.red : $theme.white_low"
-                >close</v-icon>
+                class="body-2">
+                {{ $tc('phase.delete_field') | capitalize }}
+              </span>
+              <v-icon :color="hover ? $theme.red : $theme.white_low">close</v-icon>
             </button>
 
             <v-row v-if="confirming_delete == index" justify="end" class="fill-height"> 
@@ -91,7 +91,9 @@
               </v-col>  
 
               <v-col cols="auto" class="pl-3">
-                <span class="body-2">Confermi?</span>
+                <span class="body-2">
+                  {{ $tc('confirm_question') | capitalize }}
+                </span>
               </v-col>  
             
               <v-col cols="auto">
@@ -114,7 +116,7 @@
         v-if="edit_mode"
         :color="hover ? $theme.blue : $theme.white_high"
         @click="addField">
-         + Aggiungi campo
+         + {{ $tc('phase.add_field') | capitalize }}
       </v-btn>
     </v-hover>
 

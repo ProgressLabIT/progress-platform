@@ -1,15 +1,19 @@
 <template>
   <BaseModalForm @submit="postNewWorkOrder" max_width="700px" >
     <template v-slot:title>
-      nuovo ordine di produzione
+      {{ $tc('work_order.new.title') }}
     </template>
     
     <template v-slot:form>
-      <h4 class="weight-bold text-uppercase">codice op</h4>
+      <h4 class="weight-bold text-uppercase">
+        {{ $tc('work_order.wo_code') }}
+      </h4>
       <v-text-field v-model="wo_code">
       </v-text-field>
 
-      <h4 class="weight-bold text-uppercase">righe op</h4>
+      <h4 class="weight-bold text-uppercase">
+        {{ $tc('work_order.wo_line.short', 2) }}
+      </h4>
 
       <v-row>
         <v-col 
@@ -17,7 +21,7 @@
           :key="field_name"
           :cols="info.cols"
           class="pb-0">
-          <span>{{ info.label }}</span>
+          <span>{{ info.label | capitalize }}</span>
         </v-col>
       </v-row>
 
@@ -75,19 +79,23 @@
           <v-icon v-if="index != 0" @click="deleteRow(index)">close</v-icon> 
         </v-col>
       </v-row>
-      <v-btn text class="display medium" @click="addLine">+ Aggiungi riga</v-btn>
+      <v-btn text class="display medium" @click="addLine">
+        + {{ $tc('work_order.add_line', 1) }}
+      </v-btn>
     </template>
 
     <template v-slot:actions>
         <v-col cols="6">
           <v-btn block :color="$theme.blue" @click="postNewWorkOrder">
             <v-progress-circular indeterminate v-if="loading" />
-            <span v-else>SALVA</span>
+            <span v-else>
+              {{ $tc('save') }}
+            </span>
           </v-btn>
         </v-col>
         <v-col cols="6">
           <v-btn block :color="$theme.grey" @click="$router.back()">
-            ANNULLA
+            {{ $tc('cancel') }}
           </v-btn>
         </v-col>
     </template>
@@ -112,19 +120,19 @@ export default {
       wo_code: '',
       wo_line_info: {
         product: {
-          label: 'Prodotto',
+          label: this.$tc('product.label'),
           type: Object,
           cols: 5,
           initial_value: {}
         },
         qt_planned: {
-          label: 'Quantità',
+          label: this.$tc('quantity.long'),
           type: Number,
           cols: 3,
           initial_value: 0
         },
         due_by: {
-          label: 'Entro',
+          label: this.$tc('by'),
           type: Date,
           cols: 3,
           initial_value: ''

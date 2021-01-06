@@ -11,7 +11,7 @@ const operatorRoutes = [
         name: "userJobs",
         redirect: { name: "userJobsSelected" , query: { job: 'first' }},
         component: () => import ("@/views/UserJobs.vue"),
-        meta: { screen_title: 'Selezione lavoro' },
+        meta: { screen_title: true },
         children: [
           {
             path: "confirm",
@@ -33,7 +33,7 @@ const operatorRoutes = [
     component: () => import ("@/views/WorkSessionScreen.vue"),
     props: true,
     redirect: { name: "jobSteps" },
-    meta: { screen_title: 'Sessione di lavoro' },
+    meta: { screen_title: true },
     children: [
       {
         path: "steps",

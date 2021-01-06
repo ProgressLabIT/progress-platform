@@ -19,7 +19,7 @@
                 </v-img>
               </v-avatar>
               <span class="ml-4 solid-white weight-medium medium">
-                {{ o.operator.name + ' ' + o.operator.surname }}
+                {{ o.operator.name + ' ' + o.operator.surname | capitalize_all }}
               </span>
             </v-col>
             <v-spacer></v-spacer>
@@ -38,7 +38,7 @@
             hide-default-footer
             dense
             disable-pagination
-            no-data-text="Nessun lavoro assegnato"
+            :no-data-text="$tc('job.no_job_assigned') | capitalize"
             class="assignment-list mt-4 ml-n3"
             >  
             <template v-slot:item="{ item: job }">
@@ -48,6 +48,7 @@
                     v-for="(header, index) in job_data" 
                     :key="index"
                     :class="header.value.includes('qt') ? 'text-right' : ''"
+                    class="text-uppercase"
                     @click="setSearch(header.value, job[header.value])">
                     <template v-if="header.value ==='progress'">
                       <v-row no-gutters align="center">
@@ -130,16 +131,6 @@ export default {
 
   data () {
     return {
-      job_data: [
-        { text: 'OP', value: 'wo_code', },
-        { text: 'RIGA', value: 'wo_line', },
-        { text: 'PRODOTTO', value: 'product_code', },
-        { text: 'FASE', value: 'phase_alias', },
-        { text: 'PROGRESSO', value: 'progress', width: '30%'},
-        { text: 'QComp', value: 'qt_completed', align: 'end'},
-        // { text: 'QRil', value: 'qt_released', align: 'end' },
-        { text: 'QTot', value: 'qt_planned', align: 'end' },
-      ],
       search_fields: [
         'wo_code', 
         'wo_line', 
@@ -152,6 +143,43 @@ export default {
   },
 
   computed: {
+
+    job_data() {
+      return [
+        { 
+          text: this.$tc('work_order.wo_code').toUpperCase(), 
+          value: 'wo_code', 
+        },
+        { 
+          text: this.$tc('work_order.wo_line.line_only', 1).toUpperCase(), 
+          value: 'wo_line', 
+        },
+        { 
+          text: this.$tc('product.label', 1).toUpperCase(), 
+          value: 'product_code', 
+        },
+        { 
+          text: this.$tc('phase.short').toUpperCase(), 
+          value: 'phase_alias', 
+        },
+        { 
+          text: this.$tc('progress').toUpperCase(), 
+          value: 'progress', 
+          width: '30%'
+        },
+        { 
+          text: this.$tc('quantity.completed.short').toUpperCase(), 
+          value: 'qt_completed', 
+          align: 'end'
+        },
+        // { text: this.$tc('job_list.job_data.qt_released'), value: 'qt_released', align: 'end' },
+        { 
+          text: this.$tc('quantity.planned.short').toUpperCase(), 
+          value: 'qt_planned', 
+          align: 'end' 
+        },
+      ]
+    },
 
     assignments() {
       return this.$store.state.job.assigned_job_list
@@ -199,8 +227,8 @@ export default {
         result.push({
           operator: {
             _key: 'unassigned',
-            name: 'Lavori',
-            surname: 'non assegnati'
+            name: this.$tc("job.unassigned_jobs"),
+            surname: ''
           },
           assigned_jobs_count: this.unassigned_jobs.length,    
           filtered_jobs: filtered_unassigned_jobs

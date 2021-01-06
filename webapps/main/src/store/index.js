@@ -30,7 +30,7 @@ const store = new Vuex.Store({
         animation: 200,
         ghostClass: "ghost"
       },
-      screen_title: '',
+      screen_title: 'progress',
     }
   },
 

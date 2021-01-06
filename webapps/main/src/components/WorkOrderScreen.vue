@@ -1,7 +1,9 @@
 <template>
   <BaseModalScreen :show="show_modal" @close="exit()" @input="exit()">
     <template v-slot:header>
-      <span class="ml-4 display medium highlight weight-medium">ID ORDINE DI PRODUZIONE: {{ wo_key }}</span>
+      <span class="ml-4 display medium highlight weight-medium text-uppercase">
+        {{ $tc('work_order.key') }}: {{ wo_key }}
+      </span>
 
       <v-col cols="auto" class="ml-auto">
         <v-tabs 
@@ -10,11 +12,11 @@
           hide-slider right
           >
           <v-tab 
-            v-for="(page, index) in links" 
+            v-for="(page, index) in tabs" 
             :key="index" 
-            :to="{ name: page.name, query: { back_to: $route.query.back_to } }"
+            :to="{ name: page, query: { back_to: $route.query.back_to } }"
             class="display" >
-            {{ page.title }}
+            {{ $tc(`work_order.tabs.${page}`) }}
           </v-tab>
         </v-tabs>
       </v-col>  
@@ -71,16 +73,7 @@ export default {
   data () {
     return { 
       show_modal: true,
-      links: [
-        {
-          name: 'workOrderJobs',
-          title: 'lavori'
-        },
-        {
-          name: 'workOrderHistory',
-          title: 'storico'
-        }
-      ],
+      tabs: ['workOrderJobs','workOrderHistory'],
       vuex_ready: false,
       column_height: '80vh',
       polling_instance: undefined

@@ -15,7 +15,7 @@
             clearable
             v-model="search_text">
             <template v-slot:label>
-              <span class="medium">Cerca</span>
+              <span class="medium">{{ $tc('search') | capitalize }}</span>
             </template>
           </v-text-field>
           
@@ -23,15 +23,19 @@
           <v-expansion-panels flat hover v-model="filter_panel" class="mt-2">
             <v-expansion-panel>
               <v-expansion-panel-header>
-                <span v-if="filter_panel === undefined" class=" medium">Più filtri</span>
-                <span v-else class="medium">Meno filtri</span>
+                <span v-if="filter_panel === undefined" class=" medium">
+                  {{ $tc('user.more_filters') | capitalize }}
+                </span>
+                <span v-else class="medium">
+                  {{ $tc('user.less_filters') | capitalize }}
+                </span>
               </v-expansion-panel-header>
               <v-expansion-panel-content>
                 <BaseAutocompleteDepartment 
                   @select="setDepartment($event)" 
                   class="pt-0 my-4"
                   text_classes="medium"
-                  label="Reparto">
+                  :label="$tc('department') | capitalize">
                 </BaseAutocompleteDepartment>
 
             
@@ -44,7 +48,9 @@
                       class="ma-0 pa-0"
                       v-model="check.value">
                       <template v-slot:label>
-                        <span class="medium">{{ check.label }}</span>
+                        <span class="medium">
+                          {{ $tc(`user.${check.name}`) | capitalize }}
+                        </span>
                       </template>
                     </v-checkbox>
                   </v-col> 
@@ -54,12 +60,12 @@
           </v-expansion-panels>  
         </div>
 
-          <v-row dense class="pt-2 flex-grow-0">
+          <v-row dense class="pt-2 flex-grow-0 text-uppercase">
             <v-col cols="6" class="pl-6 pb-1">
-              <h6>NOME</h6>
+              <h6>{{ $tc('name') }}</h6>
             </v-col>
             <v-col cols="6">
-              <h6>COGNOME</h6>
+              <h6>{{ $tc('user.surname') }}</h6>
             </v-col>
           </v-row>
 
@@ -85,7 +91,7 @@
               align="center" 
               justify="center" 
               class="smaller py-2">
-              {{ filtered_users.length }} di {{ user_list.length }}
+              {{ filtered_users.length }} {{ $tc('of') }} {{ user_list.length }}
             </v-row>
           </div>
 
@@ -94,7 +100,7 @@
         <v-divider></v-divider>
         
         <v-btn :color="$theme.blue" class="ma-2" @click="openUserNew">
-          AGGIUNGI UTENTE
+          {{ $tc('user.add') }}
         </v-btn>
       </v-col>
 
@@ -142,10 +148,10 @@ export default {
       department_filter: null,
       // selected_user_key: null,
       bool_filters: [
-        { name: 'show_enabled', label: 'Abilitati', value: true },
-        { name: 'show_disabled', label: 'Inabilitati', value: true },
-        { name: 'show_logged_in', label: 'Attivi', value: true },
-        { name: 'show_logged_out', label: 'Inattivi', value: true }
+        { name: 'enabled', value: true },
+        { name: 'disabled', value: true },
+        { name: 'logged_in', value: true },
+        { name: 'logged_out', value: true }
       ],
       filter_panel: undefined,
     }
@@ -189,10 +195,10 @@ export default {
 
           if (
             !filter.value && (
-            (filter.name == 'show_enabled' && user.active)
-            || (filter.name == 'show_disabled' && !user.active)
-            || (filter.name == 'show_logged_in' && user.logged_in)
-            || (filter.name == 'show_logged_out' && !user.logged_in)
+            (filter.name == 'enabled' && user.active)
+            || (filter.name == 'disabled' && !user.active)
+            || (filter.name == 'logged_in' && user.logged_in)
+            || (filter.name == 'logged_out' && !user.logged_in)
             )
           ) bool_match = false
 

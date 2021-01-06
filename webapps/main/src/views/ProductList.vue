@@ -11,7 +11,7 @@
           single-line
           autocomplete="off"
           name="search"
-          label="Filtra/Cerca prodotti"
+          :label="$tc('search') | capitalize"
           value="search"
           v-model="searchString"
           class="ma-0 pa-0 text-uppercase">
@@ -27,7 +27,7 @@
           :ripple="false"
           color="primary" 
           hide-details
-          label="Solo attivi" 
+          :label="$tc('product.filters.active_only') | capitalize" 
           v-model="filter_inactive" 
           class="ma-0 pa-0 nowrap"/>
       </v-col>    
@@ -36,7 +36,7 @@
           :ripple="false"
           color="primary"
           hide-details
-          label="Mostra immagini" 
+          :label="$tc('product.filters.show_images') | capitalize" 
           v-model="show_images" 
           class="ma-0 pa-0 nowrap"/>
       </v-col>  
@@ -46,7 +46,7 @@
       <v-col cols="auto">
         <v-btn color="primary"
           @click="$router.push({ name: 'newProduct' })">
-          Crea nuovo
+          {{ $tc('new') }}
         </v-btn>
       </v-col>
     </v-row>
@@ -74,10 +74,10 @@
       v-model="deleteSnackbar.show" 
       :timeout="deleteSnackbar.timeout">
       <v-row>
-        <v-col>
-          Product {{ deleteSnackbar.code }} deleted  
-          <v-btn text color="primary" @click.native="deleteSnackbar.show = false; ">CONFIRM</v-btn>
-          <v-btn text color="warning" @click.native="undoDelete">UNDO</v-btn>
+        <v-col class="text-uppercase">
+          {{ $tc('product.snackbars.delete_confirmed', {code: deleteSnackbar.code}) }}
+          <v-btn text color="primary" @click.native="deleteSnackbar.show = false; ">{{ $tc('confirm') }}</v-btn>
+          <v-btn text color="warning" @click.native="undoDelete">{{ $tc('undo') }}</v-btn>
         </v-col>
         <!-- <v-col cols="12">
           <v-progress-linear height="2" v-model="deleteSnackbar.remain" />

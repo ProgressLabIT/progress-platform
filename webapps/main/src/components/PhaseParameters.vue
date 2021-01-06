@@ -126,7 +126,9 @@ export default {
 
       if (param_key === 'step_check') {
         if (!this.phase_data.steps.length && value != 'none') {
-          window.alert('Aggiungi dei passi alla procedura per modificare il valore di questo parametro')
+          window.alert(this.$options.filters.capitalize(
+            this.$tc('phase.alerts.add_steps_first')
+          ))
           this.expansion_map = null
           return
         }

@@ -125,7 +125,7 @@
                   <v-btn v-else-if="selected_jobs.length === 0" small
                     :color="$theme.blue" 
                     @click="updateSelectedJobData(job, true); edit_mode = 'modify'">
-                    ASSEGNA
+                    {{ $tc('assign') }}
                   </v-btn>
                 </template>
 
@@ -159,8 +159,8 @@
                   :color="$theme.grey" 
                   @click="toggleAll(phase)">
                   {{ selected_jobs.length == 0
-                    ? 'SELEZIONA TUTTI' 
-                    : 'DELESEZIONA TUTTI' }}
+                    ? $tc('select_all') 
+                    : $tc('deselect_all')  }}
                 </v-btn>
                 
                 <!-- EDIT ACTIONS -->
@@ -169,7 +169,7 @@
                   <v-btn small 
                     :color="$theme.blue"
                     @click="edit_mode = 'modify'">
-                    MODIFICA
+                    {{ $tc('edit') }}
                   </v-btn>
                 </template>
               </template>
@@ -197,14 +197,18 @@
 
     <v-row v-if="!wo_data.active" justify="space-between" class="pb-2 mx-0 flex-grow-0">
       
-      <v-btn :color="$theme.blue" @click="edit_qt = true">MODIFICA QUANTITÀ</v-btn>
+      <v-btn :color="$theme.blue" @click="edit_qt = true">
+        {{ $tc('quantity.update') }}
+      </v-btn>
       <v-btn 
         :color="$theme.blue" 
         :loading="saving"
         @click="edit_due_date = true">
-        MODIFICA DATA SCADENZA
+        {{ $tc('work_order.update_due_date') }}
       </v-btn>
-      <v-btn :color="$theme.red">CHIUDI ORDINE</v-btn>
+      <v-btn :color="$theme.red">
+        {{ $tc('work_order.close') }}
+      </v-btn>
     </v-row>
 
     <!-- EDIT DUE DATE -->
@@ -225,12 +229,12 @@
           <v-btn small text
             :color="$theme.grey" 
             @click="closeEditDialogs">
-            ANNULLA
+            {{ $tc('cancel') }}
           </v-btn>
           <v-btn small text v-if="new_due_date"
             :color="$theme.blue"
             @click="saveWorkOrderUpdate">
-            SALVA
+            {{ $tc('save') }}
           </v-btn>
         </v-row>
       </v-date-picker>
@@ -248,7 +252,7 @@
           <v-row class="mx-0" align="center">  
             <v-col cols="7">
               <h4 class="display highlight text-uppercase">
-                nuova quantità
+                {{ $tc('work_order.new_quantity') }}
               </h4>      
             </v-col> 
             <v-col cols="5" class="d-flex align-center">
@@ -270,12 +274,12 @@
             <v-btn small text
               :color="$theme.grey" 
               @click="closeEditDialogs">
-              ANNULLA
+              {{ $tc('cancel') }}
             </v-btn>
             <v-btn small text v-if="new_qt != wo_data.qt_planned"
               :color="$theme.blue"
               @click="show_job_qt_rebalance = true">
-              SALVA
+              {{ $tc('save') }}
             </v-btn>
           </v-card-actions>    
         </v-container>
@@ -322,12 +326,40 @@ export default {
     return {
       saving: false,
       headers: [
-        { value: 'phase_alias', text: 'FASE', cols: 2, width: '20%'},
-        { value: 'progress', text: 'AVANZAMENTO', cols: 4, width: '30%'},
-        { value: 'qt_completed', text: 'QComp', align: 'end', cols: false, width: 'auto'},
+        { 
+          value: 'phase_alias', 
+          text: this.$tc('phase.short').toUpperCase(), 
+          cols: 2, 
+          width: '20%'
+        },
+        { 
+          value: 'progress', 
+          text: this.$tc('progress').toUpperCase(), 
+          cols: 4, 
+          width: '30%'
+        },
+        { 
+          value: 'qt_completed', 
+          text: this.$tc('quantity.completed.short').toUpperCase(), 
+          align: 'end', 
+          cols: false, 
+          width: 'auto'
+        },
         // { value: 'qt_released', text: 'QRil', align: 'end', cols: false, width: 'auto'},
-        { value: 'qt_remaining', text: 'QRim', align: 'end', cols: false, width: 'auto'},
-        { value: 'assigned_to', text: 'ASSEGNATO A', align: 'end', cols: '3', width: '30%'},
+        { 
+          value: 'qt_remaining', 
+          text: this.$tc('quantity.remaining.short').toUpperCase(), 
+          align: 'end', 
+          cols: false, 
+          width: 'auto'
+        },
+        { 
+          value: 'assigned_to', 
+          text: this.$tc('job.assigned_to').toUpperCase(), 
+          align: 'end', 
+          cols: '3', 
+          width: '30%'
+        },
       ],
       expanded_phase: null,
       job_select_model: {},
