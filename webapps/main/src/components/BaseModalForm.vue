@@ -19,10 +19,14 @@
           <v-row class="mt-6">
             <slot name="actions">
               <v-col>
-                <v-btn block depressed :color="$theme.blue" @click="$emit('submit')">salva</v-btn>
+                <v-btn block depressed :color="$theme.blue" @click="$emit('submit')">
+                  {{ $tc('save') }}
+                </v-btn>
               </v-col>
               <v-col>    
-                <v-btn block depressed :color="$theme.grey" @click="$router.back()">annulla</v-btn>
+                <v-btn block depressed :color="$theme.grey" @click="$router.back()">
+                  {{ $tc('cancel') }}
+                </v-btn>
               </v-col> 
             </slot>
           </v-row>  

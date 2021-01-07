@@ -6,18 +6,24 @@
     max-width="600px"
     persistent no-click-animation>
     <v-card>
-      <v-card-title>
-        SESSIONE IN PAUSA
+      <v-card-title class="text-uppercase">
+        {{ $tc('session.lock_title') }}
       </v-card-title>
 
       <v-card-text class="mt-6">
         <!-- <v-col class="pa-0"> -->
-          <p><strong>Ciao {{ user.name }} {{ user.surname }}.</strong></p>
-          <p>La sessione è stata sospesa per la tua sicurezza o perché inattiva per più di {{ session_timeout }} minuti o a causa di un ricaricamento della pagina. Inserisci la password per riprendere la sessione. Se vuoi cambiare utente, chiudi e inizia una nuova sessione.</p>
+          <p>
+            <strong>
+              {{ $tc('session.lock_salutation', 1, { name: user.name, surname: user.surname}) | capitalize_all }}.
+            </strong>
+          </p>
+          <p>
+            {{ $tc('session.lock_explainer', 1, {timeout: session_timeout} ) | capitalize }}
+          </p>
           <v-form @submit.prevent="verifyUser">
             <v-text-field
               v-model="password"
-              label="Password"
+              :label="$tc('user.password') | capitalize"
               type="password"
               single-line>
             </v-text-field>
@@ -28,10 +34,10 @@
                 type="submit"
                 :color="$theme.blue" 
                 :loading="reloading_session">
-                Riprendi
+                {{ $tc('resume') }}
               </v-btn>
               <v-btn large :color="$theme.grey" @click="logout">
-                Chiudi sessione
+                {{ $tc('session.close_session') }}
               </v-btn>
             </v-row>
           </v-form>
@@ -42,6 +48,7 @@
 </template>
 
 <script>
+import { capitalize as c } from '@/lib/filters.js'
 import { api } from '@/lib/apiCall'
 
 export default {
@@ -79,7 +86,7 @@ export default {
     },
 
     async logout() {
-      const confirm = window.confirm('Sicuro di voler terminare la sessione?')
+      const confirm = window.confirm(c(this.$tc('session.close_alert')))
       if (confirm) {
         await this.$store.dispatch('logout')
       }

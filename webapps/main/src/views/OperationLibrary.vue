@@ -12,16 +12,16 @@
           hide-details
           single-line
           clearable
-          label="Cerca"
+          :label="$tc('search') | capitalize"
           v-model="search_text">
         </v-text-field>
           
-          <v-row dense class="pt-6 flex-grow-0">
+          <v-row dense class="pt-6 flex-grow-0 text-uppercase">
             <v-col cols="8" class="pl-6 pb-1">
-              <h6>NOME</h6>
+              <h6>{{ $tc('name') }}</h6>
             </v-col>
             <v-col cols="4">
-              <h6>CODICE</h6>
+              <h6>{{ $tc('code') }}</h6>
             </v-col>
           </v-row>
 
@@ -56,7 +56,7 @@
         <v-divider></v-divider>
         
         <v-btn :color="$theme.blue" class="ma-2" @click="openOperationNew">
-          AGGIUNGI OPERAZIONE
+          {{ $tc('operations.add_op') }}
         </v-btn>
       </v-col>
 

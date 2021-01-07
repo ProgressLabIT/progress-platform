@@ -6,7 +6,7 @@
     <v-card scrollable>
 
       <v-card-title>
-        Distribuisci il nuovo carico di lavoro
+        {{ $tc('work_order.qt_rebalance_title') | capitalize }}
       </v-card-title>
 
       <v-card-text class="mt-6">
@@ -21,7 +21,7 @@
               <span 
                 v-if="phases_delta[phase.phase_key]"
                 class="solid-white font-weight-medium text-uppercase">
-                {{ phases_delta[phase.phase_key] > 0 ? 'aumenta   +' : 'riduci   ' }}  {{ phases_delta[phase.phase_key] }}
+                {{ phases_delta[phase.phase_key] > 0 ? $tc('increase') + "  +" : $tc('decrease') }}  {{ phases_delta[phase.phase_key] }}
               </span>
               <v-icon class="solid-white weight-bold" v-else>mdi-check</v-icon>
             </v-chip>
@@ -60,13 +60,13 @@
         <v-btn 
           :color="$theme.grey" 
           @click="$emit('close')">
-          ANNULLA
+          {{ $tc('cancel') }}
         </v-btn>
         <v-btn 
           :color="$theme.blue" 
           :loading="saving"
           @click="save">
-          SALVA
+          {{ $tc('save') }}
         </v-btn>
       </v-card-actions>
 
@@ -157,7 +157,7 @@ export default {
         })
         .catch( err => window.alert(err) )
       }
-      else window.alert('Completa la distribuzione del carico prima di salvare')
+      else window.alert(this.$tc('work_order.alerts.assign_workload_first'))
     }
   },
 

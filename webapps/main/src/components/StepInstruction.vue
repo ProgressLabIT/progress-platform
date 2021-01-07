@@ -1,6 +1,8 @@
 <template>
   <div>
-    <h5 class="mb-2">MEDIA</h5>
+    <h5 class="mb-2 text-uppercase">
+      {{ $tc('phase.instruction_title') }}
+    </h5>
     <v-row class="ml-n1">
       <v-col class="pa-1" cols="3" v-for="(media, index) in media_list" :key="index">
         <v-hover v-slot:default="{ hover }">
@@ -22,7 +24,9 @@
               
               <v-sheet color="rgba(100,100,100,.8)">
                 <v-row v-if="media.temp" align="start" justify="center" class="mx-1">
-                  <span class="smaller text-uppercase weight-bold">Non salvato</span>
+                  <span class="smaller text-uppercase weight-bold">
+                    {{ $tc('phase.media_not_saved') | capitalize }}
+                  </span>
                 </v-row>
               </v-sheet>
               
@@ -30,7 +34,9 @@
                 v-if="media.trash"
                 color="rgba(231, 29, 54, .8)">
                 <v-row align="start" justify="center" class="mx-1">
-                  <span class="smaller text-uppercase weight-bold">Eliminato</span>
+                  <span class="smaller text-uppercase weight-bold">
+                    {{ $tc('phase.media_deleted') | capitalize }}
+                  </span>
                 </v-row>
               </v-sheet>
           <!--     <v-overlay absolute v-if="media.trash"
@@ -102,7 +108,9 @@
             accept="image/*, application/pdf"
             @change="addMedia($event.target.files)"/>
           <v-icon :color="hover2 ? $theme.white_high : $theme.white_low">add_a_photo</v-icon>              
-          <p class="smaller text-uppercase mt-2">Aggiungi media</p>
+          <p class="smaller text-uppercase mt-2">
+            {{ $tc('phase.add_media') | capitalize }}
+          </p>
         </v-col>  
       </v-hover>
     </v-row>  

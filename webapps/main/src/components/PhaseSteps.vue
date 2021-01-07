@@ -7,7 +7,9 @@
         class="d-flex flex-column px-6 fill">
         
         <!-- STEPS LIST -->
-        <h5>SEQUENZA PASSI</h5>
+        <h5 class="text-uppercase">
+          {{ $tc('step_sequence') }}
+        </h5>
         <v-tabs
           v-if="render_steps"
           vertical dark hide-slider grow
@@ -78,8 +80,10 @@
             </v-icon>
           </v-row>
           <div class="text-center">
-            <h3>NESSUNA PROCEDURA</h3>
-            <p>Comincia ad aggiungere fasi o passi</p>
+            <h3 class="text-uppercase">
+              {{ $tc('phase.no_procedure') }}
+            </h3>
+            <p>{{ $tc('phase.add_steps' ) | capitalize }}</p>
           </div>
         </v-col>  
 
@@ -97,7 +101,9 @@
               :color="hover ? $theme.blue : $theme.white_high"
               @click="addStep(type)">
               <v-row justify="space-between" align="center">
-                <span>+ Add {{ type }}</span>
+                <span>
+                  {{ '+ ' + $tc('add') + ' ' + $tc(`phase.step_types.${type}`) }}
+                </span>
                 <v-icon>{{ stepIcon(type) }}</v-icon>
               </v-row>
             </v-btn>

@@ -8,7 +8,7 @@
 
     <v-row v-else align="center" justify="center">
       <v-col cols="auto" class="d-flex flex-column align-center">
-        <p>Recupero dati...</p>
+        <p>{{ $tc('loading_text') | capitalize }}</p>
         <v-progress-circular 
           indeterminate 
           size="40" 

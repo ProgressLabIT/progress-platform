@@ -9,7 +9,7 @@
       
       <v-card-title>  
         <h3 class="display">
-          Elimina Operazione
+          {{ $tc('operation.delete_title') | capitalize }}
         </h3>
       </v-card-title>
 
@@ -20,24 +20,26 @@
           <div v-if="stage==='confirm'" key="confirm">
 
             <div class="my-4">
-              <p>Eliminare la seguente operazione?</p> 
+              <p>{{ $tc('operation_delete.question') | capitalize }}?</p> 
               <h3 class="mb-12 text-uppercase weight-bold">
                 {{ operation.name }} 
               </h3>
             </div>
             <v-row justify="space-between" class="mx-0">
               <v-btn :color="$theme.red" @click="deleteOperation">
-                CONFERMA
+                {{ $tc('confirm') }}
               </v-btn>
               <v-btn :color="$theme.grey" @click="$router.back()">
-                ANNULLA
+                {{ $tc('cancel') }}
               </v-btn>
             </v-row>
           </div>
 
           <div v-else-if="stage==='success'" key="success">
             <v-row no-gutters align="center" class="mx-0">
-              <span class="weight-bold highlight">Operazione eliminata con successo.</span>
+              <span class="weight-bold highlight">
+                {{ $tc('operation.delete_success') | capitalize }}.
+              </span>
               
               <v-spacer></v-spacer>
 
@@ -90,12 +92,12 @@ export default {
       .catch(err => {
         // Operation is in use in some process    
         if (err.response.status === 403) {
-          const error_message = "L'operazione è in uso non può essere cancellata perché in uso nel processo dei seguenti prodotti: "
+          const error_message = this.$tc('operation.alerts.op_in_use') + ": "
           window.alert(error_message + err.response.data.detail.product_codes)
           this.$router.back()
         }
         else {
-          window.alert("An error occurred while deleting the operation. Please contact the administrator")
+          window.alert(this.$tc('operation.alerts.delete_general_error'))
         }
       })
     }

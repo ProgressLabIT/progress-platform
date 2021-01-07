@@ -9,7 +9,7 @@
       
       <v-card-title>  
         <h3 class="display">
-          Archivia Utente
+          {{ $tc('user.archive_action') }}
         </h3>
       </v-card-title>
 
@@ -24,7 +24,9 @@
             class="my-8">
           </BaseUserAvatar>
 
-          <p>I dati dell'utente non verranno effettivamente eliminati ma solo archiviati: l'utente non verrà visualizzato negli elenchi, ma potrà essere ripristinato dalla sezione archivio e i suoi dati saranno visibili in caso di analisi dello storico.</p>
+          <p>
+            {{ $tc('user.archive_explainer') }}
+          </p>
           
         </v-row>
 
@@ -33,24 +35,26 @@
           <div v-if="stage==='confirm'" key="confirm">
             <v-row justify="space-between" class="mx-0">
               <v-btn :color="$theme.red" @click="archiveUser">
-                CONFERMA
+                {{ $tc('confirm') }}
               </v-btn>
               <v-btn :color="$theme.grey" @click="$router.back()">
-                ANNULLA
+                {{ $tc('cancel') }}
               </v-btn>
             </v-row>
           </div>
 
           <div v-else-if="stage==='success'" key="success">
             <v-row no-gutters align="center" class="mx-0">
-              <span class="weight-bold highlight">Utente archiviato con successo.</span>
+              <span class="weight-bold highlight">
+                {{ $tc('user.archive_success') | capitalize }}
+              </span>
               
               <v-spacer></v-spacer>
 
               <v-btn 
                 :color="$theme.grey" 
                 @click="$router.push({ name: 'userLibrary' })">
-                CHIUDI
+                {{ $tc('close') }}
               </v-btn>
             </v-row>
           </div>

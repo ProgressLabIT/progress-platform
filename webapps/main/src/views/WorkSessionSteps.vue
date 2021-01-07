@@ -42,8 +42,8 @@
             <v-icon x-large :color="$theme.white_low">
               error_outline
             </v-icon>
-            <div class="text-center mt-6">
-              <h3>NESSUNA PROCEDURA</h3>
+            <div class="text-center mt-6 text-uppercase">
+              <h3>{{ $tc('phase_steps.no_procedure') }}</h3>
             </div>
           </v-col>
         </v-row>

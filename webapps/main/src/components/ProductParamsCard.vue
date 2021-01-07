@@ -6,13 +6,13 @@
       
       <!-- PARAM NAME -->
       <v-col cols="auto" class="body-2">
-        {{ perfs.includes(key) ? 'Obiettivo ' : '' }}{{ p }}
+        {{ perfs.includes(key) ? $tc('product_params.target') : '' | capitalize }} {{ p }}
       </v-col>
       
       <v-spacer></v-spacer>
 
       <!-- PARAM VALUE -->
-      <template v-if="key == 'active'">
+      <template v-if="key == 'active_state'">
         <v-col cols="auto" v-if="edit_mode">
           <v-switch 
             hide-details flat
@@ -23,8 +23,12 @@
           </v-switch>   
         </v-col>
         <v-col cols="4" class="body-2 highlight text-right" :style="`color: ${$theme.white_high}`">
-          <div v-if="temp_params[key].value">Attivo</div>
-          <div v-else>Disattivato</div>
+          <div v-if="temp_params[key].value">
+            {{ $tc('active') | capitalize }}
+          </div>
+          <div v-else>
+            {{ $tc('inactive') | capitalize }}
+          </div>
         </v-col>
       </template>
 
@@ -113,15 +117,10 @@ export default {
       // Map performances for temporary population in created hook
       time_perfs: ['processing_time', 'throughput_time', 'lead_time'],
 
-      params: {
-        active: 'Stato',
-        technical_batch_qt: 'Lotto tecnico',
-        minimum_order_qt: 'Ordine minimo',
-        processing_time: 'TP',
-        throughput_time: 'TA',
-        lead_time: 'TE',
-        cost: 'Costo'
-      }
+      /**
+       * PRODUCT PERFORMANCE ARE TEMPORARY HIDDEN UNTIL A PROPER CALCULATION IS
+       * DEVELOPED IN THE BACKEND
+       */
 
       // temp_params: { 
       //   active: {
@@ -173,6 +172,18 @@ export default {
   },
 
   computed: {
+
+    params() {
+      return {
+        active: this.$tc('status'),
+        technical_batch_qt: this.$tc('product.technical_batch'),
+        minimum_order_qt: this.$tc('product.minimum_order'),
+        processing_time: this.$tc('performance.processing_time.medium'),
+        throughput_time: this.$tc('performance.throughput_time.medium'),
+        lead_time: this.$tc('performance.lead_time.medium'),
+        cost: this.$tc('cost.label')
+      }
+    },
 
     perfs() { return [...this.time_perfs, 'cost'] },
       
@@ -230,6 +241,10 @@ export default {
   },
 
   methods: {
+
+    capitalize(string) {
+      return this.$options.filters.capitalize(string)
+    },
 
     getTargetTime(event) {
       const msPerMinute = 1000 * 60
