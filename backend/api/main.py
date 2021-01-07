@@ -7,11 +7,8 @@ import endpoints
 
 config = get_config()
 
-openapi_url=f"{config.root_path}/openapi.json"
-print(openapi_url)
-
 app = FastAPI(
-	openapi_url=f"{config.root_path}/openapi.json",
+	openapi_url=f"{config.openapi_root_path}/openapi.json",
 	root_path=config.root_path
 )
 # global_router = APIRouter()

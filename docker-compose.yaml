@@ -29,6 +29,7 @@ services:
       - "./webapps/main/public:/main/public"
       - "./webapps/main/src:/main/src"
     environment:
+      # the app will call the api server from outside the docker network, so the full Traefik host alias should be used
       - VUE_APP_API_BASE_URL=http://api.progress.localhost
       - VUE_APP_I18N_LOCALE=it
       - VUE_APP_I18N_FALLBACK_LOCALE=it
@@ -44,34 +45,22 @@ services:
       context: backend #root folder for build
       dockerfile: api.dev.Dockerfile
     restart: unless-stopped
+    depends_on:
+      - db
     ports:
       - "8000"
     volumes:
       - ./backend/api:/api    
     working_dir: /api
     environment:
-      - PROGRESS_ARANGO_URL=http://db.progress.localhost
+      # Here the service will be called from INSIDE the docker network, so the internal alias should be used.
+      - PROGRESS_ARANGO_URL=http://db:8529
+      # - PROGRESS_OPENAPI_ROOT_PATH=/api
       # - PROGRESS_ROOT_PATH=/api
     command: >
       uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
     labels:
-      - "traefik.http.routers.api.rule=Host(`api.progress.localhost`)"
-      # - "traefik.http.routers.api.rule=(Host(`progress.localhost`) && PathPrefix(`/api`))"
-      # - "traefik.http.routers.api.middlewares=api-stripprefix"
-      # - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
-
-  mock:
-    image: api
-    restart: unless-stopped
-    ports:
-      - "8000"
-    volumes:
-      - ./backend/mock:/api
-    working_dir: /api  
-    command: >
-        uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
-    labels:
-        - "traefik.http.routers.mock.rule=Host(`mock.progress.localhost`)"
+      - traefik.http.routers.api.rule=Host(`api.progress.localhost`)
 
   db:
     image: arangodb
@@ -85,6 +74,4 @@ services:
     environment:
       - ARANGO_NO_AUTH=1
     labels:
-      - "traefik.http.routers.db.rule=Host(`db.progress.localhost`)"
-      
-
+      - traefik.http.routers.db.rule=Host(`db.progress.localhost`)
