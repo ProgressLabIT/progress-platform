@@ -4,11 +4,15 @@
     <v-card outlined :img="`/media/product/${product._key}/image.jpeg`" height="30vh"/> 
     
     <!-- PRODUCT CODE -->
-    <h4 class="weight-bold medium mt-6">CODICE PRODOTTO</h4>
+    <h4 class="weight-bold medium mt-6 text-uppercase">
+      {{ $tc('product.code') }}
+    </h4>
     <h1 class="display highlight">{{ product.code }}</h1>
 
     <!-- PRODUCT DESCRIPTION -->
-    <h4 class="weight-bold medium mt-10">DESCRIZIONE</h4>
+    <h4 class="weight-bold medium mt-10 text-uppercase">
+      {{ $tc('description') }}
+    </h4>
     <h3 class="highlight mt-1">{{ product.description }}</h3>      
 
     <v-spacer></v-spacer>

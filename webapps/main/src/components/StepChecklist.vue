@@ -1,6 +1,9 @@
 <template>
   <div>
-    <h5 class="mb-6 text-uppercase">Lista di controllo</h5>
+    <h5 class="mb-6 text-uppercase">
+      {{ $tc('phase.checklist_title') }}
+    </h5>
+
     <draggable v-model="step_checks"
       handle=".handle"
       :disabled="!edit_mode"
@@ -46,7 +49,7 @@
           <v-col cols="1" v-show="over_row==index" v-if="edit_mode && confirming_delete != index">
             <BaseTooltipIcon
               icon="delete"
-              tooltip="Rimuovi controllo"
+              :tooltip="$tc('phase.delete_check') | capitalize"
               :color="$theme.red"
               @iconClick="confirming_delete = index"/>
           </v-col> 
@@ -58,7 +61,9 @@
           <v-row justify="end" class="fill"> 
 
             <v-col cols="auto" class="pl-3">
-              <span class="body-2">Confermi?</span>
+              <span class="body-2">
+                {{ $tc('confirm_question') | capitalize }}
+              </span>
             </v-col>  
             <v-col cols="auto">
               <v-btn 
@@ -88,7 +93,7 @@
         v-if="edit_mode"
         :color="hover ? $theme.blue : $theme.white_high"
         @click="addCheck">
-         + Aggiungi controllo
+         + {{ $tc('phase.add_check') }}
       </v-btn>
     </v-hover>
 

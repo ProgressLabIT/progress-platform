@@ -18,13 +18,13 @@
               class="pa-2 ma-0">
               <template v-slot:label>
                 <span class="body-2 text-truncate">
-                  {{ product.active ? 'Attivo' : 'Inattivo' }}
+                  {{ product.active ? $tc('active') : $tc('inactive') | capitalize }}
                 </span>
               </template>
             </v-switch>
           </template>
           <span class="no-transition">
-            {{ product.active ? 'Disattiva' : 'Riattiva' }}
+            {{ product.active ? $tc('deactivate') : $tc('reactivate') | capitalize }}
           </span>
         </v-tooltip>
       </v-col>
@@ -35,22 +35,22 @@
       <v-col cols="6" class="d-flex py-0 align-center justify-end">
         <BaseTooltipIcon
           icon="assignment"
-          tooltip="Dettagli"
+          :tooltip="$tc('product.actions.details') | capitalize"
           :color="$theme.blue"
           @iconClick="goToProductPage('productHome')"/>
         <BaseTooltipIcon
           icon="mdi-chevron-triple-right"
-          tooltip="Processo"
+          :tooltip="$tc('process') | capitalize"   
           :color="$theme.blue"
           @iconClick="goToProductPage('productionProcess')"/>
         <BaseTooltipIcon
           icon="mdi-clipboard-list"
-          tooltip="Componenti"
+          :tooltip="$tc('component', 2) | capitalize"
           :color="$theme.blue"
           @iconClick="goToProductPage('bom')"/>
         <BaseTooltipIcon
           icon="delete"
-          tooltip="Elimina"
+          :tooltip="$tc('delete') | capitalize"
           :color="$theme.red"
           @iconClick="confirmDelete"
           />

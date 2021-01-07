@@ -2,7 +2,9 @@
   <v-container fluid class="fill py-0">
 
     <v-card v-if="job_closed">
-      <h1>ATTENZIONE LAVORO CHIUSO. REINDIRIZZAMENTO IN CORSO</h1>
+      <h1 class="text-uppercase">
+        {{ $tc('job.alerts.job_closed') }}
+      </h1>
       <v-progress-circular indeterminate :color="$theme.blue"></v-progress-circular>
     </v-card>
 
@@ -67,7 +69,7 @@
           :color="job_color" 
           class="mt-6 mb-1"/>
         <v-row class="ma-0 flex-grow-0" justify="space-between" align="end">
-          <h5 class="weight-bold">PROGRESS</h5>
+          <h5 class="weight-bold text-uppercase">{{ $tc('progress') }}</h5>
           <span>{{ j.qt_completed }} / {{ j.qt_planned }}</span>
         </v-row>
 
@@ -178,18 +180,6 @@ export default {
 
   data () {
     return {
-      links: [
-        // { route_name: 'jobDocs', text: 'DETTAGLI PRODOTTO' },
-        // { route_name: 'jobBom', text: 'DISTINTA MATERIALI' },
-        { route_name: 'jobSteps', text: 'PROCEDURA' },
-      ],
-
-      wo_data: [
-        { name: 'wo_code', text: 'codice op' },
-        { name: 'wo_line', text: 'riga op' },
-        { name: 'phase_alias', text: 'fase' },
-      ],
-
       vuex_ready: false,
       job_closed: false
     }
@@ -203,16 +193,32 @@ export default {
       batch_data: state => state.traceability.current_batch_data.step_data,
     }),
 
+    links() {
+      return [
+          // { route_name: 'jobDocs', text: 'DETTAGLI PRODOTTO' },
+          // { route_name: 'jobBom', text: 'DISTINTA MATERIALI' },
+          { route_name: 'jobSteps', text: this.$tc('procedure') },
+      ]
+    },
+
+    wo_data() {
+      return [
+        { name: 'wo_code', text: this.$tc('work_order.wo_code') },
+        { name: 'wo_line', text: this.$tc('work_order.wo_line.line_only', 1) },
+        { name: 'phase_alias', text: this.$tc('phase.short', 1) },
+      ]
+    },
+
     force_order() {
       return this.j.parameters.step_check_force_order
     },
 
     confirm_batch_done_message() {
-      return "Hai completato l'ultimo passo della procedura. Confermi il completamento dei pezzi in lavorazione?"
+      return this.$tc('job.alerts.batch_confirm')
     },
     
     confirm_job_done_message() {
-      return "Hai completato tutti i pezzi previsti dal lavoro. Ne confermi la chiusura?"
+      return this.$tc('job.alerts.job_complete_confirm')
     },
     
     job_info() {
@@ -236,13 +242,13 @@ export default {
 
       const complete_step = {
         icon: 'mdi-check',
-        text: 'completa passo',
+        text: this.$tc('job.complete_step'),
         action: this.completeStep
       }
 
       const declare_batch = {
         icon: 'mdi-plus',
-        text: 'completa lotto',
+        text: this.$tc('job.complete_batch'),
         action: this.declareBatch
       }
       
@@ -341,7 +347,7 @@ export default {
       }
 
       if (this.j.active) {
-        result.text = 'PAUSA'
+        result.text = this.$tc('job.pause').toUpperCase()
         result.action = () => this.$store.dispatch('pauseJob')
         return result
       }
@@ -349,12 +355,12 @@ export default {
       else {
         // Check if progress has already been made or user has already started
         if (this.j.stage == 'started' ) {
-          result.text = 'RIPRENDI'
+          result.text = this.$tc('job.resume').toUpperCase()
           result.action = () => this.$store.dispatch('resumeJob')
           return result          
         }
         else {
-          result.text = 'INIZIA'
+          result.text = this.$tc('job.start').toUpperCase()
           result.action = () => this.$store.dispatch('startJob')
           return result
         }
@@ -483,7 +489,7 @@ export default {
 
   beforeRouteLeave (to, from, next) {
     if (this.j.active) {
-      const confirm = window.confirm("Vuoi davvero lasciare questa pagina? Il lavoro verrà messo in pausa")
+      const confirm = window.confirm(this.$tc('job.alerts.confirm_exit'))
       if (confirm) {
         this.$store.dispatch('pauseJob')
         next()

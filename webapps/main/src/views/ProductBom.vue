@@ -7,7 +7,7 @@
         <h1 class="display highlight mb-2">{{ product_metadata.code }}</h1>
         <p>{{ product_metadata.description }}</p>
         
-        <h5 class="mt-12">FILTRI</h5>
+        <h5 class="mt-12 text-uppercase">{{ $tc('filters') }}</h5>
 
         <v-text-field
           hide-details
@@ -18,7 +18,7 @@
           v-model="search"
           class="ma-0 pa-0 align-center">
           <template v-slot:append>
-            <span class="material-icons">search</span>
+            <span class="material-icons">{{ $tc('search') }}</span>
           </template>
         </v-text-field>
 
@@ -38,7 +38,7 @@
           @click="toggleEdit"
           :color="$theme.blue"
           >
-          MODIFICA DISTINTA
+          {{ $tc('bom.edit') }}
         </v-btn>
 
         <div v-else>
@@ -46,14 +46,14 @@
             :color="$theme.green" 
             @click="saveChanges"
             :loading="saving">
-            SALVA
+            {{ $tc('save') }}
           </v-btn>
 
           <v-btn block 
             :disabled="saving" 
             :color="$theme.grey" 
             @click="cancelChanges">
-            ANNULLA
+            {{ $tc('cancel') }}
           </v-btn>
         </div>  
 
@@ -62,7 +62,7 @@
           top :timeout="2000"
           :color="$theme.grey"
           v-model="show_cancel_confirmation">
-          Modifiche annullate
+          {{ $tc('snackbars.changes_canceled') | capitalize }}
           <v-btn text @click.native="show_cancel_confirmation = false">OK</v-btn>
         </v-snackbar>
 
@@ -70,8 +70,9 @@
         <v-snackbar
           top :timeout="2000"
           :color="$theme.green"
-          v-model="show_save_confirmation">
-          Distinta aggiornata
+          v-model="show_save_confirmation"
+          class="text-uppercase">
+          {{ $tc('bom.updated') }}
           <v-btn text :color="$theme.white" @click.native="show_save_confirmation = false">
             <v-icon>close</v-icon>
           </v-btn>
@@ -87,7 +88,7 @@
           :items="filtered_bom"
           :show-select="edit_mode"
           v-model="delete_items"
-          loading-text="Recupero dati in corso..."
+          :loading-text="$tc('loading_text') | capitalize"
           sort-by="code"
           fixed-header  
           item-key="table_key"
@@ -114,7 +115,7 @@
             <BaseTooltipIcon small 
               :color="$theme.red" 
               icon="delete"
-              :tooltip="deleteIconTooltip"
+              :tooltip="deleteIconTooltip | capitalize"
               @iconClick="toggleAll"
               class="mx-n1">
             </BaseTooltipIcon>
@@ -133,11 +134,13 @@
                   v-if="edit_mode && delete_items.length"  
                   :color="$theme.red"
                   @click="removeSelectedItems">
-                  <v-icon small>delete</v-icon>elimina selezionati</v-btn>
+                  <v-icon small>delete</v-icon>
+                  {{ $tc('bom.delete_selected') }}
+                </v-btn>
               </v-col>  
               
               <v-col cols="4" class="smaller text-center">
-                {{ filtered_bom.length }} di {{ temp_bom.length }} ELEMENTI
+                {{ filtered_bom.length }} {{ $tc('of') }} {{ temp_bom.length }} {{ $tc('element', 2).toUpperCase() }}
               </v-col>
               
               <v-col cols="4" class="d-flex justify-end" >
@@ -146,7 +149,7 @@
                   :color="$theme.blue"
                   @click="openItemSearch">
                   <v-icon small class="mr-2 pl-0">add</v-icon>
-                  aggiungi articolo
+                  {{ $tc('bom.add_item') }}
                 </v-btn>
               </v-col>  
             </v-row>  
@@ -167,12 +170,12 @@
       no-click-animation>
       <v-card>
           <v-card-title class="display">
-            Nuovo articolo
+            {{ $tc('new') }} {{ $tc('item', 1) }}
           </v-card-title>
           <v-card-text>
             
           <v-row>
-            <v-col>
+            <v-col cols="4">
               <v-autocomplete
                 v-model="new_item_phase"
                 :items="$store.state.process.saved"
@@ -180,7 +183,7 @@
                 item-text="alias"
                 single-line
                 return-object
-                label="Inserisci fase">
+                :label="$tc('phase.name', 1) | capitalize">
                 <template v-slot:selection="data">
                   {{ data.item.alias | capitalize }}
                 </template>
@@ -191,7 +194,7 @@
                 </template>
               </v-autocomplete>
             </v-col>  
-            <v-col cols="4">
+            <v-col cols="6">
               <v-autocomplete
                 v-model="new_item"
                 :items="item_catalog"
@@ -200,7 +203,7 @@
                 item-text="code"
                 single-line
                 return-object
-                label="Inserisci codice o descrizione"
+                :label="$tc('code') +'/'+ $tc('description') | capitalize"
               >
                 <template v-slot:item="data">
                   <v-list-item-content>
@@ -216,10 +219,10 @@
               </v-autocomplete>
               
             </v-col>  
-            <v-col cols="3">
+            <v-col>
               <v-text-field
                 type="number" min="0"
-                label="qt"
+                :label="$tc('quantity.short')"
                 v-model="new_item_qt"
                 single-line
               ></v-text-field>
@@ -229,7 +232,7 @@
           <v-card-actions class="px-4">
             <v-btn block 
               :color="$theme.blue"
-              @click="addItem">aggiungi</v-btn>
+              @click="addItem">{{ $tc('add') }}</v-btn>
           </v-card-actions>
       </v-card>
     </v-dialog>
@@ -238,6 +241,8 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
+
+import { capitalize as c } from '@/lib/filters.js'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon'
 import { api } from '@/lib/apiCall.js'
@@ -257,13 +262,6 @@ export default {
       bom_types: ['assembly', 'component', 'consumable'],
       item_type_filter: ['assembly', 'component', 'consumable'],
       table_height: '85vh',
-      table_headers: [
-        {  value:'code', text:'CODICE' },
-        {  value:'description', text:'DESCRIZIONE' },
-        {  value:'item_type', text:'TIPO' },
-        {  value:'phase_name', text:'FASE' },
-        {  value:'qt', text:'QT' },
-      ],
       delete_items: [],
       show_item_catalog: false,
       catalog_loading: false,
@@ -282,6 +280,16 @@ export default {
       // product_metadata: state => state.product.temp,
       saved_bom: state => state.bom.saved
     }),
+
+    table_headers() {
+      return [
+        {  value:'code', text: this.$tc('code').toUpperCase() },
+        {  value:'description', text: this.$tc('description').toUpperCase() },
+        {  value:'item_type', text: this.$tc('type').toUpperCase() },
+        {  value:'phase_name', text: this.$tc('phase.name', 1).toUpperCase() },
+        {  value:'qt', text: this.$tc('quantity.short').toUpperCase() },
+      ]
+    },
 
     edit_mode: {
       get() {
@@ -321,9 +329,9 @@ export default {
 
     deleteIconTooltip() {
       if (this.delete_items.length) {
-        return 'Deseleziona tutti'
+        return this.$tc('deselect_all')
       }
-      else return 'Seleziona tutti'
+      else return this.$tc('select_all')
     }
   },
 
@@ -400,7 +408,7 @@ export default {
         this.show_item_catalog = false
       }
       else {
-        window.alert("Articolo già presente in distinta")
+        window.alert(c(this.$tc('bom.alerts.phase_item_exists')))
       }
     },
 

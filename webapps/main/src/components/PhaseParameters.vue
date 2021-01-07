@@ -88,7 +88,7 @@ export default {
 
   methods: {
     paramHumanName(param_key) {
-      return params_map[param_key].title
+      return this.$tc(`phase.params.${param_key}.title`)
     },
 
     paramType(param_key) {
@@ -99,26 +99,33 @@ export default {
       if (this.paramType(param_key) == 'int') {
         return this.phase_params[param_key]
       }
-      return params_map[param_key].values.get(value_key).name
+      return this.$tc(`phase.params.${param_key}.${value_key}.title`)
     },
 
     paramValueDesc(param_key, value_key) {
       // const param_value = this.phase_params[param_key]
       if (this.paramType(param_key) == 'int') {
-        return params_map[param_key].description
+        return this.$tc(`phase.params.${param_key}.desc`)
       }
-      else return params_map[param_key].values.get(value_key).description
+      else return this.$tc(`phase.params.${param_key}.${value_key}.desc`)
     },
 
     paramOtherValues(param_key, param_value) {
       /* must update to keep map structure so that keys can be used when 
          updating param */
       const param_all_values = params_map[param_key].values
-      const param_alternative_values = new Map(
-        [...param_all_values.keys()]
-          .filter( k => k != param_value )
-          .map( k => [k, param_all_values.get(k)] )
-      )
+      const param_alternative_values = param_all_values
+        .filter(v => v != param_value)
+        .map(v => { return [param_key, { 
+            name: this.paramHumanValue(param_key, v),
+            description: this.paramValueDesc(param_key, v)
+          }]
+        })
+      // const param_alternative_values = new Map(
+      //   [...param_all_values.keys()]
+      //     .filter( k => k != param_value )
+      //     .map( k => [k, param_all_values.get(k)] )
+      // )
       return param_alternative_values
     },
 
@@ -126,7 +133,9 @@ export default {
 
       if (param_key === 'step_check') {
         if (!this.phase_data.steps.length && value != 'none') {
-          window.alert('Aggiungi dei passi alla procedura per modificare il valore di questo parametro')
+          window.alert(this.$options.filters.capitalize(
+            this.$tc('phase.alerts.add_steps_first')
+          ))
           this.expansion_map = null
           return
         }

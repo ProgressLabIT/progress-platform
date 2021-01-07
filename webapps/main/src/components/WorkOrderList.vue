@@ -6,7 +6,7 @@
       :headers="table_headers"
       :items="filtered_wo_list"
       :options="{sortBy: ['priority']}"
-      loading-text="Recupero dati in corso..."
+      :loading-text="$tc('loading_text') | capitalize"
       fixed-header  
       :height="table_height"
       disable-pagination
@@ -94,22 +94,50 @@ export default {
 
   data () {
     return {
-      table_headers: [
-        { value: 'sequence', text: 'SEQ'},
-        { value: 'wo_code', text: 'CODICE'},
-        { value: 'wo_line', text: 'RIGA', },
-        { value: 'product_code', text: 'PRODOTTO'},
-        { value: 'progress', text: 'AVANZAMENTO', width: '40%' },
-        { value: 'qt_completed', text: 'QC', align: 'end'},
-        { value: 'qt_planned', text: 'QP', align: 'end'},
-        { value: 'qt_remaining', text: 'QR', align: 'end'},
-        { value: 'due_by', text: 'ENTRO', sort: this.sortDate}
-      ],
       table_height: '85vh',
     }
   },
 
   computed: {
+
+    table_headers() {
+      return [
+        { 
+          value: 'sequence', 
+          text: this.$tc('work_order.list_headers.sequence').toUpperCase()},
+        { 
+          value: 'wo_code', 
+          text: this.$tc('work_order.list_headers.wo_code').toUpperCase()},
+        { 
+          value: 'wo_line', 
+          text: this.$tc('work_order.list_headers.wo_line').toUpperCase() },
+        { 
+          value: 'product_code', 
+          text: this.$tc('work_order.list_headers.product_code').toUpperCase()},
+        { 
+          value: 'progress', 
+          text: this.$tc('work_order.list_headers.progress').toUpperCase(), 
+          width: '40%' },
+        { 
+          value: 'qt_completed', 
+          text: this.$tc('work_order.list_headers.qt_completed').toUpperCase(), 
+          align: 'end'},
+        { 
+          value: 'qt_planned', 
+          text: this.$tc('work_order.list_headers.qt_planned').toUpperCase(), 
+          align: 'end'},
+        { 
+          value: 'qt_remaining', 
+          text: this.$tc('work_order.list_headers.qt_remaining').toUpperCase(), 
+          align: 'end'},
+        { 
+          value: 'due_by', 
+          text: this.$tc('work_order.list_headers.due_by').toUpperCase(), 
+          sort: this.sortDate
+        }
+      ]
+    },
+
     temp_queue() {
       return this.$store.state.workorder.temp_queue
     },

@@ -1,7 +1,9 @@
 <template>
   <v-row class="fill-height" align="center" justify="center">
     <v-col cols="auto" class="d-flex flex-column justify-center align-center">
-      <h3 class="display highlight text-uppercase">{{ title }}</h3>
+      <h3 class="display highlight text-uppercase">
+        {{ title ? title : $tc('loading_text') }}
+      </h3>
       <v-progress-circular 
         indeterminate 
         size="40" 
@@ -20,7 +22,7 @@ export default {
   props: {
     title: {
       type: String,
-      default: 'caricamento dati'
+      default: null
     },
   }
 }

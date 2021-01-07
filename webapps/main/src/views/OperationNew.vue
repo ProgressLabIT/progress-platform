@@ -9,7 +9,7 @@
     <v-card>
       <v-card-title>
         <h3 class="display">
-          nuova operazione
+          {{ $tc('operations.new_op') }}
         </h3>
       </v-card-title>
 
@@ -22,7 +22,7 @@
             v-if="stage==='form'" key="form">
             <v-row>
               <v-col cols="6">
-                <h5 class="mt-2">NOME</h5>
+                <h5 class="mt-2 text-uppercase">{{ $tc('name') }}</h5>
                 <v-text-field 
                   autocomplete="null"
                   required
@@ -33,7 +33,7 @@
                 </v-text-field>
               </v-col>
               <v-col cols="6">
-                <h5 class="mt-2">CODICE</h5>
+                <h5 class="mt-2 text-uppercase">{{ $tc('code') }}</h5>
                 <v-text-field 
                   autocomplete="null"
                   required
@@ -44,7 +44,7 @@
                 </v-text-field>
               </v-col>
               <v-col cols="12">
-                <h5 class="mt-2">DECRIZIONE</h5>
+                <h5 class="mt-2 text-uppercase">{{ $tc('description') }}</h5>
                 <v-textarea 
                   autocomplete="null"
                   required
@@ -61,7 +61,7 @@
                 <v-btn block depressed :color="$theme.blue" @click="submit">salva</v-btn>
               </v-col>
               <v-col>    
-                <v-btn block depressed :color="$theme.grey" @click="$router.back()">annulla</v-btn>
+                <v-btn block depressed :color="$theme.grey" @click="$router.back()">{{ $tc('cancel') }}</v-btn>
               </v-col> 
             </v-row>  
           </v-form>
@@ -71,14 +71,14 @@
           </div>
 
           <div v-else-if="stage==='success'" key="success">
-            <p>Operazione registrata con successo.</p>
+            <p>{{ $tc('operations.new_op_success') | capitalize }}.</p>
 
             <v-spacer></v-spacer>
 
             <v-btn 
               :color="$theme.grey" 
               @click="$router.back()">
-              CHIUDI
+              {{ $tc('close') }}
             </v-btn>
           </div>
           
@@ -92,6 +92,7 @@
 </template>
 
 <script>
+import {capitalize as c} from '@/lib/filters.js'
 import LoadingSignal from '@/components/LoadingSignal.vue'
 
 export default {
@@ -105,9 +106,9 @@ export default {
       stage: 'form',
       valid: true,
       fields: [
-        { title: 'nome', required: true, model: 'name', component: 'v-text-field' },
-        { title: 'codice', required: false, model: 'code', component: 'v-text-field' },
-        { title: 'descrizione', required: true, model: 'description', component: 'v-textarea' },
+        { required: true, model: 'name', component: 'v-text-field' },
+        { required: false, model: 'code', component: 'v-text-field' },
+        { required: true, model: 'description', component: 'v-textarea' },
       ],
       new_operation_data: {
         name: undefined,
@@ -120,7 +121,7 @@ export default {
   methods: {
     submit() {
       if (!this.new_operation_data.name) {
-        window.alert("Indicare almeno un nome per l'operazione")
+        window.alert(c(this.$tc('operations.alerts.op_name_missing')))
       }
 
       else {
@@ -133,7 +134,7 @@ export default {
         })
         .catch( err => {
           if (err.response.status === 409) {
-            window.alert("Nome operazione già in uso")
+            window.alert(c(this.$tc('operations.alerts.op_name_used')))
           }
           else { window.alert(err) }
           this.stage = 'form'

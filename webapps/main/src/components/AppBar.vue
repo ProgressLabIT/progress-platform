@@ -24,6 +24,7 @@
 </template>
 
 <script>
+import { capitalize as c } from '@/lib/filters.js'
 export default {
 
   name: 'AppBar',
@@ -57,23 +58,39 @@ export default {
       return this.user ? "/media/user/" + this.avatar_name + '.jpg' : ''
     },
 
+    locale() {
+      return this.$root.$i18n.locale
+    }
+
   },
 
   methods: {
     async logout() {
-      const confirm = window.confirm('Sicuro di voler terminare la sessione?')
+      const confirm = window.confirm(c(this.$tc('session.alerts.close_session')))
       if (confirm) {
         await this.$store.dispatch('logout')
+      }
+    },
+
+    update_screen_title(route) {
+      const route_with_title = route.matched.slice().reverse().find( r => r.meta.screen_title )
+      if (route_with_title) {
+        const new_screen_title = this.$tc(`views.${route_with_title.name}`) || 'PROGRESS'
+        this.screen_title = new_screen_title
       }
     }
   },
 
+  created() {
+    this.update_screen_title(this.$route)
+  },
+
   watch: {
     $route (to) {
-      const route_with_title = to.matched.slice().reverse().find( r => r.meta.screen_title )
-      if (route_with_title) {
-        this.screen_title = route_with_title.meta.screen_title || 'PROGRESS'
-      }
+      this.update_screen_title(to)
+    },
+    locale() {
+      this.update_screen_title(this.$route)
     }
   }
 

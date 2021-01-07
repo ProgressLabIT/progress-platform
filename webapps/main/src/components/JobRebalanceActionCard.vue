@@ -21,13 +21,15 @@
           :offset="col.offset" 
           class="body-2">
           <template v-if="col.value === 'key'">
-            {{ j._key || 'NUOVO' }}
+            <span class="text-uppercase">
+              {{ j._key || $tc('new') }}
+            </span>
             <v-chip v-if="j.trash" 
               small label close 
               :color="$theme.orange"
-              class="ml-2 solid-white weight-bold"
+              class="ml-2 solid-white weight-bold text-uppercase"
               @click:close="restoreJob(index)">
-              CHIUSO
+              {{ $tc('closed') }}
             </v-chip>
           </template>
 
@@ -63,7 +65,7 @@
                 single-line hide-details
                 return-object
                 :filter="filterOperator"
-                label="Assegna a:"
+                :label="$tc('job.assign_to') + ':' | capitalize"
 
                 class="pt-0 flex-grow-0 body-2"
                 @focus.native="resetAssignment(index)"
@@ -84,7 +86,7 @@
           v-if="deletable(index) && !j.trash" class="ml-auto pr-8">
           <BaseTooltipIcon
             :color="$theme.red"
-            tooltip="Elimina lavoro"
+            :tooltip="$tc('delete') | capitalize"
             icon="delete"
             @iconClick="removeJob(index)">
           </BaseTooltipIcon>
@@ -100,7 +102,9 @@
           class="text-uppercase body-2"
           :class="col.value === 'qt_remaining' ? 'text-right' : '' ">
           <template v-if="col.value === 'key'">
-            <span class="font-weight-medium">TOTALE INIZIALE/FINALE</span>
+            <span class="font-weight-medium text-uppercase">
+              {{ $tc('start_end_totals') }}
+            </span>
           </template>
 
           <template v-if="col.value === 'qt_remaining'">
@@ -117,7 +121,7 @@
             v-if="job_template.parameters.parallel_job_allowed"
             :color="$theme.blue"
             @click="addJob">
-            aggiungi lavoro
+            {{ $tc('job.add') }}
           </v-btn>
         </v-col>
         
@@ -125,7 +129,7 @@
           <v-btn small
             :color="$theme.blue"
             @click="rebalanceJobs">
-            distribuisci qt
+            {{ $tc('job.rebalance.spread') }}
           </v-btn>
         </v-col>
 
@@ -133,7 +137,7 @@
           <v-btn small
             :color="$theme.orange"
             @click="resetJobs">
-            ripristina qt iniziali
+            {{ $tc('job.rebalance.reset') }}
           </v-btn>
         </v-col>
         
@@ -141,7 +145,7 @@
           <v-btn small 
             :color="$theme.grey" 
             @click="$emit('changeEditMode','actions')">
-            ANNULLA
+            {{ $tc('cancel') }}
           </v-btn>
         </v-col>
 
@@ -149,7 +153,9 @@
           <v-btn small
             :color="$theme.blue"
             @click="save">
-            <span v-if="!saving">SALVA</span>
+            <span v-if="!saving">
+              {{ $tc('save') }}
+            </span>
             <v-progress-circular v-else indeterminate size="26" />
           </v-btn>
         </v-col>
@@ -181,11 +187,6 @@ export default {
 
   data () {
     return {
-      headers: [
-        { value: 'key', cols: 3, offset: 0, text: 'ID lavoro' },
-        { value: 'qt_remaining', cols: 2, offset: 1, text: 'Quantità'},
-        { value: 'assigned_to', cols: 3, offset: 1, text: 'Assegnato a'}
-      ],
       temp_jobs: [],
       working_total_remaining: 0,
       saving: false,
@@ -208,6 +209,29 @@ export default {
   },
 
   computed: {
+
+    headers() {
+      return [
+        { 
+          value: 'key', 
+          text: this.$tc('job.key'),
+          cols: 3, 
+          offset: 0  
+        },
+        { 
+          value: 'qt_remaining', 
+          text: this.$tc('quantity.long'),
+          cols: 2, 
+          offset: 1 
+        },
+        { 
+          value: 'assigned_to', 
+          text: this.$tc('job.assigned_to'),
+          cols: 3, 
+          offset: 1 
+        }
+      ]
+    },
     
     wo_key() {
       return this.$route.params.wo_key
@@ -321,15 +345,23 @@ export default {
       this.$set(this.temp_jobs[job_index], 'assigned_to', operator)
     },
 
+    capitalize(string) {
+      return this.$options.filters.capitalize(string)
+    },
+
     save() {
 
       // Check if overall job quantity matches original remaining quantity
       if (!this.remaining_match) {
-        window.alert('Le quantità non combaciano')
+        window.alert(
+          this.capitalize(this.$tc('job.alerts.rebalance_qt_mismatch'))
+        )
       }
 
       else if (this.temp_jobs.some( j => !('assigned_to' in j) )) {
-        window.alert('Assegna un operatore ai nuovi lavori')
+        window.alert(
+          this.capitalize(this.$tc('job.alerts.rebalance_unassigned_jobs'))
+        )
       }
 
       else {
@@ -372,7 +404,7 @@ export default {
           this.$emit('changeEditMode', 'actions')
         })
         .catch( err => {
-          window.alert("Couldn't save updates: ", err)
+          window.alert(this.$tc("errors.save_err") + ": ", err)
           this.saving = false
         })
       }

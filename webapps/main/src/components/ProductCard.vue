@@ -56,11 +56,15 @@
       class="ma-0 pa-0"
       >
       <v-container :class="image ? 'pa-6' : 'pa-3'">
-        <span>Vuoi cancellare questo prodotto?</span>
-        <span class="display weight-medium">{{ product.code }}</span>
+        <span>{{ $tc('product.confirm_delete_question') }}</span>
+        <span class="display weight-medium ml-2">{{ product.code }}</span>
         <div class="d-flex justify-space-between mt-3">
-          <v-btn dark :color="$theme.red" @click.stop="trash">DELETE</v-btn>
-          <v-btn dark :color="$theme.grey" @click.stop="showDelete = false">CANCEL</v-btn>
+          <v-btn dark :color="$theme.red" @click.stop="trash">
+            {{ $tc('confirm') }}
+          </v-btn>
+          <v-btn dark :color="$theme.grey" @click.stop="showDelete = false">
+            {{ $tc('cancel') }}
+          </v-btn>
         </div>
       </v-container>
     </v-overlay>

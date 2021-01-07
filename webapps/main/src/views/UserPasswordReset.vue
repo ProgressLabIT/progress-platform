@@ -9,7 +9,7 @@
       
       <v-card-title>  
         <h3 class="display">
-          reimposta password
+          {{ $tc('reset_password') }}
         </h3>
       </v-card-title>
 
@@ -30,18 +30,23 @@
           <div v-if="stage==='confirm'" key="confirm">
             <v-row justify="space-between" class="mx-0">
               <v-btn :color="$theme.red" @click="resetPassword">
-                CONFERMA
+                {{ $tc('confirm') }}
               </v-btn>
               <v-btn :color="$theme.grey" @click="$router.back()">
-                ANNULLA
+                {{ $tc('cancel') }}
               </v-btn>
             </v-row>
           </div>
 
           <div v-else-if="stage==='show_psw'" key="password">
-            <p>Password reimpostata con successo. Prendi nota della password temporanea per l'utente. Non verrà mostrata di nuovo. Al prossimo accesso l'utente dovrà sostituirla con una privata.</p>
+            <p>
+              {{ $tc('user.reset_password_success')}}
+            </p>
             
-            <h5 class="text-uppercase mt-6 mb-2">Password temporanea</h5>
+            <h5 class="text-uppercase mt-6 mb-2">
+              {{ $tc('user.temp_password') | capitalize }}
+            </h5>
+            
             <v-row no-gutters align="center" class="mx-0">
               <v-col cols="auto">
                 <v-sheet :color="$theme.background" class="pa-3">
@@ -56,7 +61,7 @@
               <v-btn 
                 :color="$theme.grey" 
                 @click="$router.back()">
-                CHIUDI
+                {{ $tc('close') }}
               </v-btn>
             </v-row>
           </div>

@@ -1,6 +1,6 @@
 <template>
   <v-container fill-height fluid>
-    <v-row class="fill-height mx-0">
+    <v-row class="fill-height px-2">
       
       <!-- LEFT COLUMN -->
       <v-col cols="4" class="fill-height d-flex flex-column justify-space-between">
@@ -30,7 +30,7 @@
                     mdi-image-off-outline
                   </v-icon>
                   <p class="display smaller mt-2">
-                    Nessuna immagine
+                    {{ $tc('product.no_image') }}
                   </p>
                 </v-col>
 
@@ -46,7 +46,7 @@
                   style="position:absolute"
                   class="pa-0 fill d-flex flex-column justify-space-between">
                   <v-sheet class="surface-1 text-center smaller display weight-bold">
-                    modifica immagine
+                    {{ $tc('product.update_image') | capitalize }}
                   </v-sheet>
 
                   <!-- <v-sheet class="surface-1"> -->
@@ -54,7 +54,7 @@
                     <v-btn v-if="new_image || new_image_url === 'deleted'"
                       small :color="$theme.orange"
                       @click="clearTempImg">
-                      ripristina originale
+                      {{ $tc('product.restore_image') }}
                     </v-btn>
                     <v-btn v-else-if="!no_image"
                       small
@@ -91,7 +91,9 @@
 
         <!-- PRODUCT CODE -->
         <div class="mt-6">
-          <h4 class="weight-bold medium">CODICE PRODOTTO</h4>
+          <h4 class="weight-bold medium text-uppercase">
+            {{ $tc('product.code') }}
+          </h4>
           <h1 v-if="!edit_mode" class="display highlight">{{ product.code }}</h1>
           <v-text-field v-else 
             hide-details
@@ -103,8 +105,12 @@
 
         <!-- PRODUCT DESCRIPTION -->
         <div class="mt-6">
-          <h4 class="weight-bold medium">DESCRIZIONE</h4>
-          <h3 v-if="!edit_mode" class="highlight weight-bold mt-1">{{ product.description }}</h3> 
+          <h4 class="weight-bold medium text-uppercase">
+            {{ $tc('description') }}
+          </h4>
+          <h3 v-if="!edit_mode" class="highlight weight-bold mt-1">
+            {{ product.description }}
+          </h3> 
           <v-textarea v-else 
             hide-details
             :value="temp_desc"
@@ -131,17 +137,19 @@
           :color="$theme.blue"
           @click="activateEditMode"
           >
-          MODIFICA
+          {{ $tc('edit') }}
         </v-btn>
 
         <div v-else>
           <v-btn block class="mb-2" :color="$theme.green" @click="saveChanges">
             <div v-if="!saving">
-              SALVA
+              {{ $tc('save') }}
             </div>
             <v-progress-circular v-else indeterminate :color="$theme.white"/>
           </v-btn>
-          <v-btn block :color="$theme.grey" :disabled="saving" @click="cancelChanges">ANNULLA</v-btn>
+          <v-btn block :color="$theme.grey" :disabled="saving" @click="cancelChanges">
+            {{ $tc('cancel') }}
+          </v-btn>
         </div>  
 
         <!-- CANCEL CONFIRMATION -->
@@ -149,7 +157,7 @@
           top :timeout="2000"
           :color="$theme.grey"
           v-model="show_cancel_confirmation">
-          Modifiche annullate
+          {{ $tc('snackbars.changes_canceled') | capitalize }}
           <v-btn text @click.native="show_cancel_confirmation = false">OK</v-btn>
         </v-snackbar>
 
@@ -158,7 +166,7 @@
           top :timeout="2000"
           :color="$theme.green"
           v-model="show_save_confirmation">
-          Prodotto aggiornato
+          {{ $tc('snackbars.product_updated') | capitalize }}
           <v-btn text :color="$theme.white" @click.native="show_save_confirmation = false">
             <v-icon>close</v-icon>
           </v-btn>
@@ -168,7 +176,7 @@
     
       <!-- PRODUCT DATA -->
       <v-col cols="8" class="pl-4 fill-height d-flex flex-column">
-          <v-row class="mt-n3 pr-0" align="start">
+          <v-row class="mt-n3" align="start">
             
             <!-- PARAMETERS -->
             <v-col cols="6">
@@ -185,7 +193,7 @@
               <v-card flat> 
                 <v-container class="px-5 py-4 fill">
                   <h5 class="display medium highlight mb-6">
-                    Documenti
+                    {{ $tc('document.label', 2) | capitalize }}
                   </h5>
                   <v-hover v-slot:default="{ hover }"
                     v-for="(doc, index) in docs" :key="index">
@@ -228,7 +236,7 @@
                           :color="hover ? $theme.blue : $theme.white_low"
                           @click="$refs.upload_doc.click()">
                           <v-row justify="space-between" align="center">
-                            aggiungi documento
+                            {{ $tc('document.add', 2) }}
                             <v-icon>attach_file</v-icon>
                           </v-row>
                         </v-btn>
@@ -245,7 +253,7 @@
               @close="show_media = -1" 
               v-bind="{ media_name, media_src}">
               <template v-slot:context-title>
-               PRODUCT CODE: {{ product.code }}
+               {{ $tc('product.code').toUpperCase() }}: {{ product.code }}
               </template>
             </MediaViewer>
           </v-lazy>
@@ -256,11 +264,15 @@
           <v-row class="mt-auto flex-grow-0">
             <v-spacer></v-spacer>
             <v-col cols="auto" class="pb-0">
-              <v-btn :color="$theme.blue">Crea ordine</v-btn>
+              <v-btn :color="$theme.blue">
+                {{ $tc('create_order') }}
+              </v-btn>
             </v-col>  
           
             <v-col cols="auto"  class="pb-0">
-              <v-btn :color="$theme.red">Elimina</v-btn>
+              <v-btn :color="$theme.red">
+                {{ $tc('delete') }}
+              </v-btn>
             </v-col>  
           </v-row>  
       </v-col>
@@ -270,6 +282,7 @@
 </template>
 
 <script>
+import { capitalize as c } from '@/lib/filters.js'
 import ProductParamsCard from '@/components/ProductParamsCard.vue'
 import { mapState, mapActions } from 'vuex'
 import MediaViewer from '@/components/MediaViewer.vue'
@@ -417,7 +430,9 @@ export default {
       files.forEach( (f, i) => {
         const already_in_list = this.docs.some( d => f.name == d.name )
         if (already_in_list) {
-          const replace = window.confirm(`Esiste già un documento con nome “${f.name}", vuoi sostituirlo?`)
+          const replace = window.confirm(
+            c(this.$tc('product.alerts.doc_name_exists',1, {filename: f.name}))
+          )
           if (replace) { this.$store.commit('DELETE_TEMP_DOC', i) }
           else { return }
         }
@@ -448,7 +463,7 @@ export default {
         }
       }
 
-      if (this.new_docs){
+      if (new_doc_list){
         product_update.new_docs = new_doc_list.filter( d => 'temp' in d )
       }
 

@@ -10,7 +10,9 @@
         <p>{{ product_data.description }}</p>
 
       
-        <h5 class="mt-12 mb-6">FASI PROCESSO</h5>
+        <h5 class="mt-12 mb-6 text-uppercase">
+          {{ $tc('phase.long', 2) }}
+        </h5>
 
         <v-tabs
           vertical grow
@@ -65,7 +67,7 @@
                   v-if="edit_mode" v-show="over_phase==index" class="mr-2">
                   <BaseTooltipIcon
                     icon="delete"
-                    tooltip="Elimina fase"
+                    :tooltip="$tc('phase.delete', 1) | capitalize"
                     :color="$theme.red"
                     @iconClick="confirming_delete = index"
                   ></BaseTooltipIcon>
@@ -83,7 +85,9 @@
                   <v-row no-gutters align="center" class="fill">  
 
                     <v-col cols="auto" class="pl-3">
-                      <span class="display highlight weight-bold">Confermi?</span>
+                      <span class="display highlight weight-bold">
+                        {{ $tc('process.confirm_delete') | capitalize }}?
+                      </span>
                     </v-col>  
                   
                     <v-spacer></v-spacer>
@@ -126,7 +130,7 @@
           item-text="name"
           return-object
           v-model="new_op"
-          label="Aggiungi fase"
+          :label="$tc('phase.add') | capitalize"
           hide-details
           single-line
           @input="addPhase($event)"
@@ -157,7 +161,7 @@
           @click="toggleEdit"
           :color="$theme.blue"
           >
-          MODIFICA PROCESSO
+          {{ $tc('edit') }}
         </v-btn>
 
         <div v-else>
@@ -166,7 +170,7 @@
             :color="$theme.green" 
             @click="saveChanges">
             <div v-if="!saving">
-              SALVA
+              {{ $tc('save') }}
             </div>
             <v-progress-circular v-else indeterminate :color="$theme.white"/>
           </v-btn>
@@ -174,7 +178,7 @@
             :color="$theme.grey"
             :disabled="saving"  
             @click="cancelChanges">
-            ANNULLA
+            {{ $tc('cancel') }}
           </v-btn>
         </div>  
 
@@ -183,7 +187,7 @@
           top :timeout="2000"
           :color="$theme.grey"
           v-model="show_cancel_confirmation">
-          Modifiche annullate
+          {{ $tc('snackbars.changes_canceled') | capitalize }}
           <v-btn text @click.native="show_cancel_confirmation = false">OK</v-btn>
         </v-snackbar>
 
@@ -192,7 +196,7 @@
           top :timeout="2000"
           :color="$theme.green"
           v-model="show_save_confirmation">
-          Processo aggiornato
+          {{ $tc('snackbars.process_updated') | capitalize }}
           <v-btn text :color="$theme.white" @click.native="show_save_confirmation = false">
             <v-icon>close</v-icon>
           </v-btn>
@@ -212,14 +216,14 @@
               v-for="(view, idx) in views" 
               :key="idx"
               class="display">
-              {{ view.name }}
+              {{ $tc(`views.${view}`) }}
             </v-tab>
           </v-tabs>
         </v-row>  
         <v-card elevation="0" class="scroll flex-grow-1">
           <keep-alive>
             <v-component 
-              :is="views[tab].component" 
+              :is="views[tab]" 
               :phase="process[current_phase]"
               :product_data="product_data"
               :edit_mode="edit_mode">
@@ -241,10 +245,10 @@ import draggable from 'vuedraggable'
 
 
 const views_map = [
-        { name: 'procedura', component: 'PhaseSteps' },
-        { name: 'parametri', component: 'PhaseParameters' },
-        // { name:  'assegnazioni', component: 'PhaseAssignments' } 
-      ]
+  'PhaseSteps', 
+  'PhaseParameters',
+  // 'PhaseAssignments' 
+]
 
 export default {
 
