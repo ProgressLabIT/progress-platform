@@ -1,0 +1,15 @@
+log-level = "INFO"
+
+[api]
+insecure = true
+dashboard = true
+debug = true
+
+[providers]
+docker = true
+
+
+[accessLog]
+
+[accessLog.fields]
+defaultMode = "keep"

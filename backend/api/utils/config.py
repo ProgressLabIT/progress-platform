@@ -4,7 +4,9 @@ from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-    arango_url: str = 'http://localhost:8529'
+    arango_url: str = "http://localhost:8529"
+    root_path: str = ""
+    openapi_root_path: str = ""
 
     class Config:
         env_prefix = "progress_"

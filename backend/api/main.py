@@ -1,16 +1,18 @@
-from fastapi import FastAPI
+import requests
+from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 
+from utils.config import get_config
 import endpoints
 
+config = get_config()
 
+app = FastAPI(
+	openapi_url=f"{config.openapi_root_path}/openapi.json",
+	root_path=config.root_path
+)
+# global_router = APIRouter()
 
-app = FastAPI()
-
-# origins = [
-#   "http://127.0.0.1:8080",
-#   "http://localhost:8080",
-# ]
 
 app.add_middleware(
   CORSMiddleware,
@@ -24,6 +26,18 @@ app.add_middleware(
 Each package __init__ file imports the router object from the 
 relative endpoint.py module, so it's easily available here
 """
+
+@app.get("/test")
+async def test_api():
+	r = requests.get('http://mock.progress.localhost/test')
+	return r.text
+
+
+@app.get('/mock')
+async def mock_response():
+	return "TEST"
+
+
 app.include_router(endpoints.product, prefix="/product", tags=['Product'])
 app.include_router(endpoints.bom, prefix="/product", tags=['Product'])
 app.include_router(endpoints.process, tags=['Process'])
@@ -33,6 +47,7 @@ app.include_router(endpoints.org, tags=['Organization'])
 app.include_router(endpoints.traceability, tags=['Traceability'])
 app.include_router(endpoints.auth, tags=['security'])
 
+# app.include_router(global_router, prefix="/v1")
 
 if __name__ == "__main__":
   app.main()
