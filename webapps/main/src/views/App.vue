@@ -133,7 +133,7 @@ export default {
         event.preventDefault()
         this.$store.state.last_interaction = DT.utc().toMillis()
         localStorage.setItem('TEMP_SESSION', JSON.stringify(this.$store.state))
-        if (this.is_authenticated) {
+        if (this.$store.getters.isLoggedIn) {
           await this.$store.dispatch('logout')
         }
         event.returnValue = 'Sicuro di voler lasciare la pagina?'
