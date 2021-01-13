@@ -20,6 +20,8 @@
           <p>
             {{ $tc('session.lock_explainer', 1, {timeout: session_timeout} ) | capitalize }}
           </p>
+
+          <!-- Form is used to allow post via Enter -->
           <v-form @submit.prevent="verifyUser">
             <v-text-field
               v-model="password"
@@ -86,7 +88,7 @@ export default {
     },
 
     async logout() {
-      const confirm = window.confirm(c(this.$tc('session.close_alert')))
+      const confirm = window.confirm(c(this.$tc('session.alerts.close_alert')))
       if (confirm) {
         await this.$store.dispatch('logout')
       }
