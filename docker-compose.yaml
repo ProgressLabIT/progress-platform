@@ -61,6 +61,10 @@ services:
       uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
     labels:
       - traefik.http.routers.api.rule=Host(`api.progress.localhost`)
+      - traefik.http.routers.api.middlewares=root_to_docs
+      - traefik.http.middlewares.root_to_docs.redirectregex.regex=api.progress.localhost/?$$
+      - traefik.http.middlewares.root_to_docs.redirectregex.replacement=api.progress.localhost/docs
+
 
   db:
     image: arangodb
