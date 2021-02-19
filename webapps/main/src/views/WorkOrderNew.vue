@@ -1,7 +1,7 @@
 <template>
   <BaseModalForm @submit="postNewWorkOrder" max_width="700px" >
     <template v-slot:title>
-      {{ $tc('work_order.new.title') }}
+      {{ $tc('work_order.new') }}
     </template>
     
     <template v-slot:form>
