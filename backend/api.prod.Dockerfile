@@ -1,6 +1,5 @@
 FROM python:3.8-slim
 
-
 # Install dependencies
 COPY api/requirements.txt /api/requirements.txt
 
