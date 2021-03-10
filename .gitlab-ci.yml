@@ -7,12 +7,12 @@ before_script:
 build:webapp:
   only:
     refs:
-      - branches
+      - master
     changes:
       - webapps/*
   stage: build
   image: docker:latest
-  variable:
+  variables:
     WEBAPP_ROOT: webapps/main
     WEBAPP_DOCKERFILE: webapp.prod.Dockerfile
     WEBAPP_IMAGE: $CI_REGISTRY_IMAGE/app
@@ -28,7 +28,7 @@ build:webapp:
 
     # Build builder image (first section of the Dockerfile), using cached layers when available. The tagging overwrites the image with the updated one
     - >
-      docker build
+      docker build .
       --pull
       --cache-from $WEBAPP_IMAGE:builder
       --target builder
@@ -37,7 +37,7 @@ build:webapp:
 
     # Build the final image using cached layers from both the builder and final image. Tag the image with current pipeline ID and `latest` tag.
     - >
-      docker build
+      docker build .
       --pull
       --cache-from $WEBAPP_IMAGE:builder
       --cache-from $WEBAPP_TAG
@@ -54,7 +54,7 @@ build:webapp:
 build:api:
   only:
     refs:
-      - branches
+      - master
     changes:
       - backend/api/*
   stage: build
@@ -82,3 +82,4 @@ build:api:
     # Push new images to the registry
     - docker push $API_IMAGE:latest
     - docker push $API_TAG
+
