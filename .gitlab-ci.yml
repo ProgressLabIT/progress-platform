@@ -19,7 +19,7 @@ build:webapp:
   variables:
     WEBAPP_ROOT: webapps/main
     WEBAPP_DOCKERFILE: webapp.prod.Dockerfile
-    WEBAPP_IMAGE: $CI_REGISTRY_IMAGE/app
+    WEBAPP_IMAGE: ${CI_REGISTRY_IMAGE}/app
     WEBAPP_TAG: $WEBAPP_IMAGE:$CI_PIPELINE_ID
   tags:
     - docker
@@ -66,7 +66,7 @@ build:api:
   variables:
     API_ROOT: backend/api
     API_DOCKERFILE: api.prod.Dockerfile
-    API_IMAGE: $CI_REGISTRY_IMAGE/api
+    API_IMAGE: ${CI_REGISTRY_IMAGE}/api
     API_TAG: $API_IMAGE:$CI_PIPELINE_ID
   tags:
     - docker
