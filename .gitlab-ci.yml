@@ -37,7 +37,7 @@ build:webapp:
       --cache-from $WEBAPP_IMAGE:builder
       --target builder
       -t $WEBAPP_IMAGE:builder
-      $WEBAPP_DOCKERFILE
+      -f $WEBAPP_DOCKERFILE
       .
 
     # Build the final image using cached layers from both the builder and final image. Tag the image with current pipeline ID and `latest` tag.
@@ -66,7 +66,7 @@ build:api:
   stage: build
   image: docker:latest
   variables:
-    API_ROOT: backend/api
+    API_ROOT: backend
     API_DOCKERFILE: Dockerfile
     API_IMAGE: ${CI_REGISTRY_IMAGE}/api
     API_TAG: $API_IMAGE:$CI_PIPELINE_ID
