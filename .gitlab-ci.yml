@@ -47,7 +47,7 @@ build:webapp:
       --cache-from $WEBAPP_TAG
       -t $WEBAPP_TAG
       -t $WEBAPP_IMAGE:latest
-      $WEBAPP_DOCKERFILE
+      -f $WEBAPP_DOCKERFILE
       .
 
     # Push new images to the registry
@@ -82,7 +82,7 @@ build:api:
       --cache-from $API_IMAGE:latest
       -t $CI_REGISTRY_IMAGE/api:$CI_PIPELINE_ID
       -t $API_IMAGE:latest
-      $API_DOCKERFILE
+      -f $API_DOCKERFILE
       .
 
     # Push new images to the registry
