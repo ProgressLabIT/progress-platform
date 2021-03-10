@@ -41,13 +41,14 @@ build:webapp:
 
     # Build the final image using cached layers from both the builder and final image. Tag the image with current pipeline ID and `latest` tag.
     - >
-      docker build .
+      docker build
       --pull
       --cache-from $WEBAPP_IMAGE:builder
       --cache-from $WEBAPP_TAG
       -t $WEBAPP_TAG
       -t $WEBAPP_IMAGE:latest
       $WEBAPP_DOCKERFILE
+      .
 
     # Push new images to the registry
     - docker push $WEBAPP_IMAGE:builder
@@ -79,9 +80,10 @@ build:api:
       docker build
       --pull
       --cache-from $API_IMAGE:latest
-      -t $API_TAG
+      -t $CI_REGISTRY_IMAGE/api:$CI_PIPELINE_ID
       -t $API_IMAGE:latest
       $API_DOCKERFILE
+      .
 
     # Push new images to the registry
     - docker push $API_IMAGE:latest
