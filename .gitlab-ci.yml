@@ -19,8 +19,7 @@ build:webapp:
   variables:
     WEBAPP_ROOT: webapps/main
     WEBAPP_DOCKERFILE: webapp.prod.Dockerfile
-    WEBAPP_IMAGE: ${CI_REGISTRY_IMAGE}/app
-    WEBAPP_TAG: $WEBAPP_IMAGE:$CI_PIPELINE_ID
+    WEBAPP_IMAGE: $CI_REGISTRY_IMAGE/app
   tags:
     - docker
   script:
@@ -45,16 +44,16 @@ build:webapp:
       docker build
       --pull
       --cache-from $WEBAPP_IMAGE:builder
-      --cache-from $WEBAPP_TAG
-      -t $WEBAPP_TAG
+      --cache-from $$WEBAPP_IMAGE:$CI_PIPELINE_ID
       -t $WEBAPP_IMAGE:latest
+      -t $WEBAPP_IMAGE:$CI_PIPELINE_ID
       -f $WEBAPP_DOCKERFILE
       .
 
     # Push new images to the registry
     - docker push $WEBAPP_IMAGE:builder
     - docker push $WEBAPP_IMAGE:latest
-    - docker push $WEBAPP_TAG
+    - docker push $WEBAPP_IMAGE:$CI_PIPELINE_ID
 
 
 build:api:
@@ -68,8 +67,7 @@ build:api:
   variables:
     API_ROOT: backend
     API_DOCKERFILE: Dockerfile
-    API_IMAGE: ${CI_REGISTRY_IMAGE}/api
-    API_TAG: $API_IMAGE:$CI_PIPELINE_ID
+    API_IMAGE: $CI_REGISTRY_IMAGE/api
   tags:
     - docker
   script:
@@ -81,12 +79,12 @@ build:api:
       docker build
       --pull
       --cache-from $API_IMAGE:latest
-      -t $CI_REGISTRY_IMAGE/api:$CI_PIPELINE_ID
+      -t $API_IMAGE:$CI_PIPELINE_ID
       -t $API_IMAGE:latest
       -f $API_DOCKERFILE
       .
 
     # Push new images to the registry
     - docker push $API_IMAGE:latest
-    - docker push $API_TAG
+    - docker push $API_IMAGE:$CI_PIPELINE_ID
 
