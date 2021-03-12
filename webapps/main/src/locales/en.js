@@ -129,7 +129,7 @@ export default {
     "delete_question": "do you really want to delete this operation",
     "delete_success": "operation successfully deleted",
     "delete_title": "delete operation",
-    "new": "new",
+    "new": "new operation",
     "new_success": "new operation successfully created"
   },
   "operator": "operator | operators",
