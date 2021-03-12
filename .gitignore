@@ -1,6 +1,6 @@
 .DS_Store
 node_modules
-/dist
+dist
 
 # local env files
 .env.local
@@ -25,15 +25,14 @@ yarn-error.log*
 *.sublime-workspace
 
 
-# Media and font files
-*.jpeg
-*.jpg
-*.pdf
-*.svg
-*.png
-*.gif
-*.woff
-*.woff2
+# Media
+pics/
+company/
+customer/
+equipment/
+product/
+step/
+user/
 
 # Dev utility scripts
 *.app/

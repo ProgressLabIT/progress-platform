@@ -1,5 +1,8 @@
 version: '3'
 
+variables:
+  COMPOSE_PROJECT_NAME: progress_test
+
 volumes:
   arango-persist:
     external: true
@@ -9,25 +12,24 @@ services:
   reverse-proxy:
     image: traefik:v2.3
     restart: unless-stopped
-    volumes: 
+    volumes:
       # So that Traefik can listen to the Docker events
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - ./traefik/traefik.toml:/etc/traefik/traefik.toml
+      # - ./traefik/traefik.toml:/etc/traefik/traefik.toml
     ports:
       # The HTTP port
       - "80:80"
+      # The HTTPS post
+      - "443:443"
       # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
 
   app:
+    # this is an NGINX image with built vue files embedded
     build:
       context: webapps/main
-      dockerfile: webapp.dev.Dockerfile
-    command: >
-      npm run serve -- --host 0.0.0.0
-    volumes:
-      - "./webapps/main/public:/main/public"
-      - "./webapps/main/src:/main/src"
+      dockerfile: webapp.prod.Dockerfile
+    restart: unless-stopped
     environment:
       # the app will call the api server from outside the docker network, so the full Traefik host alias should be used
       - VUE_APP_API_BASE_URL=http://api.progress.localhost
@@ -40,25 +42,13 @@ services:
       - traefik.http.routers.app.rule=Host(`progress.localhost`)
 
   api:
-    image: api
-    build:
-      context: backend #root folder for build
-      dockerfile: api.dev.Dockerfile
     restart: unless-stopped
     depends_on:
       - db
     ports:
       - "8000"
-    volumes:
-      - ./backend/api:/api    
-    working_dir: /api
     environment:
-      # Here the service will be called from INSIDE the docker network, so the internal alias should be used.
       - PROGRESS_ARANGO_URL=http://db:8529
-      # - PROGRESS_OPENAPI_ROOT_PATH=/api
-      # - PROGRESS_ROOT_PATH=/api
-    command: >
-      uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
     labels:
       - traefik.http.routers.api.rule=Host(`api.progress.localhost`)
       - traefik.http.routers.api.middlewares=root_to_docs
@@ -67,7 +57,7 @@ services:
 
 
   db:
-    image: arangodb
+    image: arangodb:3.7
     restart: unless-stopped
     volumes:
       - arango-persist:/var/lib/arangodb3

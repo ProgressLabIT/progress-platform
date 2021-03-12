@@ -1,0 +1,90 @@
+services:
+  - docker:dind
+
+# Login to GitLab container Registry for push and pull operations
+before_script:
+  # - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.com
+
+# Build Webapp image and push it to registry.
+# Uses a multi-stage dockerfile with intermediate builder image to reduce final image size and build time
+build:webapp:
+  only:
+    refs:
+      - master
+    changes:
+      - webapps/*
+  stage: build
+  image: docker:latest
+  variables:
+    WEBAPP_ROOT: webapps/main
+    WEBAPP_DOCKERFILE: webapp.prod.Dockerfile
+    WEBAPP_IMAGE: $CI_REGISTRY_IMAGE/app
+  tags:
+    - docker
+  script:
+    # Pull builder image if present, if not skip
+    - docker pull $WEBAPP_IMAGE:builder || true
+
+    # Navigate to build context
+    - cd $WEBAPP_ROOT
+
+    # Build builder image (first section of the Dockerfile), using cached layers when available. The tagging overwrites the image with the updated one
+    - >
+      docker build
+      --pull
+      --cache-from $WEBAPP_IMAGE:builder
+      --target builder
+      -t $WEBAPP_IMAGE:builder
+      -f $WEBAPP_DOCKERFILE
+      .
+
+    # Build the final image using cached layers from both the builder and final image. Tag the image with current pipeline ID and `latest` tag.
+    - >
+      docker build
+      --pull
+      --cache-from $WEBAPP_IMAGE:builder
+      --cache-from $$WEBAPP_IMAGE:$CI_PIPELINE_ID
+      -t $WEBAPP_IMAGE:latest
+      -t $WEBAPP_IMAGE:$CI_PIPELINE_ID
+      -f $WEBAPP_DOCKERFILE
+      .
+
+    # Push new images to the registry
+    - docker push $WEBAPP_IMAGE:builder
+    - docker push $WEBAPP_IMAGE:latest
+    - docker push $WEBAPP_IMAGE:$CI_PIPELINE_ID
+
+
+build:api:
+  only:
+    refs:
+      - master
+    changes:
+      - backend/api/*
+  stage: build
+  image: docker:latest
+  variables:
+    API_ROOT: backend
+    API_DOCKERFILE: Dockerfile
+    API_IMAGE: $CI_REGISTRY_IMAGE/api
+  tags:
+    - docker
+  script:
+    # Navigate to build context
+    - cd $API_ROOT
+
+    # Build image using cache from existing ones
+    - >
+      docker build
+      --pull
+      --cache-from $API_IMAGE:latest
+      -t $API_IMAGE:$CI_PIPELINE_ID
+      -t $API_IMAGE:latest
+      -f $API_DOCKERFILE
+      .
+
+    # Push new images to the registry
+    - docker push $API_IMAGE:latest
+    - docker push $API_IMAGE:$CI_PIPELINE_ID
+

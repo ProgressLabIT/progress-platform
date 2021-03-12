@@ -6,15 +6,15 @@
     >
 
     <v-sheet :color="$theme.black" class="fill">
-      <v-container class="fill d-flex align-center"> 
+      <v-container class="fill d-flex align-center">
         <v-row justify="center" align="center">
-          
+
           <v-col cols="12" md="5" class="d-flex justify-center justify-md-end">
-            <v-img max-width="300px" src="/media/company/progresslab.svg">
+            <v-img max-width="300px" src="/media/progress/progresslab.svg`">
               <template v-slot:placeholder>
                 <v-avatar size="180" color="primary">
                   <v-col class="text-center highlight">
-                    <div>IL</div> 
+                    <div>IL</div>
                     <div>VOSTRO</div>
                     <div>LOGO</div>
                   </v-col>
@@ -22,29 +22,29 @@
               </template>
             </v-img>
           </v-col>
-          
+
           <v-divider vertical inset class="mx-4"></v-divider>
-          
+
           <v-col cols="12" md="5" class="d-flex justify-center justify-md-start px-6">
             <v-card :color="$theme.background" width="100%" max-width="500px">
-              
-              <transition name="fade" mode="out-in"> 
-                
+
+              <transition name="fade" mode="out-in">
+
                 <v-container v-if="!logging_in && !verified && !reset_password" key="form">
                   <v-form @submit.prevent="login">
                     <v-card-title class="display">
                       {{ $tc('session.login_title') }}
                     </v-card-title>
                     <v-card-text>
-                      <v-text-field 
-                        v-model="credentials.username" 
+                      <v-text-field
+                        v-model="credentials.username"
                         :label="$tc('username') | capitalize"
                         autocomplete="off">
                       </v-text-field>
-                      
-                      <v-text-field 
-                        v-model="credentials.password" 
-                        type="password" 
+
+                      <v-text-field
+                        v-model="credentials.password"
+                        type="password"
                         :label="$tc('user.password') | capitalize">
                       </v-text-field>
                     </v-card-text>
@@ -55,11 +55,11 @@
                     </v-card-actions>
                   </v-form>
                 </v-container>
-                
+
                 <v-container key="progress" v-else-if="logging_in">
-                  <v-progress-circular 
+                  <v-progress-circular
                     size="80" width="6"
-                    indeterminate 
+                    indeterminate
                     :color="$theme.blue"
                     class="mx-auto">
                   </v-progress-circular>
@@ -67,17 +67,17 @@
 
                 <v-container v-else-if="verified" key="success">
                   <v-row align="center">
-                    
+
                     <v-col cols="auto" class="ml-5">
-                      <BaseUserAvatar 
-                        size="90" 
-                        :user="user" 
+                      <BaseUserAvatar
+                        size="90"
+                        :user="user"
                         :show_name="false">
                       </BaseUserAvatar>
                     </v-col>
 
                     <v-col>
-                      <transition name="slide-fade" mode="out-in"> 
+                      <transition name="slide-fade" mode="out-in">
                         <span class="highlight text-uppercase" :key="user_message">
                           {{ user_message }}
                         </span>
@@ -95,16 +95,16 @@
                     </v-card-title>
 
                     <v-card-text>
-                      <v-text-field 
-                        v-model="new_password.first" 
+                      <v-text-field
+                        v-model="new_password.first"
                         type="password"
                         :label="$tc('user.new_password') | capitalize"
                         autocomplete="off">
                       </v-text-field>
 
-                      <v-text-field 
-                        v-model="new_password.second" 
-                        type="password" 
+                      <v-text-field
+                        v-model="new_password.second"
+                        type="password"
                         label="Password"
                         autocomplete="off">
                       </v-text-field>
@@ -119,7 +119,7 @@
                   </v-form>
                 </v-container>
 
-               
+
 
               </transition>
 
@@ -167,8 +167,8 @@ export default {
 
     go_to_location() {
       const redirect = this.$route.query.redirect_to
-      return redirect 
-        ? { path: redirect } 
+      return redirect
+        ? { path: redirect }
         : { name: this.$store.getters.userHomepage }
     }
   },
@@ -237,9 +237,9 @@ export default {
     resetPassword() {
       this.logging_in = true
 
-      api.put(`user/${this.user_key}/password`, 
-        { new_password: this.new_password.first }, 
-        { 
+      api.put(`user/${this.user_key}/password`,
+        { new_password: this.new_password.first },
+        {
           headers: { 'Content-type': 'application/json' }
         }
       )
