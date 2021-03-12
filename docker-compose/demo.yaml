@@ -1,0 +1,68 @@
+version: '3'
+
+volumes:
+  db_data:
+
+services:
+
+  reverse-proxy:
+    image: traefik:v2.3
+    restart: unless-stopped
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - /etc/progress-traefik.toml:/etc/traefik/traefik.toml
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The HTTPS post
+      - "443:443"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+
+  app:
+    # this is an NGINX image with built vue files embedded
+    image: registry.gitlab.com/progresslab/progress-platform/app
+    restart: unless-stopped
+    volumes:
+      - ./media:/usr/share/nginx/html/media
+    ports:
+      - "80"
+    labels:
+      - traefik.http.routers.app.rule=Host(`progress.localhost`)
+
+  api:
+    image: registry.gitlab.com/progresslab/progress-platform/api
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8000"
+    environment:
+      - PROGRESS_ARANGO_URL=http://db:8529
+    labels:
+      - traefik.http.routers.api.rule=Host(`api.progress.localhost`)
+      - traefik.http.routers.api.middlewares=root_to_docs
+      - traefik.http.middlewares.root_to_docs.redirectregex.regex=api.progress.localhost/?$$
+      - traefik.http.middlewares.root_to_docs.redirectregex.replacement=api.progress.localhost/docs
+
+  # setup_db:
+  #   image: registry.gitlab.com/progresslab/progress-platform/api
+  #   command: python init_db.py
+  #   profiles:
+  #     - tools
+
+
+  db:
+    image: arangodb:3.7
+    restart: unless-stopped
+    volumes:
+      - db_data:/var/lib/arangodb3
+      - ./db_backup:/db_backup
+      # - ./db/arango.conf:/etc/arangodb3/arangod.conf
+    ports:
+      - "8529"
+    environment:
+      - ARANGO_NO_AUTH=1
+    labels:
+      - traefik.http.routers.db.rule=Host(`db.progress.localhost`)
