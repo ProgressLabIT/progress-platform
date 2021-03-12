@@ -10,8 +10,8 @@ before_script:
 # Uses a multi-stage dockerfile with intermediate builder image to reduce final image size and build time
 build:webapp:
   only:
-    refs:
-      - master
+    # refs:
+    #   - branches
     changes:
       - webapps/*
   stage: build
@@ -58,8 +58,8 @@ build:webapp:
 
 build:api:
   only:
-    refs:
-      - master
+    # refs:
+    #   - master
     changes:
       - backend/api/*
   stage: build
