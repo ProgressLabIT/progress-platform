@@ -1,11 +1,11 @@
 FROM python:3.8-slim
 
 # Install dependencies
-COPY api/requirements.txt /api/requirements.txt
+COPY requirements.txt /api/requirements.txt
 
 RUN pip install --upgrade pip && pip install -r /api/requirements.txt
 
-COPY api /api
+COPY . /api
 
 WORKDIR /api
 
