@@ -1,19 +1,15 @@
 FROM node:15 AS builder
-
 WORKDIR /app
-
 COPY package.json .
 COPY package-lock.json .
-
 RUN npm install
 
+FROM builder AS built
 COPY .eslintrc.js .
 COPY babel.config.js .
 COPY vue.config.js .
 COPY src ./src
 COPY public ./public
-
-FROM builder AS built
 RUN npm run build
 
 FROM nginx:1.18
