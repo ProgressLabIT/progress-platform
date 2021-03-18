@@ -78,7 +78,7 @@ build:api:
       - backend/api/**/*
   image: docker:latest
   variables:
-    API_ROOT: backend
+    API_ROOT: backend/api
     API_DOCKERFILE: Dockerfile
     API_IMAGE: $CI_REGISTRY_IMAGE/api
   tags:
