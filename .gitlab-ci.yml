@@ -73,7 +73,7 @@ build:api:
   stage: build
   only:
     refs:
-      - branches
+      - master
     changes:
       - backend/api/**/*
   image: docker:latest
