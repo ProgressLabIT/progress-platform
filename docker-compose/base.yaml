@@ -37,9 +37,7 @@ services:
       - "traefik.http.routers.api.rule=Host(`progress.localhost`) && PathPrefix(`/api`)"
       - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
       - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
-      - "traefik.http.middlewares.root_to_docs.replacepathregex.regex=^/?$$"
-      - "traefik.http.middlewares.root_to_docs.replacepathregex.replacement=/docs"
-      - "traefik.http.routers.api.middlewares=strip_api_prefix, root_to_docs"
+      - "traefik.http.routers.api.middlewares=strip_api_prefix"
 
 
   # ========== DB ==========

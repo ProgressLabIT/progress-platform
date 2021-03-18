@@ -8,7 +8,7 @@ import endpoints
 config = get_config()
 
 app = FastAPI(
-	openapi_url=f"{config.openapi_root_path}/openapi.json",
+	# openapi_url=f"{config.root_path}/openapi.json",
 	root_path=config.root_path
 )
 # global_router = APIRouter()
@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 """
-Each package __init__ file imports the router object from the 
+Each package __init__ file imports the router object from the
 relative endpoint.py module, so it's easily available here
 """
 
