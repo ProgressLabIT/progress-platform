@@ -1,0 +1,36 @@
+version: '3'
+
+volumes:
+  db_data:
+    external:
+      name: arango-persist
+
+
+services:
+
+  app:
+    # this is an NGINX image with built vue files embedded
+    build:
+      context: webapps/main
+      dockerfile: webapp.prod.Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./webapps/main/public/media:/usr/share/nginx/html/media
+    ports:
+      - "80"
+
+  api:
+    build:
+      context: ./backend/api #root folder for build
+    volumes:
+      - ./backend/api:/api
+    command:
+      ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0", "--access-logfile", "-", "main:app", "--reload"]
+
+
+  db:
+    volumes:
+      - ./db/backup:/db_backup
+      - ./db/arango.conf:/etc/arangodb3/arangod.conf
+    environment:
+      - ARANGO_NO_AUTH=1
