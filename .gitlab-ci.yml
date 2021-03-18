@@ -9,12 +9,12 @@ before_script:
 # Build Webapp image and push it to registry.
 # Uses a multi-stage dockerfile with intermediate builder image to reduce final image size and build time
 build:webapp:
-  only:
-    # refs:
-    #   - branches
-    changes:
-      - webapps/*
   stage: build
+  only:
+    refs:
+      - master
+    changes:
+      - webapps/main/**/*
   image: docker:latest
   variables:
     WEBAPP_ROOT: webapps/main
@@ -25,6 +25,7 @@ build:webapp:
   script:
     # Pull builder image if present, if not skip
     - docker pull $WEBAPP_IMAGE:builder || true
+    - docker pull $WEBAPP_IMAGE:built || true
 
     # Navigate to build context
     - cd $WEBAPP_ROOT
@@ -39,12 +40,23 @@ build:webapp:
       -f $WEBAPP_DOCKERFILE
       .
 
+    # Build builder image (first section of the Dockerfile), using cached layers when available. The tagging overwrites the image with the updated one
+    - >
+      docker build
+      --pull
+      --cache-from $WEBAPP_IMAGE:built
+      --target built
+      -t $WEBAPP_IMAGE:built
+      -f $WEBAPP_DOCKERFILE
+      .
+
     # Build the final image using cached layers from both the builder and final image. Tag the image with current pipeline ID and `latest` tag.
     - >
       docker build
       --pull
       --cache-from $WEBAPP_IMAGE:builder
-      --cache-from $$WEBAPP_IMAGE:$CI_PIPELINE_ID
+      --cache-from $WEBAPP_IMAGE:built
+      --cache-from $$WEBAPP_IMAGE:latest
       -t $WEBAPP_IMAGE:latest
       -t $WEBAPP_IMAGE:$CI_PIPELINE_ID
       -f $WEBAPP_DOCKERFILE
@@ -52,17 +64,18 @@ build:webapp:
 
     # Push new images to the registry
     - docker push $WEBAPP_IMAGE:builder
+    - docker push $WEBAPP_IMAGE:built
     - docker push $WEBAPP_IMAGE:latest
     - docker push $WEBAPP_IMAGE:$CI_PIPELINE_ID
 
 
 build:api:
-  only:
-    # refs:
-    #   - master
-    changes:
-      - backend/api/*
   stage: build
+  only:
+    refs:
+      - branches
+    changes:
+      - backend/api/**/*
   image: docker:latest
   variables:
     API_ROOT: backend
