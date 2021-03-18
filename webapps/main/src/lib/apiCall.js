@@ -5,15 +5,15 @@ import store from '@/store/index.js'
 // 	? 'https://' + window.location.hostname + '/api/v1/'
 // 	: 'http://' + window.location.hostname + ':80'
 
-const api_url = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8000'
+const api_base_path = '/api'
 
-const api = axios.create({  
-  baseURL: api_url
+const api = axios.create({
+  baseURL: window.location.origin + api_base_path
 })
 
 api.interceptors.request.use( config => {
 
-  config.headers.common = { 
+  config.headers.common = {
     ...config.headers.commons,
     'Authorization': `Bearer ${ store.getters.getToken }`
   }
