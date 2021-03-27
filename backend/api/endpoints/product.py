@@ -30,7 +30,7 @@ async def get_product_list(
 ):
 
   list =  db.aql.execute(
-    Queries.GET_PRODUCT_LIST, 
+    Queries.GET_PRODUCT_LIST,
     bind_vars=dict(code=code, limit=limit)
   )
 
@@ -49,7 +49,7 @@ async def create_product(
   description: str = Form(''),
   image: UploadFile = File(None)
 ):
-  
+
   # Map form data
   try:
     new_product = ProductData(code=code, description=description)
@@ -61,7 +61,7 @@ async def create_product(
       status_code=400,
       detail=f'The data provided cannot be read properly: \n{error_str}'
     )
-  
+
   # Check if code is present
   if product_db.find(dict(code=code, trash=False)).count():
     status_code = 400
@@ -74,9 +74,31 @@ async def create_product(
       detail=response
     )
 
-  # Insert into database
+  # Save data
   try:
-    db_response = product_db.insert(prepped_data, return_new=True)
+    tx = db.begin_transaction(write=["Product"])
+    db_response = tx.collection("Product").insert(prepped_data, return_new=True)
+    # Save image
+    if image:
+
+      product_image = UserFile.product_media(
+        append_path=db_response['_key'],
+        file=image,
+      )
+
+      try:
+        await product_image.write_file('image.jpg')
+
+      except:
+        print(traceback.format_exc())
+        raise HTTPException(
+          status_code=500,
+          detail="Could not save image"
+        )
+
+    tx.commit_transaction()
+
+
   except Exception:
     status_code = 500
     error_str = traceback.format_exc()
@@ -90,51 +112,14 @@ async def create_product(
       detail=response
     )
 
-  # Save image
-  if image:
-
-    product_image = UserFile.product_media(
-      append_path=db_response['_key'],
-      file=image,
-    )
-    
-    # media_directory = f"/Volumes/Luca/DEV/Progress/WebApps/ManagerApp/public/media/product"
-    # new_product_key = db_response['_key']
-    # # Define product docs folder (named after product ID within the Product folder)
-    # product_path = os.path.join(
-    #   media_directory, 
-    #   new_product_key
-    # )
-
-    # If product folder is not present, create it
-    # if not os.path.isdir(product_path):
-    #   os.mkdir(product_path)
-    
-    # Try saving file
-    try: 
-      # filename = 'image.jpg'
-
-      # with open(os.path.join(product_path, filename), 'wb+') as f:
-      #   image_data = await image.read()
-      #   f.write(image_data)
-      await product_image.write_file('image.jpg')
-      
-    except:
-      print(traceback.format_exc())
-      raise HTTPException(
-        status_code=500,
-        detail="Could not save image"
-      )
-
-
   # Close request and return response
   status_code = 200
   message = "Product created"
   response = APIResponse(
     status_code=status_code,
     message=message,
-    # Arango replies by sending a json that includes id, key, rev and 
-    # then again the whole document nested in the main objecy, 
+    # Arango replies by sending a json that includes id, key, rev and
+    # then again the whole document nested in the main objecy,
     # thus duplicating the above keys. Below we get only the whole document.
     detail=db_response['new']
   )
@@ -148,10 +133,10 @@ async def create_product(
 #  DELETE /PRODUCT_KEY : DELETE PRODUCT
 # =================================================
 @router.delete("/{product_key}")
-async def delete_product(product_key):  
+async def delete_product(product_key):
   product_to_trash = product_db.get(product_key)
 
-  try: 
+  try:
     updated_product = product_db.update(dict(_key=product_key, trash=True), return_new=True)['new']
     response = APIResponse(
       status_code=200,
@@ -184,7 +169,7 @@ async def udpate_product(
   product_to_update = product_db.get(product_key)
   try:
     updated_product = product_db.update(
-      dict(_key=product_key, **updated_fields), 
+      dict(_key=product_key, **updated_fields),
       return_new=True
     )['new']
     # print(updated_product)
@@ -205,7 +190,7 @@ async def udpate_product(
     raise HTTPException(
       status_code=status_code,
       detail=response
-    )  
+    )
 
 
 # =================================================
@@ -213,7 +198,7 @@ async def udpate_product(
 # =================================================
 @router.put("/{product_key}")
 async def replace_product(
-  product_key: str, 
+  product_key: str,
   new_product_data: ProductData,
 ):
 
@@ -266,7 +251,7 @@ async def delete_doc(
 ):
 
   doc = UserFile.product_media(
-    append_path=f'{product_key}/doc', 
+    append_path=f'{product_key}/doc',
     name=doc_name
   )
 
@@ -286,7 +271,7 @@ async def replace_product_image(
   filename = 'image.jpg'
   await img.write_file(filename)
   return APIResponse(message="File saved correctly")
-  
+
 
 
 # =================================================
@@ -304,21 +289,21 @@ async def replace_product_image(product_key: str):
 # =================================================
 @router.get("/{product_key}", response_model=ProductFull)
 async def get_product_data(product_key: str):
-  
+
   product = ProductFull(**product_db.get(product_key))
   folder_obj = UserFile.product_media(product_key)
   doc_list = folder_obj.get_folder_contents('doc', name_only=False)
 
   def doc_data(doc):
     return ProductDoc(
-      name=doc.name, 
+      name=doc.name,
       size=doc.stat().st_size
     )
 
   product.docs = list(map(doc_data, doc_list))
 
   return product
-  
+
 
 
 
