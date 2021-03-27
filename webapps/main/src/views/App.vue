@@ -1,38 +1,38 @@
 <template>
   <div style="height: 100vh">
-    
-    <!-- Use v-if to fully remove html from DOM in case of session lock. 
-    This avoids access to content by tweaking SessionLock component visibility in the browser inspector -->
-    <template v-if="!session_locked">
-      <AppBar @showDrawer="show_drawer = true"/> 
 
-      <v-navigation-drawer 
-        temporary 
+    <!-- Use v-if to fully remove html from DOM in case of session lock.
+    This avoids access to content by tweaking SessionLock component visibility in the browser inspector -->
+    <!-- <template v-if="!session_locked"> -->
+      <AppBar @showDrawer="show_drawer = true"/>
+
+      <v-navigation-drawer
+        temporary
         :color="$theme.surface1"
         app width="400"
         v-model="show_drawer">
         <v-container class="fill-height">
           <v-row class="fill-height">
             <v-col class="d-flex flex-column">
-              
+
               <v-tabs vertical background-color="transparent">
-                
-                <v-tab 
-                  v-for="tab in tab_routes" 
-                  :to="{ name: tab }" 
+
+                <v-tab
+                  v-for="tab in tab_routes"
+                  :to="{ name: tab }"
                   :key="tab"
                   class="menu display mb-2">
                   {{ $tc(`views.${tab}`) }}
                 </v-tab>
-                
+
                 <!-- <v-tab :to="{ name: tab 'adminPanel'}" class="display mb-2">
                   Amminitrazione di sistema
                 </v-tab>
-                
+
                 <v-tab :to="{ name: 'libraryRoot'}" class="display mb-2">
                   Libreria prodotti
                 </v-tab>
-                
+
                 <v-tab :to="{ name: 'productionRoot'}" class="display mb-2">
                   Monitoraggio produzione
                 </v-tab>
@@ -40,7 +40,7 @@
                 <v-tab :to="{ name: 'operatorRoot'}" class="display">
                   Sessione di lavoro
                 </v-tab> -->
-                
+
               </v-tabs>
 
               <v-spacer></v-spacer>
@@ -51,8 +51,8 @@
                 <v-spacer></v-spacer>
                 <v-col>
                   <v-tabs right v-model="locale_index">
-                    <v-tab 
-                      v-for="(lang, i) in locale_list" 
+                    <v-tab
+                      v-for="(lang, i) in locale_list"
                       :key="i">
                       {{ lang }}
                     </v-tab>
@@ -75,11 +75,10 @@
       </v-content>
 
       <AppFooter />
-    </template>
-    
+
     <!-- Pass session_locked as prop instead of computing it locally inside the component since it's already needed for the v-if -->
-    <SessionLock v-else v-bind="{session_locked}"></SessionLock>
-    
+    <!-- <SessionLock v-else v-bind="{session_locked}"></SessionLock> -->
+
   </div>
 </template>
 
@@ -88,7 +87,7 @@ import { DateTime as DT } from 'luxon'
 
 import AppBar from '@/components/AppBar'
 import AppFooter from '@/components/AppFooter'
-import SessionLock from '@/views/SessionLock'
+// import SessionLock from '@/views/SessionLock'
 
 export default {
   name: 'App',
@@ -96,7 +95,7 @@ export default {
   components: {
     AppBar,
     AppFooter,
-    SessionLock,
+    // SessionLock,
   },
 
   data() {
@@ -109,7 +108,7 @@ export default {
   },
 
   computed: {
-    
+
     user_key() {
       return this.$store.state.session.user._key
     },
@@ -127,19 +126,13 @@ export default {
   },
 
   created() {
-    
-    window.onbeforeunload = async (event) => {
+    window.addEventListener("beforeunload", async (event) => {
       if (this.$route.name != 'login') {
         event.preventDefault()
         this.$store.state.last_interaction = DT.utc().toMillis()
         localStorage.setItem('TEMP_SESSION', JSON.stringify(this.$store.state))
-        if (this.$store.getters.isLoggedIn) {
-          await this.$store.dispatch('logout')
-        }
-        event.returnValue = 'Sicuro di voler lasciare la pagina?'
       }
-      else { event.returnValue = '' }
-    }
+    })
   },
 
   beforeMount() {

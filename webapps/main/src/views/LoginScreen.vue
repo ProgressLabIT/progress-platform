@@ -10,7 +10,7 @@
         <v-row justify="center" align="center">
 
           <v-col cols="12" md="5" class="d-flex justify-center justify-md-end">
-            <v-img max-width="300px" src="/media/progress/progresslab.svg`">
+            <v-img max-width="300px" src="/media/progress/progresslab.svg">
               <template v-slot:placeholder>
                 <v-avatar size="180" color="primary">
                   <v-col class="text-center highlight">
