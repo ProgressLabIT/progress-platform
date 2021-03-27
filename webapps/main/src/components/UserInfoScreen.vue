@@ -4,8 +4,8 @@
 
       <!-- AVATAR AND USER UNEDITABLE INFO -->
       <v-col cols="auto" class="d-flex flex-column">
-        <v-avatar 
-          :color="$theme.grey" 
+        <v-avatar
+          :color="$theme.grey"
           size="140"
           class="mx-auto">
           <v-img :src="avatar_src">
@@ -14,7 +14,7 @@
             </template> -->
           </v-img>
         </v-avatar>
-        
+
         <template v-if="edit_mode">
           <div class="mt-4"></div>
           <v-btn small
@@ -25,7 +25,7 @@
             <span class="ml-2">
               {{ $tc('edit') }}
             </span>
-            <input 
+            <input
               type="file"
               ref="upload_image"
               style="display: none"
@@ -46,19 +46,19 @@
 
 
         <h5 class="mt-6 text-uppercase">
-          {{ $tc('user.key') }}    
+          {{ $tc('user.key') }}
         </h5>
         <span class="body-2">{{ user._key }}</span>
 
         <h5 class="mt-6 text-uppercase">
-          {{ $tc('user.creation_date') }}    
+          {{ $tc('user.creation_date') }}
         </h5>
         <span class="body-2">
           {{ user.created_at | dtFormat(locale, 'dd LLL yyyy') }}
         </span>
 
         <h5 class="mt-6 text-uppercase">
-          {{ $tc('user.last_login') }}    
+          {{ $tc('user.last_login') }}
         </h5>
         <span class="body-2">
           {{ user.last_login | dtFormat(locale, 'dd LLL yyyy HH:mm') }}
@@ -70,13 +70,13 @@
       <v-col class="d-flex flex-column fill-height scroll ml-12">
 
         <v-row class="mx-0 flex-grow-0" align="center">
-        
+
           <template v-if="!edit_mode">
-            <h2 
+            <h2
               class="text-uppercase display highlight mr-6">
               {{ full_name }}
             </h2>
-            
+
             <v-spacer></v-spacer>
 
             <BaseTooltipIcon
@@ -98,8 +98,8 @@
               :tooltip="$tc('archive') | capitalize"
               :color="$theme.red"
               @iconClick="showDelete">
-            </BaseTooltipIcon>            
-          
+            </BaseTooltipIcon>
+
           </template>
 
           <template v-else>
@@ -107,9 +107,9 @@
               <h5 class="mb-2 text-uppercase">
                 {{ $tc('user.name') }}
               </h5>
-              <v-text-field 
+              <v-text-field
                 single-line
-                hide-details  
+                hide-details
                 v-model="temp_data.name"
                 class="pt-0">
               </v-text-field>
@@ -118,23 +118,23 @@
               <h5 class="mb-2 text-uppercase">
                 {{ $tc('user.surname') }}
               </h5>
-              <v-text-field 
+              <v-text-field
                 single-line
-                hide-details 
+                hide-details
                 v-model="temp_data.surname"
                 class="pt-0">
               </v-text-field>
             </v-col>
 
             <v-spacer></v-spacer>
-            
+
             <v-btn small :color="$theme.blue" @click="save" :loading="saving">
               {{ $tc('save') }}
             </v-btn>
             <v-btn small :color="$theme.grey" @click="cancel" class="ml-2">
               {{ $tc('cancel') }}
             </v-btn>
-            
+
           </template>
 
         </v-row>
@@ -152,8 +152,8 @@
                 {{ user.username || '-' }}
               </span>
               <v-text-field v-else
-                single-line 
-                hide-details 
+                single-line
+                hide-details
                 v-model="temp_data.username"
                 class="pt-0">
               </v-text-field>
@@ -166,8 +166,8 @@
                 {{ user.email || '-' }}
               </span>
               <v-text-field v-else
-                single-line 
-                hide-details 
+                single-line
+                hide-details
                 v-model="temp_data.email"
                 class="pt-0">
               </v-text-field>
@@ -180,7 +180,7 @@
               <span v-if="!edit_mode" class="body-2">
                 {{ temp_data.department ? temp_data.department.name : '-'}}
               </span>
-              <BaseAutocompleteDepartment 
+              <BaseAutocompleteDepartment
                 v-else
                 text_classes="body-2"
                 :return_object="true"
@@ -199,8 +199,8 @@
               </span>
               <v-text-field v-else
                 type="number"
-                single-line 
-                hide-details 
+                single-line
+                hide-details
                 v-model.number="temp_data.hourly_cost"
                 prefix="€"
                 class="pt-0">
@@ -216,7 +216,7 @@
               <h5 class="text-uppercase">
                 {{ $tc('user.status_title') }}
               </h5>
-              <v-switch 
+              <v-switch
                 dense hide-details
                 :disabled="!edit_mode"
                 v-model="temp_data.active"
@@ -236,7 +236,7 @@
                 hide-details
                 multiple
                 :disabled='!edit_mode'
-                v-for="check in scopes" 
+                v-for="check in scopes"
                 :key="check.name"
                 :value="check.name"
                 v-model="user_permissions">
@@ -244,7 +244,7 @@
                   <span class="body-2 base-white">
                     {{ $tc(`user.permissions.${check.name}`) | capitalize }}
                   </span>
-                </template>                
+                </template>
               </v-checkbox>
 
             </v-col>
@@ -270,7 +270,7 @@ export default {
 
   mixins: [NonExistentUserGuard],
 
-  components: { 
+  components: {
     BaseAutocompleteDepartment,
     BaseTooltipIcon
   },
@@ -285,7 +285,7 @@ export default {
     return {
       locale: 'it',
       edit_mode: false,
-      saving: false, 
+      saving: false,
       scopes: scopes_list,
       base_path: '/media/user/',
       new_image_url: null,
@@ -297,7 +297,7 @@ export default {
         name: '',
         surname: '',
         username: '',
-        email: '', 
+        email: '',
         scope: '',
         department: {},
         hourly_cost: 0,
@@ -319,8 +319,8 @@ export default {
     },
 
     full_name() {
-      return this.user 
-        ? this.user.name + ' ' + this.user.surname 
+      return this.user
+        ? this.user.name + ' ' + this.user.surname
         : this.$options.filters.capitalize(this.$tc('user.wrong_user_key'))
     },
 
@@ -336,7 +336,7 @@ export default {
       },
 
       set(value) {
-        this.$set(this.temp_data, 'scope', value.join(' ')) 
+        this.$set(this.temp_data, 'scope', value.join(' '))
       }
     }
   },
@@ -366,8 +366,8 @@ export default {
     },
 
     showPasswordReset() {
-      this.$router.push({ 
-        name: 'passwordReset', 
+      this.$router.push({
+        name: 'passwordReset',
         params: { user_key: this.user._key }
       })
     },
@@ -384,14 +384,20 @@ export default {
       let user_update = {}
       Object.keys(this.temp_data).forEach( k => {
         if (this.temp_data[k] != this.user[k]) {
-          user_update[k] = this.temp_data[k]
+          // use only key for department
+          if (k === 'department') {
+            user_update.department_key = this.temp_data.department._key
+          }
+          else {
+            user_update[k] = this.temp_data[k]
+          }
         }
       })
 
-      const action_payload = { 
-        user_key: this.user._key, 
+      const action_payload = {
+        user_key: this.user._key,
         user_update,
-        new_image: this.new_image 
+        new_image: this.new_image
       }
 
       this.$store.dispatch('updateUser', action_payload)
