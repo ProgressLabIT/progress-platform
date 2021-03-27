@@ -8,16 +8,19 @@ volumes:
 
 services:
 
-  app:
+  prod-app:
     # this is an NGINX image with built vue files embedded
     build:
       context: webapps/main
       dockerfile: webapp.prod.Dockerfile
     restart: unless-stopped
     volumes:
-      - ./webapps/main/public/media:/usr/share/nginx/html/media
+      - media:/usr/share/nginx/html/media
+      - ./webapps/main/nginx.prod.conf:/etc/nginx/nginx.conf
     ports:
       - "80"
+    labels:
+      - traefik.http.routers.app.rule=Host(`progress.localhost`)
 
   api:
     build:
@@ -27,10 +30,8 @@ services:
     command:
       ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0", "--access-logfile", "-", "main:app", "--reload"]
 
-
   db:
     volumes:
-      - ./db/backup:/db_backup
       - ./db/arango.conf:/etc/arangodb3/arangod.conf
     environment:
       - ARANGO_NO_AUTH=1
