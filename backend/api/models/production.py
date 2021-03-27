@@ -57,22 +57,22 @@ class WorkOrderNew(ArangoDocument):
   qt_planned: float
   # priority: bool = False
   due_by: Union[datetime, date] = None
-  
+
 
 class WorkOrderFull(WorkOrderNew):
   key: str = Field(None, alias="_key")
 
   status: WorkStatus = WorkStatus.CREATED
   qt_completed: float = 0
-  on_time: bool = None
   active: bool = False
+  on_time: bool = True
   critical: bool = False
   progress: int = Field(0, ge=0, le=100)
-  
+
   created: datetime = datetime.now(tz.UTC)
   start: datetime = None
   end: datetime = None
-  
+
   lead_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
   throughput_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
   processing_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
@@ -80,7 +80,7 @@ class WorkOrderFull(WorkOrderNew):
   processing_cost: float = None
   material_cost: float = None
   total_cost: float = None
-  
+
   phase_sequence: List[str] = None
   notes: str = None
 
@@ -112,7 +112,7 @@ class Job(FlexModel):
   # operation_key: str >>> TODO: Fix Phase API to add op_id during creation
 
   parameters: PhaseParameters = None
-  
+
   first_phase: bool = None
   input_available: bool = None
 
@@ -163,7 +163,7 @@ class Job(FlexModel):
 # class PhaseJobs(FlexModel):
 #   phase_alias: str
 #   active: bool
-#   jobs: List[Job] 
+#   jobs: List[Job]
 
 class JobUpdateType(Enum):
   INSERT = 'insert'
