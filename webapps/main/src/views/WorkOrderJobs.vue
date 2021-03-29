@@ -1,34 +1,34 @@
 <template>
   <v-container class="fill py-0 d-flex flex-column">
-    
+
     <!-- HEADERS -->
     <v-row class="flex-grow-0 mx-0 px-2" align="center">
-      <v-col 
-        v-for="header in headers" 
-        :key="header.value" 
+      <v-col
+        v-for="header in headers"
+        :key="header.value"
         :cols="header.cols"
         :class="header.value.includes('qt') ? 'text-right' : '' ">
         <h5>{{ header.text}}</h5>
       </v-col>
     </v-row>
 
-    
+
     <!-- CONTENT -->
     <div class="scroll flex-grow-1">
       <v-expansion-panels flat v-model="expanded_phase">
-        <v-expansion-panel 
-          v-for="(phase, index) in phase_data" 
+        <v-expansion-panel
+          v-for="(phase, index) in phase_data"
           :key="phase.phase_key"
           color="transparent">
-          
+
           <!-- PHASE SUMMARY DATA -->
-          <v-expansion-panel-header 
+          <v-expansion-panel-header
             class="body-2 py-0 px-5"
             :class="expanded_phase === index ? 'border-top highlight font-weight-medium' : '' ">
             <v-row align="center">
-              <v-col 
-                v-for="header in headers" 
-                :key="header.value" 
+              <v-col
+                v-for="header in headers"
+                :key="header.value"
                 :cols="header.cols"
                 :class="header.value.includes('qt') || header.value === 'assigned_to' ? 'text-right' : '' ">
 
@@ -36,8 +36,8 @@
                 <template v-if="header.value === 'progress'">
                   <v-row no-gutters align="center" >
                     <v-col cols="9">
-                      <v-progress-linear 
-                        dense 
+                      <v-progress-linear
+                        dense
                         :value="phase.progress"
                         :color="phase.active ? $theme.blue : $theme.grey">
                       </v-progress-linear>
@@ -60,27 +60,27 @@
           <!-- END OF PHASE SUMMARY DATA -->
 
 
-          
+
           <!-- JOB DATA & PHASE/JOB ACTIONS -->
           <v-expansion-panel-content
             :class="expanded_phase === index ? 'border-bottom' : '' ">
 
             <!-- JOB DATA -->
-            <v-row 
+            <v-row
               :id="job._key"
-              v-for="job in phase.jobs" 
-              :key="job._key" 
+              v-for="job in phase.jobs"
+              :key="job._key"
               align="center">
 
-              <v-col v-for="header in headers" 
-                :key="header.value" 
+              <v-col v-for="header in headers"
+                :key="header.value"
                 :cols="header.cols"
                 :class="header.value.includes('qt') ? 'text-right' : '' "
                 class="py-0">
 
                 <!-- SELECT CHECKBOX -->
                 <template v-if="header.value === 'phase_alias'">
-                  <v-checkbox 
+                  <v-checkbox
                     :color="$theme.blue"
                     :disabled="job.active"
                     :value="job_select_model[job._key]"
@@ -92,8 +92,8 @@
                 <template v-else-if="header.value === 'progress'">
                   <v-row no-gutters align="center" >
                     <v-col cols="9">
-                      <v-progress-linear 
-                        dense 
+                      <v-progress-linear
+                        dense
                         :value="job.progress"
                         :color="job.active ? $theme.blue : $theme.grey">
                       </v-progress-linear>
@@ -102,14 +102,14 @@
                       {{ job.progress }}%
                     </v-col>
                     <!-- <v-col cols="1" class="text-right pl-2">
-                      <v-icon small 
-                        v-if="item.critical" 
+                      <v-icon small
+                        v-if="item.critical"
                         :color="$theme.red"
                         @click="$emit('criticalOnly')">
                         mdi-alert-octagon
                       </v-icon>
-                      <v-icon small 
-                        v-else-if="!item.on_time" 
+                      <v-icon small
+                        v-else-if="!item.on_time"
                         :color="$theme.orange"
                         @click="$emit('lateOnly')">
                         mdi-alert
@@ -123,7 +123,7 @@
                 <template v-else-if="header.value === 'assigned_to'">
                   <BaseUserAvatar v-if="job.assigned_to" :user="job.assigned_to" />
                   <v-btn v-else-if="selected_jobs.length === 0" small
-                    :color="$theme.blue" 
+                    :color="$theme.blue"
                     @click="updateSelectedJobData(job, true); edit_mode = 'modify'">
                     {{ $tc('assign') }}
                   </v-btn>
@@ -141,9 +141,9 @@
                   </span>
                 </template>
               </v-col>
-            </v-row>    
+            </v-row>
             <!-- END OF JOB DATA -->
-            
+
 
 
             <!-- JOB ACTIONS -->
@@ -154,19 +154,19 @@
               <template v-if="edit_mode=='actions'">
 
                 <!-- SELECT ALL -->
-                <v-btn small 
+                <v-btn small
                   v-if="phase.jobs.length > 1"
-                  :color="$theme.grey" 
+                  :color="$theme.grey"
                   @click="toggleAll(phase)">
                   {{ selected_jobs.length == 0
-                    ? $tc('select_all') 
+                    ? $tc('select_all')
                     : $tc('deselect_all')  }}
                 </v-btn>
-                
+
                 <!-- EDIT ACTIONS -->
                 <template v-if="phase.editing">
                   <v-spacer></v-spacer>
-                  <v-btn small 
+                  <v-btn small
                     :color="$theme.blue"
                     @click="edit_mode = 'modify'">
                     {{ $tc('edit') }}
@@ -174,7 +174,7 @@
                 </template>
               </template>
               <!-- END OF STARTING ACTION BUTTONS -->
-            
+
               <!-- REBALANCE ACTION CARD -->
               <template v-if="edit_mode == 'modify' ">
                 <JobRebalanceActionCard
@@ -196,12 +196,12 @@
     <v-spacer></v-spacer>
 
     <v-row v-if="!wo_data.active" justify="space-between" class="pb-2 mx-0 flex-grow-0">
-      
+
       <v-btn :color="$theme.blue" @click="edit_qt = true">
         {{ $tc('quantity.update') }}
       </v-btn>
-      <v-btn 
-        :color="$theme.blue" 
+      <v-btn
+        :color="$theme.blue"
         :loading="saving"
         @click="edit_due_date = true">
         {{ $tc('work_order.update_due_date') }}
@@ -212,8 +212,8 @@
     </v-row>
 
     <!-- EDIT DUE DATE -->
-    <v-dialog 
-      :value="edit_due_date" 
+    <v-dialog
+      :value="edit_due_date"
       @click:outside="closeEditDialogs"
       @keydown.esc="closeEditDialogs"
       width="300px">
@@ -227,7 +227,7 @@
         @change="new_due_date = $event">
         <v-row justify="space-between" class="mx-0">
           <v-btn small text
-            :color="$theme.grey" 
+            :color="$theme.grey"
             @click="closeEditDialogs">
             {{ $tc('cancel') }}
           </v-btn>
@@ -242,25 +242,25 @@
 
 
     <!-- EDIT QT -->
-    <v-dialog 
-      :value="edit_qt" 
+    <v-dialog
+      :value="edit_qt"
       @click:outside="closeEditDialogs"
       @keydown.esc="closeEditDialogs"
       width="300px">
       <v-card elevation="8">
         <v-container>
-          <v-row class="mx-0" align="center">  
+          <v-row class="mx-0" align="center">
             <v-col cols="7">
               <h4 class="display highlight text-uppercase">
                 {{ $tc('work_order.new_quantity') }}
-              </h4>      
-            </v-col> 
+              </h4>
+            </v-col>
             <v-col cols="5" class="d-flex align-center">
               <v-text-field
-                ref="new_qt" 
-                class="pa-0 ma-0" 
+                ref="new_qt"
+                class="pa-0 ma-0"
                 label="Nuova quantità"
-                single-line 
+                single-line
                 hide-details
                 reverse
                 type="number"
@@ -268,11 +268,11 @@
                 :value="wo_data.qt_planned"
                 @input="new_qt = $event">
               </v-text-field>
-            </v-col>       
+            </v-col>
           </v-row>
           <v-card-actions class="justify-space-between">
             <v-btn small text
-              :color="$theme.grey" 
+              :color="$theme.grey"
               @click="closeEditDialogs">
               {{ $tc('cancel') }}
             </v-btn>
@@ -281,19 +281,19 @@
               @click="show_job_qt_rebalance = true">
               {{ $tc('save') }}
             </v-btn>
-          </v-card-actions>    
+          </v-card-actions>
         </v-container>
       </v-card>
     </v-dialog>
-    
-      
+
+
     <template v-if="show_job_qt_rebalance">
-    <WorkOrderJobQtRebalance 
+    <WorkOrderJobQtRebalance
       v-bind="{ new_wo_qt: parseInt(new_qt), phase_data, wo_key: wo_data._key }"
-      @close="closeEditDialogs">    
+      @close="closeEditDialogs">
     </WorkOrderJobQtRebalance>
     </template>
-  
+
   </v-container>
 </template>
 
@@ -342,38 +342,38 @@ export default {
 
     headers() {
       return [
-        { 
-          value: 'phase_alias', 
-          text: this.$tc('phase.short').toUpperCase(), 
-          cols: 2, 
+        {
+          value: 'phase_alias',
+          text: this.$tc('phase.short').toUpperCase(),
+          cols: 2,
           width: '20%'
         },
-        { 
-          value: 'progress', 
-          text: this.$tc('progress').toUpperCase(), 
-          cols: 4, 
+        {
+          value: 'progress',
+          text: this.$tc('progress').toUpperCase(),
+          cols: 4,
           width: '30%'
         },
-        { 
-          value: 'qt_completed', 
-          text: this.$tc('quantity.completed.short').toUpperCase(), 
-          align: 'end', 
-          cols: false, 
+        {
+          value: 'qt_completed',
+          text: this.$tc('quantity.completed.short').toUpperCase(),
+          align: 'end',
+          cols: false,
           width: 'auto'
         },
         // { value: 'qt_released', text: 'QRil', align: 'end', cols: false, width: 'auto'},
-        { 
-          value: 'qt_remaining', 
-          text: this.$tc('quantity.remaining.short').toUpperCase(), 
-          align: 'end', 
-          cols: false, 
+        {
+          value: 'qt_remaining',
+          text: this.$tc('quantity.remaining.short').toUpperCase(),
+          align: 'end',
+          cols: false,
           width: 'auto'
         },
-        { 
-          value: 'assigned_to', 
-          text: this.$tc('job.assigned_to').toUpperCase(), 
-          align: 'end', 
-          cols: '3', 
+        {
+          value: 'assigned_to',
+          text: this.$tc('job.assigned_to').toUpperCase(),
+          align: 'end',
+          cols: '3',
           width: '30%'
         },
       ]
@@ -411,10 +411,10 @@ export default {
     },
 
     selected_jobs() {
-      return Object.entries(this.job_select_model).reduce( 
-        ( array, [job,selected] ) => { 
-          if (selected) { array.push(job) } 
-          return array 
+      return Object.entries(this.job_select_model).reduce(
+        ( array, [job,selected] ) => {
+          if (selected) { array.push(job) }
+          return array
         }, [])
     },
 
@@ -436,7 +436,7 @@ export default {
 
     updateSelectedJobData(job, selected) {
       if (selected) {
-        this.$set(this.job_select_model, job._key, job) 
+        this.$set(this.job_select_model, job._key, job)
       }
       else this.$delete(this.job_select_model, job._key)
     },
@@ -476,6 +476,12 @@ export default {
       // reset edit_mode after closing/switching phase details
       if (Object.keys(this.job_select_model).length === 0) this.edit_mode = 'actions'
     },
+
+    edit_mode() {
+      if (this.edit_mode === 'actions') {
+        this.job_select_model = {}
+      }
+    }
   },
 }
 </script>
@@ -494,7 +500,7 @@ export default {
 }
 
 .v-expansion-panel-header {
-  
+
 }
 
 </style>
