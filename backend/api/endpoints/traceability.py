@@ -16,8 +16,11 @@ router = APIRouter()
 @router.post('/event')
 async def apply_production_event(data: ProductionEvent):
   try:
+    print(data)
     event = Event(data)
-    event.save()
+    response = event.save()
+    print(response)
+    return response
   except:
     status_code=500
     error_str = traceback.format_exc()
