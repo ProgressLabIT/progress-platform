@@ -12,7 +12,6 @@ services:
     build:
       context: ./webapps/main
       dockerfile: webapp.dev.Dockerfile
-    restart: unless-stopped
     command: >
       npm run serve -- --host 0.0.0.0
     volumes:
