@@ -51,7 +51,7 @@ class Batch(FlexModel):
 
   # next_step: int = None
   step_data: List[StepExecutionData] = None
-  
+
 
 
 class WorkSession(FlexModel):
@@ -66,6 +66,7 @@ class WorkSession(FlexModel):
   # duration: timedelta = None
   active: bool
   hourly_cost: float = None
+  last_online: datetime = None
 
 
 class EventType(Enum):
@@ -95,6 +96,7 @@ class ProductionEvent(FlexModel):
   new_batch_key: str = None
   timestamp: datetime
   user_data: Any
+  description: str = None # optional descriptive field for auditing reasons
 
 
 class BatchTimeRecord(FlexModel):

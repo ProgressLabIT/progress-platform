@@ -80,6 +80,7 @@ class Event:
         user_key=self.info.user_key,
         user_session_key=self.info.user_session_key,
         start=self.info.timestamp,
+        last_online=self.info.timestamp
       )
     ).next()
 

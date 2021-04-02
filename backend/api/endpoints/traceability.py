@@ -1,11 +1,12 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, WebSocket
 
 from models.traceability import *
 from utils.event import Event
 from utils.api import APIResponse
 from utils.db import db
+from utils.dt import timestamp
 from utils.traceability import Queries
 
 
@@ -45,3 +46,18 @@ async def get_batch_execution_data(batch_key: str):
   except StopIteration:
     batch_data = dict()
   return APIResponse(detail=batch_data)
+
+
+
+@router.post('/worksession/{work_session_key}')
+async def work_session_heart_beat(work_session_key: str):
+  """
+  Updates the work session `last_online` attribute with current time
+  """
+  now = timestamp()
+  db.collection('WorkSession').update({"_key": work_session_key, "last_online": now})
+  return {
+    "work_session_key": work_session_key,
+    "last_online": now
+  }
+
