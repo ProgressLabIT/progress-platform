@@ -68,7 +68,7 @@ async def create_work_order(new_wo: WorkOrderNew):
   def get_procedure_for_new_job(phase_key):
     try:
       db_steps = tx.aql.execute(
-        Queries.GET_PHASE_STEP_DATA, 
+        Queries.GET_PHASE_STEP_DATA,
         bind_vars=dict(phase_key=phase_key)
       )
       job_steps = [s for s in db_steps]
@@ -83,7 +83,7 @@ async def create_work_order(new_wo: WorkOrderNew):
       raise HTTPException(status_code=status_code, detail=response)
 
     for s in job_steps:
-      try: 
+      try:
         filenames = search_step_media(s['_key'])
         s['media'] = [media_name for media_name in filenames]
         # print(s)
@@ -120,13 +120,14 @@ async def create_work_order(new_wo: WorkOrderNew):
       operation_key = phase.operation_key,
       parameters = phase.params,
       qt_planned = wo_data.qt_planned,
-      step_sequence = get_procedure_for_new_job(phase_key)
+      step_sequence = get_procedure_for_new_job(phase_key),
+      max_offline = phase.max_offline
     )
 
     prepped = jsonable_encoder(new_job_record, by_alias=True)
     new_job_record.key = collection.insert(prepped)['_key']
     return new_job_record
-  
+
   try:
     new_job_records = [create_job_record(new_wo_record, phase_key, job_coll) for phase_key in new_wo_record.phase_sequence]
 
@@ -145,7 +146,7 @@ async def create_work_order(new_wo: WorkOrderNew):
   # Add work order to default site queue
   try:
     tx.aql.execute(Queries.ADD_WORK_ORDER_TO_QUEUE, bind_vars=dict(new_wo_key=new_wo_record.key))
-    
+
   except:
     status_code=500
     response = dict(
@@ -171,22 +172,22 @@ async def create_work_order(new_wo: WorkOrderNew):
 
 @router.patch('/work-order/{wo_key}')
 async def update_work_order(
-  wo_key: str, 
+  wo_key: str,
   new_due_date: str = Body(None),
   new_qt: float = Body(None)
   ):
-  
+
   tx = db.begin_transaction(write=['WorkOrder'])
   update = dict(_key=wo_key)
-  
+
   if new_due_date:
-    update['due_by'] = new_due_date 
-    
+    update['due_by'] = new_due_date
+
   if new_qt:
     update['qt_planned'] = new_qt
 
   updated_wo_data = tx.collection('WorkOrder').update(update, return_new=True)['new']
-  
+
   if new_qt and updated_wo_data['status'] != WorkStatus.CREATED.value:
     status_code = 423
     response = dict(
@@ -228,13 +229,13 @@ async def update_queue(queue_update: Queue):
 
   try:
     match = dict(type=queue_update.type, site_key=queue_update.site_key)
-    
+
     subqueue = queue_update.subqueue_target_key
     if subqueue:
       match['subqueue_target_key'] = subqueue
 
     db.collection('Queue').update_match(match, queue_update, keep_none=False, sync=True)
-    
+
     # If updating the work order queue, reorder all job queues too
     if not subqueue:
       db.aql.execute(Queries.REORDER_JOB_QUEUES)
@@ -289,7 +290,7 @@ async def get_job_data(job_key: str):
       error=traceback.format_exc()
     )
     raise HTTPException(status_code=status_code, detail=response)
-  
+
 
   response=dict(
     message=f"Retrieved data for Job/{job_key}",
@@ -297,7 +298,7 @@ async def get_job_data(job_key: str):
   )
 
   return APIResponse(**response)
- 
+
 
 # ----------------------------------------------------------------------
 
@@ -310,7 +311,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
     try:
       if action == 'remove':
         tx.aql.execute(
-          Queries.REMOVE_JOB_FROM_QUEUE, 
+          Queries.REMOVE_JOB_FROM_QUEUE,
           bind_vars=dict(job_key=job_key, target_key=target_key)
         )
 
@@ -323,7 +324,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
 
         if operator_queue_exists:
           tx.aql.execute(
-            Queries.ADD_JOB_TO_QUEUE, 
+            Queries.ADD_JOB_TO_QUEUE,
             bind_vars=dict(target_key=target_key, job_key=job_key)
           )
 
@@ -348,7 +349,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
   job_db = tx.collection('Job')
 
   results = []
-  
+
   try:
     for u in job_updates:
 
@@ -358,7 +359,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
 
         if 'assigned_to' in u.data:
           update_target_queue(
-            job_key=new_job_data['_key'], 
+            job_key=new_job_data['_key'],
             target_key=new_job_data['assigned_to'],
             action='add',
             tx=tx
@@ -373,25 +374,25 @@ async def update_jobs(job_updates:List[JobUpdate]):
         if 'qt_planned' in u.data:
           update_job_progress(db=tx, job_key=db_resp['_key'])
 
-        if 'assigned_to' in u.data:  
+        if 'assigned_to' in u.data:
           if 'assigned_to' in old_job_data:
             update_target_queue(
               job_key=u.data['_key'],
               target_key=old_job_data['assigned_to'],
               action='remove',
-              tx=tx    
+              tx=tx
             )
-          
+
           update_target_queue(
-            job_key=u.data['_key'], 
+            job_key=u.data['_key'],
             target_key=u.data['assigned_to'],
             action='add',
             tx=tx
-          ) 
-          
+          )
+
       elif u.action == JobUpdateType.DELETE:
         new_job_data = job_db.update(dict(**u.data, trash=True), return_new=True)['new']
-        
+
         if new_job_data['assigned_to']:
           update_target_queue(
             job_key=u.data['_key'],
@@ -401,18 +402,18 @@ async def update_jobs(job_updates:List[JobUpdate]):
           )
 
       results.append(new_job_data)
-    
+
     tx.commit_transaction()
     return APIResponse(detail=db_resp, message="Jobs updated successfully")
 
-  except: 
+  except:
     status_code = 500
     error_str = traceback.format_exc()
 
     response=dict(
       status_code=status_code,
       message="There was an error saving the updates",
-      error=error_str 
+      error=error_str
     )
 
     raise HTTPException(status_code=status_code, detail=response)

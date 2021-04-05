@@ -449,7 +449,8 @@ class Event:
       last_work_session_started=self.info.work_session_key,
       current_batch=self.info.current_batch_key,
       active=True,
-      assigned_to=self.info.user_key
+      assigned_to=self.info.user_key,
+      last_online=self.info.timestamp
     )
     self.tx.collection('Job').update(job_update)
 
@@ -474,8 +475,6 @@ class Event:
         **queue_match,
         jobs=[self.info.job_key]
       ))
-
-    self.response = self.info.work_session_key
 
   # ....................................................................
 

@@ -1,6 +1,6 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException, WebSocket
+from fastapi import APIRouter, HTTPException
 
 from models.traceability import *
 from utils.event import Event
@@ -49,8 +49,8 @@ async def get_batch_execution_data(batch_key: str):
 
 
 
-@router.post('/worksession/{work_session_key}')
-async def work_session_heart_beat(work_session_key: str):
+@router.post('/job/{job_key}/heartbeat')
+async def job_heart_beat(work_session_key: str):
   """
   Updates the work session `last_online` attribute with current time
   """
