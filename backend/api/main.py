@@ -27,15 +27,9 @@ Each package __init__ file imports the router object from the
 relative endpoint.py module, so it's easily available here
 """
 
-@app.get("/test")
-async def test_api():
-	r = requests.get('http://mock.progress.localhost/test')
-	return r.text
-
-
-@app.get('/mock')
-async def mock_response():
-	return "TEST"
+@app.get("/hello")
+async def hello():
+	return 'Hi!'
 
 
 app.include_router(endpoints.product, prefix="/product", tags=['Product'])
