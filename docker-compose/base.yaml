@@ -1,17 +1,20 @@
+version: '3.1'
+
 volumes:
   media:
     external: True
-  db_data:
-    external: True
   db_backup:
+    external: True
+  db_data:
     external: True
 
 services:
 
-  # ========== ROUTER / REVERSE-PROXY ==========
   router:
     image: traefik:v2.3
     restart: unless-stopped
+    deploy:
+      replicas: 1
     volumes:
       # So that Traefik can listen to the Docker events
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -24,44 +27,22 @@ services:
       # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
 
-
-  # ========== API ==========
   api:
-    restart: unless-stopped
-    depends_on:
-      - db
     environment:
-      # Here the service will be called from INSIDE the docker network, so the internal alias should be used.
+      - PROGRESS_MEDIA_PATH=/media
       - PROGRESS_ARANGO_URL=http://db:8529
-      - PROGRESS_ROOT_PATH=/api
+      - PROGRESS_API_ROOT_PATH=/api
     ports:
       - "8000"
     volumes:
       - media:/media
-    labels:
-      - "traefik.http.routers.api.rule=Host(`progress.localhost`) && PathPrefix(`/api`)"
-      - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
-      - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
-      - "traefik.http.routers.api.middlewares=strip_api_prefix"
 
-
-  # ========== DB ==========
   db:
     image: arangodb:3.7
-    restart: unless-stopped
     volumes:
       - db_data:/var/lib/arangodb3
-      - db_backup:/backup
+      - db_backup:/db_backup
     ports:
       - "8529"
-    labels:
-      - "traefik.http.routers.db.rule=Host(`progress.localhost`) && PathPrefix(`/_db`)"
-      - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
-      - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
-      - "traefik.http.routers.db.middlewares=db_root"
-
-      # - "traefik.http.routers.db.middlewares=strip_db_prefix"
-      # - "traefik.http.middlewares.strip_db_prefix.stripprefix.prefixes=/_db"
-      # - "traefik.http.middlewares.strip_db_prefix.stripprefix.forceslash=false"
 
 

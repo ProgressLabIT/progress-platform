@@ -9,7 +9,7 @@ config = get_config()
 
 app = FastAPI(
 	# openapi_url=f"{config.root_path}/openapi.json",
-	root_path=config.root_path
+	root_path=config.api_root_path
 )
 # global_router = APIRouter()
 
