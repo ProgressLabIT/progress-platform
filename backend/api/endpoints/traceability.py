@@ -6,6 +6,7 @@ from models.traceability import *
 from utils.event import Event
 from utils.api import APIResponse
 from utils.db import db
+from utils.dt import timestamp
 from utils.traceability import Queries
 
 
@@ -16,8 +17,11 @@ router = APIRouter()
 @router.post('/event')
 async def apply_production_event(data: ProductionEvent):
   try:
+    print(data)
     event = Event(data)
-    event.save()
+    response = event.save()
+    print(response)
+    return response
   except:
     status_code=500
     error_str = traceback.format_exc()
@@ -42,3 +46,28 @@ async def get_batch_execution_data(batch_key: str):
   except StopIteration:
     batch_data = dict()
   return APIResponse(detail=batch_data)
+
+
+
+@router.post('/job/{job_key}/heartbeat')
+async def job_heartbeat(job_key: str, work_session_key: str = None):
+  """
+  Updates the work session `last_online` attribute with current time
+  """
+  now = timestamp()
+  tx = db.begin_transaction(write=['Job', 'WorkSession'])
+  tx.collection('Job').update({"_key": job_key, "last_online": now})
+
+  """
+  TODO: INSERT HERE UPDATE OF FALSELY CLOSED WORK SESSIONS
+
+  E.g. If work_session_key exists and it's inactive, update it with active state and remove the end time
+  """
+
+  tx.commit_transaction()
+
+  return {
+    "work_session_key": work_session_key,
+    "last_online": now
+  }
+

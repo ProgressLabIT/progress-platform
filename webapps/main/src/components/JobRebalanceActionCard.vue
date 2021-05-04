@@ -1,167 +1,176 @@
 <template>
-  <v-card flat outlined width="100%">
-    <v-container fluid>
-      <!-- TABLE HEADER -->
-      <v-row>
-        <v-col 
-          v-for="col in headers" 
-          :key="col.value" 
-          :cols="col.cols"
-          :offset="col.offset" 
-          class="pt-0 text-uppercase">
-          <h5>{{ col.text }}</h5>
-        </v-col>
-      </v-row>
+  <v-dialog
+    value="true"
+    overlay-opacity=".9"
+    width="80%"
+    persistent no-click-animation>
+    <v-row justify="center" class="mx-0 mb-2 highlight display text-uppercase">
+      <h4>{{ job_template.phase_alias }}</h4>
+    </v-row>
+    <v-card flat outlined width="100%">
+      <v-container fluid>
+        <!-- TABLE HEADER -->
+        <v-row>
+          <v-col
+            v-for="col in headers"
+            :key="col.value"
+            :cols="col.cols"
+            :offset="col.offset"
+            class="pt-0 text-uppercase">
+            <h5>{{ col.text }}</h5>
+          </v-col>
+        </v-row>
 
-      <v-row dense v-for="(j, index) in temp_jobs" :key="index" align="center">
-        <v-col 
-          v-for="col in headers" 
-          :key="col.value" 
-          :cols="col.cols"
-          :offset="col.offset" 
-          class="body-2">
-          <template v-if="col.value === 'key'">
-            <span class="text-uppercase">
-              {{ j._key || $tc('new') }}
-            </span>
-            <v-chip v-if="j.trash" 
-              small label close 
+        <v-row dense v-for="(j, index) in temp_jobs" :key="index" align="center">
+          <v-col
+            v-for="col in headers"
+            :key="col.value"
+            :cols="col.cols"
+            :offset="col.offset"
+            class="body-2">
+            <template v-if="col.value === 'key'">
+              <span class="text-uppercase">
+                {{ j._key || $tc('new') }}
+              </span>
+              <v-chip v-if="j.trash"
+                small label close
+                :color="$theme.orange"
+                class="ml-2 solid-white weight-bold text-uppercase"
+                @click:close="restoreJob(index)">
+                {{ $tc('closed') }}
+              </v-chip>
+            </template>
+
+            <template v-if="col.value === 'qt_remaining' && !j.trash">
+              <v-text-field
+                class="ma-0 pa-0"
+                :key="index"
+                reverse
+                single-line
+                hide-details
+                type="number"
+                :value="j.qt_remaining"
+                :min="0"
+                :max="qt_to_allocate"
+                @input="updateRemainingQt(index, $event)">
+              </v-text-field>
+            </template>
+
+            <template v-if="col.value === 'assigned_to'">
+              <!-- Show current operator if present -->
+              <template v-if="notReassignable(index)">
+                <BaseUserAvatar :user="j.assigned_to" />
+              </template>
+
+              <!-- Show operator select if new job -->
+              <template v-else>
+                <v-autocomplete
+                  ref="operator_autocomplete"
+                  autocomplete="off"
+                  :value="j.assigned_to"
+                  :items="$store.getters.operator_list()"
+                  item-value="_key"
+                  single-line hide-details
+                  return-object
+                  :filter="filterOperator"
+                  :label="$tc('job.assign_to') + ':' | capitalize"
+
+                  class="pt-0 flex-grow-0 body-2"
+                  @focus.native="resetAssignment(index)"
+                  @change="setAssignment(index, $event)">
+                  <template v-slot:item="{ item: list_item }">
+                    <BaseUserAvatar :user="list_item"/>
+                  </template>
+                  <template v-slot:selection="{ item: selection }">
+                    <BaseUserAvatar :user="selection"/>
+                  </template>
+                </v-autocomplete>
+              </template>
+            </template>
+          </v-col>
+
+          <v-col
+            cols="auto"
+            v-if="deletable(index) && !j.trash" class="ml-auto pr-8">
+            <BaseTooltipIcon
+              :color="$theme.red"
+              :tooltip="$tc('delete') | capitalize"
+              icon="delete"
+              @iconClick="removeJob(index)">
+            </BaseTooltipIcon>
+          </v-col>
+        </v-row>
+
+        <v-row align="center">
+          <v-col
+            v-for="col in headers"
+            :key="col.value"
+            :cols="col.cols"
+            :offset="col.offset"
+            class="text-uppercase body-2"
+            :class="col.value === 'qt_remaining' ? 'text-right' : '' ">
+            <template v-if="col.value === 'key'">
+              <span class="font-weight-medium text-uppercase">
+                {{ $tc('start_end_totals') }}
+              </span>
+            </template>
+
+            <template v-if="col.value === 'qt_remaining'">
+              <span class="body-1">{{ qt_to_allocate }} / </span>
+              <span class="body-1" :style="remaining_style">{{ working_total_remaining }}</span>
+              <span class="caption ml-4 mr-n10">({{ remaining_delta }})</span>
+            </template>
+          </v-col>
+        </v-row>
+
+        <v-row dense class="mt-4">
+          <v-col cols="auto">
+            <v-btn small
+              v-if="job_template.parameters.parallel_job_allowed"
+              :color="$theme.blue"
+              @click="addJob">
+              {{ $tc('job.add') }}
+            </v-btn>
+          </v-col>
+
+          <v-col cols="auto">
+            <v-btn small
+              :color="$theme.blue"
+              @click="rebalanceJobs">
+              {{ $tc('job.rebalance.spread') }}
+            </v-btn>
+          </v-col>
+
+          <v-col cols="auto">
+            <v-btn small
               :color="$theme.orange"
-              class="ml-2 solid-white weight-bold text-uppercase"
-              @click:close="restoreJob(index)">
-              {{ $tc('closed') }}
-            </v-chip>
-          </template>
+              @click="resetJobs">
+              {{ $tc('job.rebalance.reset') }}
+            </v-btn>
+          </v-col>
 
-          <template v-if="col.value === 'qt_remaining' && !j.trash">
-            <v-text-field
-              class="ma-0 pa-0"
-              :key="index"
-              reverse
-              single-line
-              hide-details
-              type="number"
-              :value="j.qt_remaining"
-              :min="0"
-              :max="qt_to_allocate"
-              @input="updateRemainingQt(index, $event)">
-            </v-text-field>
-          </template>
+          <v-col cols="auto">
+            <v-btn small
+              :color="$theme.grey"
+              @click="$emit('changeEditMode','actions')">
+              {{ $tc('cancel') }}
+            </v-btn>
+          </v-col>
 
-          <template v-if="col.value === 'assigned_to'">
-            <!-- Show current operator if present -->
-            <template v-if="notReassignable(index)">
-              <BaseUserAvatar :user="j.assigned_to" />
-            </template>
-
-            <!-- Show operator select if new job -->
-            <template v-else>
-              <v-autocomplete
-                ref="operator_autocomplete"
-                autocomplete="off"
-                :value="j.assigned_to"
-                :items="$store.getters.operator_list()"
-                item-value="_key"
-                single-line hide-details
-                return-object
-                :filter="filterOperator"
-                :label="$tc('job.assign_to') + ':' | capitalize"
-
-                class="pt-0 flex-grow-0 body-2"
-                @focus.native="resetAssignment(index)"
-                @change="setAssignment(index, $event)">
-                <template v-slot:item="{ item: list_item }">
-                  <BaseUserAvatar :user="list_item"/>
-                </template>
-                <template v-slot:selection="{ item: selection }">
-                  <BaseUserAvatar :user="selection"/>
-                </template>
-              </v-autocomplete>
-            </template>
-          </template>
-        </v-col>
-
-        <v-col 
-          cols="auto" 
-          v-if="deletable(index) && !j.trash" class="ml-auto pr-8">
-          <BaseTooltipIcon
-            :color="$theme.red"
-            :tooltip="$tc('delete') | capitalize"
-            icon="delete"
-            @iconClick="removeJob(index)">
-          </BaseTooltipIcon>
-        </v-col>
-      </v-row>
-
-      <v-row align="center">
-        <v-col 
-          v-for="col in headers" 
-          :key="col.value" 
-          :cols="col.cols"
-          :offset="col.offset" 
-          class="text-uppercase body-2"
-          :class="col.value === 'qt_remaining' ? 'text-right' : '' ">
-          <template v-if="col.value === 'key'">
-            <span class="font-weight-medium text-uppercase">
-              {{ $tc('start_end_totals') }}
-            </span>
-          </template>
-
-          <template v-if="col.value === 'qt_remaining'">
-            <span class="body-1">{{ qt_to_allocate }} / </span>
-            <span class="body-1" :style="remaining_style">{{ working_total_remaining }}</span>
-            <span class="caption ml-4 mr-n10">({{ remaining_delta }})</span>
-          </template>        
-        </v-col>
-      </v-row>
-
-      <v-row dense class="mt-4">
-        <v-col cols="auto">
-          <v-btn small
-            v-if="job_template.parameters.parallel_job_allowed"
-            :color="$theme.blue"
-            @click="addJob">
-            {{ $tc('job.add') }}
-          </v-btn>
-        </v-col>
-        
-        <v-col cols="auto">
-          <v-btn small
-            :color="$theme.blue"
-            @click="rebalanceJobs">
-            {{ $tc('job.rebalance.spread') }}
-          </v-btn>
-        </v-col>
-
-        <v-col cols="auto">
-          <v-btn small
-            :color="$theme.orange"
-            @click="resetJobs">
-            {{ $tc('job.rebalance.reset') }}
-          </v-btn>
-        </v-col>
-        
-        <v-col cols="auto">
-          <v-btn small 
-            :color="$theme.grey" 
-            @click="$emit('changeEditMode','actions')">
-            {{ $tc('cancel') }}
-          </v-btn>
-        </v-col>
-
-        <v-col cols="auto" class="ml-auto">
-          <v-btn small
-            :color="$theme.blue"
-            @click="save">
-            <span v-if="!saving">
-              {{ $tc('save') }}
-            </span>
-            <v-progress-circular v-else indeterminate size="26" />
-          </v-btn>
-        </v-col>
-      </v-row>
-    </v-container>
-  </v-card>
+          <v-col cols="auto" class="ml-auto">
+            <v-btn small
+              :color="$theme.blue"
+              @click="save">
+              <span v-if="!saving">
+                {{ $tc('save') }}
+              </span>
+              <v-progress-circular v-else indeterminate size="26" />
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
@@ -193,10 +202,10 @@ export default {
 
       // Metadata to carry over from existing jobs to new ones
       new_job_keys: [
-        'wo_key', 
-        'wo_code', 
-        'wo_line', 
-        'phase_key', 
+        'wo_key',
+        'wo_code',
+        'wo_line',
+        'phase_key',
         'phase_alias',
         'product_key',
         'product_code',
@@ -212,37 +221,37 @@ export default {
 
     headers() {
       return [
-        { 
-          value: 'key', 
+        {
+          value: 'key',
           text: this.$tc('job.key'),
-          cols: 3, 
-          offset: 0  
+          cols: 3,
+          offset: 0
         },
-        { 
-          value: 'qt_remaining', 
+        {
+          value: 'qt_remaining',
           text: this.$tc('quantity.long'),
-          cols: 2, 
-          offset: 1 
+          cols: 2,
+          offset: 1
         },
-        { 
-          value: 'assigned_to', 
+        {
+          value: 'assigned_to',
           text: this.$tc('job.assigned_to'),
-          cols: 3, 
-          offset: 1 
+          cols: 3,
+          offset: 1
         }
       ]
     },
-    
+
     wo_key() {
       return this.$route.params.wo_key
-    }, 
+    },
 
     qt_to_allocate() {
       return Object.values(this.jobs).reduce( (sum, job) => sum + job.qt_planned - job.qt_completed, 0)
     },
 
     remaining_match() {
-      return this.working_total_remaining === this.qt_to_allocate 
+      return this.working_total_remaining === this.qt_to_allocate
     },
 
     remaining_style() {
@@ -259,7 +268,7 @@ export default {
   },
 
   methods: {
-   
+
     updateNewTotal() {
       this.working_total_remaining = this.temp_jobs
         .filter(j => !j.trash)
@@ -327,7 +336,7 @@ export default {
         }
       })
     },
-    
+
     filterOperator(operator, search_text) {
       return multiMatch(search_text, operator, ['name', 'surname'])
     },
@@ -336,11 +345,11 @@ export default {
       this.$set(this.temp_jobs[job_index], 'qt_remaining', +qt)
       // this.updateNewTotal()
     },
-    
+
     resetAssignment(job_index) {
       this.$delete(this.temp_jobs[job_index], 'assigned_to')
     },
-    
+
     setAssignment(job_index, operator) {
       this.$set(this.temp_jobs[job_index], 'assigned_to', operator)
     },
@@ -367,7 +376,7 @@ export default {
       else {
         this.saving = true
         const updates = this.temp_jobs.map( j => {
-          
+
           // Delete job
           if (j.trash) {
             return { action: 'delete', data: { _key: j._key } }
@@ -377,27 +386,27 @@ export default {
           else if (j._key) {
             const new_planned_qt = j.qt_completed + j.qt_remaining
             const assignee = j.assigned_to._key
-            return { 
-              action: 'update', 
+            return {
+              action: 'update',
               data: { _key: j._key, qt_planned: new_planned_qt, assigned_to: assignee }
             }
           }
 
           // New job created
-          else return { 
+          else return {
             action: 'insert',
             data: {
               // Use all metadata from template overriding what's necessary
-              ...j, 
-              qt_planned: j.qt_remaining, 
-              assigned_to: j.assigned_to._key 
+              ...j,
+              qt_planned: j.qt_remaining,
+              assigned_to: j.assigned_to._key
             }
           }
         })
 
-        this.$store.dispatch('updateJobs', { 
-          job_updates: updates, 
-          wo_key: this.wo_key 
+        this.$store.dispatch('updateJobs', {
+          job_updates: updates,
+          wo_key: this.wo_key
         })
         .then(() => {
           this.saving = false
