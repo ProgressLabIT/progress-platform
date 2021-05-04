@@ -6,9 +6,9 @@ function createWorkSession(state, session_state, startDT) {
   const job_key = state.working_job_data._key
   const user_key = session_state.user._key
   const user_session_key = session_state.user_session_key
-  
+
   const ws_start = startDT.toISO()
-  
+
   return {
     start: ws_start,
     user_session_key,
@@ -62,9 +62,13 @@ function createEvent(state, session_state, { event_type, timestamp, step_key=nul
   return event
 }
 
+function getCurrentWorkSession(state) {
+  const ws_count = state.work_session_list.length
+  return state.work_session_list[ws_count-1]
+}
+
 function getClosedWorkSessionData(state, endDT) {
-  const ws_list_length = state.work_session_list.length
-  const current_work_session = state.work_session_list[ws_list_length-1]
+  const current_work_session = getCurrentWorkSession(state)
 
   const updated_work_session = {
     ...current_work_session,
@@ -74,6 +78,10 @@ function getClosedWorkSessionData(state, endDT) {
   return updated_work_session
 }
 
+function sendHeartBeat(state) {
+  const job_key = state.working_job_data._key
+  api.post(`/job/${job_key}/heartbeat`)
+}
 
 
 const traceability = {
@@ -82,6 +90,7 @@ const traceability = {
     working_job_data: {},
     work_session_list: [],
     current_batch_data: {},
+    heartbeat: null
   },
 
   getters: {
@@ -100,7 +109,7 @@ const traceability = {
     START_USER_SESSION(state, data) {
       const user_data = { name: data.name, surname: data.surname, _key: data.user_key }
       Vue.set(state, 'user', user_data)
-      
+
       const session_data = { _key: data.session_key, scope: data.scope }
       Vue.set(state, 'user_session', session_data)
     },
@@ -108,7 +117,7 @@ const traceability = {
     LOAD_WORKING_JOB_DATA(state, {job_data, batch_data}) {
       Vue.set(state, 'working_job_data', job_data)
       Vue.set(state, 'current_batch_data', batch_data)
-    },  
+    },
 
     START_JOB(state, {new_work_session, new_batch, updated_job_data}) {
       // get timestamp and state metadata
@@ -128,9 +137,16 @@ const traceability = {
 
     RESUME_JOB(state, new_work_session) {
       // Add work session to list
-      state.work_session_list.push(new_work_session)      
+      state.work_session_list.push(new_work_session)
       Vue.set(state.working_job_data, 'active', true)
       Vue.set(state.working_job_data, 'last_work_session_started', new_work_session._key)
+    },
+
+    SET_HEARTBEAT(state, alive) {
+      console.log(alive)
+      alive
+        ? state.heartbeat = setInterval(() => sendHeartBeat(state), 10000)
+        : clearInterval(state.heartbeat)
     },
 
     COMPLETE_STEP(state, step_index) {
@@ -156,7 +172,7 @@ const traceability = {
         active: false,
         current_batch: null,
         // qt_released: job.qt_planned,
-        progress: 100 
+        progress: 100
       }
       Vue.set(state, 'working_job_data', updated_job)
     }
@@ -176,15 +192,15 @@ const traceability = {
           const batch_key = active_batch_key
           const batch_resp = await api.get(`batch/${batch_key}`)
           batch_data = batch_resp.data.detail
-        }     
-        commit('LOAD_WORKING_JOB_DATA', {job_data, batch_data}) 
-        resolve() 
+        }
+        commit('LOAD_WORKING_JOB_DATA', {job_data, batch_data})
+        resolve()
       })
     },
 
     startJob({ commit, state, rootState }) {
       const now = DT.utc()
-      
+
       const new_work_session = createWorkSession(state, rootState.session, now)
       const new_batch = createBatch(state, now)
 
@@ -206,11 +222,13 @@ const traceability = {
 
       api.post('event', event).then(() => {
         const payload = {
-          new_work_session, 
-          new_batch, 
+          new_work_session,
+          new_batch,
           updated_job_data
         }
         commit('START_JOB', payload)
+        console.log("Setting heartbeat...")
+        commit('SET_HEARTBEAT', true)
       })
     },
 
@@ -219,19 +237,6 @@ const traceability = {
         const now = DT.utc()
         const updated_work_session = getClosedWorkSessionData(state, now)
 
-        /* INSERT EVENT CREATION HERE */
-        // const user_key = rootState.session.user._key
-        // const job = state.working_job_data
-
-        // const event = {
-        //   event_type: 'JOB_PAUSED',
-        //   user_key,
-        //   user_session_key: rootState.session.session_key,
-        //   job_key: job._key,
-        //   phase_key: job.phase_key,
-        //   timestamp: now.toISO()
-        // }
-
         const event = createEvent(state, rootState.session, {
           event_type: 'JOB_PAUSED',
           timestamp: now.toISO()
@@ -239,6 +244,8 @@ const traceability = {
 
         api.post('event', event).then(() => {
           commit('CLOSE_WORK_SESSION', updated_work_session)
+          console.log("Setting heartbeat off...")
+          commit('SET_HEARTBEAT', false)
           resolve()
         })
         .catch(() => {
@@ -251,19 +258,6 @@ const traceability = {
       return new Promise( resolve => {
         const now = DT.utc()
         const new_work_session = createWorkSession(state, rootState.session, now)
-        
-        /* INSERT EVENT CREATION HERE */
-        // const user_key = rootState.session.user._key
-        // const job = state.working_job_data
-
-        // const event = {
-        //   event_type: 'JOB_RESUMED',
-        //   user_key,
-        //   user_session_key: rootState.session.session_key,
-        //   job_key: job._key,
-        //   phase_key: job.phase_key,
-        //   timestamp: now.toISO()
-        // }
 
         const event = createEvent(state, rootState.session, {
           event_type: 'JOB_RESUMED',
@@ -271,7 +265,9 @@ const traceability = {
         })
 
         api.post('event', event).then( () => {
-          commit('RESUME_JOB', new_work_session) 
+          commit('RESUME_JOB', new_work_session)
+          console.log("Setting heartbeat on...")
+          commit('SET_HEARTBEAT', true)
           resolve()
         })
       })
@@ -287,11 +283,11 @@ const traceability = {
         const commitChanges = () => {
           commit('COMPLETE_STEP', step_index)
           if (last_step) {
-           
+
             const new_batch = last_batch ? {} : createBatch(state, now)
             const new_completed_qt = job.qt_completed + batch_qt
             commit('COMPLETE_BATCH', { qt_completed: new_completed_qt, new_batch })
-           
+
             if (last_batch) {
               commit('CLOSE_JOB', now)
             }
@@ -327,7 +323,7 @@ const traceability = {
         }
 
 
-        /* INSERT EVENT CREATION HERE */ 
+        /* INSERT EVENT CREATION HERE */
         const event = createEvent(state, rootState.session, {
           event_type: 'BATCH_COMPLETED',
           timestamp: now.toISO(),
