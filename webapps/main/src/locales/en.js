@@ -180,7 +180,7 @@ export default {
     "no_procedure": "no procedure",
     "params": {
       "max_offline": {
-        "desc": "Work sessions will be considered closed if offline for longer than this parameter (in seconds). In case of temporary connection issues, the software automatically calculates and records the correct total active time even if the session gets temporarily closed due to being offline for more than this time."
+        "desc": "Work sessions will be considered closed if offline for longer than this parameter (in seconds). In case of temporary connection issues, the software automatically calculates and records the correct total active time even if the session gets temporarily closed due to being offline for more than this time.",
         "title": "Maximum active time offline"
       },
       "parallel_job_allowed": {
