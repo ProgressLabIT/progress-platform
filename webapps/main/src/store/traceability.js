@@ -266,7 +266,6 @@ const traceability = {
 
         api.post('event', event).then( () => {
           commit('RESUME_JOB', new_work_session)
-          console.log("Setting heartbeat on...")
           commit('SET_HEARTBEAT', true)
           resolve()
         })

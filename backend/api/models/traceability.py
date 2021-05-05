@@ -6,6 +6,7 @@ from pydantic import Field
 
 from models.process import StepWithMediaInfo
 from utils.base_models import FlexModel, ArangoDocument, ArangoEdge
+from utils.dt import timestamp
 
 
 
@@ -81,8 +82,8 @@ class EventType(Enum):
 class ProductionEvent(FlexModel):
   key: str = Field(None, alias="_key")
   event_type: EventType
-  user_key: str
-  user_session_key: str
+  user_key: str = None
+  user_session_key: str = None
   work_session_key: str = None
   job_key: str = None
   product_key: str = None
@@ -94,7 +95,7 @@ class ProductionEvent(FlexModel):
   completed_batch_key: str = None
   completed_batch_qt: float = None
   new_batch_key: str = None
-  timestamp: datetime
+  timestamp: datetime = timestamp()
   user_data: Any
   description: str = None # optional descriptive field for auditing reasons
 
