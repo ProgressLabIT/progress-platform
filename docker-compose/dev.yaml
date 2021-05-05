@@ -1,10 +1,9 @@
-version: '3'
+version: '3.1'
 
 volumes:
   db_data:
     external:
       name: arango-persist
-
 
 services:
 
@@ -12,35 +11,43 @@ services:
     build:
       context: ./webapps/main
       dockerfile: webapp.dev.Dockerfile
+    restart: unless-stopped
+    labels:
+      - traefik.http.routers.app.rule=Host(`progress.localhost`)
     command: >
       npm run serve -- --host 0.0.0.0
     volumes:
       # This is use to keep HMR working
       - "./webapps/main/public:/main/public"
-      - "media:/main/public/media"
       - "./webapps/main/src:/main/src"
+      - "media:/main/public/media"
     environment:
       # the app will call the api server from outside the docker network, so the full Traefik host alias should be used
       - VUE_APP_API_BASE_URL=http://progress.localhost/api
       - VUE_APP_I18N_LOCALE=it
       - VUE_APP_I18N_FALLBACK_LOCALE=it
-      # - DEBUG=express:*
     ports:
       - "8080"
-    labels:
-      - traefik.http.routers.app.rule=Host(`progress.localhost`)
 
   api:
     build:
       context: ./backend/api #root folder for build
+    restart: unless-stopped
     volumes:
       - ./backend/api:/api
     command: >
       uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
-
+    labels:
+      - "traefik.http.routers.api.rule=Host(`progress.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
+      - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
+      - "traefik.http.routers.api.middlewares=strip_api_prefix"
 
   db:
-    volumes:
-      - ./db/arango.conf:/etc/arangodb3/arangod.conf
     environment:
       - ARANGO_NO_AUTH=1
+    labels:
+      - "traefik.http.routers.db.rule=Host(`progress.localhost`) && PathPrefix(`/_db`)"
+      - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
+      - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
+      - "traefik.http.routers.db.middlewares=db_root"

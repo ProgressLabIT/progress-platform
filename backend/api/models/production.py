@@ -138,7 +138,6 @@ class Job(FlexModel):
   estimated_completion: datetime = None
 
   last_work_session_started: str = None
-  max_offline: int = 0
   last_online: datetime = None
 
 
