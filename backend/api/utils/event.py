@@ -80,7 +80,6 @@ class Event:
         user_key=self.info.user_key,
         user_session_key=self.info.user_session_key,
         start=self.info.timestamp,
-        last_online=self.info.timestamp
       )
     ).next()
 
@@ -480,6 +479,12 @@ class Event:
         jobs=[self.info.job_key]
       ))
 
+    self.response = dict(
+      message=f"Job {self.info.job_key} started",
+      new_batch_data=self.batch,
+      new_work_session_data=self.work_session
+    )
+
   # ....................................................................
 
   def pause_job(self):
@@ -524,7 +529,11 @@ class Event:
     )
     self.tx.collection('Job').update(job_update)
 
-    self.response = self.info.work_session_key
+    self.response = dict(
+      message=f"Job {self.info.job_key} resumed",
+      new_batch_data=self.batch,
+      new_work_session_data=self.work_session
+    )
 
 
   # ....................................................................

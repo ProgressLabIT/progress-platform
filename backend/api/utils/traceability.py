@@ -17,7 +17,6 @@ class Queries:
       user_session_key: @user_session_key,
       work_order_key: @work_order_key,
       start: @start,
-      last_online: @last_online,
       active: true
     }
 

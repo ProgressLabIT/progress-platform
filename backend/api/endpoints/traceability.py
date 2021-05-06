@@ -17,11 +17,10 @@ router = APIRouter()
 @router.post('/event')
 async def apply_production_event(data: ProductionEvent):
   try:
-    print(data)
     event = Event(data)
     response = event.save()
-    print(response)
-    return response
+    return APIResponse(detail=response)
+
   except:
     status_code=500
     error_str = traceback.format_exc()
@@ -49,8 +48,8 @@ async def get_batch_execution_data(batch_key: str):
 
 
 
-@router.post('/job/{job_key}/heartbeat')
-async def job_heartbeat(job_key: str, work_session_key: str = None):
+@router.post('/job/{job_key}/heartbeat/{work_session_key}')
+async def job_heartbeat(job_key: str, work_session_key: str):
   """
   Updates the work session `last_online` attribute with current time
   """

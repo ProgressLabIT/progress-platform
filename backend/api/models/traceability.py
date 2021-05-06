@@ -67,7 +67,6 @@ class WorkSession(FlexModel):
   # duration: timedelta = None
   active: bool
   hourly_cost: float = None
-  last_online: datetime = None
 
 
 class EventType(Enum):
