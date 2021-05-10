@@ -40,7 +40,7 @@ def pause_job(job_key):
   with httpx.Client(base_url='http://api:8000') as api:
     print(f'Pausing job {job_key}...')
     event_data = dict(
-      event_type = 'JOB_PAUSED',
+      event_type = 'JOB_PAUSED_OFFLINE',
       job_key = job_key,
       user_key = 'wf:pause_offline_jobs',
       description = "Exceeded max offline time allowed"

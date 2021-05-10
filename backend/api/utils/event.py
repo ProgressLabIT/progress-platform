@@ -3,7 +3,7 @@ from models.production import Job, WorkOrderFull, WorkStatus
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 from utils.db import db, model_to_db_dict
-
+from utils.dt import timestamp
 
 class Event:
 
@@ -29,7 +29,9 @@ class Event:
   # Mapping of event types to class methods
   JOB_STARTED = 'start_job'
   JOB_PAUSED = 'pause_job'
+  JOB_PAUSED_OFFLINE = 'pause_job'
   JOB_RESUMED = 'resume_job'
+  JOB_BACK_ONLINE = 'restore_work_session'
   JOB_CLOSED = 'close_job'
   STEP_COMPLETED = 'complete_step'
   BATCH_COMPLETED = 'complete_batch'
@@ -535,6 +537,26 @@ class Event:
       new_work_session_data=self.work_session
     )
 
+  # ....................................................................
+
+  def restore_work_session(self):
+    updated_work_session = dict(
+      _key=self.info.work_session_key,
+      active=True,
+      end=None
+    )
+    self.work_session = self.tx.collection('WorkSession').update(
+      updated_work_session,
+      return_new=True
+    )
+
+    # update job as active
+    updated_job = dict(
+      _key=self.info.job_key,
+      active=True,
+      last_online=self.info.timestamp
+    )
+    self.job = self.tx.collection('Job').update(updated_job, return_new=True)
 
   # ....................................................................
 

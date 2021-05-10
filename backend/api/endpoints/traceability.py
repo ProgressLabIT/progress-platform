@@ -54,16 +54,21 @@ async def job_heartbeat(job_key: str, work_session_key: str):
   Updates the work session `last_online` attribute with current time
   """
   now = timestamp()
-  tx = db.begin_transaction(write=['Job', 'WorkSession'])
-  tx.collection('Job').update({"_key": job_key, "last_online": now})
+  work_session_data = db.collection('WorkSession').get(work_session_key)
 
-  """
-  TODO: INSERT HERE UPDATE OF FALSELY CLOSED WORK SESSIONS
+  if work_session_data['active']:
+    db.collection('Job').update({"_key": job_key, "last_online": now})
 
-  E.g. If work_session_key exists and it's inactive, update it with active state and remove the end time
-  """
-
-  tx.commit_transaction()
+  else:
+    restore_event = Event(
+      ProductionEvent(
+        event_type='JOB_BACK_ONLINE',
+        job_key=job_key,
+        work_session_key=work_session_key,
+        timestamp=now
+      )
+    )
+    restore_event.save()
 
   return {
     "work_session_key": work_session_key,
