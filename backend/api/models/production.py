@@ -57,22 +57,22 @@ class WorkOrderNew(ArangoDocument):
   qt_planned: float
   # priority: bool = False
   due_by: Union[datetime, date] = None
-  
+
 
 class WorkOrderFull(WorkOrderNew):
   key: str = Field(None, alias="_key")
 
   status: WorkStatus = WorkStatus.CREATED
   qt_completed: float = 0
-  on_time: bool = None
   active: bool = False
+  on_time: bool = True
   critical: bool = False
   progress: int = Field(0, ge=0, le=100)
-  
+
   created: datetime = datetime.now(tz.UTC)
   start: datetime = None
   end: datetime = None
-  
+
   lead_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
   throughput_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
   processing_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
@@ -80,7 +80,7 @@ class WorkOrderFull(WorkOrderNew):
   processing_cost: float = None
   material_cost: float = None
   total_cost: float = None
-  
+
   phase_sequence: List[str] = None
   notes: str = None
 

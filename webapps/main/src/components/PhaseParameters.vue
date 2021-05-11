@@ -1,56 +1,56 @@
 <template>
   <v-container fluid>
       <v-expansion-panels flat hover tile accordion :disabled="!edit_mode" v-model="expansion_map">
-        
-        <v-expansion-panel 
+
+        <v-expansion-panel
           v-for="(p_value, p_key) in phase_params" :key="p_key"
           :readonly="paramType(p_key) == 'int'">
-          
+
           <v-expansion-panel-header :hide-actions="paramType(p_key) == 'int'">
             <template v-slot:default="{ open }">
               <v-container>
                 <v-row>
                   <v-col cols="auto">
                     <h5 class="text-uppercase mb-3" :color="$theme.white_low">{{ paramHumanName(p_key, p_value) }}</h5>
-                    
+
                     <h3 v-if="!edit_mode || paramType(p_key) != 'int'" class="highlight mb-6">{{ paramHumanValue(p_key, p_value) }}</h3>
-                    <v-text-field v-else 
+                    <v-text-field v-else
                       type="number" min="0"
                       :value="paramHumanValue(p_key)"
-                      @blur="updateParam(p_key, $event.target.value)">                        
+                      @blur="updateParam(p_key, $event.target.value)">
                     </v-text-field>
-                    
-                    <p>{{ paramValueDesc(p_key, p_value) }}</p>  
+
+                    <p>{{ paramValueDesc(p_key, p_value) }}</p>
                   </v-col>
                 </v-row>
               </v-container>
-            </template> 
+            </template>
           </v-expansion-panel-header>
-          
+
           <v-expansion-panel-content v-if="paramType(p_key) != 'int'">
             <v-container>
-              <v-hover v-slot:default="{ hover }" 
-                v-for="[v_key, value] in paramOtherValues(p_key, p_value)" :key="v_key">  
-                <v-row 
+              <v-hover v-slot:default="{ hover }"
+                v-for="(value, index) in paramOtherValues(p_key, p_value)" :key="index">
+                <v-row
                   :class="hover && edit_mode ? 'hover-highlight' : ''"
                   :style="edit_mode ? 'cursor:pointer' : '' "
-                  @click="edit_mode ? updateParam(p_key, v_key) : null">
+                  @click="edit_mode ? updateParam(p_key, value) : null">
                   <v-col cols="auto" >
-                    <h5 class="highlight mb-1">{{ value.name }}</h5>
-                    <p class="body-2">{{ value.description }}</p>
+                    <h5 class="highlight mb-1">{{ paramHumanValue(p_key, value) }}</h5>
+                    <p class="body-2">{{ paramValueDesc(p_key, value) }}</p>
                   </v-col>
                 </v-row>
               </v-hover>
             </v-container>
           </v-expansion-panel-content>
-  
+
           <v-divider></v-divider>
-        
+
         </v-expansion-panel>
 
       </v-expansion-panels>
 
-   </v-container> 
+   </v-container>
 </template>
 
 <script>
@@ -68,7 +68,7 @@ export default {
   },
 
   computed: {
-    
+
     product_key() {
       return this.$route.params.product_key
     },
@@ -111,26 +111,11 @@ export default {
     },
 
     paramOtherValues(param_key, param_value) {
-      /* must update to keep map structure so that keys can be used when 
-         updating param */
       const param_all_values = params_map[param_key].values
-      const param_alternative_values = param_all_values
-        .filter(v => v != param_value)
-        .map(v => { return [param_key, { 
-            name: this.paramHumanValue(param_key, v),
-            description: this.paramValueDesc(param_key, v)
-          }]
-        })
-      // const param_alternative_values = new Map(
-      //   [...param_all_values.keys()]
-      //     .filter( k => k != param_value )
-      //     .map( k => [k, param_all_values.get(k)] )
-      // )
-      return param_alternative_values
+      return param_all_values.filter(v => v != param_value)
     },
 
     updateParam(param_key, value) {
-
       if (param_key === 'step_check') {
         if (!this.phase_data.steps.length && value != 'none') {
           window.alert(this.$options.filters.capitalize(
@@ -141,6 +126,7 @@ export default {
         }
       }
 
+      console.log(JSON.stringify(param_key), JSON.stringify(value))
 
       this.$store.commit('UPDATE_PHASE_PARAMS', {
         phase_index: this.current_phase,
@@ -153,7 +139,7 @@ export default {
   watch: {
     edit_mode: function (newValue, oldValue) {
       if (newValue == false && oldValue == true)
-      this.expansion_map = null 
+      this.expansion_map = null
     }
   }
 };
