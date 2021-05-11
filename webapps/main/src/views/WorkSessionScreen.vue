@@ -16,12 +16,12 @@
 
       <v-col cols="8" class="fill d-flex flex-column pt-0">
         <v-row class="flex-grow-0 mx-0 pb-1">
-          <v-tabs 
+          <v-tabs
             :color="$theme.white_high"
             background-color="transparent"
             hide-slider>
-            <v-tab 
-              v-for="link in links" 
+            <v-tab
+              v-for="link in links"
               :key="link.route_name"
               :to="{ name: link.route_name }"
               class="display">
@@ -47,10 +47,10 @@
 
         <!-- JOB DATA -->
         <template v-for="field in job_info" >
-          <v-row 
+          <v-row
             v-if="j[field.name] != undefined"
-            :key="field.name" 
-            dense 
+            :key="field.name"
+            dense
             align="end"
             class="flex-grow-0">
             <v-col cols="4" class="text-uppercase font-weight-medium">
@@ -63,26 +63,26 @@
         </template>
 
         <!-- JOB PROGRESS / STATUS -->
-        <v-progress-linear 
-          height="8" 
-          :value="progress_value" 
-          :color="job_color" 
+        <v-progress-linear
+          height="8"
+          :value="progress_value"
+          :color="job_color"
           class="mt-6 mb-1"/>
         <v-row class="ma-0 flex-grow-0" justify="space-between" align="end">
           <h5 class="weight-bold text-uppercase">{{ $tc('progress') }}</h5>
           <span>{{ j.qt_completed }} / {{ j.qt_planned }}</span>
         </v-row>
 
-        
+
         <!-- ************************** -->
         <!-- JOB ACTIONS                -->
         <!-- ************************** -->
-        
+
         <!-- START/PAUSE BUTTOM -->
         <v-row class="mx-0 mt-12">
-          <v-btn 
+          <v-btn
             :color="$theme.surface2"
-            block tile 
+            block tile
             height="auto"
             @click="startPauseResumeJob().action()">
             <v-row class="fill-height mx-0" align="center" justify="center">
@@ -100,7 +100,7 @@
 
         <!-- PROGRESS BUTTON -->
         <v-row class="mx-0 mt-2">
-          <v-btn 
+          <v-btn
             id="progress_button"
             :color="j.active ? $theme.surface2 : $theme.background"
             block tile
@@ -120,11 +120,11 @@
             </v-row>
           </v-btn>
         </v-row>
-      
+
         <!-- PREV/NEXT STEP AND EXIT BUTTONS -->
         <v-row class="mt-2 mx-0" justify="space-between">
 
-          <v-btn 
+          <v-btn
             :color="$theme.surface2"
             tile
             height="auto" width="32%"
@@ -133,9 +133,9 @@
             <v-icon x-large>
               mdi-skip-previous
             </v-icon>
-          </v-btn>  
+          </v-btn>
 
-          <v-btn 
+          <v-btn
             :color="$theme.surface2"
             tile
             :disabled="!allow_step_forward"
@@ -145,9 +145,9 @@
             <v-icon x-large>
               mdi-skip-next
             </v-icon>
-          </v-btn>  
+          </v-btn>
 
-          <v-btn 
+          <v-btn
             :color="$theme.surface2"
             tile
             height="auto" width="32%"
@@ -156,7 +156,7 @@
             <v-icon x-large>
               mdi-keyboard-return
             </v-icon>
-          </v-btn>  
+          </v-btn>
         </v-row>
 
       </v-col>
@@ -216,15 +216,15 @@ export default {
     confirm_batch_done_message() {
       return this.$tc('job.alerts.batch_confirm')
     },
-    
+
     confirm_job_done_message() {
       return this.$tc('job.alerts.job_complete_confirm')
     },
-    
+
     job_info() {
       const batch_index = { name: 'batch_index', text: 'iterazione' }
       const step_index = { name: 'step_index', text: 'passo' }
-  
+
       let result = [...this.wo_data, batch_index]
       const step_check = this.j.parameters ? this.j.parameters.step_check : 'none'
       if (step_check != 'none') result.push(step_index)
@@ -251,11 +251,11 @@ export default {
         text: this.$tc('job.complete_batch'),
         action: this.declareBatch
       }
-      
+
       if ('parameters' in this.j) {
-        return this.j.parameters.step_check != 'none' 
-        // && !this.current_step_is_last 
-            ? complete_step 
+        return this.j.parameters.step_check != 'none'
+        // && !this.current_step_is_last
+            ? complete_step
             : declare_batch
       }
       else return declare_batch
@@ -285,7 +285,7 @@ export default {
     },
 
     completed_steps_count() {
-      return this.batch_data 
+      return this.batch_data
         ? this.batch_data.reduce( (total, current) => total + current.done, 0)
         : 0
     },
@@ -307,7 +307,7 @@ export default {
     progress_value() {
       if ('parameters' in this.j) {
         const completed_batch_progress = this.j.qt_completed / this.j.qt_planned
-        
+
         if (this.j.parameters.step_check != 'none') {
           const current_batch_total_value = this.production_batch / this.j.qt_planned
           const step_progress_value = current_batch_total_value / this.j.step_sequence.length
@@ -330,7 +330,7 @@ export default {
     },
 
     allow_step_forward() {
-      let allow = true 
+      let allow = true
       if (this.force_order && !this.current_step_done) {
         allow = false
       }
@@ -357,7 +357,7 @@ export default {
         if (this.j.stage == 'started' ) {
           result.text = this.$tc('job.resume').toUpperCase()
           result.action = () => this.$store.dispatch('resumeJob')
-          return result          
+          return result
         }
         else {
           result.text = this.$tc('job.start').toUpperCase()
@@ -376,7 +376,7 @@ export default {
 
       if (this.current_step_is_last) {
         can_proceed = window.confirm(this.confirm_batch_done_message)
-        
+
         if (can_proceed && this.current_batch_is_last) {
           can_proceed = window.confirm(this.confirm_job_done_message)
         }
@@ -443,7 +443,7 @@ export default {
     goToNextStep() {
       const last_index = this.j.step_sequence.length - 1
       if (this.current_step_index === last_index) this.goToStep(0)
-      else this.goToStep(this.current_step_index + 1) 
+      else this.goToStep(this.current_step_index + 1)
     },
 
     goToPreviousStep() {
@@ -469,7 +469,7 @@ export default {
       const data = this.$store.state.traceability
       const job_data = data.working_job_data
 
-      // If job is closed, redirect to 
+      // If job is closed, redirect to
       this.job_closed = job_data.stage == 'closed'
 
       if (this.job_closed) {
@@ -478,10 +478,14 @@ export default {
         }, 6000)
       }
       else {
-        this.vuex_ready = true  
+        this.vuex_ready = true
         if (data.current_batch_data) {
           const next_step_index = this.batch_data.findIndex( step => !step.done )
           this.$router.replace({ query: { step: next_step_index + 1 }})
+        }
+        // In case the job is already active, e.g. after accidentally closing and reopening the page, restart heartbeat
+        if (job_data.active) {
+          this.$store.commit('SET_HEARTBEAT', true)
         }
       }
     })
@@ -512,6 +516,6 @@ export default {
 }
 #progress_button.completed {
   background-color: var(--surface-1) !important;
-  color: var(--theme-green) !important; 
+  color: var(--theme-green) !important;
 }
 </style>

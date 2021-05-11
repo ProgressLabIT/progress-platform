@@ -18,7 +18,7 @@ class Queries:
       work_order_key: @work_order_key,
       start: @start,
       active: true
-    } 
+    }
 
     INSERT new_ws INTO WorkSession RETURN NEW
   """
@@ -33,14 +33,14 @@ class Queries:
       FOR step_key IN procedure
       LET step_data = KEEP(DOCUMENT(Step, step_key), '_key', 'type')
       LET execution_data = FIRST(
-        FOR s IN StepExecutionData 
+        FOR s IN StepExecutionData
         FILTER s.batch_key == batch._key && s.step_key == step_key
         RETURN KEEP(s, 'status', 'user_data')
       )
       LET step_done = execution_data ? execution_data.status == 'done' : false
       LET step_critical = execution_data ? execution_data.status == 'critical' : false
       LET user_data = execution_data ? execution_data.user_data : []
-      RETURN MERGE( step_data, { 
+      RETURN MERGE( step_data, {
         done: step_done,
         critical: step_critical,
         user_data: user_data
@@ -93,8 +93,8 @@ class Queries:
 
     // Update active state
     LET active = TO_BOOL(SUM(
-      FOR j IN jobs 
-      FILTER j.active 
+      FOR j IN jobs
+      FILTER j.active
       RETURN 1
     ))
 
@@ -129,20 +129,20 @@ class Queries:
     LET throughput_time = still_open ? null : DATE_DIFF(wo.start, now, 'f')
 
     // Apply changes and return updated record
-    UPDATE wo WITH { 
+    UPDATE wo WITH {
 
-      progress, 
-      active, 
-      qt_completed, 
-      status, 
+      progress,
+      active,
+      qt_completed,
+      status,
       end,
-      processing_time, 
+      processing_time,
       processing_cost,
       throughput_time,
       lead_time
 
     } IN WorkOrder RETURN NEW
-  """ 
+  """
 
 
   UPDATE_JOB_PROGRESS = """
@@ -172,7 +172,7 @@ class Queries:
 
   COMPLETE_BATCH = """
     LET b = DOCUMENT(Batch, @batch_key)
-    
+
     LET unit_processing_time = SUM(
       FOR r IN BatchTimeRecord
       FILTER r.batch_key == @batch_key
@@ -187,7 +187,7 @@ class Queries:
 
     // To be added when material cost will be handled
     LET material_cost = 0
-    
+
     UPDATE b WITH {
       qt_pass: @qt_pass,
       active: false,
@@ -228,9 +228,9 @@ class Queries:
     FOR wo IN WorkOrder
     FILTER wo._key == @wo_key
     LET next_phase_index = POSITION(wo.phase_sequence, @phase_key, true) + 1
-    
+
     // if last phase of process return null
-    RETURN next_phase_index < LENGTH(wo.phase_sequence) 
+    RETURN next_phase_index < LENGTH(wo.phase_sequence)
       ? wo.phase_sequence[next_phase_index]
       : null
   """
@@ -266,9 +266,9 @@ def get_batch_step_done_count(batch_key, db):
   )).count()
 
   return step_done_count
-    
 
-def get_job_progress(job_key, db): 
+
+def get_job_progress(job_key, db):
   job = Job(**db.collection('Job').get(job_key))
   progress = job.qt_completed / job.qt_planned
 
@@ -284,7 +284,7 @@ def get_job_progress(job_key, db):
       batch_key=job.current_batch,
       db=db
     )
-    
+
     progress += step_progress_value * step_done_count
 
   return round(progress*100)
@@ -297,7 +297,7 @@ def update_job_progress(db, job_key):
 
 def get_phase_progress(wo_key, phase_key, db):
   phase_jobs_cursor = db.collection('Job').find(dict(
-    wo_key=wo_key, 
+    wo_key=wo_key,
     phase_key=phase_key)
   )
   phase_jobs = [Job(j) for j in phase_jobs_cursor]

@@ -112,7 +112,7 @@ class Job(FlexModel):
   # operation_key: str >>> TODO: Fix Phase API to add op_id during creation
 
   parameters: PhaseParameters = None
-  
+
   first_phase: bool = None
   input_available: bool = None
 
@@ -121,25 +121,25 @@ class Job(FlexModel):
   critical: bool = False
   start: datetime = None
   end: datetime = None
-  last_work_session_started: str = None
 
   qt_planned: float
   qt_completed: float = 0
   qt_released: float = 0
+  step_sequence: List[StepWithMediaInfo] = []
+
+  assigned_to: Union[str, Operator] = None
+
+  progress: int = Field(0, ge=0, le=100)
   current_batch: str = None # batch _key
   # current_step: int = None
-  progress: int = Field(0, ge=0, le=100)
 
   on_time: bool = True
   estimated_remaining_time: timedelta = None
   estimated_completion: datetime = None
 
-  jobs_upstream: List[str] = []
-  jobs_downstream: List[str] = []
+  last_work_session_started: str = None
+  last_online: datetime = None
 
-  assigned_to: Union[str, Operator] = None
-
-  step_sequence: List[StepWithMediaInfo] = []
 
   # @validator('progress')
   # def between_0_and_100_percent(cls, v):
@@ -163,7 +163,7 @@ class Job(FlexModel):
 # class PhaseJobs(FlexModel):
 #   phase_alias: str
 #   active: bool
-#   jobs: List[Job] 
+#   jobs: List[Job]
 
 class JobUpdateType(Enum):
   INSERT = 'insert'

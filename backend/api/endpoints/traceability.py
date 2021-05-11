@@ -6,6 +6,7 @@ from models.traceability import *
 from utils.event import Event
 from utils.api import APIResponse
 from utils.db import db
+from utils.dt import timestamp
 from utils.traceability import Queries
 
 
@@ -17,7 +18,9 @@ router = APIRouter()
 async def apply_production_event(data: ProductionEvent):
   try:
     event = Event(data)
-    event.save()
+    response = event.save()
+    return APIResponse(detail=response)
+
   except:
     status_code=500
     error_str = traceback.format_exc()
@@ -42,3 +45,33 @@ async def get_batch_execution_data(batch_key: str):
   except StopIteration:
     batch_data = dict()
   return APIResponse(detail=batch_data)
+
+
+
+@router.post('/job/{job_key}/heartbeat/{work_session_key}')
+async def job_heartbeat(job_key: str, work_session_key: str):
+  """
+  Updates the work session `last_online` attribute with current time
+  """
+  now = timestamp()
+  work_session_data = db.collection('WorkSession').get(work_session_key)
+
+  if work_session_data['active']:
+    db.collection('Job').update({"_key": job_key, "last_online": now})
+
+  else:
+    restore_event = Event(
+      ProductionEvent(
+        event_type='JOB_BACK_ONLINE',
+        job_key=job_key,
+        work_session_key=work_session_key,
+        timestamp=now
+      )
+    )
+    restore_event.save()
+
+  return {
+    "work_session_key": work_session_key,
+    "last_online": now
+  }
+
