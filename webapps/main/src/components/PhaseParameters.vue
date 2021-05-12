@@ -126,8 +126,6 @@ export default {
         }
       }
 
-      console.log(JSON.stringify(param_key), JSON.stringify(value))
-
       this.$store.commit('UPDATE_PHASE_PARAMS', {
         phase_index: this.current_phase,
         param: param_key,
