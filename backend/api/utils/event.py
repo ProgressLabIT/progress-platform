@@ -54,6 +54,7 @@ class Event:
 
     # Apply updates to global application state
     getattr(self, self.action)()
+    self.update_job_last_online()
     self.update_work_order()
 
     # Save event as is
@@ -334,8 +335,20 @@ class Event:
   # ....................................................................
 
   def set_job_active_state(self, active: bool):
-    job_key = self.info.job_key
-    self.tx.collection('Job').update(dict(_key=job_key, active=active), check_rev=False)
+    update_data = dict(
+      _key=self.info.job_key,
+      active=active
+    )
+    updated_job = self.tx.collection('Job').update(update_data, check_rev=False, return_new=True)['new']
+    self.job = Job(**updated_job)
+
+
+  def update_job_last_online(self):
+    update_data = dict(
+      _key=self.info.job_key,
+      last_online=self.info.timestamp
+    )
+    self.tx.collection('Job').update(update_data)
 
 
   def get_job_data(self):
@@ -551,12 +564,9 @@ class Event:
     )
 
     # update job as active
-    updated_job = dict(
-      _key=self.info.job_key,
-      active=True,
-      last_online=self.info.timestamp
-    )
-    self.job = self.tx.collection('Job').update(updated_job, return_new=True)
+    self.set_job_active_state(True)
+
+    self.response = self.job
 
   # ....................................................................
 
