@@ -151,7 +151,7 @@
             :color="$theme.surface2"
             tile
             height="auto" width="32%"
-            @click="exitJob"
+            @click="j.active ? showExitAlert(true) : exitJob()"
             class="py-3">
             <v-icon x-large>
               mdi-keyboard-return
@@ -162,6 +162,25 @@
       </v-col>
 
     </v-row>
+
+    <v-dialog v-model="show_exit_alert" max-width="480px">
+      <v-card>
+        <v-card-title>
+          {{ $tc('job.alerts.confirm_exit')}}
+        </v-card-title>
+        <v-card-actions>
+          <v-row class="mx-0" justify="space-between">
+            <v-btn text @click="exitJob" :color="$theme.orange">
+              {{ $tc('confirm') }}
+            </v-btn>
+            <v-btn text @click="show_exit_alert=false" :color="$theme.grey">
+              {{ $tc('cancel') }}
+            </v-btn>
+          </v-row>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </v-container>
 </template>
 
@@ -181,7 +200,8 @@ export default {
   data () {
     return {
       vuex_ready: false,
-      job_closed: false
+      job_closed: false,
+      show_exit_alert: false
     }
   },
 
@@ -452,12 +472,21 @@ export default {
       else this.goToStep(this.current_step_index - 1)
     },
 
+    showExitAlert(bool) {
+      this.show_exit_alert = bool
+    },
+
     exitJob() {
       if (this.j.active) {
         this.$store.dispatch('pauseJob')
         .then(() => this.$router.push({ name: 'userJobs'}))
       }
       else this.$router.push({ name: 'userJobs'})
+    },
+
+    beforeUnloadAlert(event) {
+      event.preventDefault()
+      event.returnValue = ''
     }
   },
 
@@ -489,6 +518,15 @@ export default {
         }
       }
     })
+  },
+
+  // Make sure an alert is raised if user tries to close the page
+  mounted() {
+    window.addEventListener('beforeunload', this.beforeUnloadAlert)
+  },
+
+  beforeDestroy() {
+    window.removeEventListener('beforeunload', this.beforeUnloadAlert)
   },
 
   beforeRouteLeave (to, from, next) {
