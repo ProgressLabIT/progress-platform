@@ -1,22 +1,22 @@
 <template>
-   <v-dialog 
+   <v-dialog
     v-model="showModal"
     :overlay-color="$theme.background"
     overlay-opacity="1"
     max-width="600px"
     persistent no-click-animation>
     <v-card>
-      
-      <v-card-title>  
+
+      <v-card-title>
         <h3 class="display">
-          {{ $tc('reset_password') }}
+          {{ $tc('user.reset_password') }}
         </h3>
       </v-card-title>
 
       <v-card-text>
 
         <v-row class="mx-0">
-          <BaseUserAvatar 
+          <BaseUserAvatar
             :user="user"
             :size="70"
             name_class="solid-white"
@@ -42,11 +42,11 @@
             <p>
               {{ $tc('user.reset_password_success')}}
             </p>
-            
+
             <h5 class="text-uppercase mt-6 mb-2">
               {{ $tc('user.temp_password') | capitalize }}
             </h5>
-            
+
             <v-row no-gutters align="center" class="mx-0">
               <v-col cols="auto">
                 <v-sheet :color="$theme.background" class="pa-3">
@@ -58,8 +58,8 @@
 
               <v-spacer></v-spacer>
 
-              <v-btn 
-                :color="$theme.grey" 
+              <v-btn
+                :color="$theme.grey"
                 @click="$router.back()">
                 {{ $tc('close') }}
               </v-btn>
@@ -88,7 +88,7 @@ export default {
 
   mixins: [NonExistentUserGuard],
 
-  components: { 
+  components: {
     BaseUserAvatar,
   },
 
