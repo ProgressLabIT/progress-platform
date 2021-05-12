@@ -111,7 +111,7 @@
                     </v-card-text>
 
                     <v-card-actions>
-                      <v-btn block type="submit" :color="$theme.blue">
+                      <v-btn block type="submit" :color="$theme.blue" :disabled="!password_match">
                         {{ $tc('user.new_password_save_action') | capitalize }}
                       </v-btn>
                     </v-card-actions>
@@ -170,6 +170,14 @@ export default {
       return redirect
         ? { path: redirect }
         : { name: this.$store.getters.userHomepage }
+    },
+
+    password_match() {
+      let can_reset = this.reset_password
+        && this.new_password.first.length > 0
+        && this.new_password.first === this.new_password.second
+
+      return can_reset
     }
   },
 
@@ -236,7 +244,6 @@ export default {
 
     resetPassword() {
       this.logging_in = true
-
       api.put(`user/${this.user_key}/password`,
         { new_password: this.new_password.first },
         {
