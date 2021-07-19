@@ -82,7 +82,7 @@
                 <template v-if="header.value === 'phase_alias'">
                   <v-checkbox
                     :color="$theme.blue"
-                    :disabled="job.active"
+                    :disabled="job.active || job.stage === 'closed'"
                     :value="job_select_model[job._key]"
                     @change="updateSelectedJobData(job, $event)">
                   </v-checkbox>
@@ -429,7 +429,7 @@ export default {
       if (this.selected_jobs.length) {
         this.job_select_model = {}
       }
-      else phase.jobs.forEach( j => {
+      else phase.jobs.filter(j => j.stage != 'closed').forEach( j => {
         this.$set(this.job_select_model, j._key, j)
       })
     },
