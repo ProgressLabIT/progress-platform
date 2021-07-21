@@ -367,12 +367,6 @@ export default {
         )
       }
 
-      else if (this.temp_jobs.some( j => !('assigned_to' in j) )) {
-        window.alert(
-          this.capitalize(this.$tc('job.alerts.rebalance_unassigned_jobs'))
-        )
-      }
-
       else {
         this.saving = true
         const updates = this.temp_jobs.map( j => {
@@ -385,7 +379,7 @@ export default {
           // Update to existing job
           else if (j._key) {
             const new_planned_qt = j.qt_completed + j.qt_remaining
-            const assignee = j.assigned_to._key
+            const assignee = j.assigned_to ? j.assigned_to._key : null
             return {
               action: 'update',
               data: { _key: j._key, qt_planned: new_planned_qt, assigned_to: assignee }
@@ -399,7 +393,7 @@ export default {
               // Use all metadata from template overriding what's necessary
               ...j,
               qt_planned: j.qt_remaining,
-              assigned_to: j.assigned_to._key
+              assigned_to: j.assigned_to ? j.assigned_to._key : null
             }
           }
         })
