@@ -266,6 +266,7 @@ const traceability = {
             commit('COMPLETE_BATCH', { qt_completed: new_completed_qt, new_batch })
 
             if (last_batch) {
+              commit('SET_HEARTBEAT', false)
               commit('CLOSE_JOB', now)
             }
           }
@@ -295,6 +296,7 @@ const traceability = {
           commit('COMPLETE_BATCH', { qt_completed: new_completed_qt, new_batch })
 
           if (last_batch) {
+            commit('SET_HEARTBEAT', false)
             commit('CLOSE_JOB', now)
           }
         }
