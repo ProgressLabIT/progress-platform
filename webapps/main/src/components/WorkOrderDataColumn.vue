@@ -43,7 +43,7 @@
             style="cursor: pointer"
             :style="hover ? 'text-decoration: underline' : ''"
             :class="current_view === index ? 'font-weight-black highlight' : ''">
-              {{ tabever.text }}
+              {{ tab.text }}
           </span>
         </v-hover>
       </div>
@@ -67,14 +67,16 @@
             </span>
           </v-row>
         </v-tab-item>
-        <v-tab-item key="people" class="ml-n2">
-          <BaseAvatarListElement 
+        <v-tab-item key="people" class="ml-n2 fill-height">
+          <BaseAvatarListElement
             v-for="operator in assignments"
             :key="operator._key"
             :src="getPicPath(operator)"
             :title="operator.name + ' ' + operator.surname"
             :subtitle="getAssignedPhases(operator) | capitalize_all">
           </BaseAvatarListElement>
+
+          <p class="ml-2 mt-12 text-uppercase caption">{{ $tc('job.unassigned_jobs') }}: {{ unassigned_jobs.length }}</p>
         </v-tab-item>
       </v-tabs-items>
     </v-card>
@@ -176,15 +178,13 @@ export default {
     },
 
     assignments() {
+      // handle missing data gracefully
       if (typeof this.wo_data != 'undefined') {
-        let assignments = {}
-        this.wo_data.jobs.forEach( j => {
-          if (j.assigned_to == null) {
-            if ('unassigned' in assignments) assignments.unassigned.jobs.push(j)
-            else assignments.unassigned = { jobs: [j] }
-          }
 
-          else {
+        let assignments = {}
+
+        this.wo_data.jobs.forEach( j => {
+          if (j.assigned_to != null) {
             const key = j.assigned_to._key
             if (key in assignments) assignments[key].jobs.push(j)
             else {
@@ -195,7 +195,16 @@ export default {
         })
         return assignments
       }
+
       else return {}
+    },
+
+    unassigned_jobs() {
+      let unassigned_jobs = []
+      if (typeof this.wo_data != 'undefined') {
+        unassigned_jobs = this.wo_data.jobs.filter(j => j.assigned_to == null)
+      }
+      return unassigned_jobs
     }
   },
 
