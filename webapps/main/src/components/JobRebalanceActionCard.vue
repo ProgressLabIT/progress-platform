@@ -72,6 +72,7 @@
                   item-value="_key"
                   single-line hide-details
                   return-object
+                  clearable
                   :filter="filterOperator"
                   :label="$tc('job.assign_to') + ':' | capitalize"
 
