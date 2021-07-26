@@ -261,23 +261,27 @@
           <v-spacer></v-spacer>
 
           <!-- PRODUCT ACTIONS -->
-          <v-row class="mt-auto flex-grow-0">
-            <v-spacer></v-spacer>
-            <v-col cols="auto" class="pb-0">
-              <v-btn :color="$theme.blue">
-                {{ $tc('create_order') }}
-              </v-btn>
-            </v-col>  
-          
+        <!--   <v-row class="mt-auto flex-grow-0" justify="end">
             <v-col cols="auto"  class="pb-0">
-              <v-btn :color="$theme.red">
+              <v-btn :color="$theme.red" @click="show_delete_confirmation=true">
                 {{ $tc('delete') }}
               </v-btn>
             </v-col>  
-          </v-row>  
+          </v-row>   -->
       </v-col>
 
     </v-row>  
+
+<!--     <BaseConfirmationDialog
+      :show="show_delete_confirmation"
+      :confirm_color="$theme.red"
+      :confirm_prompt="$tc('delete')"
+      max_width="40%"
+      :confirm_action="deleteProduct"
+      @close="show_delete_confirmation=false">
+      {{ $tc('product.confirm_delete_question') | capitalize }}
+    </BaseConfirmationDialog> -->
+
   </v-container>
 </template>
 
@@ -286,19 +290,22 @@ import { capitalize as c } from '@/lib/filters.js'
 import ProductParamsCard from '@/components/ProductParamsCard.vue'
 import { mapState, mapActions } from 'vuex'
 import MediaViewer from '@/components/MediaViewer.vue'
+// import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
 
 export default {
 
   name: 'ProductHome',
   
   components: {
-    ProductParamsCard,
-    MediaViewer
+    // BaseConfirmationDialog,
+    MediaViewer,
+    ProductParamsCard
   },
 
   data() {
     return {
       saving: false,
+      show_delete_confirmation: false,
       show_cancel_confirmation: false,
       show_save_confirmation: false,
       show_media: -1,
@@ -489,6 +496,11 @@ export default {
       this.show_cancel_confirmation = true
       this.edit_mode = false
     },
+
+    // deleteProduct() {
+    //   this.$store.dispatch('moveToTrash', this.product)
+    //   this.$router.push({ name: 'productList' })
+    // }
 
   },
 
