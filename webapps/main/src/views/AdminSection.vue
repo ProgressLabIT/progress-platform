@@ -12,9 +12,9 @@
           <v-tab 
             v-for="(view, index) in admin_views"
             :key="index"
-            :to="{ name: view.route_name }"
+            :to="{ name: view }"
             class="display">
-            {{ $tc(`views.${view.route_name}`) }}
+            {{ $tc(`views.${view}`) }}
           </v-tab>
         </v-tabs>
       </v-row>
@@ -36,14 +36,9 @@ export default {
     return {
       current_view: 0,
       admin_views: [
-        {
-          name: 'Utenti',
-          route_name: 'userLibrary'
-        },
-        {
-          name: 'Operazioni',
-          route_name: 'operationLibrary'
-        }
+        'generalSettings',
+        'userLibrary',
+        'operationLibrary',
       ]
     }
   },
