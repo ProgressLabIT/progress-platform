@@ -7,17 +7,8 @@
       <v-col cols="3" class="fill-height d-flex flex-column">
         
         <div class="px-5">
-          <!-- <h5>FILTRI</h5> -->
-          <v-text-field
-            append-icon="mdi-magnify"
-            hide-details
-            single-line
-            clearable
-            v-model="search_text">
-            <template v-slot:label>
-              <span class="medium">{{ $tc('search') | capitalize }}</span>
-            </template>
-          </v-text-field>
+
+          <BaseSearchBox :input.sync="search_text"></BaseSearchBox>
           
 
           <v-expansion-panels flat hover v-model="filter_panel" class="mt-2">
@@ -124,6 +115,7 @@
 
 <script>
 // import axios from 'axios'
+import BaseSearchBox from "@/components/BaseSearchBox"
 import LoadingSignal from "@/components/LoadingSignal.vue"
 import BaseAutocompleteDepartment from "@/components/BaseAutocompleteDepartment.vue"
 // import UserInfoScreen from "@/components/UserInfoScreen.vue"
@@ -136,6 +128,7 @@ export default {
 
   components: { 
     // UserInfoScreen,
+    BaseSearchBox,
     BaseAutocompleteDepartment,
     LoadingSignal
   },

@@ -1,21 +1,14 @@
 <template>
   <v-card class="fill">
+
     <LoadingSignal v-if="!vuex_ready" />
 
     <v-row v-else no-gutters class="fill-height">
       <v-col cols="3" class="fill-height d-flex flex-column">
         
           <!-- <h5>FILTRI</h5> -->
-        <v-text-field
-          class="px-5"
-          append-icon="mdi-magnify"
-          hide-details
-          single-line
-          clearable
-          :label="$tc('search') | capitalize"
-          v-model="search_text">
-        </v-text-field>
-          
+          <BaseSearchBox :input.sync="search_text" class="px-5 flex-grow-0"></BaseSearchBox>
+
           <v-row dense class="pt-6 flex-grow-0 text-uppercase">
             <v-col cols="8" class="pl-6 pb-1">
               <h6>{{ $tc('name') }}</h6>
@@ -77,6 +70,7 @@
 </template>
 
 <script>
+import BaseSearchBox from "@/components/BaseSearchBox"
 import LoadingSignal from "@/components/LoadingSignal.vue"
 import multiMatch from "@/lib/MultiFieldSearch.js"
 
@@ -85,7 +79,10 @@ export default {
 
   name: 'OperationLibrary',
 
-  components: { LoadingSignal },
+  components: {
+    BaseSearchBox,
+    LoadingSignal
+  },
 
   data () {
     return {
