@@ -145,14 +145,14 @@
                 <v-expansion-panel-content v-if="paramType(p_key) != 'int'">
                   <v-container>
                     <v-hover v-slot:default="{ hover }" 
-                      v-for="[v_key, value] in paramOtherValues(p_key, p_value)" :key="v_key">  
+                      v-for="(value, index) in paramOtherValues(p_key, p_value)" :key="index">
                       <v-row 
                         :class="hover && edit_mode ? 'hover-highlight' : ''"
                         :style="edit_mode ? 'cursor:pointer' : '' "
-                        @click="edit_mode ? updateParam(p_key, v_key) : null">
+                        @click="edit_mode ? updateParam(p_key, value) : null">
                         <v-col cols="auto" >
-                          <h5 class="highlight mb-1">{{ value.name }}</h5>
-                          <p class="body-2">{{ value.description }}</p>
+                          <h5 class="highlight mb-1">{{ paramHumanValue(p_key, value) }}</h5>
+                          <p class="body-2">{{ paramValueDesc(p_key, value) }}</p>
                         </v-col>
                       </v-row>
                     </v-hover>
@@ -205,6 +205,7 @@ export default {
         description: ''
       },
       temp_params: {
+        max_offline: 60,
         parallel_job_allowed: true,
         step_check: 'none',
         step_check_force_order: false,
@@ -247,7 +248,7 @@ export default {
     },
 
     paramHumanName(param_key) {
-      return params_map[param_key].title
+      return this.$tc(`phase.params.${param_key}.title`)
     },
 
     paramType(param_key) {
@@ -258,27 +259,20 @@ export default {
       if (this.paramType(param_key) == 'int') {
         return this.temp_params[param_key]
       }
-      return params_map[param_key].values.get(value_key).name
+      return this.$tc(`phase.params.${param_key}.${value_key}.title`)
     },
 
     paramValueDesc(param_key, value_key) {
       // const param_value = this.phase_params[param_key]
       if (this.paramType(param_key) == 'int') {
-        return params_map[param_key].description
+        return this.$tc(`phase.params.${param_key}.desc`)
       }
-      else return params_map[param_key].values.get(value_key).description
+      else return this.$tc(`phase.params.${param_key}.${value_key}.desc`)
     },
 
     paramOtherValues(param_key, param_value) {
-      /* must update to keep map structure so that keys can be used when 
-         updating param */
       const param_all_values = params_map[param_key].values
-      const param_alternative_values = new Map(
-        [...param_all_values.keys()]
-          .filter( k => k != param_value )
-          .map( k => [k, param_all_values.get(k)] )
-      )
-      return param_alternative_values
+      return param_all_values.filter(v => v != param_value)
     },
 
     updateParam(param_key, new_value) {

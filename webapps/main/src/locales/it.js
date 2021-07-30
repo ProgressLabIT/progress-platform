@@ -87,6 +87,7 @@ export default {
     "assigned_to_me": "assegnati a me",
     "complete_batch": "completa lotto",
     "complete_step": "completa passo",
+    "empty_queue": "non ci sono lavori in coda al momento",
     "filters": {
       "started_only": "solo iniziati"
     },
