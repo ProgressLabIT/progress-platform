@@ -13,7 +13,6 @@ services:
     build:
       context: webapps/main
       dockerfile: webapp.prod.Dockerfile
-    restart: unless-stopped
     volumes:
       - media:/usr/share/nginx/html/media
       - ./webapps/main/nginx.prod.conf:/etc/nginx/nginx.conf
