@@ -120,8 +120,7 @@ async def create_work_order(new_wo: WorkOrderNew):
       operation_key = phase.operation_key,
       parameters = phase.params,
       qt_planned = wo_data.qt_planned,
-      step_sequence = get_procedure_for_new_job(phase_key),
-      max_offline = phase.max_offline
+      step_sequence = get_procedure_for_new_job(phase_key)
     )
 
     prepped = jsonable_encoder(new_job_record, by_alias=True)
