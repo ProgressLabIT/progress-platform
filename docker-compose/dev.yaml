@@ -44,6 +44,7 @@ services:
       - "traefik.http.routers.api.middlewares=strip_api_prefix"
 
   db:
+    restart: unless-stopped
     environment:
       - ARANGO_NO_AUTH=1
     labels:
