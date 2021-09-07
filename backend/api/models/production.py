@@ -114,7 +114,7 @@ class Job(FlexModel):
   parameters: PhaseParameters = None
 
   first_phase: bool = None
-  input_available: bool = None
+  input_available: bool = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders
 
   stage: WorkStatus = WorkStatus.CREATED
   active: bool = False
