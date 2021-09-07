@@ -200,8 +200,8 @@ const traceability = {
     startJob({ commit, state, rootState }) {
       const now = DT.utc()
 
-      const new_work_session = createWorkSession(state, rootState.session, now)
-      const new_batch = createBatch(state, now)
+      createWorkSession(state, rootState.session, now)
+      createBatch(state, now)
 
       // job update
       const job_update = {

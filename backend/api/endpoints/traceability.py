@@ -65,8 +65,5 @@ async def job_heartbeat(job_key: str, work_session_key: str = None):
 
   tx.commit_transaction()
 
-  return {
-    "work_session_key": work_session_key,
-    "last_online": now
-  }
+  return APIResponse(detail={"last_online": now})
 
