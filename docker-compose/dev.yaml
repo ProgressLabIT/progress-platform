@@ -18,8 +18,7 @@ services:
       npm run serve -- --host 0.0.0.0
     volumes:
       # This is use to keep HMR working
-      - "./webapps/main/public:/main/public"
-      - "./webapps/main/src:/main/src"
+      - "./webapps/main:/main"
       - "media:/main/public/media"
     environment:
       # the app will call the api server from outside the docker network, so the full Traefik host alias should be used
