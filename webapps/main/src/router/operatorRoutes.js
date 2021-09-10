@@ -41,11 +41,11 @@ const operatorRoutes = [
         props: true,
         component: () => import ("@/views/WorkSessionSteps.vue"),
       },
-    //   {
-    //     path: "docs",
-    //     name: "jobDocs",
-    //     component: () => import ("@/views/WorkSessionDocs.vue"),
-    //   },
+      {
+        path: "docs",
+        name: "jobDocs",
+        component: () => import ("@/views/WorkSessionDocs.vue"),
+      },
     //   {
     //     path: "bom",
     //     name: "jobBom",

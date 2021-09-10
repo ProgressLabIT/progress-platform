@@ -215,9 +215,9 @@ export default {
 
     links() {
       return [
-          // { route_name: 'jobDocs', text: 'DETTAGLI PRODOTTO' },
           // { route_name: 'jobBom', text: 'DISTINTA MATERIALI' },
           { route_name: 'jobSteps', text: this.$tc('procedure') },
+          { route_name: 'jobDocs', text: this.$tc('document.label', 2) },
       ]
     },
 
