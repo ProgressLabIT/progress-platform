@@ -55,8 +55,16 @@ export default {
 
   computed: {
 
+    job_data () {
+      return this.$store.state.traceability.working_job_data
+    },
+
+    product_key () {
+      return this.job_data.product_key
+    },
+
     docs () {
-      return this.$store.state.traceability.working_job_data.product_docs
+      return this.job_data.product_docs
     },
 
     media_name() {
@@ -65,8 +73,11 @@ export default {
       else { return this.docs[this.show_media].name }
     },
 
-    media_src() {
+    img_src () {
+      return `/media/product/${this.product_key}/image.jpg`
+    },
 
+    media_src() {
       if (this.show_media === 'img') {
         return this.img_src
       }
