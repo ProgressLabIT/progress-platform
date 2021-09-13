@@ -55,12 +55,8 @@ export default {
 
   computed: {
 
-    product_key () {
-      return this.$store.state.traceability.working_job_data.product_key
-    },
-
     docs () {
-      return this.$store.state.product.saved.docs
+      return this.$store.state.traceability.working_job_data.product_docs
     },
 
     media_name() {
@@ -96,10 +92,6 @@ export default {
         this.show_media = value
     },
   },
-
-  created () {
-    this.$store.dispatch('loadProductDetails', this.product_key)
-  }
 }
 </script>
 
