@@ -37,7 +37,7 @@ async def create_work_order(new_wo: WorkOrderNew):
     new_wo_record = WorkOrderFull(
       **wo.dict(),
       product_docs = get_product_docs(wo.product_key),
-      product_bom = get_product_bom(wo.product_key)
+      product_bom = get_bom_from_db(wo.product_key)
     )
     prepped = jsonable_encoder(new_wo_record, by_alias=True)
     db_resp = collection.insert(prepped)

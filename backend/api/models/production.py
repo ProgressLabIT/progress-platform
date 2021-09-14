@@ -5,6 +5,7 @@ from typing import Dict, List, Union
 
 from pydantic import Field, validator
 
+from models.bom import BomLineRead
 from models.process import PhaseParameters, StepWithMediaInfo
 from models.product import ProductDoc
 from utils.base_models import FlexModel, ArangoDocument
@@ -84,6 +85,8 @@ class WorkOrderFull(WorkOrderNew):
 
   phase_sequence: List[str] = []
   product_docs: List[ProductDoc] = []
+  product_bom: List[BomLineRead] = []
+
   notes: str = None
 
 
@@ -143,6 +146,7 @@ class Job(FlexModel):
   last_online: datetime = None
 
   product_docs: List[ProductDoc] = []
+  phase_bom: List[BomLineRead] = []
 
 
   # @validator('progress')
