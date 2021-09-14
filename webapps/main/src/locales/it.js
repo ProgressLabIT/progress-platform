@@ -20,7 +20,8 @@ export default {
     },
     "delete_selected": "elimina selezionati",
     "edit": "modifica distinta",
-    "updated": "distinta aggiornata"
+    "updated": "distinta aggiornata",
+    "label": "distinta"
   },
   "by": "entro",
   "cancel": "annulla",
@@ -287,7 +288,7 @@ export default {
       "delete_confirmed": "prodotto {code} eliminato"
     },
     "tabs": {
-      "bom": "componenti",
+      "bom": "distinta",
       "home": "parametri",
       "process": "processo"
     },

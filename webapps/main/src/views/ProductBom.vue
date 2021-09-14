@@ -282,6 +282,7 @@ export default {
     }),
 
     table_headers() {
+    // TODO: refactor into mixin / composition function, used also in WorkSessionBom
       return [
         {  value:'code', text: this.$tc('code').toUpperCase() },
         {  value:'description', text: this.$tc('description').toUpperCase() },

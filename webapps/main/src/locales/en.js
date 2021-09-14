@@ -20,7 +20,8 @@ export default {
     },
     "delete_selected": "delete selected",
     "edit": "edit",
-    "updated": "bill of materials updated"
+    "updated": "bill of materials updated",
+    "label": "bom"
   },
   "by": "by",
   "cancel": "cancel",
@@ -285,7 +286,7 @@ export default {
       "delete_confirmed": "product {code} deleted"
     },
     "tabs": {
-      "bom": "components",
+      "bom": "bom",
       "home": "parameters",
       "process": "process"
     },
