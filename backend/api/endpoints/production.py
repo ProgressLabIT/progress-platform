@@ -9,6 +9,7 @@ from models.process import PhaseData
 from models.product import ProductData
 from models.production import *
 from utils.api import APIResponse
+from utils.bom import get_bom_from_db
 from utils.db import db
 from utils.process import search_step_media
 from utils.product import get_product_docs
@@ -35,9 +36,9 @@ async def create_work_order(new_wo: WorkOrderNew):
     # data_in = jsonable_encoder(wo)
     new_wo_record = WorkOrderFull(
       **wo.dict(),
-      product_docs = get_product_docs(wo.product_key)
+      product_docs = get_product_docs(wo.product_key),
+      product_bom = get_product_bom(wo.product_key)
     )
-    print(new_wo_record)
     prepped = jsonable_encoder(new_wo_record, by_alias=True)
     db_resp = collection.insert(prepped)
     new_wo_record.id = db_resp['_id']
@@ -126,7 +127,8 @@ async def create_work_order(new_wo: WorkOrderNew):
       qt_planned = wo_data.qt_planned,
       step_sequence = get_procedure_for_new_job(phase_key),
       max_offline = phase.max_offline,
-      product_docs = wo_data.product_docs
+      product_docs = wo_data.product_docs,
+      phase_bom = filter(lambda x: x.phase_key == phase_key, wo_data.product_bom)
     )
 
     prepped = jsonable_encoder(new_job_record, by_alias=True)
