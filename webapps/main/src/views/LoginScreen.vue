@@ -38,7 +38,7 @@
                     <v-card-text>
                       <v-text-field
                         v-model="credentials.username"
-                        :label="$tc('username') | capitalize"
+                        :label="$tc('user.username') | capitalize"
                         autocomplete="off">
                       </v-text-field>
 
