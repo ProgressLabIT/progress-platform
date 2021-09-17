@@ -1,26 +1,31 @@
 <template>
-  <v-container class="px-5 py-4 fill">
-    <v-hover v-slot:default="{ hover }"
-      v-for="(doc, index) in docs" :key="index">
-      <v-row
-        no-gutters
-        :style="hover ? `background: var(--hover-bg-blue)` : `` "
-        style="cursor: pointer;"
-        class="body-2 pa-2 mx-n2 flex-nowrap"
-        @click="showMedia(index)">
-        <v-col cols="8">
-          <span  :class="'temp' in doc ? 'font-italic' : ''">
-            {{ doc.name }}
-          </span>
-        </v-col>
+  <v-container class="px-5 py-4 fill" >
 
-        <v-spacer></v-spacer>
+    <template v-if="docs.length">
+      <v-hover v-slot:default="{ hover }"
+        v-for="(doc, index) in docs" :key="index">
+        <v-row
+          no-gutters
+          :style="hover ? `background: var(--hover-bg-blue)` : `` "
+          style="cursor: pointer;"
+          class="body-1 px-4 py-4 mx-n2 flex-nowrap"
+          @click="showMedia(index)">
+          <v-col cols="8">
+            <span  :class="'temp' in doc ? 'font-italic' : ''">
+              {{ doc.name }}
+            </span>
+          </v-col>
 
-        <v-col cols="auto" class="text-right">
-          {{ doc.size | bytes }}
-        </v-col>
-      </v-row >
-    </v-hover>
+          <v-spacer></v-spacer>
+
+          <v-col cols="auto" class="text-right">
+            {{ doc.size | bytes }}
+          </v-col>
+        </v-row >
+      </v-hover>
+    </template>
+
+    <NoDataAlert v-else>{{ $tc('document.missing')}}</NoDataAlert>
 
     <v-lazy>
       <MediaViewer
@@ -33,18 +38,28 @@
       </MediaViewer>
     </v-lazy>
 
+
   </v-container>
 </template>
 
 <script>
 import MediaViewer from '@/components/MediaViewer.vue'
+import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
 
   name: 'WorkSessionDocs',
 
   components: {
-    MediaViewer
+    MediaViewer,
+    NoDataAlert
+  },
+
+  props: {
+    job: {
+      type: Object,
+      required: true
+    }
   },
 
   data () {
@@ -55,16 +70,12 @@ export default {
 
   computed: {
 
-    job_data () {
-      return this.$store.state.traceability.working_job_data
-    },
-
     product_key () {
-      return this.job_data.product_key
+      return this.job.product_key
     },
 
     docs () {
-      return this.job_data.product_docs
+      return this.job.product_docs || []
     },
 
     media_name() {

@@ -21,7 +21,8 @@ export default {
     "delete_selected": "elimina selezionati",
     "edit": "modifica distinta",
     "updated": "distinta aggiornata",
-    "label": "distinta"
+    "label": "distinta",
+    "missing": "nessuna distinta"
   },
   "by": "entro",
   "cancel": "annulla",
@@ -51,7 +52,8 @@ export default {
   "deselect_all": "deseleziona tutti",
   "document": {
     "add": "aggiungi documento | aggiungi documenti",
-    "label": "documento | documenti"
+    "label": "documento | documenti",
+    "missing": "nessun documento"
   },
   "due_by": "scadenza",
   "edit": "modifica",

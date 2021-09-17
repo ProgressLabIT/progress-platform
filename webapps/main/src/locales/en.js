@@ -21,7 +21,8 @@ export default {
     "delete_selected": "delete selected",
     "edit": "edit",
     "updated": "bill of materials updated",
-    "label": "bom"
+    "label": "bom",
+    "missing": "no bill of materials"
   },
   "by": "by",
   "cancel": "cancel",
@@ -51,7 +52,8 @@ export default {
   "deselect_all": "deselect all",
   "document": {
     "add": "add document | add documents",
-    "label": "document | documents"
+    "label": "document | documents",
+    "missing": "nessun documento"
   },
   "due_by": "due by",
   "edit": "edit",

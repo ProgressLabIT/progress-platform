@@ -15,7 +15,7 @@
       <!-- ################################ -->
 
       <v-col cols="8" class="fill d-flex flex-column pt-0">
-        <v-row class="flex-grow-0 mx-0 pb-1">
+        <v-row class="flex-grow-0 mx-0 pb-3 pt-2">
           <v-tabs
             :color="$theme.white_high"
             background-color="transparent"
@@ -24,13 +24,15 @@
               v-for="link in links"
               :key="link.route_name"
               :to="{ name: link.route_name }"
-              class="display">
+              class="display py-2">
               {{ link.text }}
             </v-tab>
           </v-tabs>
         </v-row>
 
-        <router-view :job="j"></router-view>
+        <v-card class="fill d-flex flex-column" max-height="100%" >
+          <router-view :job="j"></router-view>
+        </v-card>
 
       </v-col>
 
