@@ -6,7 +6,7 @@
           error_outline
         </v-icon>
         <div class="text-center mt-6 text-uppercase">
-          <h3><slot>{{ No data }}</slot></h3>
+          <h3><slot>No data</slot></h3>
         </div>
       </v-col>
     </v-row>
