@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container class="fill">
 
      <v-data-table v-if="bom.length"
       id="bom"
