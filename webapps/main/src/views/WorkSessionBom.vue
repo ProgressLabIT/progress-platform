@@ -58,10 +58,15 @@ export default {
         ? this.job.phase_bom.map(i => {
           // multiply items by job quantity. Does not apply to tools and safety items
           const multiply = ['assembly', 'component', 'consumable']
+          let quantity = i.qt
           if (multiply.includes(i.item_type)) {
-            i.qt = i.qt * this.job.qt_planned
+            const factor = this.quantity_type === 'job' ? this.job.qt_planned : this.job.parameters.production_batch_qt
+            quantity = i.qt * factor
           }
-          return i
+          return {
+            ...i,
+            qt: quantity
+          }
         }) : []
     }
   }
