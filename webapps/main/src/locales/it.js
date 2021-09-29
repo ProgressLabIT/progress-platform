@@ -13,6 +13,7 @@ export default {
   "and": "e",
   "archive": "archivia",
   "assign": "assegna",
+  "batch": "lotto",
   "bom": {
     "add_item": "aggiungi articolo",
     "alerts": {
@@ -22,7 +23,12 @@ export default {
     "edit": "modifica distinta",
     "updated": "distinta aggiornata",
     "label": "distinta",
-    "missing": "nessuna distinta"
+    "missing": "nessuna distinta",
+    "quantity_type": {
+      "job": "lavoro",
+      "batch": "lotto",
+      "radio_label": "mostra quantità per:"
+    }
   },
   "by": "entro",
   "cancel": "annulla",
@@ -95,6 +101,7 @@ export default {
       "started_only": "solo iniziati"
     },
     "key": "ID lavoro",
+    "label": "lavoro | lavori",
     "next_job_message": "il prossimo lavoro in coda è il seguente",
     "no_job_assigned": "nessun lavoro assegnato",
     "pause": "pausa",
@@ -117,6 +124,7 @@ export default {
   },
   "loading_text": "recupero dati in corso...",
   "material_cost": "costo materiali",
+  "material": "materiale | materiali",
   "name": "nome",
   "new": "nuovo",
   "no_class": "nessuna classe",
