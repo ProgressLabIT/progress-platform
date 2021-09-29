@@ -219,7 +219,7 @@ export default {
       return [
           { route_name: 'jobSteps', text: this.$tc('procedure') },
           { route_name: 'jobDocs', text: this.$tc('document.label', 2) },
-          { route_name: 'jobBom', text: this.$tc('bom.label') },
+          { route_name: 'jobBom', text: this.$tc('material', 2) },
       ]
     },
 
