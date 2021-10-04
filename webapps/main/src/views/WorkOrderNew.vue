@@ -1,5 +1,5 @@
 <template>
-  <BaseModalForm @submit="postNewWorkOrder" max_width="700px" >
+  <BaseModalForm @submit="postNewWorkOrder" max_width="700px" @cancel="$router.back()">
     <template v-slot:title>
       {{ $tc('work_order.new') }}
     </template>
@@ -8,13 +8,16 @@
       <h4 class="weight-bold text-uppercase">
         {{ $tc('work_order.wo_code') }}
       </h4>
-      <v-text-field v-model="wo_code">
-      </v-text-field>
 
+      <!-- WORK ORDER CODE INPUT -->
+      <v-text-field v-model="wo_code" />
+
+      <!-- WORK ORDER LINES TITLE  -->
       <h4 class="weight-bold text-uppercase">
         {{ $tc('work_order.wo_line.short', 2) }}
       </h4>
 
+      <!-- WORK ORDER LINE HEADERS -->
       <v-row>
         <v-col 
           v-for="(info, field_name) in wo_line_info" 
@@ -25,6 +28,7 @@
         </v-col>
       </v-row>
 
+      <!-- WORK ORDER LINES -->
       <v-row v-for="(line, index) in wo_lines" :key="index">
         <v-col 
           v-for="(info, field_name) in wo_line_info" 
@@ -37,14 +41,14 @@
             @input="log($event)"
             @click:outside="show_picker = -1"
             @keydown.esc="show_picker = -1"
-            width="300px">
+            width="300px"
+            v-if="field_name === 'due_by'">
             <v-date-picker
               landscape no-title
               show-week
               locale="it-it"
               first-day-of-week="1"
               width="300px"
-              v-if="field_name === 'due_by'"
               @change="setDueBy($event, index)">
             </v-date-picker>
           </v-dialog>
