@@ -29,10 +29,11 @@ class Queries:
 
 
 def get_bom_from_db(db, product_key):
-  return db.aql.execute(
+  db_result = db.aql.execute(
     Queries.GET_PRODUCT_BOM, 
     bind_vars=dict(product_key=product_key)
   )
+  return [BomLineRead(**i) for i in db_result]
 
 
 def define_bom_line_for_db(bom_line_in):

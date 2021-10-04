@@ -9,8 +9,10 @@ from models.process import PhaseData
 from models.product import ProductData
 from models.production import *
 from utils.api import APIResponse
+from utils.bom import get_bom_from_db
 from utils.db import db
 from utils.process import search_step_media
+from utils.product import get_product_docs
 from utils.production import Queries
 from utils.traceability import update_job_progress
 
@@ -31,8 +33,12 @@ async def create_work_order(new_wo: WorkOrderNew):
 
   # Create WO record
   def create_wo_record(wo: WorkOrderNew, collection):
-    data_in = jsonable_encoder(wo)
-    new_wo_record = WorkOrderFull(**data_in)
+    # data_in = jsonable_encoder(wo)
+    new_wo_record = WorkOrderFull(
+      **wo.dict(),
+      product_docs = get_product_docs(wo.product_key),
+      product_bom = get_bom_from_db(tx, wo.product_key)
+    )
     prepped = jsonable_encoder(new_wo_record, by_alias=True)
     db_resp = collection.insert(prepped)
     new_wo_record.id = db_resp['_id']
@@ -106,11 +112,10 @@ async def create_work_order(new_wo: WorkOrderNew):
       phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
 
     first_phase = phase_key == wo_data.phase_sequence[0]
-
     new_job_record = Job(
-      wo_key = new_wo_record.key,
-      wo_code = new_wo_record.wo_code,
-      wo_line = new_wo_record.wo_line,
+      wo_key = wo_data.key,
+      wo_code = wo_data.wo_code,
+      wo_line = wo_data.wo_line,
       phase_key = phase_key,
       phase_alias = phase.alias,
       first_phase = first_phase,
@@ -121,7 +126,9 @@ async def create_work_order(new_wo: WorkOrderNew):
       parameters = phase.params,
       qt_planned = wo_data.qt_planned,
       step_sequence = get_procedure_for_new_job(phase_key),
-      max_offline = phase.max_offline
+      max_offline = phase.max_offline,
+      product_docs = wo_data.product_docs,
+      job_bom = list(filter(lambda x: x.phase_key == phase_key, wo_data.wo_bom))
     )
 
     prepped = jsonable_encoder(new_job_record, by_alias=True)

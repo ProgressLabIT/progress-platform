@@ -1,7 +1,6 @@
 <template>
   <v-container fluid class="pa-0 fill" ref="step_card">
 
-    <v-card class="fill d-flex flex-column" max-height="100%" >
       <v-toolbar dense class="flex-grow-0" v-if="procedure.length">
         <v-row align="center" class="fill-height mx-0" ref="stepper">
          
@@ -36,20 +35,8 @@
       </component>
 
       <!-- NO PROCEDURE -->
-      <template v-else>
-        <v-row justify="center" align="center">
-          <v-col class="text-center">
-            <v-icon x-large :color="$theme.white_low">
-              error_outline
-            </v-icon>
-            <div class="text-center mt-6 text-uppercase">
-              <h3>{{ $tc('phase_steps.no_procedure') }}</h3>
-            </div>
-          </v-col>
-        </v-row>
-      </template>
+      <NoDataAlert v-else>{{ $tc('phase.no_procedure') }}</NoDataAlert>
 
-    </v-card>
   </v-container>
 </template>
 
@@ -59,6 +46,7 @@ import { throttle as _throttle } from 'lodash'
 import JobInstruction from '@/components/JobInstruction.vue'
 import JobForm from '@/components/JobForm.vue'
 import JobChecklist from '@/components/JobChecklist.vue'
+import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
 
@@ -68,6 +56,7 @@ export default {
     JobInstruction,
     JobForm,
     JobChecklist,
+    NoDataAlert
   },
 
   props: {
