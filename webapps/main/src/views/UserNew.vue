@@ -170,11 +170,11 @@ export default {
       temp_psw: '',
       
       new_user_data: {
-        name: '',
-        surname: '',
-        username: '',
-        email: '',
-        department_key: '',
+        name: null,
+        surname: null,
+        username: null,
+        email: null,
+        department_key: null,
         hourly_cost: null,
         scopes: [], // permissions list
         scope: ''
