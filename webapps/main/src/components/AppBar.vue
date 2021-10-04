@@ -1,12 +1,11 @@
 <template>
-  <v-app-bar app fixed elevate-on-scroll dense :color="$theme.background">
+  <v-app-bar app fixed elevate-on-scroll dense class="white--text">
 
       <!-- MENU ICON AND WINDOW TITLE -->
       <v-app-bar-nav-icon 
       ref="icon"
-        style="color: rgba(255,255,255,.6);" 
         @click="$emit('showDrawer')"/>
-      <h3 class=" display">{{ screen_title }}</h3>
+      <h3 class="display">{{ screen_title }}</h3>
 
       <!-- USER NAME & BADGE -->
       <h5 class=" display highlight ml-auto">{{ username }}</h5>

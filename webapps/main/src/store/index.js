@@ -16,11 +16,12 @@ import nav from "./nav"
 import traceability from "./traceability"
 import session from "./session"
 
-
+import { dark, light } from '@/styles/theme.js'
 
 
 
 Vue.use(Vuex);
+console.log(dark, light)
 
 const store = new Vuex.Store({
   
@@ -31,6 +32,7 @@ const store = new Vuex.Store({
         ghostClass: "ghost"
       },
       screen_title: 'progress',
+      theme_colors: dark
     }
   },
 
@@ -38,10 +40,20 @@ const store = new Vuex.Store({
     UPDATE_SCREEN_TITLE(state, new_title) {
       Vue.set(state, 'screen_title', new_title)
     },
+    SET_THEME(state, theme) {
+      Vue.set(state, 'theme_colors', theme)
+    }
   },
 
-  actions: {},
-  getters: {},
+  actions: {
+    changeTheme({ commit }, dark_mode_on) {
+      commit('SET_THEME', dark_mode_on ? dark : light)
+    }
+  },
+
+  getters: {
+    theme: state => state.theme_colors
+  },
 
   plugins: [resetSessionTimeoutAtStoreChange],
 

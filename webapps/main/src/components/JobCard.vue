@@ -1,5 +1,5 @@
 <template>
-  <v-card elevation="8" style="height: 250px" :color="background ? background : $theme.surface1">
+  <v-card elevation="8" style="height: 250px">
     <v-container class="py-0 fill-height">
       <v-col cols="12" class="pa-1 fill-height d-flex flex-column">
 
@@ -54,7 +54,7 @@
         </v-progress-linear>  
 
       </v-col>  
-      <v-overlay absolute opacity=".2" :value="true"></v-overlay>
+      <!-- <v-overlay absolute opacity=".2" :value="true"></v-overlay> -->
     </v-container>
   </v-card>
 </template>

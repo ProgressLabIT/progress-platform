@@ -17,7 +17,7 @@
       <v-col cols="8" class="fill d-flex flex-column pt-0">
         <v-row class="flex-grow-0 mx-0 pb-3 pt-2">
           <v-tabs
-            :color="$theme.white_high"
+            :color="$theme.text_high"
             background-color="transparent"
             hide-slider>
             <v-tab
@@ -347,7 +347,7 @@ export default {
       if (this.j.active) return ''
       else return {
         backgroundColor: this.$theme.surface1,
-        color: this.$theme.white_disabled
+        color: this.$theme.text_disabled
       }
     },
 

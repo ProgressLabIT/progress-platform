@@ -18,7 +18,7 @@
           vertical grow
           v-model="current_phase"
           hide-slider
-          :color="$theme.white_high"
+          :color="$theme.text_high"
           background-color="transparent"
           style="max-height: 70%"
           class="scroll"
@@ -209,7 +209,7 @@
           <v-tabs
             v-model="tab"
             background-color="transparent"
-            :color="$theme.white_high"
+            :color="$theme.text_high"
             hide-slider right
             class="flex-shrink-1 flex-grow-0">
             <v-tab 
