@@ -20,9 +20,9 @@ export const dark = {
 
 export const light = {
   black: '#090C0D',
-  background: '#ccc',
-  surface1: '#fff',
-  surface2: '#fff',
+  background: '#eeeeee',
+  surface1: '#ffffff',
+  surface2: '#ffffff',
   grey: '#707070',
   blue: '#22AED1',
   blue_bg: 'rgba(39,174,209, .3)',
@@ -32,8 +32,8 @@ export const light = {
   red_bg: 'rgba(213,29,54,.3)',
   orange: '#FF9F1C',
   orange_bg: 'rgba(255,159,28,.3)',
-  text_low: 'rgba(0,0,0,.6)',
-  text_high: 'rgba(0,0,0,.87)',
-  text_disabled: 'rgba(0,0,0,.38)'
+  text_high: 'rgba(30,52,58,.87)',
+  text_low: 'rgba(100,100,100,.6)',
+  text_disabled: 'rgba(100,100,100,.38)'
 }
 

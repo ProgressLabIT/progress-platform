@@ -83,7 +83,7 @@
         <!-- START/PAUSE BUTTOM -->
         <v-row class="mx-0 mt-12">
           <v-btn
-            :color="$theme.surface2"
+            :color="`${$theme.blue}aa`"
             block tile
             height="auto"
             @click="startPauseResumeJob().action()">
@@ -104,11 +104,10 @@
         <v-row class="mx-0 mt-2">
           <v-btn
             id="progress_button"
-            :color="j.active ? $theme.surface2 : $theme.background"
+            :color="`${$theme.green}aa`"
             block tile
             :disabled="!j.active || current_step_done"
             height="auto"
-            :class="{ disabled: !j.active, completed: current_step_done }"
             @click="progress_button.action()">
             <v-row class="fill-height mx-0" align="center" justify="center">
               <v-col cols="3" class="text-right">
@@ -116,7 +115,7 @@
                   {{ progress_button.icon }}
                 </v-icon>
               </v-col>
-              <v-col class="display medium text-left" :class="{ highlight: j.active}">
+              <v-col class="display medium text-left">
                 {{ progress_button.text }}
               </v-col>
             </v-row>
@@ -132,7 +131,7 @@
             height="auto" width="32%"
             @click="goToPreviousStep"
             class="py-3">
-            <v-icon x-large>
+            <v-icon :color="$theme.text_high" x-large>
               mdi-skip-previous
             </v-icon>
           </v-btn>
@@ -144,7 +143,7 @@
             height="auto" width="32%"
             @click="goToNextStep"
             class="py-3">
-            <v-icon x-large>
+            <v-icon :color="$theme.text_high" x-large>
               mdi-skip-next
             </v-icon>
           </v-btn>
@@ -554,8 +553,8 @@ export default {
   background-color: var(--surface-1) !important;
   color: var(--theme-grey) !important;
 }
-#progress_button.completed {
+/*#progress_button.completed {
   background-color: var(--surface-1) !important;
   color: var(--theme-green) !important;
-}
+}*/
 </style>

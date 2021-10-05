@@ -19,7 +19,7 @@
           </v-row>  
 
           <!-- WINDOW CONTAINER -->
-          <v-card outlined tile class="flex-grow-1 scroll" :color="$theme.surface1">
+          <v-card class="flex-grow-1 scroll" :color="$theme.surface1" elevation="6">
             <slot name="content"></slot>
           </v-card>
 

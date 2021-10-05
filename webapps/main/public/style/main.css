@@ -6,7 +6,7 @@
   --low-white: rgba(255,255,255,.6);
   --high-white: rgba(255,255,255,.87);
   --disabled-white: rgba(255,255,255,.3);
-  --bg-color: #131E21;
+  /*--bg-color: #131E21;*/
   --surface-1: #1F2A2D;
   --surface-2: #242E31;
   --box-border: #707070;
@@ -36,8 +36,17 @@
 #app button.v-btn {
   font-family: var(--display-font);
   letter-spacing: var(--display-spacing);
-  color: var(--high-white);
+  color: var(--text-high);
   font-weight: bold;
+}
+
+#app .v-avatar {
+  color: #ffffffaa;
+}
+
+#app .v-avatar.highlight {
+  color: #fff;
+  font-weight:  bold;
 }
 
 .display {
@@ -76,8 +85,8 @@
 }
 
 .highlight {
-/*  color: var(--high-white);
-  font-weight: bold;*/
+  color: var(--text-high);
+  font-weight: bold;
 }
 
 .solid-white {

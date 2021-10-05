@@ -3,16 +3,17 @@
 
       <!-- MENU ICON AND WINDOW TITLE -->
       <v-app-bar-nav-icon 
-      ref="icon"
-        @click="$emit('showDrawer')"/>
+        ref="icon"
+        @click="$emit('showDrawer')"
+        :color="$theme.white"/>
       <h3 class="display">{{ screen_title }}</h3>
 
       <!-- USER NAME & BADGE -->
-      <h5 class=" display highlight ml-auto">{{ username }}</h5>
+      <h5 class="display ml-auto">{{ username }}</h5>
       <v-hover  v-slot:default="{ hover }">
         <v-avatar size="28" class="my-auto ml-2">
           <v-img v-if="!hover" :src="avatar_url"></v-img>
-          <v-icon v-else 
+          <v-icon v-else :color="$theme.white"
             @click="logout">
             mdi-exit-to-app
           </v-icon>

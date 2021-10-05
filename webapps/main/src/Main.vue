@@ -1,5 +1,5 @@
 <template>
-  <v-app style="height: 100vh">
+  <v-app style="height: 100vh" :style="cssVars">
     <router-view></router-view>
   </v-app>
 </template>
@@ -9,13 +9,16 @@ export default {
 
   name: 'Main',
 
-  data () {
-    return {
-
+  computed: {
+    cssVars () {
+      return {
+        '--bg-color': this.$theme.background,
+        '--text-high': this.$theme.text_high
+      }
     }
   }
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="css">
 </style>

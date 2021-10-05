@@ -43,12 +43,13 @@
                       size="20"
                       :color="current_step_index == index ? $theme.blue : $theme.grey"
                       class="d-flex text-center smaller weight-bold"
+                      :class="{ highlight: current_step_index == index }"
                       >{{ index + 1 }}
                     </v-avatar>
                   </v-col>  
 
                   <v-col cols="9" class="text-left text-truncate">
-                    <span style="max-width: 80%">
+                    <span style="max-width: 80%" :class="{ highlight: current_step_index == index }">
                       {{ step.title.length ? step.title : '(nessun titolo)' }}
                     </span>
                   </v-col>

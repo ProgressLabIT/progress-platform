@@ -21,7 +21,6 @@ import { dark, light } from '@/styles/theme.js'
 
 
 Vue.use(Vuex);
-console.log(dark, light)
 
 const store = new Vuex.Store({
   

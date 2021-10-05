@@ -46,12 +46,12 @@ $material-dark: (
 
 
 $material-light: (
-  'app-bar': #333,
+  'app-bar': rgba(30,52,58,1),
   'background': #eee,
   'text': (
-    'primary': rgba(0,0,0, .87),
-    'secondary': rgba(0,0,0, .56),
-    'disabled': rgba(0,0,0, .38),
+    'primary': rgba(30,52,58,.87),
+    'secondary': rgba(100,100,100, .56),
+    'disabled': rgba(100,100,100, .38),
   ),
 );
 

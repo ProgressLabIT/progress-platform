@@ -15,7 +15,7 @@
       </v-icon>
     </v-btn>
             
-    <v-sheet v-show="show_details" style="position: absolute; width: 100%; z-index: 9" color="rgba(0,0,0,.7)">  
+    <v-sheet v-show="show_details" style="position: absolute; width: 100%; z-index: 9" :color="`${$theme.background}cc`">
       <v-container>
         <v-row justify="space-between" no-gutters>
           <v-col cols="11">

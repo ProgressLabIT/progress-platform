@@ -144,4 +144,7 @@ export default {
 </script>
 
 <style lang="css" scoped>
+.theme--dark.v-expansion-panels .v-expansion-panel {
+  background-color: var(--surface2);
+}
 </style>
