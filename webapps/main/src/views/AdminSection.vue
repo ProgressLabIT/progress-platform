@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="fill pt-0 d-flex flex-column">      
+  <v-container fluid class="fill d-flex flex-column">
       
       <!-- TAB LINKS -->
       <v-row dense class="flex-grow-0 mb-2">    
