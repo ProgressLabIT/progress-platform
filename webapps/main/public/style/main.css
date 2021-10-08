@@ -80,8 +80,8 @@
   color: var(--low-white);
 }
 
-.base-white {
- color: var(--low-white);
+.low-text {
+ color: var(--text-low);
 }
 
 .highlight {

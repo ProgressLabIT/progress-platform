@@ -13,7 +13,8 @@ export default {
     cssVars () {
       return {
         '--bg-color': this.$theme.background,
-        '--text-high': this.$theme.text_high
+        '--text-high': this.$theme.text_high,
+        '--text-low': this.$theme.text_low
       }
     }
   }
