@@ -1,6 +1,6 @@
 <template>
 	<v-footer app fixed :color="$theme.black">
-	  <v-row no-gutter class="align-center justify-space-between px-2">
+	  <v-row no-gutter class="align-center justify-space-between px-2 low-text">
 	    <v-col class="text-left pa-0">
 	    	<span class="display smaller">PROGRESS PLATFORM</span>
 	    	<!-- <span class="material-icons smaller ml-2">info</span> -->
