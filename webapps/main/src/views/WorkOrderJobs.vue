@@ -2,7 +2,7 @@
   <v-container class="fill py-0 d-flex flex-column">
 
     <!-- HEADERS -->
-    <v-row class="flex-grow-0 mx-0 px-2" align="center">
+    <v-row class="flex-grow-0 mx-0 px-2 low-text" align="center">
       <v-col
         v-for="header in headers"
         :key="header.value"

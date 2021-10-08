@@ -35,22 +35,22 @@
     <!-- ASSIGNED JOBS -->
     <v-row class="mx-0 mt-4" align="center">
       
-      <span class="highlight">
+      <span>
         {{ $tc('job.assigned_to_me') | capitalize }}
       </span>
 
       <v-divider class="mx-3"></v-divider>
       
       <!-- Assigned jobs shown vs total -->
-      <v-chip small color="transparent" class="highlight">
+      <v-chip small color="transparent">
         <i18n path="job.shown_jobs_message">
           <template v-slot:shown>
-            <span class="weight-medium solid-white mr-1">
+            <span class="highlight mr-1">
               {{ filtered_assigned_to_user.length }}
             </span>
           </template>
           <template v-slot:total>
-            <span class="weight-medium solid-white mx-1">
+            <span class="highlight mx-1">
               {{ assigned_to_user.length }}
             </span>
           </template>
@@ -78,22 +78,22 @@
     <!-- UNASSIGNED JOBS -->
     <v-row class="mx-0 mt-12" align="center">
 
-      <div class="highlight bold">
-        {{ $tc('unassigned') }}
+      <div>
+        {{ $tc('unassigned') | capitalize }}
       </div>
       
       <v-divider class="mx-3"></v-divider>
 
       <!-- Jobs shown vs total -->
-      <v-chip small color="transparent" class="highlight">
+      <v-chip small color="transparent">
         <i18n path="job.shown_jobs_message">
           <template v-slot:shown>
-            <span class="weight-medium solid-white mr-1">
+            <span class="highlight mr-1">
               {{ filtered_unassigned.length }}
             </span>
           </template>
           <template v-slot:total>
-            <span class="weight-medium solid-white mx-1">
+            <span class="highlight mx-1">
               {{ unassigned.length }}
             </span>
           </template>

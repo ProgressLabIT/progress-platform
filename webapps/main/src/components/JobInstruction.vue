@@ -10,12 +10,12 @@
       :color="show_details ? null : $theme.blue"
       style="z-index: 10"
       class="mt-12">
-      <v-icon>
+      <v-icon color="white">
         {{ show_details ? 'close' : 'mdi-information-variant' }}
       </v-icon>
     </v-btn>
             
-    <v-sheet v-show="show_details" style="position: absolute; width: 100%; z-index: 9" :color="`${$theme.background}cc`">
+    <v-sheet v-show="show_details" style="position: absolute; width: 100%; z-index: 2" :color="`${$theme.background}cc`">
       <v-container>
         <v-row justify="space-between" no-gutters>
           <v-col cols="11">
