@@ -83,7 +83,7 @@
         <!-- START/PAUSE BUTTOM -->
         <v-row class="mx-0 mt-12">
           <v-btn
-            :color="`${$theme.blue}aa`"
+            :color="j.active ? $theme.grey : `${$theme.blue}aa`"
             block tile
             height="auto"
             @click="startPauseResumeJob().action()">
@@ -93,7 +93,7 @@
                   {{ j.active ? 'mdi-pause':'mdi-play' }}
                 </v-icon>
               </v-col>
-              <v-col class="display highlight medium text-left">
+              <v-col class="display medium text-left">
                 {{ startPauseResumeJob().text }}
               </v-col>
             </v-row>
@@ -126,7 +126,7 @@
         <v-row class="mt-2 mx-0" justify="space-between">
 
           <v-btn
-            :color="$theme.surface2"
+            :color="$theme.grey"
             tile
             height="auto" width="32%"
             @click="goToPreviousStep"
@@ -137,7 +137,7 @@
           </v-btn>
 
           <v-btn
-            :color="$theme.surface2"
+            :color="$theme.grey"
             tile
             :disabled="!allow_step_forward"
             height="auto" width="32%"
@@ -149,7 +149,7 @@
           </v-btn>
 
           <v-btn
-            :color="$theme.surface2"
+            :color="$theme.grey"
             tile
             height="auto" width="32%"
             @click="j.active ? showExitAlert(true) : exitJob()"
@@ -346,7 +346,7 @@ export default {
       if (this.j.active) return ''
       else return {
         backgroundColor: this.$theme.surface1,
-        color: this.$theme.text_disabled
+        // color: this.$theme.text_disabled
       }
     },
 
