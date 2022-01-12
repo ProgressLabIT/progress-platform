@@ -44,6 +44,18 @@
               </v-tabs>
 
               <v-spacer></v-spacer>
+
+
+              <!-- THEME SELECTION -->
+              <v-row class="flex-grow-0 mx-0">
+                <v-col cols="auto" class="align-self-center">
+                  <span class="display medium">TEMA SCURO</span>
+                </v-col>
+                <v-spacer></v-spacer>
+                <v-switch v-model="dark_mode_on"></v-switch>
+              </v-row>
+
+              <!-- LANGUAGE SELECTION -->
               <v-row class="flex-grow-0 mx-0">
                 <v-col cols="auto" class="align-self-center">
                   <span class="display medium">{{ $tc('language') }}</span>
@@ -84,7 +96,6 @@
 
 <script>
 import { DateTime as DT } from 'luxon'
-
 import AppBar from '@/components/AppBar'
 import AppFooter from '@/components/AppFooter'
 // import SessionLock from '@/views/SessionLock'
@@ -104,6 +115,7 @@ export default {
       tab_routes: ['adminPanel', 'libraryRoot', 'productionRoot', 'userJobs'],
       locale_index: null,
       locale_list: this.$root.$i18n.availableLocales,
+      dark_mode_on: true
     }
   },
 
@@ -122,6 +134,11 @@ export default {
     locale_index(new_locale_index) {
       this.$root.$i18n.locale = this.locale_list[new_locale_index]
       this.$store.state.locale = this.locale_list[new_locale_index]
+    },
+
+    dark_mode_on(state) {
+      this.$store.dispatch('changeTheme', state)
+      this.$vuetify.theme.dark = state
     }
   },
 

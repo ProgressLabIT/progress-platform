@@ -1,5 +1,5 @@
 <template>
-  <v-sheet class="surface-1">
+  <v-sheet :color="$theme.backrgound" class="white--text">
     <v-row class="pa-0">
 
       <!-- ACTIVE TOGGLE -->

@@ -61,7 +61,7 @@
           <v-hover v-slot:default="{ hover }">
             <v-icon 
               class="handle"
-              :color="$theme.white_low"
+              :color="$theme.text_low"
               :style="drag ? 'cursor: grabbing' : 'cursor: grab'">
               drag_handle
             </v-icon>
@@ -74,11 +74,11 @@
               v-if="confirming_delete != index"  
               @click="confirming_delete = index">
               <span 
-                :style="`color: ${hover ? $theme.red : $theme.white_low}`"
+                :style="`color: ${hover ? $theme.red : $theme.text_low}`"
                 class="body-2">
                 {{ $tc('phase.delete_field') | capitalize }}
               </span>
-              <v-icon :color="hover ? $theme.red : $theme.white_low">close</v-icon>
+              <v-icon :color="hover ? $theme.red : $theme.text_low">close</v-icon>
             </button>
 
             <v-row v-if="confirming_delete == index" justify="end" class="fill-height"> 
@@ -114,7 +114,7 @@
     <v-hover v-slot:default="{ hover }" v-if="edit_mode">    
       <v-btn text small class="ml-n3"
         v-if="edit_mode"
-        :color="hover ? $theme.blue : $theme.white_high"
+        :color="hover ? $theme.blue : $theme.text_high"
         @click="addField">
          + {{ $tc('phase.add_field') | capitalize }}
       </v-btn>

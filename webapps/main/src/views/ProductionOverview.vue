@@ -12,7 +12,7 @@
           <v-tabs
             background-color="transparent"
             v-model="current_view"
-            :color="$theme.white_high"
+            :color="$theme.text_high"
             hide-slider
             class="flex-shrink-1 flex-grow-0">
             <v-tab 
@@ -131,7 +131,7 @@
                 <template v-slot:activator="{ on }">
                   <v-icon 
                     v-show="hover"
-                    :color="$theme.white_low"
+                    :color="$theme.text_low"
                     small class="mr-2"
                     v-on="on">
                     info

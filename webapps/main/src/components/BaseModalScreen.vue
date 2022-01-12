@@ -5,7 +5,7 @@
     class="py-0"
     @keydown.esc="$emit('close')"
     @input="$emit('close')">
-      <v-card :color="$theme.black">
+      <v-card :color="$theme.background">
         <v-container fluid class="d-flex flex-column pt-2 px-5" style="height:100vh"> 
           <v-row dense justify="start" align="center" class="pl-1 flex-grow-0">
 
@@ -19,7 +19,7 @@
           </v-row>  
 
           <!-- WINDOW CONTAINER -->
-          <v-card outlined tile class="flex-grow-1 scroll" :style="'background-color:' + $theme.background">
+          <v-card class="flex-grow-1 scroll" :color="$theme.surface1" elevation="6">
             <slot name="content"></slot>
           </v-card>
 

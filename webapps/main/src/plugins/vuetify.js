@@ -17,10 +17,10 @@ const opts = {
 	// },
 
 	theme: {
-		dark:true,
-		options: {
-			customProperties: true,
-		},
+		dark: true,
+		// options: {
+		// 	customProperties: false,
+		// },
 		themes: {
 			dark: {
 				primary: '#22AED1',
@@ -40,7 +40,11 @@ const opts = {
 						spacing: '.03em',
 					}
 				}
-			}
+			},
+      light: {
+        primary: '#22AED1',
+        secondary: '#0DAB76',
+      }
 		}
 	}
 }
