@@ -1,4 +1,5 @@
 export const dark = {
+  footer: '#090C0D',
   black: '#090C0D',
   background: '#131E21',
   surface1: '#1F2A2D',
@@ -19,6 +20,7 @@ export const dark = {
 
 
 export const light = {
+  footer: 'rgba(30,52,58,1)',
   black: '#090C0D',
   background: '#eeeeee',
   surface1: '#ffffff',
