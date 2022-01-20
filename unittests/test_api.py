@@ -99,9 +99,11 @@ def test_Event():
 def test_router_item(mocker):
     '''
     Test for the item endpoint (API router) object, verifies that:
-    1. the status message is correctly associated with the database connection availability (arango container start/stop)
-         a. when the arango container is running, a call to the /item returns a 200 status code
-         b. when the arango container is not running, a call to the /item returns a 500 status code
+    1. the status code is correctly assigned by
+         a. the database connection availability (arango container start/stop)
+             i.  when the arango container is running, a call to the /item returns a 200 status code
+             ii. when the arango container is not running, a call to the /item returns a 500 status code
+         b. a not valid command sent by the client result in a 404 status code
     '''
 
     #with monkeypatch.context() as m:
@@ -124,16 +126,20 @@ def test_router_item(mocker):
 
     client = TestClient(app)
 
-    # 1.
+    # 1.a.
     os.system('docker start arango')
-    time.sleep(0.1)
+    time.sleep(0.5)
 
     response = client.get("/item")
-    assert response.status_code == 200 # a.
+    assert response.status_code == 200 # i.
 
     os.system('docker stop arango')
-    time.sleep(0.1)
+    time.sleep(0.5)
 
     response = client.get("/item")
-    assert response.status_code == 500 # b.
+    assert response.status_code == 500 # ii.
+
+    # b.
+    response = client.get("/iamnotavalidcommand")
+    assert response.status_code == 404
 
