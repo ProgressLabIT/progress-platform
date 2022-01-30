@@ -1,12 +1,8 @@
 import pytest
 from pytest_mock import mocker
-from mock import patch
 import os
 import sys
 import time
-
-os.chdir('../backend/api') # all the modules here tested refer to the backend.api
-sys.path.insert(0, '') # more info here: https://stackoverflow.com/questions/57870498/cannot-find-module-after-change-directory
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -15,7 +11,7 @@ from fastapi.testclient import TestClient
 from utils.config import get_config
 from models.traceability import ProductionEvent
 from utils.event import Event
-import endpoints
+#import endpoints
 
 def test_ProductionEvent():
     '''
@@ -95,10 +91,10 @@ def test_Event():
     #ws = e.save()
     #print(repr(ws))
 
-#@patch("endpoints.item.db")
-def test_router_item(mocker):
+
+def test_endpoint_item(mocker):
     '''
-    Test for the item endpoint (API router) object, verifies that:
+    Test for the item endpoint (API router) object integration with the database API, verifies that:
     1. the status code is correctly assigned by
          a. the database connection availability (arango container start/stop)
              i.  when the arango container is running, a call to the /item returns a 200 status code
@@ -106,14 +102,7 @@ def test_router_item(mocker):
          b. a not valid command sent by the client result in a 404 status code
     '''
 
-    #with monkeypatch.context() as m:
-    #    m.setattr("endpoints.item", "db", [1,2,3,4])
-
-    #my_db = mocker.patch()
-    #my_db.collection.return_value = [1,2,3,4]
-    #my_db.aql.execute.return_value = [1,2,3,4,5]
-
-    #my_db = mocker.patch('endpoints.item.db', 'collection')
+    from endpoints.item import router as item
 
     config = get_config()
 
@@ -121,20 +110,18 @@ def test_router_item(mocker):
         # openapi_url=f"{config.root_path}/openapi.json",
         root_path=config.api_root_path
     )
-
-    app.include_router(endpoints.item, tags=['Library'])
-
+    app.include_router(item)
     client = TestClient(app)
 
     # 1.a.
     os.system('docker start arango')
-    time.sleep(0.5)
+    time.sleep(1.5)
 
     response = client.get("/item")
     assert response.status_code == 200 # i.
 
     os.system('docker stop arango')
-    time.sleep(0.5)
+    time.sleep(1.5)
 
     response = client.get("/item")
     assert response.status_code == 500 # ii.
@@ -142,4 +129,54 @@ def test_router_item(mocker):
     # b.
     response = client.get("/iamnotavalidcommand")
     assert response.status_code == 404
+
+    del app
+    del client
+    del item
+
+
+
+def test_endpoint_item_db_patch(my_database):
+    '''
+    Test for the item endpoint (API router) object, verifies that:
+    '''
+    
+    my_db = my_database["database"]
+    app   = my_database["app"]
+
+    client = TestClient(app)
+
+    my_db.aql.execute.return_value = [{'_key': 'iamakey', 'code': '007', 'description': 'I am a production item, take care of me!', 'type': None, 'value': None}]
+
+    os.system('docker start arango')
+    time.sleep(1.5)
+
+    response = client.get("/item")
+    #assert response.status_code == 200
+
+    print(response.json())
+
+    del client
+
+
+
+def test_endpoint_traceability(mocker):
+    '''
+    Test for the traceability endpoint (API router) object, verifies that:
+    1. the status code is correctly assigned by
+         a. the database connection availability (arango container start/stop)
+             i.  when the arango container is running, a call to the /item returns a 200 status code
+             ii. when the arango container is not running, a call to the /item returns a 500 status code
+         b. a not valid command sent by the client result in a 404 status code
+    '''
+
+
+
+
+def test_database():
+    '''
+    Test to verify that the database is passing the data validation check by Pydantic.
+    '''
+
+
 
