@@ -92,7 +92,8 @@ def test_Event():
     #print(repr(ws))
 
 
-def test_endpoint_item(mocker):
+@pytest.mark.connect_db
+def test_endpoint_item(connect_database):
     '''
     Test for the item endpoint (API router) object integration with the database API, verifies that:
     1. the status code is correctly assigned by
@@ -101,16 +102,9 @@ def test_endpoint_item(mocker):
              ii. when the arango container is not running, a call to the /item returns a 500 status code
          b. a not valid command sent by the client result in a 404 status code
     '''
+    
+    app = connect_database
 
-    from endpoints.item import router as item
-
-    config = get_config()
-
-    app = FastAPI(
-        # openapi_url=f"{config.root_path}/openapi.json",
-        root_path=config.api_root_path
-    )
-    app.include_router(item)
     client = TestClient(app)
 
     # 1.a.
@@ -132,10 +126,9 @@ def test_endpoint_item(mocker):
 
     del app
     del client
-    del item
 
 
-
+@pytest.mark.patch_db
 def test_endpoint_item_db_patch(my_database):
     '''
     Test for the item endpoint (API router) object, verifies that:
@@ -156,6 +149,7 @@ def test_endpoint_item_db_patch(my_database):
 
     print(response.json())
 
+    del app
     del client
 
 

@@ -16,7 +16,7 @@ from utils.config import get_config
 
 @pytest.fixture(autouse = False)
 def my_database(mocker):
-    # TODO: implement a fixture that mocks the database
+    # implement a fixture that mocks the database
     
     my_db = mocker.patch('utils.db.db')
     from endpoints.item import router as item
@@ -32,8 +32,20 @@ def my_database(mocker):
     return {"database" : my_db, "app" : app}
 
 @pytest.fixture(autouse = False)
-def connect_arango_database(mocker):
-    pass
+def connect_database(mocker):
+    # instantiate actual connection with the database
+    
+    from endpoints.item import router as item
+
+    config = get_config()
+
+    app = FastAPI(
+        # openapi_url=f"{config.root_path}/openapi.json",
+        root_path=config.api_root_path
+    )
+    app.include_router(item)
+
+    return app
 
 
 @pytest.fixture(autouse = False)
