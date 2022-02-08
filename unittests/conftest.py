@@ -13,12 +13,20 @@ os.chdir('../backend/api') # all the modules here tested refer to the backend.ap
 sys.path.insert(0, '') # more info here: https://stackoverflow.com/questions/57870498/cannot-find-module-after-change-directory
 
 from utils.config import get_config
+from patch_settings import *
+
 
 @pytest.fixture(autouse = False)
 def my_database(mocker):
     # implement a fixture that mocks the database
     
     my_db = mocker.patch('utils.db.db')
+
+    my_collection = mocker.Mock()
+    my_collection.all.return_value = [my_data_collection]
+ 
+    my_db.collection.return_value = my_collection
+
     from endpoints.item import router as item
 
     config = get_config()
@@ -30,6 +38,7 @@ def my_database(mocker):
     app.include_router(item)
 
     return {"database" : my_db, "app" : app}
+
 
 @pytest.fixture(autouse = False)
 def connect_database(mocker):

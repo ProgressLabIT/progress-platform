@@ -3,6 +3,7 @@ from pytest_mock import mocker
 import os
 import sys
 import time
+import json
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -12,6 +13,9 @@ from utils.config import get_config
 from models.traceability import ProductionEvent
 from utils.event import Event
 #import endpoints
+
+from patch_settings import *
+
 
 def test_ProductionEvent():
     '''
@@ -129,7 +133,7 @@ def test_endpoint_item(connect_database):
 
 
 @pytest.mark.patch_db
-def test_endpoint_item_db_patch(my_database):
+def test_endpoint_item_db_patch(mocker, my_database):
     '''
     Test for the item endpoint (API router) object, verifies that:
     '''
@@ -139,19 +143,24 @@ def test_endpoint_item_db_patch(my_database):
 
     client = TestClient(app)
 
-    my_db.aql.execute.return_value = [{'_key': 'iamakey', 'code': '007', 'description': 'I am a production item, take care of me!', 'type': None, 'value': None}]
+    my_data = {'_key': 'iamakey', 'code': '007', 'description': 'I am a production item, take care of me!', 'type': None, 'value': None}
 
-    os.system('docker start arango')
-    time.sleep(1.5)
-
+    my_db.aql.execute.return_value = [my_data, my_data_collection]
+    
     response = client.get("/item")
     #assert response.status_code == 200
+    resp_list = response.json()
 
-    print(response.json())
+    print(resp_list)
+    print(type(resp_list))
+
+    print(len(resp_list))
+    print(len(set(resp_list)))
+
+    #assert len(resp_list) == len(set(resp_list)) # https://stackoverflow.com/questions/1541797/how-do-i-check-if-there-are-duplicates-in-a-flat-list
 
     del app
     del client
-
 
 
 def test_endpoint_traceability(mocker):
