@@ -21,6 +21,8 @@ def my_database(mocker):
     # implement a fixture that mocks the database
     
     my_db = mocker.patch('utils.db.db')
+    #my_HTTPException = mocker.patch('fastapi.HTTPException')
+    #my_HTTPException.return_value = Exception('BOOM!')
 
     my_collection = mocker.Mock()
     my_collection.all.return_value = [my_data_collection]
@@ -37,11 +39,11 @@ def my_database(mocker):
     )
     app.include_router(item)
 
-    return {"database" : my_db, "app" : app}
+    return {"database" : my_db, "app" : app}#, "HTTPException" : my_HTTPException}
 
 
 @pytest.fixture(autouse = False)
-def connect_database(mocker):
+def connect_database():
     # instantiate actual connection with the database
     
     from endpoints.item import router as item
