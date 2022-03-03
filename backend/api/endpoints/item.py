@@ -21,7 +21,7 @@ async def get_item_catalog(item_code: str = None):
   Method to fetch all production items and active products from the database.
   Returns:
     1. a list of ProductionItem objects, and 200 status code in nominal operations
-    2. None, and 500 status code when data can not be fetched from the database or data is invalid
+    2. traceback and 500 status code when data can not be fetched from the database or data is invalid
   '''
   
   try: 
