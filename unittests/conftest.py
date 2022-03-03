@@ -7,13 +7,15 @@ import sys
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from patch_settings import my_data_collection
+
 print(os.path.dirname(os.path.abspath(__file__)))
 
 os.chdir('../backend/api') # all the modules here tested refer to the backend.api
 sys.path.insert(0, '') # more info here: https://stackoverflow.com/questions/57870498/cannot-find-module-after-change-directory
 
 from utils.config import get_config
-from patch_settings import *
+
 
 
 @pytest.fixture(autouse = False)
