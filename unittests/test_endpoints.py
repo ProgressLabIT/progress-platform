@@ -85,7 +85,7 @@ def test_endpoint_item(mocker, my_database):
     Test for the item endpoint (API router) object, verifies that:
     1. in a successfull execution, returns a list 
          a.) of all production items, from 'ProductionItem' collection, and active products, from an AQL call to database
-         b.) [FIXME] of non duplicated items, when the database AQL call gives active products already present in the production items collection
+         b.) [TODO] of non duplicated items, when the database AQL call gives active products already present in the production items collection
     2. whether an exception occurs
          a.) during the AQL call, the control flow is stopped with the rising of an HTTPException
          b.) during the pydantic validation (ProductionItem model), the control flow is stopped with the rising of an HTTPException
@@ -93,6 +93,7 @@ def test_endpoint_item(mocker, my_database):
     
     my_db  = my_database["database"]
     app    = my_database["app"]
+    my_data_collection = my_database["data"]
     #my_HTTPException = my_database["HTTPException"]
 
     #my_HTTPException.reset_mock()

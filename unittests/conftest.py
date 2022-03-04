@@ -41,7 +41,7 @@ def my_database(mocker):
     )
     app.include_router(item)
 
-    return {"database" : my_db, "app" : app}#, "HTTPException" : my_HTTPException}
+    return {"database" : my_db, "app" : app, "data" : my_data_collection}#, "HTTPException" : my_HTTPException}
 
 
 @pytest.fixture(autouse = False)
