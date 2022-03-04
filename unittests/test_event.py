@@ -55,18 +55,141 @@ def test_init(connect_database):
 
 @pytest.mark.patch_db
 def test_save(my_database, mocker):
+    '''
+    Test for the save method in the Event class. Verifies that:
+         i.   the correct action method related to the event type is called, e.g. 'complete_batch' is called when event type is 'BATCH_COMPLETED'
+         ii.  the update_job_last_online method is called
+         iii. the update_work_order method is called 
+    '''
 
     Event = my_database["Event"]
 
-    e = Event(ProductionEvent(event_type='BATCH_COMPLETED', job_key = 12092961, phase_key = 11976627, 
-                                work_order_key = 12092959, user_session_key = 12006040, user_key = 11681276,
-                                work_session_key = 12093618, product_key = 11728033))
 
+    e = Event(ProductionEvent(event_type='BATCH_COMPLETED'))
+    
+    e.complete_batch = mocker.Mock()
     e.update_job_last_online = mocker.Mock()
     e.update_work_order = mocker.Mock()
     
+    ws = e.save()
+    
+    e.complete_batch.assert_called() # i.
+    e.update_job_last_online.assert_called() # ii.
+    e.update_work_order.assert_called() # iii.
+
+    
+    e.update_work_order.reset_mock()
+    e.update_job_last_online.reset_mock()
+
+    e = Event(ProductionEvent(event_type='STEP_COMPLETED'))
+    
+    e.complete_step = mocker.Mock()
+    e.update_job_last_online = mocker.Mock()
+    e.update_work_order = mocker.Mock()
+    
+    ws = e.save()
+    
+    e.complete_step.assert_called() # i.
+    e.update_job_last_online.assert_called() # ii.
+    e.update_work_order.assert_called() # iii.
+
+
+    e.update_work_order.reset_mock()
+    e.update_job_last_online.reset_mock()
+
+    e = Event(ProductionEvent(event_type='JOB_STARTED'))
+    
+    e.start_job = mocker.Mock()
+    e.update_job_last_online = mocker.Mock()
+    e.update_work_order = mocker.Mock()
+    
+    ws = e.save()
+    
+    e.start_job.assert_called() # i.
+    e.update_job_last_online.assert_called() # ii.
+    e.update_work_order.assert_called() # iii.
+
+
+    e.update_work_order.reset_mock()
+    e.update_job_last_online.reset_mock()
+
+    e = Event(ProductionEvent(event_type='JOB_CLOSED'))
+    
+    e.close_job = mocker.Mock()
+    e.update_job_last_online = mocker.Mock()
+    e.update_work_order = mocker.Mock()
 
     ws = e.save()
-    #print(repr(ws))
+    
+    e.close_job.assert_called() # i.
+    e.update_job_last_online.assert_called() # ii.
+    e.update_work_order.assert_called() # iii.
 
 
+    e.update_work_order.reset_mock()
+    e.update_job_last_online.reset_mock()
+
+    e = Event(ProductionEvent(event_type='JOB_PAUSED'))
+    
+    e.pause_job = mocker.Mock()
+    e.update_job_last_online = mocker.Mock()
+    e.update_work_order = mocker.Mock()
+
+    ws = e.save()
+    
+    e.pause_job.assert_called() # i.
+    e.update_job_last_online.assert_called() # ii.
+    e.update_work_order.assert_called() # iii.
+
+
+    e.update_work_order.reset_mock()
+    e.update_job_last_online.reset_mock()
+
+    e = Event(ProductionEvent(event_type='JOB_PAUSED_OFFLINE'))
+    
+    e.pause_job = mocker.Mock()
+    e.update_job_last_online = mocker.Mock()
+    e.update_work_order = mocker.Mock()
+
+    ws = e.save()
+    
+    e.pause_job.assert_called() # i.
+    e.update_job_last_online.assert_called() # ii.
+    e.update_work_order.assert_called() # iii.
+
+
+    e.update_work_order.reset_mock()
+    e.update_job_last_online.reset_mock()
+
+    e = Event(ProductionEvent(event_type='JOB_RESUMED'))
+    
+    e.resume_job = mocker.Mock()
+    e.update_job_last_online = mocker.Mock()
+    e.update_work_order = mocker.Mock()
+
+    ws = e.save()
+    
+    e.resume_job.assert_called() # i.
+    e.update_job_last_online.assert_called() # ii.
+    e.update_work_order.assert_called() # iii.
+
+
+    e.update_work_order.reset_mock()
+    e.update_job_last_online.reset_mock()
+
+    e = Event(ProductionEvent(event_type='JOB_BACK_ONLINE'))
+    
+    e.restore_work_session = mocker.Mock()
+    e.update_job_last_online = mocker.Mock()
+    e.update_work_order = mocker.Mock()
+
+    ws = e.save()
+    
+    e.restore_work_session.assert_called() # i.
+    e.update_job_last_online.assert_called() # ii.
+    e.update_work_order.assert_called() # iii.
+    
+    
+    
+    
+    tx.commit_transaction.assert_called()
