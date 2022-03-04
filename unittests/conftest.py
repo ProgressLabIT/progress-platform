@@ -7,7 +7,7 @@ import sys
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from patch_settings import my_data_collection
+from patch_settings import *
 
 print(os.path.dirname(os.path.abspath(__file__)))
 
@@ -15,7 +15,7 @@ os.chdir('../backend/api') # all the modules here tested refer to the backend.ap
 sys.path.insert(0, '') # more info here: https://stackoverflow.com/questions/57870498/cannot-find-module-after-change-directory
 
 from utils.config import get_config
-
+from models.production import Job
 
 
 @pytest.fixture(autouse = False)
@@ -42,7 +42,12 @@ def my_database(mocker):
     )
     app.include_router(item)
 
-    return {"database" : my_db, "app" : app, "data" : my_data_collection, "Event" : Event}#, "HTTPException" : my_HTTPException}
+    return {"database" : my_db, 
+            "app"      : app, 
+            "data"     : my_data_collection, 
+            "job"      : Job(**my_job),
+            "batch"    : my_batch,
+            "Event"    : Event}
 
 
 @pytest.fixture(autouse = False)
