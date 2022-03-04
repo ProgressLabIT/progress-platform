@@ -32,6 +32,7 @@ def my_database(mocker):
     my_db.collection.return_value = my_collection
 
     from endpoints.item import router as item
+    from utils.event import Event
 
     config = get_config()
 
@@ -41,7 +42,7 @@ def my_database(mocker):
     )
     app.include_router(item)
 
-    return {"database" : my_db, "app" : app, "data" : my_data_collection}#, "HTTPException" : my_HTTPException}
+    return {"database" : my_db, "app" : app, "data" : my_data_collection, "Event" : Event}#, "HTTPException" : my_HTTPException}
 
 
 @pytest.fixture(autouse = False)
@@ -49,6 +50,7 @@ def connect_database():
     # instantiate actual connection with the database
     
     from endpoints.item import router as item
+    from utils.event import Event
 
     config = get_config()
 
@@ -58,7 +60,7 @@ def connect_database():
     )
     app.include_router(item)
 
-    return app
+    return {"app" : app, "Event" : Event}
 
 
 @pytest.fixture(autouse = False)

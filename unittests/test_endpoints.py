@@ -52,7 +52,7 @@ def test_endpoint_item_integration(connect_database):
          b.) a not valid command sent by the client result in a 404 status code
     '''
     
-    app = connect_database
+    app = connect_database["app"]
 
     client = TestClient(app)
 

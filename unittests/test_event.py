@@ -2,22 +2,23 @@ import pytest
 from pytest_mock import mocker
 
 from models.traceability import ProductionEvent
-from utils.event import Event
+#from utils.event import Event
 
 
 # Tests for the Event class
 
-def test_init():
+@pytest.mark.connect_db
+def test_init(connect_database):
     '''
     Test for the __init__ method of the Event class. Verifies that:
-    1. the object is correctly initialized
+    -> the object is correctly initialized
         i.   the 'response' property is set to None
         ii.  the 'action' method is correctly assigned according to the specified event type
         iii. the 'db' property is set to the arango database 'PROGRESS_TEST' by default when no database is specified as argument
-    2. TBD
     '''
 
-    # 1.
+    Event = connect_database["Event"]
+
     e = Event(ProductionEvent(event_type='JOB_STARTED')) # i.
     assert e.response == None
     del e
@@ -51,13 +52,21 @@ def test_init():
     assert e.db.name == "PROGRESS_TEST"
     del e
 
-    # 2.
-    e = Event(ProductionEvent(event_type='JOB_STARTED', job_key = 12092961, phase_key = 11976627, 
+
+@pytest.mark.patch_db
+def test_save(my_database, mocker):
+
+    Event = my_database["Event"]
+
+    e = Event(ProductionEvent(event_type='BATCH_COMPLETED', job_key = 12092961, phase_key = 11976627, 
                                 work_order_key = 12092959, user_session_key = 12006040, user_key = 11681276,
                                 work_session_key = 12093618, product_key = 11728033))
+
+    e.update_job_last_online = mocker.Mock()
+    e.update_work_order = mocker.Mock()
     
-    # TODO: understand why can not execute the save()
-    #ws = e.save()
+
+    ws = e.save()
     #print(repr(ws))
 
 
