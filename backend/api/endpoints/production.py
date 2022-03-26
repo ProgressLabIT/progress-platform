@@ -127,7 +127,7 @@ async def create_work_order(new_wo: WorkOrderNew):
       qt_planned = wo_data.qt_planned,
       step_sequence = get_procedure_for_new_job(phase_key),
       max_offline = phase.max_offline,
-      product_docs = wo_data.product_docs,
+      job_docs = wo_data.wo_docs,
       job_bom = list(filter(lambda x: x.phase_key == phase_key, wo_data.wo_bom))
     )
 

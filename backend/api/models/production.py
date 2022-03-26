@@ -84,8 +84,8 @@ class WorkOrderFull(WorkOrderNew):
   total_cost: float = None
 
   phase_sequence: List[str] = []
-  product_docs: List[ProductDoc] = []
-  product_bom: List[BomLineRead] = []
+  wo_docs: List[ProductDoc] = []
+  wo_bom: List[BomLineRead] = []
 
   notes: str = None
 
@@ -145,8 +145,8 @@ class Job(FlexModel):
   last_work_session_started: str = None
   last_online: datetime = None
 
-  product_docs: List[ProductDoc] = []
-  phase_bom: List[BomLineRead] = []
+  job_docs: List[ProductDoc] = []
+  job_bom: List[BomLineRead] = []
 
 
   # @validator('progress')
