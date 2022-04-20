@@ -79,3 +79,11 @@ def docker_arango_stop():
 
     yield
     os.system('docker stop arango')
+
+@pytest.fixture(autouse = True)
+def docker_arango_stop():
+
+    yield
+    os.system('docker exec arango arangorestore --create-database true --server.database PROGRESS_TEST --input-directory "/backup" --server.authentication false')
+
+
