@@ -1,7 +1,10 @@
 import pytest
 from pytest_mock import mocker
 
-from models.traceability import ProductionEvent
+import time
+
+from models.traceability import ProductionEvent, Batch
+from models.production import Job
 from utils.dt import timestamp
 
 
@@ -199,6 +202,7 @@ def test_create_batch(my_database, mocker):
              ii. the phase has the default null value (-> first_phase attribute of the job is set to None)
          2. the WIP is not booked (-> book_wip method is called) when the phase is the first phase
              -> first_phase attribute of the job is set to True
+         *. returns a pydantic validated Batch object from the batch collection
     '''
 
     # Load fixture patches
@@ -218,7 +222,7 @@ def test_create_batch(my_database, mocker):
     e.info.timestamp = timestamp()
 
     e.tx = mocker.MagicMock()
-    e.tx.collection('Batch').insert.return_value = {'new' : my_batch}
+    e.tx.collection('Batch').insert.return_value = {'new' : my_batch} # *
     
     e.book_wip = mocker.Mock()
 
@@ -238,3 +242,59 @@ def test_create_batch(my_database, mocker):
     e.create_batch()
     e.book_wip.assert_not_called()
     del e
+
+
+@pytest.mark.connect_db
+def test_create_work_session(connect_database, mocker):
+    '''
+    Test for the create_work_session method in the Event class. Verifies that:
+    '''
+
+    Event = connect_database["Event"]
+
+    #Event.get_current_work_session()
+
+@pytest.mark.dev
+@pytest.mark.connect_db
+def test_get_current_work_session(connect_database, mocker):
+    '''
+    Test for the get_current_work_session method in the Event class. 
+    Verifies that a workspace is correctly filtered by the assignment of a job key in the Event object.
+    '''
+
+    Event = connect_database["Event"]
+
+    e = Event(ProductionEvent(event_type='JOB_STARTED'))
+    
+    # specify a job key for testing purpose and attach the key to the event object
+    spec_job_key = "12101234"
+    e.info.job_key = spec_job_key
+
+    # insert test workspace in the database
+    e.tx = e.db.begin_transaction(write=e.write_collections)
+    ws_test=dict(
+      _key="12109876",
+      job_key= spec_job_key,
+      user_session_key="12100000",
+      user_key="12100000",
+      active=True
+    )
+    e.tx.collection('WorkSession').insert(ws_test)
+
+    ret = e.get_current_work_session()
+    assert ret.key == "12109876"
+
+    # commit and close the transaction
+    e.tx.commit_transaction()
+
+    del e
+
+
+@pytest.mark.connect_db
+def test_close_work_session(connect_database, mocker):
+    '''
+    Test for the close_work_session method in the Event class. Verifies that:
+    '''
+
+    Event = connect_database["Event"]
+
