@@ -49,6 +49,10 @@ class Event:
     self.action = getattr(self, self.info.event_type.value)
 
   def save(self):
+    '''
+    Method that begins the transaction, execute an action, and commit the transaction. 
+    The action is a method of the Event object, specified in the info.event_type, and is here executed.
+    '''
     # Initialize transaction
     self.tx = self.db.begin_transaction(write=self.write_collections)
 
