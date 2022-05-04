@@ -11,12 +11,14 @@
       - db_backup
       - media
       - logs
+    additional_folders:
+      - config
     swarm_join_tkn_manager: '{{ init.swarm_facts.JoinTokens.Manager }}'
     swarm_join_tkn_worker: '{{ init_data.swarm_facts.JoinTokens.Worker }}'
     secrets:
       - { name: 'progress_api_db_pwd', length: 12 }
       - { name: 'progress_dev_db_pwd', length: 6 }
-      - { name: 'jwt_secret', length: 32 }
+      - { name: 'progress_jwt_secret', length: 32 }
 
   tasks:
   - name: Install docker and python requirements
@@ -81,9 +83,9 @@
         ansible.builtin.file:
           path: '{{ root_dir }}/{{ item }}'
           state: directory
-        loop: '{{ volumes }}'
+        loop: '{{ volumes + additional_folders }}'
 
-      - name: Create volumes
+      - name: Create docker volumes
         community.docker.docker_volume:
           name: '{{ item }}'
           driver_options:
@@ -168,8 +170,11 @@
 
       - name: Copy compose files
         ansible.builtin.copy:
-          src: docker-compose/ # copy contents only
-          dest: '{{ root_dir }}/stack/'
+          src: {{ item }}
+          dest: '{{ root_dir }}/config/'
+        loop:
+          - compose/ # copy contents only
+          - traefik.toml
 
       - name: Login to GitLab container registry
         community.docker.docker_login:
@@ -182,10 +187,11 @@
           name: progress_platform
           with_registry_auth: yes
           compose:
-            - '{{ root_dir}}/stack/base.yaml'
-            - '{{ root_dir}}/stack/prod.yaml'
+            - '{{ root_dir}}/config/base.yaml'
+            - '{{ root_dir}}/config/prod.yaml'
         environment:
           PROGRESS_ADDRESS: '{{ ansible_ssh_host }}'
+          TRAEFIK_CONFIG_FILE: '{{ root_dir }}/config/traefik.toml'
 
 
   # - name: Start dummy DB service for data initialization

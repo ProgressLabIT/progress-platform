@@ -8,7 +8,11 @@ secrets:
 
 services:
 
-  prod-app:
+  router:
+    volumes:
+      - "${TRAEFIK_CONFIG_FILE}:/etc/traefik/traefik.toml"
+
+  app:
     image: registry.gitlab.com/progresslab/progress-platform/app
     deploy:
       replicas: 1
@@ -40,7 +44,7 @@ services:
       - PROGRESS_API_DB_PWD_FILE=/run/secrets/progress_api_db_pwd
       - PROGRESS_JWT_TOKEN_SECRET_FILE=/run/secrets/jwt_secret
     command:
-      ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0", "--access-logfile", "-", "main:app"]
+      ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--access-logfile", "-", "main:app"]
 
   db:
     secrets:

@@ -7,7 +7,7 @@ volumes:
 
 services:
 
-  dev-app:
+  app:
     build:
       context: ./webapps/main
       dockerfile: webapp.dev.Dockerfile
@@ -34,7 +34,7 @@ services:
     volumes:
       - ./backend/api:/api
     environment:
-      - PROGRESS_ENV=DEV
+      - DB_NAME=PROGRESS_DEV
     command: >
       uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
     labels:

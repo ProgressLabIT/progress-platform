@@ -13,10 +13,13 @@ services:
   router:
     image: traefik:v2.3
     restart: unless-stopped
+    depends_on:
+      - app
+      - api
+      - db
     volumes:
       # So that Traefik can listen to the Docker events
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./traefik/traefik.toml:/etc/traefik/traefik.toml"
     ports:
       # The HTTP port
       - "80:80"
@@ -28,8 +31,8 @@ services:
   api:
     restart: unless-stopped
     environment:
-      - PROGRESS_MEDIA_PATH=/media
       - PROGRESS_ARANGO_URL=http://db:8529
+      - PROGRESS_MEDIA_PATH=/media
       - PROGRESS_API_ROOT_PATH=/api
     ports:
       - "8000"
