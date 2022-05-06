@@ -1,0 +1,60 @@
+version: '3.1'
+
+secrets:
+  progress_api_db_pwd:
+    external: True
+  jwt_secret:
+    external: True
+
+services:
+
+  router:
+    volumes:
+      - "${TRAEFIK_CONFIG_FILE}:/etc/traefik/traefik.toml"
+
+  app:
+    image: registry.gitlab.com/progresslab/progress-platform/app
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.http.routers.api.rule=Host(`${PROGRESS_ADDRESS:?err}`)"
+        - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
+        - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
+        - "traefik.http.routers.api.middlewares=strip_api_prefix"
+    volumes:
+      - media:/usr/share/nginx/html/media
+    ports:
+      - "80"
+
+  api:
+    image: registry.gitlab.com/progresslab/progress-platform/api
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.http.routers.api.rule=Host(`${PROGRESS_ADDRESS:?err}`) && PathPrefix(`/api`)"
+        - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
+        - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
+        - "traefik.http.routers.api.middlewares=strip_api_prefix"
+    secrets:
+      - progress_api_db_pwd
+      - progress_jwt_secret
+    environment:
+      - PROGRESS_ENV=PROD
+      - PROGRESS_API_DB_USERNAME=progress_api
+      - PROGRESS_API_DB_PWD_FILE=/run/secrets/progress_api_db_pwd
+      - PROGRESS_JWT_TOKEN_SECRET_FILE=/run/secrets/jwt_secret
+    command:
+      ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--access-logfile", "-", "main:app"]
+
+  db:
+    secrets:
+      - progress_api_db_pwd
+    environment:
+      - ARANGO_RANDOM_ROOT_PASSWORD=1
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.http.routers.db.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/_db`)"
+        - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
+        - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
+        - "traefik.http.routers.db.middlewares=db_root"

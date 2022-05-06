@@ -7,13 +7,13 @@ volumes:
 
 services:
 
-  dev-app:
+  app:
     build:
       context: ./webapps/main
       dockerfile: webapp.dev.Dockerfile
     restart: unless-stopped
     labels:
-      - traefik.http.routers.app.rule=Host(`progress.localhost`)
+      - traefik.http.routers.app.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`)
     command: >
       npm run serve -- --host 0.0.0.0
     volumes:
@@ -22,7 +22,7 @@ services:
       - "media:/main/public/media"
     environment:
       # the app will call the api server from outside the docker network, so the full Traefik host alias should be used
-      - VUE_APP_API_BASE_URL=http://progress.localhost/api
+      - VUE_APP_API_BASE_URL=${PROGRESS_ADDRESS:-progress.localhost}/api
       - VUE_APP_I18N_LOCALE=it
       - VUE_APP_I18N_FALLBACK_LOCALE=it
     ports:
@@ -31,23 +31,23 @@ services:
   api:
     build:
       context: ./backend/api #root folder for build
-    restart: unless-stopped
     volumes:
       - ./backend/api:/api
+    environment:
+      - DB_NAME=PROGRESS_DEV
     command: >
       uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
     labels:
-      - "traefik.http.routers.api.rule=Host(`progress.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.api.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/api`)"
       - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
       - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
       - "traefik.http.routers.api.middlewares=strip_api_prefix"
 
   db:
-    restart: unless-stopped
     environment:
       - ARANGO_NO_AUTH=1
     labels:
-      - "traefik.http.routers.db.rule=Host(`progress.localhost`) && PathPrefix(`/_db`)"
+      - "traefik.http.routers.db.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/_db`)"
       - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
       - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
       - "traefik.http.routers.db.middlewares=db_root"
