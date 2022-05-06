@@ -3,7 +3,7 @@ version: '3.1'
 secrets:
   progress_api_db_pwd:
     external: True
-  jwt_secret:
+  progress_jwt_secret:
     external: True
 
 services:
