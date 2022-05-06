@@ -14,19 +14,21 @@ services:
     image: traefik:v2.3
     restart: unless-stopped
     depends_on:
-      - app
-      - api
       - db
     volumes:
       # So that Traefik can listen to the Docker events
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     ports:
-      # The HTTP port
-      - "80:80"
-      # The HTTPS post
-      - "443:443"
-      # The Web UI (enabled by --api.insecure=true)
-      - "8080:8080"
+      - "80:80" # The HTTP port
+      - "443:443" # The HTTPS post
+      - "8080:8080" # The Web UI (enabled by --api.insecure=true)
+    command:
+      - --provider.docker
+      - --accesslog
+      - --api.dashboard
+      - --api.debug
+      - --api.insecure
+      - --log.level=INFO
 
   api:
     restart: unless-stopped

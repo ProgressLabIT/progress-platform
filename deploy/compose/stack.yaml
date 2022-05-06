@@ -8,10 +8,6 @@ secrets:
 
 services:
 
-  router:
-    volumes:
-      - "${TRAEFIK_CONFIG_FILE}:/etc/traefik/traefik.toml"
-
   app:
     image: registry.gitlab.com/progresslab/progress-platform/app
     deploy:

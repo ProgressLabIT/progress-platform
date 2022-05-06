@@ -173,11 +173,8 @@
 
       - name: Copy deployment files
         ansible.builtin.copy:
-          src: '{{ item }}'
+          src: compose/ # copy contents only
           dest: '{{ root_dir }}/config/'
-        loop:
-          - compose/ # copy contents only
-          - traefik.toml
 
       - name: Login to GitLab container registry
         community.docker.docker_login:
@@ -187,15 +184,13 @@
 
       - name: Deploy to production
         community.docker.docker_stack:
-          name: progress_platform
+          name: progress
           with_registry_auth: yes
           compose:
             - '{{ root_dir}}/config/base.yaml'
             - '{{ root_dir}}/config/stack.yaml'
         environment:
           PROGRESS_ADDRESS: '{{ ansible_ssh_host }}'
-          TRAEFIK_CONFIG_FILE: '{{ root_dir }}/config/traefik.toml'
-
 
   # - name: Start dummy DB service for data initialization
   #   hosts: all
