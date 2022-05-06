@@ -81,7 +81,8 @@
       </v-col>  
   
       <!-- BOM DATA -->
-       <v-col class="fill pa-0 pl-6" cols="9">          
+       <v-col class="pa-0 pl-6" cols="9">
+       <v-card>
         <v-data-table
           id="bom"
           :headers="table_headers"
@@ -155,6 +156,7 @@
             </v-row>  
           </template>
         </v-data-table>
+        </v-card>
       </v-col>  
 
 
@@ -165,7 +167,7 @@
       max-width="600px"
       transition="dialog-transition"
       value="true" 
-      :overlay-color="$theme.black"
+      :overlay-color="$theme.background"
       overlay-opacity=".9"
       no-click-animation>
       <v-card>
@@ -261,7 +263,7 @@ export default {
       search: '',
       bom_types: ['assembly', 'component', 'consumable'],
       item_type_filter: ['assembly', 'component', 'consumable'],
-      table_height: '85vh',
+      table_height: '83vh',
       delete_items: [],
       show_item_catalog: false,
       catalog_loading: false,
@@ -282,6 +284,7 @@ export default {
     }),
 
     table_headers() {
+    // TODO: refactor into mixin / composition function, used also in WorkSessionBom
       return [
         {  value:'code', text: this.$tc('code').toUpperCase() },
         {  value:'description', text: this.$tc('description').toUpperCase() },
@@ -445,7 +448,6 @@ export default {
      * remove from container its padding and that of the column,
      * plus the footer height
      */ 
-    this.onresize
     const resizeTable = () => this.table_height = this.$refs.container.clientHeight - 24 - 52
     resizeTable()
     window.onresize = _throttle(resizeTable, 100)

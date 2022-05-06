@@ -2,6 +2,22 @@ import Vue from 'vue'
 import { api } from '@/lib/apiCall.js'
 import { DateTime as DT } from 'luxon'
 
+function createWorkSession(state, session_state, startDT) {
+  const job_key = state.working_job_data._key
+  const user_key = session_state.user._key
+  const user_session_key = session_state.user_session_key
+
+  const ws_start = startDT.toISO()
+
+  return {
+    start: ws_start,
+    user_session_key,
+    user_key,
+    job_key,
+    active: true
+  }
+}
+
 function createBatch(state, startDT) {
   const job = state.working_job_data
   const job_key = job._key
@@ -64,9 +80,7 @@ function getClosedWorkSessionData(state, endDT) {
 
 function sendHeartBeat(state) {
   const job_key = state.working_job_data._key
-  const ws_count = state.work_session_list.length
-  const work_session_key = state.work_session_list[ws_count-1]._key
-  api.post(`/job/${job_key}/heartbeat/${work_session_key}`)
+  api.post(`/job/${job_key}/heartbeat`)
 }
 
 
@@ -236,14 +250,15 @@ const traceability = {
     resumeJob({ commit, state, rootState }) {
       return new Promise( resolve => {
         const now = DT.utc()
+        const new_work_session = createWorkSession(state, rootState.session, now)
 
         const event = createEvent(state, rootState.session, {
           event_type: 'JOB_RESUMED',
           timestamp: now.toISO()
         })
 
-        api.post('event', event).then( resp => {
-          commit('RESUME_JOB', resp.data.detail.new_work_session_data)
+        api.post('event', event).then( () => {
+          commit('RESUME_JOB', new_work_session)
           commit('SET_HEARTBEAT', true)
           resolve()
         })

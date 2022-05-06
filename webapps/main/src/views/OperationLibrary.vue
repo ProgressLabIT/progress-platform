@@ -56,7 +56,7 @@
         <v-divider></v-divider>
         
         <v-btn :color="$theme.blue" class="ma-2" @click="openOperationNew">
-          {{ $tc('operations.add_op') }}
+          {{ $tc('operation.add_op') }}
         </v-btn>
       </v-col>
 

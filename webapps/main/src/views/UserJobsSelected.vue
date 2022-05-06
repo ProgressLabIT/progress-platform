@@ -8,9 +8,9 @@
           {{ greeting | capitalize }}. {{ message | capitalize }}.
         </div>
 
-        <JobCard :job="selected_job"></JobCard>
+        <JobCard v-if="selected_job" :job="selected_job"></JobCard>
 
-        <v-row class="mt-10 mx-0" justify="space-between">
+        <v-row class="mt-10 mx-0" justify="space-between" v-if="selected_job">
           <v-btn 
             large
             :color="$theme.grey"
@@ -65,15 +65,25 @@ export default {
     },
 
     message() {
-      return this.job_query_param == 'first'
+      if (this.selected_job === null) {
+        return this.$tc('job.empty_queue')
+      }
+
+      else return this.job_query_param == 'first'
         ? this.$tc('job.next_job_message')
         : this.$tc('job.selected_job_message')
     },
 
     selected_job() {
-      return this.job_query_param === 'first'
-        ? this.job_list[0]
-        : this.job_list.filter(j => j._key === this.job_query_param)[0]
+      let job = null
+
+      if (this.job_list.length) {
+        job = this.job_query_param === 'first'
+          ? this.job_list[0]
+          : this.job_list.filter(j => j._key === this.job_query_param)[0]
+      }
+
+      return job
     }
 
 

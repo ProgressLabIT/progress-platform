@@ -25,7 +25,7 @@
       <v-col cols="auto" class="d-flex align-center">
         <v-checkbox
           :ripple="false"
-          color="primary" 
+          :color="$theme.blue"
           hide-details
           :label="$tc('product.filters.active_only') | capitalize" 
           v-model="filter_inactive" 
@@ -34,7 +34,7 @@
       <v-col cols="auto" class="d-flex align-center">
         <v-checkbox 
           :ripple="false"
-          color="primary"
+          :color="$theme.blue"
           hide-details
           :label="$tc('product.filters.show_images') | capitalize" 
           v-model="show_images" 
@@ -44,7 +44,7 @@
       <v-spacer></v-spacer>
 
       <v-col cols="auto">
-        <v-btn color="primary"
+        <v-btn :color="$theme.blue"
           @click="$router.push({ name: 'newProduct' })">
           {{ $tc('new') }}
         </v-btn>
@@ -76,7 +76,7 @@
       <v-row>
         <v-col class="text-uppercase">
           {{ $tc('product.snackbars.delete_confirmed', {code: deleteSnackbar.code}) }}
-          <v-btn text color="primary" @click.native="deleteSnackbar.show = false; ">{{ $tc('confirm') }}</v-btn>
+          <v-btn text :color="$theme.blue" @click.native="deleteSnackbar.show = false; ">{{ $tc('confirm') }}</v-btn>
           <v-btn text color="warning" @click.native="undoDelete">{{ $tc('undo') }}</v-btn>
         </v-col>
         <!-- <v-col cols="12">

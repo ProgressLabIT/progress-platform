@@ -26,7 +26,7 @@
                 </v-btn>
 
                 <v-col cols="auto" v-if="no_image" class="text-center">
-                  <v-icon x-large :color="$theme.white_low">
+                  <v-icon x-large :color="$theme.text_low">
                     mdi-image-off-outline
                   </v-icon>
                   <p class="display smaller mt-2">
@@ -141,11 +141,8 @@
         </v-btn>
 
         <div v-else>
-          <v-btn block class="mb-2" :color="$theme.green" @click="saveChanges">
-            <div v-if="!saving">
+          <v-btn block :loading="saving" class="mb-2" :color="$theme.green" @click="saveChanges">
               {{ $tc('save') }}
-            </div>
-            <v-progress-circular v-else indeterminate :color="$theme.white"/>
           </v-btn>
           <v-btn block :color="$theme.grey" :disabled="saving" @click="cancelChanges">
             {{ $tc('cancel') }}
@@ -233,7 +230,7 @@
                       @change="addFiles($event.target.files)"/>
                     <v-hover v-slot:default="{ hover }">
                         <v-btn text block class="pl-6 medium"
-                          :color="hover ? $theme.blue : $theme.white_low"
+                          :color="hover ? $theme.blue : $theme.text_low"
                           @click="$refs.upload_doc.click()">
                           <v-row justify="space-between" align="center">
                             {{ $tc('document.add', 2) }}

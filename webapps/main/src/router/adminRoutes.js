@@ -9,6 +9,23 @@ const adminRoutes = [
     meta: { scope: 'admin', screen_title: 'Impostazioni' },
     children: [
       {
+        path: 'general',
+        name: 'generalSettings',
+        component: () => import("@/views/GeneralSettings.vue"),
+        children: [
+          {
+            path: 'company',
+            name: 'companyDetails',
+            component: () => import("@/views/CompanyDetails.vue")
+          },
+          {
+            path: 'default-phase',
+            name: 'defaultPhaseParams',
+            component: () => import("@/views/DefaultPhaseParams.vue")
+          }
+        ]
+      },
+      {
         path: 'users',
         name: 'userLibrary',
         component: () => import("@/views/UserLibrary.vue"),

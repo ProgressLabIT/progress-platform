@@ -87,6 +87,7 @@ class PhaseData(FlexModel):
   steps: List[Step] = []
   params: PhaseParameters = PhaseParameters()
   std_processing_time: int = 0 # in milliseconds
+  max_offline: int = 0
 
 class PhaseUpdate(PhaseData):
   step_sequence: List[Optional[str]] = []

@@ -18,16 +18,16 @@
                   </template>
                 </v-img>
               </v-avatar>
-              <span class="ml-4 solid-white weight-medium medium">
+              <span class="ml-4 weight-medium medium">
                 {{ o.operator.name + ' ' + o.operator.surname | capitalize_all }}
               </span>
             </v-col>
             <v-spacer></v-spacer>
             <v-col cols="auto">
               <v-chip small>
-                <span class="weight-medium solid-white mr-1">{{ o.filtered_jobs.length }}</span>
+                <span class="weight-medium mr-1">{{ o.filtered_jobs.length }}</span>
                 di 
-                <span class="weight-medium solid-white ml-1">{{ o.assigned_jobs_count }}</span>
+                <span class="weight-medium ml-1">{{ o.assigned_jobs_count }}</span>
               </v-chip>
             </v-col>
           </v-row>        

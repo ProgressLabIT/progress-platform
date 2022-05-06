@@ -48,30 +48,22 @@ async def get_batch_execution_data(batch_key: str):
 
 
 
-@router.post('/job/{job_key}/heartbeat/{work_session_key}')
-async def job_heartbeat(job_key: str, work_session_key: str):
+@router.post('/job/{job_key}/heartbeat')
+async def job_heartbeat(job_key: str, work_session_key: str = None):
   """
   Updates the work session `last_online` attribute with current time
   """
   now = timestamp()
-  work_session_data = db.collection('WorkSession').get(work_session_key)
+  tx = db.begin_transaction(write=['Job', 'WorkSession'])
+  tx.collection('Job').update({"_key": job_key, "last_online": now})
 
-  if work_session_data['active']:
-    db.collection('Job').update({"_key": job_key, "last_online": now})
+  """
+  TODO: INSERT HERE UPDATE OF FALSELY CLOSED WORK SESSIONS
 
-  else:
-    restore_event = Event(
-      ProductionEvent(
-        event_type='JOB_BACK_ONLINE',
-        job_key=job_key,
-        work_session_key=work_session_key,
-        timestamp=now
-      )
-    )
-    restore_event.save()
+  E.g. If work_session_key exists and it's inactive, update it with active state and remove the end time
+  """
 
-  return {
-    "work_session_key": work_session_key,
-    "last_online": now
-  }
+  tx.commit_transaction()
+
+  return APIResponse(detail={"last_online": now})
 

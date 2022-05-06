@@ -5,7 +5,7 @@
     fullscreen no-click-animation persistent
     >
 
-    <v-sheet :color="$theme.black" class="fill">
+    <v-sheet :color="$theme.background" class="fill">
       <v-container class="fill d-flex align-center">
         <v-row justify="center" align="center">
 
@@ -26,7 +26,7 @@
           <v-divider vertical inset class="mx-4"></v-divider>
 
           <v-col cols="12" md="5" class="d-flex justify-center justify-md-start px-6">
-            <v-card :color="$theme.background" width="100%" max-width="500px">
+            <v-card :color="$theme.surface1" width="100%" max-width="500px">
 
               <transition name="fade" mode="out-in">
 
@@ -38,7 +38,7 @@
                     <v-card-text>
                       <v-text-field
                         v-model="credentials.username"
-                        :label="$tc('username') | capitalize"
+                        :label="$tc('user.username') | capitalize"
                         autocomplete="off">
                       </v-text-field>
 

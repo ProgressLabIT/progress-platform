@@ -1,20 +1,20 @@
 <template>
-  <v-container fluid class="fill pt-0 d-flex flex-column">      
+  <v-container fluid class="fill d-flex flex-column">
       
       <!-- TAB LINKS -->
       <v-row dense class="flex-grow-0 mb-2">    
         <v-tabs
           background-color="transparent"
           v-model="current_view"
-          :color="$theme.white_high"
+          :color="$theme.text_high"
           hide-slider
           class="flex-shrink-1 flex-grow-0">
           <v-tab 
             v-for="(view, index) in admin_views"
             :key="index"
-            :to="{ name: view.route_name }"
+            :to="{ name: view }"
             class="display">
-            {{ $tc(`views.${view.route_name}`) }}
+            {{ $tc(`views.${view}`) }}
           </v-tab>
         </v-tabs>
       </v-row>
@@ -36,14 +36,9 @@ export default {
     return {
       current_view: 0,
       admin_views: [
-        {
-          name: 'Utenti',
-          route_name: 'userLibrary'
-        },
-        {
-          name: 'Operazioni',
-          route_name: 'operationLibrary'
-        }
+        'generalSettings',
+        'userLibrary',
+        'operationLibrary',
       ]
     }
   },

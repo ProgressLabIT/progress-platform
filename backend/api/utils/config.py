@@ -1,16 +1,24 @@
+import os
 from functools import lru_cache
 
 from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-    arango_url: str = "http://localhost:8529"
-    root_path: str = ""
-    openapi_root_path: str = ""
+    arango_url: str = "http://localhost:8529" # use default when running standalone containers
+    api_root_path: str = "/api"
     media_path: str = "/media"
+    db_name: str = "PROGRESS_TEST"
+    api_db_username: str = "root" # use default when running standalone containers
 
     class Config:
         env_prefix = "progress_"
+        secrets_dir = "/run/secrets"
+        '''
+        Provided as docker secrets:
+        - progress_jwt_secret
+        - progress_api_db_password
+        '''
 
 
 @lru_cache()
