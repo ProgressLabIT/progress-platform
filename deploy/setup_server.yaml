@@ -20,6 +20,9 @@
       - { name: 'progress_dev_db_pwd', length: 6 }
       - { name: 'progress_jwt_secret', length: 32 }
 
+  vars_files:
+    - registry_creds
+
   tasks:
   - name: Install docker and python requirements
     tags: requirements
@@ -168,9 +171,9 @@
     tags: deploy
     block:
 
-      - name: Copy compose files
+      - name: Copy deployment files
         ansible.builtin.copy:
-          src: {{ item }}
+          src: '{{ item }}'
           dest: '{{ root_dir }}/config/'
         loop:
           - compose/ # copy contents only
@@ -179,8 +182,8 @@
       - name: Login to GitLab container registry
         community.docker.docker_login:
           registry_url: registry.gitlab.com/progresslab/progress-platform
-          username: '{{ lookup("env", "GITLAB_USERNAME") }}'
-          password: '{{ lookup("env", "GITLAB_ACCESS_TOKEN") }}'
+          username: '{{ registry_username }}'
+          password: '{{ registry_token }}'
 
       - name: Deploy to production
         community.docker.docker_stack:
@@ -188,7 +191,7 @@
           with_registry_auth: yes
           compose:
             - '{{ root_dir}}/config/base.yaml'
-            - '{{ root_dir}}/config/prod.yaml'
+            - '{{ root_dir}}/config/stack.yaml'
         environment:
           PROGRESS_ADDRESS: '{{ ansible_ssh_host }}'
           TRAEFIK_CONFIG_FILE: '{{ root_dir }}/config/traefik.toml'

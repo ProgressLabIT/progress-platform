@@ -37,7 +37,7 @@ services:
         - "traefik.http.routers.api.middlewares=strip_api_prefix"
     secrets:
       - progress_api_db_pwd
-      - jwt_secret
+      - progress_jwt_secret
     environment:
       - PROGRESS_ENV=PROD
       - PROGRESS_API_DB_USERNAME=progress_api
