@@ -243,13 +243,14 @@ def test_create_batch(my_database, mocker):
     e.book_wip.assert_not_called()
     del e
 
-@pytest.mark.dev
+
 @pytest.mark.connect_db
 def test_create_work_session(connect_database, mocker):
     '''
     Test for the create_work_session method in the Event class. Verifies that:
     i. the worksession specified by the keys attached to Event is returned by the method
     ii. the worksession specified by the keys attached is actually created in the database
+    *. the created worksession is an active worksession (the worksession has attribute active = True)  
     '''
 
     Event = connect_database["Event"]
@@ -271,6 +272,7 @@ def test_create_work_session(connect_database, mocker):
     assert ret.work_order_key == "12104321"
     assert ret.user_key == "12109999"
     assert ret.user_session_key == "12101111"
+    assert ret.active == True # *
 
     # ii. assert that the worksession is actually created in the database
     match=dict(
@@ -287,9 +289,12 @@ def test_create_work_session(connect_database, mocker):
     assert work_session.work_order_key == "12104321"
     assert work_session.user_key == "12109999"
     assert work_session.user_session_key == "12101111"
+    assert work_session.active == True # *
 
     # commit and close the transaction
     e.tx.commit_transaction()
+
+    del e
 
 
 @pytest.mark.connect_db
