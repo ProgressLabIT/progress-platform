@@ -6,6 +6,8 @@ import time
 from models.traceability import ProductionEvent, Batch, WorkSession 
 from models.production import Job
 from utils.dt import timestamp
+from datetime import datetime
+
 
 
 # Tests for the Event class
@@ -366,8 +368,51 @@ def test_get_current_work_session(connect_database, mocker):
 @pytest.mark.connect_db
 def test_close_work_session(connect_database, mocker):
     '''
-    Test for the close_work_session method in the Event class. Verifies that:
+    Test for the close_work_session method in the Event class. 
+    Verifies that for the worksession identified by the worksession key (e.info.work_session_key)
+         i.  the worksession is deactivated (-> assert active = False)
+         ii. the ending time is updated to the current timestamp (-> being initialized to None, the value of end is updated to e.info.timestamp)
     '''
 
     Event = connect_database["Event"]
+
+    e = Event(ProductionEvent(event_type='JOB_STARTED'))
+
+    # specify a worksession key for testing purpose and attach the key to the event object
+    spec_worksession_key = "12109876"
+    e.info.work_session_key = spec_worksession_key
+    e.info.timestamp = datetime(2022, 5, 10)
+
+    # insert a test worksession in the database
+    e.tx = e.db.begin_transaction(write=e.write_collections)
+    ws_test=dict(
+      _key = spec_worksession_key,
+      job_key = "12101234",
+      user_session_key = "12100000",
+      user_key = "12100000",
+      active = True,
+      end = None
+    )
+    e.tx.collection('WorkSession').insert(ws_test)
+
+    ret = e.close_work_session()
+
+    match=dict(
+      _key = spec_worksession_key,
+      job_key = "12101234",
+      user_session_key = "12100000",
+      user_key = "12100000",
+      active=True,
+      end = datetime(2022, 5, 10)
+    )
+    data_from_db = e.tx.collection('WorkSession').find(match).next()
+    work_session = WorkSession(**data_from_db)
+
+    assert work_session.active == True # i.
+    assert work_session.end == datetime(2022, 5, 10) # ii.
+
+    # commit and close the transaction
+    e.tx.commit_transaction()
+
+    del e
 
