@@ -402,13 +402,13 @@ def test_close_work_session(connect_database, mocker):
       job_key = "12101234",
       user_session_key = "12100000",
       user_key = "12100000",
-      active=True,
+      active=False,
       end = datetime(2022, 5, 10)
     )
     data_from_db = e.tx.collection('WorkSession').find(match).next()
     work_session = WorkSession(**data_from_db)
 
-    assert work_session.active == True # i.
+    assert work_session.active == False # i.
     assert work_session.end == datetime(2022, 5, 10) # ii.
 
     # commit and close the transaction
