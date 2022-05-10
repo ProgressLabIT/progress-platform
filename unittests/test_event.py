@@ -3,7 +3,7 @@ from pytest_mock import mocker
 
 import time
 
-from models.traceability import ProductionEvent, Batch
+from models.traceability import ProductionEvent, Batch, WorkSession 
 from models.production import Job
 from utils.dt import timestamp
 
@@ -243,19 +243,55 @@ def test_create_batch(my_database, mocker):
     e.book_wip.assert_not_called()
     del e
 
-
+@pytest.mark.dev
 @pytest.mark.connect_db
 def test_create_work_session(connect_database, mocker):
     '''
     Test for the create_work_session method in the Event class. Verifies that:
+    i. the worksession specified by the keys attached to Event is returned by the method
+    ii. the worksession specified by the keys attached is actually created in the database
     '''
 
     Event = connect_database["Event"]
 
-    #Event.get_current_work_session()
+    e = Event(ProductionEvent(event_type='JOB_STARTED'))
+
+    e.tx = e.db.begin_transaction(write=e.write_collections)
+
+    e.info.job_key = "12101234"
+    e.info.work_order_key = "12104321"
+    e.info.user_key = "12109999"
+    e.info.user_session_key = "12101111"
+    e.info.timestamp = None
+
+    ret = e.create_work_session()
+
+    # i. assert that the worksession is correctly returned by the method
+    assert ret.job_key == "12101234"
+    assert ret.work_order_key == "12104321"
+    assert ret.user_key == "12109999"
+    assert ret.user_session_key == "12101111"
+
+    # ii. assert that the worksession is actually created in the database
+    match=dict(
+      job_key=e.info.job_key,
+      work_order_key = e.info.work_order_key,
+      user_key = e.info.user_key,
+      user_session_key = e.info.user_session_key,
+      active=True
+    )
+    data_from_db = e.tx.collection('WorkSession').find(match).next()
+    work_session = WorkSession(**data_from_db)
+
+    assert work_session.job_key == "12101234"
+    assert work_session.work_order_key == "12104321"
+    assert work_session.user_key == "12109999"
+    assert work_session.user_session_key == "12101111"
+
+    # commit and close the transaction
+    e.tx.commit_transaction()
 
 
-@pytest.mark.dev
 @pytest.mark.connect_db
 def test_get_current_work_session(connect_database, mocker):
     '''
