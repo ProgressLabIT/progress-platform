@@ -254,12 +254,16 @@ def test_create_work_session(connect_database, mocker):
 
     #Event.get_current_work_session()
 
+
 @pytest.mark.dev
 @pytest.mark.connect_db
 def test_get_current_work_session(connect_database, mocker):
     '''
-    Test for the get_current_work_session method in the Event class. 
-    Verifies that a workspace is correctly filtered by the assignment of a job key in the Event object.
+    Test for the get_current_work_session method in the Event class. Verifies that 
+    1. when a worksession with specified job key exists
+         i.  if the target worksession is active (active = True), the correct worksession is returned (-> by asserting the returned worksession key)
+         ii. if the target worksession is not active (active = False), a runtime exception occurs
+    2. when a worksession with specified job key does not exist, a runtime exception occurs
     '''
 
     Event = connect_database["Event"]
@@ -270,8 +274,9 @@ def test_get_current_work_session(connect_database, mocker):
     spec_job_key = "12101234"
     e.info.job_key = spec_job_key
 
-    # insert test workspace in the database
-    e.tx = e.db.begin_transaction(write=e.write_collections)
+    # 1.
+    # insert a test worksession in the database
+    e.tx = e.db.begin_transaction(write=e.write_collections) # i.
     ws_test=dict(
       _key="12109876",
       job_key= spec_job_key,
@@ -284,6 +289,33 @@ def test_get_current_work_session(connect_database, mocker):
     ret = e.get_current_work_session()
     assert ret.key == "12109876"
 
+    e.tx = e.db.begin_transaction(write=e.write_collections) # ii.
+    error = 0
+    ws_test=dict(
+        _key="12109877",
+        job_key= spec_job_key,
+        user_session_key="12100000",
+        user_key="12100000",
+        active=False
+    )
+    e.tx.collection('WorkSession').insert(ws_test)
+    try:
+        ret = e.get_current_work_session()
+    except:
+        error = 1
+    
+    assert error == 1
+
+    # 2.
+    e.tx.collection('WorkSession').delete(ws_test)
+    error = 0
+    try:
+        ret = e.get_current_work_session()
+    except:
+        error = 1
+    
+    assert error == 1
+    
     # commit and close the transaction
     e.tx.commit_transaction()
 
