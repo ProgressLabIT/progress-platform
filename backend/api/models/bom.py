@@ -19,7 +19,7 @@ class BomLineRead(ArangoDocument):
   phase_key: str = None
   code: str
   description: str
-  type: str = None
+  item_type: str = None
   phase_name: str = None
   qt: float
 

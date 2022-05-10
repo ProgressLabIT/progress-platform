@@ -1,30 +1,30 @@
 <template>
   <v-container>
-    <v-row dense justify="space-between" class="text-uppercase mx-0">
+    <v-row dense justify="space-between" class="text-uppercase mx-0 low-text">
       <h5>{{ $tc('work_order.wo_code') }}</h5>
       <h5>{{ $tc('work_order.wo_line.line_only', 1) }}</h5>
     </v-row>
-    <v-row dense justify="space-between" class="display highlight weight-bold mx-0">
+    <v-row dense justify="space-between" class="display  weight-bold mx-0">
       <h3>{{ wo_data.wo_code }}</h3>
       <h3>{{ wo_data.wo_line }}</h3>
     </v-row>
-    <v-row dense justify="space-between" class="text-uppercase mx-0 mt-6">
+    <v-row dense justify="space-between" class="text-uppercase mx-0 mt-6 low-text">
       <h5>{{ $tc('product.label') }}</h5>
       <h5>{{ $tc('quantity.short') }}</h5>
     </v-row>
     <v-row dense justify="space-between">
       <v-col cols="9">
-        <h3 class="text-truncate display highlight">{{ wo_data.product_code }}</h3>
+        <h3 class="text-truncate display ">{{ wo_data.product_code }}</h3>
         <p class="medium mt-1">{{ wo_data.product_description }}</p>
       </v-col>
       <v-col cols="auto">
-        <h3 class="highlight display">{{ wo_data.qt_planned }}</h3>
+        <h3 class=" display">{{ wo_data.qt_planned }}</h3>
       </v-col>
     </v-row>
 
     <v-row dense justify="space-between" align="end" class="mt-4 mx-0 mb-2">
-      <h5 class="weight-bold text-uppercase">{{ $tc('progress') }}</h5>
-      <h3 class="weight-bold text-uppercase highlight">{{ wo_data.progress}}%</h3>
+      <h5 class="weight-bold text-uppercase low-text">{{ $tc('progress') }}</h5>
+      <h3 class="weight-bold text-uppercase ">{{ wo_data.progress}}%</h3>
     </v-row>
 
     <v-progress-linear
@@ -42,7 +42,7 @@
             class="text-uppercase font-weight-medium caption"
             style="cursor: pointer"
             :style="hover ? 'text-decoration: underline' : ''"
-            :class="current_view === index ? 'font-weight-black highlight' : ''">
+            :class="current_view === index ? 'font-weight-black' : 'low-text'">
               {{ tab.text }}
           </span>
         </v-hover>
@@ -62,7 +62,7 @@
             <span class="text-uppercase caption">
               {{ i.text }}
             </span>
-            <span class="highlight weight-medium">
+            <span class="weight-medium">
               {{ woInfoValue(i.name) | capitalize }}
             </span>
           </v-row>

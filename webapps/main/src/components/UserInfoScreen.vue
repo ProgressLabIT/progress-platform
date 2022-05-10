@@ -222,7 +222,7 @@
                 v-model="temp_data.active"
                 class="mt-2">
                 <template v-slot:label>
-                  <span class="body-2 base-white">
+                  <span class="body-2 low-text">
                     {{ user_active_text | capitalize }}
                   </span>
                 </template>
@@ -241,7 +241,7 @@
                 :value="check.name"
                 v-model="user_permissions">
                 <template v-slot:label>
-                  <span class="body-2 base-white">
+                  <span class="body-2 low-text">
                     {{ $tc(`user.permissions.${check.name}`) | capitalize }}
                   </span>
                 </template>

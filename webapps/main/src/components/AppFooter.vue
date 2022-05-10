@@ -1,6 +1,6 @@
 <template>
-	<v-footer app fixed :color="$theme.black">
-	  <v-row no-gutter class="align-center justify-space-between px-2">
+	<v-footer app fixed :color="$theme.footer">
+	  <v-row no-gutter class="align-center justify-space-between px-2 footer-text">
 	    <v-col class="text-left pa-0">
 	    	<span class="display smaller">PROGRESS PLATFORM</span>
 	    	<!-- <span class="material-icons smaller ml-2">info</span> -->
@@ -47,5 +47,9 @@ export default {
 .material-icons.smaller {
 	font-size: .9em;
 	vertical-align: bottom
+}
+
+.footer-text {
+  color:  rgba(255,255,255,.6);
 }
 </style>

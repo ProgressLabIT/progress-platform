@@ -3,7 +3,7 @@
   <v-card 
     :height="image ? '160px' : '120px'" 
     outlined 
-    elevation="4" class="surface-1"
+    elevation="4"
     @mouseenter="overCard = true"
     @mouseleave="overCard = false"
     @dblclick="$router.push(to_product_route)">
@@ -17,11 +17,11 @@
       
         <!-- Title and description overlay -->
         <v-sheet 
-          :color="image ? 'rgba(0,0,0,.7)' : 'transparent' " 
+          :color="image ? ($vuetify.theme.dark ? 'rgba(0,0,0,.7)' : 'rgba(230,230,230,.8)') : 'transparent' "
           class="px-2 py-0"
           @mouseenter="overDesc = true" 
           @mouseleave="overDesc = false" >      
-          <v-card-title class="display highlight px-0 pt-0 pb-3 nowrap">
+          <v-card-title class="display px-0 pt-0 pb-3 nowrap" :color="$theme.blue">
             {{ product.code }}
           </v-card-title>
          

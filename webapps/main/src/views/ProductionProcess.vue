@@ -18,7 +18,7 @@
           vertical grow
           v-model="current_phase"
           hide-slider
-          :color="$theme.white_high"
+          :color="$theme.text_high"
           background-color="transparent"
           style="max-height: 70%"
           class="scroll"
@@ -49,14 +49,15 @@
                 <v-col cols="1" class="mr-3">
                   <v-avatar size="20"
                     :color="current_phase == index ? $theme.blue : $theme.grey"
-                    class="display smaller weight-bold">
+                    class="display smaller"
+                    :class="{ highlight: current_phase == index }">
                     {{ index + 1 }}
                   </v-avatar>
                 </v-col>  
 
                 <v-col cols="auto" class="text-left text-truncate">
-                  <h4 class="display weight-medium" 
-                    :class="current_phase == index ? 'highlight weight-bold' : ''">
+                  <h4 class="display"
+                    :class="current_phase == index ? 'highlight' : 'weight-medium'">
                     {{ phase.alias }}
                   </h4>
                 </v-col>
@@ -209,7 +210,7 @@
           <v-tabs
             v-model="tab"
             background-color="transparent"
-            :color="$theme.white_high"
+            :color="$theme.text_high"
             hide-slider right
             class="flex-shrink-1 flex-grow-0">
             <v-tab 
@@ -220,7 +221,7 @@
             </v-tab>
           </v-tabs>
         </v-row>  
-        <v-card elevation="0" class="scroll flex-grow-1">
+        <v-card outline class="scroll flex-grow-1" :color="$theme.surface2">
           <keep-alive>
             <v-component 
               :is="views[tab]" 
