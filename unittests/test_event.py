@@ -195,57 +195,6 @@ def test_save_integration():
     pass
 
 
-@pytest.mark.patch_db
-def test_create_batch(my_database, mocker):
-    '''
-    Test for the create_batch method in the Event class. Verifies that:
-         1. the WIP is booked (-> book_wip method is called) when 
-             i.  the phase is not the first phase (-> first_phase attribute of the job is set to False)
-             ii. the phase has the default null value (-> first_phase attribute of the job is set to None)
-         2. the WIP is not booked (-> book_wip method is called) when the phase is the first phase
-             -> first_phase attribute of the job is set to True
-         *. returns a pydantic validated Batch object from the batch collection
-    '''
-
-    # Load fixture patches
-    Event = my_database["Event"]
-    my_job = my_database["job"]
-    my_batch = my_database["batch"]
-
-    e = Event(ProductionEvent(event_type='JOB_STARTED'))
-
-    # Set mocks and patches
-    e.get_job_data = mocker.Mock()
-    e.get_job_data.return_value = my_job
-
-    e.info.job_key = '12345678'
-    e.info.phase_key = '99999999'
-    e.info.work_order_key = '00000000'
-    e.info.timestamp = timestamp()
-
-    e.tx = mocker.MagicMock()
-    e.tx.collection('Batch').insert.return_value = {'new' : my_batch} # *
-    
-    e.book_wip = mocker.Mock()
-
-    # 1.
-    my_job.first_phase = False # i.
-    e.create_batch()
-    e.book_wip.assert_called()
-    
-    e.book_wip.reset_mock()
-    my_job.first_phase = None # ii.
-    e.create_batch()
-    e.book_wip.assert_called()
-    e.book_wip.reset_mock()
-
-    # 2.
-    my_job.first_phase = True
-    e.create_batch()
-    e.book_wip.assert_not_called()
-    del e
-
-
 @pytest.mark.connect_db
 def test_create_work_session(connect_database, mocker):
     '''
@@ -414,5 +363,56 @@ def test_close_work_session(connect_database, mocker):
     # commit and close the transaction
     e.tx.commit_transaction()
 
+    del e
+
+
+@pytest.mark.patch_db
+def test_create_batch(my_database, mocker):
+    '''
+    Test for the create_batch method in the Event class. Verifies that:
+         1. the WIP is booked (-> book_wip method is called) when 
+             i.  the phase is not the first phase (-> first_phase attribute of the job is set to False)
+             ii. the phase has the default null value (-> first_phase attribute of the job is set to None)
+         2. the WIP is not booked (-> book_wip method is called) when the phase is the first phase
+             -> first_phase attribute of the job is set to True
+         *. returns a pydantic validated Batch object from the batch collection
+    '''
+
+    # Load fixture patches
+    Event = my_database["Event"]
+    my_job = my_database["job"]
+    my_batch = my_database["batch"]
+
+    e = Event(ProductionEvent(event_type='JOB_STARTED'))
+
+    # Set mocks and patches
+    e.get_job_data = mocker.Mock()
+    e.get_job_data.return_value = my_job
+
+    e.info.job_key = '12345678'
+    e.info.phase_key = '99999999'
+    e.info.work_order_key = '00000000'
+    e.info.timestamp = timestamp()
+
+    e.tx = mocker.MagicMock()
+    e.tx.collection('Batch').insert.return_value = {'new' : my_batch} # *
+    
+    e.book_wip = mocker.Mock()
+
+    # 1.
+    my_job.first_phase = False # i.
+    e.create_batch()
+    e.book_wip.assert_called()
+    
+    e.book_wip.reset_mock()
+    my_job.first_phase = None # ii.
+    e.create_batch()
+    e.book_wip.assert_called()
+    e.book_wip.reset_mock()
+
+    # 2.
+    my_job.first_phase = True
+    e.create_batch()
+    e.book_wip.assert_not_called()
     del e
 
