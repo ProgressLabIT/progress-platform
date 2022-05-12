@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.8'
 
 volumes:
   media:
@@ -12,7 +12,6 @@ services:
 
   router:
     image: traefik:v2.3
-    restart: unless-stopped
     depends_on:
       - db
     volumes:
@@ -22,16 +21,8 @@ services:
       - "80:80" # The HTTP port
       - "443:443" # The HTTPS post
       - "8080:8080" # The Web UI (enabled by --api.insecure=true)
-    command:
-      - --provider.docker
-      - --accesslog
-      - --api.dashboard
-      - --api.debug
-      - --api.insecure
-      - --log.level=INFO
 
   api:
-    restart: unless-stopped
     environment:
       - PROGRESS_ARANGO_URL=http://db:8529
       - PROGRESS_MEDIA_PATH=/media
@@ -42,8 +33,7 @@ services:
       - media:/media
 
   db:
-    restart: unless-stopped
-    image: arangodb:3.7
+    image: arangodb:3.9
     volumes:
       - db_data:/var/lib/arangodb3
       - db_backup:/db_backup
