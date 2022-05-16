@@ -1,5 +1,5 @@
-import secrets
-import traceback
+import os
+import time
 
 from arango import ArangoClient
 
@@ -7,16 +7,28 @@ from arango import ArangoClient
 # ————————————————————————————
 # Setup DB
 # ————————————————————————————
-# Run a disposable container to bootstrap the db_data volume
-print('Creating DB users...')
-
-client = ArangoClient(hosts='http://localhost:8529')
 
 def get_secret(name):
-  with open(f'/run/secrets/{name}') as secret
-    return secret.read()
+  with open(f'/run/secrets/{name}') as secret:
+    return secret.read().rstrip('\n')
 
-with client.db(username='root', password='').begin_batch_execution() as sys_db:
+client = ArangoClient(hosts='http://db:8529')
+root_creds = dict(username='root', password=os.getenv('DB_ROOT_PWD'))
+sys_db_connection = client.db(**root_creds)
+
+print('Checking DB status...')
+
+db_ready = False
+while not db_ready:
+  try:
+    log = sys_db_connection.read_log()['text']
+    if 'Have fun!' in ''.join(log):
+      db_ready = True
+  except:
+    time.sleep(0.5)
+
+print('Database ready. Creating DB users...')
+with sys_db_connection.begin_batch_execution() as sys_db:
 
   # ————————————————————————————
   # Create DB Users
@@ -28,10 +40,9 @@ with client.db(username='root', password='').begin_batch_execution() as sys_db:
   }
 
   # TODO: Check if users are present
-  for u, pwd in db_users:
+  for u, pwd in db_users.items():
     sys_db.create_user(username=u, password=pwd)
-    users[u] = pwd
-    print('Created user', u)
+    print('Created user', u, pwd)
 
   print('Done\n\nCreating DBs...')
   # ————————————————————————————
@@ -87,7 +98,7 @@ collections = [
   'WorkSession'
 ]
 
-db_handles = [client.db(database, username='root', password='') for database in dbs]
+db_handles = [client.db(database, **root_creds) for database in dbs]
 
 for dbh in db_handles:
   with dbh.begin_batch_execution(return_result=True) as batch:

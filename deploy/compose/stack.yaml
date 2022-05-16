@@ -68,7 +68,7 @@ services:
 
   db:
     environment:
-      - ARANGO_ROOT_PASSWORD=supersecret
+      - ARANGO_ROOT_PASSWORD=${DB_ROOT_PWD}
     networks:
       - progress
     deploy:
