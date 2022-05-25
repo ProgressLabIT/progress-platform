@@ -98,8 +98,8 @@ class RequiredAvailableQt(FlexModel):
 
 class Operator(FlexModel):
   key: str = Field(..., alias="_key")
-  name: str
-  surname: str
+  name: str = None
+  surname: str = None
   active: bool = None
   department_key: str = None
 
