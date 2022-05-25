@@ -17,8 +17,8 @@
     swarm_join_tkn_worker: '{{ init.swarm_facts.JoinTokens.Worker }}'
     registry_url: registry.gitlab.com/progresslab/progress-platform
     secrets:
-      - { name: 'progress_api_db_pwd', length: 12 }
-      - { name: 'progress_dev_db_pwd', length: 6 }
+      - { name: 'progress_api_db_pwd', length: 32 }
+      - { name: 'progress_admin_pwd', length: 6 }
       - { name: 'progress_jwt_secret', length: 32 }
 
   vars_files:
@@ -213,7 +213,7 @@
           restart_config:
             condition: none
           secrets:
-            - secret_name: progress_dev_db_pwd
+            - secret_name: progress_admin_pwd
             - secret_name: progress_api_db_pwd
           networks:
             - progress
@@ -227,26 +227,27 @@
 
     #TODO: clean up and erase db_data contents in case something goes wrong
 
-  - name: Remove startup elements
-    tags: cleanup
-    block:
 
-      - name: Wait for db initialization to finish
-        debugger: true
-        ansible.builtin.shell:
-          cmd: !unsafe "docker service ls -f name=init-db --format {{.Replicas}}"
-        register: output
-        until: output.stdout == "0/1"
-        retries: 10
-        delay: 1
+  # - name: Remove startup elements
+  #   tags: cleanup
+  #   block:
 
-      - name: Remove init-db service
-        community.docker.docker_swarm_service:
-          name: init-db
-          state: absent
+  #     - name: Wait for db initialization to finish
+  #       debugger: true
+  #       ansible.builtin.shell:
+  #         cmd: !unsafe "docker service ls -f name=init-db --format {{.Replicas}}"
+  #       register: output
+  #       until: output.stdout == "0/1"
+  #       retries: 10
+  #       delay: 1
 
-      - name: Remove init script
-        ansible.builtin.file:
-          path: '{{ root_dir }}/db_init.py'
-          state: absent
+  #     - name: Remove init-db service
+  #       community.docker.docker_swarm_service:
+  #         name: init-db
+  #         state: absent
+
+  #     - name: Remove init script
+  #       ansible.builtin.file:
+  #         path: '{{ root_dir }}/db_init.py'
+  #         state: absent
 

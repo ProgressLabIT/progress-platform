@@ -2,6 +2,7 @@ import os
 import time
 
 from arango import ArangoClient
+from passlib.context import CryptContext
 
 
 # ————————————————————————————
@@ -11,6 +12,8 @@ from arango import ArangoClient
 def get_secret(name):
   with open(f'/run/secrets/{name}') as secret:
     return secret.read().rstrip('\n')
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 client = ArangoClient(hosts='http://db:8529')
 root_creds = dict(username='root', password=os.getenv('DB_ROOT_PWD'))
@@ -34,7 +37,7 @@ with sys_db_connection.begin_batch_execution() as sys_db:
   # Create DB Users
   # ————————————————————————————
   db_users = {
-    'progress_dev': get_secret('progress_dev_db_pwd'),
+    'progress_admin': get_secret('progress_admin_pwd'),
     'progress_api': get_secret('progress_api_db_pwd'),
     'customer':'customer'
   }
@@ -42,7 +45,7 @@ with sys_db_connection.begin_batch_execution() as sys_db:
   # TODO: Check if users are present
   for u, pwd in db_users.items():
     sys_db.create_user(username=u, password=pwd)
-    print('Created user', u, pwd)
+    print('Created user', u)
 
   print('Done\n\nCreating DBs...')
   # ————————————————————————————
@@ -63,7 +66,7 @@ with sys_db_connection.begin_batch_execution() as sys_db:
   # ————————————————————————————
   # Set permissions
   # ————————————————————————————
-  sys_db.update_permission(username='progress_dev', permission='rw', database='*')
+  sys_db.update_permission(username='progress_admin', permission='rw', database='*')
   sys_db.update_permission(username='progress_api', permission='rw', database='*')
   sys_db.update_permission(username='customer', permission='ro', database='*')
 
@@ -71,7 +74,7 @@ with sys_db_connection.begin_batch_execution() as sys_db:
 
 
 # ————————————————————————————
-# Create Collections
+# Create Collections and base records
 # ————————————————————————————
 collections = [
   'Batch',
@@ -98,6 +101,39 @@ collections = [
   'WorkSession'
 ]
 
+customer_admin = {
+  'collection': 'User',
+  'data': dict(
+    username = 'cadmin',
+    psw_hash = pwd_context.hash('resetme'),
+    scope = 'admin',
+    site_key = '0',
+    reset_password = True
+  )
+}
+
+default_phase_parameters = {
+  'collection': 'Config',
+  'data': dict(
+    _key = 'default_phase_parameters',
+    parallel_job_allowed = True,
+    step_check = 'none',
+    step_check_force_order = False,
+    production_batch_qt = 1,
+    max_offline = 300 # 5 minutes
+  )
+}
+
+site_queue = {
+  'collection': 'Queue',
+  'data': dict (
+    type = 's',
+    site_key = '0',
+    work_orders = []
+  )
+}
+
+
 db_handles = [client.db(database, **root_creds) for database in dbs]
 
 for dbh in db_handles:
@@ -105,10 +141,14 @@ for dbh in db_handles:
     for c in collections:
       # if collection name starts with a lowercase letter it's an edge collection
       batch.create_collection(name=c, edge=c[0].islower())
-    print('Created collections in db ', dbh.db_name)
+
+    for record in [customer_admin, default_phase_parameters, site_queue]:
+      batch.collection(record['collection']).insert(record['data'])
+
+    print('Created collections and data in db ', dbh.db_name)
+
 
 """
-INSERT HERE DEFAULT CONFIGS
 - Default user
 - Default operation and parameters
 - Default site
