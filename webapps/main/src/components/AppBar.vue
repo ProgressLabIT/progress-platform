@@ -6,15 +6,17 @@
       <h3 class="display ml-3">{{ screen_title }}</h3>
 
       <!-- USER NAME & BADGE -->
-      <h5 class="display ml-auto">{{ username }}</h5>
       <v-hover  v-slot:default="{ hover }">
-        <v-avatar size="28" class="my-auto ml-2">
-          <v-img v-if="!hover" :src="avatar_url"></v-img>
-          <v-icon v-else class="grey--text text--lighten-2"
-            @click="logout">
-            mdi-exit-to-app
-          </v-icon>
-        </v-avatar>
+        <div>
+          <h5 class="display ml-auto">{{ username }}</h5>
+          <v-avatar size="28" class="my-auto ml-2">
+            <v-img v-if="!hover" :src="avatar_url"></v-img>
+            <v-icon v-else class="grey--text text--lighten-2"
+              @click="logout">
+              mdi-exit-to-app
+            </v-icon>
+          </v-avatar>
+        </div>
       </v-hover>
       
   </v-app-bar>
