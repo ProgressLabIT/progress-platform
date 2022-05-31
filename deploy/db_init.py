@@ -109,7 +109,7 @@ customer_admin = {
     surname = 'Amministratore',
     active = True,
     psw_hash = pwd_context.hash('resetme'),
-    scope = 'admin',
+    scope = 'admin production library operator',
     site_key = '0',
     reset_password = True
   )
