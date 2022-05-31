@@ -105,6 +105,9 @@ customer_admin = {
   'collection': 'User',
   'data': dict(
     username = 'cadmin',
+    name = 'Utente',
+    surname = 'Amministratore',
+    active = True,
     psw_hash = pwd_context.hash('resetme'),
     scope = 'admin',
     site_key = '0',
