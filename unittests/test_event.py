@@ -502,6 +502,11 @@ def test_get_batch_step_done_count(connect_database):
     ret = e.get_batch_step_done_count()
 
     assert ret == 10
+
+    # commit and close the transaction
+    e.tx.commit_transaction()
+
+    del e
     
 
 @pytest.mark.patch_db
@@ -541,6 +546,11 @@ def test_current_step_was_last_to_do(my_database, mocker):
     ret = e.current_step_was_last_to_do()
 
     assert ret == 0
+
+    # commit and close the transaction
+    e.tx.commit_transaction()
+
+    del e
 
 @pytest.mark.dev
 @pytest.mark.connect_db
