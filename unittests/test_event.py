@@ -251,11 +251,11 @@ def test_create_work_session(connect_database, mocker):
 @pytest.mark.connect_db
 def test_get_current_work_session(connect_database, mocker):
     '''
-    Test for the get_current_work_session method in the Event class. Verifies that 
-    1. when a worksession with specified job key exists
-         i.  if the target worksession is active (active = True), the correct worksession is returned (-> by asserting the returned worksession key)
-         ii. if the target worksession is not active (active = False), a runtime exception occurs
-    2. when a worksession with specified job key does not exist, a runtime exception occurs
+    Test for the get_current_work_session method in the Event class. Verifies that:
+    1. when a worksession with specified job key (the current worksession) exists
+         i.  if the worksession is active (active = True), the correct worksession is returned (-> by asserting the returned worksession _key)
+         ii. if the worksession is not active (active = False), a runtime exception occurs
+    2. when a worksession with specified job key (the current worksession) does not exist, a runtime exception occurs
     '''
 
     Event = connect_database["Event"]
@@ -318,7 +318,7 @@ def test_get_current_work_session(connect_database, mocker):
 def test_close_work_session(connect_database, mocker):
     '''
     Test for the close_work_session method in the Event class. 
-    Verifies that for the worksession identified by the worksession key (e.info.work_session_key)
+    Verifies that for the worksession identified by the current worksession key (e.info.work_session_key)
          i.  the worksession is deactivated (-> assert active = False)
          ii. the ending time is updated to the current timestamp (-> being initialized to None, the value of end is updated to e.info.timestamp)
     '''
@@ -416,3 +416,75 @@ def test_create_batch(my_database, mocker):
     e.book_wip.assert_not_called()
     del e
 
+
+@pytest.mark.connect_db
+def test_get_current_batch(connect_database):
+    '''
+    Test for the get_current_batch method in the Event class. Verifies that:
+    1. when a batch with specified job key (the current batch) exists
+         i.  if the batch is active (active = True), the correct batch is returned (-> by asserting the returned batch _key)
+         ii. if the batch is not active (active = False), a runtime exception occurs
+    2. when a batch with specified job key (the current batch) does not exist, a runtime exception occurs
+    '''
+
+    Event = connect_database["Event"]
+
+    e = Event(ProductionEvent(event_type='JOB_STARTED'))
+
+    # specify a worksession key for testing purpose and attach the key to the event object
+    spec_job_key = "12101234"
+    e.info.job_key = spec_job_key
+
+    # 1.
+    # insert a test batch in the database
+    e.tx = e.db.begin_transaction(write=e.write_collections) # i.
+    batch_test=dict(
+      _key="12109876",
+      job_key = spec_job_key,
+      work_order_key = "12100000",
+      phase_key = "12100000",
+      start = datetime(2022, 5, 10),
+      active = True,
+    )
+    e.tx.collection('Batch').insert(batch_test)
+
+    ret = e.get_current_batch()
+
+    assert ret.key == "12109876"
+
+    e.tx = e.db.begin_transaction(write=e.write_collections) # ii.
+    batch_test=dict(
+      _key="12109877",
+      job_key = spec_job_key,
+      work_order_key = "12100000",
+      phase_key = "12100000",
+      start = datetime(2022, 5, 10),
+      active = False,
+    )
+    e.tx.collection('Batch').insert(batch_test)
+    try:
+        ret = e.get_current_batch()
+    except:
+        error = 1
+    
+    assert error == 1
+
+    # 2.
+    e.tx.collection('Batch').delete(batch_test)
+    error = 0
+    try:
+        ret = e.get_current_batch()
+    except:
+        error = 1
+    
+    assert error == 1
+    
+    # commit and close the transaction
+    e.tx.commit_transaction()
+
+    del e
+
+@pytest.mark.dev
+@pytest.mark.connect_db
+def test_get_batch_step_done_count(connect_database):
+    pass
