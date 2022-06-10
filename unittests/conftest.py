@@ -84,7 +84,7 @@ def docker_arango_stop():
 @pytest.fixture(autouse = True)
 def docker_arango_restore():
 
-    os.system('docker exec arango arangorestore --create-database true --server.database PROGRESS_TEST --input-directory "/backup" --server.authentication false')
+    #os.system('docker exec arango arangorestore --create-database true --server.database PROGRESS_TEST --input-directory "/backup" --server.authentication false')
 
     yield
     os.system('docker exec arango arangorestore --create-database true --server.database PROGRESS_TEST --input-directory "/backup" --server.authentication false')

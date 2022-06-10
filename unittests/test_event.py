@@ -487,4 +487,21 @@ def test_get_current_batch(connect_database):
 @pytest.mark.dev
 @pytest.mark.connect_db
 def test_get_batch_step_done_count(connect_database):
-    pass
+    '''
+    Test for the get_batch_step_done_count method in the Event class. 
+    -> Verifies that the correct number of items in the StepExecutionData collection, filtered by 'done' status and a specified (current) batch key, is returned.
+    '''
+    
+    Event = connect_database["Event"]
+
+    e = Event(ProductionEvent(event_type='JOB_STARTED'))
+
+    e.info.current_batch_key = "12093656"
+
+    e.tx = e.db.begin_transaction(write=e.write_collections)
+    ret = e.get_batch_step_done_count()
+
+    assert ret == 10
+    
+
+
