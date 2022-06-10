@@ -484,7 +484,7 @@ def test_get_current_batch(connect_database):
 
     del e
 
-@pytest.mark.dev
+
 @pytest.mark.connect_db
 def test_get_batch_step_done_count(connect_database):
     '''
@@ -504,4 +504,45 @@ def test_get_batch_step_done_count(connect_database):
     assert ret == 10
     
 
+@pytest.mark.patch_db
+def test_current_step_was_last_to_do(my_database, mocker):
+    '''
+    Test for the current_step_was_last_to_do method in the Event class. Verifies that:
+    1. returns 1 when get_job_step_sequence returns a number of elements equal to the get_batch_step_done_count return value (i., ii.)
+    2. returns 0 when get_job_step_sequence returns a number of elements different from the get_batch_step_done_count return value
+    '''
 
+    Event = my_database["Event"]
+
+    e = Event(ProductionEvent(event_type='JOB_STARTED'))
+
+    e.get_job_step_sequence = mocker.Mock()
+    e.get_batch_step_done_count = mocker.Mock()
+
+    # 1.
+    e.get_job_step_sequence.return_value = ["0", "1", "2", "3"] # i. case of non empty list
+    e.get_batch_step_done_count.return_value = 4
+
+    ret = e.current_step_was_last_to_do()
+
+    assert ret == 1
+
+    e.get_job_step_sequence.return_value = [] # ii. case of empty list
+    e.get_batch_step_done_count.return_value = 0
+
+    ret = e.current_step_was_last_to_do()
+
+    assert ret == 1
+
+    # 2.
+    e.get_job_step_sequence.return_value = ["0", "1", "2", "3"]
+    e.get_batch_step_done_count.return_value = 3
+
+    ret = e.current_step_was_last_to_do()
+
+    assert ret == 0
+
+@pytest.mark.dev
+@pytest.mark.connect_db
+def test_create_batch_time_record(connect_database):
+    pass
