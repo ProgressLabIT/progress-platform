@@ -555,4 +555,29 @@ def test_current_step_was_last_to_do(my_database, mocker):
 @pytest.mark.dev
 @pytest.mark.connect_db
 def test_create_batch_time_record(connect_database):
-    pass
+    '''Test for the create_batch_time_record method in the Event class. Verifies that:
+         -> an item is added to the BatchTimeRecord collection, with the "batch key" and "worksession key" entries correctly assigned as specified in input arguments
+    '''
+
+    Event = connect_database["Event"]
+
+    e = Event(ProductionEvent(event_type='JOB_STARTED'))
+
+    e.info.timestamp = timestamp()
+
+    e.tx = e.db.begin_transaction(write=e.write_collections)
+
+    e.create_batch_time_record("12100123","12100321") # batch_key, ws_key
+
+    match=dict(
+      batch_key = "12100123",
+      work_session_key = "12100321",
+    )
+    data_from_db = e.tx.collection('BatchTimeRecord').find(match).next()
+
+    # NOTE: no assertion needed, will throw a cursor iterator exception in a failed test
+
+    # commit and close the transaction
+    e.tx.commit_transaction()
+
+    del e
