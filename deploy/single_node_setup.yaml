@@ -72,6 +72,10 @@
             - jsondiff
             - pyyaml
 
+  - name: Setup folders
+    tags: folders
+    block:
+
       - name: Create main project directory
         ansible.builtin.file:
           path: '{{ root_dir }}'
