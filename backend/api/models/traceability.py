@@ -25,7 +25,7 @@ class StepExecutionData(FlexModel):
   step_key: str = None
   # start: datetime = None
   completed: datetime = None
-  # duration: timedelta = None
+  # duration: timedesslta = None
   status: StepStatus = StepStatus.TODO
   user_data: list = None
 

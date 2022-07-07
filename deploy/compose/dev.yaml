@@ -1,13 +1,23 @@
-version: '3.1'
+version: '3.8'
 
 volumes:
   db_data:
-    external:
-      name: arango-persist
+    name: arango-persist
 
 services:
 
+  router:
+    restart: unless-stopped
+    command:
+      - --providers.docker
+      - --accesslog
+      - --api.dashboard
+      - --api.debug
+      - --api.insecure
+      - --log.level=INFO
+
   app:
+    restart: unless-stopped
     build:
       context: ./webapps/main
       dockerfile: webapp.dev.Dockerfile
@@ -29,12 +39,13 @@ services:
       - "8080"
 
   api:
+    restart: unless-stopped
     build:
       context: ./backend/api #root folder for build
     volumes:
       - ./backend/api:/api
     environment:
-      - DB_NAME=PROGRESS_DEV
+      - PROGRESS_DB_NAME=PROGRESS_TEST
     command: >
       uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
     labels:
@@ -44,6 +55,7 @@ services:
       - "traefik.http.routers.api.middlewares=strip_api_prefix"
 
   db:
+    restart: unless-stopped
     environment:
       - ARANGO_NO_AUTH=1
     labels:

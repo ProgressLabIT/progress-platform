@@ -87,7 +87,7 @@
 
                     <v-col cols="auto" class="pl-3">
                       <span class="display highlight weight-bold">
-                        {{ $tc('process.confirm_delete') | capitalize }}?
+                        {{ $tc('confirm_question') | capitalize }}?
                       </span>
                     </v-col>  
                   

@@ -52,7 +52,9 @@
     </v-row>
 
     <!-- Product List -->
-    <v-row v-if="vuex_ready">
+    <LoadingSignal v-if="!vuex_ready"></LoadingSignal>
+    <NoDataAlert v-else-if="!productCatalog().length"></NoDataAlert>
+    <v-row v-else>
       <v-col cols="12" sm="6" md="4" lg="3" xl="2" 
         v-for="product in productCatalog()" 
         :key="product.code" 
@@ -64,10 +66,6 @@
           />
       </v-col>
     </v-row>
-
-
-    <LoadingSignal v-else></LoadingSignal>   
-
 
     <!-- DELETE/RESTORE NOTIFICATION -->
     <v-snackbar id="delete-notification" bottom left 
@@ -91,8 +89,10 @@
 </template>
 
 <script>
-import ProductCard from '@/components/ProductCard' 
 import LoadingSignal from '@/components/LoadingSignal'
+import NoDataAlert from '@/components/NoDataAlert.vue'
+import ProductCard from '@/components/ProductCard'
+
 import multiMatch from '@/lib/MultiFieldSearch.js'
 
 import { mapGetters, mapActions } from 'vuex'
@@ -102,8 +102,9 @@ export default {
   name: 'ProductList',
   
   components: {
+    LoadingSignal,
+    NoDataAlert,
     ProductCard,
-    LoadingSignal
   },
 
   // followingi props passed in router query string

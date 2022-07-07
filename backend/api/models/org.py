@@ -8,11 +8,11 @@ from utils.base_models import ArangoDocument
 
 
 class Site(ArangoDocument):
-  code: str
+  code: str = None
   name: str
-  description: str
-  address: str
-  iso_country_code: str
+  description: str = None
+  address: str = None
+  iso_country_code: str = None
 
 
 class Department(ArangoDocument):
@@ -47,28 +47,15 @@ class UserNew(BaseModel):
   scope: str
 
 
-class User(ArangoDocument):
+class User(ArangoDocument, UserNew):
   created_at: datetime = datetime.now(tz.UTC)
-  site_key: str = '0'
   active: bool = True  # change to 'enabled'
-  
-  name: str = None
-  surname: str = None
-  username: str
   email: str = None
-  
-  department_key: str = None
-  hourly_cost: float = None
 
   psw_hash: str = None
-  scope: str
   reset_password: bool = False
-  
+
   last_user_session: str = None
   last_login: datetime = None
-  # logged_in: bool = False
 
   trash: bool = False
-
-  # active_token_signature: str = None #active token signature
-  # permissions: Permissions = None

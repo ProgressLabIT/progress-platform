@@ -139,7 +139,7 @@ def issue_token(
     access_token_data.dict(by_alias=True, exclude_none=True), 
     TOKEN_SECRET, 
     algorithm=ALGORITHM
-  ).decode('UTF-8')
+  )
 
   return access_token, access_token_data
 

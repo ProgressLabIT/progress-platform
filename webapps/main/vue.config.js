@@ -13,7 +13,8 @@ module.exports = {
   devServer: {
     disableHostCheck: true,
   	watchOptions: {
-  		ignored: ['public/docs/**', 'public/media/**']
+  		ignored: ['public/docs/**', 'public/media/**'],
+      public: 'progress.localhost'
   	},
 	  // public: 'progress.localhost:80',
   }

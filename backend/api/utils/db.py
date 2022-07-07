@@ -27,12 +27,4 @@ conf = config.get_config()
 
 client = ArangoClient(hosts=conf.arango_url, serializer=encoder)
 
-# Get password from docker secrets or set as empty if none is present
-try:
-  with open(conf.api_db_pwd_file, 'r') as f:
-    db_pwd = f.read()
-except:
-  db_pwd=''
-
-
-db = client.db(conf.db_name, username=conf.api_db_username, password=db_pwd)
+db = client.db(conf.db_name, username=conf.api_db_username, password=conf.api_db_pwd)

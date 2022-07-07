@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     media_path: str = "/media"
     db_name: str = "PROGRESS_TEST"
     api_db_username: str = "root" # use default when running standalone containers
+    api_db_pwd: str = ""
 
     class Config:
         env_prefix = "progress_"
