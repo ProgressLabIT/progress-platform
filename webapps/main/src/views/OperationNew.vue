@@ -9,7 +9,7 @@
     <v-card>
       <v-card-title>
         <h3 class="display">
-          {{ $tc('operations.new_op') }}
+          {{ $tc('operation.new') }}
         </h3>
       </v-card-title>
 
@@ -71,7 +71,7 @@
           </div>
 
           <div v-else-if="stage==='success'" key="success">
-            <p>{{ $tc('operations.new_op_success') | capitalize }}.</p>
+            <p>{{ $tc('operations.new_success') | capitalize }}.</p>
 
             <v-spacer></v-spacer>
 
