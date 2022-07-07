@@ -38,6 +38,7 @@ user/
 *.app/
 
 # Virtual Environments
+.venv/
 venv/
 .pyenv
 .python-version
@@ -54,3 +55,7 @@ temp/
 
 # Finder
 .DS_Store
+
+# Ansible Cache
+.facts.cache
+

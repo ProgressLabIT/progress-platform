@@ -120,7 +120,7 @@
                     <v-container>
                       <v-row>
                         <v-col cols="auto">
-                          <h5 class="text-uppercase mb-3" :color="$theme.white_low">
+                          <h5 class="text-uppercase mb-3" :color="$theme.text_low">
                             {{ paramHumanName(p_key, p_value) }}
                           </h5>
                           

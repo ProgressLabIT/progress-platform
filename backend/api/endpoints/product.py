@@ -289,20 +289,24 @@ async def replace_product_image(product_key: str):
 # =================================================
 @router.get("/{product_key}", response_model=ProductFull)
 async def get_product_data(product_key: str):
+  try:
+    product = ProductFull(**product_db.get(product_key))
+    product.docs = get_product_docs(product_key)
+    return product
 
-  product = ProductFull(**product_db.get(product_key))
-  folder_obj = UserFile.product_media(product_key)
-  doc_list = folder_obj.get_folder_contents('doc', name_only=False)
-
-  def doc_data(doc):
-    return ProductDoc(
-      name=doc.name,
-      size=doc.stat().st_size
+  except:
+    error_str = traceback.format_exc()
+    status_code = 500
+    response=dict(
+      status=status_code,
+      message="There was an error getting data from the database.",
+      error_str=error_str
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
     )
 
-  product.docs = list(map(doc_data, doc_list))
-
-  return product
 
 
 

@@ -2,101 +2,104 @@
   <v-container class="fill pa-0 ">  
 
     <div class="flex-grow-1 scroll">
-      <v-container 
-        v-for="(o, index) in jobs_view" 
-        :key="index">
-          <v-row 
-            justify="start" 
-            align="center" 
-            no-gutters 
-            class="mt-2">
-            <v-col cols="auto">
-              <v-avatar size="36">
-                <v-img eager :src="getPicPath(o.operator)">
-                  <template v-slot:placeholder>
-                    <v-icon x-large>mdi-account-circle</v-icon>
-                  </template>
-                </v-img>
-              </v-avatar>
-              <span class="ml-4 solid-white weight-medium medium">
-                {{ o.operator.name + ' ' + o.operator.surname | capitalize_all }}
-              </span>
-            </v-col>
-            <v-spacer></v-spacer>
-            <v-col cols="auto">
-              <v-chip small>
-                <span class="weight-medium solid-white mr-1">{{ o.filtered_jobs.length }}</span>
-                di 
-                <span class="weight-medium solid-white ml-1">{{ o.assigned_jobs_count }}</span>
-              </v-chip>
-            </v-col>
-          </v-row>        
-
-          <v-data-table 
-            :items="o.filtered_jobs"
-            :headers="job_data"
-            hide-default-footer
-            dense
-            disable-pagination
-            :no-data-text="$tc('job.no_job_assigned') | capitalize"
-            class="assignment-list mt-4 ml-n3"
-            >  
-            <template v-slot:item="{ item: job }">
-              <tr @dblclick="showWorkOrderScreen(job.wo_key)">
-                <!-- <v-hover v-slot:default="{ hover }"> -->
-                  <td 
-                    v-for="(header, index) in job_data" 
-                    :key="index"
-                    :class="header.value.includes('qt') ? 'text-right' : ''"
-                    class="text-uppercase"
-                    @click="setSearch(header.value, job[header.value])">
-                    <template v-if="header.value ==='progress'">
-                      <v-row no-gutters align="center">
-                        <v-col cols="9">
-                          <v-progress-linear 
-                            dense 
-                            :value="job.progress"
-                            :color="job.active ? $theme.blue : $theme.grey">
-                          </v-progress-linear>
-                        </v-col>
-                        <v-col cols="2" class="pl-4 text-right">
-                          {{ job.progress }}%
-                        </v-col>
-                        <v-col cols="1" class="text-right pl-2">
-                          <v-icon small 
-                            v-if="job.critical" 
-                            :color="$theme.red"
-                            @click="$emit('criticalOnly')">
-                            mdi-alert-octagon
-                          </v-icon>
-                          <v-icon small 
-                            v-else-if="!job.on_time" 
-                            :color="$theme.orange"
-                            @click="$emit('lateOnly')">
-                            mdi-alert
-                          </v-icon>
-                        </v-col>
-                      </v-row>
+      <NoDataAlert v-if="!jobs_view.length"></NoDataAlert>
+      <template v-else>
+        <v-container
+          v-for="(o, index) in jobs_view"
+          :key="index">
+            <v-row
+              justify="start"
+              align="center"
+              no-gutters
+              class="mt-2">
+              <v-col cols="auto">
+                <v-avatar size="36">
+                  <v-img eager :src="getPicPath(o.operator)">
+                    <template v-slot:placeholder>
+                      <v-icon x-large>mdi-account-circle</v-icon>
                     </template>
+                  </v-img>
+                </v-avatar>
+                <span class="ml-4 weight-medium medium">
+                  {{ o.operator.name + ' ' + o.operator.surname | capitalize_all }}
+                </span>
+              </v-col>
+              <v-spacer></v-spacer>
+              <v-col cols="auto">
+                <v-chip small>
+                  <span class="weight-medium mr-1">{{ o.filtered_jobs.length }}</span>
+                  di
+                  <span class="weight-medium ml-1">{{ o.assigned_jobs_count }}</span>
+                </v-chip>
+              </v-col>
+            </v-row>
 
-                    <template v-else>
-                      <v-hover v-slot:default="{ hover }">
-                      <div 
-                        :class="filter_fields.includes(header.value) ? 'filter-field' : ''"
-                        :style="filter_fields.includes(header.value) && hover ? 'text-decoration: underline' : ''"
-                        >
-                        {{ job[header.value] | capitalize_all }}
-                      </div>
-                      </v-hover>
-                    </template>
+            <v-data-table
+              :items="o.filtered_jobs"
+              :headers="job_data"
+              hide-default-footer
+              dense
+              disable-pagination
+              :no-data-text="$tc('job.no_job_assigned') | capitalize"
+              class="assignment-list mt-4 ml-n3"
+              >
+              <template v-slot:item="{ item: job }">
+                <tr @dblclick="showWorkOrderScreen(job.wo_key)">
+                  <!-- <v-hover v-slot:default="{ hover }"> -->
+                    <td
+                      v-for="(header, index) in job_data"
+                      :key="index"
+                      :class="header.value.includes('qt') ? 'text-right' : ''"
+                      class="text-uppercase"
+                      @click="setSearch(header.value, job[header.value])">
+                      <template v-if="header.value ==='progress'">
+                        <v-row no-gutters align="center">
+                          <v-col cols="9">
+                            <v-progress-linear
+                              dense
+                              :value="job.progress"
+                              :color="job.active ? $theme.blue : $theme.grey">
+                            </v-progress-linear>
+                          </v-col>
+                          <v-col cols="2" class="pl-4 text-right">
+                            {{ job.progress }}%
+                          </v-col>
+                          <v-col cols="1" class="text-right pl-2">
+                            <v-icon small
+                              v-if="job.critical"
+                              :color="$theme.red"
+                              @click="$emit('criticalOnly')">
+                              mdi-alert-octagon
+                            </v-icon>
+                            <v-icon small
+                              v-else-if="!job.on_time"
+                              :color="$theme.orange"
+                              @click="$emit('lateOnly')">
+                              mdi-alert
+                            </v-icon>
+                          </v-col>
+                        </v-row>
+                      </template>
 
-                  </td>
-                <!-- </v-hover> -->
-              </tr>
-            </template>
-          </v-data-table>
-          <v-divider class="mt-4"></v-divider>
-      </v-container>
+                      <template v-else>
+                        <v-hover v-slot:default="{ hover }">
+                        <div
+                          :class="filter_fields.includes(header.value) ? 'filter-field' : ''"
+                          :style="filter_fields.includes(header.value) && hover ? 'text-decoration: underline' : ''"
+                          >
+                          {{ job[header.value] | capitalize_all }}
+                        </div>
+                        </v-hover>
+                      </template>
+
+                    </td>
+                  <!-- </v-hover> -->
+                </tr>
+              </template>
+            </v-data-table>
+            <v-divider class="mt-4"></v-divider>
+        </v-container>
+      </template>
     </div>
   </v-container>
 
@@ -105,10 +108,15 @@
 <script>
 // import filterJobs from '@/lib/ProductionFilters.js'
 import matchJobToFilters from '@/lib/ProductionFilters.js'
+import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
 
   name: 'JobList',
+
+  components: {
+    NoDataAlert
+  },
 
   props: {
     filters: {

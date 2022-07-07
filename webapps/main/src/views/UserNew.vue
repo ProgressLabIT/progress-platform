@@ -83,7 +83,7 @@
                   :value="check.name"
                   v-model="new_user_data.scopes">
                   <template v-slot:label>
-                    <span class="body-2 base-white">{{check.label}}</span>
+                    <span class="body-2 low-text">{{check.label}}</span>
                   </template>                
                 </v-checkbox>
               </v-col>
@@ -170,11 +170,11 @@ export default {
       temp_psw: '',
       
       new_user_data: {
-        name: '',
-        surname: '',
-        username: '',
-        email: '',
-        department_key: '',
+        name: null,
+        surname: null,
+        username: null,
+        email: null,
+        department_key: null,
         hourly_cost: null,
         scopes: [], // permissions list
         scope: ''

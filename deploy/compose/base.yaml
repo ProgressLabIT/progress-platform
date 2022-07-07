@@ -1,0 +1,43 @@
+version: '3.8'
+
+volumes:
+  media:
+    external: True
+  db_backup:
+    external: True
+  db_data:
+    external: True
+
+services:
+
+  router:
+    image: traefik:v2.3
+    depends_on:
+      - db
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    ports:
+      - "80:80" # The HTTP port
+      - "443:443" # The HTTPS post
+      - "8080:8080" # The Web UI (enabled by --api.insecure=true)
+
+  api:
+    environment:
+      - PROGRESS_ARANGO_URL=http://db:8529
+      - PROGRESS_MEDIA_PATH=/media
+      - PROGRESS_API_ROOT_PATH=/api
+    ports:
+      - "8000"
+    volumes:
+      - media:/media
+
+  db:
+    image: arangodb:3.9
+    volumes:
+      - db_data:/var/lib/arangodb3
+      - db_backup:/db_backup
+    ports:
+      - "8529"
+
+

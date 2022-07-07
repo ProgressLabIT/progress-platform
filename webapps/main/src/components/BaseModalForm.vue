@@ -1,6 +1,6 @@
 <template>
   <v-dialog 
-    value="true"
+    v-model="show"
     :overlay-color="$theme.background"
     overlay-opacity="1"
     :max-width="max_width"
@@ -24,7 +24,7 @@
                 </v-btn>
               </v-col>
               <v-col>    
-                <v-btn block depressed :color="$theme.grey" @click="$router.back()">
+                <v-btn block depressed :color="$theme.grey" @click="$emit('cancel')">
                   {{ $tc('cancel') }}
                 </v-btn>
               </v-col> 
@@ -42,6 +42,10 @@ export default {
   name: 'BaseModalForm',
 
   props: {
+    show: {
+      type: Boolean,
+      default: true
+    },
     max_width: {
       type: String,
       default: '500px'

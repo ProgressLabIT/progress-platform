@@ -13,6 +13,7 @@ export default {
   "and": "and",
   "archive": "archive",
   "assign": "assign",
+  "batch": "batch",
   "bom": {
     "add_item": "add item | add items",
     "alerts": {
@@ -20,7 +21,14 @@ export default {
     },
     "delete_selected": "delete selected",
     "edit": "edit",
-    "updated": "bill of materials updated"
+    "updated": "bill of materials updated",
+    "label": "bom",
+    "missing": "no bill of materials",
+    "quantity_type": {
+      "job": "job",
+      "batch": "batch",
+      "radio_label": "show quantity for:"
+    }
   },
   "by": "by",
   "cancel": "cancel",
@@ -50,7 +58,8 @@ export default {
   "deselect_all": "deselect all",
   "document": {
     "add": "add document | add documents",
-    "label": "document | documents"
+    "label": "document | documents",
+    "missing": "nessun documento"
   },
   "due_by": "due by",
   "edit": "edit",
@@ -92,6 +101,7 @@ export default {
       "started_only": "started only"
     },
     "key": "Job ID",
+    "label": "job | jobs",
     "next_job_message": "the next job in queue is the following",
     "no_job_assigned": "no job assigned",
     "pause": "pause",
@@ -110,6 +120,7 @@ export default {
   "late": "late",
   "lead_time": "lead time",
   "loading_text": "getting data...",
+  "material": "material | materials",
   "material_cost": "material cost",
   "name": "name",
   "new": "new",
@@ -285,7 +296,7 @@ export default {
       "delete_confirmed": "product {code} deleted"
     },
     "tabs": {
-      "bom": "components",
+      "bom": "bom",
       "home": "parameters",
       "process": "process"
     },
@@ -409,6 +420,9 @@ export default {
     "PhaseParameters": "parameters",
     "PhaseSteps": "procedure",
     "adminPanel": "settings",
+    "companyDetails": "company details",
+    "defaultPhaseParams": "default phase",
+    "generalSettings": "general",
     "jobList": "jobs",
     "libraryRoot": "product library",
     "operationLibrary": "operations",

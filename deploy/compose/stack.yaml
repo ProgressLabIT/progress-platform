@@ -1,0 +1,90 @@
+version: '3.8'
+
+networks:
+  progress:
+    external: true
+
+secrets:
+  progress_admin_pwd:
+    external: true
+  progress_api_db_pwd:
+    external: true
+  progress_jwt_secret:
+    external: true
+
+services:
+
+  router:
+    command:
+      - --providers.docker.swarmMode
+      - --providers.docker.exposedbydefault=false
+      - --accesslog
+      - --api.dashboard
+      - --api.debug
+      - --api.insecure
+      - --log.level=INFO
+    networks:
+      - progress
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=progress"
+      placement:
+        constraints:
+          - node.role == manager
+
+  app:
+    image: registry.gitlab.com/progresslab/progress-platform/app
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=progress"
+        - "traefik.http.services.app.loadbalancer.server.port=80"
+        - "traefik.http.routers.app.rule=HostRegexp(`{anyhost:.*}`)"
+    volumes:
+      - media:/usr/share/nginx/html/media
+    ports:
+      - "80"
+    networks:
+      - progress
+
+  api:
+    image: registry.gitlab.com/progresslab/progress-platform/api
+    secrets:
+      - progress_admin_pwd
+      - progress_api_db_pwd
+      - progress_jwt_secret
+    environment:
+      - PROGRESS_DB_NAME=PROGRESS_PROD
+      - PROGRESS_API_DB_USERNAME=progress_api
+    command:
+      ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--access-logfile", "-", "main:app"]
+    networks:
+      - progress
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=progress"
+        - "traefik.http.services.api.loadbalancer.server.port=8000"
+        - "traefik.http.routers.api.rule=HostRegexp(`{anyhost:.*}`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.api.middlewares=strip_api_prefix"
+        - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
+        - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
+
+  db:
+    environment:
+      - ARANGO_ROOT_PASSWORD=${DB_ROOT_PWD}
+    networks:
+      - progress
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=progress"
+        - "traefik.http.services.db.loadbalancer.server.port=8529"
+        - "traefik.http.routers.db.rule=HostRegexp(`{anyhost:.*}`) && PathPrefix(`/_db`)"
+        - "traefik.http.routers.db.middlewares=db_root"
+        - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
+        - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"

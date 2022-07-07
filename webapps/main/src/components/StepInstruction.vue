@@ -14,7 +14,7 @@
               <template v-slot:placeholder>
                 <v-row v-if="media.filename.endsWith('.pdf')"
                   align="center" justify="center" class="fill-height">
-                  <v-icon x-large :color="$theme.white_low">mdi-file-document-outline</v-icon>
+                  <v-icon x-large :color="$theme.text_low">mdi-file-document-outline</v-icon>
                 </v-row>
 
                 <v-row v-else align="center" justify="center" class="fill-height">
@@ -39,10 +39,7 @@
                   </span>
                 </v-row>
               </v-sheet>
-          <!--     <v-overlay absolute v-if="media.trash"
-                :color="$theme.black"
-                class="crossed">
-              </v-overlay> -->
+
               <v-overlay v-show="hover" :color="$theme.grey" absolute>
                 <v-row 
                   v-show="hover"
@@ -107,7 +104,7 @@
             style="display: none"
             accept="image/*, application/pdf"
             @change="addMedia($event.target.files)"/>
-          <v-icon :color="hover2 ? $theme.white_high : $theme.white_low">add_a_photo</v-icon>              
+          <v-icon :color="hover2 ? $theme.text_high : $theme.text_low">add_a_photo</v-icon>
           <p class="smaller text-uppercase mt-2">
             {{ $tc('phase.add_media') | capitalize }}
           </p>

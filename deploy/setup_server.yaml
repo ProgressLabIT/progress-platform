@@ -1,0 +1,205 @@
+---
+- name: Setup server and deploy Progress Platform in single-node mode
+  hosts: all
+  become: true
+  #debugger: on_failed
+
+  vars:
+    root_dir: /opt/progress
+    volumes:
+      - db_data
+      - db_backup
+      - media
+      - logs
+    additional_folders:
+      - config
+    swarm_join_tkn_manager: '{{ init.swarm_facts.JoinTokens.Manager }}'
+    swarm_join_tkn_worker: '{{ init_data.swarm_facts.JoinTokens.Worker }}'
+    secrets:
+      - { name: 'progress_api_db_pwd', length: 12 }
+      - { name: 'progress_dev_db_pwd', length: 6 }
+      - { name: 'progress_jwt_secret', length: 32 }
+
+  vars_files:
+    - registry_creds
+
+  tasks:
+  - name: Install docker and python requirements
+    tags: requirements
+    block:
+
+      - name: Install aptitude
+        apt:
+          name: aptitude
+          state: latest
+          update_cache: true
+
+      - name: Install required system packages
+        apt:
+          pkg:
+            - apt-transport-https
+            - ca-certificates
+            - curl
+            - software-properties-common
+            - python3-pip
+            - virtualenv
+            - python3-setuptools
+          state: latest
+          update_cache: true
+
+      - name: Add Docker GPG apt Key
+        apt_key:
+          url: https://download.docker.com/linux/ubuntu/gpg
+          state: present
+
+      - name: Add Docker Repository
+        apt_repository:
+          repo: deb https://download.docker.com/linux/ubuntu focal stable
+          state: present
+
+      - name: Update apt and install docker-ce
+        apt:
+          name: docker-ce
+          state: latest
+          update_cache: true
+
+      - name: Install docker and arangodb sdk for python
+        tags: pip
+        pip:
+          name:
+            - docker
+            - python-arango
+            - jsondiff
+            - pyyaml
+
+
+  - name: Setup app directories and docker volumes
+    tags: volumes
+    block:
+
+      - name: Create main project directory
+        ansible.builtin.file:
+          path: '{{ root_dir }}'
+          state: directory
+
+      - name: Create project subdirectories
+        ansible.builtin.file:
+          path: '{{ root_dir }}/{{ item }}'
+          state: directory
+        loop: '{{ volumes + additional_folders }}'
+
+      - name: Create docker volumes
+        community.docker.docker_volume:
+          name: '{{ item }}'
+          driver_options:
+            o: bind
+            type: none
+            device: '{{ root_dir }}/{{ item }}'
+        loop: '{{ volumes }}'
+
+  - name: Init swarm and secrets
+    tags: secrets
+    block:
+
+      - name: Activate Swarm mode
+        community.docker.docker_swarm:
+          state: present
+        register: init
+
+      - name: Generate secrets
+        ansible.builtin.shell:
+          cmd: 'openssl rand -hex {{ item.length }} | docker secret create {{ item.name }} -'
+        loop: '{{ secrets }}'
+
+
+  - name: Bootstrap database
+    tags: db
+    block:
+
+      - name: Run temporary DB container
+        community.docker.docker_container:
+          name: temp-db
+          image: arangodb:latest
+          #recreate: yes
+          detach: true
+          #auto_remove: yes
+          state: started
+          ports:
+            - 8529:8529
+          volumes:
+            - db_data:/var/lib/arangodb3:rw
+          env:
+            ARANGO_NO_AUTH: '1'
+
+      - name: Copy init script to be run
+        ansible.builtin.copy:
+          src: db_init.py
+          dest: '{{ root_dir }}/db_init.py'
+
+      - name: Run service to initialize databases and its users
+        # Requires a service to use secrets created before
+        community.docker.docker_swarm_service:
+          name: init-db
+          image: python:slim
+          secrets:
+            - secret_name: progress_dev_db_pwd
+            - secret_name: progress_api_db_pwd
+          mounts:
+            - source: '{{ root_dir }}/db_init.py'
+              target: /db_init.py
+              type: bind
+          command: python3 /db_init.py
+
+    always:
+      - name: Remove temporary DB container
+        community.docker.docker_container:
+          name: temp-db
+          state: absent
+
+      - name: Remove init script
+        ansible.builtin.file:
+          path: '{{ root_dir }}/db_init.py'
+          state: absent
+
+      - name: Remove init-db service
+        community.docker.docker_swarm_service:
+          name: init-db
+          state: absent
+
+
+  - name: Deploy stack
+    tags: deploy
+    block:
+
+      - name: Copy deployment files
+        ansible.builtin.copy:
+          src: '{{ item }}'
+          dest: '{{ root_dir }}/config/'
+        loop:
+          - compose/ # copy contents only
+          - traefik.toml
+
+      - name: Login to GitLab container registry
+        community.docker.docker_login:
+          registry_url: registry.gitlab.com/progresslab/progress-platform
+          username: '{{ registry_username }}'
+          password: '{{ registry_token }}'
+
+      - name: Deploy to production
+        community.docker.docker_stack:
+          name: progress_platform
+          with_registry_auth: yes
+          compose:
+            - '{{ root_dir}}/config/base.yaml'
+            - '{{ root_dir}}/config/stack.yaml'
+        environment:
+          PROGRESS_ADDRESS: '{{ ansible_ssh_host }}'
+          TRAEFIK_CONFIG_FILE: '{{ root_dir }}/config/traefik.toml'
+
+
+  # - name: Start dummy DB service for data initialization
+  #   hosts: all
+  #   become: True
+
+  #   tasks:
+

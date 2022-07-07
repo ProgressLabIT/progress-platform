@@ -14,7 +14,7 @@
           v-if="render_steps"
           vertical dark hide-slider grow
           v-model="current_step_index"
-          :color="$theme.white_high"
+          :color="$theme.text_high"
           background-color="transparent"
           class="mt-8 scroll px-n4"
           style="max-width: 100%; max-height: 70%"
@@ -43,12 +43,13 @@
                       size="20"
                       :color="current_step_index == index ? $theme.blue : $theme.grey"
                       class="d-flex text-center smaller weight-bold"
+                      :class="{ highlight: current_step_index == index }"
                       >{{ index + 1 }}
                     </v-avatar>
                   </v-col>  
 
                   <v-col cols="9" class="text-left text-truncate">
-                    <span style="max-width: 80%">
+                    <span style="max-width: 80%" :class="{ highlight: current_step_index == index }">
                       {{ step.title.length ? step.title : '(nessun titolo)' }}
                     </span>
                   </v-col>
@@ -59,7 +60,7 @@
                     <v-icon 
                       :id="`icon-${index}`"
                       class="ml-auto"
-                      :color="current_step_index == index ? $theme.white_high : $theme.white_low">
+                      :color="current_step_index == index ? $theme.text_high : $theme.text_low">
                       {{ stepIcon(step.type) }}
                     </v-icon>
                   </v-col>    
@@ -74,7 +75,7 @@
           <v-row justify="center" align="end" class="mt-12 pb-6">
             <v-icon 
               x-large 
-              :color="$theme.white_low"
+              :color="$theme.text_low"
               >
               error_outline
             </v-icon>
@@ -98,7 +99,7 @@
             <v-btn text small
               class="pr-6 pl-6 ml-n2"
               style="width: 105%"
-              :color="hover ? $theme.blue : $theme.white_high"
+              :color="hover ? $theme.blue : $theme.text_high"
               @click="addStep(type)">
               <v-row justify="space-between" align="center">
                 <span>

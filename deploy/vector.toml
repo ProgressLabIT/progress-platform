@@ -1,0 +1,23 @@
+[sources.swarm]
+  type = "docker_logs"
+
+[sinks.file]
+  type = "file"
+  inputs = ["swarm"]
+  compression = "none"
+  path = "/out/vector-%Y-%m-%d.log"
+  encoding.codec = "text"
+
+
+
+# [sinks.cloud_loki]
+#   type      = "loki"
+#   inputs    = ["docker"]
+#   endpoint  = "https://logs-prod-eu-west-0.grafana.net"
+#   encoding  = "text"
+#   compression = "none"
+
+# [sinks.cloud_loki.auth]
+#   strategy  = "bearer"
+#   user      = "211546"
+#   token     = "eyJrIjoiNTk1MDljY2IzOTkzYmJmY2RiNGRmYzY1NzMwMjQwODI5MTdhODA3NyIsIm4iOiJHcmFmYW5hIENsb3VkIiwiaWQiOjY0NTE3Mn0="

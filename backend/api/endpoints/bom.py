@@ -23,30 +23,14 @@ router = APIRouter()
 async def get_product_bom(product_key):
   try: 
     bom = get_bom_from_db(db, product_key)
+    return bom
 
   except Exception as e:
     status_code = 500
     error_str = traceback.format_exc()
     response=dict(
       status=status_code,
-      message="Couldn't fetch bom from db",
-      error=error_str 
-    )
-    raise HTTPException(
-      status_code=status_code,
-      detail=response
-    )
-  
-  try:
-    results = [BomLineRead(**i) for i in bom]
-    return results
-
-  except Exception as e:
-    status_code = 500
-    error_str = traceback.format_exc()
-    response=dict(
-      status=status_code,
-      message="There was a problem with the data fetched from the db",
+      message="There was a problem fetching the data from the db",
       error=error_str 
     )
     raise HTTPException(

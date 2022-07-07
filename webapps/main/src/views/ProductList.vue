@@ -25,7 +25,7 @@
       <v-col cols="auto" class="d-flex align-center">
         <v-checkbox
           :ripple="false"
-          color="primary" 
+          :color="$theme.blue"
           hide-details
           :label="$tc('product.filters.active_only') | capitalize" 
           v-model="filter_inactive" 
@@ -34,7 +34,7 @@
       <v-col cols="auto" class="d-flex align-center">
         <v-checkbox 
           :ripple="false"
-          color="primary"
+          :color="$theme.blue"
           hide-details
           :label="$tc('product.filters.show_images') | capitalize" 
           v-model="show_images" 
@@ -44,7 +44,7 @@
       <v-spacer></v-spacer>
 
       <v-col cols="auto">
-        <v-btn color="primary"
+        <v-btn :color="$theme.blue"
           @click="$router.push({ name: 'newProduct' })">
           {{ $tc('new') }}
         </v-btn>
@@ -52,7 +52,9 @@
     </v-row>
 
     <!-- Product List -->
-    <v-row v-if="vuex_ready">
+    <LoadingSignal v-if="!vuex_ready"></LoadingSignal>
+    <NoDataAlert v-else-if="!productCatalog().length"></NoDataAlert>
+    <v-row v-else>
       <v-col cols="12" sm="6" md="4" lg="3" xl="2" 
         v-for="product in productCatalog()" 
         :key="product.code" 
@@ -65,10 +67,6 @@
       </v-col>
     </v-row>
 
-
-    <LoadingSignal v-else></LoadingSignal>   
-
-
     <!-- DELETE/RESTORE NOTIFICATION -->
     <v-snackbar id="delete-notification" bottom left 
       v-model="deleteSnackbar.show" 
@@ -76,7 +74,7 @@
       <v-row>
         <v-col class="text-uppercase">
           {{ $tc('product.snackbars.delete_confirmed', {code: deleteSnackbar.code}) }}
-          <v-btn text color="primary" @click.native="deleteSnackbar.show = false; ">{{ $tc('confirm') }}</v-btn>
+          <v-btn text :color="$theme.blue" @click.native="deleteSnackbar.show = false; ">{{ $tc('confirm') }}</v-btn>
           <v-btn text color="warning" @click.native="undoDelete">{{ $tc('undo') }}</v-btn>
         </v-col>
         <!-- <v-col cols="12">
@@ -91,8 +89,10 @@
 </template>
 
 <script>
-import ProductCard from '@/components/ProductCard' 
 import LoadingSignal from '@/components/LoadingSignal'
+import NoDataAlert from '@/components/NoDataAlert.vue'
+import ProductCard from '@/components/ProductCard'
+
 import multiMatch from '@/lib/MultiFieldSearch.js'
 
 import { mapGetters, mapActions } from 'vuex'
@@ -102,8 +102,9 @@ export default {
   name: 'ProductList',
   
   components: {
+    LoadingSignal,
+    NoDataAlert,
     ProductCard,
-    LoadingSignal
   },
 
   // followingi props passed in router query string

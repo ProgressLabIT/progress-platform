@@ -3,9 +3,11 @@ from dateutil import tz
 from enum import Enum
 from typing import Dict, List, Union
 
-from pydantic import Field, validator
+from pydantic import BaseModel, Field, validator
 
+from models.bom import BomLineRead
 from models.process import PhaseParameters, StepWithMediaInfo
+from models.product import ProductDoc
 from utils.base_models import FlexModel, ArangoDocument
 
 
@@ -46,7 +48,7 @@ class WorkStatus(Enum):
   CLOSED = 'closed'
 
 
-class WorkOrderNew(ArangoDocument):
+class WorkOrderNew(BaseModel):
   customer_data: CustomerData = CustomerData()
   wo_code: str
   wo_line: int = 1
@@ -55,13 +57,11 @@ class WorkOrderNew(ArangoDocument):
   product_description: str = None
   phase_sequence: List[str] = []
   qt_planned: float
-  # priority: bool = False
+  priority: bool = False
   due_by: Union[datetime, date] = None
 
 
-class WorkOrderFull(WorkOrderNew):
-  key: str = Field(None, alias="_key")
-
+class WorkOrderFull(ArangoDocument, WorkOrderNew):
   status: WorkStatus = WorkStatus.CREATED
   qt_completed: float = 0
   active: bool = False
@@ -81,7 +81,10 @@ class WorkOrderFull(WorkOrderNew):
   material_cost: float = None
   total_cost: float = None
 
-  phase_sequence: List[str] = None
+  phase_sequence: List[str] = []
+  wo_docs: List[ProductDoc] = []
+  wo_bom: List[BomLineRead] = []
+
   notes: str = None
 
 
@@ -93,8 +96,8 @@ class RequiredAvailableQt(FlexModel):
 
 class Operator(FlexModel):
   key: str = Field(..., alias="_key")
-  name: str
-  surname: str
+  name: str = None
+  surname: str = None
   active: bool = None
   department_key: str = None
 
@@ -114,7 +117,7 @@ class Job(FlexModel):
   parameters: PhaseParameters = None
 
   first_phase: bool = None
-  input_available: bool = None
+  input_available: bool = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders
 
   stage: WorkStatus = WorkStatus.CREATED
   active: bool = False
@@ -139,6 +142,9 @@ class Job(FlexModel):
 
   last_work_session_started: str = None
   last_online: datetime = None
+
+  job_docs: List[ProductDoc] = []
+  job_bom: List[BomLineRead] = []
 
 
   # @validator('progress')

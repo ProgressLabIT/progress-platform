@@ -1,8 +1,7 @@
 <template>
   <v-container fluid class="pa-0 fill" ref="step_card">
 
-    <v-card class="fill d-flex flex-column" max-height="100%" >
-      <v-toolbar dense class="flex-grow-0" v-if="procedure.length">
+      <v-toolbar dense :color="$theme.surface2" class="flex-grow-0" v-if="procedure.length">
         <v-row align="center" class="fill-height mx-0" ref="stepper">
          
           <template v-for="(step, index) in procedure">
@@ -36,20 +35,8 @@
       </component>
 
       <!-- NO PROCEDURE -->
-      <template v-else>
-        <v-row justify="center" align="center">
-          <v-col class="text-center">
-            <v-icon x-large :color="$theme.white_low">
-              error_outline
-            </v-icon>
-            <div class="text-center mt-6 text-uppercase">
-              <h3>{{ $tc('phase_steps.no_procedure') }}</h3>
-            </div>
-          </v-col>
-        </v-row>
-      </template>
+      <NoDataAlert v-else>{{ $tc('phase.no_procedure') }}</NoDataAlert>
 
-    </v-card>
   </v-container>
 </template>
 
@@ -59,6 +46,7 @@ import { throttle as _throttle } from 'lodash'
 import JobInstruction from '@/components/JobInstruction.vue'
 import JobForm from '@/components/JobForm.vue'
 import JobChecklist from '@/components/JobChecklist.vue'
+import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
 
@@ -68,6 +56,7 @@ export default {
     JobInstruction,
     JobForm,
     JobChecklist,
+    NoDataAlert
   },
 
   props: {
@@ -139,7 +128,8 @@ export default {
       const step_active = this.current_step_index === index
       let step_done = false
       let step_critical = false
-      let color = ''
+      let bg_color = ''
+      let text_color = this.$theme.text_low
       let cursor = this.allowClick(index) ? 'pointer' : 'not-allowed'
       
       if (this.batch_data) {
@@ -148,23 +138,24 @@ export default {
       }
 
       if (step_critical) {
-        color = step_active ? this.$theme.red : this.$theme.red_bg
+        bg_color = step_active ? this.$theme.red : this.$theme.red_bg
       }
 
       else if (step_done) {
-        color = step_active ? this.$theme.green : this.$theme.green_bg
+        bg_color = step_active ? this.$theme.green : this.$theme.green_bg
       }
 
       else if (step_active) {
-        color = this.job.active ? this.$theme.blue : this.$theme.grey
+        bg_color = this.job.active ? this.$theme.blue : this.$theme.grey
       }
 
       else {
-        color = 'transparent'
+        bg_color = 'transparent'
       }
 
       return {
-        backgroundColor: color,
+        backgroundColor: bg_color,
+        color: text_color,
         cursor,
       }
     },
