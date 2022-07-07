@@ -3,7 +3,7 @@ from dateutil import tz
 from enum import Enum
 from typing import Dict, List, Union
 
-from pydantic import Field, validator
+from pydantic import BaseModel, Field, validator
 
 from models.bom import BomLineRead
 from models.process import PhaseParameters, StepWithMediaInfo
@@ -48,7 +48,7 @@ class WorkStatus(Enum):
   CLOSED = 'closed'
 
 
-class WorkOrderNew(ArangoDocument):
+class WorkOrderNew(BaseModel):
   customer_data: CustomerData = CustomerData()
   wo_code: str
   wo_line: int = 1
@@ -57,13 +57,11 @@ class WorkOrderNew(ArangoDocument):
   product_description: str = None
   phase_sequence: List[str] = []
   qt_planned: float
-  # priority: bool = False
+  priority: bool = False
   due_by: Union[datetime, date] = None
 
 
-class WorkOrderFull(WorkOrderNew):
-  key: str = Field(None, alias="_key")
-
+class WorkOrderFull(ArangoDocument, WorkOrderNew):
   status: WorkStatus = WorkStatus.CREATED
   qt_completed: float = 0
   active: bool = False

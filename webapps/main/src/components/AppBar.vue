@@ -3,12 +3,12 @@
 
       <!-- MENU ICON AND WINDOW TITLE -->
       <v-icon @click="$emit('showDrawer')" class="grey--text text--lighten-2">mdi-menu</v-icon>
-      <h3 class="display ml-3">{{ screen_title }}</h3>
+      <h3 class="display ml-3 mr-auto">{{ screen_title }}</h3>
 
       <!-- USER NAME & BADGE -->
-      <v-hover  v-slot:default="{ hover }">
-        <div>
-          <h5 class="display ml-auto">{{ username }}</h5>
+      <v-hover v-slot:default="{ hover }">
+        <div class="d-flex align-center justify-end">
+          <h5 class="display">{{ username }}</h5>
           <v-avatar size="28" class="my-auto ml-2">
             <v-img v-if="!hover" :src="avatar_url"></v-img>
             <v-icon v-else class="grey--text text--lighten-2"
