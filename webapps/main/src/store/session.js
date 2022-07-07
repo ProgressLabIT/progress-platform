@@ -113,8 +113,19 @@ const session = {
     },
 
     userHomepage: state => {
-      const home = state.user.home_page_name
-      return home ? home : 'userJobs'
+      let first_page = state.user.home_page_name
+
+      const hasAdminScope = RegExp('admin').test(state.scope)
+      const hasProductionScope = RegExp('production').test(state.scope)
+      const hasLibrayScope = RegExp('library').test(state.scope)
+      const hasOperatorScope = RegExp('operator').test(state.scope)
+
+      if (hasOperatorScope) { first_page = 'operatorRoot' }
+      else if (hasProductionScope) { first_page = 'productionRoot'}
+      else if (hasLibrayScope) { first_page = 'libraryRoot' }
+      else if (hasAdminScope) { first_page = 'adminPanel' }
+
+      return first_page
     }
   }
 

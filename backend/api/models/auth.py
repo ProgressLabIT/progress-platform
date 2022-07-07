@@ -64,14 +64,14 @@ class UserSession(ArangoDocument):
   login_at: datetime = datetime.now(tz.UTC)
   logout_at: datetime = None
   scope: str
-  name: str
-  surname: str
+  name: str = None
+  surname: str = None
 
 class NewSessionData(BaseModel):
   session_key: str
   user_key: str
-  name: str
-  surname: str
+  name: str = None
+  surname: str = None
   scope: str
   timeout: timedelta = timedelta(minutes=30)
 
