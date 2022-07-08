@@ -313,45 +313,6 @@ async def get_job_data(job_key: str):
 @router.post('/job/update')
 async def update_jobs(job_updates:List[JobUpdate]):
 
-  def update_target_queue(job_key, target_key, action, tx):
-
-    try:
-      if action == 'remove':
-        tx.aql.execute(
-          Queries.REMOVE_JOB_FROM_QUEUE,
-          bind_vars=dict(job_key=job_key, target_key=target_key)
-        )
-
-      if action == 'add':
-        queue_match = dict(
-          subqueue_target_key=target_key,
-          site_key='0'
-        )
-        operator_queue_exists = tx.collection('Queue').find(queue_match).count()
-
-        if operator_queue_exists:
-          tx.aql.execute(
-            Queries.ADD_JOB_TO_QUEUE,
-            bind_vars=dict(target_key=target_key, job_key=job_key)
-          )
-
-        else:
-          tx.collection('Queue').insert(dict(
-            **queue_match,
-            type='o',
-            jobs=[job_key]
-          ))
-
-    except:
-      status_code = 500
-      response =dict(
-       status_code=status_code,
-       message="Couldn't update queue on the db",
-       error=traceback.format_exc()
-      )
-      raise HTTPException(status_code=status_code, detail=response)
-
-
   tx = db.begin_transaction(write=['Job', 'Queue'])
   job_db = tx.collection('Job')
 

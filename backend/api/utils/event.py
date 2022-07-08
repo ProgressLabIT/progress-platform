@@ -1,6 +1,6 @@
 from models.traceability import *
 from models.production import Job, WorkOrderFull, WorkStatus
-from utils.production import Queries as ProductionQueries
+from utils.production import Queries as ProductionQueries, update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
 from utils.db import db, model_to_db_dict
 from utils.dt import timestamp
@@ -473,26 +473,12 @@ class Event:
     self.tx.collection('Job').update(job_update)
 
     # Update queue
-    queue_match = dict(
-      subqueue_target_key=self.info.user_key,
-      site_key='0'
+    update_target_queue(
+      job_key = self.info.job_key,
+      target_key = self.info.user_key,
+      action = 'add',
+      tx = self.tx
     )
-    operator_queue_exists = self.tx.collection('Queue').find(queue_match).count()
-
-    if operator_queue_exists:
-      self.tx.aql.execute(
-        ProductionQueries.ADD_JOB_TO_QUEUE,
-        bind_vars=dict(
-          target_key=self.info.user_key,
-          job_key=self.info.job_key
-        )
-      )
-
-    else:
-      self.tx.collection('Queue').insert(dict(
-        **queue_match,
-        jobs=[self.info.job_key]
-      ))
 
     self.response = dict(
       message=f"Job {self.info.job_key} started",
