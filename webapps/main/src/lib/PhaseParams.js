@@ -3,18 +3,15 @@ export const release_style = {
   values: ['continuous','release_batch', 'job'],
 }
 
-
 export const step_check = {
   type: 'select',
   values: ['none', 'fixed_batch', 'job']
 }
 
-
 export const parallel_job_allowed = {
   type: 'bool',
   values: [true, false]
 }
-
 
 export const step_check_force_order = {
   type: 'bool',
@@ -31,6 +28,11 @@ export const release_batch_qt = {
 
 export const max_offline = {
   type: `int`
+}
+
+export const auto_new_batch = {
+  type: 'bool',
+  values: [true, false]
 }
 /*
 export const wip_flow = {
@@ -56,7 +58,8 @@ export default {
   step_check_force_order,
   parallel_job_allowed,
   production_batch_qt,
-  max_offline
+  max_offline,
+  auto_new_batch
   // release_batch_qt,
   // wip_flow
 }

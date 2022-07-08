@@ -193,6 +193,17 @@ export default {
     "multiline_field": "multiriga",
     "no_procedure": "nessuna procedura",
     "params": {
+      "auto_new_batch" : {
+        "false": {
+          "desc": "Al termine di un lotto di un produzione la sessione di lavoro viene interrotta. Il nuovo lotto verrà creato al momento del riavvio della sessione.",
+          "title": "Non attivo"
+        },
+        "true": {
+          "desc": "Al termine di un lotto di produzione viene automaticamente avviato quello successivo, se previsto, senza interrompere la sessione di lavoro.",
+          "title": "Attivo"
+        },
+        "title": "Creazione lotto automatica"
+      },
       "max_offline": {
         "desc": "La sessione di lavoro verrà considerata chiusa se viene rilevata una disconnessione più lunga di questo parametro (in secondi). In caso di problemi di connessione temporanei, l'applicazione rileva e registra automaticamente il tempo totale attivo della sessione di lavoro, anche se è stata temporaneamente chiusa a causa di mancanza di connessione più lunga di questo tempo.",
         "title": "Tempo massimo offline"
