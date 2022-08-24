@@ -58,13 +58,16 @@ class Batch(FlexModel):
 class WorkSession(FlexModel):
   key: str = Field(None, alias="_key")
   user_session_key: str
+  batch_key: str
   job_key: str
-  work_order_key: str = None
+  phase_key: str
+  work_order_key: str
+  product_key: str
   user_key: str
   # master_session: bool
-  start: datetime = None
+  start: datetime
   end: datetime = None
-  # duration: timedelta = None
+  duration: timedelta = None
   active: bool
   hourly_cost: float = None
 
@@ -99,21 +102,6 @@ class ProductionEvent(FlexModel):
   timestamp: datetime = timestamp()
   user_data: Any
   description: str = None # optional descriptive field for auditing reasons
-
-
-class BatchTimeRecord(FlexModel):
-  key: str = Field(None, alias="_key")
-  batch_key: str
-  work_session_key: str
-  full_session: bool = None
-  start: datetime
-  end: datetime = None
-  duration: float = None
-  value: float = None
-  active: bool = None
-  product_key: str = None
-  work_order_key: str = None
-  phase_key: str = None
 
 
 

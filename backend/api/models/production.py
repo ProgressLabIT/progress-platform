@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 from dateutil import tz
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, validator
 
@@ -133,7 +133,7 @@ class Job(FlexModel):
   assigned_to: Union[str, Operator] = None
 
   progress: int = Field(0, ge=0, le=100)
-  current_batch: str = None # batch _key
+  current_batch_key: str = None # batch _key
   # current_step: int = None
 
   on_time: bool = True

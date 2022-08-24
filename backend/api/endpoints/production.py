@@ -13,7 +13,7 @@ from utils.bom import get_bom_from_db
 from utils.db import db
 from utils.process import search_step_media
 from utils.product import get_product_docs
-from utils.production import Queries
+from utils.production import Queries, update_target_queue
 from utils.traceability import update_job_progress
 
 
@@ -276,9 +276,18 @@ async def get_job_list():
 @router.get('/job-assignment')
 async def get_assignment_list(user_key: str = None):
 
-  result = db.aql.execute(Queries.GET_ASSIGNMENT_LIST, bind_vars=dict(user_key=user_key)).next()
+  try:
+    result = db.aql.execute(Queries.GET_ASSIGNMENT_LIST, bind_vars=dict(user_key=user_key)).next()
+    return APIResponse(detail=AssignmentsResponse(**result))
 
-  return APIResponse(detail=AssignmentsResponse(**result))
+  except:
+    status_code=500
+    response=dict(
+      status_code=status_code,
+      message="Couldn't retrieve data from the DB",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(status_code=status_code, detail=response)
 
 
 # ----------------------------------------------------------------------
