@@ -5,9 +5,9 @@ db = client.db('PROGRESS_TEST', username='root', password='')
 
 collections = [
 	'Batch',
-	'BatchTimeRecord',
 	'Event',
 	'Job',
+  'Queue',
 	'Serial',
 	'StepExecutionData',
 	'WIP',
@@ -15,11 +15,11 @@ collections = [
 	'WorkSession',
 ]
 
-tx = db.begin_transaction(write=collections + ['Queue'])
+tx = db.begin_transaction(write=collections)
 
 for c in collections:
 	tx.collection(c).truncate()
 
-tx.collection('Queue').update_match({'site_key':'0'}, {'jobs': [], 'work_orders': []})
+# tx.collection('Queue').update_match({'site_key':'0'}, {'jobs': [], 'work_orders': []})
 
 tx.commit_transaction()
