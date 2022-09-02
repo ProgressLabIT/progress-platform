@@ -270,7 +270,7 @@ const traceability = {
         const now = DT.utc()
 
         const job = state.working_job_data
-        const step_data = state.current_batch_data.step_data[step_index]
+        const step_data = state.current_batch_data.step_data[step_index] || null
 
         const commitChanges = () => {
           commit('COMPLETE_STEP', step_index)
