@@ -75,6 +75,7 @@ class Queries:
       progress: ROUND(100 * @qt_completed / j.qt_planned),
       end: @end
     } IN Job
+    RETURN NEW
   """
 
   UPDATE_WORK_ORDER = """

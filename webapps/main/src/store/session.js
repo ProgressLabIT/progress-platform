@@ -57,7 +57,7 @@ const session = {
   actions: { 
     logout({ commit, dispatch, state, rootState }) {
       return new Promise( async (resolve) => {
-        const is_working = rootState.traceability.work_session_list.some( ws => ws.active )
+        const is_working = rootState.traceability.working_job_data.active || false
         if (is_working) {
           try {
             await dispatch('pauseJob')
