@@ -9,8 +9,6 @@ from utils.db import db
 from utils.dt import timestamp
 from utils.traceability import Queries
 
-
-
 router = APIRouter()
 
 
@@ -29,7 +27,7 @@ async def apply_production_event(data: ProductionEvent):
       message="There was a problem saving the event in the db",
       error=error_str
     )
-    print(error_str)
+
     raise HTTPException(
       status_code=status_code,
       detail=response

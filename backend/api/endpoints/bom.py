@@ -56,11 +56,9 @@ async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
       Queries.DELETE_PRODUCT_BOM, 
       bind_vars=dict(product_key=product_key)
     )
-    # print("Deleted items: ", [i for i in deleted_items])
 
     # Enrich data
     bom_to_db = [define_bom_line_for_db(line) for line in new_bom]
-    print(bom_to_db)
     # Insert new bom
     txn.collection('requires').insert_many(bom_to_db, silent=True)    
     txn.commit_transaction()
@@ -78,7 +76,6 @@ async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
     )
     print("Error! Aborting transaction...")
     txn.abort_transaction()
-    print(error_str)
     raise HTTPException(
       status_code=status_code,
       detail=response
