@@ -51,19 +51,25 @@ class Event:
     # Initialize transaction
     self.tx = self.db.begin_transaction(write=self.write_collections)
 
-    # Apply updates to global application state
-    getattr(self, self.action)()
-    self.update_job_last_online()
-    self.update_work_order()
+    try:
+      # Apply updates to global application state
+      getattr(self, self.action)()
+      self.update_job_last_online()
+      self.update_work_order()
 
-    # Save event as is
-    self.tx.collection('Event').insert(self.info)
+      # Save event as is
+      self.tx.collection('Event').insert(self.info)
 
-    # Commit transaction
-    self.tx.commit_transaction()
+      # Commit transaction
+      self.tx.commit_transaction()
 
-    # Return any required value
-    return self.response
+      # Return any required value
+      return self.response
+
+    # In case of exceptions, abort transaction without catching them
+    finally:
+      if self.tx.transaction_status() != 'committed':
+        self.tx.abort_transaction()
 
 
   ######################################################################
@@ -633,6 +639,7 @@ class Event:
         TraceabilityQueries.UPDATE_INPUT_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
         bind_vars=dict(wo_key=self.info.work_order_key, phase=self.info.next_phase)
       )
+
 
 
 
