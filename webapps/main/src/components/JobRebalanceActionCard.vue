@@ -32,7 +32,7 @@
               <span class="text-uppercase">
                 {{ j._key || $tc('new') }}
               </span>
-              <v-chip v-if="j.trash"
+              <v-chip v-if="j.close"
                 small label close
                 :color="$theme.orange"
                 class="ml-2 solid-white weight-bold text-uppercase"
@@ -52,7 +52,7 @@
                 :value="j.qt_remaining"
                 min="0"
                 :max="qt_to_allocate"
-                @input="updateRemainingQt(index, $event)">
+                @input="updateRemainingQt(index, parseInt($event))">
               </v-text-field>
             </template>
 
@@ -92,7 +92,7 @@
 
           <v-col
             cols="auto"
-            v-if="deletable(index) && !j.trash" class="ml-auto pr-8">
+            v-if="deletable(index) && !j.close" class="ml-auto pr-8">
             <BaseTooltipIcon
               :color="$theme.red"
               :tooltip="$tc('delete') | capitalize"
@@ -278,7 +278,7 @@ export default {
 
     updateNewTotal() {
       this.working_total_remaining = this.temp_jobs
-        .filter(j => !j.trash)
+        .filter(j => !j.close)
         .reduce( (sum, job) => sum + job.qt_remaining, 0)
     },
 
@@ -286,7 +286,7 @@ export default {
       const j = this.temp_jobs[index]
       const has_assignee = j.assigned_to
       const started = ['started', 'completed'].includes(j.stage)
-      const to_be_closed = j.trash
+      const to_be_closed = j.close
       return (has_assignee && started) || to_be_closed
     },
 
@@ -387,7 +387,7 @@ export default {
         const datetime = new Date().toLocaleString()
 
           // Close job
-          if (j.cancel) {
+          if (j.close) {
             return {
               action: 'close',
               data: {
