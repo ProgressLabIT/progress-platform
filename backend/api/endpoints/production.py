@@ -367,8 +367,11 @@ async def update_jobs(job_updates:List[JobUpdate]):
             tx=tx
           )
 
-      elif u.action == JobUpdateType.DELETE:
-        new_job_data = job_db.update(dict(**u.data, trash=True), return_new=True)['new']
+      elif u.action == JobUpdateType.CLOSE:
+        new_job_data = job_db.update(dict(
+          **u.data,
+          stage = WorkStatus.CLOSED,
+        ), return_new=True)['new']
 
         if new_job_data['assigned_to']:
           update_target_queue(

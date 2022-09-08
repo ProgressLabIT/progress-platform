@@ -32,6 +32,7 @@ export default {
   },
   "by": "by",
   "cancel": "cancel",
+  "canceled": "canceled"
   "cancel_changes": "cancel changes",
   "change": "change",
   "close": "close",

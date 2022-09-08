@@ -32,6 +32,7 @@ export default {
   },
   "by": "entro",
   "cancel": "annulla",
+  "canceled": "annullato",
   "cancel_changes": "annulla modifiche",
   "change": "modifica | modifiche",
   "close": "chiudi",

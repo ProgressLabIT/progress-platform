@@ -3,7 +3,6 @@ from models.production import Job, WorkOrderFull, WorkStatus
 from utils.production import Queries as ProductionQueries, update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
 from utils.db import db, model_to_db_dict
-from utils.dt import timestamp
 
 class Event:
 
@@ -31,7 +30,6 @@ class Event:
   JOB_PAUSED_OFFLINE = 'pause_job'
   JOB_RESUMED = 'resume_job'
   JOB_BACK_ONLINE = 'restore_work_session'
-  JOB_CLOSED = 'close_job'
   STEP_COMPLETED = 'complete_step'
   BATCH_COMPLETED = 'complete_batch'
 
@@ -379,18 +377,23 @@ class Event:
     self.tx.collection('Job').update(job_update)
 
 
-  def close_job(self, completed_qt):
+  def complete_job(self, completed_qt):
     # Close job
     # Query allows for single call to DB to get and update job data
 
     bind_vars=dict(
       job_key=self.info.job_key,
       stage=WorkStatus.CLOSED,
+      notes="Job completed",
       qt_completed=completed_qt,
       end=self.info.timestamp,
     )
-    closed_job = self.tx.aql.execute(TraceabilityQueries.CLOSE_JOB, bind_vars=bind_vars).next()
-    self.job = Job(**closed_job)
+    completed_job = self.tx.aql.execute(
+      TraceabilityQueries.COMPLETE_JOB,
+      bind_vars=bind_vars
+    ).next()
+
+    self.job = Job(**completed_job)
 
     self.tx.aql.execute(
       ProductionQueries.REMOVE_JOB_FROM_QUEUE,
@@ -590,7 +593,7 @@ class Event:
 
     # NO REMAINING QUANTITY TO DO - LAST BATCH
     if new_qt_completed >= self.job.qt_planned: # No more pieces to work
-      self.close_job(new_qt_completed)
+      self.complete_job(new_qt_completed)
       self.response = dict(
         message = f"Batch {self.info.active_batch_key} and Job {self.info.job_key} completed.",
         job_data = self.job,

@@ -147,7 +147,7 @@ class Job(FlexModel):
   job_docs: List[ProductDoc] = []
   job_bom: List[BomLineRead] = []
 
-
+  notes: str = None
   # @validator('progress')
   # def between_0_and_100_percent(cls, v):
   #   if v < 0 or v > 1:
@@ -175,8 +175,8 @@ class Job(FlexModel):
 class JobUpdateType(Enum):
   INSERT = 'insert'
   UPDATE = 'update'
-  DELETE = 'delete'
-  REORDER = 'reorder'
+  CLOSE = 'close'
+
 
 class JobUpdate(FlexModel):
   action: JobUpdateType

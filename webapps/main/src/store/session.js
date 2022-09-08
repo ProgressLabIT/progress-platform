@@ -112,6 +112,10 @@ const session = {
       return RegExp(route_scope).test(state.scope)
     },
 
+    userFullName: state => {
+      return state.user.name + ' ' + state.user.surname
+    },
+
     userHomepage: state => {
       let first_page = state.user.home_page_name
 

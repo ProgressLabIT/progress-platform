@@ -63,7 +63,7 @@ class Queries:
   """
 
 
-  CLOSE_JOB = """
+  COMPLETE_JOB = """
     FOR j IN Job
     FILTER j._key == @job_key
     UPDATE j WITH {
