@@ -440,9 +440,17 @@ export default {
       if (this.selected_jobs.length) {
         this.job_select_model = {}
       }
-      else phase.jobs.filter(j => j.stage != 'closed').forEach( j => {
-        this.$set(this.job_select_model, j._key, j)
-      })
+      else {
+        // Select jobs that are open and NOT active
+        phase.jobs.filter(j => {
+          const job_is_open = j.stage != 'closed'
+          const job_not_active = !j.active
+          return job_is_open && job_not_active
+        })
+        .forEach( j => {
+          this.$set(this.job_select_model, j._key, j)
+        })
+      }
     },
 
     updateSelectedJobData(job, selected) {
