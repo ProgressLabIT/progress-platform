@@ -487,10 +487,11 @@ class Event:
 
   def resume_job(self):
     self.get_job_data()
-    self.get_active_batch()
 
-    # Create batch if none is active
-    if not self.job.active_batch_key:
+    # Create batch if none is active and store data for work session creation
+    if self.job.active_batch_key:
+      self.get_active_batch()
+    else:
       self.create_batch()
 
     self.create_work_session()
@@ -498,9 +499,12 @@ class Event:
     job_update=dict(
       _key = self.info.job_key,
       last_work_session_started = self.info.work_session_key,
-      active_batch_key = self.batch.key,
       active=True
     )
+
+    if not self.job.active_batch_key:
+      job_update['active_batch_key'] = self.batch.key
+      job_update['active_batch_qt'] = self.batch.qt_total
 
     self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
 
