@@ -69,7 +69,8 @@ class Queries:
     UPDATE j WITH {
       active: false,
       stage: @stage,
-      current_batch: null,
+      active_batch_key: null,
+      active_batch_qt: 0,
       qt_completed: @qt_completed,
       qt_released: @qt_completed,
       progress: ROUND(100 * @qt_completed / j.qt_planned),

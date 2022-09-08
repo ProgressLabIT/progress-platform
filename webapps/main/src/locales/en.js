@@ -330,19 +330,22 @@ export default {
   },
   "progress": "progress",
   "quantity": {
+    "active": {
+      "short": "aq"
+    },
     "completed": {
-      "short": "CQ"
+      "short": "cq"
     },
     "completed_total": "Comp. - Tot. Qt.",
     "long": "quantity",
     "planned": {
-      "short": "PQ"
+      "short": "pq"
     },
     "released": {
-      "short": "RELQ"
+      "short": "relq"
     },
     "remaining": {
-      "short": "REMQ"
+      "short": "remq"
     },
     "short": "qt",
     "update": "update quantity"

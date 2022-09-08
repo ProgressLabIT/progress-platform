@@ -133,7 +133,8 @@ class Job(FlexModel):
   assigned_to: Union[str, Operator] = None
 
   progress: int = Field(0, ge=0, le=100)
-  current_batch_key: str = None # batch _key
+  active_batch_key: str = None # batch _key
+  active_batch_qt: int = 0
   # current_step: int = None
 
   on_time: bool = True

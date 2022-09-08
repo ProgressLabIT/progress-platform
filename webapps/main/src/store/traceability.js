@@ -35,7 +35,7 @@ function createEvent(state, session_state, { event_type, timestamp, step_key=nul
     product_key: job.product_key,
     work_order_key: job.wo_key,
     phase_key: job.phase_key,
-    current_batch_key: job.current_batch_key,
+    active_batch_key: job.active_batch_key,
     step_key,
     user_data,
     completed_batch_qt,
@@ -143,8 +143,8 @@ const traceability = {
 
         // Get active batch data (if any)
         let batch_data = {}
-        if (job_data.current_batch_key) {
-          const batch_resp = await api.get(`batch/${job_data.current_batch_key}`)
+        if (job_data.active_batch_key) {
+          const batch_resp = await api.get(`batch/${job_data.active_batch_key}`)
           batch_data = batch_resp.data.detail
         }
         commit('LOAD_WORKING_JOB_DATA', {job_data, batch_data})

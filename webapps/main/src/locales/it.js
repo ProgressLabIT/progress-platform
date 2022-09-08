@@ -332,8 +332,11 @@ export default {
   },
   "progress": "avanzamento",
   "quantity": {
+    "active": {
+      "short": "qa"
+    },
     "completed": {
-      "short": "qcom"
+      "short": "qc"
     },
     "completed_total": "qt compl. - tot.",
     "long": "quantità",

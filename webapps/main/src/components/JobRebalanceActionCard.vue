@@ -50,7 +50,7 @@
                 hide-details
                 type="number"
                 :value="j.qt_remaining"
-                :min="0"
+                min="0"
                 :max="qt_to_allocate"
                 @input="updateRemainingQt(index, $event)">
               </v-text-field>
@@ -248,7 +248,9 @@ export default {
     },
 
     qt_to_allocate() {
-      return Object.values(this.jobs).reduce( (sum, job) => sum + job.qt_planned - job.qt_completed, 0)
+      return Object.values(this.jobs).reduce( (sum, job) => {
+        return sum + job.qt_planned - job.qt_completed - job.active_batch_qt
+      }, 0)
     },
 
     remaining_match() {
@@ -262,6 +264,10 @@ export default {
     },
 
     remaining_delta() {
+      /*
+       * A minus is automatically shown in case of negative numbers.
+       * Adds a plus in case of positive ones for better readability
+       */
       const delta = this.working_total_remaining - this.qt_to_allocate
       const sign = delta < 0 ? '' : '+'
       return `${sign}${delta}`
@@ -419,7 +425,7 @@ export default {
     this.temp_jobs = Object.values(this.jobs).map(j => {
       return {
         ...j,
-        qt_remaining: j.qt_planned - j.qt_completed
+        qt_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt
       }
     })
 

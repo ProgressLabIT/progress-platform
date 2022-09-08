@@ -44,6 +44,7 @@ class Batch(FlexModel):
 
   qt_pass: float = 0
   qt_scrap: float = 0
+  qt_total: float = 0
 
   unit_processing_time: float = 0
   unit_processing_cost: float = 0
@@ -94,7 +95,7 @@ class ProductionEvent(FlexModel):
   work_order_key: str = None
   phase_key: str = None
   next_phase: str = None
-  current_batch_key: str = None
+  active_batch_key: str = None
   step_key: str = None
   completed_batch_key: str = None
   completed_batch_qt: float = None
