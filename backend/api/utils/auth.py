@@ -149,12 +149,33 @@ def issue_token(
 
 def verify_user(password, username=None, user_key=None, db=db):
   # Verify User exists in DB
-  if username:
-    try:
+  try:
+    if username:
       user = User( **db.collection('User').find(dict(username=username)).next() )
-    except StopIteration:
-      raise UserNotFoundError
-    except Exception as e:
+
+    elif user_key:
+      user = User( **db.collection('User').get(user_key) )
+
+    else:
+      raise TypeError('Username or user key must be provided')
+
+    #Verify use is enabled
+    if not user.active or user.trash:
+      raise UserDisabledError
+
+    # Verify password
+    if not verify_password(password, user.psw_hash):
+      raise UserPasswordMismatchError
+
+    return user
+
+  except StopIteration:
+    raise UserNotFoundError
+
+  except DocumentGetError:
+    raise UserNotFoundError
+
+  except Exception as e:
       raise HTTPException(
         status_code=500,
         detail=dict(
@@ -163,26 +184,6 @@ def verify_user(password, username=None, user_key=None, db=db):
           stacktrace=traceback.format_exc()
         ),
       )
-  
-  elif user_key:
-    try: 
-      user = User( **db.collection('User').get(user_key) )
-    except DocumentGetError:
-      raise UserNotFoundError
-
-  else:
-    raise TypeError('Username or user key must be provided')
-
-  #Verify use is enabled
-  if not user.active or user.trash:
-    raise UserDisabledError
- 
-  # Verify password
-  if not verify_password(password, user.psw_hash):
-    raise UserPasswordMismatchError
-
-  return user
-
 # ----------------------------------------------------------------------
 
 def close_session(session_key, token_key, db=db):

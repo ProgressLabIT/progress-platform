@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 from dateutil import tz
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, validator
 
@@ -133,7 +133,8 @@ class Job(FlexModel):
   assigned_to: Union[str, Operator] = None
 
   progress: int = Field(0, ge=0, le=100)
-  current_batch: str = None # batch _key
+  active_batch_key: str = None # batch _key
+  active_batch_qt: int = 0
   # current_step: int = None
 
   on_time: bool = True
@@ -146,7 +147,7 @@ class Job(FlexModel):
   job_docs: List[ProductDoc] = []
   job_bom: List[BomLineRead] = []
 
-
+  notes: str = None
   # @validator('progress')
   # def between_0_and_100_percent(cls, v):
   #   if v < 0 or v > 1:
@@ -174,8 +175,8 @@ class Job(FlexModel):
 class JobUpdateType(Enum):
   INSERT = 'insert'
   UPDATE = 'update'
-  DELETE = 'delete'
-  REORDER = 'reorder'
+  CLOSE = 'close'
+
 
 class JobUpdate(FlexModel):
   action: JobUpdateType

@@ -407,9 +407,7 @@ export default {
       if (can_proceed) {
         await this.$store.dispatch('completeStep', {
           step_index: this.current_step_index,
-          last_step: this.current_step_is_last,
           batch_qt: this.production_batch,
-          last_batch: this.current_batch_is_last
         })
 
         if (current_step_was_last && current_batch_was_last) {
@@ -436,7 +434,6 @@ export default {
       if (can_proceed) {
         await this.$store.dispatch('declareBatch', {
           batch_qt: this.production_batch,
-          last_batch: this.current_batch_is_last
         })
         if (this.j.qt_completed >= this.j.qt_planned) this.exitJob()
         else if (this.j.parameters.step_check != 'none') this.goToStep(0)
@@ -510,7 +507,7 @@ export default {
       else {
         this.vuex_ready = true
         if (data.current_batch_data) {
-          const next_step_index = this.batch_data.findIndex( step => !step.done )
+          const next_step_index = this.batch_data.findIndex( step => !step.done ) || 0
           this.$router.replace({ query: { step: next_step_index + 1 }})
         }
         // In case the job is already active, e.g. after accidentally closing and reopening the page, restart heartbeat

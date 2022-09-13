@@ -11,9 +11,10 @@ from models.production import *
 from utils.api import APIResponse
 from utils.bom import get_bom_from_db
 from utils.db import db
+from utils.dt import timestamp
 from utils.process import search_step_media
 from utils.product import get_product_docs
-from utils.production import Queries
+from utils.production import Queries, update_target_queue
 from utils.traceability import update_job_progress
 
 
@@ -276,9 +277,18 @@ async def get_job_list():
 @router.get('/job-assignment')
 async def get_assignment_list(user_key: str = None):
 
-  result = db.aql.execute(Queries.GET_ASSIGNMENT_LIST, bind_vars=dict(user_key=user_key)).next()
+  try:
+    result = db.aql.execute(Queries.GET_ASSIGNMENT_LIST, bind_vars=dict(user_key=user_key)).next()
+    return APIResponse(detail=AssignmentsResponse(**result))
 
-  return APIResponse(detail=AssignmentsResponse(**result))
+  except:
+    status_code=500
+    response=dict(
+      status_code=status_code,
+      message="Couldn't retrieve data from the DB",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(status_code=status_code, detail=response)
 
 
 # ----------------------------------------------------------------------
@@ -313,45 +323,6 @@ async def get_job_data(job_key: str):
 @router.post('/job/update')
 async def update_jobs(job_updates:List[JobUpdate]):
 
-  def update_target_queue(job_key, target_key, action, tx):
-
-    try:
-      if action == 'remove':
-        tx.aql.execute(
-          Queries.REMOVE_JOB_FROM_QUEUE,
-          bind_vars=dict(job_key=job_key, target_key=target_key)
-        )
-
-      if action == 'add':
-        queue_match = dict(
-          subqueue_target_key=target_key,
-          site_key='0'
-        )
-        operator_queue_exists = tx.collection('Queue').find(queue_match).count()
-
-        if operator_queue_exists:
-          tx.aql.execute(
-            Queries.ADD_JOB_TO_QUEUE,
-            bind_vars=dict(target_key=target_key, job_key=job_key)
-          )
-
-        else:
-          tx.collection('Queue').insert(dict(
-            **queue_match,
-            type='o',
-            jobs=[job_key]
-          ))
-
-    except:
-      status_code = 500
-      response =dict(
-       status_code=status_code,
-       message="Couldn't update queue on the db",
-       error=traceback.format_exc()
-      )
-      raise HTTPException(status_code=status_code, detail=response)
-
-
   tx = db.begin_transaction(write=['Job', 'Queue'])
   job_db = tx.collection('Job')
 
@@ -371,6 +342,8 @@ async def update_jobs(job_updates:List[JobUpdate]):
             action='add',
             tx=tx
           )
+
+        results.append(new_job_data)
 
       elif u.action == JobUpdateType.UPDATE:
 
@@ -397,21 +370,33 @@ async def update_jobs(job_updates:List[JobUpdate]):
             tx=tx
           )
 
-      elif u.action == JobUpdateType.DELETE:
-        new_job_data = job_db.update(dict(**u.data, trash=True), return_new=True)['new']
+        results.append(db_resp)
+
+      elif u.action == JobUpdateType.CLOSE:
+        bind_vars = dict(
+          job_key = u.data['_key'],
+          stage = WorkStatus.CLOSED,
+          end = timestamp(),
+          notes = u.data['notes']
+        )
+
+        new_job_data = tx.aql.execute(
+          Queries.CLOSE_JOB,
+          bind_vars = bind_vars,
+        ).next()
 
         if new_job_data['assigned_to']:
           update_target_queue(
-            job_key=u.data['_key'],
-            target_key=new_job_data['assigned_to'],
-            action='remove',
-            tx=tx
+            job_key = u.data['_key'],
+            target_key = new_job_data['assigned_to'],
+            action = 'remove',
+            tx = tx
           )
 
-      results.append(new_job_data)
+        results.append(new_job_data)
 
     tx.commit_transaction()
-    return APIResponse(detail=db_resp, message="Jobs updated successfully")
+    return APIResponse(detail=results, message="Jobs updated successfully")
 
   except:
     status_code = 500

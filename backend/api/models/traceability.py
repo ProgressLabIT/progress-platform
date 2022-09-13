@@ -44,6 +44,7 @@ class Batch(FlexModel):
 
   qt_pass: float = 0
   qt_scrap: float = 0
+  qt_total: float = 0
 
   unit_processing_time: float = 0
   unit_processing_cost: float = 0
@@ -58,13 +59,16 @@ class Batch(FlexModel):
 class WorkSession(FlexModel):
   key: str = Field(None, alias="_key")
   user_session_key: str
+  batch_key: str
   job_key: str
-  work_order_key: str = None
+  phase_key: str
+  work_order_key: str
+  product_key: str
   user_key: str
   # master_session: bool
-  start: datetime = None
+  start: datetime
   end: datetime = None
-  # duration: timedelta = None
+  duration: timedelta = None
   active: bool
   hourly_cost: float = None
 
@@ -75,7 +79,6 @@ class EventType(Enum):
   JOB_PAUSED_OFFLINE = 'JOB_PAUSED_OFFLINE'
   JOB_RESUMED = 'JOB_RESUMED'
   JOB_BACK_ONLINE = 'JOB_BACK_ONLINE'
-  JOB_CLOSED = 'JOB_CLOSED'
   STEP_COMPLETED = 'STEP_COMPLETED'
   BATCH_COMPLETED = 'BATCH_COMPLETED'
 
@@ -91,7 +94,7 @@ class ProductionEvent(FlexModel):
   work_order_key: str = None
   phase_key: str = None
   next_phase: str = None
-  current_batch_key: str = None
+  active_batch_key: str = None
   step_key: str = None
   completed_batch_key: str = None
   completed_batch_qt: float = None
@@ -99,21 +102,6 @@ class ProductionEvent(FlexModel):
   timestamp: datetime = timestamp()
   user_data: Any
   description: str = None # optional descriptive field for auditing reasons
-
-
-class BatchTimeRecord(FlexModel):
-  key: str = Field(None, alias="_key")
-  batch_key: str
-  work_session_key: str
-  full_session: bool = None
-  start: datetime
-  end: datetime = None
-  duration: float = None
-  value: float = None
-  active: bool = None
-  product_key: str = None
-  work_order_key: str = None
-  phase_key: str = None
 
 
 

@@ -39,7 +39,8 @@ app.include_router(endpoints.item, tags=['Library'])
 app.include_router(endpoints.production, tags=['Production'])
 app.include_router(endpoints.org, tags=['Organization'])
 app.include_router(endpoints.traceability, tags=['Traceability'])
-app.include_router(endpoints.auth, tags=['security'])
+app.include_router(endpoints.auth, tags=['Security'])
+app.include_router(endpoints.admin, tags=['Administration'])
 
 # app.include_router(global_router, prefix="/v1")
 
