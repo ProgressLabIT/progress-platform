@@ -33,7 +33,6 @@ class ProgressAdmin:
 
   collections = [
     'Batch',
-    'BatchTimeRecord',
     'Config',
     'Department',
     'Event',

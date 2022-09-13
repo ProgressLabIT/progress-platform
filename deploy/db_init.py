@@ -78,7 +78,6 @@ with sys_db_connection.begin_batch_execution() as sys_db:
 # ————————————————————————————
 collections = [
   'Batch',
-  'BatchTimeRecord',
   'Config',
   'Department',
   'Event',

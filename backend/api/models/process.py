@@ -32,6 +32,7 @@ class PhaseParameters(FlexModel):
   step_check_force_order: bool = False
   production_batch_qt: int = 1
   max_offline: int = 60 # seconds
+  auto_new_batch: bool = True
   # release_style: ReleaseStyle = ReleaseStyle.JOB
   # release_batch_qt: int = 1
   # wip_flow: WIPFlow = WIPFlow.BUFFER

@@ -131,7 +131,7 @@
 
 
                 <template v-else-if="header.value === 'qt_remaining' ">
-                  {{ job.qt_planned - job.qt_completed }}
+                  {{ job.qt_planned - job.qt_completed - job.active_batch_qt }}
                 </template>
 
                 <!-- OTHER FIELDS -->
@@ -363,6 +363,13 @@ export default {
         },
         // { value: 'qt_released', text: 'QRil', align: 'end', cols: false, width: 'auto'},
         {
+          value: 'active_batch_qt',
+          text: this.$tc('quantity.active.short').toUpperCase(),
+          align: 'end',
+          cols: false,
+          width: 'auto'
+        },
+        {
           value: 'qt_remaining',
           text: this.$tc('quantity.remaining.short').toUpperCase(),
           align: 'end',
@@ -385,8 +392,11 @@ export default {
         const params = jobs[0].parameters
         const phase_alias = jobs[0].phase_alias
         const total_completed = jobs.reduce( (sum, job) => sum + job.qt_completed, 0)
+        const total_active = jobs.reduce( (sum, job) => sum + job.active_batch_qt, 0)
         // const total_released = jobs.reduce( (sum, job) => sum + job.qt_released, 0 )
-        const total_remaining = jobs.reduce( (sum, job) => sum + job.qt_planned - job.qt_completed, 0 )
+        const total_remaining = jobs.reduce( (sum, job) => {
+          return sum + job.qt_planned - job.qt_completed - job.active_batch_qt
+        }, 0)
         const total_progress = Math.floor(
           jobs.reduce( (sum, job) => sum + job.progress * job.qt_planned, 0) / this.wo_data.qt_planned
         )
@@ -405,6 +415,7 @@ export default {
           // qt_released: total_released,
           qt_completed: total_completed,
           qt_remaining: total_remaining,
+          active_batch_qt: total_active,
           progress: total_progress,
         }
       })
@@ -429,9 +440,17 @@ export default {
       if (this.selected_jobs.length) {
         this.job_select_model = {}
       }
-      else phase.jobs.filter(j => j.stage != 'closed').forEach( j => {
-        this.$set(this.job_select_model, j._key, j)
-      })
+      else {
+        // Select jobs that are open and NOT active
+        phase.jobs.filter(j => {
+          const job_is_open = j.stage != 'closed'
+          const job_not_active = !j.active
+          return job_is_open && job_not_active
+        })
+        .forEach( j => {
+          this.$set(this.job_select_model, j._key, j)
+        })
+      }
     },
 
     updateSelectedJobData(job, selected) {

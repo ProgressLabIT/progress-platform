@@ -8,7 +8,6 @@ db = client.db('PROGRESS_TEST', username='root', password='')
 # https://python-driver-for-arangodb.readthedocs.io/en/master/specs.html#arango.database.TransactionDatabase.create_collection
 collection_names = [
 	'Batch',
-	'BatchTimeRecord',
 	'Department',
 	'Event',
 	'Job',

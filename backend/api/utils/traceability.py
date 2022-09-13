@@ -11,11 +11,14 @@ class Queries:
 
   CREATE_WORK_SESSION = """
     LET new_ws = {
+      batch_key: @batch_key,
       job_key: @job_key,
+      phase_key: @phase_key,
+      work_order_key: @work_order_key,
+      product_key: @product_key,
       user_key: @user_key,
       hourly_cost: DOCUMENT(User, @user_key).hourly_cost,
       user_session_key: @user_session_key,
-      work_order_key: @work_order_key,
       start: @start,
       active: true
     }
@@ -60,18 +63,21 @@ class Queries:
   """
 
 
-  CLOSE_JOB = """
+  COMPLETE_JOB = """
     FOR j IN Job
     FILTER j._key == @job_key
     UPDATE j WITH {
       active: false,
       stage: @stage,
-      current_batch: null,
+      active_batch_key: null,
+      active_batch_qt: 0,
       qt_completed: @qt_completed,
       qt_released: @qt_completed,
       progress: ROUND(100 * @qt_completed / j.qt_planned),
-      end: @end
+      end: @end,
+      notes: @notes
     } IN Job
+    RETURN NEW
   """
 
   UPDATE_WORK_ORDER = """
@@ -107,15 +113,15 @@ class Queries:
 
     // Update PT and Cost
     LET processing_time = SUM(
-      FOR r IN BatchTimeRecord
-      FILTER r.work_order_key == @wo_key
-      RETURN r.duration
+      FOR ws IN WorkSession
+      FILTER ws.work_order_key == @wo_key
+      RETURN ws.duration
     )
 
     LET processing_cost = SUM(
-      FOR r IN BatchTimeRecord
-      FILTER r.work_order_key == @wo_key
-      RETURN r.value
+      FOR ws IN WorkSession
+      FILTER ws.work_order_key == @wo_key
+      RETURN ws.duration * ws.hourly_cost
     )
 
     // Check if any WO Job is still open
@@ -171,48 +177,57 @@ class Queries:
 
 
   COMPLETE_BATCH = """
-    LET b = DOCUMENT(Batch, @batch_key)
+    LET batch = DOCUMENT(Batch, @batch_key)
+
+    LET work_sessions = (
+      FOR ws IN WorkSession
+      FILTER ws.batch_key == @batch_key
+      RETURN ws
+    )
 
     LET unit_processing_time = SUM(
-      FOR r IN BatchTimeRecord
-      FILTER r.batch_key == @batch_key
-      RETURN r.duration
+      FOR ws IN work_sessions
+      RETURN ws.duration
     ) / @qt_pass
-
-    LET processing_cost = SUM(
-      FOR r IN BatchTimeRecord
-      FILTER r.batch_key == @batch_key
-      RETURN r.value
-    )
 
     // To be added when material cost will be handled
     LET material_cost = 0
 
-    UPDATE b WITH {
+    LET processing_cost = SUM(
+      FOR ws IN work_sessions
+      RETURN ws.duration * ws.hourly_cost
+    )
+
+
+    UPDATE batch WITH {
       qt_pass: @qt_pass,
       active: false,
       end: @end,
       unit_processing_time,
       unit_processing_cost: processing_cost / @qt_pass,
       value: processing_cost + material_cost
+
     } in Batch
   """
 
 
-  UPDATE_BATCH_TIME_RECORD = """
-    FOR r IN BatchTimeRecord
-    FILTER r.batch_key == @batch_key && r.work_session_key == @ws_key
-    LET duration = DATE_DIFF(r.start, @end, "f")
-    LET milliseconds_in_one_hour = 3600000
-    LET value = DOCUMENT(WorkSession, r.work_session_key).hourly_cost * duration / milliseconds_in_one_hour
+  CLOSE_WORK_SESSION = """
+    LET ws_key = (
+      FOR j IN Job
+      FILTER j._key == @job_key
+      RETURN j.last_work_session_started
+    )[0]
 
-    UPDATE r WITH {
+    LET ws = Document('WorkSession', ws_key)
+    LET duration = DATE_DIFF(ws.start, @end, "f")
+
+    UPDATE ws WITH {
       end: @end,
-      full_session: @full_session,
       duration,
-      value,
       active: false
-    } in BatchTimeRecord
+    } in WorkSession
+
+    RETURN NEW
   """
 
   # GET_NEXT_SERIAL_NUMBER_FOR_WORK_ORDER = """

@@ -32,6 +32,7 @@ export default {
   },
   "by": "by",
   "cancel": "cancel",
+  "canceled": "canceled"
   "cancel_changes": "cancel changes",
   "change": "change",
   "close": "close",
@@ -191,6 +192,17 @@ export default {
     "multiline_field": "multiline",
     "no_procedure": "no procedure",
     "params": {
+      "auto_new_batch" : {
+        "false": {
+          "desc": "When a batch is completed the work session is interrupted. The next batch will be created when the work session is restarted.",
+          "title": "Disabled"
+        },
+        "true": {
+          "desc": "When a batch is completed a new one, when necessary, is automatically generated without interrupting the work session.",
+          "title": "Enabled"
+        },
+        "title": "Automatic batch creation"
+      },
       "max_offline": {
         "desc": "Work sessions will be considered closed if offline for longer than this parameter (in seconds). In case of temporary connection issues, the software automatically calculates and records the correct total active time even if the session gets temporarily closed due to being offline for more than this time.",
         "title": "Maximum active time offline"
@@ -319,19 +331,22 @@ export default {
   },
   "progress": "progress",
   "quantity": {
+    "active": {
+      "short": "aq"
+    },
     "completed": {
-      "short": "CQ"
+      "short": "cq"
     },
     "completed_total": "Comp. - Tot. Qt.",
     "long": "quantity",
     "planned": {
-      "short": "PQ"
+      "short": "pq"
     },
     "released": {
-      "short": "RELQ"
+      "short": "relq"
     },
     "remaining": {
-      "short": "REMQ"
+      "short": "remq"
     },
     "short": "qt",
     "update": "update quantity"

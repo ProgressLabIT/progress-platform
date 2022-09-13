@@ -32,16 +32,16 @@
               <span class="text-uppercase">
                 {{ j._key || $tc('new') }}
               </span>
-              <v-chip v-if="j.trash"
+              <v-chip v-if="j.close"
                 small label close
                 :color="$theme.orange"
                 class="ml-2 solid-white weight-bold text-uppercase"
-                @click:close="restoreJob(index)">
+                @click:close="reopenJob(index)">
                 {{ $tc('closed') }}
               </v-chip>
             </template>
 
-            <template v-if="col.value === 'qt_remaining' && !j.trash">
+            <template v-if="col.value === 'qt_remaining' && !j.close">
               <v-text-field
                 class="ma-0 pa-0"
                 :key="index"
@@ -50,9 +50,9 @@
                 hide-details
                 type="number"
                 :value="j.qt_remaining"
-                :min="0"
+                min="0"
                 :max="qt_to_allocate"
-                @input="updateRemainingQt(index, $event)">
+                @input="updateRemainingQt(index, parseInt($event))">
               </v-text-field>
             </template>
 
@@ -92,12 +92,12 @@
 
           <v-col
             cols="auto"
-            v-if="deletable(index) && !j.trash" class="ml-auto pr-8">
+            v-if="deletable(index) && !j.close" class="ml-auto pr-8">
             <BaseTooltipIcon
               :color="$theme.red"
               :tooltip="$tc('delete') | capitalize"
               icon="delete"
-              @iconClick="removeJob(index)">
+              @iconClick="closeJob(index)">
             </BaseTooltipIcon>
           </v-col>
         </v-row>
@@ -248,7 +248,9 @@ export default {
     },
 
     qt_to_allocate() {
-      return Object.values(this.jobs).reduce( (sum, job) => sum + job.qt_planned - job.qt_completed, 0)
+      return Object.values(this.jobs).reduce( (sum, job) => {
+        return sum + job.qt_planned - job.qt_completed - job.active_batch_qt
+      }, 0)
     },
 
     remaining_match() {
@@ -262,6 +264,10 @@ export default {
     },
 
     remaining_delta() {
+      /*
+       * A minus is automatically shown in case of negative numbers.
+       * Adds a plus in case of positive ones for better readability
+       */
       const delta = this.working_total_remaining - this.qt_to_allocate
       const sign = delta < 0 ? '' : '+'
       return `${sign}${delta}`
@@ -272,7 +278,7 @@ export default {
 
     updateNewTotal() {
       this.working_total_remaining = this.temp_jobs
-        .filter(j => !j.trash)
+        .filter(j => !j.close)
         .reduce( (sum, job) => sum + job.qt_remaining, 0)
     },
 
@@ -280,7 +286,7 @@ export default {
       const j = this.temp_jobs[index]
       const has_assignee = j.assigned_to
       const started = ['started', 'completed'].includes(j.stage)
-      const to_be_closed = j.trash
+      const to_be_closed = j.close
       return (has_assignee && started) || to_be_closed
     },
 
@@ -291,15 +297,15 @@ export default {
       return !started && not_last_job
     },
 
-    removeJob(index) {
+    closeJob(index) {
       if (this.temp_jobs[index]._key) {
-        this.$set(this.temp_jobs[index], 'trash', true)
+        this.$set(this.temp_jobs[index], 'close', true)
       }
       else this.temp_jobs.splice(index, 1)
     },
 
-    restoreJob(index) {
-      this.$delete(this.temp_jobs[index], 'trash')
+    reopenJob(index) {
+      this.$delete(this.temp_jobs[index], 'close')
     },
 
     addJob() {
@@ -308,20 +314,20 @@ export default {
 
     rebalanceJobs() {
       // check if quantity is divisible by the number of jobs considered
-      let jobs = this.temp_jobs.filter(j => !j.trash)
+      let jobs = this.temp_jobs.filter(j => !j.close)
       let remainder = this.qt_to_allocate % jobs.length
 
       // Spread remaining quantity among all jobs, excluding started jobs to be closed
       for (let j of this.temp_jobs) {
 
-        if (!j.trash) j.qt_remaining = Math.floor(this.qt_to_allocate / jobs.length)
+        if (!j.close) j.qt_remaining = Math.floor(this.qt_to_allocate / jobs.length)
       }
 
       // assign remainder starting from the first job, excluding started jobs to be closed
       if (remainder) {
         for (let i=0; i < remainder; i++) {
           let j = this.temp_jobs[i]
-          if (!j.trash) j.qt_remaining ++
+          if (!j.close) j.qt_remaining ++
         }
       }
     },
@@ -331,7 +337,7 @@ export default {
       this.temp_jobs.forEach( j => {
         if (!j._key) j.qt_remaining = 0
         else {
-          j.trash = false
+          j.close = false
           const original = this.jobs[j._key]
           j.qt_remaining = original.qt_planned - original.qt_completed
         }
@@ -343,8 +349,15 @@ export default {
     },
 
     updateRemainingQt(job_index, qt) {
-      this.$set(this.temp_jobs[job_index], 'qt_remaining', +qt)
-      // this.updateNewTotal()
+      /* If qt is zero and there's no active batch close job
+       * otherwise update new quantity
+       */
+      if (qt === 0 && this.temp_jobs[job_index].active_batch_qt === 0) {
+        this.$set(this.temp_jobs[job_index], 'close', true)
+      }
+      else {
+        this.$set(this.temp_jobs[job_index], 'qt_remaining', +qt)
+      }
     },
 
     resetAssignment(job_index) {
@@ -360,7 +373,6 @@ export default {
     },
 
     save() {
-
       // Check if overall job quantity matches original remaining quantity
       if (!this.remaining_match) {
         window.alert(
@@ -371,19 +383,32 @@ export default {
       else {
         this.saving = true
         const updates = this.temp_jobs.map( j => {
+        const user_full_name = this.$store.getters.userFullName
+        const datetime = new Date().toLocaleString()
 
-          // Delete job
-          if (j.trash) {
-            return { action: 'delete', data: { _key: j._key } }
+          // Close job
+          if (j.close) {
+            return {
+              action: 'close',
+              data: {
+                _key: j._key,
+                notes: `Job closed by ${user_full_name} on ${datetime}`
+              }
+            }
           }
 
           // Update to existing job
           else if (j._key) {
-            const new_planned_qt = j.qt_completed + j.qt_remaining
+            const new_planned_qt = j.qt_completed + j.qt_remaining + j.active_batch_qt
             const assignee = j.assigned_to ? j.assigned_to._key : null
             return {
               action: 'update',
-              data: { _key: j._key, qt_planned: new_planned_qt, assigned_to: assignee }
+              data: {
+                _key: j._key,
+                qt_planned: new_planned_qt,
+                assigned_to: assignee,
+                notes: `Job last updated by ${user_full_name} on ${datetime}`
+              }
             }
           }
 
@@ -394,7 +419,8 @@ export default {
               // Use all metadata from template overriding what's necessary
               ...j,
               qt_planned: j.qt_remaining,
-              assigned_to: j.assigned_to ? j.assigned_to._key : null
+              assigned_to: j.assigned_to ? j.assigned_to._key : null,
+              notes: `Job added by ${user_full_name} on ${datetime}`
             }
           }
         })
@@ -419,7 +445,7 @@ export default {
     this.temp_jobs = Object.values(this.jobs).map(j => {
       return {
         ...j,
-        qt_remaining: j.qt_planned - j.qt_completed
+        qt_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt
       }
     })
 

@@ -90,7 +90,6 @@ async def create_product(
         await product_image.write_file('image.jpg')
 
       except:
-        print(traceback.format_exc())
         raise HTTPException(
           status_code=500,
           detail="Could not save image"
