@@ -11,6 +11,7 @@ from models.production import *
 from utils.api import APIResponse
 from utils.bom import get_bom_from_db
 from utils.db import db
+from utils.dt import timestamp
 from utils.process import search_step_media
 from utils.product import get_product_docs
 from utils.production import Queries, update_target_queue
@@ -342,6 +343,8 @@ async def update_jobs(job_updates:List[JobUpdate]):
             tx=tx
           )
 
+        results.append(new_job_data)
+
       elif u.action == JobUpdateType.UPDATE:
 
         db_resp = job_db.update(u.data, return_new=True, return_old=True)
@@ -367,24 +370,33 @@ async def update_jobs(job_updates:List[JobUpdate]):
             tx=tx
           )
 
+        results.append(db_resp)
+
       elif u.action == JobUpdateType.CLOSE:
-        new_job_data = job_db.update(dict(
-          **u.data,
+        bind_vars = dict(
+          job_key = u.data['_key'],
           stage = WorkStatus.CLOSED,
-        ), return_new=True)['new']
+          end = timestamp(),
+          notes = u.data['notes']
+        )
+
+        new_job_data = tx.aql.execute(
+          Queries.CLOSE_JOB,
+          bind_vars = bind_vars,
+        ).next()
 
         if new_job_data['assigned_to']:
           update_target_queue(
-            job_key=u.data['_key'],
-            target_key=new_job_data['assigned_to'],
-            action='remove',
-            tx=tx
+            job_key = u.data['_key'],
+            target_key = new_job_data['assigned_to'],
+            action = 'remove',
+            tx = tx
           )
 
-      results.append(new_job_data)
+        results.append(new_job_data)
 
     tx.commit_transaction()
-    return APIResponse(detail=db_resp, message="Jobs updated successfully")
+    return APIResponse(detail=results, message="Jobs updated successfully")
 
   except:
     status_code = 500

@@ -74,7 +74,8 @@ class Queries:
       qt_completed: @qt_completed,
       qt_released: @qt_completed,
       progress: ROUND(100 * @qt_completed / j.qt_planned),
-      end: @end
+      end: @end,
+      notes: @notes
     } IN Job
     RETURN NEW
   """

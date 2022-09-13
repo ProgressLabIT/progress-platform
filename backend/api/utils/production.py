@@ -151,6 +151,21 @@ class Queries:
   """
 
 
+  CLOSE_JOB = """
+    FOR j in Job
+    FILTER j._key == @job_key
+    UPDATE j WITH {
+      active: false,
+      stage: @stage,
+      qt_planned: j.qt_completed,
+      progress: 100,
+      end: @end,
+      notes: @notes
+    } in Job
+    RETURN NEW
+  """
+
+
 def update_target_queue(job_key, target_key, action, tx):
   """Add or remove jobs in a queue"""
   try:
