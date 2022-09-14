@@ -95,23 +95,46 @@
       <v-col cols="3" class="pa-6 d-flex flex-column">
         <h5 class="highlight text-uppercase">{{ $tc('filter', 2) }}</h5>
         
+        <!-- FILTERS SPECIFIC TO JOB LIST  -->
+        <template v-if="$route.name == 'jobList'">
+          <!-- BY DEPARTMENT -->
+          <v-autocomplete
+            autocomplete="off"
+            v-model="department_key"
+            :items="$store.state.org.departments"
+            item-value="_key"
+            item-text="name"
+            single-line hide-details clearable
+            :label="$tc('department', 1) | capitalize"
+            class="mb-6 flex-grow-0">
+            <template v-slot:item="{ item: list_item }">
+              {{ list_item.name }}
+            </template>
+            <template v-slot:selection="{ item: selection }">
+              {{ selection.name }}
+            </template>
+          </v-autocomplete>
 
-        <!-- FILTER JOBS BY DEPARTMENT -->
-        <v-autocomplete v-if="$route.name == 'jobList'"
-          autocomplete="off"
-          v-model="department"
-          :items="$store.state.org.departments"
-          item-value="_key"
-          single-line hide-details clearable
-          :label="$tc('department', 1) | capitalize"
-          class="mb-6 flex-grow-0">
-          <template v-slot:item="{ item: list_item }">
-            {{ list_item.name }}
-          </template>
-          <template v-slot:selection="{ item: selection }">
-            {{ selection.name }}
-          </template>
-        </v-autocomplete>
+          <!-- BY OPERATOR: Adapted from JobRebalanceActionCard  -->
+          <v-autocomplete
+            ref="operator_autocomplete"
+            autocomplete="off"
+            :items="$store.getters.operator_list()"
+            item-value="_key"
+            v-model="operator_key"
+            single-line hide-details
+            clearable
+            :filter="filterOperator"
+            :label="$tc('operator') | capitalize"
+            class="mb-6 flex-grow-0">
+            <template v-slot:item="{ item: list_item }">
+              <BaseUserAvatar :user="list_item"/>
+            </template>
+            <template v-slot:selection="{ item: selection }">
+              <BaseUserAvatar :user="selection"/>
+            </template>
+          </v-autocomplete>
+        </template>
 
         <!-- Search box: instructions shows on mouse over info icon, in turn shown only on mouse over input -->
         <v-hover v-slot:default="{ hover }">
@@ -180,9 +203,8 @@
 </template>
 
 <script>
-// import WorkOrderList from '@/components/WorkOrderList.vue'
-// import JobList from '@/components/JobList.vue'
-
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
+import multiMatch from '@/lib/MultiFieldSearch.js'
 
 const production_views = [
   { component: 'WorkOrderList', route_name: 'workOrderList' },
@@ -194,6 +216,10 @@ const header_plus_footer_height = 80
 export default {
 
   name: 'ProductionOverview',
+
+  components: {
+    BaseUserAvatar
+  },
 
   data () {
     return {
@@ -212,7 +238,8 @@ export default {
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       },
       search_string: undefined,
-      department: undefined,
+      department_key: undefined,
+      operator_key: undefined,
       editing: false,
       saving: false,
       polling_instance: undefined
@@ -226,8 +253,9 @@ export default {
       for (const [k,v] of Object.entries(this.bool_filters)) {
         bools_map[k] = v.value
       }
-      const department = this.department
-      return { search_string, ...bools_map, department }
+      const department_key = this.department_key
+      const operator_key = this.operator_key
+      return { search_string, ...bools_map, department_key, operator_key }
     },
 
     filters_active() {
@@ -257,6 +285,7 @@ export default {
     resetFilters() {
       this.search_string = undefined
       this.department = undefined
+      this.operat
       for (let filter of Object.values(this.bool_filters)) {
         filter.value = true
       }
@@ -285,7 +314,11 @@ export default {
     cancelQueueChanges() {
       this.$store.commit('RESET_TEMP_QUEUE')
       this.editing = false
-    }
+    },
+
+    filterOperator(operator, search_text) {
+      return multiMatch(search_text, operator, ['name', 'surname'])
+    },
   },
 
   beforeCreate() {

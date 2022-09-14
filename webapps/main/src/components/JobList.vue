@@ -132,7 +132,8 @@ export default {
         idle:true,
         critical:true,
         not_critical:true,
-        department: undefined 
+        department_key: undefined,
+        operator_key: undefined
       }}
     }
   },
@@ -198,8 +199,10 @@ export default {
       let list = []
       for (let i = 0; i < this.assignments.length; i++) {
         let a = this.assignments[i]
+        const department_match = [a.operator.department_key, undefined].includes(this.filters.department_key)
+        const operator_match = [a.operator._key, undefined].includes(this.filters.operator_key)
         // Check if operator is in department selected or no department filter is set
-        if ([a.operator.department_key, undefined].includes(this.filters.department)) {
+        if (department_match && operator_match) {
 
           const filtered_jobs = a.assigned_jobs ? a.assigned_jobs.filter(this.matchJobToFilters) : []
           
@@ -231,7 +234,7 @@ export default {
       const result = [...this.filtered_assignments]
       const filtered_unassigned_jobs = this.unassigned_jobs.filter(this.matchJobToFilters)
 
-      if (filtered_unassigned_jobs.length) {
+      if (filtered_unassigned_jobs.length && this.filters.operator_key === undefined) {
         result.push({
           operator: {
             _key: 'unassigned',
