@@ -10,7 +10,7 @@
       </h4>
 
       <!-- WORK ORDER CODE INPUT -->
-      <v-text-field v-model="wo_code" />
+      <v-text-field v-model="wo_code" class="input-uppercase"/>
 
       <!-- WORK ORDER LINES TITLE  -->
       <h4 class="weight-bold text-uppercase">
@@ -109,6 +109,7 @@
 </template>
 
 <script>
+import { capitalize } from '@/lib/filters.js'
 import BaseModalForm from '@/components/BaseModalForm.vue'
 
 export default {
@@ -121,7 +122,7 @@ export default {
 
   data () {
     return {
-      wo_code: '',
+      wo_code: null,
       wo_lines: [],
       show_picker: -1,
       loading: false
@@ -167,28 +168,39 @@ export default {
     },
 
     postNewWorkOrder() {
-      let new_records = this.wo_lines.map( (line, index) => {
+      const wo_code_missing = !this.wo_code
+      const quantity_missing = this.wo_lines.some( line => line.qt_planned == 0 )
+      const product_missing = this.wo_lines.some( line => !line.product._key )
+
+      if (wo_code_missing || quantity_missing || product_missing)  {
+        window.alert(capitalize(this.$tc('form_missing_fields_alert')))
+
+      }
+
+      else {
+        let new_records = this.wo_lines.map( (line, index) => {
         return {
-          wo_code: this.wo_code,
+          wo_code: this.wo_code.toUpperCase(),
           wo_line: index + 1,
           product_key: line.product._key,
           product_code: line.product.code,
           product_description: line.product.description,
           qt_planned: line.qt_planned,
           due_by: line.due_by
-        }
-      })
-      this.loading = true
-      this.$store.dispatch('postWorkOrder', new_records)
-      .then( () => {
-        this.wo_lines = []
-        this.loading = false
-        this.$router.back()
-      })
-      .catch( err => {
-        window.alert(err)
-        this.loading = false
-      })
+          }
+        })
+        this.loading = true
+        this.$store.dispatch('postWorkOrder', new_records)
+        .then( () => {
+          this.wo_lines = []
+          this.loading = false
+          this.$router.back()
+        })
+        .catch( err => {
+          window.alert(err)
+          this.loading = false
+        })
+      }
     },
 
     setDueBy(date, line) {

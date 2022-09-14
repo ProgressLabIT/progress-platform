@@ -72,6 +72,7 @@ export default {
     "save_err": "Non è stato possibile salvare gli aggiornamenti"
   },
   "filter": "filtro | filtri",
+  "form_missing_fields_alert": "compilare tutti i campi",
   "greeting": {
     "afternoon": "buon pomeriggio",
     "evening": "buonasera",

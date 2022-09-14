@@ -72,6 +72,7 @@ export default {
     "save_err": "Could not save updates"
   },
   "filter": "filter",
+  "form_missing_fields_alert": "please fill in all fields",
   "greeting": {
     "afternoon": "good afternoon",
     "evening": "good evening",
