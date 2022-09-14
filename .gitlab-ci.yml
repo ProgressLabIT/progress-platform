@@ -12,7 +12,7 @@ build:webapp:
   stage: build
   only:
     refs:
-      - master
+      - DEV
     changes:
       - webapps/main/**/*
   image: docker:latest
