@@ -57,8 +57,8 @@ async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
       bind_vars=dict(product_key=product_key)
     )
 
-    # Enrich data
     bom_to_db = [define_bom_line_for_db(line) for line in new_bom]
+
     # Insert new bom
     txn.collection('requires').insert_many(bom_to_db, silent=True)    
     txn.commit_transaction()

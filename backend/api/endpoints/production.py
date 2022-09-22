@@ -6,7 +6,7 @@ from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from models.process import PhaseData
-from models.product import ProductData
+from models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
 from utils.bom import get_bom_from_db
@@ -47,7 +47,7 @@ async def create_work_order(new_wo: WorkOrderNew):
     return new_wo_record
 
   try:
-    product_data = ProductData(**product_coll.get(new_wo.product_key))
+    product_data = ProductDetails(**product_coll.get(new_wo.product_key))
     new_wo.product_code = product_data.code
     new_wo.product_description = product_data.description
 

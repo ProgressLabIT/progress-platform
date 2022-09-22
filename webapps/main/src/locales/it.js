@@ -15,9 +15,9 @@ export default {
   "assign": "assegna",
   "batch": "lotto",
   "bom": {
-    "add_item": "aggiungi articolo",
+    "add_line": "aggiungi riga",
     "alerts": {
-      "phase_item_exists": "Articolo già presente in distinta per questa fase"
+      "line_exists": "Articolo già presente in distinta per questa fase"
     },
     "delete_selected": "elimina selezionati",
     "edit": "modifica distinta",

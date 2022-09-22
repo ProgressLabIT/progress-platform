@@ -6,15 +6,14 @@ class Queries:
 
   GET_PRODUCT_BOM = """
     FOR v,e IN 2..2 OUTBOUND DOCUMENT('Product', @product_key) requires
-      FILTER e.type like 'BomItem'
+      FILTER e.type like 'BomLine'
       LET phase = e._from
       
       RETURN {
-          item_key: v._key,
+          product_key: v._key,
           bom_line_key: e._key,
-          code: v.code,
-          description: v.description,
-          item_type: v.type,
+          product_code: v.code,
+          product_description: v.description,
           phase_key: PARSE_IDENTIFIER(phase).key,
           phase_name: DOCUMENT(phase).alias,
           qt: e.qt
@@ -23,7 +22,7 @@ class Queries:
 
   DELETE_PRODUCT_BOM = """
     FOR v,e IN 2..2 OUTBOUND DOCUMENT('Product', @product_key) requires
-    FILTER e.type=="BomItem"
+    FILTER e.type=="BomLine"
     REMOVE e IN requires
   """
 
@@ -37,13 +36,8 @@ def get_bom_from_db(db, product_key):
 
 
 def define_bom_line_for_db(bom_line_in):
-  if bom_line_in.item_type == 'assembly':
-    target_collection = 'Product'  
-  else:
-    target_collection = 'ProductionItem'
-  
   bom_line_out = BomLineWriteOut(
-    item_id=f"{target_collection}/{bom_line_in.item_key}",
+    product_id=f"Product/{bom_line_in.product_key}",
     phase_id=f"Phase/{bom_line_in.phase_key}",
     qt=bom_line_in.qt
   )

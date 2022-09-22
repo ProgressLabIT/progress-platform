@@ -15,9 +15,9 @@ export default {
   "assign": "assign",
   "batch": "batch",
   "bom": {
-    "add_item": "add item | add items",
+    "add_line": "add line",
     "alerts": {
-      "phase_item_exists": "Item already used in this phase"
+      "line_exists": "Item already used in this phase"
     },
     "delete_selected": "delete selected",
     "edit": "edit",
