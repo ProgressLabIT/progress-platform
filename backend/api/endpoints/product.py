@@ -6,7 +6,7 @@ from fnmatch import fnmatch
 from fastapi import APIRouter, Form, File, HTTPException, UploadFile
 from fastapi.encoders import jsonable_encoder
 
-from models.product import ProductData, ProductDoc, ProductFull
+from models.product import *
 from utils.api import APIResponse
 from utils.db import db
 from utils.file import UserFile
@@ -25,16 +25,27 @@ product_db = db.collection('Product')
 # =================================================
 @router.get("")
 async def get_product_list(
+  offset: int = None,
   limit: int = None, # return a limited number of results
   code: str = None, # filter by code
+  details: bool = False
 ):
 
-  list =  db.aql.execute(
+  product_list =  db.aql.execute(
     Queries.GET_PRODUCT_LIST,
-    bind_vars=dict(code=code, limit=limit)
+    bind_vars=dict(
+      code = code,
+      limit = limit,
+      details = details,
+      offset = offset
+    )
   )
 
-  results = [ProductData(**p) for p in list]
+  def validate(data):
+    return ProductDetails(**data) if details else ProductBaseData(**data)
+
+  results = [validate(p) for p in product_list]
+
   return results
 
 
@@ -198,7 +209,7 @@ async def udpate_product(
 @router.put("/{product_key}")
 async def replace_product(
   product_key: str,
-  new_product_data: ProductData,
+  new_product_data: ProductDetails,
 ):
 
   # new_product_data.key = product_key

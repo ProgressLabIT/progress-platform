@@ -23,11 +23,13 @@ class KPIWindowType(Enum):
   COUNT = 'count'
 
 
-class ProductData(FlexModel):
+class ProductBaseData(FlexModel):
   key: str = Field(None, alias="_key")
   code: str
   description: Optional[str] = None
   active: bool = True
+
+class ProductDetails(ProductBaseData):
   trash: bool = False
   cost: TargetAverageCost = TargetAverageCost()
   # sale_price: float = 0
@@ -49,6 +51,6 @@ class ProductDoc(FlexModel):
   name: str
   size: ByteSize
 
-class ProductFull(ProductData):
+class ProductFull(ProductDetails):
   docs: List[ProductDoc] = []
   img_name: str = None

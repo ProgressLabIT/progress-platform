@@ -15,20 +15,12 @@
           autocomplete="off"
           name="search"
           label="Codice o Descrizione"
-          v-model="search"
+          v-model="search_text"
           class="ma-0 pa-0 align-center">
           <template v-slot:append>
             <span class="material-icons">{{ $tc('search') }}</span>
           </template>
         </v-text-field>
-
-         <v-checkbox v-for="type in bom_types" :key="type" 
-          :label="type" 
-          v-model="item_type_filter" 
-          :value="type"
-          input-value="true"
-          :color="$theme.blue">
-        </v-checkbox>
 
         <v-spacer></v-spacer>
 
@@ -88,7 +80,7 @@
           :headers="table_headers"
           :items="filtered_bom"
           :show-select="edit_mode"
-          v-model="delete_items"
+          v-model="delete_lines"
           :loading-text="$tc('loading_text') | capitalize"
           sort-by="code"
           fixed-header  
@@ -132,7 +124,7 @@
 
               <v-col cols="4">
                 <v-btn small
-                  v-if="edit_mode && delete_items.length"  
+                  v-if="edit_mode && delete_lines.length"
                   :color="$theme.red"
                   @click="removeSelectedItems">
                   <v-icon small>delete</v-icon>
@@ -150,7 +142,7 @@
                   :color="$theme.blue"
                   @click="openItemSearch">
                   <v-icon small class="mr-2 pl-0">add</v-icon>
-                  {{ $tc('bom.add_item') }}
+                  {{ $tc('bom.add_line') }}
                 </v-btn>
               </v-col>  
             </v-row>  
@@ -163,7 +155,7 @@
     </v-row>
 
     <v-dialog
-      v-model="show_item_catalog"
+      v-model="show_product_catalog"
       max-width="600px"
       transition="dialog-transition"
       value="true" 
@@ -172,20 +164,20 @@
       no-click-animation>
       <v-card>
           <v-card-title class="display">
-            {{ $tc('new') }} {{ $tc('item', 1) }}
+            {{ $tc('new') }} {{ $tc('product', 1) }}
           </v-card-title>
           <v-card-text>
             
           <v-row>
             <v-col cols="4">
               <v-autocomplete
-                v-model="new_item_phase"
+                v-model="new_line_phase"
                 :items="$store.state.process.saved"
                 item-value="_key"
                 item-text="alias"
                 single-line
                 return-object
-                :label="$tc('phase.name', 1) | capitalize">
+                :label="$tc('phase.short') | capitalize">
                 <template v-slot:selection="data">
                   {{ data.item.alias | capitalize }}
                 </template>
@@ -198,14 +190,14 @@
             </v-col>  
             <v-col cols="6">
               <v-autocomplete
-                v-model="new_item"
-                :items="item_catalog"
+                v-model="new_line"
+                :items="product_catalog"
                 :loading="catalog_loading"
                 item-value="_key"
                 item-text="code"
                 single-line
                 return-object
-                :label="$tc('code') +'/'+ $tc('description') | capitalize"
+                :label="$tc('code') +' / '+ $tc('description') | capitalize"
               >
                 <template v-slot:item="data">
                   <v-list-item-content>
@@ -225,7 +217,7 @@
               <v-text-field
                 type="number" min="0"
                 :label="$tc('quantity.short')"
-                v-model="new_item_qt"
+                v-model="new_line_qt"
                 single-line
               ></v-text-field>
             </v-col>  
@@ -260,17 +252,15 @@ export default {
 
   data() {
     return {
-      search: '',
-      bom_types: ['assembly', 'component', 'consumable'],
-      item_type_filter: ['assembly', 'component', 'consumable'],
+      search_text: '',
       table_height: '83vh',
-      delete_items: [],
-      show_item_catalog: false,
+      delete_lines: [],
+      show_product_catalog: false,
       catalog_loading: false,
-      item_catalog: [],
-      new_item: {},
-      new_item_phase: {},
-      new_item_qt: null,
+      product_catalog: [],
+      new_line: {},
+      new_line_phase: {},
+      new_line_qt: null,
       show_cancel_confirmation: false,
       show_save_confirmation: false,
       saving: false,
@@ -286,10 +276,9 @@ export default {
     table_headers() {
     // TODO: refactor into mixin / composition function, used also in WorkSessionBom
       return [
-        {  value:'code', text: this.$tc('code').toUpperCase() },
-        {  value:'description', text: this.$tc('description').toUpperCase() },
-        {  value:'item_type', text: this.$tc('type').toUpperCase() },
-        {  value:'phase_name', text: this.$tc('phase.name', 1).toUpperCase() },
+        {  value:'product_code', text: this.$tc('code').toUpperCase() },
+        {  value:'product_description', text: this.$tc('description').toUpperCase() },
+        {  value:'phase_name', text: this.$tc('phase.short').toUpperCase() },
         {  value:'qt', text: this.$tc('quantity.short').toUpperCase() },
       ]
     },
@@ -323,15 +312,13 @@ export default {
     },
 
     filtered_bom() {
-      return this.temp_bom.filter(item => {
-        let type_check = this.item_type_filter.includes(item.item_type.toLowerCase())
-
-        return type_check && multiMatch(this.search, item, ['code', 'description'])
+      return this.temp_bom.filter(line => {
+        return multiMatch(this.search_text, line, ['code', 'description'])
       })
     },
 
     deleteIconTooltip() {
-      if (this.delete_items.length) {
+      if (this.delete_lines.length) {
         return this.$tc('deselect_all')
       }
       else return this.$tc('select_all')
@@ -347,24 +334,23 @@ export default {
       }
       else {
         this.edit_mode = false
-        this.delete_items = []
+        this.delete_lines = []
       }
     },
 
     toggleAll() {
-      if (this.delete_items.length) {
-        this.delete_items = []
+      if (this.delete_lines.length) {
+        this.delete_lines = []
       }
-      else this.delete_items = this.filtered_bom
+      else this.delete_lines = this.filtered_bom
     },
 
     openItemSearch() {
       this.catalog_loading = true
-      this.show_item_catalog = true
+      this.show_product_catalog = true
       
-      api.get('item').then( resp => {
-        
-        this.item_catalog = resp.data
+      api.get('product').then( resp => {
+        this.product_catalog = resp.data.filter(p => p._key != this.product_key)
       })
       this.catalog_loading = false
     },
@@ -377,48 +363,47 @@ export default {
 
     removeSelectedItems() {
       const new_bom = this.temp_bom.filter( 
-        item => !this.delete_items.includes(item) 
+        line => !this.delete_lines.includes(line)
       )
       this.$store.commit('UPDATE_TEMP_BOM', new_bom)
-      this.delete_items = []
+      this.delete_lines = []
     },
 
     async addItem() {
-      const is_duplicate = this.temp_bom.some(item => 
-        item.code == this.new_item.code 
-        && item.phase_key == this.new_item_phase._key
+      const is_duplicate = this.temp_bom.some(line =>
+        line.code == this.new_line.code
+        && line.phase_key == this.new_line_phase._key
       )
 
       if (!is_duplicate) {
         
-        const new_item = {
+        const new_line = {
           /** 
-           * Cannot simply add ...new_item because it would 
+           * Cannot simply add ...new_line because it would
            * contain an _id field that, when sent to the db would refer
            * to the relationship and raise an error.
            */ 
-          item_key: this.new_item._key,
-          code: this.new_item.code,
-          description: this.new_item.description,
-          item_type: this.new_item.type,
-          qt: this.new_item_qt,
-          phase_name: this.new_item_phase.alias,
-          phase_key: this.new_item_phase._key,
-          table_key: this.new_item.code + this.new_item_phase._key
+          product_key: this.new_line._key,
+          product_code: this.new_line.code,
+          product_description: this.new_line.description,
+          qt: this.new_line_qt,
+          phase_name: this.new_line_phase.alias,
+          phase_key: this.new_line_phase._key,
+          table_key: this.new_line.code + this.new_line_phase._key
         }
 
-        this.temp_bom = [...this.temp_bom, new_item]
-        this.show_item_catalog = false
+        this.temp_bom = [...this.temp_bom, new_line]
+        this.show_product_catalog = false
       }
       else {
-        window.alert(c(this.$tc('bom.alerts.phase_item_exists')))
+        window.alert(c(this.$tc('bom.alerts.line_exists')))
       }
     },
 
     cancelChanges() {
       this.temp_bom = [...this.saved_bom]
       this.edit_mode = false
-      this.delete_items = []
+      this.delete_lines = []
       this.show_cancel_confirmation = true
     },
 
@@ -455,10 +440,10 @@ export default {
 
   watch: {
     // Reset form when closing/opening modal
-    show_item_catalog() {
-      this.new_item = null
-      this.new_item_qt = null
-      this.new_item_phase = null
+    show_product_catalog() {
+      this.new_line = null
+      this.new_line_qt = null
+      this.new_line_phase = null
     },
   }
 };
