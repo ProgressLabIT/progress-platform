@@ -193,8 +193,11 @@ async def update_process(process: List[PhaseUpdate], product_key):
       # will set it automatically
       new_phase = True if phase.key == None else False
 
-      if new_phase: exclude_set.add('key')
+      if new_phase:
+        exclude_set.add('key')
+
       prepped_phase_data = jsonable_encoder(phase, by_alias=True, exclude=exclude_set)
+      prepped_phase_data['product_key'] = product_key
       
       phase_update = tx_db.insert_document('Phase', 
         prepped_phase_data, return_new=True, overwrite=True )

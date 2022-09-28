@@ -422,7 +422,16 @@ export default {
         }, 1500)  
       })
       .catch( err => {
-        window.alert(err)
+        if (err.response.status == 403) {
+          const api_resp = err.response.data.detail
+          const error_message = api_resp.message
+                                + '\n\nLoops:\n'
+                                + api_resp.data.join('\n')
+          window.alert(error_message)
+        }
+        else {
+          window.alert(err)
+        }
         this.saving = false
       })
     },

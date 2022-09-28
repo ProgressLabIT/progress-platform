@@ -16,9 +16,6 @@ from utils.api import APIResponse
 
 router = APIRouter()
 
-
-
-
 @router.get("/{product_key}/bom")
 async def get_product_bom(product_key):
   try: 
@@ -39,6 +36,7 @@ async def get_product_bom(product_key):
     )
 
 
+
 @router.put('/{product_key}/bom')
 async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
   """
@@ -47,12 +45,12 @@ async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
   """
 
   # Begin transaction
-  txn = db.begin_transaction(write="requires")
+  tx = db.begin_transaction(write="requires")
   
   try:
 
     # Remove old bom
-    deleted_items = txn.aql.execute(
+    deleted_items = tx.aql.execute(
       Queries.DELETE_PRODUCT_BOM, 
       bind_vars=dict(product_key=product_key)
     )
@@ -60,25 +58,42 @@ async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
     bom_to_db = [define_bom_line_for_db(line) for line in new_bom]
 
     # Insert new bom
-    txn.collection('requires').insert_many(bom_to_db, silent=True)    
-    txn.commit_transaction()
-    
-    return APIResponse(message="BoM updated correctly")
+    tx.collection('requires').insert_many(bom_to_db, silent=True)
 
   except Exception as e:
     error_str = traceback.format_exc()
     status_code = 500
-
     response=dict(
       status=status_code,
       message="There was a problem updating the bom. Transaction has been aborted.",
-      error=error_str 
+      error=error_str
     )
-    print("Error! Aborting transaction...")
-    txn.abort_transaction()
+    tx.abort_transaction()
     raise HTTPException(
       status_code=status_code,
       detail=response
     )
+
+  # Check for loops in BoM relationships
+  bom_loops = find_bom_loops(db=tx, product_key=product_key)
+
+  if not len(bom_loops):
+    tx.commit_transaction()
+    return APIResponse(message="BoM updated correctly")
+
+  else:
+    tx.abort_transaction()
+    status_code = 403
+    response=dict(
+      status = status_code,
+      message = "Bom contains loops: at least one of the component requires the current product to be built.",
+      data = bom_loops
+    )
+    raise HTTPException(
+      status_code = status_code,
+      detail = response
+    )
+
+
 
 

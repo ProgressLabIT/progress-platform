@@ -83,7 +83,8 @@ class PhaseData(FlexModel):
   key: str = Field(None, alias="_key")
   alias: str
   description: str = None
-  operation_key: str = None
+  product_key: str
+  operation_key: str
   operation_name: str = None
   steps: List[Step] = []
   params: PhaseParameters = PhaseParameters()

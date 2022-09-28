@@ -26,6 +26,21 @@ class Queries:
     REMOVE e IN requires
   """
 
+  CHECK_BOM_LOOP = """
+    LET start = CONCAT('Product/', @product_key)
+    FOR v, e, p in 1..30 OUTBOUND start requires
+    // Find loop by filtering edges going back to product
+    FILTER e._to == start
+
+    // Return product codes generating the loop
+    LET loop = (
+        FOR item in p.vertices
+        FILTER IS_SAME_COLLECTION(Product, item)
+        RETURN item.code
+    )
+    RETURN loop
+  """
+
 
 def get_bom_from_db(db, product_key):
   db_result = db.aql.execute(
@@ -43,4 +58,14 @@ def define_bom_line_for_db(bom_line_in):
   )
 
   return jsonable_encoder(bom_line_out, by_alias=True, exclude_none=True)
+
+
+def find_bom_loops(db, product_key):
+  """Make sure the product BoM has no loops in it"""
+  print('Checking bom loops')
+  bind_vars = dict(product_key=product_key)
+  cursor = db.aql.execute(Queries.CHECK_BOM_LOOP, bind_vars=bind_vars)
+  loops = [' -> '.join(l) for l in cursor]
+  print('Result: ', loops)
+  return loops
 
