@@ -63,7 +63,7 @@ async def create_product(
 
   # Map form data
   try:
-    new_product = ProductData(code=code, description=description)
+    new_product = ProductDetails(code=code, description=description)
     prepped_data = jsonable_encoder(new_product, by_alias=True, exclude_none=True )
 
   except Exception as e:

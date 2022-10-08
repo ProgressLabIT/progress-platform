@@ -158,7 +158,7 @@ async def get_production_process(product_key):
   response_model = List[PhaseUpdate],
   response_model_exclude = {'step_sequence'}
 )
-async def update_process(process: List[PhaseUpdate], product_key):
+async def update_process(product_key, process: List[PhaseUpdate]):
  
   
   tx_db = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'])
@@ -256,7 +256,6 @@ async def update_process(process: List[PhaseUpdate], product_key):
       error_str=error_str
     )
     tx_db.abort_transaction()
-    print(error_str)
     raise HTTPException(
       status_code = 500,
       detail = error_str

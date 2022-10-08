@@ -346,6 +346,7 @@ export default {
       new_process.push({ 
         alias: new_operation.name, 
         operation_key: new_operation._key, 
+        product_key: this.product_key,
         params: new_operation.default_phase_parameters,
         steps: []
       })

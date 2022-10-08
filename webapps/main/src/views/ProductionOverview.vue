@@ -229,12 +229,12 @@ export default {
       bool_filters: {
         started: { value: true },
         queued: { value: true },
-        on_time: { value: true },
-        late: { value: true },
+        // on_time: { value: true },
+        // late: { value: true },
         active: { value: true },
         idle: { value: true },
-        critical: { value: true },
-        not_critical: { value: true }
+        //critical: { value: true },
+        //not_critical: { value: true }
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       },
       search_string: undefined,
