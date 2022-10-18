@@ -1,0 +1,203 @@
+<template>
+  <v-container fluid class="px-6 fill scroll">
+
+    <!-- Header row with product filter and view controls -->
+    <v-row>
+
+      <!-- Text field for product filter and search -->
+      <v-col cols="12" sm="5" lg="3">
+        <v-text-field
+          hide-details
+          single-line
+          autocomplete="off"
+          name="search"
+          :label="$tc('search') | capitalize"
+          value="search"
+          v-model="searchString"
+          class="ma-0 pa-0 text-uppercase">
+          <template v-slot:append>
+            <span class="material-icons">search</span>
+          </template>
+        </v-text-field>
+      </v-col>
+
+      <!-- View controls -->
+      <v-col cols="auto" class="d-flex align-center">
+        <v-checkbox
+          :ripple="false"
+          :color="$theme.blue"
+          hide-details
+          :label="$tc('product.filters.active_only') | capitalize" 
+          v-model="filter_inactive" 
+          class="ma-0 pa-0 nowrap"/>
+      </v-col>    
+      <v-col cols="auto" class="d-flex align-center">
+        <v-checkbox 
+          :ripple="false"
+          :color="$theme.blue"
+          hide-details
+          :label="$tc('product.filters.show_images') | capitalize" 
+          v-model="show_images" 
+          class="ma-0 pa-0 nowrap"/>
+      </v-col>  
+
+      <v-spacer></v-spacer>
+
+      <v-col cols="auto">
+        <v-btn :color="$theme.blue"
+          @click="$router.push({ name: 'newProduct' })">
+          {{ $tc('new') }}
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- Product List -->
+    <LoadingSignal v-if="!vuex_ready"></LoadingSignal>
+    <NoDataAlert v-else-if="!productCatalog().length"></NoDataAlert>
+    <v-row v-else>
+      <v-col cols="12" sm="6" md="4" lg="3" xl="2" 
+        v-for="product in productCatalog()" 
+        :key="product.code" 
+        v-show="(!filter_inactive || product.active) && match(product)">
+        <ProductCard 
+          :product="product" 
+          :image="show_images" 
+          @delete="deleteNotify(product)"
+          />
+      </v-col>
+    </v-row>
+
+    <!-- DELETE/RESTORE NOTIFICATION -->
+    <v-snackbar id="delete-notification" bottom left 
+      v-model="deleteSnackbar.show" 
+      :timeout="deleteSnackbar.timeout">
+      <v-row>
+        <v-col class="text-uppercase">
+          {{ $tc('product.snackbars.delete_confirmed', {code: deleteSnackbar.code}) }}
+          <v-btn text :color="$theme.blue" @click.native="deleteSnackbar.show = false; ">{{ $tc('confirm') }}</v-btn>
+          <v-btn text color="warning" @click.native="undoDelete">{{ $tc('undo') }}</v-btn>
+        </v-col>
+        <!-- <v-col cols="12">
+          <v-progress-linear height="2" v-model="deleteSnackbar.remain" />
+        </v-col> -->
+      </v-row>
+    </v-snackbar>
+
+    <router-view></router-view>
+
+  </v-container>
+</template>
+
+<script>
+import LoadingSignal from '@/components/LoadingSignal'
+import NoDataAlert from '@/components/NoDataAlert.vue'
+import ProductCard from '@/components/ProductCard'
+
+import multiMatch from '@/lib/MultiFieldSearch.js'
+
+import { mapGetters, mapActions } from 'vuex'
+
+export default {
+
+  name: 'ProductList',
+  
+  components: {
+    LoadingSignal,
+    NoDataAlert,
+    ProductCard,
+  },
+
+  // followingi props passed in router query string
+  // props: ['show_images', 'filter_inactive'],
+
+  data: () => ({
+    // filter_inactive: false,
+    searchString: '',
+    // show_images: false,
+    deleteSnackbar: {
+      _key: null,
+      code: '',
+      timeout: 6200,
+      show: false,
+      remain: 100,
+    },
+    vuex_ready: false
+  }),
+
+  computed: {
+    ...mapGetters(['productCatalog']),
+
+    show_images: {
+      get() {
+        // return this.show_images
+        return this.$route.query.show_images
+      },
+      set(value) {
+        this.$router.replace({ 
+          // name: this.$route.name, 
+          query: { 
+            filter_inactive: this.filter_inactive,
+            show_images: value 
+          }
+        })
+      }
+    },
+
+    filter_inactive: {
+      get() {
+        // return this.filter_inactive
+        return this.$route.query.filter_inactive
+      },
+      set(value) {
+        this.$router.replace({
+          // name: this.$route.name,
+          query: { 
+            filter_inactive: value,
+            show_images: this.show_images
+          }
+        })
+      }
+    }
+  },
+
+  methods: {
+
+    ...mapActions(['restoreProduct']),
+
+    match(product) {
+      let activeFilter = !this.filter_inactive || product.active
+      let searchFilter = multiMatch(this.searchString, product, ['code', 'description'])
+
+      return activeFilter && searchFilter
+    },
+
+    deleteNotify(product) {
+      const snackbar = this.deleteSnackbar
+      snackbar._key = product._key
+      snackbar.code = product.code
+      // snackbar.remain = 100
+      snackbar.show = true
+      // let countdown = setInterval(() => {
+      //   if (snackbar.show) {
+      //     snackbar.remain -= 1
+      //   }
+      //   else {
+      //    clearInterval(countdown)
+      //   }
+      // }, 60)
+    },
+
+    undoDelete() {
+      this.restoreProduct(this.deleteSnackbar._key)
+      this.deleteSnackbar.show = false
+    }
+  },
+
+  created() {
+    this.$store.dispatch('loadProductList').then(() => this.vuex_ready = true)
+  }
+};
+</script>
+
+<style lang="css" scoped>
+</style>
