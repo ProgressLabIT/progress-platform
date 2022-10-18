@@ -11,8 +11,8 @@
       "components/*": [
         "src/components/*"
       ],
-      "layouts/*": [
-        "src/layouts/*"
+      "views/*": [
+        "src/views/*"
       ],
       "pages/*": [
         "src/pages/*"
