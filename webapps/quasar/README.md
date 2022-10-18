@@ -1,6 +1,6 @@
-# Progress Platform (progress)
+# Progress (progress)
 
-Main Interface for Progress Platform
+MES
 
 ## Install the dependencies
 ```bash

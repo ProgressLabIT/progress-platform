@@ -7,10 +7,26 @@ import axios from 'axios'
 // good idea to move this instance creation inside of the
 // "export default () => {}" function below (which runs individually
 // for each client)
-const api = axios.create({ baseURL: 'https://api.example.com' })
 
-export default boot(({ app }) => {
+// const api_url = process.env.NODE_ENV === 'production'
+//  ? 'https://' + window.location.hostname + '/api/v1/'
+//  : 'http://' + window.location.hostname + ':80'
+
+const api_base_path = '/api'
+
+const api = axios.create({
+  baseURL: window.location.origin + api_base_path
+})
+
+export default boot(({ app, store }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
+  api.interceptors.request.use(config => {
+    config.headers.common = {
+      ...config.headers.commons,
+      Authorization: `Bearer ${store.getters.getToken}`
+    }
+    return config
+  })
 
   app.config.globalProperties.$axios = axios
   // ^ ^ ^ this will allow you to use this.$axios (for Vue Options API form)

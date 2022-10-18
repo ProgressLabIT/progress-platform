@@ -1,29 +1,25 @@
 <template>
-  <v-app-bar app fixed elevate-on-scroll dense class="grey--text text--lighten-2">
+  <q-header>
+    <q-toolbar>
+      <q-btn icon="menu" @click="$emit('showDrawer')"/>
+      <q-toolbar-title class="display q-ml-sm q-mr-auto">{{ screen_title }}</q-toolbar-title>
 
-      <!-- MENU ICON AND WINDOW TITLE -->
-      <v-icon @click="$emit('showDrawer')" class="grey--text text--lighten-2">mdi-menu</v-icon>
-      <h3 class="display ml-3 mr-auto">{{ screen_title }}</h3>
+      <div
+        @mouseover="show_logout=true"
+        @mouseleave="show_logout=false">
+        <h5 class="display">{{ username }}</h5>
+        <q-avatar>
+          <q-img v-if="!show_logout" :src="avatar_url"></q-img>
+          <q-icon v-else @click="logout" name="mdi-exit-to-app" />
+        </q-avatar>
+      </div>
 
-      <!-- USER NAME & BADGE -->
-      <v-hover v-slot:default="{ hover }">
-        <div class="d-flex align-center justify-end">
-          <h5 class="display">{{ username }}</h5>
-          <v-avatar size="28" class="my-auto ml-2">
-            <v-img v-if="!hover" :src="avatar_url"></v-img>
-            <v-icon v-else class="grey--text text--lighten-2"
-              @click="logout">
-              mdi-exit-to-app
-            </v-icon>
-          </v-avatar>
-        </div>
-      </v-hover>
-      
-  </v-app-bar>
+    </q-toolbar>
+  </q-header>
 </template>
 
 <script>
-import { capitalize as c } from '@/lib/filters.js'
+import { capitalize as c } from '@/boot/filters.js'
 export default {
 
   name: 'AppBar',
@@ -31,12 +27,13 @@ export default {
   data() {
     return {
       show_drawer: false,
+      show_logout: false,
       screen_title: 'Progress'
     }
   },
 
   computed: {
-    
+
     session_data() {
       return this.$store.state.session
     },
@@ -72,7 +69,7 @@ export default {
     },
 
     update_screen_title(route) {
-      const route_with_title = route.matched.slice().reverse().find( r => r.meta.screen_title )
+      const route_with_title = route.matched.slice().reverse().find(r => r.meta.screen_title)
       if (route_with_title) {
         const new_screen_title = this.$tc(`views.${route_with_title.name}`) || 'PROGRESS'
         this.screen_title = new_screen_title

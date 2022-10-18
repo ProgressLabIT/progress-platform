@@ -72,6 +72,14 @@ module.exports = {
     
     'prefer-promise-reject-errors': 'off',
 
+    // Added by Luca
+    'space-before-function-paren': 'off',
+    'camelcase': 'off',
+    'quotes': 'off',
+    'eqeqeq': 'off',
+    'brace-style': 'off',
+    'no-async-promise-executor': 'off',
+
     // allow debugger during development only
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
   }

@@ -1,22 +1,15 @@
 <template>
-	<v-footer app fixed :color="$theme.footer">
-	  <v-row no-gutter class="align-center justify-space-between px-2 footer-text">
-	    <v-col class="text-left pa-0">
-	    	<span class="display smaller">PROGRESS PLATFORM</span>
-	    	<!-- <span class="material-icons smaller ml-2">info</span> -->
-	    </v-col>
-	    <v-col cols="1" class="text-center pa-0">
-	    	<span class="display smaller">{{ time }}</span>
-	    </v-col>
-	    <v-col class="text-right pa-0">
-				<span class="display smaller">{{ date }}</span>
-			</v-col>
-	  </v-row>
-	</v-footer>
+  <q-footer :color="$theme.footer">
+    <div class="row q-px-sm justify-between">
+      <div class="display smaller">PROGRESS PLATFORM</div>
+      <div class="display smaller">{{ time }}</div>
+      <div class="display smaller">{{ date }}</div>
+    </div>
+  </q-footer>
 </template>
 
 <script>
-import {DateTime} from 'luxon'
+import { DateTime } from 'luxon'
 
 export default {
 
@@ -24,29 +17,28 @@ export default {
 
   data () {
     return {
-    	now: 0
+      now: 0
     }
   },
 
   computed: {
-  	time() { return this.now.toLocaleString(DateTime.TIME_SIMPLE) },
-  	date() { return this.now.setLocale("it").toLocaleString(DateTime.DATE_HUGE) }
+    time() { return this.now.toLocaleString(DateTime.TIME_SIMPLE) },
+    date() { return this.now.setLocale("it").toLocaleString(DateTime.DATE_HUGE) }
   },
 
   created() {
-  	this.now = DateTime.local()
-  	setInterval(() => {
-  		this.now = this.now.plus({seconds: 1})
-  	}, 1000)
+    this.now = DateTime.local()
+    setInterval(() => {
+      this.now = this.now.plus({ seconds: 1 })
+    }, 1000)
   }
-
 }
 </script>
 
 <style lang="css" scoped>
 .material-icons.smaller {
-	font-size: .9em;
-	vertical-align: bottom
+  font-size: .9em;
+  vertical-align: bottom
 }
 
 .footer-text {
