@@ -79,6 +79,10 @@ module.exports = {
     'eqeqeq': 'off',
     'brace-style': 'off',
     'no-async-promise-executor': 'off',
+    'no-trailing-spaces': 'off',
+    'comma-dangle': 'off',
+    'no-multiple-empty-lines': 'off',
+    'object-curly-spacing': 'off',
 
     // allow debugger during development only
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'

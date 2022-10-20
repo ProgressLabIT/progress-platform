@@ -1,10 +1,7 @@
-import { store } from 'quasar/wrappers'
 import { createStore } from 'vuex'
 import { DateTime as DT } from 'luxon'
 
 import session from "./session"
-
-import { dark, light } from '@/boot/theme.js'
 
 // import example from './module-example'
 
@@ -17,19 +14,20 @@ import { dark, light } from '@/boot/theme.js'
  * with the Store instance.
  */
 
-function resetSessionTimeoutAtStoreChange (store) {
+function resetSessionTimeoutAtStoreChange(store) {
   const mutations_to_ignore = [
     'TOGGLE_SESSION_LOCK',
     'CLOSE_SESSION'
   ]
-  store.subscribe((mutation) => {
+  store.subscribe( (mutation) => {
     if (!mutations_to_ignore.includes(mutation.type)) {
       store.dispatch('setSessionTimeout')
     }
   })
 }
 
-export default createStore({
+
+const store = createStore({
   state() {
     return {
       drag_options: {
@@ -37,7 +35,6 @@ export default createStore({
         ghostClass: "ghost"
       },
       screen_title: 'progress',
-      theme_colors: dark
     }
   },
 
@@ -45,19 +42,12 @@ export default createStore({
     UPDATE_SCREEN_TITLE(state, new_title) {
       state.screen_title = new_title
     },
-    SET_THEME(state, theme) {
-      state.theme_colors = theme
-    }
   },
 
   actions: {
     changeTheme({ commit }, dark_mode_on) {
       commit('SET_THEME', dark_mode_on ? dark : light)
     }
-  },
-
-  getters: {
-    theme: state => state.theme_colors
   },
 
   plugins: [resetSessionTimeoutAtStoreChange],
@@ -82,3 +72,5 @@ if (persistedState) {
   }
   window.localStorage.removeItem('TEMP_SESSION')
 }
+
+export default store

@@ -1,3 +1,7 @@
+import library from "./libraryRoutes.js"
+import production from "./productionRoutes.js"
+import operator from "./operatorRoutes.js"
+import admin from "./adminRoutes.js"
 
 const routes = [
   {
@@ -7,12 +11,22 @@ const routes = [
       { path: '', component: () => import('pages/IndexPage.vue') }
     ]
   },
+  {
+    path: "/app",
+    component: () => import("@/views/MainLayout.vue"),
+    children: [
+      ...admin,
+      ...library,
+      ...production,
+      ...operator
+    ]
+  },
 
   // Always leave this as last one,
   // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue')
+    component: () => import('@/views/404_NotFound.vue')
   }
 ]
 

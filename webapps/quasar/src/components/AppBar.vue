@@ -1,8 +1,8 @@
 <template>
-  <q-header>
+  <q-header class="transparent">
     <q-toolbar>
-      <q-btn icon="menu" @click="$emit('showDrawer')"/>
-      <q-toolbar-title class="display q-ml-sm q-mr-auto">{{ screen_title }}</q-toolbar-title>
+      <q-btn flat icon="menu" @click="$emit('showDrawer')"/>
+      <q-toolbar-title shrink class="display q-ml-sm q-mr-auto">{{ screen_title }}</q-toolbar-title>
 
       <div
         @mouseover="show_logout=true"
@@ -62,7 +62,7 @@ export default {
 
   methods: {
     async logout() {
-      const confirm = window.confirm(c(this.$tc('session.alerts.close_session')))
+      const confirm = window.confirm(c(this.$t('session.alerts.close_session')))
       if (confirm) {
         await this.$store.dispatch('logout')
       }
@@ -71,7 +71,7 @@ export default {
     update_screen_title(route) {
       const route_with_title = route.matched.slice().reverse().find(r => r.meta.screen_title)
       if (route_with_title) {
-        const new_screen_title = this.$tc(`views.${route_with_title.name}`) || 'PROGRESS'
+        const new_screen_title = this.$t(`views.${route_with_title.name}`) || 'PROGRESS'
         this.screen_title = new_screen_title
       }
     }

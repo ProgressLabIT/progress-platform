@@ -1,5 +1,5 @@
 <template>
-  <q-footer :color="$theme.footer">
+  <q-footer class="footer">
     <div class="row q-px-sm justify-between">
       <div class="display smaller">PROGRESS PLATFORM</div>
       <div class="display smaller">{{ time }}</div>

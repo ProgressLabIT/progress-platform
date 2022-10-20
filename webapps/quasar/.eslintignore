@@ -4,3 +4,7 @@
 /.quasar
 /node_modules
 .eslintrc.js
+
+
+# TEMP: FOR ONGOING MIGRATION TO QUASAR ONLY
+/src
