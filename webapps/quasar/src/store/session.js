@@ -43,13 +43,13 @@ const session = {
       state.auth_token = null
 
       // Make sure to cancel any residual locking mechanism after logout
-      clearTimeout(state.session_timer)
+      // clearTimeout(state.session_timer)
       state.session_locked = false
     },
 
-    TOGGLE_SESSION_LOCK(state, locked) {
-      state.session_locked = locked
-    }
+    // TOGGLE_SESSION_LOCK(state, locked) {
+    //   state.session_locked = locked
+    // }
   },
 
   actions: {
@@ -77,20 +77,20 @@ const session = {
       })
     },
 
-    setSessionTimeout({ commit, state }) {
-      clearTimeout(state.session_timer)
+    // setSessionTimeout({ commit, state }) {
+    //   clearTimeout(state.session_timer)
 
-      const lockSession = () => {
-        commit('TOGGLE_SESSION_LOCK', true)
-      }
+    //   const lockSession = () => {
+    //     commit('TOGGLE_SESSION_LOCK', true)
+    //   }
 
-      state.session_timer = setTimeout(lockSession, state.max_idle_minutes * 60 * 1000)
-    },
+    //   state.session_timer = setTimeout(lockSession, state.max_idle_minutes * 60 * 1000)
+    // },
 
-    unlockSession({ commit, dispatch }) {
-      commit('TOGGLE_SESSION_LOCK', false)
-      dispatch('setSessionTimeout')
-    }
+    // unlockSession({ commit, dispatch }) {
+    //   commit('TOGGLE_SESSION_LOCK', false)
+    //   dispatch('setSessionTimeout')
+    // }
   },
 
   getters: {

@@ -15,12 +15,16 @@
 
           <q-tabs
             class="col"
+            dense
             vertical switch-indicator>
             <q-route-tab
               v-for="tab in tab_routes"
               :to="{ name: tab }"
               :key="tab"
-              class="menu display mb-2">
+              align="left"
+              active-color="theme-blue"
+              indicator-color="theme-blue"
+              class="menu display q-mb-sm">
               {{ $t(`views.${tab}`) }}
             </q-route-tab>
           </q-tabs>
@@ -62,6 +66,7 @@
 </template>
 
 <script>
+import { useQuasar } from 'quasar'
 import { DateTime as DT } from 'luxon'
 import AppBar from '@/components/AppBar.vue'
 import AppFooter from '@/components/AppFooter.vue'
@@ -78,6 +83,7 @@ export default {
 
   data() {
     return {
+      $q: useQuasar(),
       show_drawer: false,
       tab_routes: ['adminPanel', 'libraryRoot', 'productionRoot', 'userJobs'],
       locale_index: null,
@@ -101,6 +107,7 @@ export default {
     toggleDarkMode(bool) {
       const theme = bool ? 'dark' : 'light'
       document.body.setAttribute('progress-theme', theme)
+      this.$q.dark.set(bool)
     }
   },
 

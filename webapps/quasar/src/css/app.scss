@@ -2,13 +2,10 @@
 @use 'theme';
 @use 'fonts';
 
+$button-border-radius: 4px;
+$typography-font-family: 'Red Hat Text' !important;
 
-$body-font-family: 'Red Hat Text', sans-serif !important;
-$heading-font-family: 'Orbitron', serif !important;
-$border-radius-root: 0px;
-$body-line-height: 1.2;
-
-$btn-border-radius: 4px;
+$toolbar-min-height: 45px;
 
 :root {
   --display-font: 'Orbitron';
@@ -28,6 +25,28 @@ $btn-border-radius: 4px;
   --theme-red: #E71D36;
   --hover-bg-blue: rgba(30,52,58,1);
 }
+
+body {
+  font-family: 'Red Hat Text';
+}
+
+.q-btn {
+  letter-spacing: var(--display-spacing);
+  font-family: var(--display-font);
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: var(--display-spacing);
+  font-family: var(--display-font);
+  line-height: 2rem;
+  text-transform: uppercase;
+}
+
 
 
 #q-app .no-transition {
@@ -58,6 +77,15 @@ $btn-border-radius: 4px;
 #q-app .v-avatar.highlight {
   color: #fff;
   font-weight:  bold;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--display-font);
+  letter-spacing: var(--display-spacing);
+  text-transform: uppercase;
+  vertical-align: text-bottom;
+  word-break: break-word;
+  color: var(--high-white);
 }
 
 .display {

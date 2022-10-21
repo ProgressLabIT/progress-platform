@@ -12,6 +12,7 @@
   "dependencies": {
     "@quasar/extras": "^1.0.0",
     "axios": "^0.21.1",
+    "jwt-decode": "^3.1.2",
     "luxon": "^3.0.4",
     "quasar": "^2.6.0",
     "vue": "^3.0.0",

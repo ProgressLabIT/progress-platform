@@ -1,6 +1,8 @@
 import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 
+import store from '@/store/index.js'
+
 // Be careful when using SSR for cross-request state pollution
 // due to creating a Singleton instance here;
 // If any client changes this (global) instance, it might be a
@@ -15,7 +17,8 @@ import axios from 'axios'
 const api_base_path = '/api'
 
 const api = axios.create({
-  baseURL: window.location.origin + api_base_path
+  // baseURL: window.location.origin + api_base_path
+  baseURL: 'http://progress.localhost' + api_base_path
 })
 
 export default boot(({ app, store }) => {
@@ -37,4 +40,4 @@ export default boot(({ app, store }) => {
   //       so you can easily perform requests against your app's API
 })
 
-export { api }
+export { axios, api }

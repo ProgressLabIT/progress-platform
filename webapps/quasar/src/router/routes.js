@@ -5,22 +5,28 @@ import admin from "./adminRoutes.js"
 
 const routes = [
   {
-    path: '/',
+    path: "/",
+    name: "root",
     component: () => import('views/MainLayout.vue'),
+    redirect: { name: 'login' },
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
+      {
+        path: "/login",
+        name: 'login',
+        component: () => import("views/LoginScreen.vue")
+      },
+      {
+        path: "/app",
+        children: [
+          ...admin,
+          ...library,
+          ...production,
+          ...operator
+        ]
+      },
     ]
   },
-  {
-    path: "/app",
-    component: () => import("@/views/MainLayout.vue"),
-    children: [
-      ...admin,
-      ...library,
-      ...production,
-      ...operator
-    ]
-  },
+
 
   // Always leave this as last one,
   // but you can also remove it
