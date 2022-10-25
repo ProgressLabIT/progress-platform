@@ -2,6 +2,7 @@ import { createStore } from 'vuex'
 import { DateTime as DT } from 'luxon'
 
 import session from "./session"
+import job from "./job"
 
 // import example from './module-example'
 
@@ -53,6 +54,7 @@ const store = createStore({
   plugins: [resetSessionTimeoutAtStoreChange],
 
   modules: {
+    job,
     session
   },
   // enable strict mode (adds overhead!)

@@ -1,24 +1,24 @@
 <template>
-  <v-container  fluid class="fill scroll">
+  <div class="fill q-pa-md">
     
     <transition name="slide-fade" mode="out-in" v-if="vuex_ready">
       <router-view  v-bind="{ job_list }">
       </router-view>
     </transition>
 
-    <v-row v-else align="center" justify="center">
-      <v-col cols="auto" class="d-flex flex-column align-center">
-        <p>{{ $tc('loading_text') | capitalize }}</p>
-        <v-progress-circular 
+    <div v-else class="row flex-center">
+      <div class="column col-auto items-center">
+        <p>{{ $capitalize($t('loading_text')) }}</p>
+        <q-circular-progress
           indeterminate 
-          size="40" 
-          :color="$theme.blue"
-          class="mt-6">
-        </v-progress-circular>
-      </v-col>
-    </v-row>
+          size="40px"
+          color="theme-blue"
+          class="q-mt-md">
+        </q-circular-progress>
+      </div>
+    </div>
 
-  </v-container>
+  </div>
 </template>
 
 <script>

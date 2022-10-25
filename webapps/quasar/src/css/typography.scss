@@ -1,0 +1,82 @@
+:root {
+  --display-font: 'Orbitron';
+  --display-spacing: .05em;
+  --text-font: 'Red Hat Text';
+  --text-spacing: .03em;
+  --low-white: rgba(255,255,255,.6);
+  --high-white: rgba(255,255,255,.87);
+  --disabled-white: rgba(255,255,255,.3);
+  /*--bg-color: #131E21;*/
+  --surface-1: #1F2A2D;
+  --surface-2: #242E31;
+  --box-border: #707070;
+  --theme-blue: #22AED1;
+  --theme-green: #0DAB76;
+  --theme-orange: #FF9F1C;
+  --theme-red: #E71D36;
+  --hover-bg-blue: rgba(30,52,58,1);
+}
+
+body {
+  font-family: 'Red Hat Text';
+  color: var(--text-low);
+  margin: 0px;
+  padding: 0px;
+  line-height: 1.2;
+}
+
+.overline {
+  font-size: 0.67rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: var(--text-low)
+}
+
+.display {
+  position: relative;
+  font-family: var(--display-font);
+  letter-spacing: var(--display-spacing) !important;
+  text-transform: uppercase;
+  vertical-align: text-bottom;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+.text-h4 {
+  @extend .display;
+  font-size: 1rem;
+}
+
+.text-body1 {
+  letter-spacing: none;
+}
+
+.medium {
+  font-size: .89rem;
+}
+
+.weight-medium {
+  font-weight: 500;
+}
+
+.weight-bold {
+  font-weight: bold !important;
+}
+
+.solid-white {
+  color: white !important;
+}
+
+.smaller {
+  font-size: .7rem;
+}
+
+
+.low-text {
+ color: var(--text-low);
+}
+
+.highlight {
+  color: var(--text-high);
+  font-weight: bold;
+}

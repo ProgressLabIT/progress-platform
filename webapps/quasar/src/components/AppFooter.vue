@@ -1,6 +1,6 @@
 <template>
-  <q-footer class="footer">
-    <div class="row q-px-sm justify-between">
+  <q-footer class="footer footer-text">
+    <div class="row q-pa-sm justify-between">
       <div class="display smaller">PROGRESS PLATFORM</div>
       <div class="display smaller">{{ time }}</div>
       <div class="display smaller">{{ date }}</div>

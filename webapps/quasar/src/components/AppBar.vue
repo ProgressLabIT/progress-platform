@@ -1,16 +1,22 @@
 <template>
-  <q-header class="transparent">
+  <q-header class="header">
     <q-toolbar>
-      <q-btn flat icon="menu" @click="$emit('showDrawer')"/>
-      <q-toolbar-title shrink class="display q-ml-sm q-mr-auto">{{ screen_title }}</q-toolbar-title>
+      <q-btn
+        flat
+        icon="mdi-menu"
+        padding="none"
+        @click="$emit('showDrawer')">
+      </q-btn>
+      <q-toolbar-title shrink class="display q-ml-xs q-mr-auto">{{ screen_title }}</q-toolbar-title>
 
       <div
         @mouseover="show_logout=true"
-        @mouseleave="show_logout=false">
-        <h5 class="display">{{ username }}</h5>
-        <q-avatar>
+        @mouseleave="show_logout=false"
+        class="row items-center pointer">
+        <div class="app-bar-user-name q-mr-sm">{{ username }}</div>
+        <q-avatar size="28px">
           <q-img v-if="!show_logout" :src="avatar_url"></q-img>
-          <q-icon v-else @click="logout" name="mdi-exit-to-app" />
+          <q-icon v-else @click="logout" name="mdi-exit-to-app" size="sm" />
         </q-avatar>
       </div>
 
@@ -93,5 +99,5 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="scss" scoped>
 </style>

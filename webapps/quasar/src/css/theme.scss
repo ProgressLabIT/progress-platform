@@ -17,7 +17,7 @@ $commons: (
   red-backdrop: rgba(213,29,54,.3)
 );
 
-$primary: map.get($commons, 'theme-blue');
+$primary: map-get($commons, 'theme-blue');
 
 @each $name, $color in $commons {
   .bg-#{$name} {
@@ -30,12 +30,14 @@ $primary: map.get($commons, 'theme-blue');
 
 $surfaces: (
   'dark': (
+    header: #131E21,
     footer: #090C0D,
     background: #131E21,
     surface2: #242E31,
     surface1: #1F2A2D,
   ),
   'light': (
+    header: rgba(30,52,58,1),
     footer: rgba(30,52,58,1),
     background: #eee,
     surface1: #eff,
@@ -47,7 +49,7 @@ $surfaces: (
   [progress-theme="#{$theme}"] {
     @each $name, $color in $colors {
       .#{$name} {
-        background: $color !important;
+        background-color: $color !important;
       }
     }
   }

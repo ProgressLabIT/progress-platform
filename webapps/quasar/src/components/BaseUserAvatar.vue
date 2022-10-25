@@ -1,28 +1,20 @@
 <template>
-  <v-row dense align="center" :class="name_first ? 'flex-row-reverse' : ''">
-    <v-col cols="auto">
-      <v-avatar :color="$theme.grey" :size="size">
-        <slot name="content">
-          <v-img :src="avatar_src">
-            <template v-slot:placeholder>
-              <v-row 
-                class="fill-height weight-bold highlight" 
-                align="center" 
-                justify="center"
-                :style="`font-size: ${size}`">
-                {{ initials }}
-              </v-row>
-            </template>
-          </v-img>
-        </slot>
-      </v-avatar>
-    </v-col>
-    <v-col cols="auto">
-      <component v-if="show_name" :is="name_el" :class="name_class" :style="name_style">
-        {{ full_name | capitalize_all }}
+  <div class="row align-center" :class="name_first ? 'reverse' : ''">
+    <div class="col-auto">
+      <q-avatar color="theme-grey" :size="size">
+        <q-img :src="avatar_src" :alt="initials" />
+      </q-avatar>
+    </div>
+    <div class="col-auto">
+      <component
+        v-if="show_name"
+        :is="name_el"
+        :class="name_class"
+        :style="name_style">
+        {{ full_name }}
       </component>
-    </v-col>
-  </v-row>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -42,8 +34,8 @@ export default {
     },
 
     size: {
-      type: [String, Number],
-      default: 32,
+      type: String,
+      default: '32px',
     },
     
     show_name: {
@@ -58,7 +50,7 @@ export default {
     
     name_class: {
       type: String,
-      default: 'body-2'
+      default: 'body-2 uppercase'
     },
 
     name_style: {

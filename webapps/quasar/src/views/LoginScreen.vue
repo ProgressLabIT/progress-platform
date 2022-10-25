@@ -18,9 +18,17 @@
 
       <q-separator vertical class="q-mx-xl"/>
 
-      <q-card class="surface1 full-height col-3" square style="max-width:500px">
+      <q-card
+        class="surface1 full-height col-3 q-pa-lg"
+        square
+        style="max-width:500px">
         <transition name="fade" mode="out-in">
-          <q-form class="q-pa-md" @submit.prevent="login">
+
+          <!-- LOGIN FORM -->
+          <q-form
+            v-if="!logging_in && !verified && !reset_password"
+            key="form"
+            @submit.prevent="login">
             <q-card-section>
               <div class="card-title text-high">
                 {{ $t('session.login_title') }}
@@ -47,6 +55,79 @@
               </q-btn>
             </q-card-actions>
           </q-form>
+
+          <div key="progress" v-else-if="logging_in">
+            <q-spinner
+              size="80px" thickness="4px"
+              indeterminate
+              color="theme-blue"
+              class="q-ma-xl">
+            </q-spinner>
+          </div>
+
+          <!-- WELCOME MESSAGE -->
+          <div v-else-if="verified" key="success">
+            <div class="row items-center">
+
+              <div class="col-auto q-ml-md">
+                <BaseUserAvatar
+                  size="90px"
+                  :user="user"
+                  :show_name="false">
+                </BaseUserAvatar>
+              </div>
+
+              <div class="col q-ml-md">
+                <transition name="slide-fade" mode="out-in">
+                  <span class="highlight text-uppercase" :key="user_message">
+                    {{ user_message }}
+                  </span>
+                </transition>
+              </div>
+
+            </div>
+          </div>
+
+
+          <!-- RESET PASSWORD -->
+          <div v-else-if="reset_password" key="reset_password">
+            <q-form @submit.prevent="resetPassword">
+              <q-card-section>
+                <div class="card-title text-high">
+                {{ $t('user.reset_password') }}
+                </div>
+              </q-card-section>
+
+              <q-card-section>
+                <q-input
+                  v-model="new_password.first"
+                  type="password"
+                  :label="$capitalize($t('user.new_password'))"
+                  autocomplete="off">
+                </q-input>
+
+                <q-input
+                  v-model="new_password.second"
+                  type="password"
+                  label="Password"
+                  autocomplete="off">
+                </q-input>
+              </q-card-section>
+
+              <q-card-actions>
+                <q-btn
+                  type="submit"
+                  color="theme-blue"
+                  class="full-width"
+                  :disabled="!password_match">
+                  {{ $capitalize($t('user.new_password_save_action')) }}
+                </q-btn>
+              </q-card-actions>
+
+            </q-form>
+          </div>
+
+
         </transition>
       </q-card>
 
@@ -149,7 +230,7 @@ export default {
         // this.$store.dispatch('setSessionTimeout')
 
         setTimeout(() => {
-          this.user_message = this.$tc('session.login_welcome_message_1', 1, {
+          this.user_message = this.$t('session.login_welcome_message_1', {
             name: this.user.name,
             surname: this.user.surname
           })
@@ -157,7 +238,7 @@ export default {
           this.logging_in = false
         }, 1000)
         setTimeout(() => {
-          this.user_message = this.$tc('session.login_welcome_message_2')
+          this.user_message = this.$t('session.login_welcome_message_2')
         }, 3000)
         setTimeout(() => {
           this.$router.push(this.go_to_location)

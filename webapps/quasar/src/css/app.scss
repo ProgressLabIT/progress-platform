@@ -1,34 +1,13 @@
 // app global css in SCSS form
 @use 'theme';
 @use 'fonts';
+@use 'typography';
 
 $button-border-radius: 4px;
 $typography-font-family: 'Red Hat Text' !important;
 
 $toolbar-min-height: 45px;
 
-:root {
-  --display-font: 'Orbitron';
-  --display-spacing: .05em;
-  --text-font: 'Red Hat Text';
-  --text-spacing: .03em;
-  --low-white: rgba(255,255,255,.6);
-  --high-white: rgba(255,255,255,.87);
-  --disabled-white: rgba(255,255,255,.3);
-  /*--bg-color: #131E21;*/
-  --surface-1: #1F2A2D;
-  --surface-2: #242E31;
-  --box-border: #707070;
-  --theme-blue: #22AED1;
-  --theme-green: #0DAB76;
-  --theme-orange: #FF9F1C;
-  --theme-red: #E71D36;
-  --hover-bg-blue: rgba(30,52,58,1);
-}
-
-body {
-  font-family: 'Red Hat Text';
-}
 
 .q-btn {
   letter-spacing: var(--display-spacing);
@@ -63,51 +42,54 @@ body {
   filter: blur(5px);
 }
 
-#q-app button.v-btn:not(.v-btn--text .v-btn--flat .v-btn--outline) {
+#q-app button.q-btn:not(.q-btn--text .q-btn--flat .q-btn--outline) {
   font-family: var(--display-font);
   letter-spacing: var(--display-spacing);
-  color: rgba(255,255,255,.87);
+  color: var(--high-white);
   font-weight: bold;
 }
 
-#q-app .v-avatar {
+#q-app .q-avatar {
   color: #ffffffaa;
 }
 
-#q-app .v-avatar.highlight {
+#q-app .q-avatar.highlight {
   color: #fff;
   font-weight:  bold;
 }
 
-h1, h2, h3, h4, h5, h6 {
+#q-app h1, h2, h3, h4, h5 {
   font-family: var(--display-font);
   letter-spacing: var(--display-spacing);
   text-transform: uppercase;
   vertical-align: text-bottom;
   word-break: break-word;
-  color: var(--high-white);
+  color: var(--text-high);
 }
 
-.display {
-  position: relative;
-  font-family: var(--display-font);
-  letter-spacing: var(--display-spacing) !important;
+
+.uppercase {
   text-transform: uppercase;
-  vertical-align: text-bottom;
-  word-break: break-word;
 }
 
-.medium {
-  font-size: .89rem;
+.app-bar-user-name {
+  @extend .display;
+  font-size: 0.83rem !important;
+  font-weight: bold;
 }
 
-.weight-medium {
-  font-weight: 500;
+.capitalize {
+  text-transform: capitalize;
 }
 
-.weight-bold {
-  font-weight: bold !important;
+.q-toolbar__title {
+  @extend .display;
+  font-size: 1.17rem !important;
+  font-weight: bold;
+  color: var(--high-white)
 }
+
+
 
 .surface-1 {
   background-color: #1F2A2D !important;
@@ -119,22 +101,6 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--low-white);
 }
 
-.low-text {
- color: var(--text-low);
-}
-
-.highlight {
-  color: var(--text-high);
-  font-weight: bold;
-}
-
-.solid-white {
-  color: white !important;
-}
-
-.smaller {
-  font-size: .7em;
-}
 
 .fill {
   height: 100%;
@@ -146,7 +112,7 @@ h1, h2, h3, h4, h5, h6 {
   height: 300px;
 }
 
-.v-dialog.fill {
+.q-dialog.fill {
   max-height: 100% !important;
   margin-top: 0px;
   margin-bottom: 0px;
@@ -184,7 +150,7 @@ span .display {
 }
 
 /* Highlight color on hover for VDataTable rows */
-.v-data-table tr:hover:not(.v-data-table__expanded__content) {
+.q-data-table tr:hover:not(.q-data-table__expanded__content) {
   background-color: rgba(39,174,209, .4) !important;
   /*-webkit-box-shadow: 0px 0px 20px 0px rgba(34,174,209,1);
   -moz-box-shadow:  0px 0px 20px 0px rgba(34,174,209,1);
@@ -195,15 +161,15 @@ span .display {
 /*  Make Vertical tabs take all the width available
     Not possible using properties or inline style
     because the component generates an inner element
-    (.v-item-group) which is not directly targetable
+    (.q-item-group) which is not directly targetable
     from the parent component
 */
-.v-tabs--vertical.v-tabs--grow .v-item-group {
+.q-tabs--vertical.q-tabs--grow .q-item-group {
   flex: 1 1 auto !important;
 }
 
 /*Make step tabs not grow beyond container*/
-.v-tabs.v-tabs--grow .v-tabs-bar__content {
+.q-tabs.q-tabs--grow .q-tabs-bar__content {
   width: 100%;
   height: 100%;
   overflow-y: auto;
@@ -215,21 +181,16 @@ span .display {
 }
 
 /* Style bom rows for deletion */
-#bom .v-data-table__selected {
+#bom .q-data-table__selected {
   background-color: transparent !important
 }
 
-/*.v-autocomplete__content {
+/*.q-autocomplete__content {
   background-color: var(--surface-2) !important;
   border-color: var(--box-border) !important;
 }*/
 
-
-.v-menu__content {
-  border: 1px solid var(--box-border);
-}
-
-.v-menu__content .v-card .v-list.v-sheet {
+.q-menu__content .q-card .q-list.q-sheet {
   background-color: var(--surface-2);
 }
 
@@ -281,7 +242,7 @@ span .display {
   opacity: 1;
 }
 
-.v-data-table-header th {
+.q-data-table-header th {
   white-space: nowrap;
 }
 

@@ -1,5 +1,9 @@
 <template>
-  <q-layout view="lHh lpR lFf" style="height: 100vh" class="background">
+  <q-layout
+    view="lHh lpR lFf"
+    style="height: 100vh"
+    :style="cssVars"
+    class="background">
 
     <!-- Use v-if to fully remove html from DOM in case of session lock.
     This avoids access to content by tweaking SessionLock component visibility in the browser inspector -->
@@ -7,6 +11,7 @@
       <AppBar @showDrawer="show_drawer = true"/>
 
       <q-drawer
+        id="menu"
         class="surface1"
         behavior="mobile"
         width="400"
@@ -51,11 +56,13 @@
         </div>
       </q-drawer>
 
-      <q-page-container>
-        <transition name="fade">
-          <router-view />
-        </transition>
-      </q-page-container>
+      <router-view v-slot="{ Component }">
+        <q-page-container class="full-height">
+          <transition name="fade">
+            <component :is="Component" />
+          </transition>
+        </q-page-container>
+      </router-view>
 
       <AppFooter />
 
@@ -73,7 +80,7 @@ import AppFooter from '@/components/AppFooter.vue'
 // import SessionLock from '@/views/SessionLock'
 
 export default {
-  name: 'App',
+  name: 'MainLayout',
 
   components: {
     AppBar,
@@ -101,6 +108,13 @@ export default {
     session_locked() {
       return this.$store.state.session.session_locked
     },
+
+    cssVars () {
+      return {
+        '--text-high': this.$q.dark.isActive ? 'rgba(255,255,255,.87)' : 'rgba(0,0,0,.87)',
+        '--text-low': this.$q.dark.isActive ? 'rgba(255,255,255,.6)' : 'rgba(0,0,0,.6)'
+      }
+    }
   },
 
   methods: {
