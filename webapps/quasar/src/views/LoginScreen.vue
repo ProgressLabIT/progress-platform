@@ -227,7 +227,7 @@ export default {
       api.post(`session`, { user_key: this.user_key })
       .then(resp => {
         this.$store.commit('START_USER_SESSION', resp.data.detail)
-        // this.$store.dispatch('setSessionTimeout')
+        this.$store.commit('SET_SESSION_TIMEOUT')
 
         setTimeout(() => {
           this.user_message = this.$t('session.login_welcome_message_1', {

@@ -1,4 +1,3 @@
-import router from '@/router/index'
 import { api } from '@/boot/axios.js'
 
 const session = {
@@ -47,9 +46,19 @@ const session = {
       state.session_locked = false
     },
 
-    // TOGGLE_SESSION_LOCK(state, locked) {
-    //   state.session_locked = locked
-    // }
+    TOGGLE_SESSION_LOCK(state, locked) {
+      state.session_locked = locked
+    },
+
+    SET_SESSION_TIMEOUT(state) {
+      clearTimeout(state.session_timer)
+
+      const lockSession = (state) => {
+        state.session_locked = true
+      }
+
+      state.session_timer = setTimeout(lockSession, state.max_idle_minutes * 60 * 1000)
+    },
   },
 
   actions: {
@@ -71,26 +80,16 @@ const session = {
         api.delete(`session/${state.session_key}`)
           .then(async () => {
             commit('CLOSE_USER_SESSION')
-            router.push({ name: 'login' })
+            this.$router.push({ name: 'login' })
             resolve()
           })
       })
     },
 
-    // setSessionTimeout({ commit, state }) {
-    //   clearTimeout(state.session_timer)
-
-    //   const lockSession = () => {
-    //     commit('TOGGLE_SESSION_LOCK', true)
-    //   }
-
-    //   state.session_timer = setTimeout(lockSession, state.max_idle_minutes * 60 * 1000)
-    // },
-
-    // unlockSession({ commit, dispatch }) {
-    //   commit('TOGGLE_SESSION_LOCK', false)
-    //   dispatch('setSessionTimeout')
-    // }
+    unlockSession({ commit, dispatch }) {
+      commit('TOGGLE_SESSION_LOCK', false)
+      commit('SET_SESSION_TIMEOUT')
+    }
   },
 
   getters: {

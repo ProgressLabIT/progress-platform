@@ -122,7 +122,7 @@ export default {
       const theme = bool ? 'dark' : 'light'
       document.body.setAttribute('progress-theme', theme)
       this.$q.dark.set(bool)
-    }
+    },
   },
 
   watch: {
@@ -136,16 +136,9 @@ export default {
   },
 
   created() {
-    // window.addEventListener("beforeunload", async (event) => {
-    //   if (this.$route.name != 'login') {
-    //     event.preventDefault()
-    //     this.$store.state.last_interaction = DT.utc().toMillis()
-    //     localStorage.setItem('TEMP_SESSION', JSON.stringify(this.$store.state))
-    //   }
-    // })
+    // Set dark mode on
     this.toggleDarkMode(true)
-  }
-
+  },
   // beforeMount() {
   //   let locale = this.$root.$i18n.locale
   //   const saved_locale = this.$store.state.locale

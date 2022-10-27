@@ -1,8 +1,10 @@
-import { createStore } from 'vuex'
 import { DateTime as DT } from 'luxon'
+import { debounce } from 'quasar'
+import { createStore } from 'vuex'
 
-import session from "./session"
 import job from "./job"
+import session from "./session"
+import traceability from "./traceability"
 
 // import example from './module-example'
 
@@ -18,13 +20,14 @@ import job from "./job"
 function resetSessionTimeoutAtStoreChange(store) {
   const mutations_to_ignore = [
     'TOGGLE_SESSION_LOCK',
-    'CLOSE_SESSION'
+    'CLOSE_SESSION',
+    'SET_SESSION_TIMEOUT',
   ]
-  store.subscribe( (mutation) => {
+  store.subscribe( debounce((mutation) => {
     if (!mutations_to_ignore.includes(mutation.type)) {
-      store.dispatch('setSessionTimeout')
+      store.commit('SET_SESSION_TIMEOUT')
     }
-  })
+  }, 5000))
 }
 
 
@@ -55,13 +58,23 @@ const store = createStore({
 
   modules: {
     job,
-    session
+    session,
+    traceability
   },
   // enable strict mode (adds overhead!)
   // for dev mode and --debug builds only
   strict: process.env.DEBUGGING
 })
 
+
+/**
+ * The following code restores the vuex state saved in localStorage
+ * when closing or refreshing the tab, but locks the session, so the
+ * user will have to input the password to proceed.
+ *
+ * If more than five minutes have elapsed since the close, the session
+ * will not be restored.
+ */
 const persistedState = window.localStorage.getItem('TEMP_SESSION')
 
 if (persistedState) {
