@@ -1,5 +1,5 @@
 <template>
-  <q-card square style="height: 250px;" class="surface1">
+  <q-card square style="height: 250px;" class="surface1 full-width shadow-8">
     <div class="column full-height justify-between q-pa-md q-pb-lg">
 
       <!-- OP CODE/LINE -->
@@ -24,19 +24,15 @@
       </div>
 
       <!-- PRODUCT DATA -->
-      <div class="row justify-between q-mb-md">
-        <div class="col-12">
-          <div class="overline">{{ $t("product.label", 1) }}</div>
-          <div class="text-h4 highlight text-uppercase">{{ job.product_code }}</div>
-          <div class="text-body2 text-truncate">{{ job.product_description }}</div>
-        </div>
+      <div class="q-mb-md full-width">
+        <div class="overline">{{ $t("product.label", 1) }}</div>
+        <div class="text-h4 highlight text-uppercase">{{ job.product_code }}</div>
+        <div class="text-body2 ellipsis">{{ job.product_description }}</div>
       </div>
 
-      <div class="row justify-between q-mb-md">
-        <div class="col-12">
-          <div class="overline">{{ $t("phase.short", 1) }}</div>
-          <div class="text-h4 highlight">{{ job.phase_alias }}</div>
-        </div>
+      <div class="q-mb-md">
+        <div class="overline">{{ $t("phase.short", 1) }}</div>
+        <div class="text-h4 highlight">{{ job.phase_alias }}</div>
       </div>
 
       <!-- PROGRESS -->
