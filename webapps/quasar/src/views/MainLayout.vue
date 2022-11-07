@@ -1,7 +1,6 @@
 <template>
   <q-layout
-    view="lHh lpR lFf"
-    style="height: 100vh"
+    view="lHh lpr lFf"
     :style="cssVars"
     class="background">
 
@@ -45,24 +44,18 @@
           <!-- LANGUAGE SELECTION -->
           <div class="row justify-between">
             <span class="display medium">{{ $t('language') }}</span>
-            <v-tabs right v-model="locale_index">
-              <v-tab
+            <q-tabs right v-model="locale_index">
+              <q-tab
                 v-for="(lang, i) in locale_list"
                 :key="i">
                 {{ lang }}
-              </v-tab>
-            </v-tabs>
+              </q-tab>
+            </q-tabs>
           </div>
         </div>
       </q-drawer>
 
-      <router-view v-slot="{ Component }">
-        <q-page-container class="full-height">
-          <transition name="fade">
-            <component :is="Component" />
-          </transition>
-        </q-page-container>
-      </router-view>
+      <router-view />
 
       <AppFooter />
 

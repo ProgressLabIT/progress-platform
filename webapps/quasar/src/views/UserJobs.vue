@@ -1,16 +1,15 @@
 <template>
-  <div class="fill q-pa-md">
-    
-    <transition name="slide-fade" mode="out-in" v-if="vuex_ready">
-      <router-view  v-bind="{ job_list }">
-      </router-view>
-    </transition>
+  <q-page-container>
+
+    <template v-if="vuex_ready">
+      <router-view v-bind="{ job_list }" />
+    </template>
 
     <div v-else class="row flex-center">
       <div class="column col-auto items-center">
         <p>{{ $capitalize($t('loading_text')) }}</p>
         <q-circular-progress
-          indeterminate 
+          indeterminate
           size="40px"
           color="theme-blue"
           class="q-mt-md">
@@ -18,7 +17,7 @@
       </div>
     </div>
 
-  </div>
+  </q-page-container>
 </template>
 
 <script>
