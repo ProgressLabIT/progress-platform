@@ -1,5 +1,3 @@
-import { boot } from 'quasar/wrappers'
-
 export const dark = {
   blue: '#22AED1',
   grey: '#707070',
@@ -42,6 +40,12 @@ export const light = {
   text_disabled: 'rgba(0,0,0,.38)'
 }
 
-export default boot(({ app }) => {
-  app.config.globalProperties.$theme = dark
-})
+export default ({ app }) => {
+  app.mixin({
+    computed: {
+      $theme () {
+        return this.$store.getters.theme
+      }
+    }
+  })
+}

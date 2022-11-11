@@ -114,6 +114,8 @@ export default {
     toggleDarkMode(bool) {
       const theme = bool ? 'dark' : 'light'
       document.body.setAttribute('progress-theme', theme)
+      // Set theme
+      this.$store.dispatch('changeTheme', bool)
       this.$q.dark.set(bool)
     },
   },

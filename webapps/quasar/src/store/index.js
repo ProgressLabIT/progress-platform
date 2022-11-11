@@ -2,6 +2,8 @@ import { DateTime as DT } from 'luxon'
 import { debounce } from 'quasar'
 import { createStore } from 'vuex'
 
+import { dark, light } from '@/boot/theme.js'
+
 import job from "./job"
 import session from "./session"
 import traceability from "./traceability"
@@ -39,6 +41,7 @@ const store = createStore({
         ghostClass: "ghost"
       },
       screen_title: 'progress',
+      theme_colors: dark
     }
   },
 
@@ -46,12 +49,21 @@ const store = createStore({
     UPDATE_SCREEN_TITLE(state, new_title) {
       state.screen_title = new_title
     },
+    SET_THEME(state, theme) {
+      state.theme_colors = theme
+    }
   },
 
   actions: {
     changeTheme({ commit }, dark_mode_on) {
       commit('SET_THEME', dark_mode_on ? dark : light)
     }
+  },
+
+  getters: {
+    theme (state) {
+      return state.theme_colors
+    },
   },
 
   plugins: [resetSessionTimeoutAtStoreChange],
