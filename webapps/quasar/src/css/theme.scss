@@ -40,8 +40,8 @@ $surfaces: (
     header: rgba(30,52,58,1),
     footer: rgba(30,52,58,1),
     background: #eee,
-    surface1: #eff,
-    surface2: #eff
+    surface1: #fafafa,
+    surface2: #fff
   )
 );
 
@@ -74,6 +74,21 @@ $text-colors:(
       .#{$name} {
         color: $color !important;
       }
+    }
+  }
+}
+
+$disabled-colors: (
+  'dark': (
+    color: rgba(255,255,255,$disabled-emphasis),
+    background-color: rgba(255, 255, 255, 0.12),
+  )
+);
+
+@each $theme, $properties in $disabled-colors {
+  [progress-theme="#{$theme}"] .disabled {
+      @each $property, $color in $properties {
+      $property: $color !important;
     }
   }
 }

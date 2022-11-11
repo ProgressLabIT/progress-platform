@@ -1,6 +1,7 @@
 :root {
   --display-font: 'Orbitron';
   --display-spacing: .05em;
+  --display-weight: 700;
   --text-font: 'Red Hat Text';
   --text-spacing: .03em;
   --low-white: rgba(255,255,255,.6);
@@ -25,6 +26,11 @@ body {
   line-height: 1.2;
 }
 
+.q-tab {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
 .overline {
   font-size: 0.67rem;
   font-weight: bold;
@@ -42,9 +48,19 @@ body {
   line-height: 1.2;
 }
 
+.text-h2 {
+  @extend .display;
+  font-size: 1.5rem;
+}
+
 .text-h4 {
   @extend .display;
   font-size: 1rem;
+}
+
+.text-h5 {
+  font-size: 0.83rem;
+  font-weight: bold;
 }
 
 .text-body1 {
