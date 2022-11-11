@@ -1,31 +1,28 @@
 <template>
-  <v-container fluid class="pa-0 fill" ref="step_card">
+  <div class="absolute-full" ref="step_card">
 
-      <v-toolbar dense :color="$theme.surface2" class="flex-grow-0" v-if="procedure.length">
-        <v-row align="center" class="fill-height mx-0" ref="stepper">
-         
-          <template v-for="(step, index) in procedure">
-            <v-col 
-              cols="auto" 
-              class="px-1"
-              :key="step._key">
-              <v-avatar  
-                size="20" 
+      <q-toolbar dense class="shadow-4 surface2" v-if="procedure.length">
+        <div class="row full-width justify-between items-center q-col-gutter-xs" ref="stepper">
+
+          <template v-for="(step, index) in procedure" :key="step._key">
+            <div class="col-auto q-px-xs">
+              <q-avatar
+                size="20px"
                 :style="stepStyle(index)"
-                class="d-flex text-center smaller font-weight-medium"
+                class="row flex-center items-stretch text-center smaller text-weight-medium"
                 @click="stepClick(index)">
                 <span :class="current_step_index == index ? 'solid-white weight-bold': ''">
                   {{ index + 1 }}
                 </span>
-              </v-avatar>
-            </v-col>
-            <v-divider 
+              </q-avatar>
+            </div>
+            <hr
               v-if="index < procedure.length - 1"
-              :key="index">
-            </v-divider>
+              :key="index"
+              class="step-divider">
           </template>
-        </v-row>
-      </v-toolbar>
+        </div>
+      </q-toolbar>
       
       <component
         v-if="procedure.length" 
@@ -35,9 +32,9 @@
       </component>
 
       <!-- NO PROCEDURE -->
-      <NoDataAlert v-else>{{ $tc('phase.no_procedure') }}</NoDataAlert>
+      <NoDataAlert v-else>{{ $t('phase.no_procedure') }}</NoDataAlert>
 
-  </v-container>
+  </div>
 </template>
 
 <script>
@@ -162,7 +159,7 @@ export default {
 
     setContentHeight() {
       const card_height = this.$refs.step_card.clientHeight
-      const stepper_height = this.$refs.stepper.clientHeight
+      const stepper_height = this.$refs.stepper ? this.$refs.stepper.clientHeight : "400px"
       this.step_content_height = card_height - stepper_height
     },
 
