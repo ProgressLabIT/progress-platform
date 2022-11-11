@@ -10,8 +10,6 @@ export default defineComponent({
   name: 'App',
 
   created() {
-    console.log("Created")
-
     // Save vuex state in localStorage before refresh or tab close
     window.addEventListener("beforeunload", async (event) => {
       if (this.$route.name != 'login') {

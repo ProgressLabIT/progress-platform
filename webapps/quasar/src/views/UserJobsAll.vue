@@ -1,6 +1,6 @@
 <template>
   <!-- Search and options bar -->
-  <q-page class="q-pa-md">
+  <q-page class="q-pa-lg">
 
   <div class="row items-center q-gutter-md q-mb-lg">
 
@@ -28,7 +28,7 @@
         v-model="started_only"
         hide-bottom-space
         no-ripple
-        class="q-ma-none q-pa-none nowrap"/>
+        class="q-ma-none q-pa-none nowrap text-low"/>
     </div>
   </div>
 

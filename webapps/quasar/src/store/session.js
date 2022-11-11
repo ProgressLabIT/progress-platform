@@ -53,7 +53,7 @@ const session = {
     SET_SESSION_TIMEOUT(state) {
       clearTimeout(state.session_timer)
 
-      const lockSession = (state) => {
+      const lockSession = () => {
         state.session_locked = true
       }
 
