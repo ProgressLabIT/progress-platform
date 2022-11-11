@@ -1,39 +1,43 @@
 <template>
-  <div class="absolute-full" ref="step_card">
-
-      <q-toolbar dense class="shadow-4 surface2" v-if="procedure.length">
-        <div class="row full-width justify-between items-center q-col-gutter-xs" ref="stepper">
-
-          <template v-for="(step, index) in procedure" :key="step._key">
-            <div class="col-auto q-px-xs">
-              <q-avatar
-                size="20px"
-                :style="stepStyle(index)"
-                class="row flex-center items-stretch text-center smaller text-weight-medium"
-                @click="stepClick(index)">
-                <span :class="current_step_index == index ? 'solid-white weight-bold': ''">
-                  {{ index + 1 }}
-                </span>
-              </q-avatar>
-            </div>
-            <hr
-              v-if="index < procedure.length - 1"
-              :key="index"
-              class="step-divider">
-          </template>
-        </div>
-      </q-toolbar>
-      
-      <component
-        v-if="procedure.length" 
-        :is="step_component" 
-        :step="current_step" 
-        :height="step_content_height">
-      </component>
+  <div ref="step_card" class="full-height column">
 
       <!-- NO PROCEDURE -->
-      <NoDataAlert v-else>{{ $t('phase.no_procedure') }}</NoDataAlert>
+      <NoDataAlert v-if="!procedure.length">
+        {{ $t('phase.no_procedure') }}
+      </NoDataAlert>
 
+      <template v-else>
+        <q-toolbar dense class="col-auto q-pa-md shadow-4 surface2">
+          <div class="row full-width justify-between items-center q-col-gutter-xs" ref="stepper">
+
+            <template v-for="(step, index) in procedure" :key="step._key">
+              <div class="col-auto q-px-xs">
+                <q-avatar
+                  size="20px"
+                  :style="stepStyle(index)"
+                  class="row flex-center items-stretch text-center smaller text-weight-medium"
+                  @click="stepClick(index)">
+                  <span :class="current_step_index == index ? 'solid-white weight-bold': ''" class="smaller">
+                    {{ index + 1 }}
+                  </span>
+                </q-avatar>
+              </div>
+              <hr
+                v-if="index < procedure.length - 1"
+                :key="index"
+                class="step-divider">
+            </template>
+
+          </div>
+        </q-toolbar>
+
+        <component
+          v-if="procedure.length"
+          :is="step_component"
+          :step="current_step"
+          :height="step_content_height">
+        </component>
+      </template>
   </div>
 </template>
 

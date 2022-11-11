@@ -1,81 +1,40 @@
 <template>
-  <v-window 
-    continuous
-    :show-arrows="false"
-    v-model="step_image_index">
+  <q-carousel infinite keep-alive v-model="step_image_index" class="col">
+    <q-carousel-slide
+      v-for="(img, index) in step_media"
+      :key="img"
+      class="absolute-full row"
+      :img-src="displayed_image_src"
+      :name="index">
+      <div
+        v-show="show_details"
+        class="absolute-top"
+        :style="`backgroud-color: ${$theme.background}aa`">
+        <div class="text-h3">{{step.title}}</div>
+        <div>{{ step.description }}</div>
+      </div>
 
-    <!-- STEP TITLE AND DESCRIPTION -->
-    <v-btn absolute right top fab small
-      @click="show_details = !show_details"
-      :color="show_details ? null : $theme.blue"
-      style="z-index: 10"
-      class="mt-12">
-      <v-icon color="white">
-        {{ show_details ? 'close' : 'mdi-information-variant' }}
-      </v-icon>
-    </v-btn>
-            
-    <v-sheet v-show="show_details" style="position: absolute; width: 100%; z-index: 2" :color="`${$theme.background}cc`">
-      <v-container>
-        <v-row justify="space-between" no-gutters>
-          <v-col cols="11">
-            <v-card-title class="display highlight px-0 pt-0">
-              {{ step.title }}
-            </v-card-title>
-            <v-card-subtitle 
-              class="px-0 pb-1">
-              {{ step.description }}
-            </v-card-subtitle>
-          </v-col>
-        </v-row>    
-      </v-container>
-    </v-sheet>
+      <!-- INVISIBLE NAVIGATION -->
+      <div class="col-6" @click="show('prev')" />
+      <div class="col-6" @click="show('next')" />
 
-    <v-window-item 
-      v-for="(img, index) in step_media" 
-      :key="index" 
-      eager
-      class="no-transition"
-      style="position: absolute; width: 100%">
-      <v-img eager 
-        :src="displayed_image_src" 
-        :height="height">
-        <template v-slot:placeholder>
-          <v-progress-circular size="60" indeterminate></v-progress-circular>
-        </template>
-
-        <div class="d-flex flex-column fill">
-                    
-          <!-- INVISIBLE IMAGE SWITCH CONTROLS -->
-          <v-row no-gutters
-            v-if="step_media.length > 1"
-            class="mx-0">
-            <v-col cols="6" @click="show('prev')">
-            </v-col>
-            <v-col cols="6" @click="show('next')">
-            </v-col>
-            <v-col align-self="end" style="position: absolute">
-              <v-row justify="center">
-                <v-card tile raised
-                  v-for="(media, index) in step_media" 
-                  :key="index" 
-                  height="50px" 
-                  width="70px"
-                  class="ma-2"
-                  :style="step_image_index == index ? 'border-bottom: solid 3px' + $theme.blue : ''"
-                  :img="media_base_path + '/' + media"
-                  @mouseenter="step_image_index = index">
-                </v-card>
-              </v-row>
-            </v-col>  
-          </v-row>
-        </div>
-        
-      </v-img>
-
-
-    </v-window-item>
-  </v-window>
+      <!-- THUMBNAIL NAVIGATION -->
+      <div
+        v-if="step_media.length > 1"
+        class="absolute-bottom row q-mb-sm justify-center q-gutter-md">
+        <q-img
+          loading="eager"
+          v-for="(media, index) in step_media"
+          :key="media"
+          style="height: 50px; width: 70px"
+          :style="step_image_index == index ? 'border-bottom: solid 3px' + $theme.blue : ''"
+          :src="media_base_path + '/' + media"
+          @mouseenter="step_image_index = index"
+          class="shadow-6">
+        </q-img>
+      </div>
+    </q-carousel-slide>
+  </q-carousel>
 </template>
 
 <script>
