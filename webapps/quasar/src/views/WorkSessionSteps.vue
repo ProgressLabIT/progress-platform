@@ -34,8 +34,7 @@
         <component
           v-if="procedure.length"
           :is="step_component"
-          :step="current_step"
-          :height="step_content_height">
+          :step="current_step">
         </component>
       </template>
   </div>
@@ -120,8 +119,6 @@ export default {
     force_order() {
       return this.job.parameters.step_check_force_order
     }
-
-   
   },
 
   methods: {
@@ -161,12 +158,6 @@ export default {
       }
     },
 
-    setContentHeight() {
-      const card_height = this.$refs.step_card.clientHeight
-      const stepper_height = this.$refs.stepper ? this.$refs.stepper.clientHeight : "400px"
-      this.step_content_height = card_height - stepper_height
-    },
-
     allowClick(index) {
       let allow = true 
       if (this.force_order) {
@@ -183,19 +174,7 @@ export default {
         this.current_step_index = index
       }
     }
-  },
-
-
-  mounted() {
-    this.setContentHeight()
-    const resizeContent = _throttle(this.setContentHeight, 200)
-    window.addEventListener('resize', resizeContent)
-  },
-
-  updated() {
-    this.setContentHeight()
-  },
-
+  }
 }
 </script>
 
