@@ -6,11 +6,11 @@
       <div class="row items-start text-uppercase q-mb-md">
         <div class="column col-auto q-mr-xl" style="max-width: 60%">
           <div class="overline">{{ $t("work_order.wo_code") }}</div>
-          <div class="text-h4 highlight text-truncate">{{ job.wo_code }}</div>
+          <div class="text-h4 display highlight text-truncate">{{ job.wo_code }}</div>
         </div>
         <div class="column col-auto text-right">
           <div class="overline">{{ $t("work_order.wo_line.line_only", 1) }}</div>
-          <div class="text-h4 highlight">{{ job.wo_line }}</div>
+          <div class="text-h4 display highlight">{{ job.wo_line }}</div>
         </div>
 
         <q-space />
@@ -26,24 +26,24 @@
       <!-- PRODUCT DATA -->
       <div class="q-mb-md full-width">
         <div class="overline">{{ $t("product.label", 1) }}</div>
-        <div class="text-h4 highlight text-uppercase">{{ job.product_code }}</div>
+        <div class="text-h4 display highlight text-uppercase">{{ job.product_code }}</div>
         <div class="text-body2 ellipsis">{{ job.product_description }}</div>
       </div>
 
       <div class="q-mb-md">
         <div class="overline">{{ $t("phase.short", 1) }}</div>
-        <div class="text-h4 highlight">{{ job.phase_alias }}</div>
+        <div class="text-h4 display highlight">{{ job.phase_alias }}</div>
       </div>
 
       <!-- PROGRESS -->
       <div class="row text-uppercase justify-between">
         <div class="col-auto">
           <div class="overline">{{ $t("quantity.completed_total") }}</div>
-          <div class="text-h4 highlight">{{ job.qt_completed }} / {{ job.qt_planned }}</div>
+          <div class="text-h4 display highlight">{{ job.qt_completed }} / {{ job.qt_planned }}</div>
         </div>
         <div class="col-auto text-right">
           <div class="overline">{{ $t("progress") }}</div>
-          <div class="text-h4 highlight">{{ job.progress }}%</div>
+          <div class="text-h4 display highlight">{{ job.progress }}%</div>
         </div>
       </div>
     </div>

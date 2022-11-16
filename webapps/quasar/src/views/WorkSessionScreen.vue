@@ -4,7 +4,7 @@
 
       <!-- JOB CLOSED NOTIFICATION -->
       <q-card v-if="job_closed">
-        <div class="text-h3 text-uppercase">
+        <div class="text-h3 display text-uppercase">
           {{ $t('job.alerts.job_closed') }}
         </div>
         <q-circular-progress indeterminate color="theme-blue" />
@@ -21,6 +21,7 @@
           <!-- PANEL NAVIGATION -->
           <q-tabs
             class="transparent text-low"
+            active-class="text-high weight-bold"
             align="left"
             shrink
             indicator-color="transparent">
@@ -173,9 +174,10 @@
 
       </div>
 
+      <!-- Consider switching to banner or similar -->
       <q-dialog v-model="show_exit_alert" max-width="480px">
         <q-card>
-          <q-card-section class="text-h3">
+          <q-card-section class="text-body1">
             {{ $t('job.alerts.confirm_exit')}}
           </q-card-section>
           <q-card-actions>

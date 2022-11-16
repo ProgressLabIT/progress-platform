@@ -10,7 +10,7 @@
         v-show="show_details"
         class="absolute-top"
         :style="`backgroud-color: ${$theme.background}aa`">
-        <div class="text-h3">{{step.title}}</div>
+        <div class="text-h3 display">{{step.title}}</div>
         <div>{{ step.description }}</div>
       </div>
 
