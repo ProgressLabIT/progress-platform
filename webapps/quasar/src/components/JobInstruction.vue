@@ -3,7 +3,7 @@
     <q-carousel-slide
       v-for="(img, index) in step_media"
       :key="img"
-      class="absolute-full row"
+      class="absolute-full row q-pa-none"
       :img-src="displayed_image_src"
       :name="index">
       <div
@@ -17,24 +17,25 @@
       <!-- INVISIBLE NAVIGATION -->
       <div class="col-6" @click="show('prev')" />
       <div class="col-6" @click="show('next')" />
-
-      <!-- THUMBNAIL NAVIGATION -->
-      <div
-        v-if="step_media.length > 1"
-        class="absolute-bottom row q-mb-sm justify-center q-gutter-md">
-        <q-img
-          loading="eager"
-          v-for="(media, index) in step_media"
-          :key="media"
-          style="height: 50px; width: 70px"
-          :style="step_image_index == index ? 'border-bottom: solid 3px' + $theme.blue : ''"
-          :src="media_base_path + '/' + media"
-          @mouseenter="step_image_index = index"
-          class="shadow-6">
-        </q-img>
-      </div>
     </q-carousel-slide>
   </q-carousel>
+
+  <!-- THUMBNAIL NAVIGATION -->
+  <div
+    v-if="step_media.length > 1"
+    class="absolute-bottom row q-mb-sm justify-center q-gutter-md"
+    style="z-index: 9999;">
+    <q-img
+      loading="eager"
+      v-for="(media, index) in step_media"
+      :key="media"
+      style="height: 50px; width: 70px"
+      :style="step_image_index == index ? 'border-bottom: solid 3px' + $theme.blue : ''"
+      :src="media_base_path + '/' + media"
+      @mouseenter="step_image_index = index"
+      class="shadow-6">
+    </q-img>
+  </div>
 </template>
 
 <script>
@@ -49,7 +50,6 @@ export default {
     },
     height: {
       type: Number,
-      required: true
     }
   },
 
