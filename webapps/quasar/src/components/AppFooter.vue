@@ -1,9 +1,9 @@
 <template>
   <q-footer class="footer footer-text">
-    <div class="row q-pa-sm justify-between">
-      <div class="display smaller">PROGRESS PLATFORM</div>
-      <div class="display smaller">{{ time }}</div>
-      <div class="display smaller">{{ date }}</div>
+    <div class="row q-pa-sm display smaller">
+      <div class="col">PROGRESS PLATFORM</div>
+      <div class="col-auto">{{ time }}</div>
+      <div class="col text-right">{{ date }}</div>
     </div>
   </q-footer>
 </template>
