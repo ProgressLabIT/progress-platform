@@ -1,40 +1,45 @@
 <template>
-  <v-container fluid class="scroll pt-8 px-12" :style="'max-height:'+height+'px'">
-    
-    <v-card-title class="display highlight px-0 pt-0 pb-3 nowrap">
-      {{ step.title }}
-    </v-card-title>
-    <v-card-subtitle 
-      class="px-0 pb-1 mb-6">
-      {{ step.description }}
-    </v-card-subtitle>
+  <div class="col column q-pt-xl q-px-xl">
 
+    <!-- FORM TITLE -->
+    <div class="col-auto">
+      <div class="text-h3 q-px-none q-pt-none nowrap">
+        {{ step.title }}
+      </div>
+      <div class="text-body2 text-low">
+        {{ step.description }}
+      </div>
+    </div>
 
-    <template v-for="(field, index) in step_form">
-      <v-text-field 
-        :value="field_data[index]"
-        @change="updateField(index, $event)"
-        @input="debouncedFieldUpdate(index, $event)"
-        outlined
-        :disabled="!job_active  || batch_step.done"
-        v-if="field.type=='short'" 
-        :label="field.name"
-        :key="index">
-      </v-text-field>
-      
-      <v-textarea 
-        :value="field_data[index]"
-        @change="updateField(index, $event)"
-        @input="debouncedFieldUpdate(index, $event)"
-        outlined
-        :disabled="!job_active || batch_step.done"
-        v-if="field.type=='long'" 
-        :label="field.name"
-        :key="index">
-      </v-textarea>
-
-    </template>
-  </v-container>
+    <!-- FORM BODY -->
+    <q-scroll-area class="col q-mt-lg q-pr-md">
+      <div v-for="(field, index) in step_form" class="q-mb-lg">
+        <q-input
+          v-if="field.type=='short'"
+          input-class="text-low"
+          filled square
+          :model-value="field_data[index]"
+          @update:model-value="updateField(index, $event)"
+          debounce="500"
+          :disabled="!job_active  || batch_step.done"
+          :label="field.name"
+          :key="index">
+        </q-input>
+        <q-input
+          v-if="field.type=='long'"
+          input-class="text-low"
+          filled square
+          :model-value="field_data[index]"
+          debounce="500"
+          @update:model-value="updateField(index, $event)"
+          :disabled="!job_active || batch_step.done"
+          :label="field.name"
+          :key="index"
+          type="textarea">
+        </q-input>
+      </div>
+    </q-scroll-area>
+  </div>
 </template>
 
 <script>
