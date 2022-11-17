@@ -37,8 +37,8 @@ async def create_work_order(new_wo: WorkOrderNew):
     # data_in = jsonable_encoder(wo)
     new_wo_record = WorkOrderFull(
       **wo.dict(),
-      product_docs = get_product_docs(wo.product_key),
-      product_bom = get_bom_from_db(tx, wo.product_key)
+      wo_docs = get_product_docs(wo.product_key),
+      wo_bom = get_bom_from_db(tx, wo.product_key)
     )
     prepped = jsonable_encoder(new_wo_record, by_alias=True)
     db_resp = collection.insert(prepped)
@@ -129,7 +129,7 @@ async def create_work_order(new_wo: WorkOrderNew):
       step_sequence = get_procedure_for_new_job(phase_key),
       max_offline = phase.max_offline,
       job_docs = wo_data.wo_docs,
-      job_bom = list(filter(lambda x: x.phase_key == phase_key, wo_data.wo_bom))
+      job_bom = [x for x in wo_data.wo_bom if x.phase_key == phase_key]
     )
 
     prepped = jsonable_encoder(new_job_record, by_alias=True)
