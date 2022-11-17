@@ -1,16 +1,12 @@
 <template>
-  <v-container class="fill">
-     <v-row justify="center" align="center" class="fill-height">
-      <v-col class="text-center">
-        <v-icon x-large :color="$theme.text_low">
-          error_outline
-        </v-icon>
-        <div class="text-center mt-6 text-uppercase">
-          <h3><slot>No data</slot></h3>
-        </div>
-      </v-col>
-    </v-row>
-  </v-container>
+  <div class="fit column flex-center">
+    <q-icon size="xl" color="low" name="mdi-alert-circle-outline" />
+    <div class="text-center q-mt-md text-uppercase">
+      <div class="text-h3">
+        <slot>No data</slot>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>

@@ -1,31 +1,26 @@
 <template>
-  <v-container class="px-5 py-4 fill" >
+  <div class="fit column q-px-md q-py-md" >
 
     <template v-if="docs.length">
-      <v-hover v-slot:default="{ hover }"
-        v-for="(doc, index) in docs" :key="index">
-        <v-row
-          no-gutters
-          :style="hover ? `background: var(--hover-bg-blue)` : `` "
-          style="cursor: pointer;"
-          class="body-1 px-4 py-4 mx-n2 flex-nowrap"
+      <q-list>
+        <q-item
+          v-for="(doc, index) in docs"
+          :key="index"
+          clickable
           @click="showMedia(index)">
-          <v-col cols="8">
-            <span  :class="'temp' in doc ? 'font-italic' : ''">
-              {{ doc.name }}
-            </span>
-          </v-col>
-
-          <v-spacer></v-spacer>
-
-          <v-col cols="auto" class="text-right">
-            {{ doc.size | bytes }}
-          </v-col>
-        </v-row >
-      </v-hover>
+          <q-item-section  :class="'temp' in doc ? 'font-italic' : ''">
+            {{ doc.name }}
+          </q-item-section>
+          <q-item-section side>
+            {{ $bytes(doc.size) }}
+          </q-item-section>
+        </q-item>
+      </q-list>
     </template>
 
-    <NoDataAlert v-else>{{ $tc('document.missing')}}</NoDataAlert>
+    <NoDataAlert v-else>
+      {{ $t('document.missing') }}
+    </NoDataAlert>
 
     <v-lazy>
       <MediaViewer
@@ -33,13 +28,12 @@
         @close="show_media = -1"
         v-bind="{ media_name, media_src}">
         <template v-slot:context-title>
-         {{ $tc('product.code').toUpperCase() }}: {{ product.code }}
+         {{ $t('product.code').toUpperCase() }}: {{ product.code }}
         </template>
       </MediaViewer>
     </v-lazy>
 
-
-  </v-container>
+  </div>
 </template>
 
 <script>
@@ -75,7 +69,7 @@ export default {
     },
 
     docs () {
-      return this.job.product_docs || []
+      return this.job.job_docs || []
     },
 
     media_name() {

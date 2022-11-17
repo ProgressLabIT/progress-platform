@@ -1,21 +1,26 @@
 <template>
   <BaseModalScreen v-bind="{show}" @close="$emit('close')">
 
-    <template v-slot:header>
-      <div class="ml-4 py-1 medium highlight">{{ media_name }}</div>
+    <template #header>
+      <div class="q-ml-md q-py-xs medium highlight">
+        {{ media_name }}
+      </div>
     </template>
 
-    <template v-slot:content v-if="show">
-      <v-img contain height="100%"
+    <template #content v-if="show">
+      <div class="fit flex flex-center">
+      <q-img fit="contain"
         v-if="hasImageExtension()" 
         :src="media_src">
-      </v-img>
+      </q-img>
       <embed v-else
         :key="media_src"
         :src="media_src + '#toolbar=0'"
         width="100%"
         height="100%" />
+      </div>
     </template>
+
   </BaseModalScreen>
 </template>
 
