@@ -1,71 +1,39 @@
 <template>
-  <v-container class="fill pa-0">
+  <div class="absolute-full column">
 
-    <NoDataAlert v-if="!bom.length">{{ $tc('bom.missing') }}</NoDataAlert>
+    <NoDataAlert v-if="!bom.length">
+      {{ $t('bom.missing') }}
+    </NoDataAlert>
 
-    <v-row v-else class="fill-height ma-0 pa-0">
-      <v-col class="fill-heigh d-flex flex-column justify-space-between pa-0">
-        <v-data-table
-          id="bom"
-          :headers="table_headers"
-          :items="bom"
-          :loading-text="$tc('loading_text') | capitalize"
-          sort-by="code"
-          fixed-header
-          item-key="table_key"
-          disable-pagination
-          hide-default-footer
-          :height="table_height">
-          <template v-slot:item.code="{item}">
-            <div class="nowrap">{{ item.code }}</div>
-          </template>
-        </v-data-table>
+    <template v-else>
+      <q-table
+        id="bom"
+        class="my-sticky-header-table col"
+        card-class="surface1 shadow-0"
+        virtual-scroll
+        :rows="bom"
+        :columns="columns"
+        style="height: 100%"
+        :pagination="{ rowsPerPage: 0 }"
+        :rows-per-page-options="[0]"
+        hide-bottom>
+      </q-table>
 
-        <v-radio-group row v-model="quantity_type" hide-details class="pa-4">
-          <v-row class="pa-0 ma-0">
-            <span class="mr-3">{{ $tc('bom.quantity_type.radio_label') | capitalize }}</span>
-            <v-radio
-              v-for="type in qt_types"
-              :key="type"
-              :value="type">
-              <template v-slot:label>
-                <span class="body-2">{{ $tc('bom.quantity_type.' + type).toUpperCase() }}</span>
-              </template>
-            </v-radio>
-          </v-row>
-        </v-radio-group>
-      </v-col>
+      <div class="row items-center justify-center col-auto q-px-md text-body2">
+        <span class="q-mr-3">
+          {{ $capitalize($t('bom.quantity_type.radio_label')) }}
+        </span>
+        <q-radio
+          v-for="type in qt_types"
+          v-model="quantity_type"
+          :key="type"
+          :val="type"
+          :label="$t('bom.quantity_type.' + type).toUpperCase()">
+        </q-radio>
+      </div>
+    </template>
 
-      <v-btn
-        absolute rounded
-        bottom right
-        :color="$theme.blue"
-        @click="show_lot_input = true">
-        REGISTRA LOTTI MATERIALI
-      </v-btn>
-
-      <BaseModalForm :show="show_lot_input" @cancel="show_lot_input = false">
-        <template v-slot:title>
-          REGISTRAZIONE LOTTI MATERIALI
-        </template>
-
-        <template v-slot:form>
-          <v-container>
-            <v-row v-for="item in components" :key="item" align="center">
-              <v-col cols="4">{{ item }}</v-col>
-              <v-col cols="6" offset="2">
-                <v-autocomplete :items="lots">
-                </v-autocomplete>
-              </v-col>
-            </v-row>
-          </v-container>
-        </template>
-      </BaseModalForm>
-
-
-    </v-row>
-
-  </v-container>
+  </div>
 </template>
 
 <script>
@@ -93,34 +61,24 @@ export default {
       quantity_type: 'job',
       qt_types: ['job', 'batch'],
       show_lot_input: false,
-      components: [
-        'M010102',
-        'M020237',
-        'M030111',
-        'M020305'
-      ],
-      lots: [
-        'INTRAUE',
-        'EXTRAUE'
-      ]
     }
   },
 
   computed: {
-    table_headers() {
+    columns() {
     // TODO: refactor into mixin / composition function, used also in ProductBoM
       return [
-        {  value:'code', text: this.$tc('code').toUpperCase() },
-        {  value:'description', text: this.$tc('description').toUpperCase() },
-        {  value:'item_type', text: this.$tc('type').toUpperCase() },
-        {  value:'phase_name', text: this.$tc('phase.short', 1).toUpperCase() },
-        {  value:'qt', text: this.$tc('quantity.short').toUpperCase() },
+        {  name:'code', field: 'product_code', label: this.$t('code').toUpperCase(), align: 'left' },
+        {  name:'description', field: 'product_description', label: this.$t('description').toUpperCase(), align: 'left' },
+        {  name:'item_type', field: 'item_type', label: this.$t('type').toUpperCase(), align: 'left' },
+        {  name:'phase_name', field: 'phase_name', label: this.$t('phase.short', 1).toUpperCase(), align: 'left' },
+        {  name:'qt', field: 'qt', label: this.$t('quantity.short').toUpperCase() },
       ]
     },
 
     bom () {
-      return this.job.hasOwnProperty('phase_bom')
-        ? this.job.phase_bom.map(i => {
+      const base_bom = this.job.hasOwnProperty('job_bom')
+        ? this.job.job_bom.map(i => {
           // multiply items by job quantity. Does not apply to tools and safety items
           const multiply = ['assembly', 'component', 'consumable']
           let quantity = i.qt
@@ -133,10 +91,17 @@ export default {
             qt: quantity
           }
         }) : []
+        return Array(100).fill(base_bom[0])
     }
   }
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="sass" scoped>
+.my-sticky-header-table
+  thead tr th
+    position: sticky
+    z-index: 1
+  thead tr:first-child th
+    top: 0
 </style>

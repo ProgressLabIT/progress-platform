@@ -15,7 +15,7 @@
       </div>
 
       <!-- WINDOW CONTAINER -->
-      <q-card color="surface1" class="col shadow-6">
+      <q-card color="surface1" class="col shadow-6 q-ma-xs">
         <slot name="content"></slot>
       </q-card>
 
