@@ -119,8 +119,8 @@ export default {
     },
 
     bom () {
-      return this.job.hasOwnProperty('phase_bom')
-        ? this.job.phase_bom.map(i => {
+      return this.job.hasOwnProperty('job_bom')
+        ? this.job.job_bom.map(i => {
           // multiply items by job quantity. Does not apply to tools and safety items
           const multiply = ['assembly', 'component', 'consumable']
           let quantity = i.qt
