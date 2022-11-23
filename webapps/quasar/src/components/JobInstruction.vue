@@ -6,17 +6,27 @@
       class="absolute-full row q-pa-none"
       :img-src="displayed_image_src"
       :name="index">
-      <div
-        v-show="show_details"
-        class="absolute-top"
-        :style="`backgroud-color: ${$theme.background}aa`">
-        <div class="text-h3 display">{{step.title}}</div>
-        <div>{{ step.description }}</div>
-      </div>
 
       <!-- INVISIBLE NAVIGATION -->
       <div class="col-6" @click="show('prev')" />
       <div class="col-6" @click="show('next')" />
+
+      <!-- CAPTION -->
+      <div class="absolute-top q-pa-md"
+        v-show="show_details"
+        style="background-color: #111a">
+        <div class="text-h3 display">{{step.title}}</div>
+        <div>{{ step.description }}</div>
+      </div>
+
+      <q-btn
+        round
+        color="theme-blue"
+        class="absolute q-mt-md q-mr-md"
+        style="right: 0"
+        :icon="show_details ? 'mdi-close' : 'mdi-information-variant'"
+        @click="show_details = !show_details">
+      </q-btn>
     </q-carousel-slide>
   </q-carousel>
 
