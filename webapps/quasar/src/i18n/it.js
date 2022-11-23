@@ -360,6 +360,9 @@ export default {
   "restore": "ripristina",
   "resume": "riprendi",
   "save": "salva",
+  "scroll": {
+    "to_top": "torna su"
+  },
   "search": "cerca",
   "select": "seleziona",
   "select_all": "seleziona tutti",

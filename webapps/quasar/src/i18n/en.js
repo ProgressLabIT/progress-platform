@@ -358,6 +358,9 @@ export default {
   "restore": "restore",
   "resume": "resume",
   "save": "save",
+  "scroll": {
+    "to_top": "back to top"
+  },
   "search": "search",
   "select": "select",
   "select_all": "select all",

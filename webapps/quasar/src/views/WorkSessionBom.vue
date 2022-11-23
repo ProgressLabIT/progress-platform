@@ -8,18 +8,21 @@
     <template v-else>
       <q-table
         id="bom"
+        ref="bom"
         class="my-sticky-header-table col"
         card-class="surface1 shadow-0"
         virtual-scroll
         :rows="bom"
         :columns="columns"
-        style="height: 100%"
         :pagination="{ rowsPerPage: 0 }"
         :rows-per-page-options="[0]"
+        :virtual-scroll-sticky-size-start="48"
         hide-bottom>
       </q-table>
 
-      <div class="row items-center justify-center col-auto q-px-md text-body2">
+      <q-separator />
+
+      <div class="row items-center col-auto q-px-md text-body2">
         <span class="q-mr-3">
           {{ $capitalize($t('bom.quantity_type.radio_label')) }}
         </span>
@@ -30,6 +33,10 @@
           :val="type"
           :label="$t('bom.quantity_type.' + type).toUpperCase()">
         </q-radio>
+        <q-space />
+        <q-btn size="sm" color="theme-blue" @click="$refs.bom.scrollTo(0)">
+          {{ $t('scroll.to_top') }}
+        </q-btn>
       </div>
     </template>
 
@@ -77,21 +84,17 @@ export default {
     },
 
     bom () {
-      const base_bom = this.job.hasOwnProperty('job_bom')
+      return this.job.hasOwnProperty('job_bom')
         ? this.job.job_bom.map(i => {
           // multiply items by job quantity. Does not apply to tools and safety items
-          const multiply = ['assembly', 'component', 'consumable']
           let quantity = i.qt
-          if (multiply.includes(i.item_type)) {
-            const factor = this.quantity_type === 'job' ? this.job.qt_planned : this.job.parameters.production_batch_qt
-            quantity = i.qt * factor
-          }
+          const factor = this.quantity_type === 'job' ? this.job.qt_planned : this.job.parameters.production_batch_qt
+          quantity = i.qt * factor
           return {
             ...i,
             qt: quantity
           }
         }) : []
-        return Array(100).fill(base_bom[0])
     }
   }
 }
@@ -99,9 +102,20 @@ export default {
 
 <style lang="sass" scoped>
 .my-sticky-header-table
+  height: 400px
+
+  .q-table__top,
+  .q-table__bottom,
+  thead tr:first-child th /* bg color is important for th; just specify one */
+    background-color: var(--surface-1)
+
   thead tr th
     position: sticky
     z-index: 1
+  /* this will be the loading indicator */
+  thead tr:last-child th
+    /* height of all previous header rows */
+    top: 48px
   thead tr:first-child th
     top: 0
 </style>
