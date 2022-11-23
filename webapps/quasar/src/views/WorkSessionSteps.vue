@@ -7,7 +7,7 @@
       </NoDataAlert>
 
       <template v-else>
-        <q-toolbar dense class="col-auto q-pa-md shadow-4 surface2">
+        <q-toolbar dense class="col-1 q-pa-md shadow-4 surface2">
           <div class="row full-width justify-between items-center q-col-gutter-xs" ref="stepper">
 
             <template v-for="(step, index) in procedure" :key="step._key">
