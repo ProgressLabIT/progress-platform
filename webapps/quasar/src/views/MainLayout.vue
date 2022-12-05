@@ -13,7 +13,7 @@
         id="menu"
         class="surface1"
         behavior="mobile"
-        width="400"
+        :width="400"
         v-model="show_drawer">
         <div class="column fit q-pa-lg">
 
@@ -25,10 +25,9 @@
               v-for="tab in tab_routes"
               :to="{ name: tab }"
               :key="tab"
-              align="left"
-              active-color="theme-blue"
+              active-class="text-theme-blue"
               indicator-color="theme-blue"
-              class="menu display q-mb-sm">
+              content-class="display">
               {{ $t(`views.${tab}`) }}
             </q-route-tab>
           </q-tabs>
@@ -145,6 +144,13 @@ export default {
 }
 </script>
 
-<style type="text/css" scoped>
-
+<style lang="sass" scoped>
+#menu .q-tab
+  justify-content: left
+  padding-left: 15px
+  margin-bottom: 8px
+  min-height: 30px
+  color: var(--text-low)
+  .q-tab--active
+    color: var(--theme-blue)
 </style>
