@@ -1,205 +1,116 @@
 <template>
-  <v-container fluid class="fill py-0 flex-grow-0">
-    <v-row class="fill">
+  <q-page-container>
+    <q-page class="row">
 
-      <!-- WORK ORDERS / JOBS LISTS -->      
-      <v-col class="fill d-flex flex-column">
+      <div class="column col-9 q-pr-md">
+        <!-- WORK ORDERS / JOBS LISTS -->
+        <div class="row items-center">
 
-        <!-- TAB LINKS -->
-        <v-row dense class="flex-grow-0 mb-2">    
-          <v-col cols="auto">
-          
-          <v-tabs
-            background-color="transparent"
-            v-model="current_view"
-            :color="$theme.text_high"
-            hide-slider
-            class="flex-shrink-1 flex-grow-0">
-            <v-tab 
+          <!-- TAB LINKS -->
+          <q-tabs
+            class="transparent text-low"
+            active-class="text-high weight-bold"
+            align="left"
+            shrink
+            indicator-color="transparent">
+            <q-route-tab
               v-for="(view, index) in views"
               :key="index"
               :to="{ name: view.route_name }"
               class="display">
-              {{ $tc(`views.${view.route_name}`) }}
-            </v-tab>
-          </v-tabs>
-          </v-col>
+              {{ $t(`views.${view.route_name}`) }}
+            </q-route-tab>
+          </q-tabs>
 
-          <v-spacer></v-spacer>
-          
+          <q-space />
+
           <!-- CREATE NEW WORK ORDER -->
           <template v-if="$route.name == 'workOrderList'">
-            <v-col cols="auto" v-if="!editing">
-              <v-btn small 
-                :color="$theme.blue"
+            <div class="col-auto" v-if="!editing">
+              <q-btn
+                size="0.75rem"
+                color="theme-blue"
                 @click="$router.push({ name: 'newWorkOrder'})">
-                {{ $tc('create_order') }}
-              </v-btn>
-            </v-col>
-    
+                {{ $t('create_order') }}
+              </q-btn>
+            </div>
+
             <template v-else>
 
               <!-- REORDER WORK ORDER QUEUE -->
-              <v-col cols="auto">
-                <v-btn small
-                  :color="$theme.orange"
+              <div class="col-auto">
+                <q-btn
+                  size="0.75rem"
+                  color="theme-orange"
                   :loading="saving"
                   @click="updateQueue"
                   class="ml-3">
-                  {{ $tc('production.save_new_sequence') }}
-                </v-btn>
-              </v-col>
+                  {{ $t('production.save_new_sequence') }}
+                </q-btn>
+              </div>
 
               <!-- CANCEL CHANGES -->
-              <v-col cols="auto">
-                <v-btn small
-                  :color="$theme.grey"
+              <div class="col-auto">
+                <q-btn
+                  size="0.75rem"
+                  color="theme-grey"
                   @click="cancelQueueChanges"
                   class="ml-2">
-                  {{ $tc('cancel_changes') }}
-                </v-btn>
-              </v-col>
+                  {{ $t('cancel_changes') }}
+                </q-btn>
+              </div>
 
             </template>
 
           </template>
-
-        </v-row>
+        </div>
 
         <!-- MAIN CONTENT -->
-        <div class="scroll flex-grow-1">
-          <!-- <keep-alive> -->
-            <!-- <v-component
-              :is="views[current_view].component" 
-              v-bind="{ filters }"
-              @showDetails="showWorkOrderScreen($event)"/> -->
-            <router-view 
-              v-bind="{filters}"
-              @lateOnly="showLateOnly"
-              @criticalOnly="showCriticalOnly"
-              @setSearch="setSearch($event)"
-              @itemDblClick="showWorkOrderScreen($event)"
-              @editing="editing = true">
-            </router-view>
+        <q-scroll-area class="col">
+          <router-view
+            v-if="vuex_ready"
+            v-bind="{filters}"
+            @lateOnly="showLateOnly"
+            @criticalOnly="showCriticalOnly"
+            @setSearch="setSearch($event)"
+            @itemDblClick="showWorkOrderScreen($event)"
+            @editing="editing = true">
+          </router-view>
 
-          <!-- </keep-alive> -->
+          <template v-else>
+            <NoDataAlert />
+          </template>
+        </q-scroll-area>
+      </div>
+
+        <!-- DIVIDER -->
+        <q-separator vertical inset/>
+
+        <!-- FILTERS -->
+        <div class="col column q-px-md">
+          <div class="highlight text-uppercase text-h5 q-mt-sm">
+            {{ $t('filter', 2) }}
+          </div>
+
+          <!-- FILTERS SPECIFIC TO JOB LIST  -->
+          <template v-if="$route.name == 'jobList'">
+
+            <!-- BY DEPARTMENT -->
+            <q-select
+              use-input
+              clearable
+              input-debounce="500"
+              v-model="department_key"
+              :options="$store.state.org.departments"
+              option-value="_key"
+              option-label="name"
+              :label="$capitalize($t('department', 1))"
+              class="q-mb-md">
+            </q-select>
+          </template>
         </div>
-          
-      </v-col>
-
-      
-      <!-- DIVIDER -->
-      <v-divider vertical inset></v-divider>
-
-      <!-- FILTERS -->
-      <v-col cols="3" class="pa-6 d-flex flex-column">
-        <h5 class="highlight text-uppercase">{{ $tc('filter', 2) }}</h5>
-        
-        <!-- FILTERS SPECIFIC TO JOB LIST  -->
-        <template v-if="$route.name == 'jobList'">
-          <!-- BY DEPARTMENT -->
-          <v-autocomplete
-            autocomplete="off"
-            v-model="department_key"
-            :items="$store.state.org.departments"
-            item-value="_key"
-            item-text="name"
-            single-line hide-details clearable
-            :label="$tc('department', 1) | capitalize"
-            class="mb-6 flex-grow-0">
-            <template v-slot:item="{ item: list_item }">
-              {{ list_item.name }}
-            </template>
-            <template v-slot:selection="{ item: selection }">
-              {{ selection.name }}
-            </template>
-          </v-autocomplete>
-
-          <!-- BY OPERATOR: Adapted from JobRebalanceActionCard  -->
-          <v-autocomplete
-            ref="operator_autocomplete"
-            autocomplete="off"
-            :items="$store.getters.operator_list()"
-            item-value="_key"
-            v-model="operator_key"
-            single-line hide-details
-            clearable
-            :filter="filterOperator"
-            :label="$tc('operator') | capitalize"
-            class="mb-6 flex-grow-0">
-            <template v-slot:item="{ item: list_item }">
-              <BaseUserAvatar :user="list_item"/>
-            </template>
-            <template v-slot:selection="{ item: selection }">
-              <BaseUserAvatar :user="selection"/>
-            </template>
-          </v-autocomplete>
-        </template>
-
-        <!-- Search box: instructions shows on mouse over info icon, in turn shown only on mouse over input -->
-        <v-hover v-slot:default="{ hover }">
-          <v-text-field
-            clearable
-            hide-details
-            single-line
-            autocomplete="off"
-            name="search"
-            :label="$tc('search') | capitalize"
-            value="search"
-            v-model="search_string"
-            class="mb-6 body-2 text-uppercase flex-grow-0">
-            <template v-slot:append>
-              
-              <v-tooltip bottom content-class="opaque">
-                <template v-slot:activator="{ on }">
-                  <v-icon 
-                    v-show="hover"
-                    :color="$theme.text_low"
-                    small class="mr-2"
-                    v-on="on">
-                    info
-                  </v-icon>
-                </template>
-                <span>
-                  {{ $tc('production.search_explainer') | capitalize }}:
-                </span>
-                <ul>
-                  <li>{{ $tc('product_code') | capitalize }}</li>
-                  <li>{{ $tc('work_order.long') | capitalize }}</li>
-                  <li>{{ $tc('work_order.wo_line.long') | capitalize }}</li>
-                  <li>{{ $tc('phase.long') | capitalize }}</li>
-                  <li>{{ $tc('department', 1) | capitalize }}</li>
-                  <li>{{ $tc('operator', 1) | capitalize }}</li>
-                </ul>
-              </v-tooltip>
-
-              <span class="material-icons">search</span>
-
-            </template>
-          </v-text-field>
-        </v-hover>
-        
-        <!-- Checkboxes -->
-        <v-checkbox dense hide-details 
-          :color="$theme.blue"
-          v-for="(filter, key) in bool_filters" 
-          :key="key" 
-          :label="$tc(`production.filters.${key}`) | capitalize"
-          v-model="filter.value"
-          class="mt-2">
-        </v-checkbox>
-
-        <v-spacer></v-spacer>
-        <!-- FILTERS RESET -->
-        <v-btn :color="$theme.blue"
-          v-show="filters_active"
-          @click="resetFilters">
-          {{ $tc('reset_filters') }}
-        </v-btn>
-
-      </v-col>
-    </v-row>
-  </v-container>
+    </q-page>
+  </q-page-container>
 </template>
 
 <script>
@@ -223,6 +134,7 @@ export default {
 
   data () {
     return {
+      vuex_ready: false,
       // content_height: 0,
       views: production_views,
       current_view: 0,
@@ -322,13 +234,17 @@ export default {
   },
 
   beforeCreate() {
-    this.$store.dispatch("loadDepartments")
-    this.$store.dispatch("loadUsers")
-    this.$store.dispatch("loadWorkOrders")
-    this.$store.dispatch("loadJobAssignments")
   },
 
   created() {
+    console.log('get deps')
+    this.$store.dispatch("loadDepartments")
+    console.log('get users')
+    this.$store.dispatch("loadUsers")
+    console.log('get wos')
+    this.$store.dispatch("loadWorkOrders")
+    console.log('get jobs')
+    this.$store.dispatch("loadJobAssignments")
     this.polling_instance = setInterval(() => {
       this.$store.dispatch("updateWorkOrdersProgress")
       this.$store.dispatch("loadJobAssignments")

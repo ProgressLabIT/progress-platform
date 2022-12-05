@@ -5,8 +5,11 @@ import { createStore } from 'vuex'
 import { dark, light } from '@/boot/theme.js'
 
 import job from "./job"
+import org from "./org"
 import session from "./session"
 import traceability from "./traceability"
+import user from "./user"
+import workorder from "./workorder"
 
 // import example from './module-example'
 
@@ -70,8 +73,11 @@ const store = createStore({
 
   modules: {
     job,
+    org,
     session,
-    traceability
+    traceability,
+    user,
+    workorder
   },
   // enable strict mode (adds overhead!)
   // for dev mode and --debug builds only
