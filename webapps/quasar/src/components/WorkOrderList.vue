@@ -1,73 +1,41 @@
 <template>
-  <v-container fluid ref="container" class="pa-0 fill-height" id="table_container">
-    <v-data-table
-      id="wo-list"
+  <div ref="container" id="table_container">
+    <q-table
+      id="wo_list"
+      :columns="columns"
+      :rows="filtered_wo_list"
+      row-key="field"
+      :style="`height: ${table_height}`"
+      virtual-scroll
       dense
-      :headers="table_headers"
-      :items="filtered_wo_list"
-      :options="{sortBy: ['priority']}"
-      :loading-text="$tc('loading_text') | capitalize"
-      fixed-header  
-      :height="table_height"
-      disable-pagination
-      hide-default-footer
-      class="fill">
-
-      <template v-slot:item="{ item }">
-        <!-- <tr @dblclick="$emit('showDetails', item.wo_code)"> -->
-        <tr 
-          @dblclick="showWorkOrderScreen(item._key)" :key="item._key">
-          <td 
-            v-for="(header, index) in table_headers" :key="index"
-            :class="header.value.includes('qt') ? 'text-right' : '' ">
-            
-            <template v-if="header.value === 'progress'">
-              <v-row no-gutters align="center" >
-                <v-col cols="8">
-                  <v-progress-linear 
-                    dense 
-                    :value="item.progress"
-                    :color="woBarColor(item)">
-                  </v-progress-linear>
-                </v-col>
-                <v-col cols="2" class="pl-4 text-right">
-                  {{ item.progress }}%
-                </v-col>
-                <v-col cols="2" class="text-right pl-2 pointer">
-                  <v-icon small 
-                    v-if="item.critical" 
-                    :color="$theme.red"
-                    @click="$emit('criticalOnly')">
-                    mdi-alert-octagon
-                  </v-icon>
-                  <v-icon small 
-                    v-else-if="!item.on_time" 
-                    :color="$theme.orange"
-                    @click="$emit('lateOnly')">
-                    mdi-alert
-                  </v-icon>
-                </v-col>
-              </v-row>
-            </template>
-            
-            <!-- DUE BY - with date formatting -->
-            <template v-else-if="header.value==='due_by'">
-              {{ item[header.value] | shortDateString('it') }}
-            </template>
-
-            <!-- OTHER FIELDS -->
-            <template v-else>{{ item[header.value] }}</template>
-          </td>
-        </tr>
+      hide-bottom
+      separator="none"
+      table-class="text-high"
+      card-class="transparent no-shadow q-mt-sm"
+      :rows-per-page-options="[0]">
+      <template #body-cell-progress="props">
+        <q-td key="progress" :props="props">
+          <div class="row items-center">
+            <q-linear-progress
+              class="col-8"
+              :value="0.5"
+              color="blue"
+              track-color="theme-grey"
+              buffer=1
+              size="4px">
+            </q-linear-progress>
+            <span class="col-2 text-right">{{ props.value }} %</span>
+          </div>
+        </q-td>
       </template>
-
-    </v-data-table>
-  </v-container>
+    </q-table>
+  </div>
 </template>
 
 <script>
 import Sortable from 'sortablejs'
 import multiMatch from '@/lib/MultiFieldSearch.js'
+import { mapState } from 'vuex'
 import { throttle as _throttle } from 'lodash'
 
 export default {
@@ -95,59 +63,78 @@ export default {
   data () {
     return {
       table_height: '85vh',
+      table_header_style: {
+        borderBottom: '3px solid green',
+        fontWeight: 'bold',
+        borderCollapse: 'separate'
+      }
     }
   },
 
   computed: {
 
-    table_headers() {
+    columns() {
       return [
         { 
-          value: 'sequence', 
-          text: this.$tc('work_order.list_headers.sequence').toUpperCase()},
+          field: 'sequence',
+          name: 'sequence',
+          label: this.$t('work_order.list_headers.sequence').toUpperCase(),
+          align: 'left'
+        },
         { 
-          value: 'wo_code', 
-          text: this.$tc('work_order.list_headers.wo_code').toUpperCase()},
+          field: 'wo_code',
+          name: 'wo_code',
+          label: this.$t('work_order.list_headers.wo_code').toUpperCase(),
+          align: 'left'
+        },
+        // {
+        //   field: 'wo_line',
+        //   label: this.$t('work_order.list_headers.wo_line').toUpperCase() },
+        {
+          field: 'product_code',
+          name: 'product_code',
+          label: this.$t('work_order.list_headers.product_code').toUpperCase(),
+          align: 'left'
+        },
         { 
-          value: 'wo_line', 
-          text: this.$tc('work_order.list_headers.wo_line').toUpperCase() },
+          field: 'progress',
+          name: 'progress',
+          label: this.$t('work_order.list_headers.progress').toUpperCase(),
+          align: 'left'
+        },
         { 
-          value: 'product_code', 
-          text: this.$tc('work_order.list_headers.product_code').toUpperCase()},
+          field: 'qt_completed',
+          name: 'qt_completed',
+          label: this.$t('work_order.list_headers.qt_completed').toUpperCase(),
+          align: 'right'},
         { 
-          value: 'progress', 
-          text: this.$tc('work_order.list_headers.progress').toUpperCase(), 
-          width: '40%' },
+          field: 'qt_planned',
+          name: 'qt_planned',
+          label: this.$t('work_order.list_headers.qt_planned').toUpperCase(),
+          align: 'right'},
         { 
-          value: 'qt_completed', 
-          text: this.$tc('work_order.list_headers.qt_completed').toUpperCase(), 
-          align: 'end'},
+          field: 'qt_remaining',
+          name: 'qt_remaining',
+          label: this.$t('work_order.list_headers.qt_remaining').toUpperCase(),
+          align: 'right'},
         { 
-          value: 'qt_planned', 
-          text: this.$tc('work_order.list_headers.qt_planned').toUpperCase(), 
-          align: 'end'},
-        { 
-          value: 'qt_remaining', 
-          text: this.$tc('work_order.list_headers.qt_remaining').toUpperCase(), 
-          align: 'end'},
-        { 
-          value: 'due_by', 
-          text: this.$tc('work_order.list_headers.due_by').toUpperCase(), 
+          field: 'due_by',
+          name: 'due_by',
+          label: this.$t('work_order.list_headers.due_by').toUpperCase(),
           sort: this.sortDate
         }
       ]
     },
 
-    temp_queue() {
-      return this.$store.state.workorder.temp_queue
-    },
-
-    wo_data_map() {
-      return this.$store.state.workorder.wo_map
-    },
+    ...mapState({
+      temp_queue: state => state.workorder.temp_queue,
+      wo_data_map: state => state.workorder.wo_map
+    }),
 
     wo_list() {
-      return this.temp_queue.map( wo_key => this.wo_data_map[wo_key])
+      return Array(5)
+        .fill(this.temp_queue.map( wo_key => this.wo_data_map[wo_key]))
+        .flat()
     },
 
     filtered_wo_list() {
@@ -219,8 +206,8 @@ export default {
 
   methods: {
     woBarColor(wo) {
-      if (wo.active === false) return this.$theme.grey
-      else return this.$theme.blue
+      if (wo.active === false) return 'theme-grey'
+      else return 'theme-blue'
     },
 
     showWorkOrderScreen(wo_key) {
@@ -253,10 +240,12 @@ export default {
   mounted() {
     // set table height explicitly and resize with window
     const resizeTable = () => this.table_height = this.$refs.container.clientHeight
+    console.log(this.$refs.container.clientHeight)
+    console.log(this.table_height)
     resizeTable()
     window.onresize = _throttle(resizeTable, 100)
 
-    // make the table rows draggable
+    /* make the table rows draggable
     let table = document.querySelector(".v-data-table tbody")
     const _self = this
     Sortable.create(table, {
@@ -266,33 +255,18 @@ export default {
         _self.$emit('editing')
         _self.$store.commit('UPDATE_TEMP_QUEUE', { newIndex, oldIndex })
       }
-    })
+    })*/
   },
 }
 </script>
 
-<style lang="css" scoped>
-#wo-list {
-  background-color: transparent !important;
-}
-
-#wo-list >>> th {
-  background-color: var(--bg-color) !important;
-}
-
-#wo-list >>> tr:not(:last-child) {
-  border: none !important;
-}
-
-#wo-list >>> table {
-  border-color: transparent !important;
-}
-
-#wo-list >>> td {
-  border: none;
-}
-
-#wo-list >>> td {
-  padding: 8px 16px;
-}
+<style lang="sass">
+#wo_list
+  & th
+    font-weight: bold
+    color: var(--text-low)
+    border-bottom: 1px solid #fff2
+  & td
+    padding: 8px 16px
+    font-size: 14px
 </style>

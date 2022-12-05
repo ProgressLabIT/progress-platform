@@ -1,10 +1,10 @@
 <template>
-  <q-page-container>
+  <q-page-container class="fit">
     <q-page class="row">
 
-      <div class="column col-9 q-pr-md">
+      <div class="column col-9">
         <!-- WORK ORDERS / JOBS LISTS -->
-        <div class="row items-center">
+        <div class="row col-auto items-center q-pr-md">
 
           <!-- TAB LINKS -->
           <q-tabs
@@ -66,21 +66,18 @@
         </div>
 
         <!-- MAIN CONTENT -->
-        <q-scroll-area class="col">
-          <router-view
-            v-if="vuex_ready"
-            v-bind="{filters}"
-            @lateOnly="showLateOnly"
-            @criticalOnly="showCriticalOnly"
-            @setSearch="setSearch($event)"
-            @itemDblClick="showWorkOrderScreen($event)"
-            @editing="editing = true">
-          </router-view>
+        <router-view
+          v-if="vuex_ready"
+          v-bind="{filters}"
+          @lateOnly="showLateOnly"
+          @criticalOnly="showCriticalOnly"
+          @setSearch="setSearch($event)"
+          @itemDblClick="showWorkOrderScreen($event)"
+          @editing="editing = true">
+        </router-view>
 
-          <template v-else>
-            <NoDataAlert />
-          </template>
-        </q-scroll-area>
+        <NoDataAlert v-else />
+
       </div>
 
         <!-- DIVIDER -->
@@ -114,6 +111,7 @@
 </template>
 
 <script>
+import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 
@@ -129,7 +127,8 @@ export default {
   name: 'ProductionOverview',
 
   components: {
-    BaseUserAvatar
+    BaseUserAvatar,
+    NoDataAlert
   },
 
   data () {
@@ -237,14 +236,14 @@ export default {
   },
 
   created() {
-    console.log('get deps')
-    this.$store.dispatch("loadDepartments")
-    console.log('get users')
-    this.$store.dispatch("loadUsers")
-    console.log('get wos')
-    this.$store.dispatch("loadWorkOrders")
-    console.log('get jobs')
-    this.$store.dispatch("loadJobAssignments")
+    Promise.all([
+      this.$store.dispatch("loadDepartments"),
+      this.$store.dispatch("loadUsers"),
+      this.$store.dispatch("loadWorkOrders"),
+      this.$store.dispatch("loadJobAssignments")
+      ])
+    .then(this.vuex_ready = true)
+
     this.polling_instance = setInterval(() => {
       this.$store.dispatch("updateWorkOrdersProgress")
       this.$store.dispatch("loadJobAssignments")
