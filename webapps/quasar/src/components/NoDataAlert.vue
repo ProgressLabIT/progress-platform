@@ -1,7 +1,7 @@
 <template>
-  <div class="fit column flex-center">
+  <div class="absolute-center text-center">
     <q-icon size="xl" color="low" name="mdi-alert-circle-outline" />
-    <div class="text-center q-mt-md text-uppercase">
+    <div class="text-uppercase">
       <div class="text-h3">
         <slot>No data</slot>
       </div>
