@@ -18,8 +18,7 @@
         <div class="column fit q-pa-lg">
 
           <q-tabs
-            class="col"
-            dense
+            class="col-auto"
             vertical switch-indicator>
             <q-route-tab
               v-for="tab in tab_routes"
@@ -35,21 +34,24 @@
           <q-space />
 
           <!-- THEME SELECTION -->
-          <div class="row justify-between">
-            <div class="display medium">TEMA SCURO</div>
-            <q-toggle v-model="dark_mode_on"></q-toggle>
-          </div>
+          <div class="q-px-sm">
+            <div class="row justify-between items-center">
+              <div class="display medium">TEMA SCURO</div>
+              <q-toggle v-model="dark_mode_on"></q-toggle>
+            </div>
 
-          <!-- LANGUAGE SELECTION -->
-          <div class="row justify-between">
-            <span class="display medium">{{ $t('language') }}</span>
-            <q-tabs right v-model="locale_index">
-              <q-tab
-                v-for="(lang, i) in locale_list"
-                :key="i">
-                {{ lang }}
-              </q-tab>
-            </q-tabs>
+            <!-- LANGUAGE SELECTION -->
+            <div class="row justify-between items-center">
+              <span class="display medium">{{ $t('language') }}</span>
+              <q-tabs right v-model="locale_index">
+                <q-tab
+                  v-for="(lang, i) in locale_list"
+                  :key="i"
+                  class="q-ma-none">
+                  {{ lang }}
+                </q-tab>
+              </q-tabs>
+            </div>
           </div>
         </div>
       </q-drawer>
@@ -104,7 +106,8 @@ export default {
     cssVars () {
       return {
         '--text-high': this.$q.dark.isActive ? 'rgba(255,255,255,.87)' : 'rgba(0,0,0,.87)',
-        '--text-low': this.$q.dark.isActive ? 'rgba(255,255,255,.6)' : 'rgba(0,0,0,.6)'
+        '--text-low': this.$q.dark.isActive ? 'rgba(255,255,255,.6)' : 'rgba(0,0,0,.6)',
+        '--bg-color': this.$q.dark.isActive ? '#131E21' : '#eee'
       }
     }
   },

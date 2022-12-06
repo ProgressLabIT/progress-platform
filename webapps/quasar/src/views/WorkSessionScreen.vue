@@ -1,6 +1,6 @@
 <template>
   <q-page-container>
-    <q-page class="q-px-md q-pb-md column col-grow">
+    <q-page class="q-px-md q-pb-md column">
 
       <!-- JOB CLOSED NOTIFICATION -->
       <q-card v-if="job_closed">

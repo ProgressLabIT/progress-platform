@@ -1,6 +1,6 @@
 <template>
   <q-page class="row flex-center">
-    <div class="column col-12 col-sm-8 col-md-6 col-xl-4 justify-center">
+    <div class="column col-12 col-sm-8 col-md-6 col-xl-4 justify-center q-px-xl">
       <div class="text-body1 text-high q-mb-lg text-center">
         {{ $capitalize(greeting) }}. {{ $capitalize(message) }}.
       </div>

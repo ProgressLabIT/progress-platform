@@ -40,11 +40,11 @@
               <!-- REORDER WORK ORDER QUEUE -->
               <div class="col-auto">
                 <q-btn
-                  size="0.75rem"
+                  size="0.7rem"
                   color="theme-orange"
                   :loading="saving"
                   @click="updateQueue"
-                  class="ml-3">
+                  class="q-ml-sm">
                   {{ $t('production.save_new_sequence') }}
                 </q-btn>
               </div>
@@ -52,10 +52,10 @@
               <!-- CANCEL CHANGES -->
               <div class="col-auto">
                 <q-btn
-                  size="0.75rem"
+                  size="0.7rem"
                   color="theme-grey"
                   @click="cancelQueueChanges"
-                  class="ml-2">
+                  class="q-ml-md">
                   {{ $t('cancel_changes') }}
                 </q-btn>
               </div>
