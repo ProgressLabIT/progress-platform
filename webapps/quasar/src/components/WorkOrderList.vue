@@ -4,30 +4,35 @@
       id="wo_list"
       :columns="columns"
       :rows="filtered_wo_list"
-      row-key="field"
+      row-key="_key"
       :style="`height: ${table_height}`"
       virtual-scroll
-      dense
       hide-bottom
+      dense
       separator="none"
       table-class="text-high"
-      card-class="transparent no-shadow q-mt-sm"
+      card-class="background no-shadow q-mt-sm"
       :rows-per-page-options="[0]">
+
+      <!-- PROGRESS BAR -->
       <template #body-cell-progress="props">
         <q-td key="progress" :props="props">
-          <div class="row items-center">
+          <div class="row items-center q-col-gutter-sm">
+            <div class="col-8">
             <q-linear-progress
-              class="col-8"
-              :value="0.5"
-              color="blue"
-              track-color="theme-grey"
-              buffer=1
+              :value="props.value / 100"
+              :color="woBarColor(props.row)"
+              :buffer="1"
               size="4px">
             </q-linear-progress>
+            </div>
             <span class="col-2 text-right">{{ props.value }} %</span>
           </div>
         </q-td>
+        <!-- ADD ALERT ICONS HERE -->
       </template>
+
+      <!-- ADD ONE-CLICK FILTERS HERE -->
     </q-table>
   </div>
 </template>
@@ -62,7 +67,7 @@ export default {
 
   data () {
     return {
-      table_height: '85vh',
+      table_height: '80vh',
       table_header_style: {
         borderBottom: '3px solid green',
         fontWeight: 'bold',
@@ -100,7 +105,8 @@ export default {
           field: 'progress',
           name: 'progress',
           label: this.$t('work_order.list_headers.progress').toUpperCase(),
-          align: 'left'
+          align: 'left',
+          style: 'width: 35%'
         },
         { 
           field: 'qt_completed',
@@ -132,9 +138,7 @@ export default {
     }),
 
     wo_list() {
-      return Array(5)
-        .fill(this.temp_queue.map( wo_key => this.wo_data_map[wo_key]))
-        .flat()
+      return this.temp_queue.map( wo_key => this.wo_data_map[wo_key])
     },
 
     filtered_wo_list() {
@@ -199,15 +203,16 @@ export default {
         }
 
         // Return false and exclude wo from list if any filter returned false
-        return !filter_match_map.some( i => i === false )
+        return filter_match_map.every( i => i === true )
       })
     }
   },
 
   methods: {
     woBarColor(wo) {
-      if (wo.active === false) return 'theme-grey'
-      else return 'theme-blue'
+      return wo.active
+        ? 'theme-blue'
+        : 'theme-grey'
     },
 
     showWorkOrderScreen(wo_key) {
@@ -240,23 +245,28 @@ export default {
   mounted() {
     // set table height explicitly and resize with window
     const resizeTable = () => this.table_height = this.$refs.container.clientHeight
-    console.log(this.$refs.container.clientHeight)
-    console.log(this.table_height)
     resizeTable()
     window.onresize = _throttle(resizeTable, 100)
 
-    /* make the table rows draggable
-    let table = document.querySelector(".v-data-table tbody")
+    // make the table rows draggable
+    let table = document.querySelector(".q-virtual-scroll__content")
     const _self = this
     Sortable.create(table, {
       ..._self.$store.state.drag_options,
       // use onEnd event provided by SortableJs library
       onEnd: ({ newIndex, oldIndex }) => {
         _self.$emit('editing')
+        console.log(this.filtered_wo_list.map(wo => {
+          return { key: wo._key, seq: wo.sequence }
+        }))
+        console.log('Old: ', oldIndex, '\nNew:', newIndex)
         _self.$store.commit('UPDATE_TEMP_QUEUE', { newIndex, oldIndex })
+        console.log(this.filtered_wo_list.map(wo => {
+          return { key: wo._key, seq: wo.sequence }
+        }))
       }
-    })*/
-  },
+    })
+  }
 }
 </script>
 
@@ -267,6 +277,22 @@ export default {
     color: var(--text-low)
     border-bottom: 1px solid #fff2
   & td
-    padding: 8px 16px
     font-size: 14px
+    padding-top: 8px
+    padding-bottom: 8px
+
+  .q-table__top,
+  .q-table__bottom,
+  thead tr:first-child th /* bg color is important for th; just specify one */
+    background-color: var(--bg-color)
+
+  thead tr th
+    position: sticky
+    z-index: 1
+  /* this will be the loading indicator */
+  thead tr:last-child th
+    /* height of all previous header rows */
+    top: 48px
+  thead tr:first-child th
+    top: 0
 </style>

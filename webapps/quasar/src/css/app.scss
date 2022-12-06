@@ -1,7 +1,11 @@
 // app global css in SCSS form
+@use 'quasar.variables';
 @use 'theme';
 @use 'fonts';
 @use 'typography';
+
+
+
 
 $button-border-radius: 4px;
 $typography-font-family: 'Red Hat Text' !important;

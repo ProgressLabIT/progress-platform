@@ -40,7 +40,7 @@ const workorder = {
     },
 
     RESET_TEMP_QUEUE(state) {
-      state.temp_queue = state.saved_queue
+      state.temp_queue = [...state.saved_queue]
     }
   },
 
