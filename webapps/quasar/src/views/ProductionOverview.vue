@@ -4,7 +4,7 @@
 
       <div class="column col-9">
         <!-- WORK ORDERS / JOBS LISTS -->
-        <div class="row col-auto items-center q-pr-md">
+        <div class="row col-auto items-center q-pl-xs q-pr-md">
 
           <!-- TAB LINKS -->
           <q-tabs

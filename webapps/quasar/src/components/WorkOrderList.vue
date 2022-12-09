@@ -1,5 +1,5 @@
 <template>
-  <div ref="container" id="table_container">
+  <div ref="container" id="table_container" class="q-px-sm">
     <q-table
       id="wo_list"
       :columns="columns"
@@ -18,13 +18,13 @@
       <template #body-cell-progress="props">
         <q-td key="progress" :props="props">
           <div class="row items-center q-col-gutter-sm">
-            <div class="col-8">
-            <q-linear-progress
-              :value="props.value / 100"
-              :color="woBarColor(props.row)"
-              :buffer="1"
-              size="4px">
-            </q-linear-progress>
+            <div class="col-9">
+              <q-linear-progress
+                :value="props.value / 100"
+                :color="progressColor(props.row)"
+                :buffer="1"
+                size="4px">
+              </q-linear-progress>
             </div>
             <span class="col-2 text-right">{{ props.value }} %</span>
           </div>
@@ -106,7 +106,7 @@ export default {
           name: 'progress',
           label: this.$t('work_order.list_headers.progress').toUpperCase(),
           align: 'left',
-          style: 'width: 35%'
+          style: 'width: 25%'
         },
         { 
           field: 'qt_completed',
@@ -209,7 +209,7 @@ export default {
   },
 
   methods: {
-    woBarColor(wo) {
+    progressColor(wo) {
       return wo.active
         ? 'theme-blue'
         : 'theme-grey'

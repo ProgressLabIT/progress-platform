@@ -1,9 +1,9 @@
 <template>
-  <q-scroll-area class="col q-px-md q-pt-lg">
+  <q-scroll-area class="col q-mx-xs q-px-sm q-pt-lg" :visible="false">
      <template
         v-for="(o, index) in jobs_view"
         :key="index">
-        <div class="row items-center q-gutter-md">
+        <div class="row items-center q-gutter-md q-pl-sm">
           <q-img :src="getPicPath(o.operator)" class="operator-avatar">
             <template #error>
               <q-icon name="mdi-account-circle" size="36px"/>
@@ -35,9 +35,43 @@
           separator="none"
           table-class="text-high assignment-list"
           card-class="background no-shadow q-mt-md">
+          <template #body="props">
+            <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
+              <template :props="props" v-for="field in job_data" :key="field.name">
+                <q-td :props="props" :class="{ 'filter-field': filter_fields.includes(field.name)}">
+
+                  <!-- PROGRESS -->
+                  <template v-if="field.name==='progress'">
+                    <div class="row items-center q-col-gutter-sm">
+                      <div class="col-9">
+                        <q-linear-progress
+                          :value="props.row[field.name] / 100"
+                          :color="progressColor(props.row)"
+                          :buffer="1"
+                          size="4px">
+                        </q-linear-progress>
+                      </div>
+                      <span class="col-2 text-right">{{ props.row[field.name] }} %</span>
+                    </div>
+                  </template>
+
+                  <template v-else>
+                    {{ $capitalizeAll(props.row[field.name]) }}
+                  </template>
+
+                </q-td>
+              </template>
+            </q-tr>
+          </template>
+          <template #body-cell-progress="props">
+            <q-td key="progress" :props="props">
+
+            </q-td>
+            <!-- ADD ALERT ICONS HERE -->
+          </template>
         </q-table>
 
-        <q-separator class="q-my-lg"/>
+        <q-separator class="q-my-lg q-mx-sm"/>
 
      </template>
   </q-scroll-area>
@@ -97,36 +131,42 @@ export default {
           label: this.$t('work_order.wo_code').toUpperCase(),
           field: 'wo_code',
           name: 'wo_code',
-          align: 'left'
+          align: 'left',
+          style: 'width: 15%'
         },
         { 
           label: this.$t('product.label', 1).toUpperCase(),
           field: 'product_code',
           name: 'product_code',
-          align: 'left'
+          align: 'left',
+          style: 'width: 15%'
         },
         { 
           label: this.$t('phase.short').toUpperCase(),
           field: 'phase_alias',
           name: 'phase_alias',
+          style: 'width: 15%',
           align: 'left'
         },
         { 
           label: this.$t('progress').toUpperCase(),
           field: 'progress',
           name: 'progress',
-          width: '30%'
+          style: 'width: 25%',
+          align: 'left'
         },
         { 
           label: this.$t('quantity.completed.short').toUpperCase(),
           field: 'qt_completed',
           name: 'qt_completed',
+          style: 'width: 10%',
           align: 'right'
         },
         {
           label: this.$t('quantity.planned.short').toUpperCase(),
           field: 'qt_planned',
           name: 'qt_planned',
+          style: 'width: 10%',
           align: 'right'
         },
       ]
@@ -204,6 +244,12 @@ export default {
       return user_pic_folder + filename + '.jpg'
     },
 
+    progressColor(job) {
+      return job.active
+        ? 'theme-blue'
+        : 'theme-grey'
+    },
+
     setSearch(field, text) {
       if (this.filter_fields.includes(field)) {
         this.$emit('setSearch', text)
@@ -226,17 +272,20 @@ export default {
   height: 36px
   width: 36px
   border-radius: 100%
-  padding: 0px
+  margin-left: 18px
 
 .assignment-list .q-table
   th
     font-weight: bold
     color: var(--text-low)
-    &:first-child
-      padding-left: 0px
   td
     padding-top: 8px !important
     padding-bottom: 8px !important
-    &:first-child
-      padding-left: 0px
+    &.filter-field
+      cursor: pointer
+      &:hover
+        text-decoration: underline
+
+
+
 </style>
