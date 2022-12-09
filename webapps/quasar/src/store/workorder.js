@@ -1,7 +1,6 @@
 import { api } from '@/boot/axios.js'
 import axios from 'axios'
 
-
 const workorder = {
 
   state: {
@@ -35,8 +34,8 @@ const workorder = {
 
     UPDATE_TEMP_QUEUE(state, { newIndex, oldIndex }) {
       const selected_wo = state.temp_queue.splice(oldIndex, 1)[0]
-      // state.temp_wo_list.splice(newIndex, 0, selected_wo)
       state.temp_queue.splice(newIndex, 0, selected_wo)
+
     },
 
     RESET_TEMP_QUEUE(state) {

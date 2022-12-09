@@ -1,108 +1,46 @@
 <template>
-  <v-container class="fill pa-0 ">  
+  <q-scroll-area class="col q-px-md q-pt-lg">
+     <template
+        v-for="(o, index) in jobs_view"
+        :key="index">
+        <div class="row items-center q-gutter-md">
+          <q-img :src="getPicPath(o.operator)" class="operator-avatar">
+            <template #error>
+              <q-icon name="mdi-account-circle" size="36px"/>
+            </template>
+          </q-img>
+          <span class="weight-medium medium">
+            {{ $capitalizeAll(o.operator.name + ' ' + o.operator.surname) }}
+          </span>
+          <q-space />
+          <q-chip class="col-auto text-body2" color="theme-grey" size="sm">
+            <span class="weight-medium">
+              {{ o.filtered_jobs.length }}
+            </span>
+            <span class="q-mx-xs">
+              {{ $t('of') }}
+            </span>
+            <span class="weight-medium">
+              {{ o.assigned_jobs_count }}
+            </span>
+          </q-chip>
+        </div>
 
-    <div class="flex-grow-1 scroll">
-      <NoDataAlert v-if="!jobs_view.length"></NoDataAlert>
-      <template v-else>
-        <v-container
-          v-for="(o, index) in jobs_view"
-          :key="index">
-            <v-row
-              justify="start"
-              align="center"
-              no-gutters
-              class="mt-2">
-              <v-col cols="auto">
-                <v-avatar size="36">
-                  <v-img eager :src="getPicPath(o.operator)">
-                    <template v-slot:placeholder>
-                      <v-icon x-large>mdi-account-circle</v-icon>
-                    </template>
-                  </v-img>
-                </v-avatar>
-                <span class="ml-4 weight-medium medium">
-                  {{ o.operator.name + ' ' + o.operator.surname | capitalize_all }}
-                </span>
-              </v-col>
-              <v-spacer></v-spacer>
-              <v-col cols="auto">
-                <v-chip small>
-                  <span class="weight-medium mr-1">{{ o.filtered_jobs.length }}</span>
-                  di
-                  <span class="weight-medium ml-1">{{ o.assigned_jobs_count }}</span>
-                </v-chip>
-              </v-col>
-            </v-row>
+        <q-table
+          :columns="job_data"
+          :rows="o.filtered_jobs"
+          row-key="_key"
+          hide-bottom
+          dense
+          separator="none"
+          table-class="text-high assignment-list"
+          card-class="background no-shadow q-mt-md">
+        </q-table>
 
-            <v-data-table
-              :items="o.filtered_jobs"
-              :headers="job_data"
-              hide-default-footer
-              dense
-              disable-pagination
-              :no-data-text="$tc('job.no_job_assigned') | capitalize"
-              class="assignment-list mt-4 ml-n3"
-              >
-              <template v-slot:item="{ item: job }">
-                <tr @dblclick="showWorkOrderScreen(job.wo_key)">
-                  <!-- <v-hover v-slot:default="{ hover }"> -->
-                    <td
-                      v-for="(header, index) in job_data"
-                      :key="index"
-                      :class="header.value.includes('qt') ? 'text-right' : ''"
-                      class="text-uppercase"
-                      @click="setSearch(header.value, job[header.value])">
-                      <template v-if="header.value ==='progress'">
-                        <v-row no-gutters align="center">
-                          <v-col cols="9">
-                            <v-progress-linear
-                              dense
-                              :value="job.progress"
-                              :color="job.active ? $theme.blue : $theme.grey">
-                            </v-progress-linear>
-                          </v-col>
-                          <v-col cols="2" class="pl-4 text-right">
-                            {{ job.progress }}%
-                          </v-col>
-                          <v-col cols="1" class="text-right pl-2">
-                            <v-icon small
-                              v-if="job.critical"
-                              :color="$theme.red"
-                              @click="$emit('criticalOnly')">
-                              mdi-alert-octagon
-                            </v-icon>
-                            <v-icon small
-                              v-else-if="!job.on_time"
-                              :color="$theme.orange"
-                              @click="$emit('lateOnly')">
-                              mdi-alert
-                            </v-icon>
-                          </v-col>
-                        </v-row>
-                      </template>
+        <q-separator class="q-my-lg"/>
 
-                      <template v-else>
-                        <v-hover v-slot:default="{ hover }">
-                        <div
-                          :class="filter_fields.includes(header.value) ? 'filter-field' : ''"
-                          :style="filter_fields.includes(header.value) && hover ? 'text-decoration: underline' : ''"
-                          >
-                          {{ job[header.value] | capitalize_all }}
-                        </div>
-                        </v-hover>
-                      </template>
-
-                    </td>
-                  <!-- </v-hover> -->
-                </tr>
-              </template>
-            </v-data-table>
-            <v-divider class="mt-4"></v-divider>
-        </v-container>
-      </template>
-    </div>
-  </v-container>
-
+     </template>
+  </q-scroll-area>
 </template>
 
 <script>
@@ -156,36 +94,40 @@ export default {
     job_data() {
       return [
         { 
-          text: this.$tc('work_order.wo_code').toUpperCase(), 
-          value: 'wo_code', 
+          label: this.$t('work_order.wo_code').toUpperCase(),
+          field: 'wo_code',
+          name: 'wo_code',
+          align: 'left'
         },
         { 
-          text: this.$tc('work_order.wo_line.line_only', 1).toUpperCase(), 
-          value: 'wo_line', 
+          label: this.$t('product.label', 1).toUpperCase(),
+          field: 'product_code',
+          name: 'product_code',
+          align: 'left'
         },
         { 
-          text: this.$tc('product.label', 1).toUpperCase(), 
-          value: 'product_code', 
+          label: this.$t('phase.short').toUpperCase(),
+          field: 'phase_alias',
+          name: 'phase_alias',
+          align: 'left'
         },
         { 
-          text: this.$tc('phase.short').toUpperCase(), 
-          value: 'phase_alias', 
-        },
-        { 
-          text: this.$tc('progress').toUpperCase(), 
-          value: 'progress', 
+          label: this.$t('progress').toUpperCase(),
+          field: 'progress',
+          name: 'progress',
           width: '30%'
         },
         { 
-          text: this.$tc('quantity.completed.short').toUpperCase(), 
-          value: 'qt_completed', 
-          align: 'end'
+          label: this.$t('quantity.completed.short').toUpperCase(),
+          field: 'qt_completed',
+          name: 'qt_completed',
+          align: 'right'
         },
-        // { text: this.$tc('job_list.job_data.qt_released'), value: 'qt_released', align: 'end' },
-        { 
-          text: this.$tc('quantity.planned.short').toUpperCase(), 
-          value: 'qt_planned', 
-          align: 'end' 
+        {
+          label: this.$t('quantity.planned.short').toUpperCase(),
+          field: 'qt_planned',
+          name: 'qt_planned',
+          align: 'right'
         },
       ]
     },
@@ -238,7 +180,7 @@ export default {
         result.push({
           operator: {
             _key: 'unassigned',
-            name: this.$tc("job.unassigned_jobs"),
+            name: this.$t("job.unassigned_jobs"),
             surname: ''
           },
           assigned_jobs_count: this.unassigned_jobs.length,    
@@ -279,22 +221,22 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
-.assignment-list {
-  background-color: transparent !important;
-}
+<style lang="sass">
+.operator-avatar
+  height: 36px
+  width: 36px
+  border-radius: 100%
+  padding: 0px
 
-.assignment-list >>> td {
-  border: none !important;
-  padding: 8px 16px;
-}
-
-.assignment-list >>> th {
-  border: none !important;
-}
-
-.filter-field {
-  cursor: pointer;
-}
-
+.assignment-list .q-table
+  th
+    font-weight: bold
+    color: var(--text-low)
+    &:first-child
+      padding-left: 0px
+  td
+    padding-top: 8px !important
+    padding-bottom: 8px !important
+    &:first-child
+      padding-left: 0px
 </style>
