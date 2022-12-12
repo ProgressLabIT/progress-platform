@@ -94,7 +94,7 @@
 
             <!-- BY DEPARTMENT -->
             <q-select
-              ref="department_autocomplete"
+              ref="department_filter"
               use-input
               clearable
               v-model="department_selected"
@@ -102,12 +102,13 @@
               option-label="name"
               @filter="filterDepartment"
               :label="$capitalize($t('department', 1))"
-              class="q-mb-md">
+              class="q-mb-md"
+              popup-content-class="surface1">
             </q-select>
 
             <!-- BY OPERATOR -->
             <q-select
-              ref="operator_autocomplete"
+              ref="operator_filter"
               use-input
               clearable
               v-model="operator_selected"
@@ -115,7 +116,8 @@
               :option-label="(item) => item.name + ' ' + item.surname"
               @filter="filterOperator"
               :label="$capitalize($t('operator'))"
-              class="q-mb-md">
+              class="q-mb-md"
+              popup-content-class="surface1">
               <template v-slot:option="scope">
                 <q-item v-bind="scope.itemProps">
                   <BaseUserAvatar :user="scope.opt"/>
@@ -141,7 +143,7 @@
               </template>
             </q-input>
             <q-icon name="mdi-information-outline" class="col-auto" size="sm">
-              <q-tooltip delay="300" class="text-body2">
+              <q-tooltip :delay="300" class="text-body2">
                 <span>
                   {{ $capitalize($t('production.search_explainer')) }}:
                 </span>
@@ -168,6 +170,16 @@
             v-model="filter.value"
             class="q-mt-md text-body1 low-text">
           </q-checkbox>
+
+          <q-space />
+
+          <q-btn
+            color="theme-blue"
+            v-show="filters_active"
+            class="q-mb-md"
+            @click="resetFilters">
+            {{ $t('reset_filters') }}
+          </q-btn>
         </div>
     </q-page>
   </q-page-container>
@@ -236,8 +248,9 @@ export default {
 
     filters_active() {
       return Object.values(this.bool_filters).some(f => f.value === false) 
-        || this.search_string != undefined 
-        || this.department != undefined
+        || this.search_string != null
+        || this.department_selected != null
+        || this.operator_selected != null
     },
 
     operator_list () {
@@ -280,9 +293,9 @@ export default {
     },
 
     resetFilters() {
-      this.search_string = undefined
-      this.department_search_text = undefined
-      this.operator_search_text = undefined
+      this.search_string = null
+      this.operator_selected = null
+      this.department_selected = null
       for (let filter of Object.values(this.bool_filters)) {
         filter.value = true
       }
@@ -313,13 +326,13 @@ export default {
       this.editing = false
     },
 
-    filterDepartment (val, update, abort) {
+    async filterDepartment (val, update, abort) {
       update(() => {
         this.department_search_text = val.toLowerCase()
       })
     },
 
-    filterOperator (val, update, abort) {
+    async filterOperator (val, update, abort) {
       update(() => {
         this.operator_search_text = val.toLowerCase()
       })
