@@ -124,7 +124,37 @@
             </q-select>
 
           </template>
+          <!-- END OF JOB-SPECIFIC FILTERS -->
 
+          <div class="row items-center q-col-gutter-md">
+            <q-input
+              clearable
+              autocomplete="off"
+              name="search"
+              debounce="300"
+              :label="$capitalize($t('search'))"
+              v-model="search_string"
+              class="q-mb-md col">
+              <template v-slot:append>
+                <q-icon name="mdi-magnify"/>
+              </template>
+            </q-input>
+            <q-icon name="mdi-information-outline" class="col-auto" size="sm">
+              <q-tooltip delay="300" class="text-body2">
+                <span>
+                  {{ $capitalize($t('production.search_explainer')) }}:
+                </span>
+                <ul>
+                  <li>{{ $capitalize($t('product_code')) }}</li>
+                  <li>{{ $capitalize($t('work_order.long')) }}</li>
+                  <li>{{ $capitalize($t('work_order.wo_line.long')) }}</li>
+                  <li>{{ $capitalize($t('phase.long')) }}</li>
+                  <li>{{ $capitalize($t('department', 1)) }}</li>
+                  <li>{{ $capitalize($t('operator', 1)) }}</li>
+                </ul>
+              </q-tooltip>
+            </q-icon>
+          </div>
 
         </div>
     </q-page>
