@@ -94,17 +94,38 @@
 
             <!-- BY DEPARTMENT -->
             <q-select
+              ref="department_autocomplete"
               use-input
               clearable
-              input-debounce="500"
-              v-model="department_key"
-              :options="$store.state.org.departments"
-              option-value="_key"
+              v-model="department_selected"
+              :options="filtered_departments"
               option-label="name"
+              @filter="filterDepartment"
               :label="$capitalize($t('department', 1))"
               class="q-mb-md">
             </q-select>
+
+            <!-- BY OPERATOR -->
+            <q-select
+              ref="operator_autocomplete"
+              use-input
+              clearable
+              v-model="operator_selected"
+              :options="filtered_operators"
+              :option-label="(item) => item.name + ' ' + item.surname"
+              @filter="filterOperator"
+              :label="$capitalize($t('operator'))"
+              class="q-mb-md">
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <BaseUserAvatar :user="scope.opt"/>
+                </q-item>
+              </template>
+            </q-select>
+
           </template>
+
+
         </div>
     </q-page>
   </q-page-container>
@@ -149,11 +170,13 @@ export default {
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       },
       search_string: undefined,
-      department_key: undefined,
-      operator_key: undefined,
+      department_selected: undefined,
+      department_search_text: undefined,
+      operator_selected: undefined,
       editing: false,
       saving: false,
-      polling_instance: undefined
+      polling_instance: undefined,
+      operator_search_text: undefined
     }
   },
 
@@ -164,8 +187,8 @@ export default {
       for (const [k,v] of Object.entries(this.bool_filters)) {
         bools_map[k] = v.value
       }
-      const department_key = this.department_key
-      const operator_key = this.operator_key
+      const department_key = this.department_selected ? this.department_selected._key : undefined
+      const operator_key = this.operator_selected ? this.operator_selected._key : undefined
       return { search_string, ...bools_map, department_key, operator_key }
     },
 
@@ -173,7 +196,28 @@ export default {
       return Object.values(this.bool_filters).some(f => f.value === false) 
         || this.search_string != undefined 
         || this.department != undefined
+    },
+
+    operator_list () {
+      return this.$store.getters.operator_list()
+    },
+
+    filtered_operators() {
+      return this.operator_list.filter(
+        o => multiMatch(this.operator_search_text, o, ['name', 'surname'])
+      )
+    },
+
+    department_list() {
+      return this.$store.state.org.departments
+    },
+
+    filtered_departments() {
+      return this.department_search_text
+        ? this.department_list.filter(d => d.name.toLowerCase().includes(this.department_search_text))
+        : this.department_list
     }
+
   },
 
   methods: {
@@ -195,8 +239,8 @@ export default {
 
     resetFilters() {
       this.search_string = undefined
-      this.department = undefined
-      this.operat
+      this.department_search_text = undefined
+      this.operator_search_text = undefined
       for (let filter of Object.values(this.bool_filters)) {
         filter.value = true
       }
@@ -227,9 +271,17 @@ export default {
       this.editing = false
     },
 
-    filterOperator(operator, search_text) {
-      return multiMatch(search_text, operator, ['name', 'surname'])
+    filterDepartment (val, update, abort) {
+      update(() => {
+        this.department_search_text = val.toLowerCase()
+      })
     },
+
+    filterOperator (val, update, abort) {
+      update(() => {
+        this.operator_search_text = val.toLowerCase()
+      })
+    }
   },
 
   beforeCreate() {
