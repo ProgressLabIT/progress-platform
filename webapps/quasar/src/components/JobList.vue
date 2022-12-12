@@ -3,15 +3,12 @@
      <template
         v-for="(o, index) in jobs_view"
         :key="index">
-        <div class="row items-center q-gutter-md q-pl-sm">
-          <q-img :src="getPicPath(o.operator)" class="operator-avatar">
-            <template #error>
-              <q-icon name="mdi-account-circle" size="36px"/>
-            </template>
-          </q-img>
-          <span class="weight-medium medium">
-            {{ $capitalizeAll(o.operator.name + ' ' + o.operator.surname) }}
-          </span>
+        <div class="row items-center q-gutter-md">
+          <BaseUserAvatar
+            :user="o.operator"
+            name_class="medium weight-medium"
+            size="36px">
+          </BaseUserAvatar>
           <q-space />
           <q-chip class="col-auto text-body2" color="theme-grey" size="sm">
             <span class="weight-medium">
@@ -79,6 +76,8 @@
 
 <script>
 // import filterJobs from '@/lib/ProductionFilters.js'
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
+
 import matchJobToFilters from '@/lib/ProductionFilters.js'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 
@@ -87,6 +86,7 @@ export default {
   name: 'JobList',
 
   components: {
+    BaseUserAvatar,
     NoDataAlert
   },
 
@@ -268,12 +268,6 @@ export default {
 </script>
 
 <style lang="sass">
-.operator-avatar
-  height: 36px
-  width: 36px
-  border-radius: 100%
-  margin-left: 18px
-
 .assignment-list .q-table
   th
     font-weight: bold
@@ -285,7 +279,4 @@ export default {
       cursor: pointer
       &:hover
         text-decoration: underline
-
-
-
 </style>

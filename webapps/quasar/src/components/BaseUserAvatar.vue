@@ -1,9 +1,14 @@
 <template>
-  <div class="row align-center" :class="name_first ? 'reverse' : ''">
+  <div class="row items-center q-gutter-md" :class="name_first ? 'reverse' : ''">
     <div class="col-auto">
-      <q-avatar color="theme-grey" :size="size">
-        <q-img :src="avatar_src" :alt="initials" />
-      </q-avatar>
+      <q-img
+        :src="avatar_src"
+        :alt="initials"
+        :style="avatar_style">
+        <template #error>
+          <q-icon name="mdi-account-circle" :size="size"/>
+        </template>
+      </q-img>
     </div>
     <div class="col-auto">
       <component
@@ -50,7 +55,7 @@ export default {
     
     name_class: {
       type: String,
-      default: 'body-2 uppercase'
+      default: 'body-2'
     },
 
     name_style: {
@@ -60,7 +65,12 @@ export default {
 
   data() {
     return {
-      base_path: '/media/user/'
+      base_path: '/media/user/',
+      avatar_style: {
+        height: this.size,
+        width: this.size,
+        borderRadius: '100%'
+      }
     }
   },
 
@@ -70,15 +80,17 @@ export default {
     },
 
     initials() {
-      return this.user.name[0].toUpperCase() + this.user.surname[0].toUpperCase()
+      try {
+        return this.user.name[0].toUpperCase() + this.user.surname[0].toUpperCase()
+      } catch { return 'N/A' }
     },
 
     full_name() {
-      return this.user.name + ' ' + this.user.surname
+      return this.$capitalizeAll(this.user.name + ' ' + this.user.surname)
     },
   }
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="sass" scoped>
 </style>
