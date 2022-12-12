@@ -45,6 +45,7 @@
                           :value="props.row[field.name] / 100"
                           :color="progressColor(props.row)"
                           :buffer="1"
+                          animation-speed="300"
                           size="4px">
                         </q-linear-progress>
                       </div>

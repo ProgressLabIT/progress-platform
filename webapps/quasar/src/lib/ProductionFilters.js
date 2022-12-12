@@ -29,11 +29,11 @@ export default function productionFilterMatch(item, filters, search_fields) {
         break
 
       case 'started':
-        if (!value && item.status === 'started') match = false
+        if (!value && item.stage === 'started') match = false
         break
 
       case 'queued':
-        if (!value && ['created', 'planned'].includes(item.status)) match = false
+        if (!value && ['created', 'planned'].includes(item.stage)) match = false
         break
 
       case 'on_time':

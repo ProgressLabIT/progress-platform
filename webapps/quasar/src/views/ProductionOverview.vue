@@ -84,7 +84,7 @@
         <q-separator vertical inset/>
 
         <!-- FILTERS -->
-        <div class="col column q-px-md">
+        <div class="col column q-px-lg">
           <div class="highlight text-uppercase text-h5 q-mt-sm">
             {{ $t('filter', 2) }}
           </div>
@@ -126,6 +126,7 @@
           </template>
           <!-- END OF JOB-SPECIFIC FILTERS -->
 
+          <!-- SEARCH BOX -->
           <div class="row items-center q-col-gutter-md">
             <q-input
               clearable
@@ -156,6 +157,17 @@
             </q-icon>
           </div>
 
+          <!-- BOOLEAN FILTERS -->
+          <q-checkbox
+            v-for="(filter, key) in bool_filters"
+            :key="key"
+            dense
+            color="theme-blue"
+            size="sm"
+            :label="$capitalize($t(`production.filters.${key}`))"
+            v-model="filter.value"
+            class="q-mt-md text-body1 low-text">
+          </q-checkbox>
         </div>
     </q-page>
   </q-page-container>
