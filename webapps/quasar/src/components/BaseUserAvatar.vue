@@ -6,7 +6,10 @@
         :alt="initials"
         :style="avatar_style">
         <template #error>
-          <q-icon name="mdi-account-circle" :size="size"/>
+          <q-avatar color="theme-grey" :size="size" v-if="initials" class="absolute-center weight-bold" font-size=".4em">
+            {{ initials }}
+          </q-avatar>
+          <q-icon v-else name="mdi-account-circle" :size="size"/>
         </template>
       </q-img>
     </div>
