@@ -1,39 +1,38 @@
 <template>
-  <v-dialog 
+  <q-dialog
     v-model="show"
-    :overlay-color="$theme.background"
-    overlay-opacity="1"
-    :max-width="max_width"
-    persistent no-click-animation>
-    <v-card>
-      
-      <v-card-title>  
-        <h3 class="display">
-          <slot name="title"></slot>
-        </h3>
-      </v-card-title>
+    square no-backdrop-dismiss no-shake :style="{ ...$theme }">
+    <q-card class="surface1 q-pa-md" :style="{ maxWidth: max_width }">
 
-      <v-card-text>
-        <v-form @submit="$emit('submit')" lazy-validation v-model="valid">  
+      <!-- DIALOG TITLE -->
+      <q-card-section class="text-h3 display weight-medium">
+        <slot name="title"></slot>
+      </q-card-section>
+
+      <q-card-section>
+        <q-form @submit="$emit('submit')" v-model="valid">
           <slot name="form"></slot>
-          <v-row class="mt-6">
+          <div class="row q-mt-md q-col-gutter-md">
             <slot name="actions">
-              <v-col>
-                <v-btn block depressed :color="$theme.blue" @click="$emit('submit')">
-                  {{ $tc('save') }}
-                </v-btn>
-              </v-col>
-              <v-col>    
-                <v-btn block depressed :color="$theme.grey" @click="$emit('cancel')">
-                  {{ $tc('cancel') }}
-                </v-btn>
-              </v-col> 
+              <q-btn
+                class="col full-width"
+                color="theme-blue"
+                @click="$emit('submit')">
+                {{ $t('save') }}
+              </q-btn>
+
+              <q-btn
+                class="col full-width"
+                color="theme-grey"
+                @click="$emit('cancel')">
+              </q-btn>
+
             </slot>
-          </v-row>  
-        </v-form>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+          </div>
+        </q-form>
+      </q-card-section>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script>
@@ -61,5 +60,5 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
+<style>
 </style>

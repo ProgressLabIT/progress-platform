@@ -1,107 +1,108 @@
 <template>
-  <BaseModalForm @submit="postNewWorkOrder" max_width="700px" @cancel="$router.back()">
+  <BaseModalForm
+    id="new-work-order-form"
+    @submit="postNewWorkOrder"
+    max_width="700px"
+    @cancel="$router.back()">
+
     <template v-slot:title>
-      {{ $tc('work_order.new') }}
+      {{ $t('work_order.new') }}
     </template>
     
     <template v-slot:form>
-      <h4 class="weight-bold text-uppercase">
-        {{ $tc('work_order.wo_code') }}
-      </h4>
+      <div class="weight-bold text-uppercase text-low">
+        {{ $t('work_order.wo_code') }}
+      </div>
 
       <!-- WORK ORDER CODE INPUT -->
-      <v-text-field v-model="wo_code" class="input-uppercase"/>
+      <q-input v-model="wo_code" />
 
       <!-- WORK ORDER LINES TITLE  -->
-      <h4 class="weight-bold text-uppercase">
-        {{ $tc('work_order.wo_line.short', 2) }}
-      </h4>
+      <div class="text-h4 weight-bold text-uppercase">
+        {{ $t('work_order.wo_line.short', 2) }}
+      </div>
 
       <!-- WORK ORDER LINE HEADERS -->
-      <v-row>
-        <v-col 
-          v-for="(info, field_name) in wo_line_info" 
+      <div class="row">
+        <div
+          v-for="(info, field_name) in wo_line_info"
           :key="field_name"
-          :cols="info.cols"
-          class="pb-0">
-          <span>{{ info.label | capitalize }}</span>
-        </v-col>
-      </v-row>
+          :class="`q-pb-none col-${info.cols}`">
+          <span>{{ $capitalize(info.label) }}</span>
+        </div>
+      </div>
 
       <!-- WORK ORDER LINES -->
-      <v-row v-for="(line, index) in wo_lines" :key="index">
-        <v-col 
+      <div class="row" v-for="(line, index) in wo_lines" :key="index">
+        <div
           v-for="(info, field_name) in wo_line_info" 
           :key="field_name"
           :cols="info.cols"
-          class="py-0">
+          class="q-py-none">
           
-          <v-dialog 
+          <q-dialog
             :value="show_picker === index" 
             @input="log($event)"
             @click:outside="show_picker = -1"
             @keydown.esc="show_picker = -1"
             width="300px"
             v-if="field_name === 'due_by'">
-            <v-date-picker
-              landscape no-title
-              show-week
-              locale="it-it"
-              first-day-of-week="1"
+            <q-date
+              minimal
               width="300px"
               @change="setDueBy($event, index)">
-            </v-date-picker>
-          </v-dialog>
+            </q-date>
+          </q-dialog>
 
-          <v-text-field 
+          <q-input
             readonly              
             v-if="field_name === 'due_by'"
             @click.stop="show_picker = index"
-            :value="wo_lines[index].due_by | shortDateString('it')">
-          </v-text-field>         
+            :value="wo_lines[index].due_by">
+          </q-input>
 
-          <v-autocomplete
+          <q-select
             v-else-if="field_name === 'product'"
-            :items="product_list"
-            item-text="code"
-            return-object
+            :options="product_list"
+            option-label="code"
             v-model="wo_lines[index].product">
-          </v-autocomplete>
+          </q-select>
 
-          <v-text-field 
-            v-else 
-            single-line 
-            hide-details
+          <q-select
+            v-else
             autocomplete="false"
-            :reverse="info.type === Number"
+            :input-class="{ 'text-right': info.type === Number }"
             :type="field_name === 'qt_planned' ? 'number' : '' "
             v-model="wo_lines[index][field_name]">
-          </v-text-field>
+          </q-select>
         
-        </v-col>
-        <v-col cols="1">
-          <v-icon v-if="index != 0" @click="deleteRow(index)">close</v-icon> 
-        </v-col>
-      </v-row>
-      <v-btn text class="display medium" @click="addLine">
-        + {{ $tc('work_order.add_line', 1) }}
-      </v-btn>
+        </div>
+
+        <div class="col-1">
+          <q-icon v-if="index != 0" @click="deleteRow(index)" name="mdi-close" />
+        </div>
+      </div>
+
+      <q-btn flat class="display medium" @click="addLine">
+        + {{ $t('work_order.add_line', 1) }}
+      </q-btn>
+
     </template>
 
     <template v-slot:actions>
-        <v-col cols="6">
-          <v-btn block :color="$theme.blue" @click="postNewWorkOrder">
-            <v-progress-circular indeterminate v-if="loading" />
-            <span v-else>
-              {{ $tc('save') }}
-            </span>
-          </v-btn>
-        </v-col>
-        <v-col cols="6">
-          <v-btn block :color="$theme.grey" @click="$router.back()">
-            {{ $tc('cancel') }}
-          </v-btn>
-        </v-col>
+      <q-btn
+        class="col-6"
+        color="theme-blue"
+        :loading="loading"
+        @click="postNewWorkOrder">
+        {{ $t('save') }}
+      </q-btn>
+      <q-btn
+        class="col-6"
+        color="theme-grey"
+        @click="$router.back()">
+        {{ $t('cancel') }}
+      </q-btn>
     </template>
 
   </BaseModalForm>
@@ -109,7 +110,6 @@
 </template>
 
 <script>
-import { capitalize } from '@/lib/filters.js'
 import BaseModalForm from '@/components/BaseModalForm.vue'
 
 export default {
@@ -125,7 +125,8 @@ export default {
       wo_code: null,
       wo_lines: [],
       show_picker: -1,
-      loading: false
+      loading: false,
+
     }
   },
 
@@ -133,19 +134,19 @@ export default {
     wo_line_info() {
       return {
         product: {
-          label: this.$tc('product.label'),
+          label: this.$t('product.label'),
           type: Object,
           cols: 5,
           initial_value: {}
         },
         qt_planned: {
-          label: this.$tc('quantity.long'),
+          label: this.$t('quantity.long'),
           type: Number,
           cols: 3,
           initial_value: 0
         },
         due_by: {
-          label: this.$tc('by'),
+          label: this.$t('by'),
           type: Date,
           cols: 3,
           initial_value: ''
@@ -154,7 +155,9 @@ export default {
     },
 
     product_list() {
-      return this.$store.getters.productCatalog()
+      return this.vuex_ready
+        ? this.$store.getters.productCatalog()
+        : []
     }
   },
 
@@ -173,7 +176,7 @@ export default {
       const product_missing = this.wo_lines.some( line => !line.product._key )
 
       if (wo_code_missing || quantity_missing || product_missing)  {
-        window.alert(capitalize(this.$tc('form_missing_fields_alert')))
+        window.alert(capitalize(this.$t('form_missing_fields_alert')))
 
       }
 
@@ -227,5 +230,7 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="sass">
+#new-work-order-form .q-dialog__backdrop
+  background-color: v-bind('$theme.background')
 </style>

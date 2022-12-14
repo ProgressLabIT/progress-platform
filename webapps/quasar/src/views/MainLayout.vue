@@ -1,7 +1,6 @@
 <template>
   <q-layout
     view="lHh lpr lFf"
-    :style="cssVars"
     class="background">
 
     <!-- Use v-if to fully remove html from DOM in case of session lock.
@@ -102,14 +101,6 @@ export default {
     session_locked() {
       return this.$store.state.session.session_locked
     },
-
-    cssVars () {
-      return {
-        '--text-high': this.$q.dark.isActive ? 'rgba(255,255,255,.87)' : 'rgba(0,0,0,.87)',
-        '--text-low': this.$q.dark.isActive ? 'rgba(255,255,255,.6)' : 'rgba(0,0,0,.6)',
-        '--bg-color': this.$q.dark.isActive ? '#131E21' : '#eee'
-      }
-    }
   },
 
   methods: {

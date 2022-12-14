@@ -1,5 +1,7 @@
 <template>
-  <router-view />
+  <div :style="cssVars">
+    <router-view />
+  </div>
 </template>
 
 <script>
@@ -8,6 +10,16 @@ import { defineComponent } from 'vue'
 
 export default defineComponent({
   name: 'App',
+
+  computed: {
+    cssVars () {
+      return {
+        '--text-high': this.$q.dark.isActive ? 'rgba(255,255,255,.87)' : 'rgba(0,0,0,.87)',
+        '--text-low': this.$q.dark.isActive ? 'rgba(255,255,255,.6)' : 'rgba(0,0,0,.6)',
+        '--bg-color': this.$q.dark.isActive ? '#131E21' : '#eee'
+      }
+    }
+  },
 
   created() {
     // Save vuex state in localStorage before refresh or tab close

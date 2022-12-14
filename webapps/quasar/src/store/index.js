@@ -6,6 +6,7 @@ import { dark, light } from '@/boot/theme.js'
 
 import job from "./job"
 import org from "./org"
+import product from "./product"
 import session from "./session"
 import traceability from "./traceability"
 import user from "./user"
@@ -74,6 +75,7 @@ const store = createStore({
   modules: {
     job,
     org,
+    product,
     session,
     traceability,
     user,
