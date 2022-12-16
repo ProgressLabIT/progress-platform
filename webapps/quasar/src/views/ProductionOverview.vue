@@ -31,7 +31,7 @@
                 size="0.75rem"
                 color="theme-blue"
                 @click="$router.push({ name: 'newWorkOrder'})">
-                {{ $t('create_order') }}
+                {{ $t('add') }}
               </q-btn>
             </div>
 
