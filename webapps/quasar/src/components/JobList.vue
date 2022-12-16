@@ -33,7 +33,7 @@
           table-class="text-high assignment-list"
           card-class="background no-shadow q-mt-md">
           <template #body="props">
-            <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
+            <q-tr :props="props">
               <template :props="props" v-for="field in job_data" :key="field.name">
                 <q-td :props="props" :class="{ 'filter-field': filter_fields.includes(field.name)}">
 
@@ -54,7 +54,9 @@
                   </template>
 
                   <template v-else>
-                    {{ $capitalizeAll(props.row[field.name]) }}
+                    <span class="table-data" @click="setSearch(field.name, props.row[field.name])">
+                      {{ $capitalizeAll(props.row[field.name]) }}
+                    </span>
                   </template>
 
                 </q-td>
@@ -76,9 +78,7 @@
 </template>
 
 <script>
-// import filterJobs from '@/lib/ProductionFilters.js'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
-
 import matchJobToFilters from '@/lib/ProductionFilters.js'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 
@@ -263,7 +263,7 @@ export default {
         back_to_route_name: this.$route.name
       }
       this.$emit('itemDblClick', data_to_emit)
-    }
+    },
   }
 }
 </script>
@@ -276,7 +276,7 @@ export default {
   td
     padding-top: 8px !important
     padding-bottom: 8px !important
-    &.filter-field
+    &.filter-field .table-data
       cursor: pointer
       &:hover
         text-decoration: underline
