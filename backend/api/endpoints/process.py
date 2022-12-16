@@ -155,10 +155,10 @@ async def get_production_process(product_key):
 
 @router.put(
   "/product/{product_key}/process", 
-  response_model = List[PhaseUpdate],
+  response_model = List[PhaseData],
   response_model_exclude = {'step_sequence'}
 )
-async def update_process(product_key, process: List[PhaseUpdate]):
+async def update_process(product_key, process: List[PhaseData]):
  
   
   tx_db = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'])
@@ -188,7 +188,8 @@ async def update_process(product_key, process: List[PhaseUpdate]):
         tx_db.collection('Step').update(dict(_key=r, trashed=timestamp))
 
       # Insert/replace phase
-      exclude_set = { 'steps', 'operation_key' }
+      exclude_set = {'id', 'rev', 'steps'}
+
       # do not 'export' _id field with value null if none is set, so that the DB 
       # will set it automatically
       new_phase = True if phase.key == None else False
@@ -197,14 +198,14 @@ async def update_process(product_key, process: List[PhaseUpdate]):
         exclude_set.add('key')
 
       prepped_phase_data = jsonable_encoder(phase, by_alias=True, exclude=exclude_set)
-      prepped_phase_data['product_key'] = product_key
-      
-      phase_update = tx_db.insert_document('Phase', 
-        prepped_phase_data, return_new=True, overwrite=True )
+
+      db_resp = tx_db.insert_document('Phase', prepped_phase_data, return_new=True, overwrite=True )['new']
+
+      phase_update = PhaseRecord(**db_resp)
       
       if new_phase:
         # Insert new ProductPhase relationship
-        new_phase_id=f"Phase/{phase_update['_key']}"
+        new_phase_id= phase_update.id
         tx_db.insert_document('requires', dict(
           _from=f'Product/{product_key}',
           _to=new_phase_id,
@@ -218,9 +219,9 @@ async def update_process(product_key, process: List[PhaseUpdate]):
           type='PhaseOperation'
         ))
 
-        process[seq].key = phase_update['_key']
+        process[seq].key = phase_update.key
 
-      new_phase_sequence.append(phase_update['_key'])
+      new_phase_sequence.append(phase_update.key)
 
     # Update new sequence, returning old one for deletion check
     phase_sequence_update = tx_db.collection('Product').update(dict(

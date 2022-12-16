@@ -79,20 +79,20 @@ class StepWithMediaInfo(Step):
   media: List[Union[Media, str]] = None
 
 
-class PhaseData(FlexModel):
-  key: str = Field(None, alias="_key")
+class PhaseRecord(ArangoDocument):
   alias: str
   description: str = None
   product_key: str
   operation_key: str
   operation_name: str = None
-  steps: List[Step] = []
   params: PhaseParameters = PhaseParameters()
   std_processing_time: int = 0 # in milliseconds
   max_offline: int = 0
-
-class PhaseUpdate(PhaseData):
   step_sequence: List[Optional[str]] = []
+
+class PhaseData(PhaseRecord):
+  steps: List[Step] = []
+
 
 class ProcessUpdate(FlexModel):
   # this is the output model for the event logging (after DB update)
@@ -100,5 +100,5 @@ class ProcessUpdate(FlexModel):
   process_phases: List[str] = None
   new_phases: List[str] = None
   deleted_phases: List[str]
-  phase_data: List[PhaseUpdate] = None
+  phase_data: List[PhaseRecord] = None
   step_data: List[Step] = None
