@@ -3,18 +3,16 @@ import { cloneDeep as _cloneDeep } from 'lodash'
 import { api, axios } from '@/boot/axios.js'
 import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js' 
 
-const product = createStore({
+const product = {
 
-  state() {
-    return {
-      saved: {},
-      temp: {},
-      list: [],
-      edit_modes: {
-        product: false,
-        process: false,
-        bom: false
-      }
+  state: {
+    saved: {},
+    temp: {},
+    list: [],
+    edit_modes: {
+      product: false,
+      process: false,
+      bom: false
     }
   },
 
@@ -255,6 +253,6 @@ const product = createStore({
       return state.list.find( p => p._key == product_key)
     }
   }
-})
+}
 
 export default product

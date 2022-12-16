@@ -1,15 +1,12 @@
-import { createStore } from 'vuex'
 import { api, axios } from '@/boot/axios.js'
 
-const workorder = createStore({
+const workorder = {
 
-  state() {
-    return {
-      wo_map: {},
-      temp_queue: [],
-      saved_queue: [],
-      wo_data: {},
-    }
+  state: {
+    wo_map: {},
+    temp_queue: [],
+    saved_queue: [],
+    wo_data: {},
   },
 
   mutations: {
@@ -133,6 +130,6 @@ const workorder = createStore({
     }
   }
 
-})
+}
 
 export default workorder
