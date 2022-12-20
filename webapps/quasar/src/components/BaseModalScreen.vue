@@ -3,7 +3,8 @@
     :model-value="show"
     maximized no-backdrop-dismiss no-shake square
     transition-show="scale"
-    transition-hide="scale">
+    transition-hide="scale"
+    :style="{ ...$theme }">
     <q-card class="column background q-pa-sm">
 
       <!-- SCREEN HEADER -->

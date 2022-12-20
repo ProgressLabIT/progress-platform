@@ -33,7 +33,7 @@
           table-class="text-high assignment-list"
           card-class="background no-shadow q-mt-md">
           <template #body="props">
-            <q-tr :props="props">
+            <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
               <template :props="props" v-for="field in job_data" :key="field.name">
                 <q-td :props="props" :class="{ 'filter-field': filter_fields.includes(field.name)}">
 

@@ -1,81 +1,9 @@
 <template>
-  <v-dialog 
-    value="true"
-    max-width="600px"
-    persistent no-click-animation>
-    <v-card scrollable>
-
-      <v-card-title>
-        {{ $tc('work_order.qt_rebalance_title') | capitalize }}
-      </v-card-title>
-
-      <v-card-text class="mt-6">
-        <div v-for="(phase, index) in phase_data" :key="phase.phase_key">
-          <v-divider v-if="index != 0"></v-divider>
-
-          <!-- Phase header -->
-          <v-row class="mx-0" justify="space-between" align="center">
-            <span class="display highlight font-weight-medium text-uppercase">{{phase.phase_alias}}</span>
-            <v-chip small :color="phases_delta[phase.phase_key] ? $theme.orange :  $theme.green">
-              <!-- delta to allocate in orange or check in green if delta == 0 -->
-              <span 
-                v-if="phases_delta[phase.phase_key]"
-                class="solid-white font-weight-medium text-uppercase">
-                {{ phases_delta[phase.phase_key] > 0 ? $tc('increase') + "  +" : $tc('decrease') }}  {{ phases_delta[phase.phase_key] }}
-              </span>
-              <v-icon class="solid-white weight-bold" v-else>mdi-check</v-icon>
-            </v-chip>
-          </v-row>
-
-          <!-- Phase jobs -->
-          <v-row v-for="job in phase.jobs" :key="job._key">
-            <v-col cols="3">
-              {{ job._key }}
-            </v-col>
-            <v-col cols="4" offset="1">
-              <BaseUserAvatar :user="job.assigned_to"/>
-            </v-col>
-            <v-col cols="3" offset="1">
-              <v-text-field
-                class="ma-0 pa-0"
-                :key="index"
-                reverse
-                single-line
-                hide-details
-                type="number"
-                v-model.number="job_updates[job._key].new_remaining"
-                min="0"
-                :max="new_wo_qt">
-              </v-text-field>
-            </v-col>
-
-
-          </v-row>
-
-
-        </div>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-btn 
-          :color="$theme.grey" 
-          @click="$emit('close')">
-          {{ $tc('cancel') }}
-        </v-btn>
-        <v-btn 
-          :color="$theme.blue" 
-          :loading="saving"
-          @click="save">
-          {{ $tc('save') }}
-        </v-btn>
-      </v-card-actions>
-
-    </v-card>
-  </v-dialog>
+  TEST
 </template>
 
 <script>
-import BaseUserAvatar from '@/components/BaseUserAvatar'
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 
 export default {
 

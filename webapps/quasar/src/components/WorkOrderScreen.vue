@@ -1,52 +1,45 @@
 <template>
   <BaseModalScreen :show="show_modal" @close="exit()" @input="exit()">
     <template v-slot:header>
-      <span class="ml-4 display medium highlight weight-medium text-uppercase">
-        {{ $tc('work_order.key') }}: {{ wo_key }}
+      <span class="q-ml-md display medium highlight weight-medium text-uppercase">
+        {{ $t('work_order.key') }}: {{ wo_key }}
       </span>
 
-      <v-col cols="auto" class="ml-auto">
-        <v-tabs 
-          background-color="transparent"
-          :color="$theme.text_high"
-          hide-slider right
-          >
-          <v-tab 
+      <div class="q-ml-auto col-auto">
+        <q-tabs
+          class="transparent text-low"
+          active-class="text-high weight-bold"
+          indicator-color="transparent"
+          dense>
+          <q-route-tab
             v-for="(page, index) in tabs" 
             :key="index" 
             :to="{ name: page, query: { back_to: $route.query.back_to } }"
             class="display" >
-            {{ $tc(`work_order.tabs.${page}`) }}
-          </v-tab>
-        </v-tabs>
-      </v-col>  
+            {{ $t(`work_order.tabs.${page}`) }}
+          </q-route-tab>
+        </q-tabs>
+      </div>
     </template>
 
     <template v-slot:content>
-      <v-container v-if="vuex_ready" fluid class="fill" ref="container">
-        <v-row no-gutters class="fill-height">
-          
-          <v-col cols="4" lg="3" class="fill-height pr-9" style="position:fixed">
-            <v-row>
-              <v-col class="py-0">
-                <WorkOrderDataColumn v-if="vuex_ready" v-bind="{ wo_data }">
-                </WorkOrderDataColumn>
-              </v-col>
-              <v-divider vertical ></v-divider>
-            </v-row>
-          </v-col>    
+      <q-card class="surface1 fit shadow-6 row q-col-gutter-none">
+        <template v-if="vuex_ready">
+          <div class="col-4 col-lg-3">
+            <WorkOrderDataColumn v-if="vuex_ready" v-bind="{ wo_data }" />
+          </div>
 
-          <v-col cols="8"  lg="9" offset="4" offset-lg="3" class="py-0 fill-height">
+          <q-separator vertical inset />
+
+          <q-scroll-area class="col fill-height">
             <keep-alive>
               <router-view v-if="vuex_ready" v-bind="{ wo_data }"></router-view>
             </keep-alive>
-          </v-col>
+          </q-scroll-area>
+        </template>
 
-        </v-row>
-      </v-container>
-
-      <LoadingSignal v-else></LoadingSignal>
-
+        <LoadingSignal v-else />
+      </q-card>
     </template>
 
   </BaseModalScreen>
@@ -56,7 +49,7 @@
 import axios from 'axios'
 import BaseModalScreen from '@/components/BaseModalScreen.vue'
 import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue'
-import LoadingSignal from '@/components/LoadingSignal'
+import LoadingSignal from '@/components/LoadingSignal.vue'
 
 export default {
 
