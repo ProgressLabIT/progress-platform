@@ -27,10 +27,10 @@ services:
       - PROGRESS_DB_NAME=PROGRESS_PROD
       - PROGRESS_API_DB_USERNAME=progress_api
     labels:
-        - "traefik.http.routers.api.rule=Host(`${PROGRESS_ADDRESS:?err}`) && PathPrefix(`/api`)"
-        - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
-        - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
-        - "traefik.http.routers.api.middlewares=strip_api_prefix"
+      - "traefik.http.routers.api.rule=Host(`${PROGRESS_ADDRESS:?err}`) && PathPrefix(`/api`)"
+      - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
+      - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
+      - "traefik.http.routers.api.middlewares=strip_api_prefix"
     command:
       ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--access-logfile", "-", "main:app"]
 
@@ -44,3 +44,18 @@ services:
         - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
         - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
         - "traefik.http.routers.db.middlewares=db_root"
+
+  jupyterlab:
+    image: registry.gitlab.com/progresslab/progress-platform/api
+    ports:
+      - "8888"
+    volumes:
+      - notebooks:/notebooks
+    working_dir: /notebooks
+    labels:
+      - "traefik.http.routers.jupyterlab.rule=Host(`${PROGRESS_ADDRESS:?err}`) && PathPrefix(`/da`)"
+      - "traefik.http.middlewares.strip_da_prefix.stripprefix.prefixes=/da"
+      - "traefik.http.middlewares.strip_da_prefix.stripprefix.forceslash=false"
+      - "traefik.http.routers.jupyterlab.middlewares=strip_da_prefix"
+    command:
+      ["jupyter", "lab"]
