@@ -88,3 +88,24 @@ services:
         - "traefik.http.routers.db.middlewares=db_root"
         - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
         - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
+
+   jupyterlab:
+    image: registry.gitlab.com/progresslab/progress-platform/api
+    networks:
+      - progress
+    ports:
+      - "8888"
+    volumes:
+      - notebooks:/notebooks
+    working_dir: /notebooks
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=progress"
+      - "traefik.http.services.jupyterlab.loadbalancer.server.port=8888"
+      - "traefik.http.routers.jupyterlab.rule=Host(`${anyhost:.*}`) && PathPrefix(`/da`)"
+      - "traefik.http.routers.jupyterlab.middlewares=strip_da_prefix"
+      - "traefik.http.middlewares.strip_da_prefix.stripprefix.prefixes=/da"
+      - "traefik.http.middlewares.strip_da_prefix.stripprefix.forceslash=false"
+    command:
+      ["jupyter", "lab"]
+
