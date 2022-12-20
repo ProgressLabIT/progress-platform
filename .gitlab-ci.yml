@@ -13,6 +13,7 @@ build:webapp:
   only:
     refs:
       - DEV
+      - master
     changes:
       - webapps/main/**/*
   image: docker:latest
@@ -74,6 +75,7 @@ build:api:
   only:
     refs:
       - master
+      - DEV
     changes:
       - backend/api/**/*
   image: docker:latest

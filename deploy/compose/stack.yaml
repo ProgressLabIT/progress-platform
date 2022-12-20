@@ -12,6 +12,10 @@ secrets:
   progress_jwt_secret:
     external: true
 
+volumes:
+  notebooks:
+    external: true
+
 services:
 
   router:
@@ -35,6 +39,12 @@ services:
 
   app:
     image: registry.gitlab.com/progresslab/progress-platform/app
+    volumes:
+      - media:/usr/share/nginx/html/media
+    ports:
+      - "80"
+    networks:
+      - progress
     deploy:
       replicas: 1
       labels:
@@ -42,12 +52,6 @@ services:
         - "traefik.docker.network=progress"
         - "traefik.http.services.app.loadbalancer.server.port=80"
         - "traefik.http.routers.app.rule=HostRegexp(`{anyhost:.*}`)"
-    volumes:
-      - media:/usr/share/nginx/html/media
-    ports:
-      - "80"
-    networks:
-      - progress
 
   api:
     image: registry.gitlab.com/progresslab/progress-platform/api
@@ -89,7 +93,7 @@ services:
         - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
         - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
 
-   jupyterlab:
+  jupyterlab:
     image: registry.gitlab.com/progresslab/progress-platform/api
     networks:
       - progress
@@ -98,14 +102,16 @@ services:
     volumes:
       - notebooks:/notebooks
     working_dir: /notebooks
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=progress"
-      - "traefik.http.services.jupyterlab.loadbalancer.server.port=8888"
-      - "traefik.http.routers.jupyterlab.rule=Host(`${anyhost:.*}`) && PathPrefix(`/da`)"
-      - "traefik.http.routers.jupyterlab.middlewares=strip_da_prefix"
-      - "traefik.http.middlewares.strip_da_prefix.stripprefix.prefixes=/da"
-      - "traefik.http.middlewares.strip_da_prefix.stripprefix.forceslash=false"
     command:
       ["jupyter", "lab"]
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=progress"
+        - "traefik.http.services.jupyterlab.loadbalancer.server.port=8888"
+        - "traefik.http.routers.jupyterlab.rule=Host(`{anyhost:.*}`) && PathPrefix(`/da`)"
+        - "traefik.http.routers.jupyterlab.middlewares=strip_da_prefix"
+        - "traefik.http.middlewares.strip_da_prefix.stripprefix.prefixes=/da"
+        - "traefik.http.middlewares.strip_da_prefix.stripprefix.forceslash=false"
 
