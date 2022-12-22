@@ -1,6 +1,8 @@
 <template>
-  <div class="q-pa-lg">
-    <div class="row justify-between text-uppercase low-text text-h5">
+  <div class="q-px-lg q-pa-md">
+
+    <!-- WORK ORDER GENERAL DATA -->
+    <div class="row justify-between text-uppercase low-text text-h5 q-mb-xs">
       <div>{{ $t('work_order.wo_code') }}</div>
       <div>{{ $t('work_order.wo_line.line_only') }}</div>
     </div>
@@ -10,12 +12,12 @@
       <div>{{ wo_data.wo_line }}</div>
     </div>
 
-    <div class="row justify-between text-uppercase low-text q-mt-md text-h5">
+    <div class="row justify-between text-uppercase low-text q-mt-lg text-h5">
       <div>{{ $t('product.label') }}</div>
       <div>{{ $t('quantity.short') }}</div>
     </div>
 
-    <div class="row justify-between">
+    <div class="row justify-between q-mt-xs">
       <div class="col-9">
         <div class="text-truncate display text-h3">
           {{ wo_data.product_code}}
@@ -23,13 +25,13 @@
         <div class="medium q-mt-xs">
           {{ wo_data.product_description }}
         </div>
-        <div class="col-auto display text-h3">
-          {{ wo_data.qt_planned }}
-        </div>
+      </div>
+      <div class="col-auto display text-h3">
+        {{ wo_data.qt_planned }}
       </div>
     </div>
 
-    <div class="row justify-between items-end weight-bold text-uppercase q-mt-sm q-mb-xs">
+    <div class="row justify-between items-end weight-bold text-uppercase q-mt-xl q-mb-xs">
       <div class="low-text text-h5">
         {{ $t('progress')}}
       </div>
@@ -38,7 +40,7 @@
       </div>
     </div>
 
-    <BaseProgressBar :data="wo_data" />
+    <BaseProgressBar :data="wo_data" class="q-mt-sm"/>
 
   </div>
 </template>

@@ -5,7 +5,7 @@ body {
   color: var(--text-low);
   margin: 0px;
   padding: 0px;
-  line-height: 1.2;
+  line-height: 1.2 !important;
 }
 
 .q-tab {
@@ -30,12 +30,16 @@ body {
   line-height: 1.2 !important;
 }
 
+.text-h1, .text-h2, .text-h3, .text-h4, .text-h5, .text-h6, {
+  line-height: 1.2
+}
+
 .text-h2 {
   font-size: 1.5rem;
 }
 
 .text-h3 {
-  font-size: 1.25rem;
+  font-size: 1.17rem;
   font-weight: 500;
 }
 

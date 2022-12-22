@@ -1,5 +1,5 @@
 <template>
-  <div :style="cssVars">
+  <div :style="CSSVars">
     <router-view />
   </div>
 </template>
@@ -7,19 +7,12 @@
 <script>
 import { DateTime as DT } from 'luxon'
 import { defineComponent } from 'vue'
+import CSSVars from '@/mixins/CSSVars.js'
 
 export default defineComponent({
   name: 'App',
 
-  computed: {
-    cssVars () {
-      return {
-        '--text-high': this.$q.dark.isActive ? 'rgba(255,255,255,.87)' : 'rgba(0,0,0,.87)',
-        '--text-low': this.$q.dark.isActive ? 'rgba(255,255,255,.6)' : 'rgba(0,0,0,.6)',
-        '--bg-color': this.$q.dark.isActive ? '#131E21' : '#eee'
-      }
-    }
-  },
+  mixins: [CSSVars],
 
   created() {
     // Save vuex state in localStorage before refresh or tab close

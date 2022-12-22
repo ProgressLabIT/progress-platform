@@ -12,12 +12,12 @@ const productionRoutes = [
         component: () => import("@/views/ProductionOverview.vue"),
         children: [
           {
-            path: "work-order",
+            path: "workorder",
             name: 'workOrderList',
             component: () => import("@/components/WorkOrderList.vue")
           },
           {
-            path: "work-order/new",
+            path: "workorder/new",
             name: "newWorkOrder",
             component: () => import("@/views/WorkOrderNew.vue")
           },
@@ -29,7 +29,7 @@ const productionRoutes = [
         ]
       },
       {
-        path: "production/:wo_key",
+        path: "workorder/:wo_key",
         name: "workOrderScreen",
         redirect: { name: "workOrderJobs" },
         component: () => import("@/components/WorkOrderScreen.vue"),
