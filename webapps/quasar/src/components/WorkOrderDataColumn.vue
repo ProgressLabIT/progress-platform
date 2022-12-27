@@ -1,7 +1,7 @@
 <template>
-  <div class="q-px-lg q-pa-md">
+  <div class="q-px-lg q-pa-md full-height column">
 
-    <!-- WORK ORDER GENERAL DATA -->
+    <!-- COLUMN HEADER -->
     <div class="row justify-between text-uppercase low-text text-h5 q-mb-xs">
       <div>{{ $t('work_order.wo_code') }}</div>
       <div>{{ $t('work_order.wo_line.line_only') }}</div>
@@ -31,9 +31,9 @@
       </div>
     </div>
 
-    <div class="row justify-between items-end weight-bold text-uppercase q-mt-xl q-mb-xs">
+    <div class="row justify-between items-end weight-bold text-uppercase q-mt-md q-mb-xs">
       <div class="low-text text-h5">
-        {{ $t('progress')}}
+        {{ $t('progress') }}
       </div>
       <div class="text-h3">
         {{ wo_data.progress }}%
@@ -41,6 +41,64 @@
     </div>
 
     <BaseProgressBar :data="wo_data" class="q-mt-sm"/>
+
+
+    <!-- INFO PANELS -->
+    <div id="panels" class="row q-mt-lg justify-between text-h6 text-uppercase">
+      <div
+        v-for="tab in views"
+        @click="current_view = tab.name"
+        style="cursor: pointer"
+        :key="tab.name"
+        :class="current_view === tab.name ? 'weight-bold' : 'low-text'">
+        {{ tab.text }}
+      </div>
+    </div>
+
+    <q-tab-panels v-model="current_view" animated class="transparent q-mt-lg col column">
+
+      <!-- WORK ORDER DETAILS -->
+      <q-tab-panel name="info" class="q-pa-none col">
+        <div
+          v-for="i in wo_info"
+          :key="i.name"
+          class="row justify-between items-end q-mb-sm text-high">
+          <span class="text-uppercase text-caption">
+            {{ i.text }}
+          </span>
+          <span class="weight-medium text-body1">
+            {{ $capitalize(woInfoValue(i.name)) }}
+          </span>
+        </div>
+      </q-tab-panel>
+
+      <!-- ASSIGNMENTS -->
+      <q-tab-panel name="people" class="q-pa-none column col">
+        <div class="col-11 scroll">
+          <BaseUserAvatar
+            v-for="operator in assignments"
+            :key="operator._key"
+            :user="operator"
+            name_class="highlight text-body1"
+            subtitle_class="low-text"
+            class="q-mb-md q-py-xs"
+            size="40px">
+            <template #subtitle>
+              <div class="text-low">
+                {{ $capitalizeAll(getAssignedPhases(operator)) }}
+              </div>
+            </template>
+          </BaseUserAvatar>
+        </div>
+
+        <q-space />
+
+        <div class="col-auto text-uppercase text-caption">
+          {{ $t('job.unassigned_jobs') }}: {{ unassigned_jobs.length }}
+        </div>
+      </q-tab-panel>
+
+    </q-tab-panels>
 
   </div>
 </template>
@@ -50,15 +108,15 @@ import { getPicPath } from '@/lib/media.js'
 import { durationFromMillisec } from '@/lib/duration.js'
 import { DateTime as DT } from 'luxon'
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
-// import BaseAvatarListElement from '@/components/BaseAvatarListElement.vue'
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 
 export default {
 
   name: 'WorkOrderDataColumn',
 
   components: {
-    BaseProgressBar
-    // BaseAvatarListElement
+    BaseProgressBar,
+    BaseUserAvatar
   },
 
   props: {
@@ -70,7 +128,7 @@ export default {
 
   data () {
     return {
-      current_view: 0,
+      current_view: 'info',
     }
   },
 
@@ -81,12 +139,12 @@ export default {
         { 
           name: 'info', 
           text: this.$t('info'),
-          align: 'start' 
+          class: 'justify-start'
         },
         { 
           name: 'people', 
-          text: this.$t('people'),
-          align: 'start' 
+          text: this.$t('people') + ' (' + this.people_count + ')',
+          class: 'justify-end'
         },
         // { name: 'equipment', text: 'MACCHINARI', align: 'end' },
       ]
@@ -143,15 +201,20 @@ export default {
       // handle missing data gracefully
       if (typeof this.wo_data != 'undefined') {
 
-        let assignments = {}
+        const assignments = {}
 
         this.wo_data.jobs.forEach( j => {
           if (j.assigned_to != null) {
             const key = j.assigned_to._key
-            if (key in assignments) assignments[key].jobs.push(j)
+            if (key in assignments) {
+              assignments[key].jobs.push(j)
+            }
             else {
-              assignments[key] = this.$store.getters.user_data(key)
-              assignments[key].jobs = [j]
+              const data = {
+                ...this.$store.getters.user_data(key),
+                jobs: [j]
+              }
+              assignments[key] = data
             }
           }
         })
@@ -159,6 +222,10 @@ export default {
       }
 
       else return {}
+    },
+
+    people_count() {
+      return  Object.keys(this.assignments).length
     },
 
     unassigned_jobs() {
@@ -264,5 +331,8 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="scss">
+#panels div:hover {
+  text-decoration: underline;
+}
 </style>

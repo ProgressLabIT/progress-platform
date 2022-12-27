@@ -25,16 +25,21 @@
     <template v-slot:content>
       <q-card class="surface1 fit shadow-6 row q-col-gutter-none">
         <template v-if="vuex_ready">
-          <div class="col-4 col-lg-3">
+          <div class="col-4 col-lg-3 full-height">
             <WorkOrderDataColumn v-if="vuex_ready" v-bind="{ wo_data }" />
           </div>
 
           <q-separator vertical inset />
 
-          <q-scroll-area class="col fill-height">
-            <keep-alive>
-              <router-view v-if="vuex_ready" v-bind="{ wo_data }"></router-view>
-            </keep-alive>
+          <q-scroll-area class="col">
+            <router-view
+              v-if="vuex_ready"
+              v-bind="{ wo_data }"
+              v-slot="{ Component }">
+              <keep-alive>
+                <component :is="Component" />
+              </keep-alive>
+            </router-view>
           </q-scroll-area>
         </template>
 
