@@ -1,5 +1,7 @@
 <template>
-  <div class="row items-center q-gutter-md" :class="name_first ? 'reverse' : ''">
+  <div
+    class="row items-center"
+    :class="name_first ? ' reverse' : ''">
     <div class="col-auto">
       <q-img
         :src="avatar_src"
@@ -13,14 +15,21 @@
         </template>
       </q-img>
     </div>
-    <div class="col-auto">
-      <component
-        v-if="show_name"
-        :is="name_el"
-        :class="name_class"
-        :style="name_style">
-        {{ full_name }}
-      </component>
+    <div class="column col-auto q-ml-md">
+      <slot name="name">
+        <div
+          v-if="show_name"
+          :class="name_class"
+          :style="name_style">
+          {{ full_name }}
+        </div>
+      </slot>
+
+      <slot
+        name="subtitle"
+        :class="subtitle_class"
+        :style="subtitle_style">
+      </slot>
     </div>
   </div>
 </template>
@@ -50,18 +59,27 @@ export default {
       type: Boolean,
       default: true
     },
-    
+
     name_el: {
       type: String,
-      default: 'span'
+      default: 'div'
     },
     
     name_class: {
       type: String,
-      default: 'body-2'
+      default: 'text-body2'
     },
 
     name_style: {
+      type: String
+    },
+
+    subtitle_class: {
+      type: String,
+      default: 'text-body2'
+    },
+
+    subtitle_style: {
       type: String
     }
   },
