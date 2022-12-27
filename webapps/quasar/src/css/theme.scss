@@ -14,7 +14,8 @@ $commons: (
   blue-backdrop: rgba(39,174,209, .3),
   green-backdrop: rgba(13,171,118, .3),
   orange-backdrop: rgba(255,159,28,.3),
-  red-backdrop: rgba(213,29,54,.3)
+  red-backdrop: rgba(213,29,54,.3),
+  grey-backdrop: #FFF3
 );
 
 $primary: map-get($commons, 'theme-blue');
