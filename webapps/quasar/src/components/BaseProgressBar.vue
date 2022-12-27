@@ -1,7 +1,8 @@
 <template>
   <q-linear-progress
     :value="progress"
-    :color="color"
+    :color="color.foreground"
+    :track-color="color.background"
     :buffer="1"
     :size="size">
   </q-linear-progress>
@@ -30,8 +31,8 @@ export default {
 
     color() {
       return this.data.active
-        ? 'theme-blue'
-        : 'theme-grey'
+        ? { foreground: 'theme-blue', background: 'blue-backdrop' }
+        : { foreground: 'theme-grey', background: 'grey-backdrop' }
     }
   }
 }
