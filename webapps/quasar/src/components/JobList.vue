@@ -41,13 +41,7 @@
                   <template v-if="field.name==='progress'">
                     <div class="row items-center q-col-gutter-sm">
                       <div class="col-9">
-                        <q-linear-progress
-                          :value="props.row[field.name] / 100"
-                          :color="progressColor(props.row)"
-                          :buffer="1"
-                          animation-speed="300"
-                          size="4px">
-                        </q-linear-progress>
+                        <BaseProgressBar :data="props.row" />
                       </div>
                       <span class="col-2 text-right">{{ props.row[field.name] }} %</span>
                     </div>
@@ -78,6 +72,7 @@
 </template>
 
 <script>
+import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import matchJobToFilters from '@/lib/ProductionFilters.js'
 import NoDataAlert from '@/components/NoDataAlert.vue'
@@ -87,6 +82,7 @@ export default {
   name: 'JobList',
 
   components: {
+    BaseProgressBar,
     BaseUserAvatar,
     NoDataAlert
   },
