@@ -15,7 +15,7 @@
         </template>
       </q-img>
     </div>
-    <div class="column col-auto q-ml-md">
+    <div class="column col-auto q-ml-sm">
       <slot name="name">
         <div
           v-if="show_name"

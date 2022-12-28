@@ -1,5 +1,5 @@
 <template>
-  <div class="q-px-lg q-pa-md full-height column">
+  <div class="q-pa-lg full-height column">
 
     <!-- COLUMN HEADER -->
     <div class="row justify-between text-uppercase low-text text-h5 q-mb-xs">
