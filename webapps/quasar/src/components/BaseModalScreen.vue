@@ -4,6 +4,8 @@
     maximized no-backdrop-dismiss no-shake square
     transition-show="scale"
     transition-hide="scale"
+    @escape-key="$emit('close')"
+    @hide="$emit('close')"
     :style="CSSVars">
     <q-card class="column background q-pa-sm">
 

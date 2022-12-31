@@ -1,7 +1,10 @@
 <template>
   <q-dialog
     v-model="show"
-    square no-backdrop-dismiss no-shake :style="{ ...$theme }">
+    square no-backdrop-dismiss no-shake
+    :style="{ ...$theme }"
+    @escape-key="$emit('close')"
+    @hide="$emit('close')">
     <q-card class="surface1 q-pa-md" :style="{ maxWidth: max_width }">
 
       <!-- DIALOG TITLE -->
