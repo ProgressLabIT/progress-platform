@@ -1,8 +1,173 @@
 <template>
-  TEST
+  <BaseDialog :show="true" @close="$emit('changeEditMode', 'actions')">
+    <div class="column flex-center">
+      <div class="text-h4 highlight display text-uppercase q-mb-sm">
+        {{ job_template.phase_alias }}
+      </div>
+      <q-card square bordered class="surface1 q-pa-md" style="width: 80vw">
+
+        <!-- HEADERS -->
+        <div class="row items-center">
+          <div
+            v-for="col in headers"
+            class="text-uppercase text-h5"
+            :class="`col-${col.cols} offset-${col.offset}`"
+            :key="col.value">
+            {{ col.text }}
+          </div>
+        </div>
+
+        <!-- JOB DATA -->
+        <div
+          v-for="(j, index) in temp_jobs"
+          :key="j._key"
+          class="row items-center">
+          <div
+            v-for="col in headers"
+            :class="`col-${col.cols} offset-${col.offset}`"
+            :key="col.value">
+
+            <!-- JOB JEY -->
+            <template v-if="col.value === 'key'">
+              <span>
+                {{ j._key || $t('new') }}
+              </span>
+              <q-chip
+                v-if="j.close"
+                square
+                removable
+                class="text-uppercase highlight q-ml-lg"
+                color="theme-orange"
+                size="md"
+                :label="$t('closed')"
+                @remove="reopenJob(index)">
+              </q-chip>
+            </template>
+
+            <!-- REMAINING QUANTITY -->
+            <template v-if="col.value === 'qt_remaining' && !j.close">
+              <q-input
+                :key="index"
+                type="number"
+                dense
+                :model-value="j.qt_remaining"
+                @update:modelValue="updateRemainingQt(index, parseInt($event))"
+                min="0"
+                :max="qt_to_allocate"
+                content-class="text-right">
+              </q-input>
+            </template>
+
+            <!-- OPERATOR SELECTION -->
+            <template v-if="col.value === 'assigned_to'">
+
+              <template v-if="notReassignable(index)">
+                <BaseUserAvatar :user="j.assigned_to" />
+              </template>
+
+              <template v-else>
+                <q-select
+                  ref="operator_autocomplete"
+                  use-input
+                  clearable
+                  hide-bottom-space
+                  :model-value="j.assigned_to"
+                  :options="filtered_operators"
+                  :option-label="(item) => item.name + ' ' + item.surname"
+                  @filter="filterOperator"
+                  class="q-mb-md"
+                  popup-content-class="surface1"
+                  @update:modelValue="setAssignment(index, $event)">
+                  <template #label-slot>
+                    {{ $capitalize($t('job.assign_to')) }}
+                  </template>
+
+                  <template #option="scope">
+                    <q-item v-bind="scope.itemProps">
+                      <BaseUserAvatar :user="scope.opt"/>
+                    </q-item>
+                  </template>
+
+                  <template #selected-item="scope">
+                    <BaseUserAvatar :user="scope.opt" class="q-py-sm"/>
+                  </template>
+                </q-select>
+              </template>
+            </template>
+          </div>
+
+          <div
+            class="col-auto q-ml-auto q-pr-lg"
+            v-if="deletable(index) && !j.close">
+            <BaseTooltipIcon
+              :color="$theme.red"
+              :tooltip="$capitalize($t('delete'))"
+              icon="mdi-delete"
+              @iconClick="closeJob(index)">
+            </BaseTooltipIcon>
+          </div>
+
+        </div>
+        <!-- END OF JOB DATA -->
+
+        <div class="row items-center">
+          <div
+            v-for="col in headers"
+            :class="`col-${col.cols} offset-${col.offset}`"
+            :key="col.value"
+            class="text-uppercase text-body2">
+            <template v-if="col.value === 'key'">
+              <div class="weight-medium">
+                {{ $t('start_end_totals')}}
+              </div>
+            </template>
+            <template v-if="col.value === 'qt_remaining'">
+              <div class="text-body1">
+                <span>{{ qt_to_allocate }} / </span>
+                <span :style="remaining_style">{{ working_total_remaining }}</span>
+                <span class="caption q-ml-md">{{ remaining_delta }}</span>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div class="row q-mt-md q-gutter-sm">
+          <q-btn size="12px"
+            v-if="job_template.parameters.parallel_job_allowed"
+            color="theme-blue"
+            @click="addJob">
+            {{ $t('job.add') }}
+          </q-btn>
+          <q-btn size="12px"
+            color="theme-blue"
+            @click="rebalanceJobs">
+            {{ $t('job.rebalance.spread') }}
+          </q-btn>
+          <q-btn size="12px"
+            color="theme-orange"
+            @click="resetJobs">
+            {{ $t('job.rebalance.reset') }}
+          </q-btn>
+          <q-btn size="12px"
+            color="theme-grey"
+            @click="$emit('changeEditMode', 'actions')">
+            {{ $t('cancel') }}
+          </q-btn>
+          <q-space />
+          <q-btn size="12px"
+            color="theme-blue"
+            @click="save"
+            :loading="saving">
+            {{ $t('save') }}
+          </q-btn>
+        </div>
+      </q-card>
+    </div>
+  </BaseDialog>
 </template>
 
 <script>
+import BaseDialog from '@/components/BaseDialog.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
@@ -12,6 +177,7 @@ export default {
   name: 'JobRebalanceActionCard',
 
   components: {
+    BaseDialog,
     BaseUserAvatar,
     BaseTooltipIcon
   },
@@ -27,6 +193,7 @@ export default {
     return {
       temp_jobs: [],
       working_total_remaining: 0,
+      filtered_operators: [],
       saving: false,
 
       // Metadata to carry over from existing jobs to new ones
@@ -52,19 +219,19 @@ export default {
       return [
         {
           value: 'key',
-          text: this.$tc('job.key'),
+          text: this.$t('job.key'),
           cols: 3,
           offset: 0
         },
         {
           value: 'qt_remaining',
-          text: this.$tc('quantity.long'),
+          text: this.$t('quantity.long'),
           cols: 2,
           offset: 1
         },
         {
           value: 'assigned_to',
-          text: this.$tc('job.assigned_to'),
+          text: this.$t('job.assigned_to'),
           cols: 3,
           offset: 1
         }
@@ -73,6 +240,10 @@ export default {
 
     wo_key() {
       return this.$route.params.wo_key
+    },
+
+    operators() {
+      return this.$store.getters.operator_list()
     },
 
     qt_to_allocate() {
@@ -127,13 +298,13 @@ export default {
 
     closeJob(index) {
       if (this.temp_jobs[index]._key) {
-        this.$set(this.temp_jobs[index], 'close', true)
+        this.temp_jobs[index].close = true
       }
       else this.temp_jobs.splice(index, 1)
     },
 
     reopenJob(index) {
-      this.$delete(this.temp_jobs[index], 'close')
+      delete this.temp_jobs[index].close
     },
 
     addJob() {
@@ -172,8 +343,11 @@ export default {
       })
     },
 
-    filterOperator(operator, search_text) {
-      return multiMatch(search_text, operator, ['name', 'surname'])
+    filterOperator(val, update, abort) {
+      update(() => {
+        const search_fields = ['name', 'surname']
+        this.filtered_operators = this.operators.filter(o => multiMatch(val, o, search_fields))
+      })
     },
 
     updateRemainingQt(job_index, qt) {
@@ -181,30 +355,26 @@ export default {
        * otherwise update new quantity
        */
       if (qt === 0 && this.temp_jobs[job_index].active_batch_qt === 0) {
-        this.$set(this.temp_jobs[job_index], 'close', true)
+        this.temp_jobs[job_index].close = true
       }
       else {
-        this.$set(this.temp_jobs[job_index], 'qt_remaining', +qt)
+        this.temp_jobs[job_index].qt_remaining = qt
       }
     },
 
     resetAssignment(job_index) {
-      this.$delete(this.temp_jobs[job_index], 'assigned_to')
+      delete this.temp_jobs[job_index].assigned_to
     },
 
     setAssignment(job_index, operator) {
-      this.$set(this.temp_jobs[job_index], 'assigned_to', operator)
-    },
-
-    capitalize(string) {
-      return this.$options.filters.capitalize(string)
+      this.temp_jobs[job_index].assigned_to = operator
     },
 
     save() {
       // Check if overall job quantity matches original remaining quantity
       if (!this.remaining_match) {
         window.alert(
-          this.capitalize(this.$tc('job.alerts.rebalance_qt_mismatch'))
+          this.$capitalize(this.$t('job.alerts.rebalance_qt_mismatch'))
         )
       }
 

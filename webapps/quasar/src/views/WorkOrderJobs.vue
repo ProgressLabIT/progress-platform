@@ -142,6 +142,13 @@
           </template>
           <!-- END OF STARTING ACTION BUTTONS -->
 
+          <!-- REBALANCE ACTION CARD -->
+          <template v-if="edit_mode == 'modify' ">
+            <JobRebalanceActionCard
+              :jobs="selected_jobs_data"
+              @changeEditMode="edit_mode = $event">
+            </JobRebalanceActionCard>
+          </template>
         </div>
 
       </q-expansion-item>
@@ -162,8 +169,8 @@ export default {
   components: {
     BaseProgressBar,
     BaseUserAvatar,
-    JobRebalanceActionCard,
-    WorkOrderJobQtRebalance
+    JobRebalanceActionCard, // Make changes to phase jobs
+    WorkOrderJobQtRebalance // Balance wo quantity changes among jobs
   },
 
   props: {
@@ -233,6 +240,10 @@ export default {
           cols: '3',
         },
       ]
+    },
+
+    selected_jobs_data() {
+      return this.wo_data.jobs.filter(j => this.selected_jobs.includes(j._key))
     },
 
     phase_data() {

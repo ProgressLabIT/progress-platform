@@ -1,5 +1,5 @@
 <template>
-  <BaseModalScreen :show="show_modal" @close="exit()" @input="exit()">
+  <BaseModalScreen :show="show_modal" @close="exit()">
     <template v-slot:header>
       <span class="q-ml-md display medium highlight weight-medium text-uppercase">
         {{ $t('work_order.key') }}: {{ wo_key }}
