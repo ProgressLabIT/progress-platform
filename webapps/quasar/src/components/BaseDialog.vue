@@ -28,7 +28,7 @@ export default {
     },
     maximized: {
       type: Boolean,
-      default: true
+      default: false
     }
   }
 }
