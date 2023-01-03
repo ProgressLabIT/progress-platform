@@ -150,13 +150,111 @@
             </JobRebalanceActionCard>
           </template>
         </div>
+        <!-- END OF JOB ACTIONS -->
 
       </q-expansion-item>
+
     </div>
+    <!-- END OF PHASE DETAILS -->
+
+    <q-space />
+
+    <!-- WORK ORDER ACTIONS -->
+    <div class="row justify-between q-pb-sm q-gutter-md">
+      <q-btn
+        color="theme-blue"
+        @click="edit_qt = true">
+        {{ $t('quantity.update') }}
+      </q-btn>
+      <q-btn
+        color="theme-blue"
+        :loading="saving"
+        @click="edit_due_date = true">
+        {{ $t('work_order.update_due_date') }}
+      </q-btn>
+      <q-btn color="theme-red">
+        {{ $t('work_order.close') }}
+      </q-btn>
+    </div>
+
+    <!-- EDIT DUE-DATE DIALOG -->
+    <BaseDialog
+      :show="edit_due_date"
+      @close="closeEditDialogs">
+      <q-card class="surface2">
+        <q-date
+          minimal
+          v-model="temp_due_date"
+          mask="YYYY-MM-DD">
+        </q-date>
+        <div class="row justify-between q-pa-sm">
+          <q-btn flat
+            size="12px"
+            color="theme-grey"
+            @click="closeEditDialogs">
+            {{ $t('cancel') }}
+          </q-btn>
+          <q-btn
+            flat
+            size="12px"
+            color="theme-blue"
+            @click="saveWorkOrderUpdate">
+            {{ $t('save') }}
+          </q-btn>
+        </div>
+      </q-card>
+    </BaseDialog>
+
+    <!-- EDIT QUANTITY DIALOG -->
+    <BaseDialog :show="edit_qt" @close="closeEditDialogs">
+      <q-card class="surface2 q-pa-md" style="width: 300px">
+        <q-card-section>
+          <div class="text-h4 display highlight text-uppercase">
+            {{ $t('work_order.new_quantity') }}
+          </div>
+          <q-input
+            class="q-mt-md"
+            input-class="text-body1"
+            hide-bottom-space
+            type="number"
+            :min="min_allowable_wo_qt"
+            :model-value="wo_data.qt_planned"
+            @update:model-value="val => new_qt = val">
+          </q-input>
+        </q-card-section>
+        <q-card-actions align="between">
+          <q-btn
+            size="12px"
+            flat
+            color="theme-grey"
+            @click="closeEditDialogs">
+            {{ $t('cancel') }}
+          </q-btn>
+          <q-btn
+            size="12px"
+            flat
+            v-if="new_qt != wo_data.qt_planned"
+            color="theme-blue"
+            @click="show_job_qt_rebalance = true">
+            {{ $t('save') }}
+          </q-btn>
+        </q-card-actions>
+      </q-card>
+    </BaseDialog>
+
+    <WorkOrderJobQtRebalance
+      v-if="show_job_qt_rebalance"
+      :new_wo_qt="parseInt(new_qt)"
+      :phase_data="phase_data"
+      :wo_key="wo_data._key"
+      @close="closeEditDialogs">
+    </WorkOrderJobQtRebalance>
+
   </div>
 </template>
 
 <script>
+import BaseDialog from '@/components/BaseDialog.vue'
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import JobRebalanceActionCard from '@/components/JobRebalanceActionCard.vue'
@@ -167,6 +265,7 @@ export default {
   name: 'WorkOrderJobs',
 
   components: {
+    BaseDialog,
     BaseProgressBar,
     BaseUserAvatar,
     JobRebalanceActionCard, // Make changes to phase jobs
@@ -193,7 +292,7 @@ export default {
       edit_qt: false,
       new_qt: null,
       edit_due_date: false,
-      new_due_date: null,
+      temp_due_date: null,
       show_job_qt_rebalance: false
       // selected_jobs: []
     }
@@ -339,12 +438,10 @@ export default {
     closeEditDialogs() {
       this.edit_due_date = false
       this.edit_qt = false
-      this.new_due_date = null
+      this.temp_due_date = this.wo_data.due_by
       this.new_qt = null
       this.show_job_qt_rebalance = false
-      setTimeout(() => {
-        this.$refs.new_qt.internalValue = this.wo_data.qt_planned
-      }, 500)
+      this.new_qt = this.wo_data.qt_planned
     },
 
     async saveWorkOrderUpdate() {
@@ -353,13 +450,17 @@ export default {
       const wo_update = {
         wo_key: this.wo_data._key,
         new_qt: this.new_qt,
-        new_due_date: this.new_due_date
+        new_due_date: this.temp_due_date
       }
       await this.$store.dispatch('updateWorkOrder', wo_update)
       this.closeEditDialogs()
       setTimeout(() => this.saving = false, 1000)
     }
 
+  },
+
+  created() {
+    this.temp_due_date = this.wo_data.due_by
   },
 
   watch: {

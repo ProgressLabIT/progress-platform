@@ -1,8 +1,73 @@
 <template>
-  TEST
+  <BaseDialog :show="true">
+    <q-card class="scroll q-pa-md surface2" style="min-width: 600px;">
+      <q-card-section class="text-h3">
+        {{ $capitalize($t('work_order.qt_rebalance_title')) }}
+      </q-card-section>
+
+      <q-card-section>
+        <div
+          v-for="(phase, index) in phase_data"
+          :key="phase.phase_key">
+          <q-separator v-if="index != 0" class="q-my-md"/>
+
+          <!-- PHASE HEADER -->
+          <div class="row items-center justify-between">
+            <div class="display highlight weight medium">
+              {{ phase.phase_alias }}
+            </div>
+            <q-chip
+              :color="phases_delta[phase.phase_key] ? 'theme-orange' : 'theme-green'">
+              <span v-if="phases_delta[phase.phase_key]"
+                class="solid-white weight-medium text-uppercase">
+                {{ phases_delta[phase.phase_key] > 0 ? $t('increase') + ' +' : $t('decrease') }}   {{ phases_delta[phase.phase_key] }}
+              </span>
+              <q-icon v-else name="mdi-check" class="solid-white weight-bold" />
+            </q-chip>
+          </div>
+
+          <!-- PHASE JOBS -->
+          <div
+            class="row items-center q-py-sm"
+            v-for="job in phase.jobs"
+            :key="job._key">
+            <div class="col-3">
+              {{ job._key }}
+            </div>
+            <BaseUserAvatar
+              class="col-4 offset-1"
+              :user="job.assigned_to">
+            </BaseUserAvatar>
+            <q-input
+              class="col-3 offset-1"
+              :key="index"
+              dense
+              input-class="text-right"
+              hide-bottom-space
+              type="number"
+              v-model.number="job_updates[job._key].new_remaining"
+              min="0"
+              :max="new_wo_qt">
+            </q-input>
+
+          </div>
+        </div>
+      </q-card-section>
+
+      <q-card-actions align="between">
+        <q-btn color="theme-grey" @click="$emit('close')">
+          {{ $t('cancel') }}
+        </q-btn>
+        <q-btn color="theme-blue" :loading="saving" @click="save">
+          {{ $t('save') }}
+        </q-btn>
+      </q-card-actions>
+    </q-card>
+  </BaseDialog>
 </template>
 
 <script>
+import BaseDialog from '@/components/BaseDialog.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 
 export default {
@@ -10,6 +75,7 @@ export default {
   name: 'WorkOrderJobQtRebalance',
 
   components: {
+    BaseDialog,
     BaseUserAvatar
   },
 
