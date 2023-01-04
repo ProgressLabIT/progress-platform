@@ -39,12 +39,12 @@ const productionRoutes = [
             path: "job-list",
             name: "workOrderJobs",
             component: () => import("@/views/WorkOrderJobs.vue")
+          },
+          {
+            path: 'history',
+            name: "workOrderHistory",
+            component: () => import ("@/views/WorkOrderHistory.vue")
           }
-          // {
-          //   path: 'history',
-          //   name: "workOrderHistory",
-          //   component: () => import ("@/views/WorkOrderHistory.vue")
-          // }
         ]
       }
     ]
