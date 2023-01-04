@@ -13,7 +13,7 @@
       table-class="text-high"
       card-class="background no-shadow q-mt-sm"
       :rows-per-page-options="[0]"
-      @row-click="showWorkOrderScreen">
+      @row-dblclick="showWorkOrderScreen">
 
       <!-- PROGRESS BAR -->
       <template #body-cell-progress="props">
