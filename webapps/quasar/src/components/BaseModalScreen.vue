@@ -1,7 +1,7 @@
 <template>
   <q-dialog
     :model-value="show"
-    maximized no-backdrop-dismiss no-shake square
+    maximized no-backdrop-dismiss no-shake square no-route-dismiss
     transition-show="scale"
     transition-hide="scale"
     @escape-key="$emit('close')"
