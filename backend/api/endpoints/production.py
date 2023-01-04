@@ -192,20 +192,19 @@ async def update_work_order(
     update['due_by'] = new_due_date
 
   if new_qt:
-    update['qt_planned'] = new_qt
+    if updated_wo_data['status'] != WorkStatus.CREATED.value:
+      status_code = 423
+      response = dict(
+        status=status_code,
+        message="Work Order in progress or completed. Cannot modify the quantity",
+      )
+      tx.abort_transaction()
+      raise HTTPException(status_code=status_code, detail=response)
+    else:
+      update['qt_planned'] = new_qt
 
   updated_wo_data = tx.collection('WorkOrder').update(update, return_new=True)['new']
-
-  if new_qt and updated_wo_data['status'] != WorkStatus.CREATED.value:
-    status_code = 423
-    response = dict(
-      status=status_code,
-      message="Work Order in progress or completed. Cannot modify the quantity",
-    )
-    raise HTTPException(status_code=status_code, detail=response)
-
-  else:
-    tx.commit_transaction()
+  tx.commit_transaction()
 
   return APIResponse(detail=updated_wo_data)
 

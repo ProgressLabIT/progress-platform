@@ -441,7 +441,6 @@ export default {
       this.temp_due_date = this.wo_data.due_by
       this.new_qt = null
       this.show_job_qt_rebalance = false
-      this.new_qt = this.wo_data.qt_planned
     },
 
     async saveWorkOrderUpdate() {
