@@ -12,7 +12,8 @@
       separator="none"
       table-class="text-high"
       card-class="background no-shadow q-mt-sm"
-      :rows-per-page-options="[0]">
+      :rows-per-page-options="[0]"
+      @row-click="showWorkOrderScreen">
 
       <!-- PROGRESS BAR -->
       <template #body-cell-progress="props">
@@ -215,9 +216,9 @@ export default {
         : 'theme-grey'
     },
 
-    showWorkOrderScreen(wo_key) {
+    showWorkOrderScreen(evt, row, index) {
       this.$emit('itemDblClick', {
-        wo_key,
+        wo_key: row._key,
         back_to_route_name: this.$route.name
       })
     },
