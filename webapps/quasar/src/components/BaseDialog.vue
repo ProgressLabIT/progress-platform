@@ -3,6 +3,7 @@
     :model-value="show"
     :maximized="maximized"
     no-backdrop-dismiss
+    no-route-dismiss
     no-shake
     square
     transition-show="scale"
