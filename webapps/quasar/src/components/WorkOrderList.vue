@@ -29,7 +29,9 @@
       </template>
 
       <template #body-cell-due_by="props">
-
+        <td class="text-right">
+          {{ $shortDateString(props.value, $i18n.locale) }}
+        </td>
       </template>
 
       <!-- ADD ONE-CLICK FILTERS HERE -->
