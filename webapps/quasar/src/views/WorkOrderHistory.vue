@@ -1,5 +1,13 @@
 <template>
-  TEST
+  <div class="q-pa-lg">
+    <q-virtual-scroll class="full-height" :items="items" v-slot="{ item, index }">
+      <q-item :key="index">
+        <q-item-section v-for="n in 3">
+          TEST
+        </q-item-section>
+      </q-item>
+    </q-virtual-scroll>
+  </div>
 </template>
 
 <script>
@@ -9,7 +17,7 @@ export default {
 
   data () {
     return {
-
+      items: Array(20).fill('test')
     }
   }
 }
