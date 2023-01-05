@@ -20,17 +20,16 @@
         <q-td key="progress" :props="props">
           <div class="row items-center q-col-gutter-sm">
             <div class="col-9">
-              <q-linear-progress
-                :value="props.value / 100"
-                :color="progressColor(props.row)"
-                :buffer="1"
-                size="4px">
-              </q-linear-progress>
+              <BaseProgressBar :data="props.row" />
             </div>
             <span class="col-2 text-right">{{ props.value }} %</span>
           </div>
         </q-td>
         <!-- ADD ALERT ICONS HERE -->
+      </template>
+
+      <template #body-cell-due_by="props">
+
       </template>
 
       <!-- ADD ONE-CLICK FILTERS HERE -->
@@ -39,6 +38,7 @@
 </template>
 
 <script>
+import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import Sortable from 'sortablejs'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import { mapState } from 'vuex'
@@ -47,6 +47,10 @@ import { throttle as _throttle } from 'lodash'
 export default {
 
   name: 'WorkOrderList',
+
+  components: {
+    BaseProgressBar
+  },
 
   props: {
     filters: {
