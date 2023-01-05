@@ -172,7 +172,7 @@
         @click="edit_due_date = true">
         {{ $t('work_order.update_due_date') }}
       </q-btn>
-      <q-btn color="theme-red">
+      <q-btn color="theme-red" v-if="wo_data.stage === 'CREATED'">
         {{ $t('work_order.close') }}
       </q-btn>
     </div>
