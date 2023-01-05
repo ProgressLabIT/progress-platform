@@ -12,7 +12,9 @@
       <!-- SCREEN HEADER -->
       <div class="row justify-start items-center q-pl-xs text-high">
         <slot name="close">
-          <q-icon size="xs" @click="$emit('close')" name="mdi-close" />
+          <q-btn flat dense @click="$emit('close')">
+            <q-icon size="xs" name="mdi-close" />
+          </q-btn>
         </slot>
         <slot name="header"></slot>
       </div>

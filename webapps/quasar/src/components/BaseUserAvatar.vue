@@ -2,20 +2,18 @@
   <div
     class="row items-center"
     :class="name_first ? ' reverse' : ''">
-    <div class="col-auto">
+    <q-avatar :size="size" v-if="initials" class="weight-bold" font-size=".4em">
       <q-img
         :src="avatar_src"
         :alt="initials"
         :style="avatar_style">
         <template #error>
-          <q-avatar color="theme-grey" :size="size" v-if="initials" class="absolute-center weight-bold" font-size=".4em">
-            {{ initials }}
-          </q-avatar>
+          <div class="absolute-center bg-theme-grey" v-if="initials">{{ initials }}</div>
           <q-icon v-else name="mdi-account-circle" :size="size"/>
         </template>
       </q-img>
-    </div>
-    <div class="column col-auto q-ml-sm">
+    </q-avatar>
+    <div class="column col-auto q-ml-md">
       <slot name="name">
         <div
           v-if="show_name"

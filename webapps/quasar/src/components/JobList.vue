@@ -1,73 +1,74 @@
 <template>
   <q-scroll-area class="col q-mx-xs q-px-sm q-pt-lg" :visible="false">
-     <template
-        v-for="(o, index) in jobs_view"
-        :key="index">
-        <div class="row items-center q-gutter-md">
-          <BaseUserAvatar
-            :user="o.operator"
-            name_class="medium weight-medium"
-            size="36px">
-          </BaseUserAvatar>
-          <q-space />
-          <q-chip class="col-auto text-body2" color="theme-grey" size="sm">
-            <span class="weight-medium">
-              {{ o.filtered_jobs.length }}
-            </span>
-            <span class="q-mx-xs">
-              {{ $t('of') }}
-            </span>
-            <span class="weight-medium">
-              {{ o.assigned_jobs_count }}
-            </span>
-          </q-chip>
-        </div>
+   <template
+      v-for="(o, index) in jobs_view"
+      :key="index">
+      <div class="row items-center q-pl-sm">
+        <BaseUserAvatar
+          :user="o.operator"
+          name_class="medium weight-medium"
+          size="36px">
+        </BaseUserAvatar>
+        <q-space />
+        <q-chip :ripple="false" class="col-auto text-body2" color="theme-grey" size="sm">
+          <strong>
+            {{ o.filtered_jobs.length }}
+          </strong>
+          <span class="q-mx-xs">
+            {{ $t('of') }}
+          </span>
+          <strong>
+            {{ o.assigned_jobs_count }}
+          </strong>
+        </q-chip>
+      </div>
 
-        <q-table
-          :columns="job_data"
-          :rows="o.filtered_jobs"
-          row-key="_key"
-          hide-bottom
-          dense
-          separator="none"
-          table-class="text-high assignment-list"
-          card-class="background no-shadow q-mt-md">
-          <template #body="props">
-            <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
-              <template :props="props" v-for="field in job_data" :key="field.name">
-                <q-td :props="props" :class="{ 'filter-field': filter_fields.includes(field.name)}">
+      <q-table
+        :columns="job_data"
+        :rows="o.filtered_jobs"
+        row-key="_key"
+        hide-bottom
+        dense
+        separator="none"
+        table-class="text-high assignment-list"
+        card-class="background no-shadow q-mt-md"
+        :rows-per-page-options="[0]">
+        <template #body="props">
+          <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
+            <template :props="props" v-for="field in job_data" :key="field.name">
+              <q-td :props="props" :class="{ 'filter-field': filter_fields.includes(field.name)}">
 
-                  <!-- PROGRESS -->
-                  <template v-if="field.name==='progress'">
-                    <div class="row items-center q-col-gutter-sm">
-                      <div class="col-9">
-                        <BaseProgressBar :data="props.row" />
-                      </div>
-                      <span class="col-2 text-right">{{ props.row[field.name] }} %</span>
+                <!-- PROGRESS -->
+                <template v-if="field.name==='progress'">
+                  <div class="row items-center q-col-gutter-sm">
+                    <div class="col-9">
+                      <BaseProgressBar :data="props.row" />
                     </div>
-                  </template>
+                    <span class="col-2 text-right">{{ props.row[field.name] }} %</span>
+                  </div>
+                </template>
 
-                  <template v-else>
-                    <span class="table-data" @click="setSearch(field.name, props.row[field.name])">
-                      {{ $capitalizeAll(props.row[field.name]) }}
-                    </span>
-                  </template>
+                <template v-else>
+                  <span class="table-data" @click="setSearch(field.name, props.row[field.name])">
+                    {{ $capitalizeAll(props.row[field.name]) }}
+                  </span>
+                </template>
 
-                </q-td>
-              </template>
-            </q-tr>
-          </template>
-          <template #body-cell-progress="props">
-            <q-td key="progress" :props="props">
+              </q-td>
+            </template>
+          </q-tr>
+        </template>
+        <template #body-cell-progress="props">
+          <q-td key="progress" :props="props">
 
-            </q-td>
-            <!-- ADD ALERT ICONS HERE -->
-          </template>
-        </q-table>
+          </q-td>
+          <!-- ADD ALERT ICONS HERE -->
+        </template>
+      </q-table>
 
-        <q-separator class="q-my-lg q-mx-sm"/>
+      <q-separator class="q-my-lg q-mx-sm"/>
 
-     </template>
+    </template>
   </q-scroll-area>
 </template>
 
