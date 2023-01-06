@@ -238,14 +238,11 @@ const product = {
 
   getters: {
 
-    productCatalog: (state) => (options) => {
+    productCatalog: (state) => (show_active_only) => {
       return state.list.filter( p => {
         const deleted = p.trash 
-        let filter_inactive = false
-        if (options) {
-           filter_inactive = options.active_only && !p.active
-        }
-        return !deleted && !filter_inactive
+        const active_filter = !show_active_only || p.active
+        return !deleted && active_filter
       })
     },
 

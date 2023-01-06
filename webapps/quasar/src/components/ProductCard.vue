@@ -1,79 +1,43 @@
 <template>
-
-  <v-card 
-    :height="image ? '160px' : '120px'" 
-    outlined 
-    elevation="4"
+  <q-card
+    :style="`height: ${image ? '160px' : '120px'}`"
+    square
+    class="surface1 product-card"
     @mouseenter="overCard = true"
     @mouseleave="overCard = false"
     @dblclick="$router.push(to_product_route)">
-    <v-img 
-      :src="image ? `/media/product/${product._key}/image.jpg` : ''" 
-      class="fill" 
+    <q-img
+      no-spinner
+      no-native-menu
+      :src="image ? `/media/product/${product._key}/image.jpg` : ''"
+      class="fit"
       :style="product.active ? '' : 'filter:grayscale(1) brightness(.5)'">
-      <v-container 
-        class="pa-0 d-flex flex-column" 
-        style="height:100%">
-      
-        <!-- Title and description overlay -->
-        <v-sheet 
-          :color="image ? ($vuetify.theme.dark ? 'rgba(0,0,0,.7)' : 'rgba(230,230,230,.8)') : 'transparent' "
-          class="px-2 py-0"
-          @mouseenter="overDesc = true" 
-          @mouseleave="overDesc = false" >      
-          <v-card-title class="display px-0 pt-0 pb-3 nowrap" :color="$theme.blue">
-            {{ product.code }}
-          </v-card-title>
-         
-          <!-- the dynamic class 'nowrap' allows to show or hide 
-          the full description on hover -->
-          <v-card-subtitle 
-            :class="['px-0 pb-1', overDesc ? '' : 'nowrap']">
-            {{ product.description }}
-          </v-card-subtitle>
-        </v-sheet>
+    </q-img>
+    <div
+      class="absolute-top q-pa-sm"
+      :style="`background-color: ${image ? ($q.dark.isActive ? 'rgba(0,0,0,.7)' : 'rgba(230,230,230,.8)') : 'transparent'}`"
+      @mouseenter="overDesc = true"
+      @mouseleave="overDesc = false" >
+      <div class="text-h3 display">
+        {{ product.code }}
+      </div>
+      <div
+        class="text-uppercase low-text"
+        :class="['px-0 pb-1', overDesc ? '' : 'nowrap']">
+        {{ product.description }}
+      </div>
+    </div>
+    <ProductCardActions
+      class="absolute-bottom"
+      :product="product"
+      v-show="showActions">
+    </ProductCardActions>
 
-        <v-spacer></v-spacer>
-
-        <!-- ACTIONS BAR -->
-        <v-expand-transition>
-          <ProductCardActions 
-            :product="product" 
-            v-show="showActions" 
-            @showDelete="showDelete = true"
-            />
-        </v-expand-transition>
-
-      </v-container>
-    </v-img>
-    
-    <!-- DELETE CONFIRMATION -->
-    <v-overlay 
-      absolute 
-      opacity="1" 
-      :color="$theme.surface1"
-      v-if="showDelete"
-      class="ma-0 pa-0"
-      >
-      <v-container :class="image ? 'pa-6' : 'pa-3'">
-        <span>{{ $tc('product.confirm_delete_question') }}</span>
-        <span class="display weight-medium ml-2">{{ product.code }}</span>
-        <div class="d-flex justify-space-between mt-3">
-          <v-btn dark :color="$theme.red" @click.stop="trash">
-            {{ $tc('confirm') }}
-          </v-btn>
-          <v-btn dark :color="$theme.grey" @click.stop="showDelete = false">
-            {{ $tc('cancel') }}
-          </v-btn>
-        </div>
-      </v-container>
-    </v-overlay>
-
-  </v-card>  
+  </q-card>
 </template>
 
 <script>
-import ProductCardActions from '@/components/ProductCardActions'
+import ProductCardActions from '@/components/ProductCardActions.vue'
 import { mapActions } from 'vuex'
 
 export default {
@@ -120,5 +84,9 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="sass" scoped>
+.product-card
+  border: thin solid rgba(255, 255, 255, .12)
+  & .q-img__content > div
+    padding: 8px !important
 </style>
