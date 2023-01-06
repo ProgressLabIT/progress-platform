@@ -90,7 +90,6 @@ const product = {
     },
 
     LOAD_PRODUCT_LIST(state, product_list) {
-      console.log(state, product_list)
       state.list = product_list
     },
 

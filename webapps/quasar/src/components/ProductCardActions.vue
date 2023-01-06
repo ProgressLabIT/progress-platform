@@ -60,6 +60,7 @@
 <script>
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 import { mapActions } from 'vuex'
+
 export default {
 
   name: 'ProductCardActions',
@@ -68,6 +69,9 @@ export default {
   },
 
   props: ['product'],
+  emits: ['showDelete'],
+
+
   data () {
     return {
       // overSwitch: false
@@ -95,7 +99,7 @@ export default {
 
     confirmDelete() {
       this.$emit('showDelete')
-    }
+    },
   }
 }
 </script>

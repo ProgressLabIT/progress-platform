@@ -30,8 +30,31 @@
     <ProductCardActions
       class="absolute-bottom"
       :product="product"
-      v-show="showActions">
+      v-show="showActions"
+      @showDelete="showDelete = true">
     </ProductCardActions>
+
+    <!-- DELETE CONFIRMATION -->
+    <div
+      v-if="showDelete"
+      class="absolute-full surface1 column"
+      :class="image ? 'q-pa-md' : 'q-pa-sm'">
+      <div>
+        {{ $t('product.confirm_delete_question') }}
+      </div>
+      <div class="display weight-medium q-mt-sm">
+        {{ product.code }}
+      </div>
+      <q-space/>
+      <div class="row justify-between">
+        <q-btn color="theme-red" size="12px" @click.stop="trash">
+          {{ $t('confirm') }}
+        </q-btn>
+        <q-btn color='theme-grey' size="12px" @click.stop="showDelete = false">
+          {{ $t('cancel') }}
+        </q-btn>
+      </div>
+    </div>
 
   </q-card>
 </template>
@@ -39,6 +62,8 @@
 <script>
 import ProductCardActions from '@/components/ProductCardActions.vue'
 import { mapActions } from 'vuex'
+import { useQuasar } from 'quasar'
+
 
 export default {
 
@@ -62,7 +87,8 @@ export default {
         query: {
           back_to: 'productList'
         }
-      }
+      },
+      $q: useQuasar()
     }
   },
 
@@ -73,11 +99,27 @@ export default {
   },
 
   methods: {
-    ...mapActions(['moveToTrash']),
+    ...mapActions(['moveToTrash', 'restoreProduct']),
 
     trash() {
       this.moveToTrash(this.product)
-      this.$emit('delete')
+      this.$q.notify({
+        progress: true,
+        message: this.$t('product.snackbars.delete_confirmed', { code: this.product.code }).toUpperCase(),
+        color: 'theme-background',
+        multiline: true,
+        actions: [
+          {
+            label: this.$t('confirm'),
+            color: 'theme-blue',
+          },
+          {
+            label: this.$t('undo'),
+            color: 'theme-orange',
+            handler: () => this.restoreProduct(this.product._key)
+          }
+        ]
+      })
     }
   }
 

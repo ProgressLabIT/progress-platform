@@ -4,6 +4,7 @@ export const dark = {
   green: '#0DAB76',
   red: '#E71D36',
   orange: '#FF9F1C',
+  black: '#090C0D',
 
   blue_bg: 'rgba(39,174,209, .3)',
   green_bg: 'rgba(13,171,118, .3)',

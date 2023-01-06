@@ -43,24 +43,21 @@
       </div>
 
       <!-- PRODUCT LIST -->
-      <div class="col scroll">
-        <LoadingSignal v-if="!vuex_ready" class="absolute-center" />
-        <NoDataAlert v-else-if="!productCatalog().length" class="absolute-center"/>
+      <div class="col scroll flex-center">
+        <LoadingSignal v-if="!vuex_ready"/>
+        <NoDataAlert v-else-if="!productCatalog().length" />
         <div v-else class="row full-height q-col-gutter-md q-mb-md">
           <div
-            class="col-12 col-xs-6 col-sm-4 col-md-3 col-lg-2"
+            class="col-12 col-xs-6 col-sm-4 col-md-3 col-xl-2"
             v-for="product in filtered_products"
             :key="product._key">
             <ProductCard
               :product="product"
-              :image="show_images"
-              @delete="deleteNotify(product)">
+              :image="show_images">
             </ProductCard>
           </div>
         </div>
       </div>
-
-
 
     </q-page>
   </q-page-container>
@@ -141,35 +138,13 @@ export default {
 
   methods: {
 
-    ...mapActions(['restoreProduct']),
-
     match(product) {
       let activeFilter = !this.filter_inactive || product.active
       let searchFilter = multiMatch(this.search_string, product, ['code', 'description'])
 
       return activeFilter && searchFilter
-    },
-
-    deleteNotify(product) {
-      const snackbar = this.deleteSnackbar
-      snackbar._key = product._key
-      snackbar.code = product.code
-      // snackbar.remain = 100
-      snackbar.show = true
-      // let countdown = setInterval(() => {
-      //   if (snackbar.show) {
-      //     snackbar.remain -= 1
-      //   }
-      //   else {
-      //    clearInterval(countdown)
-      //   }
-      // }, 60)
-    },
-
-    undoDelete() {
-      this.restoreProduct(this.deleteSnackbar._key)
-      this.deleteSnackbar.show = false
     }
+
   },
 
   created() {
