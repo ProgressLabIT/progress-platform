@@ -7,12 +7,14 @@
     :style="hoverColor"
     @click.stop="emit">
     <q-tooltip
-      :delay="200"
+      :delay="100"
       :anchor="anchor"
       :self="self"
       :transition-show="transition_show"
       :transition-hide="transition_hide"
-      :style="`background-color: ${color}`">
+      transition-duration="200"
+      :style="`background-color: ${color}`"
+      class="text-body2">
       {{ $capitalize(tooltip) }}
     </q-tooltip>
   </q-icon>
@@ -50,11 +52,11 @@ export default {
     },
     transition_show: {
       type: String,
-      default: 'jump-up'
+      default: 'scale'
     },
     transition_hide: {
       type: String,
-      default: 'jump-down'
+      default: 'scale'
     }
   },
 
