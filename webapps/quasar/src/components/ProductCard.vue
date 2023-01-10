@@ -1,21 +1,22 @@
 <template>
   <q-card
-    :style="`height: ${image ? '160px' : '120px'}`"
+    :style="`height: ${show_image ? '160px' : '120px'}; ${!product.active ? 'filter: brightness(.7)' : ''}`"
     square
     class="surface1 product-card"
     @mouseenter="overCard = true"
     @mouseleave="overCard = false"
     @dblclick="$router.push(to_product_route)">
     <q-img
+      v-if="product.image"
       no-spinner
       no-native-menu
-      :src="image ? `/media/product/${product._key}/image.jpg` : ''"
+      :src="show_image ? `/media/product/${product._key}/image.jpg` : ''"
       class="fit"
-      :style="product.active ? '' : 'filter:grayscale(1) brightness(.5)'">
+      :style="product.active ? '' : 'filter:grayscale(1)'">
     </q-img>
     <div
       class="absolute-top q-pa-sm"
-      :style="`background-color: ${image ? ($q.dark.isActive ? 'rgba(0,0,0,.7)' : 'rgba(230,230,230,.8)') : 'transparent'}`"
+      :style="`background-color: ${show_image ? ($q.dark.isActive ? 'rgba(0,0,0,.7)' : 'rgba(230,230,230,.8)') : 'transparent'}`"
       @mouseenter="overDesc = true"
       @mouseleave="overDesc = false" >
       <div class="text-h3 display">
@@ -38,7 +39,7 @@
     <div
       v-if="showDelete"
       class="absolute-full surface1 column"
-      :class="image ? 'q-pa-md' : 'q-pa-sm'">
+      :class="show_image ? 'q-pa-md' : 'q-pa-sm'">
       <div>
         {{ $t('product.confirm_delete_question') }}
       </div>
@@ -68,7 +69,7 @@ import { useQuasar } from 'quasar'
 export default {
 
   name: 'ProductCard',
-  props: ['product', 'image'],
+  props: ['product', 'show_image'],
 
   components: {
     ProductCardActions
@@ -87,14 +88,13 @@ export default {
         query: {
           back_to: 'productList'
         }
-      },
-      $q: useQuasar()
+      }
     }
   },
 
   computed: {
     showActions() {
-      return this.image ? this.overCard : true
+      return this.show_image ? this.overCard : true
     },
   },
 
