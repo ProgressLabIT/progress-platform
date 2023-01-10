@@ -20,7 +20,7 @@
       </div>
 
       <!-- WINDOW CONTAINER -->
-      <q-card color="surface1" class="col shadow-6 q-ma-xs">
+      <q-card class="surface1 col shadow-6 q-mx-sm q-mb-sm scroll">
         <slot name="content"></slot>
       </q-card>
 

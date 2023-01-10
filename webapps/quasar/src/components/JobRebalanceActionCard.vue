@@ -1,5 +1,6 @@
 <template>
-  <BaseDialog :show="true" @close="$emit('changeEditMode', 'actions')">
+  <BaseDialog :show="true" @close="$emit('changeEditMode', 'actions')" :maximized="true">
+    <div class="column flex-center">
       <div class="text-h4 highlight display text-uppercase q-mb-sm">
         {{ job_template.phase_alias }}
       </div>
@@ -161,6 +162,7 @@
           </q-btn>
         </div>
       </q-card>
+    </div>
   </BaseDialog>
 </template>
 

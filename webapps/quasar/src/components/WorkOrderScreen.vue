@@ -23,7 +23,7 @@
     </template>
 
     <template v-slot:content>
-      <q-card class="surface1 fit shadow-6 row q-col-gutter-none">
+      <div class="fit shadow-6 row q-col-gutter-none">
 
         <template v-if="vuex_ready">
 
@@ -47,8 +47,7 @@
         </template>
 
         <LoadingSignal v-else />
-
-      </q-card>
+      </div>
     </template>
 
   </BaseModalScreen>
