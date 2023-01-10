@@ -51,23 +51,8 @@ export default {
       return this.media_src
         ? this.image_extensions.some( e => this.media_src.endsWith(e) )
         : null
-    },
-
-    escClose (event) {
-      if (event.key === 'Escape') {
-        this.$emit('close')
-      }
     }
-  },
-
-  created () {
-    document.addEventListener('keyup', this.escClose)
-  },
-
-  beforeDestroy () {
-    document.removeEventListener('keyup', this.escClose)
   }
-
 }
 </script>
 
