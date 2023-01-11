@@ -276,6 +276,10 @@ span .display {
   background-color: #77777711
 }
 
+.hover-red:hover {
+  color: var(--theme-red)
+}
+
 .step-divider {
   display: block;
   -webkit-box-flex: 1;

@@ -1,39 +1,41 @@
 <template>
   <BaseModalScreen :show="show_modal" @close="exit()">
 
-    <template v-slot:header>
-      <span class="ml-4 display medium highlight weight-medium">
-        {{ $tc('product.key') }}: {{ product_key }}
+    <template #header>
+      <span class="q-ml-md display highlight weight-medium">
+        {{ $t('product.key') }}: {{ product_key }}
       </span>
 
-      <v-col cols="auto" class="ml-auto">
-        <v-tabs 
-          background-color="transparent"
-          :color="$theme.text_high"
-          hide-slider right
-          >
-          <v-tab 
-            v-for="(page, index) in links" 
-            :key="index" 
+      <div class="col-auto q-ml-auto">
+        <q-tabs
+          class="transparent text-low"
+          active-class="text-high weight-bold"
+          indicator-color="transparent"
+          dense>
+          <q-route-tab
+            v-for="(page, index) in links"
+            :key="index"
             :to="{ name: page.name, query: { back_to: $route.query.back_to } }"
-            class="display" >
+            class="display">
             {{ page.title }}
-          </v-tab>
-        </v-tabs>
-      </v-col>  
+          </q-route-tab>
+        </q-tabs>
+      </div>
     </template>
 
-    <template v-slot:content>
-      <keep-alive>
-        <router-view></router-view>
-      </keep-alive>
+    <template #content>
+      <router-view v-slot="{ Component }">
+        <keep-alive>
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </template>
 
   </BaseModalScreen>
 </template>
 
 <script>
-import BaseModalScreen from '@/components/BaseModalScreen'
+import BaseModalScreen from '@/components/BaseModalScreen.vue'
 export default {
 
   name: 'ProductScreen',
@@ -57,15 +59,15 @@ export default {
       return [
         {
           name: 'productHome',
-          title: this.$tc('product.tabs.home')
+          title: this.$t('product.tabs.home')
         },
         {
           name: 'productionProcess',
-          title: this.$tc('product.tabs.process')
+          title: this.$t('product.tabs.process')
         },
         {
           name: 'bom',
-          title: this.$tc('product.tabs.bom')
+          title: this.$t('product.tabs.bom')
         }
       ]
     },
@@ -81,7 +83,7 @@ export default {
   methods: {
     exit() {
       if (this.user_is_editing) {
-        window.alert(this.$tc('product.alerts.save_before_exit'))
+        window.alert(this.$t('product.alerts.save_before_exit'))
         this.show_modal = true
       }
       else {

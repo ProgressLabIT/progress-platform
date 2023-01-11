@@ -7,7 +7,7 @@ const libraryRoutes = [
     redirect: { name: 'productList' },
     children: [
       {
-        path: "product",
+        path: "product-list",
         name: "productList",
         component: () => import("@/views/ProductList.vue"),
         children: [

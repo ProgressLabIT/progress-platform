@@ -1,106 +1,5 @@
 <template>
-  <v-container class="px-5 py-4 fill"> 
-    <h5 class="display medium highlight mb-6">Parametri</h5>          
-
-    <v-row v-for="(p, key) in params" :key="key">
-      
-      <!-- PARAM NAME -->
-      <v-col cols="auto" class="body-2">
-        {{ perfs.includes(key) ? $tc('product_params.target') : '' | capitalize }} {{ p }}
-      </v-col>
-      
-      <v-spacer></v-spacer>
-
-      <!-- PARAM VALUE -->
-      <template v-if="key == 'active_state'">
-        <v-col cols="auto" v-if="edit_mode">
-          <v-switch 
-            hide-details flat
-            :color="$theme.blue"
-            :input-value="temp_params[key].value"
-            @change="updateParam('active', $event)"
-            class="ma-0 pa-0">
-          </v-switch>   
-        </v-col>
-        <v-col cols="4" class="body-2 highlight text-right" :style="`color: ${$theme.text_high}`">
-          <div v-if="temp_params[key].value">
-            {{ $tc('active') | capitalize }}
-          </div>
-          <div v-else>
-            {{ $tc('inactive') | capitalize }}
-          </div>
-        </v-col>
-      </template>
-
-      <v-col v-else cols="5" class="text-right body-2 highlight">
-        <template v-if="time_perfs.includes(key)">
-          <template v-if="!edit_mode">
-            {{ temp_params[key].value.target | duration({ precision:'m' }) }}
-          </template>
-          <template v-else>
-            <v-row no-gutters>
-              <v-col>
-                <v-text-field 
-                  :ref="`${key}/hours`"
-                  :id="`${key}/hours`"
-                  type="number" min="0"
-                  hide-details reverse dense
-                  prefix="h"
-                  :value="temp_params[key].value.hours"
-                  class="my-0 py-0"
-                  @blur="updateTarget(key, $event)">
-                </v-text-field>  
-              </v-col>
-              <v-col >
-                <v-text-field 
-                  :ref="`${key}/minutes`"
-                  :id="`${key}/minutes`"
-                  type="number" min="0"
-                  hide-details reverse dense
-                  :value="temp_params[key].value.minutes"
-                  prefix="m"
-                  class="my-0 py-0"
-                  @blur="updateTarget(key, $event)">
-                </v-text-field>
-              </v-col>
-            </v-row>            
-          </template>
-        </template>
-
-        <template v-else-if="key == 'cost'">
-          <template v-if="!edit_mode">
-            € {{ temp_params[key].value.target }}
-          </template>
-          <v-text-field v-else 
-            type="number" min="0"
-            hide-details reverse dense
-            :value="temp_params[key].value.target"
-            prefix="€"
-            class="my-0 py-0"
-            @blur="updateTarget(key, $event)">
-          </v-text-field>
-        </template>
-
-        <template v-else>
-          <span v-if="!edit_mode">
-            {{ temp_params[key].value }}
-          </span>
-          <v-text-field v-else 
-            type="number" min="0"
-            hide-details reverse dense
-            :value="temp_params[key].value"
-            class="my-0 py-0"
-            @blur="updateParam(key, $event.target.value)">
-          </v-text-field>
-        </template>
-      </v-col>
-
-      <v-col cols="auto">
-        <v-icon x-small :color="$theme.text_low">info</v-icon>
-      </v-col>
-    </v-row>                    
-
-  </v-container>
+  TEST
 </template>
 
 <script>
@@ -175,13 +74,13 @@ export default {
 
     params() {
       return {
-        active: this.$tc('status'),
-        technical_batch_qt: this.$tc('product.technical_batch'),
-        minimum_order_qt: this.$tc('product.minimum_order'),
-        processing_time: this.$tc('performance.processing_time.medium'),
-        throughput_time: this.$tc('performance.throughput_time.medium'),
-        lead_time: this.$tc('performance.lead_time.medium'),
-        cost: this.$tc('cost.label')
+        active: this.$t('status'),
+        technical_batch_qt: this.$t('product.technical_batch'),
+        minimum_order_qt: this.$t('product.minimum_order'),
+        processing_time: this.$t('performance.processing_time.medium'),
+        throughput_time: this.$t('performance.throughput_time.medium'),
+        lead_time: this.$t('performance.lead_time.medium'),
+        cost: this.$t('cost.label')
       }
     },
 
@@ -241,10 +140,6 @@ export default {
   },
 
   methods: {
-
-    capitalize(string) {
-      return this.$options.filters.capitalize(string)
-    },
 
     getTargetTime(event) {
       const msPerMinute = 1000 * 60

@@ -189,7 +189,6 @@ export default {
     "label": "procedure",
     "long": "process phase | process phases",
     "media_deleted": "deleted",
-    "media_not_saved": "unsaved",
     "multiline_field": "multiline",
     "no_procedure": "no procedure",
     "params": {
@@ -391,6 +390,7 @@ export default {
   "type": "type",
   "unassigned": "unassigned",
   "undo": "undo",
+  "unsaved": "unsaved",
   "update": "update",
   "user": {
     "add": "add user",

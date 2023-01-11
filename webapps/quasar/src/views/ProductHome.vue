@@ -1,289 +1,222 @@
 <template>
-  <v-container fill-height fluid>
-    <v-row class="fill-height px-2">
-      
-      <!-- LEFT COLUMN -->
-      <v-col cols="4" class="fill-height d-flex flex-column justify-space-between">
-        <!-- PRODUCT IMAGE -->
-        <v-card outlined>
-          <v-hover v-slot="{ hover }">
-            <v-img height="30vh"
-              :src="img_src" 
-              :gradient="product.active ? '' : 'to top right, rgba(100,100,100,.33), rgba(25,25,25,.7)'">
+  <div class="row full-height q-pa-md">
+    <!-- LEFT COLUMN -->
+    <div class="col-4 column">
+      <!-- PRODUCT IMAGE -->
+      <div class="relative-position"
+        style="border: solid 1px rgba(255,255,255,.12); height: 30vh;">
+        <q-img
+          class="fit"
+          :src="img_src"
+          @mouseenter="over_image = true"
+          @mouseleave="over_image = false"
+          :style="product.active ? '' : 'filter:grayscale(1) brightness(.5)'">
+        </q-img>
+        <div class="absolute-full column q-pa-md">
+          <q-btn
+            v-if="over_image && !edit_mode && !no_image"
+            class="absolute-bottom-right q-ma-md"
+            color="theme-grey"
+            size="12px"
+            @click.stop="showMedia('img')">
+            <q-icon name="mdi-magnify" />
+          </q-btn>
 
-              <v-row 
-                class="fill-height" 
-                align="center" 
-                justify="center">
+          <template v-if="edit_mode">
+            <div class="absolute-top text-center q-py-xs" style="background: rgba(0, 0, 0, .5);">
+              {{ $capitalize($t('product.update_image')) }}
+            </div>
 
-                <v-btn absolute bottom right
-                  v-show="hover && !edit_mode && !no_image"
-                  small
-                  :color="$theme.grey" 
-                  @click.stop="showMedia('img')"
-                  class="">
-                  <v-icon>search</v-icon>
-                </v-btn>
+            <q-space />
 
-                <v-col cols="auto" v-if="no_image" class="text-center">
-                  <v-icon x-large :color="$theme.text_low">
-                    mdi-image-off-outline
-                  </v-icon>
-                  <p class="display smaller mt-2">
-                    {{ $tc('product.no_image') }}
-                  </p>
-                </v-col>
-
-
-                <!-- IMAGE LOADING -->
-                <template v-slot:placeholder>
-                  <!-- If file exists, show loading indication -->
-                  <v-progress-circular indeterminate :color="$theme.gray"></v-progress-circular>
-                </template>
-
-
-                <v-container v-if="edit_mode" 
-                  style="position:absolute"
-                  class="pa-0 fill d-flex flex-column justify-space-between">
-                  <v-sheet class="surface-1 text-center smaller display weight-bold">
-                    {{ $tc('product.update_image') | capitalize }}
-                  </v-sheet>
-
-                  <!-- <v-sheet class="surface-1"> -->
-                  <v-row align="end" class="ma-2">
-                    <v-btn v-if="new_image || new_image_url === 'deleted'"
-                      small :color="$theme.orange"
-                      @click="clearTempImg">
-                      {{ $tc('product.restore_image') }}
-                    </v-btn>
-                    <v-btn v-else-if="!no_image"
-                      small
-                      :color="$theme.red" 
-                      @click="deleteImg">
-                      <v-icon>delete</v-icon>
-                    </v-btn>
-                    <v-spacer></v-spacer>
-                    <input 
-                      type="file"
-                      ref="upload_img"
-                      style="display: none"
-                      accept="image/*"
-                      @change="updateImg($event.target.files[0])"/>
-                    <v-btn small
-                      :color="$theme.grey" 
-                      @click="$refs.upload_img.click()">
-                      <v-icon>mdi-upload</v-icon>
-                    </v-btn>
-                    <v-btn 
-                      v-if="img_src != ''"
-                      small 
-                      :color="$theme.grey" 
-                      @click.stop="showMedia('img')"
-                      class="ml-2">
-                      <v-icon>search</v-icon>
-                    </v-btn>
-                  </v-row>  
-                </v-container>
-              </v-row>  
-            </v-img>
-          </v-hover>
-        </v-card>
-
-        <!-- PRODUCT CODE -->
-        <div class="mt-6">
-          <h4 class="weight-bold medium text-uppercase">
-            {{ $tc('product.code') }}
-          </h4>
-          <h1 v-if="!edit_mode" class="display highlight">{{ product.code }}</h1>
-          <v-text-field v-else 
-            hide-details
-            :value="temp_code"
-            @blur="updateField('code', $event.target.value.toUpperCase())"
-            class="input-uppercase">
-          </v-text-field>
+            <div class="row">
+              <q-btn
+                v-if="new_image || new_image_url === 'deleted'"
+                size="12px"
+                color="theme-orange"
+                @click="clearTempImg">
+                {{ $t('product.restore_image') }}
+              </q-btn>
+              <q-btn
+                v-else-if="!no_image"
+                size="12px"
+                color="theme-red"
+                @click="deleteImg">
+                <q-icon name="mdi-delete" />
+              </q-btn>
+              <q-space />
+              <input
+                type="file"
+                ref="upload_img"
+                style="display: none"
+                accept="image/*"
+                @change="updateImg($event.target.files[0])" />
+              <q-btn
+                size="12px"
+                color="theme-grey"
+                @click="$refs.upload_img.click()">
+                <q-icon name="mdi-upload" />
+              </q-btn>
+              <q-btn
+                v-if="img_src != ''"
+                size="12px"
+                color="theme-grey"
+                @click.stop="showMedia('img')"
+                class="q-ml-sm">
+                <q-icon name="mdi-magnify" />
+              </q-btn>
+            </div>
+          </template>
         </div>
 
-        <!-- PRODUCT DESCRIPTION -->
-        <div class="mt-6">
-          <h4 class="weight-bold medium text-uppercase">
-            {{ $tc('description') }}
-          </h4>
-          <h3 v-if="!edit_mode" class="highlight weight-bold mt-1">
-            {{ product.description }}
-          </h3> 
-          <v-textarea v-else 
-            hide-details
-            :value="temp_desc"
-            @blur="updateField('description', $event.target.value)">
-          </v-textarea>  
+        <div v-if="no_image" class="column absolute-full flex-center">
+          <q-icon
+            size="xl"
+            color="text-low"
+            name="mdi-image-off-outline">
+          </q-icon>
+          <div>
+            {{ $t('product.no_image') }}
+          </div>
         </div>
-        
+      </div>
 
-        <!-- PRODUCT TAGS -->
-<!--         <h4 class="weight-bold medium">TAG</h4>
-        <v-row justify="start" class="mx-0 pt-2">            
-          <v-chip small
-            v-for="tag in product.tags" 
-            :key="tag"
-            class="mr-2">
-            {{ tag }}
-          </v-chip>
-        </v-row>           -->
+      <!-- PRODUCT CODE -->
+      <div class="q-mt-lg">
+        <div class="text-h4 weight-bold text-uppercase">
+          {{ $t('product.code') }}
+        </div>
+        <div v-if="!edit_mode" class="text-h1 display highlight">
+          {{ product.code }}
+        </div>
+        <q-input v-else
+          :model-value="temp_code"
+          @update:model-value="value => updateField('code', value.toUpperCase())"
+          class="input-uppercase">
+        </q-input>
+      </div>
 
-        <v-spacer></v-spacer>
+      <!-- PRODUCT DESCRIPTION -->
+      <div class="q-mt-lg">
+        <div class="text-h4 weight-bold text-uppercase">
+          {{ $t('description') }}
+        </div>
+        <div v-if="!edit_mode" class="text-h3 highlight weight-bold q-mt-xs">
+          {{ product.description }}
+        </div>
+        <q-input v-else
+          type="textarea"
+          :model-value="temp_desc"
+          @update:model-value="value => updateField('description', value)">
+        </q-input>
+      </div>
 
-        <v-btn 
-          v-if="!edit_mode"
-          :color="$theme.blue"
-          @click="activateEditMode"
-          >
-          {{ $tc('edit') }}
-        </v-btn>
+      <q-space />
 
-        <div v-else>
-          <v-btn block :loading="saving" class="mb-2" :color="$theme.green" @click="saveChanges">
-              {{ $tc('save') }}
-          </v-btn>
-          <v-btn block :color="$theme.grey" :disabled="saving" @click="cancelChanges">
-            {{ $tc('cancel') }}
-          </v-btn>
-        </div>  
+      <!-- EDIT MODE ACTIONS -->
+      <q-btn
+        v-if="!edit_mode"
+        color="theme-blue"
+        class="full-width"
+        @click="activateEditMode">
+        {{ $t('edit') }}
+      </q-btn>
 
-        <!-- CANCEL CONFIRMATION -->
-        <v-snackbar
-          top :timeout="2000"
-          :color="$theme.grey"
-          v-model="show_cancel_confirmation">
-          {{ $tc('snackbars.changes_canceled') | capitalize }}
-          <v-btn text @click.native="show_cancel_confirmation = false">OK</v-btn>
-        </v-snackbar>
+      <div v-else>
+        <q-btn
+          class="full-width q-mb-sm"
+          :loading="saving"
+          color="theme-green"
+          @click="saveChanges">
+          {{ $t('save') }}
+        </q-btn>
+        <q-btn
+          class="full-width"
+          color="theme-grey"
+          :disabled="saving"
+          @click="cancelChanges">
+          {{ $t('cancel') }}
+        </q-btn>
+      </div>
+    </div>
+    <!-- END OF LEFT COLUMN -->
 
-        <!-- SAVE NOTIFICATION -->
-        <v-snackbar
-          top :timeout="2000"
-          :color="$theme.green"
-          v-model="show_save_confirmation">
-          {{ $tc('snackbars.product_updated') | capitalize }}
-          <v-btn text :color="$theme.white" @click.native="show_save_confirmation = false">
-            <v-icon>close</v-icon>
-          </v-btn>
-        </v-snackbar>
+    <!-- RIGHT SECTION -->
 
-      </v-col>  
-    
-      <!-- PRODUCT DATA -->
-      <v-col cols="8" class="pl-4 fill-height d-flex flex-column">
-          <v-row class="mt-n3" align="start">
-            
-            <!-- PARAMETERS -->
-            <v-col cols="6">
-              <v-card flat> 
-                <ProductParamsCard 
-                  :product="product" 
-                  :edit_mode="edit_mode">
-                </ProductParamsCard>
-              </v-card>
-            </v-col>  
+    <!-- PARAMS -->
+    <div class="col-4">
+      <ProductParamsCard
+        :product="product"
+        :edit_mode="edit_mode">
+      </ProductParamsCard>
+    </div>
 
-            <!-- DOCS -->
-            <v-col cols="6">
-              <v-card flat> 
-                <v-container class="px-5 py-4 fill">
-                  <h5 class="display medium highlight mb-6">
-                    {{ $tc('document.label', 2) | capitalize }}
-                  </h5>
-                  <v-hover v-slot:default="{ hover }"
-                    v-for="(doc, index) in docs" :key="index">
-                    <v-row 
-                      no-gutters
-                      :style="hover ? `background: var(--hover-bg-blue)` : `` "
-                      style="cursor: pointer;"
-                      class="body-2 pa-2 mx-n2 flex-nowrap"
-                      @click="showMedia(index)">
-                      <v-col cols="8">
-                        <span  :class="'temp' in doc ? 'font-italic' : ''">
-                          {{ doc.name }} {{ 'temp' in doc ? ' (non salvato)' : ''}}
-                        </span>
-                      </v-col>
-                      <v-hover 
-                        v-if="edit_mode" 
-                        v-slot:default="{ hover: closeHover }">
-                        <v-col  @click.stop="deleteDoc(index)" cols="auto">
-                          <v-icon small class="ml-2"
-                            v-show="hover"
-                            :style="closeHover ? `color: ${$theme.red}` : ''"
-                            >close</v-icon>
-                        </v-col>
-                      </v-hover>
-                      <v-spacer></v-spacer>
-                      <v-col cols="auto" class="text-right">
-                        {{ doc.size | bytes }}
-                      </v-col>
-                    </v-row >
-                  </v-hover>
-                  <v-row v-if="edit_mode" class="mt-4">                    
-                    <input multiple 
-                      type="file"
-                      ref="upload_doc"
-                      style="display: none"
-                      accept="application/pdf, image/*"
-                      @change="addFiles($event.target.files)"/>
-                    <v-hover v-slot:default="{ hover }">
-                        <v-btn text block class="pl-6 medium"
-                          :color="hover ? $theme.blue : $theme.text_low"
-                          @click="$refs.upload_doc.click()">
-                          <v-row justify="space-between" align="center">
-                            {{ $tc('document.add', 2) }}
-                            <v-icon>attach_file</v-icon>
-                          </v-row>
-                        </v-btn>
-                    </v-hover>
-                  </v-row>
-                </v-container>
-              </v-card>
-            </v-col>  
-          </v-row> 
+    <!-- DOCS -->
+    <div class="col-4">
+      <q-card square class="surface2 q-pa-md">
+        <q-card-section class="text-h5 display highlight">
+          {{ $capitalize($t('document.label', 2)) }}
+        </q-card-section>
+        <q-list>
+          <q-item
+            v-for="(doc, index) in docs"
+            :key="index"
+            clickable
+            @click="showMedia(index)">
+            <q-item-section
+              class="col-8"
+              :class="{ 'text-italic': doc.temp}">
+              {{ doc.name }} {{ doc.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}
+            </q-item-section>
+            <q-item-section class="col-1">
+              <q-icon
+                v-if="edit_mode"
+                name="mdi-close"
+                class="hover-red"
+                @click.stop="deleteDoc(index)">
+              </q-icon>
+            </q-item-section>
+            <q-item-section class="col text-right">
+              {{ $bytes(doc.size) }}
+            </q-item-section>
+          </q-item>
+        </q-list>
 
-          <v-lazy>
-            <MediaViewer 
-              :show="show_media >= 0 || show_media === 'img' " 
-              @close="show_media = -1" 
-              v-bind="{ media_name, media_src}">
-              <template v-slot:context-title>
-               {{ $tc('product.code').toUpperCase() }}: {{ product.code }}
-              </template>
-            </MediaViewer>
-          </v-lazy>
+        <input
+          multiple
+          type="file"
+          ref="upload_doc"
+          style="display: none"
+          accept="application/pdf, image/*"
+          @change="addFiles($event.target.files)"/>
+        <q-btn
+          v-if="edit_mode"
+          flat
+          class="full-width"
+          color="theme-blue"
+          @click="$refs.upload_doc.click()">
+          <span>{{ $t('document.add', 2) }}</span>
+          <q-space />
+          <q-icon name="mdi-paperclip" />
+        </q-btn>
 
-          <v-spacer></v-spacer>
+      </q-card>
 
-          <!-- PRODUCT ACTIONS -->
-        <!--   <v-row class="mt-auto flex-grow-0" justify="end">
-            <v-col cols="auto"  class="pb-0">
-              <v-btn :color="$theme.red" @click="show_delete_confirmation=true">
-                {{ $tc('delete') }}
-              </v-btn>
-            </v-col>  
-          </v-row>   -->
-      </v-col>
+      <!-- DOCUMENT VIEWER -->
+      <MediaViewer
+        :show="show_media >= 0 || show_media === 'img' "
+        @close="show_media = -1"
+        v-bind="{ media_name, media_src }">
+        <template #context-title>
+          {{ $t('product.code').toUpperCase() }}: {{ product.code }}
+        </template>
+      </MediaViewer>
 
-    </v-row>  
-
-<!--     <BaseConfirmationDialog
-      :show="show_delete_confirmation"
-      :confirm_color="$theme.red"
-      :confirm_prompt="$tc('delete')"
-      max_width="40%"
-      :confirm_action="deleteProduct"
-      @close="show_delete_confirmation=false">
-      {{ $tc('product.confirm_delete_question') | capitalize }}
-    </BaseConfirmationDialog> -->
-
-  </v-container>
+    </div>
+  </div>
 </template>
 
 <script>
-import { capitalize as c } from '@/lib/filters.js'
 import ProductParamsCard from '@/components/ProductParamsCard.vue'
 import { mapState, mapActions } from 'vuex'
 import MediaViewer from '@/components/MediaViewer.vue'
@@ -301,6 +234,7 @@ export default {
 
   data() {
     return {
+      over_image: false,
       saving: false,
       show_delete_confirmation: false,
       show_cancel_confirmation: false,
@@ -435,7 +369,7 @@ export default {
         const already_in_list = this.docs.some( d => f.name == d.name )
         if (already_in_list) {
           const replace = window.confirm(
-            c(this.$tc('product.alerts.doc_name_exists',1, {filename: f.name}))
+            this.$capitalize(this.$t('product.alerts.doc_name_exists',1, {filename: f.name}))
           )
           if (replace) { this.$store.commit('DELETE_TEMP_DOC', i) }
           else { return }
@@ -477,7 +411,12 @@ export default {
         // even if the update is instantaneous
           // setTimeout(() => {
             await this.$store.dispatch('loadProductDetails', this.product_key)
-            this.show_save_confirmation = true
+            this.$q.notify({
+              message: this.$capitalize(this.$t('snackbars.product_updated')),
+              color: 'theme-green',
+              timeout: 1500,
+              position: 'top'
+            })
             this.edit_mode = false
             this.clearTempImg()
             this.saving = false
@@ -490,7 +429,12 @@ export default {
 
     cancelChanges() {
       this.$store.commit('CANCEL_PRODUCT_CHANGES')
-      this.show_cancel_confirmation = true
+      this.$q.notify({
+        message: this.$capitalize(this.$t('snackbars.changes_canceled')),
+        color: 'theme-grey',
+        timeout: 1500,
+        position: 'top'
+      })
       this.edit_mode = false
     },
 
@@ -498,16 +442,17 @@ export default {
     //   this.$store.dispatch('moveToTrash', this.product)
     //   this.$router.push({ name: 'productList' })
     // }
-
   },
 
   watch: {
     img_src() {
-      let test = new XMLHttpRequest()
-      test.open('HEAD', this.img_src, false)
-      test.send()
-      if (test.status === 404) {
-        this.no_image = true
+      if (!this.img_src.startsWith('blob')) {
+        let test = new XMLHttpRequest()
+        test.open('HEAD', this.img_src, false)
+        test.send()
+        if (test.status === 404) {
+          this.no_image = true
+        }
       }
     }
   }

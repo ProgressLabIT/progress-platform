@@ -191,7 +191,6 @@ export default {
     "instruction_title": "istruzioni",
     "long": "fase di lavorazione | fasi di lavorazione",
     "media_deleted": "eliminato",
-    "media_not_saved": "non salvato",
     "multiline_field": "multiriga",
     "no_procedure": "nessuna procedura",
     "params": {
@@ -392,6 +391,7 @@ export default {
   "total_cost": "costo totale",
   "type": "tipo",
   "unassigned": "non assegnato | non assegnati",
+  "unsaved": "non salvato",
   "undo": "ripristina",
   "update": "modifica",
   "user": {
