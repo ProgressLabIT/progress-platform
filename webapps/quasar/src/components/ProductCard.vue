@@ -1,19 +1,15 @@
 <template>
   <q-card
-    :style="`height: ${show_image ? '160px' : '120px'}; ${!product.active ? 'filter: brightness(.7)' : ''}`"
     square
     class="surface1 product-card"
-    @mouseenter="overCard = true"
-    @mouseleave="overCard = false"
+    :class="{ faded: !product.active }"
     @dblclick="$router.push(to_product_route)">
-    <q-img
-      v-if="product.image"
-      no-spinner
-      no-native-menu
-      :src="show_image ? `/media/product/${product._key}/image.jpg` : ''"
+    <img
+      v-if="product.image & show_image"
+      style="object-fit: cover;"
+      :src="`/media/product/${product._key}/image.jpg`"
       class="fit"
       :style="product.active ? '' : 'filter:grayscale(1)'">
-    </q-img>
     <div
       class="absolute-top q-pa-sm"
       :style="`background-color: ${show_image ? ($q.dark.isActive ? 'rgba(0,0,0,.7)' : 'rgba(230,230,230,.8)') : 'transparent'}`"
@@ -31,7 +27,6 @@
     <ProductCardActions
       class="absolute-bottom"
       :product="product"
-      v-show="showActions"
       @showDelete="showDelete = true">
     </ProductCardActions>
 
@@ -61,9 +56,9 @@
 </template>
 
 <script>
-import ProductCardActions from '@/components/ProductCardActions.vue'
 import { mapActions } from 'vuex'
 import { useQuasar } from 'quasar'
+import ProductCardActions from '@/components/ProductCardActions.vue'
 
 
 export default {
@@ -90,12 +85,6 @@ export default {
         }
       }
     }
-  },
-
-  computed: {
-    showActions() {
-      return this.show_image ? this.overCard : true
-    },
   },
 
   methods: {
@@ -128,7 +117,11 @@ export default {
 
 <style lang="sass" scoped>
 .product-card
+  height: 100%
   border: thin solid rgba(255, 255, 255, .12)
   & .q-img__content > div
     padding: 8px !important
+
+.faded
+  filter: brightness(.7)
 </style>

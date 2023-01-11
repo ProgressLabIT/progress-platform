@@ -12,7 +12,7 @@
             :placeholder="$t('search')"
             input-class="text-uppercase text-body1"
             v-model="search_string"
-            :debounce="500">
+            :debounce="200">
             <template #append>
               <q-icon name="mdi-magnify" />
             </template>
@@ -43,19 +43,30 @@
       </div>
 
       <!-- PRODUCT LIST -->
-      <div class="col scroll flex-center">
-        <LoadingSignal v-if="!vuex_ready"/>
-        <NoDataAlert v-else-if="!productCatalog().length" />
-        <div v-else class="row full-height q-col-gutter-md q-mb-md">
+      <div class="col scroll flex-center" id="product-list">
+        <div v-if="vuex_ready" class="row q-col-gutter-lg q-mb-md">
+          <NoDataAlert v-if="!productCatalog(filter_inactive).length" />
           <div
-            class="col-12 col-xs-6 col-sm-4 col-md-3 col-xl-2"
-            v-for="product in filtered_products"
-            :key="product._key">
+            class="col-12 col-sm-6 col-md-3 col-xl-2"
+            :style="`height: ${card_height}px`"
+            v-for="(product, index) in product_list"
+            :key="index">
             <ProductCard
+              :key="product._key"
               :product="product"
-              :image="show_images">
+              :show_image="show_images">
             </ProductCard>
           </div>
+        </div>
+        <div class="row q-my-lg justify-center">
+          <q-btn
+            v-if="!loading && max_shown < filtered_products.length"
+            flat
+            color="theme-blue"
+            @click="showMore">
+            CARICA ALTRI
+          </q-btn>
+          <q-spinner v-if="loading" />
         </div>
       </div>
 
@@ -71,6 +82,8 @@ import ProductCard from '@/components/ProductCard.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 
 import { mapGetters, mapActions } from 'vuex'
+import { debounce as _debounce } from 'lodash'
+
 
 export default {
 
@@ -84,23 +97,27 @@ export default {
 
   data() {
     return {
-      search_string: '',
-      deleteSnackbar: {
-        _key: null,
-        code: '',
-        timeout: 6200,
-        show: false,
-        remain: 100,
-      },
-      vuex_ready: false
+      search_string: null,
+      loading: true,
+      vuex_ready: false,
+      max_shown: 100
     }
   },
 
   computed: {
     ...mapGetters(['productCatalog']),
 
+    catalog() {
+      const list = this.productCatalog(this.filter_inactive)
+      return Array(1000).fill(list).flat()
+    },
+
     filtered_products() {
-      return this.productCatalog(this.filter_inactive).filter(p => this.match(p))
+      return this.catalog.filter(this.match)
+    },
+
+    product_list() {
+      return this.filtered_products.slice(0, this.max_shown)
     },
 
     show_images: {
@@ -133,25 +150,60 @@ export default {
           }
         })
       }
+    },
+
+    card_height() {
+      return this.show_images
+        ? 240
+        : 140
     }
   },
 
   methods: {
+    fetchProducts() {
+      return new Promise( resolve => {
+        this.loading = true
+        this.$store.dispatch('loadProductList').then(() => {
+          setTimeout(() => this.loading = false, 2000)
+          resolve()
+        })
+      })
+    },
 
     match(product) {
-      let activeFilter = !this.filter_inactive || product.active
-      let searchFilter = multiMatch(this.search_string, product, ['code', 'description'])
+      return multiMatch(this.search_string, product, ['code', 'description'])
+    },
 
-      return activeFilter && searchFilter
+    showMore() {
+      this.loading = true
+      setTimeout(() => {
+        this.max_shown += 100
+        this.loading = false
+      }, 1500)
     }
-
   },
 
   created() {
-    this.$store.dispatch('loadProductList').then(() => this.vuex_ready = true)
+    this.fetchProducts().then(() => {
+      this.vuex_ready = true
+    })
+  },
+
+  watch: {
+    search_string: {
+      immediate: true,
+      handler() {
+        this.max_shown = 0,
+        this.loading = true
+        setTimeout(() => {
+          this.loading = false
+          this.max_shown = 100
+        }, 1500)
+      }
+    }
   }
 };
 </script>
 
-<style lang="css" scoped>
+<style lang="sass" scoped>
 </style>

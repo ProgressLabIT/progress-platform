@@ -1,5 +1,5 @@
 <template>
-  <div class="surface1">
+  <div :style="`background-color: ${$theme.surface1}aa`">
     <div class="row q-col-gutter-sm">
       <div class="col-6">
         <q-toggle
@@ -7,7 +7,7 @@
           :model-value="product.active"
           @update:model-value="toggleActive(product)"
           class="q-pa-none col-6">
-          <span class="text-body2 low-text">
+          <span class="text-body2">
             {{ $capitalize(product.active ? $t('active') : $t('inactive')) }}
           </span>
           <q-tooltip
