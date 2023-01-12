@@ -11,8 +11,8 @@
             name="search"
             :placeholder="$t('search')"
             input-class="text-uppercase text-body1"
-            v-model="search_string"
-            :debounce="200">
+            v-model="search_proxy"
+            :debounce="300">
             <template #append>
               <q-icon name="mdi-magnify" />
             </template>
@@ -97,6 +97,7 @@ export default {
 
   data() {
     return {
+      search_proxy: null,
       search_string: null,
       loading: true,
       vuex_ready: false,
@@ -108,8 +109,7 @@ export default {
     ...mapGetters(['productCatalog']),
 
     catalog() {
-      const list = this.productCatalog(this.filter_inactive)
-      return Array(1000).fill(list).flat()
+      return this.productCatalog(this.filter_inactive)
     },
 
     filtered_products() {
@@ -190,12 +190,13 @@ export default {
   },
 
   watch: {
-    search_string: {
+    search_proxy: {
       immediate: true,
       handler() {
-        this.max_shown = 0,
         this.loading = true
+        this.max_shown = 0,
         setTimeout(() => {
+          this.search_string = this.search_proxy
           this.loading = false
           this.max_shown = 100
         }, 1500)
