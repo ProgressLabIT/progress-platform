@@ -12,7 +12,7 @@ const job = {
     LOAD_JOBS(state, job_list) {
       state.job_list = job_list
     },
-    
+
     LOAD_ASSIGNMENTS(state, data) {
       state.assigned_job_list = data.assigned_jobs_by_operator
       state.unassigned_job_list = data.unassigned_jobs

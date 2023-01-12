@@ -6,11 +6,13 @@ import { dark, light } from '@/boot/theme.js'
 
 import job from "./job"
 import org from "./org"
+import process from "./process"
 import product from "./product"
 import session from "./session"
 import traceability from "./traceability"
 import user from "./user"
 import workorder from "./workorder"
+import bom from "./bom"
 
 // import example from './module-example'
 
@@ -73,17 +75,16 @@ const store = createStore({
   plugins: [resetSessionTimeoutAtStoreChange],
 
   modules: {
+    bom,
     job,
     org,
+    process,
     product,
     session,
     traceability,
     user,
     workorder
-  },
-  // enable strict mode (adds overhead!)
-  // for dev mode and --debug builds only
-  strict: process.env.DEBUGGING
+  }
 })
 
 
