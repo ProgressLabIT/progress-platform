@@ -58,7 +58,7 @@
 
           <div key="progress" v-else-if="logging_in">
             <q-spinner
-              size="80px" thickness="4px"
+              size="80px" :thickness="4"
               indeterminate
               color="theme-blue"
               class="q-ma-xl">
