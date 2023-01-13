@@ -9,9 +9,9 @@
             <h6 class="text-uppercase low-text">{{ $tc("work_order.wo_code") }}</h6>
             <h4 class="display text-truncate">{{ job.wo_code }}</h4>
           </v-col>
-          <v-col cols="auto" class="text-right">
-            <h6 class="text-uppercase low-text">{{ $tc("work_order.wo_line.line_only", 1) }}</h6>
-            <h4 class="display highlight">{{ job.wo_line }}</h4>
+          <v-col cols="auto">
+            <h6 class="text-uppercase low-text">{{ $tc("project", 1) }}</h6>
+            <h4 class="display highlight">{{ job.project_code }}</h4>
           </v-col>
           <v-spacer></v-spacer>
           <v-col cols="auto">
