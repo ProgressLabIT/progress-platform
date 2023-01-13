@@ -87,7 +87,7 @@
                           :class="filter_fields.includes(header.value) ? 'filter-field' : ''"
                           :style="filter_fields.includes(header.value) && hover ? 'text-decoration: underline' : ''"
                           >
-                          {{ job[header.value] | capitalize_all }}
+                          {{ job[header.value] || '' | capitalize_all }}
                         </div>
                         </v-hover>
                       </template>
@@ -142,12 +142,12 @@ export default {
     return {
       search_fields: [
         'wo_code', 
-        'wo_line', 
         'product_code',
         'product_description',
+        'project_code',
         'phase_alias',
       ],
-      filter_fields: ['wo_code', 'product_code', 'phase_alias']
+      filter_fields: ['wo_code', 'product_code', 'phase_alias', 'project_code']
     }
   },
 
@@ -156,12 +156,12 @@ export default {
     job_data() {
       return [
         { 
-          text: this.$tc('work_order.wo_code').toUpperCase(), 
+          text: this.$tc('work_order.list_headers.wo_code').toUpperCase(),
           value: 'wo_code', 
         },
         { 
-          text: this.$tc('work_order.wo_line.line_only', 1).toUpperCase(), 
-          value: 'wo_line', 
+          text: this.$tc('project').toUpperCase(),
+          value: 'project_code',
         },
         { 
           text: this.$tc('product.label', 1).toUpperCase(), 

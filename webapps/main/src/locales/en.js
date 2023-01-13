@@ -466,7 +466,7 @@ export default {
       "qt_planned": "pq",
       "qt_remaining": "rq",
       "sequence": "seq",
-      "wo_code": "code",
+      "wo_code": "wo code",
       "wo_line": "line"
     },
     "long": "work order",
@@ -479,7 +479,7 @@ export default {
       "workOrderJobs": "jobs"
     },
     "update_due_date": "change due date",
-    "wo_code": "wo code",
+    "wo_code": "code",
     "wo_line": {
       "line_only": "line",
       "long": "work order line",

@@ -468,7 +468,7 @@ export default {
       "qt_planned": "qp",
       "qt_remaining": "qr",
       "sequence": "seq",
-      "wo_code": "codice",
+      "wo_code": "codice op",
       "wo_line": "riga"
     },
     "long": "ordine di produzione",

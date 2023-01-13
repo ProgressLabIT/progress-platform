@@ -56,7 +56,7 @@
             </template>
 
             <!-- OTHER FIELDS -->
-            <template v-else>{{ item[header.value] }}</template>
+            <template v-else>{{ item[header.value] || '' }}</template>
           </td>
         </tr>
       </template>
@@ -107,7 +107,7 @@ export default {
           text: this.$tc('work_order.list_headers.sequence').toUpperCase()},
         { 
           value: 'wo_code', 
-          text: this.$tc('work_order.list_headers.wo_code').toUpperCase()},
+          text: this.$tc('work_order.wo_code').toUpperCase()},
         {
           value: 'project_code',
           text: this.$tc('project').toUpperCase()
