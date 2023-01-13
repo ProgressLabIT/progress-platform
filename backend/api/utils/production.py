@@ -108,7 +108,7 @@ class Queries:
       FOR j in Job
         FILTER !j.trash && j.assigned_to == null
         
-        // Order by WorkOrder Queue position and 
+        // Order by WorkOrder Queue position and Phase sequence
         LET wo_queue_index = POSITION(wo_queue, j.wo_key, true)
         LET wo_phase_sequence = DOCUMENT(WorkOrder, j.wo_key).phase_sequence
         LET job_phase_index = POSITION(wo_phase_sequence, j.phase_key, true)
