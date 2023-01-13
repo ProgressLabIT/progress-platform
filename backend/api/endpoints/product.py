@@ -27,14 +27,14 @@ product_db = db.collection('Product')
 async def get_product_list(
   offset: int = None,
   limit: int = None, # return a limited number of results
-  code: str = None, # filter by code
+  search: str = None, # filter by code
   details: bool = False
 ):
 
   product_list =  db.aql.execute(
     Queries.GET_PRODUCT_LIST,
     bind_vars=dict(
-      code = code,
+      search = search,
       limit = limit,
       details = details,
       offset = offset

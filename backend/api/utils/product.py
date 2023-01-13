@@ -4,11 +4,12 @@ from utils.file import UserFile
 class Queries:
 
   GET_PRODUCT_LIST = """
-    LET search = CONCAT('%', @code, '%')
+    LET search = CONCAT('%', @search, '%')
     FOR p IN Product
 
       // find active products matching the search pattern provided
-      FILTER !p.trash && LIKE(p.code, search, true)
+      LET search_context = CONCAT(p.code, ' ', 'p.description')
+      FILTER !p.trash && LIKE(search_context, search, true)
 
       // keep only required attributes
       LET result = @details ? p : KEEP(p, ["_key", "code", "description", "active"])
