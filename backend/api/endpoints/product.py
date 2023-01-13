@@ -64,7 +64,6 @@ async def create_product(
   # Map form data
   try:
     new_product = ProductDetails(code=code, description=description)
-    prepped_data = jsonable_encoder(new_product, by_alias=True, exclude_none=True )
 
   except Exception as e:
     error_str = traceback.format_exc()
@@ -87,10 +86,9 @@ async def create_product(
 
   # Save data
   try:
-    tx = db.begin_transaction(write=["Product"])
-    db_response = tx.collection("Product").insert(prepped_data, return_new=True)
     # Save image
     if image:
+      new_product.image = True
 
       product_image = UserFile.product_media(
         append_path=db_response['_key'],
@@ -106,6 +104,9 @@ async def create_product(
           detail="Could not save image"
         )
 
+    tx = db.begin_transaction(write=["Product"])
+    prepped_data = jsonable_encoder(new_product, by_alias=True, exclude_none=True )
+    db_response = tx.collection("Product").insert(prepped_data, return_new=True)
     tx.commit_transaction()
 
 
@@ -279,6 +280,10 @@ async def replace_product_image(
   # extension = new_image.filename.split('.')[-1]
   img = UserFile.product_media(append_path=product_key, file=new_image)
   filename = 'image.jpg'
+  product_db.update(dict(
+    _key=product_key,
+    image=True
+  ))
   await img.write_file(filename)
   return APIResponse(message="File saved correctly")
 
@@ -292,7 +297,10 @@ async def replace_product_image(product_key: str):
   # extension = new_image.filename.split('.')[-1]
   img = UserFile.product_media(append_path=product_key)
   img.delete_file('image.jpg')
-
+  product_db.update(dict(
+    _key=product_key,
+    image=False
+  ))
 
 # =================================================
 #  GET /PRODUCT_KEY : GET PRODUCT DATA
