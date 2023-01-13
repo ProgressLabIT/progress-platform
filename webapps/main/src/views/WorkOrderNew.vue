@@ -179,8 +179,6 @@ export default {
       const quantity_missing = this.new_work_orders.some( wo => wo.qt_planned == 0 )
       const product_missing = this.new_work_orders.some( wo => !wo.product._key )
 
-      console.log({ wo_code_missing, quantity_missing, product_missing })
-
       if (wo_code_missing || quantity_missing || product_missing)  {
         window.alert(capitalize(this.$tc('form_missing_fields_alert')))
       }
