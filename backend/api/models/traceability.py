@@ -99,6 +99,7 @@ class ProductionEvent(FlexModel):
   completed_batch_key: str = None
   completed_batch_qt: float = None
   new_batch_key: str = None
+  project_code: str = None
   timestamp: datetime = timestamp()
   user_data: Any
   description: str = None # optional descriptive field for auditing reasons
