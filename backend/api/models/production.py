@@ -59,6 +59,7 @@ class WorkOrderNew(BaseModel):
   qt_planned: float
   priority: bool = False
   due_by: Union[datetime, date] = None
+  project_code: str = None
 
 
 class WorkOrderFull(ArangoDocument, WorkOrderNew):
