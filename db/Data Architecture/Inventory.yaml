@@ -1,7 +1,7 @@
-# Inventory
-  _key: str (product/item code key + ":" + serial number)
-  code: str
-  serial_number: str
+# InventoryItem
+  _key: str
+  product: str
+  lot_number: str
   type: str [product, material, consumable, tool, safety]
   stock_unit: str
   stock_qt: float
@@ -9,13 +9,18 @@
   available_qt: float
   
 # InventoryJournal
+  _from: str  # location or workorder id
+  _to: str # location or workorder id
   evid: str
   timestamp: ISOdts
-  *ft item_key: str
+  lot_number: str
+  product_key: str
   qt_before: float
   variation: float
   qt_after: float
   reason: str
   related:
     
+
+
 
