@@ -123,6 +123,7 @@ async def create_work_order(new_wo: WorkOrderNew):
       product_key = wo_data.product_key,
       product_code = wo_data.product_code,
       product_description = wo_data.product_description,
+      project_code = wo_data.project_code,
       operation_key = phase.operation_key,
       parameters = phase.params,
       qt_planned = wo_data.qt_planned,

@@ -113,6 +113,7 @@ class Job(FlexModel):
   product_key: str
   product_code: str
   product_description: str
+  project_code: str = None
   # operation_key: str >>> TODO: Fix Phase API to add op_id during creation
 
   parameters: PhaseParameters = None
