@@ -225,7 +225,7 @@ export default {
     wo_data() {
       return [
         { name: 'wo_code', text: this.$tc('work_order.wo_code') },
-        { name: 'wo_line', text: this.$tc('work_order.wo_line.line_only', 1) },
+        { name: 'project_code', text: this.$tc('project', 1) },
         { name: 'phase_alias', text: this.$tc('phase.short', 1) },
       ]
     },
