@@ -331,6 +331,7 @@ export default {
     "search_explainer": "search terms in one or more of the following fields"
   },
   "progress": "progress",
+  "project": "project",
   "quantity": {
     "active": {
       "short": "aq"
@@ -451,7 +452,7 @@ export default {
   },
   "waiting": "waiting",
   "work_order": {
-    "add_line": "add line | add lines",
+    "add": "add order | add orders",
     "alerts": {
       "assign_workload_first": "Assign the whole workload before saving"
     },
@@ -469,7 +470,7 @@ export default {
       "wo_line": "line"
     },
     "long": "work order",
-    "new": "new work order",
+    "new": "create new work orders",
     "new_quantity": "new quantity",
     "qt_rebalance_title": "assign the new workload",
     "short": "wo",

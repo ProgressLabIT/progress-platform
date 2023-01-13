@@ -333,6 +333,7 @@ export default {
     "search_explainer": "ricerca termini in uno o più dei seguenti campi"
   },
   "progress": "avanzamento",
+  "project": "commessa",
   "quantity": {
     "active": {
       "short": "qa"
@@ -453,7 +454,7 @@ export default {
   },
   "waiting": "in attesa",
   "work_order": {
-    "add_line": "aggiungi riga | aggiungi righe",
+    "add": "aggiungi ordine | aggiungi ordini",
     "alerts": {
       "assign_workload_first": "Completa la distribuzione del carico prima di salvare"
     },
@@ -471,7 +472,7 @@ export default {
       "wo_line": "riga"
     },
     "long": "ordine di produzione",
-    "new": "nuovo ordine di produzione",
+    "new": "crea ordini di produzione",
     "new_quantity": "nuova quantità",
     "qt_rebalance_title": "distribuisci il nuovo carico di lavoro",
     "short": "op",
@@ -480,7 +481,7 @@ export default {
       "workOrderJobs": "lavori"
     },
     "update_due_date": "modifica data scadenza",
-    "wo_code": "codice op",
+    "wo_code": "codice",
     "wo_line": {
       "line_only": "riga",
       "long": "riga ordine di produzione",

@@ -1,26 +1,15 @@
 <template>
-  <BaseModalForm @submit="postNewWorkOrder" max_width="700px" @cancel="$router.back()">
+  <BaseModalForm @submit="postNewWorkOrder" max_width="70vw" @cancel="$router.back()">
     <template v-slot:title>
       {{ $tc('work_order.new') }}
     </template>
     
     <template v-slot:form>
-      <h4 class="weight-bold text-uppercase">
-        {{ $tc('work_order.wo_code') }}
-      </h4>
 
-      <!-- WORK ORDER CODE INPUT -->
-      <v-text-field v-model="wo_code" class="input-uppercase"/>
-
-      <!-- WORK ORDER LINES TITLE  -->
-      <h4 class="weight-bold text-uppercase">
-        {{ $tc('work_order.wo_line.short', 2) }}
-      </h4>
-
-      <!-- WORK ORDER LINE HEADERS -->
+      <!-- WORK ORDER DATA HEADERS -->
       <v-row>
         <v-col 
-          v-for="(info, field_name) in wo_line_info" 
+          v-for="(info, field_name) in new_wo_info"
           :key="field_name"
           :cols="info.cols"
           class="pb-0">
@@ -28,16 +17,41 @@
         </v-col>
       </v-row>
 
-      <!-- WORK ORDER LINES -->
-      <v-row v-for="(line, index) in wo_lines" :key="index">
+      <!-- NEW WORK ORDER DATA -->
+      <v-row v-for="(line, index) in new_work_orders" :key="index">
         <v-col 
-          v-for="(info, field_name) in wo_line_info" 
+          v-for="(info, field_name) in new_wo_info"
           :key="field_name"
           :cols="info.cols"
           class="py-0">
           
-          <v-dialog 
-            :value="show_picker === index" 
+          <v-text-field
+            v-if="['code', 'project'].includes(field_name)"
+            v-model="new_work_orders[index][field_name]"
+            autocomplete="off"
+            class="input-uppercase">
+          </v-text-field>
+
+          <v-autocomplete
+            v-if="field_name === 'product'"
+            :items="product_list"
+            item-text="code"
+            return-object
+            v-model="new_work_orders[index].product">
+          </v-autocomplete>
+
+          <v-text-field
+            v-if="field_name === 'qt_planned'"
+            single-line
+            hide-details
+            autocomplete="false"
+            :reverse="true"
+            type="number"
+            v-model="new_work_orders[index].qt_planned">
+          </v-text-field>
+
+          <v-dialog
+            :value="show_picker === index"
             @input="log($event)"
             @click:outside="show_picker = -1"
             @keydown.esc="show_picker = -1"
@@ -53,29 +67,11 @@
             </v-date-picker>
           </v-dialog>
 
-          <v-text-field 
-            readonly              
+          <v-text-field
+            readonly
             v-if="field_name === 'due_by'"
             @click.stop="show_picker = index"
-            :value="wo_lines[index].due_by | shortDateString('it')">
-          </v-text-field>         
-
-          <v-autocomplete
-            v-else-if="field_name === 'product'"
-            :items="product_list"
-            item-text="code"
-            return-object
-            v-model="wo_lines[index].product">
-          </v-autocomplete>
-
-          <v-text-field 
-            v-else 
-            single-line 
-            hide-details
-            autocomplete="false"
-            :reverse="info.type === Number"
-            :type="field_name === 'qt_planned' ? 'number' : '' "
-            v-model="wo_lines[index][field_name]">
+            :value="new_work_orders[index].due_by | shortDateString('it')">
           </v-text-field>
         
         </v-col>
@@ -84,7 +80,7 @@
         </v-col>
       </v-row>
       <v-btn text class="display medium" @click="addLine">
-        + {{ $tc('work_order.add_line', 1) }}
+        + {{ $tc('work_order.add', 1) }}
       </v-btn>
     </template>
 
@@ -122,32 +118,43 @@ export default {
 
   data () {
     return {
-      wo_code: null,
-      wo_lines: [],
+      new_work_orders: [],
       show_picker: -1,
       loading: false
     }
   },
 
   computed: {
-    wo_line_info() {
+    new_wo_info() {
       return {
+        code: {
+          label: this.$tc('work_order.wo_code'),
+          type: String,
+          cols: 2,
+          initial_value: ''
+        },
         product: {
           label: this.$tc('product.label'),
           type: Object,
-          cols: 5,
+          cols: 3,
           initial_value: {}
         },
         qt_planned: {
           label: this.$tc('quantity.long'),
           type: Number,
-          cols: 3,
+          cols: 2,
           initial_value: 0
         },
         due_by: {
           label: this.$tc('by'),
           type: Date,
-          cols: 3,
+          cols: 2,
+          initial_value: ''
+        },
+        project: {
+          label: this.$tc('project'),
+          type: String,
+          cols: 2,
           initial_value: ''
         }
       }
@@ -161,38 +168,39 @@ export default {
   methods: {
     addLine() {
       let empty_line = Object.fromEntries(
-        Object.entries(this.wo_line_info).map( ([field, value]) => [field, value.initial_value] )
+        Object.entries(this.new_wo_info).map( ([field, value]) => [field, value.initial_value] )
       )
-      this.wo_lines.push(empty_line)
-      // this.wo_lines ++
+      this.new_work_orders.push(empty_line)
+      // this.new_work_orders ++
     },
 
     postNewWorkOrder() {
-      const wo_code_missing = !this.wo_code
-      const quantity_missing = this.wo_lines.some( line => line.qt_planned == 0 )
-      const product_missing = this.wo_lines.some( line => !line.product._key )
+      const wo_code_missing = this.new_work_orders.some( wo => !wo.code)
+      const quantity_missing = this.new_work_orders.some( wo => wo.qt_planned == 0 )
+      const product_missing = this.new_work_orders.some( wo => !wo.product._key )
+
+      console.log({ wo_code_missing, quantity_missing, product_missing })
 
       if (wo_code_missing || quantity_missing || product_missing)  {
         window.alert(capitalize(this.$tc('form_missing_fields_alert')))
-
       }
 
       else {
-        let new_records = this.wo_lines.map( (line, index) => {
+        let new_records = this.new_work_orders.map( wo => {
         return {
-          wo_code: this.wo_code.toUpperCase(),
-          wo_line: index + 1,
-          product_key: line.product._key,
-          product_code: line.product.code,
-          product_description: line.product.description,
-          qt_planned: line.qt_planned,
-          due_by: line.due_by
+          wo_code: wo.code.toUpperCase(),
+          product_key: wo.product._key,
+          product_code: wo.product.code,
+          product_description: wo.product.description,
+          qt_planned: wo.qt_planned,
+          due_by: wo.due_by,
+          project_code: wo.project
           }
         })
         this.loading = true
         this.$store.dispatch('postWorkOrder', new_records)
         .then( () => {
-          this.wo_lines = []
+          this.new_work_orders = []
           this.loading = false
           this.$router.back()
         })
@@ -203,20 +211,20 @@ export default {
       }
     },
 
-    setDueBy(date, line) {
-      this.$set(this.wo_lines[line], 'due_by', date)
+    setDueBy(date, index) {
+      this.$set(this.new_work_orders[index], 'due_by', date)
       this.show_picker = -1
     },
 
     deleteRow(index) {
-      this.wo_lines.splice(index,1)
+      this.new_work_orders.splice(index,1)
     }
   },
 
   created() {
     this.$store.dispatch('loadProductList')
     let today = new Date()
-    this.wo_line_info.due_by.initial_value =  '' 
+    this.new_wo_info.due_by.initial_value =  ''
       + today.getFullYear()
       + '-'
       + (today.getMonth() + 1)
