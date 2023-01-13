@@ -390,6 +390,7 @@ export default {
   "type": "tipo",
   "unassigned": "non assegnato | non assegnati",
   "undo": "ripristina",
+  "unsaved": "non salvato",
   "update": "modifica",
   "user": {
     "add": "aggiungi utente",

@@ -32,7 +32,7 @@ export default {
   },
   "by": "by",
   "cancel": "cancel",
-  "canceled": "canceled"
+  "canceled": "canceled",
   "cancel_changes": "cancel changes",
   "change": "change",
   "close": "close",
@@ -388,6 +388,7 @@ export default {
   "type": "type",
   "unassigned": "unassigned",
   "undo": "undo",
+  "unsaved": "unsaved",
   "update": "update",
   "user": {
     "add": "add user",
