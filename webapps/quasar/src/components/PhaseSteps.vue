@@ -6,7 +6,6 @@
 import StepInstruction from '@/components/StepInstruction.vue'
 import StepChecklist from '@/components/StepChecklist.vue'
 import StepForm from '@/components/StepForm.vue'
-import draggable from 'vuedraggable'
 
 export default {
 
@@ -17,8 +16,7 @@ export default {
   components: {
     StepInstruction,
     StepChecklist,
-    StepForm,
-    draggable
+    StepForm
   },
 
   data() {

@@ -9,15 +9,15 @@
 
     <template #content v-if="show">
       <div class="fit flex flex-center">
-      <q-img fit="contain"
-        v-if="hasImageExtension()" 
-        :src="media_src">
-      </q-img>
-      <embed v-else
-        :key="media_src"
-        :src="media_src + '#toolbar=0'"
-        width="100%"
-        height="100%" />
+        <q-img fit="contain"
+          v-if="hasImageExtension()"
+          :src="media_src">
+        </q-img>
+        <embed v-else
+          :key="media_src"
+          :src="media_src + '#toolbar=0'"
+          width="100%"
+          height="100%" />
       </div>
     </template>
 

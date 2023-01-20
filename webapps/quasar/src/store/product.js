@@ -41,7 +41,7 @@ const product = {
       updateProduct(state.list, updated_product._key, product => {
         for (const field in updated_product) {
           if (field != '_key') {
-            product.field = updated_product[field]
+            product[field] = updated_product[field]
           }
         }
       })

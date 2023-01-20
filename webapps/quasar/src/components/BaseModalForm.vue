@@ -28,6 +28,7 @@
                 class="col full-width"
                 color="theme-grey"
                 @click="$emit('cancel')">
+                {{ $t('cancel') }}
               </q-btn>
 
             </slot>

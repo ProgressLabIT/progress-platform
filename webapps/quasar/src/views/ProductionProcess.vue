@@ -1,15 +1,143 @@
 <template>
-  <div>TEST</div>
+  <div class="row full-height q-py-md">
+
+    <!-- ASIDE - PHASE LIST -->
+    <div class="col-3 column full-height">
+      <div class="q-px-lg">
+        <div class="text-h1 display highlight">
+          {{ product_data.code}}
+        </div>
+        <div class="text-body1">
+          {{ product_data.description }}
+        </div>
+
+        <div class="text-h5 q-mt-xl q-mb-md text-uppercase">
+          {{ $t('phase.long', 2) }}
+        </div>
+      </div>
+
+      <q-tabs
+        id="phases"
+        class="transparent text-low scroll medium text-left"
+        active-class="highlight"
+        align="left"
+        shrink vertical dense
+        indicator-color="transparent"
+        v-model="current_phase">
+        <q-tab
+          v-for="(phase, index) in process"
+          :key="phase._key"
+          :name="index"
+          :content-class="`full-width text-left ${edit_mode ? '' : 'undraggable'}`"
+          @mouseenter="over_phase = index"
+          @mouseleave="over_phase = null"
+          @click="confirming_delete = null"
+          style="max-height: 40px;">
+          <div class="row items-center full-width q-px-md">
+            <div class="col-1 q-mr-sm">
+              <q-avatar
+                size="20px"
+                :color="current_phase == index ? 'theme-blue' : 'theme-grey'"
+                class="display smaller"
+                :class="{ highlight: current_phase == index }">
+                {{ index + 1}}
+              </q-avatar>
+            </div>
+
+            <div class="col-auto text-left text-truncate">
+              <div class="display"
+                :class="current_phase == phase._key ? 'highlight' : 'weight-medium'">
+                {{ phase.alias }}
+              </div>
+            </div>
+
+            <q-space />
+
+            <div
+              class="col-1"
+              v-if="edit_mode"
+              v-show="over_phase==index">
+              <BaseTooltipIcon
+                icon="mdi-delete"
+                :tooltip="$t('phase.delete')"
+                :color="$theme.red"
+                @iconClick="confirming_delete = index">
+              </BaseTooltipIcon>
+            </div>
+          </div>
+        </q-tab>
+      </q-tabs>
+
+      <q-space />
+
+      <!-- NEW PHASE OPERATION SELECTION -->
+      <!-- ACTION BUTTONS -->
+      <div class="q-px-md q-pb-sm">
+        <q-btn
+          v-if="!edit_mode"
+          @click="toggleEdit"
+          class="full-width"
+          color="theme-blue">
+          {{ $t('edit') }}
+        </q-btn>
+
+        <template v-else>
+          <q-btn
+            class="full-width q-mb-sm"
+            color="theme-green"
+            @click="saveChanges"
+            :loading="saving">
+            {{ $t('save') }}
+          </q-btn>
+          <q-btn
+            class="full-width"
+            color="theme-grey"
+            @click="cancelChanges">
+            {{ $t('cancel') }}
+          </q-btn>
+        </template>
+      </div>
+
+    </div>
+
+    <!-- PHASE DETAILS -->
+    <div class="col-9 column q-pr-md">
+      <q-tabs
+        v-model="tab"
+        class="transparent text-low display col-auto"
+        active-class="highlight"
+        align="right"
+        shrink dense
+        indicator-color="transparent">
+        <q-tab
+          v-for="(view, idx) in views"
+          :key="idx"
+          :name="idx">
+          {{ $t(`views.${view}`) }}
+        </q-tab>
+      </q-tabs>
+      <q-card square class="surface2 scroll col">
+        <keep-alive>
+          <Component
+            :is="views[tab]"
+            :phase="process[current_phase]"
+            :product_data="product_data"
+            :edit_mode="edit_mode">
+          </Component>
+        </keep-alive>
+      </q-card>
+    </div>
+</div>
 </template>
 
 <script>
 import { mapActions } from 'vuex'
+import Sortable from 'sortablejs'
+
 import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
-import draggable from 'vuedraggable'
-
 
 const views_map = [
   'PhaseSteps', 
@@ -26,7 +154,6 @@ export default {
     PhaseSteps,
     // PhaseAssignments,
     BaseTooltipIcon,
-    draggable,
   },
 
   data() {
@@ -38,9 +165,6 @@ export default {
       confirming_delete: null,
       saving: false,
       drag: false,
-
-      show_save_confirmation: false,
-      show_cancel_confirmation: false,
     }
   },
 
@@ -99,9 +223,13 @@ export default {
       this.edit_mode = true
     },
 
+    click() {
+      console.log('click')
+    },
+
     cancelChanges() {
       this.$store.commit('CANCEL_PROCESS_CHANGES')
-      this.show_cancel_confirmation = true
+      this.confirming_delete = null
       this.edit_mode = false
     },
 
@@ -126,26 +254,26 @@ export default {
 
     deletePhase(phase_index) {
       this.$store.commit('DELETE_PHASE', phase_index)
+      this.current_phase = this.process.length - 1
       this.confirming_delete = null
     },
 
-    updateActivePhaseIndex(event) {
-      let moved = event.moved
-      if (this.current_phase == moved.oldIndex) {
-        this.current_phase = moved.newIndex
+    updateActivePhaseIndex({ oldIndex, newIndex }) {
+      if (this.current_phase == oldIndex) {
+        this.current_phase = newIndex
       }
-      else if ( moved.oldIndex < this.current_phase 
-                && moved.newIndex > this.current_phase ) {
+      else if ( oldIndex < this.current_phase
+                && newIndex > this.current_phase ) {
         this.current_phase = this.current_phase - 1
       }
-      else if ( moved.oldIndex > this.current_phase 
-                && moved.newIndex < this.current_phase ) {
+      else if ( oldIndex > this.current_phase
+                && newIndex < this.current_phase ) {
         this.current_phase = this.current_phase + 1
       }
       // ADD HERE REORDERING OF last_steps MAP
       let new_steps_map = this.product_data.last_steps
-      new_steps_map.splice(moved.oldIndex, 1)
-      new_steps_map.splice(moved.newIndex, 0, moved.element)
+      const moved = new_steps_map.splice(oldIndex, 1)[0]
+      new_steps_map.splice(newIndex, 0, moved)
 
       this.$store.commit('UPDATE_PRODUCT_NAV_STATE', { last_steps: new_steps_map })
     },
@@ -161,7 +289,7 @@ export default {
         // Show progress long enough the let user notice something is going on
         // even if the update is instantaneous
           setTimeout(() => {
-            this.show_save_confirmation = true
+            this.confirming_delete = null
             this.saving = false
             this.edit_mode = false
           }, 500)
@@ -171,8 +299,43 @@ export default {
         })
     },
   },
+
+  mounted() {
+    let container = document.querySelector("#phases .q-tabs__content")
+    const _self = this
+    Sortable.create(container, {
+      ..._self.$store.state.drag_options,
+      filter: '.undraggable',
+      // use onEnd event provided by SortableJs library
+      onEnd: ({ newIndex, oldIndex }) => {
+        const moved = _self.process.splice(oldIndex, 1)[0]
+        _self.process.splice(newIndex, 0, moved)
+        _self.updateActivePhaseIndex({ oldIndex, newIndex })
+      }
+    })
+  },
+
+  watch: {
+    confirming_delete() {
+      const index = this.confirming_delete
+      if (index != null) {
+        const phase = this.process[index]
+        this.$q.dialog({
+          title: phase.alias,
+          cancel: true,
+          message: `Confermi di voler eliminare questa fase?`
+        }).onOk(() => {
+          this.deletePhase(index)
+        }).onDismiss(() => {
+          this.confirming_delete = null
+        })
+      }
+    }
+  }
 };
 </script>
 
-<style lang="css" scoped>
+<style lang="sass" scoped>
+#phases .q-tab__content
+  justify-content: left
 </style>

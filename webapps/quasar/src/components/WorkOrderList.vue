@@ -263,14 +263,7 @@ export default {
       // use onEnd event provided by SortableJs library
       onEnd: ({ newIndex, oldIndex }) => {
         _self.$emit('editing')
-        console.log(this.filtered_wo_list.map(wo => {
-          return { key: wo._key, seq: wo.sequence }
-        }))
-        console.log('Old: ', oldIndex, '\nNew:', newIndex)
         _self.$store.commit('UPDATE_TEMP_QUEUE', { newIndex, oldIndex })
-        console.log(this.filtered_wo_list.map(wo => {
-          return { key: wo._key, seq: wo.sequence }
-        }))
       }
     })
   }

@@ -1,109 +1,13 @@
 <template>
   <div>
-    <h5 class="mb-6 text-uppercase">
-      {{ $tc('phase.checklist_title') }}
-    </h5>
-
-    <draggable v-model="step_checks"
-      handle=".handle"
-      :disabled="!edit_mode"
-      @start="drag = true" 
-      @end="drag = false"
-      v-bind="$store.state.drag_options">
-      <transition-group type="transition" :name="!drag ? 'flip-list' : null">
-      <div v-for="(check, index) in step_checks" 
-        :key="index">
-        <v-row  
-          v-if="confirming_delete != index"
-          @mouseover="over_row=index"
-          @mouseleave="over_row=null"> 
-          <v-col cols="auto" class="pr-0">
-            <v-icon v-if="edit_mode" 
-              :color="$theme.text_low"
-              :style="drag? 'cursor: grabbing' : 'cursor: grab'"
-              class="handle">
-              drag_handle
-            </v-icon>
-            
-            <v-icon v-else 
-              :color="$theme.text_low">
-              check_box_outline_blank
-            </v-icon>
-          </v-col> 
-          
-          <v-col cols="10" class="py-0">      
-            <v-textarea
-              v-if="edit_mode" 
-              filled single-line dense auto-grow
-              rows="1"
-              row-height="36px"
-              :value="check"
-              @change="udpateCheck(index, $event)"
-              class="body-2"
-              >
-            </v-textarea> 
-            <p v-else class="pt-3">{{ check }}</p>
-          </v-col>  
-          
-          <!-- DELETE ICON -->
-          <v-col cols="1" v-show="over_row==index" v-if="edit_mode && confirming_delete != index">
-            <BaseTooltipIcon
-              icon="delete"
-              :tooltip="$tc('phase.delete_check') | capitalize"
-              :color="$theme.red"
-              @iconClick="confirming_delete = index"/>
-          </v-col> 
-        </v-row>
-
-        <!-- DELETE CHECK CONFIRMATION -->
-          
-        <v-card v-else outlined class="fill mb-6" >
-          <v-row justify="end" class="fill"> 
-
-            <v-col cols="auto" class="pl-3">
-              <span class="body-2">
-                {{ $tc('confirm_question') | capitalize }}
-              </span>
-            </v-col>  
-            <v-col cols="auto">
-              <v-btn 
-                x-small :color="$theme.red" 
-                @click.stop="deleteCheck(index)">
-                <v-icon small >delete</v-icon>
-              </v-btn>
-            </v-col>  
-                        
-            <v-col cols="auto">
-              <v-btn 
-                x-small :color="$theme.grey"
-                @click.stop="confirming_delete=null">
-                <v-icon small>close</v-icon>
-              </v-btn>
-            </v-col>  
-
-          </v-row>  
-        </v-card>
-      </div>
-    </transition-group>
-    </draggable>
-
-    <!-- ADD CHECK -->
-    <v-hover v-slot:default="{ hover }">    
-      <v-btn text small class="ml-n3"
-        v-if="edit_mode"
-        :color="hover ? $theme.blue : $theme.text_high"
-        @click="addCheck">
-         + {{ $tc('phase.add_check') }}
-      </v-btn>
-    </v-hover>
-
+    TEST
   </div>
 </template>
 
 <script>
 // import {debounce as _debounce} from 'lodash/fp'
-import BaseTooltipIcon from '@/components/BaseTooltipIcon'
-import draggable from 'vuedraggable'
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
+// import draggable from 'vuedraggable'
 
 export default {
 
@@ -111,7 +15,7 @@ export default {
 
   components: {
     BaseTooltipIcon,
-    draggable
+    // draggable
   },
 
   props: ['phase_index', 'step_index', 'edit_mode'],
