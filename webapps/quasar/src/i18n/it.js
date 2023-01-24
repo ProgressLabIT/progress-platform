@@ -388,6 +388,7 @@ export default {
   "start_end_totals": "totale iniziale/finale",
   "status": "stato",
   "step_sequence": "sequenza passi",
+  "title": "titolo",
   "total_cost": "costo totale",
   "type": "tipo",
   "unassigned": "non assegnato | non assegnati",

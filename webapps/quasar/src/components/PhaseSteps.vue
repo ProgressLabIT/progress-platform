@@ -1,8 +1,148 @@
 <template>
-  <div>TEST</div>
+  <q-splitter class="full-height q-py-sm" :model-value="30">
+
+    <template #before>
+      <!-- STEP LIST -->
+      <div class="col-4 column fit" ref="step_list">
+        <div class="text-h5 text-uppercase q-px-lg q-my-md col-auto">
+          {{ $t('step_sequence') }}
+        </div>
+        <div class="col-9 scroll" v-if="render_steps">
+          <q-list dense id="steps">
+            <q-item clickable v-ripple
+              v-for="(step, index) in procedure"
+              :key="step._key"
+              :class="`${!edit_mode ? 'undraggable' : ''} ${ current_step_index == index ?  'highlight' : 'low-text'}`"
+              @click="stepClick(index)">
+              <q-item-section avatar class="col-auto">
+              <q-avatar
+                size="20px"
+                :color="current_step_index == index ? 'theme-blue' : 'theme-grey'"
+                class="smaller text-high q-ml-sm">
+                {{ index + 1 }}
+              </q-avatar>
+              </q-item-section>
+              <q-item-section class="text-truncate">
+                {{ step.title.length ? step.title : '(nessun titolo)' }}
+              </q-item-section>
+              <q-item-section side class="q-mr-sm">
+                <q-icon :name="stepIcon(step.type)" size="sm" class="q-ml-auto" :style="`color: ${ current_step_index == index ? $theme.text_high : $theme.text_low }`"/>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </div>
+
+        <!-- NO STEPS -->
+        <div v-else class="column q-mt-xl items-center">
+          <q-icon name="mdi-alert-circle-outline" class="text-low q-mb-md" size="xl"/>
+          <div class="text-h3 uppercase">
+            {{ $t('phase.no_procedure') }}
+          </div>
+          <div class="text-body1">
+            {{ $capitalize($t('phase.add_steps')) }}
+          </div>
+        </div>
+
+        <!-- ADD STEPS -->
+        <div v-if="edit_mode && typeof phase != 'undefined'" class="col-auto q-mt-auto q-mb-sm q-pl-sm q-pr-lg">
+          <q-btn flat style="width: 105%;" size="12px" align="between" v-for="type in step_types" @click="addStep(type)">
+            <span>+ {{ $t('add') }} {{ $t(`phase.step_types.${type}`) }}</span>
+            <q-icon :name="stepIcon(type)" />
+          </q-btn>
+        </div>
+      </div>
+    </template>
+
+    <!-- STEP DETAILS -->
+    <template #after>
+      <div v-if="render_steps" class="q-pa-md q-mx-md">
+
+        <!-- STEP TITLE -->
+        <div class="text-h5 uppercase q-mb-md">
+          {{ $t('title') }}
+        </div>
+        <q-input
+          v-if="edit_mode"
+          filled dense
+          name="step_title"
+          :placeholder="$t('title')"
+          v-model="step_title">
+        </q-input>
+        <div v-else class="q-mb-lg q-mt-md">
+          {{ step_title }}
+        </div>
+
+        <!-- STEP DESCRIPTION -->
+        <div class="text-h5 uppercase q-mt-lg q-mb-md">
+          {{ $t('description') }}
+        </div>
+        <q-input
+          v-if="edit_mode"
+          filled dense
+          type="textarea"
+          name="step_desc"
+          :placeholder="$t('description')"
+          v-model="step_desc">
+        </q-input>
+        <div v-else class="q-mb-lg q-mt-md">
+          {{ step_desc }}
+        </div>
+
+        <component
+          :is="step_component()"
+          :phase_index="current_phase"
+          :step_index="current_step_index"
+          :edit_mode="edit_mode"
+          class="q-mt-lg">
+        </component>
+
+        <!-- DELETE SECTION -->
+        <div v-if="edit_mode" class="row absolute-bottom-right q-mb-md q-mr-lg items-center">
+          <template v-if="!confirming_delete">
+            <span
+              v-show="over_delete"
+              class="display weight-bold q-mr-sm q-pa-sm bg-theme-red">
+              {{ $t('delete') }}
+            </span>
+            <q-btn
+              fab
+              icon="mdi-delete"
+              @mouseenter="over_delete = true"
+              @mouseleave="over_delete = false"
+              :color="over_delete ? 'theme-red' : 'theme-grey'"
+              @click="showConfirmDelete">
+            </q-btn>
+          </template>
+
+          <q-card v-else bordered square class="background shadow-6 q-pa-md">
+            <div class="row q-gutter-md items-center">
+            <span class="display medium highlight weight-bold">
+              {{ $t('confirm') }}
+            </span>
+            <q-btn
+              fab padding="sm"
+              color="theme-red"
+              icon="mdi-delete"
+              @click="deleteStep(current_step_index)">
+            </q-btn>
+            <q-btn
+              fab padding="sm"
+              color="theme-grey"
+              icon="mdi-close"
+              @click="confirming_delete = false">
+            </q-btn>
+            </div>
+          </q-card>
+        </div>
+        <!-- END OF DELETE SECTION -->
+      </div>
+    </template>
+  </q-splitter>
 </template>
 
 <script>
+import Sortable from 'sortablejs'
+
 import StepInstruction from '@/components/StepInstruction.vue'
 import StepChecklist from '@/components/StepChecklist.vue'
 import StepForm from '@/components/StepForm.vue'
@@ -88,21 +228,24 @@ export default {
       },
 
       set(value) {
-        let phase_index = this.current_phase
-        let step_index = this.current_steps_map[phase_index]
-        this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'title', value })
+        this.updateStepData('title', value)
       }
     },
 
-    step_desc() {
+    step_desc: {
+      get() {
         return this.current_step.description
+      },
+      set(value) {
+        this.updateStepData('description', value)
+      }
     },
   },
 
   methods: {
     stepIcon(step_type) {
       switch (step_type) {
-        case 'instruction': return 'playlist_add_check';
+        case 'instruction': return 'mdi-playlist-check';
         case 'checklist': return 'mdi-format-list-checks';
         case 'form': return 'mdi-playlist-edit';
         default: return '';
@@ -121,10 +264,15 @@ export default {
       }
     },
 
-    updateDesc(value) {
+    stepClick(index) {
+      this.current_step_index = index
+      this.confirming_delete = false
+    },
+
+    updateStepData(field, value) {
       let phase_index = this.current_phase
       let step_index = this.current_steps_map[phase_index]
-      this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'description', value })
+      this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field, value })
     },
 
     addStep(type) {
@@ -161,25 +309,46 @@ export default {
 
     },
 
-    updateTabIndex(event) {
-      let moved = event.moved
-      if (this.current_step_index == moved.oldIndex) {
-        this.current_steps_map[this.current_phase] = moved.newIndex
+    updateTabIndex({ oldIndex, newIndex }) {
+      if (this.current_step_index == oldIndex) {
+        this.current_steps_map[this.current_phase] = newIndex
       }
-      else if ( moved.oldIndex < this.current_step_index 
-                && moved.newIndex > this.current_step_index ) {
+      else if ( oldIndex < this.current_step_index
+                && newIndex > this.current_step_index ) {
         let new_step_index = this.current_step_index - 1
         this.current_steps_map[this.current_phase] = new_step_index
       }
-      else if ( moved.oldIndex > this.current_step_index 
-                && moved.newIndex < this.current_step_index ) {
+      else if ( oldIndex > this.current_step_index
+                && newIndex < this.current_step_index ) {
         let new_step_index = this.current_step_index + 1
         this.current_steps_map[this.current_phase] = new_step_index
       }
+    },
+
+    initSortable(container) {
+      const _self = this
+      Sortable.create(container, {
+        ..._self.$store.state.drag_options,
+        filter: '.undraggable',
+        // use onEnd event provided by SortableJs library
+        onEnd: ({ newIndex, oldIndex }) => {
+          const moved = _self.procedure.splice(oldIndex, 1)[0]
+          _self.procedure.splice(newIndex, 0, moved)
+          _self.updateTabIndex({ oldIndex, newIndex })
+        }
+      })
+    }
+  },
+
+  mounted() {
+    let container = document.querySelector("#steps")
+    if (container) {
+      this.initSortable(container)
     }
   },
 };
 </script>
 
-<style lang="css" scoped>
+<style lang="sass" scoped>
+
 </style>

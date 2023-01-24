@@ -14,6 +14,21 @@ $toolbar-min-height: 45px;
 $separator-dark-color: rgba(255, 255, 255, .12);
 
 
+.hover-red-bg:hover {
+  background-color: var(--theme-red) !important;
+}
+
+
+.q-splitter__separator {
+  background-color: $separator-dark-color
+}
+
+
+.q-field--filled .q-field__control {
+  border-radius: 0px;
+}
+
+
 .q-separator--dark {
   background-color: rgba(255, 255, 255, .12);
 }
@@ -195,6 +210,10 @@ span .display {
   width: 100%;
   height: 100%;
   overflow-y: auto;
+}
+
+.q-tabs--dense .q-tab {
+  min-height: 32px;
 }
 
 /* Draggable ghost class */
