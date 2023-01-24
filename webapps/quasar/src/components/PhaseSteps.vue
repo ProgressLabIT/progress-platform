@@ -84,7 +84,7 @@
           :placeholder="$t('description')"
           v-model="step_desc">
         </q-input>
-        <div v-else class="q-mb-lg q-mt-md">
+        <div v-else class="q-mt-md">
           {{ step_desc }}
         </div>
 
@@ -92,12 +92,11 @@
           :is="step_component()"
           :phase_index="current_phase"
           :step_index="current_step_index"
-          :edit_mode="edit_mode"
-          class="q-mt-lg">
+          :edit_mode="edit_mode">
         </component>
 
         <!-- DELETE SECTION -->
-        <div v-if="edit_mode" class="row absolute-bottom-right q-mb-md q-mr-lg items-center">
+        <div v-if="edit_mode" class="q-mb-md q-mt-xl">
           <template v-if="!confirming_delete">
             <span
               v-show="over_delete"
@@ -105,32 +104,33 @@
               {{ $t('delete') }}
             </span>
             <q-btn
-              fab
+              size="12px"
               icon="mdi-delete"
-              @mouseenter="over_delete = true"
-              @mouseleave="over_delete = false"
-              :color="over_delete ? 'theme-red' : 'theme-grey'"
+              color="theme-red"
+              :label="$t('delete')"
               @click="showConfirmDelete">
             </q-btn>
           </template>
 
-          <q-card v-else bordered square class="background shadow-6 q-pa-md">
-            <div class="row q-gutter-md items-center">
-            <span class="display medium highlight weight-bold">
-              {{ $t('confirm') }}
-            </span>
-            <q-btn
-              fab padding="sm"
-              color="theme-red"
-              icon="mdi-delete"
-              @click="deleteStep(current_step_index)">
-            </q-btn>
-            <q-btn
-              fab padding="sm"
-              color="theme-grey"
-              icon="mdi-close"
-              @click="confirming_delete = false">
-            </q-btn>
+          <q-card v-else square class="bg-red-backdrop shadow-6 q-pa-md">
+            <div class="row q-gutter-md flex-center">
+              <span class="display medium highlight weight-bold">
+                {{ $t('confirm_question') }}
+              </span>
+
+              <q-btn
+                fab padding="sm"
+                color="theme-grey"
+                icon="mdi-close"
+                @click="confirming_delete = false">
+              </q-btn>
+
+               <q-btn
+                fab padding="sm"
+                color="theme-red"
+                icon="mdi-delete"
+                @click="deleteStep(current_step_index)">
+              </q-btn>
             </div>
           </q-card>
         </div>
