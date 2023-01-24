@@ -7,7 +7,7 @@
     @escape-key="$emit('close')"
     @hide="$emit('close')"
     :style="CSSVars">
-    <q-card class="column background q-pa-sm">
+    <q-card class="background q-pa-sm">
 
       <!-- SCREEN HEADER -->
       <div class="row justify-start items-center q-pl-xs text-high">
@@ -20,7 +20,7 @@
       </div>
 
       <!-- WINDOW CONTAINER -->
-      <q-card class="surface1 col shadow-6 q-mx-sm q-mb-sm scroll">
+      <q-card class="surface1 shadow-6 q-mx-sm scroll" :style="`height: ${card_height}px`">
         <slot name="content"></slot>
       </q-card>
 
@@ -35,9 +35,14 @@ export default {
 
   name: 'BaseModalScreen',
   props: ['show'],
-  mixins: [CSSVars]
+  mixins: [CSSVars],
 
-};
+  computed: {
+    card_height() {
+      return this.$q.screen.height - 52
+    }
+  }
+}
 </script>
 
 <style lang="css" scoped>
