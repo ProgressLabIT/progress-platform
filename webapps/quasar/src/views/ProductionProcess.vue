@@ -18,7 +18,7 @@
 
       <q-tabs
         id="phases"
-        class="transparent text-low scroll medium text-left"
+        class="transparent scroll medium text-left"
         active-class="highlight"
         align="left"
         shrink vertical dense
@@ -46,7 +46,7 @@
 
             <div class="col-auto text-left text-truncate">
               <div class="display"
-                :class="current_phase == phase._key ? 'highlight' : 'weight-medium'">
+                :class="current_phase == index ? 'highlight' : 'text-low weight-medium'">
                 {{ phase.alias }}
               </div>
             </div>
@@ -70,7 +70,9 @@
 
       <q-space />
 
-      <!-- NEW PHASE OPERATION SELECTION -->
+      <!-- TODO: NEW PHASE OPERATION SELECTION -->
+
+
       <!-- ACTION BUTTONS -->
       <div class="q-px-md q-pb-sm">
         <q-btn
@@ -101,14 +103,14 @@
     </div>
 
     <!-- PHASE DETAILS -->
-    <div class="col-9 column q-pr-md">
+    <div class="col-9 q-pr-md">
       <q-tabs
         v-model="tab"
-        class="transparent text-low display col-auto"
+        class="transparent text-low display"
         active-class="highlight"
         align="right"
         shrink dense
-        indicator-color="transparent">
+        indicator-color="theme-blue">
         <q-tab
           v-for="(view, idx) in views"
           :key="idx"
@@ -116,7 +118,7 @@
           {{ $t(`views.${view}`) }}
         </q-tab>
       </q-tabs>
-      <q-card square class="surface2 scroll col">
+      <q-card square class="surface2 scroll" :style="`height: ${card_height}px`">
         <keep-alive>
           <Component
             :is="views[tab]"
@@ -169,6 +171,10 @@ export default {
   },
 
   computed: {
+
+    card_height() {
+      return this.$q.screen.height - 114
+    },
     
     product_key() {
       return this.$route.params.product_key

@@ -10,7 +10,7 @@
         <q-tabs
           class="transparent text-low"
           active-class="text-high weight-bold"
-          indicator-color="transparent"
+          indicator-color="theme-blue"
           dense>
           <q-route-tab
             v-for="(page, index) in links"
@@ -106,5 +106,5 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="sass">
 </style>
