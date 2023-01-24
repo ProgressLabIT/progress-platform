@@ -1,8 +1,77 @@
 <template>
-  <div>
-    TEST
-
+  <div class="text-h5 text-uppercase q-mt-xl q-mb-md">
+    {{ $t('phase.form_title') }}
   </div>
+
+  <div id="field-list">
+    <div
+      v-for="(field, index) in input_fields"
+      :key="index"
+      class="q-mb-md">
+
+      <q-input
+        filled
+        :disabled="!edit_mode"
+        :type="field.type=='long' ? 'textarea' : 'text'"
+        :placeholder="$capitalize($t('phase.field_name', { field_index: index + 1 }))"
+        :name="`field-${index + 1}`"
+        :model-value="field.name"
+        @update:model-value="value => updateFieldName(index, value)">
+      </q-input>
+
+      <div class="row items-center low-text">
+        <q-toggle
+          class="col-5"
+          :model-value="multilineCheck(field.type)"
+          @update:model-value="value => updateFieldType(index, value)">
+          <span class="text-body2">
+            {{ $capitalize($t('phase.multiline_field')) }}
+          </span>
+        </q-toggle>
+        <q-icon class="col-2 text-center" name="mdi-drag-horizontal-variant" size="sm"/>
+        <div class="q-ml-auto">
+          <div
+            v-if="confirming_delete != index"
+            class="hover-red"
+            @click="confirming_delete = index">
+            <span class="text-body2 q-mr-xs">
+              {{ $capitalize($t('phase.delete_field')) }}
+            </span>
+            <q-icon name="mdi-close" size="xs" />
+          </div>
+          <div v-else class="surface2">
+            <q-btn
+              padding="xs sm"
+              icon="mdi-delete"
+              color="theme-red"
+              size="xs"
+              @click.stop="deleteField(index)">
+            </q-btn>
+            <span class="text-body-2 q-mx-lg">
+              {{ $capitalize($t('confirm_question')) }}
+            </span>
+            <q-btn
+              padding="xs sm"
+              icon="mdi-close"
+              color="theme-grey"
+              size="xs"
+              @click.stop="confirming_delete=null">
+            </q-btn>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <q-btn
+    color="theme-blue"
+    size="12px"
+    class="q-mt-md"
+    v-if="edit_mode"
+    @click="addField">
+    + {{ $capitalize($t('phase.add_field')) }}
+  </q-btn>
+
 </template>
 
 <script>
