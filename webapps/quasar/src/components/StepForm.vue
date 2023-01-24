@@ -10,7 +10,7 @@
       class="q-mb-md">
 
       <q-input
-        filled
+        filled dense
         :disabled="!edit_mode"
         :type="field.type=='long' ? 'textarea' : 'text'"
         :placeholder="$capitalize($t('phase.field_name', { field_index: index + 1 }))"
@@ -135,23 +135,23 @@ export default {
       this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'input_fields', value: new_field_list })
     },
 
-    udpateFieldName(index, text) {
-        let phase_index = this.phase_index
-        let step_index = this.step_index
-        let new_field_list = this.input_fields
-        new_field_list[index].name = text
-        this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'input_fields', value: new_field_list })
+    updateFieldName(index, text) {
+      let phase_index = this.phase_index
+      let step_index = this.step_index
+      let new_field_list = this.input_fields
+      new_field_list[index].name = text
+      this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'input_fields', value: new_field_list })
     },
 
     updateFieldType(index, multiline) {
-        let phase_index = this.phase_index
-        let step_index = this.step_index
-        let new_field_list = this.input_fields
+      let phase_index = this.phase_index
+      let step_index = this.step_index
+      let new_field_list = this.input_fields
 
-        let new_type = multiline ? 'long' : 'short'
-        new_field_list[index].type = new_type
+      let new_type = multiline ? 'long' : 'short'
+      new_field_list[index].type = new_type
 
-        this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'input_fields', value: new_field_list })  
+      this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'input_fields', value: new_field_list })
     },
 
     deleteField(index) {
