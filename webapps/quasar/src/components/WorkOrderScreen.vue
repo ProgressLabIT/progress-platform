@@ -109,7 +109,7 @@ export default {
 
   created() {
     this.get_wo_data()
-    this.polling_instance = setInterval(this.get_wo_data, 3000)
+    this.polling_instance = setInterval(this.get_wo_data, 10000)
   },
 
   beforeDestroy() {
