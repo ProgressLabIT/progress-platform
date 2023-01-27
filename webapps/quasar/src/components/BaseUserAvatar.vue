@@ -105,7 +105,7 @@ export default {
     },
 
     full_name() {
-      return this.$capitalizeAll(this.user.name + ' ' + this.user.surname)
+      return this.$capitalizeAll(this.user.name + ' ' + this.user.surname) || ''
     },
   }
 }
