@@ -75,8 +75,8 @@ export default {
     columns() {
     // TODO: refactor into mixin / composition function, used also in ProductBoM
       return [
-        {  name:'code', field: 'product_code', label: this.$t('code').toUpperCase(), align: 'left' },
-        {  name:'description', field: 'product_description', label: this.$t('description').toUpperCase(), align: 'left' },
+        {  name:'code', field: 'component_code', label: this.$t('code').toUpperCase(), align: 'left' },
+        {  name:'description', field: 'component_description', label: this.$t('description').toUpperCase(), align: 'left' },
         {  name:'item_type', field: 'item_type', label: this.$t('type').toUpperCase(), align: 'left' },
         {  name:'phase_name', field: 'phase_name', label: this.$t('phase.short', 1).toUpperCase(), align: 'left' },
         {  name:'qt', field: 'qt', label: this.$t('quantity.short').toUpperCase() },
