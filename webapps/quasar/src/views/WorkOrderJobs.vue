@@ -218,8 +218,8 @@
             hide-bottom-space
             type="number"
             :min="min_allowable_wo_qt"
-            :model-value="wo_data.qt_planned"
-            @update:model-value="val => new_qt = val">
+            :model-value="new_qt"
+            @update:model-value="(value) => new_qt = parseInt(value)">
           </q-input>
         </q-card-section>
         <q-card-actions align="between">
@@ -244,7 +244,7 @@
 
     <WorkOrderJobQtRebalance
       v-if="show_job_qt_rebalance"
-      :new_wo_qt="parseInt(new_qt)"
+      :new_wo_qt="new_qt"
       :phase_data="phase_data"
       :wo_key="wo_data._key"
       @close="closeEditDialogs">
@@ -290,7 +290,7 @@ export default {
       jobs_temp_data: {},
       edit_mode: 'actions',
       edit_qt: false,
-      new_qt: null,
+      new_qt: this.wo_data.qt_planned,
       edit_due_date: false,
       temp_due_date: null,
       show_job_qt_rebalance: false
