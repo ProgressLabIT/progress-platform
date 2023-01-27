@@ -237,6 +237,7 @@ export default {
       this.$store.commit('CANCEL_PROCESS_CHANGES')
       this.confirming_delete = null
       this.edit_mode = false
+      this.$emit('changes_canceled')
     },
 
     addPhase(new_operation) {
@@ -298,6 +299,7 @@ export default {
             this.confirming_delete = null
             this.saving = false
             this.edit_mode = false
+            this.$emit('changes_saved')
           }, 500)
         }).catch(err => {
           window.alert(err)

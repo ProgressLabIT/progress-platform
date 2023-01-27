@@ -411,12 +411,7 @@ export default {
         // even if the update is instantaneous
           // setTimeout(() => {
             await this.$store.dispatch('loadProductDetails', this.product_key)
-            this.$q.notify({
-              message: this.$capitalize(this.$t('snackbars.product_updated')),
-              color: 'theme-green',
-              timeout: 1500,
-              position: 'top'
-            })
+            this.$emit('changes_saved')
             this.edit_mode = false
             this.clearTempImg()
             this.saving = false
@@ -429,12 +424,7 @@ export default {
 
     cancelChanges() {
       this.$store.commit('CANCEL_PRODUCT_CHANGES')
-      this.$q.notify({
-        message: this.$capitalize(this.$t('snackbars.changes_canceled')),
-        color: 'theme-grey',
-        timeout: 1500,
-        position: 'top'
-      })
+      this.$emit('changes_canceled')
       this.edit_mode = false
     },
 

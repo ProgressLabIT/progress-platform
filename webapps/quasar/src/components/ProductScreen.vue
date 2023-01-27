@@ -26,7 +26,10 @@
     <template #content>
       <router-view v-slot="{ Component }">
         <keep-alive>
-          <component :is="Component" />
+          <component
+            :is="Component"
+            @changes_saved="showSaveConfirmation"
+            @changes_canceled="showCancelConfirmation"/>
         </keep-alive>
       </router-view>
     </template>
@@ -90,6 +93,24 @@ export default {
         this.show_modal = false
         this.$router.push({ name: this.$route.query.back_to })
       }
+    },
+
+    showSaveConfirmation() {
+      this.$q.notify({
+        message: this.$capitalize(this.$t('snackbars.product_updated')),
+        color: 'theme-green',
+        timeout: 1500,
+        position: 'top'
+      })
+    },
+
+    showCancelConfirmation() {
+      this.$q.notify({
+        message: this.$capitalize(this.$t('snackbars.changes_canceled')),
+        color: 'theme-grey',
+        timeout: 1500,
+        position: 'top'
+      })
     }
   },
 
