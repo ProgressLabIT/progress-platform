@@ -1,11 +1,11 @@
 <template>
-  <BaseDialog :show="true">
-    <q-card class="scroll q-pa-md surface2" style="min-width: 600px;">
-      <q-card-section class="text-h3">
+  <BaseDialog :show="show">
+    <q-card class="q-pa-md surface2 column" style="width: 600px; height: 80vh">
+      <q-card-section class="text-h3 col-auto">
         {{ $capitalize($t('work_order.qt_rebalance_title')) }}
       </q-card-section>
 
-      <q-card-section>
+      <q-card-section class="scroll col">
         <div
           v-for="(phase, index) in phase_data"
           :key="phase.phase_key">
@@ -28,13 +28,14 @@
 
           <!-- PHASE JOBS -->
           <div
-            class="row items-center q-py-sm"
+            class="row items-center q-py-sm justify-between"
             v-for="job in phase.jobs"
             :key="job._key">
             <div class="col-3">
               {{ job._key }}
             </div>
             <BaseUserAvatar
+              v-if="job.assigned_to"
               class="col-4 offset-1"
               :user="job.assigned_to">
             </BaseUserAvatar>
@@ -54,7 +55,7 @@
         </div>
       </q-card-section>
 
-      <q-card-actions align="between">
+      <q-card-actions align="between" class="col-auto">
         <q-btn color="theme-grey" @click="$emit('close')">
           {{ $t('cancel') }}
         </q-btn>
@@ -91,6 +92,10 @@ export default {
     wo_key: {
       type: String,
       required: true
+    },
+    show: {
+      type: Boolean,
+      default: true
     }
   },
 
