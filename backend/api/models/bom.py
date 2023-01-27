@@ -14,13 +14,13 @@ class BomLineRead(FlexModel):
   qt: float
 
 
-class BomLineWriteIn(ArangoDocument):
+class BomLineWriteIn(FlexModel):
   component_key: str
   qt: float
   phase_key: str
   type: str = 'BomLine'
 
-class BomLineWriteOut(ArangoDocument):
+class BomLineWriteOut(FlexModel):
   component_id: str = Field(..., alias="_to")
   qt: float
   phase_id: str = Field(..., alias="_from")
