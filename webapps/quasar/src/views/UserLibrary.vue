@@ -37,7 +37,7 @@
       </q-expansion-item>
 
       <!-- USER LIST HEADERS -->
-      <div class="row q-px-lg q-py-sm text-h6 text-uppercase low-text weight-bold">
+      <div class="row q-px-lg q-py-sm text-h6 text-uppercase weight-bold">
         <div class="col-6">
           {{ $t('name') }}
         </div>
@@ -84,10 +84,18 @@
 
     </div>
 
-
-
-
     <q-separator vertical />
+
+    <!-- USER DATA -->
+    <div class="col">
+      <router-view v-slot="{ Component, route }">
+        <transition name="slide-fade" mode="out-in">
+          <div :key="route.fullPath">
+            <component :is="Component" :user="getUserData()" :key="selected_user_key" />
+          </div>
+        </transition>
+      </router-view>
+    </div>
   </div>
 </template>
 
@@ -195,7 +203,6 @@ export default {
     },
 
     showUser(user) {
-      this.selected_user_key = user._key
       this.$router.push({ 
         name: 'userInfo', 
         params: { user_key: user._key }

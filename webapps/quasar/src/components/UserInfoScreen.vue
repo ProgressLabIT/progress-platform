@@ -1,261 +1,247 @@
 <template>
-  <v-container fill-height class="px-12 py-8">
-    <v-row class="fill-height">
+  <div class="row q-col-gutter-md q-pa-xl">
 
-      <!-- AVATAR AND USER UNEDITABLE INFO -->
-      <v-col cols="auto" class="d-flex flex-column">
-        <v-avatar
-          :color="$theme.grey"
-          size="140"
-          class="mx-auto">
-          <v-img :src="avatar_src">
-            <!-- <template v-slot:placeholder>
-              <v-progress-circular indeterminate></v-progress-circular>
-            </template> -->
-          </v-img>
-        </v-avatar>
+    <!-- AVATAR AND USER UNEDITABLE INFO -->
+    <div class="col-auto q-pa-md column">
+      <q-avatar
+        color="theme-grey"
+        size="140px"
+        class="q-mx-auto">
+        <img :src="avatar_src" />
+      </q-avatar>
 
-        <template v-if="edit_mode">
-          <div class="mt-4"></div>
-          <v-btn small
-            v-if="!new_image_url"
+      <template v-if="edit_mode">
+        <q-btn
+          v-if="!new_image_url"
+          size="12px"
+          class="q-mt-md"
+          color="theme-blue"
+          @click="$refs.upload_image.click()"
+          icon="mdi-camera"
+          :label="$t('edit')">
+          <input
+            type="file"
+            ref="upload_image"
+            style="display: none"
+            accept="image/*"
+            @change="updateImg($event.target.files[0])" />
+        </q-btn>
+        <q-btn
+          v-else
+          size="12px"
+          color="theme-orange"
+          @click="clearTempImg"
+          icon="mdi-restore"
+          :label="$t('restore')">
+        </q-btn>
+      </template>
+
+      <div class="text-h5 uppercase q-mt-lg">
+        {{ $t('user.key') }}
+      </div>
+      <div class="q-mt-xs">
+        {{ user._key }}
+      </div>
+
+      <div class="text-h5 uppercase q-mt-lg">
+        {{ $t('user.creation_date') }}
+      </div>
+      <div class="q-mt-xs">
+        {{ $formatDateTime(user.created_at, locale, 'dd LLL yyyy') }}
+      </div>
+
+      <div class="text-h5 uppercase q-mt-lg">
+        {{ $t('user.last_login') }}
+      </div>
+      <div class="q-mt-xs">
+        {{ $formatDateTime(user.last_login, locale, 'dd LLL yyyy HH:mm') }}
+      </div>
+    </div>
+
+    <!-- USER EDITABLE INFO -->
+    <div class="col q-pl-xl">
+
+      <!-- NAME AND SURNAME -->
+      <div class="row q-gutter-xl items-center">
+        <template v-if="!edit_mode">
+          <div class="text-h2 uppercase display highlight q-mr-md">
+            {{ full_name}}
+          </div>
+
+          <q-space />
+
+          <BaseTooltipIcon
+            icon="mdi-pencil"
+            :tooltip="$capitalize($t('edit'))"
             :color="$theme.blue"
-            @click="$refs.upload_image.click()">
-            <v-icon small>mdi-camera</v-icon>
-            <span class="ml-2">
-              {{ $tc('edit') }}
-            </span>
-            <input
-              type="file"
-              ref="upload_image"
-              style="display: none"
-              accept="image/*"
-              @change="updateImg($event.target.files[0])" />
-          </v-btn>
-          <!-- Temporary file uploaded -->
-          <v-btn v-else
-            small
+            @iconClick="edit_mode=true">
+          </BaseTooltipIcon>
+
+          <BaseTooltipIcon
+            icon="mdi-lock-reset"
+            :tooltip="$capitalize($t('reset_password'))"
             :color="$theme.orange"
-            @click="clearTempImg">
-            <v-icon small>mdi-restore</v-icon>
-            <span class="ml-2">
-              {{ $tc('restore') }}
-            </span>
-          </v-btn>
+            @iconClick="showPasswordReset">
+          </BaseTooltipIcon>
+
+          <BaseTooltipIcon
+            icon="mdi-delete"
+            :tooltip="$capitalize($t('archive'))"
+            :color="$theme.red"
+            @iconClick="showDelete">
+          </BaseTooltipIcon>
         </template>
 
+        <template v-else>
+          <div class="col-3">
+            <div class="text-h5 uppercase">
+              {{ $t('user.name') }}
+            </div>
+            <q-input dense v-model="temp_data.name" />
+          </div>
 
-        <h5 class="mt-6 text-uppercase">
-          {{ $tc('user.key') }}
-        </h5>
-        <span class="body-2">{{ user._key }}</span>
+          <div class="col-3">
+            <div class="text-h5 uppercase">
+              {{ $t('user.surname') }}
+            </div>
+            <q-input dense v-model="temp_data.surname" />
+          </div>
 
-        <h5 class="mt-6 text-uppercase">
-          {{ $tc('user.creation_date') }}
-        </h5>
-        <span class="body-2">
-          {{ user.created_at | dtFormat(locale, 'dd LLL yyyy') }}
-        </span>
+          <div class="q-ml-auto">
+            <q-btn
+              size="12px"
+              color="theme-blue"
+              class="q-ml-auto"
+              @click="save"
+              :loading="saving"
+              :label="$t('save')">
+            </q-btn>
+            <q-btn
+              size="12px"
+              class="q-ml-md"
+              color="theme-grey"
+              @click="cancel"
+              :loading="saving"
+              :label="$t('cancel')">
+            </q-btn>
+          </div>
+        </template>
+      </div>
 
-        <h5 class="mt-6 text-uppercase">
-          {{ $tc('user.last_login') }}
-        </h5>
-        <span class="body-2">
-          {{ user.last_login | dtFormat(locale, 'dd LLL yyyy HH:mm') }}
-        </span>
+      <!-- OTHER DATA -->
 
-      </v-col>
+      <div class="row q-mt-xl">
+        <div class="col-4 column q-gutter-xl">
 
-      <!-- USER EDITABLE INFO -->
-      <v-col class="d-flex flex-column fill-height scroll ml-12">
+          <!-- USERNAME -->
+          <div>
+            <div class="text-h5 uppercase">
+              {{ $t('user.username') }}
+            </div>
+            <div v-if="!edit_mode" class="q-mt-sm">
+              {{ user.username || '-' }}
+            </div>
+            <q-input
+              dense
+              v-else
+              v-model="temp_data.username">
+            </q-input>
+          </div>
 
-        <v-row class="mx-0 flex-grow-0" align="center">
+          <!-- EMAIL -->
 
-          <template v-if="!edit_mode">
-            <h2
-              class="text-uppercase display highlight mr-6">
-              {{ full_name }}
-            </h2>
+          <div>
+            <div class="text-h5 uppercase">
+              {{ $t('user.email') }}
+            </div>
+            <div v-if="!edit_mode" class="q-mt-sm">
+              {{ user.email || '-' }}
+            </div>
+            <q-input
+              dense
+              v-else
+              v-model="temp_data.email">
+            </q-input>
+          </div>
 
-            <v-spacer></v-spacer>
+          <!-- DEPARTMENT -->
+          <div>
+            <div class="text-h5 uppercase">
+              {{ $t('user.department') }}
+            </div>
+            <div v-if="!edit_mode" class="q-mt-sm">
+              {{ temp_data.department ? temp_data.department.name : '-'}}
+            </div>
+            <BaseAutocompleteDepartment
+              v-else
+              :value="temp_data.department"
+              @select="updateTempDep">
+            </BaseAutocompleteDepartment>
+          </div>
 
-            <BaseTooltipIcon
-              icon="mdi-pencil"
-              :tooltip="$tc('edit') | capitalize"
-              :color="$theme.blue"
-              @iconClick="edit_mode=true">
-            </BaseTooltipIcon>
+          <!-- HOURLY COST -->
+          <div>
+            <div class="text-h5 uppercase">
+              {{ $t('user.hourly_cost') }}
+            </div>
+            <div v-if="!edit_mode" class="q-mt-sm">
+              {{ $numberFormat((temp_data.hourly_cost || '-'), locale) }}
+            </div>
+            <q-input
+              v-else
+              type="number"
+              dense
+              v-model.number="temp_data.hourly_cost">
+            </q-input>
+          </div>
 
-            <BaseTooltipIcon
-              icon="mdi-lock-reset"
-              :tooltip="$tc('reset_password') | capitalize"
-              :color="$theme.orange"
-              @iconClick="showPasswordReset">
-            </BaseTooltipIcon>
-
-            <BaseTooltipIcon
-              icon="mdi-delete"
-              :tooltip="$tc('archive') | capitalize"
-              :color="$theme.red"
-              @iconClick="showDelete">
-            </BaseTooltipIcon>
-
-          </template>
-
-          <template v-else>
-            <v-col cols="3" class="px-0">
-              <h5 class="mb-2 text-uppercase">
-                {{ $tc('user.name') }}
-              </h5>
-              <v-text-field
-                single-line
-                hide-details
-                v-model="temp_data.name"
-                class="pt-0">
-              </v-text-field>
-            </v-col>
-            <v-col cols="3" offset="1" class="px-0">
-              <h5 class="mb-2 text-uppercase">
-                {{ $tc('user.surname') }}
-              </h5>
-              <v-text-field
-                single-line
-                hide-details
-                v-model="temp_data.surname"
-                class="pt-0">
-              </v-text-field>
-            </v-col>
-
-            <v-spacer></v-spacer>
-
-            <v-btn small :color="$theme.blue" @click="save" :loading="saving">
-              {{ $tc('save') }}
-            </v-btn>
-            <v-btn small :color="$theme.grey" @click="cancel" class="ml-2">
-              {{ $tc('cancel') }}
-            </v-btn>
-
-          </template>
-
-        </v-row>
+        </div>
 
 
-        <v-container class="pa-0 mt-12">
-          <v-row class="mx-0">
-            <v-col cols="4" class="pa-0">
+        <div class="col-4 offset-2 column q-gutter-xl">
 
-              <!-- USERNAME -->
-              <h5 class="mb-2 text-uppercase">
-                {{ $tc('user.username') }}
-              </h5>
-              <span v-if="!edit_mode" class="mt-2 body-2">
-                {{ user.username || '-' }}
+          <!-- STATUS -->
+          <div>
+            <div class="text-h5 uppercase">
+              {{ $t('user.status_title') }}
+            </div>
+            <div v-if="!edit_mode" class="q-mt-sm">
+              {{ user_active_text }}
+            </div>
+            <q-toggle
+              v-else
+              dense
+              class="q-mt-sm"
+              v-model="temp_data.active"
+              :label="user_active_text">
+            </q-toggle>
+          </div>
+
+          <!-- SCOPE (PERMISSIONS) -->
+          <div class="column">
+            <div class="text-h5 uppercase">
+              {{ $t('user.permissions.title') }}
+            </div>
+            <q-checkbox
+              v-for="(check, index) in scopes"
+              :key="check.name"
+              dense
+              :val="check.name"
+              :disable="!edit_mode"
+              v-model="user_permissions"
+              class="q-mt-md">
+              <span class="high-text">
+                {{ $capitalize($t(`user.permissions.${check.name}`))}}
               </span>
-              <v-text-field v-else
-                single-line
-                hide-details
-                v-model="temp_data.username"
-                class="pt-0">
-              </v-text-field>
-
-              <!-- EMAIL -->
-              <h5 class="mt-8 mb-2 text-uppercase">
-                {{ $tc('user.email') }}
-              </h5>
-              <span v-if="!edit_mode" class="mt-2 body-2">
-                {{ user.email || '-' }}
-              </span>
-              <v-text-field v-else
-                single-line
-                hide-details
-                v-model="temp_data.email"
-                class="pt-0">
-              </v-text-field>
+            </q-checkbox>
+          </div>
+        </div>
+      </div>
 
 
-              <!-- DEPARTMENT -->
-              <h5 class="mt-8 mb-2 text-uppercase">
-                {{ $tc( 'user.department' )}}
-              </h5>
-              <span v-if="!edit_mode" class="body-2">
-                {{ temp_data.department ? temp_data.department.name : '-'}}
-              </span>
-              <BaseAutocompleteDepartment
-                v-else
-                text_classes="body-2"
-                :return_object="true"
-                :value="temp_data.department"
-                @select="updateTempDep($event)"
-                class="pt-0">
-              </BaseAutocompleteDepartment>
+    </div>
 
-
-              <!-- HOURLY COST -->
-              <h5 class="mt-8 mb-2 text-uppercase">
-                {{ $tc('user.hourly_cost') }}
-              </h5>
-              <span v-if="!edit_mode" class="body-2">
-                € {{ (temp_data.hourly_cost || '-') | numberFormat(locale) }}
-              </span>
-              <v-text-field v-else
-                type="number"
-                single-line
-                hide-details
-                v-model.number="temp_data.hourly_cost"
-                prefix="€"
-                class="pt-0">
-                <template v-slot:></template>
-              </v-text-field>
-
-            </v-col>
-
-
-            <v-col cols="6" offset="2" class="pa-0">
-
-              <!-- STATUS -->
-              <h5 class="text-uppercase">
-                {{ $tc('user.status_title') }}
-              </h5>
-              <v-switch
-                dense hide-details
-                :disabled="!edit_mode"
-                v-model="temp_data.active"
-                class="mt-2">
-                <template v-slot:label>
-                  <span class="body-2 low-text">
-                    {{ user_active_text | capitalize }}
-                  </span>
-                </template>
-              </v-switch>
-
-              <!-- SCOPE (PERMISSIONS) -->
-              <h5 class="mt-6 mb-4 text-uppercase">
-                {{ $tc('user.permissions.title') }}
-              </h5>
-              <v-checkbox class="mt-2"
-                hide-details
-                multiple
-                :disabled='!edit_mode'
-                v-for="check in scopes"
-                :key="check.name"
-                :value="check.name"
-                v-model="user_permissions">
-                <template v-slot:label>
-                  <span class="body-2 low-text">
-                    {{ $tc(`user.permissions.${check.name}`) | capitalize }}
-                  </span>
-                </template>
-              </v-checkbox>
-
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-col>
-
-
-    </v-row>
-
-  </v-container>
+  </div>
 </template>
 
 <script>
@@ -325,9 +311,10 @@ export default {
     },
 
     user_active_text() {
-      return this.temp_data.active
-        ? this.$tc('user.enabled')
-        : this.$tc('user.disabled')
+      const string = this.temp_data.active
+        ? this.$t('user.enabled')
+        : this.$t('user.disabled')
+      return this.$capitalize(string)
     },
 
     user_permissions: {
@@ -336,7 +323,7 @@ export default {
       },
 
       set(value) {
-        this.$set(this.temp_data, 'scope', value.join(' '))
+        this.temp_data.scope = value.join(' ')
       }
     }
   },
@@ -344,12 +331,12 @@ export default {
   methods: {
     setTempData() {
       Object.keys(this.temp_data).forEach( key => {
-        this.$set(this.temp_data, key, this.user[key])
+        this.temp_data[key] = this.user[key]
       })
     },
 
     updateTempDep(department_obj) {
-      this.$set(this.temp_data, 'department', department_obj)
+      this.temp_data.department = department_obj
     },
 
     updateImg(img) {

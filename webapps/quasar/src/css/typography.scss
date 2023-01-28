@@ -8,6 +8,15 @@ body {
   line-height: 1.2 !important;
 }
 
+.q-dark {
+  color: var(--text-high)
+}
+
+body.body--dark {
+  color: var(--text-high)
+}
+
+
 .q-tab {
   font-weight: 500;
   font-size: 0.875rem;
