@@ -1,10 +1,5 @@
 <template>
-  <q-dialog
-    v-model="show"
-    square no-backdrop-dismiss no-shake
-    :style="{ ...$theme }"
-    @escape-key="$emit('close')"
-    @hide="$emit('close')">
+  <BaseDialog :show="show">
     <q-card class="surface1 q-pa-md" :style="{ maxWidth: max_width }">
 
       <!-- DIALOG TITLE -->
@@ -13,45 +8,59 @@
       </q-card-section>
 
       <q-card-section>
-        <q-form @submit="$emit('submit')" v-model="valid">
-          <slot name="form"></slot>
-          <div class="row q-mt-md q-col-gutter-md">
-            <slot name="actions">
+        <slot name="form"></slot>
+      </q-card-section>
+
+      <q-card-section>
+        <div class="row q-mt-md q-col-gutter-md">
+          <slot name="actions">
+            <div class="col-6">
               <q-btn
-                class="col full-width"
+                class="full-width"
                 color="theme-blue"
+                :loading="loading"
                 @click="$emit('submit')">
                 {{ $t('save') }}
               </q-btn>
-
+            </div>
+            <div class="col-6">
               <q-btn
-                class="col full-width"
+                class="full-width"
                 color="theme-grey"
                 @click="$emit('cancel')">
                 {{ $t('cancel') }}
               </q-btn>
-
-            </slot>
-          </div>
-        </q-form>
+            </div>
+          </slot>
+        </div>
       </q-card-section>
     </q-card>
-  </q-dialog>
+  </BaseDialog>
 </template>
 
 <script>
+import BaseDialog from '@/components/BaseDialog.vue'
 export default {
 
   name: 'BaseModalForm',
 
+  components: {
+    BaseDialog
+  },
+
   props: {
     show: {
       type: Boolean,
-      default: true
+      default: true,
+      required: false
     },
     max_width: {
       type: String,
       default: '500px'
+    },
+    loading: {
+      type: Boolean,
+      default: false
     }
   },
 
