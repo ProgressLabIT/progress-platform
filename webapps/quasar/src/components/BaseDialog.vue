@@ -10,8 +10,15 @@
     transition-hide="scale"
     @escape-key="$emit('close')"
     @hide="$emit('close')"
-    :style="CSSVars">
-    <slot></slot>
+    :style="{ ...CSSVars, '--backdrop-color': background }">
+    <template v-if="maximized">
+      <div class="fixed-full row flex-center" style="background-color: backdrop_color;">
+        <slot></slot>
+      </div>
+    </template>
+    <template v-else>
+      <slot></slot>
+    </template>
   </q-dialog>
 </template>
 
@@ -30,10 +37,16 @@ export default {
     maximized: {
       type: Boolean,
       default: false
-    }
+    },
+    background: {
+      type: String,
+      default: '#090C0DCC'
+    },
   }
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="sass">
+.q-dialog__backdrop
+  background-color: var(--backdrop-color)
 </style>
