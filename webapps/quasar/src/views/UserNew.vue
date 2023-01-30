@@ -1,147 +1,131 @@
 <template>
-   <v-dialog 
-    value="true"
-    :overlay-color="$theme.background"
-    overlay-opacity="1"
-    max-width="600px"
-    persistent no-click-animation>
-    <v-card>
-      
-      <v-card-title>  
-        <h3 class="display">
-          {{ $tc('user.new') }}
-        </h3>
-      </v-card-title>
+  <BaseDialog :show="true" :maximized="true">
+    <div class="fixed-full row fit background flex-center">
+      <q-card square class="surface1 q-pa-md" style="max-width: 600px">
 
-      <v-card-text>
+        <!-- DIALOG TITLE -->
+        <q-card-section class="text-h2 display weight-bold">
+          {{ $t('user.new') }}
+        </q-card-section>
 
         <transition name="slide-fade" mode="out-in">
+          <div v-if="stage==='form'" key="form">
+            <q-card-section>
+              <div class="row q-col-gutter-xl text-low">
+                <div
+                  class="col-6"
+                  v-for="field in text_fields"
+                  :key="field.model">
+                  <div class="text-h5 uppercase">
+                    {{ $t(`user.${field.model}`) }}
+                  </div>
+                  <q-input
+                    dense
+                    autocomplete="null"
+                    v-model="new_user_data[field.model]">
+                  </q-input>
+                </div>
+                <div class="col-6">
+                  <div class="text-h5 uppercase">
+                    {{ $t('department') }}
+                  </div>
+                  <BaseAutocompleteDepartment
+                    :value="new_user_data.department_key"
+                    :key_only="true"
+                    @select="new_user_data.department_key = $event">
+                  </BaseAutocompleteDepartment>
+                </div>
+                <div class="col-6">
+                  <div class="text-h5 uppercase">
+                    {{ $t('user.hourly_cost') }}
+                  </div>
+                  <q-input
+                    dense
+                    type="number"
+                    autocomplete="null"
+                    v-model.number="new_user_data.hourly_cost">
+                  </q-input>
+                </div>
+              </div>
 
-          <v-form 
-            @submit.prevent="submit" 
-            lazy-validation 
-            v-model="valid"
-            v-if="stage==='form'" key="form">  
-            <v-row>
-              <v-col 
-                cols="6" 
-                v-for="field in text_fields" 
-                :key="field.model" 
-                class="pr-6 pb-0">
-                <h5 class="mt-2 text-uppercase">
-                  {{ $tc(`user.${field.model}`) }}
-                </h5>
-                <v-text-field
-                  autocomplete="null"
-                  :required="field.model === 'username' "
-                  single-line 
-                  v-model="new_user_data[field.model]"
-                  class="pt-0 body-2">
-                </v-text-field>
-              </v-col>
-            
-              <v-col cols="6" class="pr-6">
-                <h5 class="mt-2 text-uppercase">
-                  {{ $tc('department') }}
-                </h5>
-                <BaseAutocompleteDepartment 
-                  text_classes="body-2"
-                  @select="new_user_data.department_key = $event"
-                  class="pt-0">
-                </BaseAutocompleteDepartment>
-              </v-col>  
+              <div class="text-h5 uppercase q-mt-xl text-low">
+                {{ $t('user.permissions.title') }}
+              </div>
+              <div class="row q-col-gutter-x-xl q-col-gutter-y-md q-mt-md">
+                <div
+                  v-for="check in permissions"
+                  :key="check.name"
+                  class="col-6">
+                  <q-checkbox
+                    dense
+                    :val="check.name"
+                    v-model="new_user_data.scopes">
+                    {{ check.label }}
+                  </q-checkbox>
+                </div>
+              </div>
+            </q-card-section>
 
-              <v-col cols="6" class="pr-6">
-                <h5 class="mt-2 text-uppercase">
-                  {{ $tc('user.hourly_cost') }}
-                </h5>
-                <v-text-field
-                  autocomplete="off"
-                  type="number"
-                  single-line
-                  hide-details 
-                  v-model.number="new_user_data.hourly_cost"
-                  prefix="€"
-                  class="pt-0 body-2">
-                  <template v-slot:></template>
-                </v-text-field>
-              </v-col>
-            </v-row>
-
-            <h5 class="mt-8 text-uppercase">
-              {{ $tc('user.permissions.title') }}
-            </h5>
-            <v-row>
-              <v-col 
-                cols="6"
-                v-for="check in permissions" 
-                :key="check.name" 
-                class="py-0">
-                <v-checkbox class="mt-2"
-                  hide-details
-                  multiple
-                  :value="check.name"
-                  v-model="new_user_data.scopes">
-                  <template v-slot:label>
-                    <span class="body-2 low-text">{{check.label}}</span>
-                  </template>                
-                </v-checkbox>
-              </v-col>
-            </v-row>
-            
-            <v-row class="mt-6">
-              <v-col>
-                <v-btn block depressed :color="$theme.blue" @click="submit">salva</v-btn>
-              </v-col>
-              <v-col>    
-                <v-btn block depressed :color="$theme.grey" @click="$router.back()">{{ $tc('cancel') }}</v-btn>
-              </v-col> 
-            </v-row>  
-          </v-form>
+            <q-card-section>
+              <div class="row q-col-gutter-xl">
+                <div class="col-6">
+                  <q-btn
+                    class="full-width"
+                    color="theme-blue"
+                    @click="submit">
+                    {{ $t('save') }}
+                  </q-btn>
+                </div>
+                <div class="col-6">
+                  <q-btn
+                    class="full-width"
+                    color="theme-grey"
+                    @click="$router.back()">
+                    {{ $t('cancel') }}
+                  </q-btn>
+                </div>
+              </div>
+            </q-card-section>
+          </div>
 
           <div v-else-if="stage==='creating'" key="creating">
-            <LoadingSignal title=""></LoadingSignal>
+            <LoadingSignal />
           </div>
 
           <div v-else-if="stage==='show_psw'" key="password">
-            <p>
-              {{ $tc('user.new_success') | capitalize }}
-            </p>
-            
-            <h5 class="text-uppercase mt-6 mb-2">
-              {{ $tc('user.temp_password')| capitalize }}
-            </h5>
+            <q-card-section>
+              {{ $capitalize($t('user.new_success')) }}
+            </q-card-section>
 
-            <v-row no-gutters align="center" class="mx-0">
-              <v-col cols="auto">
-                <v-sheet :color="$theme.background" class="pa-3">
-                  <v-row justify="center" align="center" class="mx-0">
-                    <h2 class="highlight">{{ temp_psw }}</h2>
-                  </v-row>
-                </v-sheet>
-              </v-col>
+            <q-card-section>
+              <div class="text-h5 uppercase text-low">
+                {{ $capitalize($t('user.temp_password')) }}
+              </div>
 
-              <v-spacer></v-spacer>
+              <div class="row items-center justify-between q-mt-md">
+                <div class="col-auto background q-pa-sm">
+                  <div class="text-h2 highlight">
+                    {{ temp_psw}}
+                  </div>
+                </div>
 
-              <v-btn 
-                :color="$theme.grey" 
-                @click="$router.back()">
-                {{ $tc('close') }}
-              </v-btn>
-            </v-row>
+                <q-btn
+                  color="theme-grey"
+                  :label="$t('close')"
+                  @click="$router.back()">
+                </q-btn>
+              </div>
+            </q-card-section>
           </div>
-
         </transition>
-
-
-
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+      </q-card>
+    </div>
+  </BaseDialog>
 </template>
 
 <script>
 import user_scopes from "@/lib/UserScopes.js"
+import BaseDialog from "@/components/BaseDialog.vue"
 import BaseAutocompleteDepartment from '@/components/BaseAutocompleteDepartment.vue'
 import LoadingSignal from '@/components/LoadingSignal.vue'
 // import generateTempPassword from '@/lib/TokenGenerator.js'
@@ -152,6 +136,7 @@ export default {
 
   components: { 
     BaseAutocompleteDepartment,
+    BaseDialog,
     LoadingSignal
   },
 
@@ -184,7 +169,7 @@ export default {
 
   watch: {
     'new_user_data.scopes': function(value) {
-      this.$set(this.new_user_data, 'scope', value.join(' ')) 
+      this.new_user_data.scope = value.join(' ')
     }
   },
 
@@ -209,7 +194,7 @@ export default {
         })
         .catch( err => {
           if (err.response.status === 409) {
-            window.alert(this.$tc('user.alerts.username_already_exists'))
+            window.alert(this.$t('user.alerts.username_already_exists'))
           }
           else { window.alert(err) }
           this.stage = 'form'
