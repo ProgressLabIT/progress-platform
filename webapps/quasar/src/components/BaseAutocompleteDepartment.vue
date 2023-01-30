@@ -1,10 +1,15 @@
 <template>
   <q-select
     use-input
+    dense
     :options="options"
     :option-label="(item) => $capitalize(item.name)"
     @filter="filterDepartments"
     :model-value="value"
+    input-debounce="0"
+    :option-value="key_only ? '_key' : false"
+    :emit-value="key_only"
+    :map-options="key_only"
     @update:model-value="(selection) => $emit('select', selection)">
   </q-select>
 </template>
@@ -23,6 +28,11 @@ export default {
     load_departments: {
       type: Boolean,
       default: true
+    },
+
+    key_only: {
+      type: Boolean,
+      default: false
     }
   },
 
