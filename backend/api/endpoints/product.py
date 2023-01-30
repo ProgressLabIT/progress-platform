@@ -147,6 +147,9 @@ async def create_product(
 async def delete_product(product_key):
   product_to_trash = product_db.get(product_key)
 
+  # TODO: Verify if there's any workorder or active item related
+  # How to deal with historical data?
+
   try:
     updated_product = product_db.update(dict(_key=product_key, trash=True), return_new=True)['new']
     response = APIResponse(
