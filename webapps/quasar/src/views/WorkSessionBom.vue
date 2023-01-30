@@ -38,6 +38,25 @@
           {{ $t('scroll.to_top') }}
         </q-btn>
       </div>
+
+      <!-- INSERT HERE DIALOG FOR COMPONENT LOT REGISTRATION -->
+      <!-- <BaseModalForm :show="show_lot_input" @cancel="show_lot_input = false">
+        <template v-slot:title>
+          REGISTRAZIONE LOTTI MATERIALI
+        </template>
+
+        <template v-slot:form>
+          <v-container>
+            <v-row v-for="item in components" :key="item" align="center">
+              <v-col cols="4">{{ item }}</v-col>
+              <v-col cols="6" offset="2">
+                <v-autocomplete :items="lots">
+                </v-autocomplete>
+              </v-col>
+            </v-row>
+          </v-container>
+        </template>
+      </BaseModalForm> -->
     </template>
 
   </div>
