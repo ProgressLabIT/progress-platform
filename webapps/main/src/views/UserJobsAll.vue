@@ -166,7 +166,13 @@ export default {
 
   methods: {
     match(job) {
-      const fields_to_search = ['wo_code', 'product_code', 'product_description', 'phase_alias']
+      const fields_to_search = [
+        'wo_code',
+        'product_code',
+        'product_description',
+        'phase_alias',
+        'project_code'
+      ]
       return (
         multiMatch(this.search_string, job, fields_to_search) 
         && (!this.started_only || job.stage==='started') 

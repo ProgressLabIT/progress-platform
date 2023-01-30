@@ -75,7 +75,7 @@ export default {
     },
 
     docs () {
-      return this.job.product_docs || []
+      return this.job.job_docs || []
     },
 
     media_name() {

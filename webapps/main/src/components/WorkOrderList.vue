@@ -56,7 +56,7 @@
             </template>
 
             <!-- OTHER FIELDS -->
-            <template v-else>{{ item[header.value] }}</template>
+            <template v-else>{{ item[header.value] || '' }}</template>
           </td>
         </tr>
       </template>
@@ -104,32 +104,40 @@ export default {
       return [
         { 
           value: 'sequence', 
-          text: this.$tc('work_order.list_headers.sequence').toUpperCase()},
+          text: this.$tc('work_order.list_headers.sequence').toUpperCase()
+        },
         { 
           value: 'wo_code', 
-          text: this.$tc('work_order.list_headers.wo_code').toUpperCase()},
+          text: this.$tc('work_order.list_headers.wo_code').toUpperCase()
+        },
         { 
-          value: 'wo_line', 
-          text: this.$tc('work_order.list_headers.wo_line').toUpperCase() },
+          value: 'project_code',
+          text: this.$tc('project').toUpperCase()
+        },
         { 
           value: 'product_code', 
-          text: this.$tc('work_order.list_headers.product_code').toUpperCase()},
+          text: this.$tc('work_order.list_headers.product_code').toUpperCase()
+        },
         { 
           value: 'progress', 
           text: this.$tc('work_order.list_headers.progress').toUpperCase(), 
-          width: '40%' },
+          width: '40%'
+        },
         { 
           value: 'qt_completed', 
           text: this.$tc('work_order.list_headers.qt_completed').toUpperCase(), 
-          align: 'end'},
+          align: 'end'
+        },
         { 
           value: 'qt_planned', 
           text: this.$tc('work_order.list_headers.qt_planned').toUpperCase(), 
-          align: 'end'},
+          align: 'end'
+        },
         { 
           value: 'qt_remaining', 
           text: this.$tc('work_order.list_headers.qt_remaining').toUpperCase(), 
-          align: 'end'},
+          align: 'end'
+        },
         { 
           value: 'due_by', 
           text: this.$tc('work_order.list_headers.due_by').toUpperCase(), 
@@ -154,7 +162,7 @@ export default {
       return this.wo_list.filter( wo => {
         
         // Define wo fields to use with the text search
-        const search_fields = ['wo_code', 'wo_line', 'product_code']
+        const search_fields = ['wo_code', 'project_code', 'product_code']
         
         /* 
         Initialize filter results. 

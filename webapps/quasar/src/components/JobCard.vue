@@ -9,8 +9,8 @@
           <div class="text-h4 display highlight text-truncate">{{ job.wo_code }}</div>
         </div>
         <div class="column col-auto text-right">
-          <div class="overline">{{ $t("work_order.wo_line.line_only", 1) }}</div>
-          <div class="text-h4 display highlight">{{ job.wo_line }}</div>
+          <div class="overline">{{ $t("project") }}</div>
+          <div class="text-h4 display highlight">{{ job.project_code }}</div>
         </div>
 
         <q-space />

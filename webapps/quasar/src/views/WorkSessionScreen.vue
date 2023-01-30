@@ -236,9 +236,9 @@ export default {
 
     wo_data() {
       return [
-        { name: 'wo_code', text: this.$t('work_order.wo_code', 1) },
-        { name: 'wo_line', text: this.$t('work_order.wo_line.line_only', 1) },
-        { name: 'phase_alias', text: this.$t('phase.short', 1) },
+        { name: 'wo_code', text: this.$t('work_order.wo_code') },
+        { name: 'project_code', text: this.$t('project') },
+        { name: 'phase_alias', text: this.$t('phase.short') },
       ]
     },
 
