@@ -1,76 +1,68 @@
 <template>
-   <v-dialog 
-    v-model="showModal"
-    :overlay-color="$theme.background"
-    overlay-opacity="1"
-    max-width="600px"
-    persistent no-click-animation>
-    <v-card>
-      
-      <v-card-title>  
-        <h3 class="display">
-          {{ $tc('user.archive_action') }}
-        </h3>
-      </v-card-title>
+  <BaseDialog :show="show" :maximized="true">
+    <div class="fixed-full row fit background flex-center">
+      <q-card square class="surface1 shadow-12 q-pa-sm" style="max-width: 600px;">
+        <q-card-section>
+          <div class="text-h3 display highlight">
+            {{ $t('user.archive_action') }}
+          </div>
+        </q-card-section>
 
-      <v-card-text>
-
-        <v-row class="mx-0">
-          <BaseUserAvatar 
+        <q-card-section>
+          <BaseUserAvatar
             :user="user"
             :size="70"
             name_class="solid-white"
-            name_style="font-size: 20px"
-            class="my-8">
+            name_style="font-size: 20px">
           </BaseUserAvatar>
-
-          <p>
-            {{ $tc('user.archive_explainer') }}
-          </p>
-          
-        </v-row>
+          <div class="q-mt-xl">
+            {{ $t('user.archive_explainer') }}
+          </div>
+        </q-card-section>
 
         <transition name="slide-fade" mode="out-in">
+          <q-card-section
+            v-if="stage==='confirm'"
+            key="confirm"
+            align="between">
+            <div class="row justify-between">
+              <q-btn
+                color="theme-red"
+                :label="$t('confirm')"
+                @click="archiveUser">
+              </q-btn>
+              <q-btn
+                color="theme-grey"
+                :label="$t('cancel')"
+                @click="$router.back()">
+              </q-btn>
+            </div>
+          </q-card-section>
 
-          <div v-if="stage==='confirm'" key="confirm">
-            <v-row justify="space-between" class="mx-0">
-              <v-btn :color="$theme.red" @click="archiveUser">
-                {{ $tc('confirm') }}
-              </v-btn>
-              <v-btn :color="$theme.grey" @click="$router.back()">
-                {{ $tc('cancel') }}
-              </v-btn>
-            </v-row>
-          </div>
-
-          <div v-else-if="stage==='success'" key="success">
-            <v-row no-gutters align="center" class="mx-0">
-              <span class="weight-bold highlight">
-                {{ $tc('user.archive_success') | capitalize }}
-              </span>
-              
-              <v-spacer></v-spacer>
-
-              <v-btn 
-                :color="$theme.grey" 
+          <q-card-section
+            v-else-if="stage==='success'"
+            key="success">
+            <div class="row justify-between">
+              <div class="weight-bold-highlight">
+                {{ $capitalize($t('user.archive_success')) }}
+              </div>
+              <q-btn
+                color="theme-grey"
+                :label="$t('close')"
                 @click="$router.push({ name: 'userLibrary' })">
-                {{ $tc('close') }}
-              </v-btn>
-            </v-row>
-          </div>
-
+              </q-btn>
+            </div>
+          </q-card-section>
         </transition>
-
-
-
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+      </q-card>
+    </div>
+  </BaseDialog>
 </template>
 
 <script>
+import BaseDialog from '@/components/BaseDialog.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
-import { api } from '@/lib/apiCall.js'
+import { api } from '@/boot/axios.js'
 import NonExistentUserGuard from '@/mixins/NonExistentUserGuard.js'
 
 
@@ -83,6 +75,7 @@ export default {
 
   components: { 
     BaseUserAvatar,
+    BaseDialog
   },
 
   props: {
@@ -93,7 +86,7 @@ export default {
 
   data() {
     return {
-      showModal: true,
+      show: true,
       stage: 'confirm',
       temp_psw: ''
     }
