@@ -21,7 +21,7 @@
       <q-card
         class="surface1 full-height col-3 q-pa-lg"
         square
-        style="max-width:500px">
+        style="width:500px">
         <transition name="fade" mode="out-in">
 
           <!-- LOGIN FORM -->
