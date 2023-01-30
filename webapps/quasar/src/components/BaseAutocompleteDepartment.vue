@@ -2,6 +2,7 @@
   <q-select
     use-input
     :options="options"
+    :option-label="(item) => $capitalize(item.name)"
     @filter="filterDepartments"
     :model-value="value"
     @update:model-value="(selection) => $emit('select', selection)">
@@ -15,8 +16,14 @@ export default {
 
   props: {
     value: {
+      type: Object,
       deafult: null
     },
+
+    load_departments: {
+      type: Boolean,
+      default: true
+    }
   },
 
   data () {
@@ -28,8 +35,8 @@ export default {
 
   computed: {
     department_list() {
-      return [ ...this.$store.state.ord.departments , {
-        name: this.$tc("unassigned", 1), 
+      return [ ...this.$store.state.org.departments , {
+        name: this.$t("unassigned", 1),
         _key: 'none', 
         code: '-' 
       }]
