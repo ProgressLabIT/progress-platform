@@ -84,12 +84,18 @@ async def create_product(
       detail=response
     )
 
+
+  if image:
+    new_product.image = True
+
   # Save data
   try:
+    tx = db.begin_transaction(write=["Product"])
+    prepped_data = jsonable_encoder(new_product, by_alias=True, exclude_none=True )
+    db_response = tx.collection("Product").insert(prepped_data, return_new=True)
+
     # Save image
     if image:
-      new_product.image = True
-
       product_image = UserFile.product_media(
         append_path=db_response['_key'],
         file=image,
@@ -99,18 +105,29 @@ async def create_product(
         await product_image.write_file('image.jpg')
 
       except:
+        tx.abort_transaction()
         raise HTTPException(
           status_code=500,
-          detail="Could not save image"
+          detail="There was an error saving the image"
         )
 
-    tx = db.begin_transaction(write=["Product"])
-    prepped_data = jsonable_encoder(new_product, by_alias=True, exclude_none=True )
-    db_response = tx.collection("Product").insert(prepped_data, return_new=True)
     tx.commit_transaction()
 
+    # Close request and return response
+    status_code = 200
+    message = "Product created"
+    response = APIResponse(
+      status_code=status_code,
+      message=message,
+      # Arango replies by sending a json that includes id, key, rev and
+      # then again the whole document nested in the main objecy,
+      # thus duplicating the above keys. Below we get only the whole document.
+      detail=db_response['new']
+    )
+    return response
 
   except Exception:
+    tx.abort_transaction()
     status_code = 500
     error_str = traceback.format_exc()
     response=dict(
@@ -122,23 +139,6 @@ async def create_product(
       status_code=status_code,
       detail=response
     )
-
-  # Close request and return response
-  status_code = 200
-  message = "Product created"
-  response = APIResponse(
-    status_code=status_code,
-    message=message,
-    # Arango replies by sending a json that includes id, key, rev and
-    # then again the whole document nested in the main objecy,
-    # thus duplicating the above keys. Below we get only the whole document.
-    detail=db_response['new']
-  )
-
-  return response
-
-
-
 
 # =================================================
 #  DELETE /PRODUCT_KEY : DELETE PRODUCT

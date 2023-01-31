@@ -1,5 +1,6 @@
 <template>
   <BaseModalForm
+    :show="true"
     id="new-product-form"
     @submit="postNewProduct"
     max_width="700px"
@@ -10,27 +11,33 @@
     </template>
 
     <template #form>
+      <div class="column q-gutter-lg" style="min-width: 400px">
       <q-input
+        dense
         :label="$capitalize($t('code'))"
         v-model="new_product_code"
         class="input-uppercase"
         clearable>
       </q-input>
       <q-input
+        dense
         type="textarea"
         clearable
         :label="$capitalize($t('description'))"
         v-model="new_product_desc">
       </q-input>
       <q-file
-        :label="$t('image')"
+        dense
+        :label="$capitalize($t('image'))"
         accept="image/*"
         clearable
-        counter>
+        counter
+        v-model="new_product_pic">
         <template #append>
           <q-icon name="mdi-image" />
         </template>
       </q-file>
+      </div>
     </template>
 
   </BaseModalForm>
@@ -39,11 +46,11 @@
 <script>
 import { api } from '@/boot/axios.js'
 
-import BaseModalForm from '@/components/BaseDialog.vue'
+import BaseModalForm from '@/components/BaseModalForm.vue'
 
 export default {
 
-  name: 'NewProduct',
+  name: 'ProductNew',
 
   components: {
     BaseModalForm
@@ -91,13 +98,8 @@ export default {
         })
         .catch(error => {
           window.alert("Couldn't save product, try again.", error)
-          this.$router.back()
         })
     }
-  },
-
-  created() {
-    console.log('Creato')
   }
 };
 </script>
