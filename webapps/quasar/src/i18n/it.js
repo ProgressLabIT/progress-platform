@@ -471,7 +471,7 @@ export default {
       "qt_planned": "qp",
       "qt_remaining": "qr",
       "sequence": "seq",
-      "wo_code": "codice op",
+      "wo_code": "codice op"
     },
     "long": "ordine di produzione",
     "new": "crea ordini di produzione",
@@ -484,4 +484,5 @@ export default {
     },
     "update_due_date": "modifica data scadenza",
     "wo_code": "codice"
+  }
 }

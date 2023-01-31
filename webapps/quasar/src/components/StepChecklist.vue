@@ -159,7 +159,6 @@ export default {
       let step_index = this.step_index
       let new_checklist = this.step_checks
       new_checklist[index] = text
-      console.log({new_checklist})
       this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value: new_checklist })
     },
 

@@ -229,10 +229,6 @@ export default {
       this.edit_mode = true
     },
 
-    click() {
-      console.log('click')
-    },
-
     cancelChanges() {
       this.$store.commit('CANCEL_PROCESS_CHANGES')
       this.confirming_delete = null

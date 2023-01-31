@@ -4,12 +4,12 @@
     <!-- COLUMN HEADER -->
     <div class="row justify-between text-uppercase low-text text-h5 q-mb-xs">
       <div>{{ $t('work_order.wo_code') }}</div>
-      <div>{{ $t('work_order.wo_line.line_only') }}</div>
+      <div>{{ $t('project') }}</div>
     </div>
 
     <div class="row justify-between display weight-bold text-h3">
       <div>{{ wo_data.wo_code }}</div>
-      <div>{{ wo_data.wo_line }}</div>
+      <div>{{ wo_data.project_code }}</div>
     </div>
 
     <div class="row justify-between text-uppercase low-text q-mt-lg text-h5">
