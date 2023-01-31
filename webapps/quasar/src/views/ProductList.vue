@@ -101,7 +101,8 @@ export default {
       search_string: null,
       loading: true,
       vuex_ready: false,
-      max_shown: 100
+      load_quantity: 100,
+      loading_round: 1
     }
   },
 
@@ -118,6 +119,10 @@ export default {
 
     product_list() {
       return this.filtered_products.slice(0, this.max_shown)
+    },
+
+    max_shown() {
+      return this.load_quantity * this.loading_round
     },
 
     show_images: {
@@ -177,7 +182,7 @@ export default {
     showMore() {
       this.loading = true
       setTimeout(() => {
-        this.max_shown += 100
+        this.loading_round ++
         this.loading = false
       }, 1500)
     }
@@ -189,16 +194,17 @@ export default {
     })
   },
 
+
   watch: {
     search_proxy: {
       immediate: true,
       handler() {
         this.loading = true
-        this.max_shown = 0,
+        this.loading_round = 0,
         setTimeout(() => {
           this.search_string = this.search_proxy
           this.loading = false
-          this.max_shown = 100
+          this.loading_round = 1
         }, 1500)
       }
     }
