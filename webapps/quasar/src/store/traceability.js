@@ -35,6 +35,7 @@ function createEvent(state, session_state, { event_type, timestamp, step_key=nul
     work_order_key: job.wo_key,
     phase_key: job.phase_key,
     active_batch_key: job.active_batch_key,
+    project_code: job.project_code,
     step_key,
     user_data,
     completed_batch_qt,

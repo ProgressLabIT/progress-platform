@@ -99,9 +99,12 @@ export default {
           label: this.$t('work_order.list_headers.wo_code').toUpperCase(),
           align: 'left'
         },
-        // {
-        //   field: 'wo_line',
-        //   label: this.$t('work_order.list_headers.wo_line').toUpperCase() },
+        {
+          field: 'project_code',
+          name: 'project_code',
+          label: this.$t('project').toUpperCase(),
+          align: 'left'
+        },
         {
           field: 'product_code',
           name: 'product_code',
@@ -152,7 +155,7 @@ export default {
       return this.wo_list.filter( wo => {
         
         // Define wo fields to use with the text search
-        const search_fields = ['wo_code', 'wo_line', 'product_code']
+        const search_fields = ['wo_code', 'wo_line', 'product_code', 'project_code']
         
         /* 
         Initialize filter results. 
