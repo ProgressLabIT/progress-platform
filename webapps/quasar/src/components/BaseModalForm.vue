@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="show">
+  <BaseDialog :show="show" @close="$router.back()">
     <q-card class="surface1 q-pa-md" :style="{ maxWidth: max_width }">
 
       <!-- DIALOG TITLE -->
