@@ -10,7 +10,7 @@
     <q-card class="background q-pa-sm">
 
       <!-- SCREEN HEADER -->
-      <div class="row justify-start items-center q-pl-xs text-high">
+      <div class="row justify-start items-center q-px-sm text-high">
         <slot name="close">
           <q-btn flat dense @click="$emit('close')">
             <q-icon size="xs" name="mdi-close" />
