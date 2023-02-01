@@ -92,7 +92,6 @@
           <div :key="route.fullPath">
             <component
               :is="Component"
-              :user="getUserData()"
               :key="selected_user_key">
             </component>
           </div>
@@ -126,7 +125,6 @@ export default {
       user_index: 0,
       search_text: '',
       department_filter: null,
-      // selected_user_key: null,
       bool_filters: [
         { name: 'enabled', value: true },
         { name: 'disabled', value: true },
@@ -210,10 +208,6 @@ export default {
         name: 'userInfo', 
         params: { user_key: user._key }
       })
-    },
-
-    getUserData() {
-      return this.user_list.find( user => user._key === this.selected_user_key)
     },
 
     openUserNew() {

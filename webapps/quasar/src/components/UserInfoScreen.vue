@@ -261,12 +261,6 @@ export default {
     BaseTooltipIcon
   },
 
-  props: {
-    user: {
-      type: Object,
-    }
-  },
-
   data () {
     return {
       locale: 'it',
@@ -292,6 +286,18 @@ export default {
   },
 
   computed: {
+    user_list() {
+      return this.$store.state.user.user_list
+    },
+
+    user_key() {
+      return this.$route.params.user_key
+    },
+
+    user() {
+      return this.user_list.find(u => u._key == this.user_key)
+    },
+
     avatar_src() {
       if (!this.user) {
         return ''
