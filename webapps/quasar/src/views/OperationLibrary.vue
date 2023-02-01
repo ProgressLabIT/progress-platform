@@ -65,12 +65,10 @@
     <div class="col full-height" v-if="vuex_ready">
 
       <router-view v-slot="{ Component }">
-        <transition name="slide-fade" mode="out-in">
-          <component
-            :is="Component"
-            :key="selected_operation_key">
-          </component>
-        </transition>
+        <component
+          :is="Component"
+          :key="selected_operation_key">
+        </component>
       </router-view>
     </div>
 

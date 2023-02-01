@@ -102,9 +102,10 @@ const process = {
       return new Promise(resolve => {
         api
         .post(`operation`, new_operation_data)
-        .then( async () => {
+        .then( async (resp) => {
+          const new_op_key = resp.data.detail._key
           await dispatch('getOperations')
-          resolve()
+          resolve(new_op_key)
         })
       })
     },
