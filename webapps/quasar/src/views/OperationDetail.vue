@@ -51,6 +51,18 @@
         </div>
 
         <div class="col column q-pl-xl q-gutter-md">
+          <!-- <q-btn
+            size="12px"
+            color="theme-orange"
+            @click="setDefault"
+            :loading="saving">
+            Imposta come default
+            <q-icon name="mdi-information-outline">
+              <q-tooltip>
+                I nuovi prodotti verranno creati con questa fase
+              </q-tooltip>
+            </q-icon>
+          </q-btn> -->
           <q-btn
             size="12px"
             color="theme-blue"
@@ -96,6 +108,13 @@ export default {
 
   mixins: [NonExistentOperationGuard],
 
+  props: {
+    operation: {
+      type: Object,
+      required: true
+    }
+  }
+
   data () {
     return {
       edit_mode: false,
@@ -120,18 +139,6 @@ export default {
     products_using_operation() {
       return this.operation.used_for
     },
-
-    operation_key() {
-      return this.$route.params.operation_key
-    },
-
-    operation_list() {
-      return this.$store.state.process.operations
-    },
-
-    operation() {
-      return this.operation_list.find(o => o._key === this.operation_key)
-    }
   },  
 
 

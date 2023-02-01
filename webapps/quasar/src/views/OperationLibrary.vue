@@ -67,7 +67,7 @@
       <router-view v-slot="{ Component }">
         <component
           :is="Component"
-          :key="selected_operation_key">
+          :operation="selected_operation">
         </component>
       </router-view>
     </div>
@@ -105,6 +105,10 @@ export default {
       return this.$route.params.operation_key
     },
 
+    selected_operation() {
+      return this.operation_list.find( op => op._key == this.selected_operation_key )
+    },
+
     filtered_operations() {
       const fields_to_search = ['name', 'code', 'description']
       return this.operation_list.filter( op => multiMatch(this.search_text, op, fields_to_search) )
@@ -117,10 +121,6 @@ export default {
         name: 'operationDetail',
         params: { operation_key }
       })
-    },
-
-    getOperationData() {
-      return this.operation_list.find( op => op._key == this.selected_operation_key )
     },
 
     openOperationNew() {
