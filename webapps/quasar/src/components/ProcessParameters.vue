@@ -1,13 +1,15 @@
 <template>
   <q-list>
     <template
-      v-for="(p_value, p_key) in phase_params"
+      v-for="(p_value, p_key, index) in params"
       :key="p_key">
+
+      <q-separator v-if="index > 0" />
 
       <q-expansion-item
         :expand-icon="paramType(p_key) == 'int' || !edit_mode ? 'none' : ''"
         :model-value="expansion_map == p_key"
-        @update:model-value="(value) => updateExpansionMap(p_key, value)">
+        @update:model-value="(new_val) => updateExpansionMap(p_key, new_val)">
 
         <!-- SELECTED OPTION -->
         <template #header>
@@ -55,7 +57,6 @@
         </template>
       </q-expansion-item>
 
-      <q-separator />
 
     </template>
   </q-list>
@@ -63,35 +64,26 @@
 
 <script>
 import params_map from '@/lib/PhaseParams.js'
+
 export default {
 
-  name: 'PhaseParameters',
+  name: 'ProcessParameters',
 
-  props: ['edit_mode', 'phase', 'product_data'],
-
-  data() {
-    return {
-      expansion_map: null
+  props: {
+    edit_mode: {
+      type: Boolean,
+      required: true
+    },
+    params: {
+      type: Object,
+      required: true
     }
   },
 
-  computed: {
-
-    product_key() {
-      return this.$route.params.product_key
-    },
-
-    current_phase() {
-      return this.product_data.last_phase
-    },
-
-    phase_data() {
-       return this.$store.state.process.temp[this.current_phase]
-    },
-
-    phase_params() {
-      return this.phase_data.params
-    },
+  data () {
+    return {
+      expansion_map: null
+    }
   },
 
   methods: {
@@ -114,13 +106,12 @@ export default {
 
     paramHumanValue(param_key, value_key) {
       if (this.paramType(param_key) == 'int') {
-        return this.phase_params[param_key]
+        return this.params[param_key]
       }
       return this.$t(`phase.params.${param_key}.${value_key}.title`)
     },
 
     paramValueDesc(param_key, value_key) {
-      // const param_value = this.phase_params[param_key]
       if (this.paramType(param_key) == 'int') {
         return this.$t(`phase.params.${param_key}.desc`)
       }
@@ -133,21 +124,11 @@ export default {
     },
 
     updateParam(param_key, value) {
-      if (param_key === 'step_check') {
-        if (!this.phase_data.steps.length && value != 'none') {
-          window.alert(this.$options.filters.capitalize(
-            this.$t('phase.alerts.add_steps_first')
-          ))
-          this.expansion_map = null
-          return
-        }
-      }
-
-      this.$store.commit('UPDATE_PHASE_PARAMS', {
-        phase_index: this.current_phase,
+      this.$emit('update', {
         param: param_key,
         value: value,
       })
+      this.expansion_map = null
     },
   },
 
@@ -157,7 +138,7 @@ export default {
       this.expansion_map = null
     }
   }
-};
+}
 </script>
 
 <style lang="css" scoped>

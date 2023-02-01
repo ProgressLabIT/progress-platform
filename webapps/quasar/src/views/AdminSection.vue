@@ -17,7 +17,11 @@
         </q-route-tab>
       </q-tabs>
       <q-card class="surface1" :style="`height: ${card_height}px`" square>
-        <router-view />
+        <router-view v-slot="{ Component }" class="">
+          <keep-alive>
+            <component :is="Component" class="full-height" id="test" />
+          </keep-alive>
+        </router-view>
       </q-card>
     </q-page>
   </q-page-container>

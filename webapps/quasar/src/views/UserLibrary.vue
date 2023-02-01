@@ -17,8 +17,7 @@
       <q-expansion-item
         v-model="filter_panel"
         :label="filters_label"
-        header-class="q-px-lg"
-        class="q-my-sm">
+        header-class="q-px-lg">
         <div class="row q-col-gutter-md q-pa-lg">
           <div
             class="col-6"
@@ -37,7 +36,7 @@
       </q-expansion-item>
 
       <!-- USER LIST HEADERS -->
-      <div class="row q-px-lg q-py-sm text-h6 text-uppercase weight-bold">
+      <div class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold">
         <div class="col-6">
           {{ $t('name') }}
         </div>
@@ -73,7 +72,7 @@
         {{ filtered_users.length }} {{ $t('of') }} {{ user_list.length }}
       </div>
 
-      <div class="q-pa-md">
+      <div class="q-pa-md q-mt-auto">
         <q-btn
           class="full-width q-mt-auto"
           color="theme-blue"
@@ -91,7 +90,11 @@
       <router-view v-slot="{ Component, route }">
         <transition name="slide-fade" mode="out-in">
           <div :key="route.fullPath">
-            <component :is="Component" :user="getUserData()" :key="selected_user_key" />
+            <component
+              :is="Component"
+              :user="getUserData()"
+              :key="selected_user_key">
+            </component>
           </div>
         </transition>
       </router-view>
