@@ -70,7 +70,7 @@ const adminRoutes = [
           {
             path: ':operation_key/delete',
             name: 'operationDelete',
-            component: () => import("@/views/OperationDelete")
+            component: () => import("@/views/OperationDelete.vue")
           }
         ]
       }
