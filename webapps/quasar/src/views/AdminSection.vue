@@ -36,7 +36,6 @@ export default {
     return {
       current_view: 0,
       admin_views: [
-        'generalSettings',
         'userLibrary',
         'operationLibrary',
       ]

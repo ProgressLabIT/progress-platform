@@ -230,6 +230,13 @@ export default {
     },
 
     cancelChanges() {
+      const active_phase_key = this.process[this.current_phase]
+      const original_process = this.$store.state.process.saved
+      const original_phase_index = original_process.findIndex(p => p._key = active_phase_key)
+      this.updateActivePhaseIndex({
+        oldIndex: this.current_phase,
+        newIndex: original_phase_index
+      })
       this.$store.commit('CANCEL_PROCESS_CHANGES')
       this.confirming_delete = null
       this.edit_mode = false
@@ -261,24 +268,35 @@ export default {
       this.confirming_delete = null
     },
 
+    updateStepsMap(map) {
+      this.$store.commit('UPDATE_PRODUCT_NAV_STATE', {
+        _key: this.product_key,
+        last_steps: map
+      })
+    },
+
     updateActivePhaseIndex({ oldIndex, newIndex }) {
+      // Moved active phase
       if (this.current_phase == oldIndex) {
         this.current_phase = newIndex
       }
+      // Moved earlier phase after active one
       else if ( oldIndex < this.current_phase
                 && newIndex > this.current_phase ) {
         this.current_phase = this.current_phase - 1
       }
+      // Moved later phase before active one
       else if ( oldIndex > this.current_phase
                 && newIndex < this.current_phase ) {
         this.current_phase = this.current_phase + 1
       }
+
       // ADD HERE REORDERING OF last_steps MAP
-      let new_steps_map = this.product_data.last_steps
+      let new_steps_map = [...this.product_data.last_steps]
       const moved = new_steps_map.splice(oldIndex, 1)[0]
       new_steps_map.splice(newIndex, 0, moved)
 
-      this.$store.commit('UPDATE_PRODUCT_NAV_STATE', { last_steps: new_steps_map })
+      this.updateStepsMap(new_steps_map)
     },
 
     saveChanges() {
@@ -302,6 +320,11 @@ export default {
           this.saving = false
         })
     },
+  },
+
+  created() {
+    const step_map = Array(this.process.length).fill(0)
+    this.updateStepsMap(step_map)
   },
 
   mounted() {

@@ -127,7 +127,7 @@ export default {
     },
 
     media_list() {
-      return this.step_data.media
+      return this.step_data ? this.step_data.media : []
     },
 
     step_key() {
