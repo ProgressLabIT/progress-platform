@@ -14,11 +14,32 @@
         @mouseenter="over_row = index"
         @mouseleave="over_row = null">
         <div class="col-1 text-center low-text">
-          <q-icon
-            v-if="edit_mode"
-            name="mdi-drag-horizontal-variant"
-            size="sm">
-          </q-icon>
+          <template v-if="edit_mode">
+            <q-icon
+              v-if="index > 0"
+              @mouseenter="onup=index"
+              @mouseleave="onup=null"
+              :name="`mdi-arrow-up-circle${onup!=index ? '-outline' : ''}`"
+              :color="onup == index ? 'theme-blue' : false"
+              size="xs"
+              @click="moveUp(index)">
+              <q-tooltip>
+                move up
+              </q-tooltip>
+            </q-icon>
+            <q-icon
+              v-if="index < step_checks.length - 1"
+              @mouseenter="ondown=index"
+              @mouseleave="ondown=null"
+              :name="`mdi-arrow-down-circle${ondown!=index ? '-outline' : ''}`"
+              :color="ondown == index ? 'theme-blue' : false"
+              size="xs"
+              @click="moveDown(index)">
+              <q-tooltip>
+                Move down
+              </q-tooltip>
+            </q-icon>
+          </template>
           <q-icon
             v-else
             name="mdi-checkbox-blank-outline"
@@ -93,9 +114,7 @@
 </template>
 
 <script>
-// import {debounce as _debounce} from 'lodash/fp'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
-// import draggable from 'vuedraggable'
 
 export default {
 
@@ -111,8 +130,9 @@ export default {
   data() {
     return {
       over_row: null,
-      drag: false,
-      confirming_delete: null
+      confirming_delete: null,
+      onup: null,
+      ondown: null
     }
   },
 
@@ -123,7 +143,7 @@ export default {
     },
 
     current_step() {
-      let procedure = this.$store.state.process.temp[this.phase_index].steps
+      const procedure = this.$store.state.process.temp[this.phase_index].steps
       return procedure[this.step_index]
     },
 
@@ -136,7 +156,7 @@ export default {
         let phase_index = this.phase_index
         let step_index = this.step_index
 
-        this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value })
+        this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value  })
       }
     }
   },
@@ -162,6 +182,16 @@ export default {
       this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value: new_checklist })
     },
 
+    moveUp(index) {
+      const moved = this.step_checks.splice(index, 1)[0]
+      this.step_checks.splice(index - 1, 0, moved)
+    },
+
+    moveDown(index) {
+      const moved = this.step_checks.splice(index, 1)[0]
+      this.step_checks.splice(index + 1, 0, moved)
+    },
+
     deleteCheck(index) {
       let phase_index = this.phase_index
       let step_index = this.step_index
@@ -170,7 +200,7 @@ export default {
       this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value: new_checklist }) 
       this.confirming_delete = null
     }
-  },
+  }
 };
 </script>
 

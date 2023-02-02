@@ -6,11 +6,12 @@
     <div
       v-for="(media, index) in media_list"
       :key="index"
-      class="col-3"
+      class="col-3 items-center column"
+      :class="{ undraggable: !edit_mode }"
       @mouseenter="over_media = index"
       @mouseleave="over_media = null">
 
-      <q-card square bordered>
+      <q-card square bordered class="full-width">
         <!-- MEDIA TITLE -->
         <q-tooltip class="smaller text-center">
           {{ media.filename }}
@@ -22,11 +23,11 @@
           no-native-menu
           no-spinner>
           <template #error>
-            <div class="row flex-center">
+            <div class="row fit flex-center surface1">
               <q-icon
                 size="xl"
                 :name="media.filename.endsWith('.pdf') ? 'mdi-file-document-outline': 'mdi-error'"
-                color="text-low">
+                class="text-low">
               </q-icon>
             </div>
           </template>
@@ -81,8 +82,35 @@
           </div>
         </div>
       </q-card>
+      <!-- <q-icon
+        v-if="edit_mode"
+        name="mdi-drag-horizontal-variant"
+        size="md"
+        class="dragme">
+      </q-icon> -->
+    </div>
+    <div class="col-3">
+      <q-btn
+        flat
+        v-if="edit_mode"
+        class="column flex-center q-pt-md q-pb-sm"
+        @click="$refs.upload.click()"
+        style="cursor: pointer">
+        <input
+          type="file"
+          multiple
+          ref="upload"
+          style="display: none"
+          accept="image/*, application/pdf"
+          @change="addMedia($event.target.files)" />
+        <q-icon size="md" name="mdi-camera-plus" />
+        <div class="q-mt-sm smaller">
+          {{ $capitalize($t('phase.add_media')) }}
+        </div>
+      </q-btn>
     </div>
   </div>
+
 
   <MediaViewer
     :show="show_media_screen"
@@ -94,6 +122,7 @@
 </template>
 
 <script>
+import Sortable from 'sortablejs'
 import MediaViewer from '@/components/MediaViewer.vue'
 
 export default {
@@ -108,7 +137,7 @@ export default {
 
   data() {
     return {
-      // media_list: [],
+      sortable: undefined,
       over_media: null,
       selected_media: {},
       show_media_screen: false
@@ -184,8 +213,39 @@ export default {
         step_index: this.step_index,
         index: index
       })
-    },  
+    },
+
+    /* IMPLEMENT MEDIA SORTING AFTER PROVIDING API */
+
+    // initSortable(selector) {
+    //   const _self = this
+    //   let container = document.querySelector(selector)
+    //   console.log({ selector, container})
+    //   if (container) {
+    //     Sortable.create(container, {
+    //       ..._self.$store.state.drag_options,
+    //       filter: '.undraggable',
+    //       handle: '.dragme',
+    //       dragClass: 'dragging',
+    //       // use onEnd event provided by SortableJs library
+    //       onEnd: ({ newIndex, oldIndex }) => {
+    //         _self.dragging = false
+    //         const moved = _self.media_list.splice(oldIndex, 1)[0]
+    //         _self.media_list.splice(newIndex, 0, moved)
+    //         _self.updateTabIndex({ oldIndex, newIndex })
+    //       }
+    //     })
+    //   }
+    // }
   },
+
+  // mounted() {
+  //   this.sortable = this.initSortable('#media-list')
+  // },
+
+  // updated() {
+  //   this.sortable = this.initSortable('#media-list')
+  // }
 
 };
 </script>

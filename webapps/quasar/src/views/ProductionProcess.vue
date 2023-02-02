@@ -281,13 +281,13 @@ export default {
       }
       // Moved earlier phase after active one
       else if ( oldIndex < this.current_phase
-                && newIndex > this.current_phase ) {
-        this.current_phase = this.current_phase - 1
+                && newIndex >= this.current_phase ) {
+        this.current_phase --
       }
       // Moved later phase before active one
       else if ( oldIndex > this.current_phase
-                && newIndex < this.current_phase ) {
-        this.current_phase = this.current_phase + 1
+                && newIndex <= this.current_phase ) {
+        this.current_phase ++
       }
 
       // ADD HERE REORDERING OF last_steps MAP

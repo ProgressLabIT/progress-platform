@@ -32,9 +32,7 @@ const process = {
     },
 
     UPDATE_STEP_DETAILS(state,  { phase_index, step_index, field, value })  {
-      let phase = state.temp[phase_index]
-      let step = phase.steps[step_index]
-      step[field] = value
+      let phase = state.temp[phase_index].steps[step_index] = value
     },
 
     ADD_TEMP_MEDIA(state, { phase_index, step_index, media }) {
