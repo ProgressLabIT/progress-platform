@@ -311,41 +311,39 @@ export default {
 
     updateTabIndex({ oldIndex, newIndex }) {
       if (this.current_step_index == oldIndex) {
-        this.current_steps_map[this.current_phase] = newIndex
+        this.current_step_index = newIndex
       }
       else if ( oldIndex < this.current_step_index
-                && newIndex > this.current_step_index ) {
-        let new_step_index = this.current_step_index - 1
-        this.current_steps_map[this.current_phase] = new_step_index
+                && newIndex >= this.current_step_index ) {
+        this.current_step_index --
       }
       else if ( oldIndex > this.current_step_index
-                && newIndex < this.current_step_index ) {
-        let new_step_index = this.current_step_index + 1
-        this.current_steps_map[this.current_phase] = new_step_index
+                && newIndex <= this.current_step_index ) {
+        this.current_step_index ++
       }
     },
 
-    initSortable(container) {
+    initSortable() {
       const _self = this
-      Sortable.create(container, {
-        ..._self.$store.state.drag_options,
-        filter: '.undraggable',
-        // use onEnd event provided by SortableJs library
-        onEnd: ({ newIndex, oldIndex }) => {
-          const moved = _self.procedure.splice(oldIndex, 1)[0]
-          _self.procedure.splice(newIndex, 0, moved)
-          _self.updateTabIndex({ oldIndex, newIndex })
-        }
-      })
+      let container = document.querySelector("#steps")
+      if (container) {
+        Sortable.create(container, {
+          ..._self.$store.state.drag_options,
+          filter: '.undraggable',
+          // use onEnd event provided by SortableJs library
+          onEnd: ({ newIndex, oldIndex }) => {
+            const moved = _self.procedure.splice(oldIndex, 1)[0]
+            _self.procedure.splice(newIndex, 0, moved)
+            _self.updateTabIndex({ oldIndex, newIndex })
+          }
+        })
+      }
     }
   },
 
   mounted() {
-    let container = document.querySelector("#steps")
-    if (container) {
-      this.initSortable(container)
-    }
-  },
+    this.initSortable()
+  }
 };
 </script>
 
