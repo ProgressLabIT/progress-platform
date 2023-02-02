@@ -13,6 +13,19 @@ $typography-font-family: 'Red Hat Text' !important;
 $toolbar-min-height: 45px;
 $separator-dark-color: rgba(255, 255, 255, .12);
 
+.q-menu {
+  @extend .surface1;
+  border: 1px solid var(--theme-grey);
+  color: var(--text-high)
+}
+
+.dragme {
+  cursor: grab
+}
+
+.dragging {
+  cursor: grabbing !important
+}
 
 .hover-red-bg:hover {
   background-color: var(--theme-red) !important;

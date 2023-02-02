@@ -70,11 +70,8 @@
 
       <q-space />
 
-      <!-- TODO: NEW PHASE OPERATION SELECTION -->
-
-
       <!-- ACTION BUTTONS -->
-      <div class="q-px-md q-pb-sm">
+      <div class="column q-gutter-y-sm q-px-lg q-pb-sm">
         <q-btn
           v-if="!edit_mode"
           @click="toggleEdit"
@@ -84,8 +81,13 @@
         </q-btn>
 
         <template v-else>
+          <BaseAutocompleteOperation
+            @select="addPhase"
+            :dense="false"
+            :clearable="false">
+          </BaseAutocompleteOperation>
           <q-btn
-            class="full-width q-mb-sm"
+            class="full-width q-mt-md"
             color="theme-green"
             @click="saveChanges"
             :loading="saving">
@@ -135,7 +137,7 @@
 <script>
 import { mapActions } from 'vuex'
 import Sortable from 'sortablejs'
-
+import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
 import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
@@ -156,6 +158,7 @@ export default {
     PhaseSteps,
     // PhaseAssignments,
     BaseTooltipIcon,
+    BaseAutocompleteOperation
   },
 
   data() {
@@ -193,10 +196,6 @@ export default {
       }
     },
 
-    operations() {
-      return this.$store.state.process.operations.slice().sort()
-    },
-
     current_phase: {
       get() {
         return this.product_data.last_phase
@@ -230,7 +229,7 @@ export default {
     },
 
     cancelChanges() {
-      const active_phase_key = this.process[this.current_phase]
+      const active_phase_key = this.process[this.current_phase]._key
       const original_process = this.$store.state.process.saved
       const original_phase_index = original_process.findIndex(p => p._key = active_phase_key)
       this.updateActivePhaseIndex({
@@ -322,12 +321,12 @@ export default {
     },
   },
 
-  created() {
+  mounted() {
+    // Create step map
     const step_map = Array(this.process.length).fill(0)
     this.updateStepsMap(step_map)
-  },
 
-  mounted() {
+    // Initialize draggable phases
     let container = document.querySelector("#phases .q-tabs__content")
     const _self = this
     Sortable.create(container, {
