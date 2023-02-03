@@ -1,5 +1,5 @@
 <template>
-  <BaseModalScreen v-bind="{show}" @close="$emit('close')">
+  <BaseModalScreen :show="show" @close="$emit('close')">
 
     <template #header>
       <div class="q-ml-md q-py-xs medium highlight">
@@ -7,17 +7,40 @@
       </div>
     </template>
 
-    <template #content v-if="show">
-      <div class="fit flex flex-center">
+    <template #content>
+      <div class="fit flex flex-center" style="background-color: ;">
         <q-img fit="contain"
           v-if="hasImageExtension()"
           :src="media_src">
         </q-img>
-        <embed v-else
-          :key="media_src"
-          :src="media_src + '#toolbar=0'"
-          width="100%"
-          height="100%" />
+        <vue-pdf-embed
+          v-else
+          disableTextLayer
+          ref="pdf"
+          :source="media_src"
+          :width="doc_width">
+        </vue-pdf-embed>
+
+        <q-page-sticky position="top-right" :offset="[35, 0]">
+          <div class="column q-gutter-md">
+          <q-btn
+            round
+            padding="sm sm"
+            icon="mdi-magnify-plus-outline"
+            class="shadow-12"
+            color="grey"
+            @click="zoomIn">
+          </q-btn>
+          <q-btn
+            round
+            padding="sm sm"
+            icon="mdi-magnify-minus-outline"
+            class="shadow-12"
+            color="grey"
+            @click="zoomOut">
+          </q-btn>
+          </div>
+        </q-page-sticky>
       </div>
     </template>
 
@@ -25,20 +48,24 @@
 </template>
 
 <script>
+import VuePdfEmbed from 'vue-pdf-embed'
 import BaseModalScreen from '@/components/BaseModalScreen.vue'
+
 export default {
 
   name: 'MediaViewer',
 
   components: {
-    BaseModalScreen
+    BaseModalScreen,
+    VuePdfEmbed
   },
 
   props: ['show', 'media_name', 'media_src'],
 
   data() {
     return {
-      image_extensions: ['png', 'jpeg', 'jpg']
+      image_extensions: ['png', 'jpeg', 'jpg'],
+      doc_width: 800,
     }
   },
 
@@ -51,10 +78,27 @@ export default {
       return this.media_src
         ? this.image_extensions.some( e => this.media_src.endsWith(e) )
         : null
+    },
+
+    zoomIn() {
+      this.doc_width = this.doc_width * 1.2
+    },
+
+    zoomOut() {
+      this.doc_width = this.doc_width / 1.2
     }
+  },
+
+
+  created() {
+    this.doc_width = Math.min(this.$q.screen.width * .8, 1200)
   }
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="css">
+.vue-pdf-embed > div {
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px 4px rgba(0,0,0,.1);
+}
 </style>

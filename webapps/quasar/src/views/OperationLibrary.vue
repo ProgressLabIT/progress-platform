@@ -63,7 +63,6 @@
 
     <!-- OPERATION DATA -->
     <div class="col full-height" v-if="vuex_ready">
-
       <router-view v-slot="{ Component }">
         <component
           :is="Component"

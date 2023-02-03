@@ -204,6 +204,7 @@
 
       <!-- DOCUMENT VIEWER -->
       <MediaViewer
+        v-if="show_media >= 0 || show_media === 'img' "
         :show="show_media >= 0 || show_media === 'img' "
         @close="show_media = -1"
         v-bind="{ media_name, media_src }">
