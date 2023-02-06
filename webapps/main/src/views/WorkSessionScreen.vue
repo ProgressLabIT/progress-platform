@@ -545,7 +545,7 @@ export default {
     window.addEventListener('beforeunload', this.beforeUnloadAlert)
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('beforeunload', this.beforeUnloadAlert)
   },
 

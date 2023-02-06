@@ -13,7 +13,10 @@
 
     <!-- FORM BODY -->
     <q-scroll-area class="col q-mt-lg q-pr-md">
-      <div v-for="(field, index) in step_form" class="q-mb-lg">
+      <div
+        v-for="(field, index) in step_form"
+        :key="index"
+        class="q-mb-lg">
         <q-input
           v-if="field.type=='short'"
           input-class="text-low"

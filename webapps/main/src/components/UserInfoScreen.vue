@@ -223,7 +223,7 @@
               {{ $t('user.permissions.title') }}
             </div>
             <q-checkbox
-              v-for="(check, index) in scopes"
+              v-for="check in scopes"
               :key="check.name"
               dense
               :val="check.name"

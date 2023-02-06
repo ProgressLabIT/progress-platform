@@ -2,8 +2,8 @@
   <div class="q-pa-lg">
     <q-virtual-scroll class="full-height" :items="items" v-slot="{ item, index }">
       <q-item :key="index">
-        <q-item-section v-for="n in 3">
-          TEST
+        <q-item-section v-for="n in 3" :key="n">
+          {{ n }} {{ item }}
         </q-item-section>
       </q-item>
     </q-virtual-scroll>

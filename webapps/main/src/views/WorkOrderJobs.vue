@@ -14,7 +14,7 @@
     <!-- CONTENT -->
     <div class="scroll">
       <q-expansion-item
-        v-for="(phase, index) in phase_data"
+        v-for="phase in phase_data"
         :key="phase.phase_key"
         expand-separator
         :model-value="expanded_phase === phase.phase_key"
@@ -53,6 +53,7 @@
         <!-- JOB DATA & PHASE/JOB ACTIONS -->
         <div
           v-for="job in phase.jobs"
+          :key="job._key"
           :id="job._key"
           class="row items-center q-pa-md">
 

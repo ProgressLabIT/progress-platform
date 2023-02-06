@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import BaseModalForm from '@/components/BaseModalForm.vue'
+// import BaseModalForm from '@/components/BaseModalForm.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
@@ -78,7 +78,7 @@ export default {
   },
 
   components: {
-    BaseModalForm,
+  //  BaseModalForm,
     NoDataAlert
   },
 

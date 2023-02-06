@@ -355,7 +355,7 @@ export default {
     }, 5000)
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     clearInterval(this.polling_instance)
   }
 }

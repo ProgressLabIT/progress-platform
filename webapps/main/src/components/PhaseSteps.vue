@@ -45,7 +45,14 @@
 
         <!-- ADD STEPS -->
         <div v-if="edit_mode && typeof phase != 'undefined'" class="col-auto q-mt-auto q-mb-sm q-pl-sm q-pr-lg">
-          <q-btn flat style="width: 105%;" size="12px" align="between" v-for="type in step_types" @click="addStep(type)">
+          <q-btn
+            flat
+            style="width: 105%;"
+            size="12px"
+            align="between"
+            v-for="type in step_types"
+            :key="type"
+            @click="addStep(type)">
             <span>+ {{ $t('add') }} {{ $t(`phase.step_types.${type}`) }}</span>
             <q-icon :name="stepIcon(type)" />
           </q-btn>

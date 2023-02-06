@@ -112,7 +112,7 @@ export default {
     this.polling_instance = setInterval(this.get_wo_data, 10000)
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     clearInterval(this.polling_instance)
   }
 }

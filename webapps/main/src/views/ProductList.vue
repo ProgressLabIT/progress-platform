@@ -75,7 +75,6 @@
 </template>
 
 <script>
-import LoadingSignal from '@/components/LoadingSignal.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import ProductCard from '@/components/ProductCard.vue'
 
@@ -90,7 +89,6 @@ export default {
   name: 'ProductList',
   
   components: {
-    LoadingSignal,
     NoDataAlert,
     ProductCard
   },

@@ -30,12 +30,10 @@
         hide-bottom
         dense
         separator="none"
-        table-class="text-high assignment-list"
         card-class="background no-shadow q-mt-md"
         :rows-per-page-options="[0]">
         <template #body="props">
           <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
-            <template :props="props" v-for="field in job_data" :key="field.name">
               <q-td :props="props" :class="{ 'filter-field': filter_fields.includes(field.name)}">
 
                 <!-- PROGRESS -->
@@ -76,7 +74,6 @@
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import matchJobToFilters from '@/lib/ProductionFilters.js'
-import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
 
@@ -84,8 +81,7 @@ export default {
 
   components: {
     BaseProgressBar,
-    BaseUserAvatar,
-    NoDataAlert
+    BaseUserAvatar
   },
 
   props: {
