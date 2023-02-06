@@ -25,8 +25,10 @@ build:webapp:
     - docker
   script:
     # Pull builder image if present, if not skip
-    - docker pull $WEBAPP_IMAGE:builder || true
-    - docker pull $WEBAPP_IMAGE:built || true
+    - docker pull $WEBAPP_IMAGE:global-deps-stage || true
+    - docker pull $WEBAPP_IMAGE:develop-stage || true
+    - docker pull $WEBAPP_IMAGE:config-stage || true
+    - docker pull $WEBAPP_IMAGE:build-stage || true
 
     # Navigate to build context
     - cd $WEBAPP_ROOT
