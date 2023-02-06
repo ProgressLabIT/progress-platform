@@ -3,7 +3,7 @@
   <div class="fullscreen background flex flex-center">
     <div class="row full-width items-center">
       <div class="row col-5 justify-end">
-      <q-img width="300px" src="/media/progress/progresslab.svg">
+      <q-img width="300px" src="/progresslab.svg">
         <template v-slot:error>
           <q-avatar size="180" color="blue">
             <div class="column text-center highlight">
