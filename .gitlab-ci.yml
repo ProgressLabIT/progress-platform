@@ -77,8 +77,9 @@ build:webapp:
     - >
       docker build
       --pull
-      --cache-from $WEBAPP_IMAGE:builder
-      --cache-from $WEBAPP_IMAGE:built
+      --cache-from $WEBAPP_IMAGE:global-deps-stage
+      --cache-from $WEBAPP_IMAGE:develop-stage
+      --cache-from $WEBAPP_IMAGE:config-stage
       --cache-from $$WEBAPP_IMAGE:latest
       -t $WEBAPP_IMAGE:latest
       -t $WEBAPP_IMAGE:$CI_PIPELINE_ID
