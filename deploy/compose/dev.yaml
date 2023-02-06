@@ -12,27 +12,28 @@ services:
       - --api.insecure
       - --log.level=INFO
 
-  app:
-    restart: unless-stopped
-    build:
-      context: ./webapps/main
-      dockerfile: webapp.dev.Dockerfile
-    restart: unless-stopped
-    labels:
-      - traefik.http.routers.app.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`)
-    command: >
-      npm run serve -- --host 0.0.0.0
-    volumes:
-      # This is use to keep HMR working
-      - "./webapps/main:/main"
-      - "media:/main/public/media"
-    environment:
-      # the app will call the api server from outside the docker network, so the full Traefik host alias should be used
-      - VUE_APP_API_BASE_URL=${PROGRESS_ADDRESS:-progress.localhost}/api
-      - VUE_APP_I18N_LOCALE=it
-      - VUE_APP_I18N_FALLBACK_LOCALE=it
-    ports:
-      - "8080"
+  # app:
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./webapps/quasar
+  #     dockerfile: webapp.dev.Dockerfile
+  #   restart: unless-stopped
+  #   labels:
+  #     - traefik.http.routers.app.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`)
+  #     - traefik.http.routers.hmr.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost:9000}`)
+  #   command: yarn quasar dev --host 0.0.0.0
+  #   volumes:
+  #     # This is use to keep HMR working
+  #     - "./webapps/quasar:/app"
+  #     - /app/node_modules/ # exclude local node_modules folder from being linked into the container
+  #     - "media:/app/public/media"
+  #   environment:
+  #     # the app will call the api server from outside the docker network, so the full Traefik host alias should be used
+  #     - VUE_APP_API_BASE_URL=${PROGRESS_ADDRESS:-progress.localhost}/api
+  #     - VUE_APP_I18N_LOCALE=it
+  #     - VUE_APP_I18N_FALLBACK_LOCALE=it
+  #   ports:
+  #     - "9000"
 
   api:
     restart: unless-stopped

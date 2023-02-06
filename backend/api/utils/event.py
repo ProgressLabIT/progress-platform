@@ -190,7 +190,7 @@ class Event:
 
   def get_active_batch(self):
     match = dict(
-      job_key=self.info.job_key,
+      _key=self.job.active_batch_key,
       active=True
     )
 
@@ -538,6 +538,7 @@ class Event:
   # ....................................................................
 
   def complete_step(self):
+    self.get_job_data()
     self.get_active_batch()
 
     # Save current work session and batch keys in Event.info

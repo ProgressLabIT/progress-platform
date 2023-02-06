@@ -10,10 +10,10 @@ class Queries:
       LET phase = e._from
       
       RETURN {
-          product_key: v._key,
+          component_key: v._key,
           bom_line_key: e._key,
-          product_code: v.code,
-          product_description: v.description,
+          component_code: v.code,
+          component_description: v.description,
           phase_key: PARSE_IDENTIFIER(phase).key,
           phase_name: DOCUMENT(phase).alias,
           qt: e.qt
@@ -50,9 +50,9 @@ def get_bom_from_db(db, product_key):
   return [BomLineRead(**i) for i in db_result]
 
 
-def define_bom_line_for_db(bom_line_in):
+def define_bom_line_for_db(bom_line_in: BomLineWriteIn):
   bom_line_out = BomLineWriteOut(
-    product_id=f"Product/{bom_line_in.product_key}",
+    component_id=f"Product/{bom_line_in.component_key}",
     phase_id=f"Phase/{bom_line_in.phase_key}",
     qt=bom_line_in.qt
   )

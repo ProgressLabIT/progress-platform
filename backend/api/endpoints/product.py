@@ -27,14 +27,14 @@ product_db = db.collection('Product')
 async def get_product_list(
   offset: int = None,
   limit: int = None, # return a limited number of results
-  code: str = None, # filter by code
+  search: str = None, # filter by code
   details: bool = False
 ):
 
   product_list =  db.aql.execute(
     Queries.GET_PRODUCT_LIST,
     bind_vars=dict(
-      code = code,
+      search = search,
       limit = limit,
       details = details,
       offset = offset
@@ -64,7 +64,6 @@ async def create_product(
   # Map form data
   try:
     new_product = ProductDetails(code=code, description=description)
-    prepped_data = jsonable_encoder(new_product, by_alias=True, exclude_none=True )
 
   except Exception as e:
     error_str = traceback.format_exc()
@@ -85,13 +84,18 @@ async def create_product(
       detail=response
     )
 
+
+  if image:
+    new_product.image = True
+
   # Save data
   try:
     tx = db.begin_transaction(write=["Product"])
+    prepped_data = jsonable_encoder(new_product, by_alias=True, exclude_none=True )
     db_response = tx.collection("Product").insert(prepped_data, return_new=True)
+
     # Save image
     if image:
-
       product_image = UserFile.product_media(
         append_path=db_response['_key'],
         file=image,
@@ -101,15 +105,29 @@ async def create_product(
         await product_image.write_file('image.jpg')
 
       except:
+        tx.abort_transaction()
         raise HTTPException(
           status_code=500,
-          detail="Could not save image"
+          detail="There was an error saving the image"
         )
 
     tx.commit_transaction()
 
+    # Close request and return response
+    status_code = 200
+    message = "Product created"
+    response = APIResponse(
+      status_code=status_code,
+      message=message,
+      # Arango replies by sending a json that includes id, key, rev and
+      # then again the whole document nested in the main objecy,
+      # thus duplicating the above keys. Below we get only the whole document.
+      detail=db_response['new']
+    )
+    return response
 
   except Exception:
+    tx.abort_transaction()
     status_code = 500
     error_str = traceback.format_exc()
     response=dict(
@@ -122,29 +140,15 @@ async def create_product(
       detail=response
     )
 
-  # Close request and return response
-  status_code = 200
-  message = "Product created"
-  response = APIResponse(
-    status_code=status_code,
-    message=message,
-    # Arango replies by sending a json that includes id, key, rev and
-    # then again the whole document nested in the main objecy,
-    # thus duplicating the above keys. Below we get only the whole document.
-    detail=db_response['new']
-  )
-
-  return response
-
-
-
-
 # =================================================
 #  DELETE /PRODUCT_KEY : DELETE PRODUCT
 # =================================================
 @router.delete("/{product_key}")
 async def delete_product(product_key):
   product_to_trash = product_db.get(product_key)
+
+  # TODO: Verify if there's any workorder or active item related
+  # How to deal with historical data?
 
   try:
     updated_product = product_db.update(dict(_key=product_key, trash=True), return_new=True)['new']
@@ -279,6 +283,10 @@ async def replace_product_image(
   # extension = new_image.filename.split('.')[-1]
   img = UserFile.product_media(append_path=product_key, file=new_image)
   filename = 'image.jpg'
+  product_db.update(dict(
+    _key=product_key,
+    image=True
+  ))
   await img.write_file(filename)
   return APIResponse(message="File saved correctly")
 
@@ -292,7 +300,10 @@ async def replace_product_image(product_key: str):
   # extension = new_image.filename.split('.')[-1]
   img = UserFile.product_media(append_path=product_key)
   img.delete_file('image.jpg')
-
+  product_db.update(dict(
+    _key=product_key,
+    image=False
+  ))
 
 # =================================================
 #  GET /PRODUCT_KEY : GET PRODUCT DATA

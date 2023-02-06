@@ -6,25 +6,16 @@
 2. Copy sample media files into media folder
 3. Create volumes:
 ```
-# create implicit db_data volume
-docker volume create db_data
-
-# create other volumes linked to folders in the repo.
-docker volume create --driver local -o o=bind -o type=none -o device="/path/to/project/media" media
-docker volume create --driver local -o o=bind -o type=none -o device="/path/to/project/db/backup" db_backup
+# run for each of the following: media, db_data, db_backup, logs
+docker volume create --driver local -o o=bind -o type=none -o device="/path/to/related/folder" <volume_name>
 ```
-4. Install webapp dependencies
-```
-cd /path/to/project/webapps/main
-npm install 
-```
-5. From the project root folder, run the following command:
+3. From the project root folder, run the following command:
 ```
 docker compose -f deploy/compose/base.yaml -f deploy/compose/dev.yaml --project-directory . --project-name <whatever you want> up -d
 ```
-6. Restore db backup
+4. Restore db backup
 ```
-docker exec <project-name>-db-1 arangorestore --input-directory "/db_backup" --all-databases true --create-database
+docker exec <project-name>_db_1 arangorestore --input-directory "/db_backup" --all-databases true --create-database
 ```
 
 

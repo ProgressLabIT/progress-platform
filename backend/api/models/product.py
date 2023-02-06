@@ -28,6 +28,7 @@ class ProductBaseData(FlexModel):
   code: str
   description: Optional[str] = None
   active: bool = True
+  image: bool = False # to be replaced with Object Storage url in the future
 
 class ProductDetails(ProductBaseData):
   trash: bool = False
