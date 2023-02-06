@@ -1,16 +1,14 @@
-FROM node:15 AS builder
+FROM node:16 AS builder
 WORKDIR /app
 COPY package.json .
-COPY package-lock.json .
-RUN npm install
+COPY yarn.lock .
+RUN yarn
 
 FROM builder AS built
-COPY .eslintrc.js .
-COPY babel.config.js .
-COPY vue.config.js .
-COPY src ./src
 COPY public ./public
-RUN npm run build
+COPY jsonfig.json postcss.config.js quasar.config.json
+COPY src ./src
+RUN yarn quasar build
 
 FROM nginx:1.18
 COPY nginx.prod.conf /etc/nginx/nginx.conf
