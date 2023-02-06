@@ -126,6 +126,10 @@
           cmd: 'openssl rand -hex {{ item.length }} | docker secret create {{ item.name }} -'
         loop: '{{ secrets }}'
 
+  - name: Setup observability services
+    tags: observability
+    block:
+
       - name: Create Portainer Agent service
         community.docker.docker_swarm_service:
           name: portainer_agent
@@ -148,7 +152,7 @@
               target: '/var/lib/docker/volumes'
               type: bind
 
-      - name: Copy deployment files
+      - name: Copy Vector config file
         ansible.builtin.copy:
           src: vector.toml
           dest: '{{ root_dir }}/config/vector.toml'
