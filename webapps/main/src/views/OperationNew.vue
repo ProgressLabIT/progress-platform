@@ -1,105 +1,56 @@
 <template>
-  <v-dialog
-    value="true"
-    :overlay-color="$theme.background"
-    overlay-opacity="1"
-    max-width="600px"
-    persistent no-click-animation>
+  <BaseModalForm
+    :show="true"
+    id="new-product-form"
+    @submit="submit"
+    max_width="700px"
+    @cancel="$router.back()">
 
-    <v-card>
-      <v-card-title>
-        <h3 class="display">
-          {{ $tc('operation.new') }}
-        </h3>
-      </v-card-title>
+     <template #title>
+      {{ $t('operation.new') }}
+    </template>
 
-      <v-card-text>
-        <transition name="slide-fade" mode="out-in">
-          <v-form
-            @submit.prevent="submit"
-            lazy-validation
-            v-model="valid"
-            v-if="stage==='form'" key="form">
-            <v-row>
-              <v-col cols="6">
-                <h5 class="mt-2 text-uppercase">{{ $tc('name') }}</h5>
-                <v-text-field 
-                  autocomplete="null"
-                  required
-                  single-line
-                  hide-details
-                  v-model="new_operation_data.name"
-                  class="pt-0 body-2">
-                </v-text-field>
-              </v-col>
-              <v-col cols="6">
-                <h5 class="mt-2 text-uppercase">{{ $tc('code') }}</h5>
-                <v-text-field 
-                  autocomplete="null"
-                  required
-                  single-line
-                  hide-details
-                  v-model="new_operation_data.code"
-                  class="pt-0 body-2">
-                </v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <h5 class="mt-2 text-uppercase">{{ $tc('description') }}</h5>
-                <v-textarea 
-                  autocomplete="null"
-                  required
-                  auto-expand
-                  hide-details
-                  v-model="new_operation_data.description"
-                  class="pt-0 body-2">
-                </v-textarea>
-              </v-col>
-            </v-row>
+    <template #form>
+      <div class="row q-col-gutter-xl" style="min-width: 400px">
+        <div class="col-6">
+          <q-input
+            :label="$capitalize($t('name'))"
+            v-model="new_operation_data.name"
+            clearable>
+          </q-input>
+        </div>
 
-            <v-row class="mt-6">
-              <v-col>
-                <v-btn block depressed :color="$theme.blue" @click="submit">salva</v-btn>
-              </v-col>
-              <v-col>    
-                <v-btn block depressed :color="$theme.grey" @click="$router.back()">{{ $tc('cancel') }}</v-btn>
-              </v-col> 
-            </v-row>  
-          </v-form>
+        <div class="col-6">
+          <q-input
+            :label="$capitalize($t('code'))"
+            v-model="new_operation_data.code"
+            clearable>
+          </q-input>
+        </div>
 
-          <div v-else-if="stage==='creating'" key="creating">
-            <LoadingSignal title=""></LoadingSignal>
-          </div>
-
-          <div v-else-if="stage==='success'" key="success">
-            <p>{{ $tc('operations.new_success') | capitalize }}.</p>
-
-            <v-spacer></v-spacer>
-
-            <v-btn 
-              :color="$theme.grey" 
-              @click="$router.back()">
-              {{ $tc('close') }}
-            </v-btn>
-          </div>
-          
-        </transition>
+        <div class="col-12">
+          <q-input
+            type="textarea"
+            clearable
+            :label="$capitalize($t('description'))"
+            v-model="new_operation_data.description">
+          </q-input>
+        </div>
+      </div>
+    </template>
 
 
-      </v-card-text>
-    </v-card>
-  </v-dialog>
-
+  </BaseModalForm>
 </template>
 
 <script>
-import {capitalize as c} from '@/lib/filters.js'
-import LoadingSignal from '@/components/LoadingSignal.vue'
+import BaseModalForm from '@/components/BaseModalForm.vue'
 
 export default {
 
   name: 'OperationNew',
 
-  components: { LoadingSignal },
+  components: { BaseModalForm },
 
   data () {
     return {
@@ -125,19 +76,20 @@ export default {
       }
 
       else {
-        this.stage = 'creating'
-        // this.new_user_data.temp_psw = generateTempPassword(8)
-        
         this.$store.dispatch('createOperation', this.new_operation_data)
-        .then( () => {
-          this.stage = 'success'
+        .then( (new_operation_key) => {
+          this.$router.push({
+            name: 'operationDetail',
+            params: {
+              operation_key: new_operation_key
+            }
+          })
         })
         .catch( err => {
           if (err.response.status === 409) {
             window.alert(c(this.$tc('operations.alerts.op_name_used')))
           }
           else { window.alert(err) }
-          this.stage = 'form'
         })
       }
     }

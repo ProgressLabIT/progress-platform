@@ -1,17 +1,15 @@
 <template>
-  <v-row class="fill-height" align="center" justify="center">
-    <v-col cols="auto" class="d-flex flex-column justify-center align-center">
-      <h3 class="display highlight text-uppercase">
-        {{ title ? title : $tc('loading_text') }}
-      </h3>
-      <v-progress-circular 
-        indeterminate 
-        size="40" 
-        :color="$theme.blue"
-        class="mt-6 mx-auto">
-      </v-progress-circular>
-    </v-col>
-  </v-row>
+  <div class="fit flex-center">
+    <div class="text-h3 display highlight text-uppercase">
+      {{ title ? title : $t('loading_text') }}
+    </div>
+    <q-circular-progress
+      indeterminate
+      size="40px"
+      color="theme-blue"
+      class="q-mt-md">
+    </q-circular-progress>
+  </div>
 </template>
 
 <script>

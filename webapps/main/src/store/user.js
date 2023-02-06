@@ -1,6 +1,4 @@
-import Vue from 'vue'
-import axios from 'axios'
-import { api } from '@/lib/apiCall.js'
+import { api, axios } from '@/boot/axios.js'
 import { isEmpty as _isEmpty } from 'lodash/fp'
 
 
@@ -22,7 +20,7 @@ const user = {
 
   mutations: {
     LOAD_USERS(state, user_list) {
-      Vue.set(state, 'user_list', user_list)
+      state.user_list = user_list
     }
   },
 

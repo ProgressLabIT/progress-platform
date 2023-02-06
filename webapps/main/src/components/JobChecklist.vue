@@ -1,63 +1,66 @@
 <template>
-  <v-container fluid class="scroll pt-8 px-12" :style="'max-height:'+height+'px'">
+  <div class="col column q-pt-lg q-px-xl">
     
-    <v-card-title class="display highlight px-0 pt-0 pb-3 nowrap">
-      {{ step.title }}
-    </v-card-title>
-    <v-card-subtitle 
-      class="px-0 mb-2">
-      {{ step.description }}
-    </v-card-subtitle>
+    <!-- CHECKLIST TITLE -->
+    <div class="col-auto q-pt-md">
+      <div class="text-h3 display q-px-none q-pt-none nowrap">
+        {{ step.title }}
+      </div>
+      <div class="text-body2 text-low">
+        {{ step.description }}
+      </div>
+    </div>
 
-    <template v-for="(check, index) in step_checks" >
-      <v-row 
-        :key="`row${index}`"
-        align="center">
-        <v-col cols="1" class="d-flex align-center">
-          <v-avatar 
-            :color="Math.abs(values[index])==1 ? $theme.green : 'transparent'" 
-            size="24" 
-            class="d-flex text-center body-2 font-weight-medium">
-            <span v-if="!values[index]">
-              {{ index + 1 }}
-            </span>
-            <v-icon v-else small class="solid-white">mdi-check</v-icon>
-          </v-avatar> 
-        </v-col>
-        <v-col cols="6" class="d-flex align-center">
-          <p class="highlight ma-0">{{ check }}</p>
-        </v-col>
-        <v-spacer></v-spacer>
-        <v-col cols="auto">
-          <v-btn 
-            :key="`no${index}`"
-            x-large depressed
-            :text="values[index]!=-1" 
-            :disabled="!job_active || batch_step.done"
-            :color="$theme.red"
-            @click="toggleCheck(index, -1)"
-            >
-            {{ $tc('no') }}
-          </v-btn>
-          <v-btn 
-            x-large depressed
-            :key="`yes${index}`"
-            :disabled="!job_active || batch_step.done"
-            :text="values[index]!=1" 
-            :color="$theme.green"
-            @click="toggleCheck(index, 1)"
-            class="ml-3"
-            >
-            {{ $tc('yes') }}
-          </v-btn>
-        </v-col>        
-      </v-row>
-      <v-divider 
-        :key="`divider${index}`" 
-        v-if="index < step_checks.length -1">
-      </v-divider>      
-    </template>      
-  </v-container>
+    <!-- CHECKS -->
+    <q-scroll-area class="col q-mt-md">
+      <template v-for="(check, index) in step_checks" :key="`row${index}`">
+        <div class="row items-center q-py-md">
+          <div class="col-1 items-center">
+            <q-avatar
+              :color="Math.abs(values[index])==1 ? 'theme-green' : 'transparent'"
+              size="24px"
+              class="row flex-center text-center text-body2 font-weight-medium">
+              <span v-if="!values[index]">
+                {{ index + 1 }}
+              </span>
+              <q-icon v-else small class="solid-white" name="mdi-check" />
+            </q-avatar>
+          </div>
+          <div class="col-6 items-center">
+            <p class="text-body1 q-ma-none">{{ check }}</p>
+          </div>
+          <q-space />
+          <div class="col-auto">
+            <q-btn
+              :key="`no${index}`"
+              size="lg" unelevated
+              :flat="values[index]!=-1"
+              :disabled="!job_active || batch_step.done"
+              color="theme-red"
+              style="width: 100px"
+              @click="toggleCheck(index, -1)">
+              <span class="text-h4 display weight-bold">{{ $t('no') }}</span>
+            </q-btn>
+            <q-btn
+              size ="lg" unelevated
+              :key="`yes${index}`"
+              :disabled="!job_active || batch_step.done"
+              :flat="values[index]!=1"
+              color="theme-green"
+              style="width: 100px"
+              @click="toggleCheck(index, 1)"
+              class="q-ml-lg">
+              <span class="text-h4 display weight-bold">{{ $t('yes') }}</span>
+            </q-btn>
+          </div>
+        </div>
+        <q-separator
+          :key="`divider${index}`"
+          v-if="index < step_checks.length -1">
+        </q-separator>
+      </template>
+    </q-scroll-area>
+  </div>
 </template>
 
 <script>
@@ -72,7 +75,6 @@ export default {
     },
     height: {
       type: Number,
-      required: true
     }
   },
 
@@ -105,7 +107,10 @@ export default {
     toggleCheck(index, check_value) {
       // reset check value to 0 when user clicks a second time on the choice made
       let value = check_value
-      if (this.values[index] == check_value) value = 0
+      if (this.values[index] == check_value) {
+        value = 0
+      }
+
       const check_data = {
         step_key: this.step._key,
         value_index: index,
@@ -116,7 +121,7 @@ export default {
   },
 
   created() {
-    this.step_checks.forEach(() => this.values.push(0))
+    // this.step_checks.forEach(() => this.values.push(0))
   }
 }
 </script>

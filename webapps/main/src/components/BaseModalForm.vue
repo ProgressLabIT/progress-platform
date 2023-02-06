@@ -1,54 +1,66 @@
 <template>
-  <v-dialog 
-    v-model="show"
-    :overlay-color="$theme.background"
-    overlay-opacity="1"
-    :max-width="max_width"
-    persistent no-click-animation>
-    <v-card>
-      
-      <v-card-title>  
-        <h3 class="display">
-          <slot name="title"></slot>
-        </h3>
-      </v-card-title>
+  <BaseDialog :show="show" @close="$router.back()">
+    <q-card class="surface1 q-pa-md" :style="{ maxWidth: max_width }">
 
-      <v-card-text>
-        <v-form @submit="$emit('submit')" lazy-validation v-model="valid">  
-          <slot name="form"></slot>
-          <v-row class="mt-6">
-            <slot name="actions">
-              <v-col>
-                <v-btn block depressed :color="$theme.blue" @click="$emit('submit')">
-                  {{ $tc('save') }}
-                </v-btn>
-              </v-col>
-              <v-col>    
-                <v-btn block depressed :color="$theme.grey" @click="$emit('cancel')">
-                  {{ $tc('cancel') }}
-                </v-btn>
-              </v-col> 
-            </slot>
-          </v-row>  
-        </v-form>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+      <!-- DIALOG TITLE -->
+      <q-card-section class="text-h3 display weight-medium">
+        <slot name="title"></slot>
+      </q-card-section>
+
+      <q-card-section>
+        <slot name="form"></slot>
+      </q-card-section>
+
+      <q-card-section>
+        <div class="row q-mt-md q-col-gutter-md">
+          <slot name="actions">
+            <div class="col-6">
+              <q-btn
+                class="full-width"
+                color="theme-blue"
+                :loading="loading"
+                @click="$emit('submit')">
+                {{ $t('save') }}
+              </q-btn>
+            </div>
+            <div class="col-6">
+              <q-btn
+                class="full-width"
+                color="theme-grey"
+                @click="$emit('cancel')">
+                {{ $t('cancel') }}
+              </q-btn>
+            </div>
+          </slot>
+        </div>
+      </q-card-section>
+    </q-card>
+  </BaseDialog>
 </template>
 
 <script>
+import BaseDialog from '@/components/BaseDialog.vue'
 export default {
 
   name: 'BaseModalForm',
 
+  components: {
+    BaseDialog
+  },
+
   props: {
     show: {
       type: Boolean,
-      default: true
+      default: true,
+      required: false
     },
     max_width: {
       type: String,
       default: '500px'
+    },
+    loading: {
+      type: Boolean,
+      default: false
     }
   },
 
@@ -61,5 +73,5 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
+<style>
 </style>

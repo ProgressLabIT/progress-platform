@@ -1,43 +1,43 @@
 <template>
-  <v-container fluid class="pa-0 fill" ref="step_card">
-
-      <v-toolbar dense :color="$theme.surface2" class="flex-grow-0" v-if="procedure.length">
-        <v-row align="center" class="fill-height mx-0" ref="stepper">
-         
-          <template v-for="(step, index) in procedure">
-            <v-col 
-              cols="auto" 
-              class="px-1"
-              :key="step._key">
-              <v-avatar  
-                size="20" 
-                :style="stepStyle(index)"
-                class="d-flex text-center smaller font-weight-medium"
-                @click="stepClick(index)">
-                <span :class="current_step_index == index ? 'solid-white weight-bold': ''">
-                  {{ index + 1 }}
-                </span>
-              </v-avatar>
-            </v-col>
-            <v-divider 
-              v-if="index < procedure.length - 1"
-              :key="index">
-            </v-divider>
-          </template>
-        </v-row>
-      </v-toolbar>
-      
-      <component
-        v-if="procedure.length" 
-        :is="step_component" 
-        :step="current_step" 
-        :height="step_content_height">
-      </component>
+  <div ref="step_card" class="full-height column">
 
       <!-- NO PROCEDURE -->
-      <NoDataAlert v-else>{{ $tc('phase.no_procedure') }}</NoDataAlert>
+      <NoDataAlert v-if="!procedure.length">
+        {{ $t('phase.no_procedure') }}
+      </NoDataAlert>
 
-  </v-container>
+      <template v-else>
+        <q-toolbar dense class="col-1 q-pa-md shadow-4 surface2">
+          <div class="row full-width justify-between items-center q-col-gutter-xs" ref="stepper">
+
+            <template v-for="(step, index) in procedure" :key="step._key">
+              <div class="col-auto q-px-xs">
+                <q-avatar
+                  size="20px"
+                  :style="stepStyle(index)"
+                  class="row flex-center items-stretch text-center smaller text-weight-medium"
+                  @click="stepClick(index)">
+                  <span :class="current_step_index == index ? 'solid-white weight-bold': ''" class="smaller">
+                    {{ index + 1 }}
+                  </span>
+                </q-avatar>
+              </div>
+              <hr
+                v-if="index < procedure.length - 1"
+                :key="index"
+                class="step-divider">
+            </template>
+
+          </div>
+        </q-toolbar>
+
+        <component
+          v-if="procedure.length"
+          :is="step_component"
+          :step="current_step">
+        </component>
+      </template>
+  </div>
 </template>
 
 <script>
@@ -119,8 +119,6 @@ export default {
     force_order() {
       return this.job.parameters.step_check_force_order
     }
-
-   
   },
 
   methods: {
@@ -160,12 +158,6 @@ export default {
       }
     },
 
-    setContentHeight() {
-      const card_height = this.$refs.step_card.clientHeight
-      const stepper_height = this.$refs.stepper.clientHeight
-      this.step_content_height = card_height - stepper_height
-    },
-
     allowClick(index) {
       let allow = true 
       if (this.force_order) {
@@ -182,19 +174,7 @@ export default {
         this.current_step_index = index
       }
     }
-  },
-
-
-  mounted() {
-    this.setContentHeight()
-    const resizeContent = _throttle(this.setContentHeight, 200)
-    window.addEventListener('resize', resizeContent)
-  },
-
-  updated() {
-    this.setContentHeight()
-  },
-
+  }
 }
 </script>
 

@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import { api } from '@/lib/apiCall.js'
+import { api } from '@/boot/axios.js'
 import { DateTime as DT } from 'luxon'
 
 function createEmptyBatch(state, startDT, job) {
@@ -92,30 +91,30 @@ const traceability = {
 
     START_USER_SESSION(state, data) {
       const user_data = { name: data.name, surname: data.surname, _key: data.user_key }
-      Vue.set(state, 'user', user_data)
+      state.user = user_data
 
       const session_data = { _key: data.session_key, scope: data.scope }
-      Vue.set(state, 'user_session', session_data)
+      state.user_session = session_data
     },
 
     LOAD_WORKING_JOB_DATA(state, {job_data, batch_data}) {
-      Vue.set(state, 'working_job_data', job_data)
-      Vue.set(state, 'current_batch_data', batch_data)
+      state.working_job_data = job_data
+      state.current_batch_data = batch_data
     },
 
     START_JOB(state, { batch_data, job_data}) {
       // get timestamp and state metadata
-      Vue.set(state, 'current_batch_data', batch_data)
-      Vue.set(state, 'working_job_data', job_data)
+      state.current_batch_data = batch_data
+      state.working_job_data = job_data
     },
 
     CLOSE_WORK_SESSION(state, work_session) {
       // Update general list of work sessions
       const ws_list_length = state.work_session_list.length
-      Vue.set(state.work_session_list, ws_list_length-1, work_session)
+      state.work_session_list[ws_list_length-1] = work_session
 
       // Update Job status
-      Vue.set(state.working_job_data, 'active', false)
+      state.working_job_data.active = false
     },
 
     SET_HEARTBEAT(state, alive) {
@@ -126,12 +125,12 @@ const traceability = {
 
     UPDATE_STEP_USER_DATA(state, { step_key, value_index, value }) {
       const step_data = this.getters.getBatchStep(step_key)
-      Vue.set(step_data.user_data, value_index, value)
+      step_data.user_data[value_index] = value
     },
 
     UPDATE_JOB(state, { job_data, batch_data }) {
-      Vue.set(state, 'working_job_data', job_data)
-      Vue.set(state, 'current_batch_data', batch_data)
+      state.working_job_data = job_data
+      state.current_batch_data = batch_data
     },
   },
 

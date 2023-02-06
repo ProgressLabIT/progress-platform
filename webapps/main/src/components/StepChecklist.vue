@@ -1,109 +1,120 @@
 <template>
-  <div>
-    <h5 class="mb-6 text-uppercase">
-      {{ $tc('phase.checklist_title') }}
-    </h5>
-
-    <draggable v-model="step_checks"
-      handle=".handle"
-      :disabled="!edit_mode"
-      @start="drag = true" 
-      @end="drag = false"
-      v-bind="$store.state.drag_options">
-      <transition-group type="transition" :name="!drag ? 'flip-list' : null">
-      <div v-for="(check, index) in step_checks" 
-        :key="index">
-        <v-row  
-          v-if="confirming_delete != index"
-          @mouseover="over_row=index"
-          @mouseleave="over_row=null"> 
-          <v-col cols="auto" class="pr-0">
-            <v-icon v-if="edit_mode" 
-              :color="$theme.text_low"
-              :style="drag? 'cursor: grabbing' : 'cursor: grab'"
-              class="handle">
-              drag_handle
-            </v-icon>
-            
-            <v-icon v-else 
-              :color="$theme.text_low">
-              check_box_outline_blank
-            </v-icon>
-          </v-col> 
-          
-          <v-col cols="10" class="py-0">      
-            <v-textarea
-              v-if="edit_mode" 
-              filled single-line dense auto-grow
-              rows="1"
-              row-height="36px"
-              :value="check"
-              @change="udpateCheck(index, $event)"
-              class="body-2"
-              >
-            </v-textarea> 
-            <p v-else class="pt-3">{{ check }}</p>
-          </v-col>  
-          
-          <!-- DELETE ICON -->
-          <v-col cols="1" v-show="over_row==index" v-if="edit_mode && confirming_delete != index">
-            <BaseTooltipIcon
-              icon="delete"
-              :tooltip="$tc('phase.delete_check') | capitalize"
-              :color="$theme.red"
-              @iconClick="confirming_delete = index"/>
-          </v-col> 
-        </v-row>
-
-        <!-- DELETE CHECK CONFIRMATION -->
-          
-        <v-card v-else outlined class="fill mb-6" >
-          <v-row justify="end" class="fill"> 
-
-            <v-col cols="auto" class="pl-3">
-              <span class="body-2">
-                {{ $tc('confirm_question') | capitalize }}
-              </span>
-            </v-col>  
-            <v-col cols="auto">
-              <v-btn 
-                x-small :color="$theme.red" 
-                @click.stop="deleteCheck(index)">
-                <v-icon small >delete</v-icon>
-              </v-btn>
-            </v-col>  
-                        
-            <v-col cols="auto">
-              <v-btn 
-                x-small :color="$theme.grey"
-                @click.stop="confirming_delete=null">
-                <v-icon small>close</v-icon>
-              </v-btn>
-            </v-col>  
-
-          </v-row>  
-        </v-card>
-      </div>
-    </transition-group>
-    </draggable>
-
-    <!-- ADD CHECK -->
-    <v-hover v-slot:default="{ hover }">    
-      <v-btn text small class="ml-n3"
-        v-if="edit_mode"
-        :color="hover ? $theme.blue : $theme.text_high"
-        @click="addCheck">
-         + {{ $tc('phase.add_check') }}
-      </v-btn>
-    </v-hover>
-
+  <div class="text-h5 q-mt-xl q-mb-md text-uppercase">
+    {{ $t('phase.checklist_title') }}
   </div>
+
+  <div id="checklist">
+    <div
+      v-for="(check, index) in step_checks"
+      :key="index"
+      class="q-py-md">
+      <div
+        class="row q-col-gutter-lg items-center"
+        v-if="confirming_delete != index"
+        @mouseenter="over_row = index"
+        @mouseleave="over_row = null">
+        <div class="col-1 text-center low-text">
+          <template v-if="edit_mode">
+            <q-icon
+              v-if="index > 0"
+              @mouseenter="onup=index"
+              @mouseleave="onup=null"
+              :name="`mdi-arrow-up-circle${onup!=index ? '-outline' : ''}`"
+              :color="onup == index ? 'theme-blue' : false"
+              size="xs"
+              @click="moveUp(index)">
+              <q-tooltip>
+                move up
+              </q-tooltip>
+            </q-icon>
+            <q-icon
+              v-if="index < step_checks.length - 1"
+              @mouseenter="ondown=index"
+              @mouseleave="ondown=null"
+              :name="`mdi-arrow-down-circle${ondown!=index ? '-outline' : ''}`"
+              :color="ondown == index ? 'theme-blue' : false"
+              size="xs"
+              @click="moveDown(index)">
+              <q-tooltip>
+                Move down
+              </q-tooltip>
+            </q-icon>
+          </template>
+          <q-icon
+            v-else
+            name="mdi-checkbox-blank-outline"
+            size="sm">
+          </q-icon>
+        </div>
+
+        <div class="col-10">
+          <q-input
+            v-if="edit_mode"
+            filled
+            :model-value="check"
+            @update:model-value="(value) => updateCheck(index, value)">
+          </q-input>
+          <div v-else>{{ check }}</div>
+        </div>
+
+        <div
+          class="col-1 q-ml-auto"
+          v-if="edit_mode && confirming_delete != index"
+          v-show="over_row == index">
+          <BaseTooltipIcon
+            icon="mdi-delete"
+            :tooltip="$capitalize($t('phase.delete_check'))"
+            :color="$theme.red"
+            @iconClick="confirming_delete = index">
+          </BaseTooltipIcon>
+        </div>
+      </div>
+
+      <!-- DELETE CONFIRMATION -->
+      <q-card
+        v-else
+        square
+        bordered
+        class="background shadow-6 q-pa-md">
+        <div class="row items-center text-body2 q-gutter-md">
+          <span class="highlight">
+            {{ check }}
+          </span>
+          <q-space />
+          <span class="q-mr-md">
+            {{ $capitalize($t('confirm_question')) }}
+          </span>
+          <q-btn
+            padding="xs sm"
+            icon="mdi-delete"
+            color="theme-red"
+            size="xs"
+            @click.stop="deleteCheck(index)">
+          </q-btn>
+          <q-btn
+            padding="xs sm"
+            icon="mdi-close"
+            color="theme-grey"
+            size="xs"
+            @click.stop="confirming_delete=null">
+          </q-btn>
+        </div>
+      </q-card>
+    </div>
+  </div>
+
+  <q-btn
+    color="theme-blue"
+    size="12px"
+    class="q-mt-md"
+    v-if="edit_mode"
+    @click="addCheck">
+    + {{ $capitalize($t('phase.add_check')) }}
+  </q-btn>
 </template>
 
 <script>
-// import {debounce as _debounce} from 'lodash/fp'
-import BaseTooltipIcon from '@/components/BaseTooltipIcon'
-import draggable from 'vuedraggable'
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 
 export default {
 
@@ -111,7 +122,7 @@ export default {
 
   components: {
     BaseTooltipIcon,
-    draggable
+    // draggable
   },
 
   props: ['phase_index', 'step_index', 'edit_mode'],
@@ -119,8 +130,9 @@ export default {
   data() {
     return {
       over_row: null,
-      drag: false,
-      confirming_delete: null
+      confirming_delete: null,
+      onup: null,
+      ondown: null
     }
   },
 
@@ -131,7 +143,7 @@ export default {
     },
 
     current_step() {
-      let procedure = this.$store.state.process.temp[this.phase_index].steps
+      const procedure = this.$store.state.process.temp[this.phase_index].steps
       return procedure[this.step_index]
     },
 
@@ -144,7 +156,7 @@ export default {
         let phase_index = this.phase_index
         let step_index = this.step_index
 
-        this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value })
+        this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value  })
       }
     }
   },
@@ -162,12 +174,22 @@ export default {
       this.$store.commit('ADD_OR_UPDATE_STEP', { phase_index, step_index, step_data: new_step })
     },
 
-    udpateCheck(index, text) {
-        let phase_index = this.phase_index
-        let step_index = this.step_index
-        let new_checklist = this.step_checks
-        new_checklist[index] = text
-        this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value: new_checklist })
+    updateCheck(index, text) {
+      let phase_index = this.phase_index
+      let step_index = this.step_index
+      let new_checklist = this.step_checks
+      new_checklist[index] = text
+      this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value: new_checklist })
+    },
+
+    moveUp(index) {
+      const moved = this.step_checks.splice(index, 1)[0]
+      this.step_checks.splice(index - 1, 0, moved)
+    },
+
+    moveDown(index) {
+      const moved = this.step_checks.splice(index, 1)[0]
+      this.step_checks.splice(index + 1, 0, moved)
     },
 
     deleteCheck(index) {
@@ -178,7 +200,7 @@ export default {
       this.$store.commit('UPDATE_STEP_DETAILS', { phase_index, step_index, field: 'checks', value: new_checklist }) 
       this.confirming_delete = null
     }
-  },
+  }
 };
 </script>
 

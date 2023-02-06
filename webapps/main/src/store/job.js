@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import { api } from '@/lib/apiCall.js'
+import { api } from '@/boot/axios.js'
 
 const job = {
 
@@ -11,12 +10,12 @@ const job = {
 
   mutations: {
     LOAD_JOBS(state, job_list) {
-      Vue.set(state, 'job_list', job_list)
+      state.job_list = job_list
     },
-    
+
     LOAD_ASSIGNMENTS(state, data) {
-      Vue.set(state, 'assigned_job_list', data.assigned_jobs_by_operator)
-      Vue.set(state, 'unassigned_job_list', data.unassigned_jobs)
+      state.assigned_job_list = data.assigned_jobs_by_operator
+      state.unassigned_job_list = data.unassigned_jobs
     },
 
   },

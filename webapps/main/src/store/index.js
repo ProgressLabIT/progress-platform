@@ -1,29 +1,45 @@
-import Vue from "vue";
-import Vuex from "vuex";
-import { DateTime as DT } from 'luxon';
+import { DateTime as DT } from 'luxon'
+import { debounce } from 'quasar'
+import { createStore } from 'vuex'
 
-// import { persistSession } from "@/plugins/persistence"
-import { resetSessionTimeoutAtStoreChange } from "@/plugins/session"
+import { dark, light } from '@/boot/theme.js'
 
-import product from "./product"
-import process from "./process"
-import bom from "./bom"
-import user from "./user"
-import workorder from "./workorder"
 import job from "./job"
 import org from "./org"
-import nav from "./nav"
-import traceability from "./traceability"
+import process from "./process"
+import product from "./product"
 import session from "./session"
+import traceability from "./traceability"
+import user from "./user"
+import workorder from "./workorder"
+import bom from "./bom"
 
-import { dark, light } from '@/styles/theme.js'
+// import example from './module-example'
+
+/*
+ * If not building with SSR mode, you can
+ * directly export the Store instantiation;
+ *
+ * The function below can be async too; either use
+ * async/await or return a Promise which resolves
+ * with the Store instance.
+ */
+
+function resetSessionTimeoutAtStoreChange(store) {
+  const mutations_to_ignore = [
+    'TOGGLE_SESSION_LOCK',
+    'CLOSE_SESSION',
+    'SET_SESSION_TIMEOUT',
+  ]
+  store.subscribe( debounce((mutation) => {
+    if (!mutations_to_ignore.includes(mutation.type)) {
+      store.commit('SET_SESSION_TIMEOUT')
+    }
+  }, 5000))
+}
 
 
-
-Vue.use(Vuex);
-
-const store = new Vuex.Store({
-  
+const store = createStore({
   state() {
     return {
       drag_options: {
@@ -37,10 +53,10 @@ const store = new Vuex.Store({
 
   mutations: {
     UPDATE_SCREEN_TITLE(state, new_title) {
-      Vue.set(state, 'screen_title', new_title)
+      state.screen_title = new_title
     },
     SET_THEME(state, theme) {
-      Vue.set(state, 'theme_colors', theme)
+      state.theme_colors = theme
     }
   },
 
@@ -51,37 +67,35 @@ const store = new Vuex.Store({
   },
 
   getters: {
-    theme: state => state.theme_colors
+    theme (state) {
+      return state.theme_colors
+    },
   },
 
   plugins: [resetSessionTimeoutAtStoreChange],
 
   modules: {
-    product,
-    process,
     bom,
-    user,
-    workorder,
     job,
     org,
-    nav,
+    process,
+    product,
+    session,
     traceability,
-    session
+    user,
+    workorder
   }
-});
-
-export default store
+})
 
 
 /**
  * The following code restores the vuex state saved in localStorage
  * when closing or refreshing the tab, but locks the session, so the
  * user will have to input the password to proceed.
- * 
- * If more than five minutes have elapsed since the close, the session 
+ *
+ * If more than five minutes have elapsed since the close, the session
  * will not be restored.
  */
-
 const persistedState = window.localStorage.getItem('TEMP_SESSION')
 
 if (persistedState) {
@@ -94,3 +108,5 @@ if (persistedState) {
   }
   window.localStorage.removeItem('TEMP_SESSION')
 }
+
+export default store

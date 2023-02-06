@@ -1,70 +1,73 @@
 <template>
-  <v-dialog 
-    v-model="showModal"
-    :overlay-color="$theme.background"
-    overlay-opacity="1"
-    max-width="600px"
-    persistent no-click-animation>
-    <v-card>
-      
-      <v-card-title>  
-        <h3 class="display">
-          {{ $tc('operation.delete_title') | capitalize }}
-        </h3>
-      </v-card-title>
+  <BaseDialog :show="true" @close="$router.back()">
+    <q-card square class="surface1 q-pa-md" style="max-width: 600px">
 
-      <v-card-text>
+      <q-card-section class="text-h3 display highlight">
+        {{ $capitalize($t('operation.delete_title')) }}
+      </q-card-section>
 
-        <transition name="slide-fade" mode="out-in">
+      <transition name="slide-fade" mode="out-in">
 
-          <div v-if="stage==='confirm'" key="confirm">
-
-            <div class="my-4">
-              <p>{{ $tc('operation_delete.question') | capitalize }}?</p> 
-              <h3 class="mb-12 text-uppercase weight-bold">
-                {{ operation.name }} 
-              </h3>
+        <div v-if="stage == 'confirm'" key="confirm">
+          <q-card-section>
+            <div>
+              {{ $capitalize($t('operation.delete_question')) }}?
             </div>
-            <v-row justify="space-between" class="mx-0">
-              <v-btn :color="$theme.red" @click="deleteOperation">
-                {{ $tc('confirm') }}
-              </v-btn>
-              <v-btn :color="$theme.grey" @click="$router.back()">
-                {{ $tc('cancel') }}
-              </v-btn>
-            </v-row>
-          </div>
+            <div class="text-h3 uppercase highlight q-mt-md">
+              {{ operation.name }}
+            </div>
+          </q-card-section>
 
-          <div v-else-if="stage==='success'" key="success">
-            <v-row no-gutters align="center" class="mx-0">
-              <span class="weight-bold highlight">
-                {{ $tc('operation.delete_success') | capitalize }}.
+          <q-card-section>
+          <div class="row justify-between">
+            <q-btn
+              color="theme-red"
+              @click="deleteOperation"
+              :label="$t('confirm')">
+            </q-btn>
+            <q-btn
+              color="theme-grey"
+              @click="$router.back()"
+              :label="$t('cancel')"
+              class="q-ml-md">
+            </q-btn>
+          </div>
+          </q-card-section>
+        </div>
+
+        <div v-else key="success">
+          <q-card-section>
+            <div class="row justify-between">
+              <span class="q-mr-xl">
+                {{ $capitalize($t('operation.delete_success')) }}
               </span>
-              
-              <v-spacer></v-spacer>
+              <q-btn
+                color="theme-grey"
+                @click="$router.push({ name: 'operationLibrary' })"
+                :label="$t('close')">
+              </q-btn>
+            </div>
+          </q-card-section>
+        </div>
 
-              <v-btn 
-                :color="$theme.grey" 
-                @click="$router.push({ name: 'operationLibrary' })">
-                CHIUDI
-              </v-btn>
-            </v-row>
-          </div>
+      </transition>
+    </q-card>
 
-        </transition>
-
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+  </BaseDialog>
 </template>
 
 <script>
-import { api } from '@/lib/apiCall.js'
+import BaseDialog from '@/components/BaseDialog.vue'
+import { api } from '@/boot/axios.js'
 import NonExistentOperationGuard from "@/mixins/NonExistentOperationGuard.js"
 
 export default {
 
   name: 'OperationDelete',
+
+  components: {
+    BaseDialog
+  },
 
   mixins: [NonExistentOperationGuard],
 
@@ -87,7 +90,7 @@ export default {
       .then( async () => {
         // reload users from backend to make sure archived user is not present
         await this.$store.dispatch('getOperations')
-        this.stage = 'success' 
+        this.stage="success"
       })
       .catch(err => {
         // Operation is in use in some process    

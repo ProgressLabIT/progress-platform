@@ -1,125 +1,104 @@
 <template>
-  <v-card class="fill">
-    
-    <LoadingSignal v-if="!vuex_ready" />
+  <LoadingSignal v-if="!vuex_ready" />
 
-    <v-row v-else no-gutters class="fill-height">
-      <v-col cols="3" class="fill-height d-flex flex-column">
-        
-        <div class="px-5">
-          <!-- <h5>FILTRI</h5> -->
-          <v-text-field
-            append-icon="mdi-magnify"
-            hide-details
-            single-line
-            clearable
-            v-model="search_text">
-            <template v-slot:label>
-              <span class="medium">{{ $tc('search') | capitalize }}</span>
-            </template>
-          </v-text-field>
-          
+  <div class="row full-height">
+    <div class="col-3 full-height column">
 
-          <v-expansion-panels flat hover v-model="filter_panel" class="mt-2">
-            <v-expansion-panel>
-              <v-expansion-panel-header>
-                <span v-if="filter_panel === undefined" class=" medium">
-                  {{ $tc('user.more_filters') | capitalize }}
+      <q-input
+        dense
+        class="q-px-lg q-py-sm"
+        :placeholder="$capitalize($t('search'))"
+        v-model="search_text">
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
+      <q-expansion-item
+        v-model="filter_panel"
+        :label="filters_label"
+        header-class="q-px-lg">
+        <div class="row q-col-gutter-md q-pa-lg">
+          <div
+            class="col-6"
+            v-for="(check, index) in bool_filters"
+            :key="index">
+            <q-checkbox
+              dense
+              size="xs"
+              v-model="check.value">
+                <span class="medium">
+                  {{ $capitalize($t(`user.${check.name}`)) }}
                 </span>
-                <span v-else class="medium">
-                  {{ $tc('user.less_filters') | capitalize }}
-                </span>
-              </v-expansion-panel-header>
-              <v-expansion-panel-content>
-                <BaseAutocompleteDepartment 
-                  @select="setDepartment($event)" 
-                  class="pt-0 my-4"
-                  text_classes="medium"
-                  :label="$tc('department') | capitalize">
-                </BaseAutocompleteDepartment>
-
-            
-                <v-row dense class="mt-6"> 
-                  <v-col v-for="(check, index) in bool_filters" 
-                  :key="index">
-                    <v-checkbox 
-                      dense
-                      hide-details
-                      class="ma-0 pa-0"
-                      v-model="check.value">
-                      <template v-slot:label>
-                        <span class="medium">
-                          {{ $tc(`user.${check.name}`) | capitalize }}
-                        </span>
-                      </template>
-                    </v-checkbox>
-                  </v-col> 
-                </v-row>
-              </v-expansion-panel-content>
-            </v-expansion-panel>
-          </v-expansion-panels>  
-        </div>
-
-          <v-row dense class="pt-2 flex-grow-0 text-uppercase">
-            <v-col cols="6" class="pl-6 pb-1">
-              <h6>{{ $tc('name') }}</h6>
-            </v-col>
-            <v-col cols="6">
-              <h6>{{ $tc('user.surname') }}</h6>
-            </v-col>
-          </v-row>
-
-          <v-divider></v-divider>
-
-          <div class="flex-grow-1 scroll" style="overflow-x: hidden">
-            <v-row v-ripple dense
-              v-for="(user, index) in filtered_users" :key="index"
-              class="pointer"
-              style="white-space: nowrap"
-              :class="{ 'alternate-row': index % 2 == 0 }"
-              :style="user._key == selected_user_key ? `background-color: ${$theme.blue_bg}` : '' "
-              @click="showUser(user)">
-              <v-col cols="6" class="pl-6 pr-2 medium">
-                {{ user.name }}
-              </v-col>
-              <v-col cols="6" class="medium">
-                {{ user.surname }}
-              </v-col>
-            </v-row>
-            <v-divider></v-divider>
-            <v-row 
-              align="center" 
-              justify="center" 
-              class="smaller py-2">
-              {{ filtered_users.length }} {{ $tc('of') }} {{ user_list.length }}
-            </v-row>
+            </q-checkbox>
           </div>
+        </div>
+      </q-expansion-item>
 
-        <v-spacer></v-spacer>
-        
-        <v-divider></v-divider>
-        
-        <v-btn :color="$theme.blue" class="ma-2" @click="openUserNew">
-          {{ $tc('user.add') }}
-        </v-btn>
-      </v-col>
+      <!-- USER LIST HEADERS -->
+      <div class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold">
+        <div class="col-6">
+          {{ $t('name') }}
+        </div>
+        <div class="col-6">
+          {{ $t('user.surname') }}
+        </div>
+      </div>
 
-      <v-divider vertical></v-divider>
+      <q-separator />
 
-      <v-col class="fill-height scroll">
-        <transition name="slide-fade" mode="out-in"> 
-          <!-- <UserInfoScreen  -->
-          <router-view
-            :user="getUserData()" 
-            :key="selected_user_key">
-          </router-view>
-          <!-- </UserInfoScreen> -->
+      <!-- USER LIST -->
+      <div class="scroll col">
+        <div
+          class="row pointer q-px-lg q-py-xs medium"
+          :class="{ 'alternate-row': index % 2 == 0, 'bg-blue-backdrop': user._key == selected_user_key }"
+          v-for="(user, index) in filtered_users"
+          :key="index"
+          style="white-space: nowrap;"
+          @click="showUser(user)">
+          <div class="col-6">
+            {{ user.name }}
+          </div>
+          <div class="col-6">
+            {{ user.surname }}
+          </div>
+        </div>
+      </div>
+
+      <q-separator />
+
+      <!-- USER LIST COUNT -->
+      <div class="row flex-center smaller q-py-xs">
+        {{ filtered_users.length }} {{ $t('of') }} {{ user_list.length }}
+      </div>
+
+      <div class="q-pa-md q-mt-auto">
+        <q-btn
+          class="full-width q-mt-auto"
+          color="theme-blue"
+          :label="$t('user.add')"
+          @click="openUserNew">
+        </q-btn>
+      </div>
+
+    </div>
+
+    <q-separator vertical />
+
+    <!-- USER DATA -->
+    <div class="col">
+      <router-view v-slot="{ Component, route }">
+        <transition name="slide-fade" mode="out-in">
+          <div :key="route.fullPath">
+            <component
+              :is="Component"
+              :key="selected_user_key">
+            </component>
+          </div>
         </transition>
-      </v-col>
-
-    </v-row>
-
-  </v-card>
+      </router-view>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -146,7 +125,6 @@ export default {
       user_index: 0,
       search_text: '',
       department_filter: null,
-      // selected_user_key: null,
       bool_filters: [
         { name: 'enabled', value: true },
         { name: 'disabled', value: true },
@@ -160,6 +138,13 @@ export default {
   computed: {
     user_list() {
       return this.$store.state.user.user_list
+    },
+
+    filters_label() {
+      const string = this.filter_panel
+        ? 'user.less_filters'
+        : 'user.more_filters'
+      return this.$capitalize(this.$t(string))
     },
 
     selected_user_key() {
@@ -219,15 +204,10 @@ export default {
     },
 
     showUser(user) {
-      this.selected_user_key = user._key
       this.$router.push({ 
         name: 'userInfo', 
         params: { user_key: user._key }
       })
-    },
-
-    getUserData() {
-      return this.user_list.find( user => user._key === this.selected_user_key)
     },
 
     openUserNew() {

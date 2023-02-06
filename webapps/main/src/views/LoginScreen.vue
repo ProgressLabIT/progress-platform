@@ -1,139 +1,143 @@
 
 <template>
-  <v-dialog
-    value="true"
-    fullscreen no-click-animation persistent
-    >
+  <div class="fullscreen background flex flex-center">
+    <div class="row full-width items-center">
+      <div class="row col-5 justify-end">
+      <q-img width="300px" src="/media/progress/progresslab.svg">
+        <template v-slot:error>
+          <q-avatar size="180" color="blue">
+            <div class="column text-center highlight">
+              <div>IL</div>
+              <div>VOSTRO</div>
+              <div>LOGO</div>
+            </div>
+          </q-avatar>
+        </template>
+      </q-img>
+      </div>
 
-    <v-sheet :color="$theme.background" class="fill">
-      <v-container class="fill d-flex align-center">
-        <v-row justify="center" align="center">
+      <q-separator vertical class="q-mx-xl"/>
 
-          <v-col cols="12" md="5" class="d-flex justify-center justify-md-end">
-            <v-img max-width="300px" src="/media/progress/progresslab.svg">
-              <template v-slot:placeholder>
-                <v-avatar size="180" color="primary">
-                  <v-col class="text-center highlight">
-                    <div>IL</div>
-                    <div>VOSTRO</div>
-                    <div>LOGO</div>
-                  </v-col>
-                </v-avatar>
-              </template>
-            </v-img>
-          </v-col>
+      <q-card
+        class="surface1 full-height col-3 q-pa-lg"
+        square
+        style="width:500px">
+        <transition name="fade" mode="out-in">
 
-          <v-divider vertical inset class="mx-4"></v-divider>
+          <!-- LOGIN FORM -->
+          <q-form
+            v-if="!logging_in && !verified && !reset_password"
+            key="form"
+            @submit.prevent="login">
+            <q-card-section>
+              <div class="card-title text-high">
+                {{ $t('session.login_title') }}
+              </div>
+            </q-card-section>
 
-          <v-col cols="12" md="5" class="d-flex justify-center justify-md-start px-6">
-            <v-card :color="$theme.surface1" width="100%" max-width="500px">
+            <q-card-section>
+              <q-input
+                v-model="credentials.username"
+                :label="$capitalize($t('user.username'))"
+                autocomplete="off"
+                class="q-mb-md">
+              </q-input>
+              <q-input
+                v-model="credentials.password"
+                type="password"
+                :label="$capitalize($t('user.password'))">
+              </q-input>
+            </q-card-section>
 
-              <transition name="fade" mode="out-in">
+            <q-card-actions>
+              <q-btn type="submit" color="theme-blue" class="full-width">
+                {{ $t('session.start_session') }}
+              </q-btn>
+            </q-card-actions>
+          </q-form>
 
-                <v-container v-if="!logging_in && !verified && !reset_password" key="form">
-                  <v-form @submit.prevent="login">
-                    <v-card-title class="display">
-                      {{ $tc('session.login_title') }}
-                    </v-card-title>
-                    <v-card-text>
-                      <v-text-field
-                        v-model="credentials.username"
-                        :label="$tc('user.username') | capitalize"
-                        autocomplete="off">
-                      </v-text-field>
+          <div key="progress" v-else-if="logging_in">
+            <q-spinner
+              size="80px" :thickness="4"
+              indeterminate
+              color="theme-blue"
+              class="q-ma-xl">
+            </q-spinner>
+          </div>
 
-                      <v-text-field
-                        v-model="credentials.password"
-                        type="password"
-                        :label="$tc('user.password') | capitalize">
-                      </v-text-field>
-                    </v-card-text>
-                    <v-card-actions>
-                      <v-btn block type="submit" :color="$theme.blue">
-                        {{ $tc('session.start_session') }}
-                      </v-btn>
-                    </v-card-actions>
-                  </v-form>
-                </v-container>
+          <!-- WELCOME MESSAGE -->
+          <div v-else-if="verified" key="success">
+            <div class="row items-center">
 
-                <v-container key="progress" v-else-if="logging_in">
-                  <v-progress-circular
-                    size="80" width="6"
-                    indeterminate
-                    :color="$theme.blue"
-                    class="mx-auto">
-                  </v-progress-circular>
-                </v-container>
+              <div class="col-auto q-ml-md">
+                <BaseUserAvatar
+                  size="90px"
+                  :user="user"
+                  :show_name="false">
+                </BaseUserAvatar>
+              </div>
 
-                <v-container v-else-if="verified" key="success">
-                  <v-row align="center">
+              <div class="col q-ml-md">
+                <transition name="slide-fade" mode="out-in">
+                  <span class="highlight text-uppercase" :key="user_message">
+                    {{ user_message }}
+                  </span>
+                </transition>
+              </div>
 
-                    <v-col cols="auto" class="ml-5">
-                      <BaseUserAvatar
-                        size="90"
-                        :user="user"
-                        :show_name="false">
-                      </BaseUserAvatar>
-                    </v-col>
-
-                    <v-col>
-                      <transition name="slide-fade" mode="out-in">
-                        <span class="highlight text-uppercase" :key="user_message">
-                          {{ user_message }}
-                        </span>
-                      </transition>
-                    </v-col>
-
-                  </v-row>
-                </v-container>
-
-
-                <v-container v-else-if="reset_password" key="reset_password">
-                  <v-form @submit.prevent="resetPassword">
-                    <v-card-title class="display">
-                      {{ $tc('user.reset_password') }}
-                    </v-card-title>
-
-                    <v-card-text>
-                      <v-text-field
-                        v-model="new_password.first"
-                        type="password"
-                        :label="$tc('user.new_password') | capitalize"
-                        autocomplete="off">
-                      </v-text-field>
-
-                      <v-text-field
-                        v-model="new_password.second"
-                        type="password"
-                        label="Password"
-                        autocomplete="off">
-                      </v-text-field>
-                    </v-card-text>
-
-                    <v-card-actions>
-                      <v-btn block type="submit" :color="$theme.blue" :disabled="!password_match">
-                        {{ $tc('user.new_password_save_action') | capitalize }}
-                      </v-btn>
-                    </v-card-actions>
-
-                  </v-form>
-                </v-container>
+            </div>
+          </div>
 
 
+          <!-- RESET PASSWORD -->
+          <div v-else-if="reset_password" key="reset_password">
+            <q-form @submit.prevent="resetPassword">
+              <q-card-section>
+                <div class="card-title text-high">
+                {{ $t('user.reset_password') }}
+                </div>
+              </q-card-section>
 
-              </transition>
+              <q-card-section>
+                <q-input
+                  v-model="new_password.first"
+                  type="password"
+                  :label="$capitalize($t('user.new_password'))"
+                  autocomplete="off">
+                </q-input>
 
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-sheet>
-  </v-dialog>
+                <q-input
+                  v-model="new_password.second"
+                  type="password"
+                  label="Password"
+                  autocomplete="off">
+                </q-input>
+              </q-card-section>
+
+              <q-card-actions>
+                <q-btn
+                  type="submit"
+                  color="theme-blue"
+                  class="full-width"
+                  :disabled="!password_match">
+                  {{ $capitalize($t('user.new_password_save_action')) }}
+                </q-btn>
+              </q-card-actions>
+
+            </q-form>
+          </div>
+
+
+        </transition>
+      </q-card>
+
+    </div>
+  </div>
 </template>
 
 <script>
-import { api } from '@/lib/apiCall.js'
-import jwt from 'jsonwebtoken'
+import { api } from 'boot/axios.js'
+import jwt_decode from 'jwt-decode'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 
 export default {
@@ -189,7 +193,7 @@ export default {
         .then( resp => {
           const token = resp.data.detail.token
           this.$store.commit('UPDATE_AUTH_TOKEN', token)
-          this.user_key = jwt.decode(token).sub
+          this.user_key = jwt_decode(token).sub
 
           switch (resp.data.detail.action) {
             case 'start_session': {
@@ -223,10 +227,10 @@ export default {
       api.post(`session`, { user_key: this.user_key })
       .then(resp => {
         this.$store.commit('START_USER_SESSION', resp.data.detail)
-        this.$store.dispatch('setSessionTimeout')
+        this.$store.commit('SET_SESSION_TIMEOUT')
 
         setTimeout(() => {
-          this.user_message = this.$tc('session.login_welcome_message_1', 1, {
+          this.user_message = this.$t('session.login_welcome_message_1', {
             name: this.user.name,
             surname: this.user.surname
           })
@@ -234,7 +238,7 @@ export default {
           this.logging_in = false
         }, 1000)
         setTimeout(() => {
-          this.user_message = this.$tc('session.login_welcome_message_2')
+          this.user_message = this.$t('session.login_welcome_message_2')
         }, 3000)
         setTimeout(() => {
           this.$router.push(this.go_to_location)

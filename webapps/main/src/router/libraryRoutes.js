@@ -1,27 +1,25 @@
 const libraryRoutes = [
   {
-    path: "library",
+    path: "product",
     name: "libraryRoot",
     meta: { scope: "library", screen_title: true },
     component: () => import("@/components/BaseEmptyParentRoute.vue"),
     redirect: { name: 'productList' },
     children: [
       {
-        path: "product",
+        path: "list",
         name: "productList",
         component: () => import("@/views/ProductList.vue"),
-        children: [
-          {
-            path: "new",
-            name: "newProduct",
-            component: () => import("@/views/ProductNew.vue")
-          },
-        ]
       },
       {
-        path: "product/:product_key",
+        path: "new",
+        name: "newProduct",
+        component: () => import("@/views/ProductNew.vue")
+      },
+      {
+        path: ":product_key",
         redirect: { name: "productHome" },
-        component: () => import ("@/components/ProductScreen.vue"),
+        component: () => import("@/components/ProductScreen.vue"),
         props: true,
         children: [
           {
@@ -38,9 +36,9 @@ const libraryRoutes = [
             path: "bom",
             name: "bom",
             component: () => import("@/views/ProductBom.vue")
-          },
+          }
         ]
-      },
+      }
     ]
   }
 ]

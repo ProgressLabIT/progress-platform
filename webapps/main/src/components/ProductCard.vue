@@ -1,85 +1,70 @@
 <template>
-
-  <v-card 
-    :height="image ? '160px' : '120px'" 
-    outlined 
-    elevation="4"
-    @mouseenter="overCard = true"
-    @mouseleave="overCard = false"
+  <q-card
+    square
+    class="surface1 product-card"
+    :class="{ faded: !product.active }"
     @dblclick="$router.push(to_product_route)">
-    <v-img 
-      :src="image ? `/media/product/${product._key}/image.jpg` : ''" 
-      class="fill" 
-      :style="product.active ? '' : 'filter:grayscale(1) brightness(.5)'">
-      <v-container 
-        class="pa-0 d-flex flex-column" 
-        style="height:100%">
-      
-        <!-- Title and description overlay -->
-        <v-sheet 
-          :color="image ? ($vuetify.theme.dark ? 'rgba(0,0,0,.7)' : 'rgba(230,230,230,.8)') : 'transparent' "
-          class="px-2 py-0"
-          @mouseenter="overDesc = true" 
-          @mouseleave="overDesc = false" >      
-          <v-card-title class="display px-0 pt-0 pb-3 nowrap" :color="$theme.blue">
-            {{ product.code }}
-          </v-card-title>
-         
-          <!-- the dynamic class 'nowrap' allows to show or hide 
-          the full description on hover -->
-          <v-card-subtitle 
-            :class="['px-0 pb-1', overDesc ? '' : 'nowrap']">
-            {{ product.description }}
-          </v-card-subtitle>
-        </v-sheet>
+    <img
+      v-if="product.image & show_image"
+      style="object-fit: cover;"
+      :src="`/media/product/${product._key}/image.jpg`"
+      class="fit"
+      :style="product.active ? '' : 'filter:grayscale(1)'">
+    <div
+      class="absolute-top q-pa-sm"
+      :style="`background-color: ${show_image ? ($q.dark.isActive ? 'rgba(0,0,0,.7)' : 'rgba(230,230,230,.8)') : 'transparent'}`"
+      @mouseenter="overDesc = true"
+      @mouseleave="overDesc = false" >
+      <div class="text-h3 display">
+        {{ product.code }}
+      </div>
+      <div
+        class="text-uppercase low-text"
+        :class="['px-0 pb-1', overDesc ? '' : 'nowrap']">
+        {{ product.description }}
+      </div>
+    </div>
+    <ProductCardActions
+      class="absolute-bottom"
+      :product="product"
+      @showDelete="showDelete = true">
+    </ProductCardActions>
 
-        <v-spacer></v-spacer>
-
-        <!-- ACTIONS BAR -->
-        <v-expand-transition>
-          <ProductCardActions 
-            :product="product" 
-            v-show="showActions" 
-            @showDelete="showDelete = true"
-            />
-        </v-expand-transition>
-
-      </v-container>
-    </v-img>
-    
     <!-- DELETE CONFIRMATION -->
-    <v-overlay 
-      absolute 
-      opacity="1" 
-      :color="$theme.surface1"
+    <div
       v-if="showDelete"
-      class="ma-0 pa-0"
-      >
-      <v-container :class="image ? 'pa-6' : 'pa-3'">
-        <span>{{ $tc('product.confirm_delete_question') }}</span>
-        <span class="display weight-medium ml-2">{{ product.code }}</span>
-        <div class="d-flex justify-space-between mt-3">
-          <v-btn dark :color="$theme.red" @click.stop="trash">
-            {{ $tc('confirm') }}
-          </v-btn>
-          <v-btn dark :color="$theme.grey" @click.stop="showDelete = false">
-            {{ $tc('cancel') }}
-          </v-btn>
-        </div>
-      </v-container>
-    </v-overlay>
+      class="absolute-full surface1 column"
+      :class="show_image ? 'q-pa-md' : 'q-pa-sm'">
+      <div>
+        {{ $t('product.confirm_delete_question') }}
+      </div>
+      <div class="display weight-medium q-mt-sm">
+        {{ product.code }}
+      </div>
+      <q-space/>
+      <div class="row justify-between">
+        <q-btn color="theme-red" size="12px" @click.stop="trash">
+          {{ $t('confirm') }}
+        </q-btn>
+        <q-btn color='theme-grey' size="12px" @click.stop="showDelete = false">
+          {{ $t('cancel') }}
+        </q-btn>
+      </div>
+    </div>
 
-  </v-card>  
+  </q-card>
 </template>
 
 <script>
-import ProductCardActions from '@/components/ProductCardActions'
 import { mapActions } from 'vuex'
+import { useQuasar } from 'quasar'
+import ProductCardActions from '@/components/ProductCardActions.vue'
+
 
 export default {
 
   name: 'ProductCard',
-  props: ['product', 'image'],
+  props: ['product', 'show_image'],
 
   components: {
     ProductCardActions
@@ -102,23 +87,41 @@ export default {
     }
   },
 
-  computed: {
-    showActions() {
-      return this.image ? this.overCard : true
-    },
-  },
-
   methods: {
-    ...mapActions(['moveToTrash']),
+    ...mapActions(['moveToTrash', 'restoreProduct']),
 
     trash() {
       this.moveToTrash(this.product)
-      this.$emit('delete')
+      this.$q.notify({
+        progress: true,
+        message: this.$t('product.snackbars.delete_confirmed', { code: this.product.code }).toUpperCase(),
+        color: 'theme-background',
+        multiline: true,
+        actions: [
+          {
+            label: this.$t('confirm'),
+            color: 'theme-blue',
+          },
+          {
+            label: this.$t('undo'),
+            color: 'theme-orange',
+            handler: () => this.restoreProduct(this.product._key)
+          }
+        ]
+      })
     }
   }
 
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="sass" scoped>
+.product-card
+  height: 100%
+  border: thin solid rgba(255, 255, 255, .12)
+  & .q-img__content > div
+    padding: 8px !important
+
+.faded
+  filter: brightness(.7)
 </style>

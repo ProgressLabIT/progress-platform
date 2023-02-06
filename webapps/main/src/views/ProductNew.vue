@@ -1,63 +1,60 @@
 <template>
-  <v-dialog 
-    value="true" 
-    :overlay-color="$theme.background"
-    overlay-opacity="1"
-    max-width="500px"
-    persistent no-click-animation>
-    <v-card>
-      <v-card-title>
-        <h3 class="display">{{ $tc('product.new_modal_title') }}</h3>
-      </v-card-title>
-      <v-card-text>
-        <v-form>  
-          <v-text-field
-            clearable
-            counter="20"
-            :label="$tc('code') | capitalize"
-            v-model="new_product_code"
-            class="input-uppercase"
-            />
-          <v-textarea
-            clearable
-            auto-grow
-            counter="500"
-            :label="$tc('description') | capitalize"
-            v-model="new_product_desc"
-            />
-          <v-file-input 
-            clearable
-            label="Immagine" 
-            accept="image/*"
-            prepend-icon=""
-            append-icon="image"
-            show-size
-            v-model="new_product_pic"
-            />
-        <v-row class="mt-6">
-          <v-col>
-            <v-btn block depressed color="primary" @click="postNewProduct">
-              {{ $tc('save') }}
-            </v-btn>
-          </v-col>
-          <v-col>    
-            <v-btn block depressed :color="$theme.grey" @click="$router.back()">
-              {{ $tc('cancel') }}
-            </v-btn>
-          </v-col>    
-        </v-row>  
-        </v-form>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+  <BaseModalForm
+    :show="true"
+    id="new-product-form"
+    @submit="postNewProduct"
+    max_width="700px"
+    @cancel="$router.back()">
+
+    <template #title>
+      {{ $t('product.new_modal_title') }}
+    </template>
+
+    <template #form>
+      <div class="column q-gutter-lg" style="min-width: 400px">
+      <q-input
+        dense
+        :label="$capitalize($t('code'))"
+        v-model="new_product_code"
+        class="input-uppercase"
+        clearable>
+      </q-input>
+      <q-input
+        dense
+        type="textarea"
+        clearable
+        :label="$capitalize($t('description'))"
+        v-model="new_product_desc">
+      </q-input>
+      <q-file
+        dense
+        :label="$capitalize($t('image'))"
+        accept="image/*"
+        clearable
+        counter
+        v-model="new_product_pic">
+        <template #append>
+          <q-icon name="mdi-image" />
+        </template>
+      </q-file>
+      </div>
+    </template>
+
+  </BaseModalForm>
 </template>
 
 <script>
-import { api } from '@/lib/apiCall.js'
+import { api } from '@/boot/axios.js'
+
+import BaseModalForm from '@/components/BaseModalForm.vue'
 
 export default {
 
-  name: 'NewProduct',
+  name: 'ProductNew',
+
+  components: {
+    BaseModalForm
+  },
 
   data() {
     return {
@@ -101,10 +98,7 @@ export default {
         })
         .catch(error => {
           window.alert("Couldn't save product, try again.", error)
-          this.$router.back()
         })
-        
-
     }
   }
 };

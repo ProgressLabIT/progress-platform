@@ -1,56 +1,64 @@
 <template>
-  <v-container fluid>
-      <v-expansion-panels flat hover tile accordion :disabled="!edit_mode" v-model="expansion_map">
+  <q-list>
+    <template
+      v-for="(p_value, p_key) in phase_params"
+      :key="p_key">
 
-        <v-expansion-panel
-          v-for="(p_value, p_key) in phase_params" :key="p_key"
-          :readonly="paramType(p_key) == 'int'">
+      <q-expansion-item
+        :expand-icon="paramType(p_key) == 'int' || !edit_mode ? 'none' : ''"
+        :model-value="expansion_map == p_key"
+        @update:model-value="(value) => updateExpansionMap(p_key, value)">
 
-          <v-expansion-panel-header :hide-actions="paramType(p_key) == 'int'">
-            <template v-slot:default="{ open }">
-              <v-container>
-                <v-row>
-                  <v-col cols="auto">
-                    <h5 class="text-uppercase mb-3" :color="$theme.text_low">{{ paramHumanName(p_key, p_value) }}</h5>
+        <!-- SELECTED OPTION -->
+        <template #header>
+          <div class="full-width q-pa-lg">
+            <div class="text-h5 uppercase q-mb-sm low-text">
+              {{ paramHumanName(p_key, p_value) }}
+            </div>
+            <div
+              v-if="!edit_mode || paramType(p_key) != 'int'"
+              class="text-h3 highlight">
+              {{ paramHumanValue(p_key, p_value) }}
+            </div>
+            <q-input
+              v-else
+              type="number" min="0"
+              :readonly="!edit_mode"
+              :model-value="paramHumanValue(p_key)"
+              @update:model-value="(value) => updateParam(p_key, value)">
+            </q-input>
+            <div class="q-mt-sm">
+              {{ paramValueDesc(p_key, p_value) }}
+            </div>
+          </div>
+        </template>
 
-                    <h3 v-if="!edit_mode || paramType(p_key) != 'int'" class="highlight mb-6">{{ paramHumanValue(p_key, p_value) }}</h3>
-                    <v-text-field v-else
-                      type="number" min="0"
-                      :value="paramHumanValue(p_key)"
-                      @blur="updateParam(p_key, $event.target.value)">
-                    </v-text-field>
+        <!-- OTHER OPTIONS -->
+        <template v-if="paramType(p_key) != 'int' && edit_mode">
+          <q-list>
+            <q-item
+              v-for="(value, index) in paramOtherValues(p_key, p_value)"
+              :key="index"
+              clickable
+              v-ripple
+              @click="updateParam(p_key, value)">
+              <q-item-label class="q-pa-lg">
+                <div class="text-h5 highlight q-mb-sm">
+                  {{ paramHumanValue(p_key, value) }}
+                </div>
+                <div>
+                  {{ paramValueDesc(p_key, value) }}
+                </div>
+              </q-item-label>
+            </q-item>
+          </q-list>
+        </template>
+      </q-expansion-item>
 
-                    <p>{{ paramValueDesc(p_key, p_value) }}</p>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </template>
-          </v-expansion-panel-header>
+      <q-separator />
 
-          <v-expansion-panel-content v-if="paramType(p_key) != 'int'">
-            <v-container>
-              <v-hover v-slot:default="{ hover }"
-                v-for="(value, index) in paramOtherValues(p_key, p_value)" :key="index">
-                <v-row
-                  :class="hover && edit_mode ? 'hover-highlight' : ''"
-                  :style="edit_mode ? 'cursor:pointer' : '' "
-                  @click="edit_mode ? updateParam(p_key, value) : null">
-                  <v-col cols="auto" >
-                    <h5 class="highlight mb-1">{{ paramHumanValue(p_key, value) }}</h5>
-                    <p class="body-2">{{ paramValueDesc(p_key, value) }}</p>
-                  </v-col>
-                </v-row>
-              </v-hover>
-            </v-container>
-          </v-expansion-panel-content>
-
-          <v-divider></v-divider>
-
-        </v-expansion-panel>
-
-      </v-expansion-panels>
-
-   </v-container>
+    </template>
+  </q-list>
 </template>
 
 <script>
@@ -88,26 +96,35 @@ export default {
 
   methods: {
     paramHumanName(param_key) {
-      return this.$tc(`phase.params.${param_key}.title`)
+      return this.$t(`phase.params.${param_key}.title`)
     },
 
     paramType(param_key) {
       return params_map[param_key].type
     },
 
+    updateExpansionMap(param_key, expanded) {
+      if (expanded) {
+        this.expansion_map = param_key
+      }
+      else {
+        this.expansion_map = null
+      }
+    },
+
     paramHumanValue(param_key, value_key) {
       if (this.paramType(param_key) == 'int') {
         return this.phase_params[param_key]
       }
-      return this.$tc(`phase.params.${param_key}.${value_key}.title`)
+      return this.$t(`phase.params.${param_key}.${value_key}.title`)
     },
 
     paramValueDesc(param_key, value_key) {
       // const param_value = this.phase_params[param_key]
       if (this.paramType(param_key) == 'int') {
-        return this.$tc(`phase.params.${param_key}.desc`)
+        return this.$t(`phase.params.${param_key}.desc`)
       }
-      else return this.$tc(`phase.params.${param_key}.${value_key}.desc`)
+      else return this.$t(`phase.params.${param_key}.${value_key}.desc`)
     },
 
     paramOtherValues(param_key, param_value) {
@@ -119,7 +136,7 @@ export default {
       if (param_key === 'step_check') {
         if (!this.phase_data.steps.length && value != 'none') {
           window.alert(this.$options.filters.capitalize(
-            this.$tc('phase.alerts.add_steps_first')
+            this.$t('phase.alerts.add_steps_first')
           ))
           this.expansion_map = null
           return
@@ -144,7 +161,4 @@ export default {
 </script>
 
 <style lang="css" scoped>
-.theme--dark.v-expansion-panels .v-expansion-panel {
-  background-color: var(--surface2);
-}
 </style>

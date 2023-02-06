@@ -1,67 +1,66 @@
 <template>
-  <v-sheet :color="$theme.backrgound" class="white--text">
-    <v-row class="pa-0">
-
-      <!-- ACTIVE TOGGLE -->
-      <v-col cols="6" class="py-0">        
-        <v-tooltip top 
-          color="primary"
-          open-delay="300">
-          <template v-slot:activator="{on}">
-            
-            <v-switch 
-              flat hide-details
-              color="primary"
-              :input-value="product.active"
-              v-on="on"
-              @change="toggleActive(product)"
-              class="pa-2 ma-0">
-              <template v-slot:label>
-                <span class="body-2 text-truncate">
-                  {{ product.active ? $tc('active') : $tc('inactive') | capitalize }}
-                </span>
-              </template>
-            </v-switch>
-          </template>
-          <span class="no-transition">
-            {{ product.active ? $tc('deactivate') : $tc('reactivate') | capitalize }}
+  <div :style="`background-color: ${$theme.surface1}aa`">
+    <div class="row q-col-gutter-sm">
+      <div class="col-6">
+        <q-toggle
+          :toggle-indeterminate="false"
+          :model-value="product.active"
+          @update:model-value="toggleActive(product)"
+          class="q-pa-none col-6">
+          <span class="text-body2">
+            {{ $capitalize(product.active ? $t('active') : $t('inactive')) }}
           </span>
-        </v-tooltip>
-      </v-col>
-
-      <v-spacer></v-spacer>
-
-      <!-- OPTIONS -->
-      <v-col cols="6" class="d-flex py-0 align-center justify-end">
+          <q-tooltip
+            :delay="100"
+            anchor="top middle"
+            self="bottom middle"
+            transition-show='scale'
+            transition-hide="scale"
+            transition-duration="200"
+            class="text-body2 bg-theme-blue">
+            {{ $capitalize(product.active ? $t('deactivate') : $t('reactivate')) }}
+          </q-tooltip>
+        </q-toggle>
+      </div>
+      <div class="col-6 row items-center justify-end q-pr-xs">
         <BaseTooltipIcon
-          icon="assignment"
-          :tooltip="$tc('product.actions.details') | capitalize"
+          icon="mdi-clipboard-text"
+          icon_size="xs"
+          :tooltip="$capitalize($t('product.actions.details'))"
           :color="$theme.blue"
-          @iconClick="goToProductPage('productHome')"/>
+          @iconClick="goToProductPage('productHome')">
+        </BaseTooltipIcon>
         <BaseTooltipIcon
           icon="mdi-chevron-triple-right"
-          :tooltip="$tc('process') | capitalize"   
+          icon_size="xs"
+          :tooltip="$capitalize($t('process'))"
           :color="$theme.blue"
-          @iconClick="goToProductPage('productionProcess')"/>
+          @iconClick="goToProductPage('productionProcess')">
+        </BaseTooltipIcon>
         <BaseTooltipIcon
           icon="mdi-clipboard-list"
-          :tooltip="$tc('component', 2) | capitalize"
+          icon_size="xs"
+          :tooltip="$capitalize($t('component', 2))"
           :color="$theme.blue"
-          @iconClick="goToProductPage('bom')"/>
+          @iconClick="goToProductPage('bom')">
+        </BaseTooltipIcon>
         <BaseTooltipIcon
-          icon="delete"
-          :tooltip="$tc('delete') | capitalize"
+          icon="mdi-delete"
+          icon_size="xs"
+          :tooltip="$capitalize($t('delete'))"
           :color="$theme.red"
-          @iconClick="confirmDelete"
-          />
-      </v-col>
-    </v-row>
-  </v-sheet>
+          @iconClick="confirmDelete">
+        </BaseTooltipIcon>
+
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
-import BaseTooltipIcon from '@/components/BaseTooltipIcon'
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 import { mapActions } from 'vuex'
+
 export default {
 
   name: 'ProductCardActions',
@@ -70,6 +69,9 @@ export default {
   },
 
   props: ['product'],
+  emits: ['showDelete'],
+
+
   data () {
     return {
       // overSwitch: false
@@ -97,7 +99,7 @@ export default {
 
     confirmDelete() {
       this.$emit('showDelete')
-    }
+    },
   }
 }
 </script>

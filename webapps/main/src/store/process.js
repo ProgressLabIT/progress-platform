@@ -1,7 +1,5 @@
-import Vue from 'vue'
 import { cloneDeep as _cloneDeep } from 'lodash'
-import { api } from '@/lib/apiCall.js'
-import axios from 'axios'
+import { api, axios } from '@/boot/axios.js'
 
 const process = {
 
@@ -17,26 +15,24 @@ const process = {
      * change sequence of process phases
      */
     UPDATE_PROCESS(state, process) {
-      Vue.set(state, 'temp', process)
+      state.temp = process
     },
 
     LOAD_SAVED_PROCESS(state, process) {
-      Vue.set(state, 'saved', _cloneDeep(process))
-      Vue.set(state, 'temp', _cloneDeep(process))
+      state.saved = _cloneDeep(process)
+      state.temp = _cloneDeep(process)
     },
 
     UPDATE_PHASE_PARAMS(state, { phase_index, param, value }) {
-      Vue.set(state.temp[phase_index].params, param, value)
+      state.temp[phase_index].params[param] = value
     },
 
     UPDATE_PROCEDURE(state, { phase_index, procedure }) {
-      Vue.set(state.temp[phase_index], 'steps', procedure)
+      state.temp[phase_index].steps = procedure
     },
 
     UPDATE_STEP_DETAILS(state,  { phase_index, step_index, field, value })  {
-      let phase = state.temp[phase_index]
-      let step = phase.steps[step_index]
-      Vue.set(step, field, value)
+      let phase = state.temp[phase_index].steps[step_index] = value
     },
 
     ADD_TEMP_MEDIA(state, { phase_index, step_index, media }) {
@@ -49,14 +45,14 @@ const process = {
       let phase = state.temp[phase_index]
       let step = phase.steps[step_index]
       let media = step.media[index]
-      Vue.set(media, 'trash', true)
+      media.trash = true
     },
 
     RESTORE_SAVED_MEDIA(state, { phase_index, step_index, index }) {
       let phase = state.temp[phase_index]
       let step = phase.steps[step_index]
       let media = step.media[index]
-      Vue.set(media, 'trash', false)
+      media.trash = false
     },
 
     DELETE_TEMP_MEDIA(state, { phase_index, step_index, index }) {
@@ -67,7 +63,7 @@ const process = {
 
     ADD_OR_UPDATE_STEP(state, { phase_index, step_index, step_data}) {
       let procedure = state.temp[phase_index].steps
-      Vue.set(procedure, step_index, step_data)
+      procedure[step_index] = step_data
     },
 
     DELETE_STEP(state, { phase_index, step_index }) {
@@ -84,7 +80,7 @@ const process = {
     },
 
     CANCEL_PROCESS_CHANGES(state) {
-      Vue.set(state, 'temp', _cloneDeep(state.saved))
+      state.temp = _cloneDeep(state.saved)
     }
   },
 
@@ -104,9 +100,10 @@ const process = {
       return new Promise(resolve => {
         api
         .post(`operation`, new_operation_data)
-        .then( async () => {
+        .then( async (resp) => {
+          const new_op_key = resp.data.detail._key
           await dispatch('getOperations')
-          resolve()
+          resolve(new_op_key)
         })
       })
     },

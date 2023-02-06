@@ -1,78 +1,58 @@
 <template>
-  <v-container fluid ref="container" class="pa-0 fill-height" id="table_container">
-    <v-data-table
-      id="wo-list"
+  <div ref="container" id="table_container" class="q-px-sm">
+    <q-table
+      id="wo_list"
+      :columns="columns"
+      :rows="filtered_wo_list"
+      row-key="_key"
+      :style="`height: ${table_height}`"
+      virtual-scroll
+      hide-bottom
       dense
-      :headers="table_headers"
-      :items="filtered_wo_list"
-      :options="{sortBy: ['priority']}"
-      :loading-text="$tc('loading_text') | capitalize"
-      fixed-header  
-      :height="table_height"
-      disable-pagination
-      hide-default-footer
-      class="fill">
+      separator="none"
+      table-class="text-high"
+      card-class="background no-shadow q-mt-sm"
+      :rows-per-page-options="[0]"
+      @row-dblclick="showWorkOrderScreen">
 
-      <template v-slot:item="{ item }">
-        <!-- <tr @dblclick="$emit('showDetails', item.wo_code)"> -->
-        <tr 
-          @dblclick="showWorkOrderScreen(item._key)" :key="item._key">
-          <td 
-            v-for="(header, index) in table_headers" :key="index"
-            :class="header.value.includes('qt') ? 'text-right' : '' ">
-            
-            <template v-if="header.value === 'progress'">
-              <v-row no-gutters align="center" >
-                <v-col cols="8">
-                  <v-progress-linear 
-                    dense 
-                    :value="item.progress"
-                    :color="woBarColor(item)">
-                  </v-progress-linear>
-                </v-col>
-                <v-col cols="2" class="pl-4 text-right">
-                  {{ item.progress }}%
-                </v-col>
-                <v-col cols="2" class="text-right pl-2 pointer">
-                  <v-icon small 
-                    v-if="item.critical" 
-                    :color="$theme.red"
-                    @click="$emit('criticalOnly')">
-                    mdi-alert-octagon
-                  </v-icon>
-                  <v-icon small 
-                    v-else-if="!item.on_time" 
-                    :color="$theme.orange"
-                    @click="$emit('lateOnly')">
-                    mdi-alert
-                  </v-icon>
-                </v-col>
-              </v-row>
-            </template>
-            
-            <!-- DUE BY - with date formatting -->
-            <template v-else-if="header.value==='due_by'">
-              {{ item[header.value] | shortDateString('it') }}
-            </template>
-
-            <!-- OTHER FIELDS -->
-            <template v-else>{{ item[header.value] || '' }}</template>
-          </td>
-        </tr>
+      <!-- PROGRESS BAR -->
+      <template #body-cell-progress="props">
+        <q-td key="progress" :props="props">
+          <div class="row items-center q-col-gutter-sm">
+            <div class="col-9">
+              <BaseProgressBar :data="props.row" />
+            </div>
+            <span class="col-2 text-right">{{ props.value }} %</span>
+          </div>
+        </q-td>
+        <!-- ADD ALERT ICONS HERE -->
       </template>
 
-    </v-data-table>
-  </v-container>
+      <template #body-cell-due_by="props">
+        <td class="text-right">
+          {{ $shortDateString(props.value, $i18n.locale) }}
+        </td>
+      </template>
+
+      <!-- ADD ONE-CLICK FILTERS HERE -->
+    </q-table>
+  </div>
 </template>
 
 <script>
+import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import Sortable from 'sortablejs'
 import multiMatch from '@/lib/MultiFieldSearch.js'
+import { mapState } from 'vuex'
 import { throttle as _throttle } from 'lodash'
 
 export default {
 
   name: 'WorkOrderList',
+
+  components: {
+    BaseProgressBar
+  },
 
   props: {
     filters: {
@@ -94,58 +74,78 @@ export default {
 
   data () {
     return {
-      table_height: '85vh',
+      table_height: '80vh',
+      table_header_style: {
+        borderBottom: '3px solid green',
+        fontWeight: 'bold',
+        borderCollapse: 'separate'
+      }
     }
   },
 
   computed: {
 
-    table_headers() {
+    columns() {
       return [
         { 
-          value: 'sequence', 
-          text: this.$tc('work_order.list_headers.sequence').toUpperCase()},
-        { 
-          value: 'wo_code', 
-          text: this.$tc('work_order.wo_code').toUpperCase()},
-        {
-          value: 'project_code',
-          text: this.$tc('project').toUpperCase()
+          field: 'sequence',
+          name: 'sequence',
+          label: this.$t('work_order.list_headers.sequence').toUpperCase(),
+          align: 'left'
         },
         { 
-          value: 'product_code', 
-          text: this.$tc('work_order.list_headers.product_code').toUpperCase()},
+          field: 'wo_code',
+          name: 'wo_code',
+          label: this.$t('work_order.list_headers.wo_code').toUpperCase(),
+          align: 'left'
+        },
+        {
+          field: 'project_code',
+          name: 'project_code',
+          label: this.$t('project').toUpperCase(),
+          align: 'left'
+        },
+        {
+          field: 'product_code',
+          name: 'product_code',
+          label: this.$t('work_order.list_headers.product_code').toUpperCase(),
+          align: 'left'
+        },
         { 
-          value: 'progress', 
-          text: this.$tc('work_order.list_headers.progress').toUpperCase(), 
-          width: '40%' },
+          field: 'progress',
+          name: 'progress',
+          label: this.$t('work_order.list_headers.progress').toUpperCase(),
+          align: 'left',
+          style: 'width: 25%'
+        },
         { 
-          value: 'qt_completed', 
-          text: this.$tc('work_order.list_headers.qt_completed').toUpperCase(), 
-          align: 'end'},
+          field: 'qt_completed',
+          name: 'qt_completed',
+          label: this.$t('work_order.list_headers.qt_completed').toUpperCase(),
+          align: 'right'},
         { 
-          value: 'qt_planned', 
-          text: this.$tc('work_order.list_headers.qt_planned').toUpperCase(), 
-          align: 'end'},
+          field: 'qt_planned',
+          name: 'qt_planned',
+          label: this.$t('work_order.list_headers.qt_planned').toUpperCase(),
+          align: 'right'},
         { 
-          value: 'qt_remaining', 
-          text: this.$tc('work_order.list_headers.qt_remaining').toUpperCase(), 
-          align: 'end'},
+          field: 'qt_remaining',
+          name: 'qt_remaining',
+          label: this.$t('work_order.list_headers.qt_remaining').toUpperCase(),
+          align: 'right'},
         { 
-          value: 'due_by', 
-          text: this.$tc('work_order.list_headers.due_by').toUpperCase(), 
+          field: 'due_by',
+          name: 'due_by',
+          label: this.$t('work_order.list_headers.due_by').toUpperCase(),
           sort: this.sortDate
         }
       ]
     },
 
-    temp_queue() {
-      return this.$store.state.workorder.temp_queue
-    },
-
-    wo_data_map() {
-      return this.$store.state.workorder.wo_map
-    },
+    ...mapState({
+      temp_queue: state => state.workorder.temp_queue,
+      wo_data_map: state => state.workorder.wo_map
+    }),
 
     wo_list() {
       return this.temp_queue.map( wo_key => this.wo_data_map[wo_key])
@@ -155,7 +155,7 @@ export default {
       return this.wo_list.filter( wo => {
         
         // Define wo fields to use with the text search
-        const search_fields = ['wo_code', 'product_code', 'project_code']
+        const search_fields = ['wo_code', 'wo_line', 'product_code', 'project_code']
         
         /* 
         Initialize filter results. 
@@ -213,20 +213,21 @@ export default {
         }
 
         // Return false and exclude wo from list if any filter returned false
-        return !filter_match_map.some( i => i === false )
+        return filter_match_map.every( i => i === true )
       })
     }
   },
 
   methods: {
-    woBarColor(wo) {
-      if (wo.active === false) return this.$theme.grey
-      else return this.$theme.blue
+    progressColor(wo) {
+      return wo.active
+        ? 'theme-blue'
+        : 'theme-grey'
     },
 
-    showWorkOrderScreen(wo_key) {
+    showWorkOrderScreen(evt, row, index) {
       this.$emit('itemDblClick', {
-        wo_key,
+        wo_key: row._key,
         back_to_route_name: this.$route.name
       })
     },
@@ -258,7 +259,7 @@ export default {
     window.onresize = _throttle(resizeTable, 100)
 
     // make the table rows draggable
-    let table = document.querySelector(".v-data-table tbody")
+    let table = document.querySelector(".q-virtual-scroll__content")
     const _self = this
     Sortable.create(table, {
       ..._self.$store.state.drag_options,
@@ -268,32 +269,33 @@ export default {
         _self.$store.commit('UPDATE_TEMP_QUEUE', { newIndex, oldIndex })
       }
     })
-  },
+  }
 }
 </script>
 
-<style lang="css" scoped>
-#wo-list {
-  background-color: transparent !important;
-}
+<style lang="sass">
+#wo_list
+  & th
+    font-weight: bold
+    color: var(--text-low)
+    border-bottom: 1px solid #fff2
+  & td
+    font-size: 14px
+    padding-top: 8px
+    padding-bottom: 8px
 
-#wo-list >>> th {
-  background-color: var(--bg-color) !important;
-}
+  .q-table__top,
+  .q-table__bottom,
+  thead tr:first-child th /* bg color is important for th; just specify one */
+    background-color: var(--bg-color)
 
-#wo-list >>> tr:not(:last-child) {
-  border: none !important;
-}
-
-#wo-list >>> table {
-  border-color: transparent !important;
-}
-
-#wo-list >>> td {
-  border: none;
-}
-
-#wo-list >>> td {
-  padding: 8px 16px;
-}
+  thead tr th
+    position: sticky
+    z-index: 1
+  /* this will be the loading indicator */
+  thead tr:last-child th
+    /* height of all previous header rows */
+    top: 48px
+  thead tr:first-child th
+    top: 0
 </style>

@@ -1,9 +1,7 @@
-import Vue from "vue"
+import { createStore } from 'vuex'
 import { cloneDeep as _cloneDeep } from 'lodash'
-import { api } from '@/lib/apiCall.js'
+import { api, axios } from '@/boot/axios.js'
 import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js' 
-import axios from 'axios'
-// import { durationFromMillisec as duration } from '@/lib/duration.js'
 
 const product = {
 
@@ -21,14 +19,14 @@ const product = {
   mutations: {
 
     TOGGLE_EDIT_MODE(state, { view, value }) {
-      Vue.set(state.edit_modes, view, value)
+      state.edit_modes[view] = value
     },
 
     UPDATE_PRODUCT(state, updated_product) {
       updateProduct(state.list, updated_product._key, product => {
         for (const field in updated_product) {
           if (field != '_key') {
-            Vue.set(product, field, updated_product[field])
+            product[field] = updated_product[field]
           }
         }
       })
@@ -43,18 +41,18 @@ const product = {
       updateProduct(state.list, updated_product._key, product => {
         for (const field in updated_product) {
           if (field != '_key') {
-            Vue.set(product, field, updated_product[field])
+            product[field] = updated_product[field]
           }
         }
       })
     },
 
     UPDATE_TEMP_PARAMETER(state, { param, new_value }) {
-      Vue.set(state.temp, param, new_value)
+      state.temp[param] = new_value
     },
 
     UPDATE_TEMP_TARGET(state, { param, new_target} ) {
-      Vue.set(state.temp[param], 'target', new_target)
+      state.temp[param].target = new_target
     },
 
     ADD_TEMP_DOC(state, file) {     
@@ -81,7 +79,7 @@ const product = {
     },
 
     UPDATE_TEMP_IMAGE(state, new_image) {
-      Vue.set(state.temp_files, 'image', new_image)
+      state.temp_files.image = new_image
     },
 
     ADD_NEW_PRODUCT(state, new_product_data) {
@@ -92,21 +90,16 @@ const product = {
     },
 
     LOAD_PRODUCT_LIST(state, product_list) {
-      Vue.set(state, 'list', product_list)
+      state.list = product_list
     },
 
     LOAD_PRODUCT_DETAILS(state, product_details) {
-      Vue.set(state, 'saved', _cloneDeep(product_details))
-      Vue.set(state, 'temp', _cloneDeep(product_details))      
+      state.saved = _cloneDeep(product_details)
+      state.temp = _cloneDeep(product_details)
     },
 
-    // SAVE_PRODUCT_CHANGES(state, updated_product) {
-    //   Vue.set(state, 'saved', _cloneDeep(updated_product))
-    //   Vue.set(state, 'temp', _cloneDeep(updated_product))
-    // },
-
     CANCEL_PRODUCT_CHANGES(state) {
-      Vue.set(state, 'temp', _cloneDeep(state.saved))
+      state.temp = _cloneDeep(state.saved)
     }
   },
 
@@ -243,18 +236,12 @@ const product = {
   },
 
   getters: {
-    // productList: (state) => () => {
-    //   return state.list
-    // },
 
-    productCatalog: (state) => (options) => {
+    productCatalog: (state) => (show_active_only) => {
       return state.list.filter( p => {
         const deleted = p.trash 
-        let filter_inactive = false
-        if (options) {
-           filter_inactive = options.active_only && !p.active
-        }
-        return !deleted && !filter_inactive
+        const active_filter = !show_active_only || p.active
+        return !deleted && active_filter
       })
     },
 

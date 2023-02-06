@@ -1,62 +1,62 @@
 <template>
-  <v-card elevation="8" style="height: 250px;">
-    <v-container class="py-0 fill-height">
-      <v-col cols="12" class="pa-1 fill-height d-flex flex-column">
+  <q-card square style="height: 250px;" class="surface1 full-width shadow-8">
+    <div class="column full-height justify-between q-pa-md q-pb-lg">
 
-        <!-- OP CODE/LINE -->
-        <v-row class="text-uppercase">
-          <v-col cols="auto" style="max-width: 60%">
-            <h6 class="text-uppercase low-text">{{ $tc("work_order.wo_code") }}</h6>
-            <h4 class="display text-truncate">{{ job.wo_code }}</h4>
-          </v-col>
-          <v-col cols="auto">
-            <h6 class="text-uppercase low-text">{{ $tc("project", 1) }}</h6>
-            <h4 class="display highlight">{{ job.project_code }}</h4>
-          </v-col>
-          <v-spacer></v-spacer>
-          <v-col cols="auto">
-            <v-icon>{{ job.assigned ? 'mdi-account-check' : 'mdi-account-question' }}</v-icon>
-          </v-col>
-        </v-row>
+      <!-- OP CODE/LINE -->
+      <div class="row items-start text-uppercase q-mb-md">
+        <div class="column col-auto q-mr-xl" style="max-width: 60%">
+          <div class="overline">{{ $t("work_order.wo_code") }}</div>
+          <div class="text-h4 display highlight text-truncate">{{ job.wo_code }}</div>
+        </div>
+        <div class="column col-auto text-right">
+          <div class="overline">{{ $t("project") }}</div>
+          <div class="text-h4 display highlight">{{ job.project_code }}</div>
+        </div>
 
-        <!-- PRODUCT DATA -->
-        <v-row justify="space-between">
-          <v-col cols="12">
-            <h6 class="text-uppercase low-text">{{ $tc("product.label", 1) }}</h6>
-            <h4 class="display highlight text-uppercase">{{ job.product_code }}</h4>
-            <div class="body-2 text-truncate">{{ job.product_description }}</div>
-          </v-col>
-          <v-col cols="12">
-            <h6 class="text-uppercase low-text">{{ $tc("phase.short", 1) }}</h6>
-            <h4 class="display highlight">{{ job.phase_alias }}</h4>
-          </v-col>
-        </v-row>
+        <q-space />
 
-        <!-- <v-spacer></v-spacer> -->
-          
-        <!-- PROGRESS -->
-        <v-row>
-          <v-col cols="auto" class="text-uppercase">
-            <h6 class="text-uppercase low-text">{{ $tc("quantity.completed_total") }}</h6>
-            <h4 class="display highlight">{{ job.qt_completed }} / {{ job.qt_planned }}</h4>
-          </v-col>
-          <v-col cols="auto" class="text-uppercase text-right ml-auto">
-            <h6 class="text-uppercase low-text">{{ $tc("progress") }}</h6>
-            <h4 class="display highlight">{{ job.progress }}%</h4>
-          </v-col>
-        </v-row>
+        <div class="col-auto">
+          <q-icon
+            :name="job.assigned ? 'mdi-account-check' : 'mdi-account-question'"
+            size="sm">
+          </q-icon>
+        </div>
+      </div>
 
-        <v-progress-linear 
-          absolute bottom
-          :value="job.progress"
-          height="8px" 
-          :color="$theme.blue">
-        </v-progress-linear>  
+      <!-- PRODUCT DATA -->
+      <div class="q-mb-md full-width">
+        <div class="overline">{{ $t("product.label", 1) }}</div>
+        <div class="text-h4 display highlight text-uppercase">{{ job.product_code }}</div>
+        <div class="text-body2 ellipsis">{{ job.product_description }}</div>
+      </div>
 
-      </v-col>  
-      <!-- <v-overlay absolute opacity=".2" :value="true"></v-overlay> -->
-    </v-container>
-  </v-card>
+      <div class="q-mb-md">
+        <div class="overline">{{ $t("phase.short", 1) }}</div>
+        <div class="text-h4 display highlight">{{ job.phase_alias }}</div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div class="row text-uppercase justify-between">
+        <div class="col-auto">
+          <div class="overline">{{ $t("quantity.completed_total") }}</div>
+          <div class="text-h4 display highlight">{{ job.qt_completed }} / {{ job.qt_planned }}</div>
+        </div>
+        <div class="col-auto text-right">
+          <div class="overline">{{ $t("progress") }}</div>
+          <div class="text-h4 display highlight">{{ job.progress }}%</div>
+        </div>
+      </div>
+    </div>
+
+    <q-linear-progress
+      :value="job.progress / 100"
+      size="8px"
+      color="theme-blue"
+      track-color="blue-backdrop"
+      class="absolute-bottom">
+    </q-linear-progress>
+
+  </q-card>
 </template>
 
 <script>

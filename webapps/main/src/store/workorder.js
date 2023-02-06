@@ -1,8 +1,4 @@
-import Vue from 'vue'
-import { api } from '@/lib/apiCall.js'
-// import { cloneDeep as _cloneDeep } from 'lodash'
-import axios from 'axios'
-
+import { api, axios } from '@/boot/axios.js'
 
 const workorder = {
 
@@ -15,31 +11,34 @@ const workorder = {
 
   mutations: {
     LOAD_WORK_ORDERS(state, list) {
-      Vue.set(state, 'saved_queue', [])
-      Vue.set(state, 'temp_queue', [])
+      state.saved_queue = []
+      state.temp_queue = []
       list.forEach( (wo, index) => {
-        Vue.set(state.wo_map, wo._key, {...wo, sequence: index + 1})
+        state.wo_map[wo._key] = {...wo, sequence: index + 1}
         state.saved_queue.push(wo._key)
         state.temp_queue.push(wo._key)
       })
     },
 
     LOAD_WORK_ORDER_DATA(state, wo_data) {
-      Vue.set(state, 'wo_data', wo_data)
+      state.wo_data = wo_data
     },
 
     UPDATE_WO_LIST(state, wo_updates) {
-      wo_updates.forEach( (wo, index) => Vue.set(state.wo_map, wo._key, {...wo, sequence: index + 1}) )
+      wo_updates.forEach( (wo, index) => state.wo_map[wo._key] = {
+        ...wo,
+        sequence: index + 1
+      })
     },
 
     UPDATE_TEMP_QUEUE(state, { newIndex, oldIndex }) {
       const selected_wo = state.temp_queue.splice(oldIndex, 1)[0]
-      // state.temp_wo_list.splice(newIndex, 0, selected_wo)
       state.temp_queue.splice(newIndex, 0, selected_wo)
+
     },
 
     RESET_TEMP_QUEUE(state) {
-      Vue.set(state, 'temp_queue', state.saved_queue)
+      state.temp_queue = [...state.saved_queue]
     }
   },
 
@@ -50,7 +49,6 @@ const workorder = {
           .get(`queue/site/0`)
           .then( resp => {
             commit('LOAD_WORK_ORDERS', resp.data.detail)
-            // commit('SET_TEMP_QUEUE')
             resolve()
           })
       })

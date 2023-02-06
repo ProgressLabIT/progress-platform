@@ -1,46 +1,9 @@
 <template>
-    <v-list-item>
-
-      <v-list-item-avatar v-if="src">
-        <slot name="avatar">
-          <v-img :src="src">
-            <template v-slot:placeholder>
-              <slot name="placeholder"></slot>
-            </template>
-          </v-img>
-        </slot>
-      </v-list-item-avatar>
-      
-      <v-list-item-content>
-        <v-list-item-title class="highlight">
-          <slot name="title">
-              {{ title }}
-          </slot>
-        </v-list-item-title>
-        
-        <v-list-item-subtitle class="body-2">
-          <slot name="subtitle">
-              {{ subtitle }}
-          </slot>
-        </v-list-item-subtitle>
-      </v-list-item-content>
-      
-      <v-list-item-action v-if="edit">
-        <slot name="actions">
-          <BaseTooltipIcon
-            :icon="icon"
-            :tooltip="tooltip"
-            :color="color"
-            @iconClick="emit">
-          </BaseTooltipIcon>
-        </slot>
-      </v-list-item-action>
-
-    </v-list-item>
+   TEST
 </template>
 
 <script>
-import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
+// import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 
 export default {
 
@@ -59,7 +22,7 @@ export default {
     color: String,
   },
 
-  components: {BaseTooltipIcon},
+  // components: {BaseTooltipIcon},
 
   methods: {
     emit() {

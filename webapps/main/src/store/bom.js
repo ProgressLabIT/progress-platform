@@ -1,7 +1,4 @@
-import Vue from 'vue'
-import { api } from '@/lib/apiCall.js'
-
-// import axios from 'axios'
+import { api } from '@/boot/axios.js'
 
 const bom = {
 
@@ -13,12 +10,12 @@ const bom = {
   mutations: {
     
     LOAD_SAVED_BOM(state, bom) {
-      Vue.set(state, 'saved', [...bom])
-      Vue.set(state, 'temp', [...bom])
+      state.saved = [...bom]
+      state.temp = [...bom]
     },
 
     UPDATE_TEMP_BOM(state, new_bom) {
-      Vue.set(state, 'temp', new_bom)
+      state.temp = new_bom
     },
   },
 
@@ -42,10 +39,6 @@ const bom = {
           commit('LOAD_SAVED_BOM', resp.data) 
         }) 
     }
-  },
-
-  getters: {
-
   }
 }
 

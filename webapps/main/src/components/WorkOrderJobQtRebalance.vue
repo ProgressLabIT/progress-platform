@@ -1,87 +1,82 @@
 <template>
-  <v-dialog 
-    value="true"
-    max-width="600px"
-    persistent no-click-animation>
-    <v-card scrollable>
+  <BaseDialog :show="show">
+    <q-card class="q-pa-md surface2 column" style="width: 600px; height: 80vh">
+      <q-card-section class="text-h3 col-auto">
+        {{ $capitalize($t('work_order.qt_rebalance_title')) }}
+      </q-card-section>
 
-      <v-card-title>
-        {{ $tc('work_order.qt_rebalance_title') | capitalize }}
-      </v-card-title>
+      <q-card-section class="scroll col">
+        <div
+          v-for="(phase, index) in phase_data"
+          :key="phase.phase_key">
+          <q-separator v-if="index != 0" class="q-my-md"/>
 
-      <v-card-text class="mt-6">
-        <div v-for="(phase, index) in phase_data" :key="phase.phase_key">
-          <v-divider v-if="index != 0"></v-divider>
-
-          <!-- Phase header -->
-          <v-row class="mx-0" justify="space-between" align="center">
-            <span class="display highlight font-weight-medium text-uppercase">{{phase.phase_alias}}</span>
-            <v-chip small :color="phases_delta[phase.phase_key] ? $theme.orange :  $theme.green">
-              <!-- delta to allocate in orange or check in green if delta == 0 -->
-              <span 
-                v-if="phases_delta[phase.phase_key]"
-                class="solid-white font-weight-medium text-uppercase">
-                {{ phases_delta[phase.phase_key] > 0 ? $tc('increase') + "  +" : $tc('decrease') }}  {{ phases_delta[phase.phase_key] }}
+          <!-- PHASE HEADER -->
+          <div class="row items-center justify-between">
+            <div class="display highlight weight medium">
+              {{ phase.phase_alias }}
+            </div>
+            <q-chip
+              :color="phases_delta[phase.phase_key] ? 'theme-orange' : 'theme-green'">
+              <span v-if="phases_delta[phase.phase_key]"
+                class="solid-white weight-medium text-uppercase">
+                {{ phases_delta[phase.phase_key] > 0 ? $t('increase') + ' +' : $t('decrease') }}   {{ phases_delta[phase.phase_key] }}
               </span>
-              <v-icon class="solid-white weight-bold" v-else>mdi-check</v-icon>
-            </v-chip>
-          </v-row>
+              <q-icon v-else name="mdi-check" class="solid-white weight-bold" />
+            </q-chip>
+          </div>
 
-          <!-- Phase jobs -->
-          <v-row v-for="job in phase.jobs" :key="job._key">
-            <v-col cols="3">
+          <!-- PHASE JOBS -->
+          <div
+            class="row items-center q-py-sm justify-between"
+            v-for="job in phase.jobs"
+            :key="job._key">
+            <div class="col-3">
               {{ job._key }}
-            </v-col>
-            <v-col cols="4" offset="1">
-              <BaseUserAvatar :user="job.assigned_to"/>
-            </v-col>
-            <v-col cols="3" offset="1">
-              <v-text-field
-                class="ma-0 pa-0"
-                :key="index"
-                reverse
-                single-line
-                hide-details
-                type="number"
-                v-model.number="job_updates[job._key].new_remaining"
-                min="0"
-                :max="new_wo_qt">
-              </v-text-field>
-            </v-col>
+            </div>
+            <BaseUserAvatar
+              v-if="job.assigned_to"
+              class="col-4 offset-1"
+              :user="job.assigned_to">
+            </BaseUserAvatar>
+            <q-input
+              class="col-3 offset-1"
+              :key="index"
+              dense
+              input-class="text-right"
+              hide-bottom-space
+              type="number"
+              v-model.number="job_updates[job._key].new_remaining"
+              min="0"
+              :max="new_wo_qt">
+            </q-input>
 
-
-          </v-row>
-
-
+          </div>
         </div>
-      </v-card-text>
+      </q-card-section>
 
-      <v-card-actions>
-        <v-btn 
-          :color="$theme.grey" 
-          @click="$emit('close')">
-          {{ $tc('cancel') }}
-        </v-btn>
-        <v-btn 
-          :color="$theme.blue" 
-          :loading="saving"
-          @click="save">
-          {{ $tc('save') }}
-        </v-btn>
-      </v-card-actions>
-
-    </v-card>
-  </v-dialog>
+      <q-card-actions align="between" class="col-auto">
+        <q-btn color="theme-grey" @click="$emit('close')">
+          {{ $t('cancel') }}
+        </q-btn>
+        <q-btn color="theme-blue" :loading="saving" @click="save">
+          {{ $t('save') }}
+        </q-btn>
+      </q-card-actions>
+    </q-card>
+  </BaseDialog>
 </template>
 
 <script>
-import BaseUserAvatar from '@/components/BaseUserAvatar'
+import BaseDialog from '@/components/BaseDialog.vue'
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 
 export default {
 
   name: 'WorkOrderJobQtRebalance',
 
   components: {
+    BaseDialog,
     BaseUserAvatar
   },
 
@@ -97,6 +92,10 @@ export default {
     wo_key: {
       type: String,
       required: true
+    },
+    show: {
+      type: Boolean,
+      default: true
     }
   },
 

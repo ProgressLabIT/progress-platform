@@ -1,208 +1,190 @@
 <template>
-  <v-container fluid class="fill py-0 flex-grow-0">
-    <v-row class="fill">
+  <q-page-container class="fit">
+    <q-page class="row">
 
-      <!-- WORK ORDERS / JOBS LISTS -->      
-      <v-col class="fill d-flex flex-column">
+      <div class="column col-9">
+        <!-- WORK ORDERS / JOBS LISTS -->
+        <div class="row col-auto items-center q-pl-xs q-pr-md">
 
-        <!-- TAB LINKS -->
-        <v-row dense class="flex-grow-0 mb-2">    
-          <v-col cols="auto">
-          
-          <v-tabs
-            background-color="transparent"
-            v-model="current_view"
-            :color="$theme.text_high"
-            hide-slider
-            class="flex-shrink-1 flex-grow-0">
-            <v-tab 
+          <!-- TAB LINKS -->
+          <q-tabs
+            class="transparent text-low"
+            active-class="text-high weight-bold"
+            align="left"
+            shrink
+            indicator-color="transparent">
+            <q-route-tab
               v-for="(view, index) in views"
               :key="index"
               :to="{ name: view.route_name }"
               class="display">
-              {{ $tc(`views.${view.route_name}`) }}
-            </v-tab>
-          </v-tabs>
-          </v-col>
+              {{ $t(`views.${view.route_name}`) }}
+            </q-route-tab>
+          </q-tabs>
 
-          <v-spacer></v-spacer>
-          
+          <q-space />
+
           <!-- CREATE NEW WORK ORDER -->
           <template v-if="$route.name == 'workOrderList'">
-            <v-col cols="auto" v-if="!editing">
-              <v-btn small 
-                :color="$theme.blue"
+            <div class="col-auto" v-if="!editing">
+              <q-btn
+                size="0.75rem"
+                color="theme-blue"
                 @click="$router.push({ name: 'newWorkOrder'})">
-                {{ $tc('create_order') }}
-              </v-btn>
-            </v-col>
-    
+                {{ $t('add') }}
+              </q-btn>
+            </div>
+
             <template v-else>
 
               <!-- REORDER WORK ORDER QUEUE -->
-              <v-col cols="auto">
-                <v-btn small
-                  :color="$theme.orange"
+              <div class="col-auto">
+                <q-btn
+                  size="0.7rem"
+                  color="theme-orange"
                   :loading="saving"
                   @click="updateQueue"
-                  class="ml-3">
-                  {{ $tc('production.save_new_sequence') }}
-                </v-btn>
-              </v-col>
+                  class="q-ml-sm">
+                  {{ $t('production.save_new_sequence') }}
+                </q-btn>
+              </div>
 
               <!-- CANCEL CHANGES -->
-              <v-col cols="auto">
-                <v-btn small
-                  :color="$theme.grey"
+              <div class="col-auto">
+                <q-btn
+                  size="0.7rem"
+                  color="theme-grey"
                   @click="cancelQueueChanges"
-                  class="ml-2">
-                  {{ $tc('cancel_changes') }}
-                </v-btn>
-              </v-col>
+                  class="q-ml-md">
+                  {{ $t('cancel_changes') }}
+                </q-btn>
+              </div>
 
             </template>
 
           </template>
-
-        </v-row>
+        </div>
 
         <!-- MAIN CONTENT -->
-        <div class="scroll flex-grow-1">
-          <!-- <keep-alive> -->
-            <!-- <v-component
-              :is="views[current_view].component" 
-              v-bind="{ filters }"
-              @showDetails="showWorkOrderScreen($event)"/> -->
-            <router-view 
-              v-bind="{filters}"
-              @lateOnly="showLateOnly"
-              @criticalOnly="showCriticalOnly"
-              @setSearch="setSearch($event)"
-              @itemDblClick="showWorkOrderScreen($event)"
-              @editing="editing = true">
-            </router-view>
+        <router-view
+          v-if="vuex_ready"
+          v-bind="{filters}"
+          @lateOnly="showLateOnly"
+          @criticalOnly="showCriticalOnly"
+          @setSearch="setSearch($event)"
+          @itemDblClick="showWorkOrderScreen($event)"
+          @editing="editing = true">
+        </router-view>
 
-          <!-- </keep-alive> -->
-        </div>
-          
-      </v-col>
+        <NoDataAlert v-else />
 
-      
-      <!-- DIVIDER -->
-      <v-divider vertical inset></v-divider>
+      </div>
 
-      <!-- FILTERS -->
-      <v-col cols="3" class="pa-6 d-flex flex-column">
-        <h5 class="highlight text-uppercase">{{ $tc('filter', 2) }}</h5>
-        
-        <!-- FILTERS SPECIFIC TO JOB LIST  -->
-        <template v-if="$route.name == 'jobList'">
-          <!-- BY DEPARTMENT -->
-          <v-autocomplete
-            autocomplete="off"
-            v-model="department_key"
-            :items="$store.state.org.departments"
-            item-value="_key"
-            item-text="name"
-            single-line hide-details clearable
-            :label="$tc('department', 1) | capitalize"
-            class="mb-6 flex-grow-0">
-            <template v-slot:item="{ item: list_item }">
-              {{ list_item.name }}
-            </template>
-            <template v-slot:selection="{ item: selection }">
-              {{ selection.name }}
-            </template>
-          </v-autocomplete>
+        <!-- DIVIDER -->
+        <q-separator vertical inset/>
 
-          <!-- BY OPERATOR: Adapted from JobRebalanceActionCard  -->
-          <v-autocomplete
-            ref="operator_autocomplete"
-            autocomplete="off"
-            :items="$store.getters.operator_list()"
-            item-value="_key"
-            v-model="operator_key"
-            single-line hide-details
-            clearable
-            :filter="filterOperator"
-            :label="$tc('operator') | capitalize"
-            class="mb-6 flex-grow-0">
-            <template v-slot:item="{ item: list_item }">
-              <BaseUserAvatar :user="list_item"/>
-            </template>
-            <template v-slot:selection="{ item: selection }">
-              <BaseUserAvatar :user="selection"/>
-            </template>
-          </v-autocomplete>
-        </template>
+        <!-- FILTERS -->
+        <div class="col column q-px-lg">
+          <div class="highlight text-uppercase text-h5 q-mt-sm">
+            {{ $t('filter', 2) }}
+          </div>
 
-        <!-- Search box: instructions shows on mouse over info icon, in turn shown only on mouse over input -->
-        <v-hover v-slot:default="{ hover }">
-          <v-text-field
-            clearable
-            hide-details
-            single-line
-            autocomplete="off"
-            name="search"
-            :label="$tc('search') | capitalize"
-            value="search"
-            v-model="search_string"
-            class="mb-6 body-2 text-uppercase flex-grow-0">
-            <template v-slot:append>
-              
-              <v-tooltip bottom content-class="opaque">
-                <template v-slot:activator="{ on }">
-                  <v-icon 
-                    v-show="hover"
-                    :color="$theme.text_low"
-                    small class="mr-2"
-                    v-on="on">
-                    info
-                  </v-icon>
-                </template>
+          <!-- FILTERS SPECIFIC TO JOB LIST  -->
+          <template v-if="$route.name == 'jobList'">
+
+            <!-- BY DEPARTMENT -->
+            <q-select
+              ref="department_filter"
+              use-input
+              clearable
+              v-model="department_selected"
+              :options="filtered_departments"
+              option-label="name"
+              @filter="filterDepartment"
+              :label="$capitalize($t('department', 1))"
+              class="q-mb-md"
+              popup-content-class="surface1">
+            </q-select>
+
+            <!-- BY OPERATOR -->
+            <q-select
+              ref="operator_filter"
+              use-input
+              clearable
+              v-model="operator_selected"
+              :options="filtered_operators"
+              :option-label="(item) => item.name + ' ' + item.surname"
+              @filter="filterOperator"
+              :label="$capitalize($t('operator'))"
+              class="q-mb-md"
+              popup-content-class="surface1">
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <BaseUserAvatar :user="scope.opt"/>
+                </q-item>
+              </template>
+            </q-select>
+
+          </template>
+          <!-- END OF JOB-SPECIFIC FILTERS -->
+
+          <!-- SEARCH BOX -->
+          <div class="row items-center q-col-gutter-md">
+            <q-input
+              clearable
+              autocomplete="off"
+              name="search"
+              debounce="300"
+              :label="$capitalize($t('search'))"
+              v-model="search_string"
+              class="q-mb-md col">
+              <template v-slot:append>
+                <q-icon name="mdi-magnify"/>
+              </template>
+            </q-input>
+            <q-icon name="mdi-information-outline" class="col-auto" size="sm">
+              <q-tooltip :delay="300" class="text-body2">
                 <span>
-                  {{ $tc('production.search_explainer') | capitalize }}:
+                  {{ $capitalize($t('production.search_explainer')) }}:
                 </span>
                 <ul>
-                  <li>{{ $tc('product_code') | capitalize }}</li>
-                  <li>{{ $tc('work_order.long') | capitalize }}</li>
-                  <li>{{ $tc('work_order.wo_line.long') | capitalize }}</li>
-                  <li>{{ $tc('phase.long') | capitalize }}</li>
-                  <li>{{ $tc('department', 1) | capitalize }}</li>
-                  <li>{{ $tc('operator', 1) | capitalize }}</li>
+                  <li>{{ $capitalize($t('product.code')) }}</li>
+                  <li>{{ $capitalize($t('work_order.long')) }}</li>
+                  <li>{{ $capitalize($t('project')) }}</li>
+                  <li>{{ $capitalize($t('phase.long')) }}</li>
                 </ul>
-              </v-tooltip>
+              </q-tooltip>
+            </q-icon>
+          </div>
 
-              <span class="material-icons">search</span>
+          <!-- BOOLEAN FILTERS -->
+          <q-checkbox
+            v-for="(filter, key) in bool_filters"
+            :key="key"
+            dense
+            color="theme-blue"
+            size="sm"
+            :label="$capitalize($t(`production.filters.${key}`))"
+            v-model="filter.value"
+            class="q-mt-md text-body1 low-text">
+          </q-checkbox>
 
-            </template>
-          </v-text-field>
-        </v-hover>
-        
-        <!-- Checkboxes -->
-        <v-checkbox dense hide-details 
-          :color="$theme.blue"
-          v-for="(filter, key) in bool_filters" 
-          :key="key" 
-          :label="$tc(`production.filters.${key}`) | capitalize"
-          v-model="filter.value"
-          class="mt-2">
-        </v-checkbox>
+          <q-space />
 
-        <v-spacer></v-spacer>
-        <!-- FILTERS RESET -->
-        <v-btn :color="$theme.blue"
-          v-show="filters_active"
-          @click="resetFilters">
-          {{ $tc('reset_filters') }}
-        </v-btn>
-
-      </v-col>
-    </v-row>
-  </v-container>
+          <q-btn
+            color="theme-blue"
+            v-show="filters_active"
+            class="q-mb-md"
+            @click="resetFilters">
+            {{ $t('reset_filters') }}
+          </q-btn>
+        </div>
+    </q-page>
+  </q-page-container>
 </template>
 
 <script>
+import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 
@@ -218,11 +200,13 @@ export default {
   name: 'ProductionOverview',
 
   components: {
-    BaseUserAvatar
+    BaseUserAvatar,
+    NoDataAlert
   },
 
   data () {
     return {
+      vuex_ready: false,
       // content_height: 0,
       views: production_views,
       current_view: 0,
@@ -238,11 +222,13 @@ export default {
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       },
       search_string: undefined,
-      department_key: undefined,
-      operator_key: undefined,
+      department_selected: undefined,
+      department_search_text: undefined,
+      operator_selected: undefined,
       editing: false,
       saving: false,
-      polling_instance: undefined
+      polling_instance: undefined,
+      operator_search_text: undefined
     }
   },
 
@@ -253,16 +239,38 @@ export default {
       for (const [k,v] of Object.entries(this.bool_filters)) {
         bools_map[k] = v.value
       }
-      const department_key = this.department_key
-      const operator_key = this.operator_key
+      const department_key = this.department_selected ? this.department_selected._key : undefined
+      const operator_key = this.operator_selected ? this.operator_selected._key : undefined
       return { search_string, ...bools_map, department_key, operator_key }
     },
 
     filters_active() {
       return Object.values(this.bool_filters).some(f => f.value === false) 
-        || this.search_string != undefined 
-        || this.department != undefined
+        || this.search_string != null
+        || this.department_selected != null
+        || this.operator_selected != null
+    },
+
+    operator_list () {
+      return this.$store.getters.operator_list()
+    },
+
+    filtered_operators() {
+      return this.operator_list.filter(
+        o => multiMatch(this.operator_search_text, o, ['name', 'surname'])
+      )
+    },
+
+    department_list() {
+      return this.$store.state.org.departments
+    },
+
+    filtered_departments() {
+      return this.department_search_text
+        ? this.department_list.filter(d => d.name.toLowerCase().includes(this.department_search_text))
+        : this.department_list
     }
+
   },
 
   methods: {
@@ -283,9 +291,9 @@ export default {
     },
 
     resetFilters() {
-      this.search_string = undefined
-      this.department = undefined
-      this.operat
+      this.search_string = null
+      this.operator_selected = null
+      this.department_selected = null
       for (let filter of Object.values(this.bool_filters)) {
         filter.value = true
       }
@@ -316,19 +324,31 @@ export default {
       this.editing = false
     },
 
-    filterOperator(operator, search_text) {
-      return multiMatch(search_text, operator, ['name', 'surname'])
+    async filterDepartment (val, update, abort) {
+      update(() => {
+        this.department_search_text = val.toLowerCase()
+      })
     },
+
+    async filterOperator (val, update, abort) {
+      update(() => {
+        this.operator_search_text = val.toLowerCase()
+      })
+    }
   },
 
   beforeCreate() {
-    this.$store.dispatch("loadDepartments")
-    this.$store.dispatch("loadUsers")
-    this.$store.dispatch("loadWorkOrders")
-    this.$store.dispatch("loadJobAssignments")
   },
 
   created() {
+    Promise.all([
+      this.$store.dispatch("loadDepartments"),
+      this.$store.dispatch("loadUsers"),
+      this.$store.dispatch("loadWorkOrders"),
+      this.$store.dispatch("loadJobAssignments")
+      ])
+    .then(this.vuex_ready = true)
+
     this.polling_instance = setInterval(() => {
       this.$store.dispatch("updateWorkOrdersProgress")
       this.$store.dispatch("loadJobAssignments")

@@ -1,188 +1,200 @@
 <template>
-  <v-container fluid class="fill py-0">
+  <q-page-container>
+    <q-page class="q-px-md q-pb-md column">
 
-    <v-card v-if="job_closed">
-      <h1 class="text-uppercase">
-        {{ $tc('job.alerts.job_closed') }}
-      </h1>
-      <v-progress-circular indeterminate :color="$theme.blue"></v-progress-circular>
-    </v-card>
+      <!-- JOB CLOSED NOTIFICATION -->
+      <q-card v-if="job_closed">
+        <div class="text-h3 display text-uppercase">
+          {{ $t('job.alerts.job_closed') }}
+        </div>
+        <q-circular-progress indeterminate color="theme-blue" />
+      </q-card>
 
-    <v-row class="fill-height" v-else>
+      <div class="row absolute-full q-pb-md q-px-xs" v-if="vuex_ready & !job_closed">
 
-      <!-- ################################ -->
-      <!--          JOB DETAILS             -->
-      <!-- ################################ -->
+        <!-- ################################ -->
+        <!--          JOB DETAILS             -->
+        <!-- ################################ -->
 
-      <v-col cols="8" class="fill d-flex flex-column pt-0">
-        <v-row class="flex-grow-0 mx-0 pb-3 pt-2">
-          <v-tabs
-            :color="$theme.text_high"
-            background-color="transparent"
-            hide-slider>
-            <v-tab
+        <div class="column col-8 q-px-sm" id="job-info-section">
+
+          <!-- PANEL NAVIGATION -->
+          <q-tabs
+            class="transparent text-low"
+            active-class="text-high weight-bold"
+            align="left"
+            shrink
+            indicator-color="transparent">
+            <q-route-tab
               v-for="link in links"
               :key="link.route_name"
               :to="{ name: link.route_name }"
-              class="display py-2">
+              class="display">
               {{ link.text }}
-            </v-tab>
-          </v-tabs>
-        </v-row>
+            </q-route-tab>
+          </q-tabs>
 
-        <v-card class="fill d-flex flex-column" max-height="100%" >
-          <router-view :job="j"></router-view>
-        </v-card>
+          <!-- PANEL CONTENT -->
+          <q-card class="surface1 col" square>
+            <router-view :job="j" />
+          </q-card>
 
-      </v-col>
-
-
-      <!-- ################################ -->
-      <!-- RIGHT COLUMN: JOB DATA & ACTIONS -->
-      <!-- ################################ -->
-
-      <v-col cols="4" class="fill-height d-flex flex-column pr-4">
-
-        <!-- PRODUCT CODE & DESCRIPTION -->
-        <h2 class="display highlight text-uppercase">{{ j.product_code }}</h2>
-        <p class="mt-2 mb-6">{{ j.product_description }}</p>
-
-        <!-- JOB DATA -->
-        <template v-for="field in job_info" >
-          <v-row
-            v-if="j[field.name] != undefined"
-            :key="field.name"
-            dense
-            align="end"
-            class="flex-grow-0">
-            <v-col cols="4" class="text-uppercase font-weight-medium">
-              <h5>{{ field.text }}</h5>
-            </v-col>
-            <v-col cols="8">
-              <span>{{ j[field.name] | capitalize_all }}</span>
-            </v-col>
-          </v-row>
-        </template>
-
-        <!-- JOB PROGRESS / STATUS -->
-        <v-progress-linear
-          height="8"
-          :value="progress_value"
-          :color="job_color"
-          class="mt-6 mb-1"/>
-        <v-row class="ma-0 flex-grow-0" justify="space-between" align="end">
-          <h5 class="weight-bold text-uppercase">{{ $tc('progress') }}</h5>
-          <span>{{ j.qt_completed }} / {{ j.qt_planned }}</span>
-        </v-row>
+        </div>
 
 
-        <!-- ************************** -->
-        <!-- JOB ACTIONS                -->
-        <!-- ************************** -->
+        <!-- ################################ -->
+        <!-- RIGHT COLUMN: JOB DATA & ACTIONS -->
+        <!-- ################################ -->
 
-        <!-- START/PAUSE BUTTOM -->
-        <v-row class="mx-0 mt-12">
-          <v-btn
-            :color="j.active ? $theme.grey : `${$theme.blue}aa`"
-            block tile
-            height="auto"
-            @click="startPauseResumeJob().action()">
-            <v-row class="fill-height mx-0" align="center" justify="center">
-              <v-col cols="3" class="text-right">
-                <v-icon x-large>
-                  {{ j.active ? 'mdi-pause':'mdi-play' }}
-                </v-icon>
-              </v-col>
-              <v-col class="display medium text-left">
-                {{ startPauseResumeJob().text }}
-              </v-col>
-            </v-row>
-          </v-btn>
-        </v-row>
+        <div id="session-control-section" class="column col-4 q-px-sm q-pt-md">
 
-        <!-- PROGRESS BUTTON -->
-        <v-row class="mx-0 mt-2">
-          <v-btn
-            id="progress_button"
-            :color="`${$theme.green}aa`"
-            block tile
-            :disabled="!j.active || current_step_done"
-            height="auto"
-            @click="progress_button.action()">
-            <v-row class="fill-height mx-0" align="center" justify="center">
-              <v-col cols="3" class="text-right">
-                <v-icon x-large>
-                  {{ progress_button.icon }}
-                </v-icon>
-              </v-col>
-              <v-col class="display medium text-left">
-                {{ progress_button.text }}
-              </v-col>
-            </v-row>
-          </v-btn>
-        </v-row>
+          <!-- JOB DATA -->
+          <div id="job-data" class="col-auto">
 
-        <!-- PREV/NEXT STEP AND EXIT BUTTONS -->
-        <v-row class="mt-2 mx-0" justify="space-between">
+            <!-- PRODUCT CODE & DESCRIPTION -->
+            <div class="text-h2 display highlight text-uppercase">
+              {{ j.product_code }}
+            </div>
+            <p class="q-mt-sm">
+              {{ j.product_description }}
+            </p>
 
-          <v-btn
-            :color="$theme.grey"
-            tile
-            height="auto" width="32%"
-            @click="goToPreviousStep"
-            class="py-3">
-            <v-icon :color="$theme.text_high" x-large>
-              mdi-skip-previous
-            </v-icon>
-          </v-btn>
+            <!-- WORK ORDER DATA -->
+            <template v-for="field in job_info" >
+              <div class="row items-center"
+                v-if="j[field.name] != undefined"
+                :key="field.name">
+                <div class="col-4 text-h5 text-uppercase font-weight-medium">
+                  {{ field.text }}
+                </div>
+                <div class="col-8">
+                  <span>{{ $capitalizeAll(j[field.name]) }}</span>
+                </div>
+              </div>
+            </template>
 
-          <v-btn
-            :color="$theme.grey"
-            tile
-            :disabled="!allow_step_forward"
-            height="auto" width="32%"
-            @click="goToNextStep"
-            class="py-3">
-            <v-icon :color="$theme.text_high" x-large>
-              mdi-skip-next
-            </v-icon>
-          </v-btn>
+            <!-- JOB PROGRESS / STATUS -->
+            <q-linear-progress
+              size="8px"
+              :value="progress_value / 100"
+              :color="job_color"
+              :track-color="job_color"
+              animation-speed="300"
+              class="q-mt-lg q-mb-xs">
+            </q-linear-progress>
 
-          <v-btn
-            :color="$theme.grey"
-            tile
-            height="auto" width="32%"
-            @click="j.active ? showExitAlert(true) : exitJob()"
-            class="py-3">
-            <v-icon x-large>
-              mdi-keyboard-return
-            </v-icon>
-          </v-btn>
-        </v-row>
+            <div class="row justify-between items-center">
+              <div class="text-h5 weight-bold text-uppercase">{{ $t('progress') }}</div>
+              <div>{{ j.qt_completed }} / {{ j.qt_planned }}</div>
+            </div>
 
-      </v-col>
+          </div>
 
-    </v-row>
+          <!-- ************************** -->
+          <!-- JOB ACTIONS                -->
+          <!-- ************************** -->
+          <div class="col column q-mt-xl q-col-gutter-y-sm" id="job-actions">
 
-    <v-dialog v-model="show_exit_alert" max-width="480px">
-      <v-card>
-        <v-card-title>
-          {{ $tc('job.alerts.confirm_exit')}}
-        </v-card-title>
-        <v-card-actions>
-          <v-row class="mx-0" justify="space-between">
-            <v-btn text @click="exitJob" :color="$theme.orange">
-              {{ $tc('confirm') }}
-            </v-btn>
-            <v-btn text @click="show_exit_alert=false" :color="$theme.grey">
-              {{ $tc('cancel') }}
-            </v-btn>
-          </v-row>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+            <!-- START/PAUSE BUTTOM -->
+            <div class="col-4">
+              <q-btn
+                class="fit"
+                :style="`background-color: ${j.active ? $theme.grey : $theme.blue + 'aa'}`"
+                square
+                @click="startPauseResumeJob().action()">
+                <div class="row items-center absolute-full">
+                  <div class="col-1 offset-2">
+                    <q-icon size="lg" :name="j.active ? 'mdi-pause':'mdi-play'" />
+                  </div>
+                  <div class="display medium offset-1">
+                    {{ startPauseResumeJob().text }}
+                  </div>
+                </div>
+              </q-btn>
+            </div>
 
-  </v-container>
+            <!-- PROGRESS BUTTON -->
+            <div class="col-4">
+              <q-btn
+                id="progress_button"
+                square
+                :style="`background-color: ${progress_button_color}`"
+                :disable="!progress_button_active"
+                @click="progress_button.action()"
+                class="fit">
+                <div class="row items-center absolute-full">
+                  <div class="col-1 offset-2">
+                    <q-icon size="lg" :name="progress_button.icon" />
+                  </div>
+                  <div class="display medium offset-1">
+                    {{ progress_button.text }}
+                  </div>
+                </div>
+              </q-btn>
+            </div>
+
+            <!-- PREV/NEXT STEP AND EXIT BUTTONS -->
+            <div class="row col-4 q-col-gutter-x-sm">
+              <div class="col">
+                <q-btn
+                  color="theme-grey"
+                  square
+                  height="auto"
+                  class="fit"
+                  @click="goToPreviousStep">
+                  <q-icon color="text_high" size="lg" name="mdi-skip-previous" />
+                </q-btn>
+              </div>
+
+              <div class="col">
+                <q-btn
+                  color="theme-grey"
+                  square
+                  :disabled="!allow_step_forward"
+                  height="auto"
+                  class="fit"
+                  @click="goToNextStep">
+                  <q-icon color="text-high" size="lg" name="mdi-skip-next" />
+                </q-btn>
+              </div>
+
+              <div class="col">
+                <q-btn
+                  color="theme-grey"
+                  square
+                  height="auto"
+                  class="fit"
+                  @click="j.active ? showExitAlert(true) : exitJob()">
+                  <q-icon color="text-high" size="lg" name="mdi-keyboard-return" />
+                </q-btn>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Consider switching to banner or similar -->
+      <q-dialog v-model="show_exit_alert" max-width="480px">
+        <q-card>
+          <q-card-section class="text-body1">
+            {{ $t('job.alerts.confirm_exit')}}
+          </q-card-section>
+          <q-card-actions>
+            <div class="row justify-between">
+              <q-btn flat @click="exitJob" color="theme-orange">
+                {{ $t('confirm') }}
+              </q-btn>
+              <q-btn flat @click="show_exit_alert=false" color="theme-grey">
+                {{ $t('cancel') }}
+              </q-btn>
+            </div>
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+
+    </q-page>
+  </q-page-container>
 </template>
 
 <script>
@@ -216,17 +228,17 @@ export default {
 
     links() {
       return [
-          { route_name: 'jobSteps', text: this.$tc('procedure') },
-          { route_name: 'jobDocs', text: this.$tc('document.label', 2) },
-          { route_name: 'jobBom', text: this.$tc('material', 2) },
+          { route_name: 'jobSteps', text: this.$t('procedure') },
+          { route_name: 'jobDocs', text: this.$t('document.label', 2) },
+          { route_name: 'jobBom', text: this.$t('material', 2) },
       ]
     },
 
     wo_data() {
       return [
-        { name: 'wo_code', text: this.$tc('work_order.wo_code') },
-        { name: 'project_code', text: this.$tc('project', 1) },
-        { name: 'phase_alias', text: this.$tc('phase.short', 1) },
+        { name: 'wo_code', text: this.$t('work_order.wo_code') },
+        { name: 'project_code', text: this.$t('project') },
+        { name: 'phase_alias', text: this.$t('phase.short') },
       ]
     },
 
@@ -235,11 +247,11 @@ export default {
     },
 
     confirm_batch_done_message() {
-      return this.$tc('job.alerts.batch_confirm')
+      return this.$t('job.alerts.batch_confirm')
     },
 
     confirm_job_done_message() {
-      return this.$tc('job.alerts.job_complete_confirm')
+      return this.$t('job.alerts.job_complete_confirm')
     },
 
     job_info() {
@@ -253,23 +265,23 @@ export default {
     },
 
     job_color() {
-      if (this.j.critical) return this.$theme.red
-      else if (!this.j.on_time) return this.$theme.orange
-      else if (this.j.active) return this.$theme.blue
-      else return this.$theme.grey
+      if (this.j.critical) return 'theme-red'
+      else if (!this.j.on_time) return 'theme-orange'
+      else if (this.j.active) return 'theme-blue'
+      else return 'theme-grey'
     },
 
     progress_button() {
 
       const complete_step = {
         icon: 'mdi-check',
-        text: this.$tc('job.complete_step'),
-        action: this.completeStep
+        text: this.$t('job.complete_step'),
+        action: this.completeStep,
       }
 
       const declare_batch = {
         icon: 'mdi-plus',
-        text: this.$tc('job.complete_batch'),
+        text: this.$t('job.complete_batch'),
         action: this.declareBatch
       }
 
@@ -280,6 +292,16 @@ export default {
             : declare_batch
       }
       else return declare_batch
+    },
+
+    progress_button_active() {
+      return this.j.active && !this.current_step_done
+    },
+
+    progress_button_color() {
+      return this.progress_button_active
+        ? this.$theme.green + 'aa'
+        : 'rgba(255,255,255,.13)'
     },
 
     production_batch() {
@@ -368,7 +390,7 @@ export default {
       }
 
       if (this.j.active) {
-        result.text = this.$tc('job.pause').toUpperCase()
+        result.text = this.$t('job.pause').toUpperCase()
         result.action = () => this.$store.dispatch('pauseJob')
         return result
       }
@@ -376,12 +398,12 @@ export default {
       else {
         // Check if progress has already been made or user has already started
         if (this.j.stage == 'started' ) {
-          result.text = this.$tc('job.resume').toUpperCase()
+          result.text = this.$t('job.resume').toUpperCase()
           result.action = () => this.$store.dispatch('resumeJob')
           return result
         }
         else {
-          result.text = this.$tc('job.start').toUpperCase()
+          result.text = this.$t('job.start').toUpperCase()
           result.action = () => this.$store.dispatch('startJob')
           return result
         }
@@ -529,7 +551,7 @@ export default {
 
   beforeRouteLeave (to, from, next) {
     if (this.j.active) {
-      const confirm = window.confirm(this.$tc('job.alerts.confirm_exit'))
+      const confirm = window.confirm(this.$t('job.alerts.confirm_exit'))
       if (confirm) {
         this.$store.dispatch('pauseJob')
         next()
@@ -546,12 +568,4 @@ export default {
 </script>
 
 <style lang="css" scoped>
-#progress_button.disabled {
-  background-color: var(--surface-1) !important;
-  color: var(--theme-grey) !important;
-}
-/*#progress_button.completed {
-  background-color: var(--surface-1) !important;
-  color: var(--theme-green) !important;
-}*/
 </style>

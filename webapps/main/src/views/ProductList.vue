@@ -1,101 +1,89 @@
 <template>
-  <v-container fluid class="px-6 fill scroll">
+  <q-page-container class="q-pa-md" style="height: 100vh">
+    <q-page class="fit column">
+      <!-- Header row with product filter and view controls -->
+      <div class="col-auto q-py-md row q-col-gutter-lg items-center">
+        <div class="col-12 col-sm-5 col-md-3">
+          <q-input
+            dense
+            hide-bottom-space
+            autocomplete="off"
+            name="search"
+            :placeholder="$t('search')"
+            input-class="text-uppercase text-body1"
+            v-model="search_proxy"
+            :debounce="300">
+            <template #append>
+              <q-icon name="mdi-magnify" />
+            </template>
+          </q-input>
+        </div>
 
-    <!-- Header row with product filter and view controls -->
-    <v-row>
+        <!-- View controls -->
+        <q-checkbox
+          class="col-auto text-body1 low-text"
+          :label="$capitalize($t('product.filters.active_only'))"
+          v-model="filter_inactive">
+        </q-checkbox>
+        <q-checkbox
+          class="col-auto text-body1 low-text"
+          :label="$capitalize($t('product.filters.show_images'))"
+          v-model="show_images">
+        </q-checkbox>
 
-      <!-- Text field for product filter and search -->
-      <v-col cols="12" sm="5" lg="3">
-        <v-text-field
-          hide-details
-          single-line
-          autocomplete="off"
-          name="search"
-          :label="$tc('search') | capitalize"
-          value="search"
-          v-model="searchString"
-          class="ma-0 pa-0 text-uppercase">
-          <template v-slot:append>
-            <span class="material-icons">search</span>
-          </template>
-        </v-text-field>
-      </v-col>
+        <q-space />
 
-      <!-- View controls -->
-      <v-col cols="auto" class="d-flex align-center">
-        <v-checkbox
-          :ripple="false"
-          :color="$theme.blue"
-          hide-details
-          :label="$tc('product.filters.active_only') | capitalize" 
-          v-model="filter_inactive" 
-          class="ma-0 pa-0 nowrap"/>
-      </v-col>    
-      <v-col cols="auto" class="d-flex align-center">
-        <v-checkbox 
-          :ripple="false"
-          :color="$theme.blue"
-          hide-details
-          :label="$tc('product.filters.show_images') | capitalize" 
-          v-model="show_images" 
-          class="ma-0 pa-0 nowrap"/>
-      </v-col>  
+        <div class="col-auto">
+          <q-btn
+            color="theme-blue"
+            @click="$router.push({ name: 'newProduct' })">
+            {{ $t('new') }}
+          </q-btn>
+        </div>
+      </div>
 
-      <v-spacer></v-spacer>
+      <!-- PRODUCT LIST -->
+      <div class="col scroll flex-center" id="product-list">
+        <div v-if="vuex_ready" class="row q-col-gutter-lg q-mb-md">
+          <NoDataAlert v-if="!productCatalog(filter_inactive).length" />
+          <div
+            class="col-12 col-sm-6 col-md-3 col-xl-2"
+            :style="`height: ${card_height}px`"
+            v-for="(product, index) in product_list"
+            :key="index">
+            <ProductCard
+              :key="product._key"
+              :product="product"
+              :show_image="show_images">
+            </ProductCard>
+          </div>
+        </div>
+        <div class="row q-my-lg justify-center">
+          <q-btn
+            v-if="!loading && max_shown < filtered_products.length"
+            flat
+            color="theme-blue"
+            @click="showMore">
+            CARICA ALTRI
+          </q-btn>
+          <q-spinner v-if="loading" />
+        </div>
+      </div>
 
-      <v-col cols="auto">
-        <v-btn :color="$theme.blue"
-          @click="$router.push({ name: 'newProduct' })">
-          {{ $tc('new') }}
-        </v-btn>
-      </v-col>
-    </v-row>
-
-    <!-- Product List -->
-    <LoadingSignal v-if="!vuex_ready"></LoadingSignal>
-    <NoDataAlert v-else-if="!productCatalog().length"></NoDataAlert>
-    <v-row v-else>
-      <v-col cols="12" sm="6" md="4" lg="3" xl="2" 
-        v-for="product in productCatalog()" 
-        :key="product.code" 
-        v-show="(!filter_inactive || product.active) && match(product)">
-        <ProductCard 
-          :product="product" 
-          :image="show_images" 
-          @delete="deleteNotify(product)"
-          />
-      </v-col>
-    </v-row>
-
-    <!-- DELETE/RESTORE NOTIFICATION -->
-    <v-snackbar id="delete-notification" bottom left 
-      v-model="deleteSnackbar.show" 
-      :timeout="deleteSnackbar.timeout">
-      <v-row>
-        <v-col class="text-uppercase">
-          {{ $tc('product.snackbars.delete_confirmed', {code: deleteSnackbar.code}) }}
-          <v-btn text :color="$theme.blue" @click.native="deleteSnackbar.show = false; ">{{ $tc('confirm') }}</v-btn>
-          <v-btn text color="warning" @click.native="undoDelete">{{ $tc('undo') }}</v-btn>
-        </v-col>
-        <!-- <v-col cols="12">
-          <v-progress-linear height="2" v-model="deleteSnackbar.remain" />
-        </v-col> -->
-      </v-row>
-    </v-snackbar>
-
-    <router-view></router-view>
-
-  </v-container>
+    </q-page>
+  </q-page-container>
 </template>
 
 <script>
-import LoadingSignal from '@/components/LoadingSignal'
+import LoadingSignal from '@/components/LoadingSignal.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
-import ProductCard from '@/components/ProductCard'
+import ProductCard from '@/components/ProductCard.vue'
 
 import multiMatch from '@/lib/MultiFieldSearch.js'
 
 import { mapGetters, mapActions } from 'vuex'
+import { debounce as _debounce } from 'lodash'
+
 
 export default {
 
@@ -104,37 +92,47 @@ export default {
   components: {
     LoadingSignal,
     NoDataAlert,
-    ProductCard,
+    ProductCard
   },
 
-  // followingi props passed in router query string
-  // props: ['show_images', 'filter_inactive'],
-
-  data: () => ({
-    // filter_inactive: false,
-    searchString: '',
-    // show_images: false,
-    deleteSnackbar: {
-      _key: null,
-      code: '',
-      timeout: 6200,
-      show: false,
-      remain: 100,
-    },
-    vuex_ready: false
-  }),
+  data() {
+    return {
+      search_proxy: null,
+      search_string: null,
+      loading: true,
+      vuex_ready: false,
+      load_quantity: 100,
+      loading_round: 1
+    }
+  },
 
   computed: {
     ...mapGetters(['productCatalog']),
 
+    catalog() {
+      return this.productCatalog(this.filter_inactive)
+    },
+
+    filtered_products() {
+      return this.catalog.filter(this.match)
+    },
+
+    product_list() {
+      return this.filtered_products.slice(0, this.max_shown)
+    },
+
+    max_shown() {
+      return this.load_quantity * this.loading_round
+    },
+
     show_images: {
       get() {
-        // return this.show_images
-        return this.$route.query.show_images
+        return this.$route.query.show_images === 'true'
+          ? true
+          : false
       },
       set(value) {
         this.$router.replace({ 
-          // name: this.$route.name, 
           query: { 
             filter_inactive: this.filter_inactive,
             show_images: value 
@@ -145,59 +143,74 @@ export default {
 
     filter_inactive: {
       get() {
-        // return this.filter_inactive
-        return this.$route.query.filter_inactive
+        return this.$route.query.filter_inactive === 'true'
+          ? true
+          : false
       },
       set(value) {
         this.$router.replace({
-          // name: this.$route.name,
           query: { 
             filter_inactive: value,
             show_images: this.show_images
           }
         })
       }
+    },
+
+    card_height() {
+      return this.show_images
+        ? 240
+        : 140
     }
   },
 
   methods: {
-
-    ...mapActions(['restoreProduct']),
+    fetchProducts() {
+      return new Promise( resolve => {
+        this.loading = true
+        this.$store.dispatch('loadProductList').then(() => {
+          setTimeout(() => this.loading = false, 2000)
+          resolve()
+        })
+      })
+    },
 
     match(product) {
-      let activeFilter = !this.filter_inactive || product.active
-      let searchFilter = multiMatch(this.searchString, product, ['code', 'description'])
-
-      return activeFilter && searchFilter
+      return multiMatch(this.search_string, product, ['code', 'description'])
     },
 
-    deleteNotify(product) {
-      const snackbar = this.deleteSnackbar
-      snackbar._key = product._key
-      snackbar.code = product.code
-      // snackbar.remain = 100
-      snackbar.show = true
-      // let countdown = setInterval(() => {
-      //   if (snackbar.show) {
-      //     snackbar.remain -= 1
-      //   }
-      //   else {
-      //    clearInterval(countdown)
-      //   }
-      // }, 60)
-    },
-
-    undoDelete() {
-      this.restoreProduct(this.deleteSnackbar._key)
-      this.deleteSnackbar.show = false
+    showMore() {
+      this.loading = true
+      setTimeout(() => {
+        this.loading_round ++
+        this.loading = false
+      }, 1500)
     }
   },
 
   created() {
-    this.$store.dispatch('loadProductList').then(() => this.vuex_ready = true)
+    this.fetchProducts().then(() => {
+      this.vuex_ready = true
+    })
+  },
+
+
+  watch: {
+    search_proxy: {
+      immediate: true,
+      handler() {
+        this.loading = true
+        this.loading_round = 0,
+        setTimeout(() => {
+          this.search_string = this.search_proxy
+          this.loading = false
+          this.loading_round = 1
+        }, 1500)
+      }
+    }
   }
 };
 </script>
 
-<style lang="css" scoped>
+<style lang="sass" scoped>
 </style>

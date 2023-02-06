@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import { api } from '@/lib/apiCall.js'
+import { api } from '@/boot/axios.js'
 
 const org = {
 
@@ -9,7 +8,7 @@ const org = {
 
   mutations: {
     LOAD_DEPARTMENTS(state, dep_list) {
-      Vue.set(state, 'departments', dep_list)
+      state.departments = dep_list
     },
   },
 

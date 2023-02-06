@@ -1,102 +1,122 @@
 <template>
-  <v-container>
-    <v-row dense justify="space-between" class="text-uppercase mx-0 low-text">
-      <h5>{{ $tc('work_order.wo_code') }}</h5>
-      <h5>{{ $tc('work_order.wo_line.line_only', 1) }}</h5>
-    </v-row>
-    <v-row dense justify="space-between" class="display  weight-bold mx-0">
-      <h3>{{ wo_data.wo_code }}</h3>
-      <h3>{{ wo_data.wo_line }}</h3>
-    </v-row>
-    <v-row dense justify="space-between" class="text-uppercase mx-0 mt-6 low-text">
-      <h5>{{ $tc('product.label') }}</h5>
-      <h5>{{ $tc('quantity.short') }}</h5>
-    </v-row>
-    <v-row dense justify="space-between">
-      <v-col cols="9">
-        <h3 class="text-truncate display ">{{ wo_data.product_code }}</h3>
-        <p class="medium mt-1">{{ wo_data.product_description }}</p>
-      </v-col>
-      <v-col cols="auto">
-        <h3 class=" display">{{ wo_data.qt_planned }}</h3>
-      </v-col>
-    </v-row>
+  <div class="q-pa-lg full-height column">
 
-    <v-row dense justify="space-between" align="end" class="mt-4 mx-0 mb-2">
-      <h5 class="weight-bold text-uppercase low-text">{{ $tc('progress') }}</h5>
-      <h3 class="weight-bold text-uppercase ">{{ wo_data.progress}}%</h3>
-    </v-row>
+    <!-- COLUMN HEADER -->
+    <div class="row justify-between text-uppercase low-text text-h5 q-mb-xs">
+      <div>{{ $t('work_order.wo_code') }}</div>
+      <div>{{ $t('project') }}</div>
+    </div>
 
-    <v-progress-linear
-      :value="wo_data.progress"
-      :color="wo_data.active ? $theme.blue : $theme.grey">
-    </v-progress-linear>
+    <div class="row justify-between display weight-bold text-h3">
+      <div>{{ wo_data.wo_code }}</div>
+      <div>{{ wo_data.project_code }}</div>
+    </div>
 
-    <v-row dense class="ml-0 mb-6 mt-4" justify="space-between">
-      <div 
-        v-for="(tab, index) in views" 
-        :key="index">
-        <v-hover v-slot:default="{ hover }">
-          <span     
-            @click="current_view = index"
-            class="text-uppercase font-weight-medium caption"
-            style="cursor: pointer"
-            :style="hover ? 'text-decoration: underline' : ''"
-            :class="current_view === index ? 'font-weight-black' : 'low-text'">
-              {{ tab.text }}
-          </span>
-        </v-hover>
+    <div class="row justify-between text-uppercase low-text q-mt-lg text-h5">
+      <div>{{ $t('product.label') }}</div>
+      <div>{{ $t('quantity.short') }}</div>
+    </div>
+
+    <div class="row justify-between q-mt-xs">
+      <div class="col-9">
+        <div class="text-truncate display text-h3">
+          {{ wo_data.product_code}}
+        </div>
+        <div class="medium q-mt-xs">
+          {{ wo_data.product_description }}
+        </div>
       </div>
-    </v-row>
-    
-    <v-card class="scroll" :height="panelHeight()" flat color="transparent">
-      <v-tabs-items 
-        v-model="current_view" style="background:transparent;">
-        <v-tab-item key="info">
-          <v-row 
-            v-for="i in wo_info" 
-            :key="i.name" 
-            justify="space-between"
-            align="end"
-            class="mx-0 mb-2">
-            <span class="text-uppercase caption">
-              {{ i.text }}
-            </span>
-            <span class="weight-medium">
-              {{ woInfoValue(i.name) | capitalize }}
-            </span>
-          </v-row>
-        </v-tab-item>
-        <v-tab-item key="people" class="ml-n2 fill-height">
-          <BaseAvatarListElement
+      <div class="col-auto display text-h3">
+        {{ wo_data.qt_planned }}
+      </div>
+    </div>
+
+    <div class="row justify-between items-end weight-bold text-uppercase q-mt-md q-mb-xs">
+      <div class="low-text text-h5">
+        {{ $t('progress') }}
+      </div>
+      <div class="text-h3">
+        {{ wo_data.progress }}%
+      </div>
+    </div>
+
+    <BaseProgressBar :data="wo_data" class="q-mt-sm"/>
+
+
+    <!-- INFO PANELS -->
+    <div id="panels" class="row q-mt-lg justify-between text-h6 text-uppercase">
+      <div
+        v-for="tab in views"
+        @click="current_view = tab.name"
+        style="cursor: pointer"
+        :key="tab.name"
+        :class="current_view === tab.name ? 'weight-bold' : 'low-text'">
+        {{ tab.text }}
+      </div>
+    </div>
+
+    <q-tab-panels v-model="current_view" animated class="transparent q-mt-lg col column">
+
+      <!-- WORK ORDER DETAILS -->
+      <q-tab-panel name="info" class="q-pa-none col">
+        <div
+          v-for="i in wo_info"
+          :key="i.name"
+          class="row justify-between items-end q-mb-sm text-high">
+          <span class="text-uppercase text-caption">
+            {{ i.text }}
+          </span>
+          <span class="weight-medium text-body1">
+            {{ $capitalize(woInfoValue(i.name)) }}
+          </span>
+        </div>
+      </q-tab-panel>
+
+      <!-- ASSIGNMENTS -->
+      <q-tab-panel name="people" class="q-pa-none column col">
+        <div class="col-11 scroll">
+          <BaseUserAvatar
             v-for="operator in assignments"
             :key="operator._key"
-            :src="getPicPath(operator)"
-            :title="operator.name + ' ' + operator.surname"
-            :subtitle="getAssignedPhases(operator) | capitalize_all">
-          </BaseAvatarListElement>
+            :user="operator"
+            name_class="highlight text-body1"
+            subtitle_class="low-text"
+            class="q-mb-md q-py-xs"
+            size="40px">
+            <template #subtitle>
+              <div class="text-low">
+                {{ $capitalizeAll(getAssignedPhases(operator)) }}
+              </div>
+            </template>
+          </BaseUserAvatar>
+        </div>
 
-          <p class="ml-2 mt-12 text-uppercase caption">{{ $tc('job.unassigned_jobs') }}: {{ unassigned_jobs.length }}</p>
-        </v-tab-item>
-      </v-tabs-items>
-    </v-card>
-  </v-container>
+        <q-space />
+
+        <div class="col-auto text-uppercase text-caption">
+          {{ $t('job.unassigned_jobs') }}: {{ unassigned_jobs.length }}
+        </div>
+      </q-tab-panel>
+
+    </q-tab-panels>
+
+  </div>
 </template>
 
 <script>
 import { getPicPath } from '@/lib/media.js'
 import { durationFromMillisec } from '@/lib/duration.js'
 import { DateTime as DT } from 'luxon'
-
-import BaseAvatarListElement from '@/components/BaseAvatarListElement.vue'
-import { roundFloat } from '@/lib/filters.js'
+import BaseProgressBar from '@/components/BaseProgressBar.vue'
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 
 export default {
 
   name: 'WorkOrderDataColumn',
 
   components: {
-    BaseAvatarListElement
+    BaseProgressBar,
+    BaseUserAvatar
   },
 
   props: {
@@ -108,7 +128,7 @@ export default {
 
   data () {
     return {
-      current_view: 0,
+      current_view: 'info',
     }
   },
 
@@ -118,13 +138,13 @@ export default {
       return [
         { 
           name: 'info', 
-          text: this.$tc('info'), 
-          align: 'start' 
+          text: this.$t('info'),
+          class: 'justify-start'
         },
         { 
           name: 'people', 
-          text: this.$tc('people'), 
-          align: 'start' 
+          text: this.$t('people') + ' (' + this.people_count + ')',
+          class: 'justify-end'
         },
         // { name: 'equipment', text: 'MACCHINARI', align: 'end' },
       ]
@@ -134,45 +154,45 @@ export default {
       return [
         { 
           name: 'due_by', 
-          text: this.$tc('due_by') 
+          text: this.$t('due_by')
         },
         { 
           name: 'status', 
-          text: this.$tc('status')
+          text: this.$t('status')
         },
         { 
           name: 'created', 
-          text: this.$tc('creation_date'), 
+          text: this.$t('creation_date'),
           value: '' 
         },
         { 
           name: 'start', 
-          text: this.$tc('start_date')
+          text: this.$t('start_date')
         },
         // { name: 'queueing_time', text: 'T. coda' },
         { 
           name: 'end', 
-          text: this.$tc('end_date') 
+          text: this.$t('end_date')
         },
         { 
           name: 'processing_time', 
-          text: this.$tc('processing_time')
+          text: this.$t('processing_time')
         },
         { 
           name: 'lead_time', 
-          text: this.$tc('lead_time')
+          text: this.$t('lead_time')
         },
         { 
           name: 'processing_cost', 
-          text: this.$tc('processing_cost') 
+          text: this.$t('processing_cost')
         },
         { 
           name: 'material_cost', 
-          text: this.$tc('material_cost')
+          text: this.$t('material_cost')
         },
         { 
           name: 'total_cost', 
-          text: this.$tc('total_cost')
+          text: this.$t('total_cost')
         },
       ]
     },
@@ -181,15 +201,20 @@ export default {
       // handle missing data gracefully
       if (typeof this.wo_data != 'undefined') {
 
-        let assignments = {}
+        const assignments = {}
 
         this.wo_data.jobs.forEach( j => {
           if (j.assigned_to != null) {
             const key = j.assigned_to._key
-            if (key in assignments) assignments[key].jobs.push(j)
+            if (key in assignments) {
+              assignments[key].jobs.push(j)
+            }
             else {
-              assignments[key] = this.$store.getters.user_data(key)
-              assignments[key].jobs = [j]
+              const data = {
+                ...this.$store.getters.user_data(key),
+                jobs: [j]
+              }
+              assignments[key] = data
             }
           }
         })
@@ -197,6 +222,10 @@ export default {
       }
 
       else return {}
+    },
+
+    people_count() {
+      return  Object.keys(this.assignments).length
     },
 
     unassigned_jobs() {
@@ -225,11 +254,11 @@ export default {
 
       switch (info_name) {
         case 'status': {
-          let active_text = this.$tc('active')
-          let inactive_text = this.$tc('waiting')
-          let on_time_text = this.$tc('on_time')
-          let late_text = this.$tc('late')
-          let critical_text = this.$tc('critical')
+          let active_text = this.$t('active')
+          let inactive_text = this.$t('waiting')
+          let on_time_text = this.$t('on_time')
+          let late_text = this.$t('late')
+          let critical_text = this.$t('critical')
           let active = this.wo_data.active ? active_text : inactive_text
 
           let state = ''
@@ -271,15 +300,15 @@ export default {
         }
 
         case 'processing_cost': {
-          return roundFloat(this.wo_data.processing_cost || 0, 1) || '-'
+          return this.$roundFloat(this.wo_data.processing_cost || 0, 1) || '-'
         }
 
         case 'material_cost': {
-          return roundFloat(this.wo_data.material_cost || 0, 1) || '-'
+          return this.$roundFloat(this.wo_data.material_cost || 0, 1) || '-'
         }
 
         case 'total_cost': {
-          return roundFloat(this.wo_data.total_cost || 0, 1) || '-'
+          return this.$roundFloat(this.wo_data.total_cost || 0, 1) || '-'
         }
 
       }
@@ -302,5 +331,8 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="scss">
+#panels div:hover {
+  text-decoration: underline;
+}
 </style>

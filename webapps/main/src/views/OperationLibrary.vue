@@ -1,79 +1,79 @@
 <template>
-  <v-card class="fill">
-    <LoadingSignal v-if="!vuex_ready" />
 
-    <v-row v-else no-gutters class="fill-height">
-      <v-col cols="3" class="fill-height d-flex flex-column">
-        
-          <!-- <h5>FILTRI</h5> -->
-        <v-text-field
-          class="px-5"
-          append-icon="mdi-magnify"
-          hide-details
-          single-line
-          clearable
-          :label="$tc('search') | capitalize"
-          v-model="search_text">
-        </v-text-field>
-          
-          <v-row dense class="pt-6 flex-grow-0 text-uppercase">
-            <v-col cols="8" class="pl-6 pb-1">
-              <h6>{{ $tc('name') }}</h6>
-            </v-col>
-            <v-col cols="4">
-              <h6>{{ $tc('code') }}</h6>
-            </v-col>
-          </v-row>
+  <div v-if="vuex_ready" class="row full-height">
+    <div class="full-height column col-3">
 
-          <v-divider></v-divider>
+      <q-input
+        dense
+        class="q-px-lg q-py-sm"
+        :placeholder="$capitalize($t('search'))"
+        v-model="search_text">
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
 
-          <div class="flex-grow-1 scroll" style="overflow-x: hidden">
-            <v-row v-ripple dense
-              v-for="(operation, index) in filtered_operations" :key="index"
-              class="pointer"
-              style="white-space: nowrap"
-              :class="{ 'alternate-row': index % 2 == 0 }"
-              :style="operation._key == selected_operation_key ? `background-color: ${$theme.blue_bg}` : '' "
-              @click="showOperationDetail(operation)">
-              <v-col cols="8" class="pl-6 pr-2 medium">
-                {{ operation.name | capitalize }}
-              </v-col>
-              <v-col cols="4" class="medium">
-                {{ operation.code }}
-              </v-col>
-            </v-row>
-            <v-divider></v-divider>
-            <v-row 
-              align="center" 
-              justify="center" 
-              class="smaller py-2">
-              {{ filtered_operations.length }} di {{ operation_list.length }}
-            </v-row>
+      <div class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold">
+        <div class="col-8">
+          {{ $t('name') }}
+        </div>
+        <div class="col-4">
+          {{ $t('code') }}
+        </div>
+      </div>
+
+      <q-separator />
+
+      <!-- OPERATION LIST -->
+      <div class="scroll col">
+        <div
+          v-for="(operation, index) in filtered_operations"
+          class="row pointer q-px-lg q-py-xs medium"
+          :class="{ 'alternate-row': index % 2 == 0, 'bg-blue-backdrop': operation._key == selected_operation_key }"
+          :key="index"
+          style="white-space: nowrap;"
+          @click="showOperationDetail(operation._key)">
+          <div class="col-8">
+            {{ $capitalize(operation.name) }}
           </div>
+          <div class="col-4">
+            {{ operation.code }}
+          </div>
+        </div>
+      </div>
 
-        <v-spacer></v-spacer>
-        
-        <v-divider></v-divider>
-        
-        <v-btn :color="$theme.blue" class="ma-2" @click="openOperationNew">
-          {{ $tc('operation.add_op') }}
-        </v-btn>
-      </v-col>
+      <q-separator />
 
-      <v-divider vertical></v-divider>
+      <!-- OPERATION LIST COUNT -->
+      <div class="row flex-center smaller q-py-xs">
+        {{ filtered_operations.length }} {{ $t('of') }} {{ operation_list.length }}
+      </div>
 
-      <v-col class="fill-height scroll">
-        <transition name="slide-fade" mode="out-in"> 
-          <router-view
-            :operation="getOperationData()" 
-            :key="selected_operation_key">
-          </router-view>
-        </transition>
-      </v-col>
+      <div class="q-pa-md q-mt-auto">
+        <q-btn
+          class="full-width q-mt-auto"
+          color="theme-blue"
+          :label="$t('operation.add_op')"
+          @click="openOperationNew">
+        </q-btn>
+      </div>
+    </div>
 
-    </v-row>
+    <q-separator vertical />
 
-  </v-card>
+    <!-- OPERATION DATA -->
+    <div class="col full-height" v-if="vuex_ready">
+      <router-view v-slot="{ Component }">
+        <component
+          :is="Component"
+          :operation="selected_operation">
+        </component>
+      </router-view>
+    </div>
+
+  </div>
+
+  <LoadingSignal v-else />
 </template>
 
 <script>
@@ -91,7 +91,6 @@ export default {
     return {
       vuex_ready: false,
       search_text: undefined,
-      selected_operation_key: undefined
     }
   },
 
@@ -101,6 +100,14 @@ export default {
       return this.$store.state.process.operations
     },
 
+    selected_operation_key() {
+      return this.$route.params.operation_key
+    },
+
+    selected_operation() {
+      return this.operation_list.find( op => op._key == this.selected_operation_key )
+    },
+
     filtered_operations() {
       const fields_to_search = ['name', 'code', 'description']
       return this.operation_list.filter( op => multiMatch(this.search_text, op, fields_to_search) )
@@ -108,16 +115,11 @@ export default {
   },
 
   methods: {
-    showOperationDetail(operation) {
-      this.selected_operation_key = operation._key
+    showOperationDetail(operation_key) {
       this.$router.push({
         name: 'operationDetail',
-        params: { operation_key: this.selected_operation_key }
+        params: { operation_key }
       })
-    },
-
-    getOperationData() {
-      return this.operation_list.find( op => op._key == this.selected_operation_key )
     },
 
     openOperationNew() {

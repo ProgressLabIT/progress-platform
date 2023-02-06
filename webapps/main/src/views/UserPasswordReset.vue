@@ -1,86 +1,78 @@
 <template>
-   <v-dialog
-    v-model="showModal"
-    :overlay-color="$theme.background"
-    overlay-opacity="1"
-    max-width="600px"
-    persistent no-click-animation>
-    <v-card>
+  <BaseDialog :show="true" :maximized="true" :background="$theme.background">
+    <q-card square class="surface1 shadow-12 q-pa-sm" style="max-width: 600px;">
+      <q-card-section>
+        <div class="text-h3 display highlight">
+          {{ $t('user.reset_password') }}
+        </div>
+      </q-card-section>
+      <q-card-section>
+        <BaseUserAvatar
+          :user="user"
+          size="70"
+          name_class="solid-white"
+          name_style="font-size: 20px">
+        </BaseUserAvatar>
+      </q-card-section>
 
-      <v-card-title>
-        <h3 class="display">
-          {{ $tc('user.reset_password') }}
-        </h3>
-      </v-card-title>
-
-      <v-card-text>
-
-        <v-row class="mx-0">
-          <BaseUserAvatar
-            :user="user"
-            :size="70"
-            name_class="solid-white"
-            name_style="font-size: 20px"
-            class="my-8">
-          </BaseUserAvatar>
-        </v-row>
-
+      <q-card-section>
         <transition name="slide-fade" mode="out-in">
+          <div>
+            <div
+              v-if="stage==='confirm'"
+              key="confirm"
+              class="row justify-between">
+              <q-btn
+                color="theme-red"
+                @click="resetPassword"
+                :label="$t('confirm')">
+              </q-btn>
+              <q-btn
+                color="theme-grey"
+                @click="$router.back()"
+                :label="$t('cancel')">
+              </q-btn>
+            </div>
 
-          <div v-if="stage==='confirm'" key="confirm">
-            <v-row justify="space-between" class="mx-0">
-              <v-btn :color="$theme.red" @click="resetPassword">
-                {{ $tc('confirm') }}
-              </v-btn>
-              <v-btn :color="$theme.grey" @click="$router.back()">
-                {{ $tc('cancel') }}
-              </v-btn>
-            </v-row>
-          </div>
+            <div v-else-if="stage==='show_psw'" key="password">
+              <div class="q-mb-xl">
+                {{ $t('user.reset_password_success') }}
+              </div>
 
-          <div v-else-if="stage==='show_psw'" key="password">
-            <p>
-              {{ $tc('user.reset_password_success')}}
-            </p>
-
-            <h5 class="text-uppercase mt-6 mb-2">
-              {{ $tc('user.temp_password') | capitalize }}
-            </h5>
-
-            <v-row no-gutters align="center" class="mx-0">
-              <v-col cols="auto">
-                <v-sheet :color="$theme.background" class="pa-3">
-                  <v-row justify="center" align="center" class="mx-0">
-                    <h2 class="highlight">{{ temp_psw }}</h2>
-                  </v-row>
-                </v-sheet>
-              </v-col>
-
-              <v-spacer></v-spacer>
-
-              <v-btn
-                :color="$theme.grey"
-                @click="$router.back()">
-                {{ $tc('close') }}
-              </v-btn>
-            </v-row>
+              <div class="text-h5 uppercase">
+                {{ $capitalize($t('user.temp_password')) }}
+              </div>
+              <div class="row justify-between q-mt-sm items-center">
+                <div class="col-auto">
+                  <div class="background q-pa-sm">
+                    <span class="text-h2 highlight">
+                      {{ temp_psw }}
+                    </span>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <q-btn
+                    color="theme-grey"
+                    @click="$router.back()"
+                    :label="$t('close')">
+                  </q-btn>
+                </div>
+              </div>
+            </div>
           </div>
 
         </transition>
+      </q-card-section>
+    </q-card>
+  </BaseDialog>
 
-
-
-      </v-card-text>
-    </v-card>
-  </v-dialog>
 </template>
 
 <script>
+import BaseDialog from '@/components/BaseDialog.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
-import { api } from '@/lib/apiCall.js'
+import { api } from '@/boot/axios.js'
 import NonExistentUserGuard from '@/mixins/NonExistentUserGuard.js'
-
-
 
 export default {
 
@@ -90,21 +82,17 @@ export default {
 
   components: {
     BaseUserAvatar,
+    BaseDialog
   },
 
   props: {
     user: {
       type: Object
     }
-    // user_key: {
-    //   type: String,
-    //   required: true
-    // }
   },
 
   data() {
     return {
-      showModal: true,
       stage: 'confirm',
       temp_psw: ''
     }

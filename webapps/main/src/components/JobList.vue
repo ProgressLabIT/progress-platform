@@ -1,112 +1,80 @@
 <template>
-  <v-container class="fill pa-0 ">  
+  <q-scroll-area class="col q-mx-xs q-px-sm q-pt-lg" :visible="false">
+   <template
+      v-for="(o, index) in jobs_view"
+      :key="index">
+      <div class="row items-center q-pl-sm">
+        <BaseUserAvatar
+          :user="o.operator"
+          name_class="medium weight-medium"
+          size="36px">
+        </BaseUserAvatar>
+        <q-space />
+        <q-chip :ripple="false" class="col-auto text-body2" color="theme-grey" size="sm">
+          <strong>
+            {{ o.filtered_jobs.length }}
+          </strong>
+          <span class="q-mx-xs">
+            {{ $t('of') }}
+          </span>
+          <strong>
+            {{ o.assigned_jobs_count }}
+          </strong>
+        </q-chip>
+      </div>
 
-    <div class="flex-grow-1 scroll">
-      <NoDataAlert v-if="!jobs_view.length"></NoDataAlert>
-      <template v-else>
-        <v-container
-          v-for="(o, index) in jobs_view"
-          :key="index">
-            <v-row
-              justify="start"
-              align="center"
-              no-gutters
-              class="mt-2">
-              <v-col cols="auto">
-                <v-avatar size="36">
-                  <v-img eager :src="getPicPath(o.operator)">
-                    <template v-slot:placeholder>
-                      <v-icon x-large>mdi-account-circle</v-icon>
-                    </template>
-                  </v-img>
-                </v-avatar>
-                <span class="ml-4 weight-medium medium">
-                  {{ o.operator.name + ' ' + o.operator.surname | capitalize_all }}
-                </span>
-              </v-col>
-              <v-spacer></v-spacer>
-              <v-col cols="auto">
-                <v-chip small>
-                  <span class="weight-medium mr-1">{{ o.filtered_jobs.length }}</span>
-                  di
-                  <span class="weight-medium ml-1">{{ o.assigned_jobs_count }}</span>
-                </v-chip>
-              </v-col>
-            </v-row>
+      <q-table
+        :columns="job_data"
+        :rows="o.filtered_jobs"
+        row-key="_key"
+        hide-bottom
+        dense
+        separator="none"
+        table-class="text-high assignment-list"
+        card-class="background no-shadow q-mt-md"
+        :rows-per-page-options="[0]">
+        <template #body="props">
+          <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
+            <template :props="props" v-for="field in job_data" :key="field.name">
+              <q-td :props="props" :class="{ 'filter-field': filter_fields.includes(field.name)}">
 
-            <v-data-table
-              :items="o.filtered_jobs"
-              :headers="job_data"
-              hide-default-footer
-              dense
-              disable-pagination
-              :no-data-text="$tc('job.no_job_assigned') | capitalize"
-              class="assignment-list mt-4 ml-n3"
-              >
-              <template v-slot:item="{ item: job }">
-                <tr @dblclick="showWorkOrderScreen(job.wo_key)">
-                  <!-- <v-hover v-slot:default="{ hover }"> -->
-                    <td
-                      v-for="(header, index) in job_data"
-                      :key="index"
-                      :class="header.value.includes('qt') ? 'text-right' : ''"
-                      class="text-uppercase"
-                      @click="setSearch(header.value, job[header.value])">
-                      <template v-if="header.value ==='progress'">
-                        <v-row no-gutters align="center">
-                          <v-col cols="9">
-                            <v-progress-linear
-                              dense
-                              :value="job.progress"
-                              :color="job.active ? $theme.blue : $theme.grey">
-                            </v-progress-linear>
-                          </v-col>
-                          <v-col cols="2" class="pl-4 text-right">
-                            {{ job.progress }}%
-                          </v-col>
-                          <v-col cols="1" class="text-right pl-2">
-                            <v-icon small
-                              v-if="job.critical"
-                              :color="$theme.red"
-                              @click="$emit('criticalOnly')">
-                              mdi-alert-octagon
-                            </v-icon>
-                            <v-icon small
-                              v-else-if="!job.on_time"
-                              :color="$theme.orange"
-                              @click="$emit('lateOnly')">
-                              mdi-alert
-                            </v-icon>
-                          </v-col>
-                        </v-row>
-                      </template>
+                <!-- PROGRESS -->
+                <template v-if="field.name==='progress'">
+                  <div class="row items-center q-col-gutter-sm">
+                    <div class="col-9">
+                      <BaseProgressBar :data="props.row" />
+                    </div>
+                    <span class="col-2 text-right">{{ props.row[field.name] }} %</span>
+                  </div>
+                </template>
 
-                      <template v-else>
-                        <v-hover v-slot:default="{ hover }">
-                        <div
-                          :class="filter_fields.includes(header.value) ? 'filter-field' : ''"
-                          :style="filter_fields.includes(header.value) && hover ? 'text-decoration: underline' : ''"
-                          >
-                          {{ job[header.value] || '' | capitalize_all }}
-                        </div>
-                        </v-hover>
-                      </template>
+                <template v-else>
+                  <span class="table-data" @click="setSearch(field.name, props.row[field.name])">
+                    {{ $capitalizeAll(props.row[field.name]) }}
+                  </span>
+                </template>
 
-                    </td>
-                  <!-- </v-hover> -->
-                </tr>
-              </template>
-            </v-data-table>
-            <v-divider class="mt-4"></v-divider>
-        </v-container>
-      </template>
-    </div>
-  </v-container>
+              </q-td>
+            </template>
+          </q-tr>
+        </template>
+        <template #body-cell-progress="props">
+          <q-td key="progress" :props="props">
 
+          </q-td>
+          <!-- ADD ALERT ICONS HERE -->
+        </template>
+      </q-table>
+
+      <q-separator class="q-my-lg q-mx-sm"/>
+
+    </template>
+  </q-scroll-area>
 </template>
 
 <script>
-// import filterJobs from '@/lib/ProductionFilters.js'
+import BaseProgressBar from '@/components/BaseProgressBar.vue'
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import matchJobToFilters from '@/lib/ProductionFilters.js'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 
@@ -115,6 +83,8 @@ export default {
   name: 'JobList',
 
   components: {
+    BaseProgressBar,
+    BaseUserAvatar,
     NoDataAlert
   },
 
@@ -142,12 +112,12 @@ export default {
     return {
       search_fields: [
         'wo_code', 
+        'wo_line', 
         'product_code',
         'product_description',
-        'project_code',
         'phase_alias',
       ],
-      filter_fields: ['wo_code', 'product_code', 'phase_alias', 'project_code']
+      filter_fields: ['wo_code', 'product_code', 'phase_alias']
     }
   },
 
@@ -156,36 +126,46 @@ export default {
     job_data() {
       return [
         { 
-          text: this.$tc('work_order.list_headers.wo_code').toUpperCase(),
-          value: 'wo_code', 
+          label: this.$t('work_order.wo_code').toUpperCase(),
+          field: 'wo_code',
+          name: 'wo_code',
+          align: 'left',
+          style: 'width: 15%'
         },
         { 
-          text: this.$tc('project').toUpperCase(),
-          value: 'project_code',
+          label: this.$t('product.label', 1).toUpperCase(),
+          field: 'product_code',
+          name: 'product_code',
+          align: 'left',
+          style: 'width: 15%'
         },
         { 
-          text: this.$tc('product.label', 1).toUpperCase(), 
-          value: 'product_code', 
+          label: this.$t('phase.short').toUpperCase(),
+          field: 'phase_alias',
+          name: 'phase_alias',
+          style: 'width: 15%',
+          align: 'left'
         },
         { 
-          text: this.$tc('phase.short').toUpperCase(), 
-          value: 'phase_alias', 
+          label: this.$t('progress').toUpperCase(),
+          field: 'progress',
+          name: 'progress',
+          style: 'width: 25%',
+          align: 'left'
         },
         { 
-          text: this.$tc('progress').toUpperCase(), 
-          value: 'progress', 
-          width: '30%'
+          label: this.$t('quantity.completed.short').toUpperCase(),
+          field: 'qt_completed',
+          name: 'qt_completed',
+          style: 'width: 10%',
+          align: 'right'
         },
-        { 
-          text: this.$tc('quantity.completed.short').toUpperCase(), 
-          value: 'qt_completed', 
-          align: 'end'
-        },
-        // { text: this.$tc('job_list.job_data.qt_released'), value: 'qt_released', align: 'end' },
-        { 
-          text: this.$tc('quantity.planned.short').toUpperCase(), 
-          value: 'qt_planned', 
-          align: 'end' 
+        {
+          label: this.$t('quantity.planned.short').toUpperCase(),
+          field: 'qt_planned',
+          name: 'qt_planned',
+          style: 'width: 10%',
+          align: 'right'
         },
       ]
     },
@@ -238,7 +218,7 @@ export default {
         result.push({
           operator: {
             _key: 'unassigned',
-            name: this.$tc("job.unassigned_jobs"),
+            name: this.$t("job.unassigned_jobs"),
             surname: ''
           },
           assigned_jobs_count: this.unassigned_jobs.length,    
@@ -262,6 +242,12 @@ export default {
       return user_pic_folder + filename + '.jpg'
     },
 
+    progressColor(job) {
+      return job.active
+        ? 'theme-blue'
+        : 'theme-grey'
+    },
+
     setSearch(field, text) {
       if (this.filter_fields.includes(field)) {
         this.$emit('setSearch', text)
@@ -274,27 +260,21 @@ export default {
         back_to_route_name: this.$route.name
       }
       this.$emit('itemDblClick', data_to_emit)
-    }
+    },
   }
 }
 </script>
 
-<style lang="css" scoped>
-.assignment-list {
-  background-color: transparent !important;
-}
-
-.assignment-list >>> td {
-  border: none !important;
-  padding: 8px 16px;
-}
-
-.assignment-list >>> th {
-  border: none !important;
-}
-
-.filter-field {
-  cursor: pointer;
-}
-
+<style lang="sass">
+.assignment-list .q-table
+  th
+    font-weight: bold
+    color: var(--text-low)
+  td
+    padding-top: 8px !important
+    padding-bottom: 8px !important
+    &.filter-field .table-data
+      cursor: pointer
+      &:hover
+        text-decoration: underline
 </style>
