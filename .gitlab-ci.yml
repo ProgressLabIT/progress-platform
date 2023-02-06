@@ -27,7 +27,6 @@ build:webapp:
     # Pull builder image if present, if not skip
     - docker pull $WEBAPP_IMAGE:global-deps-stage || true
     - docker pull $WEBAPP_IMAGE:develop-stage || true
-    - docker pull $WEBAPP_IMAGE:config-stage || true
     - docker pull $WEBAPP_IMAGE:build-stage || true
 
     # Navigate to build context
@@ -53,16 +52,6 @@ build:webapp:
       -f $WEBAPP_DOCKERFILE
       .
 
-    # config-stage
-    - >
-      docker build
-      --pull
-      --cache-from $WEBAPP_IMAGE:config-stage
-      --target config-stage
-      -t $WEBAPP_IMAGE:config-stage
-      -f $WEBAPP_DOCKERFILE
-      .
-
     # build-stage
     - >
       docker build
@@ -79,7 +68,6 @@ build:webapp:
       --pull
       --cache-from $WEBAPP_IMAGE:global-deps-stage
       --cache-from $WEBAPP_IMAGE:develop-stage
-      --cache-from $WEBAPP_IMAGE:config-stage
       --cache-from $$WEBAPP_IMAGE:latest
       -t $WEBAPP_IMAGE:latest
       -t $WEBAPP_IMAGE:$CI_PIPELINE_ID
@@ -89,7 +77,6 @@ build:webapp:
     # Push new images to the registry
     - docker push $WEBAPP_IMAGE:global-deps-stage
     - docker push $WEBAPP_IMAGE:develop-stage
-    - docker push $WEBAPP_IMAGE:config-stage
     - docker push $WEBAPP_IMAGE:latest
     - docker push $WEBAPP_IMAGE:$CI_PIPELINE_ID
 
