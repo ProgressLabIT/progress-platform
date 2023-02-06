@@ -1,0 +1,53 @@
+import bytes from 'bytes'
+
+import { shortDateString, formatDateTime } from '@/lib/TimeHandling.js'
+import { durationFromMillisec } from '@/lib/duration.js'
+
+export function capitalize(value) {
+  if (value === '') return value
+  if (typeof value === "number") return value
+  value = value.toString()
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+export function capitalizeAll(value) {
+  if (typeof value === "number") return value
+
+  // The added space makes sure no error is thrown if value is a single word only
+  // It will be removed at the end by trim()
+  const words = (value + ' ').split(" ")
+  return "".concat(...words.map(w => capitalize(w) + ' ')).trim()
+}
+
+export function numberFormat(value, locale) {
+  return new Intl.NumberFormat(locale).format(value)
+}
+
+export function roundFloat(value, decimals) {
+  return +(value.toPrecision(decimals))
+}
+
+export default ({ app }) => {
+  const filters = [
+    capitalize,
+    capitalizeAll,
+    numberFormat,
+    roundFloat,
+    durationFromMillisec,
+    shortDateString,
+    formatDateTime
+  ]
+
+  filters.forEach(f => {
+    app.config.globalProperties['$' + `${f.name}`] = f
+  })
+
+  app.config.globalProperties.$bytes = byte_size => {
+    return bytes.format(byte_size, {
+      decimalPlaces: 1,
+      fixedDecimals: true,
+      unitSeparator: ' ',
+      thousandsSeparator: '.'
+    })
+  }
+}
