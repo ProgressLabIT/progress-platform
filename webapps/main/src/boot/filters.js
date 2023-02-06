@@ -1,3 +1,5 @@
+import { boot } from 'quasar/wrappers'
+
 import bytes from 'bytes'
 
 import { shortDateString, formatDateTime } from '@/lib/TimeHandling.js'
@@ -27,7 +29,8 @@ export function roundFloat(value, decimals) {
   return +(value.toPrecision(decimals))
 }
 
-export default ({ app }) => {
+
+export default boot(({ app }) => {
   const filters = [
     capitalize,
     capitalizeAll,
@@ -39,7 +42,7 @@ export default ({ app }) => {
   ]
 
   filters.forEach(f => {
-    app.config.globalProperties['$' + `${f.name}`] = f
+    app.config.globalProperties['$' + f.name] = f
   })
 
   app.config.globalProperties.$bytes = byte_size => {
@@ -50,4 +53,4 @@ export default ({ app }) => {
       thousandsSeparator: '.'
     })
   }
-}
+})
