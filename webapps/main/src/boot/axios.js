@@ -10,15 +10,14 @@ import store from '@/store/index.js'
 // "export default () => {}" function below (which runs individually
 // for each client)
 
-// const api_url = process.env.NODE_ENV === 'production'
-//  ? 'https://' + window.location.hostname + '/api/v1/'
-//  : 'http://' + window.location.hostname + ':80'
+const domain = window.location.hostname === 'localhost'
+  ? 'http://progress.localhost'
+  : 'http://' + window.location.hostname
 
 const api_base_path = '/api'
 
 const api = axios.create({
-  // baseURL: window.location.origin + api_base_path
-  baseURL: 'http://progress.localhost' + api_base_path
+  baseURL: domain + api_base_path
 })
 
 export default boot(({ app, store }) => {
