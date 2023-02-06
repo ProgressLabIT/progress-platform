@@ -6,7 +6,7 @@ RUN yarn
 
 FROM builder AS built
 COPY public ./public
-COPY jsonfig.json postcss.config.js quasar.config.json
+COPY jsconfig.json postcss.config.js quasar.config.js
 COPY src ./src
 RUN yarn quasar build
 
