@@ -40,7 +40,7 @@
             </div>
 
             <!-- LANGUAGE SELECTION -->
-            <div class="row justify-between items-center">
+           <!--  <div class="row justify-between items-center">
               <span class="display medium">{{ $t('language') }}</span>
               <q-tabs right v-model="locale_index">
                 <q-tab
@@ -50,7 +50,7 @@
                   {{ lang }}
                 </q-tab>
               </q-tabs>
-            </div>
+            </div> -->
           </div>
         </div>
       </q-drawer>
