@@ -53,7 +53,6 @@
                 </template>
 
               </q-td>
-            </template>
           </q-tr>
         </template>
         <template #body-cell-progress="props">
