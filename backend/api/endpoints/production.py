@@ -128,7 +128,6 @@ async def create_work_order(new_wo: WorkOrderNew):
       parameters = phase.params,
       qt_planned = wo_data.qt_planned,
       step_sequence = get_procedure_for_new_job(phase_key),
-      max_offline = phase.max_offline,
       job_docs = wo_data.wo_docs,
       job_bom = [x for x in wo_data.wo_bom if x.phase_key == phase_key]
     )
