@@ -1,71 +1,79 @@
 <template>
-  <q-list>
-    <template
-      v-for="(p_value, p_key) in phase_params"
-      :key="p_key">
+  <div>
+    <q-list v-if="phase_data">
+      <template
+        v-for="(p_value, p_key, index) in phase_params"
+        :key="p_key">
 
-      <q-expansion-item
-        :expand-icon="paramType(p_key) == 'int' || !edit_mode ? 'none' : ''"
-        :model-value="expansion_map == p_key"
-        @update:model-value="(value) => updateExpansionMap(p_key, value)">
+        <q-expansion-item
+          :expand-icon="paramType(p_key) == 'int' || !edit_mode ? 'none' : ''"
+          :model-value="expansion_map == p_key"
+          @update:model-value="(value) => updateExpansionMap(p_key, value)">
 
-        <!-- SELECTED OPTION -->
-        <template #header>
-          <div class="full-width q-pa-lg">
-            <div class="text-h5 uppercase q-mb-sm low-text">
-              {{ paramHumanName(p_key, p_value) }}
+          <!-- SELECTED OPTION -->
+          <template #header>
+            <div class="full-width q-pa-lg">
+              <div class="text-h5 uppercase q-mb-sm low-text">
+                {{ paramHumanName(p_key, p_value) }}
+              </div>
+              <div
+                v-if="!edit_mode || paramType(p_key) != 'int'"
+                class="text-h3 highlight">
+                {{ paramHumanValue(p_key, p_value) }}
+              </div>
+              <q-input
+                v-else
+                type="number" min="0"
+                :readonly="!edit_mode"
+                :model-value="paramHumanValue(p_key)"
+                @update:model-value="(value) => updateParam(p_key, value)">
+              </q-input>
+              <div class="q-mt-sm">
+                {{ paramValueDesc(p_key, p_value) }}
+              </div>
             </div>
-            <div
-              v-if="!edit_mode || paramType(p_key) != 'int'"
-              class="text-h3 highlight">
-              {{ paramHumanValue(p_key, p_value) }}
-            </div>
-            <q-input
-              v-else
-              type="number" min="0"
-              :readonly="!edit_mode"
-              :model-value="paramHumanValue(p_key)"
-              @update:model-value="(value) => updateParam(p_key, value)">
-            </q-input>
-            <div class="q-mt-sm">
-              {{ paramValueDesc(p_key, p_value) }}
-            </div>
-          </div>
-        </template>
+          </template>
 
-        <!-- OTHER OPTIONS -->
-        <template v-if="paramType(p_key) != 'int' && edit_mode">
-          <q-list>
-            <q-item
-              v-for="(value, index) in paramOtherValues(p_key, p_value)"
-              :key="index"
-              clickable
-              v-ripple
-              @click="updateParam(p_key, value)">
-              <q-item-label class="q-pa-lg">
-                <div class="text-h5 highlight q-mb-sm">
-                  {{ paramHumanValue(p_key, value) }}
-                </div>
-                <div>
-                  {{ paramValueDesc(p_key, value) }}
-                </div>
-              </q-item-label>
-            </q-item>
-          </q-list>
-        </template>
-      </q-expansion-item>
+          <!-- OTHER OPTIONS -->
+          <template v-if="paramType(p_key) != 'int' && edit_mode">
+            <q-list>
+              <q-item
+                v-for="(value, index) in paramOtherValues(p_key, p_value)"
+                :key="index"
+                clickable
+                v-ripple
+                @click="updateParam(p_key, value)">
+                <q-item-label class="q-pa-lg">
+                  <div class="text-h5 highlight q-mb-sm">
+                    {{ paramHumanValue(p_key, value) }}
+                  </div>
+                  <div>
+                    {{ paramValueDesc(p_key, value) }}
+                  </div>
+                </q-item-label>
+              </q-item>
+            </q-list>
+          </template>
+        </q-expansion-item>
 
-      <q-separator />
+        <q-separator v-if="index < Object.keys(phase_params).length - 1" />
 
-    </template>
-  </q-list>
+      </template>
+    </q-list>
+    <NoDataAlert v-else />
+  </div>
 </template>
 
 <script>
+import NoDataAlert from '@/components/NoDataAlert.vue'
 import params_map from '@/lib/PhaseParams.js'
 export default {
 
   name: 'PhaseParameters',
+
+  components: {
+    NoDataAlert
+  },
 
   props: ['edit_mode', 'phase', 'product_data'],
 
@@ -135,7 +143,7 @@ export default {
     updateParam(param_key, value) {
       if (param_key === 'step_check') {
         if (!this.phase_data.steps.length && value != 'none') {
-          window.alert(this.$options.filters.capitalize(
+          window.alert(this.$capitalize(
             this.$t('phase.alerts.add_steps_first')
           ))
           this.expansion_map = null

@@ -34,6 +34,10 @@ export const auto_new_batch = {
   type: 'bool',
   values: [true, false]
 }
+
+export const std_processing_time = {
+  type: 'int'
+}
 /*
 export const wip_flow = {
   title: `Accesso ai semilavorati`,
@@ -59,7 +63,8 @@ export default {
   parallel_job_allowed,
   production_batch_qt,
   max_offline,
-  auto_new_batch
+  auto_new_batch,
+  std_processing_time
   // release_batch_qt,
   // wip_flow
 }

@@ -243,6 +243,10 @@ export default {
         },
         "title": "Modalità rilascio"
       },
+      "std_processing_time": {
+        "desc": "Tempo atteso per la lavorazione di un pezzo singolo in questa fase, espresso in secondi. Verrà utilizzato per la previsione dei tempi di esecuzione in mancanza di dati storici significativi.",
+        "title": "Tempo standard"
+      },
       "step_check": {
         "fixed_batch": {
           "desc": "I passi della procedura vengono considerati come eseguiti in contemporanea su un numero fisso di prodotti definito nel parametro \"Lotto di Produzione\". Al completamento di tutti i passi viene dichiarata conclusa la produzione dell'intero lotto.",

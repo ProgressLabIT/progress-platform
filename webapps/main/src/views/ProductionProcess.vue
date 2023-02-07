@@ -253,12 +253,6 @@ export default {
       })
       this.$store.commit('UPDATE_PROCESS', new_process)
       this.current_phase = new_process.length - 1
-
-      // push blur to the end of the stack to let animation run properly
-      setTimeout(() => {
-        this.new_op = null
-        this.$refs.add_phase.blur()
-      }, 1)
     },
 
     deletePhase(phase_index) {

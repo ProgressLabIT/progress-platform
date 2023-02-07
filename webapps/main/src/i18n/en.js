@@ -241,6 +241,10 @@ export default {
         },
         "title": "Release mode"
       },
+      "std_processing_time": {
+        "desc": "Expected time to process a single piece in this phase, expressed in seconds. It will be used to forecast execution time if there's not enough historical data available.",
+        "title": "Standard processing time"
+      },
       "step_check": {
         "fixed_batch": {
           "desc": "When a step in the procedure is declared as done, it will be considered executed on a fixed number of pieces indicated in the \"Production batch\" parameter. After the completion of all the steps in the procedure, the whole batch will be considered completed.",
