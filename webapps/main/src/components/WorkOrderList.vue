@@ -15,24 +15,37 @@
       :rows-per-page-options="[0]"
       @row-dblclick="showWorkOrderScreen">
 
-      <!-- PROGRESS BAR -->
-      <template #body-cell-progress="props">
-        <q-td key="progress" :props="props">
-          <div class="row items-center q-col-gutter-sm">
-            <div class="col-9">
-              <BaseProgressBar :data="props.row" />
-            </div>
-            <span class="col-2 text-right">{{ props.value }} %</span>
-          </div>
-        </q-td>
-        <!-- ADD ALERT ICONS HERE -->
+      <template #body="props">
+        <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
+          <template v-for="c in columns" :key="c.name">
+            <q-td :props="props" :class="{ 'filter-field': search_fields.includes(c.name)}">
+
+              <!-- PROGRESS BAR -->
+              <template v-if="c.name==='progress'">
+                <div class="row items-center q-col-gutter-sm">
+                  <div class="col-9">
+                    <BaseProgressBar :data="props.row" />
+                  </div>
+                  <span class="col-2 text-right">{{ props.row.progress }} %</span>
+                </div>
+              </template>
+              <!-- ADD ALERT ICONS HERE -->
+
+              <template v-else-if="c.name==='due_by'">
+                {{ $shortDateString(props.value, $i18n.locale) }}
+              </template>
+
+              <template v-else>
+                <span class="table-data" @click="setSearch(c.name, props.row[c.name])">
+                  {{ $capitalizeAll(props.row[c.name]) }}
+                </span>
+              </template>
+            </q-td>
+          </template>
+        </q-tr>
       </template>
 
-      <template #body-cell-due_by="props">
-        <td class="text-right">
-          {{ $shortDateString(props.value, $i18n.locale) }}
-        </td>
-      </template>
+
 
       <!-- ADD ONE-CLICK FILTERS HERE -->
     </q-table>
@@ -79,7 +92,8 @@ export default {
         borderBottom: '3px solid green',
         fontWeight: 'bold',
         borderCollapse: 'separate'
-      }
+      },
+      search_fields: ['wo_code', 'product_code', 'project_code', 'product_description']
     }
   },
 
@@ -136,6 +150,7 @@ export default {
         { 
           field: 'due_by',
           name: 'due_by',
+          align: 'right',
           label: this.$t('work_order.list_headers.due_by').toUpperCase(),
           sort: this.sortDate
         }
@@ -153,10 +168,7 @@ export default {
 
     filtered_wo_list() {
       return this.wo_list.filter( wo => {
-        
-        // Define wo fields to use with the text search
-        const search_fields = ['wo_code', 'wo_line', 'product_code', 'project_code']
-        
+
         /* 
         Initialize filter results. 
         If any false will be found in this array the filter function will return false
@@ -170,7 +182,7 @@ export default {
           switch (filter) {
             // Perform text search in the defined fields
             case 'search_string':
-              match = multiMatch(this.filters.search_string, wo, search_fields)
+              match = multiMatch(this.filters.search_string, wo, this.search_fields)
               break
 
             case 'started':
@@ -225,9 +237,15 @@ export default {
         : 'theme-grey'
     },
 
-    showWorkOrderScreen(evt, row, index) {
+    setSearch(field, text) {
+      if (this.search_fields.includes(field)) {
+        this.$emit('setSearch', text)
+      }
+    },
+
+    showWorkOrderScreen(wo_key) {
       this.$emit('itemDblClick', {
-        wo_key: row._key,
+        wo_key: wo_key,
         back_to_route_name: this.$route.name
       })
     },

@@ -30,11 +30,13 @@
         hide-bottom
         dense
         separator="none"
+        table-class="text-high assignment-list"
         card-class="background no-shadow q-mt-md"
         :rows-per-page-options="[0]">
         <template #body="props">
           <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
-              <q-td :props="props" :class="{ 'filter-field': filter_fields.includes(field.name)}">
+            <template v-for="field in job_data" :key="field.name">
+              <q-td :props="props" :class="{ 'filter-field': search_fields.includes(field.name)}">
 
                 <!-- PROGRESS -->
                 <template v-if="field.name==='progress'">
@@ -53,6 +55,7 @@
                 </template>
 
               </q-td>
+            </template>
           </q-tr>
         </template>
         <template #body-cell-progress="props">
@@ -107,12 +110,11 @@ export default {
     return {
       search_fields: [
         'wo_code', 
-        'wo_line', 
         'product_code',
+        'project_code',
         'product_description',
         'phase_alias',
-      ],
-      filter_fields: ['wo_code', 'product_code', 'phase_alias']
+      ]
     }
   },
 
@@ -125,14 +127,21 @@ export default {
           field: 'wo_code',
           name: 'wo_code',
           align: 'left',
-          style: 'width: 15%'
+          style: 'width: 10%'
+        },
+        {
+          label: this.$t('project').toUpperCase(),
+          field: 'project_code',
+          name: 'project_code',
+          align: 'left',
+          style: 'width: 10%'
         },
         { 
           label: this.$t('product.label', 1).toUpperCase(),
           field: 'product_code',
           name: 'product_code',
           align: 'left',
-          style: 'width: 15%'
+          style: 'width: 10%'
         },
         { 
           label: this.$t('phase.short').toUpperCase(),
@@ -244,7 +253,7 @@ export default {
     },
 
     setSearch(field, text) {
-      if (this.filter_fields.includes(field)) {
+      if (this.search_fields.includes(field)) {
         this.$emit('setSearch', text)
       }
     },
@@ -261,15 +270,4 @@ export default {
 </script>
 
 <style lang="sass">
-.assignment-list .q-table
-  th
-    font-weight: bold
-    color: var(--text-low)
-  td
-    padding-top: 8px !important
-    padding-bottom: 8px !important
-    &.filter-field .table-data
-      cursor: pointer
-      &:hover
-        text-decoration: underline
 </style>

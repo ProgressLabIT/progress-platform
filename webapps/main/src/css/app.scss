@@ -13,6 +13,26 @@ $typography-font-family: 'Red Hat Text' !important;
 $toolbar-min-height: 45px;
 $separator-dark-color: rgba(255, 255, 255, .12);
 
+
+.q-table {
+  th {
+    font-weight: bold;
+    color: var(--text-low);
+  }
+  td {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    &.filter-field .table-data {
+      cursor: pointer;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+
+
 .q-menu {
   @extend .surface1;
   border: 1px solid var(--theme-grey);
