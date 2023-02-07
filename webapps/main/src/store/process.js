@@ -32,7 +32,7 @@ const process = {
     },
 
     UPDATE_STEP_DETAILS(state,  { phase_index, step_index, field, value })  {
-      let phase = state.temp[phase_index].steps[step_index] = value
+      state.temp[phase_index].steps[step_index][field] = value
     },
 
     ADD_TEMP_MEDIA(state, { phase_index, step_index, media }) {
@@ -67,8 +67,8 @@ const process = {
     },
 
     DELETE_STEP(state, { phase_index, step_index }) {
-      let procedure = state.temp[phase_index].steps
-      procedure.splice(step_index, 1)
+      let temp_procedure = state.temp[phase_index].steps
+      temp_procedure.splice(step_index, 1)
     },
 
     DELETE_PHASE(state, phase_index) {

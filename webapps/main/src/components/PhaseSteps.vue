@@ -23,7 +23,7 @@
               </q-avatar>
               </q-item-section>
               <q-item-section class="text-truncate">
-                {{ step.title.length ? step.title : '(nessun titolo)' }}
+                {{ step.title ? step.title : '(nessun titolo)' }}
               </q-item-section>
               <q-item-section side class="q-mr-sm">
                 <q-icon :name="stepIcon(step.type)" size="sm" class="q-ml-auto" :style="`color: ${ current_step_index == index ? $theme.text_high : $theme.text_low }`"/>
@@ -73,6 +73,7 @@
           filled dense
           name="step_title"
           :placeholder="$t('title')"
+          debounce="200"
           v-model="step_title">
         </q-input>
         <div v-else class="q-mb-lg q-mt-md">
@@ -88,6 +89,7 @@
           filled dense
           type="textarea"
           name="step_desc"
+          debounce="200"
           :placeholder="$t('description')"
           v-model="step_desc">
         </q-input>
@@ -345,6 +347,12 @@ export default {
           }
         })
       }
+    }
+  },
+
+  watch: {
+    edit_mode() {
+      this.confirming_delete = false
     }
   },
 

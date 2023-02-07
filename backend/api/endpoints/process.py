@@ -171,14 +171,17 @@ async def update_process(product_key, process: List[PhaseData]):
 
       # Insert/replace steps
       for index, s in enumerate(phase.steps):
-        exclude_set = { 'key' } if s.key == None else None
+        # Exclude key field if not present so DB creates new record
+        new_step = s.key == None
+        exclude_set = { 'key' } if new_step else None
         prepped_step_data = jsonable_encoder(s, by_alias=True, exclude=exclude_set)
 
         step_update = tx_db.insert_document('Step', 
           prepped_step_data, overwrite=True, return_new=True )
 
-        phase.steps[index] = step_update['new']
-        phase.step_sequence.append(step_update['_key'])
+        phase.steps[index] = Step(**step_update['new'])
+
+      phase.step_sequence = [s.key for s in phase.steps]
 
       # Flag removed steps for deletion by TTL 
       old_step_sequence = tx_db.document(f'Phase/{phase.key}')['step_sequence'] if phase.key else []
@@ -192,7 +195,7 @@ async def update_process(product_key, process: List[PhaseData]):
 
       # do not 'export' _id field with value null if none is set, so that the DB 
       # will set it automatically
-      new_phase = True if phase.key == None else False
+      new_phase = phase.key == None
 
       if new_phase:
         exclude_set.add('key')

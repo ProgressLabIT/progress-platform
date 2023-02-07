@@ -33,6 +33,7 @@ class PhaseParameters(FlexModel):
   production_batch_qt: int = 1
   max_offline: int = 60 # seconds
   auto_new_batch: bool = True
+  std_processing_time: int = 0 # seconds
   # release_style: ReleaseStyle = ReleaseStyle.JOB
   # release_batch_qt: int = 1
   # wip_flow: WIPFlow = WIPFlow.BUFFER
@@ -87,7 +88,6 @@ class PhaseRecord(ArangoDocument):
   operation_name: str = None
   params: PhaseParameters = PhaseParameters()
   std_processing_time: int = 0 # in milliseconds
-  max_offline: int = 0
   step_sequence: List[Optional[str]] = []
 
 class PhaseData(PhaseRecord):
