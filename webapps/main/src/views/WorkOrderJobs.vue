@@ -95,7 +95,7 @@
                 v-else-if="selected_jobs.length === 0"
                 size="sm"
                 color="theme-blue"
-                @click="updateSelectedJobData(job, true); edit_mode = 'modify'">
+                @click="updateSelectedJobData(job, true)">
                 {{ $t('assign') }}
               </q-btn>
             </template>
@@ -430,10 +430,8 @@ export default {
     },
 
     updateSelectedJobData(job, selected) {
-      if (selected) {
-        this.job_select_model[job._key] = job
-      }
-      else delete this.job_select_model[job._key]
+      this.selected_jobs.push(job._key)
+      this.edit_mode = 'modify'
     },
 
     closeEditDialogs() {
