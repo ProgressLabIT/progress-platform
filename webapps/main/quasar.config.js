@@ -12,8 +12,6 @@ const { configure } = require('quasar/wrappers')
 const path = require('path')
 
 module.exports = configure(function (ctx) {
-  ctx.debug = true
-
   return {
     eslint: {
       // fix: true,
@@ -91,7 +89,7 @@ module.exports = configure(function (ctx) {
         ['@intlify/vite-plugin-vue-i18n', {
           // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
           // compositionOnly: false,
-
+          runtimeOnly: ctx.dev,
           // you need to set i18n resource including paths !
           include: path.resolve(__dirname, './src/i18n/**')
         }]

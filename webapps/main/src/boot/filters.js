@@ -31,19 +31,13 @@ export function roundFloat(value, decimals) {
 
 
 export default boot(({ app }) => {
-  const filters = [
-    capitalize,
-    capitalizeAll,
-    numberFormat,
-    roundFloat,
-    durationFromMillisec,
-    shortDateString,
-    formatDateTime
-  ]
-
-  filters.forEach(f => {
-    app.config.globalProperties['$' + f.name] = f
-  })
+  app.config.globalProperties.$capitalize = capitalize
+  app.config.globalProperties.$capitalizeAll = capitalizeAll
+  app.config.globalProperties.$numberFormat = numberFormat
+  app.config.globalProperties.$roundFloat = roundFloat
+  app.config.globalProperties.$durationFromMillisec = durationFromMillisec
+  app.config.globalProperties.$shortDateString = shortDateString
+  app.config.globalProperties.$formatDateTime = formatDateTime
 
   app.config.globalProperties.$bytes = byte_size => {
     return bytes.format(byte_size, {
