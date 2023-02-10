@@ -6,6 +6,7 @@ export default {
     "userJobs": "work session"
   },
   "active": "active",
+  "active_qt": "active qt",
   "add": "add",
   "add_equipment": "add equipment",
   "add_operator": "add operator | add operators",

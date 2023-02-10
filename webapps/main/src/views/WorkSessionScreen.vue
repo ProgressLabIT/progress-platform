@@ -61,13 +61,13 @@
 
             <!-- WORK ORDER DATA -->
             <template v-for="field in job_info" >
-              <div class="row items-center"
+              <div class="row items-center q-py-xs"
                 v-if="j[field.name] != undefined"
                 :key="field.name">
-                <div class="col-4 text-h5 text-uppercase font-weight-medium">
+                <div class="col-5 text-h5 text-uppercase font-weight-medium">
                   {{ field.text }}
                 </div>
-                <div class="col-8">
+                <div class="col-7">
                   <span>{{ $capitalizeAll(j[field.name]) }}</span>
                 </div>
               </div>
@@ -83,7 +83,7 @@
               class="q-mt-lg q-mb-xs">
             </q-linear-progress>
 
-            <div class="row justify-between items-center">
+            <div class="row justify-between items-center q-pt-xs">
               <div class="text-h5 weight-bold text-uppercase">{{ $t('progress') }}</div>
               <div>{{ j.qt_completed }} / {{ j.qt_planned }}</div>
             </div>
@@ -93,7 +93,7 @@
           <!-- ************************** -->
           <!-- JOB ACTIONS                -->
           <!-- ************************** -->
-          <div class="col column q-mt-xl q-col-gutter-y-sm" id="job-actions">
+          <div class="col column q-mt-lg q-col-gutter-y-sm" id="job-actions">
 
             <!-- START/PAUSE BUTTOM -->
             <div class="col-4">
@@ -127,7 +127,7 @@
                     <q-icon size="lg" :name="progress_button.icon" />
                   </div>
                   <div class="display medium offset-1">
-                    {{ progress_button.text }}
+                    <span>{{ progress_button.text }}</span>
                   </div>
                 </div>
               </q-btn>
@@ -236,7 +236,7 @@ export default {
 
     wo_data() {
       return [
-        { name: 'wo_code', text: this.$t('work_order.wo_code') },
+        { name: 'wo_code', text: this.$t('work_order.list_headers.wo_code') },
         { name: 'project_code', text: this.$t('project') },
         { name: 'phase_alias', text: this.$t('phase.short') },
       ]
@@ -255,13 +255,8 @@ export default {
     },
 
     job_info() {
-      const batch_index = { name: 'batch_index', text: 'iterazione' }
-      const step_index = { name: 'step_index', text: 'passo' }
-
-      let result = [...this.wo_data, batch_index]
-      const step_check = this.j.parameters ? this.j.parameters.step_check : 'none'
-      if (step_check != 'none') result.push(step_index)
-      return result
+      const active_qt = { name: 'active_batch_qt', text: this.$t('active_qt') }
+      return [...this.wo_data, active_qt]
     },
 
     job_color() {

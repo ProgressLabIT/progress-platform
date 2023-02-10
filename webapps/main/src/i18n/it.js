@@ -6,6 +6,7 @@ export default {
     "userJobs": "sessione di lavoro"
   },
   "active": "attivo",
+  "active_qt": "qt in lavorazione",
   "add": "aggiungi",
   "add_equipment": "aggiungi attrezzature",
   "add_operator": "aggiungi operatore | aggiungi operatori",
