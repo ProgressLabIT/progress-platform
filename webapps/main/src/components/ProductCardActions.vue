@@ -45,6 +45,13 @@
           @iconClick="goToProductPage('bom')">
         </BaseTooltipIcon>
         <BaseTooltipIcon
+          icon="mdi-content-copy"
+          icon_size="xs"
+          :tooltip="$capitalize($t('copy'))"
+          :color="$theme.orange"
+          @iconClick="showCopy()">
+        </BaseTooltipIcon>
+        <BaseTooltipIcon
           icon="mdi-delete"
           icon_size="xs"
           :tooltip="$capitalize($t('delete'))"
@@ -60,6 +67,7 @@
 <script>
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 import { mapActions } from 'vuex'
+import { api } from '@/boot/axios.js'
 
 export default {
 
@@ -94,6 +102,40 @@ export default {
         query: {
           back_to: 'productList'
         }
+      })
+    },
+
+    showCopy() {
+      const dialog_title =
+      this.$q.dialog({
+        title: this.$t('code') + ' ' + this.$t('new') + ' ' + this.$t('product.label'),
+        prompt: {
+          model: '',
+          type: 'text',
+          isValid: val => val.length > 0,
+          cancel: true,
+          persistent: true
+        }
+      })
+      .onOk(new_code => {
+        api.post(`product/${this.product._key}/copy`, null, { params: { new_code }})
+        .then( async (resp) => {
+          // Load product list to include navigation state for new product
+          await this.$store.dispatch('loadProductList')
+          this.$router.push({
+            name: 'productHome',
+            params: { product_key: resp.data.detail.new_product_key },
+            query: { back_to: 'productList' }
+          })
+        })
+        .catch( err => {
+          if (err.response.status = 400) {
+            window.alert(err.response.data.detail.message)
+          }
+          else {
+            window.alert("An error occurred")
+          }
+        })
       })
     },
 

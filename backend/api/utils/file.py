@@ -1,4 +1,5 @@
 import os
+import shutil
 from utils.config import get_config
 
 media_root_path = get_config().media_path
@@ -6,6 +7,9 @@ media_root_path = get_config().media_path
 class UserFile:
 
   def __init__(self, base_path, append_path=None, file=None, name=None):
+
+    self.base_path = base_path # media type
+    self.append_path = append_path # media item key
 
     if append_path:
       self.folder_path = os.path.join(media_root_path, base_path, append_path)
@@ -37,7 +41,7 @@ class UserFile:
     return cls(base_path, append_path, file, name)
 
   @classmethod
-  def user_image(cls, append_path=None, file=None):
+  def user_image(cls, append_path, file=None):
     base_path = "user"
     return cls(base_path, append_path, file)
 
@@ -58,6 +62,15 @@ class UserFile:
       f.write(file)
       print(f"Image saved in {self.folder_path}")
 
+
+  def copy_media(self, copy_key):
+    copy_path = os.path.join(media_root_path, self.base_path, copy_key)
+    print(copy_path)
+    shutil.copytree(
+      self.folder_path,
+      copy_path,
+      dirs_exist_ok=True
+    )
 
   def delete_file(self, name=None):
     if name:

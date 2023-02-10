@@ -13,7 +13,7 @@
 
       <div>
         <div class="text-h5 text-uppercase q-mb-lg">
-          {{ $t('filters') }}
+          {{ $t('filter', 2) }}
         </div>
         <q-input
           dense

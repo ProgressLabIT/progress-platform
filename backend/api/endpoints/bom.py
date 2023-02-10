@@ -17,7 +17,7 @@ from utils.api import APIResponse
 router = APIRouter()
 
 @router.get("/{product_key}/bom")
-async def get_product_bom(product_key):
+async def get_product_bom(product_key: str):
   try: 
     bom = get_bom_from_db(db, product_key)
     return bom

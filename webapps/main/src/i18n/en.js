@@ -41,6 +41,7 @@ export default {
   "component": "component",
   "confirm": "confirm",
   "confirm_question": "confirm?",
+  "copy": "copy",
   "cost": {
     "label": "cost",
     "material": "material cost",

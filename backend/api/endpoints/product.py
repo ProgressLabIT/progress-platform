@@ -7,10 +7,13 @@ from fastapi import APIRouter, Form, File, HTTPException, UploadFile
 from fastapi.encoders import jsonable_encoder
 
 from models.product import *
+from models.process import PhaseData
+
 from utils.api import APIResponse
 from utils.db import db
 from utils.file import UserFile
 from utils.product import *
+from utils.process import Queries as ProcessQueries
 
 router = APIRouter()
 
@@ -139,6 +142,159 @@ async def create_product(
       status_code=status_code,
       detail=response
     )
+
+
+# =================================================
+#  POST /PRODUCT_KEY/COPY : COPY PRODUCT
+# =================================================
+@router.post("/{original_product_key}/copy", status_code=201)
+async def copy_product(original_product_key: str, new_code: str):
+
+  # 0. Check no product exists with same code
+  tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'], read=['Operation'])
+  product_db = tx.collection('Product')
+
+  if product_db.find(dict(code=new_code, trash=False)).count():
+    print('duplicato')
+    status_code = 400
+    response=dict(
+      status=status_code,
+      message="A product with the same code already exists"
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
+
+  try:
+    # 1. CREATE NEW PRODUCT WITH PROVIDED CODE
+    new_product = ProductDetails(**product_db.get(original_product_key))
+    original_product_code = new_product.code # save for final response
+    new_product.code = new_code
+    new_product.key = None
+    prepped_data = jsonable_encoder(new_product, by_alias=True, exclude_none=True)
+    new_product_key = product_db.insert(prepped_data)['_key']
+
+    # 2 COPY PROCESS
+    # See also update_process endpoint in endpoints/process.py
+
+    # 2.1 PROCESS: Get process data
+    bind_vars = dict(product_key=original_product_key)
+    db_process = tx.aql.execute(ProcessQueries.GET_PRODUCTION_PROCESS, bind_vars=bind_vars)
+    process_data = [PhaseData(**phase) for phase in db_process]
+
+    # 2.2 PROCESS: Initialize new phase sequence
+    new_process_phases = []
+
+    # COPY PHASES, STEPS & BOM
+    for phase in process_data:
+
+      # 3.1 PHASE: Update original phase data
+      phase.product_key = new_product_key
+
+      # 4.1 STEP: Initialize new step_sequence
+      new_step_sequence = []
+
+      # 4.2 STEP: Copy steps
+      for step in phase.steps:
+        # Exclude key field if not present so DB creates new record
+        prepped_step_data = jsonable_encoder(step, by_alias=True, exclude={'key'})
+        new_step_key = tx.insert_document('Step', prepped_step_data)['_key']
+
+        new_step_sequence.append(new_step_key)
+
+        # 4.3 STEP: Copy step media files
+        step_media = UserFile.step_media(step.key)
+        if os.path.isdir(step_media.folder_path):
+          step_media.copy_media(new_step_key)
+
+
+      # 3.2 PHASE: create new phase with existing operation key and parameters and new step sequence
+      phase.step_sequence = new_step_sequence
+      exclude_set = {'id', 'rev', 'steps', 'key'}
+      prepped_phase_data = jsonable_encoder(phase, by_alias=True, exclude=exclude_set)
+      new_phase_key = tx.insert_document('Phase', prepped_phase_data)['_key']
+
+      # 3.3 PHASE: Insert new ProductPhase relationship
+      product_phase_edge = dict(
+        _from=f'Product/{new_product_key}',
+        _to=f'Phase/{new_phase_key}',
+        type='ProductPhase'
+      )
+      tx.insert_document('requires', product_phase_edge)
+
+      # 3.4 PHASE: Insert new PhaseOperation relationship
+      phase_operation_edge = dict(
+        _from=f'Phase/{new_phase_key}',
+        _to=f'Operation/{phase.operation_key}',
+        type='PhaseOperation'
+      )
+      tx.insert_document('requires', phase_operation_edge)
+
+      # 4.1 BOM: Get BoM for phase
+      match = dict(
+        _from=f'Phase/{phase.key}',
+        type='BomLine'
+      )
+      phase_bom_cursor = tx.collection('requires').find(match)
+
+      # 4.2 BOM: Update with new phase key and insert
+      if phase_bom_cursor.count():
+        new_phase_bom = []
+
+        for line in phase_bom_cursor:
+          line['_from'] = f'Phase/{new_phase_key}'
+          # Remove id fields to make db create new record
+          for prop in ['_id', '_key', '_rev']:
+            del line[prop]
+          new_phase_bom.append(line)
+
+        tx.collection('requires').insert_many(new_phase_bom, silent=True)
+
+      # 2.3 PROCESS: save phase key in new product process
+      new_process_phases.append(new_phase_key)
+
+    # 2.4 Update product with new phases
+    product_db.update(dict(
+      _key=new_product_key,
+      process_phases=new_process_phases
+    ))
+
+    # 7. Copy product media folder (if present) with new product key
+    product_media = UserFile.product_media(original_product_key)
+    if os.path.isdir(product_media.folder_path):
+      product_media.copy_media(new_product_key)
+
+    #TODO
+    """
+    Delete media folders created if something goes wrong
+    """
+
+    # 8. Commit transaction
+    tx.commit_transaction()
+
+    return APIResponse(
+      status_code=200,
+      message=f"Created product {new_code} as copy of product {original_product_code}.",
+      detail=dict(new_product_key=new_product_key)
+    )
+
+  except:
+    tx.abort_transaction()
+    status_code = 500
+    error_str = traceback.format_exc()
+    response=dict(
+      status=status_code,
+      message="There was a problem saving the data into the database. Please contact support if it happens again",
+      error=error_str
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
+
+
+
 
 # =================================================
 #  DELETE /PRODUCT_KEY : DELETE PRODUCT
