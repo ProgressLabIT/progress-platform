@@ -79,6 +79,21 @@ class Event:
   # ....................................................................
 
   def create_work_session(self):
+    # Check no other work session is active from the user and close it if necessary
+    match = dict(
+      user_key=self.info.user_key,
+      active=True
+    )
+    cursor = self.tx.collection('WorkSession').find(match)
+    if cursor.count():
+      for ws in cursor:
+        ws.update(dict(
+          active=False,
+          end=self.info.timestamp
+        ))
+        self.tx.collection('WorkSession').update(ws)
+        self.tx.collection('Job').update({ '_key': ws['job_key'], 'active': False })
+
     new_work_session = self.tx.aql.execute(
       TraceabilityQueries.CREATE_WORK_SESSION, bind_vars=dict(
         job_key = self.info.job_key,
