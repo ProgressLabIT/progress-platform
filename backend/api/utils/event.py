@@ -505,9 +505,11 @@ class Event:
       active=True
     )
 
+
     if not self.job.active_batch_key:
       job_update['active_batch_key'] = self.batch.key
-      job_update['active_batch_qt'] = self.batch.qt_total
+
+    job_update['active_batch_qt'] = self.batch.qt_total
 
     self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
 
