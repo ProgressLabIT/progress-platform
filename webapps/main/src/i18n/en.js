@@ -6,7 +6,6 @@ export default {
     "userJobs": "work session"
   },
   "active": "active",
-  "active_qt": "active qt",
   "add": "add",
   "add_equipment": "add equipment",
   "add_operator": "add operator | add operators",
@@ -54,6 +53,10 @@ export default {
   "creation_date": "creation date",
   "critical": "critical",
   "deactivate": "deactivate",
+  "declaration_question": {
+    "qt": "How many pieces have you completed?",
+    "step": "Which steps have you completed?"
+  },
   "decrease": "decrease",
   "delete": "delete",
   "department": "department",
@@ -339,7 +342,8 @@ export default {
   "project": "project",
   "quantity": {
     "active": {
-      "short": "aq"
+      "short": "aq",
+      "medium": "active qt",
     },
     "completed": {
       "short": "cq"

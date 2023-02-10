@@ -55,6 +55,10 @@ export default {
   "critical": "critico",
   "deactivate": "disattiva",
   "decrease": "riduci",
+  "declaration_question": {
+    "qt": "Quanti pezzi hai completato?",
+    "step": "Quali passi hai completato?"
+  },
   "delete": "elimina",
   "department": "reparto | reparti",
   "description": "descrizione",
@@ -341,7 +345,8 @@ export default {
   "project": "commessa",
   "quantity": {
     "active": {
-      "short": "qa"
+      "short": "qa",
+      "medium": "active qt",
     },
     "completed": {
       "short": "qc"

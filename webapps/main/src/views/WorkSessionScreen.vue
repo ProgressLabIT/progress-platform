@@ -255,7 +255,7 @@ export default {
     },
 
     job_info() {
-      const active_qt = { name: 'active_batch_qt', text: this.$t('active_qt') }
+      const active_qt = { name: 'active_batch_qt', text: this.$t('quantity.active.medium') }
       return [...this.wo_data, active_qt]
     },
 
