@@ -10,6 +10,7 @@ from models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
 from utils.bom import get_bom_from_db
+from utils.counter import generate_counter
 from utils.db import db
 from utils.dt import timestamp
 from utils.process import search_step_media
@@ -27,7 +28,7 @@ router = APIRouter()
 async def create_work_order(new_wo: WorkOrderNew):
 
   # Initialize transaction
-  tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue'], read=['Phase', 'Product'])
+  tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'Config'], read=['Phase', 'Product'])
   wo_coll = tx.collection('WorkOrder')
   job_coll = tx.collection('Job')
   product_coll = tx.collection('Product')
@@ -47,6 +48,9 @@ async def create_work_order(new_wo: WorkOrderNew):
     return new_wo_record
 
   try:
+    if not new_wo.wo_code:
+      new_wo.wo_code = generate_counter(tx, 'work_order')
+
     product_data = ProductDetails(**product_coll.get(new_wo.product_key))
     new_wo.product_code = product_data.code
     new_wo.product_description = product_data.description
@@ -55,10 +59,12 @@ async def create_work_order(new_wo: WorkOrderNew):
       new_wo.phase_sequence = product_data.process_phases
     else:
       new_wo.phase_sequence = ['default']
+      # TODO: replace default alias with default operation (stored and cached in config)
 
     new_wo_record = create_wo_record(new_wo, wo_coll)
 
   except:
+    tx.abort_transaction()
     status_code=500
     response = dict(
       status=status_code,
@@ -81,6 +87,7 @@ async def create_work_order(new_wo: WorkOrderNew):
       job_steps = [s for s in db_steps]
 
     except:
+      tx.abort_transaction()
       status_code=500
       response=dict(
         status_code=status_code,
@@ -95,6 +102,7 @@ async def create_work_order(new_wo: WorkOrderNew):
         s['media'] = [media_name for media_name in filenames]
         # print(s)
       except:
+        tx.abort_transaction()
         status_code=500
         response=dict(
           status_code=status_code,
@@ -116,7 +124,6 @@ async def create_work_order(new_wo: WorkOrderNew):
     new_job_record = Job(
       wo_key = wo_data.key,
       wo_code = wo_data.wo_code,
-      wo_line = wo_data.wo_line,
       phase_key = phase_key,
       phase_alias = phase.alias,
       first_phase = first_phase,
@@ -140,6 +147,7 @@ async def create_work_order(new_wo: WorkOrderNew):
     new_job_records = [create_job_record(new_wo_record, phase_key, job_coll) for phase_key in new_wo_record.phase_sequence]
 
   except:
+    tx.abort_transaction()
     status_code=500
     response = dict(
       status=status_code,
@@ -156,6 +164,7 @@ async def create_work_order(new_wo: WorkOrderNew):
     tx.aql.execute(Queries.ADD_WORK_ORDER_TO_QUEUE, bind_vars=dict(new_wo_key=new_wo_record.key))
 
   except:
+    tx.abort_transaction()
     status_code=500
     response = dict(
       status=status_code,
