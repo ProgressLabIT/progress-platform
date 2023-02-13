@@ -1,12 +1,18 @@
 from datetime import datetime
 
 COUNTER_TICK = """
-// Get counter configuration
-let c = DOCUMENT(Config, 'counters')[@counter_name]
+// Get current counter value
+let c = DOCUMENT(Counter, @counter_name)
 
-// Return config (template and next_tick) and increment tick
-let new = MERGE(c, { next_tick: c.next_tick + 1 })
-update 'counters' with { @counter_name: new } in Config
+// Reset counter if needed (Beginning of year)
+let reset_counter = DATE_NOW() > DATE_TIMESTAMP(c.reset_date)
+
+// Increment tick and reset_date (if needed)
+let next_tick = reset_counter ? 2 : c.next_tick + 1
+let reset_date = reset_counter ? DATE_ADD(c.reset_date, 1, c.frequency) : c.reset_date
+update c with { reset_date, next_tick } in Counter
+
+// Return the counter value prior to update
 RETURN c
 """
 

@@ -174,12 +174,11 @@ export default {
     },
 
     postNewWorkOrder() {
-      const wo_code_missing = this.new_work_orders.some( wo => !wo.code)
       const quantity_missing = this.new_work_orders.some( wo => wo.qt_planned == 0 )
       const product_missing = this.new_work_orders.some( wo => !wo.product._key )
 
-      if (wo_code_missing || quantity_missing || product_missing)  {
-        window.alert(capitalize(this.$t('form_missing_fields_alert')))
+      if (quantity_missing || product_missing)  {
+        window.alert(this.$capitalize(this.$t('form_missing_fields_alert')))
 
       }
 

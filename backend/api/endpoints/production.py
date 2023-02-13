@@ -28,7 +28,7 @@ router = APIRouter()
 async def create_work_order(new_wo: WorkOrderNew):
 
   # Initialize transaction
-  tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'Config'], read=['Phase', 'Product'])
+  tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'Counter'], read=['Phase', 'Product'])
   wo_coll = tx.collection('WorkOrder')
   job_coll = tx.collection('Job')
   product_coll = tx.collection('Product')
@@ -47,10 +47,24 @@ async def create_work_order(new_wo: WorkOrderNew):
     new_wo_record.key = db_resp['_key']
     return new_wo_record
 
-  try:
-    if not new_wo.wo_code:
+  if not new_wo.wo_code:
+    try:
+      # Generate automatic wo_code if not present
       new_wo.wo_code = generate_counter(tx, 'work_order')
+    except:
+      tx.abort_transaction()
+      status_code=500
+      response = dict(
+        status=status_code,
+        message="Please provide a work order code or set up an automatic counter correctly",
+        error=traceback.format_exc()
+      )
+      raise HTTPException(
+        status_code=status_code,
+        detail=response
+      )
 
+  try:
     product_data = ProductDetails(**product_coll.get(new_wo.product_key))
     new_wo.product_code = product_data.code
     new_wo.product_description = product_data.description
