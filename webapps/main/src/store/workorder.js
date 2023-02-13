@@ -91,12 +91,12 @@ const workorder = {
       })
     },
 
-    updateWorkOrder({ dispatch }, { wo_key, new_qt, new_due_date, job_updates }) {
+    updateWorkOrder({ dispatch }, { wo_key, new_qt, new_due_date, new_project_code, job_updates }) {
       return new Promise( (resolve, reject) => {
         const updates = []
-        updates.push( api.patch(`work-order/${wo_key}`, { new_qt, new_due_date }) )
+        updates.push( api.patch(`work-order/${wo_key}`, { new_qt, new_due_date, new_project_code }) )
         
-        if (new_qt && job_updates) {
+        if (job_updates) {
           updates.push(api.post(`job/update`, job_updates))
         }
 

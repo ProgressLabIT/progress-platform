@@ -28,7 +28,7 @@
 
           <!-- PHASE JOBS -->
           <div
-            class="row items-center q-py-sm justify-between"
+            class="row items-center q-py-sm"
             v-for="job in phase.jobs"
             :key="job._key">
             <div class="col-3">
@@ -36,11 +36,15 @@
             </div>
             <BaseUserAvatar
               v-if="job.assigned_to"
-              class="col-4 offset-1"
+              class="col-4"
               :user="job.assigned_to">
             </BaseUserAvatar>
+            <q-space />
+            <div class="col-1 text-uppercase q-mr-md">
+              {{ $t('quantity.remaining.short') }}
+            </div>
             <q-input
-              class="col-3 offset-1"
+              class="col-2"
               :key="index"
               dense
               input-class="text-right"
@@ -59,7 +63,7 @@
         <q-btn color="theme-grey" @click="$emit('close')">
           {{ $t('cancel') }}
         </q-btn>
-        <q-btn color="theme-blue" :loading="saving" @click="save">
+        <q-btn color="theme-blue" :loading="saving" @click="save" v-if="can_save">
           {{ $t('save') }}
         </q-btn>
       </q-card-actions>
@@ -117,7 +121,7 @@ export default {
         const self = this
         const delta_map = this.phase_data.reduce( (obj, phase) => {
           const phase_temp_remaining = phase.jobs.reduce( (sum, job) => sum + self.job_updates[job._key].new_remaining, 0)
-          obj[phase.phase_key] = self.new_wo_qt - (phase.qt_completed + phase_temp_remaining)
+          obj[phase.phase_key] = self.new_wo_qt - (phase.qt_completed + phase.active_batch_qt + phase_temp_remaining)
           return obj
         }, {})
         return delta_map
@@ -127,8 +131,7 @@ export default {
 
     can_save() {
       // Check if any delta is not zero
-      const any_phase_has_delta = Object.entries(this.phases_delta).some( (phase_entry) => phase_entry.delta )
-      return !any_phase_has_delta
+      return Object.values(this.phases_delta).every( delta => delta === 0 )
     }
   },
 

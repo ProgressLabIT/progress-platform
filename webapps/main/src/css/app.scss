@@ -36,6 +36,7 @@ $separator-dark-color: rgba(255, 255, 255, .12);
 .q-menu {
   @extend .surface1;
   border: 1px solid var(--theme-grey);
+  border-radius: 0px;
   color: var(--text-high)
 }
 

@@ -48,9 +48,13 @@
                   </div>
                 </template>
 
+                <template v-else-if="field.name.includes('qt')">
+                  {{ props.row[field.name] }}
+                </template>
+
                 <template v-else>
                   <span class="table-data" @click="setSearch(field.name, props.row[field.name])">
-                    {{ $capitalizeAll(props.row[field.name]) }}
+                    {{ $capitalizeAll(props.row[field.name] || '' ) }}
                   </span>
                 </template>
 

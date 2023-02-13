@@ -2,15 +2,11 @@
   <div class="q-pa-lg full-height column">
 
     <!-- COLUMN HEADER -->
-    <div class="row justify-between text-uppercase low-text text-h5 q-mb-xs">
-      <div>{{ $t('work_order.wo_code') }}</div>
-      <div>{{ $t('project') }}</div>
-    </div>
+    <div class="text-uppercase low-text text-h5 q-mb-xs">{{ $t('work_order.wo_code') }}</div>
+    <div class="full-width display weight-bold text-h3 ellipsis">{{ wo_data.wo_code }}</div>
 
-    <div class="row justify-between display weight-bold text-h3">
-      <div>{{ wo_data.wo_code }}</div>
-      <div>{{ wo_data.project_code }}</div>
-    </div>
+    <div class="text-uppercase low-text text-h5 q-mb-xs q-mt-lg">{{ $t('project') }}</div>
+    <div class="full-width display weight-bold text-h3 ellipsis">{{ wo_data.project_code }}</div>
 
     <div class="row justify-between text-uppercase low-text q-mt-lg text-h5">
       <div>{{ $t('product.label') }}</div>
@@ -100,6 +96,150 @@
 
     </q-tab-panels>
 
+    <!-- ACTIONS -->
+    <q-btn
+      outline square
+      class="full-width"
+      color="theme-blue"
+      :label="$t('update')">
+      <q-menu fit :style="`background-color: ${$theme.surface2}`">
+        <q-list class="text-uppercase capitalize text-body2">
+          <q-item
+            clickable
+            v-close-popup
+            v-if="!wo_data.active"
+            @click="edit_project = true">
+            <q-item-section>
+              {{ $t('project_update') }}
+            </q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup @click="edit_qt = true">
+            <q-item-section>
+              {{ $t('quantity.update') }}
+            </q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup @click="edit_due_date = true">
+            <q-item-section>
+              {{ $t('work_order.update_due_date') }}
+            </q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup class="text-theme-red" v-if="wo_data.stage == 'created'">
+            <q-item-section>
+              {{ $t('work_order.close') }}
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-btn>
+
+    <!-- EDIT PROJECT DIALOG -->
+    <BaseDialog :show="edit_project" @close="closeEditDialogs">
+      <q-card class="surface2 q-pa-md" style="width: 500px">
+        <q-card-section>
+          <div class="text-h4 display highlight text-uppercase">
+            {{ $t('project') }}
+          </div>
+          <q-input
+            autofocus
+            class="q-mt-md"
+            input-class="text-body1 text-uppercase"
+            hide-bottom-space
+            v-model="temp_project_code">
+          </q-input>
+        </q-card-section>
+        <q-card-actions align="between">
+          <q-btn
+            size="12px"
+            flat
+            color="theme-grey"
+            @click="closeEditDialogs">
+            {{ $t('cancel') }}
+          </q-btn>
+          <q-btn
+            size="12px"
+            flat
+            v-if="temp_project_code != wo_data.project_code"
+            color="theme-blue"
+            @click="saveWorkOrderUpdate">
+            {{ $t('save') }}
+          </q-btn>
+        </q-card-actions>
+      </q-card>
+    </BaseDialog>
+
+    <!-- EDIT QUANTITY DIALOG -->
+    <BaseDialog :show="edit_qt" @close="closeEditDialogs">
+      <q-card class="surface2 q-pa-md" style="width: 300px">
+        <q-card-section>
+          <div class="text-h4 display highlight text-uppercase">
+            {{ $t('work_order.new_quantity') }}
+          </div>
+          <q-input
+            autofocus
+            class="q-mt-md"
+            input-class="text-body1"
+            hide-bottom-space
+            type="number"
+            :min="min_allowable_wo_qt"
+            v-model.number="new_qt">
+          </q-input>
+        </q-card-section>
+        <q-card-actions align="between">
+          <q-btn
+            size="12px"
+            flat
+            color="theme-grey"
+            @click="closeEditDialogs">
+            {{ $t('cancel') }}
+          </q-btn>
+          <q-btn
+            size="12px"
+            flat
+            v-if="new_qt != wo_data.qt_planned"
+            color="theme-blue"
+            @click="show_job_qt_rebalance = true">
+            {{ $t('save') }}
+          </q-btn>
+        </q-card-actions>
+      </q-card>
+    </BaseDialog>
+
+    <WorkOrderJobQtRebalance
+      v-if="show_job_qt_rebalance"
+      :new_wo_qt="new_qt"
+      :phase_data="phase_data"
+      :wo_key="wo_data._key"
+      @close="closeEditDialogs">
+    </WorkOrderJobQtRebalance>
+
+    <!-- EDIT DUE-DATE DIALOG -->
+    <BaseDialog
+      :show="edit_due_date"
+      @close="closeEditDialogs">
+      <q-card class="surface2">
+        <q-date
+          minimal
+          v-model="temp_due_date"
+          mask="YYYY-MM-DD">
+        </q-date>
+        <div class="row justify-between q-pa-sm">
+          <q-btn flat
+            size="12px"
+            color="theme-grey"
+            @click="closeEditDialogs">
+            {{ $t('cancel') }}
+          </q-btn>
+          <q-btn
+            flat
+            size="12px"
+            color="theme-blue"
+            @click="saveWorkOrderUpdate">
+            {{ $t('save') }}
+          </q-btn>
+        </div>
+      </q-card>
+    </BaseDialog>
+
   </div>
 </template>
 
@@ -107,6 +247,8 @@
 import { getPicPath } from '@/lib/media.js'
 import { durationFromMillisec } from '@/lib/duration.js'
 import { DateTime as DT } from 'luxon'
+import BaseDialog from '@/components/BaseDialog.vue'
+import WorkOrderJobQtRebalance from '@/components/WorkOrderJobQtRebalance.vue'
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 
@@ -115,8 +257,10 @@ export default {
   name: 'WorkOrderDataColumn',
 
   components: {
+    BaseDialog,
     BaseProgressBar,
-    BaseUserAvatar
+    BaseUserAvatar,
+    WorkOrderJobQtRebalance // Balance wo quantity changes among jobs
   },
 
   props: {
@@ -129,6 +273,13 @@ export default {
   data () {
     return {
       current_view: 'info',
+      edit_project: false,
+      temp_project_code: null,
+      edit_qt: false,
+      new_qt: null,
+      edit_due_date: false,
+      temp_due_date: null,
+      show_job_qt_rebalance: false
     }
   },
 
@@ -169,6 +320,10 @@ export default {
           name: 'start', 
           text: this.$t('start_date')
         },
+        // {
+        //   name: 'start_from',
+        //   text: this.$t('start_from')
+        // },
         // { name: 'queueing_time', text: 'T. coda' },
         { 
           name: 'end', 
@@ -182,18 +337,18 @@ export default {
           name: 'lead_time', 
           text: this.$t('lead_time')
         },
-        { 
-          name: 'processing_cost', 
-          text: this.$t('processing_cost')
-        },
-        { 
-          name: 'material_cost', 
-          text: this.$t('material_cost')
-        },
-        { 
-          name: 'total_cost', 
-          text: this.$t('total_cost')
-        },
+        // {
+        //   name: 'processing_cost',
+        //   text: this.$t('processing_cost')
+        // },
+        // {
+        //   name: 'material_cost',
+        //   text: this.$t('material_cost')
+        // },
+        // {
+        //   name: 'total_cost',
+        //   text: this.$t('total_cost')
+        // },
       ]
     },
 
@@ -234,6 +389,43 @@ export default {
         unassigned_jobs = this.wo_data.jobs.filter(j => j.assigned_to == null)
       }
       return unassigned_jobs
+    },
+
+    min_allowable_wo_qt() {
+      return Math.max(this.wo_data.jobs.map(j => j.qt_completed + j.active_batch_qt))
+    },
+
+    phase_data() {
+      return this.wo_data.phase_sequence.map( phase_key => {
+        const jobs = this.wo_data.jobs.filter( j => j.phase_key === phase_key )
+        const params = jobs[0].parameters
+        const phase_alias = jobs[0].phase_alias
+        const total_completed = jobs.reduce( (sum, job) => sum + job.qt_completed, 0)
+        const total_active = jobs.reduce( (sum, job) => sum + job.active_batch_qt, 0)
+        // const total_released = jobs.reduce( (sum, job) => sum + job.qt_released, 0 )
+        const total_remaining = jobs.reduce( (sum, job) => {
+          return sum + job.qt_planned - job.qt_completed - job.active_batch_qt
+        }, 0)
+        const total_progress = Math.floor(
+          jobs.reduce( (sum, job) => sum + job.progress * job.qt_planned, 0) / this.wo_data.qt_planned
+        )
+        const active = jobs.reduce( (count, job) => count + job.active, 0)
+
+        // const assignments = jobs.map( job => job.assigned_to )
+
+        return {
+          jobs,
+          phase_key,
+          phase_alias,
+          active,
+          ...params,
+          // qt_released: total_released,
+          qt_completed: total_completed,
+          qt_remaining: total_remaining,
+          active_batch_qt: total_active,
+          progress: total_progress,
+        }
+      })
     }
   },
 
@@ -256,18 +448,19 @@ export default {
         case 'status': {
           let active_text = this.$t('active')
           let inactive_text = this.$t('waiting')
-          let on_time_text = this.$t('on_time')
-          let late_text = this.$t('late')
-          let critical_text = this.$t('critical')
+          // let on_time_text = this.$t('on_time')
+          // let late_text = this.$t('late')
+          // let critical_text = this.$t('critical')
           let active = this.wo_data.active ? active_text : inactive_text
 
+          /*
           let state = ''
          
           if (this.wo_data.critical) state = critical_text
           else if (!this.wo_data.on_time) state = late_text
           else state = on_time_text
-
-          return active + ' - ' + state
+          */
+          return active  //+ ' - ' + state
         }
 
         case 'created':
@@ -326,7 +519,38 @@ export default {
     panelHeight() {
       let height = document.body.clientHeight - 360
       return height + 'px'
+    },
+
+    closeEditDialogs() {
+      this.edit_due_date = false
+      this.edit_qt = false
+      this.temp_due_date = this.wo_data.due_by
+      this.new_qt = this.wo_data.qt_planned
+      this.temp_project_code = this.wo_data.project_code
+      this.edit_project = false
+      this.show_job_qt_rebalance = false
+    },
+
+    async saveWorkOrderUpdate() {
+      this.saving = true
+
+      const wo_update = {
+        wo_key: this.wo_data._key,
+        new_qt: this.new_qt,
+        new_due_date: this.temp_due_date,
+        new_project_code: this.temp_project_code.toUpperCase(),
+      }
+
+      await this.$store.dispatch('updateWorkOrder', wo_update)
+      this.closeEditDialogs()
+      setTimeout(() => this.saving = false, 1000)
     }
+  },
+
+  created() {
+    this.temp_project_code = this.wo_data.project_code
+    this.temp_due_date = this.wo_data.due_by
+    this.new_qt = this.wo_data.qt_planned
   }
 }
 </script>

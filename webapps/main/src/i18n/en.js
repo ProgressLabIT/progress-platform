@@ -340,6 +340,7 @@ export default {
   },
   "progress": "progress",
   "project": "project",
+  "project_update": "update project",
   "quantity": {
     "active": {
       "short": "aq",

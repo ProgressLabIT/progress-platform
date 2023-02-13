@@ -205,7 +205,8 @@ async def create_work_order(new_wo: WorkOrderNew):
 async def update_work_order(
   wo_key: str,
   new_due_date: str = Body(None),
-  new_qt: float = Body(None)
+  new_qt: float = Body(None),
+  new_project_code: str = Body(None)
   ):
 
   tx = db.begin_transaction(write=['WorkOrder'])
@@ -215,18 +216,16 @@ async def update_work_order(
     update['due_by'] = new_due_date
 
   if new_qt:
-    if updated_wo_data['status'] != WorkStatus.CREATED.value:
-      status_code = 423
-      response = dict(
-        status=status_code,
-        message="Work Order in progress or completed. Cannot modify the quantity",
-      )
-      tx.abort_transaction()
-      raise HTTPException(status_code=status_code, detail=response)
-    else:
-      update['qt_planned'] = new_qt
+    update['qt_planned'] = new_qt
+
+  if new_project_code:
+    update['project_code'] = new_project_code
+    match = { 'wo_key': wo_key }
+    job_update = { 'project_code': new_project_code }
+    tx.collection('Job').update_match(match, job_update)
 
   updated_wo_data = tx.collection('WorkOrder').update(update, return_new=True)['new']
+
   tx.commit_transaction()
 
   return APIResponse(detail=updated_wo_data)

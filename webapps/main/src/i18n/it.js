@@ -343,6 +343,7 @@ export default {
   },
   "progress": "avanzamento",
   "project": "commessa",
+  "project_update": "modifica commessa",
   "quantity": {
     "active": {
       "short": "qa",

@@ -50,7 +50,7 @@ $surfaces: (
   [progress-theme="#{$theme}"] {
     @each $name, $color in $colors {
       .#{$name} {
-        background-color: $color !important;
+        background-color: $color;
       }
     }
   }

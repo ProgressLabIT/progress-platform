@@ -16,7 +16,7 @@
       @row-dblclick="showWorkOrderScreen">
 
       <template #body="props">
-        <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
+        <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row._key)">
           <template v-for="c in columns" :key="c.name">
             <q-td :props="props" :class="{ 'filter-field': search_fields.includes(c.name)}">
 
@@ -32,12 +32,16 @@
               <!-- ADD ALERT ICONS HERE -->
 
               <template v-else-if="c.name==='due_by'">
-                {{ $shortDateString(props.value, $i18n.locale) }}
+                {{ $shortDateString(props.row[c.name], $i18n.locale) }}
+              </template>
+
+              <template v-else-if="c.name.includes('qt')">
+                <span>{{ props.row[c.name] || 0 }}</span>
               </template>
 
               <template v-else>
                 <span class="table-data" @click="setSearch(c.name, props.row[c.name])">
-                  {{ $capitalizeAll(props.row[c.name]) }}
+                  {{ $capitalizeAll(props.row[c.name] || '') }}
                 </span>
               </template>
             </q-td>
