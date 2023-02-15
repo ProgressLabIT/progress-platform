@@ -143,7 +143,10 @@ export default {
         const updates = Object.entries(this.job_updates).map( ([job_key, data]) => {
           const job_update =  {
             action: 'update',
-            data: { _key: job_key, qt_planned: data.completed + data.new_remaining }
+            data: {
+              _key: job_key,
+              qt_planned: data.completed + data.active + data.new_remaining
+            }
           }
           return job_update
         })
@@ -167,8 +170,9 @@ export default {
     this.job_updates = this.phase_data.reduce( (obj, phase) => {
       phase.jobs.forEach( j => {
         obj[j._key] = {
-          new_remaining: j.qt_planned - j.qt_completed,
-          completed: j.qt_completed
+          new_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt,
+          completed: j.qt_completed,
+          active: j.active_batch_qt
         }
       })
       return obj

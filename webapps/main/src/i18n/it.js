@@ -347,7 +347,7 @@ export default {
   "quantity": {
     "active": {
       "short": "qa",
-      "medium": "active qt",
+      "medium": "qt in lavorazione",
     },
     "completed": {
       "short": "qc"

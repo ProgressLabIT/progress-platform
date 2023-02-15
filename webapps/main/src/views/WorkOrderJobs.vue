@@ -256,7 +256,7 @@ export default {
         const total_progress = Math.floor(
           jobs.reduce( (sum, job) => sum + job.progress * job.qt_planned, 0) / this.wo_data.qt_planned
         )
-        const active = jobs.reduce( (count, job) => count + job.active, 0)
+        const active = !!jobs.reduce( (count, job) => count + job.active, 0)
         const editing = jobs.some( j => this.selected_jobs.includes(j._key) )
 
         // const assignments = jobs.map( job => job.assigned_to )
