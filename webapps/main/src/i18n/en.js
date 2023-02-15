@@ -470,7 +470,9 @@ export default {
     "alerts": {
       "assign_workload_first": "Assign the whole workload before saving"
     },
-    "close": "close",
+    "delete_action": "Delete Work Order",
+    "delete_question": "Are you sure you want to delete this order?",
+    "delete_success": "Order successfully deleted",
     "key": "work order ID",
     "list_headers": {
       "due_by": "due by",

@@ -123,9 +123,14 @@
               {{ $t('work_order.update_due_date') }}
             </q-item-section>
           </q-item>
-          <q-item clickable v-close-popup class="text-theme-red" v-if="wo_data.stage == 'created'">
+          <q-item
+            clickable
+            v-close-popup
+            class="text-theme-red"
+            v-if="wo_data.status == 'created'"
+            @click="delete_stage = 'confirm'">
             <q-item-section>
-              {{ $t('work_order.close') }}
+              {{ $t('work_order.delete_action') }}
             </q-item-section>
           </q-item>
         </q-list>
@@ -240,6 +245,47 @@
       </q-card>
     </BaseDialog>
 
+    <BaseDialog :show="!!delete_stage" @close="closeEditDialogs">
+      <q-card class="surface2 q-pa-md" style="width: 300px">
+        <transition name="slide-fade" mode="out-in">
+          <q-card-section
+            v-if="delete_stage==='confirm'"
+            key="confirm"
+            align="between">
+            <div class="text-h4 q-mb-lg">
+              {{ $t('work_order.delete_question') }}
+            </div>
+            <div class="row justify-between">
+              <q-btn
+                color="theme-red"
+                :label="$t('delete')"
+                @click="deleteWorkOrder">
+              </q-btn>
+              <q-btn
+                color="theme-grey"
+                :label="$t('cancel')"
+                @click="closeEditDialogs">
+              </q-btn>
+            </div>
+          </q-card-section>
+
+          <q-card-section
+            v-else-if="delete_stage==='success'"
+            key="success">
+            <div class="text-h4 q-mb-md">
+              {{ $t('work_order.delete_success') }}
+            </div>
+            <q-btn
+              class="full-width"
+              color="theme-grey"
+              :label="$t('close')"
+              @click="$router.back()">
+            </q-btn>
+          </q-card-section>
+        </transition>
+      </q-card>
+    </BaseDialog>
+
   </div>
 </template>
 
@@ -279,7 +325,8 @@ export default {
       new_qt: null,
       edit_due_date: false,
       temp_due_date: null,
-      show_job_qt_rebalance: false
+      show_job_qt_rebalance: false,
+      delete_stage: null
     }
   },
 
@@ -529,6 +576,7 @@ export default {
       this.temp_project_code = this.wo_data.project_code
       this.edit_project = false
       this.show_job_qt_rebalance = false
+      this.delete_stage = null
     },
 
     async saveWorkOrderUpdate() {
@@ -544,6 +592,13 @@ export default {
       await this.$store.dispatch('updateWorkOrder', wo_update)
       this.closeEditDialogs()
       setTimeout(() => this.saving = false, 1000)
+    },
+
+    deleteWorkOrder() {
+      this.loading = true
+      this.$api.delete(`work-order/${this.wo_data._key}`).then(() => {
+        this.delete_stage = 'success'
+      })
     }
   },
 

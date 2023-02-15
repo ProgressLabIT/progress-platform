@@ -230,6 +230,91 @@ async def update_work_order(
 
   return APIResponse(detail=updated_wo_data)
 
+# ----------------------------------------------------------------------
+
+
+@router.get('/work-order/{wo_key}')
+async def get_wo_data(wo_key: str):
+
+  wo_data = db.aql.execute(Queries.GET_WORK_ORDER_DATA, bind_vars=dict(wo_key=wo_key)).next()
+  return APIResponse(detail=wo_data)
+
+
+# ----------------------------------------------------------------------
+
+@router.delete('/work-order/{wo_key}')
+async def delete_work_order(wo_key: str):
+  try:
+    tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue'])
+
+    # Delete Work Order
+    wo_coll = tx.collection('WorkOrder')
+    wo_data = wo_coll.get(wo_key)
+
+    if wo_data['status'] not in [WorkStatus.CREATED.value, WorkStatus.PLANNED.value]:
+      tx.abort_transaction()
+      status_code=403
+      response = dict(
+        status=status_code,
+        message=f"Work order {wo_key} cannot be deleted because it has been started",
+      )
+      raise HTTPException(
+        status_code=status_code,
+        detail=response
+      )
+
+    wo_coll.delete(wo_key)
+
+    # Delete Jobs
+    query = """
+      FOR j in Job
+      FILTER j.wo_key == @wo_key
+      REMOVE j in Job
+      LET removed = OLD
+      RETURN removed._key
+    """
+    cursor = tx.aql.execute(query, bind_vars={ 'wo_key': wo_key })
+    jobs_to_remove = [j for j in cursor]
+
+    # Remove WorkOrder from queue
+    q_coll = tx.collection('Queue')
+
+    query = """
+      FOR q in Queue
+      FILTER q.type == 's'
+      LET queue_update = { work_orders: REMOVE_VALUE(q.work_orders, @wo_key) }
+      UPDATE q WITH queue_update in Queue
+    """
+    tx.aql.execute(query, bind_vars={ 'wo_key': wo_key })
+
+    # Remove Jobs from queues
+    query = """
+      FOR q in Queue
+      FILTER q.type == 'o'
+      LET queue_update = { jobs: REMOVE_VALUES(q.jobs, @jobs_to_remove) }
+      UPDATE q WITH queue_update in Queue
+    """
+    tx.aql.execute(query, bind_vars={ 'jobs_to_remove': jobs_to_remove })
+
+    tx.commit_transaction()
+
+    return APIResponse(message='Work order deleted correctly')
+
+  except Exception as e:
+    tx.abort_transaction()
+
+    status_code=500
+    response = dict(
+      status=status_code,
+      message=f"There has been a problem while deleting the work order",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
+
+
 
 # ----------------------------------------------------------------------
 
@@ -241,14 +326,6 @@ async def get_site_queue(site_key: str):
   return APIResponse(detail=[wo for wo in cursor])
 
 
-# ----------------------------------------------------------------------
-
-
-@router.get('/work-order/{wo_key}')
-async def get_wo_data(wo_key: str):
-
-  wo_data = db.aql.execute(Queries.GET_WORK_ORDER_DATA, bind_vars=dict(wo_key=wo_key)).next()
-  return APIResponse(detail=wo_data)
 
 
 # ----------------------------------------------------------------------

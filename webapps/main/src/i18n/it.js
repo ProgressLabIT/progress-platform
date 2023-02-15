@@ -473,7 +473,9 @@ export default {
     "alerts": {
       "assign_workload_first": "Completa la distribuzione del carico prima di salvare"
     },
-    "close": "chiudi ordine",
+    "delete_action": "Elimina ordine",
+    "delete_question": "Confermi di voler eliminare questo ordine?",
+    "delete_success": "Ordine eliminato con successo",
     "key": "ID ordine di produzione",
     "list_headers": {
       "due_by": "entro",
