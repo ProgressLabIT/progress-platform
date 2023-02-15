@@ -3,19 +3,27 @@
     <div class="column full-height justify-between q-pa-md q-pb-lg">
 
       <!-- OP CODE/LINE -->
-      <div class="row items-start text-uppercase q-mb-md">
-        <div class="column col-auto q-mr-xl" style="max-width: 60%">
-          <div class="overline">{{ $t("work_order.wo_code") }}</div>
-          <div class="text-h4 display highlight text-truncate">{{ job.wo_code }}</div>
+      <div class="row full-width items-start text-uppercase q-mb-md">
+        <div class="column col-auto q-pr-md" style="max-width: 60%">
+          <div class="overline">
+            {{ $t("work_order.list_headers.wo_code") }}
+          </div>
+          <div class="text-h4 display highlight text-truncate full-width ellipsis q-pr-sm">
+            {{ job.wo_code }}
+          </div>
         </div>
-        <div class="column col-auto text-right">
-          <div class="overline">{{ $t("project") }}</div>
-          <div class="text-h4 display highlight">{{ job.project_code }}</div>
+        <div class="column col">
+          <div class="overline">
+            {{ $t("project") }}
+          </div>
+          <div class="text-h4 display highlight full-width ellipsis q-pr-md">
+            {{ job.project_code || '-' }}
+          </div>
         </div>
 
         <q-space />
 
-        <div class="col-auto">
+        <div class="col-auto text-right">
           <q-icon
             :name="job.assigned ? 'mdi-account-check' : 'mdi-account-question'"
             size="sm">
