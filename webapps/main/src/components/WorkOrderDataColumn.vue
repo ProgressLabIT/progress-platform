@@ -494,7 +494,9 @@ export default {
       switch (info_name) {
         case 'status': {
           let active_text = this.$t('active')
-          let inactive_text = this.$t('waiting')
+          let inactive_text = ['created', 'planned'].includes(this.wo_data.status)
+            ? this.$t('production.filters.queued')
+            : this.$t('waiting')
           // let on_time_text = this.$t('on_time')
           // let late_text = this.$t('late')
           // let critical_text = this.$t('critical')
