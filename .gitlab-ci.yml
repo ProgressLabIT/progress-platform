@@ -46,7 +46,7 @@ build:webapp:
     - >
       docker build
       --pull
-      --cache-from $WEBAPP_IMAGE:sdevelop-stage
+      --cache-from $WEBAPP_IMAGE:develop-stage
       --target develop-stage
       -t $WEBAPP_IMAGE:develop-stage
       -f $WEBAPP_DOCKERFILE

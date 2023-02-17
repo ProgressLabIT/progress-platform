@@ -2,8 +2,12 @@
   <q-page-container>
     <q-page class="q-px-md q-pb-md column">
 
-      <q-circular-progress indeterminate color="theme-blue" class="q-mt-lg" v-if="!vuex_ready" />
-
+      <q-circular-progress
+        v-if="!vuex_ready"
+        indeterminate
+        color="theme-blue"
+        class="q-mt-lg">
+      </q-circular-progress>
 
       <!-- JOB CLOSED NOTIFICATION -->
       <div v-else-if="job_closed || !has_material_to_proceed" class="row flex-center" style="height: 80vh">
@@ -206,7 +210,6 @@
 </template>
 
 <script>
-// import { DateTime as DT } from 'luxon'
 import { mapState } from 'vuex'
 
 export default {
@@ -222,7 +225,7 @@ export default {
     return {
       vuex_ready: false,
       job_closed: false,
-      show_exit_alert: false
+      show_exit_alert: false,
       alert_timeout: 6000
     }
   },
@@ -232,14 +235,14 @@ export default {
     ...mapState({
       j: state => state.traceability.working_job_data,
       ws_list: state => state.traceability.work_session_list,
-      batch_data: state => state.traceability.current_batch_data.step_data,
+      batch_data: state => state.traceability.current_batch_data.step_data
     }),
 
     links() {
       return [
           { route_name: 'jobSteps', text: this.$t('procedure') },
           { route_name: 'jobDocs', text: this.$t('document.label', 2) },
-          { route_name: 'jobBom', text: this.$t('material', 2) },
+          { route_name: 'jobBom', text: this.$t('material', 2) }
       ]
     },
 
@@ -247,7 +250,7 @@ export default {
       return [
         { name: 'wo_code', text: this.$t('work_order.list_headers.wo_code') },
         { name: 'project_code', text: this.$t('project') },
-        { name: 'phase_alias', text: this.$t('phase.short') },
+        { name: 'phase_alias', text: this.$t('phase.short') }
       ]
     },
 
