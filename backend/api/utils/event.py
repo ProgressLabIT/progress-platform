@@ -178,25 +178,22 @@ class Event:
   # Batch
   # ....................................................................
 
-  def create_batch(self):
+  def create_batch(self, batch_qt):
     self.get_job_data()
 
     # Book wip from buffer
     if not self.job.first_phase:
-      self.book_wip()
-
-    default_batch_qt = self.job.parameters.production_batch_qt
-    remaining_qt = self.job.qt_planned - self.job.qt_completed
-    tot_batch_qt = min([default_batch_qt, remaining_qt])
+      self.book_wip(batch_qt)
 
     new_batch_in = Batch(
       job_key = self.info.job_key,
       phase_key = self.info.phase_key,
       work_order_key = self.info.work_order_key,
-      qt_total = tot_batch_qt,
+      qt_total = batch_qt,
       start = self.info.timestamp,
       active = True
     )
+
     new_batch_out = self.tx.collection('Batch').insert(new_batch_in, return_new=True)['new']
 
     self.batch = Batch(**new_batch_out)
@@ -259,12 +256,13 @@ class Event:
       self.get_job_data()
 
     if not self.job.first_phase:
+      # Delete booked WIP from the previous phase
       wip_match_filter=dict(_to=f'Job/{self.info.job_key}')
       self.tx.collection('WIP').delete_match(wip_match_filter)
 
     new_wip = WIP(
       _from=f'Phase/{self.info.phase_key}',
-      _to=f'Phase/{self.info.next_phase}',
+      _to=f'Phase/{self.info.next_phase_key}',
       batch_key=self.info.completed_batch_key,
       wo_key=self.info.work_order_key,
       product_key=self.info.product_key,
@@ -273,16 +271,15 @@ class Event:
 
     self.tx.collection('WIP').insert(new_wip)
 
+    self.tx.aql.execute(
+      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.next_phase_key)
+    )
 
-  def book_wip(self):
+
+  def book_wip(self, booking_qt):
     if not self.job:
       self.get_job_data()
-
-    # batches have no predefined qt, this is so that in the future qt may be user defined if necessary. However to monitor the WIP
-    booking_qt = min([
-      self.job.qt_planned - self.job.qt_completed,
-      self.job.parameters.production_batch_qt
-    ])
 
     available_batches_cursor = self.tx.aql.execute(
       TraceabilityQueries.RETRIEVE_AVAILABLE_WIP,
@@ -294,7 +291,11 @@ class Event:
     for b in available_batches:
       if b.quantity <= booking_qt:
         # Book entire batch for job
-        self.tx.collection('WIP').update(dict(_key=b.key, _to=f'Job/{self.info.job_key}'))
+        self.tx.collection('WIP').update(dict(
+          _key = b.key,
+          _to = f'Job/{self.info.job_key}',
+          active = True
+        ))
         # Decrease booking quantity
         booking_qt -= b.quantity
         if not booking_qt:
@@ -317,25 +318,18 @@ class Event:
           batch_key=b.batch_key,
           product_key=b.product_key,
           quantity=booking_qt,
-          value=b.quantity * booking_percentage
+          value=b.quantity * booking_percentage,
+          active=True
         )
         self.tx.collection('WIP').insert(new_wip)
 
         break
 
-
-  # def check_input_availability(self):
-  #   if not self.job:
-  #     self.job = self.get_job_data()
-
-  #   if not (self.job.first_phase or self.job.input_available):
-  #     status_code = 409
-  #     message = "Cannot start work session, not enough input material available."
-  #     response = dict(
-  #       status=status_code,
-  #       message=message,
-  #     )
-  #     raise HTTPException(status_code=status_code, detail=response)
+    # Update input availability for jobs in this phase
+    self.tx.aql.execute(
+      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
+    )
 
 
   # ....................................................................
@@ -451,7 +445,8 @@ class Event:
 
   def start_job(self):
     # Create new batch and store _key in Event.info
-    self.create_batch()
+    self.get_job_data()
+    self.create_batch(self.job.qt_next_batch)
 
     # Create new WorkSession and store _key in Event.info
     self.create_work_session()
@@ -475,6 +470,7 @@ class Event:
       stage = WorkStatus.STARTED,
       last_work_session_started = self.info.work_session_key,
       active_batch_key = self.batch.key,
+      active_batch_qt = self.batch.qt_total,
       active = True,
       assigned_to = self.info.user_key,
       last_online = self.info.timestamp
@@ -510,7 +506,7 @@ class Event:
     if self.job.active_batch_key:
       self.get_active_batch()
     else:
-      self.create_batch()
+      self.create_batch(self.job.qt_next_batch)
 
     self.create_work_session()
 
@@ -592,8 +588,6 @@ class Event:
 
     self.get_job_data()
 
-    auto_new_batch = self.job.parameters.auto_new_batch
-
     self.info.completed_batch_key = self.job.active_batch_key
     self.info.work_session_key = self.job.last_work_session_started
 
@@ -614,12 +608,15 @@ class Event:
       self.complete_job(new_qt_completed)
       self.response = dict(
         message = f"Batch {self.info.active_batch_key} and Job {self.info.job_key} completed.",
-        job_data = self.job,
-        batch_data = dict()
+        job_data = self.job
       )
 
     # JOB HAS REMAINING QUANTITY
     else:
+      default_batch_qt = self.job.parameters.production_batch_qt
+      remaining_qt = self.job.qt_planned - self.job.qt_completed
+      qt_next_batch = min([default_batch_qt, remaining_qt])
+
       new_progress = round(100 * new_qt_completed / self.job.qt_planned)
       job_update = dict(
         _key = self.info.job_key,
@@ -627,17 +624,20 @@ class Event:
         active_batch_qt = 0,
         qt_completed = new_qt_completed,
         qt_released = new_qt_completed,
+        qt_next_batch = qt_next_batch,
         progress = new_progress,
         active = False
       )
 
-      if auto_new_batch:
-        job_update['active'] = True
-        self.create_batch()
+      create_new_batch = self.job.parameters.auto_new_batch and self.job.next_batch_available
+
+      if create_new_batch:
+        self.create_batch(qt_next_batch)
         job_update['active_batch_key'] = self.batch.key
         job_update['active_batch_qt'] = self.batch.qt_total
         self.create_work_session()
         job_update['last_work_session_started'] = self.info.work_session_key
+        job_update['active'] = True
 
       # Update job qt_completed and progress
       self.job = Job(**self.tx.collection('Job').update(job_update, check_rev=False, return_new=True)['new'])
@@ -648,29 +648,19 @@ class Event:
         batch_data = dict(),
       )
 
-      if auto_new_batch:
+      if create_new_batch:
         self.response['batch_data'] = self.get_batch_execution_data()
 
 
-    # Update input availability for jobs in this phase
-    self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_INPUT_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase=self.info.phase_key)
-    )
-
     # Release WIP
-    self.info.next_phase = self.tx.aql.execute(
+    self.info.next_phase_key = self.tx.aql.execute(
       TraceabilityQueries.GET_NEXT_PHASE_IN_WORK_ORDER,
       bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
     ).next()
 
     # is next_phase generate a WIP record and update job input availability state
-    if self.info.next_phase:
+    if self.info.next_phase_key:
       self.declare_wip()
-      self.tx.aql.execute(
-        TraceabilityQueries.UPDATE_INPUT_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
-        bind_vars=dict(wo_key=self.info.work_order_key, phase=self.info.next_phase)
-      )
 
 
 

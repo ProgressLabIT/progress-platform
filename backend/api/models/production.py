@@ -111,13 +111,12 @@ class Job(FlexModel):
   product_key: str
   product_code: str
   product_description: str
+  operation_key: str
   project_code: str = None
-  # operation_key: str >>> TODO: Fix Phase API to add op_id during creation
 
   parameters: PhaseParameters = None
 
   first_phase: bool = None
-  input_available: bool = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders
 
   stage: WorkStatus = WorkStatus.CREATED
   active: bool = False
@@ -128,6 +127,8 @@ class Job(FlexModel):
   qt_planned: float
   qt_completed: float = 0
   qt_released: float = 0
+  qt_next_batch: float = None
+
   step_sequence: List[StepWithMediaInfo] = []
 
   assigned_to: Union[str, Operator] = None
@@ -135,6 +136,8 @@ class Job(FlexModel):
   progress: int = Field(0, ge=0, le=100)
   active_batch_key: str = None # batch _key
   active_batch_qt: int = 0
+  next_batch_available: bool = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders
+
   # current_step: int = None
 
   on_time: bool = True

@@ -129,8 +129,8 @@ const traceability = {
     },
 
     UPDATE_JOB(state, { job_data, batch_data }) {
-      state.working_job_data = job_data
       state.current_batch_data = batch_data
+      state.working_job_data = job_data
     },
   },
 
@@ -246,11 +246,11 @@ const traceability = {
         api.post('event', event).then( resp => {
           let { job_data, batch_data } = resp.data.detail
 
-          if (!('step_data' in batch_data)) {
+          if ( !batch_data || !('step_data' in batch_data) ) {
             batch_data = createEmptyBatch(state, now, job_data)
           }
 
-          commit('UPDATE_JOB', { job_data, batch_data: batch_data })
+          commit('UPDATE_JOB', { job_data, batch_data })
 
           if (job_data.status === 'closed') {
             commit('SET_HEARTBEAT', false)

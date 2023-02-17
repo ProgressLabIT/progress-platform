@@ -20,7 +20,7 @@
       </div>
 
       <q-btn
-        round
+        fab padding="sm sm"
         color="theme-blue"
         class="absolute q-mt-md q-mr-md"
         style="right: 0"

@@ -2,15 +2,23 @@
   <q-page-container>
     <q-page class="q-px-md q-pb-md column">
 
-      <!-- JOB CLOSED NOTIFICATION -->
-      <q-card v-if="job_closed">
-        <div class="text-h3 display text-uppercase">
-          {{ $t('job.alerts.job_closed') }}
-        </div>
-        <q-circular-progress indeterminate color="theme-blue" />
-      </q-card>
+      <q-circular-progress indeterminate color="theme-blue" class="q-mt-lg" v-if="!vuex_ready" />
 
-      <div class="row absolute-full q-pb-md q-px-xs" v-if="vuex_ready & !job_closed">
+
+      <!-- JOB CLOSED NOTIFICATION -->
+      <div v-else-if="job_closed || !has_material_to_proceed" class="row flex-center" style="height: 80vh">
+        <div class="col-6 text-center">
+          <div v-if="job_closed" class="text-h3">
+            {{ $t('job.alerts.job_closed') }}
+          </div>
+          <div v-else-if="!has_material_to_proceed" class="text-h3">
+            {{ $t('job.alerts.input_not_available') }}
+          </div>
+          <q-circular-progress indeterminate color="theme-blue" class="q-mt-lg"/>
+        </div>
+      </div>
+
+      <div v-else class="row absolute-full q-pb-md q-px-xs" v-if="vuex_ready & !job_closed">
 
         <!-- ################################ -->
         <!--          JOB DETAILS             -->
@@ -215,6 +223,7 @@ export default {
       vuex_ready: false,
       job_closed: false,
       show_exit_alert: false
+      alert_timeout: 6000
     }
   },
 
@@ -373,6 +382,18 @@ export default {
         allow = false
       }
       return allow
+    },
+
+    has_material_to_proceed() {
+      return this.j.next_batch_available || this.j.active_batch_qt
+    },
+
+    job_closed() {
+      return this.j.stage == 'closed'
+    },
+
+    can_work() {
+      return this.has_material_to_proceed && !this.job_closed
     }
   },
 
@@ -514,13 +535,10 @@ export default {
       const job_data = data.working_job_data
 
       // If job is closed, redirect to
-      this.job_closed = job_data.stage == 'closed'
+      if (!this.can_work) {
+        setTimeout(this.exitJob, this.alert_timeout)
+      },
 
-      if (this.job_closed) {
-        setTimeout(() => {
-          this.$router.push({ name: 'userJobs'})
-        }, 6000)
-      }
       else {
         this.vuex_ready = true
         if (data.current_batch_data) {
@@ -557,6 +575,14 @@ export default {
     }
     else {
       next()
+    }
+  },
+
+  watch: {
+    can_work(value) {
+      if (value == false) {
+        setTimeout(this.exitJob, this.alert_timeout)
+      }
     }
   }
 }

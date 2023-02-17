@@ -93,6 +93,7 @@ export default {
     "alerts": {
       "batch_confirm": "You completed the last step of the procedure. Do you confirm the completion of the piece/batch?",
       "confirm_exit": "Do you really want to leave this page? If you do, the job will be paused.",
+      "input_not_available": "There's no more input available for the job, the work session will be closed. If you find this is not accurate, please contact your manager.",
       "job_closed": "This job has been closed. Redirecting...",
       "job_complete_confirm": "You completed all the pieces planned for this job. Do you confirm it can be closed?",
       "rebalance_qt_mismatch": "Quantities do not match",

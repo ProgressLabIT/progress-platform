@@ -86,14 +86,14 @@ class EventType(Enum):
 class ProductionEvent(FlexModel):
   key: str = Field(None, alias="_key")
   event_type: EventType
-  user_key: str = None
-  user_session_key: str = None
+  user_key: str
+  user_session_key: str
   work_session_key: str = None
   job_key: str = None
   product_key: str = None
   work_order_key: str = None
   phase_key: str = None
-  next_phase: str = None
+  next_phase_key: str = None
   active_batch_key: str = None
   step_key: str = None
   completed_batch_key: str = None
@@ -119,10 +119,12 @@ class ProductionEvent(FlexModel):
 
 
 class WIP(ArangoEdge):
+  # _from & _to refer to process phases
   batch_key: str
   wo_key: str
   product_key: str
   value: float = 0
   quantity: float = 0
+  active: bool = False # indicates if it's being worked on or just sitting around
   # serial_numbers: List[str] = None
 

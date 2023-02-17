@@ -148,6 +148,8 @@ async def create_work_order(new_wo: WorkOrderNew):
       operation_key = phase.operation_key,
       parameters = phase.params,
       qt_planned = wo_data.qt_planned,
+      qt_next_batch = min([phase.params.production_batch_qt, wo_data.qt_planned]),
+      next_batch_available = True if first_phase else False,
       step_sequence = get_procedure_for_new_job(phase_key),
       job_docs = wo_data.wo_docs,
       job_bom = [x for x in wo_data.wo_bom if x.phase_key == phase_key]

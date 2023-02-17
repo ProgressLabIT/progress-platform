@@ -73,6 +73,8 @@ class Queries:
       active_batch_qt: 0,
       qt_completed: @qt_completed,
       qt_released: @qt_completed,
+      qt_next_batch: null,
+      next_batch_available: null,
       progress: ROUND(100 * @qt_completed / j.qt_planned),
       end: @end,
       notes: @notes
@@ -250,18 +252,32 @@ class Queries:
       : null
   """
 
-  UPDATE_INPUT_AVAILABLE_STATE_FOR_JOBS_IN_PHASE = """
-    LET input_for_this_phase = SUM(
+  UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE = """
+    // Get input available for any job in phase
+    LET input_for_phase = SUM(
       FOR wip IN WIP
-      FILTER wip.wo_key == @wo_key && wip._to == CONCAT('Phase/', @phase)
+      FILTER
+        wip.wo_key == @wo_key
+        && wip._to == CONCAT('Phase/', @phase_key)
       RETURN wip.quantity
     )
 
     FOR j IN Job
-    FILTER j.wo_key == @wo_key && j.phase_key == @phase
-    LET next_batch_qt = MIN([j.qt_planned - j.qt_completed, j.parameters.production_batch_qt])
-    LET input_available = next_batch_qt <= input_for_this_phase
-    UPDATE j WITH { input_available } IN Job
+    FILTER j.wo_key == @wo_key && j.phase_key == @phase_key
+
+    // Get input available from that already booked for the job
+    LET input_for_job = SUM(
+      FOR wip IN WIP
+      FILTER
+        wip.wo_key == @wo_key
+        && wip._to == j._id
+        && !wip.active
+      RETURN wip.quantity
+    )
+
+    LET total_input_available = input_for_phase + input_for_job
+    LET next_batch_available = j.fist_phase || j.qt_next_batch <= total_input_available
+    UPDATE j WITH { next_batch_available } IN Job
   """
 
   RETRIEVE_AVAILABLE_WIP = """
