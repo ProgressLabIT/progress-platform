@@ -537,7 +537,7 @@ export default {
       // If job is closed, redirect to
       if (!this.can_work) {
         setTimeout(this.exitJob, this.alert_timeout)
-      },
+      }
 
       else {
         this.vuex_ready = true
