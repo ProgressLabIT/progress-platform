@@ -281,6 +281,7 @@ export default {
         }
       }
     },
+    "rename": "Rinomina fase",
     "short": "fase | fasi",
     "step_types": {
       "checklist": "controlli",
@@ -369,6 +370,7 @@ export default {
   },
   "reactivate": "riattiva",
   "remove_assignment": "rimuovi assegnazione",
+  "rename": "rinomina",
   "reset_filters": "rimuovi filtri",
   "restore": "ripristina",
   "resume": "riprendi",

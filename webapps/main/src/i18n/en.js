@@ -278,6 +278,7 @@ export default {
         }
       }
     },
+    "rename": "Rename phase",
     "short": "phase | phases",
     "step_types": {
       "checklist": "checklist",
@@ -366,6 +367,7 @@ export default {
   },
   "reactivate": "reactivate",
   "remove_assignment": "remove assignment",
+  "rename": "rename",
   "reset_filters": "reset filters",
   "restore": "restore",
   "resume": "resume",

@@ -54,12 +54,18 @@
             <q-space />
 
             <div
-              class="col-1"
+              class="col-auto"
               v-if="edit_mode"
               v-show="over_phase==index">
               <BaseTooltipIcon
+                icon="mdi-pencil"
+                :tooltip="$t('rename')"
+                :color="$theme.blue"
+                @iconClick="update_alias_at_index = index">
+              </BaseTooltipIcon>
+              <BaseTooltipIcon
                 icon="mdi-delete"
-                :tooltip="$t('phase.delete')"
+                :tooltip="$t('delete')"
                 :color="$theme.red"
                 @iconClick="confirming_delete = index">
               </BaseTooltipIcon>
@@ -67,6 +73,15 @@
           </div>
         </q-tab>
       </q-tabs>
+
+      <!-- PHASE ALIAS UPDATE PROMPT -->
+      <BasePrompt
+        :show="update_alias_at_index != null"
+        :initial_value="update_alias_at_index ? process[update_alias_at_index].alias : null"
+        :prompt="$t('phase.rename')"
+        @update="updatePhaseAlias"
+        @close="update_alias_at_index = null">
+      </BasePrompt>
 
       <q-space />
 
@@ -141,6 +156,7 @@ import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vu
 import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
+import BasePrompt from '@/components/BasePrompt.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 
 const views_map = [
@@ -157,6 +173,7 @@ export default {
     PhaseParameters,
     PhaseSteps,
     // PhaseAssignments,
+    BasePrompt,
     BaseTooltipIcon,
     BaseAutocompleteOperation
   },
@@ -168,6 +185,7 @@ export default {
       new_op: null,
       over_phase: null,
       confirming_delete: null,
+      update_alias_at_index: null,
       saving: false,
       drag: false,
     }
@@ -251,7 +269,7 @@ export default {
         params: new_operation.default_phase_parameters,
         steps: []
       })
-      this.$store.commit('UPDATE_PROCESS', new_process)
+      this.process = new_process
       this.current_phase = new_process.length - 1
     },
 
@@ -290,6 +308,11 @@ export default {
       new_steps_map.splice(newIndex, 0, moved)
 
       this.updateStepsMap(new_steps_map)
+    },
+
+    updatePhaseAlias(value) {
+      this.process[this.update_alias_at_index].alias = value.toUpperCase()
+      this.update_alias_at_index = null
     },
 
     saveChanges() {
