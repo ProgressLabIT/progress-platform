@@ -186,7 +186,7 @@ class Event:
 
     # Book wip from buffer
     if not self.job.first_phase:
-      self.book_wip(batch_qt)
+      available_qt = self.book_wip(batch_qt)
 
     new_batch_in = Batch(
       job_key = self.info.job_key,
@@ -286,10 +286,11 @@ class Event:
 
     available_batches_cursor = self.tx.aql.execute(
       TraceabilityQueries.RETRIEVE_AVAILABLE_WIP,
-      bind_vars=dict(phase=self.info.phase_key)
+      bind_vars=dict(phase_key=self.info.phase_key)
     )
 
     available_batches = [WIP(**b) for b in available_batches_cursor]
+    total_available = sum(wip.quantity for wip in available_batches)
 
     for b in available_batches:
       if b.quantity <= booking_qt:
@@ -333,6 +334,8 @@ class Event:
       TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
       bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
     )
+
+    return total_available
 
 
   # ....................................................................
