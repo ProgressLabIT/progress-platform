@@ -282,7 +282,7 @@ class Queries:
 
   RETRIEVE_AVAILABLE_WIP = """
     FOR wip IN WIP
-    FILTER wip._to == CONCAT('Phase/', @phase)
+    FILTER wip._to == CONCAT('Phase/', @phase_key)
     SORT wip.batch_key
     RETURN wip
   """
