@@ -96,7 +96,7 @@ collections = [
   'Token',
   'User',
   'UserSession',
-  'WIP',
+  'wip',
   'WorkOrder',
   'WorkSession'
 ]
