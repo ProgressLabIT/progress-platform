@@ -121,13 +121,16 @@ class Event:
 
 
   def close_work_session(self):
-    updated_work_session = self.tx.aql.execute(
+    updated_work_session = WorkSession(**self.tx.aql.execute(
       TraceabilityQueries.CLOSE_WORK_SESSION, bind_vars = dict(
         job_key = self.info.job_key,
         end = self.info.timestamp,
-    )).next()
+    )).next())
 
-    return WorkSession(**updated_work_session)
+    self.work_session = updated_work_session
+    self.info.work_session_key = updated_work_session._key
+
+    return updated_work_session
 
 
   # ....................................................................
