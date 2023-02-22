@@ -255,11 +255,11 @@ class Queries:
   UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE = """
     // Get input available for any job in phase
     LET input_for_phase = SUM(
-      FOR wip IN WIP
+      FOR w IN wip
       FILTER
-        wip.wo_key == @wo_key
-        && wip._to == CONCAT('Phase/', @phase_key)
-      RETURN wip.quantity
+        w.wo_key == @wo_key
+        && w._to == CONCAT('Phase/', @phase_key)
+      RETURN w.quantity
     )
 
     FOR j IN Job
@@ -267,12 +267,12 @@ class Queries:
 
     // Get input available from that already booked for the job
     LET input_for_job = SUM(
-      FOR wip IN WIP
+      FOR w IN wip
       FILTER
-        wip.wo_key == @wo_key
-        && wip._to == j._id
-        && !wip.active
-      RETURN wip.quantity
+        w.wo_key == @wo_key
+        && w._to == j._id
+        && !w.active
+      RETURN w.quantity
     )
 
     LET total_input_available = input_for_phase + input_for_job
@@ -281,10 +281,10 @@ class Queries:
   """
 
   RETRIEVE_AVAILABLE_WIP = """
-    FOR wip IN WIP
-    FILTER wip._to == CONCAT('Phase/', @phase_key)
-    SORT wip.batch_key
-    RETURN wip
+    FOR w IN wip
+    FILTER w._to == CONCAT('Phase/', @phase_key)
+    SORT w.batch_key
+    RETURN w
   """
 
 

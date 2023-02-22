@@ -10,7 +10,7 @@ collections = [
   'Queue',
 	'Serial',
 	'StepExecutionData',
-	'WIP',
+	'wip',
 	'WorkOrder',
 	'WorkSession',
 ]

@@ -12,7 +12,7 @@ async def reset_production_and_traceability_data():
     'Job',
     'Queue',
     'StepExecutionData',
-    'WIP',
+    'wip',
     'WorkOrder',
     'WorkSession',
   ]

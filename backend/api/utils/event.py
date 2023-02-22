@@ -18,7 +18,7 @@ class Event:
     'Queue',
     # 'Serial',
     'StepExecutionData',
-    'WIP',
+    'wip',
     'WorkOrder',
     'WorkSession'
   ]
@@ -261,7 +261,7 @@ class Event:
     if not self.job.first_phase:
       # Delete booked WIP from the previous phase
       wip_match_filter=dict(_to=f'Job/{self.info.job_key}')
-      self.tx.collection('WIP').delete_match(wip_match_filter)
+      self.tx.collection('wip').delete_match(wip_match_filter)
 
     new_wip = WIP(
       _from=f'Phase/{self.info.phase_key}',
@@ -272,7 +272,7 @@ class Event:
       quantity=self.info.completed_batch_qt
     )
 
-    self.tx.collection('WIP').insert(new_wip)
+    self.tx.collection('wip').insert(new_wip)
 
     self.tx.aql.execute(
       TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
@@ -295,7 +295,7 @@ class Event:
     for b in available_batches:
       if b.quantity <= booking_qt:
         # Book entire batch for job
-        self.tx.collection('WIP').update(dict(
+        self.tx.collection('wip').update(dict(
           _key = b.key,
           _to = f'Job/{self.info.job_key}',
           active = True
@@ -308,7 +308,7 @@ class Event:
       else:
         # Book only booking_qt
         booking_percentage = booking_qt / b.quantity
-        self.tx.collection('WIP').update(dict(
+        self.tx.collection('wip').update(dict(
           _key=b.key,
           quantity=b.quantity - booking_qt,
           value=b.value * (1 - booking_percentage)
@@ -325,7 +325,7 @@ class Event:
           value=b.quantity * booking_percentage,
           active=True
         )
-        self.tx.collection('WIP').insert(new_wip)
+        self.tx.collection('wip').insert(new_wip)
 
         break
 
