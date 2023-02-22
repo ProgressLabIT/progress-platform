@@ -323,7 +323,7 @@ export default {
         product_key: this.product_key,
         new_process: this.process.map(p => {
           // remove temp _key
-          if (typeof p._key == Number) {
+          if (typeof p._key == 'number') {
             delete p._key
           }
           return p
