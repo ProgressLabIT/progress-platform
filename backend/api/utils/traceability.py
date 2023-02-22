@@ -276,7 +276,7 @@ class Queries:
     )
 
     LET total_input_available = input_for_phase + input_for_job
-    LET next_batch_available = j.fist_phase || j.qt_next_batch <= total_input_available
+    LET next_batch_available = j.first_phase || j.qt_next_batch <= total_input_available
     UPDATE j WITH { next_batch_available } IN Job
   """
 
