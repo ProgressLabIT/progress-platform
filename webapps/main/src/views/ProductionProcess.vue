@@ -29,8 +29,8 @@
           :key="phase._key"
           :name="index"
           :content-class="`full-width text-left ${edit_mode ? '' : 'undraggable'}`"
-          @mouseenter="over_phase = index"
-          @mouseleave="over_phase = null"
+          @mouseenter="dragging ? undefined : over_phase = index"
+          @mouseleave="dragging ? undefined : over_phase = null"
           @click="confirming_delete = null"
           style="max-height: 40px;">
           <div class="row items-center full-width q-px-md">
@@ -187,7 +187,7 @@ export default {
       confirming_delete: null,
       update_alias_at_index: null,
       saving: false,
-      drag: false,
+      dragging: false,
     }
   },
 
@@ -263,6 +263,8 @@ export default {
     addPhase(new_operation) {
       let new_process = this.process
       new_process.push({ 
+        // Add temp _key so that sorting works with new phases too
+        _key: Date.now(),
         alias: new_operation.name, 
         operation_key: new_operation._key, 
         product_key: this.product_key,
@@ -319,7 +321,13 @@ export default {
       this.saving = true
       let process_update = {
         product_key: this.product_key,
-        new_process: this.process
+        new_process: this.process.map(p => {
+          // remove temp _key
+          if (typeof p._key == Number) {
+            delete p._key
+          }
+          return p
+        })
       }
       this.$store.dispatch('saveTempProcess', process_update)
         .then(() => {
@@ -349,8 +357,10 @@ export default {
     Sortable.create(container, {
       ..._self.$store.state.drag_options,
       filter: '.undraggable',
+      onStart: () => _self.dragging = true,
       // use onEnd event provided by SortableJs library
       onEnd: ({ newIndex, oldIndex }) => {
+        _self.dragging = false
         const moved = _self.process.splice(oldIndex, 1)[0]
         _self.process.splice(newIndex, 0, moved)
         _self.updateActivePhaseIndex({ oldIndex, newIndex })
