@@ -128,7 +128,7 @@ class Event:
     )).next())
 
     self.work_session = updated_work_session
-    self.info.work_session_key = updated_work_session._key
+    self.info.work_session_key = updated_work_session.key
 
     return updated_work_session
 
