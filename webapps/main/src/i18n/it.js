@@ -267,12 +267,12 @@ export default {
       },
       "step_check_force_order": {
         "false": {
-          "desc": "Ciascun passo può essere validato in maniera autonoma dagli altri. (* Valido solo con lotto di controllo)",
+          "desc": "Ciascun passo può essere validato in maniera autonoma dagli altri. (* Valido solo con controllo passi attivo)",
           "title": "No"
         },
         "title": "Sequenza passi obbligata *",
         "true": {
-          "desc": "I passi possono essere validati solo nella sequenza indicata. (* Valido solo con lotto di controllo)",
+          "desc": "I passi possono essere validati solo nella sequenza indicata. (* Valido solo con controllo passi attivo)",
           "title": "Sì"
         }
       }

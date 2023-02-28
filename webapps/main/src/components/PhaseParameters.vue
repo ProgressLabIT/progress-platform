@@ -1,6 +1,6 @@
 <template>
   <div>
-    <q-list v-if="phase_data">
+    <q-list v-if="phase">
       <template
         v-for="(p_value, p_key, index) in phase_params"
         :key="p_key">
@@ -93,12 +93,8 @@ export default {
       return this.product_data.last_phase
     },
 
-    phase_data() {
-       return this.$store.state.process.temp[this.current_phase]
-    },
-
     phase_params() {
-      return this.phase_data.params
+      return this.phase.params
     },
   },
 
@@ -120,11 +116,15 @@ export default {
       }
     },
 
-    paramHumanValue(param_key, value_key) {
+    paramHumanValue(param_key, param_value) {
       if (this.paramType(param_key) == 'int') {
-        return this.phase_params[param_key]
+        // Show "JOB" label if zero. See parameter explanation for details
+        if (param_key == 'production_batch_qt' && this.phase_params[param_key] == 0) {
+          return this.edit_mode ? 0 : this.$t('job.label').toUpperCase()
+        }
+        else return this.phase_params[param_key]
       }
-      return this.$t(`phase.params.${param_key}.${value_key}.title`)
+      return this.$t(`phase.params.${param_key}.${param_value}.title`)
     },
 
     paramValueDesc(param_key, value_key) {
@@ -142,7 +142,7 @@ export default {
 
     updateParam(param_key, value) {
       if (param_key === 'step_check') {
-        if (!this.phase_data.steps.length && value == true) {
+        if (!this.phase.steps.length && value == true) {
           window.alert(this.$capitalize(
             this.$t('phase.alerts.add_steps_first')
           ))
