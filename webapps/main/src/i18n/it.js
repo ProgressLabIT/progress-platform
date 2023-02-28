@@ -228,7 +228,7 @@ export default {
         }
       },
       "production_batch_qt": {
-        "desc": "Quantità di avanzamento produzione a fine ciclo. Questo parametro ha efficacia solo se il controllo passi è impostato con valore \"Lotto fisso\". Nel caso di lotto fisso, la quantità indicata non può essere modificata dall'operatore ed è valida per tutto il lavoro, con l'eccezione dell'ultimo lotto, che potrebbe essere inferiore al lotto definito.",
+        "desc": "Quantità processata in ogni singolo lotto. La quantità indicata è valida per tutto il lavoro, con l'eccezione dell'ultimo lotto, che potrebbe essere inferiore al lotto definito. Se impostata a zero, il lotto di produzione corrisponde all'intera quantità del lavoro.",
         "title": "Lotto di produzione"
       },
       "release_batch_qt": {

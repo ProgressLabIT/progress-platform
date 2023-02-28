@@ -225,7 +225,7 @@ export default {
         }
       },
       "production_batch_qt": {
-        "desc": "Quantity declared complete at the end of a procedure. This parameter is effective only if the step check is set as \"Fixed batch\". In this case, the quantity indicated cannot be changed by the operator and is valid until the completion of the job, with the exception of the last batch, which could have a smaller quantity than defined here.",
+        "desc": "The quantity being processed with each single batch. The quantity indicated is valid throughout the job, with the exception of the last batch, which could have a smaller quantity than defined here. If set to zero, the batch quantity will be equal to the total quantity to be processed by the job.",
         "title": "Production batch"
       },
       "release_batch_qt": {
