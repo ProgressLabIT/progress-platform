@@ -169,6 +169,12 @@ async def update_process(product_key, process: List[PhaseData]):
   # LOOP OVER PHASES TO UPDATE DB
     for seq, phase in enumerate(process):
 
+      has_steps = len(phase.steps)
+
+      # Disable step check if no steps are present
+      if not has_steps:
+        phase.params.step_check = False
+
       # Insert/replace steps
       for index, s in enumerate(phase.steps):
         # Exclude key field if not present so DB creates new record

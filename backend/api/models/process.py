@@ -7,14 +7,6 @@ from utils.base_models import FlexModel, ArangoDocument
 
 
 
-
-class StepCheckBatch(Enum):
-  NONE = 'none'
-  SINGLE = 'single'
-  FIXED_BATCH = 'fixed_batch'
-  MANUAL_BATCH = 'manual_batch'
-  JOB = 'job'
-
 class ReleaseStyle(Enum):
   CONTINUOUS = 'continuous'
   BATCH = 'batch'
@@ -28,9 +20,9 @@ class WIPAccess(Enum):
 
 class PhaseParameters(FlexModel):
   parallel_job_allowed: bool = True
-  step_check: StepCheckBatch = StepCheckBatch.NONE
+  step_check: bool = False
   step_check_force_order: bool = False
-  production_batch_qt: int = 1
+  production_batch_qt: int = 1 # 0 means the whole job at once
   max_offline: int = 60 # seconds
   auto_new_batch: bool = True
   std_processing_time: int = 0 # seconds

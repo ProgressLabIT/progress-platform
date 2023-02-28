@@ -120,7 +120,7 @@ default_phase_parameters = {
   'data': dict(
     _key = 'default_phase_parameters',
     parallel_job_allowed = True,
-    step_check = 'none',
+    step_check = False,
     step_check_force_order = False,
     production_batch_qt = 1,
     max_offline = 300 # 5 minutes

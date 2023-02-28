@@ -4,8 +4,8 @@ export const release_style = {
 }
 
 export const step_check = {
-  type: 'select',
-  values: ['none', 'fixed_batch', 'job']
+  type: 'bool',
+  values: [true, false]
 }
 
 export const parallel_job_allowed = {

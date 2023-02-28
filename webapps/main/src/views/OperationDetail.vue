@@ -130,7 +130,7 @@ export default {
       temp_params: {
         max_offline: 60,
         parallel_job_allowed: true,
-        step_check: 'none',
+        step_check: false,
         step_check_force_order: false,
         production_batch_qt: 1,
         auto_new_batch: true
