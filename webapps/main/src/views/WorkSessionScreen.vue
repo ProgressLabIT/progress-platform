@@ -88,7 +88,7 @@
             <!-- JOB PROGRESS / STATUS -->
             <q-linear-progress
               size="8px"
-              :value="progress_value / 100"
+              :value="j.progress / 100"
               :color="job_color"
               :track-color="job_color"
               animation-speed="300"
@@ -311,24 +311,6 @@ export default {
         : 'rgba(255,255,255,.13)'
     },
 
-    production_batch() {
-      let production_batch = 1
-      if (this.j.parameters) {
-        switch (this.j.parameters.step_check) {
-          case 'job':
-            production_batch = this.j.qt_planned
-            break
-          default:
-            production_batch = this.j.parameters.production_batch_qt
-            break
-        }
-        // The last batch could include less pieces than the production batch
-        const qt_remaining = this.j.qt_planned - this.j.qt_completed
-        return Math.min(production_batch, qt_remaining)
-      }
-      else return production_batch
-    },
-
     current_step_index() {
       const step_index = this.$route.query.step - 1
       return step_index ? step_index : 0
@@ -346,29 +328,12 @@ export default {
 
     current_batch_is_last() {
       const remaining_qt = this.j.qt_planned - this.j.qt_completed
-      return this.production_batch === remaining_qt
+      return this.j.active_batch_qt === remaining_qt
     },
 
     current_step_done() {
       let current_step = this.batch_data ? this.batch_data[this.current_step_index] : null
       return current_step ? current_step.done : null
-    },
-
-    progress_value() {
-      if ('parameters' in this.j) {
-        const completed_batch_progress = this.j.qt_completed / this.j.qt_planned
-
-        if (this.j.parameters.step_check != 'none') {
-          const current_batch_total_value = this.production_batch / this.j.qt_planned
-          const step_progress_value = current_batch_total_value / this.j.step_sequence.length
-          const current_batch_current_value = step_progress_value * this.completed_steps_count
-          const total_progress = completed_batch_progress + current_batch_current_value
-          return Math.floor( 100 * total_progress )
-        }
-        else return Math.floor(100 * completed_batch_progress)
-      }
-      else return 0
-
     },
 
     disabled_button_style() {
@@ -448,7 +413,7 @@ export default {
       if (can_proceed) {
         await this.$store.dispatch('completeStep', {
           step_index: this.current_step_index,
-          batch_qt: this.production_batch,
+          batch_qt: this.j.active_batch_qt,
         })
 
         if (current_step_was_last && current_batch_was_last) {
@@ -474,7 +439,7 @@ export default {
 
       if (can_proceed) {
         await this.$store.dispatch('declareBatch', {
-          batch_qt: this.production_batch,
+          batch_qt: this.j.active_batch_qt,
         })
         if (this.j.qt_completed >= this.j.qt_planned) this.exitJob()
         else if (this.j.parameters.step_check != 'none') this.goToStep(0)

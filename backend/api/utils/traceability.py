@@ -290,49 +290,8 @@ class Queries:
 
 # ------------- END OF QUERIES CLASS ----------------------------------
 
-def get_batch_step_done_count(batch_key, db):
-  step_done_count = db.collection('StepExecutionData').find(dict(
-    batch_key=batch_key,
-    status=StepStatus.DONE
-  )).count()
-
-  return step_done_count
-
-
-def get_job_progress(job_key, db):
-  job = Job(**db.collection('Job').get(job_key))
-  progress = job.qt_completed / job.qt_planned
-
-  if job.parameters.step_check != StepCheckBatch.NONE and job.current_batch:
-    default_batch = job.parameters.production_batch_qt
-    remaining_qt = job.qt_planned - job.qt_completed
-    batch_qt = min([default_batch, remaining_qt])
-    current_batch_total_value = batch_qt / job.qt_planned
-
-    step_progress_value = current_batch_total_value / len(job.step_sequence)
-
-    step_done_count = get_batch_step_done_count(
-      batch_key=job.current_batch,
-      db=db
-    )
-
-    progress += step_progress_value * step_done_count
-
-  return round(progress*100)
-
 
 def update_job_progress(db, job_key):
   db.aql.execute(Queries.UPDATE_JOB_PROGRESS, bind_vars=dict(job_key=job_key))
-
-
-
-def get_phase_progress(wo_key, phase_key, db):
-  phase_jobs_cursor = db.collection('Job').find(dict(
-    wo_key=wo_key,
-    phase_key=phase_key)
-  )
-  phase_jobs = [Job(j) for j in phase_jobs_cursor]
-  phase_weighted_average_progress = sum(j.progress * j.qt_planned for j in phase_jobs) / sum(j.qt_planned for j in phase_jobs)
-  return phase_weighted_average_progress
 
 

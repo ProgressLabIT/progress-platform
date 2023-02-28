@@ -213,6 +213,7 @@ class Event:
       data_from_db = self.tx.collection('Batch').find(match).next()
       self.batch = Batch(**data_from_db)
       self.info.active_batch_key = self.batch.key
+      self.info.active_batch_qt = self.batch.qt_total
     except StopIteration:
       pass
 
@@ -226,10 +227,12 @@ class Event:
       status=StepStatus.DONE
     )
 
-    return self.tx.aql.execute(
+    step_done_count = self.tx.aql.execute(
       TraceabilityQueries.GET_BATCH_STEP_DONE_COUNT,
       bind_vars=bind_vars
     ).next()
+
+    return step_done_count
 
 
   def get_batch_execution_data(self):
@@ -374,10 +377,7 @@ class Event:
 
   def update_job_step_progress(self):
     self.get_job_data()
-    default_batch = self.job.parameters.production_batch_qt
-    remaining_qt = self.job.qt_planned - self.job.qt_completed
-    batch_qt = min([default_batch, remaining_qt])
-    current_batch_total_value = batch_qt / self.job.qt_planned
+    current_batch_total_value = self.job.active_batch_qt / self.job.qt_planned
 
     procedure = self.get_job_step_sequence()
     step_progress_value = current_batch_total_value / len(procedure)
@@ -389,7 +389,8 @@ class Event:
       _key = self.job.key,
       progress = round(total_progress * 100)
     )
-    self.tx.collection('Job').update(job_update)
+
+    self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
 
 
   def complete_job(self, completed_qt):
@@ -595,6 +596,7 @@ class Event:
     self.get_job_data()
 
     self.info.completed_batch_key = self.job.active_batch_key
+    self.info.completed_batch_qt = self.job.active_batch_qt
     self.info.work_session_key = self.job.last_work_session_started
 
     # Complete batch
