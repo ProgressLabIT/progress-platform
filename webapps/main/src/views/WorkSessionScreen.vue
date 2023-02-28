@@ -224,7 +224,6 @@ export default {
   data () {
     return {
       vuex_ready: false,
-      job_closed: false,
       show_exit_alert: false,
       alert_timeout: 6000
     }
