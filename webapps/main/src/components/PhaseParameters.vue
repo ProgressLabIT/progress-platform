@@ -142,7 +142,7 @@ export default {
 
     updateParam(param_key, value) {
       if (param_key === 'step_check') {
-        if (!this.phase_data.steps.length && value != 'none') {
+        if (!this.phase_data.steps.length && value == true) {
           window.alert(this.$capitalize(
             this.$t('phase.alerts.add_steps_first')
           ))

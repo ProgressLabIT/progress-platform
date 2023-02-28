@@ -252,17 +252,14 @@ export default {
         "title": "Standard processing time"
       },
       "step_check": {
-        "fixed_batch": {
-          "desc": "When a step in the procedure is declared as done, it will be considered executed on a fixed number of pieces indicated in the \"Production batch\" parameter. After the completion of all the steps in the procedure, the whole batch will be considered completed.",
-          "title": "Fixed batch"
+        "title": "Step declaration",
+        "true": {
+          "title": "Active",
+          "desc": "Require the operator to declare each step of the procedure. The step will be considered executed on all the pieces included in the active batch. After the completion of all the steps in the procedure, the whole batch will be considered completed.",
         },
-        "job": {
-          "desc": "When a step in the procedure is declared as done, it will be considered executed on all the pieces planned for the job. After the completion of all the steps in the procedure, all the pieces planned for the job will be considered completed.",
-          "title": "Job"
-        },
-        "none": {
-          "desc": "No step check. If a procedure is set for this phase it will be shown purely for informational purposes, without any check or control. The operator will declare directly the completion of the piece or production batch.",
-          "title": "None"
+        "false": {
+          "title": "Not active",
+          "desc": "No step verification. If a procedure is set for this phase it will be shown purely for informational purposes, without any check or control. The operator will declare directly the completion of the current batch.",
         },
         "title": "Step check batch"
       },

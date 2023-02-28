@@ -60,7 +60,7 @@
     # material_check_mandatory: bool
     # missing_items_allowed: bool
     parallel_job_allowed: bool
-    step_check: str [NONE, SINGLE, FIXED_BATCH, MANUAL_BATCH, JOB]
+    step_check: bool
     step_check_force_order: bool
     release_style: str [CONTINUOUS, BATCH, SESSION, MANUAL, JOB]
     production_batch_qt: float

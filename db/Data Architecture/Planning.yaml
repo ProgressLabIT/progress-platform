@@ -52,7 +52,7 @@
   parameters:
     # material_check_mandatory: bool
     # missing_items_allowed: book
-    step_check: str [(see specs for options)]
+    step_check: bool [(see specs for options)]
       # default = single
     step_check_force_order: bool
     release_style: str [(see specs for options)]
@@ -60,11 +60,6 @@
       # Is this relevant at the job level?
       # How do we keep track of WIP location?
     complete_batch_qt: float 
-      # if step_check === Single: 1, not modifiable
-      # if step_check === job, job planned_qt, fixed
-      # else phase default_batch_qt, 
-      #   fixed if step_check === fixed_batch
-      #   otherwise modifiable
     release_batch_qt: float
       # if release_style === (continuous | session): 0
       # if release_style === batch, phase release_batch_qt, fix

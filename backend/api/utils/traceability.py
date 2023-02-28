@@ -1,6 +1,5 @@
 from models.production import Job
 from models.traceability import StepStatus
-from models.process import StepCheckBatch
 
 class Queries:
 

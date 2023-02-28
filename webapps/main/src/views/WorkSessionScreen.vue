@@ -293,7 +293,7 @@ export default {
       }
 
       if ('parameters' in this.j) {
-        return this.j.parameters.step_check != 'none'
+        return this.j.parameters.step_check
         // && !this.current_step_is_last
             ? complete_step
             : declare_batch
@@ -422,7 +422,7 @@ export default {
         else if (current_step_was_last) {
           this.goToStep(0)
         }
-        else if (this.j.parameters.step_check != 'none') {
+        else if (this.j.parameters.step_check) {
           // Go to first step that is not done.
           // This works with both force_order mode active or not
           this.goToNextUndoneStep()
@@ -442,7 +442,7 @@ export default {
           batch_qt: this.j.active_batch_qt,
         })
         if (this.j.qt_completed >= this.j.qt_planned) this.exitJob()
-        else if (this.j.parameters.step_check != 'none') this.goToStep(0)
+        else if (this.j.parameters.step_check) this.goToStep(0)
       }
     },
 

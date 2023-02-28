@@ -255,19 +255,15 @@ export default {
         "title": "Tempo standard"
       },
       "step_check": {
-        "fixed_batch": {
-          "desc": "I passi della procedura vengono considerati come eseguiti in contemporanea su un numero fisso di prodotti definito nel parametro \"Lotto di Produzione\". Al completamento di tutti i passi viene dichiarata conclusa la produzione dell'intero lotto.",
-          "title": "Lotto fisso"
+        "true": {
+          "desc": "All'operatore è richiesto di dichiarare il completamento di ciascun passo della procedura. I passi vengono considerati come eseguiti in contemporanea su su tutti i pezzi del lotto in corso di lavorazione. Al completamento di tutti i passi della procedura viene dichiarata conclusa la produzione dell'intero lotto.",
+          "title": "Attivo"
         },
-        "job": {
-          "desc": "I passi della procedura vengono considerati come eseguiti in contemporanea su tutti i pezzi pianificati per il lavoro in corso. Al completamento di tutti i passi viene dichiarata conclusa la produzione di tutti i pezzi previsti.",
-          "title": "Lavoro"
+        "false": {
+          "desc": "Nessun controllo dei passi. Eventuali procedure registrate vengono mostrate a scopo puramente illustrativo per l'utente, senza nessun tracciamento o vincolo. L'operatore dichiarerà direttamente il completamento lotto in corso di lavorazione.",
+          "title": "Non attivo"
         },
-        "none": {
-          "desc": "Nessun controllo dei passi. Eventuali procedure registrate vengono mostrate a scopo puramente illustrativo per l'utente, senza nessun tracciamento o vincolo. L'operatore dichiarerà direttamente il completamento del pezzo o del lotto di produzione.",
-          "title": "Nessuno"
-        },
-        "title": "Lotto di controllo passi"
+        "title": "Controllo passi"
       },
       "step_check_force_order": {
         "false": {
