@@ -621,7 +621,13 @@ class Event:
     else:
       default_batch_qt = self.job.parameters.production_batch_qt
       remaining_qt = self.job.qt_planned - self.job.qt_completed
-      qt_next_batch = min([default_batch_qt, remaining_qt])
+
+      # if production_batch_qt is zero, use total remaining quantity
+      if not default_batch_qt:
+        qt_next_batch = remaining_qt
+      # Do not consider production batch if remaining quantity is lower
+      else:
+        qt_next_batch = min([default_batch_qt, remaining_qt])
 
       new_progress = round(100 * new_qt_completed / self.job.qt_planned)
       job_update = dict(
