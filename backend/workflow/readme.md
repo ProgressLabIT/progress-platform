@@ -8,7 +8,7 @@ The Server stores metadata, handles scheduling, and provides a management and mo
 ## System and Integration workflows
 The Progress Platform has features that rely on workflows handled by Prefect. This are called "System" workflows. However most clients will have the need to implement their own data flows to exchange data with other business systems. These are called "Integration" workflows.
 
-To keep concerns separate, the stack provides two different services to run System and Integration workflows, each associated to a different "queue" in the Prefect server.
+To keep concerns separate, the stack provides two different services to run System and Integration workflows, each associated to a different "queue" in the Prefect server (the queues are created automatically after creating the deployment)
 
 ## Setting up workflows
 
