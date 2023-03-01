@@ -5,7 +5,7 @@ from arango import ArangoClient
 from prefect import task, flow, get_run_logger
 
 
-client = ArangoClient(hosts="http://localhost:8529")
+client = ArangoClient(hosts="http://db:8529")
 db = client.db('PROGRESS_TEST', username='root', password='')
 
 httpx_params = dict(
@@ -61,10 +61,10 @@ def pause_job(job_key):
 
 
 @flow(name="Pause offline jobs", log_prints=True)
-def pause_offline_jobs():
+def main():
   jobs_to_pause = check_offline_jobs()
   pause_job.map(jobs_to_pause)
 
 
 if __name__ == "__main__":
-  pause_offline_jobs()
+  main()
