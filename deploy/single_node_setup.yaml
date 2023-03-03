@@ -9,6 +9,9 @@
     volumes:
       - db_data
       - db_backup
+      - workflow_db
+      - workflow_config
+      - flows
       - media
       - logs
     additional_folders:
