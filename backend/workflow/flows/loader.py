@@ -1,13 +1,17 @@
 import importlib.util
 import os
+import sys
 
 from prefect.deployments import Deployment
+
+queue = sys.argv[1]
 
 flow_list = [entry.name for entry in os.scandir() if os.path.isdir(entry)]
 
 """
 This script loads the flows contained in the each folder under the `flow` directory, generating the relative deployment file in the same folder.
 """
+
 
 for entry in flow_list:
   # run script to build and apply the flow
@@ -19,7 +23,7 @@ for entry in flow_list:
     flow=flow,
     name='main',
     version=1,
-    work_queue_name="system",
+    work_queue_name=queue,
     output=f'{entry}/deployment.yaml',
     skip_upload=True,
     apply=True
