@@ -34,6 +34,9 @@ product/
 step/
 user/
 
+# DBs
+integration_db/
+
 # Dev utility scripts
 *.app/
 
