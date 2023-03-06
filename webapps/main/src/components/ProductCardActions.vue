@@ -118,7 +118,11 @@ export default {
         }
       })
       .onOk(new_code => {
-        api.post(`product/${this.product._key}/copy`, null, { params: { new_code }})
+        const data = {
+          original_product: this.product._key,
+          new_code
+        }
+        api.post(`product/copy`, data)
         .then( async (resp) => {
           // Load product list to include navigation state for new product
           await this.$store.dispatch('loadProductList')
