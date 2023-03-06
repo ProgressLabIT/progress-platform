@@ -65,17 +65,18 @@ async def create_work_order(new_wo: WorkOrderNew):
       )
 
   try:
+    match = dict(active=True, trash=False)
+
     if not new_wo.product_key:
-      product_data = ProductDetails(**product_coll.find(dict(
-        code = new_wo.product_code,
-        active = True,
-        trash = False
-      )).next())
+      match['code'] = new_wo.product_code
 
     else:
-      product_data = ProductDetails(**product_coll.get(new_wo.product_key))
+      match['_key'] = new_wo_record.product_key
 
+    print(match)
+    product_data = ProductDetails(**product_coll.find(match).next())
     new_wo.product_code = product_data.code
+    new_wo.product_key = product_data.key
     new_wo.product_description = product_data.description
 
     if len(product_data.process_phases):

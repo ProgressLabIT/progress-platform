@@ -3,7 +3,7 @@ from dateutil import tz
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, PositiveFloat, root_validator
 
 from models.bom import BomLineRead
 from models.process import PhaseParameters, StepWithMediaInfo
@@ -55,10 +55,17 @@ class WorkOrderNew(BaseModel):
   product_code: str = None
   product_description: str = None
   phase_sequence: List[str] = []
-  qt_planned: float
+  qt_planned: PositiveFloat
   priority: bool = False
   due_by: Union[datetime, date] = None
   project_code: str = None
+
+  @root_validator
+  def check_key_or_code_provided(cls, values):
+    if not values.get('product_key') and not values.get('product_code'):
+      raise ValueError('A product key or code must be provided')
+    return values
+
 
 
 class WorkOrderFull(ArangoDocument, WorkOrderNew):
