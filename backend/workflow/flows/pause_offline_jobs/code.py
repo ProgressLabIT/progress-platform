@@ -9,8 +9,8 @@ client = ArangoClient(hosts="http://db:8529")
 db = client.db('PROGRESS_TEST', username='root', password='')
 
 httpx_params = dict(
-    proxies={ "all://progress.localhost": "http://localhost:80" },
-    base_url='http://progress.localhost/api'
+    # proxies={ "all://progress.localhost": "http://localhost:80" },
+    base_url='http://api:8000'
 )
 
 query = """
