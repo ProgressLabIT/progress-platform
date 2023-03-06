@@ -247,13 +247,16 @@ export default {
     },
 
     cancelChanges() {
-      const active_phase_key = this.process[this.current_phase]._key
-      const original_process = this.$store.state.process.saved
-      const original_phase_index = original_process.findIndex(p => p._key = active_phase_key)
-      this.updateActivePhaseIndex({
-        oldIndex: this.current_phase,
-        newIndex: original_phase_index
-      })
+      const active_phase = this.process[this.current_phase]
+      if (active_phase) {
+        const original_process = this.$store.state.process.saved
+        const original_phase_index = original_process.findIndex(p => p._key = active_phase._key)
+        this.updateActivePhaseIndex({
+          oldIndex: this.current_phase,
+          newIndex: original_phase_index
+        })
+      }
+
       this.$store.commit('CANCEL_PROCESS_CHANGES')
       this.confirming_delete = null
       this.edit_mode = false

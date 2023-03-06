@@ -228,7 +228,7 @@ export default {
         }
       },
       "production_batch_qt": {
-        "desc": "Quantità di avanzamento produzione a fine ciclo. Questo parametro ha efficacia solo se il controllo passi è impostato con valore \"Lotto fisso\". Nel caso di lotto fisso, la quantità indicata non può essere modificata dall'operatore ed è valida per tutto il lavoro, con l'eccezione dell'ultimo lotto, che potrebbe essere inferiore al lotto definito.",
+        "desc": "Quantità processata in ogni singolo lotto. La quantità indicata è valida per tutto il lavoro, con l'eccezione dell'ultimo lotto, che potrebbe essere inferiore al lotto definito. Se impostata a zero, il lotto di produzione corrisponde all'intera quantità del lavoro.",
         "title": "Lotto di produzione"
       },
       "release_batch_qt": {
@@ -255,28 +255,24 @@ export default {
         "title": "Tempo standard"
       },
       "step_check": {
-        "fixed_batch": {
-          "desc": "I passi della procedura vengono considerati come eseguiti in contemporanea su un numero fisso di prodotti definito nel parametro \"Lotto di Produzione\". Al completamento di tutti i passi viene dichiarata conclusa la produzione dell'intero lotto.",
-          "title": "Lotto fisso"
+        "true": {
+          "desc": "All'operatore è richiesto di dichiarare il completamento di ciascun passo della procedura. I passi vengono considerati come eseguiti in contemporanea su su tutti i pezzi del lotto in corso di lavorazione. Al completamento di tutti i passi della procedura viene dichiarata conclusa la produzione dell'intero lotto.",
+          "title": "Attivo"
         },
-        "job": {
-          "desc": "I passi della procedura vengono considerati come eseguiti in contemporanea su tutti i pezzi pianificati per il lavoro in corso. Al completamento di tutti i passi viene dichiarata conclusa la produzione di tutti i pezzi previsti.",
-          "title": "Lavoro"
+        "false": {
+          "desc": "Nessun controllo dei passi. Eventuali procedure registrate vengono mostrate a scopo puramente illustrativo per l'utente, senza nessun tracciamento o vincolo. L'operatore dichiarerà direttamente il completamento lotto in corso di lavorazione.",
+          "title": "Non attivo"
         },
-        "none": {
-          "desc": "Nessun controllo dei passi. Eventuali procedure registrate vengono mostrate a scopo puramente illustrativo per l'utente, senza nessun tracciamento o vincolo. L'operatore dichiarerà direttamente il completamento del pezzo o del lotto di produzione.",
-          "title": "Nessuno"
-        },
-        "title": "Lotto di controllo passi"
+        "title": "Controllo passi"
       },
       "step_check_force_order": {
         "false": {
-          "desc": "Ciascun passo può essere validato in maniera autonoma dagli altri. (* Valido solo con lotto di controllo)",
+          "desc": "Ciascun passo può essere validato in maniera autonoma dagli altri. (* Valido solo con controllo passi attivo)",
           "title": "No"
         },
         "title": "Sequenza passi obbligata *",
         "true": {
-          "desc": "I passi possono essere validati solo nella sequenza indicata. (* Valido solo con lotto di controllo)",
+          "desc": "I passi possono essere validati solo nella sequenza indicata. (* Valido solo con controllo passi attivo)",
           "title": "Sì"
         }
       }

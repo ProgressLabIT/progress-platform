@@ -95,6 +95,7 @@ class ProductionEvent(FlexModel):
   phase_key: str = None
   next_phase_key: str = None
   active_batch_key: str = None
+  active_batch_qt: float = None
   step_key: str = None
   completed_batch_key: str = None
   completed_batch_qt: float = None
