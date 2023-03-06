@@ -3,7 +3,7 @@ import traceback
 from typing import List
 from fnmatch import fnmatch
 
-from fastapi import APIRouter, Form, File, HTTPException, UploadFile
+from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body
 from fastapi.encoders import jsonable_encoder
 
 from models.product import *
@@ -147,31 +147,49 @@ async def create_product(
 # =================================================
 #  POST /PRODUCT_KEY/COPY : COPY PRODUCT
 # =================================================
-@router.post("/{original_product_key}/copy", status_code=201)
-async def copy_product(original_product_key: str, new_code: str):
+@router.post("/copy", status_code=201)
+async def copy_product(
+  original_product: str = Body(), # Can be product key or code (key default)
+  new_code: str = Body(),
+  by_code: bool = Body(default=False)
+  ):
 
-  # 0. Check no product exists with same code
   tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'], read=['Operation'])
   product_db = tx.collection('Product')
 
+  # 0.1 Check no product exists with same code
   if product_db.find(dict(code=new_code, trash=False)).count():
-    print('duplicato')
-    status_code = 400
-    response=dict(
-      status=status_code,
-      message="A product with the same code already exists"
-    )
+    status_code = 409
     raise HTTPException(
       status_code=status_code,
-      detail=response
+      detail="A product with the same code already exists"
+    )
+
+  # 0.2 Fetch product data and prepare
+  try:
+    if by_code:
+      match = dict(code=original_product, trash=False)
+
+    else: # Copy product by key
+      match = dict(_key=original_product, trash=False)
+
+    new_product = ProductDetails(**product_db.find(match).next())
+    original_product_code = new_product.code
+    original_product_key = new_product.key
+
+  except StopIteration:
+    tx.abort_transaction()
+    raise HTTPException(
+      status_code=404,
+      detail="No product with the provided code or key could be found"
     )
 
   try:
     # 1. CREATE NEW PRODUCT WITH PROVIDED CODE
-    new_product = ProductDetails(**product_db.get(original_product_key))
-    original_product_code = new_product.code # save for final response
     new_product.code = new_code
+    new_product.active = True
     new_product.key = None
+
     prepped_data = jsonable_encoder(new_product, by_alias=True, exclude_none=True)
     new_product_key = product_db.insert(prepped_data)['_key']
 
