@@ -33,9 +33,8 @@ async def create_work_order(new_wo: WorkOrderNew):
   job_coll = tx.collection('Job')
   product_coll = tx.collection('Product')
 
-  # Create WO record
+  # Define WO record creation procedure
   def create_wo_record(wo: WorkOrderNew, collection):
-    # data_in = jsonable_encoder(wo)
     new_wo_record = WorkOrderFull(
       **wo.dict(),
       wo_docs = get_product_docs(wo.product_key),
@@ -47,9 +46,10 @@ async def create_work_order(new_wo: WorkOrderNew):
     new_wo_record.key = db_resp['_key']
     return new_wo_record
 
+  # 0. Handle Work Order Code
+  # 0.1 Generate automatic wo_code if not provided
   if not new_wo.wo_code:
     try:
-      # Generate automatic wo_code if not present
       new_wo.wo_code = generate_counter(tx, 'work_order')
     except:
       tx.abort_transaction()
@@ -64,16 +64,26 @@ async def create_work_order(new_wo: WorkOrderNew):
         detail=response
       )
 
+  # 0.2 Check Work Order Code is not already present
+  wo_code_in_use = wo_coll.find({'wo_code': new_wo.wo_code }).count()
+  if wo_code_in_use:
+    tx.abort_transaction()
+    raise HTTPException(
+      status_code=409,
+      detail="The work order code already exists. Please provide a new code. If you are using automatic counters, please check the configuration."
+    )
+
+
   try:
+    # 1. Fetch product data by code or key
     match = dict(active=True, trash=False)
 
     if not new_wo.product_key:
       match['code'] = new_wo.product_code
 
     else:
-      match['_key'] = new_wo_record.product_key
+      match['_key'] = new_wo.product_key
 
-    print(match)
     product_data = ProductDetails(**product_coll.find(match).next())
     new_wo.product_code = product_data.code
     new_wo.product_key = product_data.key
@@ -114,7 +124,7 @@ async def create_work_order(new_wo: WorkOrderNew):
     )
 
 
-  # Get phase data from products, phase parameters from phase & Create Jobs
+  # 2. Get phase data from products, phase parameters from phase & Create Jobs
   def get_procedure_for_new_job(phase_key):
     try:
       db_steps = tx.aql.execute(
@@ -207,7 +217,7 @@ async def create_work_order(new_wo: WorkOrderNew):
       detail=response
     )
 
-  # Add work order to default site queue
+  # 3. Add work order to default site queue
   try:
     tx.aql.execute(Queries.ADD_WORK_ORDER_TO_QUEUE, bind_vars=dict(new_wo_key=new_wo_record.key))
 
