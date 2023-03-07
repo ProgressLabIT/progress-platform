@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from random import randrange, uniform
 from typing import List, Optional
@@ -5,7 +6,6 @@ from typing import List, Optional
 from pydantic import ByteSize, Field
 
 from utils.base_models import FlexModel
-from utils.dt import timestamp
 
 
 
