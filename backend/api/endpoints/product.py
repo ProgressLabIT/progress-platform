@@ -11,6 +11,7 @@ from models.process import PhaseData
 
 from utils.api import APIResponse
 from utils.db import db
+from utils.dt import timestamp
 from utils.file import UserFile
 from utils.product import *
 from utils.process import Queries as ProcessQueries
@@ -66,7 +67,11 @@ async def create_product(
 
   # Map form data
   try:
-    new_product = ProductDetails(code=code, description=description)
+    new_product = ProductDetails(
+      code=code,
+      description=description,
+      created=timestamp()
+    )
 
   except Exception as e:
     error_str = traceback.format_exc()
@@ -173,7 +178,11 @@ async def copy_product(
     else: # Copy product by key
       match = dict(_key=original_product, trash=False)
 
-    new_product = ProductDetails(**product_db.find(match).next())
+    new_product = ProductDetails(
+      created=timestamp(),
+      **product_db.find(match).next()
+    )
+
     original_product_code = new_product.code
     original_product_key = new_product.key
 
@@ -357,8 +366,11 @@ async def udpate_product(
   product_to_update = product_db.get(product_key)
   try:
     updated_product = product_db.update(
-      dict(_key=product_key, **updated_fields),
-      return_new=True
+      dict(
+        _key=product_key,
+        updated=timestamp(),
+        **updated_fields
+      ), return_new=True
     )['new']
     # print(updated_product)
     response = APIResponse(
@@ -459,6 +471,7 @@ async def replace_product_image(
   filename = 'image.jpg'
   product_db.update(dict(
     _key=product_key,
+    updated=timestamp(),
     image=True
   ))
   await img.write_file(filename)
@@ -476,6 +489,7 @@ async def replace_product_image(product_key: str):
   img.delete_file('image.jpg')
   product_db.update(dict(
     _key=product_key,
+    updated=timestamp(),
     image=False
   ))
 
