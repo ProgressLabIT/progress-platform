@@ -12,7 +12,7 @@
     @hide="$emit('close')"
     :style="{ ...CSSVars, '--backdrop-color': background }">
     <template v-if="maximized">
-      <div class="fixed-full row flex-center" style="background-color: backdrop_color;">
+      <div class="fixed-full row flex-center" :style="`background-color: ${background || default_background};`">
         <slot></slot>
       </div>
     </template>
@@ -40,8 +40,11 @@ export default {
     },
     background: {
       type: String,
-      default: '#090C0DCC'
     },
+  },
+
+  created() {
+    this.default_background = this.$theme.background
   }
 }
 </script>

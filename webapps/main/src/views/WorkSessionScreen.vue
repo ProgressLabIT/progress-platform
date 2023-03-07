@@ -109,40 +109,12 @@
 
             <!-- START/PAUSE BUTTOM -->
             <div class="col-4">
-              <q-btn
-                class="fit"
-                :style="`background-color: ${j.active ? $theme.grey : $theme.blue + 'aa'}`"
-                square
-                @click="startPauseResumeJob().action()">
-                <div class="row items-center absolute-full">
-                  <div class="col-1 offset-2">
-                    <q-icon size="lg" :name="j.active ? 'mdi-pause':'mdi-play'" />
-                  </div>
-                  <div class="display medium offset-1">
-                    {{ startPauseResumeJob().text }}
-                  </div>
-                </div>
-              </q-btn>
+              <StartPauseResumeBtn />
             </div>
 
             <!-- PROGRESS BUTTON -->
             <div class="col-4">
-              <q-btn
-                id="progress_button"
-                square
-                :style="`background-color: ${progress_button_color}`"
-                :disable="!progress_button_active"
-                @click="progress_button.action()"
-                class="fit">
-                <div class="row items-center absolute-full">
-                  <div class="col-1 offset-2">
-                    <q-icon size="lg" :name="progress_button.icon" />
-                  </div>
-                  <div class="display medium offset-1">
-                    <span>{{ progress_button.text }}</span>
-                  </div>
-                </div>
-              </q-btn>
+              <ProgressBtn />
             </div>
 
             <!-- PREV/NEXT STEP AND EXIT BUTTONS -->
@@ -212,9 +184,17 @@
 <script>
 import { mapState } from 'vuex'
 
+import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue'
+import ProgressBtn from '@/components/ProgressBtn.vue'
+
 export default {
 
   name: 'WorkSessionScreen',
+
+  components: {
+    StartPauseResumeBtn,
+    ProgressBtn
+  },
 
   props: {
     // from router
@@ -245,11 +225,12 @@ export default {
       ]
     },
 
-    wo_data() {
+    job_info() {
       return [
         { name: 'wo_code', text: this.$t('work_order.list_headers.wo_code') },
         { name: 'project_code', text: this.$t('project') },
-        { name: 'phase_alias', text: this.$t('phase.short') }
+        { name: 'phase_alias', text: this.$t('phase.short') },
+        { name: 'active_batch_qt', text: this.$t('quantity.active.medium') }
       ]
     },
 
@@ -257,57 +238,11 @@ export default {
       return this.j.parameters.step_check_force_order
     },
 
-    confirm_batch_done_message() {
-      return this.$t('job.alerts.batch_confirm')
-    },
-
-    confirm_job_done_message() {
-      return this.$t('job.alerts.job_complete_confirm')
-    },
-
-    job_info() {
-      const active_qt = { name: 'active_batch_qt', text: this.$t('quantity.active.medium') }
-      return [...this.wo_data, active_qt]
-    },
-
     job_color() {
       if (this.j.critical) return 'theme-red'
       else if (!this.j.on_time) return 'theme-orange'
       else if (this.j.active) return 'theme-blue'
       else return 'theme-grey'
-    },
-
-    progress_button() {
-
-      const complete_step = {
-        icon: 'mdi-check',
-        text: this.$t('job.complete_step'),
-        action: this.completeStep,
-      }
-
-      const declare_batch = {
-        icon: 'mdi-plus',
-        text: this.$t('job.complete_batch'),
-        action: this.declareBatch
-      }
-
-      if ('parameters' in this.j) {
-        return this.j.parameters.step_check
-        // && !this.current_step_is_last
-            ? complete_step
-            : declare_batch
-      }
-      else return declare_batch
-    },
-
-    progress_button_active() {
-      return this.j.active && !this.current_step_done
-    },
-
-    progress_button_color() {
-      return this.progress_button_active
-        ? this.$theme.green + 'aa'
-        : 'rgba(255,255,255,.13)'
     },
 
     current_step_index() {
@@ -321,26 +256,9 @@ export default {
         : 0
     },
 
-    current_step_is_last() {
-      return this.completed_steps_count === this.j.step_sequence.length -1
-    },
-
-    current_batch_is_last() {
-      const remaining_qt = this.j.qt_planned - this.j.qt_completed
-      return this.j.active_batch_qt === remaining_qt
-    },
-
     current_step_done() {
       let current_step = this.batch_data ? this.batch_data[this.current_step_index] : null
       return current_step ? current_step.done : null
-    },
-
-    disabled_button_style() {
-      if (this.j.active) return ''
-      else return {
-        backgroundColor: this.$theme.surface1,
-        // color: this.$theme.text_disabled
-      }
     },
 
     allow_step_forward() {
@@ -366,101 +284,8 @@ export default {
 
   methods: {
 
-    startPauseResumeJob() {
-      const result = {
-        text: null,
-        action: null
-      }
-
-      if (this.j.active) {
-        result.text = this.$t('job.pause').toUpperCase()
-        result.action = () => this.$store.dispatch('pauseJob')
-        return result
-      }
-
-      else {
-        // Check if progress has already been made or user has already started
-        if (this.j.stage == 'started' ) {
-          result.text = this.$t('job.resume').toUpperCase()
-          result.action = () => this.$store.dispatch('resumeJob')
-          return result
-        }
-        else {
-          result.text = this.$t('job.start').toUpperCase()
-          result.action = () => this.$store.dispatch('startJob')
-          return result
-        }
-      }
-    },
-
-    async completeStep() {
-      let can_proceed = true
-
-      // Values will change after committing mutation save to use for navigation later on
-      const current_step_was_last = this.current_step_is_last
-      const current_batch_was_last = this.current_batch_is_last
-
-      if (this.current_step_is_last) {
-        can_proceed = window.confirm(this.confirm_batch_done_message)
-
-        if (can_proceed && this.current_batch_is_last) {
-          can_proceed = window.confirm(this.confirm_job_done_message)
-        }
-      }
-
-
-      if (can_proceed) {
-        await this.$store.dispatch('completeStep', {
-          step_index: this.current_step_index,
-          batch_qt: this.j.active_batch_qt,
-        })
-
-        if (current_step_was_last && current_batch_was_last) {
-          this.$router.push({ name: 'userJobs' })
-        }
-        else if (current_step_was_last) {
-          this.goToStep(0)
-        }
-        else if (this.j.parameters.step_check) {
-          // Go to first step that is not done.
-          // This works with both force_order mode active or not
-          this.goToNextUndoneStep()
-        }
-      }
-    },
-
-    async declareBatch() {
-      let can_proceed = true
-
-      if (this.current_batch_is_last) {
-        can_proceed = window.confirm(this.confirm_job_done_message)
-      }
-
-      if (can_proceed) {
-        await this.$store.dispatch('declareBatch', {
-          batch_qt: this.j.active_batch_qt,
-        })
-        if (this.j.qt_completed >= this.j.qt_planned) this.exitJob()
-        else if (this.j.parameters.step_check) this.goToStep(0)
-      }
-    },
-
     goToStep(step_sequence) {
       this.$router.push({ query: { step: step_sequence + 1 }})
-    },
-
-    goToNextUndoneStep() {
-      if (this.batch_data) {
-        const procedure_length = this.j.step_sequence.length
-        for (let i = this.current_step_index; i < procedure_length ; i++) {
-          if (!this.batch_data[i].done) {
-            this.goToStep(i)
-            return
-          }
-        }
-        const next_step_index = this.batch_data.findIndex( step => !step.done )
-        this.goToStep(next_step_index)
-      }
     },
 
     goToNextStep() {
@@ -508,7 +333,7 @@ export default {
 
       else {
         this.vuex_ready = true
-        if (data.current_batch_data) {
+        if (data.current_batch_data.step_data) {
           const next_step_index = this.batch_data.findIndex( step => !step.done ) || 0
           this.$router.replace({ query: { step: next_step_index + 1 }})
         }
