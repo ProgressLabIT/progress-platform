@@ -65,8 +65,18 @@ async def create_work_order(new_wo: WorkOrderNew):
       )
 
   try:
-    product_data = ProductDetails(**product_coll.get(new_wo.product_key))
+    match = dict(active=True, trash=False)
+
+    if not new_wo.product_key:
+      match['code'] = new_wo.product_code
+
+    else:
+      match['_key'] = new_wo_record.product_key
+
+    print(match)
+    product_data = ProductDetails(**product_coll.find(match).next())
     new_wo.product_code = product_data.code
+    new_wo.product_key = product_data.key
     new_wo.product_description = product_data.description
 
     if len(product_data.process_phases):
@@ -76,6 +86,19 @@ async def create_work_order(new_wo: WorkOrderNew):
       # TODO: replace default alias with default operation (stored and cached in config)
 
     new_wo_record = create_wo_record(new_wo, wo_coll)
+
+  except StopIteration:
+    tx.abort_transaction()
+    status_code=404
+    response = dict(
+      status=status_code,
+      message="There is no active product present with the key or code provided"
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
+    raise HTTPException()
 
   except:
     tx.abort_transaction()

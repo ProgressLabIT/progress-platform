@@ -12,10 +12,6 @@ secrets:
   progress_jwt_secret:
     external: true
 
-volumes:
-  notebooks:
-    external: true
-
 services:
 
   router:

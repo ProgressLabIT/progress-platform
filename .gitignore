@@ -1,6 +1,6 @@
-.DS_Store
 node_modules
 dist
+deployment.yaml
 
 # local env files
 .env.local
@@ -33,6 +33,9 @@ equipment/
 product/
 step/
 user/
+
+# DBs
+integration_db/
 
 # Dev utility scripts
 *.app/

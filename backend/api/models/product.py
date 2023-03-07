@@ -5,6 +5,7 @@ from typing import List, Optional
 from pydantic import ByteSize, Field
 
 from utils.base_models import FlexModel
+from utils.dt import timestamp
 
 
 
@@ -32,6 +33,10 @@ class ProductBaseData(FlexModel):
 
 class ProductDetails(ProductBaseData):
   trash: bool = False
+
+  created: datetime = None
+  updated: datetime = None
+
   cost: TargetAverageCost = TargetAverageCost()
   # sale_price: float = 0
   # margin: TargetAverageData = TargetAverageData()
