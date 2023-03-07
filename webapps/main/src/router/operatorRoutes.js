@@ -33,7 +33,7 @@ const operatorRoutes = [
     component: () => import("@/views/WorkSessionScreen.vue"),
     props: true,
     redirect: { name: "jobSteps" },
-    meta: { screen_title: true },
+    meta: { screen_title: true, scope: 'operator' },
     children: [
       {
         path: "steps",

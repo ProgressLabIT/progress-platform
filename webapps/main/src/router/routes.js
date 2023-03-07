@@ -2,6 +2,7 @@ import library from "./libraryRoutes.js"
 import production from "./productionRoutes.js"
 import operator from "./operatorRoutes.js"
 import admin from "./adminRoutes.js"
+import store from "@/store/index"
 
 const routes = [
   {
