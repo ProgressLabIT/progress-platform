@@ -67,8 +67,8 @@
             </q-card-section>
 
             <q-card-section>
-              <div class="row q-col-gutter-xl">
-                <div class="col-6">
+              <div class="row">
+                <div class="col">
                   <q-btn
                     class="full-width"
                     color="theme-blue"
@@ -76,7 +76,8 @@
                     {{ $t('save') }}
                   </q-btn>
                 </div>
-                <div class="col-6">
+                <div class="col-1"></div>
+                <div class="col">
                   <q-btn
                     class="full-width"
                     color="theme-grey"
@@ -176,11 +177,11 @@ export default {
   methods: {
     submit() {
       if (!this.new_user_data.username) {
-        window.alert(this.$tc('user.alerts.username_missing'))
+        window.alert(this.$t('user.alerts.username_missing'))
       }
 
       else if (!this.new_user_data.scopes.length) {
-        window.alert(this.$tc('user.alerts.permission_missing'))
+        window.alert(this.$t('user.alerts.permission_missing'))
       }
       
       else {
