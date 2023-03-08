@@ -1,5 +1,6 @@
 <template>
   <q-linear-progress
+    animation-speed="500"
     :value="progress"
     :color="color.foreground"
     :track-color="color.background"

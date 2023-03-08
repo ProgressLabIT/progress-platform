@@ -1,21 +1,49 @@
 <template>
   <BaseDialog :show="show" @close="$emit('close')" maximized>
 
+
+
     <!-- FILE NAME -->
-    <div class="fixed-top-left medium highlight q-ma-lg" style="z-index: 99;">
+    <div class="fixed-top-left medium highlight q-ma-md" style="z-index: 99;">
       <div
         v-if="info==='name'"
-        class="q-pa-md"
+        class="q-pa-md row"
         :style="darkGlassStyle">
-        {{ media_name }}
-        <q-btn
-          flat
-          round
-          padding="xs xs"
-          icon="mdi-chevron-left"
-          size="md"
-          @click="info='icon'">
-        </q-btn>
+        <div class="col column justify-center q-pt-sm">
+          <div class="q-mb-md">FILE: {{ media_name }}</div>
+          <template v-if="isWorkSession">
+            <template v-for="field in job_info">
+              <div class="row items-center q-py-xs"
+                v-if="job[field.name] != undefined"
+                :key="field.name">
+                <div class="col text-h5 text-uppercase font-weight-medium">
+                  {{ field.text }}
+                </div>
+                <div class="col">
+                  <span>{{ $capitalizeAll(job[field.name]) }}</span>
+                </div>
+              </div>
+            </template>
+            <div class="row items-center q-py-xs">
+              <div class="col text-h5 text-uppercase font-weight-medium">
+                {{ $t('quantity.completed_total') }}
+              </div>
+              <div class="col">
+                <span>{{ job.qt_completed }} / {{ job.qt_planned }}</span>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div class="col-auto q-ml-md">
+          <q-btn
+            flat
+            round
+            padding="xs xs"
+            icon="mdi-chevron-left"
+            size="md"
+            @click="info='icon'">
+          </q-btn>
+        </div>
       </div>
       <q-btn
         v-if="info==='icon'"
@@ -56,45 +84,52 @@
     </div>
 
     <!-- CONTENT -->
-    <div class="fit flex flex-center q-pa-xl" style="z-index: -1;">
-      <q-img fit="contain"
-        v-if="hasImageExtension()"
-        :src="media_src">
-      </q-img>
-      <vue-pdf-embed
-        v-else
-        disableTextLayer
-        ref="pdf"
-        :source="media_src"
-        :width="doc_width">
-      </vue-pdf-embed>
+    <div class="flex flex-center q-pa-xl" style="z-index: -1;">
+      <div>
+        <q-img fit="contain"
+          v-if="hasImageExtension()"
+          :src="media_src">
+        </q-img>
+        <vue-pdf-embed
+          v-else
+          disableTextLayer
+          ref="pdf"
+          :source="media_src"
+          :width="doc_width">
+        </vue-pdf-embed>
+      </div>
     </div>
 
-    <!-- WORK SESSION BUTTONS -->
-    <div
-      v-if="isWorkSession"
-      class="fixed-bottom full-width">
-      <q-btn
-        flat square
-        class="q-mr-lg"
-        :style="darkGlassStyle"
-        :icon="action_drawer ? 'mdi-chevron-down' : 'mdi-chevron-up'"
-        size="md"
-        @click="action_drawer = !action_drawer">
-      </q-btn>
-      <q-slide-transition>
-        <div v-if="action_drawer">
-          <div class="row" style="height: 10vh;">
-            <div class="col" style="backdrop-filter: blur(8px);">
-              <StartPauseResumeBtn />
-            </div>
-            <div class="col" style="backdrop-filter: blur(3px);">
-              <ProgressBtn />
+    <!-- WORK SESSION ITEMS -->
+    <template v-if="isWorkSession">
+      <div class="fixed-top full-width">
+        <BaseProgressBar :data="job" size="8px"/>
+      </div>
+
+      <div class="fixed-bottom full-width">
+        <q-btn
+          flat square
+          class="q-mr-lg"
+          :style="darkGlassStyle"
+          :icon="action_drawer ? 'mdi-chevron-down' : 'mdi-chevron-up'"
+          size="md"
+          @click="action_drawer = !action_drawer">
+        </q-btn>
+        <q-slide-transition>
+          <div v-if="action_drawer">
+            <div class="row" style="height: 10vh; min-height: 75px">
+              <div class="col" style="backdrop-filter: blur(8px);">
+                <StartPauseResumeBtn />
+              </div>
+              <div class="col" style="backdrop-filter: blur(3px);">
+                <ProgressBtn />
+              </div>
             </div>
           </div>
-        </div>
-      </q-slide-transition>
-    </div>
+        </q-slide-transition>
+      </div>
+    </template>
+
   </BaseDialog>
 </template>
 
@@ -103,6 +138,7 @@ import VuePdfEmbed from 'vue-pdf-embed'
 import BaseDialog from '@/components/BaseDialog.vue'
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue'
 import ProgressBtn from '@/components/ProgressBtn.vue'
+import BaseProgressBar from '@/components/BaseProgressBar.vue'
 
 export default {
 
@@ -112,7 +148,8 @@ export default {
     BaseDialog,
     VuePdfEmbed,
     StartPauseResumeBtn,
-    ProgressBtn
+    ProgressBtn,
+    BaseProgressBar
   },
 
   props: ['show', 'media_name', 'media_src'],
@@ -122,14 +159,27 @@ export default {
       image_extensions: ['png', 'jpeg', 'jpg'],
       doc_width: 800,
       info: "icon",
-      action_drawer: false
+      action_drawer: true
     }
   },
 
   computed: {
     isWorkSession() {
       return this.$route.matched.some(r => r.name == 'workSession')
-    }
+    },
+
+    job() {
+      return this.$store.state.traceability.working_job_data
+    },
+
+    job_info() {
+      return [
+        { name: 'wo_code', text: this.$t('work_order.list_headers.wo_code') },
+        { name: 'project_code', text: this.$t('project') },
+        { name: 'phase_alias', text: this.$t('phase.short') },
+        { name: 'active_batch_qt', text: this.$t('quantity.active.medium') }
+      ]
+    },
   },
 
   methods: {
