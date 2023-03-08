@@ -101,6 +101,7 @@
       outline square
       class="full-width"
       color="theme-blue"
+      :loading="saving"
       :label="$t('update')">
       <q-menu fit :style="`background-color: ${$theme.surface2}`">
         <q-list class="text-uppercase capitalize text-body2">
@@ -118,7 +119,12 @@
               {{ $t('quantity.update') }}
             </q-item-section>
           </q-item>
-          <q-item clickable v-close-popup @click="edit_due_date = true">
+          <q-item clickable v-close-popup @click="editDate('start_from')">
+            <q-item-section>
+              {{ $t('work_order.update_from_date') }}
+            </q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup @click="editDate('due_by')">
             <q-item-section>
               {{ $t('work_order.update_due_date') }}
             </q-item-section>
@@ -217,14 +223,14 @@
       @close="closeEditDialogs">
     </WorkOrderJobQtRebalance>
 
-    <!-- EDIT DUE-DATE DIALOG -->
+    <!-- EDIT DATES DIALOG -->
     <BaseDialog
-      :show="edit_due_date"
+      :show="edit_date != null"
       @close="closeEditDialogs">
       <q-card class="surface2">
         <q-date
           minimal
-          v-model="temp_due_date"
+          v-model="temp_date"
           mask="YYYY-MM-DD">
         </q-date>
         <div class="row justify-between q-pa-sm">
@@ -323,8 +329,8 @@ export default {
       temp_project_code: null,
       edit_qt: false,
       new_qt: null,
-      edit_due_date: false,
-      temp_due_date: null,
+      edit_date: null,
+      temp_date: null,
       show_job_qt_rebalance: false,
       delete_stage: null
     }
@@ -363,14 +369,14 @@ export default {
           text: this.$t('creation_date'),
           value: '' 
         },
+        {
+          name: 'start_from',
+          text: this.$t('start_from_date'),
+        },
         { 
           name: 'start', 
           text: this.$t('start_date')
         },
-        // {
-        //   name: 'start_from',
-        //   text: this.$t('start_from')
-        // },
         // { name: 'queueing_time', text: 'T. coda' },
         { 
           name: 'end', 
@@ -514,6 +520,7 @@ export default {
 
         case 'created':
         case 'start':
+        case 'start_from':
         case 'end':
         case 'due_by':
           return formatDate(this.wo_data[info_name])
@@ -570,10 +577,15 @@ export default {
       return height + 'px'
     },
 
+    editDate(date_field) {
+      this.edit_date = date_field
+      this.temp_date = this.wo_data[date_field]
+    },
+
     closeEditDialogs() {
-      this.edit_due_date = false
+      this.edit_date = null
       this.edit_qt = false
-      this.temp_due_date = this.wo_data.due_by
+      this.temp_date = null
       this.new_qt = this.wo_data.qt_planned
       this.temp_project_code = this.wo_data.project_code
       this.edit_project = false
@@ -587,13 +599,21 @@ export default {
       const wo_update = {
         wo_key: this.wo_data._key,
         new_qt: this.new_qt,
-        new_due_date: this.temp_due_date,
         new_project_code: this.temp_project_code.toUpperCase(),
+      }
+
+      switch (this.edit_date) {
+        case 'due_by':
+          wo_update.new_due_date = this.temp_date
+          break
+        case 'start_from':
+          wo_update.new_from_date = this.temp_date
+          break
       }
 
       await this.$store.dispatch('updateWorkOrder', wo_update)
       this.closeEditDialogs()
-      setTimeout(() => this.saving = false, 1000)
+      this.saving = false
     },
 
     deleteWorkOrder() {
