@@ -10,7 +10,7 @@
 
         <q-card-section>
           <BaseUserAvatar
-            :user="user"
+            :user="user_data"
             :size="70"
             name_class="solid-white"
             name_style="font-size: 20px">
@@ -79,8 +79,9 @@ export default {
   },
 
   props: {
-    user: {
-      type: Object,
+    // From route
+    user_key: {
+      type: String,
     }
   },
 
@@ -92,10 +93,15 @@ export default {
     }
   },
 
+  computed: {
+    user_data() {
+      return this.$store.state.user.user_list.find( user => user._key === this.user_key)
+    }
+  },
   
   methods:{
     archiveUser() {
-      api.delete(`user/${this.user._key}`).then( () => {
+      api.delete(`user/${this.user_key}`).then( () => {
         // reload users from backend to make sure archived user is not present
         this.$store.dispatch('loadUsers')
         this.stage = 'success' 

@@ -8,7 +8,7 @@
       </q-card-section>
       <q-card-section>
         <BaseUserAvatar
-          :user="user"
+          :user="user_data"
           size="70"
           name_class="solid-white"
           name_style="font-size: 20px">
@@ -86,8 +86,9 @@ export default {
   },
 
   props: {
-    user: {
-      type: Object
+    // From route
+    user_key: {
+      type: String
     }
   },
 
@@ -98,15 +99,15 @@ export default {
     }
   },
 
-  // computed: {
-  //   user_data() {
-  //     return this.$store.state.user.user_list.find( user => user._key === this.user_key)
-  //   }
-  // },
+  computed: {
+    user_data() {
+      return this.$store.state.user.user_list.find( user => user._key === this.user_key)
+    }
+  },
 
   methods:{
     resetPassword() {
-      api.delete(`user/${this.user._key}/password`).then( resp => {
+      api.delete(`user/${this.user_key}/password`).then( resp => {
         this.temp_psw = resp.data.detail.temp_psw
         this.stage = 'show_psw'
       })
