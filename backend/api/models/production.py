@@ -59,6 +59,7 @@ class WorkOrderNew(BaseModel):
   priority: bool = False
   due_by: Union[datetime, date] = None
   project_code: str = None
+  start_from: Union[datetime, date] = None
 
   @root_validator
   def check_key_or_code_provided(cls, values):
@@ -126,9 +127,10 @@ class Job(FlexModel):
   first_phase: bool = None
 
   stage: WorkStatus = WorkStatus.CREATED
+  start_from: Union[datetime, date] = None
+  start: datetime = None
   active: bool = False
   critical: bool = False
-  start: datetime = None
   end: datetime = None
 
   qt_planned: float
