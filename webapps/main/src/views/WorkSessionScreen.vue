@@ -250,12 +250,6 @@ export default {
       return step_index ? step_index : 0
     },
 
-    completed_steps_count() {
-      return this.batch_data
-        ? this.batch_data.reduce( (total, current) => total + current.done, 0)
-        : 0
-    },
-
     current_step_done() {
       let current_step = this.batch_data ? this.batch_data[this.current_step_index] : null
       return current_step ? current_step.done : null

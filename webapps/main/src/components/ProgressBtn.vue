@@ -65,6 +65,12 @@ export default {
       return current_step ? current_step.done : null
     },
 
+    completed_steps_count() {
+      return this.batch_data
+        ? this.batch_data.reduce( (total, current) => total + current.done, 0)
+        : 0
+    },
+
     current_step_is_last() {
       return this.completed_steps_count === this.j.step_sequence.length -1
     },
