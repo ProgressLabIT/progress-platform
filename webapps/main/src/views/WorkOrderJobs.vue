@@ -2,7 +2,7 @@
   <div class="q-px-md q-py-md full-height column">
 
     <!-- HEADERS -->
-    <div class="row low-text items-center q-px-md">
+    <div class="row col-auto low-text items-center q-px-md">
       <div
         v-for="header in headers" :key="header.value"
         class="text-h5 text-uppercase"
@@ -12,7 +12,7 @@
     </div>
 
     <!-- CONTENT -->
-    <div class="scroll">
+    <div class="scroll col">
       <q-expansion-item
         v-for="phase in phase_data"
         :key="phase.phase_key"
