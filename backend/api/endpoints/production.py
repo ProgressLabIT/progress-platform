@@ -180,6 +180,7 @@ async def create_work_order(new_wo: WorkOrderNew):
     new_job_record = Job(
       wo_key = wo_data.key,
       wo_code = wo_data.wo_code,
+      start_from = wo_data.start_from,
       phase_key = phase_key,
       phase_alias = phase.alias,
       first_phase = first_phase,
@@ -249,26 +250,34 @@ async def create_work_order(new_wo: WorkOrderNew):
 async def update_work_order(
   wo_key: str,
   new_due_date: str = Body(None),
+  new_from_date: str = Body(None),
   new_qt: float = Body(None),
   new_project_code: str = Body(None)
   ):
 
-  tx = db.begin_transaction(write=['WorkOrder'])
-  update = dict(_key=wo_key)
+  tx = db.begin_transaction(write=['WorkOrder', 'Job'])
+  wo_update = dict(_key=wo_key)
+  job_match = dict(wo_key=wo_key)
+  job_update = dict()
 
   if new_due_date:
-    update['due_by'] = new_due_date
+    wo_update['due_by'] = new_due_date
 
   if new_qt:
-    update['qt_planned'] = new_qt
+    wo_update['qt_planned'] = new_qt
+
+  if new_from_date:
+    wo_update['start_from'] = new_from_date
+    job_update.update({ 'start_from': new_from_date })
 
   if new_project_code:
-    update['project_code'] = new_project_code
-    match = { 'wo_key': wo_key }
-    job_update = { 'project_code': new_project_code }
-    tx.collection('Job').update_match(match, job_update)
+    wo_update['project_code'] = new_project_code
+    job_update.update({ 'project_code': new_project_code })
 
-  updated_wo_data = tx.collection('WorkOrder').update(update, return_new=True)['new']
+  if new_project_code or new_from_date:
+    tx.collection('Job').update_match(job_match, job_update)
+
+  updated_wo_data = tx.collection('WorkOrder').update(wo_update, return_new=True)['new']
 
   tx.commit_transaction()
 
