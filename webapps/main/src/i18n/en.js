@@ -482,6 +482,7 @@ export default {
       "qt_planned": "pq",
       "qt_remaining": "rq",
       "sequence": "seq",
+      "start_from": "Start from",
       "wo_code": "wo code",
       "wo_line": "line"
     },
