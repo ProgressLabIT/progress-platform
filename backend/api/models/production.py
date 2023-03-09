@@ -57,9 +57,9 @@ class WorkOrderNew(BaseModel):
   phase_sequence: List[str] = []
   qt_planned: PositiveFloat
   priority: bool = False
-  due_by: Union[datetime, date] = None
   project_code: str = None
   start_from: Union[datetime, date] = None
+  due_by: Union[datetime, date] = None
 
   @root_validator
   def check_key_or_code_provided(cls, values):

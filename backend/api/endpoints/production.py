@@ -1,6 +1,6 @@
 import traceback
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -249,8 +249,8 @@ async def create_work_order(new_wo: WorkOrderNew):
 @router.patch('/work-order/{wo_key}')
 async def update_work_order(
   wo_key: str,
-  new_due_date: str = Body(None),
-  new_from_date: str = Body(None),
+  new_due_date: Union[datetime, date] = Body(None),
+  new_from_date: Union[datetime, date] = Body(None),
   new_qt: float = Body(None),
   new_project_code: str = Body(None)
   ):
