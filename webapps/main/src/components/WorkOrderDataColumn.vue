@@ -332,7 +332,8 @@ export default {
       edit_date: null,
       temp_date: null,
       show_job_qt_rebalance: false,
-      delete_stage: null
+      delete_stage: null,
+      saving: false
     }
   },
 
@@ -599,7 +600,7 @@ export default {
       const wo_update = {
         wo_key: this.wo_data._key,
         new_qt: this.new_qt,
-        new_project_code: this.temp_project_code.toUpperCase(),
+        new_project_code: this.temp_project_code,
       }
 
       switch (this.edit_date) {
