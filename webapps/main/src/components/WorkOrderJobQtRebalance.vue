@@ -157,8 +157,11 @@ export default {
           job_updates: updates
         })
         .then(() => {
-          this.saving = false
-          this.$emit('close')
+          this.$store.dispatch('loadWorkOrderData', this.wo_key)
+          .then(() => {
+            this.saving = false
+            this.$emit('close')
+          })
         })
         .catch( err => window.alert(err) )
       }

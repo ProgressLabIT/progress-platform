@@ -350,9 +350,9 @@ export default {
     .then(this.vuex_ready = true)
 
     this.polling_instance = setInterval(() => {
-      this.$store.dispatch("updateWorkOrdersProgress")
+      this.$store.dispatch("updateWorkOrderList")
       this.$store.dispatch("loadJobAssignments")
-    }, 5000)
+    }, 10000)
   },
 
   beforeUnmount() {

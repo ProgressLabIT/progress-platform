@@ -613,6 +613,7 @@ export default {
       }
 
       await this.$store.dispatch('updateWorkOrder', wo_update)
+      await this.$store.dispatch('loadWorkOrderData', wo_update.wo_key)
       this.closeEditDialogs()
       this.saving = false
     },

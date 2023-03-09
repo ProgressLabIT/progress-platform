@@ -53,7 +53,8 @@ const workorder = {
       })
     },
 
-    updateWorkOrdersProgress({ commit }) {
+    // Differs from the above because it doesn't change the queue
+    updateWorkOrderList({ commit }) {
       return new Promise( resolve => {
         api
           .get(`queue/site/0`)
@@ -100,10 +101,7 @@ const workorder = {
         }
 
         axios.all(updates)
-        .then( () => {
-          dispatch('loadWorkOrderData', wo_key)
-          .then(() => resolve())
-        })
+        .then(resolve)
         .catch( err => reject(err) )
       })
     },
