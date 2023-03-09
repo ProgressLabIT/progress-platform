@@ -16,7 +16,10 @@
       @row-dblclick="showWorkOrderScreen">
 
       <template #body="props">
-        <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row._key)">
+        <q-tr
+          :key="props.row._key"
+          :props="props"
+          @dblclick="showWorkOrderScreen(props.row._key)">
           <template v-for="c in columns" :key="c.name">
             <q-td :props="props" :class="{ 'filter-field': search_fields.includes(c.name)}">
 
@@ -24,7 +27,7 @@
               <template v-if="c.name==='progress'">
                 <div class="row items-center q-col-gutter-sm">
                   <div class="col-9">
-                    <BaseProgressBar :data="props.row" />
+                    <BaseProgressBar v-if="isReleased(props.row)" :data="props.row" />
                   </div>
                   <span class="col-2 text-right">{{ props.row.progress }} %</span>
                 </div>
@@ -277,6 +280,10 @@ export default {
       })
     },
 
+    isReleased(wo) {
+      return new Date(wo.start_from).getTime() <= new Date().getTime()
+    },
+
     sortDate(a,b) {
       // equal items sort equally
       if (a === b) {
@@ -307,6 +314,7 @@ export default {
       wo_update.wo_key = this.temp_date.wo_key
 
       await this.$store.dispatch('updateWorkOrder', wo_update)
+      await this.$store.dispatch('updateWorkOrderList')
       this.temp_date = null
     }
   },

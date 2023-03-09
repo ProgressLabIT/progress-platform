@@ -34,7 +34,6 @@ const workorder = {
     UPDATE_TEMP_QUEUE(state, { newIndex, oldIndex }) {
       const selected_wo = state.temp_queue.splice(oldIndex, 1)[0]
       state.temp_queue.splice(newIndex, 0, selected_wo)
-
     },
 
     RESET_TEMP_QUEUE(state) {
