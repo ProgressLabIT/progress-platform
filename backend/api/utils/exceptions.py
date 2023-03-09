@@ -15,3 +15,7 @@ class TokenExpiredError(Exception): pass
 class TokenSignatureVerificationError(Exception): pass
 
 class TokenNotFoundError(Exception): pass
+
+class InputNotAvailableError(Exception): pass
+
+class JobNotReleasedError(Exception): pass
