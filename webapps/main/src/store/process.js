@@ -211,10 +211,13 @@ const process = {
           api.put(`product/${data.product_key}/process`, data.new_process)
         )
 
-        // update process data
+        // update process & product data
         axios.all(api_calls)
         .then(async () => {
-          await dispatch('getProcess', data.product_key)
+          await axios.all([
+            dispatch('getProcess', data.product_key),
+            dispatch('loadProductDetails', data.product_key)
+          ])
           resolve()
         })
         .catch(err => reject(err))
