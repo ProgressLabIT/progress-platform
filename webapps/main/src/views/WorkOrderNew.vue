@@ -27,18 +27,18 @@
 
           <q-input
             dense
-            v-model="new_work_orders[index].due_by"
+            v-model="new_work_orders[index][field_name]"
             mask="####-##-##"
             hide-bottom-space
             :rules="[checkDate]"
-            v-if="field_name === 'due_by'">
+            v-if="['start_from','due_by'].includes(field_name)">
             <template #append>
               <q-icon name="mdi-calendar" class="cursor-pointer">
                 <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                   <q-date
                     minimal
                     mask="YYYY-MM-DD"
-                    v-model="new_work_orders[index].due_by">
+                    v-model="new_work_orders[index][field_name]">
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -66,7 +66,7 @@
         
         </div>
 
-        <div class="col-1">
+        <div class="col-auto">
           <BaseTooltipIcon
             v-if="new_work_orders.length > 1"
             icon="mdi-close"
@@ -136,19 +136,25 @@ export default {
         product: {
           label: this.$t('product.label'),
           type: Object,
-          cols: 'col',
+          cols: 'col-2',
           initial_value: null
         },
         qt_planned: {
           label: this.$t('quantity.long'),
           type: Number,
-          cols: 'col-2',
+          cols: 'col-auto',
           initial_value: 0
+        },
+        start_from: {
+          label: this.$t('work_order.list_headers.start_from'),
+          type: Date,
+          cols: 'col',
+          initial_value: date.formatDate(new Date())
         },
         due_by: {
           label: this.$t('by'),
           type: Date,
-          cols: 'col-2',
+          cols: 'col',
           initial_value: date.formatDate(new Date())
         }
       }
@@ -190,6 +196,7 @@ export default {
             product_code: wo.product.code,
             product_description: wo.product.description,
             qt_planned: wo.qt_planned,
+            start_from: wo.start_from,
             due_by: wo.due_by,
             project_code: wo.project_code.toUpperCase()
           }

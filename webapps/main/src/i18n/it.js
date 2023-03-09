@@ -397,6 +397,7 @@ export default {
     "product_updated": "prodotto aggiornato"
   },
   "start_date": "data inizio",
+  "start_from_date": "data rilascio",
   "start_end_totals": "totale iniziale/finale",
   "status": "stato",
   "step_sequence": "sequenza passi",
@@ -484,6 +485,7 @@ export default {
       "qt_planned": "qp",
       "qt_remaining": "qr",
       "sequence": "seq",
+      "start_from": "Inizio da",
       "wo_code": "codice op"
     },
     "long": "ordine di produzione",
@@ -496,6 +498,7 @@ export default {
       "workOrderJobs": "lavori"
     },
     "update_due_date": "modifica data scadenza",
+    "update_from_date": "modifica data rilascio",
     "wo_code": "codice"
   }
 }

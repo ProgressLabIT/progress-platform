@@ -16,7 +16,10 @@
       @row-dblclick="showWorkOrderScreen">
 
       <template #body="props">
-        <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row._key)">
+        <q-tr
+          :key="props.row._key"
+          :props="props"
+          @dblclick="showWorkOrderScreen(props.row._key)">
           <template v-for="c in columns" :key="c.name">
             <q-td :props="props" :class="{ 'filter-field': search_fields.includes(c.name)}">
 
@@ -24,7 +27,7 @@
               <template v-if="c.name==='progress'">
                 <div class="row items-center q-col-gutter-sm">
                   <div class="col-9">
-                    <BaseProgressBar :data="props.row" />
+                    <BaseProgressBar v-if="isReleased(props.row)" :data="props.row" />
                   </div>
                   <span class="col-2 text-right">{{ props.row.progress }} %</span>
                 </div>
@@ -32,7 +35,15 @@
               <!-- ADD ALERT ICONS HERE -->
 
               <template v-else-if="c.name==='due_by'">
-                {{ $shortDateString(props.row[c.name], $i18n.locale) }}
+                <div class="pointer" @click="showDatePicker({ field: 'due_by', wo_data: props.row })">
+                  {{ props.row.due_by == null ? '-' : $shortDateString(props.row.due_by, $i18n.locale) }}
+                </div>
+              </template>
+
+              <template v-else-if="c.name==='start_from'">
+                <div class="pointer" @click="showDatePicker({ field: 'start_from', wo_data: props.row })">
+                  {{ props.row.start_from == null ? '-' : $shortDateString(props.row.start_from, $i18n.locale) }}
+                </div>
               </template>
 
               <template v-else-if="c.name.includes('qt')">
@@ -48,11 +59,17 @@
           </template>
         </q-tr>
       </template>
-
-
-
-      <!-- ADD ONE-CLICK FILTERS HERE -->
     </q-table>
+
+    <BaseDialog :show="temp_date != null" @close="temp_date = null">
+      <q-date
+        v-if="temp_date"
+        minimal
+        mask="YYYY-MM-DDTHH:mm:ss"
+        :model-value="temp_date.value"
+        @update:model-value="val => updateWorkOrder(val)">
+      </q-date>
+    </BaseDialog>
   </div>
 </template>
 
@@ -62,13 +79,15 @@ import Sortable from 'sortablejs'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import { mapState } from 'vuex'
 import { throttle as _throttle } from 'lodash'
+import BaseDialog from '@/components/BaseDialog.vue'
 
 export default {
 
   name: 'WorkOrderList',
 
   components: {
-    BaseProgressBar
+    BaseProgressBar,
+    BaseDialog
   },
 
   props: {
@@ -97,7 +116,8 @@ export default {
         fontWeight: 'bold',
         borderCollapse: 'separate'
       },
-      search_fields: ['wo_code', 'product_code', 'project_code', 'product_description']
+      search_fields: ['wo_code', 'product_code', 'project_code', 'product_description'],
+      temp_date: null
     }
   },
 
@@ -151,6 +171,12 @@ export default {
           name: 'qt_remaining',
           label: this.$t('work_order.list_headers.qt_remaining').toUpperCase(),
           align: 'right'},
+        {
+          field: 'start_from',
+          name: 'start_from',
+          align: 'right',
+          label: this.$t('work_order.list_headers.start_from').toUpperCase()
+        },
         { 
           field: 'due_by',
           name: 'due_by',
@@ -254,6 +280,10 @@ export default {
       })
     },
 
+    isReleased(wo) {
+      return new Date(wo.start_from).getTime() <= new Date().getTime()
+    },
+
     sortDate(a,b) {
       // equal items sort equally
       if (a === b) {
@@ -270,7 +300,22 @@ export default {
       else { 
           return a < b ? 1 : -1
       }
+    },
 
+    showDatePicker({ field, wo_data }) {
+      const update_field = field == 'due_by' ? 'new_due_date' : 'new_from_date'
+      this.temp_date = { update_field, value: wo_data[field], wo_key: wo_data._key }
+    },
+
+    async updateWorkOrder(new_date_value) {
+      let wo_update = {}
+
+      wo_update[this.temp_date.update_field] = new_date_value
+      wo_update.wo_key = this.temp_date.wo_key
+
+      await this.$store.dispatch('updateWorkOrder', wo_update)
+      await this.$store.dispatch('updateWorkOrderList')
+      this.temp_date = null
     }
   },
 

@@ -34,7 +34,6 @@ const workorder = {
     UPDATE_TEMP_QUEUE(state, { newIndex, oldIndex }) {
       const selected_wo = state.temp_queue.splice(oldIndex, 1)[0]
       state.temp_queue.splice(newIndex, 0, selected_wo)
-
     },
 
     RESET_TEMP_QUEUE(state) {
@@ -54,7 +53,8 @@ const workorder = {
       })
     },
 
-    updateWorkOrdersProgress({ commit }) {
+    // Differs from the above because it doesn't change the queue
+    updateWorkOrderList({ commit }) {
       return new Promise( resolve => {
         api
           .get(`queue/site/0`)
@@ -91,20 +91,17 @@ const workorder = {
       })
     },
 
-    updateWorkOrder({ dispatch }, { wo_key, new_qt, new_due_date, new_project_code, job_updates }) {
+    updateWorkOrder({ dispatch }, { wo_key, new_qt, new_due_date, new_from_date, new_project_code, job_updates }) {
       return new Promise( (resolve, reject) => {
         const updates = []
-        updates.push( api.patch(`work-order/${wo_key}`, { new_qt, new_due_date, new_project_code }) )
+        updates.push( api.patch(`work-order/${wo_key}`, { new_qt, new_due_date, new_from_date, new_project_code }) )
         
         if (job_updates) {
           updates.push(api.post(`job/update`, job_updates))
         }
 
         axios.all(updates)
-        .then( () => {
-          dispatch('loadWorkOrderData', wo_key)
-          .then(() => resolve())
-        })
+        .then(resolve)
         .catch( err => reject(err) )
       })
     },

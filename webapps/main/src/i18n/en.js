@@ -395,6 +395,7 @@ export default {
     "product_updated": "product updated"
   },
   "start_date": "start date",
+  "start_from_date": "release date",
   "start_end_totals": "start/end total",
   "status": "status",
   "step_sequence": "step sequence",
@@ -482,6 +483,7 @@ export default {
       "qt_planned": "pq",
       "qt_remaining": "rq",
       "sequence": "seq",
+      "start_from": "Start from",
       "wo_code": "wo code",
       "wo_line": "line"
     },
@@ -495,6 +497,7 @@ export default {
       "workOrderJobs": "jobs"
     },
     "update_due_date": "change due date",
+    "update_from_date": "change release date",
     "wo_code": "code",
   }
 }

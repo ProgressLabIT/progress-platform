@@ -73,13 +73,11 @@ export default {
 
     selected_job() {
       let job = null
-
       if (this.job_list.length) {
         job = this.job_query_param === 'first'
-          ? this.job_list.filter(j => j.next_batch_available || j.active_batch_qt)[0]
+          ? this.job_list[0]
           : this.job_list.find(j => j._key === this.job_query_param)
       }
-
       return job
     }
 

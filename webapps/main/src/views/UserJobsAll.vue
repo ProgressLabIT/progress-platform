@@ -169,7 +169,6 @@ export default {
       ]
       return (
         multiMatch(this.search_string, job, fields_to_search) 
-        && (job.next_batch_available || job.active_batch_qt)
         && (!this.started_only || job.stage==='started') 
       )
     },

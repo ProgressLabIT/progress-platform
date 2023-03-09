@@ -59,8 +59,16 @@ export default {
         : []
 
       let list = [...assigned_jobs, ...unassigned_jobs]
-      return list
+      return list.filter(this.showJob)
     },
+  },
+
+  methods: {
+    showJob(job) {
+      const batch_available = job.next_batch_available || job.active_batch_qt
+      const start_from_is_past = new Date(job.start_from).getTime() <= new Date().getTime()
+      return batch_available && start_from_is_past
+    }
   },
 
   created() {
