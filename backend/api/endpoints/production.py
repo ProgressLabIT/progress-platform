@@ -371,6 +371,25 @@ async def delete_work_order(wo_key: str):
 
 # ----------------------------------------------------------------------
 
+@router.get('/work-order-archive')
+async def get_work_order_archive(search: str = None):
+  query = """
+    FOR wo IN WorkOrder
+    LET code_match = @search ? CONTAINS(LOWER(wo.wo_code), LOWER(@search)) : true
+    LET product_match = @search ? CONTAINS(LOWER(wo.product_code), LOWER(@search)) : true
+    FILTER code_match || product_match
+    LIMIT 100
+    RETURN wo
+  """
+  try:
+    cursor = db.aql.execute(query, bind_vars=dict(search=search))
+    print(cursor)
+    return [WorkOrderFull(**r) for r in cursor]
+  except StopIteration:
+    return []
+
+
+# ----------------------------------------------------------------------
 
 @router.get('/queue/site/{site_key}')
 async def get_site_queue(site_key: str):
