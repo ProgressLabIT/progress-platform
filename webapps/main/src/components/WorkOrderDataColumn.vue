@@ -359,10 +359,6 @@ export default {
     wo_info() {
       return [
         { 
-          name: 'due_by', 
-          text: this.$t('due_by')
-        },
-        { 
           name: 'status', 
           text: this.$t('status')
         },
@@ -378,6 +374,10 @@ export default {
         { 
           name: 'start', 
           text: this.$t('start_date')
+        },
+        {
+          name: 'due_by',
+          text: this.$t('due_by')
         },
         // { name: 'queueing_time', text: 'T. coda' },
         { 
@@ -501,23 +501,28 @@ export default {
 
       switch (info_name) {
         case 'status': {
-          let active_text = this.$t('active')
-          let inactive_text = ['created', 'planned'].includes(this.wo_data.status)
-            ? this.$t('production.filters.queued')
-            : this.$t('waiting')
-          // let on_time_text = this.$t('on_time')
-          // let late_text = this.$t('late')
-          // let critical_text = this.$t('critical')
-          let active = this.wo_data.active ? active_text : inactive_text
+          if (this.wo_data.status == 'closed') {
+            return this.$t('closed')
+          }
+          else {
+            let active_text = this.$t('active')
+            let inactive_text = ['created', 'planned'].includes(this.wo_data.status)
+              ? this.$t('production.filters.queued')
+              : this.$t('waiting')
+            // let on_time_text = this.$t('on_time')
+            // let late_text = this.$t('late')
+            // let critical_text = this.$t('critical')
+            let active = this.wo_data.active ? active_text : inactive_text
 
-          /*
-          let state = ''
-         
-          if (this.wo_data.critical) state = critical_text
-          else if (!this.wo_data.on_time) state = late_text
-          else state = on_time_text
-          */
-          return active  //+ ' - ' + state
+            /*
+            let state = ''
+
+            if (this.wo_data.critical) state = critical_text
+            else if (!this.wo_data.on_time) state = late_text
+            else state = on_time_text
+            */
+            return active  //+ ' - ' + state
+          }
         }
 
         case 'created':
