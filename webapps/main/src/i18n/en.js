@@ -463,6 +463,7 @@ export default {
     "productionRoot": "production monitoring",
     "userLibrary": "users",
     "userJobs": "job selection",
+    "workOrderArchive": "Archive",
     "workOrderList": "work orders"
   },
   "waiting": "waiting",

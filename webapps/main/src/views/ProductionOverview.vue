@@ -191,6 +191,7 @@ import multiMatch from '@/lib/MultiFieldSearch.js'
 const production_views = [
   { component: 'WorkOrderList', route_name: 'workOrderList' },
   { component: 'JobList', route_name: 'jobList' },
+  { component: 'WorkOrderArchive', route_name: 'workOrderArchive' }
 ]
 
 const header_plus_footer_height = 80

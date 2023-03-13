@@ -25,6 +25,11 @@ const productionRoutes = [
             path: "job/:department?",
             name: 'jobList',
             component: () => import("@/components/JobList.vue")
+          },
+          {
+            path: "workorder/archive",
+            name: 'workOrderArchive',
+            component: () => import("@/components/WorkOrderArchive.vue")
           }
         ]
       },

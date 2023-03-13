@@ -375,6 +375,7 @@ async def delete_work_order(wo_key: str):
 async def get_work_order_archive(search: str = None):
   query = """
     FOR wo IN WorkOrder
+    FILTER wo.status == 'closed'
     LET code_match = @search ? CONTAINS(LOWER(wo.wo_code), LOWER(@search)) : true
     LET product_match = @search ? CONTAINS(LOWER(wo.product_code), LOWER(@search)) : true
     FILTER code_match || product_match
