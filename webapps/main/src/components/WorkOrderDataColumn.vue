@@ -98,6 +98,7 @@
 
     <!-- ACTIONS -->
     <q-btn
+      v-if="wo_data.status != 'closed'"
       outline square
       class="full-width"
       color="theme-blue"
