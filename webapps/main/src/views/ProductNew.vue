@@ -4,6 +4,7 @@
     id="new-product-form"
     @submit="postNewProduct"
     max_width="700px"
+    maximized
     @cancel="$router.back()">
 
     <template #title>

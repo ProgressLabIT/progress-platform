@@ -74,7 +74,10 @@ export default {
   data () {
     return { 
       show_modal: true,
-      tabs: ['workOrderJobs','workOrderHistory'],
+      tabs: [
+        'workOrderJobs',
+        // 'workOrderHistory'
+      ],
       vuex_ready: false,
       column_height: '80vh',
       polling_instance: undefined

@@ -70,6 +70,8 @@
         @update:model-value="val => updateWorkOrder(val)">
       </q-date>
     </BaseDialog>
+
+    <router-view />
   </div>
 </template>
 

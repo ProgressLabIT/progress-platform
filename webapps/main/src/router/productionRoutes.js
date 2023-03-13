@@ -14,12 +14,14 @@ const productionRoutes = [
           {
             path: "workorder",
             name: 'workOrderList',
-            component: () => import("@/components/WorkOrderList.vue")
-          },
-          {
-            path: "workorder/new",
-            name: "newWorkOrder",
-            component: () => import("@/views/WorkOrderNew.vue")
+            component: () => import("@/components/WorkOrderList.vue"),
+            children: [
+              {
+                path: "workorder/new",
+                name: "newWorkOrder",
+                component: () => import("@/views/WorkOrderNew.vue")
+              },
+            ]
           },
           {
             path: "job/:department?",
