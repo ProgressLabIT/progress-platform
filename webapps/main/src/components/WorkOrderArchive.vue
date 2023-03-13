@@ -29,9 +29,9 @@
           @dblclick="showWorkOrderScreen(props.row._key)">
           <template v-for="c in columns" :key="c.name">
             <q-td :props="props">
-              <template v-if="['start', 'end', 'due_by'].includes(c.name)">
+              <template v-if="['start', 'end'].includes(c.name)">
                 <div>
-                  {{ props.row.due_by == null ? '-' : getHumanDate(props.row.due_by) }}
+                  {{ props.row.due_by == null ? '-' : $capitalize(getHumanDate(props.row[c.name])) }}
                 </div>
               </template>
 
@@ -55,7 +55,6 @@
 <script>
 import { DateTime as DT } from 'luxon'
 import { mapState } from 'vuex'
-import { throttle as _throttle, debounce as _debounce } from 'lodash'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
@@ -173,8 +172,13 @@ export default {
 
   created() {
     this.fetchData()
-    this.$watch('filters.search_string', _debounce(this.fetchData, 300))
   },
+
+  watch: {
+    'filters.search_string'() {
+      this.fetchData()
+    }
+  }
 }
 </script>
 
