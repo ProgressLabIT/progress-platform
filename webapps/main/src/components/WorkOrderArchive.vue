@@ -7,6 +7,7 @@
       row-key="_key"
       :style="`height: ${table_height}`"
       virtual-scroll
+      :loading="loading"
       hide-bottom
       dense
       separator="none"
@@ -14,6 +15,12 @@
       card-class="background no-shadow q-mt-sm"
       :rows-per-page-options="[0]"
       @row-dblclick="showWorkOrderScreen">
+
+      <template #loading>
+        <div class="absolute-center">
+          <q-spinner indeterminate />
+        </div>
+      </template>
 
       <template #body="props">
         <q-tr
@@ -47,20 +54,16 @@
 
 <script>
 import { DateTime as DT } from 'luxon'
-import BaseProgressBar from '@/components/BaseProgressBar.vue'
-import Sortable from 'sortablejs'
-import multiMatch from '@/lib/MultiFieldSearch.js'
 import { mapState } from 'vuex'
 import { throttle as _throttle, debounce as _debounce } from 'lodash'
-import BaseDialog from '@/components/BaseDialog.vue'
+import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
 
-  name: 'WorkOrderList',
+  name: 'WorkOrderArchive',
 
   components: {
-    BaseProgressBar,
-    BaseDialog
+    NoDataAlert
   },
 
   props: {
@@ -83,6 +86,7 @@ export default {
 
   data () {
     return {
+      loading: true,
       table_height: '80vh',
       table_header_style: {
         borderBottom: '3px solid green',
@@ -141,11 +145,18 @@ export default {
   methods: {
 
     fetchData() {
-      this.$api.get('work-order-archive', {
-        params: {
-          search: this.search_string
-        }
-      }).then(resp => this.wo_list = resp.data)
+      this.loading = true
+      console.log('Fetching...')
+      setTimeout(() => {
+        this.$api.get('work-order-archive', {
+          params: {
+            search: this.filters.search_string
+          }
+        }).then(resp => {
+          this.wo_list = resp.data
+          this.loading = false
+        })
+      }, 1000)
     },
 
     showWorkOrderScreen(wo_key) {
@@ -161,9 +172,8 @@ export default {
   },
 
   created() {
-    console.log('Created')
     this.fetchData()
-    this.$watch('search_string', _debounce(this.fetchData, 500))
+    this.$watch('filters.search_string', _debounce(this.fetchData, 300))
   },
 }
 </script>
