@@ -2,7 +2,7 @@
   <q-page-container class="fit">
     <q-page class="row">
 
-      <div class="column col-9">
+      <div class="column col">
         <!-- WORK ORDERS / JOBS LISTS -->
         <div class="row col-auto items-center q-pl-xs q-pr-md">
 
@@ -63,6 +63,24 @@
             </template>
 
           </template>
+
+          <template v-if="$route.name == 'workOrderArchive'">
+            <q-input
+              clearable
+              filled
+              dense
+              hide-bottom-space
+              autocomplete="off"
+              name="search"
+              debounce="300"
+              :label="$capitalize($t('search'))"
+              v-model="search_string"
+              class="q-my-sm col-3">
+              <template v-slot:append>
+                <q-icon name="mdi-magnify" size="xs"/>
+              </template>
+            </q-input>
+          </template>
         </div>
 
         <!-- MAIN CONTENT -->
@@ -80,11 +98,12 @@
 
       </div>
 
+      <template v-if="$route.name != 'workOrderArchive'">
         <!-- DIVIDER -->
         <q-separator vertical inset/>
 
         <!-- FILTERS -->
-        <div class="col column q-px-lg">
+        <div class="col-3 column q-px-lg">
           <div class="highlight text-uppercase text-h5 q-mt-sm">
             {{ $t('filter', 2) }}
           </div>
@@ -179,6 +198,7 @@
             {{ $t('reset_filters') }}
           </q-btn>
         </div>
+      </template>
     </q-page>
   </q-page-container>
 </template>

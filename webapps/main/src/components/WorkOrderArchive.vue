@@ -7,6 +7,7 @@
       row-key="_key"
       :style="`height: ${table_height}`"
       virtual-scroll
+      :loading="loading"
       hide-bottom
       dense
       separator="none"
@@ -15,6 +16,12 @@
       :rows-per-page-options="[0]"
       @row-dblclick="showWorkOrderScreen">
 
+      <template #loading>
+        <div class="absolute-center">
+          <q-spinner indeterminate />
+        </div>
+      </template>
+
       <template #body="props">
         <q-tr
           :key="props.row._key"
@@ -22,9 +29,9 @@
           @dblclick="showWorkOrderScreen(props.row._key)">
           <template v-for="c in columns" :key="c.name">
             <q-td :props="props">
-              <template v-if="['start', 'end', 'due_by'].includes(c.name)">
+              <template v-if="['start', 'end'].includes(c.name)">
                 <div>
-                  {{ props.row.due_by == null ? '-' : getHumanDate(props.row.due_by) }}
+                  {{ props.row.due_by == null ? '-' : $capitalize(getHumanDate(props.row[c.name])) }}
                 </div>
               </template>
 
@@ -47,20 +54,15 @@
 
 <script>
 import { DateTime as DT } from 'luxon'
-import BaseProgressBar from '@/components/BaseProgressBar.vue'
-import Sortable from 'sortablejs'
-import multiMatch from '@/lib/MultiFieldSearch.js'
 import { mapState } from 'vuex'
-import { throttle as _throttle, debounce as _debounce } from 'lodash'
-import BaseDialog from '@/components/BaseDialog.vue'
+import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
 
-  name: 'WorkOrderList',
+  name: 'WorkOrderArchive',
 
   components: {
-    BaseProgressBar,
-    BaseDialog
+    NoDataAlert
   },
 
   props: {
@@ -83,6 +85,7 @@ export default {
 
   data () {
     return {
+      loading: true,
       table_height: '80vh',
       table_header_style: {
         borderBottom: '3px solid green',
@@ -141,11 +144,18 @@ export default {
   methods: {
 
     fetchData() {
-      this.$api.get('work-order-archive', {
-        params: {
-          search: this.search_string
-        }
-      }).then(resp => this.wo_list = resp.data)
+      this.loading = true
+      console.log('Fetching...')
+      setTimeout(() => {
+        this.$api.get('work-order-archive', {
+          params: {
+            search: this.filters.search_string
+          }
+        }).then(resp => {
+          this.wo_list = resp.data
+          this.loading = false
+        })
+      }, 1000)
     },
 
     showWorkOrderScreen(wo_key) {
@@ -161,10 +171,14 @@ export default {
   },
 
   created() {
-    console.log('Created')
     this.fetchData()
-    this.$watch('search_string', _debounce(this.fetchData, 500))
   },
+
+  watch: {
+    'filters.search_string'() {
+      this.fetchData()
+    }
+  }
 }
 </script>
 
