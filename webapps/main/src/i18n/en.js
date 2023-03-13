@@ -455,6 +455,7 @@ export default {
     "adminPanel": "settings",
     "companyDetails": "company details",
     "defaultPhaseParams": "default phase",
+    "flowLibrary": "Flussi dati",
     "generalSettings": "general",
     "jobList": "jobs",
     "libraryRoot": "product library",

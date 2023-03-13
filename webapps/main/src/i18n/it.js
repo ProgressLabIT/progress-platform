@@ -457,6 +457,7 @@ export default {
     "adminPanel": "impostazioni",
     "companyDetails": "dettagli azienda",
     "defaultPhaseParams": "fase di default",
+    "flowLibrary": "Flussi dati",
     "generalSettings": "generale",
     "jobList": "lavori",
     "libraryRoot": "libreria prodotti",
@@ -465,7 +466,7 @@ export default {
     "productionRoot": "monitoraggio produzione",
     "userLibrary": "utenti",
     "userJobs": "selezione lavoro",
-    "workOrderList": "ordini di produzione"
+    "workOrderList": "ordini di produzione",
   },
   "waiting": "in attesa",
   "work_order": {
