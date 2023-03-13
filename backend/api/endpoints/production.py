@@ -378,7 +378,9 @@ async def get_work_order_archive(search: str = None):
     FILTER wo.status == 'closed'
     LET code_match = @search ? CONTAINS(LOWER(wo.wo_code), LOWER(@search)) : true
     LET product_match = @search ? CONTAINS(LOWER(wo.product_code), LOWER(@search)) : true
-    FILTER code_match || product_match
+    LET project_match = @search ? CONTAINS(LOWER(wo.project_code), LOWER(@search)) : true
+    FILTER code_match || product_match || project_match
+    SORT wo.end DESC
     LIMIT 100
     RETURN wo
   """
