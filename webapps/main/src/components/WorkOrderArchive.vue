@@ -8,7 +8,6 @@
       :style="`height: ${table_height}`"
       virtual-scroll
       :loading="loading"
-      hide-bottom
       dense
       separator="none"
       table-class="text-high"
@@ -19,6 +18,12 @@
       <template #loading>
         <div class="absolute-center">
           <q-spinner indeterminate />
+        </div>
+      </template>
+
+      <template #bottom>
+        <div class="row full-width justify-end text-low">
+          <div>{{ wo_list.length }} record (Max 100)</div>
         </div>
       </template>
 
@@ -207,4 +212,8 @@ export default {
     top: 48px
   thead tr:first-child th
     top: 0
+
+  .q-table__bottom
+    border-top: 1px solid #fff2
+
 </style>
