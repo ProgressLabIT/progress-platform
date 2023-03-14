@@ -334,7 +334,9 @@ export default {
       "not_critical": "non critico",
       "on_time": "puntuale",
       "queued": "in coda",
-      "started": "iniziato"
+      "started": "iniziato",
+      "ready": "Eseguibile",
+      "not_ready": "Non eseguibile"
     },
     "save_new_sequence": "salva nuova sequenza",
     "search_explainer": "ricerca termini in uno o più dei seguenti campi"

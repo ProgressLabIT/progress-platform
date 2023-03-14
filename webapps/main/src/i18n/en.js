@@ -333,6 +333,8 @@ export default {
       "on_time": "on time",
       "queued": "queued",
       "started": "started"
+      "ready": "Ready",
+      "not_ready": "Not ready"
     },
     "save_new_sequence": "save new sequence",
     "search_explainer": "search terms in one or more of the following fields"

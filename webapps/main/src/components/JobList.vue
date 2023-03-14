@@ -79,7 +79,7 @@
 <script>
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
-import matchJobToFilters from '@/lib/ProductionFilters.js'
+import multiMatch from '@/lib/MultiFieldSearch.js'
 
 export default {
 
@@ -118,7 +118,8 @@ export default {
         'project_code',
         'product_description',
         'phase_alias',
-      ]
+      ],
+      today: new Date().getTime
     }
   },
 
@@ -239,9 +240,77 @@ export default {
   },
 
   methods: {
+    isReleased(item) {
+      return new Date(item.start_from).getTime() <= this.today
+    },
 
     matchJobToFilters(job) {
-      return matchJobToFilters(job, this.filters, this.search_fields)
+      /*
+      Initialize filter results.
+      If any false will be found in this array the filter function will return false
+      */
+      let filter_match_map = []
+
+      for (const [filter, value] of Object.entries(this.filters)) {
+        // by default show item in the list
+        let match = true
+
+        switch (filter) {
+
+          // Perform text search in the defined fields
+          case 'search_string':
+            match = multiMatch(this.filters.search_string, job, this.search_fields)
+            break
+
+          case 'started':
+            if (!value && job.stage === 'started') match = false
+            break
+
+          case 'queued':
+            if (!value && ['created', 'planned'].includes(job.stage)) match = false
+            break
+
+          case 'on_time':
+            if (!value && job.on_time) match = false
+            break
+
+          case 'late':
+            if (!value && !job.on_time) match = false
+            break
+
+          case 'critical':
+            if (!value && job.critical) match = false
+            break
+
+          case 'not_critical':
+            if (!value && !job.critical) match = false
+            break
+
+          case 'active':
+            // Do not show if control is false and job is active
+            if (!value && job.active) match = false
+            break
+
+          case 'idle':
+            // Do not show if control is false and job is not active
+            if (!value && !job.active) match = false
+            break
+
+          case 'ready':
+            if (!value && (this.isReleased(job) && job.next_batch_available)) match = false
+            break
+
+          case 'not_ready':
+            if (!value && (!this.isReleased(job) || !job.next_batch_available)) match = false
+            break
+        }
+
+        // add result of the specific filter to the map
+        filter_match_map.push(match)
+      }
+
+      // Return false and exclude job from list if any filter returned false
+      return !filter_match_map.some( i => i === false )
     },
 
     getPicPath(operator) {

@@ -238,6 +238,8 @@ export default {
         // late: { value: true },
         active: { value: true },
         idle: { value: true },
+        ready: { value: true },
+        not_ready: { value: true },
         //critical: { value: true },
         //not_critical: { value: true }
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },

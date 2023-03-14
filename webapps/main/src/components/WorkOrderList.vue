@@ -21,13 +21,13 @@
           :props="props"
           @dblclick="showWorkOrderScreen(props.row._key)">
           <template v-for="c in columns" :key="c.name">
-            <q-td :props="props" :class="{ 'filter-field': search_fields.includes(c.name)}">
+            <q-td :props="props" :class="{ 'filter-field': search_fields.includes(c.name) }">
 
               <!-- PROGRESS BAR -->
               <template v-if="c.name==='progress'">
                 <div class="row items-center q-col-gutter-sm">
                   <div class="col-9">
-                    <BaseProgressBar v-if="isReleased(props.row)" :data="props.row" />
+                    <BaseProgressBar :data="props.row" />
                   </div>
                   <span class="col-2 text-right">{{ props.row.progress }} %</span>
                 </div>
@@ -105,7 +105,9 @@ export default {
         "active":true,
         "idle":true,
         "critical":true,
-        "not_critical":true
+        "not_critical":true,
+        "ready":true,
+        "not_ready":true
       }}
     }
   },
@@ -249,6 +251,14 @@ export default {
             case 'idle':
               // Do not show if control is false and wo is not active
               if (!value && !wo.active) match = false
+              break
+
+            case 'ready':
+              if (!value && this.isReleased(wo)) match = false
+              break
+
+            case 'not_ready':
+              if (!value && !this.isReleased(wo)) match = false
               break
           }
 
