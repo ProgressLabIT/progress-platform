@@ -332,7 +332,7 @@ export default {
       "not_critical": "not critical",
       "on_time": "on time",
       "queued": "queued",
-      "started": "started"
+      "started": "started",
       "ready": "Ready",
       "not_ready": "Not ready"
     },
