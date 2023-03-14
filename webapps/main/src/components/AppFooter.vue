@@ -2,7 +2,7 @@
   <q-footer class="footer footer-text">
     <div class="row q-pa-sm display smaller">
       <div class="col">PROGRESS PLATFORM</div>
-      <div class="col-auto">{{ time }}</div>
+      <div style="width: 60px">{{ time }}</div>
       <div class="col text-right">{{ date }}</div>
     </div>
   </q-footer>
@@ -22,14 +22,14 @@ export default {
   },
 
   computed: {
-    time() { return this.now.toLocaleString(DateTime.TIME_SIMPLE) },
+    time() { return this.now.toLocaleString(DateTime.TIME_WITH_SECONDS) },
     date() { return this.now.setLocale("it").toLocaleString(DateTime.DATE_HUGE) }
   },
 
   created() {
     this.now = DateTime.local()
     setInterval(() => {
-      this.now = this.now.plus({ seconds: 1 })
+      this.now = DateTime.local()
     }, 1000)
   }
 }
