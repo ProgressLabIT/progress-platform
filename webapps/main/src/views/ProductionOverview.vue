@@ -4,7 +4,7 @@
 
       <div class="column col">
         <!-- WORK ORDERS / JOBS LISTS -->
-        <div class="row col-auto items-center q-pl-xs q-pr-md">
+        <div class="row col-auto items-center q-pl-xs q-pr-md q-py-sm">
 
           <!-- TAB LINKS -->
           <q-tabs
@@ -12,7 +12,8 @@
             active-class="text-high weight-bold"
             align="left"
             shrink
-            indicator-color="transparent">
+            dense
+            indicator-color="theme-blue">
             <q-route-tab
               v-for="(view, index) in views"
               :key="index"
@@ -21,6 +22,26 @@
               {{ $t(`views.${view.route_name}`) }}
             </q-route-tab>
           </q-tabs>
+
+          <!-- ARCHIVE SEARCH BOX -->
+          <template v-if="$route.name == 'workOrderArchive'">
+            <q-input
+              clearable
+              filled
+              dense
+              hide-bottom-space
+              autocomplete="off"
+              name="search"
+              debounce="300"
+              :label="$capitalize($t('search'))"
+              v-model="search_string"
+              class="col-3 q-ml-xl">
+              <template v-slot:append>
+                <q-icon name="mdi-magnify" size="xs"/>
+              </template>
+            </q-input>
+          </template>
+
 
           <q-space />
 
@@ -36,7 +57,6 @@
             </div>
 
             <template v-else>
-
               <!-- REORDER WORK ORDER QUEUE -->
               <div class="col-auto">
                 <q-btn
@@ -59,27 +79,7 @@
                   {{ $t('cancel_changes') }}
                 </q-btn>
               </div>
-
             </template>
-
-          </template>
-
-          <template v-if="$route.name == 'workOrderArchive'">
-            <q-input
-              clearable
-              filled
-              dense
-              hide-bottom-space
-              autocomplete="off"
-              name="search"
-              debounce="300"
-              :label="$capitalize($t('search'))"
-              v-model="search_string"
-              class="q-my-sm col-3">
-              <template v-slot:append>
-                <q-icon name="mdi-magnify" size="xs"/>
-              </template>
-            </q-input>
           </template>
         </div>
 

@@ -23,7 +23,7 @@
 
       <template #bottom>
         <div class="row full-width justify-end text-low">
-          <div>{{ wo_list.length }} record (Max 100)</div>
+          <div>{{ wo_list.length }} Record (Max 100)</div>
         </div>
       </template>
 

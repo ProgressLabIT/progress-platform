@@ -52,6 +52,15 @@
                   {{ props.row[field.name] }}
                 </template>
 
+                <template v-else-if="field.name == 'ready'">
+                  <q-icon
+                    :name="jobIcon(props.row).name"
+                    :color="jobIcon(props.row).color"
+                    size="xs">
+                    <!-- calendar-clock check-circle cube-off/toybrick-remove-->
+                  </q-icon>
+                </template>
+
                 <template v-else>
                   <span class="table-data" @click="setSearch(field.name, props.row[field.name])">
                     {{ $capitalizeAll(props.row[field.name] || '' ) }}
@@ -119,7 +128,7 @@ export default {
         'product_description',
         'phase_alias',
       ],
-      today: new Date().getTime
+      now: new Date().getTime()
     }
   },
 
@@ -146,7 +155,7 @@ export default {
           field: 'product_code',
           name: 'product_code',
           align: 'left',
-          style: 'width: 10%'
+          style: 'width: 15%'
         },
         { 
           label: this.$t('phase.short').toUpperCase(),
@@ -166,14 +175,21 @@ export default {
           label: this.$t('quantity.completed.short').toUpperCase(),
           field: 'qt_completed',
           name: 'qt_completed',
-          style: 'width: 10%',
+          style: 'width: 5%',
           align: 'right'
         },
         {
           label: this.$t('quantity.planned.short').toUpperCase(),
           field: 'qt_planned',
           name: 'qt_planned',
-          style: 'width: 10%',
+          style: 'width: 5%',
+          align: 'right'
+        },
+        {
+          label: this.$t('production.filters.ready').toUpperCase(),
+          field: 'ready',
+          name: 'ready',
+          style: 'width: 5%',
           align: 'right'
         },
       ]
@@ -221,7 +237,12 @@ export default {
 
     jobs_view() {
       const result = [...this.filtered_assignments]
-      const filtered_unassigned_jobs = this.unassigned_jobs.filter(this.matchJobToFilters)
+      const filtered_unassigned_jobs = this.unassigned_jobs.filter(this.matchJobToFilters).map(j => {
+        return {
+          ...j,
+          ready: this.isReleased(j) && j.next_batch_available
+        }
+      })
 
       if (filtered_unassigned_jobs.length && this.filters.operator_key === undefined) {
         result.push({
@@ -241,7 +262,15 @@ export default {
 
   methods: {
     isReleased(item) {
-      return new Date(item.start_from).getTime() <= this.today
+      return new Date(item.start_from).getTime() <= this.now
+    },
+
+    jobIcon(job) {
+      return !this.isReleased(job)
+        ? { name: 'mdi-calendar-clock', color: 'grey-backdrop' }
+        : job.next_batch_available
+        ? { name: 'mdi-check-circle', color: 'theme-blue' }
+        : { name: 'mdi-cube-off', color: 'orange-backdrop' }
     },
 
     matchJobToFilters(job) {

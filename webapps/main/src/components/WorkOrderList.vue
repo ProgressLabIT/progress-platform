@@ -121,7 +121,8 @@ export default {
         borderCollapse: 'separate'
       },
       search_fields: ['wo_code', 'product_code', 'project_code', 'product_description'],
-      temp_date: null
+      temp_date: null,
+      now: new Date().getTime()
     }
   },
 
@@ -293,7 +294,7 @@ export default {
     },
 
     isReleased(wo) {
-      return new Date(wo.start_from).getTime() <= new Date().getTime()
+      return new Date(wo.start_from).getTime() <= this.now
     },
 
     sortDate(a,b) {
