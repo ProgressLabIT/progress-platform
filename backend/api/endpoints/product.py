@@ -159,18 +159,18 @@ async def copy_product(
   by_code: bool = Body(default=False)
   ):
 
-  tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'], read=['Operation'])
-  product_db = tx.collection('Product')
-
   # 0.1 Check no product exists with same code
-  if product_db.find(dict(code=new_code, trash=False)).count():
-    status_code = 409
+  if db.collection('Product').find(dict(code=new_code, trash=False)).count():
     raise HTTPException(
-      status_code=status_code,
+      status_code=409,
       detail="A product with the same code already exists"
     )
 
-  # 0.2 Fetch product data and prepare
+  # 0.2 Setup transaction
+  tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'], read=['Operation'])
+  product_db = tx.collection('Product')
+
+  # 0.3 Fetch product data
   try:
     if by_code:
       match = dict(code=original_product, trash=False)
@@ -191,6 +191,20 @@ async def copy_product(
     raise HTTPException(
       status_code=404,
       detail="No product with the provided code or key could be found"
+    )
+
+  except Exception:
+    tx.abort_transaction()
+    status_code = 500
+    error_str = traceback.format_exc()
+    response=dict(
+      status=status_code,
+      message="There was a problem saving the data into the database. Please contact support if it happens again",
+      error=error_str
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
     )
 
   try:
