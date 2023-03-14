@@ -384,7 +384,6 @@ async def udpate_product(
         **updated_fields
       ), return_new=True
     )['new']
-    # print(updated_product)
     response = APIResponse(
       status=200,
       message=f"Product {updated_product['code']} (KEY: {updated_product['_key']}) updated",

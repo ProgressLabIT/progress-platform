@@ -147,7 +147,6 @@ async def create_work_order(new_wo: WorkOrderNew):
       try:
         filenames = search_step_media(s['_key'])
         s['media'] = [media_name for media_name in filenames]
-        # print(s)
       except:
         tx.abort_transaction()
         status_code=500
@@ -386,7 +385,6 @@ async def get_work_order_archive(search: str = None):
   """
   try:
     cursor = db.aql.execute(query, bind_vars=dict(search=search))
-    print(cursor)
     return [WorkOrderFull(**r) for r in cursor]
   except StopIteration:
     return []

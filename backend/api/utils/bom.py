@@ -62,10 +62,8 @@ def define_bom_line_for_db(bom_line_in: BomLineWriteIn):
 
 def find_bom_loops(db, product_key):
   """Make sure the product BoM has no loops in it"""
-  print('Checking bom loops')
   bind_vars = dict(product_key=product_key)
   cursor = db.aql.execute(Queries.CHECK_BOM_LOOP, bind_vars=bind_vars)
   loops = [' -> '.join(l) for l in cursor]
-  print('Result: ', loops)
   return loops
 

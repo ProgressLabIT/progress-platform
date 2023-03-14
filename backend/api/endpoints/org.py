@@ -128,7 +128,6 @@ async def reset_user_password(
   token: str = Depends(auth.verify_token),
   new_password: str = Body(..., embed=True)
 ):
-  print(new_password)
   if not user_key == token.consumer_key:
     raise auth.credentials_exception
 

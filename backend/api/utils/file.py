@@ -65,7 +65,6 @@ class UserFile:
 
   def copy_media(self, copy_key):
     copy_path = os.path.join(media_root_path, self.base_path, copy_key)
-    print(copy_path)
     shutil.copytree(
       self.folder_path,
       copy_path,
