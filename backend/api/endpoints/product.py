@@ -178,10 +178,8 @@ async def copy_product(
     else: # Copy product by key
       match = dict(_key=original_product, trash=False)
 
-    new_product = ProductDetails(
-      created=timestamp(),
-      **product_db.find(match).next()
-    )
+    new_product = ProductDetails(**product_db.find(match).next())
+    new_product.created = timestamp()
 
     original_product_code = new_product.code
     original_product_key = new_product.key
