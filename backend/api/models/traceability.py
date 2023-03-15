@@ -68,7 +68,7 @@ class WorkSession(FlexModel):
   # master_session: bool
   start: datetime
   end: datetime = None
-  duration: timedelta = None
+  duration: timedelta = None # milliseconds
   active: bool
   hourly_cost: float = None
 
