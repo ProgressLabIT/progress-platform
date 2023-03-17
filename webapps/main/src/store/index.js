@@ -2,6 +2,18 @@ import { DateTime as DT } from 'luxon'
 import { debounce } from 'quasar'
 import { createStore } from 'vuex'
 
+import icons from '@quasar/extras/mdi-v6/icons.json'
+
+const icon_list = icons.map(string => {
+    // Transofrm icon names from camelCase to kebab-case
+    return [...string].map(char => {
+      return char.toUpperCase() == char
+        ? '-' + char.toLowerCase()
+        : char
+    }).join('')
+  })
+
+
 import { dark, light } from '@/boot/theme.js'
 
 import job from "./job"
@@ -47,7 +59,8 @@ const store = createStore({
         ghostClass: "ghost"
       },
       screen_title: 'progress',
-      theme_colors: dark
+      theme_colors: dark,
+      icons: icon_list
     }
   },
 
@@ -70,6 +83,9 @@ const store = createStore({
     theme (state) {
       return state.theme_colors
     },
+    global_state (state) {
+      return state
+    }
   },
 
   plugins: [resetSessionTimeoutAtStoreChange],
