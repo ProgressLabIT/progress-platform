@@ -37,6 +37,7 @@ class IssueField(FormField):
 
 # ISSUE TYPE
 class IssueType(ArangoDocument):
+  code: str
   name: str
   description: str = None
   icon: str = None
@@ -68,19 +69,26 @@ class IssueWithLinks(Issue):
   linked_to: List[str] = None # ids of entities connected
 
 
-# MESSAGE
-class MessageRecord(ArangoDocument):
-  from: str = Field(..., alias="_from") # ID of creator (User/Machine/etc.)
-  to: str = Field(..., alias="_to") # related issue or user
-  content: str
-  created: datetime
-  updated: datetime
-  deleted: bool = False
+class IssueLink(ArangoDocument):
+  _from: str
+  _to: str
 
-class MessageFull(MessageRecord):
-  from_display_name: str
-  from_avatar_src: str # path to image
+  @validator('_from')
+  def check_from_issue(cls, value):
+    if value.split('/')[0] != 'Issue':
+      raise ValueError('This record is not related to an Issue')
+
+
+
+# MESSAGE
+class Message(ArangoDocument):
+  sender: str = Field(..., alias="_from") # ID of creator (User/Machine/etc.)
+  recipient: str = Field(..., alias="_to") # related issue or user
+  content: str
+  created: datetime = timestamp()
+  updated: datetime = None
+  deleted: bool = False
 
 
 class IssueFullData(IssueWithLinks):
-  messages: List[MessageFull]
+  messages: List[Message]

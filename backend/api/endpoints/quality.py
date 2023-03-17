@@ -26,15 +26,19 @@ async def get_issue_type(
   ):
   # use query parameters to filter specific type
   match = dict()
+
   if key:
     match['_key'] = key
+
   if code:
     match['code'] = code
+
   if critical:
     match['critical'] = critical
 
   return [_ for _ in issue_types.find(match)]
 
+# ----------------------------------------------------------------------
 
 @router.post('/issue-type' , response_status=201)
 async def create_issue_type(data: IssueType):
@@ -63,6 +67,7 @@ async def create_issue_type(data: IssueType):
       )
     )
 
+# ----------------------------------------------------------------------
 
 @router.put('/issue-type/{issue_type_ref}')
 async def update_issue_type(
@@ -90,7 +95,7 @@ async def update_issue_type(
       )
     )
 
-
+# ----------------------------------------------------------------------
 
 @router.delete('/issue-type/{issue_key}')
 async def delete_issue_type(issue_key: str):
@@ -112,11 +117,9 @@ async def delete_issue_type(issue_key: str):
 
 @router.get('/issue')
 async def get_issue(
-  id: str = None,
+  issue_key: str = None,
   issue_type: str = None,
-  product_code: str = None,
   product_key: str = None,
-  work_order_code: str = None,
   work_order_key: str = None,
   job_key: str = None,
   phase_key: str = None,
@@ -126,17 +129,50 @@ async def get_issue(
   time_created_to: datetime = None,
   time_closed_from: datetime = None,
   time_closed_to: datetime = None,
-  open: bool = None,
+  issue_open: bool = None,
   limit: int = None
   ):
   # use query parameters to filter specific type
-  pass
+  bind_vars = dict(
+    issue_key = issue_key,
+    issue_type = issue_type,
+    product_key = product_key,
+    work_order_key = work_order_key,
+    job_key = job_key,
+    phase_key = phase_key,
+    operation_key = operation_key,
+    creator_id = creator_id,
+    time_created_from = time_created_from,
+    time_created_to = time_created_to,
+    time_closed_from = time_closed_from,
+    time_closed_to = time_closed_to,
+    issue_open = issue_open,
+    limit = limit
+  )
+  cursor db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)
+  return [IssueFullData(**i) for i in cursor]
 
+# ----------------------------------------------------------------------
 
 @router.post('/issue')
 async def create_issue(data: IssueWithLinks):
-  pass
+  try:
+    tx = db.begin_transaction()
+    new_issue_id = tx.collection('Issue').insert(Issue(**data.dict()))['_id']
 
+    rels = [IssueLink(_from=new_issue_id, _to=rel) for rel in data.linked_to]
+    tx.collection('issue_rel').insert_many(rels, silent=True)
+    tx.commit_transaction()
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error creating the issue in the database.",
+        error=traceback.format_exc()
+      )
+    )
+
+# ----------------------------------------------------------------------
 
 @router.patch('/issue/{issue_key}')
 async def update_issue(
@@ -145,14 +181,54 @@ async def update_issue(
   issue_type: str = Body(None),
   critical: bool = Body(None),
   open: bool = Body(None),
-  field_update: IssueField
+  field_updates: List[IssueField] = None
   ):
 
+  new_data = dict(_key = issue_key)
 
+  if title:
+    new_data['title'] = title
+
+  if description:
+    new_data['description'] = description
+
+  if issue_type:
+    new_data['issue_type'] = issue_type
+
+  if critical:
+    new_data['critical'] = critical
+
+  if open:
+    new_data['open'] = open
+
+  try:
+    updated_issue = db.collection('Issue').update(new_data, return_new=True)['new']
+    return APIResponse(
+      message=f"Issue { updated_issue['_key'] } updated successfully",
+      detail=updated_issue
+    )
+
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error updating the issue in the database.",
+        error=traceback.format_exc()
+      )
+    )
 
 @router.delete('/issue/{issue_key}')
 async def cancel_issue(issue_key: str):
-  pass
+  try:
+    db.collection('Issue').delete(issue_key)
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error deleting the issue in the database.",
+        error=traceback.format_exc()
+      )
+    )
 
 
 # ---------------------------------------------
@@ -160,17 +236,56 @@ async def cancel_issue(issue_key: str):
 # ---------------------------------------------
 
 @router.post('/message')
-async def post_message(id: str):
+async def post_message(data: Message):
 # use query parameters to filter specific type
-  pass
+  try:
+    new_message = db.collection('message').insert(data, return_new=True)['new']
+    return APIResponse(
+      message="The message was posted correctly",
+      detail=new_message
+    )
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error posting the message.",
+        error=traceback.format_exc()
+      )
+    )
 
+# ----------------------------------------------------------------------
 
 @router.patch('/message/{message_key}')
 async def update_message(content: str = Body()):
-  pass
+  try:
+    update = dict(_key=message_key, content=content)
+    updated_content = db.collection('message').update(update, return_new=True)['new']
+    return APIResponse(
+      message="The message was updated correctly",
+      detail=updated_content
+    )
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error updating the message.",
+        error=traceback.format_exc()
+      )
+    )
 
+# ----------------------------------------------------------------------
 
 @router.delete('/message/{message_key}')
 async def delete_message(message_key: str):
   # Dont't really delete it, simply flag it as deleted.
-  pass
+  try:
+    update = dict(_key=message_key, deleted=True)
+    db.collection('message').update(update)
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error updating the message.",
+        error=traceback.format_exc()
+      )
+    )
