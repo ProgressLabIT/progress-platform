@@ -73,6 +73,28 @@ const adminRoutes = [
             component: () => import("@/views/OperationDelete.vue")
           }
         ]
+      },
+      {
+        path: 'issue-types',
+        name: 'issueTypeLibrary',
+        component: () => import("@/views/IssueTypeLibrary.vue"),
+        children: [
+          {
+            path: ':issue_type_key',
+            name: 'issueTypeDetail',
+            component: () => import("@/views/IssueTypeDetail.vue")
+          },
+          {
+            path: 'new',
+            name: 'issueTypeNew',
+            component: () => import("@/views/IssueTypeNew.vue")
+          },
+          {
+            path: ':issue_type_key/delete',
+            name: 'issueTypeDelete',
+            component: () => import("@/views/IssueTypeDelete.vue")
+          }
+        ]
       }
     ]
   }

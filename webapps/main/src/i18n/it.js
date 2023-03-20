@@ -88,6 +88,8 @@ export default {
   "inactive": "disattivato",
   "increase": "aumenta",
   "info": "info",
+  "issue": "segnalazione | segnalazioni",
+  "issue_type": "tipo di segnalazione | tipi di segnalazione",
   "item": "articolo | articoli",
   "job": {
     "add": "aggiungi lavoro",
@@ -462,6 +464,7 @@ export default {
     "generalSettings": "generale",
     "jobList": "lavori",
     "libraryRoot": "libreria prodotti",
+    "issueTypeLibrary": "tipi di segnalazione",
     "operationLibrary": "operazioni",
     "workSession": "sessione di lavoro",
     "productionRoot": "monitoraggio produzione",

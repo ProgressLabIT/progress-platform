@@ -87,6 +87,8 @@ export default {
   "inactive": "inactive",
   "increase": "increase",
   "info": "info",
+  "issue": "issue",
+  "issue_type": "Issue type | Issue types",
   "item": "item",
   "job": {
     "add": "add job",
