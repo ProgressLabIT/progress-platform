@@ -2,12 +2,12 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, List
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, Field, root_validator, validator
 
 from utils.base_models import ArangoDocument, ArangoEdge
 from utils.dt import timestamp
 
-class FieldType(Enum)
+class FieldType(Enum):
   TEXT_SHORT: 'text_short'
   TEXT_LONG: 'text_long'
   SINGLE_CHOICE: 'single_choice'
@@ -20,7 +20,7 @@ class FieldType(Enum)
 
 # FIELD
 class FormField(BaseModel):
-  type: FieldType = FieldType.TEXT_SHORT
+  type: FieldType = None
   label: str
   description: str = None
   required: bool = False
@@ -30,8 +30,8 @@ class IssueField(FormField):
 
   @root_validator(pre=True)
   def ensure_required_value(cls, values):
-    if values.get('required') and values.get('value') == None
-      raise ValueError(f'Value for field "{ values.get('label') }" is required')
+    if values.get('required') and values.get('value') == None:
+      raise ValueError(f'Value for field "{ values.get("label") }" is required')
     return values
 
 
@@ -41,7 +41,7 @@ class IssueType(ArangoDocument):
   name: str
   description: str = None
   icon: str = None
-  template: List[FormField] = None
+  template: List[FormField] = []
   critical: bool = False
   close_within: int = 0 # Time in minutes. After this make critical. If 0 ignore.
 
@@ -55,7 +55,7 @@ class Issue(ArangoDocument):
   """
   issue_type: str # _key of the issue type
   title: str
-  description = str = None
+  description: str = None
   created: datetime = timestamp()
   created_by: str # Creator ID
   closed: datetime = None
@@ -73,10 +73,11 @@ class IssueLink(ArangoDocument):
   _from: str
   _to: str
 
-  @validator('_from')
-  def check_from_issue(cls, value):
-    if value.split('/')[0] != 'Issue':
-      raise ValueError('This record is not related to an Issue')
+  # @validator('_from')
+  # def check_from_issue(cls, value):
+  #   if value.split('/')[0] != 'Issue':
+  #     raise ValueError('This record is not related to an Issue')
+  #   return value
 
 
 

@@ -40,7 +40,7 @@ async def get_issue_type(
 
 # ----------------------------------------------------------------------
 
-@router.post('/issue-type' , response_status=201)
+@router.post('/issue-type' , status_code=201)
 async def create_issue_type(data: IssueType):
 
   # Check if code already exists
@@ -149,7 +149,7 @@ async def get_issue(
     issue_open = issue_open,
     limit = limit
   )
-  cursor db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)
+  cursor = db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)
   return [IssueFullData(**i) for i in cursor]
 
 # ----------------------------------------------------------------------
@@ -218,7 +218,7 @@ async def update_issue(
     )
 
 @router.delete('/issue/{issue_key}')
-async def cancel_issue(issue_key: str):
+async def delete_issue(issue_key: str):
   try:
     db.collection('Issue').delete(issue_key)
   except Exception:
