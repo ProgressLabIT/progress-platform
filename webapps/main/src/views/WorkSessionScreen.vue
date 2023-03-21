@@ -125,20 +125,8 @@
                   square
                   height="auto"
                   class="fit"
-                  @click="goToPreviousStep">
-                  <q-icon color="text_high" size="lg" name="mdi-skip-previous" />
-                </q-btn>
-              </div>
-
-              <div class="col">
-                <q-btn
-                  color="theme-grey"
-                  square
-                  :disabled="!allow_step_forward"
-                  height="auto"
-                  class="fit"
-                  @click="goToNextStep">
-                  <q-icon color="text-high" size="lg" name="mdi-skip-next" />
+                  @click="show_issue_new = true">
+                  <q-icon color="text_high" size="lg" name="mdi-flag" />
                 </q-btn>
               </div>
 
@@ -149,7 +137,7 @@
                   height="auto"
                   class="fit"
                   @click="j.active ? showExitAlert(true) : exitJob()">
-                  <q-icon color="text-high" size="lg" name="mdi-keyboard-return" />
+                  <q-icon color="text-high" size="lg" name="mdi-close" />
                 </q-btn>
               </div>
             </div>
@@ -177,6 +165,12 @@
         </q-card>
       </q-dialog>
 
+      <BaseDialog
+        :show="show_issue_new"
+        background="#0008"
+        @hide="show_issue_new = false">
+        <IssueNew />
+      </BaseDialog>
     </q-page>
   </q-page-container>
 </template>
@@ -184,16 +178,20 @@
 <script>
 import { mapState } from 'vuex'
 
-import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue'
+import BaseDialog from '@/components/BaseDialog.vue'
+import IssueNew from '@/components/IssueNew.vue'
 import ProgressBtn from '@/components/ProgressBtn.vue'
+import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue'
 
 export default {
 
   name: 'WorkSessionScreen',
 
   components: {
-    StartPauseResumeBtn,
-    ProgressBtn
+    BaseDialog,
+    IssueNew,
+    ProgressBtn,
+    StartPauseResumeBtn
   },
 
   props: {
@@ -205,6 +203,7 @@ export default {
     return {
       vuex_ready: false,
       show_exit_alert: false,
+      show_issue_new: false,
       alert_timeout: 6000
     }
   },

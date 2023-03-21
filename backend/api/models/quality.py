@@ -73,13 +73,22 @@ class Issue(ArangoDocument):
   open: bool = True
 
 
+class IssueLinkType(str, Enum):
+  PRODUCT = 'product'
+  OPERATION = 'operation'
+  PHASE = 'phase'
+  WORK_ORDER = 'work_order'
+  PROJECT = 'project'
+  USER = 'user'
+  JOB = 'job'
+
+class IssueLink(BaseModel):
+  type: IssueLinkType
+  key: str
+
+
 class IssueWithLinks(Issue):
-  linked_to: List[str] = None # ids of entities connected
-
-
-class IssueLink(ArangoDocument):
-  _from: str
-  _to: str
+  linked_to: List[IssueLink] = None # ids of entities connected
 
   # @validator('_from')
   # def check_from_issue(cls, value):
