@@ -1,5 +1,5 @@
 <template>
-  <LoadingSignal v-if="vuex_ready" />
+  <LoadingSignal v-if="!vuex_ready" />
 
   <div v-else class="row full-height">
     <div class="full-height column col-3">
@@ -25,7 +25,7 @@
 
       <q-separator />
 
-      <!-- OPERATION LIST -->
+      <!-- ISSUE TYPE LIST -->
       <div class="scroll col">
         <div
           v-for="(issue_type, index) in filtered_issue_types"
@@ -33,21 +33,21 @@
           :class="{ 'alternate-row': index % 2 == 0, 'bg-blue-backdrop': issue_type._key == selected_issue_type_key }"
           :key="index"
           style="white-space: nowrap;"
-          @click="showOperationDetail(issue_type._key)">
-          <div class="col-8">
-            {{ $capitalize(issue_type.name) }}
+          @click="showIssueTypeDetail(issue_type._key)">
+          <div class="col-3">
+            {{ $capitalize(issue_type.code) }}
           </div>
-          <div class="col-4">
-            {{ issue_type.code }}
+          <div class="col-9">
+            {{ issue_type.name }}
           </div>
         </div>
       </div>
 
       <q-separator />
 
-      <!-- OPERATION LIST COUNT -->
+      <!-- ISSUE TYPE LIST COUNT -->
       <div class="row flex-center smaller q-py-xs">
-        {{ filtered_types.length }} {{ $t('of') }} {{ issue_type_list.length }}
+        {{ filtered_issue_types.length }} {{ $t('of') }} {{ issue_type_list.length }}
       </div>
 
       <div class="q-pa-md q-mt-auto">
@@ -67,7 +67,7 @@
       <router-view v-slot="{ Component }">
         <component
           :is="Component"
-          :operation="selected_issue_type">
+          :issue_type="selected_issue_type">
         </component>
       </router-view>
     </div>
@@ -94,7 +94,7 @@ export default {
   computed: {
 
     issue_type_list() {
-      return this.$store.state.quality.issue_types || []
+      return this.$store.state.issue_types.sort((a,b) => a.code > b.code ? 1 : a.code < b.code ? -1 : 0) || []
     },
 
     selected_issue_type_key() {
@@ -112,6 +112,7 @@ export default {
   },
 
   methods: {
+
     showIssueTypeDetail(issue_type_key) {
       this.$router.push({
         name: 'issueTypeDetail',
@@ -125,7 +126,9 @@ export default {
   },
 
   created() {
-    this.$store.dispatch('getIssueTypes').then( () => this.vuex_ready = true )
+    this.$store.dispatch('getIssueTypes').then( () => {
+      this.vuex_ready = true
+    })
   },
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
-  <div class="column full-height">
+  <div class="column scroll full-height">
     <template v-if="issue_type">
-      <div class="row q-pa-lg q-ma-md">
+      <div class="row q-pa-xl">
         <template v-if="!edit_mode">
           <div class="col" v-if="!edit_mode">
             <div class="text-h2 uppercase display highlight">
@@ -29,22 +29,30 @@
           </BaseTooltipIcon>
         </template>
 
+        <!-- EDIT ISSUE TYPE METADATA -->
         <template v-else>
           <div class="column justify-between col-4">
             <q-input
+              filled
+              stack-label
               hide-bottom-space
               :label="$capitalize($t('name'))"
               v-model="temp_metadata.name">
             </q-input>
             <q-input
+              filled
+              stack-label
               hide-bottom-space
               :label="$capitalize($t('code'))"
-              v-model="temp_metadata.code">
+              v-model="temp_metadata.code"
+              class="q-mt-md">
             </q-input>
           </div>
           <div class="col-5 q-ml-xl">
             <q-input
-              type="textarea"
+              filled
+              stack-label
+              autogrow
               hide-bottom-space
               :label="$capitalize($t('description'))"
               v-model="temp_metadata.description">
@@ -69,13 +77,72 @@
         </template>
       </div>
 
-      <q-separator />
 
-      <div class="col scroll">
-        <q-input v-model="temp_metadata.close_within" />
-        <q-toggle v-model="temp_metadata.critical" />
-        <IconLibrary @choice="value => temp_metadata.icon = value"/>
+      <!-- ISSUE TYPE OPTIONS -->
+      <div class="row q-px-xl">
+
+        <div class="row">
+          <div class="col-4 column">
+
+            <!-- ACTIVE -->
+            <q-toggle
+              :disable="!edit_mode"
+              :label="$capitalize($t('active'))"
+              v-model="temp_metadata.active">
+            </q-toggle>
+
+            <!-- DEFAULT CRITICAL -->
+            <q-toggle
+              :disable="!edit_mode"
+              :label="$capitalize($t('critical'))"
+              v-model="temp_metadata.critical">
+            </q-toggle>
+
+            <!-- CLOSE WITHIN -->
+            <q-input
+              filled
+              stack-label
+              :label="$t('close_within')"
+              :disable="!edit_mode"
+              type="number"
+              min="0"
+              v-model.number="temp_metadata.close_within"
+              class="q-mt-lg">
+            </q-input>
+            <div class="q-mt-md text-low text-italic">
+            {{ $t('issue_type_close_within_explainer') }}
+            </div>
+
+          </div>
+
+          <!-- ISSUE TYPE ICON -->
+          <div class="col-8 q-pl-xl">
+            <div class="row items-center q-mb-md q-pl-sm">
+              <div class="text-h4 text-high q-mr-md">
+                {{ $capitalize($t('icon')) }}
+              </div>
+              <div class="text-low row items-center">
+                <q-icon :name="temp_metadata.icon" size="lg" class="q-mr-sm" />
+                <div class="text-body2 text-italic">{{ temp_metadata.icon }}</div>
+              </div>
+              <q-btn
+                v-if="edit_mode"
+                flat
+                :label="$t('change')"
+                @click="show_icon_library = true"
+                color="theme-blue"
+                class="q-ml-xl">
+              </q-btn>
+            </div>
+            <BaseDialog :show="show_icon_library">
+              <div class="surface2 q-pa-md">
+                <IconLibrary @choice="(value) => pickIcon(value)" />
+              </div>
+            </BaseDialog>
+          </div>
+        </div>
       </div>
+
     </template>
 
     <NoDataAlert v-else />
@@ -86,14 +153,18 @@
 import IconLibrary from '@/components/IconLibrary.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
+import BaseDialog from '@/components/BaseDialog.vue'
+
 
 export default {
 
-  name: 'OperationDetail',
+  name: 'IssueTypeDetail',
 
   components: {
+    BaseDialog,
     BaseTooltipIcon,
-    NoDataAlert
+    NoDataAlert,
+    IconLibrary
   },
 
   props: {
@@ -105,14 +176,16 @@ export default {
 
   data () {
     return {
+      show_icon_library: false,
       edit_mode: false,
       saving: false,
       temp_metadata: {
         name: '',
         code: '',
+        active: undefined,
         description: '',
         icon: '',
-        critical: '',
+        critical: undefined,
         close_within: 0
       }
     }
@@ -127,6 +200,11 @@ export default {
       })
     },
 
+    pickIcon(value) {
+      this.temp_metadata.icon = value
+      this.show_icon_library = false
+    },
+
     cancel() {
       this.saving = false
       this.edit_mode = false
@@ -135,30 +213,37 @@ export default {
     async save() {
       this.saving = true
       const data = {
-        key: this.issue_type._key,
-        update: this.temp_metadata
+        _key: this.issue_type._key,
+        ...this.temp_metadata
       }
       await this.$store.dispatch('updateIssueType', data)
       this.saving = false
       this.edit_mode = false
     },
 
-    // showDelete() {
-    //   if (this.products_using_operation.length) {
-    //     const product_codes = this.products_using_operation.map( o => o.code )
-    //     window.alert(c(this.$tc('operation.alerts.op_in_use') + ": " +  product_codes))
-    //   }
-    //   else {
-    //     this.$router.push({
-    //       name: 'operationDelete',
-    //       params: { operation_key: this.operation._key }
-    //     })
-    //   }
-    // },
+    showDelete() {
+      if (this.products_using_operation.length) {
+        const product_codes = this.products_using_operation.map( o => o.code )
+        window.alert(c(this.$tc('operation.alerts.op_in_use') + ": " +  product_codes))
+      }
+      else {
+        this.$router.push({
+          name: 'operationDelete',
+          params: { operation_key: this.operation._key }
+        })
+      }
+    },
+  },
+
+  created() {
+    this.setTempData()
   },
 
   watch: {
     edit_mode() {
+      this.setTempData()
+    },
+    issue_type() {
       this.setTempData()
     }
   }
