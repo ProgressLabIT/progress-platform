@@ -31,7 +31,8 @@ const adminRoutes = [
           {
             path: ':user_key',
             name: 'userInfo',
-            component: () => import("@/components/UserInfoScreen.vue")
+            component: () => import("@/components/UserInfoScreen.vue"),
+            props: true
           },
           {
             path: 'new',
@@ -60,7 +61,8 @@ const adminRoutes = [
           {
             path: ':operation_key',
             name: 'operationDetail',
-            component: () => import("@/views/OperationDetail.vue")
+            component: () => import("@/views/OperationDetail.vue"),
+            props: true
           },
           {
             path: 'new',
@@ -70,7 +72,8 @@ const adminRoutes = [
           {
             path: ':operation_key/delete',
             name: 'operationDelete',
-            component: () => import("@/views/OperationDelete.vue")
+            component: () => import("@/views/OperationDelete.vue"),
+            props: true
           }
         ]
       },
@@ -82,7 +85,8 @@ const adminRoutes = [
           {
             path: ':issue_type_key',
             name: 'issueTypeDetail',
-            component: () => import("@/views/IssueTypeDetail.vue")
+            component: () => import("@/views/IssueTypeDetail.vue"),
+            props: true
           },
           {
             path: 'new',
@@ -92,7 +96,8 @@ const adminRoutes = [
           {
             path: ':issue_type_key/delete',
             name: 'issueTypeDelete',
-            component: () => import("@/views/IssueTypeDelete.vue")
+            component: () => import("@/views/IssueTypeDelete.vue"),
+            props: true
           }
         ]
       }

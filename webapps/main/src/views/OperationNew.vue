@@ -1,7 +1,7 @@
 <template>
   <BaseModalForm
     :show="true"
-    id="new-product-form"
+    id="new-operation-form"
     @submit="submit"
     max_width="700px"
     @cancel="$router.back()">

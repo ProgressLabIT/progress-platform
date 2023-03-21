@@ -79,7 +79,7 @@
 
             <BaseTooltipIcon
               icon="mdi-lock-reset"
-              :tooltip="$capitalize($t('reset_password'))"
+              :tooltip="$capitalize($t('user.reset_password'))"
               :color="$theme.orange"
               @iconClick="showPasswordReset">
             </BaseTooltipIcon>

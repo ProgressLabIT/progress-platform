@@ -1,4 +1,5 @@
 <template>
+  <div>
   <LoadingSignal v-if="!vuex_ready" />
 
   <div class="row full-height">
@@ -90,14 +91,12 @@
       <router-view v-slot="{ Component, route }">
         <transition name="slide-fade" mode="out-in">
           <div :key="route.fullPath">
-            <component
-              :is="Component"
-              :key="selected_user_key">
-            </component>
+            <component :is="Component" />
           </div>
         </transition>
       </router-view>
     </div>
+  </div>
   </div>
 </template>
 

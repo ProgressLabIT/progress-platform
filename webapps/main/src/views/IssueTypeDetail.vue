@@ -168,9 +168,9 @@ export default {
   },
 
   props: {
-    issue_type: {
-      type: Object,
-      required: true
+    // from router
+    issue_type_key: {
+      type: String
     }
   },
 
@@ -191,7 +191,14 @@ export default {
     }
   },
 
+  computed: {
+    issue_type() {
+      return this.$store.state.issue_types.find(it => it._key == this.issue_type_key)
+    }
+  },
+
   methods: {
+
     setTempData(){
       Object.keys(this.temp_metadata).forEach( key => {
         if (key in this.issue_type) {
@@ -235,16 +242,14 @@ export default {
     },
   },
 
-  created() {
-    this.setTempData()
-  },
-
   watch: {
     edit_mode() {
       this.setTempData()
     },
-    issue_type() {
-      this.setTempData()
+    issue_type_key: {
+      immediate: true,
+      handler: 'setTempData',
+      deep: true
     }
   }
 }
