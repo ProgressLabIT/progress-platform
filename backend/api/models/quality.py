@@ -2,7 +2,14 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, List
 
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import (
+  BaseModel,
+  constr,
+  NonNegativeInt,
+  Field,
+  root_validator,
+  validator
+)
 
 from utils.base_models import ArangoDocument, ArangoEdge
 from utils.dt import timestamp
@@ -37,13 +44,14 @@ class IssueField(FormField):
 
 # ISSUE TYPE
 class IssueType(ArangoDocument):
-  code: str
-  name: str
+  code: constr(to_upper=True)
+  name: constr(to_upper=True)
+  active: bool = True
   description: str = None
   icon: str = None
   template: List[FormField] = []
   critical: bool = False
-  close_within: int = 0 # Time in minutes. After this make critical. If 0 ignore.
+  close_within: NonNegativeInt = 0 # Time in minutes. After this make critical. If 0 ignore.
 
 
 # ISSUE
@@ -60,7 +68,7 @@ class Issue(ArangoDocument):
   created_by: str # Creator ID
   closed: datetime = None
   critical: bool # Default value set at the IssueType level
-  close_within: int # Value set at the IssueType level
+  close_within: NonNegativeInt # Value set at the IssueType level
   data: List[IssueField] = None
   open: bool = True
 

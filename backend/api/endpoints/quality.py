@@ -6,6 +6,7 @@ from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from models.quality import *
+from utils.api import APIResponse
 from utils.db import db
 
 router = APIRouter()
@@ -44,17 +45,17 @@ async def get_issue_type(
 async def create_issue_type(data: IssueType):
 
   # Check if code already exists
-  try:
-    if issue_types.find({ 'code': data.code }).count():
-      raise HTTPException(
-        status_code=409,
-        detail="An issue type with the same code already exists"
-      )
+  if issue_types.find({ 'code': data.code }).count():
+    raise HTTPException(
+      status_code=409,
+      detail="An issue type with the same code already exists"
+    )
 
+  try:
     new_issue_type = issue_types.insert(data, return_new=True)['new']
     return APIResponse(
       status_code=201,
-      message = f"Issue type created { new_issue_type['_key'] } updated correctly",
+      message = f"Issue type { new_issue_type['_key'] } created correctly",
       detail = new_issue_type
     )
 
@@ -69,18 +70,14 @@ async def create_issue_type(data: IssueType):
 
 # ----------------------------------------------------------------------
 
-@router.put('/issue-type/{issue_type_ref}')
-async def update_issue_type(
-  issue_type_ref: str,
-  data: IssueType,
-  by_code = False
-  ):
+@router.patch('/issue-type/{issue_type_key}')
+async def update_issue_type(issue_type_key: str, data: dict):
 
-  search_field = 'code' if by_code else '_key'
-  match = { search_field: issue_type_ref }
+  if '_key' not in data:
+    data['_key'] = issue_type_key
 
   try:
-    updated_issue_type = issue_types.replace_match(match, data, return_new=True, keep_none=False)['new']
+    updated_issue_type = issue_types.update(data, return_new=True, keep_none=False)['new']
     return APIResponse(
       message = "Issue type updated corretly",
       detail = updated_issue_type
