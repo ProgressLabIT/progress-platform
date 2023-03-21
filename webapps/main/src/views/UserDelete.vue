@@ -103,8 +103,8 @@ export default {
     archiveUser() {
       api.delete(`user/${this.user_key}`).then( () => {
         // reload users from backend to make sure archived user is not present
+        this.stage = 'success'
         this.$store.dispatch('loadUsers')
-        this.stage = 'success' 
       })
     }
   },

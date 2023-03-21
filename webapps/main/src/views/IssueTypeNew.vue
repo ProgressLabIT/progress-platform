@@ -13,11 +13,11 @@
 
     <template #form>
       <div class="row q-col-gutter-lg items-center" style="min-width: 400px">
-        <div class="col-6 text-uppercase">
+        <div class="col-6">
           <q-input
             filled
             stack-label
-            :label="$capitalize($t('name'))"
+            :label="$capitalize($t('name').toUpperCase())"
             v-model="new_issue_type.name">
           </q-input>
         </div>
@@ -26,14 +26,14 @@
           <q-input
             filled
             stack-label
-            :label="$capitalize($t('code'))"
+            :label="$t('code').toUpperCase()"
             v-model="new_issue_type.code">
           </q-input>
         </div>
 
         <div class="col-3 text-uppercase">
           <q-toggle
-            :label="$capitalize($t('critical'))"
+            :label="$t('critical').toUpperCase()"
             v-model="new_issue_type.critical">
           </q-toggle>
         </div>

@@ -14,24 +14,27 @@
       <div class="row q-col-gutter-xl" style="min-width: 400px">
         <div class="col-6">
           <q-input
+            filled
+            stack-label
             :label="$capitalize($t('name'))"
-            v-model="new_operation_data.name"
-            clearable>
+            v-model="new_operation_data.name">
           </q-input>
         </div>
 
         <div class="col-6">
           <q-input
+            filled
+            stack-label
             :label="$capitalize($t('code'))"
-            v-model="new_operation_data.code"
-            clearable>
+            v-model="new_operation_data.code">
           </q-input>
         </div>
 
         <div class="col-12">
           <q-input
-            type="textarea"
-            clearable
+            filled
+            stack-label
+            autogrow
             :label="$capitalize($t('description'))"
             v-model="new_operation_data.description">
           </q-input>

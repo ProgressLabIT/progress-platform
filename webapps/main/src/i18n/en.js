@@ -93,7 +93,12 @@ export default {
   "issue_type": "Issue type | Issue types",
   "issue_type_alerts_code_missing": "Provide a code for the issue type",
   "issue_type_alerts_name_missing": "Provide a name for the issue type",
+  "issue_type_alerts_delete_general_error": "The issue type coiuld not be deleted due to an error in the database",
+  "issue_type_alerts_in_use": "This issue type cannot be deleted because the following issues are of this type",
   "issue_type_close_within_explainer": "Number of hours after which a issue fo this type becomes critical, if not created as such. Zero means never.",
+  "issue_type_delete_question": "Do you want to delete this issue type?",
+  "issue_type_delete_success": "Issue type deleted successfully",
+  "issue_type_delete_title": "Delete issue type",
   "issue_type_new": "New issue type",
   "item": "item",
   "job": {

@@ -32,19 +32,26 @@
         <template v-else>
           <div class="column justify-between col-4">
             <q-input
+              filled
+              stack-label
               hide-bottom-space
               :label="$capitalize($t('name'))"
               v-model="temp_metadata.name">
             </q-input>
             <q-input
+              filled
+              stack-label
               hide-bottom-space
               :label="$capitalize($t('code'))"
-              v-model="temp_metadata.code">
+              v-model="temp_metadata.code"
+              class="q-mt-md">
             </q-input>
           </div>
           <div class="col-5 q-ml-xl">
             <q-input
-              type="textarea"
+              filled
+              stack-label
+              autogrow
               hide-bottom-space
               :label="$capitalize($t('description'))"
               v-model="temp_metadata.description">
@@ -190,7 +197,7 @@ export default {
     showDelete() {
       if (this.products_using_operation.length) {
         const product_codes = this.products_using_operation.map( o => o.code )
-        window.alert(c(this.$tc('operation.alerts.op_in_use') + ": " +  product_codes))
+        window.alert(this.$capitalize(this.$t('operation.alerts.op_in_use') + ": " +  product_codes))
       }
       else {
         this.$router.push({
@@ -203,6 +210,9 @@ export default {
 
   watch: {
     edit_mode() {
+      this.setTempData()
+    },
+    operation_key() {
       this.setTempData()
     }
   }

@@ -44,8 +44,8 @@ class IssueField(FormField):
 
 # ISSUE TYPE
 class IssueType(ArangoDocument):
-  code: constr(to_upper=True)
-  name: constr(to_upper=True)
+  code: str
+  name: str
   active: bool = True
   description: str = None
   icon: str = None

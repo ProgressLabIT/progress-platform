@@ -94,7 +94,12 @@ export default {
   "issue_type": "tipo di segnalazione | tipi di segnalazione",
   "issue_type_alerts_code_missing": "Indicare un codice per il tipo di segnalazione",
   "issue_type_alerts_name_missing": "Indicare un nome per il tipo di segnalazione",
+  "issue_type_alerts_in_use": "Questo tipo di segnalazione non può essere eliminato perché le seguenti segnalazioni sono id questo tipo",
+  "issue_types_alerts_delete_general_error": "Non è stato possibile eliminare questo tipo di segnalazione per un errore nel server",
   "issue_type_close_within_explainer": "Tempo in ore oltre il quale una segnalazione diventa automaticamente critica, quando non creata come tale. Zero significa mai.",
+  "issue_type_delete_title": "Elimina tipo di segnalazione",
+  "issue_type_delete_question": "Vuoi eliminare il seguente tipo di segnalazione?",
+  "issue_type_delete_success": "Tipo di segnalazione eliminato con successo",
   "issue_type_new": "Nuovo tipo di segnalazione",
   "item": "articolo | articoli",
   "job": {

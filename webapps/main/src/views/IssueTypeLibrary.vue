@@ -18,8 +18,11 @@
         <div class="col-3">
           {{ $t('code') }}
         </div>
-        <div class="col-9">
+        <div class="col">
           {{ $t('name') }}
+        </div>
+        <div class="col-2 text-right">
+          {{ $t('icon') }}
         </div>
       </div>
 
@@ -29,7 +32,7 @@
       <div class="scroll col">
         <div
           v-for="(issue_type, index) in filtered_issue_types"
-          class="row pointer q-px-lg q-py-xs medium"
+          class="row pointer q-px-lg q-py-xs medium full-width"
           :class="{ 'alternate-row': index % 2 == 0, 'bg-blue-backdrop': issue_type._key == selected_issue_type_key }"
           :key="index"
           style="white-space: nowrap;"
@@ -37,8 +40,11 @@
           <div class="col-3">
             {{ $capitalize(issue_type.code) }}
           </div>
-          <div class="col-9">
+          <div class="col-8">
             {{ issue_type.name }}
+          </div>
+          <div class="col-1 text-right">
+            <q-icon :name="issue_type.icon" />
           </div>
         </div>
       </div>

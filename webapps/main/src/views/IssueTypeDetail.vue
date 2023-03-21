@@ -229,17 +229,11 @@ export default {
     },
 
     showDelete() {
-      if (this.products_using_operation.length) {
-        const product_codes = this.products_using_operation.map( o => o.code )
-        window.alert(c(this.$tc('operation.alerts.op_in_use') + ": " +  product_codes))
-      }
-      else {
-        this.$router.push({
-          name: 'operationDelete',
-          params: { operation_key: this.operation._key }
-        })
-      }
-    },
+      this.$router.push({
+        name: 'issueTypeDelete',
+        params: { issue_type_key: this.issue_type_key }
+      })
+    }
   },
 
   watch: {
