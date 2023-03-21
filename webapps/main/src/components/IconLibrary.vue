@@ -9,8 +9,9 @@
         :label="$capitalize($t('search'))"
         icon="mdi-magnify"
         debounce="300"
+        dense
         square filled
-        class="full-width q-mb-xl">
+        class="full-width q-mb-lg">
         <template #append>
           <q-icon name="mdi-magnify" />
         </template>
@@ -87,8 +88,9 @@ export default {
 
   methods: {
     choose(icon) {
-      this.$emit('choice', icon),
-      this.$emit('close')
+      this.$emit('choice', icon)
+      console.log(icon)
+      this.$emit('hide') // for use within BaseDialog
     }
   }
 }
