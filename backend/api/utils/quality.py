@@ -2,9 +2,9 @@ class Queries:
 
   FIND_ISSUES = """
     // Filter first issue properties...
-    FOR i IN Issues
+    FOR i IN Issue
     FILTER
-      i._key == @key
+      i._key == @issue_key
       && @issue_type ? i.issue_type == @issue_type : true
       && @creator_id ? i.created_by == @creator_id : true
       && @time_created_from ? i.created >= @time_created_from : true
@@ -23,7 +23,10 @@ class Queries:
         && @phase_key ? ir._to == CONCAT('Phase/', @phase_key) : true
         && @operation_key ? ir._to == CONCAT('Operation/', @operation_key) : true
     LIMIT @limit || null
-    LET rels = (FOR ir IN issue_rel FILTER i._id == ir._from RETURN ir._to)
-    LET messages = (FOR m IN messages FILTER m._to == i._id RETURN m)
-    RETURN { ...i, linked_to: rels, messages }
+    LET icon = FIRST(
+      FOR it IN IssueType
+      FILTER it._key == i.issue_type
+      RETURN it.icon
+    )
+    RETURN MERGE(i, { icon })
   """

@@ -28,7 +28,10 @@
         <!--          JOB DETAILS             -->
         <!-- ################################ -->
 
-        <div class="column col-8 q-px-sm" id="job-info-section">
+        <div
+          class="column q-px-sm"
+          id="job-info-section"
+          :class="$route.name === 'jobIssueDetail' ? 'col-12' : 'col-8'">
 
           <!-- PANEL NAVIGATION -->
           <q-tabs
@@ -58,7 +61,10 @@
         <!-- RIGHT COLUMN: JOB DATA & ACTIONS -->
         <!-- ################################ -->
 
-        <div id="session-control-section" class="column col-4 q-px-sm q-pt-md">
+        <div
+          id="session-control-section"
+          v-if="$route.name != 'jobIssueDetail'"
+          class="column col-4 q-px-sm q-pt-md">
 
           <!-- JOB DATA -->
           <div id="job-data" class="col-auto">
@@ -148,20 +154,20 @@
 
       <!-- Consider switching to banner or similar -->
       <q-dialog v-model="show_exit_alert" max-width="480px">
-        <q-card>
-          <q-card-section class="text-body1">
+        <q-card class="surface2 q-pa-md">
+          <q-card-section class="text-h3">
             {{ $t('job.alerts.confirm_exit')}}
           </q-card-section>
-          <q-card-actions>
+          <q-card-section>
             <div class="row justify-between">
-              <q-btn flat @click="exitJob" color="theme-orange">
+              <q-btn @click="exitJob" color="theme-orange">
                 {{ $t('confirm') }}
               </q-btn>
-              <q-btn flat @click="show_exit_alert=false" color="theme-grey">
+              <q-btn @click="show_exit_alert=false" color="theme-grey">
                 {{ $t('cancel') }}
               </q-btn>
             </div>
-          </q-card-actions>
+          </q-card-section>
         </q-card>
       </q-dialog>
 
@@ -171,6 +177,7 @@
         @hide="show_issue_new = false">
         <IssueNew />
       </BaseDialog>
+
     </q-page>
   </q-page-container>
 </template>
@@ -220,7 +227,8 @@ export default {
       return [
           { route_name: 'jobSteps', text: this.$t('procedure') },
           { route_name: 'jobDocs', text: this.$t('document.label', 2) },
-          { route_name: 'jobBom', text: this.$t('material', 2) }
+          { route_name: 'jobBom', text: this.$t('material', 2) },
+          { route_name: 'jobIssues', text: this.$t('issue', 2) }
       ]
     },
 

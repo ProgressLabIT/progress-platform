@@ -70,6 +70,7 @@ class Issue(ArangoDocument):
   critical: bool # Default value set at the IssueType level
   close_within: NonNegativeInt # Value set at the IssueType level
   data: List[IssueField] = None
+  icon: str = None
   open: bool = True
 
 

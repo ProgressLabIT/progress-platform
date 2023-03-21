@@ -8,6 +8,7 @@ from fastapi.encoders import jsonable_encoder
 from models.quality import *
 from utils.api import APIResponse
 from utils.db import db
+from utils.quality import Queries
 
 router = APIRouter()
 
@@ -147,17 +148,31 @@ async def get_issue(
     limit = limit
   )
   cursor = db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)
-  return [IssueFullData(**i) for i in cursor]
+  return [Issue(**i) for i in cursor]
 
 # ----------------------------------------------------------------------
+
+def build_link(_from: str, link_dict: IssueLink):
+  link_map = dict(
+    product="Product/",
+    operation="Operation/",
+    phase="Phase/",
+    work_order="WorkOrder/",
+    project="Project/",
+    user="User/",
+    job="Job/"
+  )
+  target = link_map[link_dict.type.value] + link_dict.key
+  return dict(_from=_from, _to=target)
 
 @router.post('/issue')
 async def create_issue(data: IssueWithLinks):
   try:
-    tx = db.begin_transaction()
+    tx = db.begin_transaction(write=['Issue', 'issue_rel'])
     new_issue_id = tx.collection('Issue').insert(Issue(**data.dict()))['_id']
 
-    rels = [IssueLink(_from=new_issue_id, _to=rel) for rel in data.linked_to]
+    rels = [build_link(_from=new_issue_id, link_dict=rel) for rel in data.linked_to]
+
     tx.collection('issue_rel').insert_many(rels, silent=True)
     tx.commit_transaction()
   except Exception:
@@ -231,6 +246,22 @@ async def delete_issue(issue_key: str):
 # ---------------------------------------------
 # MESSAGES
 # ---------------------------------------------
+
+@router.get('/message')
+async def get_messages(issue_key: str):
+  try:
+    cursor = db.collection('message').find(dict(_to=f'Issue/{issue_key}'))
+    return [Message(**m) for m in cursor]
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching messages from the db.",
+        error=traceback.format_exc()
+      )
+    )
+
+
 
 @router.post('/message')
 async def post_message(data: Message):
