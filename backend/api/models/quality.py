@@ -64,7 +64,7 @@ class Issue(ArangoDocument):
   issue_type: str # _key of the issue type
   title: str
   description: str = None
-  created: datetime = timestamp()
+  created: datetime = Field(default_factory=timestamp())
   created_by: str # Creator ID
   closed: datetime = None
   critical: bool # Default value set at the IssueType level
@@ -104,10 +104,9 @@ class Message(ArangoDocument):
   sender: str = Field(..., alias="_from") # ID of creator (User/Machine/etc.)
   recipient: str = Field(..., alias="_to") # related issue or user
   content: str
-  created: datetime = timestamp()
+  created: datetime = Field(default_factory=timestamp)
   updated: datetime = None
   deleted: bool = False
-
 
 class IssueFullData(IssueWithLinks):
   messages: List[Message]
