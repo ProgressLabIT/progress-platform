@@ -21,6 +21,7 @@ import job from "./job"
 import org from "./org"
 import process from "./process"
 import product from "./product"
+import quality from "./quality"
 import session from "./session"
 import traceability from "./traceability"
 import user from "./user"
@@ -72,44 +73,12 @@ const store = createStore({
     },
     SET_THEME(state, theme) {
       state.theme_colors = theme
-    },
-    LOAD_ISSUE_TYPES(state, types) {
-      state.issue_types = types
-    },
+    }
   },
 
   actions: {
     changeTheme({ commit }, dark_mode_on) {
       commit('SET_THEME', dark_mode_on ? dark : light)
-    },
-    getIssueTypes({ commit }) {
-      return new Promise((resolve, reject) => {
-        api.get('issue-type')
-          .then( resp => {
-            commit('LOAD_ISSUE_TYPES', resp.data)
-            resolve()
-          })
-          .catch(err => reject(err))
-        })
-    },
-    createIssueType({ commit, dispatch }, issue_type_data) {
-      return new Promise((resolve, reject) => {
-        api.post('issue-type', issue_type_data)
-        .then( async (resp) => {
-          const new_issue_type_key = resp.data.detail._key
-          await dispatch('getIssueTypes')
-          resolve(new_issue_type_key)
-        })
-      })
-    },
-    updateIssueType({ commit, dispatch }, issue_type_data) {
-      return new Promise((resolve, reject) => {
-        api.patch(`issue-type/${issue_type_data._key}`, issue_type_data)
-        .then( async () => {
-          await dispatch('getIssueTypes')
-          resolve()
-        })
-      })
     }
   },
 
@@ -130,6 +99,7 @@ const store = createStore({
     org,
     process,
     product,
+    quality,
     session,
     traceability,
     user,

@@ -97,7 +97,7 @@ export default {
   computed: {
 
     issue_type_list() {
-      return this.$store.state.issue_types.sort((a,b) => a.code > b.code ? 1 : a.code < b.code ? -1 : 0) || []
+      return this.$store.state.quality.issue_types.sort((a,b) => a.code > b.code ? 1 : a.code < b.code ? -1 : 0) || []
     },
 
     selected_issue_type_key() {
