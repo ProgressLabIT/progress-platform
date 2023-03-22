@@ -3,12 +3,22 @@ import { api } from '@/boot/axios.js'
 const quality = {
 
   state: {
-    issue_types: []
+    issue_types: [],
+    issues: []
+  },
+
+  getters: {
+    getIssueData: (state) => (issue_key) => {
+      return state.issues.find( i => i._key == issue_key)
+    }
   },
 
   mutations: {
     LOAD_ISSUE_TYPES(state, types) {
       state.issue_types = types
+    },
+    LOAD_ISSUES(state, issues) {
+      state.issues = issues
     }
   },
 
@@ -41,6 +51,10 @@ const quality = {
           resolve()
         })
       })
+    },
+    getIssues({ commit }, search_params) {
+      api.get('issue', { params: search_params })
+      .then(resp => commit('LOAD_ISSUES', resp.data))
     }
   }
 }
