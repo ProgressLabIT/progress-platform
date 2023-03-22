@@ -2,7 +2,12 @@
   <div
     class="row items-center"
     :class="name_first ? ' reverse' : ''">
-    <q-avatar :size="size" v-if="initials" class="weight-bold" font-size=".4em">
+    <q-avatar
+      color="theme-grey"
+      :size="size"
+      v-if="initials"
+      class="weight-bold"
+      font-size=".4em">
       <q-img
         :src="avatar_src"
         :alt="initials"
