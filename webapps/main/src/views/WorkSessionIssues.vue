@@ -1,58 +1,50 @@
 <template>
-  <div class="q-pa-md">
+  <div class="q-pa-md absolute-full scroll">
     <q-list>
-      <q-item
-        v-for="issue in issues"
-        :key="issue._key"
-        class="q-pa-lg">
-        <q-item-section avatar>
-          <q-icon :name="issue.icon" size="lg" />
-        </q-item-section>
-        <q-item-section>
-          <q-item-label class="weight-bold text-h4">
-            {{ issue.title }} (ID {{ issue._key }})
-          </q-item-label>
-          <q-item-label class="text-low">
-            {{ issue.description }}
-          </q-item-label>
-        </q-item-section>
-        <q-item-section top class="display col-auto weight-bold text-uppercase">
-          <q-chip :color="issue.badge.color">
-            {{ issue.badge.text }}
-          </q-chip>
-        </q-item-section>
-      </q-item>
-      <q-separator spaced />
+      <template v-for="issue, index in issues" :key="index">
+        <q-separator inset v-if="index > 0" />
+        <IssueHeader clickable :issue="issue" @click="openIssue(issue._key)"/>
+      </template>
     </q-list>
+    <router-view />
   </div>
 </template>
 
 <script>
+import IssueHeader from '@/components/IssueHeader.vue'
+import enrichIssue from '@/mixins/issues.js'
+
 export default {
 
   name: 'WorkSessionIssues',
+
+  components: {
+    IssueHeader
+  },
+
+  mixins: [enrichIssue],
 
   props: {
     job_key: String // from router
   },
 
-  data () {
-    return {
-      issues: []
+  computed: {
+    issues() {
+      return this.$store.state.quality.issues.map(i => this.enrichIssue(i))
+    }
+  },
+
+  methods: {
+    openIssue(issue_key) {
+      this.$router.push({
+        name: 'jobIssueDetail',
+        params: { issue_key }
+      })
     }
   },
 
   created() {
-    this.$api.get('issue', { params: { job_key: this.job_key }})
-    .then(resp => this.issues = resp.data.map(i => {
-      let badge = !i.open
-        ? { color: 'theme-grey', text: this.$t('closed') }
-        : i.critical
-        ? { color: 'theme-red', text: this.$t('critical') }
-        : { color: 'theme-orange', text: this.$t('open') }
-
-      return { ...i, badge }
-    }))
+    this.$store.dispatch('getIssues', { job_key: this.job_key })
   }
 }
 </script>
