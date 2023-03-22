@@ -18,10 +18,9 @@
         </template>
       </q-img>
     </q-avatar>
-    <div class="column col-auto q-ml-md">
+    <div class="column col-auto q-ml-md" v-if="show_name">
       <slot name="name">
         <div
-          v-if="show_name"
           :class="name_class"
           :style="name_style">
           {{ full_name }}
