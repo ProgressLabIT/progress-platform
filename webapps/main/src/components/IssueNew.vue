@@ -1,17 +1,26 @@
 <template>
-  <q-card square class="surface1" style="max-width: 1200px;">
+  <q-card square class="surface1 q-pt-md" style="min-width: 600px; max-width: 1200px;">
     <q-card-section>
-      <div class="text-h2 display highlight text-center q-mt-md">
-        {{ $t('issue_new_title') }}
+      <div class="row justify-between items-center q-px-lg">
+        <div class="text-h2 display highlight text-center">
+          {{ $t('issue_new_title') }}
+        </div>
+        <q-btn
+          round
+          flat
+          padding="sm sm"
+          icon="mdi-close"
+          @click="$emit('close')">
+        </q-btn>
       </div>
     </q-card-section>
     <q-card-section>
       <q-stepper
         v-model="current_issue_step"
         animated
+        vertical
         square
         flat
-        alternative-labels
         header-class="full-width">
 
         <q-step
@@ -79,94 +88,32 @@
         <q-step
           :name="4"
           :title="$t('link', 2).toUpperCase()"
-          icon="mdi-link-variant">
+          icon="mdi-link-variant"
+          :done="current_issue_step > 4">
 
-          <div class="text-center text-body1 q-mb-lg">{{ $t('issue_new_link_step_helper') }}</div>
-
-          <div class="row justify-center">
-            <q-list style="max-width: 600px;">
-              <q-item>
-                <q-item-section avatar>
-                  <q-checkbox v-model="links.product" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>
-                    {{ $capitalize($t('product.label'))}}:
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="highlight">
-                    {{ job_data.product_code }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-
-              <q-item>
-                <q-item-section avatar>
-                  <q-checkbox v-model="links.operation" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>
-                  {{ $capitalize($t('operation.issue_link_label'))}}:
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="highlight">
-                    {{ $capitalize(job_data.phase_alias) }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-
-              <q-item>
-                <q-item-section avatar>
-                  <q-checkbox v-model="links.phase" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>
-                  {{ $capitalize($t('phase.issue_link_label'))}}:
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="highlight">
-                    {{ $capitalize(job_data.phase_alias) }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-
-              <q-item>
-                <q-item-section avatar>
-                  <q-checkbox v-model="links.work_order" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>
-                  {{ $capitalize($t('work_order.long'))}}:
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="highlight">
-                    {{ job_data.wo_code }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-
-              <q-item v-if="job_data.project_code">
-                <q-item-section>
-                  <q-checkbox v-model="links.project" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>
-                    {{ $capitalize($t('project')) }}:
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="highlight">
-                    {{ job_data.project_code }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
+          <div class="q-mb-lg">
+            {{ $t('issue_new_link_step_helper') }}
           </div>
 
+          <q-list style="max-width: 600px;">
+            <q-item
+              v-for="link in links.filter(l => l.visible)"
+              :key="link.type">
+              <q-item-section avatar>
+                <q-checkbox v-model="link.active" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>
+                  {{ link.label }}:
+                </q-item-label>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="highlight">
+                  {{ $capitalize(job_data[link.job_prop]) }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
 
           <q-stepper-navigation class="row justify-between q-mt-md">
             <q-btn
@@ -190,7 +137,7 @@
           :done="confirmed">
 
           <div class="row">
-            <div class="col-8">
+            <div class="col-7">
 
               <div class="text-h5 text-low text-uppercase q-mt-lg q-mb-xs">
                 {{ $t('type') }}
@@ -225,10 +172,19 @@
 
             </div>
 
-            <div class="col-4">
+            <div class="col-5">
               <div class="text-h5 text-low text-uppercase q-mt-lg q-mb-xs">
                 {{ $t('link', 2) }}
               </div>
+
+              <div
+                  v-for="link in links.filter(l => l.visible && l.active)"
+                  :key="link.type"
+                  class="q-mt-md">
+                  <div class="overline">{{ link.label }}</div>
+                  <span class="weight-bold q-mt-xs">{{ $capitalize(job_data[link.job_prop]) }}</span>
+                </div>
+
             </div>
           </div>
 
@@ -245,12 +201,6 @@
               :label="$t('save')"
               @click="save">
             </q-btn>
-            <q-space />
-            <q-btn
-              color="theme-grey"
-              :label="$t('cancel')"
-              @click="$emit('hide')">
-            </q-btn>
           </q-stepper-navigation>
         </q-step>
 
@@ -259,14 +209,15 @@
           :title="$t('end').toUpperCase()"
           icon="mdi-check"
           :done="false">
-          COMPLETED
-          <q-stepper-navigation>
-            <q-btn
-              color="theme-grey"
-              label="Back to previous page"
-              @click="$emit('hide')">
-            </q-btn>
-          </q-stepper-navigation>
+          <div class="column full-width flex-center">
+            <q-icon
+              name="mdi-check-circle"
+              color="theme-green"
+              size="xl">
+            </q-icon>
+            <div class="q-mt-sm">{{ $t('issue_new_success') }}</div>
+            <q-spinner class="q-mt-md"/>
+          </div>
         </q-step>
 
       </q-stepper>
@@ -295,22 +246,52 @@ export default {
       description: '',
       confirmed: false,
       critical: false,
-      product: null,
-      operation: null,
-      phase: null,
-      work_order: null,
-      project: null,
-      user: null,
-      job: null,
-      links: {
-        product: true,
-        operation: true,
-        phase: true,
-        work_order: true,
-        project: true,
-        user: true,
-        job: true
-      }
+      links: [
+        {
+          type: 'product',
+          job_prop: 'product_code',
+          label: this.$capitalize(this.$t('product.label')),
+          active: true,
+          value: null,
+          visible: true
+        },
+        {
+          type: 'operation',
+          job_prop: 'phase_alias',
+          label: this.$capitalize(this.$t('operation.issue_link_label')),
+          active: true,
+          value: null,
+          visible: true
+        },
+        {
+          type: 'phase',
+          job_prop: 'phase_alias',
+          label: this.$capitalize(this.$t('phase.issue_link_label')),
+          active: true,
+          value: null,
+          visible: true
+        },
+        {
+          type: 'work_order',
+          job_prop: 'wo_code',
+          label: this.$capitalize(this.$t('work_order.long')),
+          active: true,
+          value: null,
+          visible: true
+        },
+        {
+          type: 'user',
+          active: true,
+          value: null,
+          visible: false
+        },
+        {
+          type: 'job',
+          active: true,
+          value: null,
+          visible: false
+        }
+      ]
     }
   },
 
@@ -323,35 +304,42 @@ export default {
   methods: {
     save() {
       // if link is active send data in the form e.g. { type: product, key: whatever }
-      const active_links = Object.entries(this.links).filter(([k, v]) => !!v)
-      const link_data = active_links.map(([k, v]) => ({ type: k, key: this[k] }))
+      const link_data = this.links.filter(l => !!l.active).map(l => ({ type: l.type, key: l.value }))
+
+      const user = this.links.find(l => l.type == 'user').value
 
       this.saving = true
       const issue_data = {
         issue_type: this.issue_type._key,
         title: this.title,
         description: this.description,
-        created_by: `User/${this.user}`, // temporarily hardcoding DB id
+        created_by: `User/${user}`, // temporarily hardcoding DB id
         critical: this.critical,
         close_within: this.issue_type.close_within,
         // Map links to list of objects, including only populated properties
         linked_to: link_data
       }
       api.post('issue', issue_data).then(() => {
+        this.confirmed = true
         this.saving = false
         this.current_issue_step = 6
+        setTimeout(() => this.$emit('close'), 3000)
       })
     }
   },
 
   mounted() {
-    this.product = this.job_data.product_key
-    this.operation = this.job_data.operation_key
-    this.phase = this.job_data.phase_key
-    this.work_order = this.job_data.wo_key
-    this.project = this.job_data.project_code
-    this.user = this.$store.state.session.user._key
-    this.job = this.job_data._key
+    this.links.forEach(l => {
+      l.value = (
+        l.type == 'product' ? this.job_data.product_key
+        : l.type == 'operation' ? this.job_data.operation_key
+        : l.type == 'phase' ? this.job_data.phase_key
+        : l.type == 'work_order' ? this.job_data.wo_key
+        : l.type == 'user' ? this.$store.state.session.user._key
+        : l.type == 'job' ? this.job_data._key
+        : null
+      )
+    })
   }
 }
 </script>
@@ -361,4 +349,6 @@ export default {
   background-color: var(--surface-1)
   border-radius: 0px
 
+  .q-stepper__dot
+    color: white
 </style>
