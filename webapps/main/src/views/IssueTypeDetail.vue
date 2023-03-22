@@ -168,9 +168,8 @@ export default {
   },
 
   props: {
-    // from router
-    issue_type_key: {
-      type: String
+    issue_type: {
+      type: Object
     }
   },
 
@@ -188,12 +187,6 @@ export default {
         critical: undefined,
         close_within: 0
       }
-    }
-  },
-
-  computed: {
-    issue_type() {
-      return this.$store.state.issue_types.find(it => it._key == this.issue_type_key)
     }
   },
 
@@ -231,7 +224,7 @@ export default {
     showDelete() {
       this.$router.push({
         name: 'issueTypeDelete',
-        params: { issue_type_key: this.issue_type_key }
+        params: { issue_type_key: this.issue_type._key }
       })
     }
   },
@@ -240,7 +233,7 @@ export default {
     edit_mode() {
       this.setTempData()
     },
-    issue_type_key: {
+    issue_type: {
       immediate: true,
       handler: 'setTempData',
       deep: true

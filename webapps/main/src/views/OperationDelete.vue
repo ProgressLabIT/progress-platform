@@ -70,8 +70,9 @@ export default {
   // mixins: [NonExistentOperationGuard],
 
   props: {
-    operation_key: {
-      type: String
+    operation: {
+      type: Object,
+      required: true
     }
   },
 
@@ -79,12 +80,6 @@ export default {
     return {
       showModal: true,
       stage: 'confirm',
-    }
-  },
-
-  computed: {
-    operation() {
-      return this.$store.state.process.operations.find(o => o._key == this.operation_key)
     }
   },
 

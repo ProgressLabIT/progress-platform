@@ -119,8 +119,9 @@ export default {
   },
 
   props: {
-    operation_key: {
-      type: String,
+    operation: {
+      type: Object,
+      required: true
     }
   },
 
@@ -145,10 +146,6 @@ export default {
   },
 
   computed: {
-    operation() {
-      return this.$store.state.process.operations.find(o => o._key == this.operation_key)
-    },
-
     products_using_operation() {
       return this.operation.used_for
     },
@@ -212,8 +209,10 @@ export default {
     edit_mode() {
       this.setTempData()
     },
-    operation_key() {
-      this.setTempData()
+    operation: {
+      immediate: true,
+      deep: true,
+      handler: 'setTempData'
     }
   }
 }

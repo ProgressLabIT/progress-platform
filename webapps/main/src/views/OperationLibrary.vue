@@ -64,7 +64,7 @@
     <!-- OPERATION DATA -->
     <div class="col full-height" v-if="selected_operation">
       <router-view v-slot="{ Component }">
-        <component :is="Component" />
+        <component :is="Component" :operation="selected_operation"/>
       </router-view>
     </div>
 

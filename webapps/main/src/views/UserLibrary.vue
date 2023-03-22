@@ -91,7 +91,7 @@
       <router-view v-slot="{ Component, route }">
         <transition name="slide-fade" mode="out-in">
           <div :key="route.fullPath">
-            <component :is="Component" />
+            <component :is="Component" :user="selected_user" />
           </div>
         </transition>
       </router-view>
@@ -148,6 +148,10 @@ export default {
 
     selected_user_key() {
       return this.$route.params.user_key
+    },
+
+    selected_user() {
+      return this.user_list.find(u => u._key == this.selected_user_key)
     },
 
     filtered_users() {

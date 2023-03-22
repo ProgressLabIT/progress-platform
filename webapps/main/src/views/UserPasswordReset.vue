@@ -8,7 +8,7 @@
       </q-card-section>
       <q-card-section>
         <BaseUserAvatar
-          :user="user_data"
+          :user="user"
           size="70"
           name_class="solid-white"
           name_style="font-size: 20px">
@@ -72,13 +72,13 @@
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import { api } from '@/boot/axios.js'
-import NonExistentUserGuard from '@/mixins/NonExistentUserGuard.js'
+// import NonExistentUserGuard from '@/mixins/NonExistentUserGuard.js'
 
 export default {
 
   name: 'UserPasswordReset',
 
-  mixins: [NonExistentUserGuard],
+  // mixins: [NonExistentUserGuard],
 
   components: {
     BaseUserAvatar,
@@ -86,9 +86,9 @@ export default {
   },
 
   props: {
-    // From route
-    user_key: {
-      type: String
+    user: {
+      type: Object,
+      required: true
     }
   },
 
@@ -99,15 +99,9 @@ export default {
     }
   },
 
-  computed: {
-    user_data() {
-      return this.$store.state.user.user_list.find( user => user._key === this.user_key)
-    }
-  },
-
   methods:{
     resetPassword() {
-      api.delete(`user/${this.user_key}/password`).then( resp => {
+      api.delete(`user/${this.user._key}/password`).then( resp => {
         this.temp_psw = resp.data.detail.temp_psw
         this.stage = 'show_psw'
       })

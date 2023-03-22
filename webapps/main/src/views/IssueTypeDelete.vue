@@ -69,8 +69,8 @@ export default {
   },
 
   props: {
-    issue_type_key: {
-      type: String
+    issue_type: {
+      type: Object
     }
   },
 
@@ -81,15 +81,9 @@ export default {
     }
   },
 
-  computed: {
-    issue_type() {
-      return this.$store.state.issue_types.find(it => it._key == this.issue_type_key)
-    }
-  },
-
   methods:{
     deleteIssueType() {
-      api.delete(`issue-type/${this.issue_type_key}`)
+      api.delete(`issue-type/${this.issue_type._key}`)
       .then( async () => {
         // reload users from backend to make sure archived user is not present
         this.stage="success"
@@ -103,7 +97,7 @@ export default {
           this.$router.back()
         }
         else {
-          window.alert(this.$tc('issue_type_alerts_delete_general_error'))
+          window.alert(this.$t('issue_type_alerts_delete_general_error'))
         }
       })
     }
