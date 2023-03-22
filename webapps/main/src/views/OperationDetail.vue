@@ -210,7 +210,6 @@ export default {
       this.setTempData()
     },
     operation: {
-      immediate: true,
       deep: true,
       handler: 'setTempData'
     }

@@ -169,7 +169,8 @@ export default {
 
   props: {
     issue_type: {
-      type: Object
+      type: Object,
+      required: true
     }
   },
 
@@ -229,12 +230,15 @@ export default {
     }
   },
 
+  created() {
+    this.setTempData()
+  },
+
   watch: {
     edit_mode() {
       this.setTempData()
     },
     issue_type: {
-      immediate: true,
       handler: 'setTempData',
       deep: true
     }
