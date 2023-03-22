@@ -1,9 +1,9 @@
 class Queries:
 
   FIND_ISSUES = """
-    // Filter first issue properties...
     FOR i IN Issue
     FILTER
+      // Filter first issue properties...
       i._key == @issue_key
       && @issue_type ? i.issue_type == @issue_type : true
       && @creator_id ? i.created_by == @creator_id : true
@@ -13,15 +13,15 @@ class Queries:
       && @time_closed_to ? i.closed_to <= @time_closed_to : true
       && @issue_open ? i.open == @issue_open : true
 
-      // ...and then in relationships
-      FOR ir IN issue_rel
+      // Then in relationships...
+      FOR v, e IN 1..1 OUTBOUND i issue_rel
       FILTER
-        ir._from == i._id
-        && @product_key ? ir._to == CONCAT('Product/', @product_key) : true
-        && @work_order_key ? ir._to == CONCAT('WorkOrder/', @work_order_key) : true
-        && @job_key ? ir._to == CONCAT('Job/', @job_key) : true
-        && @phase_key ? ir._to == CONCAT('Phase/', @phase_key) : true
-        && @operation_key ? ir._to == CONCAT('Operation/', @operation_key) : true
+        @product_key ? e._to == CONCAT('Product/', @product_key) : true
+        && @work_order_key ? e._to == CONCAT('WorkOrder/', @work_order_key) : true
+        && @job_key ? e._to == CONCAT('Job/', @job_key) : true
+        && @phase_key ? e._to == CONCAT('Phase/', @phase_key) : true
+        && @operation_key ? e._to == CONCAT('Operation/', @operation_key) : true
+
     LIMIT @limit || null
     LET icon = FIRST(
       FOR it IN IssueType
