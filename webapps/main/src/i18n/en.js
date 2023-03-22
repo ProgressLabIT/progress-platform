@@ -92,6 +92,7 @@ export default {
   "increase": "increase",
   "info": "info",
   "issue": "issue",
+  "issue_new_success": "Issue created successfully. Redirecting...",
   "issue_new_title": "New issue",
   "issue_new_link_step_helper": "Indicate to which elements this issue should be linked to",
   "issue_type": "Issue type | Issue types",
@@ -148,6 +149,8 @@ export default {
   "loading_text": "getting data...",
   "material": "material | materials",
   "material_cost": "material cost",
+  "message": "Message",
+  "message_prompt": "Write...",
   "name": "name",
   "new": "new",
   "next": "next",
@@ -155,6 +158,7 @@ export default {
   "no_department": "no department",
   "of": "of",
   "on_time": "on time",
+  "open": "open",
   "operation": {
     "add_op": "add operation",
     "alerts": {
@@ -398,6 +402,7 @@ export default {
   "search": "search",
   "select": "select",
   "select_all": "select all",
+  "send": "Send",
   "session": {
     "alerts": {
       "close_session": "do you really want to close this session?"
@@ -524,5 +529,6 @@ export default {
     "update_due_date": "change due date",
     "update_from_date": "change release date",
     "wo_code": "code",
-  }
+  },
+  "write": "Write"
 }

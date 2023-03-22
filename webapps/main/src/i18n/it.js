@@ -93,6 +93,7 @@ export default {
   "increase": "aumenta",
   "info": "info",
   "issue": "segnalazione | segnalazioni",
+  "issue_new_success": "Segnalazione creata con successo. Reindirizzamento in corso...",
   "issue_new_title": "Nuova segnalazione",
   "issue_new_link_step_helper": "Indicare a quali elementi dovrebbe essere collegata la segnalazione",
   "issue_type": "tipo di segnalazione | tipi di segnalazione",
@@ -152,6 +153,8 @@ export default {
   "loading_text": "recupero dati in corso...",
   "material_cost": "costo materiali",
   "material": "materiale | materiali",
+  "message": "Messaggio | Messaggi",
+  "message_prompt": "Scrivi...",
   "name": "nome",
   "new": "nuovo",
   "next": "avanti",
@@ -159,6 +162,7 @@ export default {
   "no_department": "nessun reparto",
   "of": "di",
   "on_time": "puntuale",
+  "open": "aperto",
   "operation": {
     "add_op": "aggiungi operazione",
     "alerts": {
@@ -401,6 +405,7 @@ export default {
   "search": "cerca",
   "select": "seleziona",
   "select_all": "seleziona tutti",
+  "send": "Invia",
   "session": {
     "alerts": {
       "close_session": "vuoi davvero chiudere la sessione?"

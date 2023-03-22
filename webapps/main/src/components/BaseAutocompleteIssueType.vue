@@ -78,7 +78,7 @@ export default {
 
   computed: {
     origin_list() {
-      return this.$store.state.issue_types
+      return this.$store.state.quality.issue_types
     }
   },
 
