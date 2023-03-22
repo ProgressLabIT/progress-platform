@@ -175,7 +175,7 @@
         :show="show_issue_new"
         background="#0008"
         @hide="show_issue_new = false">
-        <IssueNew />
+        <IssueNew @close="show_issue_new = false"/>
       </BaseDialog>
 
     </q-page>
