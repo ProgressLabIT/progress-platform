@@ -119,11 +119,11 @@ class Queries:
       RETURN ws.duration
     )
 
-    LET processing_cost = SUM(
+    LET processing_cost = CEIL(SUM(
       FOR ws IN WorkSession
       FILTER ws.work_order_key == @wo_key
       RETURN ws.duration * ws.hourly_cost
-    )
+    ) / (60*60*10)) / 100
 
     // Check if any WO Job is still open
     LET still_open = TO_BOOL(COUNT(FOR j IN jobs FILTER j.stage != 'closed' RETURN 1))
