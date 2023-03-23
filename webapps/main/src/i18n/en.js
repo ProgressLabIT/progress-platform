@@ -163,6 +163,11 @@ export default {
       "medium": "lead time",
       "short": "LT"
     },
+    "processing_cost": {
+      "long": "processing cost",
+      "medium": "proc. cost",
+      "short": "PC"
+    },
     "processing_time": {
       "long": "processing time",
       "medium": "proc. time",

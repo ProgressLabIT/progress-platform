@@ -44,6 +44,10 @@
                 <span>{{ props.row[c.name] || 0 }}</span>
               </template>
 
+              <template v-else-if="c.name == 'processing_time'">
+                <span>{{ getHumanDuration(props.row.processing_time) }}</span>
+              </template>
+
               <template v-else>
                 <span class="table-data">
                   {{ $capitalizeAll(props.row[c.name] || '') }}
@@ -60,6 +64,7 @@
 <script>
 import { DateTime as DT } from 'luxon'
 import { mapState } from 'vuex'
+import { durationFromMillisec as duration } from '@/lib/duration.js'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
@@ -141,7 +146,19 @@ export default {
           name: 'end',
           align: 'right',
           label: this.$t('end_date').toUpperCase()
-        }
+        },
+        {
+          field: 'processing_time',
+          name: 'processing_time',
+          align: 'right',
+          label: this.$t('performance.processing_time.medium').toUpperCase()
+        },
+        {
+          field: 'processing_cost',
+          name: 'processing_cost',
+          align: 'right',
+          label: this.$t('performance.processing_cost.medium').toUpperCase()
+        },
       ]
     }
   },
@@ -172,6 +189,10 @@ export default {
 
     getHumanDate(iso_string) {
       return DT.fromISO(iso_string).setLocale(this.$i18n.locale).toLocaleString(DT.DATE_MED_WITH_WEEKDAY)
+    },
+
+    getHumanDuration(millisecs) {
+      return duration(millisecs)
     }
   },
 
