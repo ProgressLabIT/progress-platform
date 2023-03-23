@@ -47,14 +47,14 @@
           {{ $t('user.creation_date') }}
         </div>
         <div class="q-mt-xs">
-          {{ $formatDateTime(user.created_at, locale, 'dd LLL yyyy') }}
+          {{ formatDate(user.created_at) }}
         </div>
 
         <div class="text-h5 uppercase q-mt-lg">
           {{ $t('user.last_login') }}
         </div>
         <div class="q-mt-xs">
-          {{ $formatDateTime(user.last_login, locale, 'dd LLL yyyy HH:mm') }}
+          {{ formatDate(user.last_login, true) }}
         </div>
       </div>
 
@@ -251,6 +251,7 @@ import scopes_list from "@/lib/UserScopes.js"
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseAutocompleteDepartment from '@/components/BaseAutocompleteDepartment.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
+import { DateTime as DT } from 'luxon'
 
 export default {
 
@@ -335,6 +336,11 @@ export default {
       Object.keys(this.temp_data).forEach( key => {
         this.temp_data[key] = this.user[key]
       })
+    },
+
+    formatDate(date_string, with_time) {
+      const format = with_time ? DT.DATETIME_MED : DT.DATE_MED
+      return this.$formatDateTime(date_string, this.$i18n.locale, format)
     },
 
     updateTempDep(department_obj) {
