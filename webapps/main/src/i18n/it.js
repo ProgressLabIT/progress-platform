@@ -192,6 +192,11 @@ export default {
       "medium": "t. evasione",
       "short": "TE"
     },
+    "processing_cost": {
+      "long": "costo di processo",
+      "medium": "c. processo",
+      "short": "cp"
+    },
     "processing_time": {
       "long": "tempo di processo",
       "medium": "t. processo",
