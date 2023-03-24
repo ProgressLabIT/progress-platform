@@ -1,5 +1,5 @@
 <template>
-  <q-item class="q-pa-lg" :clickable="clickable">
+  <q-item class="q-py-md" :clickable="clickable">
     <q-item-section avatar>
       <q-icon :name="issue.icon" size="lg" />
     </q-item-section>
