@@ -18,7 +18,6 @@
 </template>
 
 <script>
-import { DateTime as DT } from 'luxon'
 import { formatDateTime } from '@/lib/TimeHandling.js'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 
@@ -43,7 +42,7 @@ export default {
     },
 
     datetime() {
-      return formatDateTime(this.message.created, this.$i18n.locale, DT.DATETIME_MED)
+      return formatDateTime(this.message.created, this.$i18n.locale, 'DATETIME_MED')
     }
   }
 }
