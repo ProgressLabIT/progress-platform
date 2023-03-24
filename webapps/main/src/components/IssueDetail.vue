@@ -1,36 +1,45 @@
 <template>
-  <div class="absolute-full row">
-    <div class="col-8">
+  <div class="absolute-full row q-pa-md">
+
+    <!-- LEFT SECTION -->
+    <div class="col-8 column">
       <IssueHeader :issue="issue" />
-      <div class="row">
-      <q-timeline class="q-ml-xl col-6" color="theme-grey">
-        <q-timeline-entry
-          v-for="m, index in messages"
-          :key="index"
-          :title="getUserData(m).full_name"
-          :avatar="getUserData(m).src">
-          <div style="white-space: pre-line">
-            {{ m.content }}
-          </div>
-        </q-timeline-entry>
-      </q-timeline>
-      <div class="col">
-          <div v-for="n in 6" :key="n" class="q-mt-md q-ml-xl relative-position" style="z-index: 0">
-            <div>Time</div>
-            <div>Name</div>
-            <div>Content</div>
-            <div style="position: absolute; left: -40px; top: 0; height: 100%; width: 32px">
-              <div class="column full-height">
-                <div style="height: 32px; width: 32px; border-radius: 100%; background-color: #888; border: 4px solid green; box-sizing: content-box;"></div>
-                <div style="position: absolute; height: 100%; left: 49%; width: 2px; background-color: red;"></div>
-              </div>
+      <div class="q-ml-xl q-px-xl">
+        <div v-for="m, index in messages" :key="m._key" class="q-mt-md q-ml-xl relative-position row full-width items-baseline justify-between">
+          <div class="text-italic">{{ $formatDateTime(m.created, $i18n.locale, 'DATETIME_MED') }}</div>
+          <div class="text-h4 highlight">MESSAGGIO PUBBLICATO</div>
+          <BaseUserAvatar name_first :user="getUserData(m)"></BaseUserAvatar>
+          <div style="position: absolute; left: -40px; top: 5; height: 100%; width: 32px">
+            <div class="column full-height">
+              <div style="height: 13px; width: 13px; border-radius: 100%; background-color: #888; border: 5px solid var(--surface-1); box-sizing: content-box; z-index:99"></div>
+              <div v-if="index < messages.length -1" style="position: absolute; height: 100%; left: 11px; top: 20px; width: 1px; background-color: #fff3;"></div>
             </div>
           </div>
+        </div>
       </div>
+
+      <q-space />
+
+
+      <div class="row q-pa-md q-gutter-lg">
+        <template v-if="issue.open">
+          <q-btn color="theme-green" label="Chiudi segnalazione" />
+          <q-btn v-if="issue.critical" color="theme-orange" label="Segna come non critica" />
+          <q-btn v-else color="theme-red" label="trasforma in critica" />
+        </template>
+        <template v-else>
+          <q-btn color="theme-orange" label="riapri segnalazione" />
+          <q-btn color="theme-red" label="riapri come critica" />
+        </template>
+        <q-space />
+        <q-btn color="theme-grey" label="torna all'elenco" @click="goToJobIssueList"/>
       </div>
     </div>
-    <q-separator vertical inset spaced />
-    <div class="col column q-pa-lg full-height">
+
+    <q-separator vertical spaced />
+
+    <!-- RIGHT SECTION -->
+    <div class="col column q-pa-md full-height">
       <div class="display low-text text-h5 col-auto q-pb-md">
         {{ $t('message', 2) }}
       </div>
@@ -49,24 +58,10 @@
               v-model="new_message"
               :placeholder="$t('message_prompt')">
             </q-input>
-<!--             <template v-else>
-              <div class="row justify-center full-width">
-                <q-spinner-bars v-for="n in 10" size="lg" style="margin-left: -6px"/>
-              </div>
-            </template> -->
           </div>
-         <!--  <q-btn
-            round
-            dense
-            color="theme-red"
-            icon="mdi-microphone"
-            class="q-ml-md"
-            @click="record">
-          </q-btn> -->
         </div>
         <q-btn
           class="full-width q-mt-md"
-          padding="sm"
           :loading="loading"
           color="theme-green"
           :label="$t('send')"
@@ -81,6 +76,7 @@
 import IssueHeader from '@/components/IssueHeader.vue'
 import enrichIssue from '@/mixins/issues.js'
 import Message from '@/components/Message.vue'
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 
 export default {
 
@@ -88,7 +84,8 @@ export default {
 
   components: {
     IssueHeader,
-    Message
+    Message,
+    BaseUserAvatar
   },
 
   mixins: [enrichIssue],
@@ -131,9 +128,19 @@ export default {
     getUserData(message) {
       const user = this.$store.getters.user_data(message._from.split('/')[1])
       return {
+        ...user,
         full_name: user.name + ' ' + user.surname,
         src: this.getAvatarSrc(user)
       }
+    },
+
+    goToJobIssueList() {
+      this.$router.push({
+        name: 'jobIssues',
+        params: {
+          job_key: this.$route.params.job_key
+        }
+      })
     },
 
     postMessage() {
@@ -148,36 +155,6 @@ export default {
         this.getMessages()
         this.loading = false
       })
-    },
-
-    async record(constraints) {
-      const downloadLink = document.getElementById('download');
-      const stopButton = document.getElementById('stop');
-
-
-      const handleSuccess = function(stream) {
-        const options = {mimeType: 'audio/webm'};
-        const recordedChunks = [];
-        const mediaRecorder = new MediaRecorder(stream, options);
-
-        mediaRecorder.addEventListener('dataavailable', function(e) {
-          if (e.data.size > 0) recordedChunks.push(e.data);
-        });
-
-        mediaRecorder.addEventListener('stop', function() {
-          downloadLink.href = URL.createObjectURL(new Blob(recordedChunks));
-          downloadLink.download = 'acetest.wav';
-        });
-
-        stopButton.addEventListener('click', function() {
-          mediaRecorder.stop();
-        });
-
-        mediaRecorder.start();
-      };
-
-      navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-      .then(handleSuccess);
     }
   },
 

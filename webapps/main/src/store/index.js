@@ -38,7 +38,6 @@ import bom from "./bom"
  * async/await or return a Promise which resolves
  * with the Store instance.
  */
-
 function resetSessionTimeoutAtStoreChange(store) {
   const mutations_to_ignore = [
     'TOGGLE_SESSION_LOCK',
@@ -63,7 +62,6 @@ const store = createStore({
       screen_title: 'progress',
       theme_colors: dark,
       icons: icon_list,
-      issue_types: []
     }
   },
 
