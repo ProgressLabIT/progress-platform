@@ -156,6 +156,7 @@ async def create_product(
 async def copy_product(
   original_product: str = Body(), # Can be product key or code (key default)
   new_code: str = Body(),
+  new_description: str = Body(None),
   by_code: bool = Body(default=False)
   ):
 
@@ -182,6 +183,7 @@ async def copy_product(
     new_product.created = timestamp()
 
     original_product_code = new_product.code
+    original_product_desc = new_product.description
     original_product_key = new_product.key
 
   except StopIteration:
@@ -208,6 +210,7 @@ async def copy_product(
   try:
     # 1. CREATE NEW PRODUCT WITH PROVIDED CODE
     new_product.code = new_code
+    new_product.description = new_desc or original_product_desc
     new_product.active = True
     new_product.key = None
 
