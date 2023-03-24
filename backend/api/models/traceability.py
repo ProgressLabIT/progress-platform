@@ -74,6 +74,7 @@ class WorkSession(FlexModel):
 
 
 class EventType(Enum):
+  # Production Events
   JOB_STARTED = 'JOB_STARTED'
   JOB_PAUSED = 'JOB_PAUSED'
   JOB_PAUSED_OFFLINE = 'JOB_PAUSED_OFFLINE'
@@ -82,12 +83,23 @@ class EventType(Enum):
   STEP_COMPLETED = 'STEP_COMPLETED'
   BATCH_COMPLETED = 'BATCH_COMPLETED'
 
+  # Issue Events
+  ISSUE_CREATED = 'ISSUE_CREATED'
+  ISSUE_UPDATED = 'ISSUE_UPDATED'
+  MESSAGE_POSTED = 'MESSAGE_POSTED'
+  MESSAGE_UPDATED = 'MESSAGE_UPDATED'
+  ISSUE_CLOSED = 'ISSUE_CLOSED'
+  ISSUE_REOPENED = 'ISSUE_REOPENED'
 
-class ProductionEvent(FlexModel):
+  # Admin Events
+  # e.g. WorkSession time Forced, etc.
+
+
+class EventModel(FlexModel):
   key: str = Field(None, alias="_key")
   event_type: EventType
   user_key: str
-  user_session_key: str
+  user_session_key: str = None
   work_session_key: str = None
   job_key: str = None
   product_key: str = None
@@ -101,7 +113,9 @@ class ProductionEvent(FlexModel):
   completed_batch_qt: float = None
   new_batch_key: str = None
   project_code: str = None
-  timestamp: datetime = timestamp()
+  issue_key: str = None
+  message_key: str = None
+  timestamp: datetime = Field(default_factory=timestamp)
   user_data: Any
   description: str = None # optional descriptive field for auditing reasons
 

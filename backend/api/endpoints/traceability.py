@@ -2,8 +2,8 @@ import traceback
 
 from fastapi import APIRouter, HTTPException
 
+from events.main import Event
 from models.traceability import *
-from utils.event import Event
 from utils.api import APIResponse
 from utils.db import db
 from utils.dt import timestamp
@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.post('/event')
-async def apply_production_event(data: ProductionEvent):
+async def apply_production_event(data: EventModel):
   try:
     event = Event(data)
     response = event.save()
