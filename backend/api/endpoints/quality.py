@@ -6,6 +6,7 @@ from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from models.quality import *
+from models.event import EventModel, EventType
 from utils.api import APIResponse
 from utils.db import db
 from utils.quality import Queries
@@ -152,82 +153,6 @@ async def get_issue(
 
 # ----------------------------------------------------------------------
 
-def build_link(_from: str, link_dict: IssueLink):
-  link_map = dict(
-    product="Product/",
-    operation="Operation/",
-    phase="Phase/",
-    work_order="WorkOrder/",
-    project="Project/",
-    user="User/",
-    job="Job/"
-  )
-  target = link_map[link_dict.type.value] + link_dict.key
-  return dict(_from=_from, _to=target)
-
-@router.post('/issue')
-async def create_issue(data: IssueWithLinks):
-  try:
-    tx = db.begin_transaction(write=['Issue', 'issue_rel'])
-    new_issue_id = tx.collection('Issue').insert(Issue(**data.dict()))['_id']
-
-    rels = [build_link(_from=new_issue_id, link_dict=rel) for rel in data.linked_to]
-
-    tx.collection('issue_rel').insert_many(rels, silent=True)
-    tx.commit_transaction()
-  except Exception:
-    raise HTTPException(
-      status_code=500,
-      detail=dict(
-        message="There was an error creating the issue in the database.",
-        error=traceback.format_exc()
-      )
-    )
-
-# ----------------------------------------------------------------------
-
-@router.patch('/issue/{issue_key}')
-async def update_issue(
-  title: str = Body(None),
-  description: str = Body(None),
-  issue_type: str = Body(None),
-  critical: bool = Body(None),
-  open: bool = Body(None),
-  field_updates: List[IssueField] = None
-  ):
-
-  new_data = dict(_key = issue_key)
-
-  if title:
-    new_data['title'] = title
-
-  if description:
-    new_data['description'] = description
-
-  if issue_type:
-    new_data['issue_type'] = issue_type
-
-  if critical:
-    new_data['critical'] = critical
-
-  if open:
-    new_data['open'] = open
-
-  try:
-    updated_issue = db.collection('Issue').update(new_data, return_new=True)['new']
-    return APIResponse(
-      message=f"Issue { updated_issue['_key'] } updated successfully",
-      detail=updated_issue
-    )
-
-  except Exception:
-    raise HTTPException(
-      status_code=500,
-      detail=dict(
-        message="There was an error updating the issue in the database.",
-        error=traceback.format_exc()
-      )
-    )
 
 @router.delete('/issue/{issue_key}')
 async def delete_issue(issue_key: str):
@@ -257,63 +182,6 @@ async def get_messages(issue_key: str):
       status_code=500,
       detail=dict(
         message="There was an error fetching messages from the db.",
-        error=traceback.format_exc()
-      )
-    )
-
-
-
-@router.post('/message')
-async def post_message(data: Message):
-# use query parameters to filter specific type
-  try:
-    new_message = db.collection('message').insert(data, return_new=True)['new']
-    return APIResponse(
-      message="The message was posted correctly",
-      detail=new_message
-    )
-  except Exception:
-    raise HTTPException(
-      status_code=500,
-      detail=dict(
-        message="There was an error posting the message.",
-        error=traceback.format_exc()
-      )
-    )
-
-# ----------------------------------------------------------------------
-
-@router.patch('/message/{message_key}')
-async def update_message(content: str = Body()):
-  try:
-    update = dict(_key=message_key, content=content)
-    updated_content = db.collection('message').update(update, return_new=True)['new']
-    return APIResponse(
-      message="The message was updated correctly",
-      detail=updated_content
-    )
-  except Exception:
-    raise HTTPException(
-      status_code=500,
-      detail=dict(
-        message="There was an error updating the message.",
-        error=traceback.format_exc()
-      )
-    )
-
-# ----------------------------------------------------------------------
-
-@router.delete('/message/{message_key}')
-async def delete_message(message_key: str):
-  # Dont't really delete it, simply flag it as deleted.
-  try:
-    update = dict(_key=message_key, deleted=True)
-    db.collection('message').update(update)
-  except Exception:
-    raise HTTPException(
-      status_code=500,
-      detail=dict(
-        message="There was an error updating the message.",
         error=traceback.format_exc()
       )
     )

@@ -73,6 +73,7 @@
 </template>
 
 <script>
+import event from '@/mixins/event.js'
 import IssueHeader from '@/components/IssueHeader.vue'
 import enrichIssue from '@/mixins/issues.js'
 import Message from '@/components/Message.vue'
@@ -88,7 +89,7 @@ export default {
     BaseUserAvatar
   },
 
-  mixins: [enrichIssue],
+  mixins: [enrichIssue, event],
 
   props: {
     // from router
@@ -144,13 +145,16 @@ export default {
     },
 
     postMessage() {
-      const data = {
+      const message_data = {
         sender: `User/${this.$store.state.session.user._key}`,
         recipient: `Issue/${this.issue._key}`,
         content: this.new_message
       }
       this.loading = true
-      this.$api.post('message', data).then(() => {
+      this.sendEvent({
+        event_type: 'MESSAGE_POSTED',
+        event_data: { message_data }
+      }).then(() => {
         this.new_message = ''
         this.getMessages()
         this.loading = false

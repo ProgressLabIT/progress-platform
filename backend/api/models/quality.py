@@ -61,9 +61,7 @@ class Issue(ArangoDocument):
 
   A job link is enough to establish within a graph single query all the relationships with Phase, Operation and Product and WorkOrder. However If the issue is raised withing the WorkOrder in general there's no graph that can help, and the product must be associated explicitly.
   """
-  issue_type: str # _key of the issue type
-  title: str
-  description: str = None
+  issue_type: str = None # _key of the issue type
   created: datetime = Field(default_factory=timestamp)
   created_by: str # Creator ID
   closed: datetime = None
@@ -72,6 +70,13 @@ class Issue(ArangoDocument):
   data: List[IssueField] = None
   icon: str = None
   open: bool = True
+
+  # Require issue type only when closing.
+  @root_validator
+  def ensure_type_if_closing(cls, values):
+    if not open and issue_type is None:
+      raise ValueError('Issue must have type associated to be closed')
+    return values
 
 
 class IssueLinkType(str, Enum):

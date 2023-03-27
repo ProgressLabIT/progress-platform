@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from events.main import Event
 from models.traceability import *
+from models.event import EventModel
 from utils.api import APIResponse
 from utils.db import db
 from utils.dt import timestamp

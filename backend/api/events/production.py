@@ -1,8 +1,10 @@
 from pydantic import BaseModel
 
 from events.shared import EventMeta
+
 from models.traceability import *
 from models.production import Job, WorkOrderFull, WorkStatus
+
 from utils.production import Queries as ProductionQueries, update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
 from utils.db import db, model_to_db_dict
@@ -24,24 +26,56 @@ class ProductionEvent:
   production_post_processing = ['update_job_last_online', 'update_work_order']
 
 
-  JOB_STARTED = EventMeta(collections=production_collections, action='start_job', post_processing=production_post_processing)
-  JOB_PAUSED = EventMeta(collections=production_collections, action='pause_job', post_processing=production_post_processing)
-  JOB_PAUSED_OFFLINE = EventMeta(collections=production_collections, action='pause_job', post_processing=production_post_processing)
-  JOB_RESUMED = EventMeta(collections=production_collections, action='resume_job', post_processing=production_post_processing)
-  JOB_BACK_ONLINE = EventMeta(collections=production_collections, action='restore_work_session', post_processing=production_post_processing)
-  STEP_COMPLETED = EventMeta(collections=production_collections, action='complete_step', post_processing=production_post_processing)
-  BATCH_COMPLETED = EventMeta(collections=production_collections, action='complete_batch', post_processing=production_post_processing)
+  # EVENTS DEFINITION ========================
+  JOB_STARTED = EventMeta(
+    collections=production_collections,
+    action='start_job',
+    post_processing=production_post_processing
+  )
 
+  JOB_PAUSED = EventMeta(
+    collections=production_collections,
+    action='pause_job',
+    post_processing=production_post_processing
+  )
 
+  JOB_PAUSED_OFFLINE = EventMeta(
+    collections=production_collections,
+    action='pause_job',
+    post_processing=production_post_processing
+  )
 
+  JOB_RESUMED = EventMeta(
+    collections=production_collections,
+    action='resume_job',
+    post_processing=production_post_processing
+  )
+
+  JOB_BACK_ONLINE = EventMeta(
+    collections=production_collections,
+    action='restore_work_session',
+    post_processing=production_post_processing
+  )
+
+  STEP_COMPLETED = EventMeta(
+    collections=production_collections,
+    action='complete_step',
+    post_processing=production_post_processing
+  )
+
+  BATCH_COMPLETED = EventMeta(
+    collections=production_collections,
+    action='complete_batch',
+    post_processing=production_post_processing
+  )
 
   ######################################################################
   # HELPER METHODS (Updates to specific collections)
   ######################################################################
 
-  # ....................................................................
+  # ===================================================================
   # WorkSession
-  # ....................................................................
+  # ===================================================================
 
   def create_work_session(self):
     # Check no other work session is active from the user and close it if necessary
@@ -98,9 +132,9 @@ class ProductionEvent:
     return updated_work_session
 
 
-  # ....................................................................
+  # ===================================================================
   # Serial
-  # ....................................................................
+  # ===================================================================
 
   # def create_serial(self, counter, batch_key):
   #   new_serial = Serial(
@@ -142,9 +176,9 @@ class ProductionEvent:
 
 
 
-  # ....................................................................
+  # ===================================================================
   # Batch
-  # ....................................................................
+  # ===================================================================
 
   def create_batch(self, batch_qt):
     self.get_job_data()
@@ -218,9 +252,9 @@ class ProductionEvent:
     return step_done_count == total_step_count
 
 
-  # ....................................................................
+  # ===================================================================
   # WIP
-  # ....................................................................
+  # ===================================================================
 
   def declare_wip(self):
     if not self.job:
@@ -306,9 +340,9 @@ class ProductionEvent:
     return total_available
 
 
-  # ....................................................................
+  # ===================================================================
   # Job
-  # ....................................................................
+  # ===================================================================
 
   def set_job_active_state(self, active: bool):
     update_data = dict(
@@ -385,9 +419,9 @@ class ProductionEvent:
     )
 
 
-  # ....................................................................
+  # ===================================================================
   # WorkOrder
-  # ....................................................................
+  # ===================================================================
 
   def get_work_order_data(self):
     wo_data = self.tx.collection('WorkOrder').get(self.info.work_order_key)
@@ -463,13 +497,13 @@ class ProductionEvent:
       job_data = self.job
     )
 
-  # ....................................................................
+  # ===================================================================
 
   def pause_job(self):
     self.close_work_session()
     self.set_job_active_state(False)
 
-  # ....................................................................
+  # ===================================================================
 
   def resume_job(self):
     self.get_job_data()
@@ -502,7 +536,7 @@ class ProductionEvent:
       job_data = self.job
     )
 
-  # ....................................................................
+  # ===================================================================
 
   def restore_work_session(self):
     updated_work_session = dict(
@@ -520,7 +554,7 @@ class ProductionEvent:
 
     self.response = self.job
 
-  # ....................................................................
+  # ===================================================================
 
   def complete_step(self):
     self.get_job_data()
@@ -554,7 +588,7 @@ class ProductionEvent:
       )
 
 
-  # ....................................................................
+  # ===================================================================
 
   def complete_batch(self):
 
@@ -641,15 +675,4 @@ class ProductionEvent:
     if self.info.next_phase_key:
       self.declare_wip()
 
-
-# =======================================================
-
-class IssueEvent:
-  issue_collections = ['Issue', 'issue_rel']
-
-  # Mapping of event types to metadata
-
-  ISSUE_CREATED = dict(category="quality", collections=issue_collections, action="open_issue")
-  ISSUE_MESSAGE_POSTED = dict(category="quality", collections=issue_collections, action="")
-  ISSUE_CLOSED = dict(category="quality", collections=issue_collections, action="")
-  ISSUE_REOPENED = dict(category="quality", collections=issue_collections, action="")
+# --------------------------------------------------------------------

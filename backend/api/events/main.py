@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 from events import IssueEvent, ProductionEvent
-from models.traceability import EventModel
+from models.event import EventModel
 from utils.db import db
 
 
@@ -38,7 +38,7 @@ class Event(ProductionEvent, IssueEvent):
       self.action()
 
       # Apply updates based on event category shared logic
-      for method in self.meta.post_processing:
+      for method in self.meta.post_processing or []:
         getattr(self, method)()
 
       # Save event

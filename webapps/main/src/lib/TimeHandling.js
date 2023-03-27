@@ -18,3 +18,7 @@ export function shortDateString(string, locale) {
   if (string === undefined) return '-'
   else return formatDateString(string, locale, options)
 }
+
+export function timestamp() {
+  return DT.utc().toISO()
+}

@@ -228,6 +228,7 @@
 <script>
 import { api } from '@/boot/axios.js'
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue'
+import { timestamp } from '@/lib/TimeHandling.js'
 
 export default {
 
@@ -319,7 +320,14 @@ export default {
         // Map links to list of objects, including only populated properties
         linked_to: link_data
       }
-      api.post('issue', issue_data).then(() => {
+      const event = {
+        event_type: 'ISSUE_CREATED',
+        user_key: user,
+        user_session_key: this.$store.state.session.session_key,
+        timestamp: timestamp(),
+        issue_data
+      }
+      api.post('event', event).then(() => {
         this.confirmed = true
         this.saving = false
         this.current_issue_step = 6
