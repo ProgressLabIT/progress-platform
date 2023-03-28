@@ -557,7 +557,8 @@ export default {
     "short": "op",
     "tabs": {
       "workOrderHistory": "storico",
-      "workOrderJobs": "lavori"
+      "workOrderJobs": "lavori",
+      "workOrderIssues": 'segnalazioni'
     },
     "update_due_date": "modifica data scadenza",
     "update_from_date": "modifica data rilascio",

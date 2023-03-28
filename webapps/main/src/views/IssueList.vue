@@ -25,7 +25,7 @@ import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
 
-  name: 'WorkSessionIssues',
+  name: 'IssueList',
 
   components: {
     IssueHeader,
@@ -35,10 +35,21 @@ export default {
   mixins: [enrichIssue],
 
   props: {
-    job_key: String // from router
+    // from router
+    job_key: String,
+    wo_key: String,
   },
 
   computed: {
+    context() {
+      // Check where the component is being used
+      return this.job_key
+        ? 'job'
+        : this.wo_key
+        ? 'work-order'
+        : undefined
+    },
+
     base_issues() {
       return this.$store.state.quality.issues
     },
@@ -49,13 +60,24 @@ export default {
 
   methods: {
     openIssue(issue_key) {
+      const next_route_name =
+        this.context == 'job' ? 'jobIssueDetail'
+        : this.context == 'work-order' ? 'workOrderIssueDetail'
+        : null
+
       this.$router.push({
-        name: 'jobIssueDetail',
+        name: next_route_name,
         params: { issue_key }
       })
     },
+
     getIssues() {
-      this.$store.dispatch('getIssues', { job_key: this.job_key })
+      const filter =
+        this.context == 'job' ? { job_key: this.job_key }
+        : this.context == 'work-order' ? { work_order_key: this.wo_key }
+        : null
+
+      this.$store.dispatch('getIssues', filter)
     }
   },
 

@@ -554,7 +554,8 @@ export default {
     "short": "wo",
     "tabs": {
       "workOrderHistory": "history",
-      "workOrderJobs": "jobs"
+      "workOrderJobs": "jobs",
+      "workOrderIssues": "issues"
     },
     "update_due_date": "change due date",
     "update_from_date": "change release date",

@@ -54,7 +54,7 @@ const operatorRoutes = [
       {
         path: "issues",
         name: "jobIssues",
-        component: () => import ("@/views/WorkSessionIssues.vue"),
+        component: () => import ("@/views/IssueList.vue"),
         props: true,
       },
       {

@@ -4,14 +4,14 @@
     <!-- LEFT SECTION -->
     <div class="col-8 column full-height">
       <IssueHeader :issue="issue" @type-change="refreshIssue"/>
-      <div class="q-ml-xl q-px-xl col scroll q-pb-lg">
-        <div
+      <q-list class="q-ml-lg q-px-xl col scroll q-pb-lg">
+        <q-item
           v-for="e, index in history"
           :key="e._key"
-          class="q-mt-md q-ml-xl relative-position row full-width items-baseline">
+          class="q-mt-md relative-position row justify-between full-width items-baseline">
 
           <!-- TIMELINE DOT & LINE -->
-          <div style="position: absolute; left: -40px; top: 5px; height: 100%; width: 32px">
+          <div style="position: absolute; left: -40px; top: 13px; height: 100%; width: 32px">
             <div class="column full-height">
               <div class="dot" />
               <div v-if="index < history.length - 1" class="thread" />
@@ -19,16 +19,18 @@
           </div>
 
           <!-- EVENT TYPE -->
-          <div class="text-italic q-mr-xl q-ml-md">
+          <q-item-section class="text-italic">
             {{ $formatDateTime(e.timestamp, $i18n.locale, 'DATETIME_MED') }}
-          </div>
-          <div class="text-h4 highlight text-uppercase q-ml-xl">
+          </q-item-section>
+          <q-item-section class="text-h4 highlight text-uppercase">
             {{ $t(`events.${e.event_type}`) }}
-          </div>
+          </q-item-section>
           <q-space />
-          <BaseUserAvatar name_first :user="getUserData(e)" />
-        </div>
-      </div>
+          <q-item-section>
+            <BaseUserAvatar name_first :user="getUserData(e)" />
+          </q-item-section>
+        </q-item>
+      </q-list>
 
       <q-space />
 
@@ -69,7 +71,7 @@
         <q-btn
           color="theme-grey"
           :label="$t('back')"
-          @click="goToJobIssueList">
+          @click="$router.back()">
         </q-btn>
       </div>
     </div>
@@ -134,7 +136,9 @@ export default {
     issue_key: {
       type: String,
       required: true
-    }
+    },
+    job_key: String,
+    wo_key: String
   },
 
   data() {
@@ -152,6 +156,21 @@ export default {
     issue() {
       const issue_data = this.$store.getters.getIssueData(this.issue_key)
       return this.enrichIssue(issue_data)
+    },
+
+    context() {
+      // Check where the component is being used
+      return this.job_key
+        ? 'job'
+        : this.wo_key
+        ? 'work-order'
+        : undefined
+    },
+
+    fetch_filter() {
+      return this.context == 'job' ? { job_key: this.job_key }
+        : this.context == 'work-order' ? { work_order_key: this.wo_key }
+        : null
     }
   },
 
@@ -179,15 +198,6 @@ export default {
       }
     },
 
-    goToJobIssueList() {
-      this.$router.push({
-        name: 'jobIssues',
-        params: {
-          job_key: this.$route.params.job_key
-        }
-      })
-    },
-
     notifyUpdate({ message, color='theme-green' }) {
       this.$q.notify({
         message: this.$t('issue_updated'),
@@ -198,7 +208,7 @@ export default {
     },
 
     refreshIssue() {
-      this.$store.dispatch('getIssues', { job_key: this.job_key})
+      this.$store.dispatch('getIssues', this.fetch_filter)
       this.getHistory()
     },
 
@@ -273,7 +283,7 @@ export default {
 
   created() {
     this.$store.dispatch('loadUsers')
-    this.$store.dispatch('getIssues')
+    this.$store.dispatch('getIssues', this.fetch_filter)
     this.getMessages()
     this.getHistory()
   }
