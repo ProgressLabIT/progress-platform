@@ -4,14 +4,14 @@ class Queries:
     FOR i IN Issue
     FILTER
       // Filter first issue properties...
-      i._key == @issue_key
+      @issue_key ? i._key == @issue_key : true
       && @issue_type ? i.issue_type == @issue_type : true
       && @creator_id ? i.created_by == @creator_id : true
       && @time_created_from ? i.created >= @time_created_from : true
       && @time_created_to ? i.created <= @time_created_to : true
       && @time_closed_from ? i.closed >= @time_closed_from : true
       && @time_closed_to ? i.closed_to <= @time_closed_to : true
-      && @issue_open ? i.open == @issue_open : true
+      && @issue_open != null ? i.open == @issue_open : true
 
       // Then in relationships...
       FOR v, e IN 1..1 OUTBOUND i issue_rel

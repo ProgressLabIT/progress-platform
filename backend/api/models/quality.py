@@ -14,6 +14,7 @@ from pydantic import (
 from utils.base_models import ArangoDocument, ArangoEdge
 from utils.dt import timestamp
 
+
 class FieldType(Enum):
   TEXT_SHORT: 'text_short'
   TEXT_LONG: 'text_long'
@@ -68,7 +69,6 @@ class Issue(ArangoDocument):
   critical: bool # Default value set at the IssueType level
   close_within: NonNegativeInt # Value set at the IssueType level
   data: List[IssueField] = None
-  icon: str = None
   open: bool = True
 
   # Require issue type only when closing.
@@ -115,3 +115,4 @@ class Message(ArangoDocument):
 
 class IssueFullData(IssueWithLinks):
   messages: List[Message]
+  history: List[dict]

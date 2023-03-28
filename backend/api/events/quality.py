@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from events.shared import EventMeta
-from models.quality import Issue, IssueLink
+from models.quality import Issue, IssueLink, IssueWithLinks
 
 class IssueEvent:
   issue_collections = ['Event', 'Issue', 'issue_rel']
@@ -58,15 +58,15 @@ class IssueEvent:
     return dict(_from=_from, _to=target)
 
   def create_issue(self):
-    print(type(self.info.issue_data), self.info.issue_data)
-    issue_data = self.info.issue_data.dict(exclude={'_key', '_id', '_rev', 'linked_to'})
-    new_issue_id = self.tx.collection('Issue').insert(issue_data)['_id']
+    self.info.issue_data = IssueWithLinks(**self.info.issue_data)
+    new_issue_record = Issue(**self.info.issue_data.dict())
+    new_issue_id = self.tx.collection('Issue').insert(new_issue_record.dict(exclude={'_key', '_id', '_rev'}), return_new=True)['_id']
 
-    issue_links = self.info.issue_data.linked_to
+    issue_links = [l for l in self.info.issue_data.linked_to]
     rels = [self._build_issue_link(_from=new_issue_id, link_dict=rel) for rel in issue_links]
 
     self.tx.collection('issue_rel').insert_many(rels, silent=True)
-    issue_key=new_issue_id.split('/')[1],
+    issue_key=new_issue_id.split('/')[1]
     self.info.issue_data.key = issue_key
 
     self.response = dict(
@@ -116,16 +116,21 @@ class IssueEvent:
     )
 
   def post_message(self):
-    issue_key = self.info.message_data.recipient
+    issue_key = self.info.message_data.recipient.split('/')[1]
+    self.info.issue_data = dict(_key=issue_key)
     message_data = self.info.message_data.dict(by_alias=True, exclude={'_key', '_id', '_rev'})
-    self.tx.collection('message').insert(message_data)
+    self.info.message_data = self.tx.collection('message').insert(message_data, return_new=True)['new']
     self.response = dict(
       message="Message posted correctly to issue {issue_key}"
     )
 
   def update_message(self):
-    message_data = self.info.message_data.dict(by_alias=True)
-    db_resp = self.tx.update(message_data, return_old=True, return_new=True)
+    issue_key = self.info.message_data.recipient.split('/')[1]
+    self.info.issue_data = dict(issue_key=issue_key)
+
+    self.info.message_data.updated = True
+    message_record = self.info.message_data.dict(by_alias=True)
+    db_resp = self.tx.update(message_record, return_new=True)
     self.response = dict(
       message="Message updated correctly",
       detail=dict(

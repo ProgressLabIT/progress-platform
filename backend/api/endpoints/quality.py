@@ -115,7 +115,7 @@ async def delete_issue_type(issue_key: str):
 # ---------------------------------------------
 
 @router.get('/issue')
-async def get_issue(
+async def get_issues(
   issue_key: str = None,
   issue_type: str = None,
   product_key: str = None,
@@ -148,8 +148,9 @@ async def get_issue(
     issue_open = issue_open,
     limit = limit
   )
+  print(bind_vars)
   cursor = db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)
-  return [Issue(**i) for i in cursor]
+  return [i for i in cursor]
 
 # ----------------------------------------------------------------------
 

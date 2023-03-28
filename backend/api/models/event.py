@@ -58,5 +58,5 @@ class EventModel(FlexModel):
   user_data: Any
 
   # Quality Fields
-  issue_data: IssueWithLinks = None
+  issue_data: Any
   message_data: Message = None
