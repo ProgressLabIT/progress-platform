@@ -1,6 +1,7 @@
 <template>
   <q-select
     use-input
+    filled
     :label="$capitalize($t('issue_type'))"
     :dense="dense"
     :clearable="clearable"

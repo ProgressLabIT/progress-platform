@@ -80,6 +80,22 @@ export default {
   "errors": {
     "save_err": "Non è stato possibile salvare gli aggiornamenti"
   },
+  "events": {
+    'JOB_STARTED': "Lavoro iniziato",
+    'JOB_PAUSED': "Lavoro messo in pausa",
+    'JOB_PAUSED_OFFLINE': "Lavoro in pausa (sessione offline)",
+    'JOB_RESUMED': "Lavoro ripreso",
+    'JOB_BACK_ONLINE': "Sessione online",
+    'STEP_COMPLETED': "Passo completato",
+    'BATCH_COMPLETED': "Pezzo/Lotto completato",
+    'ISSUE_CREATED': "Segnalazione creata",
+    'ISSUE_UPDATED': "Segnalazione modificata",
+    'ISSUE_CLOSED': "Segnalazione chiusa",
+    'ISSUE_REOPENED': "Segnalazione riaperta",
+    'MESSAGE_POSTED': "Messaggio pubblicato",
+    'MESSAGE_UPDATED': "Messaggio modificato",
+    'MESSAGE_DELETED': "Messaggio cancellato"
+  },
   "filter": "filtro | filtri",
   "form_missing_fields_alert": "compilare tutti i campi",
   "greeting": {
@@ -93,6 +109,7 @@ export default {
   "increase": "aumenta",
   "info": "info",
   "issue": "segnalazione | segnalazioni",
+  "issue_missing": "Nessuna segnalazione",
   "issue_new_success": "Segnalazione creata con successo. Reindirizzamento in corso...",
   "issue_new_title": "Nuova segnalazione",
   "issue_new_link_step_helper": "Indicare a quali elementi dovrebbe essere collegata la segnalazione",

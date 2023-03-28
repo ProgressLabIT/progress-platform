@@ -5,16 +5,28 @@
     <div class="col-8 column">
       <IssueHeader :issue="issue" />
       <div class="q-ml-xl q-px-xl">
-        <div v-for="m, index in messages" :key="m._key" class="q-mt-md q-ml-xl relative-position row full-width items-baseline justify-between">
-          <div class="text-italic">{{ $formatDateTime(m.created, $i18n.locale, 'DATETIME_MED') }}</div>
-          <div class="text-h4 highlight">MESSAGGIO PUBBLICATO</div>
-          <BaseUserAvatar name_first :user="getUserData(m)"></BaseUserAvatar>
-          <div style="position: absolute; left: -40px; top: 5; height: 100%; width: 32px">
+        <div
+          v-for="e, index in history"
+          :key="e._key"
+          class="q-mt-md q-ml-xl relative-position row full-width items-baseline">
+
+          <!-- TIMELINE DOT & LINE -->
+          <div style="position: absolute; left: -40px; top: 5px; height: 100%; width: 32px">
             <div class="column full-height">
-              <div style="height: 13px; width: 13px; border-radius: 100%; background-color: #888; border: 5px solid var(--surface-1); box-sizing: content-box; z-index:99"></div>
-              <div v-if="index < messages.length -1" style="position: absolute; height: 100%; left: 11px; top: 20px; width: 1px; background-color: #fff3;"></div>
+              <div class="dot" />
+              <div v-if="index < messages.length" class="thread" />
             </div>
           </div>
+
+          <!-- EVENT TYPE -->
+          <div class="text-italic q-mr-xl q-ml-md">
+            {{ $formatDateTime(e.timestamp, $i18n.locale, 'DATETIME_MED') }}
+          </div>
+          <div class="text-h4 highlight text-uppercase q-ml-xl">
+            {{ $t(`events.${e.event_type}`) }}
+          </div>
+          <q-space />
+          <BaseUserAvatar name_first :user="getUserData(e)" />
         </div>
       </div>
 
@@ -102,6 +114,7 @@ export default {
   data() {
     return {
       messages: [],
+      history: [],
       new_message: '',
       loading: false,
       recording: false,
@@ -122,12 +135,17 @@ export default {
       .then(resp => this.messages = resp.data)
     },
 
+    getHistory() {
+      this.$api.get('event', { params: { issue_key: this.issue._key }})
+      .then(resp => this.history = resp.data)
+    },
+
     getAvatarSrc(user) {
       return this.base_path + (user.name + user.surname).replace(/\s+/g, '') + '.jpg'
     },
 
-    getUserData(message) {
-      const user = this.$store.getters.user_data(message._from.split('/')[1])
+    getUserData(event) {
+      const user = this.$store.getters.user_data(event.user_key)
       return {
         ...user,
         full_name: user.name + ' ' + user.surname,
@@ -157,6 +175,7 @@ export default {
       }).then(() => {
         this.new_message = ''
         this.getMessages()
+        this.getHistory()
         this.loading = false
       })
     }
@@ -165,9 +184,26 @@ export default {
   created() {
     this.$store.dispatch('loadUsers')
     this.getMessages()
+    this.getHistory()
   }
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="sass" scoped>
+.dot
+  height: 13px
+  width: 13px
+  border-radius: 100%
+  background-color: #888
+  border: 5px solid var(--surface-1)
+  box-sizing: content-box
+  z-index:99
+
+.thread
+  position: absolute
+  height: 100%
+  left: 11px
+  top: 20px
+  width: 1px
+  background-color: #fff3
 </style>

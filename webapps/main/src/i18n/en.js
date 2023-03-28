@@ -79,6 +79,22 @@ export default {
   "errors": {
     "save_err": "Could not save updates"
   },
+  "events": {
+    'JOB_STARTED': "Job started",
+    'JOB_PAUSED': "Job paused",
+    'JOB_PAUSED_OFFLINE': "Job paused (session offline)",
+    'JOB_RESUMED': "Job resumed",
+    'JOB_BACK_ONLINE': "Session back online",
+    'STEP_COMPLETED': "Step completed",
+    'BATCH_COMPLETED': "Piece/Batch completed",
+    'ISSUE_CREATED': "Issue created",
+    'ISSUE_UPDATED': "Issue updated",
+    'ISSUE_CLOSED': "Issue closed",
+    'ISSUE_REOPENED': "Issue reopened",
+    'MESSAGE_POSTED': "Message posted",
+    'MESSAGE_UPDATED': "Message updated",
+    'MESSAGE_DELETED': "Message deleted"
+  },
   "filter": "filter",
   "form_missing_fields_alert": "please fill in all fields",
   "greeting": {
@@ -92,6 +108,7 @@ export default {
   "increase": "increase",
   "info": "info",
   "issue": "issue",
+  "issue_missing": "No issues",
   "issue_new_success": "Issue created successfully. Redirecting...",
   "issue_new_title": "New issue",
   "issue_new_link_step_helper": "Indicate to which elements this issue should be linked to",

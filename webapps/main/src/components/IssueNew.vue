@@ -226,7 +226,6 @@
 </template>
 
 <script>
-import { api } from '@/boot/axios.js'
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue'
 import { timestamp } from '@/lib/TimeHandling.js'
 
@@ -311,12 +310,12 @@ export default {
 
       this.saving = true
       const issue_data = {
-        issue_type: this.issue_type._key,
+        issue_type: this.issue_type ? this.issue_type._key : null,
         title: this.title,
         description: this.description,
         created_by: `User/${user}`, // temporarily hardcoding DB id
         critical: this.critical,
-        close_within: this.issue_type.close_within,
+        close_within: this.issue_type ? this.issue_type.close_within : 0,
         // Map links to list of objects, including only populated properties
         linked_to: link_data
       }
@@ -327,12 +326,14 @@ export default {
         timestamp: timestamp(),
         issue_data
       }
-      api.post('event', event).then(() => {
+      this.$api.post('event', event)
+      .then(() => {
         this.confirmed = true
         this.saving = false
         this.current_issue_step = 6
         setTimeout(() => this.$emit('close'), 3000)
       })
+      .catch(err, () => console.log(err))
     }
   },
 

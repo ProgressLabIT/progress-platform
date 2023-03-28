@@ -175,7 +175,7 @@
         :show="show_issue_new"
         background="#0008"
         @hide="show_issue_new = false">
-        <IssueNew @close="show_issue_new = false"/>
+        <WorkSessionIssueNew @close="show_issue_new = false"/>
       </BaseDialog>
 
     </q-page>
@@ -186,7 +186,7 @@
 import { mapState } from 'vuex'
 
 import BaseDialog from '@/components/BaseDialog.vue'
-import IssueNew from '@/components/IssueNew.vue'
+import WorkSessionIssueNew from '@/components/WorkSessionIssueNew.vue'
 import ProgressBtn from '@/components/ProgressBtn.vue'
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue'
 
@@ -196,7 +196,7 @@ export default {
 
   components: {
     BaseDialog,
-    IssueNew,
+    WorkSessionIssueNew,
     ProgressBtn,
     StartPauseResumeBtn
   },
