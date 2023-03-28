@@ -2,9 +2,9 @@
   <div class="absolute-full row q-pa-md">
 
     <!-- LEFT SECTION -->
-    <div class="col-8 column">
-      <IssueHeader :issue="issue" />
-      <div class="q-ml-xl q-px-xl">
+    <div class="col-8 column full-height">
+      <IssueHeader :issue="issue" @type-change="refreshIssue"/>
+      <div class="q-ml-xl q-px-xl col scroll q-pb-lg">
         <div
           v-for="e, index in history"
           :key="e._key"
@@ -14,7 +14,7 @@
           <div style="position: absolute; left: -40px; top: 5px; height: 100%; width: 32px">
             <div class="column full-height">
               <div class="dot" />
-              <div v-if="index < messages.length" class="thread" />
+              <div v-if="index < history.length - 1" class="thread" />
             </div>
           </div>
 
@@ -32,19 +32,45 @@
 
       <q-space />
 
-
+      <!-- ACTIONS -->
       <div class="row q-pa-md q-gutter-lg">
         <template v-if="issue.open">
-          <q-btn color="theme-green" label="Chiudi segnalazione" />
-          <q-btn v-if="issue.critical" color="theme-orange" label="Segna come non critica" />
-          <q-btn v-else color="theme-red" label="trasforma in critica" />
+          <q-btn
+            color="theme-green"
+            :label="$t('issue_button_close')"
+            @click="closeIssue">
+          </q-btn>
+          <q-btn
+            v-if="issue.critical"
+            color="theme-orange"
+            :label="$t('issue_button_remove_critical')"
+            @click="toggleCritical">
+          </q-btn>
+          <q-btn
+            v-else
+            color="theme-red"
+            :label="$t('issue_button_add_critical')"
+            @click="toggleCritical">
+          </q-btn>
         </template>
         <template v-else>
-          <q-btn color="theme-orange" label="riapri segnalazione" />
-          <q-btn color="theme-red" label="riapri come critica" />
+          <q-btn
+            color="theme-orange"
+            :label="$t('issue_button_reopen')"
+            @click="() => { critical=false; reopenIssue() }">
+          </q-btn>
+          <q-btn
+            color="theme-red"
+            :label="$t('issue_button_reopen_critical')"
+            @click="() => { critical=true; reopenIssue() }">
+          </q-btn>
         </template>
         <q-space />
-        <q-btn color="theme-grey" label="torna all'elenco" @click="goToJobIssueList"/>
+        <q-btn
+          color="theme-grey"
+          :label="$t('back')"
+          @click="goToJobIssueList">
+        </q-btn>
       </div>
     </div>
 
@@ -162,6 +188,70 @@ export default {
       })
     },
 
+    notifyUpdate({ message, color='theme-green' }) {
+      this.$q.notify({
+        message: this.$t('issue_updated'),
+        color: 'theme-green',
+        timeout: '1500',
+        position: 'top'
+      })
+    },
+
+    refreshIssue() {
+      this.$store.dispatch('getIssues', { job_key: this.job_key})
+      this.getHistory()
+    },
+
+    closeIssue() {
+      this.sendEvent({
+        event_type: 'ISSUE_CLOSED',
+        event_data: {
+          issue_data: {
+            _key: this.issue._key
+          }
+        }
+      }).then(() => {
+        this.refreshIssue()
+        this.notifyUpdate({ message: this.$t('issue_updated') })
+      })
+    },
+
+    toggleCritical() {
+      this.issue.critical = !this.issue.critical
+      this.sendEvent({
+        event_type: 'ISSUE_UPDATED',
+        event_data: {
+          issue_data: {
+            _key: this.issue._key,
+            critical: this.issue.critical
+          }
+        }
+      }).then(() => {
+        this.refreshIssue()
+        this.notifyUpdate({
+          message: this.$t('issue_updated'),
+          color: this.issue.critical ? 'theme-red' : 'theme-green'
+        })
+      })
+    },
+
+    reopenIssue() {
+      this.sendEvent({
+        event_type: 'ISSUE_REOPENED',
+        event_data: {
+          issue_data: {
+            _key: this.issue._key,
+            critical: this.issue.critical,
+          }
+        }
+      }).then(() => {
+        this.refreshIssue()
+        this.notifyUpdate({
+          message: this.$t('issue_updated')
+        })
+      })
+    },
+
     postMessage() {
       const message_data = {
         sender: `User/${this.$store.state.session.user._key}`,
@@ -183,6 +273,7 @@ export default {
 
   created() {
     this.$store.dispatch('loadUsers')
+    this.$store.dispatch('getIssues')
     this.getMessages()
     this.getHistory()
   }

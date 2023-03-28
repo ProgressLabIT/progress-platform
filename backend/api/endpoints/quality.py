@@ -148,7 +148,6 @@ async def get_issues(
     issue_open = issue_open,
     limit = limit
   )
-  print(bind_vars)
   cursor = db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)
   return [i for i in cursor]
 

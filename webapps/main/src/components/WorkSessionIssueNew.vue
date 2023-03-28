@@ -15,24 +15,26 @@
       </div>
     </q-card-section>
     <q-card-section>
-      <template v-if="!confirmed">
-        <BaseAutocompleteIssueType
-          @select="(value) => issue_type = value"
-          :value="issue_type">
-        </BaseAutocompleteIssueType>
+      <BaseAutocompleteIssueType
+        @select="(value) => issue_type = value"
+        :value="issue_type">
+      </BaseAutocompleteIssueType>
 
-        <div class="row q-gutter-md q-mt-lg">
-          <q-btn color="theme-orange" :label="$t('save')" @click="save" :loading="saving"/>
-          <q-btn color="theme-red" @click="() => {critical = true; save()}">
-            {{ $t('save') }} {{ $t('critical') }}
-          </q-btn>
-          <q-space />
-          <q-btn color="theme-grey" :label="$t('cancel')" />
-        </div>
-      </template>
+      <div class="row q-gutter-md q-mt-lg">
+        <q-btn color="theme-orange" :label="$t('save')" @click="save" :loading="saving"/>
+        <q-btn color="theme-red" @click="() => {critical = true; save()}">
+          {{ $t('save') }} {{ $t('critical') }}
+        </q-btn>
+        <q-space />
+        <q-btn
+          color="theme-grey"
+          :label="$t('cancel')"
+          @click="$emit('close')">
+        </q-btn>
+      </div>
 
 
-      <div v-else class="column full-width flex-center">
+      <!-- <div v-else class="column full-width flex-center">
         <q-icon
           name="mdi-check-circle"
           color="theme-green"
@@ -40,7 +42,7 @@
         </q-icon>
         <div class="q-mt-sm">{{ $t('issue_new_success') }}</div>
         <q-spinner class="q-mt-md"/>
-      </div>
+      </div> -->
     </q-card-section>
   </q-card>
 </template>
@@ -151,13 +153,14 @@ export default {
       this.$api.post('event', event)
       .then(() => {
         this.saving = false
-        this.confirmed = true
         this.$store.dispatch('getIssues', { job_key: this.job_data._key })
-        setTimeout(() => this.$emit('close'), 3000)
-      })
-      .catch(err => {
-        this.saving = false
-        console.log({err})
+        this.$emit('close')
+        this.$q.notify({
+          message: this.$t('issue_new_success'),
+          color: this.critical ? 'theme-red' : 'theme-orange',
+          timeout: 1500,
+          position: 'top'
+        })
       })
     }
   },

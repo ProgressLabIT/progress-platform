@@ -3,7 +3,12 @@
     <q-list v-if="issues.length">
       <template v-for="issue, index in issues" :key="index">
         <q-separator inset v-if="index > 0" />
-        <IssueHeader clickable :issue="issue" @click="openIssue(issue._key)"/>
+        <IssueHeader
+          clickable
+          :issue="issue"
+          @click="openIssue(issue._key)"
+          @type-change="getIssues">
+        </IssueHeader>
       </template>
     </q-list>
     <NoDataAlert v-else>
@@ -48,11 +53,14 @@ export default {
         name: 'jobIssueDetail',
         params: { issue_key }
       })
+    },
+    getIssues() {
+      this.$store.dispatch('getIssues', { job_key: this.job_key })
     }
   },
 
   created() {
-    this.$store.dispatch('getIssues', { job_key: this.job_key })
+    this.getIssues()
   }
 }
 </script>

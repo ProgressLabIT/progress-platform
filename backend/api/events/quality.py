@@ -2,6 +2,7 @@ from fastapi import HTTPException
 
 from events.shared import EventMeta
 from models.quality import Issue, IssueLink, IssueWithLinks
+from utils.dt import timestamp
 
 class IssueEvent:
   issue_collections = ['Event', 'Issue', 'issue_rel']
@@ -23,9 +24,9 @@ class IssueEvent:
     action="close_issue"
   )
 
-  ISSUE_OPENED = EventMeta(
+  ISSUE_REOPENED = EventMeta(
     collections=issue_collections,
-    action="open_issue"
+    action="reopen_issue"
   )
 
   MESSAGE_POSTED = EventMeta(
@@ -75,41 +76,33 @@ class IssueEvent:
     )
 
   def update_issue(self):
-    new_data = dict(_key = self.info.issue_data.issue_key)
-
-    if self.info.issue_data.title:
-      new_data['title'] = self.info.issue_data.title
-
-    if self.info.issue_data.description:
-      new_data['description'] = self.info.issue_data.description
-
-    if self.info.issue_data.issue_type:
-      new_data['issue_type'] = self.info.issue_data.issue_type
-
-    if self.info.issue_data.critical:
-      new_data['critical'] = self.info.issue_data.critical
-
-    db_resp = self.tx.collection('Issue').update(new_data, return_new=True, return_old=True)
-
-    self.info.original_issue = Issue(**db_resp['old'])
-    self.info.updated_issue = Issue(**db_resp['new'])
+    self.tx.collection('Issue').update(self.info.issue_data)
 
     self.response = dict(
-      message=f"Issue { updated_issue['_key'] } updated successfully",
-      detail=updated_issue
+      message=f"Issue { self.info.issue_data['_key'] } updated successfully"
     )
 
   def close_issue(self):
-    issue_key = self.info.issue_data.issue_key
-    issue_update = dict(_key = issue_key, open=False)
+    issue_key = self.info.issue_data['_key']
+    issue_update = dict(
+      _key = issue_key,
+      open = False,
+      closed = timestamp()
+    )
     self.tx.collection('Issue').update(issue_update)
     self.response = dict(
       message=f"Issue {issue_key} closed successfuly."
     )
 
-  def open_issue(self):
-    issue_key = self.info.issue_data.issue_key
-    issue_update = dict(_key = issue_key, open=True)
+  def reopen_issue(self):
+    issue_key = self.info.issue_data['_key']
+    open_as_critical = self.info.issue_data.get('critical', False)
+    issue_update = dict(
+      _key = issue_key,
+      open = True,
+      critical = open_as_critical,
+      closed = None
+    )
     self.tx.collection('Issue').update(issue_update)
     self.response = dict(
       message=f"Issue {issue_key} opened successfuly."

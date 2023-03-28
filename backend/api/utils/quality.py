@@ -23,10 +23,10 @@ class Queries:
         && @operation_key ? e._to == CONCAT('Operation/', @operation_key) : true
 
     LIMIT @limit || null
-    LET icon = FIRST(
+    LET type_data = FIRST(
       FOR it IN IssueType
       FILTER it._key == i.issue_type
-      RETURN it.icon
+      RETURN it
     )
-    RETURN MERGE(i, { icon })
+    RETURN MERGE(i, { icon: type_data.icon, type_name: type_data.name })
   """
