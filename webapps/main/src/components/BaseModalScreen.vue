@@ -10,17 +10,26 @@
     transition-hide="scale"
     @escape-key="$emit('close')"
     @hide="$emit('close')"
+    @click="show_drawer=false"
     :style="CSSVars">
     <q-card class="background q-pa-sm">
 
       <!-- SCREEN HEADER -->
       <div class="row justify-start items-center q-px-sm text-high">
-        <slot name="close">
-          <q-btn flat dense @click="$emit('close')">
-            <q-icon size="xs" name="mdi-close" />
+        <slot name="menu">
+          <q-btn
+            flat
+            icon="mdi-menu"
+            padding="none"
+            @click="show_drawer=true">
           </q-btn>
         </slot>
         <slot name="header"></slot>
+        <slot name="close">
+          <q-btn flat dense @click="$emit('close')">
+            <q-icon size="xs" name="mdi-close" class="text-low" />
+          </q-btn>
+        </slot>
       </div>
 
       <!-- WINDOW CONTAINER -->
@@ -34,12 +43,13 @@
 
 <script>
 import CSSVars from '@/mixins/CSSVars.js'
+import drawer from '@/mixins/drawer.js'
 
 export default {
 
   name: 'BaseModalScreen',
   props: ['show'],
-  mixins: [CSSVars],
+  mixins: [CSSVars, drawer],
 
   computed: {
     card_height() {
