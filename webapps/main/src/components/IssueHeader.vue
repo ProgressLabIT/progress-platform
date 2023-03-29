@@ -82,7 +82,7 @@ export default {
     return {
       over_icon: false,
       show_type_picker: false,
-      new_issue_type: {}
+      new_issue_type: null
     }
   },
 
