@@ -55,32 +55,46 @@ class Queries:
 
 
   REORDER_JOB_QUEUES = """
-    FOR q1 IN Queue
-    FILTER q1.type == 's' && q1.site_key == '0'
-    LET wo_queue = q1.work_orders
-
-    FOR q IN Queue
-    FILTER q.type != 's' && q.site_key == '0' && LENGTH(q.jobs)
-      LET jobs = (
-        FOR j IN q.jobs
-        LET wo_key = DOCUMENT('Job', j).wo_key
-        RETURN { 
-            job_key: j, 
-            wo_key, 
-            wo_in_queue: POSITION(wo_queue, wo_key)
+    LET wo_queue = (
+      FOR q1 IN Queue
+      FILTER
+        q1.type == 's'
+        && (q1.site_key == @site_key || "0")
+        FOR wo in q1.work_orders
+        RETURN {
+          _key: wo,
+          phase_sequence: DOCUMENT(WorkOrder, wo).phase_sequence
         }
-      )
-          
-          
-      LET new_queue = REMOVE_VALUE(
-        FLATTEN( 
-          FOR wo_key IN wo_queue
-          LET wo_job = (FOR j IN jobs FILTER j.wo_key == wo_key RETURN j.job_key)
-          RETURN wo_job
-        ), null
-      )
-      
-      UPDATE q WITH { jobs: new_queue } IN Queue
+    )
+
+    LET jobs = (
+        FOR j IN Job
+        FILTER j.stage != 'closed'
+        RETURN j
+    )
+
+    // Process Job queues
+    FOR q IN Queue
+    FILTER
+      q.type == "o"
+      && (q.site_key == @site_key || "0")
+      && (@target_key ? q.subqueue_target_key == @target_key : true)
+      && LENGTH(q.jobs)
+
+    LET new_queue = REMOVE_VALUE(
+      FLATTEN(
+        FOR wo IN wo_queue
+          FOR phase IN wo.phase_sequence
+            FOR j IN jobs
+            FILTER
+              j.wo_key == wo._key
+              && j.phase_key == phase
+              && j.assigned_to == q.subqueue_target_key
+            RETURN j._key
+      ), null
+    )
+
+    UPDATE q WITH { jobs: new_queue } in Queue
   """
 
   GET_ASSIGNMENT_LIST = """
@@ -192,6 +206,14 @@ def update_target_queue(job_key, target_key, action, tx):
           )
         )
 
+        tx.aql.execute(
+          Queries.REORDER_JOB_QUEUES,
+          bind_vars = dict(
+            site_key = '0',
+            target_key = target_key
+          )
+        )
+
       else:
         tx.collection('Queue').insert(dict(
           **queue_match,
@@ -200,6 +222,7 @@ def update_target_queue(job_key, target_key, action, tx):
         ))
 
   except:
+    tx.abort_transaction()
     status_code = 500
     response =dict(
      status_code=status_code,

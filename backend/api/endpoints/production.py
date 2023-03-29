@@ -417,7 +417,11 @@ async def update_queue(queue_update: Queue):
 
     # If updating the work order queue, reorder all job queues too
     if not subqueue:
-      db.aql.execute(Queries.REORDER_JOB_QUEUES)
+      bind_vars = dict(
+        site_key = queue_update.site_key,
+        target_key = None,
+      )
+      db.aql.execute(Queries.REORDER_JOB_QUEUES, bind_vars=bind_vars)
 
   except:
     status_code = 500
