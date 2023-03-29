@@ -51,6 +51,18 @@ const productionRoutes = [
             path: 'history',
             name: "workOrderHistory",
             component: () => import ("@/views/WorkOrderHistory.vue")
+          },
+          {
+            path: 'issues',
+            name: 'workOrderIssues',
+            component: () => import("@/views/IssueList.vue"),
+            props: true
+          },
+          {
+            path: 'issues/:issue_key',
+            name: 'workOrderIssueDetail',
+            component: () => import("@/components/IssueDetail.vue"),
+            props: true
           }
         ]
       }

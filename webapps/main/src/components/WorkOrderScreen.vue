@@ -1,5 +1,5 @@
 <template>
-  <BaseModalScreen :show="show_modal" @close="exit()">
+  <BaseModalScreen :show="true" @close="exit()">
     <template v-slot:header>
       <span class="q-ml-md display medium highlight weight-medium text-uppercase">
         {{ $t('work_order.key') }}: {{ wo_key }}
@@ -40,7 +40,9 @@
             v-bind="{ wo_data }"
             v-slot="{ Component }">
             <keep-alive>
-              <component :is="Component" class="col full-height"/>
+              <div class="col full-height relative-position">
+                <component :is="Component" />
+              </div>
             </keep-alive>
           </router-view>
 
@@ -76,6 +78,7 @@ export default {
       show_modal: true,
       tabs: [
         'workOrderJobs',
+        'workOrderIssues'
         // 'workOrderHistory'
       ],
       vuex_ready: false,
@@ -93,13 +96,13 @@ export default {
   methods: {
 
     exit() {
-      // if (this.user_is_editing) {
-      //   window.alert(`Salva o annulla le modifiche in tutte le sezioni prima di uscire.`)
-      // }
-      // else {
-        this.show_modal = false
+      console.log('exit')
+      if (this.$route.query.back_to) {
         this.$router.push({ name: this.$route.query.back_to })
-      // }
+      }
+      else {
+        this.$router.push({ name: 'workOrderList' })
+      }
     },
     get_wo_data() {
       axios.all([

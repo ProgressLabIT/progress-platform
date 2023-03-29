@@ -107,82 +107,82 @@
         </template>
       </q-table>
     </div>
+
+    <BaseDialog :show="show_product_catalog">
+      <q-card style="max-width: 700px;" class="surface1 q-pa-md">
+        <q-card-section class="display text-h3 highlight">
+          {{ $t('add') }} {{ $t('product.label', 2) }}
+        </q-card-section>
+        <q-card-section>
+          <div class="row q-col-gutter-md items-center">
+            <q-select
+              class="col-4"
+              use-input
+              dense
+              v-model="new_line_phase"
+              input-debounce="0"
+              @filter="filterOperations"
+              :options="filtered_process"
+              :label="$capitalize($t('phase.short'))"
+              option-label="alias"
+              popup-content-class="text-capitalize">
+            </q-select>
+
+            <q-select
+              class="col-6"
+              use-input
+              dense
+              v-model="new_line_product"
+              @filter="filterProducts"
+              :loading="catalog_loading"
+              :options="filtered_products"
+              :label="$capitalize($t('code') +' / '+ $t('description'))"
+              option-label="code"
+              input-class="text-capitalize">
+              <template #option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section>
+                  <q-item-label class="display">
+                    {{ scope.opt.code }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ scope.opt.description }}
+                  </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+
+            <q-input
+              dense
+              class="col-2"
+              v-model="new_line_qt"
+              type="number"
+              :label="$t('quantity.short')">
+            </q-input>
+          </div>
+        </q-card-section>
+        <div class="row q-col-gutter-md q-pa-md">
+          <div class="col-6">
+            <q-btn
+              class="full-width"
+              color="theme-blue"
+              @click="addItem"
+              :label="$t('add')">
+            </q-btn>
+          </div>
+          <div class="col-6">
+            <q-btn
+              class="full-width"
+              color="theme-grey"
+              @click="show_product_catalog = false"
+              :label="$t('cancel')">
+            </q-btn>
+          </div>
+        </div>
+      </q-card>
+    </BaseDialog>
   </div>
-
-  <BaseDialog :show="show_product_catalog">
-    <q-card style="max-width: 700px;" class="surface1 q-pa-md">
-      <q-card-section class="display text-h3 highlight">
-        {{ $t('add') }} {{ $t('product.label', 2) }}
-      </q-card-section>
-      <q-card-section>
-        <div class="row q-col-gutter-md items-center">
-          <q-select
-            class="col-4"
-            use-input
-            dense
-            v-model="new_line_phase"
-            input-debounce="0"
-            @filter="filterOperations"
-            :options="filtered_process"
-            :label="$capitalize($t('phase.short'))"
-            option-label="alias"
-            popup-content-class="text-capitalize">
-          </q-select>
-
-          <q-select
-            class="col-6"
-            use-input
-            dense
-            v-model="new_line_product"
-            @filter="filterProducts"
-            :loading="catalog_loading"
-            :options="filtered_products"
-            :label="$capitalize($t('code') +' / '+ $t('description'))"
-            option-label="code"
-            input-class="text-capitalize">
-            <template #option="scope">
-              <q-item v-bind="scope.itemProps">
-                <q-item-section>
-                <q-item-label class="display">
-                  {{ scope.opt.code }}
-                </q-item-label>
-                <q-item-label caption>
-                  {{ scope.opt.description }}
-                </q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
-
-          <q-input
-            dense
-            class="col-2"
-            v-model="new_line_qt"
-            type="number"
-            :label="$t('quantity.short')">
-          </q-input>
-        </div>
-      </q-card-section>
-      <div class="row q-col-gutter-md q-pa-md">
-        <div class="col-6">
-          <q-btn
-            class="full-width"
-            color="theme-blue"
-            @click="addItem"
-            :label="$t('add')">
-          </q-btn>
-        </div>
-        <div class="col-6">
-          <q-btn
-            class="full-width"
-            color="theme-grey"
-            @click="show_product_catalog = false"
-            :label="$t('cancel')">
-          </q-btn>
-        </div>
-      </div>
-    </q-card>
-  </BaseDialog>
 </template>
 
 <script>

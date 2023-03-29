@@ -47,14 +47,14 @@
           {{ $t('user.creation_date') }}
         </div>
         <div class="q-mt-xs">
-          {{ $formatDateTime(user.created_at, locale, 'dd LLL yyyy') }}
+          {{ formatDate(user.created_at) }}
         </div>
 
         <div class="text-h5 uppercase q-mt-lg">
           {{ $t('user.last_login') }}
         </div>
         <div class="q-mt-xs">
-          {{ $formatDateTime(user.last_login, locale, 'dd LLL yyyy HH:mm') }}
+          {{ formatDate(user.last_login, true) }}
         </div>
       </div>
 
@@ -79,7 +79,7 @@
 
             <BaseTooltipIcon
               icon="mdi-lock-reset"
-              :tooltip="$capitalize($t('reset_password'))"
+              :tooltip="$capitalize($t('user.reset_password'))"
               :color="$theme.orange"
               @iconClick="showPasswordReset">
             </BaseTooltipIcon>
@@ -262,6 +262,13 @@ export default {
     NoDataAlert
   },
 
+  props: {
+    user: {
+      type: Object,
+      required: true
+    }
+  },
+
   data () {
     return {
       locale: 'it',
@@ -287,18 +294,6 @@ export default {
   },
 
   computed: {
-    user_list() {
-      return this.$store.state.user.user_list
-    },
-
-    user_key() {
-      return this.$route.params.user_key
-    },
-
-    user() {
-      return this.user_list.find(u => u._key == this.user_key)
-    },
-
     avatar_src() {
       if (!this.user) {
         return ''
@@ -340,6 +335,11 @@ export default {
       Object.keys(this.temp_data).forEach( key => {
         this.temp_data[key] = this.user[key]
       })
+    },
+
+    formatDate(date_string, with_time) {
+      const format = with_time ? 'DATETIME_MED' : 'DATE_MED'
+      return this.$formatDateTime(date_string, this.$i18n.locale, format)
     },
 
     updateTempDep(department_obj) {

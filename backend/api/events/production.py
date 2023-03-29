@@ -1,17 +1,17 @@
+from pydantic import BaseModel
+
+from events.shared import EventMeta
+
 from models.traceability import *
 from models.production import Job, WorkOrderFull, WorkStatus
+
 from utils.production import Queries as ProductionQueries, update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
 from utils.db import db, model_to_db_dict
 
-class Event:
 
-  ###################################
-  # Class properties
-  ###################################
-
-  # Transaction parameters
-  write_collections = [
+class ProductionEvent:
+  production_collections = [
     'Batch',
     'Event',
     'Job',
@@ -22,61 +22,60 @@ class Event:
     'WorkOrder',
     'WorkSession'
   ]
-  # read_collections = ['Phase', 'Product', 'Step
 
-  # Mapping of event types to class methods
-  JOB_STARTED = 'start_job'
-  JOB_PAUSED = 'pause_job'
-  JOB_PAUSED_OFFLINE = 'pause_job'
-  JOB_RESUMED = 'resume_job'
-  JOB_BACK_ONLINE = 'restore_work_session'
-  STEP_COMPLETED = 'complete_step'
-  BATCH_COMPLETED = 'complete_batch'
+  production_post_processing = ['update_job_last_online', 'update_work_order']
 
-  ######################################################################
-  # INIT & SAVE
-  ######################################################################
 
-  def __init__(self, event: ProductionEvent, database=db):
-    self.db = database
-    self.info = event
-    self.response = None
+  # EVENTS DEFINITION ========================
+  JOB_STARTED = EventMeta(
+    collections=production_collections,
+    action='start_job',
+    post_processing=production_post_processing
+  )
 
-    # define action to be taken based on the event type
-    self.action = getattr(self, self.info.event_type.value)
+  JOB_PAUSED = EventMeta(
+    collections=production_collections,
+    action='pause_job',
+    post_processing=production_post_processing
+  )
 
-  def save(self):
-    # Initialize transaction
-    self.tx = self.db.begin_transaction(write=self.write_collections)
+  JOB_PAUSED_OFFLINE = EventMeta(
+    collections=production_collections,
+    action='pause_job',
+    post_processing=production_post_processing
+  )
 
-    try:
-      # Apply updates to global application state
-      getattr(self, self.action)()
-      self.update_job_last_online()
-      self.update_work_order()
+  JOB_RESUMED = EventMeta(
+    collections=production_collections,
+    action='resume_job',
+    post_processing=production_post_processing
+  )
 
-      # Save event as is
-      self.tx.collection('Event').insert(self.info)
+  JOB_BACK_ONLINE = EventMeta(
+    collections=production_collections,
+    action='restore_work_session',
+    post_processing=production_post_processing
+  )
 
-      # Commit transaction
-      self.tx.commit_transaction()
+  STEP_COMPLETED = EventMeta(
+    collections=production_collections,
+    action='complete_step',
+    post_processing=production_post_processing
+  )
 
-      # Return any required value
-      return self.response
-
-    # In case of exceptions, abort transaction without catching them
-    finally:
-      if self.tx.transaction_status() != 'committed':
-        self.tx.abort_transaction()
-
+  BATCH_COMPLETED = EventMeta(
+    collections=production_collections,
+    action='complete_batch',
+    post_processing=production_post_processing
+  )
 
   ######################################################################
   # HELPER METHODS (Updates to specific collections)
   ######################################################################
 
-  # ....................................................................
+  # ===================================================================
   # WorkSession
-  # ....................................................................
+  # ===================================================================
 
   def create_work_session(self):
     # Check no other work session is active from the user and close it if necessary
@@ -133,9 +132,9 @@ class Event:
     return updated_work_session
 
 
-  # ....................................................................
+  # ===================================================================
   # Serial
-  # ....................................................................
+  # ===================================================================
 
   # def create_serial(self, counter, batch_key):
   #   new_serial = Serial(
@@ -177,9 +176,9 @@ class Event:
 
 
 
-  # ....................................................................
+  # ===================================================================
   # Batch
-  # ....................................................................
+  # ===================================================================
 
   def create_batch(self, batch_qt):
     self.get_job_data()
@@ -253,9 +252,9 @@ class Event:
     return step_done_count == total_step_count
 
 
-  # ....................................................................
+  # ===================================================================
   # WIP
-  # ....................................................................
+  # ===================================================================
 
   def declare_wip(self):
     if not self.job:
@@ -341,9 +340,9 @@ class Event:
     return total_available
 
 
-  # ....................................................................
+  # ===================================================================
   # Job
-  # ....................................................................
+  # ===================================================================
 
   def set_job_active_state(self, active: bool):
     update_data = dict(
@@ -420,9 +419,9 @@ class Event:
     )
 
 
-  # ....................................................................
+  # ===================================================================
   # WorkOrder
-  # ....................................................................
+  # ===================================================================
 
   def get_work_order_data(self):
     wo_data = self.tx.collection('WorkOrder').get(self.info.work_order_key)
@@ -498,13 +497,13 @@ class Event:
       job_data = self.job
     )
 
-  # ....................................................................
+  # ===================================================================
 
   def pause_job(self):
     self.close_work_session()
     self.set_job_active_state(False)
 
-  # ....................................................................
+  # ===================================================================
 
   def resume_job(self):
     self.get_job_data()
@@ -537,7 +536,7 @@ class Event:
       job_data = self.job
     )
 
-  # ....................................................................
+  # ===================================================================
 
   def restore_work_session(self):
     updated_work_session = dict(
@@ -555,7 +554,7 @@ class Event:
 
     self.response = self.job
 
-  # ....................................................................
+  # ===================================================================
 
   def complete_step(self):
     self.get_job_data()
@@ -589,7 +588,7 @@ class Event:
       )
 
 
-  # ....................................................................
+  # ===================================================================
 
   def complete_batch(self):
 
@@ -676,6 +675,4 @@ class Event:
     if self.info.next_phase_key:
       self.declare_wip()
 
-
-
-
+# --------------------------------------------------------------------

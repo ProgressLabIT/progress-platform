@@ -13,6 +13,7 @@ export default {
   "and": "and",
   "archive": "archive",
   "assign": "assign",
+  "back": "back",
   "batch": "batch",
   "bom": {
     "add_line": "add line",
@@ -36,6 +37,7 @@ export default {
   "cancel_changes": "cancel changes",
   "change": "change",
   "close": "close",
+  "close_within": "Close within",
   "closed": "closed",
   "code": "code",
   "component": "component",
@@ -70,11 +72,28 @@ export default {
   "due_by": "due by",
   "edit": "edit",
   "element": "element",
+  "end": "end",
   "end_date": "end date",
   "equipment": "equipment",
   "equipment_class": "equipment class | equipment classes",
   "errors": {
     "save_err": "Could not save updates"
+  },
+  "events": {
+    'JOB_STARTED': "Job started",
+    'JOB_PAUSED': "Job paused",
+    'JOB_PAUSED_OFFLINE': "Job paused (session offline)",
+    'JOB_RESUMED': "Job resumed",
+    'JOB_BACK_ONLINE': "Session back online",
+    'STEP_COMPLETED': "Step completed",
+    'BATCH_COMPLETED': "Piece/Batch completed",
+    'ISSUE_CREATED': "Issue created",
+    'ISSUE_UPDATED': "Issue updated",
+    'ISSUE_CLOSED': "Issue closed",
+    'ISSUE_REOPENED': "Issue reopened",
+    'MESSAGE_POSTED': "Message posted",
+    'MESSAGE_UPDATED': "Message updated",
+    'MESSAGE_DELETED': "Message deleted"
   },
   "filter": "filter",
   "form_missing_fields_alert": "please fill in all fields",
@@ -83,10 +102,34 @@ export default {
     "evening": "good evening",
     "morning": "good morning"
   },
+  "icon": "icon",
   "image": "image",
   "inactive": "inactive",
   "increase": "increase",
   "info": "info",
+  "issue": "issue",
+  "issue_button_close": "Close issue",
+  "issue_button_reopen": "Reopen issue",
+  "issue_button_reopen_critical": "Reopen as critical",
+  "issue_button_add_critical": "Make critical",
+  "issue_button_remove_critical": "Make non critical",
+  "issue_edit_type": "Change type",
+  "issue_missing": "No issues",
+  "issue_new_success": "Issue created successfully. Redirecting...",
+  "issue_new_title": "New issue",
+  "issue_new_link_step_helper": "Indicate to which elements this issue should be linked to",
+  "issue_type": "Issue type | Issue types",
+  "issue_type_alerts_code_missing": "Provide a code for the issue type",
+  "issue_type_alerts_name_missing": "Provide a name for the issue type",
+  "issue_type_alerts_delete_general_error": "The issue type coiuld not be deleted due to an error in the database",
+  "issue_type_alerts_in_use": "This issue type cannot be deleted because the following issues are of this type",
+  "issue_type_close_within_explainer": "Number of hours after which a issue fo this type becomes critical, if not created as such. Zero means never.",
+  "issue_type_delete_question": "Do you want to delete this issue type?",
+  "issue_type_delete_success": "Issue type deleted successfully",
+  "issue_type_delete_title": "Delete issue type",
+  "issue_type_new": "New issue type",
+  "issue_updated": "Issue updated successfully",
+  "issue_update_type": "Choose new issue type",
   "item": "item",
   "job": {
     "add": "add job",
@@ -127,15 +170,20 @@ export default {
   "language": "language",
   "late": "late",
   "lead_time": "lead time",
+  "link": "Link | Links",
   "loading_text": "getting data...",
   "material": "material | materials",
   "material_cost": "material cost",
+  "message": "Message",
+  "message_prompt": "Write...",
   "name": "name",
   "new": "new",
+  "next": "next",
   "no_class": "no class",
   "no_department": "no department",
   "of": "of",
   "on_time": "on time",
+  "open": "open",
   "operation": {
     "add_op": "add operation",
     "alerts": {
@@ -149,6 +197,8 @@ export default {
     "delete_question": "do you really want to delete this operation",
     "delete_success": "operation successfully deleted",
     "delete_title": "delete operation",
+    "issue_link_label": "Operation (generica)",
+    "label": "Operation",
     "new": "new operation",
     "new_success": "new operation successfully created"
   },
@@ -382,6 +432,7 @@ export default {
   "search": "search",
   "select": "select",
   "select_all": "select all",
+  "send": "Send",
   "session": {
     "alerts": {
       "close_session": "do you really want to close this session?"
@@ -406,6 +457,7 @@ export default {
   "start_end_totals": "start/end total",
   "status": "status",
   "step_sequence": "step sequence",
+  "summary": "summary",
   "title": "title",
   "total_cost": "total cost",
   "type": "type",
@@ -502,10 +554,12 @@ export default {
     "short": "wo",
     "tabs": {
       "workOrderHistory": "history",
-      "workOrderJobs": "jobs"
+      "workOrderJobs": "jobs",
+      "workOrderIssues": "issues"
     },
     "update_due_date": "change due date",
     "update_from_date": "change release date",
     "wo_code": "code",
-  }
+  },
+  "write": "Write"
 }

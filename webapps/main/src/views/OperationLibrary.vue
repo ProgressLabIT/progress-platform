@@ -62,12 +62,9 @@
     <q-separator vertical />
 
     <!-- OPERATION DATA -->
-    <div class="col full-height" v-if="vuex_ready">
+    <div class="col full-height" v-if="selected_operation">
       <router-view v-slot="{ Component }">
-        <component
-          :is="Component"
-          :operation="selected_operation">
-        </component>
+        <component :is="Component" :operation="selected_operation"/>
       </router-view>
     </div>
 

@@ -1,0 +1,58 @@
+from pydantic import BaseModel
+
+from events import IssueEvent, ProductionEvent
+from models.event import EventModel
+from utils.db import db
+
+
+class Event(ProductionEvent, IssueEvent):
+  """
+  This class serves as collector of all event categories and as main "entrypoint" for the event API
+  It abstracts the general logic of processing and saving events from the specifics defined in each
+  of the classes it inherits from.
+
+  Each inherited class includes a property named after each event type of its "category".
+  Each event type (class property) is itself an EventMeta class instance which defines:
+  - the list of collections to use in the transaction
+  - the actions to be carried out specific to the event type
+  """
+  ######################################################################
+  # INIT & SAVE
+  ######################################################################
+
+  def __init__(self, event: EventModel, database=db):
+    self.db = database
+    self.info = event
+    self.meta = getattr(self, self.info.event_type.value)
+    self.response = None
+
+    # define action to be taken based on the event type
+    self.action = getattr(self, self.meta.action)
+
+  def save(self):
+    # Initialize transaction
+    self.tx = self.db.begin_transaction(write=self.meta.collections)
+
+    try:
+      # Apply updates to global application state based on specific event
+      self.action()
+
+      # Apply updates based on event category shared logic
+      for method in self.meta.post_processing or []:
+        getattr(self, method)()
+
+      # Save event
+      self.tx.collection('Event').insert(self.info)
+
+      # Commit transaction
+      self.tx.commit_transaction()
+
+      # Return any required value
+      return self.response
+
+    # In case of exceptions, abort transaction without catching them
+    finally:
+      if self.tx.transaction_status() != 'committed':
+        self.tx.abort_transaction()
+
+

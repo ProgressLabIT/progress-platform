@@ -96,6 +96,7 @@
         <div v-else class="q-py-xl">
           <vue-pdf-embed
             disableTextLayer
+            disableAnnotationLayer
             ref="pdf"
             :source="media_src"
             :width="doc_width">

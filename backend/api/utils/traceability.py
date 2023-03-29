@@ -5,7 +5,14 @@ class Queries:
 
   GET_EVENTS = """
     FOR e IN Event
-    FILTER e.wo_key
+    FILTER
+      @work_order_key ? e.work_order_key == @work_order_key : true
+      && @job_key ? e.job_key == @job_key : true
+      && @issue_key ? e.issue_data._key == @issue_key : true
+      && @time_from ? e.timestamp >= @time_from : true
+      && @time_to ? e.timestamp <= @time_to : true
+    SORT e.timestamp
+    RETURN e
   """
 
   CREATE_WORK_SESSION = """

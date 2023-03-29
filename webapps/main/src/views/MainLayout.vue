@@ -6,12 +6,13 @@
     <!-- Use v-if to fully remove html from DOM in case of session lock.
     This avoids access to content by tweaking SessionLock component visibility in the browser inspector -->
     <!-- <template v-if="!session_locked"> -->
-      <AppBar @showDrawer="show_drawer = true"/>
+      <AppBar />
 
       <q-drawer
         id="menu"
-        class="surface1"
+        class="surface2"
         behavior="mobile"
+        bordered
         :width="400"
         v-model="show_drawer">
         <div class="column fit q-pa-lg">
@@ -70,6 +71,7 @@ import { useQuasar } from 'quasar'
 import { DateTime as DT } from 'luxon'
 import AppBar from '@/components/AppBar.vue'
 import AppFooter from '@/components/AppFooter.vue'
+import drawer from '@/mixins/drawer.js'
 // import SessionLock from '@/views/SessionLock'
 
 export default {
@@ -81,10 +83,11 @@ export default {
     // SessionLock,
   },
 
+  mixins: [drawer],
+
   data() {
     return {
       $q: useQuasar(),
-      show_drawer: false,
       tab_routes: ['adminPanel', 'libraryRoot', 'productionRoot', 'userJobs'],
       locale_index: null,
       locale_list: this.$root.$i18n.availableLocales,
@@ -138,7 +141,7 @@ export default {
 }
 </script>
 
-<style lang="sass" scoped>
+<style lang="sass">
 #menu .q-tab
   justify-content: left
   padding-left: 15px
@@ -147,4 +150,11 @@ export default {
   color: var(--text-low)
   .q-tab--active
     color: var(--theme-blue)
+
+.q-drawer__backdrop
+  z-index: 9998 !important
+
+.q-drawer--on-top
+  z-index:9999
+  // border-right: solid 1px grey
 </style>

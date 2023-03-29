@@ -6,7 +6,6 @@ from pydantic import Field
 
 from models.process import StepWithMediaInfo
 from utils.base_models import FlexModel, ArangoDocument, ArangoEdge
-from utils.dt import timestamp
 
 
 
@@ -68,44 +67,9 @@ class WorkSession(FlexModel):
   # master_session: bool
   start: datetime
   end: datetime = None
-  duration: timedelta = None
+  duration: timedelta = None # milliseconds
   active: bool
   hourly_cost: float = None
-
-
-class EventType(Enum):
-  JOB_STARTED = 'JOB_STARTED'
-  JOB_PAUSED = 'JOB_PAUSED'
-  JOB_PAUSED_OFFLINE = 'JOB_PAUSED_OFFLINE'
-  JOB_RESUMED = 'JOB_RESUMED'
-  JOB_BACK_ONLINE = 'JOB_BACK_ONLINE'
-  STEP_COMPLETED = 'STEP_COMPLETED'
-  BATCH_COMPLETED = 'BATCH_COMPLETED'
-
-
-class ProductionEvent(FlexModel):
-  key: str = Field(None, alias="_key")
-  event_type: EventType
-  user_key: str
-  user_session_key: str
-  work_session_key: str = None
-  job_key: str = None
-  product_key: str = None
-  work_order_key: str = None
-  phase_key: str = None
-  next_phase_key: str = None
-  active_batch_key: str = None
-  active_batch_qt: float = None
-  step_key: str = None
-  completed_batch_key: str = None
-  completed_batch_qt: float = None
-  new_batch_key: str = None
-  project_code: str = None
-  timestamp: datetime = timestamp()
-  user_data: Any
-  description: str = None # optional descriptive field for auditing reasons
-
-
 
 
 # class Serial(ArangoDocument):
