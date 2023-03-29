@@ -2,7 +2,7 @@ import traceback
 from datetime import datetime
 from typing import Dict, List, Union
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 
 from models.quality import *
@@ -116,14 +116,14 @@ async def delete_issue_type(issue_key: str):
 
 @router.get('/issue')
 async def get_issues(
-  issue_key: str = None,
-  issue_type: str = None,
-  product_key: str = None,
-  work_order_key: str = None,
-  job_key: str = None,
-  phase_key: str = None,
-  operation_key: str = None,
-  creator_id: str = None,
+  issue_key: Union[List[str], None] = Query(default=None),
+  issue_type: Union[List[str], None] = Query(default=None),
+  product_key: Union[List[str], None] = Query(default=None),
+  work_order_key: Union[List[str], None] = Query(default=None),
+  job_key: Union[List[str], None] = Query(default=None),
+  phase_key: Union[List[str], None] = Query(default=None),
+  operation_key: Union[List[str], None] = Query(default=None),
+  creator_id: Union[List[str], None] = Query(default=None),
   time_created_from: datetime = None,
   time_created_to: datetime = None,
   time_closed_from: datetime = None,

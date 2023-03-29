@@ -3,10 +3,11 @@ class Queries:
   FIND_ISSUES = """
     FOR i IN Issue
     FILTER
+      // When filtering by document key, parameters will be arrays
       // Filter first issue properties...
-      @issue_key ? i._key == @issue_key : true
-      && @issue_type ? i.issue_type == @issue_type : true
-      && @creator_id ? i.created_by == @creator_id : true
+      @issue_key ? POSITION(@issue_key, i._key) : true
+      && @issue_type ? POSITION(@issue_type, i.issue_type) : true
+      && @creator_id ? POSITION(@creator_id, i.created_by) : true
       && @time_created_from ? i.created >= @time_created_from : true
       && @time_created_to ? i.created <= @time_created_to : true
       && @time_closed_from ? i.closed >= @time_closed_from : true
@@ -16,11 +17,12 @@ class Queries:
       // Then in relationships...
       FOR v, e IN 1..1 OUTBOUND i issue_rel
       FILTER
-        @product_key ? e._to == CONCAT('Product/', @product_key) : true
-        && @work_order_key ? e._to == CONCAT('WorkOrder/', @work_order_key) : true
-        && @job_key ? e._to == CONCAT('Job/', @job_key) : true
-        && @phase_key ? e._to == CONCAT('Phase/', @phase_key) : true
-        && @operation_key ? e._to == CONCAT('Operation/', @operation_key) : true
+        // Here the keys must be turned into document ids
+        @product_key ? POSITION(@product_key[* RETURN CONCAT('Product/', CURRENT)], e._to) : true
+        && @work_order_key ? POSITION(@work_order_key[* RETURN CONCAT('WorkOrder/', CURRENT)], e._to) : true
+        && @job_key ? POSITION(@job_key[* RETURN CONCAT('Job/', CURRENT)], e._to) : true
+        && @phase_key ? POSITION(@phase_key[* RETURN CONCAT('Phase/', CURRENT)], e._to) : true
+        && @operation_key ? POSITION(@operation_key[* RETURN CONCAT('Operation/', CURRENT)], e._to) : true
 
     LIMIT @limit || null
     LET type_data = FIRST(
