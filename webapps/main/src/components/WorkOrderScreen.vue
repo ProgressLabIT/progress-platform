@@ -1,5 +1,5 @@
 <template>
-  <BaseModalScreen :show="true" @close="exit()">
+  <BaseModalScreen :show="true" @close="exit">
     <template v-slot:header>
       <span class="q-ml-md display medium highlight weight-medium text-uppercase">
         {{ $t('work_order.key') }}: {{ wo_key }}
@@ -9,7 +9,7 @@
         <q-tabs
           class="transparent text-low"
           active-class="text-high weight-bold"
-          indicator-color="transparent"
+          indicator-color="theme-blue"
           dense>
           <q-route-tab
             v-for="(page, index) in tabs" 
@@ -96,7 +96,6 @@ export default {
   methods: {
 
     exit() {
-      console.log('exit')
       if (this.$route.query.back_to) {
         this.$router.push({ name: this.$route.query.back_to })
       }
