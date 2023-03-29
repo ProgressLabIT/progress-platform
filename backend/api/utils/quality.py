@@ -28,5 +28,6 @@ class Queries:
       FILTER it._key == i.issue_type
       RETURN it
     )
+    SORT i.created
     RETURN MERGE(i, { icon: type_data.icon, type_name: type_data.name })
   """

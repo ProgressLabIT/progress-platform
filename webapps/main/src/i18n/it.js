@@ -108,7 +108,7 @@ export default {
   "inactive": "disattivato",
   "increase": "aumenta",
   "info": "info",
-  "issue": "segnalazione | segnalazioni",
+  "issue": "Segnalazione | Segnalazioni",
   "issue_button_close": "Chiudi segnalazione",
   "issue_button_reopen": "Riapri segnalazione",
   "issue_button_reopen_critical": "Riapri come critica",

@@ -6,7 +6,7 @@ export default {
         ? { color: 'theme-grey', text: this.$t('closed') }
         : i.critical
         ? { color: 'theme-red', text: this.$t('critical') }
-        : { color: 'theme-orange', text: this.$t('open') }
+        : { color: 'theme-blue', text: this.$t('open') }
       return { ...i, badge }
     }
   }

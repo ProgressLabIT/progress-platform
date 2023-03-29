@@ -1,115 +1,118 @@
 <template>
-  <div class="absolute-full row q-pa-md">
+  <BaseDialog :show="true" @close="exit" maximized>
+    <q-card class="surface1 row" bordered square style="width: 90vw; height: 90vh">
 
-    <!-- LEFT SECTION -->
-    <div class="col-8 column full-height">
-      <IssueHeader :issue="issue" @type-change="refreshIssue"/>
-      <q-list class="q-ml-lg q-px-xl col scroll q-pb-lg">
-        <q-item
-          v-for="e, index in history"
-          :key="e._key"
-          class="q-mt-md relative-position row justify-between full-width items-baseline">
+      <!-- LEFT SECTION -->
+      <div class="col-8 column full-height">
+        <IssueHeader :issue="issue" @type-change="refreshIssue"/>
+        <q-list class="q-ml-lg q-px-xl col scroll q-pb-lg">
+          <q-item
+            v-for="e, index in history"
+            :key="e._key"
+            class="q-mt-md relative-position row justify-between full-width items-baseline">
 
-          <!-- TIMELINE DOT & LINE -->
-          <div style="position: absolute; left: -40px; top: 13px; height: 100%; width: 32px">
-            <div class="column full-height">
-              <div class="dot" />
-              <div v-if="index < history.length - 1" class="thread" />
+            <!-- TIMELINE DOT & LINE -->
+            <div style="position: absolute; left: -30px; top: 13px; height: 100%; width: 32px">
+              <div class="column full-height">
+                <div class="dot"></div>
+                <div v-if="index < history.length - 1" class="thread"></div>
+              </div>
+            </div>
+
+            <!-- EVENT TYPE -->
+            <q-item-section class="text-italic">
+              {{ $formatDateTime(e.timestamp, $i18n.locale, 'DATETIME_MED') }}
+            </q-item-section>
+            <q-item-section class="text-h4 highlight text-uppercase">
+              {{ $t(`events.${e.event_type}`) }}
+            </q-item-section>
+            <q-space />
+            <q-item-section>
+              <BaseUserAvatar name_first :user="getUserData(e)" />
+            </q-item-section>
+          </q-item>
+        </q-list>
+
+        <q-space />
+
+        <!-- ACTIONS -->
+        <div class="row q-pa-md q-gutter-lg">
+          <template v-if="issue.open">
+            <q-btn
+              color="theme-blue"
+              :label="$t('issue_button_close')"
+              @click="closeIssue">
+            </q-btn>
+            <q-btn
+              v-if="issue.critical"
+              color="theme-blue"
+              :label="$t('issue_button_remove_critical')"
+              @click="toggleCritical">
+            </q-btn>
+            <q-btn
+              v-else
+              color="theme-red"
+              :label="$t('issue_button_add_critical')"
+              @click="toggleCritical">
+            </q-btn>
+          </template>
+          <template v-else>
+            <q-btn
+              color="theme-blue"
+              :label="$t('issue_button_reopen')"
+              @click="() => { critical=false; reopenIssue() }">
+            </q-btn>
+            <q-btn
+              color="theme-red"
+              :label="$t('issue_button_reopen_critical')"
+              @click="() => { critical=true; reopenIssue() }">
+            </q-btn>
+          </template>
+          <q-space />
+          <q-btn
+            color="theme-grey"
+            :label="$t('back')"
+            @click="$router.back()">
+          </q-btn>
+        </div>
+      </div>
+
+
+      <q-separator vertical spaced />
+
+      <!-- RIGHT SECTION -->
+      <div class="col column q-pa-md full-height">
+        <div class="display low-text text-h5 col-auto q-pb-md">
+          {{ $t('message', 2) }}
+        </div>
+        <q-separator></q-separator>
+        <div class="col scroll q-py-md">
+          <Message v-for="m in messages" :key="m._key" :message="m" />
+        </div>
+        <div class="col-auto">
+          <q-separator spaced></q-separator>
+          <div class="row justify-between items-center">
+            <div class="col">
+              <q-input
+                v-if="!recording"
+                filled
+                autogrow
+                v-model="new_message"
+                :placeholder="$t('message_prompt')">
+              </q-input>
             </div>
           </div>
-
-          <!-- EVENT TYPE -->
-          <q-item-section class="text-italic">
-            {{ $formatDateTime(e.timestamp, $i18n.locale, 'DATETIME_MED') }}
-          </q-item-section>
-          <q-item-section class="text-h4 highlight text-uppercase">
-            {{ $t(`events.${e.event_type}`) }}
-          </q-item-section>
-          <q-space />
-          <q-item-section>
-            <BaseUserAvatar name_first :user="getUserData(e)" />
-          </q-item-section>
-        </q-item>
-      </q-list>
-
-      <q-space />
-
-      <!-- ACTIONS -->
-      <div class="row q-pa-md q-gutter-lg">
-        <template v-if="issue.open">
           <q-btn
-            color="theme-green"
-            :label="$t('issue_button_close')"
-            @click="closeIssue">
+            class="full-width q-mt-md"
+            :loading="loading"
+            color="theme-blue"
+            :label="$t('send')"
+            @click="postMessage">
           </q-btn>
-          <q-btn
-            v-if="issue.critical"
-            color="theme-orange"
-            :label="$t('issue_button_remove_critical')"
-            @click="toggleCritical">
-          </q-btn>
-          <q-btn
-            v-else
-            color="theme-red"
-            :label="$t('issue_button_add_critical')"
-            @click="toggleCritical">
-          </q-btn>
-        </template>
-        <template v-else>
-          <q-btn
-            color="theme-orange"
-            :label="$t('issue_button_reopen')"
-            @click="() => { critical=false; reopenIssue() }">
-          </q-btn>
-          <q-btn
-            color="theme-red"
-            :label="$t('issue_button_reopen_critical')"
-            @click="() => { critical=true; reopenIssue() }">
-          </q-btn>
-        </template>
-        <q-space />
-        <q-btn
-          color="theme-grey"
-          :label="$t('back')"
-          @click="$router.back()">
-        </q-btn>
-      </div>
-    </div>
-
-    <q-separator vertical spaced />
-
-    <!-- RIGHT SECTION -->
-    <div class="col column q-pa-md full-height">
-      <div class="display low-text text-h5 col-auto q-pb-md">
-        {{ $t('message', 2) }}
-      </div>
-      <q-separator></q-separator>
-      <div class="col scroll q-py-md">
-        <Message v-for="m in messages" :key="m._key" :message="m" />
-      </div>
-      <div class="col-auto">
-        <q-separator spaced></q-separator>
-        <div class="row justify-between items-center">
-          <div class="col">
-            <q-input
-              v-if="!recording"
-              filled
-              autogrow
-              v-model="new_message"
-              :placeholder="$t('message_prompt')">
-            </q-input>
-          </div>
         </div>
-        <q-btn
-          class="full-width q-mt-md"
-          :loading="loading"
-          color="theme-green"
-          :label="$t('send')"
-          @click="postMessage">
-        </q-btn>
       </div>
-    </div>
-  </div>
+    </q-card>
+  </BaseDialog>
 </template>
 
 <script>
@@ -118,7 +121,7 @@ import IssueHeader from '@/components/IssueHeader.vue'
 import enrichIssue from '@/mixins/issues.js'
 import Message from '@/components/Message.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
-
+import BaseDialog from '@/components/BaseDialog.vue'
 export default {
 
   name: 'IssueDetail',
@@ -126,7 +129,8 @@ export default {
   components: {
     IssueHeader,
     Message,
-    BaseUserAvatar
+    BaseUserAvatar,
+    BaseDialog
   },
 
   mixins: [enrichIssue, event],

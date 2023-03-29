@@ -12,7 +12,7 @@
     </q-item-section>
     <q-item-section>
       <q-item-label class="weight-bold text-h4 row">
-        <div v-if="issue.type_name" class="q-mr-md">{{ issue.type_name }}</div>
+        <div class="q-mr-md">{{ issue.type_name || $t('issue') }}</div>
         <div>#{{ issue._key }}</div>
       </q-item-label>
     </q-item-section>
@@ -21,6 +21,8 @@
         {{ issue.badge.text }}
       </q-chip>
     </q-item-section>
+
+    <!-- ISSUE TYPE PICKER -->
     <BaseDialog :show="show_type_picker">
       <q-card class="q-pa-md surface1" style="min-width: 400px;">
         <q-card-section class="text-h3 highlight">
@@ -28,7 +30,7 @@
         </q-card-section>
         <q-card-section>
           <BaseAutocompleteIssueType
-            :value="new_issue_type.name"
+            :value="new_issue_type"
             @select="(value) => new_issue_type=value">
           </BaseAutocompleteIssueType>
         </q-card-section>
@@ -97,11 +99,11 @@ export default {
         event_data: {
           issue_data: {
             _key: this.issue._key,
-            issue_type: this.new_issue_type._key
+            issue_type: this.new_issue_type ? this.new_issue_type._key : null
           }
         }
       }).then(() => {
-        this.$emit('type-change', this.new_issue_type._key)
+        this.$emit('type-change', this.new_issue_type ? this.new_issue_type._key : null)
         this.show_type_picker = false
       })
     }
