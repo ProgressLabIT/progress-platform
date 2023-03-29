@@ -60,6 +60,7 @@ const store = createStore({
         ghostClass: "ghost"
       },
       screen_title: 'progress',
+      show_drawer: false,
       theme_colors: dark,
       icons: icon_list,
     }
@@ -71,7 +72,11 @@ const store = createStore({
     },
     SET_THEME(state, theme) {
       state.theme_colors = theme
+    },
+    SHOW_DRAWER(state, value) {
+      state.show_drawer = value
     }
+
   },
 
   actions: {

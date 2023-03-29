@@ -6,7 +6,7 @@
     <!-- Use v-if to fully remove html from DOM in case of session lock.
     This avoids access to content by tweaking SessionLock component visibility in the browser inspector -->
     <!-- <template v-if="!session_locked"> -->
-      <AppBar @showDrawer="show_drawer = true"/>
+      <AppBar />
 
       <q-drawer
         id="menu"
@@ -84,7 +84,6 @@ export default {
   data() {
     return {
       $q: useQuasar(),
-      show_drawer: false,
       tab_routes: ['adminPanel', 'libraryRoot', 'productionRoot', 'userJobs'],
       locale_index: null,
       locale_list: this.$root.$i18n.availableLocales,
