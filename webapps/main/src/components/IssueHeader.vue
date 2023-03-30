@@ -107,6 +107,13 @@ export default {
         this.show_type_picker = false
       })
     }
+  },
+  watch: {
+    show_type_picker() {
+      if (this.show_type_picker == false) {
+        this.new_issue_type = null
+      }
+    }
   }
 }
 </script>
