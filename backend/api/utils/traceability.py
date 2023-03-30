@@ -120,17 +120,17 @@ class Queries:
     )
 
     // Update PT and Cost
-    LET processing_time = SUM(
+    LET work_sessions = (
       FOR ws IN WorkSession
       FILTER ws.work_order_key == @wo_key
-      RETURN ws.duration
+      LET benchmark = ws.active ? now : ws.end
+      LET duration = DATE_DIFF(ws.start, benchmark, 'f')
+      LET cost = ws.hourly_cost * duration / 3600000 // No. of milliseconds in an hour: 60*60*1000
+      RETURN MERGE(ws, { duration, cost })
     )
 
-    LET processing_cost = CEIL(SUM(
-      FOR ws IN WorkSession
-      FILTER ws.work_order_key == @wo_key
-      RETURN ws.duration * ws.hourly_cost
-    ) / (60*60*10)) / 100
+    LET processing_time = SUM(FOR ws IN work_sessions RETURN ws.duration)
+    LET processing_cost = CEIL(SUM(FOR ws IN work_sessions RETURN ws.cost * 100)) / 100 // round to cents
 
     // Check if any WO Job is still open
     LET still_open = TO_BOOL(COUNT(FOR j IN jobs FILTER j.stage != 'closed' RETURN 1))

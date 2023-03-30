@@ -35,22 +35,8 @@ class Queries:
         RETURN MERGE( j, { assigned_to: operator } )
       )
 
-      LET work_sessions = ( 
-        FOR ws IN WorkSession 
-        FILTER ws.work_order_key == @wo_key
-        LET benchmark = ws.active ? now : ws.end
-        LET duration = DATE_DIFF(ws.start, benchmark, 'f')
-        LET cost = ws.hourly_cost * duration / (1000*60*60)
-        RETURN MERGE(ws, { duration, cost })
-      )
-
-      LET processing_time = SUM(FOR ws IN work_sessions RETURN ws.duration)
-      LET processing_cost = SUM(FOR ws IN work_sessions RETURN ws.cost)
-      LET total_cost = processing_cost + wo.material_cost
-
-
       // Return enriched wo data
-      RETURN MERGE(wo, { jobs, processing_time, processing_cost, total_cost })
+      RETURN MERGE(wo, { jobs })
   """
 
 
