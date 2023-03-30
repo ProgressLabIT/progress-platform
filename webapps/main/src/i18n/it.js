@@ -185,6 +185,8 @@ export default {
   "next": "avanti",
   "no_class": "nessuna classe",
   "no_department": "nessun reparto",
+  "notes": "Note",
+  "notes_production": "Note produzione",
   "of": "di",
   "on_time": "puntuale",
   "open": "aperto",
