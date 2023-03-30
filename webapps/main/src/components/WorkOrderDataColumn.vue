@@ -392,10 +392,10 @@ export default {
         //   name: 'lead_time',
         //   text: this.$t('lead_time')
         // },
-        // {
-        //   name: 'processing_cost',
-        //   text: this.$t('processing_cost')
-        // },
+        {
+          name: 'processing_cost',
+          text: this.$t('processing_cost')
+        },
         // {
         //   name: 'material_cost',
         //   text: this.$t('material_cost')
@@ -556,15 +556,15 @@ export default {
         }
 
         case 'processing_cost': {
-          return this.$roundFloat(this.wo_data.processing_cost || 0, 1) || '-'
+          return (this.wo_data.processing_cost || 0).toFixed(2) || '-'
         }
 
         case 'material_cost': {
-          return this.$roundFloat(this.wo_data.material_cost || 0, 1) || '-'
+          return (this.wo_data.material_cost || 0).toFixed(2) || '-'
         }
 
         case 'total_cost': {
-          return this.$roundFloat(this.wo_data.total_cost || 0, 1) || '-'
+          return (this.wo_data.total_cost || 0).toFixed(2) || '-'
         }
 
       }

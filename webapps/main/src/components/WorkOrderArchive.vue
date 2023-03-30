@@ -45,7 +45,11 @@
               </template>
 
               <template v-else-if="c.name == 'processing_time'">
-                <span>{{ getHumanDuration(props.row.processing_time) }}</span>
+                <span>{{ props.row.processing_time }} / {{ props.row.unit_processing_time }}</span>
+              </template>
+
+              <template v-else-if="c.name == 'processing_cost'">
+                <span>{{ props.row.processing_cost }} / {{ props.row.unit_processing_cost }}</span>
               </template>
 
               <template v-else>
@@ -151,13 +155,13 @@ export default {
           field: 'processing_time',
           name: 'processing_time',
           align: 'right',
-          label: this.$t('performance.processing_time.medium').toUpperCase()
+          label: this.$t('performance.processing_time.medium').toUpperCase() + ' (TOT/UN)'
         },
         {
           field: 'processing_cost',
           name: 'processing_cost',
           align: 'right',
-          label: this.$t('performance.processing_cost.medium').toUpperCase()
+          label: this.$t('performance.processing_cost.medium').toUpperCase() + ' (TOT/UN)'
         },
       ]
     }
@@ -174,7 +178,15 @@ export default {
             search: this.filters.search_string
           }
         }).then(resp => {
-          this.wo_list = resp.data
+          this.wo_list = resp.data.map(wo => {
+            return {
+              ...wo,
+              processing_time: this.getHumanDuration(wo.processing_time),
+              unit_processing_time: this.getHumanDuration(wo.processing_time / wo.qt_completed),
+              processing_cost: wo.processing_cost.toFixed(2),
+              unit_processing_cost: (wo.processing_cost / wo.qt_completed).toFixed(2)
+            }
+          })
           this.loading = false
         })
       }, 1000)

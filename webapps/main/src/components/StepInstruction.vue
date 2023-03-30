@@ -145,12 +145,6 @@ export default {
   },
 
   computed: {
-
-    pic_index() {
-      const rand = Math.random()*5
-      return Math.ceil(rand)
-    },
-
     step_data() {
       return this.$store.state.process.temp[this.phase_index].steps[this.step_index]
     },

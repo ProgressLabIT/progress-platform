@@ -130,7 +130,7 @@ class Queries:
     )
 
     LET processing_time = SUM(FOR ws IN work_sessions RETURN ws.duration)
-    LET processing_cost = CEIL(SUM(FOR ws IN work_sessions RETURN ws.cost * 100)) / 100 // round to cents
+    LET processing_cost = SUM(FOR ws IN work_sessions RETURN ws.cost)
 
     // Check if any WO Job is still open
     LET still_open = TO_BOOL(COUNT(FOR j IN jobs FILTER j.stage != 'closed' RETURN 1))
