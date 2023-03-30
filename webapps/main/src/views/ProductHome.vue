@@ -149,26 +149,24 @@
     <!-- NOTES -->
     <div class="col-4 q-px-md">
       <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md">
-
-      <q-card-section class="text-h5 display weight-bold text-uppercase">
-        {{ $t('notes_production') }}
-      </q-card-section>
-      <q-card-section>
-        <div v-if="!edit_mode" style="white-space: pre-line;">
-          {{ temp_notes }}
-        </div>
-        <q-input
-          v-else
-          filled
-          dense
-          type="textarea"
-          :readonly="!edit_mode"
-          :model-value="temp_notes"
-          @update:model-value="value => updateField('production_notes', value)"
-          class="q-mt-md">
-        </q-input>
-      </q-card-section>
-
+        <q-card-section class="text-h5 display weight-bold text-uppercase">
+          {{ $t('notes_production') }}
+        </q-card-section>
+        <q-card-section>
+          <div v-if="!edit_mode" style="white-space: pre-line;">
+            {{ temp_notes }}
+          </div>
+          <q-input
+            v-else
+            filled
+            dense
+            type="textarea"
+            :readonly="!edit_mode"
+            :model-value="temp_notes"
+            @update:model-value="value => updateField('production_notes', value)"
+            class="q-mt-md">
+          </q-input>
+        </q-card-section>
       </q-card>
     </div>
 

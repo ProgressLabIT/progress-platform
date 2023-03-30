@@ -186,6 +186,7 @@ export default {
   "no_class": "nessuna classe",
   "no_department": "nessun reparto",
   "notes": "Note",
+  "notes_empty": "Nessuna nota",
   "notes_production": "Note produzione",
   "of": "di",
   "on_time": "puntuale",
@@ -516,6 +517,7 @@ export default {
   "views": {
     "PhaseParameters": "parametri",
     "PhaseSteps": "procedura",
+    "PhaseNotes": "Note produzione",
     "adminPanel": "impostazioni",
     "companyDetails": "dettagli azienda",
     "defaultPhaseParams": "fase di default",
