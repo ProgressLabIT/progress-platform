@@ -60,8 +60,11 @@ class IssueEvent:
 
   def create_issue(self):
     self.info.issue_data = IssueWithLinks(**self.info.issue_data)
-    new_issue_record = Issue(**self.info.issue_data.dict())
-    new_issue_id = self.tx.collection('Issue').insert(new_issue_record.dict(exclude={'_key', '_id', '_rev'}), return_new=True)['_id']
+    # Remove links and exclude document id fields
+    new_issue_record = Issue(
+      **self.info.issue_data.dict()
+    ).dict(by_alias=True)
+    new_issue_id = self.tx.collection('Issue').insert(new_issue_record, return_new=True)['_id']
 
     issue_links = [l for l in self.info.issue_data.linked_to]
     rels = [self._build_issue_link(_from=new_issue_id, link_dict=rel) for rel in issue_links]
