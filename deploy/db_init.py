@@ -84,6 +84,7 @@ collections = [
   'Event',
   'Issue',
   'IssueType',
+  'issue_rel',
   'Job',
   'message',
   'Operation',
