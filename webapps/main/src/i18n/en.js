@@ -183,6 +183,8 @@ export default {
   "no_department": "no department",
   "notes": "Notes",
   "notes_empty": "Notes empty",
+  "notes_order": "Order notes",
+  "notes_product": "Product notes",
   "notes_production": "Production notes",
   "of": "of",
   "on_time": "on time",

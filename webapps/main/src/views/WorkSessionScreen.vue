@@ -228,7 +228,8 @@ export default {
           { route_name: 'jobSteps', text: this.$t('procedure') },
           { route_name: 'jobDocs', text: this.$t('document.label', 2) },
           { route_name: 'jobBom', text: this.$t('material', 2) },
-          { route_name: 'jobIssues', text: this.$t('issue', 2) }
+          { route_name: 'jobIssues', text: this.$t('issue', 2) },
+          { route_name: 'jobNotes', text: this.$t('notes', 2) }
       ]
     },
 

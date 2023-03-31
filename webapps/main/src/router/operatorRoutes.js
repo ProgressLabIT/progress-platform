@@ -52,6 +52,11 @@ const operatorRoutes = [
         component: () => import("@/views/WorkSessionBom.vue")
       },
       {
+        path: "notes",
+        name: "jobNotes",
+        component: () => import("@/views/WorkSessionNotes.vue")
+      },
+      {
         path: "issues",
         name: "jobIssues",
         component: () => import ("@/views/IssueList.vue"),

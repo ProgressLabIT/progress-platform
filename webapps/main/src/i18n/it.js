@@ -187,6 +187,8 @@ export default {
   "no_department": "nessun reparto",
   "notes": "Note",
   "notes_empty": "Nessuna nota",
+  "notes_order": "Note ordine",
+  "notes_product": "Note prodotto",
   "notes_production": "Note produzione",
   "of": "di",
   "on_time": "puntuale",

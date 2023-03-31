@@ -260,20 +260,20 @@ async def update_work_order(
   job_match = dict(wo_key=wo_key)
   job_update = dict()
 
-  if new_due_date:
+  if new_due_date is not None:
     wo_update['due_by'] = new_due_date
 
-  if notes:
+  if notes is not None:
     wo_update['notes'] = notes
 
-  if new_qt:
+  if new_qt is not None:
     wo_update['qt_planned'] = new_qt
 
-  if new_from_date:
+  if new_from_date is not None:
     wo_update['start_from'] = new_from_date
     job_update.update({ 'start_from': new_from_date })
 
-  if new_project_code:
+  if new_project_code is not None:
     wo_update['project_code'] = new_project_code
     job_update.update({ 'project_code': new_project_code })
 
@@ -475,9 +475,19 @@ async def get_assignment_list(user_key: str = None):
 
 @router.get('/job/{job_key}')
 async def get_job_data(job_key: str):
+  query = """
+    FOR j IN Job
+    FILTER j._key == @job_key
+    LET product_notes = DOCUMENT(Product, j.product_key).production_notes
+    LET phase_notes = DOCUMENT(Phase, j.phase_key).notes
+    LET order_notes = DOCUMENT(WorkOrder, j.wo_key).notes
+    RETURN MERGE(j, { product_notes, phase_notes, order_notes })
+  """
+  bind_vars = dict(job_key = job_key)
 
   try:
-    job_data = db.collection('Job').get(job_key)
+    job_data = db.aql.execute(query, bind_vars=bind_vars).next()
+
   except:
     status_code=500
     response=dict(
@@ -490,7 +500,7 @@ async def get_job_data(job_key: str):
 
   response=dict(
     message=f"Retrieved data for Job/{job_key}",
-    detail=jsonable_encoder(job_data)
+    detail=job_data
   )
 
   return APIResponse(**response)
