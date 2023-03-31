@@ -562,7 +562,8 @@ export default {
     "tabs": {
       "workOrderHistory": "storico",
       "workOrderJobs": "lavori",
-      "workOrderIssues": 'segnalazioni'
+      "workOrderIssues": 'segnalazioni',
+      "workOrderNotes": "Note"
     },
     "update_due_date": "modifica data scadenza",
     "update_from_date": "modifica data rilascio",

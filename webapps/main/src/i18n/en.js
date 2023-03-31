@@ -559,7 +559,8 @@ export default {
     "tabs": {
       "workOrderHistory": "history",
       "workOrderJobs": "jobs",
-      "workOrderIssues": "issues"
+      "workOrderIssues": "issues",
+      "workOrderNotes": "Notes"
     },
     "update_due_date": "change due date",
     "update_from_date": "change release date",

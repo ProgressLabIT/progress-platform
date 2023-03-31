@@ -49,10 +49,6 @@ export default {
         })
       }
     }
-  },
-
-  mounted() {
-    console.log(this.phase, this.phase.production_notes, this.phase_notes)
   }
 }
 </script>

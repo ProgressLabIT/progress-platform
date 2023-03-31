@@ -251,7 +251,8 @@ async def update_work_order(
   new_due_date: Union[datetime, date] = Body(None),
   new_from_date: Union[datetime, date] = Body(None),
   new_qt: float = Body(None),
-  new_project_code: str = Body(None)
+  new_project_code: str = Body(None),
+  notes: str = Body(None)
   ):
 
   tx = db.begin_transaction(write=['WorkOrder', 'Job'])
@@ -261,6 +262,9 @@ async def update_work_order(
 
   if new_due_date:
     wo_update['due_by'] = new_due_date
+
+  if notes:
+    wo_update['notes'] = notes
 
   if new_qt:
     wo_update['qt_planned'] = new_qt
