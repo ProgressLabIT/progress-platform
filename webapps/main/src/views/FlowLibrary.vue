@@ -24,7 +24,7 @@
         </div>
       </q-item-section>
       <q-item-section class="col-auto">
-        <q-btn @click="print(flow)" label="launch" color="theme-blue"/>
+        <q-btn @click="run(flow)" label="launch" color="theme-blue"/>
       </q-item-section>
     </q-item>
   </q-list>
@@ -37,7 +37,6 @@ export default {
 
   data () {
     return {
-      base_url: 'http://192.168.2.189:4200/api',
       flows: [],
       query_filter: {
         "query": {
@@ -52,6 +51,10 @@ export default {
   },
 
   computed: {
+    base_url() {
+      return 'http://' + window.location.hostname + ':4200/api'
+    },
+
     deployments_url() {
       return this.base_url + '/deployments/filter'
     },
@@ -82,30 +85,46 @@ export default {
       return flow_params
     },
 
-    print(flow_data) {
-      console.log({ flow_data })
+    run(flow_data) {
+      const url = this.base_url + '/deployments/' + flow_data.deployment_id + '/create_flow_run'
+      let params_data = {}
+      flow_data.parameters.forEach(p => params_data[p.title] = p.value)
+
+      const body = {
+        state: {
+          type: "SCHEDULED"
+        },
+        parameters: params_data
+      }
+      this.$axios.post(url, body)
+    },
+
+    fetchFlows() {
+      // Get flow name from flows. Deployment data provides parameters and endpoint info
+      let flows_data, deployment_data
+      const calls = [
+        this.$axios.post(this.flows_url, this.query_filter),
+        this.$axios.post(this.deployments_url, this.query_filter)
+      ]
+      this.$axios.all(calls).then(responses => {
+        const flows_data = responses[0].data
+        const deployments_data = responses[1].data
+        console.log({ flows_data, deployments_data })
+        this.flows = flows_data.map(f => {
+          const deployment = deployments_data.find(d => d.flow_id == f.id)
+          return {
+            ...f,
+            deployment_id: deployment.id,
+            description: deployment.description,
+            parameters: this.defineFlowParameters(deployment)
+          }
+        })
+      })
     }
   },
 
   created() {
-    let flows_data, deployment_data
-    const calls = [
-      this.$axios.post(this.flows_url, this.query_filter),
-      this.$axios.post(this.deployments_url, this.query_filter)
-    ]
-    this.$axios.all(calls).then(responses => {
-      const flows_data = responses[0].data
-      const deployments_data = responses[1].data
-      this.flows = flows_data.map(f => {
-        const deployment = deployments_data.find(d => d.flow_id == f.id)
-        return {
-          ...f,
-          deployment_id: deployment.id,
-          description: deployment.description,
-          parameters: this.defineFlowParameters(deployment)
-        }
-      })
-    })
+    this.fetchFlows()
   }
 }
 </script>

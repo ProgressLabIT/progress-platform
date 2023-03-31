@@ -523,6 +523,7 @@ export default {
     "adminPanel": "impostazioni",
     "companyDetails": "dettagli azienda",
     "defaultPhaseParams": "fase di default",
+    "flowLibrary": "Flussi dati",
     "generalSettings": "generale",
     "jobList": "lavori",
     "libraryRoot": "libreria prodotti",
