@@ -285,6 +285,30 @@ export default {
   },
 
   methods: {
+    loadJob() {
+      this.$store.dispatch('loadJobData', this.job_key)
+      .then(() => {
+        const data = this.$store.state.traceability
+        const job_data = data.working_job_data
+
+        // If job is closed, redirect to
+        if (!this.can_work) {
+          setTimeout(this.exitJob, this.alert_timeout)
+        }
+
+        else {
+          this.vuex_ready = true
+          if (data.current_batch_data.step_data) {
+            const next_step_index = this.batch_data.findIndex( step => !step.done ) || 0
+            this.$router.replace({ query: { step: next_step_index + 1 }})
+          }
+          // In case the job is already active, e.g. after accidentally closing and reopening the page, restart heartbeat
+          if (job_data.active) {
+            this.$store.commit('SET_HEARTBEAT', true)
+          }
+        }
+      })
+    },
 
     goToStep(step_sequence) {
       this.$router.push({ query: { step: step_sequence + 1 }})
@@ -322,29 +346,8 @@ export default {
 
   created() {
     // Load job data
-    const job_key = this.job_key
-    this.$store.dispatch('loadJobData', job_key)
-    .then(() => {
-      const data = this.$store.state.traceability
-      const job_data = data.working_job_data
-
-      // If job is closed, redirect to
-      if (!this.can_work) {
-        setTimeout(this.exitJob, this.alert_timeout)
-      }
-
-      else {
-        this.vuex_ready = true
-        if (data.current_batch_data.step_data) {
-          const next_step_index = this.batch_data.findIndex( step => !step.done ) || 0
-          this.$router.replace({ query: { step: next_step_index + 1 }})
-        }
-        // In case the job is already active, e.g. after accidentally closing and reopening the page, restart heartbeat
-        if (job_data.active) {
-          this.$store.commit('SET_HEARTBEAT', true)
-        }
-      }
-    })
+    this.loadJob()
+    setInterval(this.loadJob, 10000)
   },
 
   // Make sure an alert is raised if user tries to close the page
