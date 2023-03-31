@@ -75,6 +75,10 @@ const process = {
       state.temp.splice(phase_index, 1)
     },
 
+    UPDATE_PHASE_PRODUCTION_NOTES(state, { phase_index, content }) {
+      state.temp[phase_index].production_notes = content
+    },
+
     LOAD_OPERATIONS(state, op_list) {
       state.operations = op_list
     },

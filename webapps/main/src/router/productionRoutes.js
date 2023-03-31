@@ -63,6 +63,11 @@ const productionRoutes = [
             name: 'workOrderIssueDetail',
             component: () => import("@/components/IssueDetail.vue"),
             props: true
+          },
+          {
+            path: 'notes',
+            name: 'workOrderNotes',
+            component: () => import("@/views/WorkOrderNotes.vue")
           }
         ]
       }

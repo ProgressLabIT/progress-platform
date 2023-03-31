@@ -44,7 +44,8 @@ class ProductDetails(ProductBaseData):
   # economic_order_qt: int = 0   ----> Doesn't make sense in a MTO/ATO context: only for purchases or MTS
   minimum_order_qt: int = 0
   # tags: List[str] = []
-  process_phases: List[str] = [] 
+  process_phases: List[str] = []
+  production_notes: str = None
   
   lead_time_target: float = None #TargetAverageTime = TargetAverageTime()
   throughput_time_target: float = None #TargetAverageTime = TargetAverageTime()

@@ -102,3 +102,7 @@ body.body--dark {
   color: var(--text-high);
   font-weight: bold;
 }
+
+.multiline-text {
+  white-space: pre-line;
+}

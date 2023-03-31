@@ -2,7 +2,7 @@
   <div class="row full-height q-py-md">
 
     <!-- ASIDE - PHASE LIST -->
-    <div class="col-3 column full-height">
+    <div class="col-auto column full-height" style="min-width: 400px;">
       <div class="q-px-lg">
         <div class="text-h1 display highlight">
           {{ product_data.code}}
@@ -120,7 +120,7 @@
     </div>
 
     <!-- PHASE DETAILS -->
-    <div class="col-9 q-pr-md">
+    <div class="col q-pr-md">
       <q-tabs
         v-model="tab"
         class="transparent text-low display"
@@ -155,6 +155,7 @@ import Sortable from 'sortablejs'
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
 import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
+import PhaseNotes from '@/components/PhaseNotes.vue'
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import BasePrompt from '@/components/BasePrompt.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
@@ -162,6 +163,7 @@ import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 const views_map = [
   'PhaseSteps', 
   'PhaseParameters',
+  'PhaseNotes'
   // 'PhaseAssignments' 
 ]
 
@@ -172,6 +174,7 @@ export default {
   components: {
     PhaseParameters,
     PhaseSteps,
+    PhaseNotes,
     // PhaseAssignments,
     BasePrompt,
     BaseTooltipIcon,

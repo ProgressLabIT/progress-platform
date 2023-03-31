@@ -185,6 +185,11 @@ export default {
   "next": "avanti",
   "no_class": "nessuna classe",
   "no_department": "nessun reparto",
+  "notes": "Note",
+  "notes_empty": "Nessuna nota",
+  "notes_order": "Note ordine",
+  "notes_product": "Note prodotto",
+  "notes_production": "Note produzione",
   "of": "di",
   "on_time": "puntuale",
   "open": "aperto",
@@ -514,6 +519,7 @@ export default {
   "views": {
     "PhaseParameters": "parametri",
     "PhaseSteps": "procedura",
+    "PhaseNotes": "Note produzione",
     "adminPanel": "impostazioni",
     "companyDetails": "dettagli azienda",
     "defaultPhaseParams": "fase di default",
@@ -558,7 +564,8 @@ export default {
     "tabs": {
       "workOrderHistory": "storico",
       "workOrderJobs": "lavori",
-      "workOrderIssues": 'segnalazioni'
+      "workOrderIssues": 'segnalazioni',
+      "workOrderNotes": "Note"
     },
     "update_due_date": "modifica data scadenza",
     "update_from_date": "modifica data rilascio",

@@ -1,6 +1,6 @@
 <template>
-  <div class="row full-height q-pa-lg">
-    <div class="column col-3 justify-between q-pr-lg">
+  <div class="row full-height q-py-md">
+    <div class="column col-3 justify-between q-px-lg q-pb-sm">
 
       <div>
         <div class="text-h1 display highlight q-mb-xs">

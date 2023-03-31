@@ -23,7 +23,7 @@
     </template>
 
     <template v-slot:content>
-      <div class="fit shadow-6 row q-col-gutter-none">
+      <div class="fit shadow-6 row">
 
         <template v-if="vuex_ready">
 
@@ -78,7 +78,8 @@ export default {
       show_modal: true,
       tabs: [
         'workOrderJobs',
-        'workOrderIssues'
+        'workOrderIssues',
+        'workOrderNotes'
         // 'workOrderHistory'
       ],
       vuex_ready: false,

@@ -181,6 +181,11 @@ export default {
   "next": "next",
   "no_class": "no class",
   "no_department": "no department",
+  "notes": "Notes",
+  "notes_empty": "Notes empty",
+  "notes_order": "Order notes",
+  "notes_product": "Product notes",
+  "notes_production": "Production notes",
   "of": "of",
   "on_time": "on time",
   "open": "open",
@@ -511,6 +516,7 @@ export default {
   "views": {
     "PhaseParameters": "parameters",
     "PhaseSteps": "procedure",
+    "PhaseNotes": "Production notes",
     "adminPanel": "settings",
     "companyDetails": "company details",
     "defaultPhaseParams": "default phase",
@@ -555,7 +561,8 @@ export default {
     "tabs": {
       "workOrderHistory": "history",
       "workOrderJobs": "jobs",
-      "workOrderIssues": "issues"
+      "workOrderIssues": "issues",
+      "workOrderNotes": "Notes"
     },
     "update_due_date": "change due date",
     "update_from_date": "change release date",

@@ -49,11 +49,11 @@
               </q-input>
             </q-card-section>
 
-            <q-card-actions>
+            <q-card-section>
               <q-btn type="submit" color="theme-blue" class="full-width">
                 {{ $t('session.start_session') }}
               </q-btn>
-            </q-card-actions>
+            </q-card-section>
           </q-form>
 
           <div key="progress" v-else-if="logging_in">
