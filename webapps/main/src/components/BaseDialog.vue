@@ -40,6 +40,7 @@ export default {
     },
     background: {
       type: String,
+      default: null
     },
   },
 
@@ -51,5 +52,6 @@ export default {
 
 <style lang="sass">
 .q-dialog__backdrop
-  background-color: var(--backdrop-color)
+  background-color: var(--bg-color)
+  opacity: .8
 </style>

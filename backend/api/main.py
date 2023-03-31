@@ -32,14 +32,15 @@ async def hello():
 	return 'Hi!'
 
 
-app.include_router(endpoints.product, prefix="/product", tags=['Product'])
-app.include_router(endpoints.bom, prefix="/product", tags=['Product'])
-app.include_router(endpoints.process, tags=['Process'])
-app.include_router(endpoints.production, tags=['Production'])
-app.include_router(endpoints.org, tags=['Organization'])
-app.include_router(endpoints.traceability, tags=['Traceability'])
-app.include_router(endpoints.auth, tags=['Security'])
 app.include_router(endpoints.admin, tags=['Administration'])
+app.include_router(endpoints.auth, tags=['Security'])
+app.include_router(endpoints.bom, prefix="/product", tags=['Product'])
+app.include_router(endpoints.org, tags=['Organization'])
+app.include_router(endpoints.process, tags=['Process'])
+app.include_router(endpoints.product, prefix="/product", tags=['Product'])
+app.include_router(endpoints.production, tags=['Production'])
+app.include_router(endpoints.quality, tags=['Quality'])
+app.include_router(endpoints.traceability, tags=['Traceability'])
 
 # app.include_router(global_router, prefix="/v1")
 

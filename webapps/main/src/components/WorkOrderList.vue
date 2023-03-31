@@ -21,13 +21,13 @@
           :props="props"
           @dblclick="showWorkOrderScreen(props.row._key)">
           <template v-for="c in columns" :key="c.name">
-            <q-td :props="props" :class="{ 'filter-field': search_fields.includes(c.name)}">
+            <q-td :props="props" :class="{ 'filter-field': search_fields.includes(c.name) }">
 
               <!-- PROGRESS BAR -->
               <template v-if="c.name==='progress'">
                 <div class="row items-center q-col-gutter-sm">
                   <div class="col-9">
-                    <BaseProgressBar v-if="isReleased(props.row)" :data="props.row" />
+                    <BaseProgressBar :data="props.row" />
                   </div>
                   <span class="col-2 text-right">{{ props.row.progress }} %</span>
                 </div>
@@ -70,6 +70,8 @@
         @update:model-value="val => updateWorkOrder(val)">
       </q-date>
     </BaseDialog>
+
+    <router-view />
   </div>
 </template>
 
@@ -103,7 +105,9 @@ export default {
         "active":true,
         "idle":true,
         "critical":true,
-        "not_critical":true
+        "not_critical":true,
+        "ready":true,
+        "not_ready":true
       }}
     }
   },
@@ -117,7 +121,8 @@ export default {
         borderCollapse: 'separate'
       },
       search_fields: ['wo_code', 'product_code', 'project_code', 'product_description'],
-      temp_date: null
+      temp_date: null,
+      now: new Date().getTime()
     }
   },
 
@@ -248,6 +253,14 @@ export default {
               // Do not show if control is false and wo is not active
               if (!value && !wo.active) match = false
               break
+
+            case 'ready':
+              if (!value && this.isReleased(wo)) match = false
+              break
+
+            case 'not_ready':
+              if (!value && !this.isReleased(wo)) match = false
+              break
           }
 
           // add result of the specific filter to the map
@@ -281,7 +294,7 @@ export default {
     },
 
     isReleased(wo) {
-      return new Date(wo.start_from).getTime() <= new Date().getTime()
+      return new Date(wo.start_from).getTime() <= this.now
     },
 
     sortDate(a,b) {

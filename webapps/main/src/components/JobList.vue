@@ -52,6 +52,15 @@
                   {{ props.row[field.name] }}
                 </template>
 
+                <template v-else-if="field.name == 'ready'">
+                  <q-icon
+                    :name="jobIcon(props.row).name"
+                    :color="jobIcon(props.row).color"
+                    size="xs">
+                    <!-- calendar-clock check-circle cube-off/toybrick-remove-->
+                  </q-icon>
+                </template>
+
                 <template v-else>
                   <span class="table-data" @click="setSearch(field.name, props.row[field.name])">
                     {{ $capitalizeAll(props.row[field.name] || '' ) }}
@@ -79,7 +88,7 @@
 <script>
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
-import matchJobToFilters from '@/lib/ProductionFilters.js'
+import multiMatch from '@/lib/MultiFieldSearch.js'
 
 export default {
 
@@ -118,7 +127,8 @@ export default {
         'project_code',
         'product_description',
         'phase_alias',
-      ]
+      ],
+      now: new Date().getTime()
     }
   },
 
@@ -145,7 +155,7 @@ export default {
           field: 'product_code',
           name: 'product_code',
           align: 'left',
-          style: 'width: 10%'
+          style: 'width: 15%'
         },
         { 
           label: this.$t('phase.short').toUpperCase(),
@@ -165,14 +175,21 @@ export default {
           label: this.$t('quantity.completed.short').toUpperCase(),
           field: 'qt_completed',
           name: 'qt_completed',
-          style: 'width: 10%',
+          style: 'width: 5%',
           align: 'right'
         },
         {
           label: this.$t('quantity.planned.short').toUpperCase(),
           field: 'qt_planned',
           name: 'qt_planned',
-          style: 'width: 10%',
+          style: 'width: 5%',
+          align: 'right'
+        },
+        {
+          label: this.$t('production.filters.ready').toUpperCase(),
+          field: 'ready',
+          name: 'ready',
+          style: 'width: 5%',
           align: 'right'
         },
       ]
@@ -220,7 +237,12 @@ export default {
 
     jobs_view() {
       const result = [...this.filtered_assignments]
-      const filtered_unassigned_jobs = this.unassigned_jobs.filter(this.matchJobToFilters)
+      const filtered_unassigned_jobs = this.unassigned_jobs.filter(this.matchJobToFilters).map(j => {
+        return {
+          ...j,
+          ready: this.isReleased(j) && j.next_batch_available
+        }
+      })
 
       if (filtered_unassigned_jobs.length && this.filters.operator_key === undefined) {
         result.push({
@@ -239,9 +261,85 @@ export default {
   },
 
   methods: {
+    isReleased(item) {
+      return new Date(item.start_from).getTime() <= this.now
+    },
+
+    jobIcon(job) {
+      return !this.isReleased(job)
+        ? { name: 'mdi-calendar-clock', color: 'grey-backdrop' }
+        : job.next_batch_available
+        ? { name: 'mdi-check-circle', color: 'theme-blue' }
+        : { name: 'mdi-cube-off', color: 'orange-backdrop' }
+    },
 
     matchJobToFilters(job) {
-      return matchJobToFilters(job, this.filters, this.search_fields)
+      /*
+      Initialize filter results.
+      If any false will be found in this array the filter function will return false
+      */
+      let filter_match_map = []
+
+      for (const [filter, value] of Object.entries(this.filters)) {
+        // by default show item in the list
+        let match = true
+
+        switch (filter) {
+
+          // Perform text search in the defined fields
+          case 'search_string':
+            match = multiMatch(this.filters.search_string, job, this.search_fields)
+            break
+
+          case 'started':
+            if (!value && job.stage === 'started') match = false
+            break
+
+          case 'queued':
+            if (!value && ['created', 'planned'].includes(job.stage)) match = false
+            break
+
+          case 'on_time':
+            if (!value && job.on_time) match = false
+            break
+
+          case 'late':
+            if (!value && !job.on_time) match = false
+            break
+
+          case 'critical':
+            if (!value && job.critical) match = false
+            break
+
+          case 'not_critical':
+            if (!value && !job.critical) match = false
+            break
+
+          case 'active':
+            // Do not show if control is false and job is active
+            if (!value && job.active) match = false
+            break
+
+          case 'idle':
+            // Do not show if control is false and job is not active
+            if (!value && !job.active) match = false
+            break
+
+          case 'ready':
+            if (!value && (this.isReleased(job) && job.next_batch_available)) match = false
+            break
+
+          case 'not_ready':
+            if (!value && (!this.isReleased(job) || !job.next_batch_available)) match = false
+            break
+        }
+
+        // add result of the specific filter to the map
+        filter_match_map.push(match)
+      }
+
+      // Return false and exclude job from list if any filter returned false
+      return !filter_match_map.some( i => i === false )
     },
 
     getPicPath(operator) {

@@ -81,6 +81,7 @@ class PhaseRecord(ArangoDocument):
   params: PhaseParameters = PhaseParameters()
   std_processing_time: int = 0 # in milliseconds
   step_sequence: List[Optional[str]] = []
+  production_notes: str = None
 
 class PhaseData(PhaseRecord):
   steps: List[Step] = []

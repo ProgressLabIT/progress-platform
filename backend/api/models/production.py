@@ -61,7 +61,7 @@ class WorkOrderNew(BaseModel):
   start_from: Union[datetime, date] = None
   due_by: Union[datetime, date] = None
 
-  @root_validator
+  @root_validator(pre=True)
   def check_key_or_code_provided(cls, values):
     if not values.get('product_key') and not values.get('product_code'):
       raise ValueError('A product key or code must be provided')

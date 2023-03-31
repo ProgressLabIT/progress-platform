@@ -5,7 +5,14 @@ class Queries:
 
   GET_EVENTS = """
     FOR e IN Event
-    FILTER e.wo_key
+    FILTER
+      @work_order_key ? e.work_order_key == @work_order_key : true
+      && @job_key ? e.job_key == @job_key : true
+      && @issue_key ? e.issue_data._key == @issue_key : true
+      && @time_from ? e.timestamp >= @time_from : true
+      && @time_to ? e.timestamp <= @time_to : true
+    SORT e.timestamp
+    RETURN e
   """
 
   CREATE_WORK_SESSION = """
@@ -113,17 +120,17 @@ class Queries:
     )
 
     // Update PT and Cost
-    LET processing_time = SUM(
+    LET work_sessions = (
       FOR ws IN WorkSession
       FILTER ws.work_order_key == @wo_key
-      RETURN ws.duration
+      LET benchmark = ws.active ? now : ws.end
+      LET duration = DATE_DIFF(ws.start, benchmark, 'f')
+      LET cost = ws.hourly_cost * duration / 3600000 // No. of milliseconds in an hour: 60*60*1000
+      RETURN MERGE(ws, { duration, cost })
     )
 
-    LET processing_cost = SUM(
-      FOR ws IN WorkSession
-      FILTER ws.work_order_key == @wo_key
-      RETURN ws.duration * ws.hourly_cost
-    )
+    LET processing_time = SUM(FOR ws IN work_sessions RETURN ws.duration)
+    LET processing_cost = SUM(FOR ws IN work_sessions RETURN ws.cost)
 
     // Check if any WO Job is still open
     LET still_open = TO_BOOL(COUNT(FOR j IN jobs FILTER j.stage != 'closed' RETURN 1))

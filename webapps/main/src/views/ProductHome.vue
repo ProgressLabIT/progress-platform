@@ -1,9 +1,9 @@
 <template>
   <div class="row full-height q-pa-md">
     <!-- LEFT COLUMN -->
-    <div class="col-4 column">
+    <div class="col-4 column full-height q-pr-md">
       <!-- PRODUCT IMAGE -->
-      <div class="relative-position"
+      <div class="relative-position col-auto"
         style="border: solid 1px rgba(255,255,255,.12); height: 30vh;">
         <q-img
           class="fit"
@@ -82,22 +82,22 @@
       </div>
 
       <!-- PRODUCT CODE -->
-      <div class="q-mt-lg">
+      <div class="q-mt-lg col-auto">
         <div class="text-h4 weight-bold text-uppercase">
           {{ $t('product.code') }}
         </div>
         <div v-if="!edit_mode" class="text-h1 display highlight">
           {{ product.code }}
         </div>
-        <q-input v-else
+        <q-input v-else filled dense
           :model-value="temp_code"
           @update:model-value="value => updateField('code', value.toUpperCase())"
-          class="input-uppercase">
+          class="input-uppercase q-mt-md">
         </q-input>
       </div>
 
       <!-- PRODUCT DESCRIPTION -->
-      <div class="q-mt-lg">
+      <div class="q-mt-lg col-auto">
         <div class="text-h4 weight-bold text-uppercase">
           {{ $t('description') }}
         </div>
@@ -105,55 +105,74 @@
           {{ product.description }}
         </div>
         <q-input v-else
-          type="textarea"
+          filled dense type="textarea"
           :model-value="temp_desc"
-          @update:model-value="value => updateField('description', value)">
+          @update:model-value="value => updateField('description', value)"
+          class="q-mt-md">
         </q-input>
       </div>
 
       <q-space />
 
       <!-- EDIT MODE ACTIONS -->
-      <q-btn
-        v-if="!edit_mode"
-        color="theme-blue"
-        class="full-width"
-        @click="activateEditMode">
-        {{ $t('edit') }}
-      </q-btn>
-
-      <div v-else>
+      <div class="col-auto">
         <q-btn
-          class="full-width q-mb-sm"
-          :loading="saving"
-          color="theme-green"
-          @click="saveChanges">
-          {{ $t('save') }}
-        </q-btn>
-        <q-btn
+          v-if="!edit_mode"
+          color="theme-blue"
           class="full-width"
-          color="theme-grey"
-          :disabled="saving"
-          @click="cancelChanges">
-          {{ $t('cancel') }}
+          @click="activateEditMode">
+          {{ $t('edit') }}
         </q-btn>
+
+        <div v-else>
+          <q-btn
+            class="full-width q-mb-sm"
+            :loading="saving"
+            color="theme-green"
+            @click="saveChanges">
+            {{ $t('save') }}
+          </q-btn>
+          <q-btn
+            class="full-width"
+            color="theme-grey"
+            :disabled="saving"
+            @click="cancelChanges">
+            {{ $t('cancel') }}
+          </q-btn>
+        </div>
       </div>
     </div>
     <!-- END OF LEFT COLUMN -->
 
     <!-- RIGHT SECTION -->
 
-    <!-- PARAMS -->
-    <div class="col-4">
-      <ProductParamsCard
-        :product="product"
-        :edit_mode="edit_mode">
-      </ProductParamsCard>
+    <!-- NOTES -->
+    <div class="col-4 q-px-md">
+      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md">
+        <q-card-section class="text-h5 display weight-bold text-uppercase">
+          {{ $t('notes_production') }}
+        </q-card-section>
+        <q-card-section>
+          <div v-if="!edit_mode" style="white-space: pre-line;">
+            {{ temp_notes }}
+          </div>
+          <q-input
+            v-else
+            filled
+            dense
+            type="textarea"
+            :readonly="!edit_mode"
+            :model-value="temp_notes"
+            @update:model-value="value => updateField('production_notes', value)"
+            class="q-mt-md">
+          </q-input>
+        </q-card-section>
+      </q-card>
     </div>
 
     <!-- DOCS -->
-    <div class="col-4">
-      <q-card square class="surface2 q-pa-md">
+    <div class="col-4 q-pl-md">
+      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md">
         <q-card-section class="text-h5 display highlight">
           {{ $capitalize($t('document.label', 2)) }}
         </q-card-section>
@@ -164,7 +183,7 @@
             clickable
             @click="showMedia(index)">
             <q-item-section
-              class="col-8"
+              class="col"
               :class="{ 'text-italic': doc.temp}">
               {{ doc.name }} {{ doc.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}
             </q-item-section>
@@ -176,7 +195,7 @@
                 @click.stop="deleteDoc(index)">
               </q-icon>
             </q-item-section>
-            <q-item-section class="col text-right">
+            <q-item-section class="col-auto text-right">
               {{ $bytes(doc.size) }}
             </q-item-section>
           </q-item>
@@ -282,6 +301,10 @@ export default {
 
     temp_desc() {
       return this.product.description
+    },
+
+    temp_notes() {
+      return this.product.production_notes
     },
 
     docs() {

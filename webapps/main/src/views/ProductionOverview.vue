@@ -2,9 +2,9 @@
   <q-page-container class="fit">
     <q-page class="row">
 
-      <div class="column col-9">
+      <div class="column col">
         <!-- WORK ORDERS / JOBS LISTS -->
-        <div class="row col-auto items-center q-pl-xs q-pr-md">
+        <div class="row col-auto items-center q-pl-xs q-pr-md q-py-sm">
 
           <!-- TAB LINKS -->
           <q-tabs
@@ -12,7 +12,8 @@
             active-class="text-high weight-bold"
             align="left"
             shrink
-            indicator-color="transparent">
+            dense
+            indicator-color="theme-blue">
             <q-route-tab
               v-for="(view, index) in views"
               :key="index"
@@ -21,6 +22,26 @@
               {{ $t(`views.${view.route_name}`) }}
             </q-route-tab>
           </q-tabs>
+
+          <!-- ARCHIVE SEARCH BOX -->
+          <template v-if="$route.name == 'workOrderArchive'">
+            <q-input
+              clearable
+              filled
+              dense
+              hide-bottom-space
+              autocomplete="off"
+              name="search"
+              debounce="300"
+              :label="$capitalize($t('search'))"
+              v-model="search_string"
+              class="col-3 q-ml-xl">
+              <template v-slot:append>
+                <q-icon name="mdi-magnify" size="xs"/>
+              </template>
+            </q-input>
+          </template>
+
 
           <q-space />
 
@@ -36,7 +57,6 @@
             </div>
 
             <template v-else>
-
               <!-- REORDER WORK ORDER QUEUE -->
               <div class="col-auto">
                 <q-btn
@@ -59,9 +79,7 @@
                   {{ $t('cancel_changes') }}
                 </q-btn>
               </div>
-
             </template>
-
           </template>
         </div>
 
@@ -80,11 +98,12 @@
 
       </div>
 
+      <template v-if="$route.name != 'workOrderArchive'">
         <!-- DIVIDER -->
         <q-separator vertical inset/>
 
         <!-- FILTERS -->
-        <div class="col column q-px-lg">
+        <div class="col-3 column q-px-lg">
           <div class="highlight text-uppercase text-h5 q-mt-sm">
             {{ $t('filter', 2) }}
           </div>
@@ -179,6 +198,7 @@
             {{ $t('reset_filters') }}
           </q-btn>
         </div>
+      </template>
     </q-page>
   </q-page-container>
 </template>
@@ -191,6 +211,7 @@ import multiMatch from '@/lib/MultiFieldSearch.js'
 const production_views = [
   { component: 'WorkOrderList', route_name: 'workOrderList' },
   { component: 'JobList', route_name: 'jobList' },
+  { component: 'WorkOrderArchive', route_name: 'workOrderArchive' }
 ]
 
 const header_plus_footer_height = 80
@@ -217,6 +238,8 @@ export default {
         // late: { value: true },
         active: { value: true },
         idle: { value: true },
+        ready: { value: true },
+        not_ready: { value: true },
         //critical: { value: true },
         //not_critical: { value: true }
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },

@@ -8,7 +8,7 @@
 
       <transition name="slide-fade" mode="out-in">
 
-        <div v-if="stage == 'confirm'" key="confirm">
+        <div v-if="stage === 'confirm'" key="confirm">
           <q-card-section>
             <div>
               {{ $capitalize($t('operation.delete_question')) }}?
@@ -35,20 +35,18 @@
           </q-card-section>
         </div>
 
-        <div v-else key="success">
-          <q-card-section>
-            <div class="row justify-between">
-              <span class="q-mr-xl">
-                {{ $capitalize($t('operation.delete_success')) }}
-              </span>
-              <q-btn
-                color="theme-grey"
-                @click="$router.push({ name: 'operationLibrary' })"
-                :label="$t('close')">
-              </q-btn>
-            </div>
-          </q-card-section>
-        </div>
+        <q-card-section v-else-if="stage === 'success'" key="success">
+          <div class="row justify-between">
+            <span class="q-mr-xl">
+              {{ $capitalize($t('operation.delete_success')) }}
+            </span>
+            <q-btn
+              color="theme-grey"
+              @click="$router.push({ name: 'operationLibrary' })"
+              :label="$t('close')">
+            </q-btn>
+          </div>
+        </q-card-section>
 
       </transition>
     </q-card>
@@ -59,7 +57,7 @@
 <script>
 import BaseDialog from '@/components/BaseDialog.vue'
 import { api } from '@/boot/axios.js'
-import NonExistentOperationGuard from "@/mixins/NonExistentOperationGuard.js"
+// import NonExistentOperationGuard from "@/mixins/NonExistentOperationGuard.js"
 
 export default {
 
@@ -69,11 +67,12 @@ export default {
     BaseDialog
   },
 
-  mixins: [NonExistentOperationGuard],
+  // mixins: [NonExistentOperationGuard],
 
   props: {
     operation: {
-      type: Object
+      type: Object,
+      required: true
     }
   },
 
@@ -86,21 +85,22 @@ export default {
 
   methods:{
     deleteOperation() {
-      api.delete(`operation/${this.operation._key}`)
+      console.log('Before delete')
+
+      api.delete(`operation/${this.operation_key}`)
       .then( async () => {
-        // reload users from backend to make sure archived user is not present
-        await this.$store.dispatch('getOperations')
         this.stage="success"
+        this.$store.dispatch('getOperations')
       })
       .catch(err => {
         // Operation is in use in some process    
         if (err.response.status === 403) {
-          const error_message = this.$tc('operation.alerts.op_in_use') + ": "
+          const error_message = this.$t('operation.alerts.op_in_use') + ": "
           window.alert(error_message + err.response.data.detail.product_codes)
           this.$router.back()
         }
         else {
-          window.alert(this.$tc('operation.alerts.delete_general_error'))
+          window.alert(this.$t('operation.alerts.delete_general_error'))
         }
       })
     }

@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="show" @close="$router.back()">
+  <BaseDialog :show="show" @close="$router.back()" :maximized="maximized">
     <q-card class="surface1 q-pa-md" :style="{ maxWidth: max_width }">
 
       <!-- DIALOG TITLE -->
@@ -59,6 +59,10 @@ export default {
       default: '500px'
     },
     loading: {
+      type: Boolean,
+      default: false
+    },
+    maximized: {
       type: Boolean,
       default: false
     }

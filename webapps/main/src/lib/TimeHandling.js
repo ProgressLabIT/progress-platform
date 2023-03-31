@@ -7,7 +7,7 @@ export function formatDateString(string, locale, options) {
 
 export function formatDateTime(string, locale, format) {
   if (!string) return '-'
-  else return DT.fromISO(string).setLocale(locale).toFormat(format)
+  else return DT.fromISO(string).setLocale(locale).toLocaleString(DT[format])
 }
 
 export function shortDateString(string, locale) {
@@ -17,4 +17,8 @@ export function shortDateString(string, locale) {
   }
   if (string === undefined) return '-'
   else return formatDateString(string, locale, options)
+}
+
+export function timestamp() {
+  return DT.utc().toISO()
 }

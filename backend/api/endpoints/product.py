@@ -156,21 +156,22 @@ async def create_product(
 async def copy_product(
   original_product: str = Body(), # Can be product key or code (key default)
   new_code: str = Body(),
+  new_description: str = Body(None),
   by_code: bool = Body(default=False)
   ):
 
-  tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'], read=['Operation'])
-  product_db = tx.collection('Product')
-
   # 0.1 Check no product exists with same code
-  if product_db.find(dict(code=new_code, trash=False)).count():
-    status_code = 409
+  if db.collection('Product').find(dict(code=new_code, trash=False)).count():
     raise HTTPException(
-      status_code=status_code,
+      status_code=409,
       detail="A product with the same code already exists"
     )
 
-  # 0.2 Fetch product data and prepare
+  # 0.2 Setup transaction
+  tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'], read=['Operation'])
+  product_db = tx.collection('Product')
+
+  # 0.3 Fetch product data
   try:
     if by_code:
       match = dict(code=original_product, trash=False)
@@ -178,12 +179,11 @@ async def copy_product(
     else: # Copy product by key
       match = dict(_key=original_product, trash=False)
 
-    new_product = ProductDetails(
-      created=timestamp(),
-      **product_db.find(match).next()
-    )
+    new_product = ProductDetails(**product_db.find(match).next())
+    new_product.created = timestamp()
 
     original_product_code = new_product.code
+    original_product_desc = new_product.description
     original_product_key = new_product.key
 
   except StopIteration:
@@ -193,9 +193,24 @@ async def copy_product(
       detail="No product with the provided code or key could be found"
     )
 
+  except Exception:
+    tx.abort_transaction()
+    status_code = 500
+    error_str = traceback.format_exc()
+    response=dict(
+      status=status_code,
+      message="There was a problem saving the data into the database. Please contact support if it happens again",
+      error=error_str
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
+
   try:
     # 1. CREATE NEW PRODUCT WITH PROVIDED CODE
     new_product.code = new_code
+    new_product.description = new_desc or original_product_desc
     new_product.active = True
     new_product.key = None
 
@@ -372,7 +387,6 @@ async def udpate_product(
         **updated_fields
       ), return_new=True
     )['new']
-    # print(updated_product)
     response = APIResponse(
       status=200,
       message=f"Product {updated_product['code']} (KEY: {updated_product['_key']}) updated",

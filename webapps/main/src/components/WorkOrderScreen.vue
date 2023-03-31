@@ -1,5 +1,5 @@
 <template>
-  <BaseModalScreen :show="show_modal" @close="exit()">
+  <BaseModalScreen :show="true" @close="exit">
     <template v-slot:header>
       <span class="q-ml-md display medium highlight weight-medium text-uppercase">
         {{ $t('work_order.key') }}: {{ wo_key }}
@@ -9,7 +9,7 @@
         <q-tabs
           class="transparent text-low"
           active-class="text-high weight-bold"
-          indicator-color="transparent"
+          indicator-color="theme-blue"
           dense>
           <q-route-tab
             v-for="(page, index) in tabs" 
@@ -23,7 +23,7 @@
     </template>
 
     <template v-slot:content>
-      <div class="fit shadow-6 row q-col-gutter-none">
+      <div class="fit shadow-6 row">
 
         <template v-if="vuex_ready">
 
@@ -40,7 +40,9 @@
             v-bind="{ wo_data }"
             v-slot="{ Component }">
             <keep-alive>
-              <component :is="Component" class="col full-height"/>
+              <div class="col full-height relative-position">
+                <component :is="Component" />
+              </div>
             </keep-alive>
           </router-view>
 
@@ -74,7 +76,12 @@ export default {
   data () {
     return { 
       show_modal: true,
-      tabs: ['workOrderJobs','workOrderHistory'],
+      tabs: [
+        'workOrderJobs',
+        'workOrderIssues',
+        'workOrderNotes'
+        // 'workOrderHistory'
+      ],
       vuex_ready: false,
       column_height: '80vh',
       polling_instance: undefined
@@ -90,13 +97,12 @@ export default {
   methods: {
 
     exit() {
-      // if (this.user_is_editing) {
-      //   window.alert(`Salva o annulla le modifiche in tutte le sezioni prima di uscire.`)
-      // }
-      // else {
-        this.show_modal = false
+      if (this.$route.query.back_to) {
         this.$router.push({ name: this.$route.query.back_to })
-      // }
+      }
+      else {
+        this.$router.push({ name: 'workOrderList' })
+      }
     },
     get_wo_data() {
       axios.all([

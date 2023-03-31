@@ -5,7 +5,7 @@
         flat
         icon="mdi-menu"
         padding="none"
-        @click="$emit('showDrawer')">
+        @click="show_drawer=true">
       </q-btn>
       <q-toolbar-title shrink class="display q-ml-xs q-mr-auto">{{ screen_title }}</q-toolbar-title>
 
@@ -26,13 +26,16 @@
 
 <script>
 import { capitalize as c } from '@/boot/filters.js'
+import drawer from '@/mixins/drawer.js'
+
 export default {
 
   name: 'AppBar',
 
+  mixins: [drawer],
+
   data() {
     return {
-      show_drawer: false,
       show_logout: false,
       screen_title: 'Progress'
     }

@@ -41,14 +41,12 @@ const adminRoutes = [
           {
             path: ':user_key/reset-password',
             name: 'passwordReset',
-            component: () => import("@/views/UserPasswordReset.vue"),
-            props: true
+            component: () => import("@/views/UserPasswordReset.vue")
           },
           {
             path: ':user_key/delete',
             name: 'userDelete',
-            component: () => import("@/views/UserDelete.vue"),
-            props: true
+            component: () => import("@/views/UserDelete.vue")
           }
         ]
       },
@@ -71,6 +69,30 @@ const adminRoutes = [
             path: ':operation_key/delete',
             name: 'operationDelete',
             component: () => import("@/views/OperationDelete.vue")
+          }
+        ]
+      },
+      {
+        path: 'issue-types',
+        name: 'issueTypeLibrary',
+        component: () => import("@/views/IssueTypeLibrary.vue"),
+        children: [
+          {
+            path: ':issue_type_key',
+            name: 'issueTypeDetail',
+            component: () => import("@/views/IssueTypeDetail.vue"),
+            props: true
+          },
+          {
+            path: 'new',
+            name: 'issueTypeNew',
+            component: () => import("@/views/IssueTypeNew.vue")
+          },
+          {
+            path: ':issue_type_key/delete',
+            name: 'issueTypeDelete',
+            component: () => import("@/views/IssueTypeDelete.vue"),
+            props: true
           }
         ]
       },

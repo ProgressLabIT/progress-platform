@@ -25,16 +25,10 @@ export function numberFormat(value, locale) {
   return new Intl.NumberFormat(locale).format(value)
 }
 
-export function roundFloat(value, decimals) {
-  return +(value.toPrecision(decimals))
-}
-
-
 export default boot(({ app }) => {
   app.config.globalProperties.$capitalize = capitalize
   app.config.globalProperties.$capitalizeAll = capitalizeAll
   app.config.globalProperties.$numberFormat = numberFormat
-  app.config.globalProperties.$roundFloat = roundFloat
   app.config.globalProperties.$durationFromMillisec = durationFromMillisec
   app.config.globalProperties.$shortDateString = shortDateString
   app.config.globalProperties.$formatDateTime = formatDateTime

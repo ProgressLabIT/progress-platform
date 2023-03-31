@@ -1,9 +1,10 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
+from events.main import Event
 from models.traceability import *
-from utils.event import Event
+from models.event import EventModel
 from utils.api import APIResponse
 from utils.db import db
 from utils.dt import timestamp
@@ -13,7 +14,7 @@ router = APIRouter()
 
 
 @router.post('/event')
-async def apply_production_event(data: ProductionEvent):
+async def apply_production_event(data: EventModel):
   try:
     event = Event(data)
     response = event.save()
@@ -32,6 +33,26 @@ async def apply_production_event(data: ProductionEvent):
       status_code=status_code,
       detail=response
     )
+
+
+
+@router.get('/event')
+async def get_events(
+  issue_key: str = None,
+  job_key: str = None,
+  work_order_key: str = None,
+  time_from: datetime = None,
+  time_to: datetime = None
+  ):
+  bind_vars = dict(
+    issue_key = issue_key,
+    job_key = job_key,
+    work_order_key = work_order_key,
+    time_from = time_from,
+    time_to = time_to
+  )
+  return [e for e in db.aql.execute(Queries.GET_EVENTS, bind_vars=bind_vars)]
+
 
 
 @router.get('/batch/{batch_key}')

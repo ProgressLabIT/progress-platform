@@ -70,6 +70,8 @@
         </div>
       </div>
 
+      <router-view />
+
     </q-page>
   </q-page-container>
 </template>

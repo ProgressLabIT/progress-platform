@@ -50,12 +50,24 @@ const operatorRoutes = [
         path: "bom",
         name: "jobBom",
         component: () => import("@/views/WorkSessionBom.vue")
+      },
+      {
+        path: "notes",
+        name: "jobNotes",
+        component: () => import("@/views/WorkSessionNotes.vue")
+      },
+      {
+        path: "issues",
+        name: "jobIssues",
+        component: () => import ("@/views/IssueList.vue"),
+        props: true,
+      },
+      {
+        path: 'issues/:issue_key',
+        name: "jobIssueDetail",
+        component: () => import ("@/components/IssueDetail.vue"),
+        props: true
       }
-      // {
-      //   path: "issues",
-      //   name: "jobIssues",
-      //   component: () => import ("@/views/WorkSessionIssues.vue")
-      // }
     ]
   }
 ]

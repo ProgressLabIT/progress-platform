@@ -1,6 +1,19 @@
+import { api } from '@/boot/axios.js'
 import { DateTime as DT } from 'luxon'
 import { debounce } from 'quasar'
 import { createStore } from 'vuex'
+
+import icons from '@quasar/extras/mdi-v6/icons.json'
+
+const icon_list = icons.map(string => {
+    // Transofrm icon names from camelCase to kebab-case
+    return [...string].map(char => {
+      return char.toUpperCase() == char
+        ? '-' + char.toLowerCase()
+        : char
+    }).join('')
+  })
+
 
 import { dark, light } from '@/boot/theme.js'
 
@@ -8,6 +21,7 @@ import job from "./job"
 import org from "./org"
 import process from "./process"
 import product from "./product"
+import quality from "./quality"
 import session from "./session"
 import traceability from "./traceability"
 import user from "./user"
@@ -24,7 +38,6 @@ import bom from "./bom"
  * async/await or return a Promise which resolves
  * with the Store instance.
  */
-
 function resetSessionTimeoutAtStoreChange(store) {
   const mutations_to_ignore = [
     'TOGGLE_SESSION_LOCK',
@@ -47,7 +60,9 @@ const store = createStore({
         ghostClass: "ghost"
       },
       screen_title: 'progress',
-      theme_colors: dark
+      show_drawer: false,
+      theme_colors: dark,
+      icons: icon_list,
     }
   },
 
@@ -57,7 +72,11 @@ const store = createStore({
     },
     SET_THEME(state, theme) {
       state.theme_colors = theme
+    },
+    SHOW_DRAWER(state, value) {
+      state.show_drawer = value
     }
+
   },
 
   actions: {
@@ -70,6 +89,9 @@ const store = createStore({
     theme (state) {
       return state.theme_colors
     },
+    global_state (state) {
+      return state
+    }
   },
 
   plugins: [resetSessionTimeoutAtStoreChange],
@@ -80,6 +102,7 @@ const store = createStore({
     org,
     process,
     product,
+    quality,
     session,
     traceability,
     user,
@@ -96,6 +119,7 @@ const store = createStore({
  * If more than five minutes have elapsed since the close, the session
  * will not be restored.
  */
+
 const persistedState = window.localStorage.getItem('TEMP_SESSION')
 
 if (persistedState) {

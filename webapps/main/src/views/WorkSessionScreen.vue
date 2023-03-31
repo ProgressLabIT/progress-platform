@@ -28,7 +28,10 @@
         <!--          JOB DETAILS             -->
         <!-- ################################ -->
 
-        <div class="column col-8 q-px-sm" id="job-info-section">
+        <div
+          class="column q-px-sm"
+          id="job-info-section"
+          :class="$route.name === 'jobIssueDetail' ? 'col-12' : 'col-8'">
 
           <!-- PANEL NAVIGATION -->
           <q-tabs
@@ -58,7 +61,10 @@
         <!-- RIGHT COLUMN: JOB DATA & ACTIONS -->
         <!-- ################################ -->
 
-        <div id="session-control-section" class="column col-4 q-px-sm q-pt-md">
+        <div
+          id="session-control-section"
+          v-if="$route.name != 'jobIssueDetail'"
+          class="column col-4 q-px-sm q-pt-md">
 
           <!-- JOB DATA -->
           <div id="job-data" class="col-auto">
@@ -125,20 +131,8 @@
                   square
                   height="auto"
                   class="fit"
-                  @click="goToPreviousStep">
-                  <q-icon color="text_high" size="lg" name="mdi-skip-previous" />
-                </q-btn>
-              </div>
-
-              <div class="col">
-                <q-btn
-                  color="theme-grey"
-                  square
-                  :disabled="!allow_step_forward"
-                  height="auto"
-                  class="fit"
-                  @click="goToNextStep">
-                  <q-icon color="text-high" size="lg" name="mdi-skip-next" />
+                  @click="show_issue_new = true">
+                  <q-icon color="text_high" size="lg" name="mdi-flag" />
                 </q-btn>
               </div>
 
@@ -149,7 +143,7 @@
                   height="auto"
                   class="fit"
                   @click="j.active ? showExitAlert(true) : exitJob()">
-                  <q-icon color="text-high" size="lg" name="mdi-keyboard-return" />
+                  <q-icon color="text-high" size="lg" name="mdi-close" />
                 </q-btn>
               </div>
             </div>
@@ -160,22 +154,29 @@
 
       <!-- Consider switching to banner or similar -->
       <q-dialog v-model="show_exit_alert" max-width="480px">
-        <q-card>
-          <q-card-section class="text-body1">
+        <q-card class="surface2 q-pa-md">
+          <q-card-section class="text-h3">
             {{ $t('job.alerts.confirm_exit')}}
           </q-card-section>
-          <q-card-actions>
+          <q-card-section>
             <div class="row justify-between">
-              <q-btn flat @click="exitJob" color="theme-orange">
+              <q-btn @click="exitJob" color="theme-orange">
                 {{ $t('confirm') }}
               </q-btn>
-              <q-btn flat @click="show_exit_alert=false" color="theme-grey">
+              <q-btn @click="show_exit_alert=false" color="theme-grey">
                 {{ $t('cancel') }}
               </q-btn>
             </div>
-          </q-card-actions>
+          </q-card-section>
         </q-card>
       </q-dialog>
+
+      <BaseDialog
+        :show="show_issue_new"
+        background="#0008"
+        @hide="show_issue_new = false">
+        <WorkSessionIssueNew @close="show_issue_new = false"/>
+      </BaseDialog>
 
     </q-page>
   </q-page-container>
@@ -184,16 +185,20 @@
 <script>
 import { mapState } from 'vuex'
 
-import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue'
+import BaseDialog from '@/components/BaseDialog.vue'
+import WorkSessionIssueNew from '@/components/WorkSessionIssueNew.vue'
 import ProgressBtn from '@/components/ProgressBtn.vue'
+import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue'
 
 export default {
 
   name: 'WorkSessionScreen',
 
   components: {
-    StartPauseResumeBtn,
-    ProgressBtn
+    BaseDialog,
+    WorkSessionIssueNew,
+    ProgressBtn,
+    StartPauseResumeBtn
   },
 
   props: {
@@ -205,6 +210,7 @@ export default {
     return {
       vuex_ready: false,
       show_exit_alert: false,
+      show_issue_new: false,
       alert_timeout: 6000
     }
   },
@@ -221,7 +227,9 @@ export default {
       return [
           { route_name: 'jobSteps', text: this.$t('procedure') },
           { route_name: 'jobDocs', text: this.$t('document.label', 2) },
-          { route_name: 'jobBom', text: this.$t('material', 2) }
+          { route_name: 'jobBom', text: this.$t('material', 2) },
+          { route_name: 'jobIssues', text: this.$t('issue', 2) },
+          { route_name: 'jobNotes', text: this.$t('notes', 2) }
       ]
     },
 
@@ -277,6 +285,30 @@ export default {
   },
 
   methods: {
+    loadJob() {
+      this.$store.dispatch('loadJobData', this.job_key)
+      .then(() => {
+        const data = this.$store.state.traceability
+        const job_data = data.working_job_data
+
+        // If job is closed, redirect to
+        if (!this.can_work) {
+          setTimeout(this.exitJob, this.alert_timeout)
+        }
+
+        else {
+          this.vuex_ready = true
+          if (data.current_batch_data.step_data) {
+            const next_step_index = this.batch_data.findIndex( step => !step.done ) || 0
+            this.$router.replace({ query: { step: next_step_index + 1 }})
+          }
+          // In case the job is already active, e.g. after accidentally closing and reopening the page, restart heartbeat
+          if (job_data.active) {
+            this.$store.commit('SET_HEARTBEAT', true)
+          }
+        }
+      })
+    },
 
     goToStep(step_sequence) {
       this.$router.push({ query: { step: step_sequence + 1 }})
@@ -314,29 +346,8 @@ export default {
 
   created() {
     // Load job data
-    const job_key = this.job_key
-    this.$store.dispatch('loadJobData', job_key)
-    .then(() => {
-      const data = this.$store.state.traceability
-      const job_data = data.working_job_data
-
-      // If job is closed, redirect to
-      if (!this.can_work) {
-        setTimeout(this.exitJob, this.alert_timeout)
-      }
-
-      else {
-        this.vuex_ready = true
-        if (data.current_batch_data.step_data) {
-          const next_step_index = this.batch_data.findIndex( step => !step.done ) || 0
-          this.$router.replace({ query: { step: next_step_index + 1 }})
-        }
-        // In case the job is already active, e.g. after accidentally closing and reopening the page, restart heartbeat
-        if (job_data.active) {
-          this.$store.commit('SET_HEARTBEAT', true)
-        }
-      }
-    })
+    this.loadJob()
+    setInterval(this.loadJob, 10000)
   },
 
   // Make sure an alert is raised if user tries to close the page

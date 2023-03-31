@@ -2,7 +2,12 @@
   <div
     class="row items-center"
     :class="name_first ? ' reverse' : ''">
-    <q-avatar :size="size" v-if="initials" class="weight-bold" font-size=".4em">
+    <q-avatar
+      color="theme-grey"
+      :size="size"
+      v-if="initials"
+      class="weight-bold"
+      font-size=".4em">
       <q-img
         :src="avatar_src"
         :alt="initials"
@@ -13,10 +18,9 @@
         </template>
       </q-img>
     </q-avatar>
-    <div class="column col-auto q-ml-md">
+    <div class="column col-auto q-mx-md" v-if="show_name">
       <slot name="name">
         <div
-          v-if="show_name"
           :class="name_class"
           :style="name_style">
           {{ full_name }}

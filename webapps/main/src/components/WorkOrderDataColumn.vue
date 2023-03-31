@@ -98,6 +98,7 @@
 
     <!-- ACTIONS -->
     <q-btn
+      v-if="wo_data.status != 'closed'"
       outline square
       class="full-width"
       color="theme-blue"
@@ -358,10 +359,6 @@ export default {
     wo_info() {
       return [
         { 
-          name: 'due_by', 
-          text: this.$t('due_by')
-        },
-        { 
           name: 'status', 
           text: this.$t('status')
         },
@@ -378,6 +375,10 @@ export default {
           name: 'start', 
           text: this.$t('start_date')
         },
+        {
+          name: 'due_by',
+          text: this.$t('due_by')
+        },
         // { name: 'queueing_time', text: 'T. coda' },
         { 
           name: 'end', 
@@ -387,14 +388,14 @@ export default {
           name: 'processing_time', 
           text: this.$t('processing_time')
         },
-        { 
-          name: 'lead_time', 
-          text: this.$t('lead_time')
-        },
         // {
-        //   name: 'processing_cost',
-        //   text: this.$t('processing_cost')
+        //   name: 'lead_time',
+        //   text: this.$t('lead_time')
         // },
+        {
+          name: 'processing_cost',
+          text: this.$t('processing_cost')
+        },
         // {
         //   name: 'material_cost',
         //   text: this.$t('material_cost')
@@ -500,23 +501,28 @@ export default {
 
       switch (info_name) {
         case 'status': {
-          let active_text = this.$t('active')
-          let inactive_text = ['created', 'planned'].includes(this.wo_data.status)
-            ? this.$t('production.filters.queued')
-            : this.$t('waiting')
-          // let on_time_text = this.$t('on_time')
-          // let late_text = this.$t('late')
-          // let critical_text = this.$t('critical')
-          let active = this.wo_data.active ? active_text : inactive_text
+          if (this.wo_data.status == 'closed') {
+            return this.$t('closed')
+          }
+          else {
+            let active_text = this.$t('active')
+            let inactive_text = ['created', 'planned'].includes(this.wo_data.status)
+              ? this.$t('production.filters.queued')
+              : this.$t('waiting')
+            // let on_time_text = this.$t('on_time')
+            // let late_text = this.$t('late')
+            // let critical_text = this.$t('critical')
+            let active = this.wo_data.active ? active_text : inactive_text
 
-          /*
-          let state = ''
-         
-          if (this.wo_data.critical) state = critical_text
-          else if (!this.wo_data.on_time) state = late_text
-          else state = on_time_text
-          */
-          return active  //+ ' - ' + state
+            /*
+            let state = ''
+
+            if (this.wo_data.critical) state = critical_text
+            else if (!this.wo_data.on_time) state = late_text
+            else state = on_time_text
+            */
+            return active  //+ ' - ' + state
+          }
         }
 
         case 'created':
@@ -537,28 +543,28 @@ export default {
           const start = DT.fromISO(this.wo_data.start)
           const benchmark = start ? start : DT.utc()
           return this.wo_data.start 
-            ? durationFromMillisec(benchmark - created, {precision: 'h'})
+            ? durationFromMillisec(benchmark - created, { precision: 'h'})
             : '-'
         }
 
         case 'lead_time': {
-          const created = DT.fromISO(this.wo_data.created)
+          const start = DT.fromISO(this.wo_data.start)
           const end = DT.fromISO(this.wo_data.end)
           return this.wo_data.end 
-            ? durationFromMillisec(end - created, {precision: 'h'}) 
+            ? durationFromMillisec(end - start, { precision: 'h'})
             : '-'
         }
 
         case 'processing_cost': {
-          return this.$roundFloat(this.wo_data.processing_cost || 0, 1) || '-'
+          return (this.wo_data.processing_cost || 0).toFixed(2) || '-'
         }
 
         case 'material_cost': {
-          return this.$roundFloat(this.wo_data.material_cost || 0, 1) || '-'
+          return (this.wo_data.material_cost || 0).toFixed(2) || '-'
         }
 
         case 'total_cost': {
-          return this.$roundFloat(this.wo_data.total_cost || 0, 1) || '-'
+          return (this.wo_data.total_cost || 0).toFixed(2) || '-'
         }
 
       }

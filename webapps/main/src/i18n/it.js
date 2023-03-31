@@ -14,6 +14,7 @@ export default {
   "and": "e",
   "archive": "archivia",
   "assign": "assegna",
+  "back": "Indietro",
   "batch": "lotto",
   "bom": {
     "add_line": "aggiungi riga",
@@ -37,6 +38,7 @@ export default {
   "cancel_changes": "annulla modifiche",
   "change": "modifica | modifiche",
   "close": "chiudi",
+  "close_within": "Chiudere entro",
   "closed": "chiuso",
   "code": "codice",
   "component": "componente | componenti",
@@ -71,11 +73,28 @@ export default {
   "due_by": "scadenza",
   "edit": "modifica",
   "element": "elemento | elementi",
+  "end": "fine",
   "end_date": "data chiusura",
   "equipment": "attrezzatura | attrezzature",
   "equipment_classes": "classe di attrezzature | classi di attrezzature",
   "errors": {
     "save_err": "Non è stato possibile salvare gli aggiornamenti"
+  },
+  "events": {
+    'JOB_STARTED': "Lavoro iniziato",
+    'JOB_PAUSED': "Lavoro messo in pausa",
+    'JOB_PAUSED_OFFLINE': "Lavoro in pausa (sessione offline)",
+    'JOB_RESUMED': "Lavoro ripreso",
+    'JOB_BACK_ONLINE': "Sessione online",
+    'STEP_COMPLETED': "Passo completato",
+    'BATCH_COMPLETED': "Pezzo/Lotto completato",
+    'ISSUE_CREATED': "Segnalazione creata",
+    'ISSUE_UPDATED': "Segnalazione modificata",
+    'ISSUE_CLOSED': "Segnalazione chiusa",
+    'ISSUE_REOPENED': "Segnalazione riaperta",
+    'MESSAGE_POSTED': "Messaggio pubblicato",
+    'MESSAGE_UPDATED': "Messaggio modificato",
+    'MESSAGE_DELETED': "Messaggio cancellato"
   },
   "filter": "filtro | filtri",
   "form_missing_fields_alert": "compilare tutti i campi",
@@ -84,10 +103,34 @@ export default {
     "evening": "buonasera",
     "morning": "buongiorno"
   },
+  "icon": "icona",
   "image": "immagine | immagini",
   "inactive": "disattivato",
   "increase": "aumenta",
   "info": "info",
+  "issue": "Segnalazione | Segnalazioni",
+  "issue_button_close": "Chiudi segnalazione",
+  "issue_button_reopen": "Riapri segnalazione",
+  "issue_button_reopen_critical": "Riapri come critica",
+  "issue_button_add_critical": "Trasforma in critica",
+  "issue_button_remove_critical": "Segna come non critica",
+  "issue_edit_type": "modifica tipo",
+  "issue_missing": "Nessuna segnalazione",
+  "issue_new_success": "Segnalazione creata con successo",
+  "issue_new_title": "Nuova segnalazione",
+  "issue_new_link_step_helper": "Indicare a quali elementi dovrebbe essere collegata la segnalazione",
+  "issue_type": "tipo di segnalazione | tipi di segnalazione",
+  "issue_type_alerts_code_missing": "Indicare un codice per il tipo di segnalazione",
+  "issue_type_alerts_name_missing": "Indicare un nome per il tipo di segnalazione",
+  "issue_type_alerts_in_use": "Questo tipo di segnalazione non può essere eliminato perché le seguenti segnalazioni sono id questo tipo",
+  "issue_types_alerts_delete_general_error": "Non è stato possibile eliminare questo tipo di segnalazione per un errore nel server",
+  "issue_type_close_within_explainer": "Tempo in ore oltre il quale una segnalazione diventa automaticamente critica, quando non creata come tale. Zero significa mai.",
+  "issue_type_delete_title": "Elimina tipo di segnalazione",
+  "issue_type_delete_question": "Vuoi eliminare il seguente tipo di segnalazione?",
+  "issue_type_delete_success": "Tipo di segnalazione eliminato con successo",
+  "issue_type_new": "Nuovo tipo di segnalazione",
+  "issue_updated": "Segnalazione aggiornata con successo",
+  "issue_update_type": "Scegli il nuovo tipo",
   "item": "articolo | articoli",
   "job": {
     "add": "aggiungi lavoro",
@@ -128,18 +171,28 @@ export default {
   "language": "lingua",
   "late": "in ritardo",
   "lead_time": "t. evasione",
+  "link": "Collegamento | Collegamenti",
   "loading_signal": {
     "default_title": "caricamento dati..."
   },
   "loading_text": "recupero dati in corso...",
   "material_cost": "costo materiali",
   "material": "materiale | materiali",
+  "message": "Messaggio | Messaggi",
+  "message_prompt": "Scrivi...",
   "name": "nome",
   "new": "nuovo",
+  "next": "avanti",
   "no_class": "nessuna classe",
   "no_department": "nessun reparto",
+  "notes": "Note",
+  "notes_empty": "Nessuna nota",
+  "notes_order": "Note ordine",
+  "notes_product": "Note prodotto",
+  "notes_production": "Note produzione",
   "of": "di",
   "on_time": "puntuale",
+  "open": "aperto",
   "operation": {
     "add_op": "aggiungi operazione",
     "alerts": {
@@ -153,6 +206,8 @@ export default {
     "delete_question": "eliminare la seguente operazione",
     "delete_success": "operazione eliminata con successo",
     "delete_title": "elimina operazione",
+    "label": "Operazione",
+    "issue_link_label": "Operazione (generica)",
     "new": "nuova operazione",
     "new_success": "Operazione registrata con successo"
   },
@@ -166,6 +221,11 @@ export default {
       "long": "tempo di evasione",
       "medium": "t. evasione",
       "short": "TE"
+    },
+    "processing_cost": {
+      "long": "costo di processo",
+      "medium": "c. processo",
+      "short": "cp"
     },
     "processing_time": {
       "long": "tempo di processo",
@@ -196,6 +256,7 @@ export default {
     "field_name": "nome campo {field_index}",
     "form_title": "campi modulo",
     "instruction_title": "istruzioni",
+    "issue_link_label": "Fase (prodotto specifico)",
     "long": "fase di lavorazione | fasi di lavorazione",
     "media_deleted": "eliminato",
     "multiline_field": "multiriga",
@@ -334,7 +395,9 @@ export default {
       "not_critical": "non critico",
       "on_time": "puntuale",
       "queued": "in coda",
-      "started": "iniziato"
+      "started": "iniziato",
+      "ready": "Eseguibile",
+      "not_ready": "Non eseguibile"
     },
     "save_new_sequence": "salva nuova sequenza",
     "search_explainer": "ricerca termini in uno o più dei seguenti campi"
@@ -377,6 +440,7 @@ export default {
   "search": "cerca",
   "select": "seleziona",
   "select_all": "seleziona tutti",
+  "send": "Invia",
   "session": {
     "alerts": {
       "close_session": "vuoi davvero chiudere la sessione?"
@@ -401,6 +465,7 @@ export default {
   "start_end_totals": "totale iniziale/finale",
   "status": "stato",
   "step_sequence": "sequenza passi",
+  "summary": "Riepilogo",
   "title": "titolo",
   "total_cost": "costo totale",
   "type": "tipo",
@@ -454,19 +519,21 @@ export default {
   "views": {
     "PhaseParameters": "parametri",
     "PhaseSteps": "procedura",
+    "PhaseNotes": "Note produzione",
     "adminPanel": "impostazioni",
     "companyDetails": "dettagli azienda",
     "defaultPhaseParams": "fase di default",
-    "flowLibrary": "Flussi dati",
     "generalSettings": "generale",
     "jobList": "lavori",
     "libraryRoot": "libreria prodotti",
+    "issueTypeLibrary": "tipi di segnalazione",
     "operationLibrary": "operazioni",
     "workSession": "sessione di lavoro",
     "productionRoot": "monitoraggio produzione",
     "userLibrary": "utenti",
     "userJobs": "selezione lavoro",
-    "workOrderList": "ordini di produzione",
+    "workOrderArchive": "Archivio",
+    "workOrderList": "ordini di produzione"
   },
   "waiting": "in attesa",
   "work_order": {
@@ -496,7 +563,9 @@ export default {
     "short": "op",
     "tabs": {
       "workOrderHistory": "storico",
-      "workOrderJobs": "lavori"
+      "workOrderJobs": "lavori",
+      "workOrderIssues": 'segnalazioni',
+      "workOrderNotes": "Note"
     },
     "update_due_date": "modifica data scadenza",
     "update_from_date": "modifica data rilascio",

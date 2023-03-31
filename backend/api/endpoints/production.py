@@ -147,7 +147,6 @@ async def create_work_order(new_wo: WorkOrderNew):
       try:
         filenames = search_step_media(s['_key'])
         s['media'] = [media_name for media_name in filenames]
-        # print(s)
       except:
         tx.abort_transaction()
         status_code=500
@@ -252,7 +251,8 @@ async def update_work_order(
   new_due_date: Union[datetime, date] = Body(None),
   new_from_date: Union[datetime, date] = Body(None),
   new_qt: float = Body(None),
-  new_project_code: str = Body(None)
+  new_project_code: str = Body(None),
+  notes: str = Body(None)
   ):
 
   tx = db.begin_transaction(write=['WorkOrder', 'Job'])
@@ -260,17 +260,20 @@ async def update_work_order(
   job_match = dict(wo_key=wo_key)
   job_update = dict()
 
-  if new_due_date:
+  if new_due_date is not None:
     wo_update['due_by'] = new_due_date
 
-  if new_qt:
+  if notes is not None:
+    wo_update['notes'] = notes
+
+  if new_qt is not None:
     wo_update['qt_planned'] = new_qt
 
-  if new_from_date:
+  if new_from_date is not None:
     wo_update['start_from'] = new_from_date
     job_update.update({ 'start_from': new_from_date })
 
-  if new_project_code:
+  if new_project_code is not None:
     wo_update['project_code'] = new_project_code
     job_update.update({ 'project_code': new_project_code })
 
@@ -371,6 +374,27 @@ async def delete_work_order(wo_key: str):
 
 # ----------------------------------------------------------------------
 
+@router.get('/work-order-archive')
+async def get_work_order_archive(search: str = None):
+  query = """
+    FOR wo IN WorkOrder
+    FILTER wo.status == 'closed'
+    LET code_match = @search ? CONTAINS(LOWER(wo.wo_code), LOWER(@search)) : true
+    LET product_match = @search ? CONTAINS(LOWER(wo.product_code), LOWER(@search)) : true
+    LET project_match = @search ? CONTAINS(LOWER(wo.project_code), LOWER(@search)) : true
+    FILTER code_match || product_match || project_match
+    SORT wo.end DESC
+    LIMIT 100
+    RETURN wo
+  """
+  try:
+    cursor = db.aql.execute(query, bind_vars=dict(search=search))
+    return [WorkOrderFull(**r) for r in cursor]
+  except StopIteration:
+    return []
+
+
+# ----------------------------------------------------------------------
 
 @router.get('/queue/site/{site_key}')
 async def get_site_queue(site_key: str):
@@ -397,7 +421,11 @@ async def update_queue(queue_update: Queue):
 
     # If updating the work order queue, reorder all job queues too
     if not subqueue:
-      db.aql.execute(Queries.REORDER_JOB_QUEUES)
+      bind_vars = dict(
+        site_key = queue_update.site_key,
+        target_key = None,
+      )
+      db.aql.execute(Queries.REORDER_JOB_QUEUES, bind_vars=bind_vars)
 
   except:
     status_code = 500
@@ -447,9 +475,19 @@ async def get_assignment_list(user_key: str = None):
 
 @router.get('/job/{job_key}')
 async def get_job_data(job_key: str):
+  query = """
+    FOR j IN Job
+    FILTER j._key == @job_key
+    LET product_notes = DOCUMENT(Product, j.product_key).production_notes
+    LET phase_notes = DOCUMENT(Phase, j.phase_key).notes
+    LET order_notes = DOCUMENT(WorkOrder, j.wo_key).notes
+    RETURN MERGE(j, { product_notes, phase_notes, order_notes })
+  """
+  bind_vars = dict(job_key = job_key)
 
   try:
-    job_data = db.collection('Job').get(job_key)
+    job_data = db.aql.execute(query, bind_vars=bind_vars).next()
+
   except:
     status_code=500
     response=dict(
@@ -462,7 +500,7 @@ async def get_job_data(job_key: str):
 
   response=dict(
     message=f"Retrieved data for Job/{job_key}",
-    detail=jsonable_encoder(job_data)
+    detail=job_data
   )
 
   return APIResponse(**response)

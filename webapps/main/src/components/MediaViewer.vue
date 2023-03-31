@@ -66,37 +66,42 @@
           :style="darkGlassStyle"
           @click="$emit('close')">
         </q-btn>
-        <q-btn
-          round flat
-          padding="sm sm"
-          icon="mdi-magnify-plus-outline"
-          :style="darkGlassStyle"
-          @click="zoomIn">
-        </q-btn>
-        <q-btn
-          round flat
-          padding="sm sm"
-          :style="darkGlassStyle"
-          icon="mdi-magnify-minus-outline"
-          @click="zoomOut">
-        </q-btn>
+          <q-btn
+            round flat
+            padding="sm sm"
+            icon="mdi-magnify-plus-outline"
+            :style="darkGlassStyle"
+            @click="zoomIn">
+          </q-btn>
+          <q-btn
+            round flat
+            padding="sm sm"
+            :style="darkGlassStyle"
+            icon="mdi-magnify-minus-outline"
+            @click="zoomOut">
+          </q-btn>
       </div>
     </div>
 
     <!-- CONTENT -->
-    <div class="flex flex-center q-pa-xl" style="z-index: -1;">
-      <div>
-        <q-img fit="contain"
-          v-if="hasImageExtension()"
+    <div class="absolute-full" style="z-index: -1;">
+      <div
+        class="q-mx-auto flex flex-center full-height"
+        :style="`width: ${doc_width}px`">
+        <q-img
+          v-if="is_image"
+          fit="contain"
           :src="media_src">
         </q-img>
-        <vue-pdf-embed
-          v-else
-          disableTextLayer
-          ref="pdf"
-          :source="media_src"
-          :width="doc_width">
-        </vue-pdf-embed>
+        <div v-else class="q-py-xl">
+          <vue-pdf-embed
+            disableTextLayer
+            disableAnnotationLayer
+            ref="pdf"
+            :source="media_src"
+            :width="doc_width">
+          </vue-pdf-embed>
+        </div>
       </div>
     </div>
 
@@ -180,11 +185,9 @@ export default {
         { name: 'active_batch_qt', text: this.$t('quantity.active.medium') }
       ]
     },
-  },
 
-  methods: {
-    hasImageExtension() {
-      // const ext = typeof this.media_name == "string" 
+    is_image() {
+      // const ext = typeof this.media_name == "string"
       //   ? this.media_name.split('.')[this.media_src.length -1]
       //   : null
       // return ext
@@ -192,6 +195,9 @@ export default {
         ? this.image_extensions.some( e => this.media_src.endsWith(e) )
         : null
     },
+  },
+
+  methods: {
 
     zoomIn() {
       this.doc_width = this.doc_width * 1.2
