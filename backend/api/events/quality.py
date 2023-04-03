@@ -3,9 +3,10 @@ from fastapi import HTTPException
 from events.shared import EventMeta
 from models.quality import Issue, IssueLink, IssueWithLinks
 from utils.dt import timestamp
+from utils.quality import Queries
 
 class IssueEvent:
-  issue_collections = ['Event', 'Issue', 'issue_rel']
+  issue_collections = ['Event', 'Issue', 'issue_rel', 'WorkOrder', 'Job']
   message_collections = ['Event', 'message']
   # Mapping of event types to metadata
 
@@ -44,8 +45,13 @@ class IssueEvent:
     action="delete_message"
   )
 
+  #===============================================================
+
   @staticmethod
   def _build_issue_link(_from: str, link_dict: IssueLink):
+    """
+    Utility function to create the database records for the issue_rel edge collection
+    """
     link_map = dict(
       product="Product/",
       operation="Operation/",
@@ -58,6 +64,20 @@ class IssueEvent:
     target = link_map[link_dict.type.value] + link_dict.key
     return dict(_from=_from, _to=target)
 
+
+  def _update_production_status(self, issue_id):
+    """
+    Set critical flag of work order and job related to the issue,
+    checking all other issues related to them
+    """
+    bind_vars = dict(issue_id=issue_id)
+    cursor = self.tx.aql.execute(Queries.CHECK_PRODUCTION_CRITICAL_STATUS, bind_vars=bind_vars)
+    for document in cursor:
+      self.tx.update_document(document)
+
+
+  #===============================================================
+
   def create_issue(self):
     self.info.issue_data = IssueWithLinks(**self.info.issue_data)
     # Remove links and exclude document id fields
@@ -66,10 +86,14 @@ class IssueEvent:
     ).dict(by_alias=True)
     new_issue_id = self.tx.collection('Issue').insert(new_issue_record, return_new=True)['_id']
 
-    issue_links = [l for l in self.info.issue_data.linked_to]
-    rels = [self._build_issue_link(_from=new_issue_id, link_dict=rel) for rel in issue_links]
+    rels = [self._build_issue_link(_from=new_issue_id, link_dict=rel) for rel in self.info.issue_data.linked_to]
+
 
     self.tx.collection('issue_rel').insert_many(rels, silent=True)
+
+    # Update critical status of related job and work order
+    self._update_production_status(new_issue_id)
+
     issue_key=new_issue_id.split('/')[1]
     self.info.issue_data.key = issue_key
 
@@ -78,12 +102,20 @@ class IssueEvent:
       detail=dict(issue_key=issue_key)
     )
 
+  #===============================================================
+
   def update_issue(self):
     self.tx.collection('Issue').update(self.info.issue_data)
+    issue_key = self.info.issue_data['_key']
+
+    # Update critical status of related job and work order
+    self._update_production_status(f'Issue/{issue_key}')
 
     self.response = dict(
-      message=f"Issue { self.info.issue_data['_key'] } updated successfully"
+      message=f"Issue { issue_key } updated successfully"
     )
+
+  #===============================================================
 
   def close_issue(self):
     issue_key = self.info.issue_data['_key']
@@ -93,9 +125,16 @@ class IssueEvent:
       closed = timestamp()
     )
     self.tx.collection('Issue').update(issue_update)
+
+    # Update critical status of related job and work order
+    self._update_production_status(f'Issue/{issue_key}')
+
+
     self.response = dict(
       message=f"Issue {issue_key} closed successfuly."
     )
+
+  #===============================================================
 
   def reopen_issue(self):
     issue_key = self.info.issue_data['_key']
@@ -107,9 +146,14 @@ class IssueEvent:
       closed = None
     )
     self.tx.collection('Issue').update(issue_update)
+
+    self._update_production_status(f'Issue/{issue_key}')
+
     self.response = dict(
       message=f"Issue {issue_key} opened successfuly."
     )
+
+  #===============================================================
 
   def post_message(self):
     issue_key = self.info.message_data.recipient.split('/')[1]
@@ -119,6 +163,8 @@ class IssueEvent:
     self.response = dict(
       message="Message posted correctly to issue {issue_key}"
     )
+
+  #===============================================================
 
   def update_message(self):
     issue_key = self.info.message_data.recipient.split('/')[1]

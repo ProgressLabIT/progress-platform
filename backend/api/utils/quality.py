@@ -33,3 +33,23 @@ class Queries:
     SORT i.created
     RETURN MERGE(i, { icon: type_data.icon, type_name: type_data.name })
   """
+
+  CHECK_PRODUCTION_CRITICAL_STATUS = """
+    // Find WorkOrder and Job related to Issue
+    LET docs = (
+      FOR v, e in 1..1 OUTBOUND @issue_id issue_rel
+      LET collection = PARSE_IDENTIFIER(e._to).collection
+      FILTER POSITION(['WorkOrder', 'Job'], collection)
+      RETURN v._id
+    )
+
+    /* Check if there are open critical issue associated with each
+    and update critical status accordingly */
+    FOR d IN docs
+    LET critical = TO_BOOL(COUNT(
+      FOR v, e in 1..1 INBOUND d issue_rel
+      FILTER v.critical && v.open
+      RETURN 1
+    ))
+    RETURN { _id: d, critical }
+  """

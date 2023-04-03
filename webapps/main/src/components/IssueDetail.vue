@@ -60,12 +60,12 @@
             <q-btn
               color="theme-blue"
               :label="$t('issue_button_reopen')"
-              @click="() => { critical=false; reopenIssue() }">
+              @click="() => { issue.critical=false; reopenIssue() }">
             </q-btn>
             <q-btn
               color="theme-red"
               :label="$t('issue_button_reopen_critical')"
-              @click="() => { critical=true; reopenIssue() }">
+              @click="() => { issue.critical=true; reopenIssue() }">
             </q-btn>
           </template>
           <q-space />
