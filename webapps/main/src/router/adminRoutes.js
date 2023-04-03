@@ -95,6 +95,11 @@ const adminRoutes = [
             props: true
           }
         ]
+      },
+      {
+        path: 'flows',
+        name: 'flowLibrary',
+        component: () => import("@/views/FlowLibrary.vue")
       }
     ]
   }

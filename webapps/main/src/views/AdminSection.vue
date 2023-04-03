@@ -38,7 +38,8 @@ export default {
       admin_views: [
         'userLibrary',
         'operationLibrary',
-        'issueTypeLibrary'
+        'issueTypeLibrary',
+        'flowLibrary'
       ]
     }
   },
