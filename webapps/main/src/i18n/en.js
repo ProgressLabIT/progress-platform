@@ -140,6 +140,7 @@ export default {
       "input_not_available": "There's no more input available for the job, the work session will be closed. If you find this is not accurate, please contact your manager.",
       "job_closed": "This job has been closed. Redirecting...",
       "job_complete_confirm": "You completed all the pieces planned for this job. Do you confirm it can be closed?",
+      "next_batch_not_available": "There is no more materiale available to proceed and the job will be paused. Do you confirm?",
       "rebalance_qt_mismatch": "Quantities do not match",
       "rebalance_unassigned_jobs": "Assign an operator to the new jobs"
     },

@@ -211,7 +211,7 @@ export default {
       vuex_ready: false,
       show_exit_alert: false,
       show_issue_new: false,
-      alert_timeout: 6000
+      alert_timeout: 4000
     }
   },
 

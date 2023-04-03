@@ -141,6 +141,7 @@ export default {
       "input_not_available": "Non c'è materiale disponibile per procedere, la sessione di lavoro verrà conclusa. Se ritieni che ciò non sia accurato contatta il tuo responsabile.",
       "job_closed": "Attenzione lavoro chiuso. Reindirizzamento in corso...",
       "job_complete_confirm": "Hai completato tutti i pezzi previsti dal lavoro. Ne confermi la chiusura?",
+      "next_batch_not_available": "Non è disponibile materiale per procedere. Il lavoro verrà messo in pausa. Confermi?",
       "rebalance_qt_mismatch": "le quantità non combaciano",
       "rebalance_unassigned_jobs": "assegna un operatore ai nuovi lavori"
     },

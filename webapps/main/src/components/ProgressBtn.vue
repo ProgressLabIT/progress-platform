@@ -88,6 +88,10 @@ export default {
       return this.$t('job.alerts.job_complete_confirm')
     },
 
+    confirm_stop_session_message() {
+      return this.$t('job.alerts.next_batch_not_available')
+    },
+
     current_step_index() {
       const step_index = this.$route.query.step - 1
       return step_index ? step_index : 0
@@ -106,11 +110,14 @@ export default {
       if (current_step_was_last) {
         can_proceed = window.confirm(this.confirm_batch_done_message)
 
+        if (can_proceed && !this.j.next_batch_available) {
+          can_proceed = window.confirm(this.confirm_stop_session_message)
+        }
+
         if (can_proceed && current_batch_was_last) {
           can_proceed = window.confirm(this.confirm_job_done_message)
         }
       }
-
 
       if (can_proceed) {
         await this.$store.dispatch('completeStep', {
@@ -135,7 +142,11 @@ export default {
     async declareBatch() {
       let can_proceed = true
 
-      if (this.current_batch_is_last) {
+      if (!this.j.next_batch_available) {
+        can_proceed = window.confirm(this.confirm_stop_session_message)
+      }
+
+      if (can_proceed && this.current_batch_is_last) {
         can_proceed = window.confirm(this.confirm_job_done_message)
       }
 
