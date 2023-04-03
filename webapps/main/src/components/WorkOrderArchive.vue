@@ -44,13 +44,13 @@
                 <span>{{ props.row[c.name] || 0 }}</span>
               </template>
 
-              <template v-else-if="c.name == 'processing_time'">
+              <!--<template v-else-if="c.name == 'processing_time'">
                 <span>{{ props.row.processing_time }} / {{ props.row.unit_processing_time }}</span>
               </template>
 
               <template v-else-if="c.name == 'processing_cost'">
                 <span>{{ props.row.processing_cost }} / {{ props.row.unit_processing_cost }}</span>
-              </template>
+              </template>-->
 
               <template v-else>
                 <span class="table-data">
@@ -62,6 +62,14 @@
         </q-tr>
       </template>
     </q-table>
+
+    <q-btn
+      class="absolute"
+      style="top: 15px; right: 20px"
+      color="theme-blue"
+      :label="$t('export')"
+      @click="export_csv">
+    </q-btn>
   </div>
 </template>
 
@@ -155,13 +163,25 @@ export default {
           field: 'processing_time',
           name: 'processing_time',
           align: 'right',
-          label: this.$t('performance.processing_time.medium').toUpperCase() + ' (TOT/UN)'
+          label: this.$t('performance.processing_time.medium').toUpperCase() + ' (TOT)'
+        },
+        {
+          field: 'unit_processing_time',
+          name: 'unit_processing_time',
+          csv_only: true,
+          label: this.$t('performance.processing_time.medium').toUpperCase() + ' (UN)'
         },
         {
           field: 'processing_cost',
           name: 'processing_cost',
           align: 'right',
-          label: this.$t('performance.processing_cost.medium').toUpperCase() + ' (TOT/UN)'
+          label: this.$t('performance.processing_cost.medium').toUpperCase() + ' (TOT)'
+        },
+        {
+          field: 'unit_processing_cost',
+          name: 'unit_processing_cost',
+          csv_only: true,
+          label: this.$t('performance.processing_cost.medium').toUpperCase() + ' (UN)'
         },
       ]
     }
@@ -205,6 +225,22 @@ export default {
 
     getHumanDuration(millisecs) {
       return duration(millisecs)
+    },
+
+    export_csv() {
+      console.log('child')
+      const file_heading = 'data:text/csv;charset=utf-8,'
+      const header_row = this.columns.map(c => c.label).join(';') + '\n'
+      const data = this.wo_list.map(wo => {
+        return this.columns.map(c => wo[c.field]).join(';')
+      }).join('\n')
+      const csv_url = encodeURI(file_heading + header_row + data)
+      const link = document.createElement('a')
+      link.setAttribute('href', csv_url)
+      link.setAttribute('download', 'archivio.csv')
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
     }
   },
 

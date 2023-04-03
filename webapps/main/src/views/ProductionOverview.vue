@@ -43,10 +43,11 @@
           </template>
 
 
-          <q-space />
 
           <!-- CREATE NEW WORK ORDER -->
           <template v-if="$route.name == 'workOrderList'">
+            <q-space />
+
             <div class="col-auto" v-if="!editing">
               <q-btn
                 size="0.75rem"

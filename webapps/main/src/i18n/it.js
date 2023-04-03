@@ -96,6 +96,7 @@ export default {
     'MESSAGE_UPDATED': "Messaggio modificato",
     'MESSAGE_DELETED': "Messaggio cancellato"
   },
+  "export": "Esporta",
   "filter": "filtro | filtri",
   "form_missing_fields_alert": "compilare tutti i campi",
   "greeting": {
