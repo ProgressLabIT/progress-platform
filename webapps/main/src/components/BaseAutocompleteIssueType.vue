@@ -9,6 +9,7 @@
     :display-value="value ? value.name : null"
     option-label="name"
     @filter="filter"
+    @clear="$emit('selection', null)"
     :model-value="value"
     input-debounce="100"
     :option-value="key_only ? '_key' : null"

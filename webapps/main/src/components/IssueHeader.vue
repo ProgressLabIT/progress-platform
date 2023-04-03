@@ -41,8 +41,8 @@
             @click="() => { show_type_picker=false; new_issue_type = {}}">
           </q-btn>
           <q-btn
-            color="theme-blue"
-            :label="$t('save')"
+            :color="save_btn_color"
+            :label="save_btn_label"
             @click="changeIssueType">
           </q-btn>
         </q-card-section>
@@ -89,20 +89,45 @@ export default {
   computed: {
     icon() {
       return this.over_icon ? 'mdi-pencil' : this.issue.icon || 'mdi-help'
+    },
+
+    save_btn_color() {
+      return this.new_issue_type == null
+        ? 'theme-blue'
+        : this.new_issue_type.critical
+        ? 'theme-red'
+        : 'theme-blue'
+    },
+
+    save_btn_label() {
+      const base = this.$t('save')
+      const critical = this.new_issue_type == null
+        ? ''
+        : this.new_issue_type.critical
+        ? ' ' + this.$t('critical')
+        : ''
+      return base + critical
     }
   },
 
   methods: {
     changeIssueType() {
-      this.sendEvent({
+      const set_as_critical = this.new_issue_type ? this.new_issue_type.critical : false
+      const event = {
         event_type: 'ISSUE_UPDATED',
         event_data: {
           issue_data: {
             _key: this.issue._key,
-            issue_type: this.new_issue_type ? this.new_issue_type._key : null
+            issue_type: this.new_issue_type ? this.new_issue_type._key : null,
           }
         }
-      }).then(() => {
+      }
+
+      if (set_as_critical) {
+        event.event_data.issue_data.critical = true
+      }
+
+      this.sendEvent(event).then(() => {
         this.$emit('type-change', this.new_issue_type ? this.new_issue_type._key : null)
         this.show_type_picker = false
       })

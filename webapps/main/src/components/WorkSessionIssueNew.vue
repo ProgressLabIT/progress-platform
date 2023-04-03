@@ -16,15 +16,24 @@
     </q-card-section>
     <q-card-section>
       <BaseAutocompleteIssueType
-        @select="(value) => issue_type = value"
+        @select="(value) => setIssueType(value)"
         :value="issue_type">
       </BaseAutocompleteIssueType>
 
       <div class="row q-gutter-md q-mt-lg">
-        <q-btn color="theme-orange" :label="$t('save')" @click="save" :loading="saving"/>
-        <q-btn color="theme-red" @click="() => {critical = true; save()}">
+        <q-btn
+          v-if="!critical_only"
+          color="theme-orange"
+          :label="$t('save')"
+          @click="save"
+          :loading="saving">
+        </q-btn>
+        <q-btn
+          color="theme-red"
+          @click="() => {critical = true; save()}">
           {{ $t('save') }} {{ $t('critical') }}
         </q-btn>
+
         <q-space />
         <q-btn
           color="theme-grey"
@@ -62,6 +71,7 @@ export default {
   data () {
     return {
       current_issue_step: 1,
+      critical_only: false,
       saving: false,
       issue_type: null,
       title: '',
@@ -128,6 +138,16 @@ export default {
   },
 
   methods: {
+    setIssueType(value) {
+      this.issue_type = value
+      if (value.critical) {
+        this.critical_only = true
+      }
+      else {
+        this.critical_only = false
+      }
+    },
+
     save() {
       // if link is active send data in the form e.g. { type: product, key: whatever }
       const link_data = this.links.map(l => ({ type: l.type, key: l.value }))
