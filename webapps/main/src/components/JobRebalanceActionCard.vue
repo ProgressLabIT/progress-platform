@@ -206,6 +206,8 @@ export default {
         'product_key',
         'product_code',
         'product_description',
+        'project_code',
+        'operation_key',
         'parameters',
         'step_sequence'
       ],
@@ -432,7 +434,7 @@ export default {
           this.$emit('changeEditMode', 'actions')
         })
         .catch( err => {
-          window.alert(this.$tc("errors.save_err") + ": ", err)
+          window.alert(this.$t("errors.save_err") + ": ", err)
           this.saving = false
         })
       }
