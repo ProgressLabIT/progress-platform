@@ -99,7 +99,7 @@
             </q-toggle>
 
             <!-- CLOSE WITHIN -->
-            <q-input
+          <!--   <q-input
               filled
               stack-label
               :label="$t('close_within')"
@@ -111,7 +111,7 @@
             </q-input>
             <div class="q-mt-md text-low text-italic">
             {{ $t('issue_type_close_within_explainer') }}
-            </div>
+            </div> -->
 
           </div>
 
@@ -186,7 +186,7 @@ export default {
         description: '',
         icon: '',
         critical: undefined,
-        close_within: 0
+        // close_within: 0
       }
     }
   },

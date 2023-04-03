@@ -38,7 +38,7 @@
           </q-toggle>
         </div>
 
-        <div class="col-3 text-uppercase">
+       <!--  <div class="col-3 text-uppercase">
           <q-input
             filled
             stack-label
@@ -52,7 +52,7 @@
         <div class="col-9 text-low">
           {{ $t('issue_type_close_within_explainer') }}
         </div>
-
+ -->
         <div class="col-12">
           <q-input
             filled

@@ -52,7 +52,7 @@ class IssueType(ArangoDocument):
   icon: str = None
   template: List[FormField] = []
   critical: bool = False
-  close_within: NonNegativeInt = 0 # Time in minutes. After this make critical. If 0 ignore.
+  # close_within: NonNegativeInt = 0 # Time in hours. After this make critical. If 0 ignore.
 
 
 # ISSUE
@@ -67,7 +67,7 @@ class Issue(ArangoDocument):
   created_by: str # Creator ID
   closed: datetime = None
   critical: bool # Default value set at the IssueType level
-  close_within: NonNegativeInt # Value set at the IssueType level
+  # close_within: NonNegativeInt # Value set at the IssueType level
   data: List[IssueField] = None
   open: bool = True
 
