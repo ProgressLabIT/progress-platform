@@ -347,7 +347,6 @@ export default {
   created() {
     // Load job data
     this.loadJob()
-    setInterval(this.loadJob, 10000)
   },
 
   // Make sure an alert is raised if user tries to close the page

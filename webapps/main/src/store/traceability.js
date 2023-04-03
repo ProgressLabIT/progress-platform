@@ -132,6 +132,15 @@ const traceability = {
       state.current_batch_data = batch_data
       state.working_job_data = job_data
     },
+
+    UPDATE_JOB_NOTES(state, { order_notes, phase_notes, product_notes }) {
+      state.working_job_data = {
+        ...state.working_job_data,
+        order_notes,
+        phase_notes,
+        product_notes
+      }
+    }
   },
 
   actions: {
