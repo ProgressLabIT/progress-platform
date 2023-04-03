@@ -75,7 +75,7 @@ export default {
   methods: {
     submit() {
       if (!this.new_operation_data.name) {
-        window.alert(c(this.$tc('operations.alerts.op_name_missing')))
+        window.alert(c(this.$t('operations.alerts.op_name_missing')))
       }
 
       else {
@@ -90,7 +90,7 @@ export default {
         })
         .catch( err => {
           if (err.response.status === 409) {
-            window.alert(c(this.$tc('operations.alerts.op_name_used')))
+            window.alert(c(this.$t('operations.alerts.op_name_used')))
           }
           else { window.alert(err) }
         })

@@ -5,13 +5,13 @@
     
     <!-- PRODUCT CODE -->
     <h4 class="weight-bold medium mt-6 text-uppercase">
-      {{ $tc('product.code') }}
+      {{ $t('product.code') }}
     </h4>
     <h1 class="display highlight">{{ product.code }}</h1>
 
     <!-- PRODUCT DESCRIPTION -->
     <h4 class="weight-bold medium mt-10 text-uppercase">
-      {{ $tc('description') }}
+      {{ $t('description') }}
     </h4>
     <h3 class="highlight mt-1">{{ product.description }}</h3>      
 

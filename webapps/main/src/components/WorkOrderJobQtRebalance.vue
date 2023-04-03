@@ -165,7 +165,7 @@ export default {
         })
         .catch( err => window.alert(err) )
       }
-      else window.alert(this.$tc('work_order.alerts.assign_workload_first'))
+      else window.alert(this.$t('work_order.alerts.assign_workload_first'))
     }
   },
 

@@ -11,7 +11,7 @@
           class="mb-2" 
           :color="$theme.blue" 
           @click="$router.push({name: link})">
-          {{ $tc(`views.${link}`) }}
+          {{ $t(`views.${link}`) }}
         </v-btn>
         <!-- <v-btn block :color="$theme.blue" @click="$router.push({name: 'productionOverview'})">
           Monitoraggio Produzione

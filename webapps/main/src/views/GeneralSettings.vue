@@ -14,7 +14,7 @@
               :to="{ name: tab }"
               :key="tab"
               class="menu display mb-2">
-              {{ $tc(`views.${tab}`) }}
+              {{ $t(`views.${tab}`) }}
             </v-tab>
 
           </v-tabs>

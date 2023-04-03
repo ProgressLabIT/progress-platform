@@ -16,10 +16,10 @@
           <v-container>
             <v-row class="mx-0" justify="space-between">
               <v-btn :color="confirm_color || $theme.blue" @click="(confirm_action)()">
-                {{ confirm_prompt || $tc('confirm') }}
+                {{ confirm_prompt || $t('confirm') }}
               </v-btn>
               <v-btn :color="cancel_color || $theme.grey " @click="$emit('close')">
-                {{ cancel_prompt || $tc('cancel') }}
+                {{ cancel_prompt || $t('cancel') }}
               </v-btn>
             </v-row>
           </v-container>

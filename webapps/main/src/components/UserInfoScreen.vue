@@ -309,7 +309,7 @@ export default {
     full_name() {
       return this.user
         ? this.user.name + ' ' + this.user.surname
-        : this.$options.filters.capitalize(this.$tc('user.wrong_user_key'))
+        : this.$options.filters.capitalize(this.$t('user.wrong_user_key'))
     },
 
     user_active_text() {

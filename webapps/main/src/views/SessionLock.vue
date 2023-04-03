@@ -7,25 +7,25 @@
     persistent no-click-animation>
     <v-card>
       <v-card-title class="text-uppercase">
-        {{ $tc('session.lock_title') }}
+        {{ $t('session.lock_title') }}
       </v-card-title>
 
       <v-card-text class="mt-6">
         <!-- <v-col class="pa-0"> -->
           <p>
             <strong>
-              {{ $tc('session.lock_salutation', 1, { name: user.name, surname: user.surname}) | capitalize_all }}.
+              {{ $t('session.lock_salutation', 1, { name: user.name, surname: user.surname}) | capitalize_all }}.
             </strong>
           </p>
           <p>
-            {{ $tc('session.lock_explainer', 1, {timeout: session_timeout} ) | capitalize }}
+            {{ $t('session.lock_explainer', 1, {timeout: session_timeout} ) | capitalize }}
           </p>
 
           <!-- Form is used to allow post via Enter -->
           <v-form @submit.prevent="verifyUser">
             <v-text-field
               v-model="password"
-              :label="$tc('user.password') | capitalize"
+              :label="$t('user.password') | capitalize"
               type="password"
               single-line>
             </v-text-field>
@@ -36,10 +36,10 @@
                 type="submit"
                 :color="$theme.blue" 
                 :loading="reloading_session">
-                {{ $tc('resume') }}
+                {{ $t('resume') }}
               </v-btn>
               <v-btn large :color="$theme.grey" @click="logout">
-                {{ $tc('session.close_session') }}
+                {{ $t('session.close_session') }}
               </v-btn>
             </v-row>
           </v-form>
@@ -88,7 +88,7 @@ export default {
     },
 
     async logout() {
-      const confirm = window.confirm(c(this.$tc('session.alerts.close_alert')))
+      const confirm = window.confirm(c(this.$t('session.alerts.close_alert')))
       if (confirm) {
         await this.$store.dispatch('logout')
       }
