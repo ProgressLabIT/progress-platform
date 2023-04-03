@@ -16,6 +16,9 @@ traceability_collections = [
     'wip',
     'WorkOrder',
     'WorkSession',
+    'Issue',
+    'issue_rel',
+    'message'
   ]
 
 @router.delete('/reset/prod')
