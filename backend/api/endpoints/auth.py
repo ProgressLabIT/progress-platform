@@ -175,6 +175,7 @@ async def start_user_session(
       )
 
     except:
+      tx.abort_transaction()
       status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
       response=dict(
         status_code=status_code,

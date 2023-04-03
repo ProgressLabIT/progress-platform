@@ -21,22 +21,26 @@ traceability_collections = [
 @router.delete('/reset/prod')
 async def reset_production_and_traceability_data():
 
-  tx = db.begin_transaction(write=traceability_collections)
+  try:
+    tx = db.begin_transaction(write=traceability_collections)
 
-  for c in collections:
-    tx.collection(c).truncate()
+    for c in collections:
+      tx.collection(c).truncate()
 
-  tx.collection('Queue').insert(dict(
-    type = 's', #What the queue refers to.
-    site_key = '0',
-    subqueue_target_key = None,
-    work_orders = [],
-    jobs = []
-  ))
+    tx.collection('Queue').insert(dict(
+      type = 's', #What the queue refers to.
+      site_key = '0',
+      subqueue_target_key = None,
+      work_orders = [],
+      jobs = []
+    ))
 
-  tx.commit_transaction()
+    tx.commit_transaction()
 
-  return 'Reset of Production and Traceability data successful'
+    return 'Reset of Production and Traceability data successful'
+
+  except Exception:
+    tx.abort_transaction()
 
 
 async def get_work_order_jobs(work_order_key):
@@ -99,6 +103,7 @@ async def force_delete_work_order_data(work_order_key: str):
     return f"All data related to WorkOrder {work_order_key} has been deleted."
 
   except Exception:
+    tx.abort_transaction()
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 

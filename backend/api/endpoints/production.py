@@ -255,36 +255,50 @@ async def update_work_order(
   notes: str = Body(None)
   ):
 
-  tx = db.begin_transaction(write=['WorkOrder', 'Job'])
-  wo_update = dict(_key=wo_key)
-  job_match = dict(wo_key=wo_key)
-  job_update = dict()
+  try:
+    tx = db.begin_transaction(write=['WorkOrder', 'Job'])
+    wo_update = dict(_key=wo_key)
+    job_match = dict(wo_key=wo_key)
+    job_update = dict()
 
-  if new_due_date is not None:
-    wo_update['due_by'] = new_due_date
+    if new_due_date is not None:
+      wo_update['due_by'] = new_due_date
 
-  if notes is not None:
-    wo_update['notes'] = notes
+    if notes is not None:
+      wo_update['notes'] = notes
 
-  if new_qt is not None:
-    wo_update['qt_planned'] = new_qt
+    if new_qt is not None:
+      wo_update['qt_planned'] = new_qt
 
-  if new_from_date is not None:
-    wo_update['start_from'] = new_from_date
-    job_update.update({ 'start_from': new_from_date })
+    if new_from_date is not None:
+      wo_update['start_from'] = new_from_date
+      job_update.update({ 'start_from': new_from_date })
 
-  if new_project_code is not None:
-    wo_update['project_code'] = new_project_code
-    job_update.update({ 'project_code': new_project_code })
+    if new_project_code is not None:
+      wo_update['project_code'] = new_project_code
+      job_update.update({ 'project_code': new_project_code })
 
-  if new_project_code or new_from_date:
-    tx.collection('Job').update_match(job_match, job_update)
+    if new_project_code or new_from_date:
+      tx.collection('Job').update_match(job_match, job_update)
 
-  updated_wo_data = tx.collection('WorkOrder').update(wo_update, return_new=True)['new']
+    updated_wo_data = tx.collection('WorkOrder').update(wo_update, return_new=True)['new']
 
-  tx.commit_transaction()
+    tx.commit_transaction()
 
-  return APIResponse(detail=updated_wo_data)
+    return APIResponse(detail=updated_wo_data)
+
+  except Exception:
+    tx.abort_transaction()
+    status_code=500
+    response = dict(
+      status=status_code,
+      message="There was a problem updating the work order",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
 
 # ----------------------------------------------------------------------
 
@@ -588,6 +602,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
     return APIResponse(detail=results, message="Jobs updated successfully")
 
   except:
+    tx.abort_transaction()
     status_code = 500
     error_str = traceback.format_exc()
 

@@ -61,6 +61,7 @@ async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
     tx.collection('requires').insert_many(bom_to_db, silent=True)
 
   except Exception as e:
+    tx.abort_transaction()
     error_str = traceback.format_exc()
     status_code = 500
     response=dict(

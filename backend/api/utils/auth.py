@@ -187,17 +187,19 @@ def verify_user(password, username=None, user_key=None, db=db):
 # ----------------------------------------------------------------------
 
 def close_session(session_key, token_key, db=db):
-  tx = db.begin_transaction(write=['Token', 'UserSession'])
-  
-  session_update = dict(
-    _key=session_key,
-    active=False,
-    logout_at=datetime.now(tz.UTC)
-  )
-  tx.collection('UserSession').update(session_update, return_new=True)['new']
-  revoke_token(token_key, tx)
-  tx.commit_transaction()
+  try:
+    tx = db.begin_transaction(write=['Token', 'UserSession'])
 
+    session_update = dict(
+      _key=session_key,
+      active=False,
+      logout_at=datetime.now(tz.UTC)
+    )
+    tx.collection('UserSession').update(session_update, return_new=True)['new']
+    revoke_token(token_key, tx)
+    tx.commit_transaction()
+  except Exception:
+    tx.abort_transaction()
 
 
 
