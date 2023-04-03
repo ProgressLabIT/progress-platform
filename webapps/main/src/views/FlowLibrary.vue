@@ -101,8 +101,7 @@ export default {
 
   computed: {
     base_url() {
-      // return 'http://' + window.location.hostname + ':4200/api'
-      return 'http://' + '192.168.2.189' + ':4200/api'
+      return 'http://' + window.location.hostname + ':4200/api'
     },
 
     deployments_url() {
