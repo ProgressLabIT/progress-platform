@@ -109,7 +109,7 @@ export default {
   created() {
     if (this.load_data) {
       this.loading = true
-      this.$store.dispatch('getIssueTypes').then(() => {
+      this.$store.dispatch('getIssueTypes', true).then(() => {
         this.initOptions()
         this.loading = false
       })

@@ -23,9 +23,9 @@ const quality = {
   },
 
   actions: {
-    getIssueTypes({ commit }) {
+    getIssueTypes({ commit }, active_only = false) {
       return new Promise((resolve, reject) => {
-        api.get('issue-type')
+        api.get('issue-type', { params: { active_only }})
           .then( resp => {
             commit('LOAD_ISSUE_TYPES', resp.data)
             resolve()

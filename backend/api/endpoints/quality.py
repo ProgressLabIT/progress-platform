@@ -26,6 +26,7 @@ async def get_issue_type(
   key: str = None,
   code: str = None,
   critical: bool = None,
+  active_only: bool = True
   ):
   # use query parameters to filter specific type
   match = dict()
@@ -38,6 +39,9 @@ async def get_issue_type(
 
   if critical:
     match['critical'] = critical
+
+  if active_only:
+    match['active'] = True
 
   return [_ for _ in issue_types.find(match)]
 
