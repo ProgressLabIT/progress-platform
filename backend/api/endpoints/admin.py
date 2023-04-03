@@ -24,7 +24,7 @@ async def reset_production_and_traceability_data():
   try:
     tx = db.begin_transaction(write=traceability_collections)
 
-    for c in collections:
+    for c in traceability_collections:
       tx.collection(c).truncate()
 
     tx.collection('Queue').insert(dict(
@@ -41,6 +41,10 @@ async def reset_production_and_traceability_data():
 
   except Exception:
     tx.abort_transaction()
+    raise HTTPException(
+      status_code=500,
+      detail=traceback.format_exc()
+    )
 
 
 async def get_work_order_jobs(work_order_key):
