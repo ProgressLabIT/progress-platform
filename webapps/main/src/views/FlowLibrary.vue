@@ -27,18 +27,67 @@
         <q-btn @click="run(flow)" label="launch" color="theme-blue"/>
       </q-item-section>
     </q-item>
+
+    <BaseDialog :show="!!launched_flow">
+      <q-card class="surface1 q-pa-md" style="min-width: 60vw">
+
+        <!-- FLOW TITLE -->
+        <q-card-section class="row justify-between items-center">
+          <div class="text-h3">{{ launched_flow }}</div>
+          <q-chip class="q-ml-md row items-center" :color="state_color">
+            <div class="q-mr-sm">{{ flow_state }}</div>
+            <q-spinner-hourglass v-if="['SCHEDULED', 'PENDING'].includes(flow_state)" />
+            <q-spinner-dots v-else-if="flow_state == 'RUNNING'" />
+            <q-icon v-else-if="failed_states.includes(flow_state)" name="mdi-close-octagon"/>
+            <q-icon v-else name="mdi-check-circle"/>
+          </q-chip>
+        </q-card-section>
+
+        <!-- LOGS -->
+        <q-card-section>
+        <div id="flow-log"
+          class="background smaller full-with scroll relative-position q-pa-md"
+          style="height: 400px; font-family: monospace;">
+          <div v-for="(l, index) in flow_logs" :key="index" class="q-mb-sm">
+            {{ l }}
+          </div>
+          <div id="scroll-anchor" class="q-mb-sm">
+            <q-spinner v-if="active_states.includes(flow_state)" />
+            <q-badge v-else color="theme-grey">END</q-badge>
+          </div>
+        </div>
+        </q-card-section>
+
+        <q-card-section v-if="!active_states.includes(flow_state)" class="row justify-end">
+          <q-btn :label="$t('close')" color="theme-grey" @click="clearFlowData" />
+        </q-card-section>
+      </q-card>
+    </BaseDialog>
   </q-list>
 </template>
 
 <script>
+import BaseDialog from '@/components/BaseDialog.vue'
+
 export default {
 
   name: 'FlowLibrary',
 
+  components: {
+    BaseDialog
+  },
+
   data () {
     return {
       flows: [],
-      query_filter: {
+      active_states: ['SCHEDULED','PENDING', 'RUNNING'],
+      failed_states: ['FAILED','CRASHED'],
+      launched_flow: false,
+      run_id: null,
+      polling_instance: null,
+      flow_logs: [],
+      flow_state: null,
+      flow_query_filter: {
         "query": {
           "deployments": {
             "work_queue_name": {
@@ -52,7 +101,8 @@ export default {
 
   computed: {
     base_url() {
-      return 'http://' + window.location.hostname + ':4200/api'
+      // return 'http://' + window.location.hostname + ':4200/api'
+      return 'http://' + '192.168.2.189' + ':4200/api'
     },
 
     deployments_url() {
@@ -61,6 +111,48 @@ export default {
 
     flows_url() {
       return this.base_url + '/flows/filter'
+    },
+
+    status() {
+      return {
+        url: this.base_url + '/flow_runs/filter',
+        body: {
+          flow_runs: {
+            id: { any_: [this.run_id] }
+          }
+        }
+      }
+    },
+
+    state_color() {
+      switch (this.flow_state) {
+        case 'PENDING':
+        case 'SCHEDULED':
+          return 'theme-orange'
+
+        case 'RUNNING':
+          return 'theme-blue'
+
+        case 'COMPLETED':
+          return 'theme-green'
+
+        default:
+          return 'theme-red'
+      }
+    },
+
+    logs() {
+      return {
+        url: this.base_url + '/logs/filter',
+        body: {
+          logs: {
+            level: { ge_: 0 },
+            flow_run_id: { any_: [this.run_id] }
+          },
+          sort: "TIMESTAMP_ASC",
+          offset: this.flow_logs.length
+        }
+      }
     },
 
     flow_list() {
@@ -85,6 +177,28 @@ export default {
       return flow_params
     },
 
+    fetchFlows() {
+      // Get flow name from flows. Deployment data provides parameters and endpoint info
+      let flows_data, deployment_data
+      const calls = [
+        this.$axios.post(this.flows_url, this.flow_query_filter),
+        this.$axios.post(this.deployments_url, this.flow_query_filter)
+      ]
+      this.$axios.all(calls).then(responses => {
+        const flows_data = responses[0].data
+        const deployments_data = responses[1].data
+        this.flows = flows_data.map(f => {
+          const deployment = deployments_data.find(d => d.flow_id == f.id)
+          return {
+            ...f,
+            deployment_id: deployment.id,
+            description: deployment.description,
+            parameters: this.defineFlowParameters(deployment)
+          }
+        })
+      })
+    },
+
     run(flow_data) {
       const url = this.base_url + '/deployments/' + flow_data.deployment_id + '/create_flow_run'
       let params_data = {}
@@ -96,31 +210,39 @@ export default {
         },
         parameters: params_data
       }
-      this.$axios.post(url, body)
+      this.$axios.post(url, body).then(resp => {
+        this.launched_flow = flow_data.name
+        this.flow_state = resp.data.state.type
+        this.run_id = resp.data.id
+        this.polling_instance = setInterval(this.checkRun, 1000)
+      })
     },
 
-    fetchFlows() {
-      // Get flow name from flows. Deployment data provides parameters and endpoint info
-      let flows_data, deployment_data
-      const calls = [
-        this.$axios.post(this.flows_url, this.query_filter),
-        this.$axios.post(this.deployments_url, this.query_filter)
-      ]
-      this.$axios.all(calls).then(responses => {
-        const flows_data = responses[0].data
-        const deployments_data = responses[1].data
-        console.log({ flows_data, deployments_data })
-        this.flows = flows_data.map(f => {
-          const deployment = deployments_data.find(d => d.flow_id == f.id)
-          return {
-            ...f,
-            deployment_id: deployment.id,
-            description: deployment.description,
-            parameters: this.defineFlowParameters(deployment)
-          }
-        })
-      })
-    }
+    async updateLogs(log_resp) {
+      const new_logs = log_resp.data.map(l => `${l.timestamp}: ${l.message}`)
+      const logbox = document.getElementById('flow-log')
+      this.flow_logs.push(...new_logs)
+      logbox.scrollTop = logbox.scrollHeight
+    },
+
+    async checkRun() {
+      const [status, logs] = await this.$axios.all([
+        this.$axios.post(this.status.url, this.status.body),
+        this.$axios.post(this.logs.url, this.logs.body)
+      ])
+      this.flow_state = status.data[0].state_type
+      this.updateLogs(logs)
+
+      if (['COMPLETED', 'FAILED', 'CRASHED'].includes(this.flow_state)) {
+        clearInterval(this.polling_instance)
+      }
+    },
+
+    clearFlowData() {
+      this.launched_flow = null
+      this.flow_logs = []
+      this.flow_state = null
+    },
   },
 
   created() {
@@ -129,5 +251,11 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="sass" scoped>
+#flow-log *
+  overflow-anchor: none !important
+
+#scroll-anchor
+  overflow-anchor: auto
+  height: 1px
 </style>
