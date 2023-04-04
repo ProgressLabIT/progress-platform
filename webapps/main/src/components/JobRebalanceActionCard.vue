@@ -200,7 +200,6 @@ export default {
       new_job_keys: [
         'wo_key',
         'wo_code',
-        'wo_line',
         'phase_key',
         'phase_alias',
         'product_key',
@@ -209,7 +208,14 @@ export default {
         'project_code',
         'operation_key',
         'parameters',
-        'step_sequence'
+        'first_phase'
+        'start_from',
+        'step_sequence',
+        'qt_next_batch',
+        'step_sequence',
+        'next_batch_available',
+        'job_docs',
+        'job_bom'
       ],
       job_template: {}
     }
