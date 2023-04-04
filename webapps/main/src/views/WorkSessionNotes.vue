@@ -56,39 +56,12 @@ export default {
     }
   },
 
-  data() {
-    return {
-      notes_fields: ['order_notes', 'phase_notes', 'product_notes'],
-      notes_polling_instance: null
-    }
-  },
-
   computed: {
     no_notes() {
       return !this.job.order_notes
         && !this.job.phase_notes
         && !this.job.product_notes
     }
-  },
-
-  methods: {
-    updateNotes() {
-      this.$api.get(`job/${this.job._key}`).then(resp => {
-        const new_job_data = resp.data.detail
-        const changes = this.notes_fields.map(f => this.job[f] != new_job_data[f]).some(f => f == true)
-        if (changes) {
-          this.$store.commit('UPDATE_JOB_NOTES', new_job_data)
-        }
-      })
-    }
-  },
-
-  created() {
-    this.notes_polling_instance = setInterval(this.updateNotes, 5000)
-  },
-
-  beforeDestroy() {
-    clearInterval(this.notes_polling_instance)
   }
 }
 </script>

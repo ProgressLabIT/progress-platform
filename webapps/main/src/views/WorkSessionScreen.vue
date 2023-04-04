@@ -286,7 +286,7 @@ export default {
 
   methods: {
     loadJob() {
-      this.$store.dispatch('loadJobData', this.job_key)
+      this.$store.dispatch('loadWorkingJobData', this.job_key)
       .then(() => {
         const data = this.$store.state.traceability
         const job_data = data.working_job_data
@@ -341,12 +341,19 @@ export default {
     beforeUnloadAlert(event) {
       event.preventDefault()
       event.returnValue = ''
+    },
+
+    updateJobData() {
+      this.$api.get(`job/${this.job_key}`).then(resp => {
+        this.$store.commit('UPDATE_JOB', resp.data.detail)
+      })
     }
   },
 
   created() {
     // Load job data
     this.loadJob()
+    this.polling_instance = setInterval(this.updateJobData, 10000)
   },
 
   // Make sure an alert is raised if user tries to close the page
@@ -356,6 +363,7 @@ export default {
 
   beforeUnmount() {
     window.removeEventListener('beforeunload', this.beforeUnloadAlert)
+    clearInterval(this.polling_instance)
   },
 
   beforeRouteLeave (to, from, next) {
