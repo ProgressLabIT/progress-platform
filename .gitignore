@@ -36,6 +36,7 @@ user/
 
 # DBs
 integration_db/
+backup/
 
 # Dev utility scripts
 *.app/

@@ -180,12 +180,24 @@ class ProductionEvent:
   # Batch
   # ===================================================================
 
-  def create_batch(self, batch_qt):
+  def create_batch(self):
     self.get_job_data()
+
+    default_batch_qt = self.job.parameters.production_batch_qt
+
+    # qt_completed must include any update from the current event being recorded
+    remaining_qt = self.job.qt_planned - self.job.qt_completed
+
+    # if production_batch_qt is zero, use total remaining quantity
+    if default_batch_qt == 0:
+      batch_qt = remaining_qt
+    # Do not consider production batch if remaining quantity is lower
+    else:
+      batch_qt = min([default_batch_qt, remaining_qt])
 
     # Book wip from buffer
     if not self.job.first_phase:
-      available_qt = self.book_wip(batch_qt)
+      self.book_wip(batch_qt)
 
     new_batch_in = Batch(
       job_key = self.info.job_key,
@@ -375,7 +387,9 @@ class ProductionEvent:
 
 
   def update_job_step_progress(self):
-    self.get_job_data()
+    if not self.job:
+      self.get_job_data()
+
     current_batch_total_value = self.job.active_batch_qt / self.job.qt_planned
 
     procedure = self.get_job_step_sequence()
@@ -452,7 +466,7 @@ class ProductionEvent:
   def start_job(self):
     # Create new batch and store _key in Event.info
     self.get_job_data()
-    self.create_batch(self.job.qt_next_batch)
+    self.create_batch()
 
     # Create new WorkSession and store _key in Event.info
     self.create_work_session()
@@ -512,7 +526,7 @@ class ProductionEvent:
     if self.job.active_batch_key:
       self.get_active_batch()
     else:
-      self.create_batch(self.job.qt_next_batch)
+      self.create_batch()
 
     self.create_work_session()
 
@@ -620,16 +634,6 @@ class ProductionEvent:
 
     # JOB HAS REMAINING QUANTITY
     else:
-      default_batch_qt = self.job.parameters.production_batch_qt
-      remaining_qt = self.job.qt_planned - self.job.qt_completed
-
-      # if production_batch_qt is zero, use total remaining quantity
-      if not default_batch_qt:
-        qt_next_batch = remaining_qt
-      # Do not consider production batch if remaining quantity is lower
-      else:
-        qt_next_batch = min([default_batch_qt, remaining_qt])
-
       new_progress = round(100 * new_qt_completed / self.job.qt_planned)
       job_update = dict(
         _key = self.info.job_key,
@@ -637,7 +641,6 @@ class ProductionEvent:
         active_batch_qt = 0,
         qt_completed = new_qt_completed,
         qt_released = new_qt_completed,
-        qt_next_batch = qt_next_batch,
         progress = new_progress,
         active = False
       )
@@ -645,7 +648,7 @@ class ProductionEvent:
       create_new_batch = self.job.parameters.auto_new_batch and self.job.next_batch_available
 
       if create_new_batch:
-        self.create_batch(qt_next_batch)
+        self.create_batch()
         job_update['active_batch_key'] = self.batch.key
         job_update['active_batch_qt'] = self.batch.qt_total
         self.create_work_session()

@@ -167,14 +167,6 @@ async def create_work_order(new_wo: WorkOrderNew):
       phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
 
     first_phase = phase_key == wo_data.phase_sequence[0]
-    default_batch_qt = phase.params.production_batch_qt
-
-    # Production batch = 0 means declare the whole job at once
-    if default_batch_qt == 0:
-      qt_next_batch = wo_data.qt_planned
-    # Do not consider production batch if total quantity is lower
-    else:
-      qt_next_batch = min([default_batch_qt, wo_data.qt_planned])
 
     new_job_record = Job(
       wo_key = wo_data.key,
@@ -190,7 +182,6 @@ async def create_work_order(new_wo: WorkOrderNew):
       operation_key = phase.operation_key,
       parameters = phase.params,
       qt_planned = wo_data.qt_planned,
-      qt_next_batch = qt_next_batch,
       next_batch_available = True if first_phase else False,
       step_sequence = get_procedure_for_new_job(phase_key),
       job_docs = wo_data.wo_docs,

@@ -204,7 +204,7 @@ class Queries:
     LET processing_cost = SUM(
       FOR ws IN work_sessions
       RETURN ws.duration * ws.hourly_cost
-    )
+    ) / (60*60*1000)
 
 
     UPDATE batch WITH {
@@ -281,8 +281,12 @@ class Queries:
       RETURN w.quantity
     )
 
+    LET qt_remaining = j.qt_planned - j.qt_completed
+    LET default_batch = j.parameters.production_batch_qt
+    LET qt_next_batch = default_batch == 0 ? qt_remaining : MIN([default_batch, qt_remaining])
+
     LET total_input_available = input_for_phase + input_for_job
-    LET next_batch_available = j.first_phase || j.qt_next_batch <= total_input_available
+    LET next_batch_available = j.first_phase || qt_next_batch <= total_input_available - j.active_batch_qt
     UPDATE j WITH { next_batch_available } IN Job
   """
 
