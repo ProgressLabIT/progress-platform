@@ -208,7 +208,7 @@ export default {
         'project_code',
         'operation_key',
         'parameters',
-        'first_phase'
+        'first_phase',
         'start_from',
         'step_sequence',
         'qt_next_batch',
