@@ -34,15 +34,16 @@ class Event(ProductionEvent, IssueEvent):
     self.tx = self.db.begin_transaction(write=self.meta.collections)
 
     try:
+      # Save event, storing its key for later use
+      event_record = self.tx.collection('Event').insert(self.info, return_new=True)['new']
+      self.info = EventModel(**event_record)
+
       # Apply updates to global application state based on specific event
       self.action()
 
       # Apply updates based on event category shared logic
       for method in self.meta.post_processing or []:
         getattr(self, method)()
-
-      # Save event
-      self.tx.collection('Event').insert(self.info)
 
       # Commit transaction
       self.tx.commit_transaction()
