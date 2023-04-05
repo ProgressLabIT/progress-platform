@@ -271,7 +271,8 @@ class Queries:
     FOR j IN Job
     FILTER j.wo_key == @wo_key && j.phase_key == @phase_key
 
-    // Get input available from that already booked for the job
+    // Get additional input available from that already booked for the job
+    // that is not already in the active batch
     LET input_for_job = SUM(
       FOR w IN wip
       FILTER
@@ -286,7 +287,9 @@ class Queries:
     LET qt_next_batch = default_batch == 0 ? qt_remaining : MIN([default_batch, qt_remaining])
 
     LET total_input_available = input_for_phase + input_for_job
-    LET next_batch_available = j.first_phase || qt_next_batch <= total_input_available - j.active_batch_qt
+
+    // Wip booked and active is not counted as available, so do not subtract active quantity here
+    LET next_batch_available = j.first_phase || qt_next_batch <= total_input_available
     UPDATE j WITH { next_batch_available } IN Job
   """
 
