@@ -65,12 +65,17 @@
 
             <!-- SELECT CHECKBOX -->
             <template v-if="header.value === 'phase_alias'">
-              <q-checkbox
-                color="theme-blue"
-                :disable="job.active || job.stage === 'closed'"
-                :val="job._key"
-                v-model="selected_jobs">
-              </q-checkbox>
+              <div class="row items-center">
+                <q-checkbox
+                  color="theme-blue"
+                  :disable="job.active || job.stage === 'closed'"
+                  :val="job._key"
+                  v-model="selected_jobs">
+                </q-checkbox>
+                <div class="smaller">
+                  {{ job._key }}
+                </div>
+              </div>
             </template>
 
             <!-- JOB PROGRESS BAR -->
@@ -201,7 +206,7 @@ export default {
       return [
         {
           value: 'phase_alias',
-          text: this.$t('phase.short'),
+          text: this.$t('phase.short') + ' / ID',
           cols: 2,
           width: '20%'
         },
