@@ -122,7 +122,7 @@ class Queries:
     // Update PT and Cost
     LET work_sessions = (
       FOR ws IN WorkSession
-      FILTER ws.work_order_key == @wo_key
+      FILTER ws.work_order_key == @wo_key && !ws.canceled
       LET benchmark = ws.active ? now : ws.end
       LET duration = DATE_DIFF(ws.start, benchmark, 'f')
       LET cost = ws.hourly_cost * duration / 3600000 // No. of milliseconds in an hour: 60*60*1000
