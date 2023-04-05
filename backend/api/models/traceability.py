@@ -28,6 +28,9 @@ class StepExecutionData(FlexModel):
   status: StepStatus = StepStatus.TODO
   user_data: list = None
 
+  modified: str = None
+  canceled: str = None
+
 
 class Batch(FlexModel):
   key: str = Field(None, alias="_key")
@@ -53,6 +56,9 @@ class Batch(FlexModel):
   # next_step: int = None
   step_data: List[StepExecutionData] = None
 
+  # Attributes for overrides
+  canceled: str = None # Event id
+  forced: str = None # Event id
 
 
 class WorkSession(FlexModel):
@@ -71,6 +77,9 @@ class WorkSession(FlexModel):
   active: bool
   hourly_cost: float = None
 
+  # Attributes for overrides
+  canceled: str = None
+  forced: str = None
 
 # class Serial(ArangoDocument):
 #   wo_key: str
