@@ -95,11 +95,20 @@ async def update_user_image(
   user_key: str, 
   new_image: UploadFile = File(...)
 ):
-  user = User(**db.collection('User').get(user_key))
-  img = UserFile.user_image(file=new_image)
-  filename = (user.name + user.surname + '.jpg').replace(' ', '').lower()
-  await img.write_file(filename)  
-  return APIResponse(message="File saved correctly")
+  try:
+    user = User(**db.collection('User').get(user_key))
+    img = UserFile.user_image(file=new_image)
+    filename = (user.name + user.surname + '.jpg').replace(' ', '').lower()
+    await img.write_file(filename)
+    return APIResponse(message="File saved correctly")
+  except Exception:
+    raise HTTPException(
+      status_code = 500,
+      detail = dict(
+        message = "Could not save image to disk",
+        error = traceback.format_exc()
+      )
+    )
 
 # ----------------------------------------------------
 

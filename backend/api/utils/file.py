@@ -41,7 +41,7 @@ class UserFile:
     return cls(base_path, append_path, file, name)
 
   @classmethod
-  def user_image(cls, append_path, file=None):
+  def user_image(cls, append_path=None, file=None):
     base_path = "user"
     return cls(base_path, append_path, file)
 
