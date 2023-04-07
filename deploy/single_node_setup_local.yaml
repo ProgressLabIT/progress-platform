@@ -1,8 +1,15 @@
 ---
+# This play is used when the target installation server has no access to the internet
+# It copies a local tarball containing the basic images of the platform
+# As of 0.2.6 it does not include workflow engine.
+
 - name: Setup server and deploy Progress Platform in single-node mode
   hosts: all
   become: true
   #debugger: on_failed
+  vars_prompt:
+    - name: tarball_path
+      prompt: Please provide path to images tar/tar.gz file
 
   vars:
     root_dir: /opt/progress
@@ -18,14 +25,11 @@
       - config
     swarm_join_tkn_manager: '{{ init.swarm_facts.JoinTokens.Manager }}'
     swarm_join_tkn_worker: '{{ init.swarm_facts.JoinTokens.Worker }}'
-    registry_url: registry.gitlab.com/progresslab/progress-platform
+    registry_url: registry.gitlab.com/progresslab/progress-platform #still required to build image path name
     secrets:
       - { name: 'progress_api_db_pwd', length: 32 }
       - { name: 'progress_admin_pwd', length: 6 }
       - { name: 'progress_jwt_secret', length: 32 }
-
-  vars_files:
-    - registry_creds
 
   tasks:
   - name: Setup system
@@ -183,6 +187,20 @@
               target: '/out'
               type: volume
 
+  - name: Provide images
+    tags: load
+    block:
+
+      - name: Copy images
+        ansible.builtin.copy:
+          src: '{{ tarball_path }}'
+          dest: '{{ root_dir }}/config/images.tar.gz'
+
+      - name: Load images
+        community.docker.docker_image_load:
+          path: '{{ root_dir }}/config/images.tar.gz'
+
+
   - name: Deploy stack
     tags: deploy
     block:
@@ -204,7 +222,6 @@
       - name: Deploy to production
         community.docker.docker_stack:
           name: progress
-          with_registry_auth: yes
           compose:
             - '{{ root_dir}}/config/base.yaml'
             - '{{ root_dir}}/config/stack.yaml'
@@ -235,30 +252,3 @@
           env:
             DB_ROOT_PWD: '{{ db_root_pwd.stdout }}'
           command: python3 /db_init.py
-
-    #TODO: clean up and erase db_data contents in case something goes wrong
-
-
-  # - name: Remove startup elements
-  #   tags: cleanup
-  #   block:
-
-  #     - name: Wait for db initialization to finish
-  #       debugger: true
-  #       ansible.builtin.shell:
-  #         cmd: !unsafe "docker service ls -f name=init-db --format {{.Replicas}}"
-  #       register: output
-  #       until: output.stdout == "0/1"
-  #       retries: 10
-  #       delay: 1
-
-  #     - name: Remove init-db service
-  #       community.docker.docker_swarm_service:
-  #         name: init-db
-  #         state: absent
-
-  #     - name: Remove init script
-  #       ansible.builtin.file:
-  #         path: '{{ root_dir }}/db_init.py'
-  #         state: absent
-
