@@ -65,3 +65,7 @@ class EventModel(FlexModel):
   # Quality Fields
   issue_data: Any
   message_data: Message = None
+
+  # Admin fields
+  new_job_duration: int = None # milliseconds
+  new_job_quantity: float = None
