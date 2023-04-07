@@ -1,0 +1,98 @@
+from pydantic import BaseModel
+
+from events.shared import EventMeta
+from models.traceability import Batch, WIP, WorkSession
+from utils.exceptions import JobIsActiveError
+from utils.traceability import Queries
+
+
+
+class Queries:
+  CANCEL_JOB_WORK_SESSIONS = """
+    FOR ws IN WorkSession
+    FILTER ws.job_key == @job_key
+    UPDATE ws WITH { canceled: @event_id } IN WorkSession
+    RETURN NEW
+  """
+
+
+
+class ProductionAdminEvent:
+
+  TIME_OVERRIDE_REQUESTED = EventMeta(
+    collections=production_collections,
+    action="override_time",
+    post_processing=['update_work_order', 'flag_job_as_forced_by']
+  )
+
+  def override_time(self):
+    job_key = self.info.job_key
+
+    # Don't allow updating times on an open job
+    job_data = self.tx.document(f'Job/{job_key}')
+    job_is_open = job_data.stage != 'closed'
+
+    if job_is_open:
+      raise JobIsActiveError("You are not allowed to override processing time while the job is still open")
+
+    # Cancel existing job work sessions, while fetching data
+    # for calculation of weighted average hourly cost
+    bind_vars = dict(job_key = job_key, event_id=self.info.id)
+    ws_cursor = self.tx.aql.execute(Queries.CANCEL_JOB_WORK_SESSIONS, bind_vars=bind_vars)
+    old_work_sessions = [WorkSession(**ws) for ws in ws_cursor]
+
+    # Define hourly cost as provided or as weighted average of the recorded sessions
+    if self.info.getattr('hourly_cost', False):
+      avg_hourly_cost = total_recorded_cost / total_recoded_duration
+    else:
+      # Duration is in milliseconds, cost is based on hours,
+      # but conversion is handled going back to hourly cost in the average
+      total_recorded_duration = sum(ws.duration for ws in old_work_sessions)
+      total_recorded_cost = sum(ws.duration * ws.hourly_cost for ws in old_work_sessions)
+      avg_hourly_cost = total_recorded_cost / total_recoded_duration
+
+    # Get job batches to update
+    match = dict(job_key=job_key, canceled=False)
+    cursor = self.tx.collection('Batch').find(match)
+    job_batches = [Batch(**b) for b in cursor]
+
+    # Define new duration, either the one provided or using unit standard time for phase
+    # use getattr with default zero to avoid errors in case the value is not provided
+    if self.info.getattr('new_job_duration', False):
+      new_job_duration = self.info.new_job_duration
+    else: #
+      new_job_duration = job_data.parameters.srd_processing_time * job_data.qt_completed
+
+    # Insert manual work session for each batch of the job
+    new_work_sessions = []
+    batch_updates = []
+
+    for b in job_batches:
+      batch_quota = b.qt_total / job_data.qt_completed
+      batch_duration = new_job_duration * batch_quota
+      new_unit_processing_time = batch_duration / b.qt_total,
+
+      batch_update = dict(
+        _key = b.key,
+        unit_processign_time = new_unit_processing_time,
+        unit_processign_cost = new_unit_processing_time * avg_hourly_cost / 3600000, # No. of milliseconds in an hour
+        forced = self.info.id
+      )
+
+      batch_updates.append(batch_update)
+
+      forced_work_session = WorkSession(
+        batch_key = b.key,
+        job_key = job_key,
+        work_order_key = self.info.work_order_key,
+        phase_key = self.info.phase_key,
+        product_key = self.info.product_key,
+        duration = batch_duration,
+        forced = self.info.id,
+        hourly_cost = avg_hourly_cost
+      )
+
+      new_work_sessions.append(forced_work_session)
+
+    self.tx.collection('WorkSession').insert_many(new_work_sessions)
+    self.tx.collection('Batch').update_many(batch_updates)
