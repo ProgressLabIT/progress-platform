@@ -298,6 +298,32 @@ class Queries:
     RETURN w
   """
 
+  GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_PHASE = """
+    LET current_phase_id = CONCAT('Phase/', @current_phase_key)
+    LET process = DOCUMENT(WorkOrder, @work_order_key).phase_sequence
+    LET current_phase_index = POSITION(process, @current_phase_key, true)
+    LET next_phase_id = CONCAT('Phase/', process[current_phase_index + 1])
+
+    LET free_up_down_stream_wip_records = (
+      for w in wip
+      filter w.wo_key == @work_order_key && w._to in [current_phase_id, next_phase_id]
+      return w
+    )
+
+    LET upstream_free_wip = SUM(
+      FOR w IN free_up_down_stream_wip_records
+      FILTER w._to == current_phase_id
+      RETURN { _from:  w.quantity
+    )
+
+    LET downstream_free_wip = SUM(
+      FOR w IN free_up_down_stream_wip_records
+      FILTER w._to == next_phase_id
+      RETURN { _from: @phase_key, qt: w.quantity }
+    )
+
+    RETURN { upstream_free_wip, downstream_free_wip }
+  """
 
 # ------------- END OF QUERIES CLASS ----------------------------------
 
