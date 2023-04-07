@@ -32,10 +32,10 @@
             <!-- PHASE PROGRESS -->
             <template v-if="header.value === 'progress'">
               <div class="col-12 row items-center">
-                <div class="col-9">
+                <div class="col">
                   <BaseProgressBar :data="phase" />
                 </div>
-                <div class="col q-ml-md text-right">
+                <div class="col-2 text-right">
                   {{ phase.progress }}%
                 </div>
               </div>
@@ -75,16 +75,53 @@
                 <div class="smaller">
                   {{ job._key }}
                 </div>
+                <q-btn
+                  v-if="job.assigned_to && !job.active"
+                  round flat size="sm"
+                  icon="mdi-dots-horizontal"
+                  class="q-ml-sm">
+                  <q-popup-proxy>
+                    <q-list auto-close>
+                      <q-item
+                        v-if="job.stage == 'closed'"
+                        clickable v-ripple
+                        @click="window.alert('eccomi!')">
+                        <q-item-section avatar>
+                          <q-icon name="mdi-clock-edit-outline" />
+                        </q-item-section>
+                        <q-item-section>
+                          Modifica tempi
+                        </q-item-section>
+                      </q-item>
+                      <q-item clickable v-ripple>
+                        <q-item-section avatar>
+                          <q-icon name="mdi-plus-minus-variant" />
+                        </q-item-section>
+                        <q-item-section>
+                          Modifica avanzamento
+                        </q-item-section>
+                      </q-item>
+                      <q-item clickable v-ripple v-if="job.active_batch_qt">
+                        <q-item-section avatar>
+                          <q-icon name="mdi-cube-off-outline" />
+                        </q-item-section>
+                        <q-item-section>
+                          Annulla pezzi attivi
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-popup-proxy>
+                </q-btn>
               </div>
             </template>
 
             <!-- JOB PROGRESS BAR -->
             <template v-else-if="header.value === 'progress'">
               <div class="row items-center">
-                <div class="col-9">
+                <div class="col">
                   <BaseProgressBar :data="job" />
                 </div>
-                <div class="col q-ml-md text-right">
+                <div class="col-2 text-right">
                   {{ job.progress }}%
                 </div>
               </div>
@@ -100,8 +137,9 @@
                 v-else-if="selected_jobs.length === 0"
                 size="sm"
                 color="theme-blue"
+                icon="mdi-account-plus"
+                :label="$t('assign')"
                 @click="updateSelectedJobData(job, true)">
-                {{ $t('assign') }}
               </q-btn>
             </template>
 
@@ -112,7 +150,7 @@
 
             <!-- OTHER FIELDS -->
             <template v-else>
-              {{ $capitalizeAll(job[header.value]) }}
+              {{ job[header.value] }}
             </template>
           </div>
           <!-- END OF JOB DATA -->
@@ -130,10 +168,10 @@
               size="12px"
               v-if="phase.jobs.length > 1"
               color="theme-grey"
-              @click="toggleAll(phase)">
-              {{ selected_jobs.length == 0
+              :label="selected_jobs.length == 0
                   ? $t('select_all')
-                  : $t('deselect_all')  }}
+                  : $t('deselect_all')"
+              @click="toggleAll(phase)">
             </q-btn>
 
             <template v-if="phase.editing">
@@ -196,6 +234,7 @@ export default {
       selected_jobs: [],
       jobs_temp_data: {},
       edit_mode: 'actions',
+      over_job: undefined
       // selected_jobs: []
     }
   },
@@ -207,8 +246,7 @@ export default {
         {
           value: 'phase_alias',
           text: this.$t('phase.short') + ' / ID',
-          cols: 2,
-          width: '20%'
+          cols: '2'
         },
         {
           value: 'progress',
@@ -219,20 +257,20 @@ export default {
           value: 'qt_completed',
           text: this.$t('quantity.completed.short'),
           align: 'end',
-          cols: false,
+          cols: '1',
         },
-        // { value: 'qt_released', text: 'QRil', align: 'end', cols: false, width: 'auto'},
+        // { value: 'qt_released', text: 'QRil', align: 'end', cols: false, width: '1'},
         {
           value: 'active_batch_qt',
           text: this.$t('quantity.active.short'),
           align: 'end',
-          cols: false,
+          cols: '1',
         },
         {
           value: 'qt_remaining',
           text: this.$t('quantity.remaining.short'),
           align: 'end',
-          cols: false,
+          cols: '1',
         },
         {
           value: 'assigned_to',
@@ -288,7 +326,7 @@ export default {
     getHeaderClass(phase_key) {
       const base_classes = 'row items-center q-py-lg'
       const highlight = this.expanded_phase === phase_key ? ' highlight' : ''
-      return base_classes + highlight
+      return base_classes + highlight + ' q-px-md'
     },
 
     getColClass(header) {
