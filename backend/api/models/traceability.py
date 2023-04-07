@@ -63,15 +63,15 @@ class Batch(FlexModel):
 
 class WorkSession(FlexModel):
   key: str = Field(None, alias="_key")
-  user_session_key: str
+  user_session_key: str = None
   batch_key: str
   job_key: str
   phase_key: str
   work_order_key: str
   product_key: str
-  user_key: str
+  user_key: str = None
   # master_session: bool
-  start: datetime
+  start: datetime = None
   end: datetime = None
   duration: timedelta = None # milliseconds
   active: bool
