@@ -96,3 +96,87 @@ class ProductionAdminEvent:
 
     self.tx.collection('WorkSession').insert_many(new_work_sessions)
     self.tx.collection('Batch').update_many(batch_updates)
+
+  # =====================================================================================
+
+  PROGRESS_OVERRIDE_REQUESTED = EventMeta(
+    collections=production_collections,
+    action=override_progress,
+    post_processing=['update_work_order', 'flag_job_as_forced_by']
+  )
+
+  def override_progress(self):
+    bind_vars = dict(
+      work_order_key = self.info.work_order_key,
+      current_phase_key = self.info.phase_key
+    )
+    wip = self.tx.aql.execute(
+      Queries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_PHASE,
+      bind_vars = bind_vars
+    ).next()
+
+    job_data = self.tx.collection('Job').get(self.info.job_key)
+    quantity_update = self.info.new_qt_completed - self.job.qt_completed
+
+    # Completed quantity increase
+    if quantity_update > 0:
+      if quantity_update <= wip['upstream_free_wip']:
+        pass
+
+        # 1. Store new data in job:
+        # - new quantity completed/released
+        # - status (if closed)
+        # - end: as provided or event timestamp (if closed)
+        # - note: updated by ...
+
+        # 2. Create new batch with:
+        # - qt_total: quantity_update
+        # - duration: as provided or standard time * quantity_update
+        # - forced: event id
+
+        # 3. Create a new WorkSession with:
+        # - start/end/user_key/user_session_key = None
+        # - duration: as provided or standard time * quantity_update
+        # - hourly cost based on user input or weighted average of other sessions
+        # - forced: event id
+
+        # 4. Delete free wip from previous phase to current (if not first phase)
+
+        # 5. Create new free wip from current phase to next (if not last phase)
+
+
+
+      else:
+        raise WipNotAvailableError("The previous phase has not made enough progress to make this change")
+
+    elif quantity_update < 0:
+      if quantity_update <= wip['downstream_free_wip']:
+        pass
+
+        # 1. Store new data in job:
+        # - new quantity completed/released
+        # - status (if reopened or fully restarted)
+        # - start: null (if fully restarted)
+        # - note: updated by...
+
+        # 2. Flag last N batches with `canceled: true`
+
+        # 3. Flag the work sessions of the canceled batches with `canceled: true`
+
+        # 4. Delete free wip from current phase to next (if not last phase)
+
+        # 5. Add free wip from previous phase to current (If not first phase)
+
+      else:
+        raise WipNotAvailableError("You can't reduce the released quantity of this phase below that already completed/started/booked from the following phase")
+
+
+
+  # =====================================================================================
+
+  def flag_job_as_forced_by(self):
+    pass
+
+  # REMEMBER TO WIRE IN WORK ORDER UPDATE!!!
+
+
