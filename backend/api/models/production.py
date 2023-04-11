@@ -136,7 +136,6 @@ class Job(FlexModel):
   qt_planned: float
   qt_completed: float = 0
   qt_released: float = 0
-  qt_next_batch: float = None
 
   step_sequence: List[StepWithMediaInfo] = []
 
