@@ -5,7 +5,7 @@ from typing import Any, Union
 from pydantic import Field
 
 from models.quality import IssueWithLinks, Issue, Message
-from utils.base_models import FlexModel
+from utils.base_models import ArangoDocument
 from utils.dt import timestamp
 
 class EventType(Enum):
@@ -36,9 +36,8 @@ class EventType(Enum):
   STEP_MODIFIED = 'STEP_MODIFIED'
 
 
-class EventModel(FlexModel):
+class EventModel(ArangoDocument):
   """fields marked with a comment are event attributes, the rest could be refactored into a generic "data" field, which can be defined with additional models specific for the event type."""
-  key: str = Field(None, alias="_key") #
   event_type: EventType #
   user_key: str #
   user_session_key: str = None #
