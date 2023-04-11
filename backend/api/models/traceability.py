@@ -73,8 +73,8 @@ class WorkSession(FlexModel):
   # master_session: bool
   start: datetime = None
   end: datetime = None
-  duration: timedelta = None # milliseconds
-  active: bool
+  duration: int = None # milliseconds
+  active: bool = False
   hourly_cost: float = None
 
   # Attributes for overrides
