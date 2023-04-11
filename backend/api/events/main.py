@@ -41,6 +41,7 @@ class Event(
 
   def save(self):
     # Initialize transaction
+    self.meta.collections.append('Event')
     self.tx = self.db.begin_transaction(write=self.meta.collections)
 
     try:
