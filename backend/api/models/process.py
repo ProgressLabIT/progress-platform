@@ -25,7 +25,7 @@ class PhaseParameters(FlexModel):
   production_batch_qt: int = 1 # 0 means the whole job at once
   max_offline: int = 60 # seconds
   auto_new_batch: bool = True
-  std_processing_time: int = 0 # seconds
+  std_processing_time: int = 60 # seconds
   # release_style: ReleaseStyle = ReleaseStyle.JOB
   # release_batch_qt: int = 1
   # wip_flow: WIPFlow = WIPFlow.BUFFER
@@ -79,7 +79,6 @@ class PhaseRecord(ArangoDocument):
   operation_key: str
   operation_name: str = None
   params: PhaseParameters = PhaseParameters()
-  std_processing_time: int = 0 # in milliseconds
   step_sequence: List[Optional[str]] = []
   production_notes: str = None
 
