@@ -112,7 +112,7 @@
                           <q-icon name="mdi-clock-edit-outline" />
                         </q-item-section>
                         <q-item-section>
-                          Modifica tempi
+                          {{ $t('update_time') }}
                         </q-item-section>
                       </q-item>
                       <q-item clickable v-ripple v-close-popup>
@@ -120,7 +120,7 @@
                           <q-icon name="mdi-plus-minus-variant" />
                         </q-item-section>
                         <q-item-section>
-                          Modifica avanzamento
+                          {{ $t('update_progress') }}
                         </q-item-section>
                       </q-item>
                       <q-item clickable v-ripple v-close-popup v-if="job.active_batch_qt">
@@ -128,7 +128,7 @@
                           <q-icon name="mdi-cube-off-outline" />
                         </q-item-section>
                         <q-item-section>
-                          Annulla pezzi attivi
+                          {{ $t('cancel_batch') }}
                         </q-item-section>
                       </q-item>
                     </q-list>
@@ -140,24 +140,24 @@
                   @update="value => forceProcessingTime(job._key, value)">
                   <q-card square class="surface1 q-pa-md">
                     <q-card-section class="text-h3 display highlight">
-                      Modifica tempo di esecuzione
+                      {{ $t('update_time') }}
                     </q-card-section>
                     <q-card-section>
                       <div class="row q-gutter-md">
                         <q-input
                           type="number"
                           v-model.number="jobs_temp_data.hours"
-                          label="Ore">
+                          :label="$t('time.hour', 2)">
                         </q-input>
                         <q-input
                           type="number"
                           v-model.number="jobs_temp_data.minutes"
-                          label="Minuti">
+                          :label="$t('time.minute', 2)">
                         </q-input>
                         <q-input
                           type="number"
                           v-model.number="jobs_temp_data.seconds"
-                          label="Secondi">
+                          :label="$t('time.second', 2)">
                         </q-input>
                       </div>
                     </q-card-section>
@@ -490,7 +490,7 @@ export default {
         this.resetEditing()
         await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
         this.$q.notify({
-          message: this.$t('Tempo modificato con successo'),
+          message: this.$t('update_time_success'),
           color: 'theme-green',
           timeout: 1500,
           position: 'top'

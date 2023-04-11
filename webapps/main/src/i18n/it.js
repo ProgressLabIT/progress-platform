@@ -469,6 +469,11 @@ export default {
   "status": "stato",
   "step_sequence": "sequenza passi",
   "summary": "Riepilogo",
+  "time": {
+    "hour": "Ora | Ore",
+    "minute": "Minuto | Minuti",
+    "second": "Secondo | Secondi"
+  },
   "title": "titolo",
   "total_cost": "costo totale",
   "type": "tipo",
@@ -476,6 +481,8 @@ export default {
   "unsaved": "non salvato",
   "undo": "ripristina",
   "update": "modifica",
+  "update_time": "Modifica tempi",
+  "update_time_success": "Tempo modificato con successo",
   "user": {
     "add": "aggiungi utente",
     "alerts": {

@@ -466,6 +466,11 @@ export default {
   "status": "status",
   "step_sequence": "step sequence",
   "summary": "summary",
+  "time": {
+    "hour": "Hour",
+    "minute": "Minute",
+    "second": "Second"
+  },
   "title": "title",
   "total_cost": "total cost",
   "type": "type",
@@ -473,6 +478,8 @@ export default {
   "undo": "undo",
   "unsaved": "unsaved",
   "update": "update",
+  "update_time": "Update time",
+  "update_time_success": "Time updated successfully",
   "user": {
     "add": "add user",
     "alerts": {
