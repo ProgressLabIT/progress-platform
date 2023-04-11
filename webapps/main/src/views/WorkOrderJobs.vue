@@ -2,7 +2,7 @@
   <div class="q-px-md q-py-md full-height column">
 
     <!-- HEADERS -->
-    <div class="row col-auto low-text items-center q-px-md">
+    <div class="row col-auto low-text items-center q-px-md q-py-sm">
       <div
         v-for="header in headers" :key="header.value"
         class="text-h5 text-uppercase"
@@ -95,17 +95,19 @@
                 <div class="smaller">
                   {{ job._key }}
                 </div>
+
+                <!-- JOB FORCED UPDATES MENU -->
                 <q-btn
                   v-if="job.assigned_to && !job.active"
                   round flat size="sm"
                   icon="mdi-dots-horizontal"
                   class="q-ml-sm">
                   <q-popup-proxy>
-                    <q-list auto-close>
+                    <q-list>
                       <q-item
                         v-if="job.stage == 'closed'"
-                        clickable v-ripple
-                        @click="window.alert('eccomi!')">
+                        clickable v-ripple v-close-popup
+                        @click="editJobTime(job._key, job.processing_time)">
                         <q-item-section avatar>
                           <q-icon name="mdi-clock-edit-outline" />
                         </q-item-section>
@@ -113,7 +115,7 @@
                           Modifica tempi
                         </q-item-section>
                       </q-item>
-                      <q-item clickable v-ripple>
+                      <q-item clickable v-ripple v-close-popup>
                         <q-item-section avatar>
                           <q-icon name="mdi-plus-minus-variant" />
                         </q-item-section>
@@ -121,7 +123,7 @@
                           Modifica avanzamento
                         </q-item-section>
                       </q-item>
-                      <q-item clickable v-ripple v-if="job.active_batch_qt">
+                      <q-item clickable v-ripple v-close-popup v-if="job.active_batch_qt">
                         <q-item-section avatar>
                           <q-icon name="mdi-cube-off-outline" />
                         </q-item-section>
@@ -132,6 +134,49 @@
                     </q-list>
                   </q-popup-proxy>
                 </q-btn>
+
+                <BaseDialog
+                  :show="edit_job_time == job._key"
+                  @update="value => forceProcessingTime(job._key, value)">
+                  <q-card square class="surface1 q-pa-md">
+                    <q-card-section class="text-h3 display highlight">
+                      Modifica tempo di esecuzione
+                    </q-card-section>
+                    <q-card-section>
+                      <div class="row q-gutter-md">
+                        <q-input
+                          type="number"
+                          v-model.number="jobs_temp_data.hours"
+                          label="Ore">
+                        </q-input>
+                        <q-input
+                          type="number"
+                          v-model.number="jobs_temp_data.minutes"
+                          label="Minuti">
+                        </q-input>
+                        <q-input
+                          type="number"
+                          v-model.number="jobs_temp_data.seconds"
+                          label="Secondi">
+                        </q-input>
+                      </div>
+                    </q-card-section>
+                    <q-card-section>
+                      <div class="row justify-between">
+                        <q-btn
+                          color="theme-grey"
+                          :label="$t('cancel')"
+                          @click="resetEditing">
+                        </q-btn>
+                        <q-btn
+                          color="theme-blue"
+                          :label="$t('save')"
+                          @click="forceProcessingTime">
+                        </q-btn>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </BaseDialog>
               </div>
             </template>
 
@@ -234,9 +279,12 @@
 </template>
 
 <script>
+import { Duration } from 'luxon'
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
+import BaseDialog from '@/components/BaseDialog.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import JobRebalanceActionCard from '@/components/JobRebalanceActionCard.vue'
+import sendEvent from '@/mixins/event.js'
 
 export default {
 
@@ -244,14 +292,18 @@ export default {
 
   components: {
     BaseProgressBar,
+    BaseDialog,
     BaseUserAvatar,
     JobRebalanceActionCard // Make changes to phase jobs
   },
+
+  mixins: [sendEvent],
 
   props: {
     wo_data: {
       type: Object,
       required: true,
+      show_update: null,
       default: function() {
         return { phase_sequence: [] }
       }
@@ -265,8 +317,8 @@ export default {
       selected_jobs: [],
       jobs_temp_data: {},
       edit_mode: 'actions',
-      over_job: undefined
-      // selected_jobs: []
+      edit_job_time: null,
+      edit_job_progress: null,
     }
   },
 
@@ -401,6 +453,49 @@ export default {
     updateSelectedJobData(job, selected) {
       this.selected_jobs.push(job._key)
       this.edit_mode = 'modify'
+    },
+
+    editJobTime(job_key, milliseconds) {
+      const duration = Duration.fromMillis(milliseconds).rescale().toObject()
+      console.log({duration})
+      this.jobs_temp_data = {
+        _key: job_key,
+        hours: duration.hours,
+        minutes: duration.minutes,
+        seconds: duration.seconds
+      }
+      this.edit_job_time = job_key
+    },
+
+    resetEditing() {
+      this.edit_job_time = null
+      this.edit_job_progress = null
+      this.jobs_temp_data = {}
+    },
+
+    forceProcessingTime() {
+      const job_key = this.jobs_temp_data._key
+      const new_job_duration = Duration.fromObject({
+        hours: this.jobs_temp_data.hours,
+        minutes: this.jobs_temp_data.minutes,
+        seconds: this.jobs_temp_data.seconds
+      }).toMillis()
+      this.sendEvent({
+        event_type: 'TIME_OVERRIDE_REQUESTED',
+        event_data: {
+          job_key: this.jobs_temp_data._key,
+          new_job_duration
+        }
+      }).then(async () => {
+        this.resetEditing()
+        await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
+        this.$q.notify({
+          message: this.$t('Tempo modificato con successo'),
+          color: 'theme-green',
+          timeout: 1500,
+          position: 'top'
+        })
+      })
     }
   },
 
@@ -424,7 +519,7 @@ export default {
         this.selected_jobs = []
       }
     }
-  },
+  }
 }
 </script>
 

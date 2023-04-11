@@ -158,6 +158,8 @@ class Job(FlexModel):
   job_docs: List[ProductDoc] = []
   job_bom: List[BomLineRead] = []
 
+  forced: bool = False
+
   notes: str = None
   # @validator('progress')
   # def between_0_and_100_percent(cls, v):
