@@ -1,11 +1,21 @@
 from pydantic import BaseModel
 
-from events import IssueEvent, ProductionEvent
+from events import (
+  IssueEvent,
+  ProductionActivityEvent,
+  ProductionAdminEvent,
+  SharedEventMethods
+)
 from models.event import EventModel
 from utils.db import db
 
 
-class Event(ProductionEvent, IssueEvent):
+class Event(
+  IssueEvent,
+  ProductionActivityEvent,
+  ProductionAdminEvent,
+  SharedEventMethods
+  ):
   """
   This class serves as collector of all event categories and as main "entrypoint" for the event API
   It abstracts the general logic of processing and saving events from the specifics defined in each

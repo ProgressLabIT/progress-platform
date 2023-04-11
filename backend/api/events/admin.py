@@ -20,7 +20,7 @@ class Queries:
 class ProductionAdminEvent:
 
   TIME_OVERRIDE_REQUESTED = EventMeta(
-    collections=production_collections,
+    collections=['Job', 'Batch', 'WorkSession', 'WorkOrder'],
     action="override_time",
     post_processing=['update_work_order', 'flag_job_as_forced_by']
   )
@@ -61,7 +61,7 @@ class ProductionAdminEvent:
     if self.info.getattr('new_job_duration', False):
       new_job_duration = self.info.new_job_duration
     else: #
-      new_job_duration = job_data.parameters.srd_processing_time * job_data.qt_completed
+      new_job_duration = job_data.parameters.std_processing_time * job_data.qt_completed
 
     # Insert manual work session for each batch of the job
     new_work_sessions = []
@@ -100,8 +100,8 @@ class ProductionAdminEvent:
   # =====================================================================================
 
   PROGRESS_OVERRIDE_REQUESTED = EventMeta(
-    collections=production_collections,
-    action=override_progress,
+    collections=['Job', 'Batch', 'WorkSession', 'WorkOrder', 'wip', 'requires'],
+    action='override_progress',
     post_processing=['update_work_order', 'flag_job_as_forced_by']
   )
 
