@@ -7,7 +7,17 @@
         v-for="header in headers" :key="header.value"
         class="text-h5 text-uppercase"
         :class="getColClass(header)">
-        {{ header.text }}
+        <div v-if="header.value != 'assigned_to'">
+          {{ header.text }}
+        </div>
+        <div v-else class="row items-center">
+          <div class="col-4  text-right q-pr-lg">
+            {{ $t('performance.processing_time.short') }}
+          </div>
+          <div class="col">
+            {{ $t('job.assigned_to') }}
+          </div>
+        </div>
       </div>
     </div>
 
@@ -35,16 +45,26 @@
                 <div class="col">
                   <BaseProgressBar :data="phase" />
                 </div>
-                <div class="col-2 text-right">
+                <div class="col-2 text-right q-ml-sm">
                   {{ phase.progress }}%
                 </div>
               </div>
             </template>
 
+            <template v-else-if="header.value == 'assigned_to'">
+              <div class="row">
+                <div class="col-3 text-right">
+                  {{ phase.processing_time }}
+                </div>
+              </div>
+            </template>
+
             <!-- OTHER PHASE DATA -->
-            <template v-else-if="header.value != 'assigned_to'">
+            <template v-else>
               {{ $capitalizeAll(phase[header.value]) }}
             </template>
+
+
 
           </div>
         </template>
@@ -121,7 +141,7 @@
                 <div class="col">
                   <BaseProgressBar :data="job" />
                 </div>
-                <div class="col-2 text-right">
+                <div class="col-2 text-right q-ml-sm">
                   {{ job.progress }}%
                 </div>
               </div>
@@ -129,18 +149,23 @@
 
             <!-- ASSIGNED OPERATOR -->
             <template v-else-if="header.value === 'assigned_to'">
-              <BaseUserAvatar
-                v-if="job.assigned_to"
-                :user="job.assigned_to">
-              </BaseUserAvatar>
-              <q-btn
-                v-else-if="selected_jobs.length === 0"
-                size="sm"
-                color="theme-blue"
-                icon="mdi-account-plus"
-                :label="$t('assign')"
-                @click="updateSelectedJobData(job, true)">
-              </q-btn>
+              <div class="row items-center">
+                <div class="text-right q-mr-lg col-3">
+                  {{ job.stage != 'created' ? $durationFromMillisec(job.processing_time, { precision: 'm'}) || '< 1m' : '-' }}
+                </div>
+                <BaseUserAvatar
+                  v-if="job.assigned_to"
+                  :user="job.assigned_to">
+                </BaseUserAvatar>
+                <q-btn
+                  v-else-if="selected_jobs.length === 0"
+                  size="sm"
+                  color="theme-blue"
+                  icon="mdi-account-plus"
+                  :label="$t('assign')"
+                  @click="updateSelectedJobData(job, true)">
+                </q-btn>
+              </div>
             </template>
 
             <!-- REMAINING QUANTITY (CALCULATED) -->
@@ -148,10 +173,16 @@
               {{ job.qt_planned - job.qt_completed - job.active_batch_qt }}
             </template>
 
+            <!-- PROCESSING TIME -->
+            <template v-else-if="header.value === 'processing_time'">
+              {{ $durationFromMillisec(job.processing_time, { precision: 'm' }) }}
+            </template>
+
             <!-- OTHER FIELDS -->
             <template v-else>
               {{ job[header.value] }}
             </template>
+
           </div>
           <!-- END OF JOB DATA -->
 
@@ -251,7 +282,7 @@ export default {
         {
           value: 'progress',
           text: this.$t('progress'),
-          cols: 4,
+          cols: '3',
         },
         {
           value: 'qt_completed',
@@ -274,9 +305,8 @@ export default {
         },
         {
           value: 'assigned_to',
-          text: this.$t('job.assigned_to'),
           align: 'end',
-          cols: '3',
+          cols: '',
         },
       ]
     },
@@ -299,6 +329,9 @@ export default {
         const total_progress = Math.floor(
           jobs.reduce( (sum, job) => sum + job.progress * job.qt_planned, 0) / this.wo_data.qt_planned
         )
+
+        const total_processing_time = jobs.reduce((sum, job) => sum + job.processing_time, 0)
+        const processing_time_string = total_processing_time == 0 ? '-' : this.$durationFromMillisec(total_processing_time, { precision: 'm'}) || '< 1m'
         const active = !!jobs.reduce( (count, job) => count + job.active, 0)
         const editing = jobs.some( j => this.selected_jobs.includes(j._key) )
 
@@ -316,6 +349,7 @@ export default {
           qt_remaining: total_remaining,
           active_batch_qt: total_active,
           progress: total_progress,
+          processing_time: processing_time_string
         }
       })
     }
@@ -330,7 +364,7 @@ export default {
     },
 
     getColClass(header) {
-      const alignment_class = header.value.includes('qt')
+      const alignment_class = header.value.includes('qt') || header.value == 'processing_time'
         ? 'text-right'
         : ''
 
