@@ -48,7 +48,9 @@ export default {
 
       const declare_batch = {
         icon: 'mdi-plus',
-        text: this.$t('job.complete_batch'),
+        text: this.j.parameters.production_batch_qt == 1
+          ? this.$t('job.complete_piece')
+          : this.$t('job.complete_batch'),
         action: this.declareBatch
       }
 

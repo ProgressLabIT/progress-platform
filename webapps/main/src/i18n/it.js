@@ -149,6 +149,7 @@ export default {
     "assigned_to": "assegnato a",
     "assigned_to_me": "assegnati a me",
     "complete_batch": "completa lotto",
+    "complete_piece": "completa pezzo",
     "complete_step": "completa passo",
     "empty_queue": "non ci sono lavori in coda al momento",
     "filters": {

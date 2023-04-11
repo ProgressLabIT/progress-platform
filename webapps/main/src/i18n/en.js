@@ -148,6 +148,7 @@ export default {
     "assigned_to": "assigned to",
     "assigned_to_me": "assigned to me",
     "complete_batch": "complete batch",
+    "complete_piece": "complete piece",
     "complete_step": "complete step",
     "empty_queue": "there are no jobs in the queue at the moment",
     "filters": {
