@@ -154,7 +154,9 @@ export default {
         await this.$store.dispatch('declareBatch', {
           batch_qt: this.j.active_batch_qt,
         })
-        if (this.j.qt_completed >= this.j.qt_planned) this.exitJob()
+        if (this.j.qt_completed >= this.j.qt_planned) {
+          this.$router.push({ name: 'userJobs' })
+        }
         else if (this.j.parameters.step_check) this.goToStep(0)
       }
     },
