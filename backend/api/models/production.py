@@ -125,6 +125,7 @@ class Job(FlexModel):
   parameters: PhaseParameters = None
 
   first_phase: bool = None
+  last_phase: bool = None
 
   stage: WorkStatus = WorkStatus.CREATED
   start_from: Union[datetime, date] = None

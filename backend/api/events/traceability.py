@@ -275,6 +275,9 @@ class ProductionActivityEvent:
       wip_match_filter=dict(_to=f'Job/{self.info.job_key}')
       self.tx.collection('wip').delete_match(wip_match_filter)
 
+      # TODO: Make sure only wip related to active batch gets deleted
+      # This setup would delete also other wip booked in advance.
+
     new_wip = WIP(
       _from=f'Phase/{self.info.phase_key}',
       _to=f'Phase/{self.info.next_phase_key}',
@@ -304,6 +307,7 @@ class ProductionActivityEvent:
     available_batches = [WIP(**b) for b in available_batches_cursor]
     total_available = sum(wip.quantity for wip in available_batches)
 
+    # TODO: change using while loop like in events/admin.py@override_progress
     for b in available_batches:
       if b.quantity <= booking_qt:
         # Book entire batch for job
@@ -577,12 +581,14 @@ class ProductionActivityEvent:
   # ===================================================================
 
   def complete_batch(self):
-
-    self.get_job_data()
+    if not hasattr(self, 'job'):
+      self.get_job_data()
 
     self.info.completed_batch_key = self.job.active_batch_key
     self.info.completed_batch_qt = self.job.active_batch_qt
     self.info.work_session_key = self.job.last_work_session_started
+
+    self.close_work_session()
 
     # Complete batch
     self.tx.aql.execute(
@@ -592,7 +598,6 @@ class ProductionActivityEvent:
         end=self.info.timestamp
       )
     )
-    self.close_work_session()
 
     new_qt_completed = self.job.qt_completed + self.info.completed_batch_qt
 

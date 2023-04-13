@@ -26,7 +26,10 @@ class Queries:
       hourly_cost: DOCUMENT(User, @user_key).hourly_cost,
       user_session_key: @user_session_key,
       start: @start,
-      active: true
+      active: true,
+      canceled: null,
+      forced: null,
+      end: null
     }
 
     INSERT new_ws INTO WorkSession RETURN NEW
@@ -115,7 +118,7 @@ class Queries:
     // Update completed quantity
     LET qt_completed = SUM(
       FOR j IN jobs
-      FILTER j.phase_key == LAST(wo.phase_sequence)
+      FILTER j.last_phase
       RETURN j.qt_released
     )
 
@@ -204,7 +207,7 @@ class Queries:
     LET processing_cost = SUM(
       FOR ws IN work_sessions
       RETURN ws.duration * ws.hourly_cost
-    ) / (60*60*1000)
+    ) / 3600000
 
 
     UPDATE batch WITH {
@@ -214,17 +217,16 @@ class Queries:
       unit_processing_time,
       unit_processing_cost: processing_cost / @qt_pass,
       value: processing_cost + material_cost
-
     } in Batch
   """
 
 
   CLOSE_WORK_SESSION = """
-    LET ws_key = (
+    LET ws_key = FIRST(
       FOR j IN Job
       FILTER j._key == @job_key
       RETURN j.last_work_session_started
-    )[0]
+    )
 
     LET ws = Document('WorkSession', ws_key)
     LET duration = DATE_DIFF(ws.start, @end, "f")
