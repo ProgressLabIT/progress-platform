@@ -107,7 +107,7 @@
                       <q-item
                         v-if="job.stage == 'closed'"
                         clickable v-ripple v-close-popup
-                        @click="editJobTime(job._key, job.processing_time)">
+                        @click="editJobTime(job)">
                         <q-item-section avatar>
                           <q-icon name="mdi-clock-edit-outline" />
                         </q-item-section>
@@ -115,7 +115,12 @@
                           {{ $t('update_time') }}
                         </q-item-section>
                       </q-item>
-                      <q-item clickable v-ripple v-close-popup>
+                      <q-item
+                        v-if="!job.active_batch_qt"
+                        clickable
+                        v-ripple
+                        v-close-popup
+                        @click="editJobProgress(job)">
                         <q-item-section avatar>
                           <q-icon name="mdi-plus-minus-variant" />
                         </q-item-section>
