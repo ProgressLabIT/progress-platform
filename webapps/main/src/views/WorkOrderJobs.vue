@@ -128,12 +128,15 @@
                           {{ $t('update_progress') }}
                         </q-item-section>
                       </q-item>
-                      <q-item clickable v-ripple v-close-popup v-if="job.active_batch_qt">
+                      <q-item
+                        v-if="job.active_batch_qt"
+                        clickable v-ripple v-close-popup
+                        @click="confirm_cancel_batch = job._key">
                         <q-item-section avatar>
                           <q-icon name="mdi-cube-off-outline" />
                         </q-item-section>
                         <q-item-section>
-                          {{ $t('cancel_batch') }}
+                          {{ $t('cancel_active_batch') }}
                         </q-item-section>
                       </q-item>
                     </q-list>
@@ -212,6 +215,29 @@
                           color="theme-blue"
                           :label="$t('save')"
                           @click="forceProgress">
+                        </q-btn>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </BaseDialog>
+
+                <!-- Consider switching to banner or similar -->
+                <BaseDialog :show="confirm_cancel_batch == job._key">
+                  <q-card square class="surface1 q-pa-md">
+                    <q-card-section class="text-h3 highlight">
+                      {{ $t('cancel_active_batch_confirm') }}
+                    </q-card-section>
+                    <q-card-section>
+                      <div class="row justify-between">
+                        <q-btn
+                          color="theme-grey"
+                          :label="$t('cancel')"
+                          @click="resetEditing">
+                        </q-btn>
+                        <q-btn
+                          color="theme-orange"
+                          :label="$t('confirm')"
+                          @click="cancelBatch">
                         </q-btn>
                       </div>
                     </q-card-section>
@@ -360,6 +386,7 @@ export default {
       edit_mode: 'actions',
       edit_job_time: null,
       edit_job_progress: null,
+      confirm_cancel_batch: null,
     }
   },
 
@@ -522,6 +549,7 @@ export default {
     resetEditing() {
       this.edit_job_time = null
       this.edit_job_progress = null
+      this.confirm_cancel_batch = null
       this.jobs_temp_data = {}
     },
 
@@ -561,6 +589,24 @@ export default {
         await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
         this.$q.notify({
           message: this.$t('update_progress_success'),
+          color: 'theme-green',
+          timeout: 1500,
+          position: 'top'
+        })
+      })
+    },
+
+    cancelBatch() {
+      this.sendEvent({
+        event_type: 'BATCH_CANCELED',
+        event_data: {
+          job_key: this.confirm_cancel_batch
+        }
+      }).then(async () => {
+        this.resetEditing()
+        await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
+        this.$q.notify({
+          message: this.$t('cancel_active_batch_success'),
           color: 'theme-green',
           timeout: 1500,
           position: 'top'

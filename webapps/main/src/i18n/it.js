@@ -36,6 +36,8 @@ export default {
   "cancel": "annulla",
   "canceled": "annullato",
   "cancel_active_batch": "Annulla pezzi attivi",
+  "cancel_active_batch_confirm": "Confermi di voler cancellare i pezzi attivi?",
+  "cancel_active_batch_success": "Pezzi attivi annullati con successo",
   "cancel_changes": "annulla modifiche",
   "change": "modifica | modifiche",
   "close": "chiudi",

@@ -35,6 +35,8 @@ export default {
   "cancel": "cancel",
   "canceled": "canceled",
   "cancel_active_batch": "Cancel active pieces",
+  "cancel_active_batch_confirm": "Are you sure you want to cancel active pieces?",
+  "cancel_active_batch_success": "Active pieces canceled successfully",
   "cancel_changes": "cancel changes",
   "change": "change",
   "close": "close",

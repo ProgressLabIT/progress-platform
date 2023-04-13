@@ -533,6 +533,65 @@ class ProductionAdminEvent:
 
   # ========================================================================
 
+  BATCH_CANCELED = EventMeta(
+    collections = ['Job', 'Batch', 'wip', 'WorkOrder', 'WorkSession'],
+    action='cancel_batch',
+    post_processing=['update_work_order', 'flag_job_as_forced'],
+    event_first = True
+  )
+
+  def cancel_batch(self):
+    self.get_job_data()
+
+    if self.job.active:
+      raise JobIsActiveError("You can't cancel a batch while it's being worked on")
+
+    if self.job.active_batch_qt == 0:
+      raise JobHasNoActiveBatchError("The job has no active batch to cancel")
+
+    # 1. Cancel batch
+    batch_key = self.job.active_batch_key
+    batch_update = dict(
+      _key = batch_key,
+      canceled = self.info.id
+    )
+    self.tx.collection('Batch').update(batch_update)
+
+    # 2. Cancel work sessions
+    ws_match = dict(batch_key=batch_key)
+    ws_update = dict(canceled=self.info.id)
+    self.tx.collection('WorkSession').update_match(ws_match, ws_update)
+
+    # 3. Free booked wip
+    if not self.job.first_phase:
+      wip_match = dict(_to=f'Job/{self.job.key}', batch_key=batch_key)
+      wip_update = dict(_to=f'Phase/{self.job.phase_key}')
+      self.tx.collection('wip').update(wip_update)
+      self.tx.aql.execute(
+        TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
+        bind_vars=dict(
+          wo_key = self.job.wo_key,
+          phase_key = self.job.phase_key
+        )
+      )
+
+    # 3. Update Job
+    job_update = dict(
+      _key = self.job.key,
+      active_batch_key = None,
+      active_batch_qt = 0,
+    )
+
+    # Reset as created if batch is first
+    if self.job.qt_completed == 0:
+      job_update['stage'] = 'created'
+
+    self.tx.collection('Job').update(job_update)
+
+
+
+  # ========================================================================
+
   def flag_job_as_forced(self):
     job_update = dict(_key=self.info.job_key, forced=self.info.id)
     self.tx.collection('Job').update(job_update)
