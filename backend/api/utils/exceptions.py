@@ -17,3 +17,10 @@ class TokenSignatureVerificationError(Exception): pass
 class TokenNotFoundError(Exception): pass
 
 class JobIsActiveError(Exception): pass
+
+class JobHasActiveBatchError(Exception): pass
+
+class JobHasNoAssigneeError(Exception): pass
+
+class WipNotAvailableError(Exception): pass
+

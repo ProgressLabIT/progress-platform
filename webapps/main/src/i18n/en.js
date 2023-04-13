@@ -34,6 +34,7 @@ export default {
   "by": "by",
   "cancel": "cancel",
   "canceled": "canceled",
+  "cancel_active_batch": "Cancel active pieces",
   "cancel_changes": "cancel changes",
   "change": "change",
   "close": "close",
@@ -411,7 +412,8 @@ export default {
       "medium": "active qt",
     },
     "completed": {
-      "short": "cq"
+      "short": "cq",
+      "long": "Completed quantity"
     },
     "completed_total": "Comp. - Tot. Qt.",
     "long": "quantity",
@@ -478,6 +480,8 @@ export default {
   "undo": "undo",
   "unsaved": "unsaved",
   "update": "update",
+  "update_progress": "Update progress",
+  "update_progress_success": "Progress updated successfully",
   "update_time": "Update time",
   "update_time_success": "Time updated successfully",
   "user": {

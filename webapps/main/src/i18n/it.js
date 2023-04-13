@@ -35,6 +35,7 @@ export default {
   "by": "entro",
   "cancel": "annulla",
   "canceled": "annullato",
+  "cancel_active_batch": "Annulla pezzi attivi",
   "cancel_changes": "annulla modifiche",
   "change": "modifica | modifiche",
   "close": "chiudi",
@@ -414,7 +415,8 @@ export default {
       "medium": "qt in lavorazione",
     },
     "completed": {
-      "short": "qc"
+      "short": "qc",
+      "long": "Quantità completata"
     },
     "completed_total": "qt compl. - tot.",
     "long": "quantità",
@@ -481,6 +483,8 @@ export default {
   "unsaved": "non salvato",
   "undo": "ripristina",
   "update": "modifica",
+  "update_progress": "Modifica avanzamento",
+  "update_progress_success": "Avanzamento modificato con successo",
   "update_time": "Modifica tempi",
   "update_time_success": "Tempo modificato con successo",
   "user": {

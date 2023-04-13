@@ -67,4 +67,5 @@ class EventModel(ArangoDocument):
 
   # Admin fields
   new_job_duration: int = None # milliseconds
-  new_job_quantity: float = None
+  new_job_qt_completed: float = None
+  new_job_qt_released: float = None
