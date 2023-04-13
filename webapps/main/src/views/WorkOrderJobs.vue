@@ -140,9 +140,8 @@
                   </q-popup-proxy>
                 </q-btn>
 
-                <BaseDialog
-                  :show="edit_job_time == job._key"
-                  @update="value => forceProcessingTime(job._key, value)">
+                <!-- PROCESSING TIME EDIT -->
+                <BaseDialog :show="edit_job_time == job._key">
                   <q-card square class="surface1 q-pa-md">
                     <q-card-section class="text-h3 display highlight">
                       {{ $t('update_time') }}
@@ -152,16 +151,19 @@
                         <q-input
                           type="number"
                           v-model.number="jobs_temp_data.hours"
+                          min="0"
                           :label="$t('time.hour', 2)">
                         </q-input>
                         <q-input
                           type="number"
                           v-model.number="jobs_temp_data.minutes"
+                          min="0"
                           :label="$t('time.minute', 2)">
                         </q-input>
                         <q-input
                           type="number"
                           v-model.number="jobs_temp_data.seconds"
+                          min="0"
                           :label="$t('time.second', 2)">
                         </q-input>
                       </div>
@@ -182,6 +184,40 @@
                     </q-card-section>
                   </q-card>
                 </BaseDialog>
+
+                <!-- PROGRESS EDIT -->
+                <BaseDialog :show="edit_job_progress == job._key">
+                  <q-card square class="surface1 q-pa-md">
+                    <q-card-section class="text-h3 display highlight">
+                      {{ $t('update_progress') }}
+                    </q-card-section>
+                    <q-card-section>
+                      <q-input
+                        type="number"
+                        v-model.number="jobs_temp_data.new_job_qt_completed"
+                        :max="job.qt_planned"
+                        :min="0"
+                        :label="$t('quantity.completed.long')">
+                      </q-input>
+                    </q-card-section>
+                    <q-card-section>
+                      <div class="row justify-between">
+                        <q-btn
+                          color="theme-grey"
+                          :label="$t('cancel')"
+                          @click="resetEditing">
+                        </q-btn>
+                        <q-btn
+                          v-if="jobs_temp_data.new_job_qt_completed != job.qt_completed"
+                          color="theme-blue"
+                          :label="$t('save')"
+                          @click="forceProgress">
+                        </q-btn>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </BaseDialog>
+
               </div>
             </template>
 
@@ -460,16 +496,27 @@ export default {
       this.edit_mode = 'modify'
     },
 
-    editJobTime(job_key, milliseconds) {
-      const duration = Duration.fromMillis(milliseconds).rescale().toObject()
-      console.log({duration})
+    editJobTime(job_data) {
+      const duration = Duration.fromMillis(job_data.processing_time).rescale().toObject()
       this.jobs_temp_data = {
-        _key: job_key,
+        _key: job_data._key,
+        phase_key: job_data.phase_key,
+        work_order_key: job_data.wo_key,
         hours: duration.hours,
         minutes: duration.minutes,
         seconds: duration.seconds
       }
-      this.edit_job_time = job_key
+      this.edit_job_time = job_data._key
+    },
+
+    editJobProgress(job_data) {
+      this.jobs_temp_data = {
+        job_key: job_data._key,
+        phase_key: job_data.phase_key,
+        work_order_key: job_data.wo_key,
+        new_job_qt_completed: job_data.qt_completed
+      },
+      this.edit_job_progress = job_data._key
     },
 
     resetEditing() {
@@ -479,16 +526,18 @@ export default {
     },
 
     forceProcessingTime() {
-      const job_key = this.jobs_temp_data._key
       const new_job_duration = Duration.fromObject({
         hours: this.jobs_temp_data.hours,
         minutes: this.jobs_temp_data.minutes,
         seconds: this.jobs_temp_data.seconds
       }).toMillis()
+
       this.sendEvent({
         event_type: 'TIME_OVERRIDE_REQUESTED',
         event_data: {
           job_key: this.jobs_temp_data._key,
+          work_order_key: this.wo_data._key,
+          phase_key: this.jobs_temp_data.phase_key,
           new_job_duration
         }
       }).then(async () => {
@@ -496,6 +545,22 @@ export default {
         await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
         this.$q.notify({
           message: this.$t('update_time_success'),
+          color: 'theme-green',
+          timeout: 1500,
+          position: 'top'
+        })
+      })
+    },
+
+    forceProgress() {
+      this.sendEvent({
+        event_type: 'PROGRESS_OVERRIDE_REQUESTED',
+        event_data: this.jobs_temp_data
+      }).then(async () => {
+        this.resetEditing()
+        await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
+        this.$q.notify({
+          message: this.$t('update_progress_success'),
           color: 'theme-green',
           timeout: 1500,
           position: 'top'
