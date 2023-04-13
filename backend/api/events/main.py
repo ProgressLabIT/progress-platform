@@ -46,8 +46,9 @@ class Event(
 
     try:
       # Save event, storing its key for later use
-      event_record = self.tx.collection('Event').insert(self.info, return_new=True)['new']
-      self.info = EventModel(**event_record)
+      if self.meta.event_first:
+        event_record = self.tx.collection('Event').insert(self.info, return_new=True)['new']
+        self.info = EventModel(**event_record)
 
       # Apply updates to global application state based on specific event
       self.action()
@@ -55,6 +56,9 @@ class Event(
       # Apply updates based on event category shared logic
       for method in self.meta.post_processing or []:
         getattr(self, method)()
+
+      # Re-save event with new data added
+      self.tx.collection('Event').insert(self.info, overwrite=True)
 
       # Commit transaction
       self.tx.commit_transaction()

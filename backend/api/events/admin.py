@@ -23,7 +23,8 @@ class ProductionAdminEvent:
   TIME_OVERRIDE_REQUESTED = EventMeta(
     collections=['Job', 'Batch', 'WorkSession', 'WorkOrder'],
     action="override_time",
-    post_processing=['update_work_order', 'flag_job_as_forced']
+    post_processing=['update_work_order', 'flag_job_as_forced'],
+    event_first = True
   )
 
   def override_time(self):
@@ -108,7 +109,8 @@ class ProductionAdminEvent:
   PROGRESS_OVERRIDE_REQUESTED = EventMeta(
     collections=['Job', 'Batch', 'WorkSession', 'WorkOrder', 'wip', 'requires'],
     action='override_progress',
-    post_processing=['update_work_order', 'flag_job_as_forced']
+    post_processing=['update_work_order', 'flag_job_as_forced'],
+    event_first = True
   )
 
   def override_progress(self):

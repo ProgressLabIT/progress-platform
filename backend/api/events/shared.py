@@ -2,10 +2,16 @@ from models.production import WorkOrderFull, WorkStatus
 from utils.traceability import Queries as TraceabilityQueries
 
 class EventMeta:
-  def __init__(self, collections, action, post_processing = None):
+  def __init__(self,
+    collections,
+    action,
+    event_first: bool = False,
+    post_processing = None
+    ):
     self.collections = collections
     self.action = action
     self.post_processing = post_processing
+    self.event_first = event_first
 
 
 
