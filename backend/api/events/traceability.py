@@ -270,14 +270,6 @@ class ProductionActivityEvent:
     if not self.job:
       self.get_job_data()
 
-    if not self.job.first_phase:
-      # Delete booked WIP from the previous phase
-      wip_match_filter=dict(_to=f'Job/{self.info.job_key}')
-      self.tx.collection('wip').delete_match(wip_match_filter)
-
-      # TODO: Make sure only wip related to active batch gets deleted
-      # This setup would delete also other wip booked in advance.
-
     new_wip = WIP(
       _from=f'Phase/{self.info.phase_key}',
       _to=f'Phase/{self.info.next_phase_key}',
@@ -294,6 +286,14 @@ class ProductionActivityEvent:
       bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.next_phase_key)
     )
 
+
+  def remove_wip(self):
+    # Delete booked WIP from the previous phase
+    wip_match_filter=dict(_to=f'Job/{self.info.job_key}')
+    self.tx.collection('wip').delete_match(wip_match_filter)
+
+    # TODO: Make sure only wip related to active batch gets deleted
+    # This setup would delete also other wip booked in advance.
 
   def book_wip(self, booking_qt):
     if not self.job:
@@ -644,15 +644,11 @@ class ProductionActivityEvent:
       if create_new_batch:
         self.response['batch_data'] = self.get_batch_execution_data()
 
-
-    # Release WIP
-    self.info.next_phase_key = self.tx.aql.execute(
-      TraceabilityQueries.GET_NEXT_PHASE_IN_WORK_ORDER,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
-    ).next()
+    if not self.job.first_phase:
+      self.remove_wip()
 
     # is next_phase generate a WIP record and update job input availability state
-    if self.info.next_phase_key:
+    if not self.job.last_phase:
       self.declare_wip()
 
 # --------------------------------------------------------------------
