@@ -159,7 +159,7 @@ class Job(FlexModel):
   job_docs: List[ProductDoc] = []
   job_bom: List[BomLineRead] = []
 
-  forced: bool = False
+  forced: str = None
 
   notes: str = None
   # @validator('progress')

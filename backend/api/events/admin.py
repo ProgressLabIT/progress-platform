@@ -6,7 +6,16 @@ from pydantic import BaseModel
 from events.shared import EventMeta
 from models.production import Job, WorkStatus
 from models.traceability import Batch, WIP, WorkSession
-from utils.exceptions import JobIsActiveError, JobHasActiveBatchError, JobHasNoAssigneeError, WipNotAvailableError
+from utils.exceptions import (
+  JobHasActiveBatchError,
+  JobHasNoActiveBatchError,
+  JobHasNoAssigneeError,
+  JobIsActiveError,
+  JobIsOpenError,
+  WipNotAvailableError
+)
+from utils.traceability import Queries as TraceabilityQueries
+from utils.production import Queries as ProductionQueries
 
 
 class Queries:
@@ -222,7 +231,7 @@ class ProductionAdminEvent:
     ).next()
 
     unit_processing_cost = avg_hourly_cost * unit_processing_time
-    batch_value = unit_processing_cost * quantity_update
+    batch_value = unit_processing_cost * quantity
 
     new_batch_data = Batch(
       job_key = self.job.key,
@@ -248,7 +257,7 @@ class ProductionAdminEvent:
       work_order_key = self.job.wo_key,
       product_key = self.job.product_key,
       hourly_cost = avg_hourly_cost,
-      duration = unit_processing_time * quantity_update,
+      duration = unit_processing_time * quantity,
       forced = self.info.id
     )
 
@@ -302,17 +311,24 @@ class ProductionAdminEvent:
 
     # Progress increase
     elif quantity_update > 0:
-      if quantity_update > sum(w['quantity'] for w in wip['upstream_free_wip']):
+      if quantity_update > sum(w['quantity'] for w in wip['upstream_free_wip']) and not self.job.first_phase:
         raise WipNotAvailableError("The previous phase has not made enough progress to make this change")
       else:
         # Set job as started if not already
         if self.job.stage == WorkStatus.CREATED:
           job_update['stage'] = WorkStatus.STARTED
 
-        # Set job as closed if necessary
+        # Set job as closed and remove it from queues if necessary
         if self.info.new_job_qt_completed == self.job.qt_planned:
           job_update['stage'] = WorkStatus.CLOSED
           job_update['end'] = self.info.timestamp
+          self.tx.aql.execute(
+            ProductionQueries.REMOVE_JOB_FROM_QUEUE,
+            bind_vars = dict(
+              target_key = self.job.assigned_to,
+              job_key = self.job.key
+            )
+          )
 
         # 2. Create forced batch and work_session:
         new_batch_key, batch_value = self._create_forced_batch_and_work_session(quantity_update)
@@ -337,6 +353,13 @@ class ProductionAdminEvent:
               remaining_wip_to_remove = 0
 
           self.tx.collection('wip').delete_many(records_to_delete)
+          self.tx.aql.execute(
+            TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
+            bind_vars=dict(
+              wo_key = self.job.wo_key,
+              phase_key = self.job.phase_key
+            )
+          )
 
         # 4. Create new free wip from current phase to next (if not last phase)
         if not self.job.last_phase:
@@ -351,15 +374,29 @@ class ProductionAdminEvent:
             active = False,
           )
           self.tx.collection('wip').insert(new_wip)
+          self.tx.aql.execute(
+            TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
+            bind_vars=dict(
+              wo_key = self.job.wo_key,
+              phase_key = wip['next_phase_key']
+            )
+          )
 
     else: # quantity_update < 0
-      if abs(quantity_update) > sum(w['quantity'] for w in wip['downstream_free_wip']):
+      if abs(quantity_update) > sum(w['quantity'] for w in wip['downstream_free_wip']) and not self.job.last_phase:
         raise WipNotAvailableError("You can't reduce the released quantity of this phase below that already completed/started/booked from the following phase")
       else:
-        # Reopen job if closed
+        # Reopen job and restore it into queue if closed
         if self.job.stage == WorkStatus.CLOSED:
           job_update['stage'] = WorkStatus.STARTED
           job_update['end'] = None
+          self.tx.aql.execute(ProductionQueries.ADD_JOB_TO_QUEUE,
+            bind_vars = dict(
+              job_key = self.job.key,
+              target_key = self.job.assigned_to
+            )
+          )
+          self.tx.aql.execute(ProductionQueries.REORDER_JOB_QUEUES)
 
         # Reset job to created status if necessary
         if self.info.new_job_qt_completed == 0:
@@ -416,6 +453,13 @@ class ProductionAdminEvent:
             REMOVE w IN wip
             """,
             bind_vars = dict(canceled_batches_keys=canceled_batches_keys)
+          )
+          self.tx.aql.execute(
+            TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
+            bind_vars=dict(
+              wo_key = self.job.wo_key,
+              phase_key = wip['next_phase_key']
+            )
           )
 
         # 5. If we canceled more than required, create a forced batch/work session to compensate
@@ -474,6 +518,13 @@ class ProductionAdminEvent:
             wip_to_add -= wip_quantity
 
           self.tx.collection('wip').insert_many(new_wip_records)
+          self.tx.aql.execute(
+            TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
+            bind_vars=dict(
+              wo_key = self.job.wo_key,
+              phase_key = self.job.phase_key
+            )
+          )
 
     self.tx.collection('Job').update(job_update)
 
@@ -483,7 +534,7 @@ class ProductionAdminEvent:
   # ========================================================================
 
   def flag_job_as_forced(self):
-    job_update = dict(_key=self.info.job_key, forced=True)
+    job_update = dict(_key=self.info.job_key, forced=self.info.id)
     self.tx.collection('Job').update(job_update)
 
   # REMEMBER TO WIRE IN WORK ORDER UPDATE!!!

@@ -1,4 +1,5 @@
 from models.production import WorkOrderFull, WorkStatus
+from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 
 class EventMeta:
@@ -32,13 +33,22 @@ class SharedEventMethods:
       self.get_job_data()
       self.info.work_order_key = self.job.wo_key
 
-    updated_wo = self.tx.aql.execute(
+    wo_previous_state = self.get_work_order_data()
+
+    updated_wo = WorkOrderFull(**self.tx.aql.execute(
       TraceabilityQueries.UPDATE_WORK_ORDER,
       bind_vars=dict(wo_key=self.info.work_order_key)
-    ).next()
+    ).next())
 
-    if updated_wo['status'] == WorkStatus.CLOSED.value:
+    if updated_wo.status == WorkStatus.CLOSED:
       self.tx.aql.execute(
         ProductionQueries.REMOVE_WORK_ORDER_FROM_QUEUE,
         bind_vars=dict(wo_key=self.info.work_order_key)
+      )
+
+    # Restore work order in the queue if override reopens it
+    elif wo_previous_state.status == WorkStatus.CLOSED:
+      self.tx.aql.execute(
+        ProductionQueries.ADD_WORK_ORDER_TO_QUEUE,
+        bind_vars=dict(new_wo_key=self.info.work_order_key)
       )

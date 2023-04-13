@@ -270,6 +270,11 @@ class ProductionActivityEvent:
     if not self.job:
       self.get_job_data()
 
+    self.info.next_phase_key = self.tx.aql.execute(
+      TraceabilityQueries.GET_NEXT_PHASE_IN_WORK_ORDER,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
+    ).next()
+
     new_wip = WIP(
       _from=f'Phase/{self.info.phase_key}',
       _to=f'Phase/{self.info.next_phase_key}',

@@ -18,9 +18,13 @@ class TokenNotFoundError(Exception): pass
 
 class JobIsActiveError(Exception): pass
 
+class JobIsOpenError(Exception): pass
+
 class JobHasActiveBatchError(Exception): pass
 
 class JobHasNoAssigneeError(Exception): pass
+
+class JobHasNoActiveBatchError(Exception): pass
 
 class WipNotAvailableError(Exception): pass
 
