@@ -1,6 +1,9 @@
 <template>
   <q-scroll-area class="col q-mx-xs q-px-sm q-pt-lg" :visible="false">
-   <template
+    <NoDataAlert v-if="!jobs_view.length" />
+
+    <template
+      v-else
       v-for="(o, index) in jobs_view"
       :key="index">
       <div class="row items-center q-pl-sm">
@@ -89,14 +92,15 @@
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
-
+import NoDataAlert from '@/components/NoDataAlert.vue'
 export default {
 
   name: 'JobList',
 
   components: {
     BaseProgressBar,
-    BaseUserAvatar
+    BaseUserAvatar,
+    NoDataAlert
   },
 
   props: {

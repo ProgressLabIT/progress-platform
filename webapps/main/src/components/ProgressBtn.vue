@@ -144,12 +144,12 @@ export default {
     async declareBatch() {
       let can_proceed = true
 
-      if (!this.j.next_batch_available) {
-        can_proceed = window.confirm(this.confirm_stop_session_message)
+      if (this.current_batch_is_last) {
+        can_proceed = window.confirm(this.confirm_job_done_message)
       }
 
-      if (can_proceed && this.current_batch_is_last) {
-        can_proceed = window.confirm(this.confirm_job_done_message)
+      else if (!this.j.next_batch_available) {
+        can_proceed = window.confirm(this.confirm_stop_session_message)
       }
 
       if (can_proceed) {
