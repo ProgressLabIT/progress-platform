@@ -100,7 +100,7 @@ class ProductionAdminEvent:
     job_is_open = self.job.stage != WorkStatus.CLOSED
 
     if job_is_open:
-      raise JobIsActiveError("You are not allowed to override processing time while the job is still open")
+      raise JobIsOpenError("You can't override processing time while the job is still open")
 
     # Cancel existing job work sessions, while fetching data
     # for calculation of weighted average hourly cost
