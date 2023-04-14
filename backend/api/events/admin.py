@@ -169,7 +169,7 @@ class ProductionAdminEvent:
   # =========================================================================
 
   PROGRESS_OVERRIDE_REQUESTED = EventMeta(
-    collections=['Job', 'Batch', 'WorkSession', 'WorkOrder', 'wip', 'requires'],
+    collections=['Job', 'Batch', 'Queue', 'WorkSession', 'WorkOrder', 'wip', 'requires'],
     action='override_progress',
     post_processing=['update_work_order', 'flag_job_as_forced'],
     event_first = True
@@ -377,13 +377,6 @@ class ProductionAdminEvent:
         if self.job.stage == WorkStatus.CLOSED:
           job_update['stage'] = WorkStatus.STARTED
           job_update['end'] = None
-          self.tx.aql.execute(ProductionQueries.ADD_JOB_TO_QUEUE,
-            bind_vars = dict(
-              job_key = self.job.key,
-              target_key = self.job.assigned_to
-            )
-          )
-          self.tx.aql.execute(ProductionQueries.REORDER_JOB_QUEUES)
 
         # Reset job to created status if necessary
         if self.info.new_job_qt_completed == 0:
@@ -440,13 +433,6 @@ class ProductionAdminEvent:
             REMOVE w IN wip
             """,
             bind_vars = dict(canceled_batches_keys=canceled_batches_keys)
-          )
-          self.tx.aql.execute(
-            TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
-            bind_vars=dict(
-              wo_key = self.job.wo_key,
-              phase_key = wip['next_phase_key']
-            )
           )
 
         # 5. If we canceled more than required, create a forced batch/work session to compensate
@@ -507,6 +493,21 @@ class ProductionAdminEvent:
           self.tx.collection('wip').insert_many(new_wip_records)
 
     self.tx.collection('Job').update(job_update)
+
+    if self.job.stage == WorkStatus.CLOSED and quantity_update < 0:
+      self.tx.aql.execute(ProductionQueries.ADD_JOB_TO_QUEUE,
+        bind_vars = dict(
+          job_key = self.job.key,
+          target_key = self.job.assigned_to
+        )
+      )
+      self.tx.aql.execute(
+        ProductionQueries.REORDER_JOB_QUEUES,
+        bind_vars = dict(
+          site_key = '0',
+          target_key = self.job.assigned_to
+        )
+      )
 
     # Update batch available state for current and next phase (if present)
     wip_phases = [self.job.phase_key]
