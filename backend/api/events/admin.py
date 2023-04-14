@@ -547,6 +547,8 @@ class ProductionAdminEvent:
     batch_key = self.job.active_batch_key
     batch_update = dict(
       _key = batch_key,
+      active = False,
+      end = self.info.timestamp,
       canceled = self.info.id
     )
     self.tx.collection('Batch').update(batch_update)
