@@ -36,6 +36,7 @@ export default {
   "cancel": "annulla",
   "canceled": "annullato",
   "cancel_active_batch": "Annulla pezzi attivi",
+  "cancel_active_batch_disabled": "Disponibile in caso di quantità attiva presente",
   "cancel_active_batch_confirm": "Confermi di voler cancellare i pezzi attivi?",
   "cancel_active_batch_success": "Pezzi attivi annullati con successo",
   "cancel_changes": "annulla modifiche",
@@ -486,8 +487,10 @@ export default {
   "undo": "ripristina",
   "update": "modifica",
   "update_progress": "Modifica avanzamento",
+  "update_progress_disabled": "Disponibile in assenza di quantità attiva",
   "update_progress_success": "Avanzamento modificato con successo",
   "update_time": "Modifica tempi",
+  "update_time_disabled": "Disponibile con lavoro chiuso",
   "update_time_success": "Tempo modificato con successo",
   "user": {
     "add": "aggiungi utente",

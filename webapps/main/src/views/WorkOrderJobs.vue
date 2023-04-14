@@ -105,19 +105,26 @@
                   <q-popup-proxy>
                     <q-list>
                       <q-item
-                        v-if="job.stage == 'closed'"
-                        clickable v-ripple v-close-popup
+                        :disable="job.stage != 'closed'"
+                        :clickable="job.stage == 'closed'"
+                        v-ripple
+                        v-close-popup
                         @click="editJobTime(job)">
                         <q-item-section avatar>
                           <q-icon name="mdi-clock-edit-outline" />
                         </q-item-section>
                         <q-item-section>
-                          {{ $t('update_time') }}
+                          <q-item-label>
+                            {{ $t('update_time') }}
+                          </q-item-label>
+                          <q-item-label caption>
+                            {{ $t('update_time_disabled') }}
+                          </q-item-label>
                         </q-item-section>
                       </q-item>
                       <q-item
-                        v-if="!job.active_batch_qt"
-                        clickable
+                        :disable="job.active_batch_qt > 0"
+                        :clickable="job.active_batch_qt == 0"
                         v-ripple
                         v-close-popup
                         @click="editJobProgress(job)">
@@ -125,18 +132,30 @@
                           <q-icon name="mdi-plus-minus-variant" />
                         </q-item-section>
                         <q-item-section>
-                          {{ $t('update_progress') }}
+                          <q-item-label>
+                            {{ $t('update_progress') }}
+                          </q-item-label>
+                          <q-item-label caption v-if="job.active_batch_qt > 0">
+                            {{ $t('update_progress_disabled') }}
+                          </q-item-label>
                         </q-item-section>
                       </q-item>
                       <q-item
-                        v-if="job.active_batch_qt"
-                        clickable v-ripple v-close-popup
+                        :disable="job.active_batch_qt == 0"
+                        :clickable="job.active_batch_qt > 0"
+                        v-ripple
+                        v-close-popup
                         @click="confirm_cancel_batch = job._key">
                         <q-item-section avatar>
                           <q-icon name="mdi-cube-off-outline" />
                         </q-item-section>
                         <q-item-section>
-                          {{ $t('cancel_active_batch') }}
+                          <q-item-label>
+                            {{ $t('cancel_active_batch') }}
+                          </q-item-label>
+                          <q-item-label caption v-if="job.active_batch_qt == 0">
+                            {{ $t('cancel_active_batch_disabled') }}
+                          </q-item-label>
                         </q-item-section>
                       </q-item>
                     </q-list>

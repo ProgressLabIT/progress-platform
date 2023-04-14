@@ -35,6 +35,7 @@ export default {
   "cancel": "cancel",
   "canceled": "canceled",
   "cancel_active_batch": "Cancel active pieces",
+  "cancel_active_batch_disabled": "Available in case of active quantity",
   "cancel_active_batch_confirm": "Are you sure you want to cancel active pieces?",
   "cancel_active_batch_success": "Active pieces canceled successfully",
   "cancel_changes": "cancel changes",
@@ -483,8 +484,10 @@ export default {
   "unsaved": "unsaved",
   "update": "update",
   "update_progress": "Update progress",
+  "update_progress_disabled": "Available with no active quantity present",
   "update_progress_success": "Progress updated successfully",
   "update_time": "Update time",
+  "update_time_disabled": "Available if order is closed",
   "update_time_success": "Time updated successfully",
   "user": {
     "add": "add user",
