@@ -260,18 +260,18 @@ class Queries:
       : null
   """
 
-  UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE = """
+  UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES = """
+    FOR j IN Job
+    FILTER j.wo_key == @wo_key && j.phase_key IN @phase_keys
+
     // Get input available for any job in phase
     LET input_for_phase = SUM(
       FOR w IN wip
       FILTER
         w.wo_key == @wo_key
-        && w._to == CONCAT('Phase/', @phase_key)
+        && w._to == CONCAT('Phase/', j.phase_key)
       RETURN w.quantity
     )
-
-    FOR j IN Job
-    FILTER j.wo_key == @wo_key && j.phase_key == @phase_key
 
     // Get additional input available from that already booked for the job
     // that is not already in the active batch

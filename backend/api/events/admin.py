@@ -353,13 +353,7 @@ class ProductionAdminEvent:
               remaining_wip_to_remove = 0
 
           self.tx.collection('wip').delete_many(records_to_delete)
-          self.tx.aql.execute(
-            TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
-            bind_vars=dict(
-              wo_key = self.job.wo_key,
-              phase_key = self.job.phase_key
-            )
-          )
+
 
         # 4. Create new free wip from current phase to next (if not last phase)
         if not self.job.last_phase:
@@ -374,13 +368,6 @@ class ProductionAdminEvent:
             active = False,
           )
           self.tx.collection('wip').insert(new_wip)
-          self.tx.aql.execute(
-            TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
-            bind_vars=dict(
-              wo_key = self.job.wo_key,
-              phase_key = wip['next_phase_key']
-            )
-          )
 
     else: # quantity_update < 0
       if abs(quantity_update) > sum(w['quantity'] for w in wip['downstream_free_wip']) and not self.job.last_phase:
@@ -518,16 +505,22 @@ class ProductionAdminEvent:
             wip_to_add -= wip_quantity
 
           self.tx.collection('wip').insert_many(new_wip_records)
-          self.tx.aql.execute(
-            TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
-            bind_vars=dict(
-              wo_key = self.job.wo_key,
-              phase_key = self.job.phase_key
-            )
-          )
 
     self.tx.collection('Job').update(job_update)
 
+    # Update batch available state for current and next phase (if present)
+    wip_phases = [self.job.phase_key]
+
+    if not self.job.last_phase:
+      wip_phases.append(wip['next_phase_key'])
+
+    self.tx.aql.execute(
+      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
+      bind_vars=dict(
+        wo_key = self.job.wo_key,
+        phase_keys = wip_phases
+      )
+    )
 
 
 

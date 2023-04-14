@@ -287,8 +287,8 @@ class ProductionActivityEvent:
     self.tx.collection('wip').insert(new_wip)
 
     self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.next_phase_key)
+      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.next_phase_key])
     )
 
 
@@ -352,8 +352,8 @@ class ProductionActivityEvent:
 
     # Update input availability for jobs in this phase
     self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
+      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
     )
 
     return total_available
