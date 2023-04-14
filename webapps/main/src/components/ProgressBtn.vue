@@ -156,7 +156,7 @@ export default {
         await this.$store.dispatch('declareBatch', {
           batch_qt: this.j.active_batch_qt,
         })
-        if (this.j.qt_completed >= this.j.qt_planned) {
+        if (this.current_batch_is_last || !this.j.next_batch_available) {
           this.$router.push({ name: 'userJobs' })
         }
         else if (this.j.parameters.step_check) this.goToStep(0)
