@@ -285,16 +285,7 @@ class ProductionAdminEvent:
     # Progress increase: check there's wip available to pick from
     elif quantity_update > 0:
       if quantity_update > free_wip_qt_upstream and not self.job.first_phase:
-        raise HTTPException(
-          status_code = 422,
-          detail = dict(
-            message = "WIP NOT AVAILABLE: The previous phase has not made enough progress to make this change",
-            data = dict(
-              free_wip_qt_upstream = free_wip_qt_upstream,
-              free_wip_qt_downstream = free_wip_qt_downstream
-            )
-          )
-        )
+        raise WipNotAvailableError("The previous phase has not made enough progress to make this change")
 
       else:
         # Set job as started if not already
@@ -339,17 +330,7 @@ class ProductionAdminEvent:
 
     else: # quantity_update < 0, Progress decrease: check enough wip downstream has not already been booked/used
       if abs(quantity_update) > free_wip_qt_downstream and not self.job.last_phase:
-        raise HTTPException(
-          status_code = 422,
-          detail = dict(
-            message = "WIP NOT AVAILABLE: You can't reduce the released quantity of this phase below that already completed/started/booked from the following phase",
-            data = dict(
-              free_wip_qt_upstream = free_wip_qt_upstream,
-              free_wip_qt_downstream = free_wip_qt_downstream
-            )
-          )
-        )
-
+        raise WipNotAvailableError("You can't reduce the released quantity of this phase below that already completed/started/booked from the following phase")
       else:
         # Reopen job and restore it into queue if closed
         if self.job.stage == WorkStatus.CLOSED:
@@ -518,12 +499,7 @@ class ProductionAdminEvent:
     self.get_job_data()
 
     if self.job.active:
-      raise HTTPError(
-        status_code = 422,
-        detail = dict(
-          message = "The job is active. You can't cancel a batch while it's being worked on",
-        )
-      )
+      raise JobIsActiveError("You can't cancel a batch while it's being worked on")
 
     if self.job.active_batch_qt == 0:
       raise JobHasNoActiveBatchError("The job has no active batch to cancel")
