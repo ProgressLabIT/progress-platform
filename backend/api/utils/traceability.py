@@ -295,9 +295,57 @@ class Queries:
 
   RETRIEVE_AVAILABLE_WIP = """
     FOR w IN wip
-    FILTER w._to == CONCAT('Phase/', @phase_key)
+    FILTER
+      w._to == CONCAT('Phase/', @phase_key)
+      && w.wo_key == @wo_key
     SORT w.batch_key
     RETURN w
+  """
+
+  GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB = """
+    FOR j in Job
+    FILTER j._key == @job_key
+    LET current_phase_id = CONCAT('Phase/', j.phase_key)
+    LET process = DOCUMENT(WorkOrder, j.wo_key).phase_sequence
+    LET current_phase_index = POSITION(process, j.phase_key, true)
+
+    LET next_phase_key = j.phase_key == LAST(process)
+      ? null
+      : process[current_phase_index + 1]
+    LET next_phase_id = CONCAT('Phase/', next_phase_key)
+
+    LET previous_phase_key = j.phase_key == FIRST(process)
+      ? null
+      : process[current_phase_index - 1]
+    LET previous_phase_id = CONCAT('Phase/', previous_phase_key)
+
+    LET free_up_down_stream_wip_records = (
+      for w in wip
+      filter
+        w.wo_key == j.wo_key
+        && w._to in [current_phase_id, next_phase_id]
+      return w
+    )
+
+    LET upstream_free_wip = (
+      FOR w IN free_up_down_stream_wip_records
+      FILTER
+        w._from == previous_phase_id
+        && w._to == current_phase_id
+      SORT w.batch_key
+      RETURN w
+    )
+
+    LET downstream_free_wip = (
+      FOR w IN free_up_down_stream_wip_records
+      FILTER
+        w._from == current_phase_id
+        && w._to == next_phase_id
+      SORT w.batch_key
+      RETURN w
+    )
+
+    RETURN { upstream_free_wip, downstream_free_wip, next_phase_key, previous_phase_key }
   """
 
 # ------------- END OF QUERIES CLASS ----------------------------------

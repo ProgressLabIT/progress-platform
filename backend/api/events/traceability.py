@@ -306,7 +306,7 @@ class ProductionActivityEvent:
 
     available_batches_cursor = self.tx.aql.execute(
       TraceabilityQueries.RETRIEVE_AVAILABLE_WIP,
-      bind_vars=dict(phase_key=self.info.phase_key)
+      bind_vars=dict(phase_key=self.info.phase_key, wo_key=self.info.work_order_key)
     )
 
     available_batches = [WIP(**b) for b in available_batches_cursor]
@@ -586,8 +586,13 @@ class ProductionActivityEvent:
   # ===================================================================
 
   def complete_batch(self):
+
     if not hasattr(self, 'job'):
       self.get_job_data()
+
+    if not self.job.first_phase:
+      # TODO: check for wip availability
+      pass
 
     self.info.completed_batch_key = self.job.active_batch_key
     self.info.completed_batch_qt = self.job.active_batch_qt
