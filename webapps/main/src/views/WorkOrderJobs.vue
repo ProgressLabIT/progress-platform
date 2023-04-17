@@ -607,6 +607,8 @@ export default {
           timeout: 1500,
           position: 'top'
         })
+      }).catch(err => {
+        window.alert(err)
       })
     },
 
@@ -623,6 +625,8 @@ export default {
           timeout: 1500,
           position: 'top'
         })
+      }).catch(err => {
+        window.alert(err)
       })
     },
 
@@ -641,6 +645,8 @@ export default {
           timeout: 1500,
           position: 'top'
         })
+      }).catch(err => {
+        window.alert(err)
       })
     }
   },
