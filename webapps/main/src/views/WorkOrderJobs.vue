@@ -40,7 +40,17 @@
             :key="header.value">
 
             <!-- PHASE PROGRESS -->
-            <template v-if="header.value === 'progress'">
+            <template v-if="header.value === 'phase_alias'">
+              <span>{{ $capitalizeAll(phase[header.value]) }}</span>
+              <span
+                v-if="expanded_phase == phase.phase_key"
+                class="q-ml-sm text-body2 smaller text-disabled"
+                @click.stop="null">
+                ({{ phase.phase_key }})
+              </span>
+            </template>
+
+            <template v-else-if="header.value === 'progress'">
               <div class="col-12 row items-center">
                 <div class="col">
                   <BaseProgressBar :data="phase" />
