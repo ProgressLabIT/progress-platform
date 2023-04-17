@@ -567,12 +567,9 @@ export default {
     },
 
     async editJobProgress(job_data) {
-      let min_progress_qt = 0
-      let max_progress_qt = job_data.qt_planned
-
       const resp = await this.$api.get('wip', { params: { job_key: job_data._key }})
-      min_progress_qt = job_data.qt_completed - resp.data.free_wip_qt_downstream
-      max_progress_qt = job_data.qt_completed + resp.data.free_wip_qt_upstream
+      const min_progress_qt = job_data.last_phase ? 0 : job_data.qt_completed - resp.data.free_wip_qt_downstream
+      const max_progress_qt = job_data.first_phase ? job_data.qt_planned : job_data.qt_completed + resp.data.free_wip_qt_upstream
 
       this.jobs_temp_data = {
         job_key: job_data._key,
@@ -623,21 +620,36 @@ export default {
     },
 
     forceProgress() {
-      this.sendEvent({
-        event_type: 'PROGRESS_OVERRIDE_REQUESTED',
-        event_data: this.jobs_temp_data
-      }).then(async () => {
-        this.resetEditing()
-        await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
-        this.$q.notify({
-          message: this.$t('update_progress_success'),
-          color: 'theme-green',
-          timeout: 1500,
-          position: 'top'
+      const td = this.jobs_temp_data
+      const new_qt_within_bounds = (
+        td.min_progress_qt <= td.new_job_qt_completed
+        && td.new_job_qt_completed <= td.max_progress_qt
+      )
+      if (new_qt_within_bounds) {
+        this.sendEvent({
+          event_type: 'PROGRESS_OVERRIDE_REQUESTED',
+          event_data: this.jobs_temp_data
+        }).then(async () => {
+          this.resetEditing()
+          await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
+          this.$q.notify({
+            message: this.$t('update_progress_success'),
+            color: 'theme-green',
+            timeout: 1500,
+            position: 'top'
+          })
+        }).catch(err => {
+          window.alert(err)
         })
-      }).catch(err => {
-        window.alert(err)
-      })
+      }
+      else {
+        window.alert(`Quantità deve essere fra ${td.min_progress_qt} e ${td.max_progress_qt}`)
+        // Set value to closest limit
+        td.new_job_qt_completed = td.new_job_qt_completed < td.min_progress_qt
+          ? td.min_progress_qt
+          : td.max_progress_qt
+         console.log(td)
+      }
     },
 
     cancelBatch() {
