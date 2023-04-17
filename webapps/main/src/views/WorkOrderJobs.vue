@@ -217,9 +217,10 @@
                       <q-input
                         type="number"
                         v-model.number="jobs_temp_data.new_job_qt_completed"
-                        :max="job.qt_planned"
-                        :min="0"
-                        :label="$t('quantity.completed.long')">
+                        :min="jobs_temp_data.min_progress_qt"
+                        :max="jobs_temp_data.max_progress_qt"
+                        :label="$t('quantity.completed.long')"
+                        autofocus>
                       </q-input>
                     </q-card-section>
                     <q-card-section>
@@ -555,13 +556,23 @@ export default {
       this.edit_job_time = job_data._key
     },
 
-    editJobProgress(job_data) {
+    async editJobProgress(job_data) {
+      let min_progress_qt = 0
+      let max_progress_qt = job_data.qt_planned
+
+      const resp = await this.$api.get('wip', { params: { job_key: job_data._key }})
+      min_progress_qt = job_data.qt_completed - resp.data.free_wip_qt_downstream
+      max_progress_qt = job_data.qt_completed + resp.data.free_wip_qt_upstream
+
       this.jobs_temp_data = {
         job_key: job_data._key,
         phase_key: job_data.phase_key,
         work_order_key: job_data.wo_key,
-        new_job_qt_completed: job_data.qt_completed
-      },
+        new_job_qt_completed: job_data.qt_completed,
+        min_progress_qt,
+        max_progress_qt
+      }
+
       this.edit_job_progress = job_data._key
     },
 
