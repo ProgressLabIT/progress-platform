@@ -23,17 +23,18 @@ async def apply_production_event(data: EventModel):
     return APIResponse(detail=response)
 
   except (
-    JobIsActiveError
-    , JobIsOpenError
-    , JobHasActiveBatchError
-    , JobHasNoAssigneeError
-    , JobHasNoActiveBatchError
-    , WipNotAvailableError
+    JobIsActiveError,
+    JobIsOpenError,
+    JobHasActiveBatchError,
+    JobHasNoAssigneeError,
+    JobHasNoActiveBatchError,
+    ValueError,
+    WipNotAvailableError
   ) as e:
     raise HTTPException(
       status_code=422,
       detail=dict(
-        error_type = e.__class__.__name,
+        error_type = e.__class__.__name__,
         message = e.args[0]
       )
     )

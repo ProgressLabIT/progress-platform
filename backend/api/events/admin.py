@@ -282,6 +282,9 @@ class ProductionAdminEvent:
     if not quantity_update:
       raise ValueError('No quantity change')
 
+    if self.info.new_job_qt_completed > self.job.qt_planned:
+      raise ValueError('Quantity is higher than the total planned')
+
     # Progress increase: check there's wip available to pick from
     elif quantity_update > 0:
       if quantity_update > free_wip_qt_upstream and not self.job.first_phase:
