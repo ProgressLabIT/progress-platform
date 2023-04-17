@@ -282,7 +282,7 @@ class ProductionAdminEvent:
     if not quantity_update:
       raise ValueError('No quantity change')
 
-    if self.info.new_job_qt_completed > self.job.qt_planned:
+    elif self.info.new_job_qt_completed > self.job.qt_planned:
       raise ValueError('Quantity is higher than the total planned')
 
     # Progress increase: check there's wip available to pick from
@@ -348,7 +348,9 @@ class ProductionAdminEvent:
         job_batches_cursor = self.tx.aql.execute(
           """
           FOR b IN Batch
-          FILTER b.job_key == @job_key
+          FILTER
+            b.job_key == @job_key
+            && !b.canceled
           SORT b.end DESC
           RETURN b
           """,
@@ -425,22 +427,23 @@ class ProductionAdminEvent:
             FILTER
               b.work_order_key == @work_order_key
               && b.phase_key == @phase_key
+              && !b.canceled
             SORT b.end DESC
             RETURN b
             """,
             bind_vars = dict(
               work_order_key = self.job.wo_key,
-              phase_key = wip['previous_phase_key']
+              phase_key = self.wip['previous_phase_key']
             )
           )
           batches_from_previous_phase = deque(Batch(**b) for b in cursor)
-          wip_to_add = quantity_update
-          new_wip_records = deque()
+          wip_to_add = abs(quantity_update)
 
           while wip_to_add:
             wip_batch = batches_from_previous_phase.popleft()
             # Wip quantity can be less than batch quantity
             wip_quantity = min([wip_to_add, wip_batch.qt_pass])
+
             new_wip = WIP(
               _from = f"Phase/{self.wip['previous_phase_key']}",
               _to = f"Phase/{self.job.phase_key}",
@@ -451,10 +454,9 @@ class ProductionAdminEvent:
               value = wip_batch.value * wip_quantity / wip_batch.qt_pass,
               active = False,
             )
-            new_wip_records.append(new_wip)
+            self.tx.collection('wip').insert(new_wip)
             wip_to_add -= wip_quantity
 
-          self.tx.collection('wip').insert_many(new_wip_records)
 
     self.tx.collection('Job').update(job_update)
 
