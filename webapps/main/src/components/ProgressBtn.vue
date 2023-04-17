@@ -157,6 +157,7 @@ export default {
           batch_qt: this.j.active_batch_qt,
         })
         if (this.current_batch_is_last || !this.j.next_batch_available) {
+          this.$store.commit('SET_HEARTBEAT', false)
           this.$router.push({ name: 'userJobs' })
         }
         else if (this.j.parameters.step_check) this.goToStep(0)
