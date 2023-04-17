@@ -5,6 +5,8 @@ from fastapi import APIRouter, HTTPException, Request
 from events import Event
 from models.traceability import *
 from models.event import EventModel
+
+from utils.exceptions import *
 from utils.api import APIResponse
 from utils.db import db
 from utils.dt import timestamp
@@ -20,7 +22,23 @@ async def apply_production_event(data: EventModel):
     response = event.save()
     return APIResponse(detail=response)
 
-  except:
+  except (
+    JobIsActiveError
+    , JobIsOpenError
+    , JobHasActiveBatchError
+    , JobHasNoAssigneeError
+    , JobHasNoActiveBatchError
+    , WipNotAvailableError
+  ) as e:
+    raise HTTPException(
+      status_code=422,
+      detail=dict(
+        error_type = e.__class__.__name,
+        message = e.args[0]
+      )
+    )
+
+  except Exception as e:
     status_code=500
     error_str = traceback.format_exc()
     response = dict(
@@ -79,7 +97,6 @@ async def get_batch_execution_data(batch_key: str):
     )
 
   return APIResponse(detail=batch_data)
-
 
 
 @router.post('/job/{job_key}/heartbeat')
