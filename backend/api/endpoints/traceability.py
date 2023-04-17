@@ -105,3 +105,21 @@ async def job_heartbeat(job_key: str, work_session_key: str = None):
   except Exception:
     tx.abort_transaction()
 
+
+@router.get('/wip')
+async def get_wip_availability_for_job(job_key: str):
+  tx = db.begin_transaction()
+  job_data = tx.collection('Job').get(job_key)
+  available_wip_records = tx.aql.execute(
+    Queries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB,
+    bind_vars=dict(job_key=job_key)
+  ).next()
+
+  free_wip_qt_upstream = sum(w['quantity'] for w in available_wip_records['upstream_free_wip'])
+  free_wip_qt_downstream = sum(w['quantity'] for w in available_wip_records['downstream_free_wip'])
+
+  return dict(
+    job_key = job_key,
+    free_wip_qt_downstream = free_wip_qt_downstream,
+    free_wip_qt_upstream = free_wip_qt_upstream
+  )
