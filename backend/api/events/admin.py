@@ -307,7 +307,7 @@ class ProductionAdminEvent:
             )
           )
 
-        # 2. Create forced batch and work_session:
+        # 2. Create forced batch, work_session and downstream wip:
         new_batch_key, batch_value = self._create_forced_traceability_records(quantity_update)
 
         # 3. Delete free wip from previous phase to current (if not first phase)

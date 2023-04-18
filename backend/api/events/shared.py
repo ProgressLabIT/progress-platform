@@ -40,6 +40,7 @@ class SharedEventMethods:
       bind_vars=dict(wo_key=self.info.work_order_key)
     ).next())
 
+    # Remove work order from the queue if override closed it
     if updated_wo.status == WorkStatus.CLOSED:
       self.tx.aql.execute(
         ProductionQueries.REMOVE_WORK_ORDER_FROM_QUEUE,
