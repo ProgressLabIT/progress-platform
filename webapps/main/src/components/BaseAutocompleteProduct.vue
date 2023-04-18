@@ -61,7 +61,7 @@ export default {
 
   computed: {
     origin_list() {
-      return this.$store.getters.productCatalog()
+      return this.$store.getters.productCatalog(true)
     }
   },
 

@@ -48,7 +48,9 @@ export default {
 
       const declare_batch = {
         icon: 'mdi-plus',
-        text: this.$t('job.complete_batch'),
+        text: this.j.parameters.production_batch_qt == 1
+          ? this.$t('job.complete_piece')
+          : this.$t('job.complete_batch'),
         action: this.declareBatch
       }
 
@@ -142,19 +144,22 @@ export default {
     async declareBatch() {
       let can_proceed = true
 
-      if (!this.j.next_batch_available) {
-        can_proceed = window.confirm(this.confirm_stop_session_message)
+      if (this.current_batch_is_last) {
+        can_proceed = window.confirm(this.confirm_job_done_message)
       }
 
-      if (can_proceed && this.current_batch_is_last) {
-        can_proceed = window.confirm(this.confirm_job_done_message)
+      else if (!this.j.next_batch_available) {
+        can_proceed = window.confirm(this.confirm_stop_session_message)
       }
 
       if (can_proceed) {
         await this.$store.dispatch('declareBatch', {
           batch_qt: this.j.active_batch_qt,
         })
-        if (this.j.qt_completed >= this.j.qt_planned) this.exitJob()
+        if (this.current_batch_is_last || !this.j.next_batch_available) {
+          this.$store.commit('SET_HEARTBEAT', false)
+          this.$router.push({ name: 'userJobs' })
+        }
         else if (this.j.parameters.step_check) this.goToStep(0)
       }
     },

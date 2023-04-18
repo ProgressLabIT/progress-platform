@@ -26,7 +26,10 @@ class Queries:
       hourly_cost: DOCUMENT(User, @user_key).hourly_cost,
       user_session_key: @user_session_key,
       start: @start,
-      active: true
+      active: true,
+      canceled: null,
+      forced: null,
+      end: null
     }
 
     INSERT new_ws INTO WorkSession RETURN NEW
@@ -115,14 +118,14 @@ class Queries:
     // Update completed quantity
     LET qt_completed = SUM(
       FOR j IN jobs
-      FILTER j.phase_key == LAST(wo.phase_sequence)
+      FILTER j.last_phase
       RETURN j.qt_released
     )
 
     // Update PT and Cost
     LET work_sessions = (
       FOR ws IN WorkSession
-      FILTER ws.work_order_key == @wo_key
+      FILTER ws.work_order_key == @wo_key && !ws.canceled
       LET benchmark = ws.active ? now : ws.end
       LET duration = DATE_DIFF(ws.start, benchmark, 'f')
       LET cost = ws.hourly_cost * duration / 3600000 // No. of milliseconds in an hour: 60*60*1000
@@ -204,7 +207,7 @@ class Queries:
     LET processing_cost = SUM(
       FOR ws IN work_sessions
       RETURN ws.duration * ws.hourly_cost
-    ) / (60*60*1000)
+    ) / 3600000
 
 
     UPDATE batch WITH {
@@ -214,17 +217,16 @@ class Queries:
       unit_processing_time,
       unit_processing_cost: processing_cost / @qt_pass,
       value: processing_cost + material_cost
-
     } in Batch
   """
 
 
   CLOSE_WORK_SESSION = """
-    LET ws_key = (
+    LET ws_key = FIRST(
       FOR j IN Job
       FILTER j._key == @job_key
       RETURN j.last_work_session_started
-    )[0]
+    )
 
     LET ws = Document('WorkSession', ws_key)
     LET duration = DATE_DIFF(ws.start, @end, "f")
@@ -258,18 +260,18 @@ class Queries:
       : null
   """
 
-  UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE = """
+  UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES = """
+    FOR j IN Job
+    FILTER j.wo_key == @wo_key && j.phase_key IN @phase_keys
+
     // Get input available for any job in phase
     LET input_for_phase = SUM(
       FOR w IN wip
       FILTER
         w.wo_key == @wo_key
-        && w._to == CONCAT('Phase/', @phase_key)
+        && w._to == CONCAT('Phase/', j.phase_key)
       RETURN w.quantity
     )
-
-    FOR j IN Job
-    FILTER j.wo_key == @wo_key && j.phase_key == @phase_key
 
     // Get additional input available from that already booked for the job
     // that is not already in the active batch
@@ -287,19 +289,64 @@ class Queries:
     LET qt_next_batch = default_batch == 0 ? qt_remaining : MIN([default_batch, qt_remaining])
 
     LET total_input_available = input_for_phase + input_for_job
-
-    // Wip booked and active is not counted as available, so do not subtract active quantity here
     LET next_batch_available = j.first_phase || qt_next_batch <= total_input_available
     UPDATE j WITH { next_batch_available } IN Job
   """
 
   RETRIEVE_AVAILABLE_WIP = """
     FOR w IN wip
-    FILTER w._to == CONCAT('Phase/', @phase_key)
+    FILTER
+      w._to == CONCAT('Phase/', @phase_key)
+      && w.wo_key == @wo_key
     SORT w.batch_key
     RETURN w
   """
 
+  GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB = """
+    FOR j in Job
+    FILTER j._key == @job_key
+    LET current_phase_id = CONCAT('Phase/', j.phase_key)
+    LET process = DOCUMENT(WorkOrder, j.wo_key).phase_sequence
+    LET current_phase_index = POSITION(process, j.phase_key, true)
+
+    LET next_phase_key = j.phase_key == LAST(process)
+      ? null
+      : process[current_phase_index + 1]
+    LET next_phase_id = CONCAT('Phase/', next_phase_key)
+
+    LET previous_phase_key = j.phase_key == FIRST(process)
+      ? null
+      : process[current_phase_index - 1]
+    LET previous_phase_id = CONCAT('Phase/', previous_phase_key)
+
+    LET free_up_down_stream_wip_records = (
+      for w in wip
+      filter
+        w.wo_key == j.wo_key
+        && w._to in [current_phase_id, next_phase_id]
+      return w
+    )
+
+    LET upstream_free_wip = (
+      FOR w IN free_up_down_stream_wip_records
+      FILTER
+        w._from == previous_phase_id
+        && w._to == current_phase_id
+      SORT w.batch_key
+      RETURN w
+    )
+
+    LET downstream_free_wip = (
+      FOR w IN free_up_down_stream_wip_records
+      FILTER
+        w._from == current_phase_id
+        && w._to == next_phase_id
+      SORT w.batch_key
+      RETURN w
+    )
+
+    RETURN { upstream_free_wip, downstream_free_wip, next_phase_key, previous_phase_key }
+  """
 
 # ------------- END OF QUERIES CLASS ----------------------------------
 

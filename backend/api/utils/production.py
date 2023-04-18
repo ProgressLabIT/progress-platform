@@ -32,11 +32,25 @@ class Queries:
         FOR j IN Job
         FILTER j.wo_key == wo._key && !j.trash
         LET operator = KEEP(DOCUMENT(User, j.assigned_to), '_key', 'name', 'surname', 'active')
-        RETURN MERGE( j, { assigned_to: operator } )
+        LET work_sessions = (
+          FOR ws IN WorkSession
+          FILTER ws.job_key == j._key && !ws.canceled
+          LET duration = ws.active ? DATE_DIFF(ws.start, now, 'f') : ws.duration
+          LET cost = ws.hourly_cost * duration / 3600000
+          RETURN MERGE({ duration, cost })
+        )
+        LET processing_time = SUM(work_sessions[*].duration)
+        LET processing_cost = SUM(work_sessions[*].cost)
+
+        RETURN MERGE( j, { assigned_to: operator, processing_time, processing_cost } )
       )
 
+      LET processing_time = SUM(jobs[*].processing_time)
+      LET processing_cost = SUM(jobs[*].processing_cost)
+      LET total_cost = processing_cost + wo.material_cost
+
       // Return enriched wo data
-      RETURN MERGE(wo, { jobs })
+      RETURN MERGE(wo, { jobs, processing_time, processing_cost, total_cost })
   """
 
 

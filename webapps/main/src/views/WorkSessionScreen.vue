@@ -123,7 +123,7 @@
               <ProgressBtn />
             </div>
 
-            <!-- PREV/NEXT STEP AND EXIT BUTTONS -->
+            <!-- NEW ISSUE AND EXIT BUTTONS -->
             <div class="row col-4 q-col-gutter-x-sm">
               <div class="col">
                 <q-btn

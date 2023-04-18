@@ -2,9 +2,11 @@ import traceback
 
 from fastapi import APIRouter, HTTPException, Request
 
-from events.main import Event
+from events import Event
 from models.traceability import *
 from models.event import EventModel
+
+from utils.exceptions import *
 from utils.api import APIResponse
 from utils.db import db
 from utils.dt import timestamp
@@ -20,7 +22,24 @@ async def apply_production_event(data: EventModel):
     response = event.save()
     return APIResponse(detail=response)
 
-  except:
+  except (
+    JobIsActiveError,
+    JobIsOpenError,
+    JobHasActiveBatchError,
+    JobHasNoAssigneeError,
+    JobHasNoActiveBatchError,
+    ValueError,
+    WipNotAvailableError
+  ) as e:
+    raise HTTPException(
+      status_code=422,
+      detail=dict(
+        error_type = e.__class__.__name__,
+        message = e.args[0]
+      )
+    )
+
+  except Exception as e:
     status_code=500
     error_str = traceback.format_exc()
     response = dict(
@@ -81,7 +100,6 @@ async def get_batch_execution_data(batch_key: str):
   return APIResponse(detail=batch_data)
 
 
-
 @router.post('/job/{job_key}/heartbeat')
 async def job_heartbeat(job_key: str, work_session_key: str = None):
   """
@@ -105,3 +123,21 @@ async def job_heartbeat(job_key: str, work_session_key: str = None):
   except Exception:
     tx.abort_transaction()
 
+
+@router.get('/wip')
+async def get_wip_availability_for_job(job_key: str):
+  tx = db.begin_transaction()
+  job_data = tx.collection('Job').get(job_key)
+  available_wip_records = tx.aql.execute(
+    Queries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB,
+    bind_vars=dict(job_key=job_key)
+  ).next()
+
+  free_wip_qt_upstream = sum(w['quantity'] for w in available_wip_records['upstream_free_wip'])
+  free_wip_qt_downstream = sum(w['quantity'] for w in available_wip_records['downstream_free_wip'])
+
+  return dict(
+    job_key = job_key,
+    free_wip_qt_downstream = free_wip_qt_downstream,
+    free_wip_qt_upstream = free_wip_qt_upstream
+  )

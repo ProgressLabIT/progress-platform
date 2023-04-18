@@ -125,6 +125,7 @@ class Job(FlexModel):
   parameters: PhaseParameters = None
 
   first_phase: bool = None
+  last_phase: bool = None
 
   stage: WorkStatus = WorkStatus.CREATED
   start_from: Union[datetime, date] = None
@@ -136,7 +137,6 @@ class Job(FlexModel):
   qt_planned: float
   qt_completed: float = 0
   qt_released: float = 0
-  qt_next_batch: float = None
 
   step_sequence: List[StepWithMediaInfo] = []
 
@@ -158,6 +158,8 @@ class Job(FlexModel):
 
   job_docs: List[ProductDoc] = []
   job_bom: List[BomLineRead] = []
+
+  forced: str = None
 
   notes: str = None
   # @validator('progress')

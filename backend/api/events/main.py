@@ -1,11 +1,21 @@
 from pydantic import BaseModel
 
-from events import IssueEvent, ProductionEvent
+from events import (
+  IssueEvent,
+  ProductionActivityEvent,
+  ProductionAdminEvent,
+  SharedEventMethods
+)
 from models.event import EventModel
 from utils.db import db
 
 
-class Event(ProductionEvent, IssueEvent):
+class Event(
+  IssueEvent,
+  ProductionActivityEvent,
+  ProductionAdminEvent,
+  SharedEventMethods
+  ):
   """
   This class serves as collector of all event categories and as main "entrypoint" for the event API
   It abstracts the general logic of processing and saving events from the specifics defined in each
@@ -31,9 +41,15 @@ class Event(ProductionEvent, IssueEvent):
 
   def save(self):
     # Initialize transaction
+    self.meta.collections.append('Event')
     self.tx = self.db.begin_transaction(write=self.meta.collections)
 
     try:
+      # Save event, storing its key for later use
+      if self.meta.event_first:
+        event_record = self.tx.collection('Event').insert(self.info, return_new=True)['new']
+        self.info = EventModel(**event_record)
+
       # Apply updates to global application state based on specific event
       self.action()
 
@@ -41,8 +57,8 @@ class Event(ProductionEvent, IssueEvent):
       for method in self.meta.post_processing or []:
         getattr(self, method)()
 
-      # Save event
-      self.tx.collection('Event').insert(self.info)
+      # Re-save event with new data added
+      self.tx.collection('Event').insert(self.info, overwrite=True)
 
       # Commit transaction
       self.tx.commit_transaction()

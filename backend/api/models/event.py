@@ -5,7 +5,7 @@ from typing import Any, Union
 from pydantic import Field
 
 from models.quality import IssueWithLinks, Issue, Message
-from utils.base_models import FlexModel
+from utils.base_models import ArangoDocument
 from utils.dt import timestamp
 
 class EventType(Enum):
@@ -29,11 +29,15 @@ class EventType(Enum):
 
   # Admin Events
   # e.g. WorkSession time Forced, etc.
+  TIME_OVERRIDE_REQUESTED = 'TIME_OVERRIDE_REQUESTED'
+  PROGRESS_OVERRIDE_REQUESTED = 'PROGRESS_OVERRIDE_REQUESTED'
+  BATCH_CANCELED = 'BATCH_CANCELED'
+  STEP_CANCELED = 'STEP_CANCELED'
+  STEP_MODIFIED = 'STEP_MODIFIED'
 
 
-class EventModel(FlexModel):
+class EventModel(ArangoDocument):
   """fields marked with a comment are event attributes, the rest could be refactored into a generic "data" field, which can be defined with additional models specific for the event type."""
-  key: str = Field(None, alias="_key") #
   event_type: EventType #
   user_key: str #
   user_session_key: str = None #
@@ -60,3 +64,8 @@ class EventModel(FlexModel):
   # Quality Fields
   issue_data: Any
   message_data: Message = None
+
+  # Admin fields
+  new_job_duration: int = None # milliseconds
+  new_job_qt_completed: float = None
+  new_job_qt_released: float = None

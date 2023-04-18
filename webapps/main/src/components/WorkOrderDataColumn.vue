@@ -100,7 +100,7 @@
     <q-btn
       v-if="wo_data.status != 'closed'"
       outline square
-      class="full-width"
+      class="full-width q-mt-md"
       color="theme-blue"
       :loading="saving"
       :label="$t('update')">

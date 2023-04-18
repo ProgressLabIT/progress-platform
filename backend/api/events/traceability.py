@@ -1,5 +1,3 @@
-from pydantic import BaseModel
-
 from events.shared import EventMeta
 
 from models.traceability import *
@@ -10,7 +8,7 @@ from utils.traceability import Queries as TraceabilityQueries
 from utils.db import db, model_to_db_dict
 
 
-class ProductionEvent:
+class ProductionActivityEvent:
   production_collections = [
     'Batch',
     'Event',
@@ -272,10 +270,10 @@ class ProductionEvent:
     if not self.job:
       self.get_job_data()
 
-    if not self.job.first_phase:
-      # Delete booked WIP from the previous phase
-      wip_match_filter=dict(_to=f'Job/{self.info.job_key}')
-      self.tx.collection('wip').delete_match(wip_match_filter)
+    self.info.next_phase_key = self.tx.aql.execute(
+      TraceabilityQueries.GET_NEXT_PHASE_IN_WORK_ORDER,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
+    ).next()
 
     new_wip = WIP(
       _from=f'Phase/{self.info.phase_key}',
@@ -289,10 +287,18 @@ class ProductionEvent:
     self.tx.collection('wip').insert(new_wip)
 
     self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.next_phase_key)
+      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.next_phase_key])
     )
 
+
+  def remove_wip(self):
+    # Delete booked WIP from the previous phase
+    wip_match_filter=dict(_to=f'Job/{self.info.job_key}')
+    self.tx.collection('wip').delete_match(wip_match_filter)
+
+    # TODO: Make sure only wip related to active batch gets deleted
+    # This setup would delete also other wip booked in advance.
 
   def book_wip(self, booking_qt):
     if not self.job:
@@ -300,12 +306,13 @@ class ProductionEvent:
 
     available_batches_cursor = self.tx.aql.execute(
       TraceabilityQueries.RETRIEVE_AVAILABLE_WIP,
-      bind_vars=dict(phase_key=self.info.phase_key)
+      bind_vars=dict(phase_key=self.info.phase_key, wo_key=self.info.work_order_key)
     )
 
     available_batches = [WIP(**b) for b in available_batches_cursor]
     total_available = sum(wip.quantity for wip in available_batches)
 
+    # TODO: change using while loop like in events/admin.py@override_progress
     for b in available_batches:
       if b.quantity <= booking_qt:
         # Book entire batch for job
@@ -345,8 +352,8 @@ class ProductionEvent:
 
     # Update input availability for jobs in this phase
     self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASE,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
+      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
     )
 
     return total_available
@@ -432,32 +439,6 @@ class ProductionEvent:
       )
     )
 
-
-  # ===================================================================
-  # WorkOrder
-  # ===================================================================
-
-  def get_work_order_data(self):
-    wo_data = self.tx.collection('WorkOrder').get(self.info.work_order_key)
-    wo_data_out = WorkOrderFull(**wo_data)
-    return wo_data_out
-
-
-  def update_work_order(self):
-    if not self.info.work_order_key:
-      self.get_job_data()
-      self.info.work_order_key = self.job.wo_key
-
-    updated_wo = self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_WORK_ORDER,
-      bind_vars=dict(wo_key=self.info.work_order_key)
-    ).next()
-
-    if updated_wo['status'] == WorkStatus.CLOSED.value:
-      self.tx.aql.execute(
-        ProductionQueries.REMOVE_WORK_ORDER_FROM_QUEUE,
-        bind_vars=dict(wo_key=self.info.work_order_key)
-      )
 
   ######################################################################
   # EVENT ACTIONS
@@ -606,11 +587,18 @@ class ProductionEvent:
 
   def complete_batch(self):
 
-    self.get_job_data()
+    if not hasattr(self, 'job'):
+      self.get_job_data()
+
+    if not self.job.first_phase:
+      # TODO: check for wip availability
+      pass
 
     self.info.completed_batch_key = self.job.active_batch_key
     self.info.completed_batch_qt = self.job.active_batch_qt
     self.info.work_session_key = self.job.last_work_session_started
+
+    self.close_work_session()
 
     # Complete batch
     self.tx.aql.execute(
@@ -620,7 +608,6 @@ class ProductionEvent:
         end=self.info.timestamp
       )
     )
-    self.close_work_session()
 
     new_qt_completed = self.job.qt_completed + self.info.completed_batch_qt
 
@@ -667,15 +654,11 @@ class ProductionEvent:
       if create_new_batch:
         self.response['batch_data'] = self.get_batch_execution_data()
 
-
-    # Release WIP
-    self.info.next_phase_key = self.tx.aql.execute(
-      TraceabilityQueries.GET_NEXT_PHASE_IN_WORK_ORDER,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
-    ).next()
+    if not self.job.first_phase:
+      self.remove_wip()
 
     # is next_phase generate a WIP record and update job input availability state
-    if self.info.next_phase_key:
+    if not self.job.last_phase:
       self.declare_wip()
 
 # --------------------------------------------------------------------
