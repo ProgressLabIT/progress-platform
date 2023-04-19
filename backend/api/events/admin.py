@@ -64,15 +64,9 @@ class ProductionAdminEvent:
     ws_cursor = self.tx.aql.execute(Queries.CANCEL_JOB_WORK_SESSIONS, bind_vars=bind_vars)
     old_work_sessions = [WorkSession(**ws) for ws in ws_cursor]
 
-    # Define hourly cost as provided or as weighted average of the recorded sessions
-    if hasattr(self.info, 'hourly_cost'):
-      avg_hourly_cost = self.info.hourly_cost
-    else:
-      # Duration is in milliseconds, cost is based on hours,
-      # but conversion is handled going back to hourly cost in the average
-      total_recorded_duration = sum(ws.duration for ws in old_work_sessions)
-      total_recorded_cost = sum(ws.duration * ws.hourly_cost for ws in old_work_sessions)
-      avg_hourly_cost = total_recorded_cost / total_recorded_duration
+    # Define hourly cost as defined for the operator
+    operator_data = self.tx.collection('User').get(self.job.assigned_to)
+    hourly_cost = operator_data.get('assigned_to', 0)
 
     # Get job batches to update
     match = dict(job_key=job_key, canceled=None)
@@ -98,7 +92,7 @@ class ProductionAdminEvent:
       batch_update = dict(
         _key = b.key,
         unit_processing_time = new_unit_processing_time,
-        unit_processing_cost = new_unit_processing_time * avg_hourly_cost / 3600000, # No. of milliseconds in an hour
+        unit_processing_cost = new_unit_processing_time * hourly_cost / 3600000, # No. of milliseconds in an hour
         forced = self.info.id
       )
 
@@ -112,7 +106,7 @@ class ProductionAdminEvent:
         product_key = self.job.product_key,
         duration = batch_duration,
         forced = self.info.id,
-        hourly_cost = avg_hourly_cost
+        hourly_cost = hourly_cost
       )
 
       new_work_sessions.append(forced_work_session.dict(exclude={'key', 'id', 'rev'}))
@@ -170,25 +164,10 @@ class ProductionAdminEvent:
     else:
       unit_processing_time = self.job.parameters.std_processing_time
 
-    avg_hourly_cost = self.tx.aql.execute(
-      """
-      LET work_sessions = (
-        FOR ws IN WorkSession
-        FILTER ws.product_key == @product_key
-        SORT ws.end DESC
-        LIMIT 100
-        RETURN ws
-      )
+    operator_data = self.tx.collection('User').get(self.job.assigned_to)
+    hourly_cost = operator_data.get('hourly_cost', 0)
 
-      LET total_time = SUM(work_sessions[*].duration)
-      LET total_cost = SUM(work_sessions[* RETURN CURRENT.duration * CURRENT.hourly_cost])
-
-      RETURN total_time ? total_cost / total_time : 0
-      """,
-      bind_vars = dict(product_key=self.job.product_key)
-    ).next()
-
-    unit_processing_cost = avg_hourly_cost * unit_processing_time
+    unit_processing_cost = hourly_cost * unit_processing_time
     batch_value = unit_processing_cost * quantity
 
     new_batch_data = Batch(
@@ -214,7 +193,7 @@ class ProductionAdminEvent:
       phase_key = self.job.phase_key,
       work_order_key = self.job.wo_key,
       product_key = self.job.product_key,
-      hourly_cost = avg_hourly_cost,
+      hourly_cost = hourly_cost,
       duration = unit_processing_time * quantity,
       forced = self.info.id
     )
