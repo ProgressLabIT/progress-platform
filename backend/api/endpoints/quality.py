@@ -29,21 +29,15 @@ async def get_issue_type(
   active_only: bool = True
   ):
   # use query parameters to filter specific type
-  match = dict()
+  match = dict(
+    key = key,
+    code = code,
+    critical = critical,
+    active_only = active_only
+  )
 
-  if key:
-    match['_key'] = key
-
-  if code:
-    match['code'] = code
-
-  if critical:
-    match['critical'] = critical
-
-  if active_only:
-    match['active'] = True
-
-  return [_ for _ in issue_types.find(match)]
+  cursor = db.aql.execute(Queries.FETCH_ISSUE_TYPES, bind_vars=match)
+  return [_ for _ in cursor]
 
 # ----------------------------------------------------------------------
 

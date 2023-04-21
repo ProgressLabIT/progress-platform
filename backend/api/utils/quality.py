@@ -1,4 +1,22 @@
 class Queries:
+  FETCH_ISSUE_TYPES = """
+    FOR i IN IssueType
+    FILTER
+      @key ? i._key == @key : true
+      && @code ? i.code == @code : true
+      && @critical ? i.critical == @critical : true
+      && @active_only ? i.active_only == @active_only : true
+    LET form_template = (
+      FOR f IN i.form_template
+      LET field_definition = FIRST(
+        FOR fdef IN CustomField
+        FILTER fdef._key == f._key
+        RETURN fdef
+      )
+      RETURN MERGE(f, { type: field_definition.type })
+    )
+    RETURN MERGE(i, { form_template })
+  """
 
   FIND_ISSUES = """
     FOR i IN Issue
