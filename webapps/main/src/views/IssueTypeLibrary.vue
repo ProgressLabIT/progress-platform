@@ -60,7 +60,7 @@
         <q-btn
           class="full-width q-mt-auto"
           color="theme-blue"
-          :label="$t('add')"
+          :label="$t('new')"
           @click="openIssueTypeNew">
         </q-btn>
       </div>

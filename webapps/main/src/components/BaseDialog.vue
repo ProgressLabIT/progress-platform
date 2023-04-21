@@ -2,7 +2,7 @@
   <q-dialog
     :model-value="show"
     :maximized="maximized"
-    no-backdrop-dismiss
+    :no-backdrop-dismiss="noBackdropDismiss"
     no-route-dismiss
     no-shake
     square
@@ -37,6 +37,10 @@ export default {
     maximized: {
       type: Boolean,
       default: false
+    },
+    noBackdropDismiss: {
+      type: Boolean,
+      default: true
     },
     background: {
       type: String,
