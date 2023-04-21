@@ -11,78 +11,9 @@ from pydantic import (
   validator
 )
 
+from models.form import CustomFieldInstance
 from utils.base_models import ArangoDocument, ArangoEdge
 from utils.dt import timestamp
-
-
-class FieldType(Enum):
-  TEXT = 'text'
-  NUMBER = 'number'
-  BOOLEAN = 'boolean'
-  TERNARY = 'ternary'
-  RADIO = 'radio'
-  CHECKLIST = 'checklist'
-  SELECT = 'select'
-  DATE = 'date'
-  TIME = 'time'
-  # Files will added to the form through a boolean parameter in the endpoint
-  # No need to specify a field of type "file"
-  # In the future these will be saved as in a Media collection with metadata
-  # and pointing to an object storage location
-
-field_type_map = {
-  FieldType.TEXT.value: str,
-  FieldType.NUMBER.value: float,
-  FieldType.BOOLEAN.value: bool,
-  FieldType.TERNARY.value: Union[bool, None],
-  FieldType.RADIO.value: str,
-  FieldType.SELECT.value: str,
-  FieldType.DATE.value: date,
-  FieldType.TIME.value: time
-}
-# if the field model has multiple = True, the type becomes List[type]
-
-
-class CustomListMeta(ArangoDocument):
-  name: str
-  description: str = None
-
-
-class CustomListValue(ArangoDocument):
-  list_key: str # Reference to CustomField
-  ext_key: str = None # Optional reference to external identification, e.g. ERP id
-  value: str
-
-
-class CustomField(ArangoDocument):
-  type: FieldType
-  name: str # To search when building the form
-  default_label: str # To show to the user when filling up the forms
-  default_hint: str = None # To show to the user when filling up the forms
-  description: str = None
-  list_key: str = None
-
-  @root_validator(pre=True)
-  def ensure_list_for_selects(cls, values):
-    if (values.get('type') == FieldType.SELECT
-      and values.get('list_key') == None):
-      raise ValueError('Select fields must have a custom list associated')
-    return values
-
-class CustomFieldInstance(BaseModel):
-  field_key: str
-  multiple: bool = False
-  label: str = None
-  hint: str = None
-  default: str = None # this value should be able to be parsed to get current data
-  required: bool = True
-  hidden: bool = None
-
-  @root_validator(pre=True)
-  def ensure_default_for_hidden(cls, values):
-    if values.get('hidden') and values.get('default') == None:
-      raise ValueError('Hidden fields must have a default value')
-    return values
 
 
 # ISSUE TYPE
@@ -92,7 +23,7 @@ class IssueType(ArangoDocument):
   active: bool = True
   description: str = None
   icon: str = None
-  form_template: List[CustomField] = []
+  form_template: List[CustomFieldInstance] = []
   critical: bool = False
   # close_within: NonNegativeInt = 0 # Time in hours. After this make critical. If 0 ignore.
 
