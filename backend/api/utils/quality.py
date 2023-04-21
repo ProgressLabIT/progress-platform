@@ -5,7 +5,7 @@ class Queries:
       @key ? i._key == @key : true
       && @code ? i.code == @code : true
       && @critical ? i.critical == @critical : true
-      && @active_only ? i.active_only == @active_only : true
+      && @active_only ? i.active == @active_only : true
     LET form_template = (
       FOR f IN i.form_template
       LET field_definition = FIRST(

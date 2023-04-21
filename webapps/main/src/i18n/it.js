@@ -106,6 +106,7 @@ export default {
   "field_multiple": "Valori multipli",
   "field_none": "Nessun campo",
   "field_required": "Obbligatorio",
+  "field_required_alert": "Campo obbligatorio",
   "field_type_text": "Testo",
   "field_type_number": "Numero",
   "field_type_boolean": "Vero/Falso",

@@ -1,59 +1,64 @@
 <template>
   <BaseDialog :show="show">
     <q-card square class="surface1 q-pa-md" style="min-width: 600px; max-width: 1200px;">
-      <q-card-section>
-        <div class="row justify-between items-center">
-          <div class="text-h2 display highlight text-center">
-            {{ $t('issue_new_title') }}
+      <q-form>
+        <q-card-section>
+          <div class="row justify-between items-center">
+            <div class="text-h2 display highlight text-center">
+              {{ $t('issue_new_title') }}
+            </div>
+            <q-btn
+              round
+              flat
+              padding="sm sm"
+              icon="mdi-close"
+              @click="$emit('close')">
+            </q-btn>
           </div>
-          <q-btn
-            round
-            flat
-            padding="sm sm"
-            icon="mdi-close"
-            @click="$emit('close')">
-          </q-btn>
-        </div>
-      </q-card-section>
-      <q-card-section>
-        <BaseAutocompleteIssueType
-          @select="(value) => setIssueType(value)"
-          :value="issue_type">
-        </BaseAutocompleteIssueType>
+        </q-card-section>
+        <q-card-section>
+          <BaseAutocompleteIssueType
+            @select="(value) => setIssueType(value)"
+            :value="issue_type">
+          </BaseAutocompleteIssueType>
+        </q-card-section>
 
-        <div class="row q-gutter-md q-mt-lg">
-          <q-btn
-            v-if="!critical_only"
-            color="theme-orange"
-            :label="$t('save')"
-            @click="save"
-            :loading="saving">
-          </q-btn>
-          <q-btn
-            color="theme-red"
-            @click="() => {critical = true; save()}">
-            {{ $t('save') }} {{ $t('critical') }}
-          </q-btn>
+        <q-card-section>
+          <template v-if="issue_type">
+            <FormField
+              v-for="field in issue_type.form_template"
+              :key="field._key"
+              :field_meta="field">
+            </FormField>
+          </template>
+        </q-card-section>
 
-          <q-space />
-          <q-btn
-            color="theme-grey"
-            :label="$t('cancel')"
-            @click="$emit('close')">
-          </q-btn>
-        </div>
+        <!-- ACTIONS -->
+        <q-card-section>
+          <div class="row q-gutter-md">
+            <q-btn
+              v-if="!critical_only"
+              color="theme-orange"
+              :label="$t('save')"
+              @click="save"
+              :loading="saving">
+            </q-btn>
+            <q-btn
+              color="theme-red"
+              @click="() => {critical = true; save()}">
+              {{ $t('save') }} {{ $t('critical') }}
+            </q-btn>
 
+            <q-space />
+            <q-btn
+              color="theme-grey"
+              :label="$t('cancel')"
+              @click="$emit('close')">
+            </q-btn>
+          </div>
 
-        <!-- <div v-else class="column full-width flex-center">
-          <q-icon
-            name="mdi-check-circle"
-            color="theme-green"
-            size="xl">
-          </q-icon>
-          <div class="q-mt-sm">{{ $t('issue_new_success') }}</div>
-          <q-spinner class="q-mt-md"/>
-        </div> -->
-      </q-card-section>
+        </q-card-section>
+      </q-form>
     </q-card>
   </BaseDialog>
 </template>
@@ -61,6 +66,7 @@
 <script>
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
+import FormField from '@/components/FormField.vue'
 import { timestamp } from '@/lib/TimeHandling.js'
 
 export default {
@@ -69,7 +75,8 @@ export default {
 
   components: {
     BaseAutocompleteIssueType,
-    BaseDialog
+    BaseDialog,
+    FormField
   },
 
   props: {
@@ -81,12 +88,10 @@ export default {
 
   data () {
     return {
-      current_issue_step: 1,
       critical_only: false,
       saving: false,
       issue_type: null,
-      title: '',
-      description: '',
+      form_data: {},
       confirmed: false,
       critical: false,
       links: [
@@ -208,7 +213,7 @@ export default {
         : null
       )
     })
-  }
+  },
 }
 </script>
 
