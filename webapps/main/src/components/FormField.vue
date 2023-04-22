@@ -2,39 +2,45 @@
   <div>
     <!-- TEXT -->
     <q-input
-      v-if="field_meta.type == 'text'"
+      v-if="field_data.type == 'text'"
       filled
       stack-label
       autogrow
       lazy-rules
-      :label="field_meta.label"
-      :hint="field_meta.hint"
-      :model-value="value"
-      :rules="[value => (field_meta.required ? !!value : true) || $t('field_required_alert')]"
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :hint="field_data.hint"
+      :model-value="field_data.value"
+      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
       @update:model-value="(val) => $emit('update', val)">
     </q-input>
 
     <!-- NUMBER -->
     <q-input
-      v-if="field_meta.type == 'number'"
+      v-if="field_data.type == 'number'"
       type="number"
       filled
       stack-label
       autogrow
-      :label="field_meta.label"
-      :hint="field_meta.hint"
-      :model-value="value"
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :hint="field_data.hint"
+      :model-value="field_data.value"
       lazy-rules
-      :rules="[value => (field_meta.required ? !!value : true) || $t('field_required_alert')]"
+      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
       @update:model-value="val => $emit('update', parseFloat(val))">
     </q-input>
 
     <!-- BOOLEAN -->
     <q-checkbox
-      v-if="field_meta.type == 'boolean'"
-      :label="field_meta.label"
-      :model-value="value"
-      :rules="[value => (field_meta.required ? !!value : true) || $t('field_required_alert')]"
+      v-if="field_data.type == 'boolean'"
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :model-value="field_data.value"
+      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
       @update:model-value="val => $emit('update', val)">
     </q-checkbox>
 
@@ -50,11 +56,18 @@ export default {
   name: 'FormField',
 
   props: {
-    field_meta: {
+    field_data: {
       type: Object,
       required: true
     },
-    value: null
+    dense: {
+      type: Boolean,
+      default: false
+    },
+    disable: {
+      type: Boolean,
+      default: false
+    }
   },
 }
 </script>
