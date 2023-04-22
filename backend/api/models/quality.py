@@ -46,7 +46,7 @@ class Issue(ArangoDocument):
   closed: datetime = None
   critical: bool # Default value set at the IssueType level
   # close_within: NonNegativeInt # Value set at the IssueType level
-  data: dict = None
+  data: List[dict] = None
   open: bool = True
 
   # Require issue type only when closing.

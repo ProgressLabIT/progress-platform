@@ -48,8 +48,14 @@ class Queries:
       FILTER it._key == i.issue_type
       RETURN it
     )
+    LET issue_data = (
+      FOR field IN i.data
+      FOR fdef IN type_data.form_template
+      FILTER fdef._key == field._key
+      RETURN MERGE(fdef, field)
+    )
     SORT i.created
-    RETURN MERGE(i, { icon: type_data.icon, type_name: type_data.name })
+    RETURN MERGE(i, { icon: type_data.icon, type_name: type_data.name, data: issue_data })
   """
 
   CHECK_PRODUCTION_CRITICAL_STATUS = """
