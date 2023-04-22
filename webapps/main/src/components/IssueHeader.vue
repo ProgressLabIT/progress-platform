@@ -16,7 +16,7 @@
         <div>#{{ issue._key }}</div>
       </q-item-label>
     </q-item-section>
-    <q-item-section top class="display col-auto weight-bold text-uppercase">
+    <q-item-section class="display col-auto weight-bold text-uppercase">
       <q-chip :color="issue.badge.color">
         {{ issue.badge.text }}
       </q-chip>
