@@ -28,7 +28,8 @@
             <FormField
               v-for="field in issue_type.form_template"
               :key="field._key"
-              :field_meta="field">
+              :field_data="field"
+              @update="val => field.value = val">
             </FormField>
           </template>
         </q-card-section>
@@ -53,7 +54,7 @@
             <q-btn
               color="theme-grey"
               :label="$t('cancel')"
-              @click="$emit('close')">
+              @click="cancel">
             </q-btn>
           </div>
 
@@ -164,6 +165,12 @@ export default {
       }
     },
 
+    cancel() {
+      this.issue_type = null
+      this.form_data = {}
+      this.$emit('close')
+    },
+
     save() {
       // if link is active send data in the form e.g. { type: product, key: whatever }
       const link_data = this.links.map(l => ({ type: l.type, key: l.value }))
@@ -177,7 +184,10 @@ export default {
         critical: this.critical,
         close_within: this.issue_type ? this.issue_type.close_within : 0,
         // Map links to list of objects, including only populated properties
-        linked_to: link_data
+        linked_to: link_data,
+        data: this.issue_type ? this.issue_type.form_template.map(f => {
+          return { _key: f._key, value: f.value }
+        }) : null
       }
       const event = {
         event_type: 'ISSUE_CREATED',
