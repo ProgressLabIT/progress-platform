@@ -4,7 +4,39 @@
 
       <!-- LEFT SECTION -->
       <div class="col-8 column full-height">
+
+        <!-- HEADER -->
         <IssueHeader :issue="issue" @type-change="refreshIssue"/>
+
+
+        <!-- FORM DATA -->
+        <div class="row items-center q-pl-lg q-mt-sm">
+          <div class="col-auto text-h5 weight bold text-uppercase text-low">
+            {{ $t('form_title') }}
+          </div>
+          <div class="col">
+            <q-separator inset />
+          </div>
+        </div>
+
+        <div class="row q-px-lg q-pt-md">
+          <div class="col-auto q-pr-md" v-for="field in issue.data">
+            <FormField :field_data="field" dense :disable="true" />
+          </div>
+        </div>
+
+
+        <!-- ISSUE EVENTS -->
+        <div class="row items-center q-pl-lg q-mt-sm">
+          <div class="col-auto text-h5 weight bold text-uppercase text-low">
+            {{ $t('history') }}
+          </div>
+          <div class="col">
+            <q-separator inset />
+          </div>
+        </div>
+
+
         <q-list class="q-ml-lg q-px-xl col scroll q-pb-lg">
           <q-item
             v-for="e, index in history"
@@ -122,6 +154,9 @@ import enrichIssue from '@/mixins/issues.js'
 import Message from '@/components/Message.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
+import FormField from '@/components/FormField.vue'
+
+
 export default {
 
   name: 'IssueDetail',
@@ -130,7 +165,8 @@ export default {
     IssueHeader,
     Message,
     BaseUserAvatar,
-    BaseDialog
+    BaseDialog,
+    FormField
   },
 
   mixins: [enrichIssue, event],

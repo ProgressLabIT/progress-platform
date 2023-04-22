@@ -121,6 +121,7 @@ export default {
     "morning": "good morning"
   },
   "hint": "Help text",
+  "history": "History",
   "icon": "icon",
   "image": "image",
   "inactive": "inactive",

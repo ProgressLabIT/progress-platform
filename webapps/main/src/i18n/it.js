@@ -122,6 +122,7 @@ export default {
     "morning": "buongiorno"
   },
   "hint": "Testo aiuto",
+  "history": "Storico",
   "icon": "icona",
   "image": "immagine | immagini",
   "inactive": "disattivato",
