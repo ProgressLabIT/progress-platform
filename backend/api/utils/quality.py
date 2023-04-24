@@ -24,7 +24,7 @@ class Queries:
       // When filtering by document key, parameters will be arrays
       // Filter first issue properties...
       @issue_key ? POSITION(@issue_key, i._key) : true
-      && @issue_type ? POSITION(@issue_type, i.issue_type) : true
+      && @issue_type_key ? POSITION(@issue_type_key, i.issue_type_key) : true
       && @creator_id ? POSITION(@creator_id, i.created_by) : true
       && @time_created_from ? i.created >= @time_created_from : true
       && @time_created_to ? i.created <= @time_created_to : true
@@ -45,7 +45,7 @@ class Queries:
     LIMIT @limit || null
     LET type_data = FIRST(
       FOR it IN IssueType
-      FILTER it._key == i.issue_type
+      FILTER it._key == i.issue_type_key
       RETURN it
     )
     LET issue_data = (
@@ -55,7 +55,7 @@ class Queries:
       RETURN MERGE(fdef, field)
     )
     SORT i.created
-    RETURN MERGE(i, { icon: type_data.icon, type_name: type_data.name, data: issue_data })
+    RETURN MERGE(i, { icon: type_data.icon, issue_type_name: type_data.name, data: issue_data })
   """
 
   CHECK_PRODUCTION_CRITICAL_STATUS = """

@@ -115,7 +115,7 @@ async def delete_issue_type(issue_key: str):
 @router.get('/issue')
 async def get_issues(
   issue_key: Union[List[str], None] = Query(default=None),
-  issue_type: Union[List[str], None] = Query(default=None),
+  issue_type_key: Union[List[str], None] = Query(default=None),
   product_key: Union[List[str], None] = Query(default=None),
   work_order_key: Union[List[str], None] = Query(default=None),
   job_key: Union[List[str], None] = Query(default=None),
@@ -132,7 +132,7 @@ async def get_issues(
   # use query parameters to filter specific type
   bind_vars = dict(
     issue_key = issue_key,
-    issue_type = issue_type,
+    issue_type_key = issue_type_key,
     product_key = product_key,
     work_order_key = work_order_key,
     job_key = job_key,
