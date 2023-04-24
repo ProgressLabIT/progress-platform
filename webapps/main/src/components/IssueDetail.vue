@@ -1,6 +1,6 @@
 <template>
   <BaseDialog :show="true" @close="exit" maximized>
-    <q-card class="surface1 row" bordered square style="width: 90vw; height: 90vh">
+    <q-card class="surface1 row" bordered square style="width: 95vw; height: 95vh">
 
       <!-- LEFT SECTION -->
       <div class="col-8 column full-height">
@@ -19,15 +19,19 @@
           </div>
         </div>
 
-        <div class="row q-px-lg q-pt-md">
-          <div class="col-auto q-pr-md" v-for="field in issue.data">
-            <FormField :field_data="field" dense :disable="true" />
+        <div class="row q-px-lg q-pt-md q-mb-md">
+          <template v-if="issue.data.length">
+            <div class="col-auto q-pr-md" v-for="field in issue.data">
+              <FormField :field_data="field" dense :disable="true" />
+            </div>
+          </template>
+          <div v-else class="col-auto text-italic">
+            No data
           </div>
         </div>
 
-
         <!-- ISSUE EVENTS -->
-        <div class="row items-center q-pl-lg q-mt-sm">
+        <div class="row items-center q-pl-lg">
           <div class="col-auto text-h5 weight bold text-uppercase text-low">
             {{ $t('history') }}
           </div>
@@ -104,7 +108,7 @@
           <q-btn
             color="theme-grey"
             :label="$t('back')"
-            @click="$router.back()">
+            @click="exit">
           </q-btn>
         </div>
       </div>
@@ -318,6 +322,10 @@ export default {
         this.getHistory()
         this.loading = false
       })
+    },
+
+    exit() {
+      this.$router.back()
     }
   },
 
