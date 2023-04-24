@@ -1,19 +1,17 @@
 <template>
   <BaseDialog :show="show">
     <q-card square class="surface1 q-pa-md" style="min-width: 600px; max-width: 1200px;">
-      <q-form>
+      <q-form ref="issue-form">
         <q-card-section>
           <div class="row justify-between items-center">
             <div class="text-h2 display highlight text-center">
-              {{ $t('issue_new_title') }}
+              <template v-if="mode=='new'">
+                {{ $t('issue_new_title') }}
+              </template>
+              <template v-else>
+                {{ $t('issue_update_title')}}
+              </template>
             </div>
-            <q-btn
-              round
-              flat
-              padding="sm sm"
-              icon="mdi-close"
-              @click="$emit('close')">
-            </q-btn>
           </div>
         </q-card-section>
         <q-card-section>
@@ -25,12 +23,24 @@
 
         <q-card-section>
           <template v-if="issue_type">
-            <FormField
-              v-for="field in issue_type.form_template"
-              :key="field._key"
-              :field_data="field"
-              @update="val => field.value = val">
-            </FormField>
+            <!-- NEW ISSUE -->
+            <template v-if="issue.issue_type_key != issue_type._key">
+              <FormField
+                v-for="field in issue_type.form_template"
+                :key="field._key"
+                :field_data="field"
+                @update="val => field.value = val">
+              </FormField>
+            </template>
+
+            <template v-else>
+              <FormField
+                v-for="field in issue.data"
+                :key="field._key"
+                :field_data="field"
+                @update="val => field.value = val">
+              </FormField>
+            </template>
           </template>
         </q-card-section>
 
@@ -72,7 +82,7 @@ import { timestamp } from '@/lib/TimeHandling.js'
 
 export default {
 
-  name: 'IssueNew',
+  name: 'IssueForm',
 
   components: {
     BaseAutocompleteIssueType,
@@ -84,6 +94,14 @@ export default {
     show: {
       type: Boolean,
       default: true
+    },
+    mode: {
+      type: String,
+      default: 'new'
+    },
+    issue: {
+      type: Object,
+      default: undefined
     }
   },
 
@@ -151,10 +169,16 @@ export default {
 
     session_data() {
       return this.$store.state.session
-    }
+    },
   },
 
   methods: {
+    initIssueType() {
+      this.issue_type = this.issue.issue_type_key != null
+        ? this.$store.getters.getIssueType(this.issue.issue_type_key)
+        : undefined
+    },
+
     setIssueType(value) {
       this.issue_type = value
       if (value.critical) {
@@ -166,43 +190,57 @@ export default {
     },
 
     cancel() {
-      this.issue_type = null
+      this.initIssueType()
       this.form_data = {}
       this.$emit('close')
     },
 
     save() {
-      // if link is active send data in the form e.g. { type: product, key: whatever }
-      const link_data = this.links.map(l => ({ type: l.type, key: l.value }))
+      this.saving = true
+      const issue_data = {
+        issue_type_key: this.issue_type ? this.issue_type._key : null,
+        critical: this.critical,
+      }
 
       const user = this.session_data.user._key
 
-      this.saving = true
-      const issue_data = {
-        issue_type: this.issue_type ? this.issue_type._key : null,
-        created_by: `User/${user}`, // temporarily hardcoding DB id
-        critical: this.critical,
-        close_within: this.issue_type ? this.issue_type.close_within : 0,
+      if (this.mode == 'new') {
+        // if link is active send data in the form e.g. { type: product, key: whatever }
+        issue_data.created_by = `User/${user}` // temporarily hardcoding DB id
+        issue_data.close_within = this.issue_type ? this.issue_type.close_within : 0
+
         // Map links to list of objects, including only populated properties
-        linked_to: link_data,
-        data: this.issue_type ? this.issue_type.form_template.map(f => {
+        const link_data = this.links.map(l => ({ type: l.type, key: l.value }))
+        issue_data.linked_to = link_data
+
+        issue_data.data = this.issue_type ? this.issue_type.form_template.map(f => {
           return { _key: f._key, value: f.value }
         }) : null
       }
+
+      else {
+        // Add _key and data fields for ISSUE_UPDATED event
+        issue_data._key = this.issue._key
+        issue_data.data = this.issue.data
+      }
+
+
       const event = {
-        event_type: 'ISSUE_CREATED',
+        event_type: this.mode == 'new' ? 'ISSUE_CREATED' : 'ISSUE_UPDATED',
         user_key: user,
         user_session_key: this.session_data.session_key,
         timestamp: timestamp(),
         issue_data
       }
+
+      const message = this.mode == 'new' ? 'issue_new_success' : 'issue_update_success'
       this.$api.post('event', event)
       .then(() => {
         this.saving = false
         this.$store.dispatch('getIssues', { job_key: this.job_data._key })
         this.$emit('close')
         this.$q.notify({
-          message: this.$t('issue_new_success'),
+          message: this.$t(message),
           color: this.critical ? 'theme-red' : 'theme-orange',
           timeout: 1500,
           position: 'top'
@@ -212,26 +250,27 @@ export default {
   },
 
   mounted() {
-    this.links.forEach(l => {
-      l.value = (
-        l.type == 'product' ? this.job_data.product_key
-        : l.type == 'operation' ? this.job_data.operation_key
-        : l.type == 'phase' ? this.job_data.phase_key
-        : l.type == 'work_order' ? this.job_data.wo_key
-        : l.type == 'user' ? this.session_data.user._key
-        : l.type == 'job' ? this.job_data._key
-        : null
-      )
-    })
-  },
+    // Currently for use only from WorkSessionScreen
+    if (this.mode == 'new') {
+      this.links.forEach(l => {
+        l.value = (
+          l.type == 'product' ? this.job_data.product_key
+          : l.type == 'operation' ? this.job_data.operation_key
+          : l.type == 'phase' ? this.job_data.phase_key
+          : l.type == 'work_order' ? this.job_data.wo_key
+          : l.type == 'user' ? this.session_data.user._key
+          : l.type == 'job' ? this.job_data._key
+          : null
+        )
+      })
+    }
+    // Edit existing issue
+    else if (this.issue.issue_type_key) {
+      this.initIssueType()
+    }
+  }
 }
 </script>
 
 <style lang="sass" scoped>
-.q-stepper
-  background-color: var(--surface-1)
-  border-radius: 0px
-
-  .q-stepper__dot
-    color: white
 </style>

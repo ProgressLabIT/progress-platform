@@ -149,8 +149,8 @@ export default {
   "issue_type_delete_title": "Delete issue type",
   "issue_type_new": "New issue type",
   "issue_type_update_success": "Issue type updated successfully",
-  "issue_updated": "Issue updated successfully",
-  "issue_update_type": "Choose new issue type",
+  "issue_update_success": "Issue updated successfully",
+  "issue_update_title": "Update the issue",
   "item": "item",
   "job": {
     "add": "add job",

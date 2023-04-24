@@ -10,6 +10,9 @@ const quality = {
   getters: {
     getIssueData: (state) => (issue_key) => {
       return state.issues.find( i => i._key == issue_key)
+    },
+    getIssueType: (state) => (issue_type_key) => {
+      return state.issue_types.find(it => it._key == issue_type_key)
     }
   },
 

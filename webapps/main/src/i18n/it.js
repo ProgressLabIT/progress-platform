@@ -150,8 +150,8 @@ export default {
   "issue_type_delete_success": "Tipo di segnalazione eliminato con successo",
   "issue_type_new": "Nuovo tipo di segnalazione",
   "issue_type_update_success": "Tipo di segnalazione aggiornata con successo",
-  "issue_updated": "Segnalazione aggiornata con successo",
-  "issue_update_type": "Scegli il nuovo tipo",
+  "issue_update_success": "Segnalazione aggiornata con successo",
+  "issue_update_title": "Modifica segnalazione",
   "item": "articolo | articoli",
   "job": {
     "add": "aggiungi lavoro",
