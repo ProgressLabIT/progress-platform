@@ -23,24 +23,12 @@
 
         <q-card-section>
           <template v-if="issue_type">
-            <!-- NEW ISSUE -->
-            <template v-if="issue.issue_type_key != issue_type._key">
-              <FormField
-                v-for="field in issue_type.form_template"
-                :key="field._key"
-                :field_data="field"
-                @update="val => field.value = val">
-              </FormField>
-            </template>
-
-            <template v-else>
-              <FormField
-                v-for="field in issue.data"
-                :key="field._key"
-                :field_data="field"
-                @update="val => field.value = val">
-              </FormField>
-            </template>
+            <FormField
+              v-for="field in form_fields"
+              :key="field._key"
+              :field_data="field"
+              @update="val => field.value = val">
+            </FormField>
           </template>
         </q-card-section>
 
@@ -170,13 +158,25 @@ export default {
     session_data() {
       return this.$store.state.session
     },
+
+    form_fields() {
+      if (this.issue) {
+        return this.issue.issue_type_key == this.issue_type._key
+          ? this.issue.data
+          : this.issue_type.form_template
+      }
+      else return this.issue_type ? this.issue_type.form_template : null
+    }
   },
 
   methods: {
     initIssueType() {
-      this.issue_type = this.issue.issue_type_key != null
-        ? this.$store.getters.getIssueType(this.issue.issue_type_key)
-        : undefined
+      if (this.issue) {
+        this.issue_type = this.issue.issue_type_key != null
+          ? this.$store.getters.getIssueType(this.issue.issue_type_key)
+          : null
+      }
+      else this.issue_type = null
     },
 
     setIssueType(value) {
@@ -197,9 +197,15 @@ export default {
 
     save() {
       this.saving = true
+
+      let fields_from_issue = (this.issue && this.issue.issue_type_key == this.issue_type._key)
+
+      let field_data = fields_from_issue ? this.issue.data : this.issue_type.form_template
+
       const issue_data = {
         issue_type_key: this.issue_type ? this.issue_type._key : null,
         critical: this.critical,
+        data: field_data
       }
 
       const user = this.session_data.user._key
@@ -212,17 +218,10 @@ export default {
         // Map links to list of objects, including only populated properties
         const link_data = this.links.map(l => ({ type: l.type, key: l.value }))
         issue_data.linked_to = link_data
-
-        issue_data.data = this.issue_type ? this.issue_type.form_template.map(f => {
-          return { _key: f._key, value: f.value }
-        }) : null
       }
 
-      else {
-        // Add _key and data fields for ISSUE_UPDATED event
-        issue_data._key = this.issue._key
-        issue_data.data = this.issue.data
-      }
+      // Add _key and data fields for ISSUE_UPDATED event
+      else issue_data._key = this.issue._key
 
 
       const event = {
