@@ -35,7 +35,7 @@ export default {
 
     progress_button_color() {
       return this.progress_button_active
-        ? this.$theme.green + 'aa'
+        ? (this.j.critical ? this.$theme.red : this.$theme.green) + 'aa'
         : this.$theme.surface2
     },
 

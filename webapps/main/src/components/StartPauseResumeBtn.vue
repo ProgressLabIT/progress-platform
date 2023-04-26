@@ -1,7 +1,7 @@
 <template>
   <q-btn
     class="fit"
-    :style="`background-color: ${j.active ? $theme.grey + 'aa' : $theme.blue + 'aa'}`"
+    :style="`background-color: ${color}`"
     square
     @click="startPauseResumeJob().action()">
     <div class="row items-center absolute-full">
@@ -25,7 +25,12 @@ export default {
   computed: {
     j() {
       return this.$store.state.traceability.working_job_data
-    }
+    },
+
+    color() {
+      return this.j.active ? this.$theme.grey + 'aa'
+        : (this.j.critical ? this.$theme.red : this.$theme.green) + 'aa'
+    },
   },
 
   methods: {
