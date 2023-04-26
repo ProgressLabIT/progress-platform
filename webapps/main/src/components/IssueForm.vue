@@ -24,7 +24,7 @@
         <q-card-section>
           <template v-if="issue_type">
             <FormField
-              v-for="field in form_fields"
+              v-for="field in form_data"
               :key="field._key"
               :field_data="field"
               @update="val => field.value = val">
@@ -39,7 +39,7 @@
               v-if="!critical_only"
               color="theme-orange"
               :label="$t('save')"
-              @click="save"
+              @click="() => { critical = false; save() }"
               :loading="saving">
             </q-btn>
             <q-btn
@@ -157,31 +157,34 @@ export default {
 
     session_data() {
       return this.$store.state.session
-    },
-
-    form_fields() {
-      if (this.issue) {
-        return this.issue.issue_type_key == this.issue_type._key
-          ? this.issue.data
-          : this.issue_type.form_template
-      }
-      else return this.issue_type ? this.issue_type.form_template : null
     }
   },
 
   methods: {
-    initIssueType() {
-      if (this.issue) {
-        this.issue_type = this.issue.issue_type_key != null
-          ? this.$store.getters.getIssueType(this.issue.issue_type_key)
-          : null
+    initFormData() {
+      // Show empty form fields if it's a new issue or the issue type is being changed
+      const use_clean_form = this.mode == 'new' || this.issue_type?._key != this.issue.issue_type_key
+
+      if (use_clean_form) {
+        // Use fields from issue type template adding empty value
+        // If no template, force null, otherwise `undefiend` will not be included in the api body and the issue data will not be updated
+        this.form_data = this.issue_type?.form_template.map(f => {
+          return { ...f, value: null }
+        }) ?? null
       }
-      else this.issue_type = null
+      else this.form_data = [ ...this.issue.data ]
+    },
+
+    initIssueType() {
+      // Fetch issue type data if editing an existing issue
+      this.issue_type = this.issue?.issue_type_key != null
+        ? this.$store.getters.getIssueType(this.issue.issue_type_key)
+        : null
     },
 
     setIssueType(value) {
       this.issue_type = value
-      if (value.critical) {
+      if (value?.critical) {
         this.critical_only = true
       }
       else {
@@ -191,21 +194,17 @@ export default {
 
     cancel() {
       this.initIssueType()
-      this.form_data = {}
+      this.form_data = []
       this.$emit('close')
     },
 
     save() {
       this.saving = true
 
-      let fields_from_issue = (this.issue && this.issue.issue_type_key == this.issue_type._key)
-
-      let field_data = fields_from_issue ? this.issue.data : this.issue_type.form_template
-
       const issue_data = {
-        issue_type_key: this.issue_type ? this.issue_type._key : null,
+        issue_type_key: this.issue_type?._key || null,
         critical: this.critical,
-        data: field_data
+        data: this.form_data
       }
 
       const user = this.session_data.user._key
@@ -266,6 +265,14 @@ export default {
     // Edit existing issue
     else if (this.issue.issue_type_key) {
       this.initIssueType()
+      this.initFormData()
+    }
+  },
+
+  watch: {
+    issue_type: {
+      deep: true,
+      handler: 'initFormData'
     }
   }
 }
