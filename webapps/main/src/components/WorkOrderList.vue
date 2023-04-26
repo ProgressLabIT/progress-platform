@@ -15,6 +15,12 @@
       :rows-per-page-options="[0]"
       @row-dblclick="showWorkOrderScreen">
 
+      <template #header-cell-issue_count="props">
+        <q-th :props="props">
+          <q-icon name="mdi-flag" size="14px"/>
+        </q-th>
+      </template>
+
       <template #body="props">
         <q-tr
           :key="props.row._key"
@@ -44,6 +50,10 @@
                 <div class="pointer" @click="showDatePicker({ field: 'start_from', wo_data: props.row })">
                   {{ props.row.start_from == null ? '-' : $shortDateString(props.row.start_from, $i18n.locale) }}
                 </div>
+              </template>
+
+              <template v-else-if="c.name==='issue_count'">
+                {{ props.row.issue_count }}
               </template>
 
               <template v-else-if="c.name.includes('qt')">
@@ -161,11 +171,16 @@ export default {
           align: 'left',
           style: 'width: 25%'
         },
+        {
+          field: 'issue_count',
+          name: 'issue_count',
+        },
         { 
           field: 'qt_completed',
           name: 'qt_completed',
           label: this.$t('work_order.list_headers.qt_completed').toUpperCase(),
-          align: 'right'},
+          align: 'right'
+        },
         { 
           field: 'qt_planned',
           name: 'qt_planned',

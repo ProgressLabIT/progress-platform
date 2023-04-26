@@ -1,6 +1,6 @@
 <template>
   <q-linear-progress
-    animation-speed="500"
+    animation-speed="300"
     :value="progress"
     :color="color.foreground"
     :track-color="color.background"
@@ -31,9 +31,9 @@ export default {
     },
 
     color() {
-      return this.data.active
-        ? { foreground: 'theme-blue', background: 'blue-backdrop' }
-        : { foreground: 'theme-grey', background: 'grey-backdrop' }
+      const background = this.data.active ? (this.data.critical ? 'red-backdrop' : 'blue-backdrop') : 'grey-backdrop'
+      const foreground = this.data.critical ? (this.data.active ? 'theme-red' : 'red-backdrop') : (this.data.active ? 'theme-blue' : 'theme-grey')
+      return { foreground, background }
     }
   }
 }

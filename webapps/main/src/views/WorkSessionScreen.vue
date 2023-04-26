@@ -92,14 +92,11 @@
             </template>
 
             <!-- JOB PROGRESS / STATUS -->
-            <q-linear-progress
+            <BaseProgressBar
               size="8px"
-              :value="j.progress / 100"
-              :color="job_color"
-              :track-color="job_color"
-              animation-speed="300"
+              :data="j"
               class="q-mt-lg q-mb-xs">
-            </q-linear-progress>
+            </BaseProgressBar>
 
             <div class="row justify-between items-center q-pt-xs">
               <div class="text-h5 weight-bold text-uppercase">{{ $t('progress') }}</div>
@@ -185,6 +182,7 @@
 import { mapState } from 'vuex'
 
 import BaseDialog from '@/components/BaseDialog.vue'
+import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import IssueForm from '@/components/IssueForm.vue'
 import ProgressBtn from '@/components/ProgressBtn.vue'
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue'
@@ -195,6 +193,7 @@ export default {
 
   components: {
     BaseDialog,
+    BaseProgressBar,
     IssueForm,
     ProgressBtn,
     StartPauseResumeBtn

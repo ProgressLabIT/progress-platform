@@ -15,6 +15,12 @@
       :rows-per-page-options="[0]"
       @row-dblclick="showWorkOrderScreen">
 
+      <template #header-cell-issue_count="props">
+        <q-th :props="props">
+          <q-icon name="mdi-flag" size="14px"/>
+        </q-th>
+      </template>
+
       <template #loading>
         <div class="absolute-center">
           <q-spinner indeterminate />
@@ -40,7 +46,7 @@
                 </div>
               </template>
 
-              <template v-else-if="c.name.includes('qt')">
+              <template v-else-if="c.name.includes('qt') || c.name == 'issue_count'">
                 <span>{{ props.row[c.name] || 0 }}</span>
               </template>
 
@@ -145,6 +151,11 @@ export default {
           field: 'qt_completed',
           name: 'qt_completed',
           label: this.$t('work_order.list_headers.qt_completed').toUpperCase(),
+          align: 'right'
+        },
+        {
+          field: 'issue_count',
+          name: 'issue_count',
           align: 'right'
         },
         {

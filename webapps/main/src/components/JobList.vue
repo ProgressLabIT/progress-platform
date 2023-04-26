@@ -36,6 +36,13 @@
         table-class="text-high assignment-list"
         card-class="background no-shadow q-mt-md"
         :rows-per-page-options="[0]">
+
+        <template #header-cell-issue_count="props">
+          <q-th :props="props">
+            <q-icon name="mdi-flag" size="14px"/>
+          </q-th>
+        </template>
+
         <template #body="props">
           <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
             <template v-for="field in job_data" :key="field.name">
@@ -51,7 +58,7 @@
                   </div>
                 </template>
 
-                <template v-else-if="field.name.includes('qt')">
+                <template v-else-if="field.name.includes('qt') || field.name == 'issue_count'">
                   {{ props.row[field.name] }}
                 </template>
 
@@ -73,12 +80,6 @@
               </q-td>
             </template>
           </q-tr>
-        </template>
-        <template #body-cell-progress="props">
-          <q-td key="progress" :props="props">
-
-          </q-td>
-          <!-- ADD ALERT ICONS HERE -->
         </template>
       </q-table>
 
@@ -174,6 +175,12 @@ export default {
           name: 'progress',
           style: 'width: 25%',
           align: 'left'
+        },
+        {
+          field: 'issue_count',
+          name: 'issue_count',
+          style: 'width: 5%',
+          align: 'right'
         },
         { 
           label: this.$t('quantity.completed.short').toUpperCase(),

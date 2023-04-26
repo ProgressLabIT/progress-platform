@@ -241,8 +241,8 @@ export default {
         idle: { value: true },
         ready: { value: true },
         not_ready: { value: true },
-        //critical: { value: true },
-        //not_critical: { value: true }
+        critical: { value: true },
+        not_critical: { value: true }
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       },
       search_string: undefined,
@@ -300,14 +300,6 @@ export default {
   methods: {
     updateHeight() {
       this.content_height = document.documentElement.clientHeight - header_plus_footer_height
-    },
-
-    showLateOnly() {
-      this.bool_filters.on_time.value = false
-    },
-
-    showCriticalOnly() {
-      this.bool_filters.not_critical.value = false
     },
 
     setSearch(text) {

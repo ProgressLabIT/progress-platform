@@ -392,7 +392,8 @@ async def get_work_order_archive(search: str = None):
     FILTER code_match || product_match || project_match
     SORT wo.end DESC
     LIMIT 100
-    RETURN wo
+    LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == wo._id RETURN 1)
+    RETURN MERGE(wo, { issue_count })
   """
   try:
     cursor = db.aql.execute(query, bind_vars=dict(search=search))

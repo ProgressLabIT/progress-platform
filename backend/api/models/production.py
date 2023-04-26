@@ -81,6 +81,8 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
   start: datetime = None
   end: datetime = None
 
+  issue_count: int = None
+
   lead_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
   throughput_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
   processing_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
@@ -141,6 +143,8 @@ class Job(FlexModel):
   step_sequence: List[StepWithMediaInfo] = []
 
   assigned_to: Union[str, Operator] = None
+
+  issue_count: int = None
 
   progress: int = Field(0, ge=0, le=100)
   active_batch_key: str = None # batch _key

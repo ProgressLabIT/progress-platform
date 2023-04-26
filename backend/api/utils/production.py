@@ -15,10 +15,10 @@ class Queries:
     FOR wo_key IN queue
       LET wo = DOCUMENT(WorkOrder, wo_key)
       LET qt_remaining = wo.qt_planned - wo.qt_completed
-      LET jobs = ( FOR j IN Job FILTER !j.trash && j.wo_key == wo._key RETURN j)
-      LET phases = ( FOR j IN jobs RETURN DISTINCT j.phase_key )
-      LET active = TO_BOOL(SUM(FOR j IN jobs FILTER j.active RETURN 1))
-      RETURN MERGE ([wo, { qt_remaining: qt_remaining, active: active }])  
+      LET jobs = (FOR j IN Job FILTER !j.trash && j.wo_key == wo._key RETURN j)
+      LET phases = (FOR j IN jobs RETURN DISTINCT j.phase_key)
+      LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == wo._id RETURN 1)
+      RETURN MERGE (wo, { qt_remaining: qt_remaining, issue_count })
   """
 
   GET_WORK_ORDER_DATA = """
@@ -41,8 +41,9 @@ class Queries:
         )
         LET processing_time = SUM(work_sessions[*].duration)
         LET processing_cost = SUM(work_sessions[*].cost)
+        LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == j._id RETURN 1)
 
-        RETURN MERGE( j, { assigned_to: operator, processing_time, processing_cost } )
+        RETURN MERGE( j, { assigned_to: operator, processing_time, processing_cost, issue_count } )
       )
 
       LET processing_time = SUM(jobs[*].processing_time)
@@ -102,11 +103,15 @@ class Queries:
       LET user_key = @user_key ? : '%'
       FOR o IN User
       FILTER CONTAINS(o.scope, 'operator') && LIKE(o._key, user_key)
-      
-      LET assigned_jobs = FIRST(    
+
+      LET assigned_jobs = FIRST(
         FOR q in Queue
         FILTER q.subqueue_target_key == o._key
-        LET jobs = ( FOR j IN q.jobs RETURN DOCUMENT(Job, j) )
+        LET jobs = (
+          FOR j IN q.jobs
+          LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == CONCAT('Job/', j) RETURN 1)
+          RETURN MERGE(DOCUMENT(Job, j), { issue_count })
+        )
         RETURN jobs
       )
       
@@ -128,12 +133,12 @@ class Queries:
         LET job_phase_index = POSITION(wo_phase_sequence, j.phase_key, true)
         SORT wo_queue_index, job_phase_index
       
-        RETURN j
+        RETURN MERGE(j, { issue_count: 0 })
     )
 
     RETURN {
-      assigned_jobs_by_operator: assigned_jobs_by_operator,
-      unassigned_jobs: unassigned_jobs
+      assigned_jobs_by_operator,
+      unassigned_jobs
     }  
   """
 

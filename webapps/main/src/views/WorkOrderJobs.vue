@@ -7,9 +7,16 @@
         v-for="header in headers" :key="header.value"
         class="text-h5 text-uppercase"
         :class="getColClass(header)">
-        <div v-if="header.value != 'assigned_to'">
+
+        <div v-if="header.value == 'issue_count'">
+          <q-icon name="mdi-flag" size="14px" />
+        </div>
+
+        <div v-else-if="header.value != 'assigned_to'">
           {{ header.text }}
         </div>
+
+        <!-- ASSIGNED TO -->
         <div v-else class="row items-center">
           <div class="col-4  text-right q-pr-lg">
             {{ $t('performance.processing_time.short') }}
@@ -18,6 +25,7 @@
             {{ $t('job.assigned_to') }}
           </div>
         </div>
+
       </div>
     </div>
 
@@ -59,6 +67,10 @@
                   {{ phase.progress }}%
                 </div>
               </div>
+            </template>
+
+            <template v-else-if="header.value === 'issue_count'">
+              {{ phase.issue_count }}
             </template>
 
             <template v-else-if="header.value == 'assigned_to'">
@@ -435,41 +447,43 @@ export default {
           cols: '3',
         },
         {
+          value: 'issue_count',
+          align: 'right',
+        },
+        {
           value: 'qt_completed',
           text: this.$t('quantity.completed.short'),
           align: 'end',
-          cols: '1',
         },
         // { value: 'qt_released', text: 'QRil', align: 'end', cols: false, width: '1'},
         {
           value: 'active_batch_qt',
           text: this.$t('quantity.active.short'),
           align: 'end',
-          cols: '1',
         },
         {
           value: 'qt_remaining',
           text: this.$t('quantity.remaining.short'),
           align: 'end',
-          cols: '1',
         },
         {
           value: 'assigned_to',
           align: 'end',
-          cols: '',
+          cols: '4',
         },
       ]
     },
 
     selected_jobs_data() {
-      return this.wo_data.jobs.filter(j => this.selected_jobs.includes(j._key))
+      return this.wo_data.jobs.filter(job => this.selected_jobs.includes(job._key))
     },
 
     phase_data() {
       return this.wo_data.phase_sequence.map( phase_key => {
-        const jobs = this.wo_data.jobs.filter( j => j.phase_key === phase_key )
+        const jobs = this.wo_data.jobs.filter( job => job.phase_key === phase_key )
         const params = jobs[0].parameters
         const phase_alias = jobs[0].phase_alias
+        const issue_count = jobs.reduce( (sum, job) => sum + job.issue_count, 0)
         const total_completed = jobs.reduce( (sum, job) => sum + job.qt_completed, 0)
         const total_active = jobs.reduce( (sum, job) => sum + job.active_batch_qt, 0)
         // const total_released = jobs.reduce( (sum, job) => sum + job.qt_released, 0 )
@@ -479,11 +493,12 @@ export default {
         const total_progress = Math.floor(
           jobs.reduce( (sum, job) => sum + job.progress * job.qt_planned, 0) / this.wo_data.qt_planned
         )
+        const critical = jobs.some(job => job.critical)
 
         const total_processing_time = jobs.reduce((sum, job) => sum + job.processing_time, 0)
         const processing_time_string = total_processing_time == 0 ? '-' : this.$durationFromMillisec(total_processing_time, { precision: 'm'}) || '< 1m'
         const active = !!jobs.reduce( (count, job) => count + job.active, 0)
-        const editing = jobs.some( j => this.selected_jobs.includes(j._key) )
+        const editing = jobs.some( job => this.selected_jobs.includes(job._key) )
 
         // const assignments = jobs.map( job => job.assigned_to )
 
@@ -493,6 +508,8 @@ export default {
           phase_alias,
           editing,
           active,
+          critical,
+          issue_count,
           ...params,
           // qt_released: total_released,
           qt_completed: total_completed,
@@ -514,7 +531,7 @@ export default {
     },
 
     getColClass(header) {
-      const alignment_class = header.value.includes('qt') || header.value == 'processing_time'
+      const alignment_class = header.value.includes('qt') || ['processing_time', 'issue_count'].includes(header.value)
         ? 'text-right'
         : ''
 
