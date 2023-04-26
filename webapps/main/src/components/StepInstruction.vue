@@ -214,7 +214,6 @@ export default {
     // initSortable(selector) {
     //   const _self = this
     //   let container = document.querySelector(selector)
-    //   console.log({ selector, container})
     //   if (container) {
     //     Sortable.create(container, {
     //       ..._self.$store.state.drag_options,

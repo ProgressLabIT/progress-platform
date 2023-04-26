@@ -168,7 +168,6 @@ export default {
     },
 
     updateParam({ param, value }) {
-      console.log({ param, value })
       this.temp_params[param] = value
     },
 

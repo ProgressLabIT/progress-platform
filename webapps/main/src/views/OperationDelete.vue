@@ -85,8 +85,6 @@ export default {
 
   methods:{
     deleteOperation() {
-      console.log('Before delete')
-
       api.delete(`operation/${this.operation_key}`)
       .then( async () => {
         this.stage="success"

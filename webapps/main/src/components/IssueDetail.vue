@@ -1,10 +1,46 @@
 <template>
   <BaseDialog :show="true" @close="exit" maximized>
-    <q-card class="surface1 row" bordered square style="width: 90vw; height: 90vh">
+    <q-card class="surface1 row" bordered square style="width: 95vw; height: 95vh">
 
       <!-- LEFT SECTION -->
       <div class="col-8 column full-height">
+
+        <!-- HEADER -->
         <IssueHeader :issue="issue" @type-change="refreshIssue"/>
+
+
+        <!-- FORM DATA -->
+        <div class="row items-center q-pl-lg q-mt-sm">
+          <div class="col-auto text-h5 weight bold text-uppercase text-low">
+            {{ $t('form_title') }}
+          </div>
+          <div class="col">
+            <q-separator inset />
+          </div>
+        </div>
+
+        <div class="row q-px-lg q-pt-md q-mb-md">
+          <template v-if="issue.data.length">
+            <div class="col-auto q-pr-md" v-for="field in issue.data">
+              <FormField :field_data="field" dense :disable="true" />
+            </div>
+          </template>
+          <div v-else class="col-auto text-italic">
+            No data
+          </div>
+        </div>
+
+        <!-- ISSUE EVENTS -->
+        <div class="row items-center q-pl-lg">
+          <div class="col-auto text-h5 weight bold text-uppercase text-low">
+            {{ $t('history') }}
+          </div>
+          <div class="col">
+            <q-separator inset />
+          </div>
+        </div>
+
+
         <q-list class="q-ml-lg q-px-xl col scroll q-pb-lg">
           <q-item
             v-for="e, index in history"
@@ -72,7 +108,7 @@
           <q-btn
             color="theme-grey"
             :label="$t('back')"
-            @click="$router.back()">
+            @click="exit">
           </q-btn>
         </div>
       </div>
@@ -122,6 +158,9 @@ import enrichIssue from '@/mixins/issues.js'
 import Message from '@/components/Message.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
+import FormField from '@/components/FormField.vue'
+
+
 export default {
 
   name: 'IssueDetail',
@@ -130,7 +169,8 @@ export default {
     IssueHeader,
     Message,
     BaseUserAvatar,
-    BaseDialog
+    BaseDialog,
+    FormField
   },
 
   mixins: [enrichIssue, event],
@@ -282,6 +322,10 @@ export default {
         this.getHistory()
         this.loading = false
       })
+    },
+
+    exit() {
+      this.$router.back()
     }
   },
 

@@ -648,7 +648,6 @@ export default {
         td.new_job_qt_completed = td.new_job_qt_completed < td.min_progress_qt
           ? td.min_progress_qt
           : td.max_progress_qt
-         console.log(td)
       }
     },
 

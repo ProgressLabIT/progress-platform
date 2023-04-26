@@ -1,58 +1,37 @@
 <template>
   <q-item class="q-py-md" :clickable="clickable">
-    <q-item-section
-      avatar
-      @mouseenter="over_icon=true"
-      @mouseleave="over_icon=false">
-      <q-btn flat :icon="icon" size="lg" @click.stop="show_type_picker=true">
-        <q-tooltip class="text-uppercase">
-          {{ $t('issue_edit_type') }}
-        </q-tooltip>
-      </q-btn>
+    <q-item-section avatar>
+      <q-icon flat :name="issue.icon || 'mdi-help'" size="lg" />
     </q-item-section>
     <q-item-section>
-      <q-item-label class="weight-bold text-h4 row">
-        <div class="q-mr-md">{{ issue.type_name || $t('issue') }}</div>
+      <q-item-label class="weight-bold text-h4 row items-center">
+        <div class="q-mr-md">{{ issue.issue_type_name || $t('issue') }}</div>
         <div>#{{ issue._key }}</div>
+        <div class="col q-ml-xl">
+          <q-btn flat round @click.stop="show_issue_update=true" icon="mdi-pencil" />
+        </div>
       </q-item-label>
     </q-item-section>
-    <q-item-section top class="display col-auto weight-bold text-uppercase">
+    <q-item-section class="display col-auto weight-bold text-uppercase">
       <q-chip :color="issue.badge.color">
         {{ issue.badge.text }}
       </q-chip>
     </q-item-section>
 
-    <!-- ISSUE TYPE PICKER -->
-    <BaseDialog :show="show_type_picker">
-      <q-card class="q-pa-md surface1" style="min-width: 400px;">
-        <q-card-section class="text-h3 highlight">
-          {{ $t('issue_update_type') }}
-        </q-card-section>
-        <q-card-section>
-          <BaseAutocompleteIssueType
-            :value="new_issue_type"
-            @select="(value) => new_issue_type=value">
-          </BaseAutocompleteIssueType>
-        </q-card-section>
-        <q-card-section class="row justify-between">
-          <q-btn
-            color="theme-grey"
-            :label="$t('cancel')"
-            @click="() => { show_type_picker=false; new_issue_type = {}}">
-          </q-btn>
-          <q-btn
-            :color="save_btn_color"
-            :label="save_btn_label"
-            @click="changeIssueType">
-          </q-btn>
-        </q-card-section>
-      </q-card>
-    </BaseDialog>
+    <!-- ISSUE EDIT DIALOG -->
+    <IssueForm
+      :show="show_issue_update"
+      :issue="issue"
+      mode="edit"
+      @close="show_issue_update=false">
+    </IssueForm>
+
   </q-item>
 </template>
 
 <script>
 import BaseDialog from '@/components/BaseDialog.vue'
+import IssueForm from '@/components/IssueForm.vue'
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue'
 import event from '@/mixins/event.js'
 
@@ -62,7 +41,8 @@ export default {
 
   components: {
     BaseAutocompleteIssueType,
-    BaseDialog
+    BaseDialog,
+    IssueForm
   },
 
   props: {
@@ -81,7 +61,7 @@ export default {
   data() {
     return {
       over_icon: false,
-      show_type_picker: false,
+      show_issue_update: false,
       new_issue_type: null
     }
   },

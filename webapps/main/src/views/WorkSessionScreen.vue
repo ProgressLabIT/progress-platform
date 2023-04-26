@@ -131,7 +131,7 @@
                   square
                   height="auto"
                   class="fit"
-                  @click="show_issue_new = true">
+                  @click="show_issue_form = true">
                   <q-icon color="text_high" size="lg" name="mdi-flag" />
                 </q-btn>
               </div>
@@ -171,12 +171,11 @@
         </q-card>
       </q-dialog>
 
-      <BaseDialog
-        :show="show_issue_new"
-        background="#0008"
-        @hide="show_issue_new = false">
-        <WorkSessionIssueNew @close="show_issue_new = false"/>
-      </BaseDialog>
+      <IssueForm
+        :show="show_issue_form"
+        mode="new"
+        @close="show_issue_form = false">
+      </IssueForm>
 
     </q-page>
   </q-page-container>
@@ -186,7 +185,7 @@
 import { mapState } from 'vuex'
 
 import BaseDialog from '@/components/BaseDialog.vue'
-import WorkSessionIssueNew from '@/components/WorkSessionIssueNew.vue'
+import IssueForm from '@/components/IssueForm.vue'
 import ProgressBtn from '@/components/ProgressBtn.vue'
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue'
 
@@ -196,7 +195,7 @@ export default {
 
   components: {
     BaseDialog,
-    WorkSessionIssueNew,
+    IssueForm,
     ProgressBtn,
     StartPauseResumeBtn
   },
@@ -210,7 +209,7 @@ export default {
     return {
       vuex_ready: false,
       show_exit_alert: false,
-      show_issue_new: false,
+      show_issue_form: false,
       alert_timeout: 4000
     }
   },

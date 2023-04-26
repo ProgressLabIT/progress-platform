@@ -29,21 +29,15 @@ async def get_issue_type(
   active_only: bool = True
   ):
   # use query parameters to filter specific type
-  match = dict()
+  match = dict(
+    key = key,
+    code = code,
+    critical = critical,
+    active_only = active_only
+  )
 
-  if key:
-    match['_key'] = key
-
-  if code:
-    match['code'] = code
-
-  if critical:
-    match['critical'] = critical
-
-  if active_only:
-    match['active'] = True
-
-  return [_ for _ in issue_types.find(match)]
+  cursor = db.aql.execute(Queries.FETCH_ISSUE_TYPES, bind_vars=match)
+  return [_ for _ in cursor]
 
 # ----------------------------------------------------------------------
 
@@ -121,7 +115,7 @@ async def delete_issue_type(issue_key: str):
 @router.get('/issue')
 async def get_issues(
   issue_key: Union[List[str], None] = Query(default=None),
-  issue_type: Union[List[str], None] = Query(default=None),
+  issue_type_key: Union[List[str], None] = Query(default=None),
   product_key: Union[List[str], None] = Query(default=None),
   work_order_key: Union[List[str], None] = Query(default=None),
   job_key: Union[List[str], None] = Query(default=None),
@@ -138,7 +132,7 @@ async def get_issues(
   # use query parameters to filter specific type
   bind_vars = dict(
     issue_key = issue_key,
-    issue_type = issue_type,
+    issue_type_key = issue_type_key,
     product_key = product_key,
     work_order_key = work_order_key,
     job_key = job_key,

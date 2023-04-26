@@ -89,7 +89,6 @@ export default {
   methods: {
     choose(icon) {
       this.$emit('choice', icon)
-      console.log(icon)
       this.$emit('hide') // for use within BaseDialog
     }
   }

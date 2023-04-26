@@ -191,7 +191,6 @@ export default {
 
     fetchData() {
       this.loading = true
-      console.log('Fetching...')
       setTimeout(() => {
         this.$api.get('work-order-archive', {
           params: {
@@ -228,7 +227,6 @@ export default {
     },
 
     export_csv() {
-      console.log('child')
       const file_heading = 'data:text/csv;charset=utf-8,'
       const header_row = this.columns.map(c => c.label).join(';') + '\n'
       const data = this.wo_list.map(wo => {
