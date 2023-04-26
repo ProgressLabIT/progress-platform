@@ -18,10 +18,10 @@ export default {
       return this.field_types.find(f => f.value == type)
     },
     getFieldIcon(type) {
-      return this.getFieldByType(type).icon
+      return this.getFieldByType(type)?.icon
     },
     getFieldLabel(type) {
-      return this.getFieldByType(type).label
+      return this.getFieldByType(type)?.label
     }
   }
 }
