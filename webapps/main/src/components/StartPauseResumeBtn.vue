@@ -29,7 +29,7 @@ export default {
 
     color() {
       return this.j.active ? this.$theme.grey + 'aa'
-        : (this.j.critical ? this.$theme.red : this.$theme.green) + 'aa'
+        : (this.j.critical ? this.$theme.red : this.$theme.blue) + 'aa'
     },
   },
 
