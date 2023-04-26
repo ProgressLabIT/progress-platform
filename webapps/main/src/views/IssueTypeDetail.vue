@@ -205,7 +205,7 @@
           </div>
 
           <!-- multiple / required -->
-          <div class="col-auto">
+          <!-- <div class="col-auto">
             <q-checkbox
               size="sm"
               dense
@@ -222,7 +222,7 @@
               :label="$t('field_required')"
               v-model="field.required">
             </q-checkbox>
-          </div>
+          </div> -->
 
           <div class="col-auto">
 
@@ -385,8 +385,8 @@ export default {
         type: field_data.type,
         label: field_data.default_label,
         hint: field_data.default_hint,
-        multiple: false,
-        required: false
+        // multiple: false,
+        // required: false
       })
       this.show_field_dialog = false
     },
