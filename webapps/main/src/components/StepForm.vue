@@ -94,12 +94,13 @@
     </div>
 
     <q-btn
+      v-if="edit_mode"
       color="theme-blue"
       size="12px"
+      icon="mdi-plus"
+      :label="$t('add_field')"
       class="q-mt-md"
-      v-if="edit_mode"
       @click="addField">
-      + {{ $capitalize($t('phase.add_field')) }}
     </q-btn>
   </div>
 </template>
