@@ -236,7 +236,7 @@ export default {
       .then(() => {
         this.saving = false
         this.$store.dispatch('getIssues', { job_key: this.job_data._key })
-        this.$emit('close')
+        this.cancel()
         this.$q.notify({
           message: this.$t(message),
           color: this.critical ? 'theme-red' : 'theme-orange',
