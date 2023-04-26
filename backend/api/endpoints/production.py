@@ -486,10 +486,11 @@ async def get_job_data(job_key: str):
   query = """
     FOR j IN Job
     FILTER j._key == @job_key
+    LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == j._id RETURN 1)
     LET product_notes = DOCUMENT(Product, j.product_key).production_notes
     LET phase_notes = DOCUMENT(Phase, j.phase_key).notes
     LET order_notes = DOCUMENT(WorkOrder, j.wo_key).notes
-    RETURN MERGE(j, { product_notes, phase_notes, order_notes })
+    RETURN MERGE(j, { issue_count, product_notes, phase_notes, order_notes })
   """
   bind_vars = dict(job_key = job_key)
 

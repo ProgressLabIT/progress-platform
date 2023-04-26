@@ -43,9 +43,19 @@
             <q-route-tab
               v-for="link in links"
               :key="link.route_name"
-              :to="{ name: link.route_name }"
-              class="display">
-              {{ link.text }}
+              :to="{ name: link.route_name }">
+              <div class="row items-center justify-start">
+                <div class="display">
+                  {{ link.text }}
+                </div>
+                <q-avatar
+                  v-if="link.item_count"
+                  size="xs"
+                  :color="getItemCountColor(link)"
+                  class="q-ml-sm weight-bold text-body2">
+                  {{ link.item_count }}
+                </q-avatar>
+              </div>
             </q-route-tab>
           </q-tabs>
 
@@ -223,11 +233,31 @@ export default {
 
     links() {
       return [
-          { route_name: 'jobSteps', text: this.$t('procedure') },
-          { route_name: 'jobDocs', text: this.$t('document.label', 2) },
-          { route_name: 'jobBom', text: this.$t('material', 2) },
-          { route_name: 'jobIssues', text: this.$t('issue', 2) },
-          { route_name: 'jobNotes', text: this.$t('notes', 2) }
+        {
+          route_name: 'jobSteps',
+          text: this.$t('procedure'),
+          item_count: this.j.step_sequence.length
+        },
+        {
+          route_name: 'jobDocs',
+          text: this.$t('document.label', 2),
+          item_count: this.j.job_docs.length
+        },
+        {
+          route_name: 'jobBom',
+          text: this.$t('material', 2),
+          item_count: this.j.job_bom.length
+        },
+        {
+          route_name: 'jobIssues',
+          text: this.$t('issue', 2),
+          item_count: this.j.issue_count
+        },
+        {
+          route_name: 'jobNotes',
+          text: this.$t('notes', 2),
+          item_count: !!this.j.order_notes + !!this.j.phase_notes + !!this.j.product_notes
+        }
       ]
     },
 
@@ -306,6 +336,12 @@ export default {
           }
         }
       })
+    },
+
+    getItemCountColor(link) {
+      return this.$route.name == link.route_name
+        ? ( this.j.critical ? 'theme-red' : 'theme-blue' )
+        : 'theme-grey'
     },
 
     goToStep(step_sequence) {
