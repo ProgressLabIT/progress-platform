@@ -15,18 +15,27 @@
               :class="`${!edit_mode ? 'undraggable' : ''} ${ current_step_index == index ?  'highlight' : 'low-text'}`"
               @click="stepClick(index)">
               <q-item-section avatar class="col-auto">
-              <q-avatar
-                size="20px"
-                :color="current_step_index == index ? 'theme-blue' : 'theme-grey'"
-                class="smaller text-high q-ml-sm">
-                {{ index + 1 }}
-              </q-avatar>
+                <q-avatar
+                  size="20px"
+                  :color="current_step_index == index ? 'theme-blue' : 'theme-grey'"
+                  class="smaller text-high q-ml-sm">
+                  {{ index + 1 }}
+                </q-avatar>
               </q-item-section>
-              <q-item-section class="text-truncate">
-                {{ step.title ? step.title : '(nessun titolo)' }}
+
+              <q-item-section class="ellipsis">
+                <q-item-label>
+                  {{ step.title ? step.title : '(nessun titolo)' }}
+                </q-item-label>
               </q-item-section>
+
               <q-item-section side class="q-mr-sm">
-                <q-icon :name="stepIcon(step.type)" size="sm" class="q-ml-auto" :style="`color: ${ current_step_index == index ? $theme.text_high : $theme.text_low }`"/>
+                <q-icon
+                  :name="stepIcon(step.type)"
+                  size="sm"
+                  class="q-ml-auto"
+                  :style="`color: ${ current_step_index == index ? $theme.text_high : $theme.text_low }`">
+                </q-icon>
               </q-item-section>
             </q-item>
           </q-list>
@@ -339,8 +348,10 @@ export default {
         Sortable.create(container, {
           ..._self.$store.state.drag_options,
           filter: '.undraggable',
+          onStart: () => _self.dragging = true,
           // use onEnd event provided by SortableJs library
           onEnd: ({ newIndex, oldIndex }) => {
+            _self.dragging = false
             const moved = _self.procedure.splice(oldIndex, 1)[0]
             _self.procedure.splice(newIndex, 0, moved)
             _self.updateTabIndex({ oldIndex, newIndex })
@@ -353,6 +364,9 @@ export default {
   watch: {
     edit_mode() {
       this.confirming_delete = false
+      if (this.edit_mode) {
+        this.initSortable()
+      }
     }
   },
 

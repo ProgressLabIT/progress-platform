@@ -27,6 +27,7 @@
           <q-item
             v-for="(phase, index) in process"
             clickable
+            v-ripple
             :key="phase._key"
             :name="index"
             :class="`full-width text-left ${edit_mode ? '' : 'undraggable'}`"
@@ -54,7 +55,7 @@
             <q-item-section
               v-if="edit_mode"
               v-show="over_phase==index"
-              class="col-auto">
+              side>
               <div class="row items-center">
                 <BaseTooltipIcon
                   icon="mdi-pencil"
