@@ -105,7 +105,7 @@
 
         <!-- FILTERS -->
         <div class="col-3 column q-px-lg">
-          <div class="highlight text-uppercase text-h5 q-mt-sm">
+          <div class="highlight text-uppercase text-h5 q-mt-sm q-mb-md">
             {{ $t('filter', 2) }}
           </div>
 
@@ -115,6 +115,8 @@
             <!-- BY DEPARTMENT -->
             <q-select
               ref="department_filter"
+              filled
+              dense
               use-input
               clearable
               v-model="department_selected"
@@ -129,6 +131,8 @@
             <!-- BY OPERATOR -->
             <q-select
               ref="operator_filter"
+              filled
+              dense
               use-input
               clearable
               v-model="operator_selected"
@@ -149,8 +153,10 @@
           <!-- END OF JOB-SPECIFIC FILTERS -->
 
           <!-- SEARCH BOX -->
-          <div class="row items-center q-col-gutter-md">
+          <div class="row items-baseline q-col-gutter-md">
             <q-input
+              filled
+              dense
               clearable
               autocomplete="off"
               name="search"

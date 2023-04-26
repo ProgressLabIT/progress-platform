@@ -1,6 +1,7 @@
 <template>
   <q-select
     use-input
+    filled
     :label="$capitalize($t('phase.add'))"
     :dense="dense"
     :clearable="clearable"

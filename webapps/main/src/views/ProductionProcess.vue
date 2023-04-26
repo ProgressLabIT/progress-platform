@@ -2,7 +2,7 @@
   <div class="row full-height q-py-md">
 
     <!-- ASIDE - PHASE LIST -->
-    <div class="col-auto column full-height" style="min-width: 400px;">
+    <div class="col-3 column full-height" style="min-width: 400px;">
       <div class="q-px-lg">
         <div class="text-h1 display highlight">
           {{ product_data.code}}
@@ -11,30 +11,29 @@
           {{ product_data.description }}
         </div>
 
-        <div class="text-h5 q-mt-xl q-mb-md text-uppercase">
+        <div class="text-h5 q-mt-lg q-mb-sm text-uppercase">
           {{ $t('phase.long', 2) }}
         </div>
       </div>
+      <q-separator inset></q-separator>
 
-      <q-tabs
-        id="phases"
-        class="transparent scroll medium text-left"
-        active-class="highlight"
-        align="left"
-        shrink vertical dense
-        indicator-color="transparent"
-        v-model="current_phase">
-        <q-tab
-          v-for="(phase, index) in process"
-          :key="phase._key"
-          :name="index"
-          :content-class="`full-width text-left ${edit_mode ? '' : 'undraggable'}`"
-          @mouseenter="dragging ? undefined : over_phase = index"
-          @mouseleave="dragging ? undefined : over_phase = null"
-          @click="confirming_delete = null"
-          style="max-height: 40px;">
-          <div class="row items-center full-width q-px-md">
-            <div class="col-1 q-mr-sm">
+      <div class="scroll col q-py-sm full-width">
+        <q-list
+          id="phases"
+          dense
+          class="transparent medium text-left q-pl-sm"
+          align="left"
+          v-model="current_phase">
+          <q-item
+            v-for="(phase, index) in process"
+            clickable
+            :key="phase._key"
+            :name="index"
+            :class="`full-width text-left ${edit_mode ? '' : 'undraggable'}`"
+            @mouseenter="dragging ? undefined : over_phase = index"
+            @mouseleave="dragging ? undefined : over_phase = null"
+            @click="goToPhase(index)">
+            <q-item-section avatar class="col-auto">
               <q-avatar
                 size="20px"
                 :color="current_phase == index ? 'theme-blue' : 'theme-grey'"
@@ -42,51 +41,53 @@
                 :class="{ highlight: current_phase == index }">
                 {{ index + 1}}
               </q-avatar>
-            </div>
+            </q-item-section>
 
-            <div class="col-auto text-left text-truncate">
-              <div class="display"
+            <q-item-section>
+              <q-item-label
+                class="display ellipsis"
                 :class="current_phase == index ? 'highlight' : 'text-low weight-medium'">
                 {{ phase.alias }}
-              </div>
-            </div>
+              </q-item-label>
+            </q-item-section>
 
-            <q-space />
-
-            <div
-              class="col-auto"
+            <q-item-section
               v-if="edit_mode"
-              v-show="over_phase==index">
-              <BaseTooltipIcon
-                icon="mdi-pencil"
-                :tooltip="$t('rename')"
-                :color="$theme.blue"
-                @iconClick="update_alias_at_index = index">
-              </BaseTooltipIcon>
-              <BaseTooltipIcon
-                icon="mdi-delete"
-                :tooltip="$t('delete')"
-                :color="$theme.red"
-                @iconClick="confirming_delete = index">
-              </BaseTooltipIcon>
-            </div>
-          </div>
-        </q-tab>
-      </q-tabs>
+              v-show="over_phase==index"
+              class="col-auto">
+              <div class="row items-center">
+                <BaseTooltipIcon
+                  icon="mdi-pencil"
+                  :tooltip="$t('rename')"
+                  :color="$theme.blue"
+                  @iconClick="update_alias_at_index = index">
+                </BaseTooltipIcon>
+                <BaseTooltipIcon
+                  icon="mdi-delete"
+                  :tooltip="$t('delete')"
+                  :color="$theme.red"
+                  @iconClick="confirming_delete = index">
+                </BaseTooltipIcon>
+              </div>
+            </q-item-section>
+          </q-item>
 
-      <!-- PHASE ALIAS UPDATE PROMPT -->
-      <BasePrompt
-        :show="update_alias_at_index != null"
-        :initial_value="update_alias_at_index ? process[update_alias_at_index].alias : null"
-        :prompt="$t('phase.rename')"
-        @update="updatePhaseAlias"
-        @close="update_alias_at_index = null">
-      </BasePrompt>
+          <!-- PHASE ALIAS UPDATE PROMPT -->
+          <BasePrompt
+            :show="update_alias_at_index != null"
+            :initial_value="update_alias_at_index ? process[update_alias_at_index].alias : null"
+            :prompt="$t('phase.rename')"
+            @update="updatePhaseAlias"
+            @close="update_alias_at_index = null">
+          </BasePrompt>
+        </q-list>
+      </div>
 
       <q-space />
+      <q-separator inset></q-separator>
 
       <!-- ACTION BUTTONS -->
-      <div class="column q-gutter-y-sm q-px-lg q-pb-sm">
+      <div class="column q-gutter-y-sm q-px-lg q-mt-sm q-pb-sm col-auto">
         <q-btn
           v-if="!edit_mode"
           @click="toggleEdit"
@@ -98,7 +99,6 @@
         <template v-else>
           <BaseAutocompleteOperation
             @select="addPhase"
-            :dense="false"
             :clearable="false">
           </BaseAutocompleteOperation>
           <q-btn
@@ -249,6 +249,11 @@ export default {
       this.edit_mode = true
     },
 
+    goToPhase(index) {
+      this.confirming_delete = null
+      this.current_phase = index
+    },
+
     cancelChanges() {
       const active_phase = this.process[this.current_phase]
       if (active_phase) {
@@ -358,7 +363,7 @@ export default {
     this.updateStepsMap(step_map)
 
     // Initialize draggable phases
-    let container = document.querySelector("#phases .q-tabs__content")
+    let container = document.querySelector("#phases")
     const _self = this
     Sortable.create(container, {
       ..._self.$store.state.drag_options,
