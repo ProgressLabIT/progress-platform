@@ -39,7 +39,7 @@
       :disable="disable"
       :dense="dense"
       :label="field_data.label"
-      :model-value="field_data.value"
+      :model-value="field_data.value ?? false"
       :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
       @update:model-value="val => $emit('update', val)">
     </q-checkbox>
