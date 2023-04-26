@@ -6,7 +6,6 @@
     :dense="dense"
     :clearable="clearable"
     :options="options"
-    :display-value="value ? value.name : null"
     option-label="name"
     @filter="filter"
     @clear="$emit('selection', null)"
