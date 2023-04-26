@@ -7,6 +7,7 @@
       stack-label
       autogrow
       lazy-rules
+      input-debounce="100"
       :disable="disable"
       :dense="dense"
       :label="field_data.label"
@@ -23,6 +24,7 @@
       filled
       stack-label
       autogrow
+      input-debounce="100"
       :disable="disable"
       :dense="dense"
       :label="field_data.label"
@@ -45,6 +47,21 @@
     </q-checkbox>
 
     <!-- CHOICE -->
+    <q-select
+      v-if="field_data.type == 'choice'"
+      filled
+      stack-label
+      use-input
+      clearable
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :options="options"
+      option-label="value"
+      @filter="filter"
+      :model-value="field_data.value"
+      @update:model-value="val => $emit('update', val)">
+    </q-select>
     <!-- DATE -->
     <!-- TIME -->
   </div>
@@ -69,6 +86,44 @@ export default {
       default: false
     }
   },
+
+  data() {
+    return {
+      origin_list: [],
+      options: []
+    }
+  },
+
+  methods: {
+    initOptions() {
+      this.$api.get('list', { params: { field_key: this.field_data._key }})
+      .then( resp => {
+        this.origin_list = resp.data
+        this.options = resp.data
+      })
+    },
+
+    filter(value, update) {
+      if (value === '') {
+        update(() => {
+          this.initOptions()
+        })
+        return
+      }
+      update(() => {
+        const needle = value.toLowerCase()
+        this.options = this.origin_list.filter(option => {
+          return option.value.toLowerCase().includes(needle)
+        })
+      })
+    }
+  },
+
+  created() {
+    if (this.field_data.type == 'choice') {
+      this.initOptions()
+    }
+  }
 }
 </script>
 

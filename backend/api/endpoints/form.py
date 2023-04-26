@@ -32,7 +32,7 @@ def fetch_field(name: str = None, key: str = None):
 @router.get('/list')
 def fetch_custom_list_values(field_key: str):
   match = dict(field_key=field_key)
-  return [v for v in db.collection('CustomListValue').find(match)]
+  return [CustomListValue(**v) for v in db.collection('CustomListValue').find(match)]
 
 
 

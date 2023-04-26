@@ -31,8 +31,8 @@ field_type_map = {
 # if the field model has multiple = True, the type becomes List[type]
 
 
-class CustomListValue(ArangoDocument):
-  list_key: str # Reference to CustomField
+class CustomListValue(BaseModel):
+  field_key: str # Reference to CustomField
   ext_key: str = None # Optional reference to external identification, e.g. ERP id
   value: str
 
@@ -47,7 +47,7 @@ class CustomField(ArangoDocument):
   @root_validator
   def ensure_type_if_choice(cls, values):
     if values.get('type') == FieldType.CHOICE and values.get('use_dropdown') == None:
-      raise ValueError('Choice fields require setting the `use_dropdown` property (boolean value)')
+      values['use_dropdown'] = True
     return values
 
 class CustomFieldInstance(BaseModel):
