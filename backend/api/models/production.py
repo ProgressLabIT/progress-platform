@@ -1,5 +1,4 @@
 from datetime import date, datetime, timedelta
-from dateutil import tz
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
@@ -9,7 +8,7 @@ from models.bom import BomLineRead
 from models.process import PhaseParameters, StepWithMediaInfo
 from models.product import ProductDoc
 from utils.base_models import FlexModel, ArangoDocument
-
+from utils.dt import timestamp
 
 
 class CustomerData(FlexModel):
@@ -77,7 +76,7 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
   critical: bool = False
   progress: int = Field(0, ge=0, le=100)
 
-  created: datetime = datetime.now(tz.UTC)
+  created: datetime = Field(default_factory=timestamp)
   start: datetime = None
   end: datetime = None
 
