@@ -7,6 +7,8 @@
     <!-- Text field for product filter and search -->
     <div class="column col-12 col-sm-5 col-lg-3">
       <q-input
+        filled
+        dense
         clearable
         clear-icon="mdi-close"
         autocomplete="off"
