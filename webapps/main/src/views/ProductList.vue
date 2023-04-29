@@ -6,6 +6,7 @@
         <div class="col-12 col-sm-5 col-md-3">
           <q-input
             dense
+            filled
             hide-bottom-space
             autocomplete="off"
             name="search"
