@@ -16,7 +16,7 @@
         </q-btn>
         <q-btn
           size="md"
-          color="theme-blue"
+          :color="selected_job.critical ? 'theme-red' : 'theme-blue'"
           @click="goToJob">
           {{ $t('select') }}
         </q-btn>
