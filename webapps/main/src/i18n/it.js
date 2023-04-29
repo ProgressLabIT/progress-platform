@@ -216,7 +216,7 @@ export default {
   "notes_product": "Note prodotto",
   "notes_production": "Note produzione",
   "of": "di",
-  "on_time": "puntuale",
+  "on_time": "In tempo",
   "open": "aperto",
   "operation": {
     "add_op": "aggiungi operazione",
@@ -418,7 +418,7 @@ export default {
       "idle": "in attesa",
       "late": "in ritardo",
       "not_critical": "non critico",
-      "on_time": "puntuale",
+      "on_time": "In tempo",
       "queued": "in coda",
       "started": "iniziato",
       "ready": "Eseguibile",

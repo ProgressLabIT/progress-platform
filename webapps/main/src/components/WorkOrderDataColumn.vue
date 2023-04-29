@@ -59,12 +59,18 @@
           v-for="i in wo_info"
           :key="i.name"
           class="row justify-between items-end q-mb-sm text-high">
-          <span class="text-uppercase text-caption">
+          <div class="text-uppercase text-caption">
             {{ i.text }}
-          </span>
-          <span class="weight-medium text-body1">
+          </div>
+          <div class="weight-medium text-body1 relative-position">
+            <q-icon
+              v-if="isLate(wo_data.due_by) && i.name == 'due_by'"
+              class="q-mb-xs q-mr-xs"
+              name="mdi-alert-octagon"
+              color="theme-red">
+            </q-icon>
             {{ $capitalize(woInfoValue(i.name)) }}
-          </span>
+          </div>
         </div>
       </q-tab-panel>
 
@@ -568,6 +574,10 @@ export default {
         }
 
       }
+    },
+
+    isLate(due_by_date) {
+      return DT.fromISO(due_by_date) < DT.now()
     },
 
     getPicPath(operator) {

@@ -241,8 +241,8 @@ export default {
       bool_filters: {
         started: { value: true },
         queued: { value: true },
-        // on_time: { value: true },
-        // late: { value: true },
+        on_time: { value: true },
+        late: { value: true },
         active: { value: true },
         idle: { value: true },
         ready: { value: true },

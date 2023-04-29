@@ -42,6 +42,7 @@
 
               <template v-else-if="c.name==='due_by'">
                 <div class="pointer" @click="showDatePicker({ field: 'due_by', wo_data: props.row })">
+                  <q-icon v-if="isLate(props.row.due_by)" color="theme-red" name="mdi-alert-octagon" />
                   {{ props.row.due_by == null ? '-' : $shortDateString(props.row.due_by, $i18n.locale) }}
                 </div>
               </template>
@@ -91,6 +92,7 @@ import Sortable from 'sortablejs'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import { mapState } from 'vuex'
 import { throttle as _throttle } from 'lodash'
+import { DateTime as DT } from 'luxon'
 import BaseDialog from '@/components/BaseDialog.vue'
 
 export default {
@@ -244,11 +246,11 @@ export default {
               break
 
             case 'on_time':
-              if (!value && wo.on_time) match = false
+              if (!value && !this.isLate(wo.due_by)) match = false
               break 
 
             case 'late':
-              if (!value && !wo.on_time) match = false
+              if (!value && this.isLate(wo.due_by)) match = false
               break
 
             case 'critical':
@@ -344,6 +346,10 @@ export default {
       await this.$store.dispatch('updateWorkOrder', wo_update)
       await this.$store.dispatch('updateWorkOrderList')
       this.temp_date = null
+    },
+
+    isLate(due_by_date) {
+      return DT.fromISO(due_by_date).toMillis() < this.now
     }
   },
 
