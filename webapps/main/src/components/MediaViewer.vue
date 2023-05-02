@@ -1,8 +1,6 @@
 <template>
   <BaseDialog :show="show" @close="$emit('close')" maximized>
 
-
-
     <!-- FILE NAME -->
     <div class="fixed-top-left medium highlight q-ma-md" style="z-index: 99;">
       <div
@@ -31,6 +29,12 @@
               <div class="col">
                 <span>{{ job.qt_completed }} / {{ job.qt_planned }}</span>
               </div>
+            </div>
+            <div v-if="instruction_title" class="q-mt-md text-uppercase">
+              {{ instruction_title }}
+            </div>
+            <div v-if="instruction_details" class="q-my-sm text-body2">
+              {{ instruction_details }}
             </div>
           </template>
         </div>
@@ -157,7 +161,7 @@ export default {
     BaseProgressBar
   },
 
-  props: ['show', 'media_name', 'media_src'],
+  props: ['show', 'media_name', 'media_src', 'instruction_title', 'instruction_details'],
 
   data() {
     return {
