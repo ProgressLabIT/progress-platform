@@ -1,50 +1,50 @@
 <template>
-  <q-card square style="height: 280px;" class="surface1 full-width shadow-8">
-    <div class="column q-col-gutter-md full-height justify-between q-px-md q-pt-md">
+  <q-card square style="height: 280px;" class="surface1 full-width shadow-8 q-pa-md">
+    <div class="column full-height justify-between">
 
       <!-- WO CODE -->
-      <div class="row col-auto justify-start q-col-gutter-sm">
-        <div class="column col-auto" style="max-width: 60%">
-          <div class="overline">
-            {{ $t("work_order.list_headers.wo_code") }}
-          </div>
-          <div class="text-h4 display highlight text-truncate full-width ellipsis q-pr-sm">
-            {{ job.wo_code }}
-          </div>
+      <div class="col-auto full-width">
+        <div class="row q-col-gutter-sm">
+          <div class="col row q-col-gutter-sm" style="max-width: 80%;">
+            <div class="col-auto">
+              <div class="overline">
+                {{ $t("work_order.list_headers.wo_code") }}
+              </div>
+              <div class="text-h4 display highlight text-truncate full-width ellipsis q-pr-sm">
+                {{ job.wo_code }}
+              </div>
+            </div>
+
+            <!-- PROJECT CODE -->
+            <div class="col">
+              <div class="overline">
+                {{ $t("project") }}
+              </div>
+              <div class="text-h4 display highlight full-width ellipsis">
+                {{ job.project_code || '-' }}
+              </div>
+            </div>
           </div>
 
-        <!-- PROJECT CODE -->
-        <div class="column col-auto">
-          <div class="overline">
-            {{ $t("project") }}
+          <q-space></q-space>
+          <div class="col-auto text-right">
+            <q-icon
+              :name="job.assigned ? 'mdi-account-check' : 'mdi-account-question'"
+              size="sm">
+            </q-icon>
           </div>
-          <div class="text-h4 display highlight full-width ellipsis">
-            {{ job.project_code || '-' }}
-          </div>
+
         </div>
-
-        <q-space></q-space>
-        <div class="col-auto text-right">
-          <q-icon
-            :name="job.assigned ? 'mdi-account-check' : 'mdi-account-question'"
-            size="sm">
-          </q-icon>
-        </div>
-
       </div>
-
-
-
-
 
       <!-- PRODUCT DATA -->
-      <div class="column col-auto">
+      <div class="col-auto full-width">
         <div class="overline">{{ $t("product.label", 1) }}</div>
         <div class="text-h4 display highlight text-uppercase">{{ job.product_code }}</div>
-        <div class="text-body2 ellipsis">{{ job.product_description }}</div>
+        <div class="text-body2 ellipsis-2-lines">{{ job.product_description }}</div>
       </div>
 
-      <div class="column col-auto">
+      <div class="col-auto">
         <div class="overline">{{ $t("phase.short", 1) }}</div>
         <div class="text-h4 display highlight">{{ job.phase_alias }}</div>
       </div>
