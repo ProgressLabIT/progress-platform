@@ -167,7 +167,7 @@ class ProductionAdminEvent:
     operator_data = self.tx.collection('User').get(self.job.assigned_to)
     hourly_cost = operator_data.get('hourly_cost', 0)
 
-    unit_processing_cost = hourly_cost * unit_processing_time
+    unit_processing_cost = (0 if hourly_cost is None else hourly_cost) * unit_processing_time
     batch_value = unit_processing_cost * quantity
 
     new_batch_data = Batch(
