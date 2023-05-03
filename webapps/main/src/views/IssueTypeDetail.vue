@@ -159,9 +159,10 @@
         {{ $t('field_none') }}
       </div>
 
-      <div v-else class="col scroll">
+      <div v-else class="col scroll" id="issue-type-fields">
 
-        <div class="row items-center q-col-gutter-lg q-py-sm"
+        <div
+          class="row items-center q-col-gutter-lg q-py-sm"
           v-for="(field, index) in temp_metadata.form_template"
           :key="field._key">
 
@@ -281,6 +282,7 @@ import BaseDialog from '@/components/BaseDialog.vue'
 import FormFieldSearch from '@/components/FormFieldSearch.vue'
 import form from '@/mixins/form.js'
 import { cloneDeep as _cloneDeep } from 'lodash'
+import Sortable from 'sortablejs'
 
 
 export default {
@@ -393,6 +395,24 @@ export default {
 
     deleteField(index) {
       this.temp_metadata.form_template.splice(index, 1)
+    },
+
+    initSortable() {
+      const _self = this
+      let container = document.querySelector("#issue-type-fields")
+      if (container) {
+        Sortable.create(container, {
+          ..._self.$store.state.drag_options,
+          handle: ".dragme",
+          onStart: () => _self.dragging = true,
+          // use onEnd event provided by SortableJs library
+          onEnd: ({ newIndex, oldIndex }) => {
+            _self.dragging = false
+            const moved = _self.temp_metadata.form_template.splice(oldIndex, 1)[0]
+            _self.temp_metadata.form_template.splice(newIndex, 0, moved)
+          }
+        })
+      }
     }
   },
 
@@ -403,6 +423,7 @@ export default {
   watch: {
     edit_mode() {
       this.setTempData()
+      this.initSortable()
     },
     issue_type: {
       handler: 'setTempData',
