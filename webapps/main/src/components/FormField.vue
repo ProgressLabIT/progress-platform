@@ -1,67 +1,84 @@
 <template>
   <div>
+
     <!-- TEXT -->
-    <q-input
-      v-if="field_data.type == 'text'"
-      filled
-      stack-label
-      autogrow
-      lazy-rules
-      input-debounce="100"
-      :disable="disable"
-      :dense="dense"
-      :label="field_data.label"
-      :hint="field_data.hint"
-      :model-value="field_data.value"
-      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-      @update:model-value="(val) => $emit('update', val)">
-    </q-input>
+    <div v-if="field_data.type == 'text'" class="q-mb-lg">
+      <q-input
+        filled
+        stack-label
+        autogrow
+        lazy-rules
+        input-debounce="100"
+        hide-bottom-space
+        :disable="disable"
+        :dense="dense"
+        :label="field_data.label"
+        :model-value="field_data.value"
+        :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
+        @update:model-value="(val) => $emit('update', val)">
+      </q-input>
+      <div class="smaller q-px-sm q-mt-xs">
+        {{ field_data.hint }}
+      </div>
+    </div>
 
     <!-- NUMBER -->
-    <q-input
-      v-if="field_data.type == 'number'"
-      type="number"
-      filled
-      stack-label
-      autogrow
-      input-debounce="100"
-      :disable="disable"
-      :dense="dense"
-      :label="field_data.label"
-      :hint="field_data.hint"
-      :model-value="field_data.value"
-      lazy-rules
-      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-      @update:model-value="val => $emit('update', parseFloat(val))">
-    </q-input>
+    <div v-if="field_data.type == 'number'" class="q-mb-lg">
+      <q-input
+        type="number"
+        filled
+        stack-label
+        hide-bottom-space
+        input-debounce="100"
+        :disable="disable"
+        :dense="dense"
+        :label="field_data.label"
+        :model-value="field_data.value"
+        lazy-rules
+        :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
+        @update:model-value="val => $emit('update', parseFloat(val))">
+      </q-input>
+      <div class="smaller q-px-sm q-mt-xs">
+        {{ field_data.hint }}
+      </div>
+    </div>
 
     <!-- BOOLEAN -->
-    <q-checkbox
-      v-if="field_data.type == 'boolean'"
-      :disable="disable"
-      :dense="dense"
-      :label="field_data.label"
-      :model-value="field_data.value ?? false"
-      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-      @update:model-value="val => $emit('update', val)">
-    </q-checkbox>
+    <div v-if="field_data.type == 'boolean'" class="q-mb-lg">
+      <q-checkbox
+        :disable="disable"
+        :dense="dense"
+        :label="field_data.label"
+        :model-value="field_data.value ?? false"
+        :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
+        @update:model-value="val => $emit('update', val)">
+      </q-checkbox>
+      <div class="smaller q-px-sm q-mt-xs">
+        {{ field_data.hint }}
+      </div>
+    </div>
 
     <!-- CHOICE -->
-    <q-select
-      v-if="field_data.type == 'choice'"
-      filled
-      stack-label
-      use-input
-      clearable
-      :disable="disable"
-      :dense="dense"
-      :label="field_data.label"
-      :options="options"
-      option-label="value"
-      @filter="filter"
-      :model-value="field_data.value"
-      @update:model-value="val => $emit('update', val)">
-    </q-select>
+    <div v-if="field_data.type == 'choice'" class="q-mb-lg">
+      <q-select
+        filled
+        stack-label
+        use-input
+        clearable
+        :disable="disable"
+        :dense="dense"
+        :label="field_data.label"
+        :options="options"
+        option-label="value"
+        @filter="filter"
+        :model-value="field_data.value"
+        @update:model-value="val => $emit('update', val)">
+      </q-select>
+      <div class="smaller q-px-sm q-mt-xs">
+        {{ field_data.hint }}
+      </div>
+    </div>
+
     <!-- DATE -->
     <!-- TIME -->
   </div>
