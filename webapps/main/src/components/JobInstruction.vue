@@ -4,17 +4,17 @@
 
       <!-- MEDIA CONTAINER -->
       <div class="absolute-full scroll" v-if="step_media.length">
-        <div class="q-mx-auto flex flex-center relative-position" style="z-index: 0">
+        <div class="q-mx-auto flex flex-center full-width relative-position" style="z-index: 0">
 
           <!-- INVISIBLE NAVIGATION -->
-          <div class="row full-height">
+          <div class="row absolute-full">
             <div class="col-6" @click="show('prev')" style="z-index: 1"/>
             <div class="col-6" @click="show('next')" style="z-index: 1"/>
           </div>
 
           <!-- IMAGE CONTENT -->
           <q-img
-            class="absolute-full"
+            class="full-width"
             id="step-image"
             v-if="is_image"
             fit="cover"
