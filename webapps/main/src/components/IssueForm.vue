@@ -1,6 +1,6 @@
 <template>
   <BaseDialog :show="show">
-    <q-card square class="surface1 q-pa-md" style="min-width: 600px; max-width: 1200px;">
+    <q-card square class="surface1 q-pa-md" style="min-width: 600px; max-width: 800px;">
       <q-form ref="issue-form">
         <q-card-section>
           <div class="row justify-between items-center">
