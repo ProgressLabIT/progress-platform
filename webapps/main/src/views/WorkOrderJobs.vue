@@ -527,7 +527,7 @@ export default {
     getHeaderClass(phase_key) {
       const base_classes = 'row items-center q-py-lg'
       const highlight = this.expanded_phase === phase_key ? ' highlight' : ''
-      return base_classes + highlight + ' q-pl-sm'
+      return base_classes + highlight + ' q-pl-sm q-pr-none'
     },
 
     getColClass(header) {
