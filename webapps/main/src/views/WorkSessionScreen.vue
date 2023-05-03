@@ -251,7 +251,7 @@ export default {
         {
           route_name: 'jobIssues',
           text: this.$t('issue', 2),
-          item_count: this.j.issue_count
+          item_count: this.$store.getters.getOpenIssueCount
         },
         {
           route_name: 'jobNotes',
