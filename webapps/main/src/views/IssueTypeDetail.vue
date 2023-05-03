@@ -166,11 +166,11 @@
           v-for="(field, index) in temp_metadata.form_template"
           :key="field._key">
 
-          <div class="col-auto dragme">
+          <div class="col-auto">
             <q-icon
               v-if="edit_mode"
               name="mdi-drag-horizontal-variant"
-              class="q-mr-sm"
+              class="q-mr-sm dragme"
               size="sm">
             </q-icon>
             <q-icon
