@@ -40,7 +40,7 @@
           <div class="col-3">
             {{ $capitalize(issue_type.code) }}
           </div>
-          <div class="col-8">
+          <div class="col-8 ellipsis">
             {{ issue_type.name }}
           </div>
           <div class="col-1 text-right">
