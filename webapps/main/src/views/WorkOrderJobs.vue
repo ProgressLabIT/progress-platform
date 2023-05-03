@@ -107,7 +107,7 @@
 
             <!-- SELECT CHECKBOX -->
             <template v-if="header.value === 'phase_alias'">
-              <div class="row items-center">
+              <div class="row items-center" style="margin-left: -6px;">
                 <q-checkbox
                   color="theme-blue"
                   :disable="job.active || job.stage === 'closed'"
@@ -343,7 +343,7 @@
         </div>
 
         <!-- JOB ACTIONS -->
-        <div class="row items-center q-px-md q-py-lg">
+        <div class="row items-center q-pa-lg">
 
           <!-- STARTING ACTION BUTTONS -->
           <template v-if="edit_mode=='actions'">
@@ -527,7 +527,7 @@ export default {
     getHeaderClass(phase_key) {
       const base_classes = 'row items-center q-py-lg'
       const highlight = this.expanded_phase === phase_key ? ' highlight' : ''
-      return base_classes + highlight + ' q-px-sm'
+      return base_classes + highlight + ' q-pl-sm'
     },
 
     getColClass(header) {
@@ -536,7 +536,7 @@ export default {
         : ''
 
       const cols = header.cols ? 'col-' + header.cols : 'col'
-      return cols + ' ' + alignment_class + ' q-px-sm'
+      return cols + ' ' + alignment_class + ' q-pl-md'
     },
 
     togglePhase(phase_key) {
