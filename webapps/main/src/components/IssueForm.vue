@@ -216,7 +216,19 @@ export default {
         issue_data.close_within = this.issue_type ? this.issue_type.close_within : 0
 
         // Map links to list of objects, including only populated properties
-        const link_data = this.links.map(l => ({ type: l.type, key: l.value }))
+
+        const link_data = this.links.map(l => {
+          const value = (
+            l.type == 'product' ? this.job_data.product_key
+            : l.type == 'operation' ? this.job_data.operation_key
+            : l.type == 'phase' ? this.job_data.phase_key
+            : l.type == 'work_order' ? this.job_data.wo_key
+            : l.type == 'user' ? this.session_data.user._key
+            : l.type == 'job' ? this.job_data._key
+            : null
+          )
+          return { type: l.type, key: value  }
+        })
         issue_data.linked_to = link_data
       }
 
@@ -250,24 +262,6 @@ export default {
 
   mounted() {
     // Currently for use only from WorkSessionScreen
-    if (this.mode == 'new') {
-      this.links.forEach(l => {
-        l.value = (
-          l.type == 'product' ? this.job_data.product_key
-          : l.type == 'operation' ? this.job_data.operation_key
-          : l.type == 'phase' ? this.job_data.phase_key
-          : l.type == 'work_order' ? this.job_data.wo_key
-          : l.type == 'user' ? this.session_data.user._key
-          : l.type == 'job' ? this.job_data._key
-          : null
-        )
-      })
-    }
-    // Edit existing issue
-    else if (this.issue.issue_type_key) {
-      this.initIssueType()
-      this.initFormData()
-    }
   },
 
   watch: {
