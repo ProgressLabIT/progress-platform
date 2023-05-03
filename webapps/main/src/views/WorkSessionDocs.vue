@@ -22,16 +22,14 @@
       {{ $t('document.missing') }}
     </NoDataAlert>
 
-    <v-lazy>
-      <MediaViewer
-        :show="show_media >= 0 || show_media === 'img' "
-        @close="show_media = -1"
-        v-bind="{ media_name, media_src}">
-        <template v-slot:context-title>
-         {{ $t('product.code').toUpperCase() }}: {{ product.code }}
-        </template>
-      </MediaViewer>
-    </v-lazy>
+    <MediaViewer
+      :show="show_media >= 0 || show_media === 'img' "
+      @close="show_media = -1"
+      v-bind="{ media_name, media_src}">
+      <template v-slot:context-title>
+       {{ $t('product.code').toUpperCase() }}: {{ product.code }}
+      </template>
+    </MediaViewer>
 
   </div>
 </template>

@@ -66,16 +66,15 @@
         @click="show_full_screen = true">
       </q-btn>
 
-      <v-lazy>
-        <MediaViewer
-          :show="show_full_screen"
-          @close="show_full_screen = false"
-          v-bind="{ media_name, media_src, instruction_title: step.title, instruction_detail: step.description }">
-          <template v-slot:context-title>
-           {{ $t('product.code').toUpperCase() }}: {{ product.code }}
-          </template>
-        </MediaViewer>
-      </v-lazy>
+      <MediaViewer
+        :show="show_full_screen"
+        @close="show_full_screen = false"
+        v-bind="{ media_name, media_src, instruction_title: step.title, instruction_detail: step.description }">
+        <template v-slot:context-title>
+         {{ $t('product.code').toUpperCase() }}: {{ product.code }}
+        </template>
+      </MediaViewer>
+
     </div>
   </div>
 
