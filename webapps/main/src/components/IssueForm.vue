@@ -195,6 +195,7 @@ export default {
     cancel() {
       this.initIssueType()
       this.form_data = []
+      this.critical_only = false
       this.$emit('close')
     },
 
