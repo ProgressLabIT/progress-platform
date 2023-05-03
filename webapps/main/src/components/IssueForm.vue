@@ -98,7 +98,7 @@ export default {
       critical_only: false,
       saving: false,
       issue_type: null,
-      form_data: {},
+      form_data: [],
       confirmed: false,
       critical: false,
       links: [
