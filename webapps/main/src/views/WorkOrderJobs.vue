@@ -1,8 +1,8 @@
 <template>
-  <div class="q-px-md q-py-md full-height column">
+  <div class="q-px-sm q-py-sm full-height column">
 
     <!-- HEADERS -->
-    <div class="row col-auto low-text items-center q-px-md q-py-sm">
+    <div class="row low-text items-center q-px-sm q-py-sm">
       <div
         v-for="header in headers" :key="header.value"
         class="text-h5 text-uppercase"
@@ -18,7 +18,7 @@
 
         <!-- ASSIGNED TO -->
         <div v-else class="row items-center">
-          <div class="col-4  text-right q-pr-lg">
+          <div class="col-4 text-right q-pr-lg">
             {{ $t('performance.processing_time.short') }}
           </div>
           <div class="col">
@@ -97,7 +97,7 @@
           v-for="job in phase.jobs"
           :key="job._key"
           :id="job._key"
-          class="row items-center q-pa-md">
+          class="row items-center q-py-md q-pl-sm">
 
           <!-- JOB DATA -->
           <div
@@ -343,7 +343,7 @@
         </div>
 
         <!-- JOB ACTIONS -->
-        <div class="row items-center q-px-lg q-py-md">
+        <div class="row items-center q-px-md q-py-lg">
 
           <!-- STARTING ACTION BUTTONS -->
           <template v-if="edit_mode=='actions'">
@@ -527,7 +527,7 @@ export default {
     getHeaderClass(phase_key) {
       const base_classes = 'row items-center q-py-lg'
       const highlight = this.expanded_phase === phase_key ? ' highlight' : ''
-      return base_classes + highlight + ' q-px-md'
+      return base_classes + highlight + ' q-px-sm'
     },
 
     getColClass(header) {
@@ -536,7 +536,7 @@ export default {
         : ''
 
       const cols = header.cols ? 'col-' + header.cols : 'col'
-      return cols + ' ' + alignment_class + ' q-px-md'
+      return cols + ' ' + alignment_class + ' q-px-sm'
     },
 
     togglePhase(phase_key) {

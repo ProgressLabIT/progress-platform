@@ -23,33 +23,33 @@
     </template>
 
     <template v-slot:content>
-      <div class="fit shadow-6 row">
 
-        <template v-if="vuex_ready">
+        <q-splitter
+          v-if="vuex_ready"
+          v-model="data_column_width"
+          class="fit q-py-sm"
+          separator-class="text-disabled">
 
-          <WorkOrderDataColumn
-            v-if="vuex_ready"
-            v-bind="{ wo_data }"
-            class="col-4 col-lg-3 full-height">
-          </WorkOrderDataColumn>
+          <template #before>
+            <WorkOrderDataColumn v-bind="{ wo_data }" />
+          </template>
 
-          <q-separator vertical inset />
+          <template #after>
+            <router-view
+              v-if="vuex_ready"
+              v-bind="{ wo_data }"
+              v-slot="{ Component }">
+              <keep-alive>
+                <div class="full-height relative-position q-pl-sm">
+                  <component :is="Component" />
+                </div>
+              </keep-alive>
+            </router-view>
+          </template>
 
-          <router-view
-            v-if="vuex_ready"
-            v-bind="{ wo_data }"
-            v-slot="{ Component }">
-            <keep-alive>
-              <div class="col full-height relative-position">
-                <component :is="Component" />
-              </div>
-            </keep-alive>
-          </router-view>
-
-        </template>
-
+        </q-splitter>
         <LoadingSignal v-else />
-      </div>
+
     </template>
 
   </BaseModalScreen>
@@ -84,6 +84,7 @@ export default {
       ],
       vuex_ready: false,
       column_height: '80vh',
+      data_column_width: 25,
       polling_instance: undefined
     }
   },

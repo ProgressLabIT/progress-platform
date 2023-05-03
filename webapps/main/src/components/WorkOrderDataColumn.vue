@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-lg full-height column">
+  <div class="q-px-lg q-py-md full-height column">
 
     <!-- COLUMN HEADER -->
     <div class="text-uppercase low-text text-h5 q-mb-xs">{{ $t('work_order.wo_code') }}</div>
