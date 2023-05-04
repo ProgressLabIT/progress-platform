@@ -46,7 +46,9 @@
         <template #body="props">
           <q-tr :props="props" @dblclick="showWorkOrderScreen(props.row.wo_key)">
             <template v-for="field in job_data" :key="field.name">
-              <q-td :props="props" :class="{ 'filter-field': search_fields.includes(field.name)}">
+              <q-td
+                :props="props"
+                :class="{ 'filter-field': search_fields.includes(field.name) }">
 
                 <!-- PROGRESS -->
                 <template v-if="field.name==='progress'">
@@ -145,62 +147,65 @@ export default {
           label: this.$t('work_order.wo_code').toUpperCase(),
           field: 'wo_code',
           name: 'wo_code',
+          classes: 'ellipsis',
           align: 'left',
-          style: 'width: 10%'
         },
         {
           label: this.$t('project').toUpperCase(),
           field: 'project_code',
           name: 'project_code',
+          classes: 'ellipsis',
           align: 'left',
-          style: 'width: 10%'
+          style: 'max-width: 200px',
+          headerStyle: 'max-width: 200px'
         },
         { 
           label: this.$t('product.label', 1).toUpperCase(),
           field: 'product_code',
           name: 'product_code',
+          classes: 'ellipsis',
           align: 'left',
-          style: 'width: 15%'
+          style: 'max-width: 200px',
+          headerStyle: 'max-width: 200px'
         },
         { 
           label: this.$t('phase.short').toUpperCase(),
           field: 'phase_alias',
           name: 'phase_alias',
-          style: 'width: 15%',
-          align: 'left'
+          classes: 'ellipsis',
+          align: 'left',
+          style: 'max-width: 200px',
+          headerStyle: 'max-width: 200px'
         },
         { 
           label: this.$t('progress').toUpperCase(),
           field: 'progress',
           name: 'progress',
-          style: 'width: 25%',
+          style: 'min-width: 200px',
+          headerStyle: 'min-width: 200px',
           align: 'left'
         },
         {
           field: 'issue_count',
           name: 'issue_count',
-          style: 'width: 5%',
           align: 'right'
         },
         { 
           label: this.$t('quantity.completed.short').toUpperCase(),
           field: 'qt_completed',
           name: 'qt_completed',
-          style: 'width: 5%',
           align: 'right'
         },
         {
           label: this.$t('quantity.planned.short').toUpperCase(),
           field: 'qt_planned',
           name: 'qt_planned',
-          style: 'width: 5%',
           align: 'right'
         },
         {
           label: this.$t('production.filters.ready').toUpperCase(),
           field: 'ready',
           name: 'ready',
-          style: 'width: 5%',
           align: 'right'
         },
       ]
