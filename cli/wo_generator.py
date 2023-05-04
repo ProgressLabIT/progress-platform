@@ -6,15 +6,15 @@ import traceback
 
 from arango import ArangoClient
 
-db_client = ArangoClient(hosts='http://progress.localhost/_db')
+db_client = ArangoClient(hosts='http://progress.localhost:8529')
 db = db_client.db('PROGRESS_TEST', username='root', password='')
 wos = db.collection('WorkOrder')
 jobs = db.collection('Job')
 
 
 httpx_params = {
-    proxies={ "all://progress.localhost": "http://localhost:80" },
-    base_url='http://progress.localhost/api/'
+    'proxies': { "all://progress.localhost": "http://localhost:80" },
+    'base_url': 'http://progress.localhost/api/'
 }
 
 
@@ -152,13 +152,12 @@ wo_progress_query = """
 
 def generate_random_wos(
     quantity: int, 
-    start_number: int = 220137, 
+    start_number: int = 2300137,
     prefix: str = 'WO', 
-    max_no_lines: int = 5,
-    min_wo_quantity: int = 5,
-    max_wo_quantity: int = 5,
+    min_wo_quantity: int = 1,
+    max_wo_quantity: int = 20,
     min_due_days: int = 7,
-    max_due_days: int = 300,
+    max_due_days: int = 100,
     set_progress: bool = True
     ) -> None:
 
@@ -167,34 +166,32 @@ def generate_random_wos(
             product_list = client.get('product').json()
             product_keys_list = [p['_key'] for p in product_list]
 
-            wo_lines = random.randrange(5)
-
             # Generate 200 work orders starting from number 1032
             count = 0
-            while count < quantity:
+            for _ in range(quantity):
                 wo_code = prefix + str(start_number + count)
 
-                for l in range(random.randrange(max_no_lines)):
-                    # select product
-                    product_key = random.choice(product_keys_list)
-                    # select quantity
-                    qt = random.randrange(min_wo_quantity, max_wo_quantity)
-                    # select due date with minimum 7 days ahead
-                    due_date = datetime.now() + timedelta(random.randrange(min_due_days, max_due_days))
+                # select product
+                product_key = random.choice(product_keys_list)
+                # select quantity
+                qt = random.randrange(min_wo_quantity, max_wo_quantity)
+                # select due date with minimum 7 days ahead
+                due_date = datetime.now() + timedelta(random.randrange(min_due_days, max_due_days))
 
-                    wo_data = dict(
-                        wo_code=wo_code,
-                        wo_line=l+1,
-                        product_key=product_key,
-                        qt_planned=qt,
-                        due_by=due_date.isoformat()
-                    )
-                    r = client.post('work-order', json=wo_data)
-                    print(f"Created {wo_code}")
-                    count += 1
+                wo_data = dict(
+                    wo_code=wo_code,
+                    product_key=product_key,
+                    qt_planned=qt,
+                    due_by=due_date.isoformat()
+                )
+                r = client.post('work-order', json=wo_data)
+                print(r.json())
+                print(f"Created {wo_code}")
+                count += 1
                     
             # Assign jobs when not already assigned, leaving some unassigned
-            operators = [o['_key'] for o in db.collection('User').all() if 'operator' in o['scope']]
+            users = client.get('user', params={'active_only': True}).json()['detail']
+            operators = [o['_key'] for o in users if 'operator' in o['scope']]
             operators_choice = operators.append(None)
 
             for j in [j['_key'] for j in jobs.all() if j['assigned_to'] is not None]:
@@ -217,9 +214,5 @@ def generate_random_wos(
               # Commit changes
               tx.commit_transaction()
 
-        except:
+        except Exception:
             print(traceback.format_exc())
-
-
-if __name__ == '__main__':
-  main()
