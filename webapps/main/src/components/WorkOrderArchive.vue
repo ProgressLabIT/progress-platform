@@ -70,8 +70,8 @@
     </q-table>
 
     <q-btn
-      class="absolute"
-      style="top: 15px; right: 20px"
+      class="fixed"
+      style="top: 60px; right: 20px"
       color="theme-blue"
       :label="$t('export')"
       @click="export_csv">
@@ -98,7 +98,8 @@ export default {
       type: Object,
       required: true,
       default: () => { return {
-        "search_string":"",
+        "search_string": "",
+        "archive_search":"",
         "started":true,
         "queued":true,
         "on_time":true,
@@ -205,7 +206,7 @@ export default {
       setTimeout(() => {
         this.$api.get('work-order-archive', {
           params: {
-            search: this.filters.search_string
+            search: this.filters.archive_search
           }
         }).then(resp => {
           this.wo_list = resp.data.map(wo => {
@@ -258,7 +259,7 @@ export default {
   },
 
   watch: {
-    'filters.search_string'() {
+    'filters.archive_search'() {
       this.fetchData()
     }
   }

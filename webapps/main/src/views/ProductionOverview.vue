@@ -1,9 +1,8 @@
 <template>
-  <q-page-container class="fit">
-    <q-page class="row">
+  <q-page-container class="absolute-full">
+    <q-page class="row full-height">
 
-      <div class="column col">
-        <!-- WORK ORDERS / JOBS LISTS -->
+      <div class="column col full-height">
         <div class="row col-auto items-center q-pl-xs q-pr-md q-py-sm">
 
           <!-- TAB LINKS -->
@@ -17,7 +16,7 @@
             <q-route-tab
               v-for="(view, index) in views"
               :key="index"
-              :to="{ name: view.route_name }"
+              :to="{ name: view.route_name, query: $route.query }"
               class="display">
               {{ $t(`views.${view.route_name}`) }}
             </q-route-tab>
@@ -34,7 +33,7 @@
               name="search"
               debounce="300"
               :label="$capitalize($t('search'))"
-              v-model="search_string"
+              v-model="archive_search"
               class="col-3 q-ml-xl">
               <template v-slot:append>
                 <q-icon name="mdi-magnify" size="xs"/>
@@ -85,21 +84,22 @@
         </div>
 
         <!-- MAIN CONTENT -->
-        <router-view
-          v-if="vuex_ready"
-          v-bind="{filters}"
-          @lateOnly="showLateOnly"
-          @criticalOnly="showCriticalOnly"
-          @setSearch="setSearch($event)"
-          @itemDblClick="showWorkOrderScreen($event)"
-          @editing="editing = true">
-        </router-view>
+        <div class="col relative-position">
+          <router-view
+            v-if="vuex_ready"
+            v-bind="{filters}"
+            @setSearch="setSearch($event)"
+            @itemDblClick="showWorkOrderScreen($event)"
+            @editing="editing = true">
+          </router-view>
+          <NoDataAlert v-else />
+        </div>
 
-        <NoDataAlert v-else />
 
       </div>
 
       <template v-if="$route.name != 'workOrderArchive'">
+
         <!-- DIVIDER -->
         <q-separator vertical inset/>
 
@@ -111,7 +111,6 @@
 
           <!-- FILTERS SPECIFIC TO JOB LIST  -->
           <template v-if="$route.name == 'jobList'">
-
             <!-- BY DEPARTMENT -->
             <q-select
               ref="department_filter"
@@ -122,6 +121,9 @@
               v-model="department_selected"
               :options="filtered_departments"
               option-label="name"
+              option-value="_key"
+              emit-value
+              map-options
               @filter="filterDepartment"
               :label="$capitalize($t('department', 1))"
               class="q-mb-md"
@@ -137,6 +139,9 @@
               clearable
               v-model="operator_selected"
               :options="filtered_operators"
+              option-value="_key"
+              emit-value
+              map-options
               :option-label="(item) => item.name + ' ' + item.surname"
               @filter="filterOperator"
               :label="$capitalize($t('operator'))"
@@ -185,13 +190,13 @@
 
           <!-- BOOLEAN FILTERS -->
           <q-checkbox
-            v-for="(filter, key) in bool_filters"
-            :key="key"
+            v-for="filter in bool_filters"
+            :key="filter"
             dense
             color="theme-blue"
             size="sm"
-            :label="$capitalize($t(`production.filters.${key}`))"
-            v-model="filter.value"
+            :label="$capitalize($t(`production.filters.${filter}`))"
+            v-model="_this[filter]"
             class="q-mt-md text-body1 low-text">
           </q-checkbox>
 
@@ -214,6 +219,7 @@
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
+import queryModel from '@/lib/queryModelFactory.js'
 
 const production_views = [
   { component: 'WorkOrderList', route_name: 'workOrderList' },
@@ -238,23 +244,9 @@ export default {
       // content_height: 0,
       views: production_views,
       current_view: 0,
-      bool_filters: {
-        started: { value: true },
-        queued: { value: true },
-        on_time: { value: true },
-        late: { value: true },
-        active: { value: true },
-        idle: { value: true },
-        ready: { value: true },
-        not_ready: { value: true },
-        critical: { value: true },
-        not_critical: { value: true }
+      bool_filters: ['started','queued','on_time','late','active','idle','ready','not_ready','critical','not_critical'],
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
-      },
-      search_string: undefined,
-      department_selected: undefined,
       department_search_text: undefined,
-      operator_selected: undefined,
       editing: false,
       saving: false,
       polling_instance: undefined,
@@ -263,19 +255,41 @@ export default {
   },
 
   computed: {
+    // Filters
+    search_string: queryModel(String, 'search', null),
+    archive_search: queryModel(String, 'archive_search', null),
+
+    operator_selected: queryModel(String, 'operator', undefined),
+    department_selected: queryModel(String, 'department', undefined),
+
+    started: queryModel(Boolean, 'started', true),
+    queued: queryModel(Boolean, 'queued', true),
+    on_time: queryModel(Boolean, 'on_time', true),
+    late: queryModel(Boolean, 'late', true),
+    active: queryModel(Boolean, 'active', true),
+    idle: queryModel(Boolean, 'idle', true),
+    ready: queryModel(Boolean, 'ready', true),
+    not_ready: queryModel(Boolean, 'not_ready', true),
+    critical: queryModel(Boolean, 'critical', true),
+    not_critical: queryModel(Boolean, 'not_critical', true),
+
+    _this() { return this },
+
     filters() {
-      const search_string = this.search_string
-      const bools_map = {}
-      for (const [k,v] of Object.entries(this.bool_filters)) {
-        bools_map[k] = v.value
+      let bools = {}
+      this.bool_filters.forEach(f => bools[f] = this[f])
+
+      return {
+        search_string: this.search_string,
+        archive_search: this.archive_search,
+        ...bools,
+        department_key: this.department_selected,
+        operator_key: this.operator_selected
       }
-      const department_key = this.department_selected ? this.department_selected._key : undefined
-      const operator_key = this.operator_selected ? this.operator_selected._key : undefined
-      return { search_string, ...bools_map, department_key, operator_key }
     },
 
     filters_active() {
-      return Object.values(this.bool_filters).some(f => f.value === false) 
+      return this.bool_filters.map(f => this[f]).some(f => f === false)
         || this.search_string != null
         || this.department_selected != null
         || this.operator_selected != null
@@ -313,12 +327,7 @@ export default {
     },
 
     resetFilters() {
-      this.search_string = null
-      this.operator_selected = null
-      this.department_selected = null
-      for (let filter of Object.values(this.bool_filters)) {
-        filter.value = true
-      }
+      this.$router.replace({ query: null })
     },
 
     showWorkOrderScreen({wo_key, back_to_route_name}) {
@@ -328,7 +337,8 @@ export default {
           wo_key: wo_key,
         },
         query: {
-          back_to: back_to_route_name
+          back_to: back_to_route_name,
+          ...this.$route.query
         }
       }
       this.$router.push(to_route)
@@ -357,9 +367,6 @@ export default {
         this.operator_search_text = val.toLowerCase()
       })
     }
-  },
-
-  beforeCreate() {
   },
 
   created() {

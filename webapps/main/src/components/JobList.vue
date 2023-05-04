@@ -1,5 +1,5 @@
 <template>
-  <q-scroll-area class="col q-mx-xs q-px-sm q-pt-lg" :visible="false">
+  <div class="full-height q-mx-xs q-px-sm q-pt-lg scroll">
     <NoDataAlert v-if="!jobs_view.length" />
 
     <template
@@ -86,7 +86,7 @@
       <q-separator class="q-my-lg q-mx-sm"/>
 
     </template>
-  </q-scroll-area>
+  </div>
 </template>
 
 <script>

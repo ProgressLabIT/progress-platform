@@ -14,44 +14,43 @@
           <q-route-tab
             v-for="(page, index) in tabs" 
             :key="index" 
-            :to="{ name: page, query: { back_to: $route.query.back_to } }"
+            :to="{ name: page, query: $route.query }"
             class="display" >
             {{ $t(`work_order.tabs.${page}`) }}
           </q-route-tab>
         </q-tabs>
       </div>
-    </template>
+  </template>
 
     <template v-slot:content>
 
-        <q-splitter
-          v-if="vuex_ready"
-          v-model="data_column_width"
-          class="fit q-py-sm"
-          separator-class="text-disabled">
+      <q-splitter
+        v-if="vuex_ready"
+        v-model="data_column_width"
+        class="fit q-py-sm"
+        separator-class="text-disabled">
 
-          <template #before>
-            <WorkOrderDataColumn v-bind="{ wo_data }" />
-          </template>
+        <template #before>
+          <WorkOrderDataColumn v-bind="{ wo_data }" />
+        </template>
 
-          <template #after>
-            <router-view
-              v-if="vuex_ready"
-              v-bind="{ wo_data }"
-              v-slot="{ Component }">
-              <keep-alive>
-                <div class="full-height relative-position q-pl-sm">
-                  <component :is="Component" />
-                </div>
-              </keep-alive>
-            </router-view>
-          </template>
+        <template #after>
+          <router-view
+            v-if="vuex_ready"
+            v-bind="{ wo_data }"
+            v-slot="{ Component }">
+            <keep-alive>
+              <div class="full-height relative-position q-pl-sm">
+                <component :is="Component" />
+              </div>
+            </keep-alive>
+          </router-view>
+        </template>
+      </q-splitter>
 
-        </q-splitter>
-        <LoadingSignal v-else />
+      <LoadingSignal v-else />
 
     </template>
-
   </BaseModalScreen>
 </template>
 
@@ -98,13 +97,19 @@ export default {
   methods: {
 
     exit() {
+      let query = {...this.$route.query}
+
       if (this.$route.query.back_to) {
-        this.$router.push({ name: this.$route.query.back_to })
+        delete query.back_to
+        const push_route = { name: this.$route.query.back_to, query }
+        console.log({push_route})
+        this.$router.push(push_route)
       }
       else {
-        this.$router.push({ name: 'workOrderList' })
+        this.$router.push({ name: 'workOrderList', query })
       }
     },
+
     get_wo_data() {
       axios.all([
         this.$store.dispatch('loadWorkOrderData', this.wo_key),
