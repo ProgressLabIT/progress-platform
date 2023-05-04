@@ -12,7 +12,7 @@
             name="search"
             :placeholder="$t('search')"
             input-class="text-uppercase text-body1"
-            v-model="search_proxy"
+            v-model="search_string"
             :debounce="300">
             <template #append>
               <q-icon name="mdi-magnify" />
@@ -98,9 +98,8 @@ export default {
 
   data() {
     return {
-      search_proxy: null,
-      search_string: null,
-      loading: true,
+      // search_string: null,
+      loading: false,
       vuex_ready: false,
       load_quantity: 100,
       loading_round: 1
@@ -126,6 +125,20 @@ export default {
       return this.load_quantity * this.loading_round
     },
 
+    search_string: {
+      get() {
+        return this.$route.query.search
+      },
+      set(value) {
+        this.$router.replace({
+          query: {
+            ...this.$route.query,
+            search: value
+          }
+        })
+      }
+    },
+
     show_images: {
       get() {
         return this.$route.query.show_images === 'true'
@@ -135,7 +148,7 @@ export default {
       set(value) {
         this.$router.replace({ 
           query: { 
-            filter_inactive: this.filter_inactive,
+            ...this.$route.query,
             show_images: value 
           }
         })
@@ -151,8 +164,8 @@ export default {
       set(value) {
         this.$router.replace({
           query: { 
+            ...this.$route.query,
             filter_inactive: value,
-            show_images: this.show_images
           }
         })
       }
@@ -185,7 +198,7 @@ export default {
       setTimeout(() => {
         this.loading_round ++
         this.loading = false
-      }, 1500)
+      }, 700)
     }
   },
 
@@ -195,18 +208,16 @@ export default {
     })
   },
 
-
   watch: {
-    search_proxy: {
+    search_string: {
       immediate: true,
       handler() {
         this.loading = true
-        this.loading_round = 0,
+        this.loading_round = 0
         setTimeout(() => {
-          this.search_string = this.search_proxy
           this.loading = false
           this.loading_round = 1
-        }, 1500)
+        }, 700)
       }
     }
   }

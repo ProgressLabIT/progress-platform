@@ -100,7 +100,8 @@ export default {
           product_key: this.product._key
         },
         query: {
-          back_to: 'productList'
+          back_to: 'productList',
+          ...this.$route.query
         }
       })
     },

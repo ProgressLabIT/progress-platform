@@ -15,7 +15,7 @@
           <q-route-tab
             v-for="(page, index) in links"
             :key="index"
-            :to="{ name: page.name, query: { back_to: $route.query.back_to } }"
+            :to="{ name: page.name, query: { ...$route.query } }"
             class="display">
             {{ page.title }}
           </q-route-tab>
@@ -91,7 +91,9 @@ export default {
       }
       else {
         this.show_modal = false
-        this.$router.push({ name: this.$route.query.back_to })
+        let query = { ...this.$route.query }
+        delete query.back_to
+        this.$router.push({ name: this.$route.query.back_to, query })
       }
     },
 

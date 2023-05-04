@@ -74,14 +74,20 @@ export default {
     return {
       overCard: false,
       overDesc: false,
-      showDelete: false,
-      to_product_route: {
+      showDelete: false
+    }
+  },
+
+  computed: {
+    to_product_route() {
+      return {
         name: 'productHome',
         params: {
           product_key: this.product._key
         },
         query: {
-          back_to: 'productList'
+          back_to: 'productList',
+          ...this.$route.query
         }
       }
     }
