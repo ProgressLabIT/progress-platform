@@ -14,7 +14,9 @@ const quality = {
     getIssueType: (state) => (issue_type_key) => {
       return state.issue_types.find(it => it._key == issue_type_key)
     },
-    getOpenIssueCount: (state) => state.issues.filter(i => i.open).length
+    getIssueCount: (state) => (open_only) => {
+      return state.issues.filter(i => open_only == true ? i.open : true).length
+    }
   },
 
   mutations: {

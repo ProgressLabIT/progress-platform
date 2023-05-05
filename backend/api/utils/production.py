@@ -116,8 +116,11 @@ class Queries:
         FILTER q.subqueue_target_key == o._key
         LET jobs = (
           FOR j IN q.jobs
-          LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == CONCAT('Job/', j) RETURN 1)
-          RETURN MERGE(DOCUMENT(Job, j), { issue_count })
+          LET job_data = DOCUMENT(Job, j)
+          LET wo_id = CONCAT('WorkOrder/', job_data.wo_key)
+          LET issues = (FOR v IN 1..1 INBOUND wo_id issue_rel RETURN v)
+          LET issues_open = LENGTH(issues[* FILTER CURRENT.open])
+          RETURN MERGE(job_data, { issues_open, issues_total:  LENGTH(issues) })
         )
         RETURN jobs
       )

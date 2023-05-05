@@ -57,12 +57,13 @@
             {{ job.qt_completed }} / {{ job.qt_planned }}
           </div>
         </div>
-        <div class="col-auto text-right overline">
+        <div class="col-auto text-center overline">
           <div class="overline">
-            <q-icon dense name="mdi-flag" class="q-pb-xs"></q-icon> aperte
+            <q-icon dense name="mdi-flag" class="q-pb-xs q-mr-xs"></q-icon>
+            <span>AP - TOT</span>
           </div>
           <div class="text-h4 display highlight">
-            {{ job.issue_count }}
+            {{ job.issues_open }} / {{ job.issues_total }}
           </div>
         </div>
         <div class="col-auto text-right">

@@ -4,12 +4,17 @@
       <q-icon flat :name="issue.icon || 'mdi-help'" size="lg" />
     </q-item-section>
     <q-item-section>
-      <q-item-label class="weight-bold text-h4 row items-center">
-        <div class="q-mr-md">{{ issue.issue_type_name || $t('issue') }}</div>
-        <div>#{{ issue._key }}</div>
-        <div class="col q-ml-xl">
+      <q-item-label class="row items-center">
+        <span class="weight-bold text-h4 q-mr-sm">
+          {{ issue.issue_type_name || $t('issue') }}
+        </span>
+        <span class="smaller text-body2 text-uppercase low-text q-ml-md">
+          <span class="q-mr-sm">{{ issue.phase_alias }}</span>
+          <span>#{{ issue._key }}</span>
+        </span>
+        <span class="col q-ml-xl">
           <q-btn flat round @click.stop="show_issue_update=true" icon="mdi-pencil" />
-        </div>
+        </span>
       </q-item-label>
     </q-item-section>
     <q-item-section class="display col-auto weight-bold text-uppercase">

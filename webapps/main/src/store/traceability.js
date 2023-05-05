@@ -143,7 +143,7 @@ const traceability = {
   },
 
   actions: {
-    loadWorkingJobData({ commit }, job_key) {
+    loadWorkingJobData({ commit, dispatch }, job_key) {
       return new Promise( async resolve => {
         // Get job data
         const job_resp = await api.get(`job/${job_key}`)
@@ -156,6 +156,7 @@ const traceability = {
           batch_data = batch_resp.data.detail
         }
         commit('LOAD_WORKING_JOB_DATA', {job_data, batch_data})
+        await dispatch('getIssues', { work_order_key: job_data.wo_key})
         resolve()
       })
     },

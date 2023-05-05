@@ -62,7 +62,15 @@ class Queries:
     )
 
     SORT i.created
-    RETURN MERGE(i, { icon: type_data.icon, issue_type_name: type_data.name, data: issue_data })
+
+    LET phase_alias = FIRST(FOR v IN 1..1 OUTBOUND i issue_rel FILTER PARSE_IDENTIFIER(v._id).collection == 'Phase' RETURN v.alias)
+
+    RETURN MERGE(i, {
+      icon: type_data.icon,
+      issue_type_name: type_data.name,
+      data: issue_data,
+      phase_alias
+    })
   """
 
   CHECK_PRODUCTION_CRITICAL_STATUS = """

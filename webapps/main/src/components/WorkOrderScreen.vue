@@ -113,7 +113,8 @@ export default {
     get_wo_data() {
       axios.all([
         this.$store.dispatch('loadWorkOrderData', this.wo_key),
-        this.$store.dispatch('loadUsers')
+        this.$store.dispatch('loadUsers'),
+        this.$store.dispatch('getIssues', { work_order_key: this.wo_key })
       ])
       .then(() => this.vuex_ready = true)
     }

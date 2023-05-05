@@ -72,17 +72,8 @@ export default {
     },
 
     getIssues() {
-      const filter =
-        this.context == 'job' ? { job_key: this.job_key }
-        : this.context == 'work-order' ? { work_order_key: this.wo_key }
-        : null
-
-      this.$store.dispatch('getIssues', filter)
+      this.$store.dispatch('getIssues', { work_order_key: this.wo_key })
     }
-  },
-
-  created() {
-    this.getIssues()
   }
 }
 </script>

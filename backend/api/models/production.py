@@ -143,7 +143,8 @@ class Job(FlexModel):
 
   assigned_to: Union[str, Operator] = None
 
-  issue_count: int = None
+  issues_total: int = None
+  issues_open: int = None
 
   progress: int = Field(0, ge=0, le=100)
   active_batch_key: str = None # batch _key
