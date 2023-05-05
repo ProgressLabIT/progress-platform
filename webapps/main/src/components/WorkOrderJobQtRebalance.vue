@@ -1,6 +1,6 @@
 <template>
   <BaseDialog :show="show">
-    <q-card class="q-pa-md surface2 column" style="width: 600px; height: 80vh">
+    <q-card class="q-pa-md surface2 column" style="min-width: 600px; height: 80vh">
       <q-card-section class="text-h3 col-auto">
         {{ $capitalize($t('work_order.qt_rebalance_title')) }}
       </q-card-section>
@@ -29,42 +29,57 @@
           <!-- PHASE JOBS -->
           <div
             class="row items-center q-py-sm"
-            v-for="job in phase.jobs"
-            :key="job._key">
+            v-for="job_update in job_updates[phase.phase_key]"
+            :key="job_update._key">
             <div class="col-3">
-              {{ job._key }}
+              {{ job_update._key }}
             </div>
-            <BaseUserAvatar
-              v-if="job.assigned_to"
-              class="col-4"
-              :user="job.assigned_to">
-            </BaseUserAvatar>
+            <div class="col-auto">
+              <BaseUserAvatar
+                v-if="job_update.assigned_to"
+                :user="job_update.assigned_to">
+              </BaseUserAvatar>
+            </div>
             <q-space />
-            <div class="col-1 text-uppercase q-mr-md">
-              {{ $t('quantity.remaining.short') }}
-            </div>
-            <q-input
-              class="col-2"
-              :key="index"
-              dense
-              input-class="text-right"
-              hide-bottom-space
-              type="number"
-              v-model.number="job_updates[job._key].new_remaining"
-              min="0"
-              :max="new_wo_qt">
-            </q-input>
+            <template v-if="job_update._key != 'NA'">
+              <div class="col-auto text-uppercase q-mr-md">
+                {{ $t('quantity.remaining.short') }}
+              </div>
+              <q-input
+                class="col-2"
+                :key="index"
+                dense
+                input-class="text-right"
+                hide-bottom-space
+                type="number"
+                v-model.number="job_update.new_remaining"
+                min="0"
+                :max="new_wo_qt">
+              </q-input>
+            </template>
 
           </div>
         </div>
       </q-card-section>
 
-      <q-card-actions align="between" class="col-auto">
-        <q-btn color="theme-grey" @click="$emit('close')">
-          {{ $t('cancel') }}
+      <q-card-actions align="between">
+        <q-btn
+          color="theme-grey"
+          @click="$emit('close')"
+          :label="$t('cancel')">
         </q-btn>
-        <q-btn color="theme-blue" :loading="saving" @click="save" v-if="can_save">
-          {{ $t('save') }}
+        <q-btn
+          color="theme-orange"
+          @click="spreadRemaining"
+          :label="$t('job.rebalance.spread')">
+        </q-btn>
+        <q-space />
+        <q-btn
+          v-if="can_save"
+          color="theme-blue"
+          :loading="saving"
+          @click="save"
+          :label="$t('save')">
         </q-btn>
       </q-card-actions>
     </q-card>
@@ -105,28 +120,20 @@ export default {
 
   data () {
     return {
-      phase_index: 0,
       job_updates: {}, // job_key => qt
       saving: false
     }
   },
 
   computed: {
-    // phases_to_rebalance() {
-    //   return this.phase_data.filter( p => p.jobs.length > 1 )
-    // },
-
     phases_delta() {
-      if (this.job_updates != {}) {
-        const self = this
-        const delta_map = this.phase_data.reduce( (obj, phase) => {
-          const phase_temp_remaining = phase.jobs.reduce( (sum, job) => sum + self.job_updates[job._key].new_remaining, 0)
-          obj[phase.phase_key] = self.new_wo_qt - (phase.qt_completed + phase.active_batch_qt + phase_temp_remaining)
-          return obj
-        }, {})
-        return delta_map
-      }
-      else return {}
+      let deltas = {}
+      this.phase_data.forEach( phase => {
+        const phase_new_remaining = this.new_wo_qt - phase.qt_completed - phase.active_batch_qt
+        const current_remaining = this.job_updates[phase.phase_key].reduce((sum, job) => sum + job.new_remaining, 0)
+        deltas[phase.phase_key] = phase_new_remaining - current_remaining
+      })
+      return deltas
     },
 
     can_save() {
@@ -137,24 +144,70 @@ export default {
 
   methods: {
 
+    spreadRemaining() {
+      Object.entries(this.job_updates).forEach(([phase_key, phase_jobs]) => {
+        let delta = this.phases_delta[phase_key]
+        let remainder = delta % phase_jobs.length
+        const base_job_variation = (delta - remainder) / phase_jobs.length
+
+        phase_jobs.forEach(j => {
+          const current_remaining = j.new_remaining
+          let new_remaining = current_remaining + base_job_variation
+          console.log({ phase_key, j, delta, remainder, base_job_variation, new_remaining })
+          if (remainder) {
+            new_remaining += Math.sign(delta) // handle both increase and decrease of quantity
+            remainder -= Math.sign(remainder)
+          }
+          j.new_remaining = new_remaining
+          console.log({ phase_key, j, delta, remainder, base_job_variation, new_remaining })
+
+        })
+      })
+    },
+
     save() {
       if (this.can_save) {
         this.saving = true
-        const updates = Object.entries(this.job_updates).map( ([job_key, data]) => {
-          const job_update =  {
-            action: 'update',
-            data: {
-              _key: job_key,
-              qt_planned: data.completed + data.active + data.new_remaining
+        let job_updates = []
+
+        // Job update data is in an object divided by phase. First get a full, flat list
+        const flat_list = Object.entries(this.job_updates).reduce((full_list, [phase_key, phase_jobs]) => {
+          return full_list.concat(phase_jobs)
+        }, [])
+
+        // Then build the data to be sent to the backend
+        flat_list.forEach( data => {
+          let update
+
+          if (data._key == 'NA') { return }
+
+          else if (data._key == 'NEW') {
+            update = {
+              action: 'insert',
+              data: {
+                work_order_key: this.wo_key,
+                phase_key: data.phase_key,
+                qt_planned: data.new_remaining
+              }
             }
           }
-          return job_update
+
+          else {
+            update =  {
+              action: 'update',
+              data: {
+                _key: data._key,
+                qt_planned: data.qt_completed + data.active_batch_qt + data.new_remaining
+              }
+            }
+          }
+          job_updates.push(update)
         })
         // dispatch wo and job updates
         this.$store.dispatch('updateWorkOrder', {
           wo_key: this.wo_key,
           new_qt: this.new_wo_qt,
-          job_updates: updates
+          job_updates
         })
         .then(() => {
           this.$store.dispatch('loadWorkOrderData', this.wo_key)
@@ -170,14 +223,35 @@ export default {
   },
 
   created() {
+    /*
+    for each phase
+      check remaining quantity
+      if any
+        get open jobs
+      else (if increase)
+        add new job
+    */
     this.job_updates = this.phase_data.reduce( (obj, phase) => {
-      phase.jobs.forEach( j => {
-        obj[j._key] = {
-          new_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt,
-          completed: j.qt_completed,
-          active: j.active_batch_qt
-        }
-      })
+
+      obj[phase.phase_key] = []
+      let delta = this.new_wo_qt - (phase.qt_completed + phase.qt_remaining)
+
+      if (phase.qt_remaining) {
+        const open_jobs = phase.jobs.filter(j => j.stage != 'closed')
+        open_jobs.forEach( j => {
+          obj[phase.phase_key].push({ ...j, new_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt })
+        })
+      }
+
+      else {
+        const job_data = (delta > 0
+          ? { _key: 'NEW', phase_key: phase.phase_key, qt_completed: 0, active_batch_qt: 0, new_remaining: delta }
+          : { _key: 'NA', new_remaining: 0 }
+        )
+
+        obj[phase.phase_key].push(job_data)
+      }
+
       return obj
     }, {})
   }

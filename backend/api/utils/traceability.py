@@ -351,7 +351,7 @@ class Queries:
 # ------------- END OF QUERIES CLASS ----------------------------------
 
 
-def update_job_progress(db, job_key):
+def _update_job_progress(db, job_key):
   db.aql.execute(Queries.UPDATE_JOB_PROGRESS, bind_vars=dict(job_key=job_key))
 
 

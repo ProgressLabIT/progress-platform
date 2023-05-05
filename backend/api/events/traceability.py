@@ -3,7 +3,7 @@ from events.shared import EventMeta
 from models.traceability import *
 from models.production import Job, WorkOrderFull, WorkStatus
 
-from utils.production import Queries as ProductionQueries, update_target_queue
+from utils.production import Queries as ProductionQueries, _update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
 from utils.db import db, model_to_db_dict
 
@@ -479,7 +479,7 @@ class ProductionActivityEvent:
     self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
 
     # Update queue
-    update_target_queue(
+    _update_target_queue(
       job_key = self.info.job_key,
       target_key = self.info.user_key,
       action = 'add',

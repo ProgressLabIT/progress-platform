@@ -423,7 +423,8 @@ export default {
             action: 'insert',
             data: {
               // Use all metadata from template overriding what's necessary
-              ...j,
+              work_order_key: j.wo_key,
+              phase_key: j.phase_key,
               qt_planned: j.qt_remaining,
               assigned_to: j.assigned_to ? j.assigned_to._key : null,
               notes: `Job added by ${user_full_name} on ${datetime}`

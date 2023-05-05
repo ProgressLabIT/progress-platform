@@ -42,7 +42,7 @@ class Queries:
   """
 
 
-def get_bom_from_db(db, product_key):
+def _get_bom_from_db(db, product_key):
   db_result = db.aql.execute(
     Queries.GET_PRODUCT_BOM, 
     bind_vars=dict(product_key=product_key)

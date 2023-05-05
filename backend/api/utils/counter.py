@@ -16,7 +16,7 @@ update c with { reset_date, next_tick } in Counter
 RETURN c
 """
 
-def generate_counter(tx, counter_name):
+def _generate_counter(tx, counter_name):
   c = tx.aql.execute(COUNTER_TICK, bind_vars={ 'counter_name': counter_name }).next()
   counter_elements = []
   now = datetime.now()

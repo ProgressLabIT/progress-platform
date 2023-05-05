@@ -1,3 +1,10 @@
+from fastapi import HTTPException
+from fastapi.encoders import jsonable_encoder
+
+from models.process import PhaseData
+from models.production import Job, WorkOrderFull
+from utils.process import _search_step_media
+
 class Queries:
   ADD_WORK_ORDER_TO_QUEUE = """
     FOR q IN Queue
@@ -185,7 +192,7 @@ class Queries:
   """
 
 
-def update_target_queue(job_key, target_key, action, tx):
+def _update_target_queue(job_key, target_key, action, tx):
   """Add or remove jobs in a queue"""
   try:
     if action == 'remove':
@@ -235,3 +242,86 @@ def update_target_queue(job_key, target_key, action, tx):
      error=traceback.format_exc()
     )
     raise HTTPException(status_code=status_code, detail=response)
+
+
+def _get_procedure_for_new_job(tx, phase_key):
+  try:
+    db_steps = tx.aql.execute(
+      Queries.GET_PHASE_STEP_DATA,
+      bind_vars=dict(phase_key=phase_key)
+    )
+    job_steps = [s for s in db_steps]
+
+  except:
+    tx.abort_transaction()
+    status_code=500
+    response=dict(
+      status_code=status_code,
+      message=f"Couldn't retrieve data from the DB about Phase {phase_key}",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+  for s in job_steps:
+    try:
+      filenames = _search_step_media(s['_key'])
+      s['media'] = [media_name for media_name in filenames]
+    except:
+      tx.abort_transaction()
+      status_code=500
+      response=dict(
+        status_code=status_code,
+        message=f"Error while retrieving media info about Step {s['_key']}",
+        error=traceback.format_exc()
+      )
+      raise HTTPException(status_code=status_code, detail=response)
+
+  return job_steps
+
+
+def _create_job_record(
+  tx,
+  wo_data: WorkOrderFull,
+  phase_key: str,
+  qt_planned: float,
+  assigned_to: str = None,
+  **kwargs
+  ):
+  if phase_key == 'default':
+    phase = PhaseData(alias='default')
+  else:
+    phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
+
+  first_phase = phase_key == wo_data.phase_sequence[0]
+  last_phase = phase_key == wo_data.phase_sequence[-1]
+
+  new_job_data = Job(
+    wo_key = wo_data.key,
+    wo_code = wo_data.wo_code,
+    start_from = wo_data.start_from,
+    phase_key = phase_key,
+    phase_alias = phase.alias,
+    first_phase = first_phase,
+    last_phase = last_phase,
+    product_key = wo_data.product_key,
+    product_code = wo_data.product_code,
+    product_description = wo_data.product_description,
+    project_code = wo_data.project_code,
+    operation_key = phase.operation_key,
+    parameters = phase.params,
+    qt_planned = qt_planned,
+    next_batch_available = True if first_phase else False,
+    step_sequence = _get_procedure_for_new_job(tx, phase_key),
+    job_docs = wo_data.wo_docs,
+    job_bom = [x for x in wo_data.wo_bom if x.phase_key == phase_key],
+    assigned_to = assigned_to,
+    notes = kwargs.get('notes', None)
+  )
+
+  prepped = jsonable_encoder(new_job_data, by_alias=True)
+  new_job_record = Job(**tx.collection('Job').insert(prepped, return_new=True)['new'])
+
+  if assigned_to:
+    _update_target_queue(new_job_record.key, assigned_to, 'add', tx)
+
+  return new_job_record

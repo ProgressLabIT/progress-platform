@@ -5,18 +5,20 @@ from typing import Dict, List, Union
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 
-from models.process import PhaseData
 from models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
-from utils.bom import get_bom_from_db
-from utils.counter import generate_counter
+from utils.bom import _get_bom_from_db
+from utils.counter import _generate_counter
 from utils.db import db
 from utils.dt import timestamp
-from utils.process import search_step_media
-from utils.product import get_product_docs
-from utils.production import Queries, update_target_queue
-from utils.traceability import update_job_progress
+from utils.product import _get_product_docs
+from utils.production import (
+  Queries,
+  _create_job_record,
+  _update_target_queue
+)
+from utils.traceability import _update_job_progress, Queries as TraceabilityQueries
 
 
 router = APIRouter()
@@ -37,8 +39,8 @@ async def create_work_order(new_wo: WorkOrderNew):
   def create_wo_record(wo: WorkOrderNew, collection):
     new_wo_record = WorkOrderFull(
       **wo.dict(),
-      wo_docs = get_product_docs(wo.product_key),
-      wo_bom = get_bom_from_db(tx, wo.product_key)
+      wo_docs = _get_product_docs(wo.product_key),
+      wo_bom = _get_bom_from_db(tx, wo.product_key)
     )
     prepped = jsonable_encoder(new_wo_record, by_alias=True)
     db_resp = collection.insert(prepped)
@@ -50,7 +52,7 @@ async def create_work_order(new_wo: WorkOrderNew):
   # 0.1 Generate automatic wo_code if not provided
   if not new_wo.wo_code:
     try:
-      new_wo.wo_code = generate_counter(tx, 'work_order')
+      new_wo.wo_code = _generate_counter(tx, 'work_order')
     except:
       tx.abort_transaction()
       status_code=500
@@ -123,79 +125,9 @@ async def create_work_order(new_wo: WorkOrderNew):
       detail=response
     )
 
-
-  # 2. Get phase data from products, phase parameters from phase & Create Jobs
-  def get_procedure_for_new_job(phase_key):
-    try:
-      db_steps = tx.aql.execute(
-        Queries.GET_PHASE_STEP_DATA,
-        bind_vars=dict(phase_key=phase_key)
-      )
-      job_steps = [s for s in db_steps]
-
-    except:
-      tx.abort_transaction()
-      status_code=500
-      response=dict(
-        status_code=status_code,
-        message=f"Couldn't retrieve data from the DB about Phase {phase_key}",
-        error=traceback.format_exc()
-      )
-      raise HTTPException(status_code=status_code, detail=response)
-
-    for s in job_steps:
-      try:
-        filenames = search_step_media(s['_key'])
-        s['media'] = [media_name for media_name in filenames]
-      except:
-        tx.abort_transaction()
-        status_code=500
-        response=dict(
-          status_code=status_code,
-          message=f"Error while retrieving media info about Step {s['_key']}",
-          error=traceback.format_exc()
-        )
-        raise HTTPException(status_code=status_code, detail=response)
-
-    return job_steps
-
-
-  def create_job_record(wo_data, phase_key, collection):
-    if phase_key == 'default':
-      phase = PhaseData(alias='default')
-    else:
-      phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
-
-    first_phase = phase_key == wo_data.phase_sequence[0]
-    last_phase = phase_key == wo_data.phase_sequence[-1]
-
-    new_job_record = Job(
-      wo_key = wo_data.key,
-      wo_code = wo_data.wo_code,
-      start_from = wo_data.start_from,
-      phase_key = phase_key,
-      phase_alias = phase.alias,
-      first_phase = first_phase,
-      last_phase = last_phase,
-      product_key = wo_data.product_key,
-      product_code = wo_data.product_code,
-      product_description = wo_data.product_description,
-      project_code = wo_data.project_code,
-      operation_key = phase.operation_key,
-      parameters = phase.params,
-      qt_planned = wo_data.qt_planned,
-      next_batch_available = True if first_phase else False,
-      step_sequence = get_procedure_for_new_job(phase_key),
-      job_docs = wo_data.wo_docs,
-      job_bom = [x for x in wo_data.wo_bom if x.phase_key == phase_key]
-    )
-
-    prepped = jsonable_encoder(new_job_record, by_alias=True)
-    new_job_record.key = collection.insert(prepped)['_key']
-    return new_job_record
-
+  # 2. Create Jobs
   try:
-    new_job_records = [create_job_record(new_wo_record, phase_key, job_coll) for phase_key in new_wo_record.phase_sequence]
+    new_job_records = [_create_job_record(tx, new_wo_record, phase_key, new_wo.qt_planned) for phase_key in new_wo_record.phase_sequence]
 
   except:
     tx.abort_transaction()
@@ -530,13 +462,17 @@ async def update_jobs(job_updates:List[JobUpdate]):
     for u in job_updates:
 
       if u.action == JobUpdateType.INSERT:
-        new_job_record = jsonable_encoder(Job(**u.data), by_alias=True)
-        new_job_data = job_db.insert(new_job_record, return_new=True)['new']
+        wo_data = WorkOrderFull(**tx.collection('WorkOrder').get(u.data['work_order_key']))
+        new_job_data = _create_job_record(
+          tx,
+          wo_data = wo_data,
+          **u.data
+        )
 
         if 'assigned_to' in u.data:
-          update_target_queue(
-            job_key=new_job_data['_key'],
-            target_key=new_job_data['assigned_to'],
+          _update_target_queue(
+            job_key=new_job_data.key,
+            target_key=new_job_data.assigned_to,
             action='add',
             tx=tx
           )
@@ -544,31 +480,30 @@ async def update_jobs(job_updates:List[JobUpdate]):
         results.append(new_job_data)
 
       elif u.action == JobUpdateType.UPDATE:
-
         db_resp = job_db.update(u.data, return_new=True, return_old=True)
-        new_job_data = db_resp['new']
-        old_job_data = db_resp['old']
+        new_job_data = Job(**db_resp['new'])
+        old_job_data = Job(**db_resp['old'])
 
         if 'qt_planned' in u.data:
-          update_job_progress(db=tx, job_key=db_resp['_key'])
+          _update_job_progress(db=tx, job_key=new_job_data.key)
 
         if 'assigned_to' in u.data:
           if 'assigned_to' in old_job_data:
-            update_target_queue(
+            _update_target_queue(
               job_key=u.data['_key'],
-              target_key=old_job_data['assigned_to'],
+              target_key=old_job_data.assigned_to,
               action='remove',
               tx=tx
             )
 
-          update_target_queue(
+          _update_target_queue(
             job_key=u.data['_key'],
             target_key=u.data['assigned_to'],
             action='add',
             tx=tx
           )
 
-        results.append(db_resp)
+        results.append(new_job_data)
 
       elif u.action == JobUpdateType.CLOSE:
         bind_vars = dict(
@@ -584,14 +519,25 @@ async def update_jobs(job_updates:List[JobUpdate]):
         ).next()
 
         if new_job_data['assigned_to']:
-          update_target_queue(
+          _update_target_queue(
             job_key = u.data['_key'],
-            target_key = new_job_data['assigned_to'],
+            target_key = new_job_data.assigned_to,
             action = 'remove',
             tx = tx
           )
 
         results.append(new_job_data)
+
+    # Update next_batch_available throughout the work order
+    work_order_data = tx.collection('WorkOrder').get(results[0].wo_key)
+
+    tx.aql.execute(
+      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
+      bind_vars = dict(
+        wo_key = work_order_data['_key'],
+        phase_keys = work_order_data['phase_sequence']
+      )
+    )
 
     tx.commit_transaction()
     return APIResponse(detail=results, message="Jobs updated successfully")
