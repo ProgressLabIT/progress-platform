@@ -48,13 +48,13 @@
                 <div class="display">
                   {{ link.text }}
                 </div>
-                <q-avatar
+                <q-chip
                   v-if="link.item_count"
                   size="xs"
                   :color="getItemCountColor(link)"
                   class="q-ml-sm weight-bold text-body2">
                   {{ link.item_count }}
-                </q-avatar>
+                </q-chip>
               </div>
             </q-route-tab>
           </q-tabs>
