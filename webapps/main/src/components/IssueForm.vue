@@ -260,8 +260,9 @@ export default {
     }
   },
 
-  mounted() {
-    // Currently for use only from WorkSessionScreen
+  created() {
+    this.initIssueType()
+    this.initFormData()
   },
 
   watch: {
