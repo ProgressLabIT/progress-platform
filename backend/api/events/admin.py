@@ -505,8 +505,8 @@ class ProductionAdminEvent:
 
     # 3. Free booked wip
     if not self.job.first_phase:
-      wip_match = dict(_to=f'Job/{self.job.key}', batch_key=batch_key)
-      wip_update = dict(_to=f'Phase/{self.job.phase_key}')
+      wip_match = dict(_to=f'Job/{self.job.key}', active=True)
+      wip_update = dict(_to=f'Phase/{self.job.phase_key}', active=False)
       self.tx.collection('wip').update_match(wip_match, wip_update)
       self.tx.aql.execute(
         TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
