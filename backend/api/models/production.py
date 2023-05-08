@@ -59,6 +59,7 @@ class WorkOrderNew(BaseModel):
   project_code: str = None
   start_from: Union[datetime, date] = None
   due_by: Union[datetime, date] = None
+  notes: str = None
 
   @root_validator(pre=True)
   def check_key_or_code_provided(cls, values):
@@ -93,8 +94,6 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
   phase_sequence: List[str] = []
   wo_docs: List[ProductDoc] = []
   wo_bom: List[BomLineRead] = []
-
-  notes: str = None
 
 
 class RequiredAvailableQt(FlexModel):
