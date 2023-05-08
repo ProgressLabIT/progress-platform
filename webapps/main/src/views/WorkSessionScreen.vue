@@ -29,7 +29,7 @@
         <!-- ################################ -->
 
         <div
-          class="column q-px-sm"
+          class="column q-px-sm gt-sm"
           id="job-info-section"
           :class="$route.name === 'jobIssueDetail' ? 'col-12' : 'col-8'">
 
@@ -74,7 +74,7 @@
         <div
           id="session-control-section"
           v-if="$route.name != 'jobIssueDetail'"
-          class="column col-4 q-px-sm q-pt-md">
+          class="column col q-px-sm q-pt-md">
 
           <!-- JOB DATA -->
           <div id="job-data" class="col-auto">
