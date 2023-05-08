@@ -76,36 +76,48 @@
           <template v-if="issue.open">
             <q-btn
               color="theme-blue"
+              size="12px"
+              icon="mdi-check"
               :label="$t('issue_button_close')"
               @click="closeIssue">
             </q-btn>
             <q-btn
               v-if="issue.critical"
+              size="12px"
+              icon="mdi-alert-circle-outline"
               color="theme-blue"
               :label="$t('issue_button_remove_critical')"
               @click="toggleCritical">
             </q-btn>
             <q-btn
               v-else
+              size="12px"
               color="theme-red"
+              icon="mdi-alert-octagon"
               :label="$t('issue_button_add_critical')"
               @click="toggleCritical">
             </q-btn>
           </template>
           <template v-else>
             <q-btn
+              size="12px"
               color="theme-blue"
+              icon="mdi-restore"
               :label="$t('issue_button_reopen')"
               @click="() => { issue.critical=false; reopenIssue() }">
             </q-btn>
             <q-btn
               color="theme-red"
+              size="12px"
+              icon="mdi-restore-alert"
               :label="$t('issue_button_reopen_critical')"
               @click="() => { issue.critical=true; reopenIssue() }">
             </q-btn>
           </template>
           <q-space />
           <q-btn
+            size="12px"
+            icon="mdi-keyboard-return"
             color="theme-grey"
             :label="$t('back')"
             @click="exit">
@@ -142,6 +154,7 @@
             class="full-width q-mt-md"
             :loading="loading"
             color="theme-blue"
+            size="12px"
             :label="$t('send')"
             @click="postMessage">
           </q-btn>
@@ -244,7 +257,7 @@ export default {
 
     notifyUpdate({ message, color='theme-green' }) {
       this.$q.notify({
-        message: this.$t('issue_updated'),
+        message: this.$t('issue_update_success'),
         color: 'theme-green',
         timeout: '1500',
         position: 'top'
@@ -266,7 +279,7 @@ export default {
         }
       }).then(() => {
         this.refreshIssue()
-        this.notifyUpdate({ message: this.$t('issue_updated') })
+        this.notifyUpdate({ message: this.$t('issue_update_success') })
       })
     },
 
