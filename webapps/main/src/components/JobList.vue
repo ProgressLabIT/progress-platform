@@ -60,8 +60,12 @@
                   </div>
                 </template>
 
-                <template v-else-if="field.name.includes('qt') || field.name == 'issue_count'">
+                <template v-else-if="field.name.includes('qt')">
                   {{ props.row[field.name] }}
+                </template>
+
+                <template v-else-if="field.name == 'issue_count'">
+                  {{ (props.row.issues_open ?? 0) + '/' + (props.row.issues_total ?? 0) }}
                 </template>
 
                 <template v-else-if="field.name == 'ready'">
