@@ -22,7 +22,7 @@ class Queries:
 
 
 
-def _get_product_docs(product_key):
+def get_product_docs(product_key):
   folder_obj = UserFile.product_media(product_key)
   doc_list = folder_obj.get_folder_contents('doc', name_only=False)
 

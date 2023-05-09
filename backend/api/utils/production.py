@@ -3,7 +3,7 @@ from fastapi.encoders import jsonable_encoder
 
 from models.process import PhaseData
 from models.production import Job, WorkOrderFull
-from utils.process import _search_step_media
+from utils.process import search_step_media
 
 class Queries:
   ADD_WORK_ORDER_TO_QUEUE = """
@@ -195,7 +195,7 @@ class Queries:
   """
 
 
-def _update_target_queue(job_key, target_key, action, tx):
+def update_target_queue(job_key, target_key, action, tx):
   """Add or remove jobs in a queue"""
   try:
     if action == 'remove':
@@ -267,7 +267,7 @@ def _get_procedure_for_new_job(tx, phase_key):
 
   for s in job_steps:
     try:
-      filenames = _search_step_media(s['_key'])
+      filenames = search_step_media(s['_key'])
       s['media'] = [media_name for media_name in filenames]
     except:
       tx.abort_transaction()
@@ -282,7 +282,7 @@ def _get_procedure_for_new_job(tx, phase_key):
   return job_steps
 
 
-def _create_job_record(
+def create_job_record(
   tx,
   wo_data: WorkOrderFull,
   phase_key: str,
@@ -325,6 +325,6 @@ def _create_job_record(
   new_job_record = Job(**tx.collection('Job').insert(prepped, return_new=True)['new'])
 
   if assigned_to:
-    _update_target_queue(new_job_record.key, assigned_to, 'add', tx)
+    update_target_queue(new_job_record.key, assigned_to, 'add', tx)
 
   return new_job_record

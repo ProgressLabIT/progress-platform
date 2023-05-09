@@ -514,7 +514,7 @@ async def replace_product_image(product_key: str):
 async def get_product_data(product_key: str):
   try:
     product = ProductFull(**product_db.get(product_key))
-    product.docs = _get_product_docs(product_key)
+    product.docs = get_product_docs(product_key)
     return product
 
   except:

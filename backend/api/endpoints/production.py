@@ -8,15 +8,15 @@ from fastapi.encoders import jsonable_encoder
 from models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
-from utils.bom import _get_bom_from_db
+from utils.bom import get_bom_from_db
 from utils.counter import _generate_counter
 from utils.db import db
 from utils.dt import timestamp
-from utils.product import _get_product_docs
+from utils.product import get_product_docs
 from utils.production import (
   Queries,
-  _create_job_record,
-  _update_target_queue
+  create_job_record,
+  update_target_queue
 )
 from utils.traceability import _update_job_progress, Queries as TraceabilityQueries
 
@@ -39,8 +39,8 @@ async def create_work_order(new_wo: WorkOrderNew):
   def create_wo_record(wo: WorkOrderNew, collection):
     new_wo_record = WorkOrderFull(
       **wo.dict(),
-      wo_docs = _get_product_docs(wo.product_key),
-      wo_bom = _get_bom_from_db(tx, wo.product_key)
+      wo_docs = get_product_docs(wo.product_key),
+      wo_bom = get_bom_from_db(tx, wo.product_key)
     )
     prepped = jsonable_encoder(new_wo_record, by_alias=True)
     db_resp = collection.insert(prepped)
@@ -127,7 +127,7 @@ async def create_work_order(new_wo: WorkOrderNew):
 
   # 2. Create Jobs
   try:
-    new_job_records = [_create_job_record(tx, new_wo_record, phase_key, new_wo.qt_planned) for phase_key in new_wo_record.phase_sequence]
+    new_job_records = [create_job_record(tx, new_wo_record, phase_key, new_wo.qt_planned) for phase_key in new_wo_record.phase_sequence]
 
   except:
     tx.abort_transaction()
@@ -463,14 +463,14 @@ async def update_jobs(job_updates:List[JobUpdate]):
 
       if u.action == JobUpdateType.INSERT:
         wo_data = WorkOrderFull(**tx.collection('WorkOrder').get(u.data['work_order_key']))
-        new_job_data = _create_job_record(
+        new_job_data = create_job_record(
           tx,
           wo_data = wo_data,
           **u.data
         )
 
         if 'assigned_to' in u.data:
-          _update_target_queue(
+          update_target_queue(
             job_key=new_job_data.key,
             target_key=new_job_data.assigned_to,
             action='add',
@@ -489,14 +489,14 @@ async def update_jobs(job_updates:List[JobUpdate]):
 
         if 'assigned_to' in u.data:
           if 'assigned_to' in old_job_data:
-            _update_target_queue(
+            update_target_queue(
               job_key=u.data['_key'],
               target_key=old_job_data.assigned_to,
               action='remove',
               tx=tx
             )
 
-          _update_target_queue(
+          update_target_queue(
             job_key=u.data['_key'],
             target_key=u.data['assigned_to'],
             action='add',
@@ -519,7 +519,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
         ).next()
 
         if new_job_data['assigned_to']:
-          _update_target_queue(
+          update_target_queue(
             job_key = u.data['_key'],
             target_key = new_job_data.assigned_to,
             action = 'remove',
