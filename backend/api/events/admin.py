@@ -35,7 +35,7 @@ class ProductionAdminEvent:
   # =====================================================================================
 
   TIME_OVERRIDE_REQUESTED = EventMeta(
-    collections=['Job', 'Batch', 'WorkSession', 'WorkOrder'],
+    collections=['Job', 'Batch', 'WorkSession', 'WorkOrder', 'Queue'],
     action="override_time",
     post_processing=['update_work_order', 'flag_job_as_forced'],
     event_first = True
