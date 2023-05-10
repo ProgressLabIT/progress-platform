@@ -74,7 +74,8 @@
         <div
           id="session-control-section"
           v-if="$route.name != 'jobIssueDetail'"
-          class="column col q-px-sm q-pt-md">
+          class="column col q-px-sm q-pt-md"
+          style="min-height: 600px">
 
           <!-- JOB DATA -->
           <div id="job-data" class="col-auto">

@@ -6,7 +6,7 @@
     <!-- Use v-if to fully remove html from DOM in case of session lock.
     This avoids access to content by tweaking SessionLock component visibility in the browser inspector -->
     <!-- <template v-if="!session_locked"> -->
-      <AppBar />
+      <AppBar v-if="$q.screen.height > 400"/>
 
       <q-drawer
         id="menu"
@@ -58,7 +58,7 @@
 
       <router-view />
 
-      <AppFooter />
+      <AppFooter v-if="$q.screen.height > 400"/>
 
     <!-- Pass session_locked as prop instead of computing it locally inside the component since it's already needed for the v-if -->
     <!-- <SessionLock v-else v-bind="{session_locked}"></SessionLock> -->
