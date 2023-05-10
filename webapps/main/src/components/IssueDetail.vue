@@ -57,7 +57,7 @@
 
             <!-- EVENT TYPE -->
             <q-item-section class="text-italic">
-              {{ $formatDateTime(e.timestamp, $i18n.locale, 'DATETIME_MED') }}
+              {{ getHumanDate(e.timestamp) }}
             </q-item-section>
             <q-item-section class="text-h4 highlight text-uppercase">
               {{ $t(`events.${e.event_type}`) }}
@@ -115,6 +115,12 @@
             </q-btn>
           </template>
           <q-space />
+          <q-btn
+            color="theme-red"
+            size="12px"
+            icon="mdi-delete"
+            :label="$t('delete')">
+          </q-btn>
           <q-btn
             size="12px"
             icon="mdi-keyboard-return"
@@ -253,6 +259,19 @@ export default {
         full_name: user.name + ' ' + user.surname,
         src: this.getAvatarSrc(user)
       }
+    },
+
+    getHumanDate(timestamp) {
+      const config = {
+        year: '2-digit',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        weekday: 'short'
+      }
+      return this.$capitalize(this.$formatDateTime(timestamp, this.$i18n.locale, config))
     },
 
     notifyUpdate({ message, color='theme-green' }) {

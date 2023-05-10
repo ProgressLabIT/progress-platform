@@ -42,7 +42,7 @@
             <q-td :props="props">
               <template v-if="['start', 'end'].includes(c.name)">
                 <div>
-                  {{ props.row.due_by == null ? '-' : $capitalize(getHumanDate(props.row[c.name])) }}
+                  {{ getHumanDate(props.row[c.name]) }}
                 </div>
               </template>
 
@@ -231,7 +231,8 @@ export default {
     },
 
     getHumanDate(iso_string) {
-      return DT.fromISO(iso_string).setLocale(this.$i18n.locale).toLocaleString(DT.DATE_MED_WITH_WEEKDAY)
+      const config = { year: '2-digit', month: 'short', day: 'numeric' }
+      return this.$capitalize(this.$formatDateTime(iso_string, this.$i18n.locale, config))
     },
 
     getHumanDuration(millisecs) {

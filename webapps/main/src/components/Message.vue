@@ -18,7 +18,6 @@
 </template>
 
 <script>
-import { formatDateTime } from '@/lib/TimeHandling.js'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 
 export default {
@@ -42,7 +41,16 @@ export default {
     },
 
     datetime() {
-      return formatDateTime(this.message.created, this.$i18n.locale, 'DATETIME_MED')
+      const config = {
+        year: '2-digit',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        weekday: 'short'
+      }
+      return this.$capitalize(this.$formatDateTime(this.message.created, this.$i18n.locale, config))
     }
   }
 }

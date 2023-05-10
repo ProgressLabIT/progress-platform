@@ -251,6 +251,7 @@ import scopes_list from "@/lib/UserScopes.js"
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseAutocompleteDepartment from '@/components/BaseAutocompleteDepartment.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
+import { DateTime as DT } from 'luxon'
 
 export default {
 
@@ -338,7 +339,7 @@ export default {
     },
 
     formatDate(date_string, with_time) {
-      const format = with_time ? 'DATETIME_MED' : 'DATE_MED'
+      const format = with_time ? DT.DATETIME_MED : DT.DATE_MED
       return this.$formatDateTime(date_string, this.$i18n.locale, format)
     },
 

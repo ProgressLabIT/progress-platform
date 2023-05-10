@@ -498,8 +498,9 @@ export default {
           return DT.fromISO(timestamp)
                   .setLocale('it').toLocaleString({ 
                     weekday: 'short', 
-                    month: 'short', 
-                    day: 'numeric'
+                    month: 'short',
+                    day: 'numeric',
+                    year: '2-digit'
                   })
         }
         else return '-'
