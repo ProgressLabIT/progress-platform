@@ -12,8 +12,9 @@ export function formatDateTime(string, locale, format) {
 
 export function shortDateString(string, locale) {
   const options = {
-    day: '2-digit',
-    month: 'short'
+    day: 'numeric',
+    month: 'short',
+    year: '2-digit'
   }
   if (string === undefined) return '-'
   else return formatDateString(string, locale, options)
