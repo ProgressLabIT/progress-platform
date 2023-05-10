@@ -6,9 +6,9 @@ from fnmatch import fnmatch
 from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body
 from fastapi.encoders import jsonable_encoder
 
+from utils.kpi import Queries as ProductStatQueries
 from models.product import *
 from models.process import PhaseData
-
 from utils.api import APIResponse
 from utils.db import db
 from utils.dt import timestamp
@@ -532,7 +532,26 @@ async def get_product_data(product_key: str):
 
 
 
+# =================================================
+#  PRODUCT STATS
+# =================================================
+@router.get('/{product_key}/stats')
+async def get_product_stats(product_key: str):
+  try:
+    stats = db.aql.execute(ProductStatQueries.GET_PRODUCT_STATS, bind_vars=dict(product_key=product_key)).next()
+    return stats
 
-
+  except:
+    error_str = traceback.format_exc()
+    status_code = 500
+    response=dict(
+      status=status_code,
+      message="There was an error getting data from the database.",
+      error_str=error_str
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
 
 

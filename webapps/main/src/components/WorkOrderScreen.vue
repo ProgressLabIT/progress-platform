@@ -102,7 +102,6 @@ export default {
       if (this.$route.query.back_to) {
         delete query.back_to
         const push_route = { name: this.$route.query.back_to, query }
-        console.log({push_route})
         this.$router.push(push_route)
       }
       else {

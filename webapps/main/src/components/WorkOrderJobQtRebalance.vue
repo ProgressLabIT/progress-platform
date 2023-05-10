@@ -153,14 +153,11 @@ export default {
         phase_jobs.forEach(j => {
           const current_remaining = j.new_remaining
           let new_remaining = current_remaining + base_job_variation
-          console.log({ phase_key, j, delta, remainder, base_job_variation, new_remaining })
           if (remainder) {
             new_remaining += Math.sign(delta) // handle both increase and decrease of quantity
             remainder -= Math.sign(remainder)
           }
           j.new_remaining = new_remaining
-          console.log({ phase_key, j, delta, remainder, base_job_variation, new_remaining })
-
         })
       })
     },
