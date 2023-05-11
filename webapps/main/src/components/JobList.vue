@@ -12,6 +12,14 @@
           name_class="medium weight-medium"
           size="36px">
         </BaseUserAvatar>
+        <q-btn
+          v-if="o.operator._key == 'unassigned'"
+          size="sm"
+          color="theme-blue"
+          :label="$t('assign')"
+          class="q-ml-lg"
+          @click="show_assignment_dialog = true">
+        </q-btn>
         <q-space />
         <q-chip :ripple="false" class="col-auto text-body2" color="theme-grey" size="sm">
           <strong>
@@ -31,6 +39,7 @@
         :rows="o.filtered_jobs"
         row-key="_key"
         hide-bottom
+        virtual-scroll
         dense
         separator="none"
         table-class="text-high assignment-list"
@@ -92,12 +101,91 @@
       <q-separator class="q-my-lg q-mx-sm"/>
 
     </template>
+
+    <BaseDialog
+      :show="show_assignment_dialog"
+      @close="show_assignment_dialog = false"
+      maximized
+      background="#0004">
+      <q-card
+        style="width: 60vw; height: 90vh;" class="q-py-lg q-px-md surface-1">
+        <div class="column fit">
+          <div class="row justify-between q-px-md">
+            <div>
+              <div class="display text-h3">ASSEGNA LAVORI IN BLOCCO</div>
+              <div class="q-mt-sm">
+                {{ $t('job.shown_jobs_message', {shown: batch_assignment_view.length, total: unassigned_jobs.length}) }}
+              </div>
+            </div>
+            <q-input
+              filled
+              :placeholder="$t('filter').toUpperCase()"
+              dense
+              v-model="assign_search_string">
+              <template #append>
+                <q-icon name="mdi-filter" size="xs"/>
+              </template>
+            </q-input>
+          </div>
+
+          <q-table
+            square
+            :columns="job_data.slice(0,4)"
+            :rows="batch_assignment_view"
+            row-key="_key"
+            hide-bottom
+            color="theme-blue"
+            dense flat
+            class="my-sticky-header-table col q-my-md"
+            separator="none"
+            card-class="transparent q-py-md text-high full-height"
+            table-class="q-px-none"
+            table-header-style="background: var(--surface-1); border-bottom: 1px solid grey"
+            :pagination="{ rowsPerPage: 0 }"
+            :rows-per-page-options="[0]"
+            v-model:selected="jobs_to_assign"
+            selection="multiple">
+          </q-table>
+
+          <div class="row text-h5 text-uppercase q-mb-sm q-px-md" v-if="jobs_to_assign.length">
+            {{ $t('assign') + ' ' + jobs_to_assign.length + ' ' + $t('job.label', 2) }}
+          </div>
+          <div class="row q-gutter-md items-center q-px-md">
+            <div class="col-6">
+              <BaseAutocompleteOperator
+                :value="batch_assign_to"
+                @select="(selection) => batch_assign_to = selection">
+              </BaseAutocompleteOperator>
+            </div>
+            <q-space />
+            <div class="col-auto">
+            <q-btn
+              v-if="batch_assign_to && jobs_to_assign.length"
+              color="theme-blue"
+              :label="$t('save')">
+            </q-btn>
+            </div>
+            <div class="col-auto">
+            <q-btn
+              color="theme-grey"
+              :label="$t('cancel')"
+              @click="() => {show_assignment_dialog = false; batch_assign_to = null}">
+            </q-btn>
+            </div>
+          </div>
+        </div>
+      </q-card>
+    </BaseDialog>
+
   </div>
 </template>
 
 <script>
+import BaseAutocompleteOperator from '@/components/BaseAutocompleteOperator.vue'
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
+import BaseDialog from '@/components/BaseDialog.vue'
+import BaseActionCard from '@/components/BaseActionCard.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 export default {
@@ -105,8 +193,11 @@ export default {
   name: 'JobList',
 
   components: {
+    BaseAutocompleteOperator,
     BaseProgressBar,
     BaseUserAvatar,
+    BaseActionCard,
+    BaseDialog,
     NoDataAlert
   },
 
@@ -139,7 +230,11 @@ export default {
         'product_description',
         'phase_alias',
       ],
-      now: new Date().getTime()
+      now: new Date().getTime(),
+      assign_search_string: null,
+      show_assignment_dialog: false,
+      batch_assign_to: null,
+      jobs_to_assign: []
     }
   },
 
@@ -277,6 +372,12 @@ export default {
       }
 
       return result
+    },
+
+    batch_assignment_view() {
+      return this.unassigned_jobs.filter(j => {
+        return multiMatch(this.assign_search_string, j, this.search_fields)
+      })
     }
   },
 
@@ -387,6 +488,12 @@ export default {
       }
       this.$emit('itemDblClick', data_to_emit)
     },
+  },
+
+  watch: {
+    assign_search_string() {
+      this.jobs_to_assign = []
+    }
   }
 }
 </script>

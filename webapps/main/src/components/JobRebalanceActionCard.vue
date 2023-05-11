@@ -228,7 +228,7 @@ export default {
         {
           value: 'key',
           text: this.$t('job.key'),
-          cols: 3,
+          cols: 2,
           offset: 0
         },
         {
@@ -240,7 +240,7 @@ export default {
         {
           value: 'assigned_to',
           text: this.$t('job.assigned_to'),
-          cols: 3,
+          cols: 4,
           offset: 1
         }
       ]
