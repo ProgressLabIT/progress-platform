@@ -22,12 +22,19 @@ $separator-dark-color: rgba(255, 255, 255, .12);
   td {
     padding-top: 8px !important;
     padding-bottom: 8px !important;
-    &.filter-field .table-data {
+    &.filter-field {
       cursor: pointer;
       &:hover {
         text-decoration: underline;
       }
     }
+  }
+  /* after = background of selected rows */
+  tbody td:after {
+    @extend .bg-blue-backdrop
+  }
+  /* before = background of hovered row */
+  tbody td:before{
   }
 }
 

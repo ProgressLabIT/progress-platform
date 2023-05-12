@@ -87,7 +87,7 @@
                 </template>
 
                 <template v-else>
-                  <span class="table-data" @click="setSearch(field.name, props.row[field.name])">
+                  <span @click="setSearch(field.name, props.row[field.name])">
                     {{ $capitalizeAll(props.row[field.name] || '' ) }}
                   </span>
                 </template>
@@ -108,9 +108,9 @@
       maximized
       background="#0004">
       <q-card
-        style="width: 60vw; height: 90vh;" class="q-py-lg q-px-md surface-1">
+        style="width: 60vw; height: 90vh;" class="q-pa-lg q-px-md background">
         <div class="column fit">
-          <div class="row justify-between q-px-md">
+          <div class="row justify-between">
             <div>
               <div class="display text-h3">ASSEGNA LAVORI IN BLOCCO</div>
               <div class="q-mt-sm">
@@ -119,40 +119,55 @@
             </div>
             <q-input
               filled
-              :placeholder="$t('filter').toUpperCase()"
+              clearable
+              :placeholder="$t('search').toUpperCase()"
               dense
               v-model="assign_search_string">
               <template #append>
-                <q-icon name="mdi-filter" size="xs"/>
+                <q-icon name="mdi-magnify" size="xs"/>
               </template>
             </q-input>
           </div>
 
           <q-table
             square
-            :columns="job_data.slice(0,4)"
+            :columns="batch_assignment_cols"
             :rows="batch_assignment_view"
             row-key="_key"
             hide-bottom
             color="theme-blue"
-            dense flat
-            class="my-sticky-header-table col q-my-md"
+            dense flat bordered
+            class="my-sticky-header-table col q-my-lg"
             separator="none"
-            card-class="transparent q-py-md text-high full-height"
+            card-class="text-high full-height background"
             table-class="q-px-none"
-            table-header-style="background: var(--surface-1); border-bottom: 1px solid grey"
+            table-header-class="surface1"
             :pagination="{ rowsPerPage: 0 }"
             :rows-per-page-options="[0]"
             v-model:selected="jobs_to_assign"
             selection="multiple">
+            <template #body-cell="props">
+              <q-td
+                :props="props"
+                v-if="search_fields.includes(props.col.name)"
+                class="filter-field"
+                @click="assign_search_string = props.value">
+                {{ props.value }}
+              </q-td>
+              <q-td v-else :props="props">
+                {{ props.value }}
+              </q-td>
+            </template>
           </q-table>
 
-          <div class="row text-h5 text-uppercase q-mb-sm q-px-md" v-if="jobs_to_assign.length">
+          <div class="row text-h5 text-uppercase q-mb-sm" v-show="jobs_to_assign.length">
             {{ $t('assign') + ' ' + jobs_to_assign.length + ' ' + $t('job.label', 2) }}
           </div>
-          <div class="row q-gutter-md items-center q-px-md">
+          <div class="row q-gutter-md items-center">
             <div class="col-6">
               <BaseAutocompleteOperator
+                :placeholder="$t('operator_select_prompt')"
+                v-show="jobs_to_assign.length"
                 :value="batch_assign_to"
                 @select="(selection) => batch_assign_to = selection">
               </BaseAutocompleteOperator>
@@ -162,13 +177,15 @@
             <q-btn
               v-if="batch_assign_to && jobs_to_assign.length"
               color="theme-blue"
-              :label="$t('save')">
+              :label="$t('save')"
+              :loading="saving"
+              @click="assign_jobs">
             </q-btn>
             </div>
             <div class="col-auto">
             <q-btn
               color="theme-grey"
-              :label="$t('cancel')"
+              :label="$t('close')"
               @click="() => {show_assignment_dialog = false; batch_assign_to = null}">
             </q-btn>
             </div>
@@ -234,7 +251,8 @@ export default {
       assign_search_string: null,
       show_assignment_dialog: false,
       batch_assign_to: null,
-      jobs_to_assign: []
+      jobs_to_assign: [],
+      saving: false
     }
   },
 
@@ -374,6 +392,11 @@ export default {
       return result
     },
 
+    batch_assignment_cols() {
+      const cols = ['wo_code', 'project_code', 'product_code', 'phase_alias', 'qt_planned']
+      return this.job_data.filter(col => cols.includes(col.name))
+    },
+
     batch_assignment_view() {
       return this.unassigned_jobs.filter(j => {
         return multiMatch(this.assign_search_string, j, this.search_fields)
@@ -488,11 +511,38 @@ export default {
       }
       this.$emit('itemDblClick', data_to_emit)
     },
+
+    async assign_jobs() {
+      const job_updates = this.jobs_to_assign.map(job => ({
+        action: 'update',
+        data: { _key: job._key, assigned_to: this.batch_assign_to._key }
+      }))
+      this.saving = true
+      await this.$api.post('job/update', job_updates)
+      setTimeout(() => {
+        this.$store.dispatch('loadJobAssignments')
+        this.saving = false
+        this.jobs_to_assign = []
+        this.batch_assign_to = null
+        this.$q.notify({
+          message: this.$t('assignment_success'),
+          color: 'theme-green',
+          timeout: 2000,
+          position: 'top'
+        })
+      }, 500)
+    }
   },
 
   watch: {
     assign_search_string() {
       this.jobs_to_assign = []
+    },
+    jobs_to_assign(val) {
+      console.log(val)
+      if (!val.length) {
+        this.batch_assign_to = null
+      }
     }
   }
 }

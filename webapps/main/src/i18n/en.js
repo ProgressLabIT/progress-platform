@@ -14,6 +14,7 @@ export default {
   "and": "and",
   "archive": "archive",
   "assign": "assign",
+  "assignment_success": "Jobs assigned successfully",
   "back": "back",
   "batch": "batch",
   "bom": {
@@ -233,6 +234,7 @@ export default {
     "new_success": "new operation successfully created"
   },
   "operator": "operator | operators",
+  "operator_select_prompt": "Select operator",
   "or": "or",
   "order": "order | orders",
   "people": "people",

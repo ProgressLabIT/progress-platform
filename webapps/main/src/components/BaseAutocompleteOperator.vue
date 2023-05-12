@@ -5,6 +5,7 @@
     :label-slot="!!label"
     :stack-label="stackLabel"
     :dense="dense"
+    :placeholder="placeholder_computed"
     :clearable="clearable"
     :options="options"
     :option-label="(operator) => operator.name + ' ' + operator.surname"
@@ -12,7 +13,7 @@
     @filter="filter"
     @clear="$emit('selection', null)"
     :model-value="value"
-    input-debounce="100"
+    input-debounce="200"
     :emit-value="key_only"
     :map-options="key_only"
     @update:model-value="(selection) => $emit('select', selection)">
@@ -74,6 +75,11 @@ export default {
       default: true
     },
 
+    placeholder: {
+      type: String,
+      default: false
+    },
+
     stackLabel: {
       type: Boolean,
       default: false
@@ -91,6 +97,10 @@ export default {
   computed: {
     origin_list() {
       return this.$store.getters.operator_list()
+    },
+
+    placeholder_computed() {
+      return this.value ? null : this.placeholder
     }
   },
 

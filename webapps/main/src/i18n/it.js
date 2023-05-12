@@ -15,6 +15,7 @@ export default {
   "and": "e",
   "archive": "archivia",
   "assign": "assegna",
+  "assignment_success": "Lavori assegnati con successo",
   "back": "Indietro",
   "batch": "lotto",
   "bom": {
@@ -237,6 +238,7 @@ export default {
     "new_success": "Operazione registrata con successo"
   },
   "operator": "operatore | operatori",
+  "operator_select_prompt": "Seleziona operatore",
   "or": "o",
   "order": "ordine | ordini",
   "people": "persone",
