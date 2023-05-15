@@ -31,9 +31,9 @@ const workorder = {
       })
     },
 
-    UPDATE_TEMP_QUEUE(state, { newIndex, oldIndex }) {
-      const selected_wo = state.temp_queue.splice(oldIndex, 1)[0]
-      state.temp_queue.splice(newIndex, 0, selected_wo)
+    UPDATE_TEMP_QUEUE(state, { new_queue_index, old_queue_index }) {
+      const selected_wo = state.temp_queue.splice(old_queue_index, 1)[0]
+      state.temp_queue.splice(new_queue_index, 0, selected_wo)
     },
 
     RESET_TEMP_QUEUE(state) {

@@ -57,7 +57,9 @@ const store = createStore({
     return {
       drag_options: {
         animation: 200,
-        ghostClass: "ghost"
+        ghostClass: "ghost",
+        delay: 500,
+        delayOnTouchOnly: true
       },
       screen_title: 'progress',
       show_drawer: false,
