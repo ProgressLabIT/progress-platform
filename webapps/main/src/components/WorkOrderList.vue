@@ -372,16 +372,14 @@ export default {
 
         Sortable can only see the rendered list so the old and new index will not be referred to the actual work order queue, but to the position in the rendered list and are not useful as such.
 
-        For this reason each table row has been tagged with its key as the dom element id, so that it can be retrieved after dragging together with its sibling and the queue can be updated accordingly.
+        For this reason each table row has been tagged with its key as the dom element id, so that it can be retrieved after dragging and retrieve the index based on the original position of the key in the queue.
 
-        At first thought the sequence could also seem a good id, but using it would break if more than one reordering is done before saving.
+        The new index will be calculated using the difference between the indexes detected by Sortable.
         */
-        console.log(evt)
         const moved_item = evt.item
         const old_queue_index = this.temp_queue.findIndex(i => i == moved_item.id)
         const delta = evt.newIndex - evt.oldIndex
         const new_queue_index = old_queue_index + delta
-        console.log({ old_queue_index, new_queue_index })
         _self.$emit('editing')
         _self.$store.commit('UPDATE_TEMP_QUEUE', { new_queue_index, old_queue_index })
       }
