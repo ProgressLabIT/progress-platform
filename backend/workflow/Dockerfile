@@ -1,11 +1,11 @@
-FROM python:3.11-slim
+FROM prefecthq/prefect:2.8.3-python3.11
 
 # Install dependencies
 COPY requirements.txt /requirements.txt
 
 RUN pip install --upgrade pip && pip install -r /requirements.txt
 
-COPY ./flows /flows
+COPY flows /flows
 
 WORKDIR /flows
 

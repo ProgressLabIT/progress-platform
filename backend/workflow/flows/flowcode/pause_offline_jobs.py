@@ -3,10 +3,26 @@ from datetime import timedelta
 import httpx
 from arango import ArangoClient
 from prefect import task, flow, get_run_logger
+from prefect.server.schemas.schedules import CronSchedule
 
 
-client = ArangoClient(hosts="http://db:8529")
-db = client.db('PROGRESS_TEST', username='root', password='')
+
+def connect_to_progress_db():
+  try:
+    with open('/run/secrets/progress_admin_pwd') as secret:
+        username = 'progress_admin'
+        progress_db_password = secret.read().rstrip('\n')
+  except FileNotFoundError:
+    username = 'root'
+    progress_db_password = ''
+
+    client = ArangoClient(hosts="http://db:8529")
+    db = client.db('PROGRESS_PROD', username=username, password=progress_db_password)
+
+    return db
+
+
+db = connect_to_progress_db()
 
 httpx_params = dict(
     # proxies={ "all://progress.localhost": "http://localhost:80" },
@@ -62,12 +78,13 @@ def pause_job(job_data):
 
 
 @flow(name="Pause offline jobs", log_prints=True)
-"""
-Pause jobs that have been offline for more seconds than indicated in the `max_offline` parameter of the job
-"""
-def pause_offline_jobs():
+def main():
+  """
+  Pause jobs that have been offline for more seconds than indicated in the `max_offline` parameter of the job
+  """
   jobs_to_pause = check_offline_jobs()
   for job_key in jobs_to_pause:
     pause_job(job_key)
 
 
+schedule = CronSchedule(cron="0 * * * *")
