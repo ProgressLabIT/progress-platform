@@ -117,11 +117,14 @@ class ProductionActivityEvent:
     return work_session
 
 
-  def close_work_session(self):
+  def close_work_session(self, end=None):
+    if end == None:
+      end = self.info.timestamp
+
     updated_work_session = WorkSession(**self.tx.aql.execute(
       TraceabilityQueries.CLOSE_WORK_SESSION, bind_vars = dict(
         job_key = self.info.job_key,
-        end = self.info.timestamp,
+        end = end,
     )).next())
 
     self.work_session = updated_work_session
@@ -495,7 +498,7 @@ class ProductionActivityEvent:
   # ===================================================================
 
   def pause_job(self):
-    self.close_work_session()
+    self.close_work_session(self.info.work_session_end)
     self.set_job_active_state(False)
 
   # ===================================================================

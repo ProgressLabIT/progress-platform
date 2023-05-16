@@ -19,7 +19,7 @@ query = """
     j.active
     && j.parameters.max_offline > 0
     && DATE_DIFF(DATE_TIMESTAMP(j.last_online), DATE_NOW(), 's', true) > j.parameters.max_offline
-  RETURN j._key
+  RETURN j
 """
 
 @task
@@ -30,7 +30,7 @@ def check_offline_jobs() -> list:
   return result
 
 @task
-def pause_job(job_key):
+def pause_job(job_data):
   """
   Use the event API to pause jobs
   e.g.
@@ -45,7 +45,8 @@ def pause_job(job_key):
   with httpx.Client(**httpx_params) as api:
     event_data = dict(
       event_type = 'JOB_PAUSED_OFFLINE',
-      job_key = job_key,
+      job_key = job_data['_key'],
+      work_session_end = job_data['last_online'],
       user_key = 'wf:pause_offline_jobs',
       user_session_key = 'wf',
       description = "Exceeded max offline time allowed"
@@ -61,10 +62,12 @@ def pause_job(job_key):
 
 
 @flow(name="Pause offline jobs", log_prints=True)
-def main():
+"""
+Pause jobs that have been offline for more seconds than indicated in the `max_offline` parameter of the job
+"""
+def pause_offline_jobs():
   jobs_to_pause = check_offline_jobs()
-  pause_job.map(jobs_to_pause)
+  for job_key in jobs_to_pause:
+    pause_job(job_key)
 
 
-if __name__ == "__main__":
-  main()

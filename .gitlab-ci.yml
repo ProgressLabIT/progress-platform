@@ -114,3 +114,36 @@ build:api:
     - docker push $API_IMAGE:latest
     - docker push $API_IMAGE:$CI_PIPELINE_ID
 
+
+build:workflow:
+  stage: build
+  only:
+    refs:
+      - master
+      - DEV
+    changes:
+      - backend/workflow/**/*
+  image: docker:latest
+  variables:
+    WF_SYS_AGENT_DOCKERFILE: Dockerfile
+    WF_SYS_AGENT_IMAGE: $CI_REGISTRY_IMAGE/wf-sys-agent
+  tags:
+    - docker
+  script:
+    # Navigate to build context
+    - cd backend/workflow
+
+    # Build image using cache from existing ones
+    - >
+      docker build
+      --pull
+      --cache-from $WF_SYS_AGENT_IMAGE:latest
+      -t $WF_SYS_AGENT_IMAGE:$CI_PIPELINE_ID
+      -t $WF_SYS_AGENT_IMAGE:latest
+      -f $WF_SYS_AGENT_DOCKERFILE
+      .
+
+    # Push new images to the registry
+    - docker push $WD_SYS_AGET_IMAGE:latest
+    - docker push $WD_SYS_AGET_IMAGE:$CI_PIPELINE_ID
+
