@@ -144,6 +144,6 @@ build:workflow:
       .
 
     # Push new images to the registry
-    - docker push $WD_SYS_AGET_IMAGE:latest
-    - docker push $WD_SYS_AGET_IMAGE:$CI_PIPELINE_ID
+    - docker push $WD_SYS_AGENT_IMAGE:latest
+    - docker push $WD_SYS_AGENT_IMAGE:$CI_PIPELINE_ID
 
