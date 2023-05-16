@@ -1,0 +1,32 @@
+version: "3.9"
+
+volumes:
+  workflow_db:
+    external: true
+  workflow_config:
+    external: true
+  flows:
+    external: true
+
+
+networks:
+  progress:
+    external: true
+
+services:
+  wf-integration-agent: # Client Workflow Agent
+    image: prefecthq/prefect:2.8.3-python3.11
+    restart: always
+    entrypoint: >
+      sh -c "chmod +x /flows/entrypoint.sh &&
+             /usr/bin/tini -g -- /flows/entrypoint.sh"
+    depends_on:
+      - server
+    volumes:
+      - flows:/flows
+    networks:
+      - progress
+    environment:
+      - PREFECT_API_URL=http://wf-server:4200/api
+    deploy:
+      replicas: 1

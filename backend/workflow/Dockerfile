@@ -9,6 +9,4 @@ COPY flows /flows
 
 WORKDIR /flows
 
-RUN python sys_loader.py system
-
-CMD ["prefect", "agent", "start", "-q", "system"]
+CMD ["python", "sys_loader.py", "&&", "prefect", "agent", "start", "-q", "system"]

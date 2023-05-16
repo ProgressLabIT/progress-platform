@@ -157,7 +157,7 @@
 
       - name: Copy Vector config file
         ansible.builtin.copy:
-          src: vector.toml
+          src: config/vector.toml
           dest: '{{ root_dir }}/config/vector.toml'
 
       - name: Create Vector logging service
@@ -208,8 +208,10 @@
           compose:
             - '{{ root_dir}}/config/base.yaml'
             - '{{ root_dir}}/config/stack.yaml'
+            - '{{ root_dir}}/config/workflow.yaml'
         environment:
           DB_ROOT_PWD: '{{ db_root_pwd.stdout }}'
+          HOST: '{{ ansible_env.SSH_CONNECTION.split(" ")[2] }}'
 
       - name: Copy init script to be run
         ansible.builtin.copy:
