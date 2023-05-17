@@ -1,4 +1,4 @@
-FROM prefecthq/prefect:2.8.3-python3.11
+FROM python:3.11-slim
 
 # Install dependencies
 COPY requirements.txt /requirements.txt
@@ -9,4 +9,4 @@ COPY flows /flows
 
 WORKDIR /flows
 
-CMD ["python", "sys_loader.py", "&&", "prefect", "agent", "start", "-q", "system"]
+CMD ["prefect", "agent", "start", "-q", "system"]

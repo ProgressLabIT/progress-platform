@@ -238,6 +238,11 @@
             DB_ROOT_PWD: '{{ db_root_pwd.stdout }}'
           command: python3 /db_init.py
 
+      - name: Deploy system workflows
+        ansible.builtin.shell:
+          cmd: 'docker exec $(docker ps -q --filter name=system) python /flows/sys_loader.py'
+
+
     #TODO: clean up and erase db_data contents in case something goes wrong
 
 
