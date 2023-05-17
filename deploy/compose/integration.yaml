@@ -13,6 +13,11 @@ networks:
   progress:
     external: true
 
+
+secrets:
+  progress_api_db_pwd:
+    external: true
+
 services:
   wf-integration-agent: # Client Workflow Agent
     image: prefecthq/prefect:2.8.3-python3.11
@@ -26,6 +31,8 @@ services:
       - flows:/flows
     networks:
       - progress
+    secrets:
+      - progress_api_db_pwd
     environment:
       - PREFECT_API_URL=http://wf-server:4200/api
     deploy:

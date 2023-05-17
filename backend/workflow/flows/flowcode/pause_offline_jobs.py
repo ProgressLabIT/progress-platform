@@ -9,8 +9,8 @@ from prefect.server.schemas.schedules import CronSchedule
 
 def connect_to_progress_db():
   try:
-    with open('/run/secrets/progress_admin_pwd') as secret:
-      username = 'progress_admin'
+    with open('/run/secrets/progress_api_db_pwd') as secret:
+      username = 'progress_api'
       progress_db_password = secret.read().rstrip('\n')
   except FileNotFoundError:
     username = 'root'

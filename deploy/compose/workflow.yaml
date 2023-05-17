@@ -8,6 +8,10 @@ volumes:
   flows:
     external: true
 
+secrets:
+  progress_api_db_pwd:
+    external: true
+
 
 networks:
   progress:
@@ -44,6 +48,8 @@ services:
       - server
     networks:
       - progress
+    secrets:
+      - progress_api_db_pwd
     environment:
       - PREFECT_API_URL=http://wf-server:4200/api
     deploy:
