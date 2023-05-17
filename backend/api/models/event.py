@@ -46,6 +46,7 @@ class EventModel(ArangoDocument):
 
   # Production Fields
   work_session_key: str = None
+  work_session_end: datetime = None
   job_key: str = None
   product_key: str = None
   work_order_key: str = None
