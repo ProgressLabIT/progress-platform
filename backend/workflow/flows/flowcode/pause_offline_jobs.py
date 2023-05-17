@@ -10,16 +10,16 @@ from prefect.server.schemas.schedules import CronSchedule
 def connect_to_progress_db():
   try:
     with open('/run/secrets/progress_admin_pwd') as secret:
-        username = 'progress_admin'
-        progress_db_password = secret.read().rstrip('\n')
+      username = 'progress_admin'
+      progress_db_password = secret.read().rstrip('\n')
   except FileNotFoundError:
     username = 'root'
     progress_db_password = ''
 
-    client = ArangoClient(hosts="http://db:8529")
-    db = client.db('PROGRESS_PROD', username=username, password=progress_db_password)
+  client = ArangoClient(hosts="http://db:8529")
+  db = client.db('PROGRESS_PROD', username=username, password=progress_db_password)
 
-    return db
+  return db
 
 
 db = connect_to_progress_db()
