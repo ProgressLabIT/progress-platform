@@ -3,6 +3,7 @@ from events.shared import EventMeta
 from models.traceability import *
 from models.production import Job, WorkOrderFull, WorkStatus
 
+from utils.exceptions import JobIsStartedError
 from utils.production import Queries as ProductionQueries, update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
 from utils.db import db, model_to_db_dict
@@ -448,8 +449,13 @@ class ProductionActivityEvent:
   ######################################################################
 
   def start_job(self):
-    # Create new batch and store _key in Event.info
+
+    # Check job hasn't been started already
     self.get_job_data()
+    if self.job.stage != WorkStatus.CREATED:
+      raise JobIsStartedError('Job has already been started')
+
+    # Create new batch and store _key in Event.info
     self.create_batch()
 
     # Create new WorkSession and store _key in Event.info
