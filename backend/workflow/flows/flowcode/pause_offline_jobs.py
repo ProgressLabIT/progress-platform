@@ -57,11 +57,12 @@ def pause_job(job_data):
   )
   api.event(event_data)
   """
+  job_key = job_data['_key']
   print(f'Pausing job {job_key}...')
   with httpx.Client(**httpx_params) as api:
     event_data = dict(
       event_type = 'JOB_PAUSED_OFFLINE',
-      job_key = job_data['_key'],
+      job_key = job_key,
       work_session_end = job_data['last_online'],
       user_key = 'wf:pause_offline_jobs',
       user_session_key = 'wf',
@@ -83,8 +84,8 @@ def main():
   Pause jobs that have been offline for more seconds than indicated in the `max_offline` parameter of the job
   """
   jobs_to_pause = check_offline_jobs()
-  for job_key in jobs_to_pause:
-    pause_job(job_key)
+  for job in jobs_to_pause:
+    pause_job(job)
 
 
 schedule = CronSchedule(cron="0 * * * *")
