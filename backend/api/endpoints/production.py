@@ -506,27 +506,39 @@ async def update_jobs(job_updates:List[JobUpdate]):
         results.append(new_job_data)
 
       elif u.action == JobUpdateType.CLOSE:
-        bind_vars = dict(
-          job_key = u.data['_key'],
-          stage = WorkStatus.CLOSED,
-          end = timestamp(),
-          notes = u.data['notes']
-        )
+        job_key = u.data['_key']
+        current_job_data = Job(**job_db.get(job_key))
 
-        new_job_data = tx.aql.execute(
-          Queries.CLOSE_JOB,
-          bind_vars = bind_vars,
-        ).next()
+        # Delete job instead of closing if not started
+        if current_job_data.stage == WorkStatus.CREATED:
+          job_db.delete(job_key)
+          # This is just a formality to pass on the WorkOrder code later on for wip update
+          current_job_data.stage = WorkStatus.CLOSED
+          results.append(current_job_data)
 
-        if new_job_data['assigned_to']:
+        else:
+          bind_vars = dict(
+            job_key = job_key,
+            stage = WorkStatus.CLOSED,
+            end = timestamp(),
+            notes = u.data['notes']
+          )
+
+          new_job_data = Job(**tx.aql.execute(
+            Queries.CLOSE_JOB,
+            bind_vars = bind_vars,
+          ).next())
+
+          results.append(new_job_data)
+
+        if 'assigned_to' in current_job_data:
           update_target_queue(
-            job_key = u.data['_key'],
+            job_key = job_key,
             target_key = new_job_data.assigned_to,
             action = 'remove',
             tx = tx
-          )
+        )
 
-        results.append(new_job_data)
 
     # Update next_batch_available throughout the work order
     work_order_data = tx.collection('WorkOrder').get(results[0].wo_key)

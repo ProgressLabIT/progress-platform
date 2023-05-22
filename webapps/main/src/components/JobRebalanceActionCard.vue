@@ -345,7 +345,7 @@ export default {
         if (!j._key) j.qt_remaining = 0
         else {
           j.close = false
-          const original = this.jobs[j._key]
+          const original = this.jobs.find(job => job._key == j._key)
           j.qt_remaining = original.qt_planned - original.qt_completed
         }
       })
