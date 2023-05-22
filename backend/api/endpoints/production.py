@@ -488,7 +488,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
           _update_job_progress(db=tx, job_key=new_job_data.key)
 
         if 'assigned_to' in u.data:
-          if 'assigned_to' in old_job_data:
+          if hasattr(old_job_data, 'assigned_to'):
             update_target_queue(
               job_key=u.data['_key'],
               target_key=old_job_data.assigned_to,
