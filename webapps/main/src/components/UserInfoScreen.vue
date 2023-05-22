@@ -301,7 +301,7 @@ export default {
       }
 
       else if (!this.new_image_url) {
-        return this.base_path + (this.user.name + this.user.surname).replace(/\s+/g, '') + '.jpg'
+        return (this.base_path + (this.user.name + this.user.surname).replace(/\s+/g, '') + '.jpg').toLowerCase()
       }
 
       else return this.new_image_url
