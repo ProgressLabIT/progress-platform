@@ -264,7 +264,7 @@ const traceability = {
           commit('UPDATE_JOB', job_data)
           commit('UPDATE_BATCH', batch_data)
 
-          if (job_data.status === 'closed') {
+          if (!job_data.active) {
             commit('SET_HEARTBEAT', false)
           }
           resolve()
