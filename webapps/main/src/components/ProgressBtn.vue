@@ -113,11 +113,12 @@ export default {
         can_proceed = window.confirm(this.confirm_batch_done_message)
 
         if (can_proceed && !this.j.next_batch_available) {
-          can_proceed = window.confirm(this.confirm_stop_session_message)
-        }
-
-        if (can_proceed && current_batch_was_last) {
-          can_proceed = window.confirm(this.confirm_job_done_message)
+          if (current_batch_was_last) {
+            can_proceed = window.confirm(this.confirm_job_done_message)
+          }
+          else {
+            can_proceed = window.confirm(this.confirm_stop_session_message)
+          }
         }
       }
 
@@ -143,8 +144,9 @@ export default {
 
     async declareBatch() {
       let can_proceed = true
+      const current_batch_was_last = this.current_batch_is_last
 
-      if (this.current_batch_is_last) {
+      if (current_batch_was_last) {
         can_proceed = window.confirm(this.confirm_job_done_message)
       }
 
@@ -156,11 +158,9 @@ export default {
         await this.$store.dispatch('declareBatch', {
           batch_qt: this.j.active_batch_qt,
         })
-        if (this.current_batch_is_last || !this.j.next_batch_available) {
-          this.$store.commit('SET_HEARTBEAT', false)
+        if (current_batch_was_last || (!this.j.next_batch_available && !this.j.active_batch_qt)) {
           this.$router.push({ name: 'userJobs' })
         }
-        else if (this.j.parameters.step_check) this.goToStep(0)
       }
     },
 
