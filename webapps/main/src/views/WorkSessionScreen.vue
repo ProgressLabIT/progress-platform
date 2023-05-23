@@ -415,14 +415,6 @@ export default {
     else {
       next()
     }
-  },
-
-  watch: {
-    can_work(value) {
-      if (value == false) {
-        setTimeout(this.exitJob, this.alert_timeout)
-      }
-    }
   }
 }
 </script>
