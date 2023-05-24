@@ -257,9 +257,18 @@ export default {
   },
 
   computed: {
+    wo_map() {
+      return this.$store.state.workorder.wo_map
+    },
 
     job_data() {
       return [
+        {
+          field: 'wo_sequence',
+          name: 'wo_sequence',
+          label: this.$t('work_order.list_headers.sequence').toUpperCase(),
+          align: 'left'
+        },
         { 
           label: this.$t('work_order.wo_code').toUpperCase(),
           field: 'wo_code',
