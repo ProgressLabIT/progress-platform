@@ -28,14 +28,18 @@
           :props="props"
           @dblclick="showWorkOrderScreen(props.row._key)">
           <template v-for="c in columns" :key="c.name">
-            <q-td :props="props" :class="{ 'filter-field': search_fields.includes(c.name) }">
+            <q-td
+              :props="props"
+              class="ellipsis"
+              :class="{ 'filter-field': search_fields.includes(c.name) }">
 
               <!-- PROGRESS BAR -->
               <template v-if="c.name==='progress'">
-                <div class="row items-center q-col-gutter-sm">
-                  <div class="col-9">
+                <div class="row items-center">
+                  <div class="col q-pr-sm">
                     <BaseProgressBar :data="props.row" />
                   </div>
+                  <q-space></q-space>
                   <span class="col-2 text-right">{{ props.row.progress }} %</span>
                 </div>
               </template>
@@ -63,7 +67,9 @@
               </template>
 
               <template v-else>
-                <span class="table-data" @click="setSearch(c.name, props.row[c.name])">
+                <span
+                  class="table-data"
+                  @click="setSearch(c.name, props.row[c.name])">
                   {{ $capitalizeAll(props.row[c.name] || '') }}
                 </span>
               </template>
@@ -153,13 +159,15 @@ export default {
           field: 'wo_code',
           name: 'wo_code',
           label: this.$t('work_order.list_headers.wo_code').toUpperCase(),
-          align: 'left'
+          align: 'left',
+          style: 'max-width: 10vw'
         },
         {
           field: 'project_code',
           name: 'project_code',
           label: this.$t('project').toUpperCase(),
-          align: 'left'
+          align: 'left',
+          style: 'max-width: 10vw'
         },
         {
           field: 'product_code',
@@ -172,7 +180,7 @@ export default {
           name: 'progress',
           label: this.$t('work_order.list_headers.progress').toUpperCase(),
           align: 'left',
-          style: 'width: 25%'
+          style: 'min-width: 15vw'
         },
         {
           field: 'issue_count',
