@@ -264,6 +264,7 @@ export default {
           label: this.$t('work_order.wo_code').toUpperCase(),
           field: 'wo_code',
           name: 'wo_code',
+          style: 'max-width: 10vw',
           classes: 'ellipsis',
           align: 'left',
         },
@@ -272,6 +273,7 @@ export default {
           field: 'project_code',
           name: 'project_code',
           classes: 'ellipsis',
+          style: 'max-width: 10vw',
           align: 'left',
           style: 'max-width: 200px',
           headerStyle: 'max-width: 200px'
@@ -282,8 +284,7 @@ export default {
           name: 'product_code',
           classes: 'ellipsis',
           align: 'left',
-          style: 'max-width: 200px',
-          headerStyle: 'max-width: 200px'
+          style: 'max-width: 10vw'
         },
         { 
           label: this.$t('phase.short').toUpperCase(),
@@ -291,15 +292,13 @@ export default {
           name: 'phase_alias',
           classes: 'ellipsis',
           align: 'left',
-          style: 'max-width: 200px',
-          headerStyle: 'max-width: 200px'
+          style: 'max-width: 10vw'
         },
         { 
           label: this.$t('progress').toUpperCase(),
           field: 'progress',
           name: 'progress',
-          style: 'min-width: 200px',
-          headerStyle: 'min-width: 200px',
+          style: 'min-width: 15vw',
           align: 'left'
         },
         {
@@ -348,7 +347,11 @@ export default {
             const active_jobs = []
             const queued_jobs = []
             filtered_jobs.forEach( j => {
-              j.active ? active_jobs.push(j) : queued_jobs.push(j)
+              const data = {
+                ...j,
+                wo_sequence: this.wo_map[j.wo_key].sequence
+              }
+              j.active ? active_jobs.push(data) : queued_jobs.push(data)
             })
 
             const operator_filtered_assignments = {
@@ -373,7 +376,8 @@ export default {
       const filtered_unassigned_jobs = this.unassigned_jobs.filter(this.matchJobToFilters).map(j => {
         return {
           ...j,
-          ready: this.isReleased(j) && j.next_batch_available
+          ready: this.isReleased(j) && j.next_batch_available,
+          wo_sequence: this.wo_map[j.wo_key].sequence
         }
       })
 

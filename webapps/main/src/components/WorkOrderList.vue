@@ -173,6 +173,7 @@ export default {
           field: 'product_code',
           name: 'product_code',
           label: this.$t('work_order.list_headers.product_code').toUpperCase(),
+          style: 'max-width: 10vw',
           align: 'left'
         },
         { 
