@@ -73,6 +73,8 @@ const traceability = {
     working_job_data: {},
     work_session_list: [],
     current_batch_data: {},
+    current_step_index: null,
+    current_step_media_index: null,
     heartbeat: null
   },
 

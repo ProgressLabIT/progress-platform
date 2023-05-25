@@ -77,12 +77,10 @@ export default {
 
     current_step_index: {
       get() {
-        const step_index = this.$route.query.step - 1
-        return step_index ? step_index : 0
+        return this.$store.state.traceability.current_step_index ?? 0
       },
-      set(value) {
-        if (value != this.current_step_index)
-          this.$router.push({ query: { ...this.$route.query, step: value + 1 }})
+      set(index) {
+        this.$store.state.traceability.current_step_index = index
       }
     },
 
@@ -91,10 +89,7 @@ export default {
     },
 
     current_step() {
-      if (this.procedure) {
-        return this.procedure[this.current_step_index]
-      }
-      else return {}
+      return this.procedure?.[this.current_step_index] ?? {}
     },
 
     step_component() {

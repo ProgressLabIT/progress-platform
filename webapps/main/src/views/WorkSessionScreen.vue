@@ -282,9 +282,13 @@ export default {
       else return 'theme-grey'
     },
 
-    current_step_index() {
-      const step_index = this.$route.query.step - 1
-      return step_index ? step_index : 0
+    current_step_index: {
+      get() {
+        return this.$store.state.traceability.current_step_index ?? 0
+      },
+      set(index) {
+        this.$store.state.traceability.current_step_index = index
+      }
     },
 
     current_step_done() {
@@ -345,22 +349,6 @@ export default {
         : 'theme-grey'
     },
 
-    goToStep(step_sequence) {
-      this.$router.push({ query: { step: step_sequence + 1 }})
-    },
-
-    goToNextStep() {
-      const last_index = this.j.step_sequence.length - 1
-      if (this.current_step_index === last_index) this.goToStep(0)
-      else this.goToStep(this.current_step_index + 1)
-    },
-
-    goToPreviousStep() {
-      const last_index = this.j.step_sequence.length - 1
-      if (this.current_step_index === 0) this.goToStep(last_index)
-      else this.goToStep(this.current_step_index - 1)
-    },
-
     showExitAlert(bool) {
       this.show_exit_alert = bool
     },
@@ -399,6 +387,7 @@ export default {
   beforeUnmount() {
     window.removeEventListener('beforeunload', this.beforeUnloadAlert)
     clearInterval(this.polling_instance)
+    this.$store.state.traceability.current_step_index = 0
   },
 
   beforeRouteLeave (to, from, next) {

@@ -94,9 +94,13 @@ export default {
       return this.$t('job.alerts.next_batch_not_available')
     },
 
-    current_step_index() {
-      const step_index = this.$route.query.step - 1
-      return step_index ? step_index : 0
+    current_step_index: {
+      get() {
+        return this.$store.state.traceability.current_step_index ?? 0
+      },
+      set(index) {
+        this.$store.state.traceability.current_step_index = index
+      }
     },
 
   },
@@ -164,8 +168,8 @@ export default {
       }
     },
 
-    goToStep(step_sequence) {
-      this.$router.push({ query: { step: step_sequence + 1 }})
+    goToStep(step_index) {
+      this.current_step_index = step_index
     },
 
     goToNextUndoneStep() {

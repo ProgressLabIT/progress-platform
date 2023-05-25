@@ -139,18 +139,20 @@ export default {
 
   computed: {
 
+    current_step_index() {
+      return this.$store.state.traceability.current_step_index
+    },
+
     step_media() {
       return this.step.media ?? []
     },
 
     step_media_index: {
       get() {
-        const media_query_param = this.$route.query.media ?? 1
-        return media_query_param - 1
+        return this.$store.state.traceability.current_step_media_index
       },
-      set(value) {
-        if (value != this.current_step_media_index)
-          this.$router.push({ query: { ...this.$route.query, media: value + 1 }})
+      set(index) {
+        this.$store.state.traceability.current_step_media_index = index
       }
     },
 
@@ -194,7 +196,7 @@ export default {
   },
 
   watch: {
-    '$route.query.step'() {
+    current_step_index() {
       this.step_media_index = 0
     }
   },
