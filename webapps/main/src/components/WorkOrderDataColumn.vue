@@ -64,7 +64,7 @@
           </div>
           <div class="weight-medium text-body1 relative-position">
             <q-icon
-              v-if="isLate(wo_data.due_by) && i.name == 'due_by'"
+              v-if="isLate(wo_data.due_by) && i.name == 'due_by' && wo_data.status != 'closed'"
               class="q-mb-xs q-mr-xs"
               name="mdi-alert-octagon"
               color="theme-red">
