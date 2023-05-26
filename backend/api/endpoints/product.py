@@ -316,7 +316,7 @@ async def copy_product(
     tx.commit_transaction()
 
     return APIResponse(
-      status_code=200,
+      status_code=201,
       message=f"Created product {new_code} as copy of product {original_product_code}.",
       detail=dict(new_product_key=new_product_key)
     )
