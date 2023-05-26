@@ -117,10 +117,11 @@ class Queries:
         LET jobs = (
           FOR j IN q.jobs
           LET job_data = DOCUMENT(Job, j)
-          LET wo_id = CONCAT('WorkOrder/', job_data.wo_key)
-          LET issues = (FOR v IN 1..1 INBOUND wo_id issue_rel RETURN v)
+          LET wo_data = DOCUMENT(WorkOrder, job_data.wo_key)
+          LET issues = (FOR v IN 1..1 INBOUND wo_data._id issue_rel RETURN v)
           LET issues_open = LENGTH(issues[* FILTER CURRENT.open])
-          RETURN MERGE(job_data, { issues_open, issues_total:  LENGTH(issues) })
+          LET due_by = wo_data.due_by
+          RETURN MERGE(job_data, { issues_open, issues_total:  LENGTH(issues), due_by })
         )
         RETURN jobs
       )
@@ -138,12 +139,16 @@ class Queries:
         FILTER !j.trash && j.assigned_to == null
         
         // Order by WorkOrder Queue position and Phase sequence
+        LET wo_data = DOCUMENT(WorkOrder, j.wo_key)
+        LET issues = (FOR v IN 1..1 INBOUND wo_data._id issue_rel RETURN v)
+        LET issues_open = LENGTH(issues[* FILTER CURRENT.open])
         LET wo_queue_index = POSITION(wo_queue, j.wo_key, true)
-        LET wo_phase_sequence = DOCUMENT(WorkOrder, j.wo_key).phase_sequence
+        LET wo_phase_sequence = wo_data.phase_sequence
+        LET due_by = wo_data.due_by
         LET job_phase_index = POSITION(wo_phase_sequence, j.phase_key, true)
         SORT wo_queue_index, job_phase_index
       
-        RETURN MERGE(j, { issue_count: 0 })
+        RETURN MERGE(j, { issues_open, issues_total:  LENGTH(issues), due_by })
     )
 
     RETURN {

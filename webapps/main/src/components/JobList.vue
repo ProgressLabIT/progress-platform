@@ -379,8 +379,7 @@ export default {
             filtered_jobs.forEach( j => {
               const data = {
                 ...j,
-                wo_sequence: this.wo_map[j.wo_key].sequence,
-                due_by: this.wo_map[j.wo_key].due_by
+                wo_sequence: this.wo_map[j.wo_key].sequence
               }
               j.active ? active_jobs.push(data) : queued_jobs.push(data)
             })
@@ -408,8 +407,7 @@ export default {
         return {
           ...j,
           ready: this.isReleased(j) && j.next_batch_available,
-          wo_sequence: this.wo_map[j.wo_key].sequence,
-          due_by: this.wo_map[j.wo_key].due_by
+          wo_sequence: this.wo_map[j.wo_key].sequence
         }
       })
 

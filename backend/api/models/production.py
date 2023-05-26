@@ -129,6 +129,7 @@ class Job(FlexModel):
 
   stage: WorkStatus = WorkStatus.CREATED
   start_from: Union[datetime, date] = None
+  due_by: Union[datetime, date] = None
   start: datetime = None
   active: bool = False
   critical: bool = False
