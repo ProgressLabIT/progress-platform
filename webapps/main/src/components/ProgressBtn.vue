@@ -185,6 +185,10 @@ export default {
         this.goToStep(next_step_index)
       }
     },
+  },
+
+  mounted() {
+    this.goToNextUndoneStep()
   }
 }
 </script>
