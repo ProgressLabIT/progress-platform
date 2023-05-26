@@ -217,7 +217,7 @@ export default {
           sortable: true,
           name: 'start_from',
           align: 'right',
-          label: this.$t('work_order.list_headers.start_from').toUpperCase()
+          label: this.$t('work_order.list_headers.start_from').toUpperCase(),
           sort: this.sortDate
         },
         { 
