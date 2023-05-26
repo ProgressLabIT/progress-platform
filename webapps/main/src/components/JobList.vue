@@ -1,5 +1,5 @@
 <template>
-  <div class="full-height q-mx-xs q-px-sm q-pt-lg scroll">
+  <div class="full-height q-mx-xs q-px-sm q-py-lg scroll" id="job-list">
     <NoDataAlert v-if="!jobs_view.length" />
 
     <template
@@ -86,7 +86,13 @@
                   </q-icon>
                 </template>
 
+                <template v-else-if="field.name == 'due_by'">
+                  <q-icon v-if="props.row.due_by < now" color="theme-red" name="mdi-alert-octagon" />
+                  {{ props.row.due_by == null ? '-' : $shortDateString(props.row.due_by, $i18n.locale) }}
+                </template>
+
                 <template v-else>
+
                   <span @click="setSearch(field.name, props.row[field.name])">
                     {{ $capitalizeAll(props.row[field.name] || '' ) }}
                   </span>
@@ -98,7 +104,7 @@
         </template>
       </q-table>
 
-      <q-separator class="q-my-lg q-mx-sm"/>
+      <q-separator class="q-my-lg q-mr-xs q-ml-sm" v-if="index < jobs_view.length - 1"/>
 
     </template>
 
@@ -252,6 +258,7 @@ export default {
       show_assignment_dialog: false,
       batch_assign_to: null,
       jobs_to_assign: [],
+      now: new Date().toISOString(),
       saving: false
     }
   },
@@ -287,8 +294,6 @@ export default {
           classes: 'ellipsis',
           style: 'max-width: 10vw',
           align: 'left',
-          style: 'max-width: 200px',
-          headerStyle: 'max-width: 200px'
         },
         { 
           label: this.$t('product.label', 1).toUpperCase(),
@@ -342,6 +347,13 @@ export default {
           name: 'ready',
           align: 'right'
         },
+        {
+          field: 'due_by',
+          sortable: true,
+          name: 'due_by',
+          align: 'right',
+          label: this.$t('work_order.list_headers.due_by').toUpperCase(),
+        }
       ]
     },
 
@@ -367,7 +379,8 @@ export default {
             filtered_jobs.forEach( j => {
               const data = {
                 ...j,
-                wo_sequence: this.wo_map[j.wo_key].sequence
+                wo_sequence: this.wo_map[j.wo_key].sequence,
+                due_by: this.wo_map[j.wo_key].due_by
               }
               j.active ? active_jobs.push(data) : queued_jobs.push(data)
             })
@@ -395,7 +408,8 @@ export default {
         return {
           ...j,
           ready: this.isReleased(j) && j.next_batch_available,
-          wo_sequence: this.wo_map[j.wo_key].sequence
+          wo_sequence: this.wo_map[j.wo_key].sequence,
+          due_by: this.wo_map[j.wo_key].due_by
         }
       })
 
@@ -466,11 +480,11 @@ export default {
             break
 
           case 'on_time':
-            if (!value && job.on_time) match = false
+            if (!value && job.due_by > this.now) match = false
             break
 
           case 'late':
-            if (!value && !job.on_time) match = false
+            if (!value && !job.due_by <= this.now) match = false
             break
 
           case 'critical':
@@ -553,7 +567,25 @@ export default {
           position: 'top'
         })
       }, 500)
-    }
+    },
+
+    sortDate(a,b) {
+      // equal items sort equally
+      if (a === b) {
+          return 0
+      }
+      // nulls sort after anything else
+      else if (a === null) {
+          return 1
+      }
+      else if (b === null) {
+          return -1
+      }
+      // standard sorting
+      else {
+          return a < b ? 1 : -1
+      }
+    },
   },
 
   watch: {
@@ -571,4 +603,12 @@ export default {
 </script>
 
 <style lang="sass">
+#job-list
+  .q-table--dense .q-table th:first-child,
+  .q-table--dense .q-table td:first-child
+    padding-left: 12px
+
+  .q-table--dense .q-table th:last-child,
+  .q-table--dense .q-table td:last-child
+    padding-right: 10px
 </style>

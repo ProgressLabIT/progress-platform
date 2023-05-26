@@ -218,6 +218,7 @@ export default {
           name: 'start_from',
           align: 'right',
           label: this.$t('work_order.list_headers.start_from').toUpperCase()
+          sort: this.sortDate
         },
         { 
           field: 'due_by',
