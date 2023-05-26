@@ -152,12 +152,14 @@ export default {
         { 
           field: 'sequence',
           name: 'sequence',
+          sortable: true,
           label: this.$t('work_order.list_headers.sequence').toUpperCase(),
           align: 'left'
         },
         { 
           field: 'wo_code',
           name: 'wo_code',
+          sortable: true,
           label: this.$t('work_order.list_headers.wo_code').toUpperCase(),
           align: 'left',
           style: 'max-width: 10vw'
@@ -165,6 +167,7 @@ export default {
         {
           field: 'project_code',
           name: 'project_code',
+          sortable: true,
           label: this.$t('project').toUpperCase(),
           align: 'left',
           style: 'max-width: 10vw'
@@ -172,6 +175,7 @@ export default {
         {
           field: 'product_code',
           name: 'product_code',
+          sortable: true,
           label: this.$t('work_order.list_headers.product_code').toUpperCase(),
           style: 'max-width: 10vw',
           align: 'left'
@@ -179,38 +183,45 @@ export default {
         { 
           field: 'progress',
           name: 'progress',
+          sortable: true,
           label: this.$t('work_order.list_headers.progress').toUpperCase(),
           align: 'left',
           style: 'min-width: 15vw'
         },
         {
           field: 'issue_count',
+          sortable: true,
           name: 'issue_count',
         },
         { 
           field: 'qt_completed',
           name: 'qt_completed',
+          sortable: true,
           label: this.$t('work_order.list_headers.qt_completed').toUpperCase(),
           align: 'right'
         },
         { 
           field: 'qt_planned',
           name: 'qt_planned',
+          sortable: true,
           label: this.$t('work_order.list_headers.qt_planned').toUpperCase(),
           align: 'right'},
         { 
           field: 'qt_remaining',
           name: 'qt_remaining',
+          sortable: true,
           label: this.$t('work_order.list_headers.qt_remaining').toUpperCase(),
           align: 'right'},
         {
           field: 'start_from',
+          sortable: true,
           name: 'start_from',
           align: 'right',
           label: this.$t('work_order.list_headers.start_from').toUpperCase()
         },
         { 
           field: 'due_by',
+          sortable: true,
           name: 'due_by',
           align: 'right',
           label: this.$t('work_order.list_headers.due_by').toUpperCase(),

@@ -266,6 +266,7 @@ export default {
         {
           field: 'wo_sequence',
           name: 'wo_sequence',
+          sortable: true,
           label: this.$t('work_order.list_headers.sequence').toUpperCase(),
           align: 'left'
         },
@@ -273,6 +274,7 @@ export default {
           label: this.$t('work_order.wo_code').toUpperCase(),
           field: 'wo_code',
           name: 'wo_code',
+          sortable: true,
           style: 'max-width: 10vw',
           classes: 'ellipsis',
           align: 'left',
@@ -281,6 +283,7 @@ export default {
           label: this.$t('project').toUpperCase(),
           field: 'project_code',
           name: 'project_code',
+          sortable: true,
           classes: 'ellipsis',
           style: 'max-width: 10vw',
           align: 'left',
@@ -291,6 +294,7 @@ export default {
           label: this.$t('product.label', 1).toUpperCase(),
           field: 'product_code',
           name: 'product_code',
+          sortable: true,
           classes: 'ellipsis',
           align: 'left',
           style: 'max-width: 10vw'
@@ -299,12 +303,14 @@ export default {
           label: this.$t('phase.short').toUpperCase(),
           field: 'phase_alias',
           name: 'phase_alias',
+          sortable: true,
           classes: 'ellipsis',
           align: 'left',
           style: 'max-width: 10vw'
         },
         { 
           label: this.$t('progress').toUpperCase(),
+          sortable: true,
           field: 'progress',
           name: 'progress',
           style: 'min-width: 15vw',
@@ -313,10 +319,12 @@ export default {
         {
           field: 'issue_count',
           name: 'issue_count',
+          sortable: true,
           align: 'right'
         },
         { 
           label: this.$t('quantity.completed.short').toUpperCase(),
+          sortable: true,
           field: 'qt_completed',
           name: 'qt_completed',
           align: 'right'
@@ -325,6 +333,7 @@ export default {
           label: this.$t('quantity.planned.short').toUpperCase(),
           field: 'qt_planned',
           name: 'qt_planned',
+          sortable: true,
           align: 'right'
         },
         {
