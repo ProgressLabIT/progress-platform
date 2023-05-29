@@ -253,7 +253,6 @@ export default {
         'product_description',
         'phase_alias',
       ],
-      now: new Date().getTime(),
       assign_search_string: null,
       show_assignment_dialog: false,
       batch_assign_to: null,
@@ -440,7 +439,7 @@ export default {
 
   methods: {
     isReleased(item) {
-      return new Date(item.start_from).getTime() <= this.now
+      return item.start_from <= this.now
     },
 
     jobIcon(job) {
