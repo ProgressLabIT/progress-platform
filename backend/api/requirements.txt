@@ -1,13 +1,13 @@
 bcrypt>=3.2
 certifi==2020.6.20
-cffi==1.14.2
+cffi
 chardet==3.0.4
 click==7.1.2
 cryptography==2.9.2
 fastapi>=0.61
 gunicorn>=20.0
 h11==0.9.0
-httptools==0.1.1
+httptools
 idna==2.10
 passlib==1.7.2
 pycparser==2.20

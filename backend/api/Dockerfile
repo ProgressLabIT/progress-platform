@@ -1,4 +1,4 @@
-FROM python:3.8-slim
+FROM python:3.11-slim
 
 # Install dependencies
 COPY requirements.txt /api/requirements.txt
