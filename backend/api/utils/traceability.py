@@ -11,6 +11,7 @@ class Queries:
       && @issue_key ? e.issue_data._key == @issue_key : true
       && @time_from ? e.timestamp >= @time_from : true
       && @time_to ? e.timestamp <= @time_to : true
+      && @type ? e.event_type == @type : true
     SORT e.timestamp
     RETURN e
   """

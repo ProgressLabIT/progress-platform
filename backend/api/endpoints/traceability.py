@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from events import Event
 from models.traceability import *
-from models.event import EventModel
+from models.event import EventModel, EventType
 
 from utils.exceptions import *
 from utils.api import APIResponse
@@ -61,14 +61,16 @@ async def get_events(
   job_key: str = None,
   work_order_key: str = None,
   time_from: datetime = None,
-  time_to: datetime = None
+  time_to: datetime = None,
+  type: EventType = None
   ):
   bind_vars = dict(
     issue_key = issue_key,
     job_key = job_key,
     work_order_key = work_order_key,
     time_from = time_from,
-    time_to = time_to
+    time_to = time_to,
+    type = type
   )
   return [e for e in db.aql.execute(Queries.GET_EVENTS, bind_vars=bind_vars)]
 
