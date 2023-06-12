@@ -597,6 +597,7 @@ export default {
       "wo_line": "line"
     },
     "long": "work order",
+    "move_title": "Update priority for work order {wo_code}",
     "new": "create new work orders",
     "new_quantity": "new quantity",
     "qt_rebalance_title": "assign the new workload",

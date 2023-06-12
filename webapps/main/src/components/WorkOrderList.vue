@@ -33,8 +33,16 @@
               class="ellipsis"
               :class="{ 'filter-field': search_fields.includes(c.name) }">
 
+              <!-- SEQUENCE -->
+              <div
+                v-if="c.name=='sequence'"
+                @click="change_sequence_for_wo = props.row"
+                class="pointer" >
+                {{ props.row.sequence }}
+              </div>
+
               <!-- PROGRESS BAR -->
-              <template v-if="c.name==='progress'">
+              <template v-else-if="c.name==='progress'">
                 <div class="row items-center">
                   <div class="col q-pr-sm">
                     <BaseProgressBar :data="props.row" />
@@ -79,7 +87,10 @@
       </template>
     </q-table>
 
-    <BaseDialog :show="temp_date != null" @close="temp_date = null">
+    <BaseDialog
+      :show="temp_date != null"
+      @close="temp_date = null"
+      :no-backdrop-dismiss="false">
       <q-date
         v-if="temp_date"
         minimal
@@ -88,6 +99,17 @@
         @update:model-value="val => updateWorkOrder(val)">
       </q-date>
     </BaseDialog>
+
+    <BasePrompt
+      :prompt="$t('work_order.move_title', { wo_code: change_sequence_for_wo?.wo_code })"
+      :show="change_sequence_for_wo != null"
+      :initial_value="change_sequence_for_wo?.sequence"
+      input_type="number"
+      :min="1"
+      :max="wo_list.length"
+      @close="change_sequence_for_wo = null"
+      @update="updateSequence">
+    </BasePrompt>
 
     <router-view />
   </div>
@@ -101,6 +123,7 @@ import { mapState } from 'vuex'
 import { throttle as _throttle } from 'lodash'
 import { DateTime as DT } from 'luxon'
 import BaseDialog from '@/components/BaseDialog.vue'
+import BasePrompt from '@/components/BasePrompt.vue'
 
 export default {
 
@@ -108,7 +131,8 @@ export default {
 
   components: {
     BaseProgressBar,
-    BaseDialog
+    BaseDialog,
+    BasePrompt
   },
 
   props: {
@@ -141,6 +165,7 @@ export default {
       },
       search_fields: ['wo_code', 'product_code', 'project_code', 'product_description'],
       temp_date: null,
+      change_sequence_for_wo: null,
       now: new Date().getTime()
     }
   },
@@ -332,6 +357,14 @@ export default {
       })
     },
 
+    updateSequence(new_sequence) {
+      const old_queue_index = this.change_sequence_for_wo.sequence - 1
+      const new_queue_index = new_sequence - 1
+      this.$emit('editing')
+      this.$store.commit('UPDATE_TEMP_QUEUE', { new_queue_index: new_sequence - 1, old_queue_index })
+      this.change_sequence_for_wo = null
+    },
+
     isReleased(wo) {
       return new Date(wo.start_from).getTime() <= this.now
     },
@@ -403,8 +436,6 @@ export default {
         const reference_item = moving_down ? moved_item.previousSibling : moved_item.nextSibling
         const reference_index = this.temp_queue.findIndex(wo => wo == reference_item.id)
         const new_queue_index = reference_index
-
-        console.log({ oldIndex: evt.oldIndex, newIndex: evt.newIndex, moved_item, old_queue_index, moving_down, reference_index, reference_item, new_queue_index })
 
         _self.$emit('editing')
         _self.$store.commit('UPDATE_TEMP_QUEUE', { new_queue_index, old_queue_index })

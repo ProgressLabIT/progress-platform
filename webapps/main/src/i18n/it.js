@@ -600,6 +600,7 @@ export default {
       "wo_code": "codice op"
     },
     "long": "ordine di produzione",
+    "move_title": "Cambia priorità ordine {wo_code}",
     "new": "crea ordini di produzione",
     "new_quantity": "nuova quantità",
     "qt_rebalance_title": "distribuisci il nuovo carico di lavoro",

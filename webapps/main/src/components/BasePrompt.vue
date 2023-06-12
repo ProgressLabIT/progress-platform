@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="show" @keyup.enter="update">
+  <BaseDialog :show="show" @keyup.enter="update" :no-backdrop-dismiss="false">
     <q-card class="surface2 q-pa-md" :style="`width: ${width}`">
       <q-card-section>
         <div class="text-h4 display highlight text-uppercase">
@@ -11,8 +11,9 @@
           input-class="text-body1"
           hide-bottom-space
           :type="input_type"
-          :model-value="initial_value"
-          @update:model-value="(val) => value = val">
+          :max="max"
+          :min="min"
+          v-model="value">
         </q-input>
       </q-card-section>
       <q-card-actions align="between">
@@ -65,7 +66,16 @@ export default {
     },
     initial_value: {
       required: true
+    },
+    max: {
+      type: Number,
+      default: null
+    },
+    min: {
+      type: Number,
+      default: null
     }
+
   },
 
   data () {
@@ -80,7 +90,7 @@ export default {
     }
   },
 
-  created() {
+  updated() {
     this.value = this.initial_value
   }
 }
