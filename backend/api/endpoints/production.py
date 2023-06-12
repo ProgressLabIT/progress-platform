@@ -534,10 +534,10 @@ async def update_jobs(job_updates:List[JobUpdate]):
         if 'assigned_to' in current_job_data:
           update_target_queue(
             job_key = job_key,
-            target_key = new_job_data.assigned_to,
+            target_key = current_job_data.assigned_to,
             action = 'remove',
             tx = tx
-        )
+          )
 
 
     # Update next_batch_available throughout the work order
