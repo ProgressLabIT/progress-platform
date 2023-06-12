@@ -1,5 +1,5 @@
 <template>
-  <BaseModalScreen :show="show_modal" @close="exit()">
+  <BaseModalScreen :show="show_modal" @close="exit()" :no_esc_dismiss="user_is_editing">
 
     <template #header>
       <span class="q-ml-md display highlight weight-medium">
@@ -87,7 +87,6 @@ export default {
     exit() {
       if (this.user_is_editing) {
         window.alert(this.$t('product.alerts.save_before_exit'))
-        this.show_modal = true
       }
       else {
         this.show_modal = false

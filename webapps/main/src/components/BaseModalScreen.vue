@@ -4,6 +4,7 @@
     maximized
     no-backdrop-dismiss
     no-route-dismiss
+    :no-esc-dismiss="no_esc_dismiss"
     no-shake
     square
     transition-show="scale"
@@ -48,7 +49,7 @@ import drawer from '@/mixins/drawer.js'
 export default {
 
   name: 'BaseModalScreen',
-  props: ['show'],
+  props: ['show', 'no_esc_dismiss'],
   mixins: [CSSVars, drawer],
 
   computed: {
