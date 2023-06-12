@@ -65,8 +65,12 @@ services:
     networks:
       - progress
     expose:
-      - 5432
+      - 5432:5432
     volumes:
       - workflow_db:/var/lib/postgresql/data
     deploy:
       replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=progress"
+        - "traefik.http.services.workflow-db.loadbalancer.server.port=5432"

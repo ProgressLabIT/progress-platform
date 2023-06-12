@@ -17,6 +17,9 @@ This script loads the flows contained in the each folder under the `flowcode` di
 """
 
 
+
+
+
 # run script to build and apply the flow
 for entry in flow_list:
   # Strip .py from entry name
@@ -25,13 +28,17 @@ for entry in flow_list:
   # Load modules
   flow = importlib.util.spec_from_file_location(entry_name, entry.path).loader.load_module()
 
+  try:
+    schedule = flow.schedule
+  except AttributeError:
+    schedule = None
 
   deployment = Deployment.build_from_flow(
     flow=flow.main,
     name="main",
     description=flow.main.__doc__.strip(),
     work_queue_name='system',
-    schedule=flow.schedule,
+    schedule=schedule,
     output=f'deployments/{entry_name}.yaml',
     skip_upload=True,
     apply=True
