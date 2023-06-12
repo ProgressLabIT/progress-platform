@@ -94,10 +94,10 @@ async def update_issue_type(issue_type_key: str, data: dict):
 
 # ----------------------------------------------------------------------
 
-@router.delete('/issue-type/{issue_key}')
-async def delete_issue_type(issue_key: str):
+@router.delete('/issue-type/{issue_type_key}')
+async def delete_issue_type(issue_type_key: str):
   try:
-    issue_types.delete(issue_key)
+    issue_types.delete(issue_type_key)
   except Exception:
     raise HTTPException(
       status_code=500,
@@ -148,22 +148,6 @@ async def get_issues(
   )
   cursor = db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)
   return [i for i in cursor]
-
-# ----------------------------------------------------------------------
-
-
-@router.delete('/issue/{issue_key}')
-async def delete_issue(issue_key: str):
-  try:
-    db.collection('Issue').delete(issue_key)
-  except Exception:
-    raise HTTPException(
-      status_code=500,
-      detail=dict(
-        message="There was an error deleting the issue in the database.",
-        error=traceback.format_exc()
-      )
-    )
 
 
 # ---------------------------------------------

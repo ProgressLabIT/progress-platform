@@ -25,6 +25,11 @@ class IssueEvent:
     action="close_issue"
   )
 
+  ISSUE_DELETED = EventMeta(
+    collections=issue_collections,
+    action="delete_issue"
+  )
+
   ISSUE_REOPENED = EventMeta(
     collections=issue_collections,
     action="reopen_issue"
@@ -151,6 +156,20 @@ class IssueEvent:
 
     self.response = dict(
       message=f"Issue {issue_key} opened successfuly."
+    )
+
+  #===============================================================
+
+  def delete_issue(self):
+    issue_key = self.info.issue_data['_key']
+
+    self.tx.collection('Issue').delete(issue_key)
+    self.tx.collection('issue_rel').delete_match(filters=dict(_from=f'Issue/{issue_key}'))
+    self.tx.collection('message').delete_match(filters=dict(_to=f'Issue/{issue_key}'))
+    self._update_production_status(f'Issue/{issue_key}')
+
+    self.response = dict(
+      message=f"Issue {issue_key} deleted successfuly"
     )
 
   #===============================================================

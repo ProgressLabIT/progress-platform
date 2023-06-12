@@ -116,10 +116,12 @@
           </template>
           <q-space />
           <q-btn
+            v-if="user_can_delete"
             color="theme-red"
             size="12px"
             icon="mdi-delete"
-            :label="$t('delete')">
+            :label="$t('delete')"
+            @click="deleteIssue">
           </q-btn>
           <q-btn
             size="12px"
@@ -221,20 +223,9 @@ export default {
       return this.enrichIssue(issue_data)
     },
 
-    context() {
-      // Check where the component is being used
-      return this.job_key
-        ? 'job'
-        : this.wo_key
-        ? 'work-order'
-        : undefined
+    user_can_delete() {
+      return this.$store.getters.hasPermission('production')
     },
-
-    fetch_filter() {
-      return this.context == 'job' ? { job_key: this.job_key }
-        : this.context == 'work-order' ? { work_order_key: this.wo_key }
-        : null
-    }
   },
 
   methods: {
@@ -274,17 +265,17 @@ export default {
       return this.$capitalize(this.$formatDateTime(timestamp, this.$i18n.locale, config))
     },
 
-    notifyUpdate({ message, color='theme-green' }) {
+    notify({ message, color='theme-green' }) {
       this.$q.notify({
-        message: this.$t('issue_update_success'),
-        color: 'theme-green',
+        message,
+        color,
         timeout: '1500',
         position: 'top'
       })
     },
 
     refreshIssue() {
-      this.$store.dispatch('getIssues', this.fetch_filter)
+      this.$store.dispatch('getIssues', { issue_key })
       this.getHistory()
     },
 
@@ -298,7 +289,7 @@ export default {
         }
       }).then(() => {
         this.refreshIssue()
-        this.notifyUpdate({ message: this.$t('issue_update_success') })
+        this.notify({ message: this.$t('issue_update_success') })
       })
     },
 
@@ -314,8 +305,8 @@ export default {
         }
       }).then(() => {
         this.refreshIssue()
-        this.notifyUpdate({
-          message: this.$t('issue_updated'),
+        this.notify({
+          message: this.$t('issue_update_success'),
           color: this.issue.critical ? 'theme-red' : 'theme-green'
         })
       })
@@ -332,8 +323,32 @@ export default {
         }
       }).then(() => {
         this.refreshIssue()
-        this.notifyUpdate({
+        this.notify({
           message: this.$t('issue_updated')
+        })
+      })
+    },
+
+    deleteIssue() {
+      this.$q.dialog({
+        cancel: true,
+        title: this.$t('issue_delete_confirm_title'),
+        message: this.$t('issue_delete_confirm_question')
+      }).onOk(() => {
+        this.sendEvent({
+          event_type: 'ISSUE_DELETED',
+          event_data: {
+            issue_data: {
+              _key: this.issue_key
+            }
+          }
+        }).then(async () => {
+          const work_order_key = this.$store.state.traceability.working_job_data.wo_key
+          await this.$store.dispatch('getIssues', { work_order_key })
+          this.exit()
+          this.notify({
+            message: this.$t('issue_delete_success')
+          })
         })
       })
     },
@@ -363,7 +378,6 @@ export default {
 
   created() {
     this.$store.dispatch('loadUsers')
-    this.$store.dispatch('getIssues', this.fetch_filter)
     this.getMessages()
     this.getHistory()
   }
