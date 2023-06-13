@@ -283,7 +283,7 @@ export default {
     },
 
     refreshIssue() {
-      this.$store.dispatch('getIssues', { issue_key })
+      this.$store.dispatch('getIssues', { issue_key: this.issue_key })
       this.getHistory()
     },
 

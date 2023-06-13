@@ -44,6 +44,7 @@ class Issue(ArangoDocument):
   created: datetime = Field(default_factory=timestamp)
   created_by: str # Creator ID
   closed: datetime = None
+  closed_by: str = None # Closer ID
   critical: bool # Default value set at the IssueType level
   # close_within: NonNegativeInt # Value set at the IssueType level
   data: List[dict] = None

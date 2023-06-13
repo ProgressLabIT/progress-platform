@@ -127,7 +127,8 @@ class IssueEvent:
     issue_update = dict(
       _key = issue_key,
       open = False,
-      closed = timestamp()
+      closed = timestamp(),
+      closed_by = f'User/{self.info.user_key}'
     )
     self.tx.collection('Issue').update(issue_update)
 
@@ -148,7 +149,8 @@ class IssueEvent:
       _key = issue_key,
       open = True,
       critical = open_as_critical,
-      closed = None
+      closed = None,
+      closed_by = None
     )
     self.tx.collection('Issue').update(issue_update)
 
