@@ -321,6 +321,7 @@ class ProductionAdminEvent:
 
         # Reset job to created status if necessary
         if self.info.new_job_qt_completed == 0:
+          self.job_reset = True # used to reset work order too if necessary
           job_update['stage'] = WorkStatus.CREATED
 
         # 2. Flag last N batches with `canceled: true`
@@ -526,6 +527,7 @@ class ProductionAdminEvent:
 
     # Reset as created if batch is first
     if self.job.qt_completed == 0:
+      self.job_reset = True # used to reset work order too if necessary
       job_update['stage'] = 'created'
       job_update['start'] = None
 

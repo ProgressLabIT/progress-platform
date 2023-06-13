@@ -53,3 +53,23 @@ class SharedEventMethods:
         ProductionQueries.ADD_WORK_ORDER_TO_QUEUE,
         bind_vars=dict(new_wo_key=self.info.work_order_key)
       )
+
+    elif getattr(self, 'job_reset', False):
+      # Figure out if the wo should be reset too
+      should_reset_wo = self.tx.aql.execute(
+        """
+        RETURN SUM(FOR j IN Job
+        FILTER j.wo_key == @wo_key && j.stage != 'created'
+        RETURN 1)
+        """,
+        bind_vars=dict(wo_key=self.info.work_order_key)
+      ).next() == 0
+
+      if should_reset_wo:
+        wo_update = dict(
+          _key=self.info.work_order_key,
+          start = None,
+          status = WorkStatus.CREATED
+        )
+        self.tx.collection('WorkOrder').update(wo_update)
+
