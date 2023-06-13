@@ -5,8 +5,9 @@
     <q-avatar
       color="theme-grey"
       :size="size"
-      v-if="initials"
+      v-if="initials && show_avatar"
       class="weight-bold"
+      :class="dense ? 'q-mr-sm' : 'q-mr-md'"
       font-size=".4em">
       <q-img
         :src="avatar_src"
@@ -18,7 +19,7 @@
         </template>
       </q-img>
     </q-avatar>
-    <div class="column col-auto q-mx-md" v-if="show_name">
+    <div class="column col" v-if="show_name">
       <slot name="name">
         <div
           :class="name_class"
@@ -42,6 +43,11 @@ export default {
   name: 'BaseUserAvatar',
 
   props: {
+    dense: {
+      type: Boolean,
+      default: false
+    },
+
     name_first: {
       type: Boolean,
       default: false
@@ -55,6 +61,11 @@ export default {
     size: {
       type: String,
       default: '32px',
+    },
+
+    show_avatar: {
+      type: Boolean,
+      default: true
     },
     
     show_name: {

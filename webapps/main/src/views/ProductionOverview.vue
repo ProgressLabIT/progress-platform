@@ -131,29 +131,14 @@
             </q-select>
 
             <!-- BY OPERATOR -->
-            <q-select
-              ref="operator_filter"
-              filled
+            <BaseAutocompleteOperator
+              :placeholder="$capitalize($t('operator'))"
               dense
-              use-input
-              clearable
-              v-model="operator_selected"
-              :options="filtered_operators"
-              option-value="_key"
-              emit-value
-              map-options
-              :option-label="(item) => item.name + ' ' + item.surname"
-              @filter="filterOperator"
-              :label="$capitalize($t('operator'))"
               class="q-mb-md"
-              popup-content-class="surface1">
-              <template v-slot:option="scope">
-                <q-item v-bind="scope.itemProps">
-                  <BaseUserAvatar :user="scope.opt"/>
-                </q-item>
-              </template>
-            </q-select>
-
+              key_only
+              :value="operator_selected"
+              @select="(selection) => operator_selected = selection">
+            </BaseAutocompleteOperator>
           </template>
           <!-- END OF JOB-SPECIFIC FILTERS -->
 
@@ -189,16 +174,36 @@
           </div>
 
           <!-- BOOLEAN FILTERS -->
-          <q-checkbox
-            v-for="filter in bool_filters"
-            :key="filter"
-            dense
-            color="theme-blue"
-            size="sm"
-            :label="$capitalize($t(`production.filters.${filter}`))"
-            v-model="_this[filter]"
-            class="q-mt-md text-body1 low-text">
-          </q-checkbox>
+          <div class="row">
+            <div
+              class="col-6"
+              v-for="filter in bool_filters"
+              :key="filter">
+              <q-checkbox
+                dense
+                color="theme-blue"
+                size="sm"
+                :label="$capitalize($t(`production.filters.${filter}`))"
+                v-model="_this[filter]"
+                class="q-mt-md text-body1 low-text">
+              </q-checkbox>
+            </div>
+            <template v-if="$route.name=='jobList'">
+              <div
+                class="col-6"
+                v-for="filter in job_filters"
+                :key="filter">
+                <q-checkbox
+                  dense
+                  color="theme-blue"
+                  size="sm"
+                  :label="$capitalize($t(`production.filters.${filter}`))"
+                  v-model="_this[filter]"
+                  class="q-mt-md text-body1 low-text">
+                </q-checkbox>
+              </div>
+            </template>
+          </div>
 
           <q-space />
 
@@ -218,6 +223,7 @@
 <script>
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
+import BaseAutocompleteOperator from '@/components/BaseAutocompleteOperator.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import queryModel from '@/lib/queryModelFactory.js'
 
@@ -235,6 +241,7 @@ export default {
 
   components: {
     BaseUserAvatar,
+    BaseAutocompleteOperator,
     NoDataAlert
   },
 
@@ -245,6 +252,7 @@ export default {
       views: production_views,
       current_view: 0,
       bool_filters: ['started','queued','on_time','late','active','idle','ready','not_ready','critical','not_critical'],
+      job_filters: ['assigned', 'unassigned'],
         // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       department_search_text: undefined,
       editing: false,
@@ -272,12 +280,15 @@ export default {
     not_ready: queryModel(Boolean, 'not_ready', true),
     critical: queryModel(Boolean, 'critical', true),
     not_critical: queryModel(Boolean, 'not_critical', true),
+    assigned: queryModel(Boolean, 'assigned', true),
+    unassigned: queryModel(Boolean, 'unassigned', true),
 
     _this() { return this },
 
     filters() {
       let bools = {}
       this.bool_filters.forEach(f => bools[f] = this[f])
+      this.job_filters.forEach(f => bools[f] = this[f])
 
       return {
         search_string: this.search_string,

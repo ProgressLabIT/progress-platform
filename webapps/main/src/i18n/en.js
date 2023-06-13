@@ -416,6 +416,7 @@ export default {
   "production": {
     "filters": {
       "active": "active",
+      "assigned": "Assigned",
       "critical": "critical",
       "idle": "idle",
       "late": "late",
@@ -424,7 +425,8 @@ export default {
       "queued": "queued",
       "started": "started",
       "ready": "Ready",
-      "not_ready": "Not ready"
+      "not_ready": "Not ready",
+      "unassigned": "Unassigned"
     },
     "save_new_sequence": "save new sequence",
     "search_explainer": "search terms in one or more of the following fields"

@@ -28,7 +28,7 @@
     </template>
 
     <template #selected-item="scope">
-      <BaseUserAvatar :user="scope.opt" class="q-py-sm"/>
+      <BaseUserAvatar :user="scope.opt" :show_avatar="show_avatar" :dense="dense" reverse/>
     </template>
   </q-select>
 </template>
@@ -46,7 +46,7 @@ export default {
 
   props: {
     value: {
-      type: Object,
+      type: [Object, String],
       deafult: null
     },
 
@@ -83,6 +83,11 @@ export default {
     stackLabel: {
       type: Boolean,
       default: false
+    },
+
+    show_avatar: {
+      type: Boolean,
+      default: true
     }
   },
 

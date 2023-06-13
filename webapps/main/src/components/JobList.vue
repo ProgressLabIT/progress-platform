@@ -86,10 +86,10 @@
                   </q-icon>
                 </template>
 
-                <template v-else-if="field.name == 'due_by'">
-                  <q-icon v-if="props.row.due_by < now" color="theme-red" name="mdi-alert-octagon" />
-                  {{ props.row.due_by == null ? '-' : $shortDateString(props.row.due_by, $i18n.locale) }}
-                </template>
+                <div class="row items-center justify-end q-gutter-xs" v-else-if="field.name == 'due_by'">
+                  <q-icon v-if="props.row.due_by < now" color="theme-red" name="mdi-alert-octagon"/>
+                  <div>{{ props.row.due_by == null ? '-' : $shortDateString(props.row.due_by, $i18n.locale) }}</div>
+                </div>
 
                 <template v-else>
 
@@ -238,6 +238,8 @@ export default {
         idle:true,
         critical:true,
         not_critical:true,
+        assigned: true,
+        unassigned: true,
         department_key: undefined,
         operator_key: undefined
       }}
@@ -367,8 +369,9 @@ export default {
         let a = this.assignments[i]
         const department_match = [a.operator.department_key, undefined].includes(this.filters.department_key)
         const operator_match = [a.operator._key, undefined].includes(this.filters.operator_key)
+        console.log(operator_match)
         // Check if operator is in department selected or no department filter is set
-        if (department_match && operator_match) {
+        if (operator_match && department_match) {
 
           const filtered_jobs = a.assigned_jobs ? a.assigned_jobs.filter(this.matchJobToFilters) : []
           
@@ -401,25 +404,27 @@ export default {
     },
 
     jobs_view() {
-      const result = [...this.filtered_assignments]
-      const filtered_unassigned_jobs = this.unassigned_jobs.filter(this.matchJobToFilters).map(j => {
-        return {
-          ...j,
-          ready: this.isReleased(j) && j.next_batch_available,
-          wo_sequence: this.wo_map[j.wo_key].sequence
-        }
-      })
+      const result = this.filters.assigned ? [...this.filtered_assignments] : []
 
-      if (filtered_unassigned_jobs.length && this.filters.operator_key === undefined) {
-        result.push({
-          operator: {
-            _key: 'unassigned',
-            name: this.$t("job.unassigned_jobs"),
-            surname: ''
-          },
-          assigned_jobs_count: this.unassigned_jobs.length,    
-          filtered_jobs: filtered_unassigned_jobs
+      if (this.filters.unassigned && this.filters.operator_key === undefined) {
+        const filtered_unassigned_jobs = this.unassigned_jobs.filter(this.matchJobToFilters).map(j => {
+          return {
+            ...j,
+            ready: this.isReleased(j) && j.next_batch_available,
+            wo_sequence: this.wo_map[j.wo_key].sequence
+          }
         })
+        if (filtered_unassigned_jobs.length) {
+          result.push({
+            operator: {
+              _key: 'unassigned',
+              name: this.$t("job.unassigned_jobs"),
+              surname: ''
+            },
+            assigned_jobs_count: this.unassigned_jobs.length,
+            filtered_jobs: filtered_unassigned_jobs
+          })
+        }
       }
 
       return result

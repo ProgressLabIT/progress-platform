@@ -419,6 +419,7 @@ export default {
   "production": {
     "filters": {
       "active": "attivo",
+      "assigned": "Assegnato",
       "critical": "critico",
       "idle": "in attesa",
       "late": "in ritardo",
@@ -427,7 +428,8 @@ export default {
       "queued": "in coda",
       "started": "iniziato",
       "ready": "Eseguibile",
-      "not_ready": "Non eseguibile"
+      "not_ready": "Non eseguibile",
+      "unassigned": "Non assegnato"
     },
     "save_new_sequence": "salva nuova sequenza",
     "search_explainer": "ricerca termini in uno o più dei seguenti campi"
