@@ -67,6 +67,7 @@ export default {
   },
   "decrease": "decrease",
   "delete": "delete",
+  "deleted": "Deleted",
   "department": "department",
   "description": "description",
   "deselect_all": "deselect all",

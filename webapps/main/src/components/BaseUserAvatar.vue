@@ -7,7 +7,6 @@
       :size="size"
       v-if="initials && show_avatar"
       class="weight-bold"
-      :class="dense ? 'q-mr-sm' : 'q-mr-md'"
       font-size=".4em">
       <q-img
         :src="avatar_src"
@@ -19,7 +18,10 @@
         </template>
       </q-img>
     </q-avatar>
-    <div class="column col" v-if="show_name">
+
+    <div v-if="show_name && show_avatar" :class="dense ? 'q-mx-xs' : 'q-mx-sm'"></div>
+
+    <div class="column col-auto" v-if="show_name">
       <slot name="name">
         <div
           :class="name_class"

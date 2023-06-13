@@ -3,7 +3,7 @@
     <q-card class="surface2 q-pa-md" :style="`width: ${width}`">
       <q-card-section>
         <div class="text-h4 display highlight text-uppercase">
-          {{ prompt }}
+          {{ prompt ?? $t('update') }}
         </div>
         <q-input
           autofocus
@@ -58,7 +58,7 @@ export default {
     },
     prompt: {
       type: String,
-      default: () => this.$t('update')
+      default: undefined
     },
     input_type: {
       type: String,

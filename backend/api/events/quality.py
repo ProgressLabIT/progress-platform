@@ -186,17 +186,25 @@ class IssueEvent:
   #===============================================================
 
   def update_message(self):
-    issue_key = self.info.message_data.recipient.split('/')[1]
-    self.info.issue_data = dict(issue_key=issue_key)
-
-    self.info.message_data.updated = True
+    self.info.message_data.updated = self.info.timestamp
     message_record = self.info.message_data.dict(by_alias=True)
-    db_resp = self.tx.update(message_record, return_new=True)
+    db_resp = self.tx.collection('message').update(message_record, return_new=True)
     self.response = dict(
       message="Message updated correctly",
       detail=dict(
         new_message=db_resp['new']
       )
+    )
+
+  #===============================================================
+
+  def delete_message(self):
+    self.info.message_data.content = '[deleted]'
+    self.info.message_data.deleted = self.info.timestamp
+    message_record = self.info.message_data.dict(by_alias=True)
+    db_resp = self.tx.collection('message').update(message_record, return_new=True)
+    self.response = dict(
+      message="Message deleted correctly",
     )
 
 

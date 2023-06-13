@@ -68,6 +68,7 @@ export default {
     "step": "Quali passi hai completato?"
   },
   "delete": "elimina",
+  "deleted": "Eliminato",
   "department": "reparto | reparti",
   "description": "descrizione",
   "deselect_all": "deseleziona tutti",

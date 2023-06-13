@@ -143,7 +143,12 @@
         </div>
         <q-separator></q-separator>
         <div class="col scroll q-py-md">
-          <Message v-for="m in messages" :key="m._key" :message="m" />
+          <Message
+            v-for="m in messages"
+            :key="m._key"
+            :message="m"
+            @change="getMessages">
+          </Message>
         </div>
         <div class="col-auto">
           <q-separator spaced></q-separator>
@@ -155,17 +160,20 @@
                 autogrow
                 v-model="new_message"
                 :placeholder="$t('message_prompt')">
+                <template #append>
+                  <q-btn
+                    v-if="new_message.length"
+                    round
+                    icon="mdi-send"
+                    :loading="loading"
+                    color="theme-blue"
+                    size="12px"
+                    @click="postMessage">
+                  </q-btn>
+                </template>
               </q-input>
             </div>
           </div>
-          <q-btn
-            class="full-width q-mt-md"
-            :loading="loading"
-            color="theme-blue"
-            size="12px"
-            :label="$t('send')"
-            @click="postMessage">
-          </q-btn>
         </div>
       </div>
     </q-card>

@@ -158,7 +158,9 @@ async def get_issues(
 async def get_messages(issue_key: str):
   try:
     cursor = db.collection('message').find(dict(_to=f'Issue/{issue_key}'))
-    return [Message(**m) for m in cursor]
+    messages = [Message(**m) for m in cursor]
+    # Ensure sorting by posting time
+    return sorted(messages, key=lambda m: m.created)
   except Exception:
     raise HTTPException(
       status_code=500,

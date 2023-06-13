@@ -89,7 +89,7 @@ class Message(ArangoDocument):
   content: str
   created: datetime = Field(default_factory=timestamp)
   updated: datetime = None
-  deleted: bool = False
+  deleted: datetime = None
 
 class IssueFullData(IssueWithLinks):
   messages: List[Message]
