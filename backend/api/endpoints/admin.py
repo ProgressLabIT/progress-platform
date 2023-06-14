@@ -105,6 +105,18 @@ async def force_delete_work_order_data(work_order_key: str):
     bind_vars = dict(work_order_key=work_order_key, jobs_to_delete=jobs_to_delete)
     tx.aql.execute(queue_update_query, bind_vars=bind_vars)
 
+    # Remove issues relationships (keep issue and rels to product/phase/etc)
+    query = """
+      FOR ir IN issue_rel
+      FILTER ir._to IN flatten([@wo_id, @job_ids])
+      REMOVE ir IN issue_rel
+    """
+    bind_vars = dict(
+      wo_id = f'WorkOrder/{work_order_key}',
+      job_ids = [f'Job/{j}' for j in jobs_to_delete]
+    )
+    tx.aql.execute(query, bind_vars=bind_vars)
+
     # 9. Commit and return
     tx.commit_transaction()
     return f"All data related to WorkOrder {work_order_key} has been deleted."

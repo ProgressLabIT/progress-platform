@@ -240,7 +240,7 @@ async def get_wo_data(wo_key: str):
 @router.delete('/work-order/{wo_key}')
 async def delete_work_order(wo_key: str):
   try:
-    tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue'])
+    tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'issue_rel'])
 
     # Delete Work Order
     wo_coll = tx.collection('WorkOrder')
@@ -290,6 +290,18 @@ async def delete_work_order(wo_key: str):
       UPDATE q WITH queue_update in Queue
     """
     tx.aql.execute(query, bind_vars={ 'jobs_to_remove': jobs_to_remove })
+
+    # Remove issues relationships (keep issue and rels to product/phase/etc)
+    query = """
+      FOR ir IN issue_rel
+      FILTER ir._to IN flatten([@wo_id, @job_ids])
+      REMOVE ir IN issue_rel
+    """
+    bind_vars = dict(
+      wo_id = f'WorkOrder/{wo_key}',
+      job_ids = [f'Job/{j}' for j in jobs_to_remove]
+    )
+    tx.aql.execute(query, bind_vars=bind_vars)
 
     tx.commit_transaction()
 
