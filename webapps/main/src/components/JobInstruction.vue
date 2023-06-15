@@ -131,7 +131,7 @@ export default {
   data () {
     return {
       media_root_path: '/media/step/',
-      show_details: false,
+      show_details: true,
       image_extensions: ['png', 'jpeg', 'jpg'],
       show_full_screen: false
     }
