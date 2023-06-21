@@ -149,6 +149,10 @@ export default {
     products_using_operation() {
       return this.operation.used_for
     },
+
+    operation_key() {
+      return this.$route.query.operation_key
+    }
   },  
 
 
@@ -208,8 +212,7 @@ export default {
     edit_mode() {
       this.setTempData()
     },
-    operation: {
-      deep: true,
+    operation_key: {
       handler: 'setTempData'
     }
   }

@@ -7,47 +7,49 @@
       </q-card-section>
 
       <transition name="slide-fade" mode="out-in">
+        <div>
+          <div v-if="stage === 'confirm'" key="confirm">
+            <q-card-section>
+              <div>
+                {{ $capitalize($t('operation.delete_question')) }}?
+              </div>
+              <div class="text-h3 uppercase highlight q-mt-md">
+                {{ operation.name }}
+              </div>
+            </q-card-section>
 
-        <div v-if="stage === 'confirm'" key="confirm">
-          <q-card-section>
-            <div>
-              {{ $capitalize($t('operation.delete_question')) }}?
-            </div>
-            <div class="text-h3 uppercase highlight q-mt-md">
-              {{ operation.name }}
-            </div>
-          </q-card-section>
-
-          <q-card-section>
-          <div class="row justify-between">
-            <q-btn
-              color="theme-red"
-              @click="deleteOperation"
-              :label="$t('confirm')">
-            </q-btn>
-            <q-btn
-              color="theme-grey"
-              @click="$router.back()"
-              :label="$t('cancel')"
-              class="q-ml-md">
-            </q-btn>
+            <q-card-section>
+              <div class="row justify-between">
+                <q-btn
+                  color="theme-red"
+                  @click="deleteOperation"
+                  :label="$t('confirm')">
+                </q-btn>
+                <q-btn
+                  color="theme-grey"
+                  @click="$router.back()"
+                  :label="$t('cancel')"
+                  class="q-ml-md">
+                </q-btn>
+              </div>
+            </q-card-section>
           </div>
+
+          <q-spinner v-else-if="stage === 'saving'" key="saving" />
+
+          <q-card-section v-else-if="stage === 'success'" key="success">
+            <div class="row justify-between">
+              <span class="q-mr-xl">
+                {{ $capitalize($t('operation.delete_success')) }}
+              </span>
+              <q-btn
+                color="theme-grey"
+                @click="goToLibrary"
+                :label="$t('close')">
+              </q-btn>
+            </div>
           </q-card-section>
         </div>
-
-        <q-card-section v-else-if="stage === 'success'" key="success">
-          <div class="row justify-between">
-            <span class="q-mr-xl">
-              {{ $capitalize($t('operation.delete_success')) }}
-            </span>
-            <q-btn
-              color="theme-grey"
-              @click="$router.push({ name: 'operationLibrary' })"
-              :label="$t('close')">
-            </q-btn>
-          </div>
-        </q-card-section>
-
       </transition>
     </q-card>
 
@@ -72,37 +74,41 @@ export default {
   props: {
     operation: {
       type: Object,
-      required: true
+      default: {}
     }
   },
 
   data () {
     return {
-      showModal: true,
       stage: 'confirm',
     }
   },
 
   methods:{
     deleteOperation() {
-      api.delete(`operation/${this.operation_key}`)
-      .then( async () => {
-        this.stage="success"
-        this.$store.dispatch('getOperations')
-      })
-      .catch(err => {
-        // Operation is in use in some process    
-        if (err.response.status === 403) {
-          const error_message = this.$t('operation.alerts.op_in_use') + ": "
-          window.alert(error_message + err.response.data.detail.product_codes)
-          this.$router.back()
-        }
-        else {
-          window.alert(this.$t('operation.alerts.delete_general_error'))
-        }
-      })
+      this.stage = 'saving'
+      setTimeout(() => {
+        api.delete(`operation/${this.operation._key}`)
+        .then(() => this.stage="success")
+        .catch(err => {
+          // Operation is in use in some process
+          if (err.response.status === 403) {
+            const error_message = this.$t('operation.alerts.op_in_use') + ": "
+            window.alert(error_message + err.response.data.detail.product_codes)
+            this.$router.back()
+          }
+          else {
+            window.alert(this.$t('operation.alerts.delete_general_error'))
+          }
+        })
+      }, 1500)
+    },
+
+    async goToLibrary() {
+      await this.$store.dispatch('getOperations')
+      this.$router.push({ name: 'operationLibrary' })
     }
-  },
+  }
 }
 </script>
 
