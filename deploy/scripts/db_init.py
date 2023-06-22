@@ -80,6 +80,8 @@ collections = [
   'Batch',
   'Config',
   'Counter',
+  'CustomField',
+  'CustomListValue',
   'Department',
   'Event',
   'Issue',
