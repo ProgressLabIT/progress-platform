@@ -7,8 +7,8 @@ export default {
         { value: 'boolean', label: this.$t('field_type_boolean'), icon: 'mdi-check-bold' },
         // { value: 'ternary', label: this.$t('field_type_ternary'), icon: '' }
         { value: 'choice', label: this.$t('field_type_choice'), icon: 'mdi-format-list-checks' },
-        // { value: 'date', label: this.$t('field_type_date'), icon: 'mdi-calendar' },
-        // { value: 'time', label: this.$t('field_type_time'), icon: 'mdi-clock-outline' }
+        { value: 'date', label: this.$t('field_type_date'), icon: 'mdi-calendar' },
+        { value: 'time', label: this.$t('field_type_time'), icon: 'mdi-clock-outline' },
       ]
     }
   },

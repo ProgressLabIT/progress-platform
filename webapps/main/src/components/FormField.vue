@@ -1,86 +1,132 @@
 <template>
-  <div>
+  <div class="q-mb-lg">
 
     <!-- TEXT -->
-    <div v-if="field_data.type == 'text'" class="q-mb-lg">
-      <q-input
-        filled
-        stack-label
-        autogrow
-        lazy-rules
-        input-debounce="100"
-        hide-bottom-space
-        :disable="disable"
-        :dense="dense"
-        :label="field_data.label"
-        :model-value="field_data.value"
-        :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-        @update:model-value="(val) => $emit('update', val)">
-      </q-input>
-      <div class="smaller q-px-sm q-mt-xs">
-        {{ field_data.hint }}
-      </div>
-    </div>
+    <q-input
+      v-if="field_data.type == 'text'"
+      filled
+      stack-label
+      autogrow
+      lazy-rules
+      input-debounce="100"
+      hide-bottom-space
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :model-value="field_data.value"
+      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
+      @update:model-value="(val) => $emit('update', val)">
+    </q-input>
 
     <!-- NUMBER -->
-    <div v-if="field_data.type == 'number'" class="q-mb-lg">
-      <q-input
-        type="number"
-        filled
-        stack-label
-        hide-bottom-space
-        input-debounce="100"
-        :disable="disable"
-        :dense="dense"
-        :label="field_data.label"
-        :model-value="field_data.value"
-        lazy-rules
-        :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-        @update:model-value="val => $emit('update', parseFloat(val))">
-      </q-input>
-      <div class="smaller q-px-sm q-mt-xs">
-        {{ field_data.hint }}
-      </div>
-    </div>
+    <q-input
+      v-if="field_data.type == 'number'"
+      type="number"
+      filled
+      stack-label
+      hide-bottom-space
+      input-debounce="100"
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :model-value="field_data.value"
+      lazy-rules
+      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
+      @update:model-value="val => $emit('update', parseFloat(val))">
+    </q-input>
 
     <!-- BOOLEAN -->
-    <div v-if="field_data.type == 'boolean'" class="q-mb-lg">
-      <q-checkbox
-        :disable="disable"
-        :dense="dense"
-        :label="field_data.label"
-        :model-value="field_data.value ?? false"
-        :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-        @update:model-value="val => $emit('update', val)">
-      </q-checkbox>
-      <div class="smaller q-px-sm q-mt-xs">
-        {{ field_data.hint }}
-      </div>
-    </div>
+    <q-checkbox
+      v-if="field_data.type == 'boolean'"
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :model-value="field_data.value ?? false"
+      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
+      @update:model-value="val => $emit('update', val)">
+    </q-checkbox>
 
     <!-- CHOICE -->
-    <div v-if="field_data.type == 'choice'" class="q-mb-lg">
-      <q-select
-        filled
-        stack-label
-        use-input
-        clearable
-        :disable="disable"
-        :dense="dense"
-        :label="field_data.label"
-        :options="options"
-        option-label="value"
-        @filter="filter"
-        :model-value="field_data.value"
-        @update:model-value="val => $emit('update', val)">
-      </q-select>
-      <div class="smaller q-px-sm q-mt-xs">
-        {{ field_data.hint }}
-      </div>
-    </div>
+    <q-select
+      v-if="field_data.type == 'choice'"
+      filled
+      stack-label
+      use-input
+      clearable
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :options="options"
+      option-label="value"
+      @filter="filter"
+      :model-value="field_data.value"
+      @update:model-value="val => $emit('update', val)"
+      input-class="cursor-pointer">
+    </q-select>
 
     <!-- DATE -->
+    <q-input
+      v-if="field_data.type == 'date'"
+      filled
+      stack-label
+      :label="field_data.label"
+      v-model="field_data.value"
+      :placeholder="$t('date_format')"
+      input-class="cursor-pointer">
+      <template v-slot:append>
+        <q-icon name="mdi-calendar" />
+      </template>
+      <q-popup-proxy anchor="center middle" self="center middle" @hide="blur">
+        <q-date minimal v-model="field_data.value">
+          <div class="row items-center justify-end">
+            <q-btn v-close-popup :label="$t('close')" color="primary" flat />
+          </div>
+        </q-date>
+      </q-popup-proxy>
+    </q-input>
+
     <!-- TIME -->
+    <q-input
+      v-if="field_data.type == 'time'"
+      stack-label
+      filled
+      :label="field_data.label"
+      v-model="field_data.value"
+      inpu-class="cursor-pointer"
+      placeholder="HH:mm">
+      <template v-slot:append>
+        <q-icon name="mdi-clock-outline" />
+      </template>
+      <q-popup-proxy anchor="center middle" self="center middle" @hide="blur">
+        <q-time v-model="field_data.value" format24h>
+          <div class="row items-center justify-end">
+            <q-btn v-close-popup :label="$t('close')" color="primary" flat />
+          </div>
+        </q-time>
+      </q-popup-proxy>
+    </q-input>
+
+    <!-- ATTACHMENT -->
+    <q-file
+      v-if="field_data.type == 'attachment'"
+      multiple
+      append
+      use-chips
+      counter
+      clearable
+      filled
+      stack-label
+      v-model="field_data.value"
+      :label="field_data.label">
+      <template #append>
+        <q-icon name="mdi-paperclip" />
+      </template>
+    </q-file>
+
+    <!-- HINT -->
+    <div class="smaller q-px-sm q-mt-xs">
+      {{ field_data.hint }}
+    </div>
   </div>
 </template>
 
@@ -133,7 +179,12 @@ export default {
           return option.value.toLowerCase().includes(needle)
         })
       })
+    },
+
+    blur() {
+      document.activeElement.blur()
     }
+
   },
 
   created() {

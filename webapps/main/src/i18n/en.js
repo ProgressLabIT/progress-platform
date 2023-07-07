@@ -60,6 +60,7 @@ export default {
   "create_order": "create order",
   "creation_date": "creation date",
   "critical": "critical",
+  "date_format": "YYYY/MM/DD",
   "deactivate": "deactivate",
   "declaration_question": {
     "qt": "How many pieces have you completed?",

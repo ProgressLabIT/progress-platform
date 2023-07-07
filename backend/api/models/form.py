@@ -10,7 +10,7 @@ class FieldType(Enum):
   TEXT = 'text'
   NUMBER = 'number'
   BOOLEAN = 'boolean'
-  TERNARY = 'ternary'
+  # TERNARY = 'ternary'
   CHOICE = 'choice'
   DATE = 'date'
   TIME = 'time'
@@ -23,7 +23,7 @@ field_type_map = {
   FieldType.TEXT.value: str,
   FieldType.NUMBER.value: float,
   FieldType.BOOLEAN.value: bool,
-  FieldType.TERNARY.value: Union[bool, None],
+  # FieldType.TERNARY.value: Union[bool, None],
   FieldType.CHOICE.value: str,
   FieldType.DATE.value: date,
   FieldType.TIME.value: time

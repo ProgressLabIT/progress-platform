@@ -595,7 +595,6 @@ export default {
       this.jobs_to_assign = []
     },
     jobs_to_assign(val) {
-      console.log(val)
       if (!val.length) {
         this.batch_assign_to = null
       }

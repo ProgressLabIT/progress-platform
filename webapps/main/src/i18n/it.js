@@ -61,6 +61,7 @@ export default {
   "create_order": "crea ordine",
   "creation_date": "data creazione",
   "critical": "critico",
+  "date_format": "AAAA/MM/GG",
   "deactivate": "disattiva",
   "decrease": "riduci",
   "declaration_question": {
