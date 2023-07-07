@@ -20,16 +20,24 @@ collection_map = {
 
 def target_data(
   bucket: FileBucket = Form(...),
-  target_key: str = Form(...)
+  key: str = Form(...),
+  field_key: str = Form(None)
 ):
   # Check whether an entity with the key provided exists
-  if not db.collection(collection_map[bucket]).has(target_key):
+  if not db.collection(collection_map[bucket]).has(key):
     raise HTTPException(
       status_code = 404,
-      detail = f'No {target.value} with key {target_key} exists on the database'
+      detail = f'No {target.value} with key {key} exists on the database'
     )
 
-  return FileTargetData(bucket=bucket, key=target_key)
+  # Check whether the field key corresponds to an actual field
+  if field_key and not db.collection('CustomField').has(field_key):
+    raise HTTPException(
+      status_code = 404,
+      detail = f'No field with with key {field_key} exists on the database'
+    )
+
+  return FileTargetData(bucket=bucket, key=key, field_key=field_key)
 
 
 @router.post('/file')
@@ -39,7 +47,7 @@ async def upload_files(
 ):
 
   for file in contents:
-    handler = UserFile(base_path=target.bucket.value, append_path=target.key, file=file)
+    handler = UserFile(base_path=target.bucket.value, append_path=target.key, field_path=target.field_key, file=file)
     try:
       await handler.write_file()
     except Exception:
@@ -58,7 +66,7 @@ async def delete_files(
   target: FileTargetData = Depends(target_data)
 ):
 
-  handler = UserFile(base_path=target.bucket.value, append_path=target.key)
+  handler = UserFile(base_path=target.bucket.value, append_path=target.key, field_path=target.field_key)
   for filename in filenames:
     try:
       handler.delete_file(filename)

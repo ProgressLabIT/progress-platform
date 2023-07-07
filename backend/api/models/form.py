@@ -17,6 +17,7 @@ class FileBucket(Enum):
 class FileTargetData(BaseModel):
   bucket: FileBucket
   key: str
+  field_key: str = None
 
 
 class FieldType(Enum):

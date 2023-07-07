@@ -6,15 +6,19 @@ media_root_path = get_config().media_path
 
 class UserFile:
 
-  def __init__(self, base_path, append_path=None, file=None, name=None):
+  def __init__(self, base_path, append_path=None, field_path=None, file=None, name=None):
 
     self.base_path = base_path # media type
     self.append_path = append_path # media item key
+    self.field_path = field_path
+    self.folder_path = os.path.join(media_root_path, base_path)
 
     if append_path:
-      self.folder_path = os.path.join(media_root_path, base_path, append_path)
-    else:
-      self.folder_path = os.path.join(media_root_path, base_path)
+      self.folder_path = os.path.join(self.folder_path, append_path)
+
+      # Field path makes sense only under a specific object instance folder
+      if field_path:
+        self.folder_path = os.path.join(self.folder_path, field_path)
 
     if file:
       self.file = file
@@ -49,6 +53,7 @@ class UserFile:
   def step_media(cls, append_path, file=None, name=None):
     base_path = "step"
     return cls(base_path, append_path, file, name)
+
 
   async def write_file(self, custom_name=None):
     if not os.path.isdir(self.folder_path):
