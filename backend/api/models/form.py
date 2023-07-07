@@ -6,6 +6,19 @@ from pydantic import BaseModel, root_validator
 
 from utils.base_models import ArangoDocument
 
+
+
+class FileBucket(Enum):
+  ISSUE = 'issue'
+  PRODUCT = 'product'
+  STEP = 'step'
+  USER = 'user'
+
+class FileTargetData(BaseModel):
+  bucket: FileBucket
+  key: str
+
+
 class FieldType(Enum):
   TEXT = 'text'
   NUMBER = 'number'
@@ -14,6 +27,7 @@ class FieldType(Enum):
   CHOICE = 'choice'
   DATE = 'date'
   TIME = 'time'
+  ATTACHMENT = 'attachment'
   # Files will added to the form through a boolean parameter in the endpoint
   # No need to specify a field of type "file"
   # In the future these will be saved as in a Media collection with metadata
@@ -26,7 +40,8 @@ field_type_map = {
   # FieldType.TERNARY.value: Union[bool, None],
   FieldType.CHOICE.value: str,
   FieldType.DATE.value: date,
-  FieldType.TIME.value: time
+  FieldType.TIME.value: time,
+  FieldType.ATTACHMENT.value: bytes
 }
 # if the field model has multiple = True, the type becomes List[type]
 

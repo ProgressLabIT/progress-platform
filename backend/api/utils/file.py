@@ -60,7 +60,7 @@ class UserFile:
     with open(os.path.join(self.folder_path, self.name), 'wb+') as f:
       file = await self.file.read()
       f.write(file)
-      print(f"Image saved in {self.folder_path}")
+      print(f"File saved in {self.folder_path}")
 
 
   def copy_media(self, copy_key):
