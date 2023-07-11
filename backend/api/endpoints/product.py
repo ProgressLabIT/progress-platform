@@ -105,7 +105,7 @@ async def create_product(
     # Save image
     if image:
       product_image = UserFile.product_media(
-        append_path=db_response['_key'],
+        object_key=db_response['_key'],
         file=image,
       )
 
@@ -434,7 +434,8 @@ async def save_doc(
 ):
 
   doc = UserFile.product_media(
-    append_path=f"{product_key}/doc",
+    object_key=product_key,
+    subfolder="doc",
     file=new_doc,
     name=new_doc.filename
   )
@@ -465,7 +466,8 @@ async def delete_doc(
 ):
 
   doc = UserFile.product_media(
-    append_path=f'{product_key}/doc',
+    object_key=product_key,
+    subfolder='doc',
     name=doc_name
   )
 
@@ -481,7 +483,7 @@ async def replace_product_image(
   new_image: UploadFile = File(...)
 ):
   # extension = new_image.filename.split('.')[-1]
-  img = UserFile.product_media(append_path=product_key, file=new_image)
+  img = UserFile.product_media(object_key=product_key, file=new_image)
   filename = 'image.jpg'
   product_db.update(dict(
     _key=product_key,
@@ -499,7 +501,7 @@ async def replace_product_image(
 @router.delete("/{product_key}/image")
 async def replace_product_image(product_key: str):
   # extension = new_image.filename.split('.')[-1]
-  img = UserFile.product_media(append_path=product_key)
+  img = UserFile.product_media(object_key=product_key)
   img.delete_file('image.jpg')
   product_db.update(dict(
     _key=product_key,

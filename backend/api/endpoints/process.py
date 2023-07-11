@@ -294,7 +294,7 @@ async def save_step_media(
 ):
   
   new_media = UserFile.step_media(
-    append_path=step_key,
+    object_key=step_key,
     file=media_file,
     name=media_file.filename
   )
@@ -326,7 +326,7 @@ async def delete_step_media(
 ):
 
   media_to_delete = UserFile.step_media(
-    append_path=step_key,
+    object_key=step_key,
     name=filename
   )
   

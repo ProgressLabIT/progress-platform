@@ -6,19 +6,22 @@ media_root_path = get_config().media_path
 
 class UserFile:
 
-  def __init__(self, base_path, append_path=None, field_path=None, file=None, name=None):
+  def __init__(self, bucket, object_key=None, subfolder=None, file=None, name=None):
 
-    self.base_path = base_path # media type
-    self.append_path = append_path # media item key
-    self.field_path = field_path
-    self.folder_path = os.path.join(media_root_path, base_path)
+    self.bucket = bucket # media type
+    self.object_key = object_key # media item key
+    self.subfolder = subfolder
+    self.bucket_path = os.path.join(media_root_path, bucket)
+    self.object_path = None
+    self.folder_path = self.bucket_path
 
-    if append_path:
-      self.folder_path = os.path.join(self.folder_path, append_path)
+    if object_key:
+      self.object_path = os.path.join(self.bucket_path, object_key)
+      self.folder_path = self.object_path
 
       # Field path makes sense only under a specific object instance folder
-      if field_path:
-        self.folder_path = os.path.join(self.folder_path, field_path)
+      if subfolder:
+        self.folder_path = os.path.join(self.object_path, subfolder)
 
     if file:
       self.file = file
@@ -36,23 +39,24 @@ class UserFile:
 
   # @classmethod
   # def product_image(cls, file=None, name=None):
-  #   base_path = "media/product"
-  #   return cls(base_path, file=file, name=name)
+  #   bucket = "media/product"
+  #   return cls(bucket, file=file, name=name)
 
   @classmethod
-  def product_media(cls, append_path, file=None, name=None):
-    base_path = "product"
-    return cls(base_path, append_path, file, name)
+  def product_media(cls, object_key, subfolder=None, file=None, name=None):
+    bucket = "product"
+    return cls(bucket=bucket, object_key=object_key, subfolder=subfolder, file=file, name=name)
 
   @classmethod
-  def user_image(cls, append_path=None, file=None):
-    base_path = "user"
-    return cls(base_path, append_path, file)
+  def user_image(cls, object_key=None, subfolder=None, file=None, name=None):
+    bucket = "user"
+    return cls(bucket=bucket, object_key=object_key, subfolder=subfolder, file=file, name=name)
+
 
   @classmethod
-  def step_media(cls, append_path, file=None, name=None):
-    base_path = "step"
-    return cls(base_path, append_path, file, name)
+  def step_media(cls, object_key, subfolder=None, file=None, name=None):
+    bucket = "step"
+    return cls(bucket=bucket, object_key=object_key, subfolder=subfolder, file=file, name=name)
 
 
   async def write_file(self, custom_name=None):
@@ -63,13 +67,13 @@ class UserFile:
       self.name = custom_name
 
     with open(os.path.join(self.folder_path, self.name), 'wb+') as f:
-      file = await self.file.read()
+      file = await self.file.read() # self.file is a `UploadFile` object, and the write method requires a bytes-like object
       f.write(file)
       print(f"File saved in {self.folder_path}")
 
 
   def copy_media(self, copy_key):
-    copy_path = os.path.join(media_root_path, self.base_path, copy_key)
+    copy_path = os.path.join(media_root_path, self.bucket, copy_key)
     shutil.copytree(
       self.folder_path,
       copy_path,
@@ -84,9 +88,9 @@ class UserFile:
     os.remove(file_path)
 
 
-  def get_folder_contents(self, append_path=None, name_only=True):
-    if append_path:
-      self.folder_path = os.path.join(self.folder_path, append_path)
+  def get_folder_contents(self, object_key=None, name_only=True):
+    if object_key:
+      self.folder_path = os.path.join(self.folder_path, object_key)
 
     contents = os.scandir(self.folder_path) if os.path.isdir(self.folder_path) else []
 

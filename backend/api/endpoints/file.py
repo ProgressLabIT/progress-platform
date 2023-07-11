@@ -30,7 +30,7 @@ def target_data(
       detail = f'No {target.value} with key {key} exists on the database'
     )
 
-  # Check whether the field key corresponds to an actual field
+  # Check whether the field key corresponds to an actual field (does not check whether the field is used in a specific form)
   if field_key and not db.collection('CustomField').has(field_key):
     raise HTTPException(
       status_code = 404,
@@ -47,7 +47,7 @@ async def upload_files(
 ):
 
   for file in contents:
-    handler = UserFile(base_path=target.bucket.value, append_path=target.key, field_path=target.field_key, file=file)
+    handler = UserFile(base_path=target.bucket.value, object_key=target.key, subfolder=target.field_key, file=file)
     try:
       await handler.write_file()
     except Exception:
@@ -66,7 +66,7 @@ async def delete_files(
   target: FileTargetData = Depends(target_data)
 ):
 
-  handler = UserFile(base_path=target.bucket.value, append_path=target.key, field_path=target.field_key)
+  handler = UserFile(base_path=target.bucket.value, object_key=target.key, subfolder=target.field_key)
   for filename in filenames:
     try:
       handler.delete_file(filename)
