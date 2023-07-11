@@ -99,7 +99,7 @@ async def update_user_image(
     user = User(**db.collection('User').get(user_key))
     img = UserFile.user_image(file=new_image)
     filename = (user.name + user.surname + '.jpg').replace(' ', '').lower()
-    await img.write_file(filename)
+    await img.write_file(custom_name=filename)
     return APIResponse(message="File saved correctly")
   except Exception:
     raise HTTPException(

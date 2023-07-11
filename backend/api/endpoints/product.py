@@ -110,7 +110,7 @@ async def create_product(
       )
 
       try:
-        await product_image.write_file('image.jpg')
+        await product_image.write_file(custom_name='image.jpg')
 
       except:
         tx.abort_transaction()
@@ -490,7 +490,7 @@ async def replace_product_image(
     updated=timestamp(),
     image=True
   ))
-  await img.write_file(filename)
+  await img.write_file(custom_name=filename)
   return APIResponse(message="File saved correctly")
 
 
