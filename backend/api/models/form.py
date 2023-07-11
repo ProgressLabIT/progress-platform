@@ -16,8 +16,8 @@ class FileBucket(Enum):
 
 class FileTargetData(BaseModel):
   bucket: FileBucket
-  key: str
-  field_key: str = None
+  object_key: str
+  subfolder: str = None
 
 
 class FieldType(Enum):
@@ -28,11 +28,8 @@ class FieldType(Enum):
   CHOICE = 'choice'
   DATE = 'date'
   TIME = 'time'
-  ATTACHMENT = 'attachment'
-  # Files will added to the form through a boolean parameter in the endpoint
-  # No need to specify a field of type "file"
-  # In the future these will be saved as in a Media collection with metadata
-  # and pointing to an object storage location
+  FILES = 'files'
+
 
 field_type_map = {
   FieldType.TEXT.value: str,
@@ -42,7 +39,7 @@ field_type_map = {
   FieldType.CHOICE.value: str,
   FieldType.DATE.value: date,
   FieldType.TIME.value: time,
-  FieldType.ATTACHMENT.value: bytes
+  FieldType.FILES.value: bytes
 }
 # if the field model has multiple = True, the type becomes List[type]
 

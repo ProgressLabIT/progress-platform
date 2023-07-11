@@ -20,36 +20,45 @@ collection_map = {
 
 def target_data(
   bucket: FileBucket = Form(...),
-  key: str = Form(...),
-  field_key: str = Form(None)
+  object_key: str = Form(...),
+  subfolder: str = Form(None)
 ):
   # Check whether an entity with the key provided exists
-  if not db.collection(collection_map[bucket]).has(key):
+  if not db.collection(collection_map[bucket]).has(object_key):
     raise HTTPException(
       status_code = 404,
-      detail = f'No {target.value} with key {key} exists on the database'
+      detail = f'No {target.value} with key {object_key} exists on the database'
     )
 
   # Check whether the field key corresponds to an actual field (does not check whether the field is used in a specific form)
-  if field_key and not db.collection('CustomField').has(field_key):
+  if subfolder and not db.collection('CustomField').has(subfolder):
     raise HTTPException(
       status_code = 404,
       detail = f'No field with with key {field_key} exists on the database'
     )
 
-  return FileTargetData(bucket=bucket, key=key, field_key=field_key)
+  return FileTargetData(bucket=bucket, object_key=object_key, subfolder=subfolder)
 
 
-@router.post('/file')
+@router.post('/files')
 async def upload_files(
   contents: list[UploadFile],
-  target: FileTargetData = Depends(target_data)
+  target: FileTargetData = Depends(target_data),
+  reset_folder: bool = Form(False),
 ):
 
+  handler = FileHandler(
+    bucket = target.bucket.value,
+    object_key = target.object_key,
+    subfolder = target.subfolder
+  )
+
+  if reset_folder:
+    handler.clean_dir()
+
   for file in contents:
-    handler = UserFile(base_path=target.bucket.value, object_key=target.key, subfolder=target.field_key, file=file)
     try:
-      await handler.write_file()
+      await handler.write_file(file=file)
     except Exception:
       raise HTTPException(
         status_code=500,

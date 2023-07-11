@@ -199,13 +199,42 @@ export default {
       this.$emit('close')
     },
 
-    save() {
+    saveFiles(issue_key) {
+      this.form_data
+        .filter(f => f.type == 'files' && f.value.length)
+        .forEach(async f => {
+          let body = new FormData()
+
+          const body_data = {
+            bucket: 'issue',
+            object_key: issue_key,
+            subfolder: f._key,
+            reset_folder: true
+          }
+          Object.entries(body_data).forEach(([k,v]) => body.append(k, v))
+          f.value.forEach(file => body.append('contents', file))
+          this.$api.post('/files',
+            body, {
+            headers: {'Content-Type': 'multipart/form-data'}
+          }).catch( err => window.alert(err) )
+        })
+    },
+
+    async save() {
       this.saving = true
 
       const issue_data = {
         issue_type_key: this.issue_type?._key || null,
         critical: this.critical,
-        data: this.form_data
+        data: this.form_data.map(field => {
+          if (field.type == 'files') {
+            return {
+              ...field,
+              value: field.value.map(file => file.name)
+            }
+          }
+          else return field
+        })
       }
 
       const user = this.session_data.user._key
@@ -216,7 +245,6 @@ export default {
         issue_data.close_within = this.issue_type ? this.issue_type.close_within : 0
 
         // Map links to list of objects, including only populated properties
-
         const link_data = this.links.map(l => {
           const value = (
             l.type == 'product' ? this.job_data.product_key
@@ -235,7 +263,6 @@ export default {
       // Add _key and data fields for ISSUE_UPDATED event
       else issue_data._key = this.issue._key
 
-
       const event = {
         event_type: this.mode == 'new' ? 'ISSUE_CREATED' : 'ISSUE_UPDATED',
         user_key: user,
@@ -246,7 +273,8 @@ export default {
 
       const message = this.mode == 'new' ? 'issue_new_success' : 'issue_update_success'
       this.$api.post('event', event)
-      .then(() => {
+      .then(async (resp) => {
+        await this.saveFiles(resp.data.detail.issue_key)
         this.saving = false
         this.$store.dispatch('getIssues', { job_key: this.job_data._key })
         this.cancel()

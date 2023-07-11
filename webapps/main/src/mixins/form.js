@@ -9,6 +9,7 @@ export default {
         { value: 'choice', label: this.$t('field_type_choice'), icon: 'mdi-format-list-checks' },
         { value: 'date', label: this.$t('field_type_date'), icon: 'mdi-calendar' },
         { value: 'time', label: this.$t('field_type_time'), icon: 'mdi-clock-outline' },
+        { value: 'file', label: this.$t('field_type_files'), icon: 'mdi-folder-open-outline' }
       ]
     }
   },

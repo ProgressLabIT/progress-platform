@@ -59,12 +59,16 @@ class FileHandler:
     return cls(bucket=bucket, object_key=object_key, subfolder=subfolder, file=file, name=name)
 
 
-  async def write_file(self, custom_name=None):
-    if not os.path.isdir(self.folder_path):
-      os.makedirs(self.folder_path)
+  async def write_file(self, file=None, custom_name=None):
+    if file:
+      self.file = file
+      self.name = file.filename
 
     if custom_name:
       self.name = custom_name
+
+    if not os.path.isdir(self.folder_path):
+      os.makedirs(self.folder_path)
 
     with open(os.path.join(self.folder_path, self.name), 'wb+') as f:
       file = await self.file.read() # self.file is a `UploadFile` object, and the write method requires a bytes-like object
@@ -86,7 +90,12 @@ class FileHandler:
 
     file_path = os.path.join(self.folder_path, self.name)
     os.remove(file_path)
-
+    # Delete directory if empty
+    if not os.listdir(self.folder_path):
+      os.rmdir(self.folder_path)
+      # remove Object directory if that is empty too
+      if self.subfolder and not os.listdir(self.object_path):
+        os.rmdir(self.object_path)
 
   def get_folder_contents(self, object_key=None, name_only=True):
     if object_key:
@@ -98,3 +107,9 @@ class FileHandler:
       return [ f.name for f in contents ]
     else:
       return [ f for f in contents]
+
+
+  def clean_dir(self):
+    if os.path.isdir(self.folder_path):
+      for filename in os.listdir(self.folder_path):
+        os.remove(os.path.join(self.folder_path, filename))

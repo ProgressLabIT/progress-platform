@@ -104,7 +104,7 @@ class IssueEvent:
 
     self.response = dict(
       message="Issue created correctly",
-      detail=dict(issue_key=issue_key)
+      issue_key=issue_key
     )
 
   #===============================================================

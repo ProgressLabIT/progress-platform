@@ -369,7 +369,6 @@ export default {
         let a = this.assignments[i]
         const department_match = [a.operator.department_key, undefined].includes(this.filters.department_key)
         const operator_match = [a.operator._key, undefined].includes(this.filters.operator_key)
-        console.log(operator_match)
         // Check if operator is in department selected or no department filter is set
         if (operator_match && department_match) {
 

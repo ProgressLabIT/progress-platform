@@ -69,6 +69,7 @@
       v-if="field_data.type == 'date'"
       filled
       stack-label
+      :disable="disable"
       :label="field_data.label"
       v-model="field_data.value"
       :placeholder="$t('date_format')"
@@ -91,8 +92,9 @@
       stack-label
       filled
       :label="field_data.label"
+      :disable="disable"
       v-model="field_data.value"
-      inpu-class="cursor-pointer"
+      input-class="cursor-pointer"
       placeholder="HH:mm">
       <template v-slot:append>
         <q-icon name="mdi-clock-outline" />
@@ -106,20 +108,21 @@
       </q-popup-proxy>
     </q-input>
 
-    <!-- ATTACHMENT -->
+    <!-- FILES -->
     <q-file
-      v-if="field_data.type == 'attachment'"
+      v-if="field_data.type == 'files'"
       multiple
       append
-      use-chips
+      :use-chips="!disable"
       counter
       clearable
       filled
       stack-label
+      :disable="disable"
       v-model="field_data.value"
       :label="field_data.label">
       <template #append>
-        <q-icon name="mdi-paperclip" />
+        <q-icon name="mdi-folder-open-outline" />
       </template>
     </q-file>
 
