@@ -12,7 +12,7 @@ from models.process import PhaseData
 from utils.api import APIResponse
 from utils.db import db
 from utils.dt import timestamp
-from utils.file import UserFile
+from utils.file import FileHandler
 from utils.product import *
 from utils.process import Queries as ProcessQueries
 
@@ -104,7 +104,7 @@ async def create_product(
 
     # Save image
     if image:
-      product_image = UserFile.product_media(
+      product_image = FileHandler.product_media(
         object_key=db_response['_key'],
         file=image,
       )
@@ -246,7 +246,7 @@ async def copy_product(
         new_step_sequence.append(new_step_key)
 
         # 4.3 STEP: Copy step media files
-        step_media = UserFile.step_media(step.key)
+        step_media = FileHandler.step_media(step.key)
         if os.path.isdir(step_media.folder_path):
           step_media.copy_media(new_step_key)
 
@@ -303,7 +303,7 @@ async def copy_product(
     ))
 
     # 7. Copy product media folder (if present) with new product key
-    product_media = UserFile.product_media(original_product_key)
+    product_media = FileHandler.product_media(original_product_key)
     if os.path.isdir(product_media.folder_path):
       product_media.copy_media(new_product_key)
 
@@ -433,7 +433,7 @@ async def save_doc(
   new_doc: UploadFile =  File(...)
 ):
 
-  doc = UserFile.product_media(
+  doc = FileHandler.product_media(
     object_key=product_key,
     subfolder="doc",
     file=new_doc,
@@ -465,7 +465,7 @@ async def delete_doc(
   doc_name: str
 ):
 
-  doc = UserFile.product_media(
+  doc = FileHandler.product_media(
     object_key=product_key,
     subfolder='doc',
     name=doc_name
@@ -483,7 +483,7 @@ async def replace_product_image(
   new_image: UploadFile = File(...)
 ):
   # extension = new_image.filename.split('.')[-1]
-  img = UserFile.product_media(object_key=product_key, file=new_image)
+  img = FileHandler.product_media(object_key=product_key, file=new_image)
   filename = 'image.jpg'
   product_db.update(dict(
     _key=product_key,
@@ -501,7 +501,7 @@ async def replace_product_image(
 @router.delete("/{product_key}/image")
 async def replace_product_image(product_key: str):
   # extension = new_image.filename.split('.')[-1]
-  img = UserFile.product_media(object_key=product_key)
+  img = FileHandler.product_media(object_key=product_key)
   img.delete_file('image.jpg')
   product_db.update(dict(
     _key=product_key,

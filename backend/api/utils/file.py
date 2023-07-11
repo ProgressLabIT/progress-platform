@@ -4,7 +4,7 @@ from utils.config import get_config
 
 media_root_path = get_config().media_path
 
-class UserFile:
+class FileHandler:
 
   def __init__(self, bucket, object_key=None, subfolder=None, file=None, name=None):
 
@@ -35,7 +35,7 @@ class UserFile:
 
 
   def __repr__(self):
-    return f'UserFile object:\nfolder_path: {self.folder_path}\nfilename: {self.name}'
+    return f'FileHandler object:\nfolder_path: {self.folder_path}\nfilename: {self.name}'
 
   # @classmethod
   # def product_image(cls, file=None, name=None):

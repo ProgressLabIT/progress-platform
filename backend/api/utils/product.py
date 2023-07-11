@@ -1,5 +1,5 @@
 from models.product import ProductDoc
-from utils.file import UserFile
+from utils.file import FileHandler
 
 class Queries:
 
@@ -23,7 +23,7 @@ class Queries:
 
 
 def get_product_docs(product_key):
-  folder_obj = UserFile.product_media(product_key)
+  folder_obj = FileHandler.product_media(product_key)
   doc_list = folder_obj.get_folder_contents('doc', name_only=False)
 
   def doc_data(doc):

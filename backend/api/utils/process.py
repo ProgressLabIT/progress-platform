@@ -1,10 +1,10 @@
 import os
 from utils.db import db
-from utils.file import UserFile
+from utils.file import FileHandler
 
 def search_step_media(step_key: str):
 
-  step_media = UserFile.step_media(step_key)
+  step_media = FileHandler.step_media(step_key)
   media_folder_exists = os.path.isdir(step_media.folder_path)
 
   if (media_folder_exists):

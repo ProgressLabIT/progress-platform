@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 
 from models.form import FileBucket, FileTargetData
 from utils.db import db
-from utils.file import UserFile
+from utils.file import FileHandler
 
 
 router = APIRouter()
@@ -66,7 +66,7 @@ async def delete_files(
   target: FileTargetData = Depends(target_data)
 ):
 
-  handler = UserFile(base_path=target.bucket.value, object_key=target.key, subfolder=target.field_key)
+  handler = FileHandler(base_path=target.bucket.value, object_key=target.key, subfolder=target.field_key)
   for filename in filenames:
     try:
       handler.delete_file(filename)
