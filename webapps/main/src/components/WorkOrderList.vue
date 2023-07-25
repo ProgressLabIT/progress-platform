@@ -150,7 +150,11 @@ export default {
         "critical":true,
         "not_critical":true,
         "ready":true,
-        "not_ready":true
+        "not_ready":true,
+        "start_from_min": null,
+        "start_from_max": null,
+        "due_by_min": null,
+        "due_by_max": null
       }}
     }
   },
@@ -324,6 +328,22 @@ export default {
 
             case 'not_ready':
               if (!value && !this.isReleased(wo)) match = false
+              break
+
+            case 'start_from_min':
+              if (!!value && new Date(value) > new Date(wo.start_from)) match = false
+              break
+
+            case 'start_from_max':
+              if (!!value && new Date(value) < new Date(wo.start_from)) match = false
+              break
+
+            case 'due_by_min':
+              if (!!value && new Date(value) > new Date(wo.due_by)) match = false
+              break
+
+            case 'due_by_max':
+              if (!!value && new Date(value) < new Date(wo.due_by)) match = false
               break
           }
 

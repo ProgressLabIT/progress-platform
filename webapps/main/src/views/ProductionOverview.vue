@@ -155,26 +155,121 @@
               v-model="search_string"
               class="q-mb-md col">
               <template v-slot:append>
-                <q-icon name="mdi-magnify"/>
+                <q-icon name="mdi-information-outline" class="col-auto" size="sm">
+                  <q-tooltip :delay="300" class="text-body2">
+                    <span>
+                      {{ $capitalize($t('production.search_explainer')) }}:
+                    </span>
+                    <ul>
+                      <li>{{ $capitalize($t('product.code')) }}</li>
+                      <li>{{ $capitalize($t('work_order.long')) }}</li>
+                      <li>{{ $capitalize($t('project')) }}</li>
+                      <li>{{ $capitalize($t('phase.long')) }}</li>
+                    </ul>
+                  </q-tooltip>
+                </q-icon>
               </template>
             </q-input>
-            <q-icon name="mdi-information-outline" class="col-auto" size="sm">
-              <q-tooltip :delay="300" class="text-body2">
-                <span>
-                  {{ $capitalize($t('production.search_explainer')) }}:
-                </span>
-                <ul>
-                  <li>{{ $capitalize($t('product.code')) }}</li>
-                  <li>{{ $capitalize($t('work_order.long')) }}</li>
-                  <li>{{ $capitalize($t('project')) }}</li>
-                  <li>{{ $capitalize($t('phase.long')) }}</li>
-                </ul>
-              </q-tooltip>
-            </q-icon>
+          </div>
+
+          <!-- DATE START RANGE -->
+          <div class="row q-col-gutter-sm">
+            <div class="col">
+              <q-input
+                filled
+                dense
+                clearable
+                debounce="1000"
+                mask="date"
+                v-model="start_from_min"
+                :label="$capitalize($t('work_order.list_headers.start_from')) + ' (' + $t('min') + ')'">
+                <template #append>
+                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-date minimal v-model="start_from_min">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Close" color="primary" flat />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+            <div class="col">
+              <q-input
+                filled
+                dense
+                clearable
+                mask="date"
+                debounce="1000"
+                v-model="start_from_max"
+                :label="$capitalize($t('work_order.list_headers.start_from')) + ' (' + $t('max') + ')'">
+                <template #append>
+                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-date minimal v-model="start_from_max">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Close" color="primary" flat />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+          </div>
+
+          <!-- DUE BY RANGE -->
+          <div class="row q-col-gutter-sm q-mt-sm">
+            <div class="col">
+              <q-input
+                filled
+                dense
+                clearable
+                mask="date"
+                debounce="1000"
+                v-model="due_by_min"
+                :label="$capitalize($t('work_order.list_headers.due_by')) + ' (' + $t('min') + ')'">
+                <template #append>
+                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-date minimal v-model="due_by_min">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Close" color="primary" flat />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+            <div class="col">
+              <q-input
+                filled
+                dense
+                clearable
+                mask="date"
+                v-model="due_by_max"
+                debounce="1000"
+                :label="$capitalize($t('work_order.list_headers.due_by')) + ' (' + $t('max') + ')'">
+                <template #append>
+                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-date minimal v-model="due_by_max">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Close" color="primary" flat />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
           </div>
 
           <!-- BOOLEAN FILTERS -->
-          <div class="row">
+          <div class="row q-mt-sm">
             <div
               class="col-6"
               v-for="filter in bool_filters"
@@ -270,6 +365,11 @@ export default {
     operator_selected: queryModel(String, 'operator', undefined),
     department_selected: queryModel(String, 'department', undefined),
 
+    start_from_min: queryModel(String, 'min_start_from', null),
+    start_from_max: queryModel(String, 'max_start_from', null),
+    due_by_min: queryModel(String, 'min_due_by', null),
+    due_by_max: queryModel(String, 'max_due_by', null),
+
     started: queryModel(Boolean, 'started', true),
     queued: queryModel(Boolean, 'queued', true),
     on_time: queryModel(Boolean, 'on_time', true),
@@ -295,15 +395,19 @@ export default {
         archive_search: this.archive_search,
         ...bools,
         department_key: this.department_selected,
-        operator_key: this.operator_selected
+        operator_key: this.operator_selected,
+        start_from_min: this.start_from_min,
+        start_from_max: this.start_from_max,
+        due_by_min: this.due_by_min,
+        due_by_max: this.due_by_max
       }
     },
 
     filters_active() {
-      return this.bool_filters.map(f => this[f]).some(f => f === false)
-        || this.search_string != null
-        || this.department_selected != null
-        || this.operator_selected != null
+      return Object.entries(this.filters).map( ([f,v]) => {
+        const active = [...this.bool_filters, ...this.job_filters].includes(f) ? v === false : !!v
+        return active
+      }).some(f => f)
     },
 
     operator_list () {
@@ -382,9 +486,9 @@ export default {
 
   created() {
     Promise.all([
+      this.$store.dispatch("loadWorkOrders"),
       this.$store.dispatch("loadDepartments"),
       this.$store.dispatch("loadUsers"),
-      this.$store.dispatch("loadWorkOrders"),
       this.$store.dispatch("loadJobAssignments")
       ])
     .then(this.vuex_ready = true)

@@ -241,7 +241,11 @@ export default {
         assigned: true,
         unassigned: true,
         department_key: undefined,
-        operator_key: undefined
+        operator_key: undefined,
+        start_from_min: null,
+        start_from_max: null,
+        due_by_min: null,
+        due_by_max: null
       }}
     }
   },
@@ -513,6 +517,22 @@ export default {
 
           case 'not_ready':
             if (!value && (!this.isReleased(job) || !job.next_batch_available)) match = false
+            break
+
+          case 'start_from_min':
+            if (!!value && new Date(value) > new Date(job.start_from)) match = false
+            break
+
+          case 'start_from_max':
+            if (!!value && new Date(value) < new Date(job.start_from)) match = false
+            break
+
+          case 'due_by_min':
+            if (!!value && new Date(value) > new Date(job.due_by)) match = false
+            break
+
+          case 'due_by_max':
+            if (!!value && new Date(value) < new Date(job.due_by)) match = false
             break
         }
 

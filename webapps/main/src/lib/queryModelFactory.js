@@ -11,6 +11,7 @@
 
 export default function queryModelFactory(data_type, query_param_name, default_value) {
   return {
+
     get() {
       let value = this.$route.query[query_param_name]
       if (data_type == Number) {
@@ -21,13 +22,15 @@ export default function queryModelFactory(data_type, query_param_name, default_v
       }
       return value ?? default_value
     },
+
     set(value) {
       let query = {
         ...this.$route.query,
         [query_param_name]: value
       }
 
-      if ([null, undefined, ''].includes(value)) {
+      // Remove query param from url if value is empty, null, undefined or true (for booleans)
+      if ([null, undefined, '', true].includes(value)) {
         delete query[query_param_name]
       }
 
