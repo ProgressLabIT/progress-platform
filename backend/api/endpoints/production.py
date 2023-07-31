@@ -173,11 +173,11 @@ async def create_work_order(new_wo: WorkOrderNew):
 @router.patch('/work-order/{wo_key}')
 async def update_work_order(
   wo_key: str,
-  new_due_date: Union[datetime, date] = Body(None),
-  new_from_date: Union[datetime, date] = Body(None),
-  new_qt: float = Body(None),
-  new_project_code: str = Body(None),
-  notes: str = Body(None)
+  new_due_date: datetime | date | None = Body(None),
+  new_from_date: datetime | date | None = Body(None),
+  new_qt: float | None = Body(None),
+  new_project_code: str | None = Body(None),
+  notes: str | None = Body(None)
   ):
 
   try:
