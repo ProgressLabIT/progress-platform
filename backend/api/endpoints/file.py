@@ -69,7 +69,7 @@ async def upload_files(
       )
 
 
-@router.delete('/file')
+@router.delete('/files')
 async def delete_files(
   filenames: list[str],
   target: FileTargetData = Depends(target_data)
@@ -87,7 +87,3 @@ async def delete_files(
           error=traceback.format_exc()
         )
       )
-
-  # Delete directory if empty
-  if os.listdir(handler.folder_path) == []:
-    os.rmdir(handler.folder_path)
