@@ -1,93 +1,160 @@
 <template>
-  <div>
+  <div class="q-mb-lg">
 
     <!-- TEXT -->
-    <div v-if="field_data.type == 'text'" class="q-mb-lg">
-      <q-input
-        filled
-        stack-label
-        autogrow
-        lazy-rules
-        input-debounce="100"
-        hide-bottom-space
-        :disable="disable"
-        :dense="dense"
-        :label="field_data.label"
-        :model-value="field_data.value"
-        :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-        @update:model-value="(val) => $emit('update', val)">
-      </q-input>
-      <div class="smaller q-px-sm q-mt-xs">
-        {{ field_data.hint }}
-      </div>
-    </div>
+    <q-input
+      v-if="field_data.type == 'text'"
+      filled
+      stack-label
+      autogrow
+      lazy-rules
+      input-debounce="100"
+      hide-bottom-space
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :model-value="field_data.value"
+      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
+      @update:model-value="(val) => $emit('update', val)">
+    </q-input>
 
     <!-- NUMBER -->
-    <div v-if="field_data.type == 'number'" class="q-mb-lg">
-      <q-input
-        type="number"
-        filled
-        stack-label
-        hide-bottom-space
-        input-debounce="100"
-        :disable="disable"
-        :dense="dense"
-        :label="field_data.label"
-        :model-value="field_data.value"
-        lazy-rules
-        :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-        @update:model-value="val => $emit('update', parseFloat(val))">
-      </q-input>
-      <div class="smaller q-px-sm q-mt-xs">
-        {{ field_data.hint }}
-      </div>
-    </div>
+    <q-input
+      v-if="field_data.type == 'number'"
+      type="number"
+      filled
+      stack-label
+      hide-bottom-space
+      input-debounce="100"
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :model-value="field_data.value"
+      lazy-rules
+      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
+      @update:model-value="val => $emit('update', parseFloat(val))">
+    </q-input>
 
     <!-- BOOLEAN -->
-    <div v-if="field_data.type == 'boolean'" class="q-mb-lg">
-      <q-checkbox
-        :disable="disable"
-        :dense="dense"
-        :label="field_data.label"
-        :model-value="field_data.value ?? false"
-        :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-        @update:model-value="val => $emit('update', val)">
-      </q-checkbox>
-      <div class="smaller q-px-sm q-mt-xs">
-        {{ field_data.hint }}
-      </div>
-    </div>
+    <q-checkbox
+      v-if="field_data.type == 'boolean'"
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :model-value="field_data.value ?? false"
+      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
+      @update:model-value="val => $emit('update', val)">
+    </q-checkbox>
 
     <!-- CHOICE -->
-    <div v-if="field_data.type == 'choice'" class="q-mb-lg">
-      <q-select
-        filled
-        stack-label
-        use-input
-        clearable
-        :disable="disable"
-        :dense="dense"
-        :label="field_data.label"
-        :options="options"
-        option-label="value"
-        @filter="filter"
-        :model-value="field_data.value"
-        @update:model-value="val => $emit('update', val)">
-      </q-select>
-      <div class="smaller q-px-sm q-mt-xs">
-        {{ field_data.hint }}
-      </div>
-    </div>
+    <q-select
+      v-if="field_data.type == 'choice'"
+      filled
+      stack-label
+      use-input
+      clearable
+      :disable="disable"
+      :dense="dense"
+      :label="field_data.label"
+      :options="options"
+      option-label="value"
+      @filter="filter"
+      :model-value="field_data.value"
+      @update:model-value="val => $emit('update', val)"
+      input-class="cursor-pointer">
+    </q-select>
 
     <!-- DATE -->
+    <q-input
+      v-if="field_data.type == 'date'"
+      filled
+      stack-label
+      :disable="disable"
+      :label="field_data.label"
+      v-model="field_data.value"
+      :placeholder="$t('date_format')"
+      input-class="cursor-pointer">
+      <template v-slot:append>
+        <q-icon name="mdi-calendar" />
+      </template>
+      <q-popup-proxy anchor="center middle" self="center middle" @hide="blur">
+        <q-date minimal v-model="field_data.value">
+          <div class="row items-center justify-end">
+            <q-btn v-close-popup :label="$t('close')" color="primary" flat />
+          </div>
+        </q-date>
+      </q-popup-proxy>
+    </q-input>
+
     <!-- TIME -->
+    <q-input
+      v-if="field_data.type == 'time'"
+      stack-label
+      filled
+      :label="field_data.label"
+      :disable="disable"
+      v-model="field_data.value"
+      input-class="cursor-pointer"
+      placeholder="HH:mm">
+      <template v-slot:append>
+        <q-icon name="mdi-clock-outline" />
+      </template>
+      <q-popup-proxy anchor="center middle" self="center middle" @hide="blur">
+        <q-time v-model="field_data.value" format24h>
+          <div class="row items-center justify-end">
+            <q-btn v-close-popup :label="$t('close')" color="primary" flat />
+          </div>
+        </q-time>
+      </q-popup-proxy>
+    </q-input>
+
+    <!-- FILES -->
+    <!-- <q-file
+      v-if="field_data.type == 'files'"
+      multiple
+      append
+      :use-chips="!disable"
+      counter
+      clearable
+      filled
+      stack-label
+      :disable="disable"
+      v-model="field_data.value"
+      :label="field_data.label">
+      <template #append>
+        <q-icon name="mdi-folder-open-outline" />
+      </template>
+    </q-file> -->
+    <div v-if="field_data.type == 'files'">
+      <FilesList
+        :label="field_data.label"
+        :disable="disable"
+        :files="field_data.value"
+        :root_path="`${root_path}/${field_data._key}`"
+        @addFiles="addFiles"
+        @deleteFile="deleteFile"
+        @restoreFile="restoreFile">
+      </FilesList>
+    </div>
+
+
+    <!-- HINT -->
+    <div class="smaller q-px-sm q-mt-xs">
+      {{ field_data.hint }}
+    </div>
   </div>
 </template>
 
 <script>
+import FilesList from '@/components/FilesList.vue'
+
 export default {
 
   name: 'FormField',
+
+  components: {
+    FilesList
+  },
 
   props: {
     field_data: {
@@ -101,13 +168,16 @@ export default {
     disable: {
       type: Boolean,
       default: false
+    },
+    root_path: {
+      type: String,
     }
   },
 
   data() {
     return {
       origin_list: [],
-      options: []
+      options: [],
     }
   },
 
@@ -133,6 +203,48 @@ export default {
           return option.value.toLowerCase().includes(needle)
         })
       })
+    },
+
+    addFiles(file_list) {
+      let working_list = this.field_data.value ?? []
+      const files = Array.from(file_list)
+      // Don't add files already in the list
+      files.forEach( (new_file, index) => {
+        const already_in_list = working_list.some( existing_file => existing_file.name == new_file.name )
+        if (already_in_list) {
+          const replace = window.confirm(
+            this.$capitalize(this.$t('product.alerts.doc_name_exists',1, {filename: new_file.name}))
+          )
+          if (replace) {
+            working_list.splice(index, 1)
+          }
+          else {
+            return
+          }
+        }
+        working_list.push({
+          content: new_file,
+          name: new_file.name,
+          temp: true,
+          delete: false,
+          path: window.URL.createObjectURL(new_file),
+          size: new_file.size
+        })
+      })
+      this.field_data.value = working_list
+    },
+
+    deleteFile(index) {
+      const file = this.field_data.value[index]
+      file.temp ? this.field_data.value.splice(index, 1) : file.delete = true
+    },
+
+    restoreFile(index) {
+      this.field_data.value[index].delete = false
+    },
+
+    blur() {
+      document.activeElement.blur()
     }
   },
 

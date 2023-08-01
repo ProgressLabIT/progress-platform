@@ -6,7 +6,7 @@
         <q-avatar
           color="theme-grey"
           size="140px"
-          class="q-mx-auto">
+          class="q-mx-auto q-mb-md">
           <img :src="avatar_src" />
         </q-avatar>
 
@@ -14,7 +14,6 @@
           <q-btn
             v-if="!new_image_url"
             size="12px"
-            class="q-mt-md"
             color="theme-blue"
             @click="$refs.upload_image.click()"
             icon="mdi-camera"

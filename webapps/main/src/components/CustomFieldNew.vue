@@ -1,6 +1,6 @@
 <template>
   <BaseActionCard
-    title="NEW FIELD"
+    :title="$t('field_new')"
     @save="addField"
     @cancel="$emit('close')">
 

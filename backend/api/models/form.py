@@ -6,27 +6,40 @@ from pydantic import BaseModel, root_validator
 
 from utils.base_models import ArangoDocument
 
+
+
+class FileBucket(Enum):
+  ISSUE = 'issue'
+  PRODUCT = 'product'
+  STEP = 'step'
+  USER = 'user'
+
+class FileTargetData(BaseModel):
+  bucket: FileBucket
+  object_key: str
+  subfolder: str = None
+
+
 class FieldType(Enum):
   TEXT = 'text'
   NUMBER = 'number'
   BOOLEAN = 'boolean'
-  TERNARY = 'ternary'
+  # TERNARY = 'ternary'
   CHOICE = 'choice'
   DATE = 'date'
   TIME = 'time'
-  # Files will added to the form through a boolean parameter in the endpoint
-  # No need to specify a field of type "file"
-  # In the future these will be saved as in a Media collection with metadata
-  # and pointing to an object storage location
+  FILES = 'files'
+
 
 field_type_map = {
   FieldType.TEXT.value: str,
   FieldType.NUMBER.value: float,
   FieldType.BOOLEAN.value: bool,
-  FieldType.TERNARY.value: Union[bool, None],
+  # FieldType.TERNARY.value: Union[bool, None],
   FieldType.CHOICE.value: str,
   FieldType.DATE.value: date,
-  FieldType.TIME.value: time
+  FieldType.TIME.value: time,
+  FieldType.FILES.value: bytes
 }
 # if the field model has multiple = True, the type becomes List[type]
 
@@ -39,16 +52,10 @@ class CustomListValue(BaseModel):
 
 class CustomField(ArangoDocument):
   type: FieldType
-  use_dropdown: bool = None # Only relevant for choice fields
   name: str # To search when building the form
   default_label: str = None # To show to the user when filling up the forms
   default_hint: str = None # To show to the user when filling up the forms
 
-  @root_validator
-  def ensure_type_if_choice(cls, values):
-    if values.get('type') == FieldType.CHOICE and values.get('use_dropdown') == None:
-      values['use_dropdown'] = True
-    return values
 
 class CustomFieldInstance(BaseModel):
   field_key: str

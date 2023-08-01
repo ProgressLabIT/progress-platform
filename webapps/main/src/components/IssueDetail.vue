@@ -3,7 +3,7 @@
     <q-card class="surface1 row" bordered square style="width: 95vw; height: 95vh">
 
       <!-- LEFT SECTION -->
-      <div class="col-8 column full-height">
+      <div class="col-7 column full-height">
 
         <!-- HEADER -->
         <IssueHeader :issue="issue" @type-change="refreshIssue"/>
@@ -22,7 +22,12 @@
         <div class="row q-px-lg q-pt-md q-mb-md">
           <template v-if="issue.data.length">
             <div class="col-auto q-pr-md" v-for="field in issue.data">
-              <FormField :field_data="field" dense :disable="true" />
+              <FormField
+                :field_data="field"
+                dense
+                :disable="true"
+                :root_path="`/media/issue/${issue_key}`">
+              </FormField>
             </div>
           </template>
           <div v-else class="col-auto text-italic">

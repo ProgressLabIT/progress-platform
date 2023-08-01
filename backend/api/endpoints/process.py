@@ -12,7 +12,7 @@ from models.process import *
 from utils import dt
 from utils.api import APIResponse
 from utils.db import db
-from utils.file import UserFile
+from utils.file import FileHandler
 from utils.process import *
 
 
@@ -293,8 +293,8 @@ async def save_step_media(
   media_file: UploadFile = File(...)
 ):
   
-  new_media = UserFile.step_media(
-    append_path=step_key,
+  new_media = FileHandler.step_media(
+    object_key=step_key,
     file=media_file,
     name=media_file.filename
   )
@@ -325,8 +325,8 @@ async def delete_step_media(
   filename: str
 ):
 
-  media_to_delete = UserFile.step_media(
-    append_path=step_key,
+  media_to_delete = FileHandler.step_media(
+    object_key=step_key,
     name=filename
   )
   

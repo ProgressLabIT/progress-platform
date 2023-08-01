@@ -1,6 +1,7 @@
 from .admin import router as admin
 from .auth import router as auth
 from .bom import router as bom
+from .file import router as file
 from .form import router as form
 from .org import router as org
 from .process import router as process
