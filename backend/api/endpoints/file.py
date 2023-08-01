@@ -1,7 +1,7 @@
 import os
 import traceback
 
-from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, UploadFile
 
 from models.form import FileBucket, FileTargetData
 from utils.db import db
@@ -18,10 +18,10 @@ collection_map = {
 }
 
 
-def target_data(
-  bucket: FileBucket = Form(...),
-  object_key: str = Form(...),
-  subfolder: str = Form(None)
+def verify_target_data(
+  bucket: FileBucket,
+  object_key: str,
+  subfolder: str = None
 ):
   # Check whether an entity with the key provided exists
   if not db.collection(collection_map[bucket]).has(object_key):
@@ -43,9 +43,13 @@ def target_data(
 @router.post('/files')
 async def upload_files(
   contents: list[UploadFile],
-  target: FileTargetData = Depends(target_data),
+  bucket: FileBucket = Form(...),
+  object_key: str = Form(...),
+  subfolder: str = Form(None),
   reset_folder: bool = Form(False),
 ):
+
+  target = verify_target_data(bucket, object_key, subfolder)
 
   handler = FileHandler(
     bucket = target.bucket.value,
@@ -72,10 +76,14 @@ async def upload_files(
 @router.delete('/files')
 async def delete_files(
   filenames: list[str],
-  target: FileTargetData = Depends(target_data)
+  bucket: FileBucket = Body(...),
+  object_key: str = Body(...),
+  subfolder: str = Body(None),
 ):
 
-  handler = FileHandler(base_path=target.bucket.value, object_key=target.key, subfolder=target.field_key)
+  target = verify_target_data(bucket, object_key, subfolder)
+
+  handler = FileHandler(bucket=target.bucket.value, object_key=target.object_key, subfolder=target.subfolder)
   for filename in filenames:
     try:
       handler.delete_file(filename)
@@ -83,7 +91,7 @@ async def delete_files(
       raise HTTPException(
         status_code=404,
         detail=dict(
-          message=f"No file named {filename} is associated with {target.bucket.value} {target.key}",
+          message=f"No file named {filename} is associated with {target.bucket.value} {target.object_key}",
           error=traceback.format_exc()
         )
       )

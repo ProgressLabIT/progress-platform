@@ -113,3 +113,7 @@ class FileHandler:
     if os.path.isdir(self.folder_path):
       for filename in os.listdir(self.folder_path):
         os.remove(os.path.join(self.folder_path, filename))
+
+  def remove_dir(self):
+    if os.path.isdir(self.folder_path):
+      shutil.rmtree(self.folder_path)

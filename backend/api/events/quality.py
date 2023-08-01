@@ -4,6 +4,7 @@ from events.shared import EventMeta
 from models.quality import Issue, IssueLink, IssueWithLinks
 from utils.dt import timestamp
 from utils.quality import Queries
+from utils.file import FileHandler
 
 class IssueEvent:
   issue_collections = ['Event', 'Issue', 'issue_rel', 'WorkOrder', 'Job']
@@ -168,6 +169,9 @@ class IssueEvent:
     self.tx.collection('Issue').delete(issue_key)
     self.tx.collection('issue_rel').delete_match(filters=dict(_from=f'Issue/{issue_key}'))
     self.tx.collection('message').delete_match(filters=dict(_to=f'Issue/{issue_key}'))
+
+    FileHandler(bucket='issue', object_key=issue_key).remove_dir()
+
     self._update_production_status(f'Issue/{issue_key}')
 
     self.response = dict(
