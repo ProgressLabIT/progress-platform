@@ -109,7 +109,7 @@
     </q-input>
 
     <!-- FILES -->
-    <q-file
+    <!-- <q-file
       v-if="field_data.type == 'files'"
       multiple
       append
@@ -124,7 +124,19 @@
       <template #append>
         <q-icon name="mdi-folder-open-outline" />
       </template>
-    </q-file>
+    </q-file> -->
+    <div v-if="field_data.type == 'files'">
+      <FilesList
+        :label="field_data.label"
+        :disable="disable"
+        :files="field_data.value"
+        :root_path="`${root_path}/${field_data._key}`"
+        @addFiles="addFiles"
+        @deleteFile="deleteFile"
+        @restoreFile="restoreFile">
+      </FilesList>
+    </div>
+
 
     <!-- HINT -->
     <div class="smaller q-px-sm q-mt-xs">
@@ -134,9 +146,15 @@
 </template>
 
 <script>
+import FilesList from '@/components/FilesList.vue'
+
 export default {
 
   name: 'FormField',
+
+  components: {
+    FilesList
+  },
 
   props: {
     field_data: {
@@ -150,13 +168,16 @@ export default {
     disable: {
       type: Boolean,
       default: false
+    },
+    root_path: {
+      type: String,
     }
   },
 
   data() {
     return {
       origin_list: [],
-      options: []
+      options: [],
     }
   },
 
@@ -184,10 +205,47 @@ export default {
       })
     },
 
+    addFiles(file_list) {
+      let working_list = this.field_data.value ?? []
+      const files = Array.from(file_list)
+      // Don't add files already in the list
+      files.forEach( (new_file, index) => {
+        const already_in_list = working_list.some( existing_file => existing_file.name == new_file.name )
+        if (already_in_list) {
+          const replace = window.confirm(
+            this.$capitalize(this.$t('product.alerts.doc_name_exists',1, {filename: new_file.name}))
+          )
+          if (replace) {
+            working_list.splice(index, 1)
+          }
+          else {
+            return
+          }
+        }
+        working_list.push({
+          content: new_file,
+          name: new_file.name,
+          temp: true,
+          delete: false,
+          path: window.URL.createObjectURL(new_file),
+          size: new_file.size
+        })
+      })
+      this.field_data.value = working_list
+    },
+
+    deleteFile(index) {
+      const file = this.field_data.value[index]
+      file.temp ? this.field_data.value.splice(index, 1) : file.delete = true
+    },
+
+    restoreFile(index) {
+      this.field_data.value[index].delete = false
+    },
+
     blur() {
       document.activeElement.blur()
     }
-
   },
 
   created() {

@@ -1,0 +1,129 @@
+<template>
+  <div style="background: rgba(255, 255, 255, 0.07);">
+    <div class="row justify-between items-center q-pl-sm q-py-sm">
+      <div class="q-ml-xs" style="color: rgba(255,255,255,0.7)">
+        {{ label }}
+      </div>
+      <q-btn
+        flat
+        padding="xs sm"
+        class="q-mr-xs"
+        style="color: rgba(255,255,255,0.7)"
+        :disable="disable"
+        size="md"
+        @click="$refs.upload_files.click()">
+        <span class="smaller q-mr-xs" v-if="!disable">
+          {{ $t('add') }}
+        </span>
+        <q-icon :name="disable ? 'mdi-folder-outline' : 'mdi-folder-plus-outline'" />
+      </q-btn>
+    </div>
+    <q-list v-if="files" dense class="q-pb-md">
+      <q-item
+        v-for="(file, index) in shown_files"
+        :key="index"
+        clickable
+        @click="showMedia(index)">
+        <q-item-section
+          :class="{ 'text-italic': !disable && file.temp, 'text-strike': !disable && file.delete, 'text-disabled': !disable && file.delete }">
+          {{ file.name }} {{ !disable && file.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}
+        </q-item-section>
+        <q-item-section side class="text-right">
+          {{ $bytes(file.size) }}
+        </q-item-section>
+        <q-item-section side v-if="!disable">
+          <q-btn
+            round
+            flat
+            size="sm"
+            style="margin-right: -6px;"
+            :icon="file.delete ? 'mdi-delete-restore' : 'mdi-close'"
+            @click.stop="$emit(file.delete ? 'restoreFile' : 'deleteFile', index)">
+          </q-btn>
+        </q-item-section>
+      </q-item>
+    </q-list>
+
+    <input
+      multiple
+      type="file"
+      ref="upload_files"
+      style="display: none"
+      accept="application/pdf, image/*"
+      @change="$emit('addFiles', $event.target.files)" />
+
+    <MediaViewer
+      v-if="show_media >= 0"
+      :show="show_media >= 0"
+      @close="show_media = -1"
+      v-bind="{ media_name, media_src }">
+    </MediaViewer>
+
+  </div>
+</template>
+
+<script>
+import MediaViewer from '@/components/MediaViewer.vue'
+
+export default {
+
+  name: 'FilesList',
+
+  components: {
+    MediaViewer
+  },
+
+  props: {
+    label: {
+      type: String,
+      default: 'Files'
+    },
+    files: {
+      type: Array,
+      default: []
+    },
+    disable: {
+      type: Boolean,
+      default: true
+    },
+    root_path: {
+      type: String,
+      required: true
+    }
+  },
+
+  data () {
+    return {
+      show_media: -1,
+    }
+  },
+
+  computed: {
+    shown_files() {
+      return this.disable ? this.files.filter(f => !f.temp) : this.files
+    },
+
+    media_src() {
+      return this.files[this.show_media]?.path || this.root_path + '/' + this.media_name
+    },
+
+    media_name() {
+      if (this.show_media == -1) { return '' }
+      else { return this.files[this.show_media].name }
+    },
+  },
+
+  methods: {
+    getFileName(path) {
+      return path.split('/').pop()
+    },
+
+    showMedia(value) {
+      this.show_media = value
+    },
+  }
+}
+</script>
+
+<style lang="css" scoped>
+</style>
