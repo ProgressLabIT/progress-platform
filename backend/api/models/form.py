@@ -52,16 +52,10 @@ class CustomListValue(BaseModel):
 
 class CustomField(ArangoDocument):
   type: FieldType
-  use_dropdown: bool = None # Only relevant for choice fields
   name: str # To search when building the form
   default_label: str = None # To show to the user when filling up the forms
   default_hint: str = None # To show to the user when filling up the forms
 
-  @root_validator
-  def ensure_type_if_choice(cls, values):
-    if values.get('type') == FieldType.CHOICE and values.get('use_dropdown') == None:
-      values['use_dropdown'] = True
-    return values
 
 class CustomFieldInstance(BaseModel):
   field_key: str
