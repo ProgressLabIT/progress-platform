@@ -33,6 +33,7 @@ equipment/
 product/
 step/
 user/
+issue/
 
 # DBs
 integration_db/
