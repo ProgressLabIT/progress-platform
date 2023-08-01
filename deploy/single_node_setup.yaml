@@ -187,15 +187,15 @@
     tags: deploy
     block:
 
-      - name: Generate DB root password
-        ansible.builtin.shell:
-          cmd: 'openssl rand -hex 12'
-        register: db_root_pwd
-
       - name: Copy deployment files
         ansible.builtin.copy:
           src: compose/ # copy contents only
           dest: '{{ root_dir }}/config/'
+
+      - name: Generate DB root password
+        ansible.builtin.shell:
+          cmd: 'openssl rand -hex 12'
+        register: db_root_pwd
 
       - name: Show DB root password
         ansible.builtin.debug:
@@ -211,7 +211,7 @@
             - '{{ root_dir}}/config/workflow.yaml'
         environment:
           DB_ROOT_PWD: '{{ db_root_pwd.stdout }}'
-          HOST: '{{ ansible_env.SSH_CONNECTION.split(" ")[2] }}'
+          HOST: '{{ inventory_hostname }}'
 
       - name: Copy init script to be run
         ansible.builtin.copy:
@@ -237,6 +237,11 @@
           env:
             DB_ROOT_PWD: '{{ db_root_pwd.stdout }}'
           command: python3 /db_init.py
+
+      # Last try failed when loading flows because the agent container was not ready, probably busy installing python dependencies
+      - name: Wait for agent setup to finish
+        ansible.builtin.wait_for:
+          timeout: 10
 
       - name: Deploy system workflows
         ansible.builtin.shell:
