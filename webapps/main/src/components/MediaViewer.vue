@@ -191,12 +191,8 @@ export default {
     },
 
     is_image() {
-      // const ext = typeof this.media_name == "string"
-      //   ? this.media_name.split('.')[this.media_src.length -1]
-      //   : null
-      // return ext
-      return this.media_src
-        ? this.image_extensions.some( e => this.media_src.endsWith(e) )
+      return this.media_name
+        ? this.image_extensions.some( e => this.media_name.endsWith(e) )
         : null
     },
   },
