@@ -171,12 +171,12 @@
           </div>
           <div class="row q-gutter-md items-center">
             <div class="col-6">
-              <BaseAutocompleteOperator
+              <BaseAutocompleteUser
                 :placeholder="$t('operator_select_prompt')"
                 v-show="jobs_to_assign.length"
                 :value="batch_assign_to"
                 @select="(selection) => batch_assign_to = selection">
-              </BaseAutocompleteOperator>
+              </BaseAutocompleteUser>
             </div>
             <q-space />
             <div class="col-auto">
@@ -204,7 +204,7 @@
 </template>
 
 <script>
-import BaseAutocompleteOperator from '@/components/BaseAutocompleteOperator.vue'
+import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue'
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
@@ -216,7 +216,7 @@ export default {
   name: 'JobList',
 
   components: {
-    BaseAutocompleteOperator,
+    BaseAutocompleteUser,
     BaseProgressBar,
     BaseUserAvatar,
     BaseActionCard,

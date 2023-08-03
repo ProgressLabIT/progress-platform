@@ -131,14 +131,14 @@
             </q-select>
 
             <!-- BY OPERATOR -->
-            <BaseAutocompleteOperator
+            <BaseAutocompleteUser
               :placeholder="$capitalize($t('operator'))"
               dense
               class="q-mb-md"
               key_only
               :value="operator_selected"
               @select="(selection) => operator_selected = selection">
-            </BaseAutocompleteOperator>
+            </BaseAutocompleteUser>
           </template>
           <!-- END OF JOB-SPECIFIC FILTERS -->
 
@@ -318,7 +318,7 @@
 <script>
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
-import BaseAutocompleteOperator from '@/components/BaseAutocompleteOperator.vue'
+import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import queryModel from '@/lib/queryModelFactory.js'
 
@@ -336,7 +336,7 @@ export default {
 
   components: {
     BaseUserAvatar,
-    BaseAutocompleteOperator,
+    BaseAutocompleteUser,
     NoDataAlert
   },
 

@@ -65,6 +65,11 @@ export default {
       default: false
     },
 
+    operator_only: {
+      type: Boolean,
+      default: true
+    },
+
     dense: {
       type: Boolean,
       default: false
@@ -101,7 +106,9 @@ export default {
 
   computed: {
     origin_list() {
-      return this.$store.getters.operator_list()
+      return this.operator_only
+        ? this.$store.getters.operator_list()
+        : this.$store.state.user.user_list
     },
 
     placeholder_computed() {
