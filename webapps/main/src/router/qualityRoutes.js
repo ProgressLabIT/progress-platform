@@ -11,6 +11,12 @@ const qualityRoutes = [
         name: 'issueOverview',
         component: () => import("@/views/IssueOverview.vue"),
       },
+      {
+        path: 'issues/:issue_key',
+        name: 'issueDetail',
+        component: () => import('@/components/IssueDetail.vue'),
+        props: true
+      }
     ]
   }
 ]
