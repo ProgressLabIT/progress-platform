@@ -115,37 +115,55 @@ async def delete_issue_type(issue_type_key: str):
 @router.get('/issue')
 async def get_issues(
   issue_key: Union[List[str], None] = Query(default=None),
+  issue_key_search: str = None,
   issue_type_key: Union[List[str], None] = Query(default=None),
   product_key: Union[List[str], None] = Query(default=None),
+  product_code_search: str = None,
   work_order_key: Union[List[str], None] = Query(default=None),
+  work_order_code_search: str = None,
+  project_search: str = None,
   job_key: Union[List[str], None] = Query(default=None),
   phase_key: Union[List[str], None] = Query(default=None),
+  phase_alias_search: str = None,
   operation_key: Union[List[str], None] = Query(default=None),
   created_by: Union[List[str], None] = Query(default=None),
+  closed_by: Union[List[str], None] = Query(default=None),
   time_created_from: datetime = None,
   time_created_to: datetime = None,
   time_closed_from: datetime = None,
   time_closed_to: datetime = None,
   issue_open: bool = None,
-  limit: int = None
+  issue_closed: bool = None,
+  issue_critical: bool = None,
+  issue_non_critical: bool = None,
+  limit: int = None,
   with_links: bool = False
   ):
   # use query parameters to filter specific type
   bind_vars = dict(
     issue_key = issue_key,
+    issue_key_search = issue_key_search,
     issue_type_key = issue_type_key,
     product_key = product_key,
+    product_code_search = product_code_search,
     work_order_key = work_order_key,
+    work_order_code_search = work_order_code_search,
+    project_search = project_search,
     job_key = job_key,
     phase_key = phase_key,
+    phase_alias_search = phase_alias_search,
     operation_key = operation_key,
     created_by = created_by,
+    closed_by = closed_by,
     time_created_from = time_created_from,
     time_created_to = time_created_to,
     time_closed_from = time_closed_from,
     time_closed_to = time_closed_to,
     issue_open = issue_open,
-    limit = limit
+    issue_closed = issue_closed,
+    issue_critical = issue_critical,
+    issue_non_critical = issue_non_critical,
+    limit = limit,
     with_links = with_links
   )
   cursor = db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)

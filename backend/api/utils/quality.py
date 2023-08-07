@@ -20,32 +20,60 @@ class Queries:
   """
 
   FIND_ISSUES = """
-    // Graph results will return the same issue for each link
-    LET link_filtered = UNIQUE(
+    LET first_filtered = (
       FOR i IN Issue
+      FILTER
+        // When filtering by document key, parameters will be arrays
+        @issue_key ? POSITION(@issue_key, i._key) : true
+        && @issue_key_search ? CONTAINS(i._key, @issue_key_search) : true
+        && @issue_type_key ? POSITION(@issue_type_key, i.issue_type_key) : true
+        && @created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], i.created_by) : true
+        && @closed_by ? POSITION(@closed_by[* RETURN CONCAT('User/', CURRENT)], i.closed_by) : true
+        && @time_created_from ? i.created >= @time_created_from : true
+        && @time_created_to ? i.created <= @time_created_to : true
+        && @time_closed_from ? i.closed >= @time_closed_from : true
+        && @time_closed_to ? i.closed <= @time_closed_to : true
+        && @issue_open != null ? i.open == @issue_open : true
+        && @issue_closed != null ? i.open == !@issue_closed : true
+        && @issue_critical != null ? i.critical == @issue_critical : true
+        && @issue_non_critical != null ? i.critical == !@issue_non_critical : true
+      RETURN i
+    )
+
+    // Graph results will return the same issue for each link
+    LET links_filtered = UNIQUE(
+      FOR i IN first_filtered
       FOR v, e IN 1..1 OUTBOUND i issue_rel
       FILTER
-        // Here the keys must be turned into document ids
+        // Key Parameters are passed as lists. Keys must be turned into document ids
         @product_key ? POSITION(@product_key[* RETURN CONCAT('Product/', CURRENT)], e._to) : true
         && @work_order_key ? POSITION(@work_order_key[* RETURN CONCAT('WorkOrder/', CURRENT)], e._to) : true
         && @job_key ? POSITION(@job_key[* RETURN CONCAT('Job/', CURRENT)], e._to) : true
         && @phase_key ? POSITION(@phase_key[* RETURN CONCAT('Phase/', CURRENT)], e._to) : true
         && @operation_key ? POSITION(@operation_key[* RETURN CONCAT('Operation/', CURRENT)], e._to) : true
+        // Substring search for entity names
+        && @product_code_search ? (
+          PARSE_IDENTIFIER(v).collection == 'Product'
+          && CONTAINS(LOWER(v.code), LOWER(@product_code_search))
+        ) : true
+        && @work_order_code_search ? (
+          PARSE_IDENTIFIER(v).collection == 'WorkOrder'
+          && CONTAINS(LOWER(v.wo_code), LOWER(@work_order_code_search))
+        ) : true
+        && @project_search ? (
+          PARSE_IDENTIFIER(v).collection == 'WorkOrder'
+          && CONTAINS(LOWER(v.project_code), LOWER(@project_search))
+        ) : true
+        && @phase_alias_search ? (
+          PARSE_IDENTIFIER(v).collection == 'Phase'
+          && CONTAINS(LOWER(v.alias), LOWER(@phase_alias_search))
+        ) : true
       RETURN i
     )
 
-    FOR i IN link_filtered
-    FILTER
-      // When filtering by document key, parameters will be arrays
-      @issue_key ? POSITION(@issue_key, i._key) : true
-      && @issue_type_key ? POSITION(@issue_type_key, i.issue_type_key) : true
-      && @creator_id ? POSITION(@creator_id, i.created_by) : true
-      && @time_created_from ? i.created >= @time_created_from : true
-      && @time_created_to ? i.created <= @time_created_to : true
-      && @time_closed_from ? i.closed >= @time_closed_from : true
-      && @time_closed_to ? i.closed_to <= @time_closed_to : true
-      && @issue_open ? i.open == @issue_open : true
-
+    // Limit and Enrich filtered issue records
+    FOR i IN links_filtered
+    SORT i.created
     LIMIT @limit || null
 
     LET type_data = FIRST(
@@ -61,7 +89,6 @@ class Queries:
       RETURN MERGE(fdef, field)
     )
 
-    SORT i.created
     // Phase alias is always required
 
     LET phase = FIRST(
