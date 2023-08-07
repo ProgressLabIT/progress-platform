@@ -128,6 +128,7 @@ async def get_issues(
   time_closed_to: datetime = None,
   issue_open: bool = None,
   limit: int = None
+  with_links: bool = False
   ):
   # use query parameters to filter specific type
   bind_vars = dict(
@@ -145,6 +146,7 @@ async def get_issues(
     time_closed_to = time_closed_to,
     issue_open = issue_open,
     limit = limit
+    with_links = with_links
   )
   cursor = db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)
   return [i for i in cursor]

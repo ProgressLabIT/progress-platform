@@ -62,15 +62,45 @@ class Queries:
     )
 
     SORT i.created
+    // Phase alias is always required
 
-    LET phase_alias = FIRST(FOR v IN 1..1 OUTBOUND i issue_rel FILTER PARSE_IDENTIFIER(v._id).collection == 'Phase' RETURN v.alias)
+    LET phase = FIRST(
+      FOR l IN 1..1 OUTBOUND i issue_rel
+      FILTER PARSE_IDENTIFIER(l._id).collection == 'Phase'
+      RETURN l
+    )
 
-    RETURN MERGE(i, {
+    LET base_result = MERGE(i, {
       icon: type_data.icon,
       issue_type_name: type_data.name,
       data: issue_data,
-      phase_alias
+      phase_alias: phase.alias
     })
+
+    // Add other links data to record if requested
+
+
+    LET product = @with_links ? FIRST(
+      FOR l IN 1..1 OUTBOUND i issue_rel
+      FILTER PARSE_IDENTIFIER(l._id).collection == 'Product'
+      RETURN l
+    ) : null
+
+    LET operation = @with_links ? FIRST(
+      FOR l IN 1..1 OUTBOUND i issue_rel
+      FILTER PARSE_IDENTIFIER(l._id).collection == 'Operation'
+      RETURN l
+    ) : null
+
+    LET work_order = @with_links ?FIRST(
+      FOR l IN 1..1 OUTBOUND i issue_rel
+      FILTER PARSE_IDENTIFIER(l._id).collection == 'WorkOrder'
+      RETURN l
+    ) : null
+
+    LET issue_links = @with_links ? { product, operation, phase, work_order } : null
+
+    RETURN @with_links ? MERGE(base_result, { links: issue_links }) : base_result
   """
 
   CHECK_PRODUCTION_CRITICAL_STATUS = """
