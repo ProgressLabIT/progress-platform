@@ -112,7 +112,9 @@ export default {
 
   computed: {
     avatar_src() {
-      return (this.base_path + (this.user.name + this.user.surname).replace(/\s+/g, '') + '.jpg').toLowerCase()
+      return this.user.name && this.user.surname
+        ? (this.base_path + (this.user.name + this.user.surname).replace(/\s+/g, '') + '.jpg').toLowerCase()
+        : 'N/A'
     },
 
     initials() {

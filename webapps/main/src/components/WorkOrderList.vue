@@ -12,8 +12,7 @@
       separator="none"
       table-class="text-high"
       card-class="background no-shadow q-mt-sm"
-      :rows-per-page-options="[0]"
-      @row-dblclick="showWorkOrderScreen">
+      :rows-per-page-options="[0]">
 
       <template #header-cell-issue_count="props">
         <q-th :props="props">
