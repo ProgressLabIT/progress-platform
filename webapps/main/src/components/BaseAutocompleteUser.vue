@@ -38,7 +38,7 @@ import multiMatch from '@/lib/MultiFieldSearch.js'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 export default {
 
-  name: 'BaseAutocompletOperator',
+  name: 'BaseAutocompletUser',
 
   components: {
     BaseUserAvatar

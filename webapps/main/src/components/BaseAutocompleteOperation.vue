@@ -2,7 +2,7 @@
   <q-select
     use-input
     filled
-    :label="$capitalize($t('phase.add'))"
+    :label="label ?? $capitalize($t('phase.add'))"
     :dense="dense"
     :clearable="clearable"
     :options="options"
@@ -35,7 +35,7 @@ export default {
 
   props: {
     value: {
-      type: Object,
+      type: [String, Object],
       deafult: null
     },
 
@@ -57,6 +57,10 @@ export default {
     clearable: {
       type: Boolean,
       default: true
+    },
+
+    label: {
+      type: String,
     }
   },
 

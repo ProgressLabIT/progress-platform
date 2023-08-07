@@ -7,6 +7,7 @@
     option-label="code"
     @filter="filter"
     :model-value="value"
+    :label="label ?? $capitalize($t('product.label'))"
     input-debounce="100"
     :option-value="key_only ? '_key' : null"
     :emit-value="key_only"
@@ -36,7 +37,7 @@ export default {
 
   props: {
     value: {
-      type: Object,
+      type: [String, Object],
       deafult: null
     },
 
@@ -48,7 +49,9 @@ export default {
     key_only: {
       type: Boolean,
       default: false
-    }
+    },
+
+    label: String
   },
 
   data () {
