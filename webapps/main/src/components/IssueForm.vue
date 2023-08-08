@@ -14,40 +14,120 @@
             </div>
           </div>
         </q-card-section>
-        <q-card-section>
-          <BaseAutocompleteIssueType
-            @select="(value) => setIssueType(value)"
-            :value="issue_type">
-          </BaseAutocompleteIssueType>
-        </q-card-section>
 
-        <q-card-section>
-          <template v-if="issue_type">
-            <FormField
-              v-for="field in form_data"
-              :key="field._key"
-              :field_data="field"
-              :root_path="`/media/issue/${issue?._key}`"
-              @update="val => field.value = val">
-            </FormField>
-          </template>
-        </q-card-section>
+        <!-- FORM BODY -->
+        <transition name="slide-fade" mode="out-in">
 
-        <!-- ACTIONS -->
+          <!-- ISSUE LINKS -->
+          <q-card-section
+            v-if="mode=='new' && with_links && form_step=='links'"
+            key="issue_links"
+            class="column q-gutter-md">
+            <!-- "Path" selection (Order, Product, General) -->
+            <q-select
+              :options="['order', 'product', 'general']"
+              filled
+              v-model="link_form"
+              label="Scegli tipo collegamenti">
+            </q-select>
+            <!-- Link details (WO/Phase/Job, Product/Phase, Operation/User) -->
+            <template v-if="link_form == 'order'">
+
+              <!-- WORK ORDER -->
+              <BaseAutocompleteWorkOrder
+                :value="work_order"
+                :label="$capitalize($t('work_order.long'))"
+                @select="selection => loadWorkOrder(selection)">
+              </BaseAutocompleteWorkOrder>
+
+              <!-- PHASE -->
+              <q-select
+                v-if="work_order"
+                v-model="phase"
+                :label="$t('phase.short')"
+                filled
+                clearable
+                :options="work_order_phase_data"
+                option-label="alias">
+              </q-select>
+
+              <!-- JOB -->
+              <q-select
+                v-if="phase"
+                v-model="job"
+                :label="$capitalize($t('job.label'))"
+                filled
+                clearable
+                :options="phase_jobs">
+                <template #option="scope">
+                  <JobListItem v-bind="scope.itemProps" :job_data="scope.opt" />
+                </template>
+                <template #selected-item="scope">
+                  <JobListItem :job_data="scope.opt" />
+                </template>
+              </q-select>
+
+            </template>
+
+
+          </q-card-section>
+
+          <!-- ISSUE DATA -->
+          <div v-else key="issue_data">
+
+            <!-- ISSUE TYPE SELECTION -->
+            <q-card-section>
+              <BaseAutocompleteIssueType
+                @select="(value) => setIssueType(value)"
+                :value="issue_type">
+              </BaseAutocompleteIssueType>
+            </q-card-section>
+
+            <!-- FORM FIELDS -->
+            <q-card-section>
+              <template v-if="issue_type">
+                <FormField
+                  v-for="field in form_data"
+                  :key="field._key"
+                  :field_data="field"
+                  :root_path="`/media/issue/${issue?._key}`"
+                  @update="val => field.value = val">
+                </FormField>
+              </template>
+            </q-card-section>
+          </div>
+
+        </transition>
+
+        <!-- FORM ACTIONS -->
         <q-card-section>
           <div class="row q-gutter-md">
             <q-btn
-              v-if="!critical_only"
-              color="theme-orange"
-              :label="$t('save')"
-              @click="() => { critical = false; save() }"
-              :loading="saving">
+              v-if="mode == 'new' && with_links && form_step == 'links'"
+              color="theme-blue"
+              :label="$t('next')"
+              @click="form_step = 'data'">
             </q-btn>
-            <q-btn
-              color="theme-red"
-              @click="() => {critical = true; save()}">
-              {{ $t('save') }} {{ $t('critical') }}
-            </q-btn>
+            <template v-else>
+              <q-btn
+                v-if="with_links"
+                icon="mdi-arrow-left-bold"
+                color="theme-blue"
+                @click="form_step = 'links'">
+              </q-btn>
+              <q-btn
+                v-if="!critical_only"
+                color="theme-orange"
+                :label="$t('save')"
+                @click="() => { critical = false; save() }"
+                :loading="saving">
+              </q-btn>
+              <q-btn
+                color="theme-red"
+                @click="() => {critical = true; save()}">
+                {{ $t('save') }} {{ $t('critical') }}
+              </q-btn>
+            </template>
 
             <q-space />
             <q-btn
@@ -56,8 +136,8 @@
               @click="cancel">
             </q-btn>
           </div>
-
         </q-card-section>
+
       </q-form>
     </q-card>
   </BaseDialog>
@@ -65,8 +145,10 @@
 
 <script>
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue'
+import BaseAutocompleteWorkOrder from '@/components/BaseAutocompleteWorkOrder.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import FormField from '@/components/FormField.vue'
+import JobListItem from '@/components/JobListItem.vue'
 import { timestamp } from '@/lib/TimeHandling.js'
 
 export default {
@@ -75,7 +157,9 @@ export default {
 
   components: {
     BaseAutocompleteIssueType,
+    BaseAutocompleteWorkOrder,
     BaseDialog,
+    JobListItem,
     FormField
   },
 
@@ -91,6 +175,10 @@ export default {
     issue: {
       type: Object,
       default: undefined
+    },
+    with_links: {
+      type: Boolean,
+      default: false
     }
   },
 
@@ -99,9 +187,16 @@ export default {
       critical_only: false,
       saving: false,
       issue_type: null,
+      form_step: 'data',
       form_data: [],
       confirmed: false,
       critical: false,
+      link_form: null,
+      work_order: null,
+      work_order_phase_data: null,
+      phase: null,
+      phase_jobs: null,
+      job: null,
       links: [
         {
           type: 'product',
@@ -164,6 +259,14 @@ export default {
   methods: {
     initFormData() {
       // Show empty form fields if it's a new issue or the issue type is being changed
+      if (this.with_links) {
+        this.form_step = 'links'
+        this.link_form = null
+        this.work_order = null
+        this.phase = null
+        this.work_order_phase_data = null
+      }
+
       const use_clean_form = this.mode == 'new' || this.issue_type?._key != this.issue.issue_type_key
 
       if (use_clean_form) {
@@ -193,9 +296,30 @@ export default {
       }
     },
 
+    loadWorkOrder(wo) {
+      // Set work order data and initialize Phase options to select from
+      this.work_order = wo
+      let params = new URLSearchParams()
+      this.work_order.phase_sequence.forEach(pk => params.append('phase_key', pk))
+      this.$api.get('phase', { params }).then(
+        resp => this.work_order_phase_data = resp.data
+      )
+    },
+
+    loadPhase(phase_data) {
+      this.phase = phase_data
+      // Phase link exists for both order and product mode. Load jobs only in order mode
+      if (this.link_form == 'order') {
+        this.$api.get('job', { params: {
+          wowrk_order_key: this.work_order._key,
+          phase_key: this.phase._key
+        }}).then(resp => this.phase_jobs = resp.data.detail)
+      }
+    },
+
     cancel() {
       this.initIssueType()
-      this.form_data = []
+      this.initFormData()
       this.critical_only = false
       this.$emit('close')
     },
@@ -316,12 +440,15 @@ export default {
           position: 'top'
         })
       })
-    }
+    },
   },
 
   created() {
     this.initIssueType()
     this.initFormData()
+
+    // Inser links step if required
+    if (this.mode == 'new' && this.with_links) this.form_step = 'links'
   },
 
   watch: {
@@ -331,6 +458,9 @@ export default {
     },
     show: {
       handler: 'initFormData'
+    },
+    phase: {
+      handler: 'loadPhase'
     }
   }
 }

@@ -22,6 +22,21 @@
               {{ $t(`views.${view.route_name}`) }}
             </q-route-tab>
           </q-tabs>
+
+          <!-- NEW ISSUE BUTTON -->
+          <q-btn
+            size="0.75rem"
+            :label="$t('new')"
+            color="theme-blue"
+            @click="show_issue_form = true">
+          </q-btn>
+
+           <IssueForm
+            :show="show_issue_form"
+            mode="new"
+            with_links
+            @close="show_issue_form = false">
+          </IssueForm>
         </div>
 
 
@@ -330,6 +345,7 @@
 </template>
 
 <script>
+import IssueForm from '@/components/IssueForm.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue'
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
@@ -346,6 +362,7 @@ export default {
     BaseAutocompleteOperation,
     BaseAutocompleteProduct,
     BaseAutocompleteUser,
+    IssueForm,
     NoDataAlert
   },
 
@@ -357,6 +374,7 @@ export default {
       filter_list: ['issue_key_search', 'created_by','time_created_from','time_created_to','closed_by','time_closed_from','time_closed_to', 'issue_type_key', 'operation_key', 'work_order_code_search', 'product_code_search', 'phase_alias_search', 'project_search', 'issue_critical', 'issue_non_critical', 'issue_open', 'issue_closed'],
       bool_filters: ['issue_open', 'issue_closed', 'issue_critical', 'issue_non_critical'],
       loading: false,
+      show_issue_form: false
     }
   },
 

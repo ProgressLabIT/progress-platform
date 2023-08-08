@@ -635,5 +635,6 @@ export default {
     "update_from_date": "change release date",
     "wo_code": "code",
   },
+  "work_order_autocomplete_hint": "Input the text to search (min 3 characters) between order code, product and project. Will show first 100 results.",
   "write": "Write"
 }
