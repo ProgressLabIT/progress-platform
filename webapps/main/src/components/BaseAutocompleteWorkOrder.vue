@@ -18,27 +18,38 @@
     input-debounce="500"
     :emit-value="key_only"
     :map-options="key_only"
-    @update:model-value="(selection) => $emit('select', selection)"
-    popup-content-class="full-width">
+    popup-content-style="width: 0px"
+    @update:model-value="(selection) => $emit('select', selection)">
     <template #option="scope">
-      <q-item v-bind="scope.itemProps">
-        <q-item-section class="text-h4 highlight">
+      <q-item
+        v-bind="scope.itemProps"
+        @click.stop="print"
+        :class="{ 'text-low': scope.opt.status == 'closed' }">
+        <q-item-section class="text-h4 highlight col-auto q-pr-md">
           {{ scope.opt.wo_code }}
         </q-item-section>
         <q-item-section>
-          <q-item-label>
+          <q-item-label class="weight-bold">
             {{ scope.opt.product_code }}
           </q-item-label>
-          <q-item-label caption class="smaller text-uppercase">
+          <q-item-label caption lines="2" class="smaller text-uppercase">
             {{ scope.opt.product_description }}
           </q-item-label>
         </q-item-section>
+        <q-item-section class="q-px-lg text-right col-2">
+          <q-item-label>
+            {{ scope.opt.qt_completed }}/{{ scope.opt.qt_planned }}
+          </q-item-label>
+          <q-item-label>
+            <BaseProgressBar :data="scope.opt" />
+          </q-item-label>
+        </q-item-section>
         <q-item-section>
-          x{{ scope.opt.qt_planned }}
+          <q-item-label lines="2">
+            {{ scope.opt.project_code }}
+          </q-item-label>
         </q-item-section>
-        <q-item-section class="ellipsis">
-          {{ scope.opt.project_code }}
-        </q-item-section>
+
       </q-item>
     </template>
 
@@ -55,19 +66,19 @@
 </template>
 
 <script>
+import BaseProgressBar from '@/components/BaseProgressBar.vue'
 export default {
 
   name: 'BaseAutocompletWorkOrder',
+
+  components: {
+    BaseProgressBar
+  },
 
   props: {
     value: {
       type: [Object, String],
       deafult: null
-    },
-
-    load_data: {
-      type: Boolean,
-      default: true
     },
 
     label: {
@@ -78,11 +89,6 @@ export default {
     key_only: {
       type: Boolean,
       default: false
-    },
-
-    operator_only: {
-      type: Boolean,
-      default: true
     },
 
     dense: {
@@ -99,16 +105,6 @@ export default {
       type: String,
       default: null
     },
-
-    stackLabel: {
-      type: Boolean,
-      default: false
-    },
-
-    show_avatar: {
-      type: Boolean,
-      default: true
-    }
   },
 
   data () {
