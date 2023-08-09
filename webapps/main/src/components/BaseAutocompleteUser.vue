@@ -2,7 +2,7 @@
   <q-select
     use-input
     filled
-    :label-slot="!!label"
+    :label="label"
     :stack-label="stackLabel"
     :dense="dense"
     :placeholder="placeholder_computed"
@@ -21,10 +21,6 @@
       <q-item v-bind="scope.itemProps">
         <BaseUserAvatar :user="scope.opt"/>
       </q-item>
-    </template>
-
-    <template #label v-if="!!label">
-      {{ label }}
     </template>
 
     <template #selected-item="scope">
@@ -82,7 +78,7 @@ export default {
 
     placeholder: {
       type: String,
-      default: false
+      default: ''
     },
 
     stackLabel: {

@@ -59,6 +59,7 @@
 
           <BaseAutocompleteProduct
             v-else-if="field_name === 'product'"
+            dense
             :load="false"
             :value="new_work_orders[index].product"
             @select="new_work_orders[index].product = $event">

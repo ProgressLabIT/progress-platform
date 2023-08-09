@@ -2,7 +2,7 @@
   <q-select
     use-input
     filled
-    :label="label ?? $capitalize($t('phase.add'))"
+    :label="label"
     :dense="dense"
     :clearable="clearable"
     :options="options"
@@ -51,7 +51,7 @@ export default {
 
     dense: {
       type: Boolean,
-      default: true
+      default: false
     },
 
     clearable: {

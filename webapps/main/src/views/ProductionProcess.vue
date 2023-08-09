@@ -100,6 +100,8 @@
         <template v-else>
           <BaseAutocompleteOperation
             @select="addPhase"
+            dense
+            :label="$capitalize($t('phase.add'))"
             :clearable="false">
           </BaseAutocompleteOperation>
           <q-btn
