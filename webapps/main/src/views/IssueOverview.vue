@@ -1,19 +1,19 @@
 <template>
-  <div ref="container" class="q-px-sm">
+  <div ref="container" class="q-px-sm q-pt-sm full-height">
     <q-table
       id="issue_list"
       :columns="columns"
       :rows="issue_list"
       row-key="_key"
-      :style="`height: ${table_height}`"
       :loading="loading"
       color="primary"
       virtual-scroll
       hide-bottom
+      class="full-height"
       dense
       separator="none"
       table-class="text-high"
-      card-class="background no-shadow q-mt-sm"
+      card-class="background no-shadow"
       :rows-per-page-options="[0]">
 
       <template #body="props">
@@ -219,12 +219,6 @@ export default {
       }
       this.$router.push(to_route)
     },
-  },
-
-  mounted() {
-    const resizeTable = () => this.table_height = this.$refs.container.clientHeight
-    resizeTable()
-    window.onresize = _throttle(resizeTable, 100)
   }
 }
 </script>

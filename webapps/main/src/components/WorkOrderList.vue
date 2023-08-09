@@ -1,17 +1,17 @@
 <template>
-  <div ref="container" id="table_container" class="q-px-sm">
+  <div ref="container" id="table_container" class="q-px-sm q-pt-sm full-height">
     <q-table
       id="wo_list"
       :columns="columns"
       :rows="filtered_wo_list"
       row-key="_key"
-      :style="`height: ${table_height}`"
       virtual-scroll
       hide-bottom
       dense
+      class="full-height"
       separator="none"
       table-class="text-high"
-      card-class="background no-shadow q-mt-sm"
+      card-class="background no-shadow"
       :rows-per-page-options="[0]">
 
       <template #header-cell-issue_count="props">
@@ -428,11 +428,6 @@ export default {
   },
 
   mounted() {
-    // set table height explicitly and resize with window
-    const resizeTable = () => this.table_height = this.$refs.container.clientHeight
-    resizeTable()
-    window.onresize = _throttle(resizeTable, 100)
-
     // make the table rows draggable
     let table = document.querySelector(".q-virtual-scroll__content")
     const _self = this
