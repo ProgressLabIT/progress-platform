@@ -31,7 +31,7 @@ import multiMatch from '@/lib/MultiFieldSearch.js'
 
 export default {
 
-  name: 'BaseAutocompleteProduct',
+  name: 'BaseAutocompleteOperation',
 
   props: {
     value: {
