@@ -12,21 +12,30 @@
     
     <template #form>
 
-      <!-- NEW WORK ORDER DATA -->
+      <!-- NEW WORK ORDER FIELD LABELS -->
+      <div class="row q-col-gutter-md">
+        <div
+          v-for="(info, field_name) in new_wo_data"
+          :key="field_name"
+          :class="info.cols"
+          class="text-h5 text-uppercase text-low">
+          {{ $capitalize(info.label) }}
+        </div>
+      </div>
+
+      <!-- NEW WORK ORDER DATA  -->
       <div
-        class="row q-col-gutter-lg q-py-md items-center"
+        class="row q-col-gutter-md q-py-sm items-center"
         v-for="(line, index) in new_work_orders"
         :key="index">
         <div
           v-for="(info, field_name) in new_wo_data"
           :key="field_name"
           :class="info.cols">
-          <div class="text-h5 text-uppercase text-low">
-            {{ $capitalize(info.label) }}
-          </div>
 
           <q-input
             dense
+            filled
             v-model="new_work_orders[index][field_name]"
             mask="####-##-##"
             hide-bottom-space
@@ -58,8 +67,8 @@
           <q-input
             v-else
             dense
+            filled
             autocomplete="false"
-            :input-class="{ 'text-right': info.type === Number }"
             :type="field_name === 'qt_planned' ? 'number' : '' "
             v-model="new_work_orders[index][field_name]">
           </q-input>
@@ -136,13 +145,13 @@ export default {
         product: {
           label: this.$t('product.label'),
           type: Object,
-          cols: 'col-2',
+          cols: 'col-3',
           initial_value: null
         },
         qt_planned: {
           label: this.$t('quantity.long'),
           type: Number,
-          cols: 'col-auto',
+          cols: 'col-1',
           initial_value: 0
         },
         start_from: {

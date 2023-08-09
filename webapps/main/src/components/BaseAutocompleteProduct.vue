@@ -2,6 +2,7 @@
   <q-select
     use-input
     dense
+    filled
     clearable
     :options="options"
     option-label="code"
