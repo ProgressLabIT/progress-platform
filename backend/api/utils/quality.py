@@ -20,61 +20,25 @@ class Queries:
   """
 
   FIND_ISSUES = """
-    LET first_filtered = (
-      FOR i IN Issue
-      FILTER
-        // When filtering by document key, parameters will be arrays
-        (@issue_key ? POSITION(@issue_key, i._key) : true)
-        && (@issue_key_search ? CONTAINS(i._key, @issue_key_search) : true)
-        && (@issue_type_key ? POSITION(@issue_type_key, i.issue_type_key) : true)
-        && (@created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], i.created_by) : true)
-        && (@closed_by ? POSITION(@closed_by[* RETURN CONCAT('User/', CURRENT)], i.closed_by) : true)
-        && (@time_created_from ? i.created >= @time_created_from : true)
-        && (@time_created_to ? i.created <= @time_created_to : true)
-        && (@time_closed_from ? i.closed >= @time_closed_from : true)
-        && (@time_closed_to ? i.closed <= @time_closed_to : true)
-        && (@issue_open != null ? i.open == @issue_open : true)
-        && (@issue_closed != null ? i.open == !@issue_closed : true)
-        && (@issue_critical != null ? i.critical == @issue_critical : true)
-        && (@issue_non_critical != null ? i.critical == !@issue_non_critical : true)
-      RETURN i
-    )
 
-    // Graph results will return the same issue for each link
-    LET links_filtered = UNIQUE(
-      FOR i IN first_filtered
-      FOR v, e IN 1..1 OUTBOUND i issue_rel
-      FILTER
-        // Key Parameters are passed as lists. Keys must be turned into document ids
-        (@product_key ? POSITION(@product_key[* RETURN CONCAT('Product/', CURRENT)], e._to) : true)
-        && (@work_order_key ? POSITION(@work_order_key[* RETURN CONCAT('WorkOrder/', CURRENT)], e._to) : true)
-        && (@job_key ? POSITION(@job_key[* RETURN CONCAT('Job/', CURRENT)], e._to) : true)
-        && (@phase_key ? POSITION(@phase_key[* RETURN CONCAT('Phase/', CURRENT)], e._to) : true)
-        && (@operation_key ? POSITION(@operation_key[* RETURN CONCAT('Operation/', CURRENT)], e._to) : true)
-        // Substring search for entity names
-        && (@product_code_search ? (
-            PARSE_IDENTIFIER(v).collection == 'Product'
-            && CONTAINS(LOWER(v.code), LOWER(@product_code_search))
-          ) : true)
-        && (@work_order_code_search ? (
-            PARSE_IDENTIFIER(v).collection == 'WorkOrder'
-            && CONTAINS(LOWER(v.wo_code), LOWER(@work_order_code_search))
-          ) : true)
-        && (@project_search ? (
-            PARSE_IDENTIFIER(v).collection == 'WorkOrder'
-            && CONTAINS(LOWER(v.project_code), LOWER(@project_search))
-          ) : true)
-        && (@phase_alias_search ? (
-            PARSE_IDENTIFIER(v).collection == 'Phase'
-            && CONTAINS(LOWER(v.alias), LOWER(@phase_alias_search))
-          ) : true)
-      RETURN i
-    )
+    FOR i IN Issue
 
-    // Limit and Enrich filtered issue records
-    FOR i IN links_filtered
-    SORT i.created
-    LIMIT @limit || null
+    // FILTER BY DOCUMENT PROPERTIES
+    FILTER
+      // When filtering by document key, parameters will be arrays
+      (@issue_key ? POSITION(@issue_key, i._key) : true)
+      && (@issue_key_search ? CONTAINS(i._key, @issue_key_search) : true)
+      && (@issue_type_key ? POSITION(@issue_type_key, i.issue_type_key) : true)
+      && (@created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], i.created_by) : true)
+      && (@closed_by ? POSITION(@closed_by[* RETURN CONCAT('User/', CURRENT)], i.closed_by) : true)
+      && (@time_created_from ? i.created >= @time_created_from : true)
+      && (@time_created_to ? i.created <= @time_created_to : true)
+      && (@time_closed_from ? i.closed >= @time_closed_from : true)
+      && (@time_closed_to ? i.closed <= @time_closed_to : true)
+      && (@issue_open != null ? i.open == @issue_open : true)
+      && (@issue_closed != null ? i.open == !@issue_closed : true)
+      && (@issue_critical != null ? i.critical == @issue_critical : true)
+      && (@issue_non_critical != null ? i.critical == !@issue_non_critical : true)
 
     LET type_data = FIRST(
       FOR it IN IssueType
@@ -89,14 +53,65 @@ class Queries:
       RETURN MERGE(fdef, field)
     )
 
-    // Phase alias is always required
+    // FILTER BY LINKS
 
+    // PRODUCT
+    LET product = FIRST(
+      FOR l IN 1..1 OUTBOUND i issue_rel
+      FILTER PARSE_IDENTIFIER(l._id).collection == 'Product'
+      RETURN l
+    )
+
+    FILTER
+      (@product_key ? product._key IN @product_key : true)
+      && (@product_code_search ? CONTAINS(LOWER(product.code), LOWER(@product_code_search)) : true)
+
+    // PHASE
     LET phase = FIRST(
       FOR l IN 1..1 OUTBOUND i issue_rel
       FILTER PARSE_IDENTIFIER(l._id).collection == 'Phase'
       RETURN l
     )
 
+    FILTER
+      (@phase_key ? phase._key IN @phase_key : true)
+      && (@phase_alias_search ? CONTAINS(LOWER(phase.alias), LOWER(@phase_alias_search)) : true)
+
+    // OPERATION
+    LET operation = FIRST(
+      FOR l IN 1..1 OUTBOUND i issue_rel
+      FILTER PARSE_IDENTIFIER(l._id).collection == 'Operation'
+      RETURN l
+    )
+
+    FILTER @operation_key ? operation && operation._key IN @operation_key : true
+
+    // WORK ORDER
+    LET work_order = FIRST(
+      FOR l IN 1..1 OUTBOUND i issue_rel
+      FILTER PARSE_IDENTIFIER(l._id).collection == 'WorkOrder'
+      RETURN l
+    )
+
+    FILTER
+      (@work_order_key ? work_order._key IN @work_order_key : true)
+      && (@work_order_code_search ? CONTAINS(LOWER(work_order.wo_code), LOWER(@work_order_code_search)) : true)
+      && (@project_search ? CONTAINS(LOWER(work_order.project_code), LOWER(@project_search)) : true)
+
+    // JOB
+    LET job = FIRST(
+      FOR l IN 1..1 OUTBOUND i issue_rel
+      FILTER PARSE_IDENTIFIER(l._id).collection == 'Job'
+      RETURN l
+    )
+
+    FILTER @job_key ? job._key IN @job_key : true
+
+    // LIMIT FILTERED ISSUE RECORDS
+    SORT i.created
+    LIMIT @limit || null
+
+    // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(i, {
       icon: type_data.icon,
       issue_type_name: type_data.name,
@@ -104,28 +119,7 @@ class Queries:
       phase_alias: phase.alias
     })
 
-    // Add other links data to record if requested
-
-
-    LET product = @with_links ? FIRST(
-      FOR l IN 1..1 OUTBOUND i issue_rel
-      FILTER PARSE_IDENTIFIER(l._id).collection == 'Product'
-      RETURN l
-    ) : null
-
-    LET operation = @with_links ? FIRST(
-      FOR l IN 1..1 OUTBOUND i issue_rel
-      FILTER PARSE_IDENTIFIER(l._id).collection == 'Operation'
-      RETURN l
-    ) : null
-
-    LET work_order = @with_links ?FIRST(
-      FOR l IN 1..1 OUTBOUND i issue_rel
-      FILTER PARSE_IDENTIFIER(l._id).collection == 'WorkOrder'
-      RETURN l
-    ) : null
-
-    LET issue_links = @with_links ? { product, operation, phase, work_order } : null
+    LET issue_links = { product, operation, phase, work_order }
 
     RETURN @with_links ? MERGE(base_result, { links: issue_links }) : base_result
   """
