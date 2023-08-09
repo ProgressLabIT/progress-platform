@@ -2,6 +2,8 @@
   <BaseDialog :show="show">
     <q-card square class="surface1 q-pa-md" style="min-width: 600px; max-width: 800px;">
       <q-form ref="issue-form">
+
+        <!-- FORM TITLE -->
         <q-card-section>
           <div class="row justify-between items-center">
             <div class="text-h2 display highlight text-center">
@@ -32,12 +34,10 @@
             :label="$t('issue_new_link_type_label')">
           </q-select>
 
-          <!-- Link details (WO/Phase/Job, Product/Phase, Operation/User) -->
-
           <!-- WORK ORDER -->
           <BaseAutocompleteWorkOrder
             v-if="link_form == 'order'"
-            :value="work_order"
+            :value="links.work_order"
             :label="$capitalize($t('work_order.long'))"
             @select="selection => loadWorkOrder(selection)">
           </BaseAutocompleteWorkOrder>
@@ -45,7 +45,7 @@
           <!-- PRODUCT -->
           <BaseAutocompleteProduct
             v-if="link_form == 'product'"
-            :value="product"
+            :value="links.product"
             key_only
             :label="$capitalize($t('product.label'))"
             @select="selection => loadProduct(selection)">
@@ -53,8 +53,8 @@
 
           <!-- PHASE -->
           <q-select
-            v-if="work_order || product"
-            :model-value="phase"
+            v-if="links.work_order || links.product"
+            :model-value="links.phase"
             @update:model-value="selection => loadPhase(selection)"
             :label="$t('phase.short')"
             filled
@@ -65,8 +65,8 @@
 
           <!-- JOB -->
           <q-select
-            v-if="link_form == 'order' && phase"
-            v-model="job"
+            v-if="link_form == 'order' && links.phase"
+            v-model="links.job"
             :label="$capitalize($t('job.label'))"
             filled
             clearable
@@ -85,11 +85,11 @@
 
           <template v-if="link_form == 'general'">
             <BaseAutocompleteUser
-              v-model="user"
+              v-model="links.user"
               :label="$t('user.label')">
             </BaseAutocompleteUser>
             <BaseAutocompleteOperation
-              v-model="operation"
+              v-model="links.operation"
               :label="$capitalize($t('operation.label'))">
             </BaseAutocompleteOperation>
           </template>
@@ -222,60 +222,16 @@ export default {
       confirmed: false,
       critical: false,
       link_form: null,
-      work_order: null,
-      product: null,
       phase_data: null,
-      phase: null,
       phase_jobs: null,
-      job: null,
-      operation: null,
-      user: null,
-      links: [
-        {
-          type: 'product',
-          job_prop: 'product_code',
-          label: this.$capitalize(this.$t('product.label')),
-          active: true,
-          value: null,
-          visible: true
-        },
-        {
-          type: 'operation',
-          job_prop: 'phase_alias',
-          label: this.$capitalize(this.$t('operation.issue_link_label')),
-          active: true,
-          value: null,
-          visible: true
-        },
-        {
-          type: 'phase',
-          job_prop: 'phase_alias',
-          label: this.$capitalize(this.$t('phase.issue_link_label')),
-          active: true,
-          value: null,
-          visible: true
-        },
-        {
-          type: 'work_order',
-          job_prop: 'wo_code',
-          label: this.$capitalize(this.$t('work_order.long')),
-          active: true,
-          value: null,
-          visible: true
-        },
-        {
-          type: 'user',
-          active: true,
-          value: null,
-          visible: false
-        },
-        {
-          type: 'job',
-          active: true,
-          value: null,
-          visible: false
-        }
-      ]
+      links: {
+        product: null,
+        operation: null,
+        phase: null,
+        work_order: null,
+        user: null,
+        job: null,
+      }
     }
   },
 
@@ -310,14 +266,9 @@ export default {
     initLinks() {
       // Show empty form fields if it's a new issue or the issue type is being changed
       if (this.with_links) {
-        this.work_order = null
-        this.product = null
-        this.phase = null
+        Object.keys(this.links).forEach(l => this.links[l] = null)
         this.phase_data = null
-        this.user = null
-        this.operation = null
-        this.job = null
-        this.phae_jobs = null
+        this.phase_jobs = null
       }
     },
 
@@ -329,7 +280,7 @@ export default {
         // If no template, force null, otherwise `undefiend` will not be included in the api body and the issue data will not be updated
         this.form_data = this.issue_type?.form_template.map(f => {
           return { ...f, value: null }
-        }) ?? null
+        }) ?? []
       }
       else this.form_data = [ ...this.issue.data ]
     },
@@ -353,9 +304,10 @@ export default {
 
     loadWorkOrder(wo) {
       // Set work order data and initialize Phase options to select from
-      this.work_order = wo
+      this.links.work_order = wo
+      this.links.product = { _key: wo.product_key }
       let params = new URLSearchParams()
-      this.work_order.phase_sequence.forEach(pk => params.append('phase_key', pk))
+      this.links.work_order.phase_sequence.forEach(pk => params.append('phase_key', pk))
       this.$api.get('phase', { params }).then(
         resp => this.phase_data = resp.data
       )
@@ -363,9 +315,9 @@ export default {
 
     loadProduct(product_key) {
       this.$api.get(`product/${product_key}`).then(resp => {
-        this.product = resp.data
+        this.links.product = resp.data
         let params = new URLSearchParams()
-        this.product.process_phases.forEach(p => params.append('phase_key', p))
+        this.links.product.process_phases.forEach(p => params.append('phase_key', p))
         this.$api.get('phase', { params }).then(
           resp => this.phase_data = resp.data
         )
@@ -373,12 +325,13 @@ export default {
     },
 
     loadPhase(phase_data) {
-      this.phase = phase_data
+      this.links.phase = phase_data
+      this.links.operation = { _key: phase_data.operation_key }
       // Phase link exists for both order and product mode. Load jobs only in order mode
       if (this.link_form == 'order') {
         this.$api.get('job', { params: {
-          work_order_key: this.work_order._key,
-          phase_key: this.phase._key
+          work_order_key: this.links.work_order._key,
+          phase_key: this.links.phase._key
         }}).then(resp => this.phase_jobs = resp.data.detail)
       }
     },
@@ -397,8 +350,6 @@ export default {
       this.form_data
       .filter(field => field.type == 'files')
       .forEach(async field => {
-
-
         const to_delete = []
         const to_add = []
 
@@ -440,6 +391,37 @@ export default {
       })
     },
 
+    prepareLinks() {
+      /*
+       * Set links automatically if during work session,
+       * otherwise use input from user and enrich it
+       */
+      const links = []
+
+      // Manual links
+      if (this.with_links) {
+        Object.entries(this.links).forEach(([k,v]) => {
+          if (v) links.push({ type: k, key: v._key})
+        })
+      }
+
+      // Auto links
+      else {
+        return Object.keys(this.links).forEach(k => {
+          const value = (
+            k == 'product' ? this.job_data.product_key
+            : k == 'operation' ? this.job_data.operation_key
+            : k == 'phase' ? this.job_data.phase_key
+            : k == 'work_order' ? this.job_data.wo_key
+            : k == 'job' ? this.job_data._key
+            : null
+          )
+          if (value) links.push({ type: k, key: value  })
+        })
+      }
+      return links
+    },
+
     async save() {
       this.saving = true
 
@@ -468,18 +450,7 @@ export default {
         issue_data.close_within = this.issue_type ? this.issue_type.close_within : 0
 
         // Map links to list of objects, including only populated properties
-        const link_data = this.links.map(l => {
-          const value = (
-            l.type == 'product' ? this.job_data.product_key
-            : l.type == 'operation' ? this.job_data.operation_key
-            : l.type == 'phase' ? this.job_data.phase_key
-            : l.type == 'work_order' ? this.job_data.wo_key
-            : l.type == 'user' ? this.session_data.user._key
-            : l.type == 'job' ? this.job_data._key
-            : null
-          )
-          return { type: l.type, key: value  }
-        })
+        const link_data = this.prepareLinks()
         issue_data.linked_to = link_data
       }
 
@@ -499,9 +470,16 @@ export default {
       .then(async (resp) => {
         const issue_key = this.mode == 'new' ? resp.data.detail.issue_key : issue_data._key
         await this.saveFiles(issue_key)
-        this.saving = false
-        this.$store.dispatch('getIssues', { job_key: this.job_data._key })
+
+        // If from work session, fetch issues directly, otherwise signal the parent component to do so
+        if (!this.with_links) {
+          await this.$store.dispatch('getIssues', { job_key: this.job_data._key })
+        }
+        else {
+          this.$emit('issue_created')
+        }
         this.cancel()
+        this.saving = false
         this.$q.notify({
           message: this.$t(message),
           color: this.critical ? 'theme-red' : 'theme-orange',

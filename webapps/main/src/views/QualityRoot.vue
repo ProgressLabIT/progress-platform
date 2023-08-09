@@ -35,7 +35,8 @@
             :show="show_issue_form"
             mode="new"
             with_links
-            @close="show_issue_form = false">
+            @close="show_issue_form = false"
+            @issue_created="getIssues">
           </IssueForm>
         </div>
 
@@ -237,6 +238,7 @@
             dense
             class="q-mb-md"
             key_only
+            :label="$t('opened_by')"
             :operator_only="false"
             :value="created_by"
             @select="(selection) => created_by = selection">
@@ -248,6 +250,7 @@
             dense
             class="q-mb-md"
             key_only
+            :label="$t('closed_by')"
             :operator_only="false"
             :value="closed_by"
             @select="(selection) => closed_by = selection">

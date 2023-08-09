@@ -125,7 +125,7 @@ export default {
         },
         {
           name: 'product_code',
-          field: row => row.links.product?.code,
+          field: row => row.links?.product?.code,
           sortable: true,
           align: 'left',
           label: this.$t('product.label').toUpperCase(),
@@ -133,7 +133,7 @@ export default {
         },
         {
           name: 'work_order_code',
-          field: row => row.links.work_order?.wo_code,
+          field: row => row.links?.work_order?.wo_code,
           sortable: true,
           label: this.$t('work_order.list_headers.wo_code').toUpperCase(),
           align: 'left',
@@ -141,7 +141,7 @@ export default {
         },
         {
           name: 'project_code',
-          field: row => row.links.work_order?.project_code,
+          field: row => row.links?.work_order?.project_code,
           sortable: true,
           label: this.$t('project').toUpperCase(),
           align: 'left',
