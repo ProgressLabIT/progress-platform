@@ -18,63 +18,77 @@
         <!-- FORM BODY -->
 
         <!-- ISSUE LINKS -->
-        <q-card-section
-          v-if="mode=='new' && with_links && form_step=='links'"
-          key="issue_links"
+        <q-card-section v-if="mode=='new' && with_links && form_step=='links'"
           class="column q-gutter-md">
           <!-- "Path" selection (Order, Product, General) -->
           <q-select
             :options="['order', 'product', 'general']"
             filled
+            clearable
             v-model="link_form"
             :label="$t('issue_new_link_type_label')">
           </q-select>
 
           <!-- Link details (WO/Phase/Job, Product/Phase, Operation/User) -->
-          <template v-if="link_form == 'order'">
 
-            <!-- WORK ORDER -->
-            <BaseAutocompleteWorkOrder
-              :value="work_order"
-              :label="$capitalize($t('work_order.long'))"
-              @select="selection => loadWorkOrder(selection)">
-            </BaseAutocompleteWorkOrder>
+          <!-- WORK ORDER -->
+          <BaseAutocompleteWorkOrder
+            v-if="link_form == 'order'"
+            :value="work_order"
+            :label="$capitalize($t('work_order.long'))"
+            @select="selection => loadWorkOrder(selection)">
+          </BaseAutocompleteWorkOrder>
 
-            <!-- PHASE -->
-            <q-select
-              v-if="work_order"
-              v-model="phase"
-              :label="$t('phase.short')"
-              filled
-              clearable
-              :options="work_order_phase_data"
-              option-label="alias">
-            </q-select>
+          <!-- PRODUCT -->
+          <BaseAutocompleteProduct
+            v-if="link_form == 'product'"
+            :value="product"
+            key_only
+            :label="$capitalize($t('product.label'))"
+            @select="selection => loadProduct(selection)">
+          </BaseAutocompleteProduct>
 
-            <!-- JOB -->
-            <q-select
-              v-if="phase"
-              v-model="job"
-              :label="$capitalize($t('job.label'))"
-              filled
-              clearable
-              :options="phase_jobs">
-              <template #option="scope">
-                <JobListItem
-                  v-bind="scope.itemProps"
-                  :job_data="scope.opt"
-                  show_progress
-                  show_assignee/>
-              </template>
-              <template #selected-item="scope">
-                <JobListItem :job_data="scope.opt" />
-              </template>
-            </q-select>
+          <!-- PHASE -->
+          <q-select
+            v-if="work_order || product"
+            :model-value="phase"
+            @update:model-value="selection => loadPhase(selection)"
+            :label="$t('phase.short')"
+            filled
+            clearable
+            :options="phase_data"
+            option-label="alias">
+          </q-select>
 
-          </template>
+          <!-- JOB -->
+          <q-select
+            v-if="link_form == 'order' && phase"
+            v-model="job"
+            :label="$capitalize($t('job.label'))"
+            filled
+            clearable
+            :options="phase_jobs">
+            <template #option="scope">
+              <JobListItem
+                v-bind="scope.itemProps"
+                :job_data="scope.opt"
+                show_progress
+                show_assignee/>
+            </template>
+            <template #selected-item="scope">
+              <JobListItem :job_data="scope.opt" />
+            </template>
+          </q-select>
 
-          <template v-else-if="link_form == 'product'">
-
+          <template v-if="link_form == 'general'">
+            <BaseAutocompleteUser
+              v-model="user"
+              :label="$t('user.label')">
+            </BaseAutocompleteUser>
+            <BaseAutocompleteOperation
+              v-model="operation"
+              :label="$capitalize($t('operation.label'))">
+            </BaseAutocompleteOperation>
           </template>
 
 
@@ -152,6 +166,9 @@
 
 <script>
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue'
+import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
+import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue'
+import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue'
 import BaseAutocompleteWorkOrder from '@/components/BaseAutocompleteWorkOrder.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import FormField from '@/components/FormField.vue'
@@ -164,6 +181,9 @@ export default {
 
   components: {
     BaseAutocompleteIssueType,
+    BaseAutocompleteOperation,
+    BaseAutocompleteProduct,
+    BaseAutocompleteUser,
     BaseAutocompleteWorkOrder,
     BaseDialog,
     JobListItem,
@@ -200,10 +220,13 @@ export default {
       critical: false,
       link_form: null,
       work_order: null,
-      work_order_phase_data: null,
+      product: null,
+      phase_data: null,
       phase: null,
       phase_jobs: null,
       job: null,
+      operation: null,
+      user: null,
       links: [
         {
           type: 'product',
@@ -267,11 +290,14 @@ export default {
     initLinks() {
       // Show empty form fields if it's a new issue or the issue type is being changed
       if (this.with_links) {
-        this.form_step = 'links'
-        this.link_form = null
         this.work_order = null
+        this.product = null
         this.phase = null
-        this.work_order_phase_data = null
+        this.phase_data = null
+        this.user = null
+        this.operation = null
+        this.job = null
+        this.phae_jobs = null
       }
     },
 
@@ -311,8 +337,19 @@ export default {
       let params = new URLSearchParams()
       this.work_order.phase_sequence.forEach(pk => params.append('phase_key', pk))
       this.$api.get('phase', { params }).then(
-        resp => this.work_order_phase_data = resp.data
+        resp => this.phase_data = resp.data
       )
+    },
+
+    loadProduct(product_key) {
+      this.$api.get(`product/${product_key}`).then(resp => {
+        this.product = resp.data
+        let params = new URLSearchParams()
+        this.product.process_phases.forEach(p => params.append('phase_key', p))
+        this.$api.get('phase', { params }).then(
+          resp => this.phase_data = resp.data
+        )
+      })
     },
 
     loadPhase(phase_data) {
@@ -330,6 +367,8 @@ export default {
       this.initIssueType()
       this.initFormData()
       this.initLinks()
+      this.form_step = 'links'
+      this.link_form = null
       this.critical_only = false
       this.$emit('close')
     },
@@ -466,12 +505,12 @@ export default {
       deep: true,
       handler: 'initFormData'
     },
+    link_form: {
+      handler: 'initLinks'
+    },
     show: {
       handler: 'initFormData'
     },
-    phase: {
-      handler: 'loadPhase'
-    }
   }
 }
 </script>

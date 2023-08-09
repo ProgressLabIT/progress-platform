@@ -349,7 +349,6 @@ import IssueForm from '@/components/IssueForm.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue'
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
-import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue'
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue'
 import queryModel from '@/lib/queryModelFactory.js'
 
@@ -360,7 +359,6 @@ export default {
   components: {
     BaseAutocompleteIssueType,
     BaseAutocompleteOperation,
-    BaseAutocompleteProduct,
     BaseAutocompleteUser,
     IssueForm,
     NoDataAlert
