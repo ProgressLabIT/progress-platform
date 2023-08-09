@@ -16,88 +16,95 @@
         </q-card-section>
 
         <!-- FORM BODY -->
-        <transition name="slide-fade" mode="out-in">
 
-          <!-- ISSUE LINKS -->
-          <q-card-section
-            v-if="mode=='new' && with_links && form_step=='links'"
-            key="issue_links"
-            class="column q-gutter-md">
-            <!-- "Path" selection (Order, Product, General) -->
+        <!-- ISSUE LINKS -->
+        <q-card-section
+          v-if="mode=='new' && with_links && form_step=='links'"
+          key="issue_links"
+          class="column q-gutter-md">
+          <!-- "Path" selection (Order, Product, General) -->
+          <q-select
+            :options="['order', 'product', 'general']"
+            filled
+            v-model="link_form"
+            :label="$t('issue_new_link_type_label')">
+          </q-select>
+
+          <!-- Link details (WO/Phase/Job, Product/Phase, Operation/User) -->
+          <template v-if="link_form == 'order'">
+
+            <!-- WORK ORDER -->
+            <BaseAutocompleteWorkOrder
+              :value="work_order"
+              :label="$capitalize($t('work_order.long'))"
+              @select="selection => loadWorkOrder(selection)">
+            </BaseAutocompleteWorkOrder>
+
+            <!-- PHASE -->
             <q-select
-              :options="['order', 'product', 'general']"
+              v-if="work_order"
+              v-model="phase"
+              :label="$t('phase.short')"
               filled
-              v-model="link_form"
-              label="Scegli tipo collegamenti">
+              clearable
+              :options="work_order_phase_data"
+              option-label="alias">
             </q-select>
-            <!-- Link details (WO/Phase/Job, Product/Phase, Operation/User) -->
-            <template v-if="link_form == 'order'">
 
-              <!-- WORK ORDER -->
-              <BaseAutocompleteWorkOrder
-                :value="work_order"
-                :label="$capitalize($t('work_order.long'))"
-                @select="selection => loadWorkOrder(selection)">
-              </BaseAutocompleteWorkOrder>
+            <!-- JOB -->
+            <q-select
+              v-if="phase"
+              v-model="job"
+              :label="$capitalize($t('job.label'))"
+              filled
+              clearable
+              :options="phase_jobs">
+              <template #option="scope">
+                <JobListItem
+                  v-bind="scope.itemProps"
+                  :job_data="scope.opt"
+                  show_progress
+                  show_assignee/>
+              </template>
+              <template #selected-item="scope">
+                <JobListItem :job_data="scope.opt" />
+              </template>
+            </q-select>
 
-              <!-- PHASE -->
-              <q-select
-                v-if="work_order"
-                v-model="phase"
-                :label="$t('phase.short')"
-                filled
-                clearable
-                :options="work_order_phase_data"
-                option-label="alias">
-              </q-select>
+          </template>
 
-              <!-- JOB -->
-              <q-select
-                v-if="phase"
-                v-model="job"
-                :label="$capitalize($t('job.label'))"
-                filled
-                clearable
-                :options="phase_jobs">
-                <template #option="scope">
-                  <JobListItem v-bind="scope.itemProps" :job_data="scope.opt" />
-                </template>
-                <template #selected-item="scope">
-                  <JobListItem :job_data="scope.opt" />
-                </template>
-              </q-select>
+          <template v-else-if="link_form == 'product'">
 
-            </template>
+          </template>
 
 
+        </q-card-section>
+
+        <!-- ISSUE DATA -->
+        <div v-else key="issue_data">
+
+          <!-- ISSUE TYPE SELECTION -->
+          <q-card-section>
+            <BaseAutocompleteIssueType
+              @select="(value) => setIssueType(value)"
+              :value="issue_type">
+            </BaseAutocompleteIssueType>
           </q-card-section>
 
-          <!-- ISSUE DATA -->
-          <div v-else key="issue_data">
+          <!-- FORM FIELDS -->
+          <q-card-section>
+            <template v-if="issue_type">
+              <FormField
+                v-for="field in form_data"
+                :key="field._key"
+                :field_data="field"
+                :root_path="`/media/issue/${issue?._key}`"
+                @update="val => field.value = val">
+              </FormField>
+            </template>
+          </q-card-section>
+        </div>
 
-            <!-- ISSUE TYPE SELECTION -->
-            <q-card-section>
-              <BaseAutocompleteIssueType
-                @select="(value) => setIssueType(value)"
-                :value="issue_type">
-              </BaseAutocompleteIssueType>
-            </q-card-section>
-
-            <!-- FORM FIELDS -->
-            <q-card-section>
-              <template v-if="issue_type">
-                <FormField
-                  v-for="field in form_data"
-                  :key="field._key"
-                  :field_data="field"
-                  :root_path="`/media/issue/${issue?._key}`"
-                  @update="val => field.value = val">
-                </FormField>
-              </template>
-            </q-card-section>
-          </div>
-
-        </transition>
 
         <!-- FORM ACTIONS -->
         <q-card-section>
@@ -257,7 +264,7 @@ export default {
   },
 
   methods: {
-    initFormData() {
+    initLinks() {
       // Show empty form fields if it's a new issue or the issue type is being changed
       if (this.with_links) {
         this.form_step = 'links'
@@ -266,7 +273,9 @@ export default {
         this.phase = null
         this.work_order_phase_data = null
       }
+    },
 
+    initFormData() {
       const use_clean_form = this.mode == 'new' || this.issue_type?._key != this.issue.issue_type_key
 
       if (use_clean_form) {
@@ -311,7 +320,7 @@ export default {
       // Phase link exists for both order and product mode. Load jobs only in order mode
       if (this.link_form == 'order') {
         this.$api.get('job', { params: {
-          wowrk_order_key: this.work_order._key,
+          work_order_key: this.work_order._key,
           phase_key: this.phase._key
         }}).then(resp => this.phase_jobs = resp.data.detail)
       }
@@ -320,6 +329,7 @@ export default {
     cancel() {
       this.initIssueType()
       this.initFormData()
+      this.initLinks()
       this.critical_only = false
       this.$emit('close')
     },
