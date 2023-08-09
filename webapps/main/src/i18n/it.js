@@ -125,6 +125,7 @@ export default {
   "filter": "filtro | filtri",
   "form_title": "campi modulo",
   "form_missing_fields_alert": "compilare tutti i campi",
+  "general": "Generale",
   "greeting": {
     "afternoon": "buon pomeriggio",
     "evening": "buonasera",
@@ -623,7 +624,7 @@ export default {
       "start_from": "Inizio da",
       "wo_code": "codice op"
     },
-    "long": "ordine di produzione",
+    "long": "Ordine di produzione",
     "move_title": "Cambia priorità ordine {wo_code}",
     "new": "crea ordini di produzione",
     "new_quantity": "nuova quantità",

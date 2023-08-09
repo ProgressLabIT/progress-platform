@@ -124,6 +124,7 @@ export default {
   "filter": "filter",
   "form_title": "form fields",
   "form_missing_fields_alert": "please fill in all fields",
+  "general": "General",
   "greeting": {
     "afternoon": "good afternoon",
     "evening": "good evening",
@@ -620,7 +621,7 @@ export default {
       "wo_code": "wo code",
       "wo_line": "line"
     },
-    "long": "work order",
+    "long": "Work order",
     "move_title": "Update priority for work order {wo_code}",
     "new": "create new work orders",
     "new_quantity": "new quantity",

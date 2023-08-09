@@ -22,9 +22,12 @@
           class="column q-gutter-md">
           <!-- "Path" selection (Order, Product, General) -->
           <q-select
-            :options="['order', 'product', 'general']"
+            :options="link_form_options"
             filled
             clearable
+            emit-value
+            map-options
+            :display-value="label"
             v-model="link_form"
             :label="$t('issue_new_link_type_label')">
           </q-select>
@@ -283,6 +286,23 @@ export default {
 
     session_data() {
       return this.$store.state.session
+    },
+
+    link_form_options() {
+      return [
+        {
+          value: 'order',
+          label: this.$t('work_order.long')
+        },
+        {
+          value: 'product',
+          label: this.$t('product.label')
+        },
+        {
+          value: 'general',
+          label: this.$t('general')
+        }
+      ]
     }
   },
 
