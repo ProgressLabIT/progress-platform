@@ -418,9 +418,9 @@ async def get_job_list(
     // parameters are passed as lists
     FOR j IN Job
     FILTER
-      @job_key ? POSITION(@job_key, j._key) : true
-      && @work_order_key ? POSITION(@work_order_key, j.wo_key) : true
-      && @phase_key ? POSITION(@phase_key, j.phase_key) : true
+      (@job_key ? POSITION(@job_key, j._key) : true)
+      && (@work_order_key ? POSITION(@work_order_key, j.wo_key) : true)
+      && (@phase_key ? POSITION(@phase_key, j.phase_key) : true)
       && !j.trash
     LET assigned_to = DOCUMENT(User, j.assigned_to)
     RETURN MERGE(j, { assigned_to })

@@ -24,19 +24,19 @@ class Queries:
       FOR i IN Issue
       FILTER
         // When filtering by document key, parameters will be arrays
-        @issue_key ? POSITION(@issue_key, i._key) : true
-        && @issue_key_search ? CONTAINS(i._key, @issue_key_search) : true
-        && @issue_type_key ? POSITION(@issue_type_key, i.issue_type_key) : true
-        && @created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], i.created_by) : true
-        && @closed_by ? POSITION(@closed_by[* RETURN CONCAT('User/', CURRENT)], i.closed_by) : true
-        && @time_created_from ? i.created >= @time_created_from : true
-        && @time_created_to ? i.created <= @time_created_to : true
-        && @time_closed_from ? i.closed >= @time_closed_from : true
-        && @time_closed_to ? i.closed <= @time_closed_to : true
-        && @issue_open != null ? i.open == @issue_open : true
-        && @issue_closed != null ? i.open == !@issue_closed : true
-        && @issue_critical != null ? i.critical == @issue_critical : true
-        && @issue_non_critical != null ? i.critical == !@issue_non_critical : true
+        (@issue_key ? POSITION(@issue_key, i._key) : true)
+        && (@issue_key_search ? CONTAINS(i._key, @issue_key_search) : true)
+        && (@issue_type_key ? POSITION(@issue_type_key, i.issue_type_key) : true)
+        && (@created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], i.created_by) : true)
+        && (@closed_by ? POSITION(@closed_by[* RETURN CONCAT('User/', CURRENT)], i.closed_by) : true)
+        && (@time_created_from ? i.created >= @time_created_from : true)
+        && (@time_created_to ? i.created <= @time_created_to : true)
+        && (@time_closed_from ? i.closed >= @time_closed_from : true)
+        && (@time_closed_to ? i.closed <= @time_closed_to : true)
+        && (@issue_open != null ? i.open == @issue_open : true)
+        && (@issue_closed != null ? i.open == !@issue_closed : true)
+        && (@issue_critical != null ? i.critical == @issue_critical : true)
+        && (@issue_non_critical != null ? i.critical == !@issue_non_critical : true)
       RETURN i
     )
 
@@ -46,28 +46,28 @@ class Queries:
       FOR v, e IN 1..1 OUTBOUND i issue_rel
       FILTER
         // Key Parameters are passed as lists. Keys must be turned into document ids
-        @product_key ? POSITION(@product_key[* RETURN CONCAT('Product/', CURRENT)], e._to) : true
-        && @work_order_key ? POSITION(@work_order_key[* RETURN CONCAT('WorkOrder/', CURRENT)], e._to) : true
-        && @job_key ? POSITION(@job_key[* RETURN CONCAT('Job/', CURRENT)], e._to) : true
-        && @phase_key ? POSITION(@phase_key[* RETURN CONCAT('Phase/', CURRENT)], e._to) : true
-        && @operation_key ? POSITION(@operation_key[* RETURN CONCAT('Operation/', CURRENT)], e._to) : true
+        (@product_key ? POSITION(@product_key[* RETURN CONCAT('Product/', CURRENT)], e._to) : true)
+        && (@work_order_key ? POSITION(@work_order_key[* RETURN CONCAT('WorkOrder/', CURRENT)], e._to) : true)
+        && (@job_key ? POSITION(@job_key[* RETURN CONCAT('Job/', CURRENT)], e._to) : true)
+        && (@phase_key ? POSITION(@phase_key[* RETURN CONCAT('Phase/', CURRENT)], e._to) : true)
+        && (@operation_key ? POSITION(@operation_key[* RETURN CONCAT('Operation/', CURRENT)], e._to) : true)
         // Substring search for entity names
-        && @product_code_search ? (
-          PARSE_IDENTIFIER(v).collection == 'Product'
-          && CONTAINS(LOWER(v.code), LOWER(@product_code_search))
-        ) : true
-        && @work_order_code_search ? (
-          PARSE_IDENTIFIER(v).collection == 'WorkOrder'
-          && CONTAINS(LOWER(v.wo_code), LOWER(@work_order_code_search))
-        ) : true
-        && @project_search ? (
-          PARSE_IDENTIFIER(v).collection == 'WorkOrder'
-          && CONTAINS(LOWER(v.project_code), LOWER(@project_search))
-        ) : true
-        && @phase_alias_search ? (
-          PARSE_IDENTIFIER(v).collection == 'Phase'
-          && CONTAINS(LOWER(v.alias), LOWER(@phase_alias_search))
-        ) : true
+        && (@product_code_search ? (
+            PARSE_IDENTIFIER(v).collection == 'Product'
+            && CONTAINS(LOWER(v.code), LOWER(@product_code_search))
+          ) : true)
+        && (@work_order_code_search ? (
+            PARSE_IDENTIFIER(v).collection == 'WorkOrder'
+            && CONTAINS(LOWER(v.wo_code), LOWER(@work_order_code_search))
+          ) : true)
+        && (@project_search ? (
+            PARSE_IDENTIFIER(v).collection == 'WorkOrder'
+            && CONTAINS(LOWER(v.project_code), LOWER(@project_search))
+          ) : true)
+        && (@phase_alias_search ? (
+            PARSE_IDENTIFIER(v).collection == 'Phase'
+            && CONTAINS(LOWER(v.alias), LOWER(@phase_alias_search))
+          ) : true)
       RETURN i
     )
 
