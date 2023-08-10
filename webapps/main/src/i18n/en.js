@@ -306,6 +306,7 @@ export default {
     "long": "process phase | process phases",
     "media_deleted": "deleted",
     "multiline_field": "multiline",
+    "no_phase": "No phase",
     "no_procedure": "no procedure",
     "params": {
       "auto_new_batch" : {

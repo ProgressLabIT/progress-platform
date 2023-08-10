@@ -2,6 +2,7 @@
   <q-select
     use-input
     :dense="dense"
+    :hint="hint"
     filled
     clearable
     :options="options"
@@ -58,7 +59,8 @@ export default {
       default: false
     },
 
-    label: String
+    label: String,
+    hint: String
   },
 
   data () {

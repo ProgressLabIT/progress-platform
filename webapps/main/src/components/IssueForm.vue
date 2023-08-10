@@ -30,7 +30,8 @@
             emit-value
             map-options
             :display-value="label"
-            v-model="link_form"
+            :model-value="link_form"
+            @update:model-value="updateLinkForm"
             :label="$t('issue_new_link_type_label')">
           </q-select>
 
@@ -46,14 +47,16 @@
           <BaseAutocompleteProduct
             v-if="link_form == 'product'"
             :value="links.product"
+            :hint="(links.work_order || links.product) && !phase_data ? $t('phase.no_phase') : null"
             key_only
             :label="$capitalize($t('product.label'))"
             @select="selection => loadProduct(selection)">
           </BaseAutocompleteProduct>
 
+
           <!-- PHASE -->
           <q-select
-            v-if="links.work_order || links.product"
+            v-if="phase_data"
             :model-value="links.phase"
             @update:model-value="selection => loadPhase(selection)"
             :label="$t('phase.short')"
@@ -209,7 +212,18 @@ export default {
     with_links: {
       type: Boolean,
       default: false
-    }
+    },
+    auto_link_mode: {
+      type: String,
+      validator(value) {
+        // The value must match one of these strings
+        return ['work_order', 'work_session'].includes(value)
+      }
+    },
+    auto_links: {
+      type: Object,
+      default: null
+    },
   },
 
   data () {
@@ -231,7 +245,7 @@ export default {
         work_order: null,
         user: null,
         job: null,
-      }
+      },
     }
   },
 
@@ -263,12 +277,32 @@ export default {
   },
 
   methods: {
+    updateLinkForm(value) {
+      this.link_form = value
+      this.initLinks()
+    },
+
     initLinks() {
-      // Show empty form fields if it's a new issue or the issue type is being changed
+      // Inser links step if required
+      if (this.mode == 'new' && this.with_links) this.form_step = 'links'
+
+      // Reset links
       if (this.with_links) {
         Object.keys(this.links).forEach(l => this.links[l] = null)
         this.phase_data = null
         this.phase_jobs = null
+      }
+
+      // Set auto links if required
+      if (this.auto_link_mode == 'work_order' && this.auto_links.work_order) {
+        this.link_form = 'order'
+        this.loadWorkOrder(this.auto_links.work_order)
+      }
+
+      if (this.auto_link_mode == 'work_session' && this.auto_links) {
+        Object.entries(this.auto_links).forEach(([k,v]) => {
+          this.links[k] = { _key: v }
+        })
       }
     },
 
@@ -306,21 +340,29 @@ export default {
       // Set work order data and initialize Phase options to select from
       this.links.work_order = wo
       this.links.product = { _key: wo.product_key }
+
       let params = new URLSearchParams()
-      this.links.work_order.phase_sequence.forEach(pk => params.append('phase_key', pk))
+      this.links.work_order.phase_sequence.forEach(
+        pk => params.append('phase_key', pk)
+      )
+
       this.$api.get('phase', { params }).then(
         resp => this.phase_data = resp.data
       )
     },
 
     loadProduct(product_key) {
+      // To avoid loading in advance a lot of unnecessary product data, the product list contains limited information. Thus it is necessary to fetch the full product data first and then load the phases options.
       this.$api.get(`product/${product_key}`).then(resp => {
         this.links.product = resp.data
-        let params = new URLSearchParams()
-        this.links.product.process_phases.forEach(p => params.append('phase_key', p))
-        this.$api.get('phase', { params }).then(
-          resp => this.phase_data = resp.data
-        )
+        if (this.product.process_phases) {
+
+          let params = new URLSearchParams()
+          this.links.product.process_phases.forEach(p => params.append('phase_key', p))
+          this.$api.get('phase', { params }).then(
+            resp => this.phase_data = resp.data
+          )
+        }
       })
     },
 
@@ -392,33 +434,11 @@ export default {
     },
 
     prepareLinks() {
-      /*
-       * Set links automatically if during work session,
-       * otherwise use input from user and enrich it
-       */
+      // Create array of { type, key } objects from object keys and values
       const links = []
-
-      // Manual links
-      if (this.with_links) {
-        Object.entries(this.links).forEach(([k,v]) => {
-          if (v) links.push({ type: k, key: v._key})
-        })
-      }
-
-      // Auto links
-      else {
-        return Object.keys(this.links).forEach(k => {
-          const value = (
-            k == 'product' ? this.job_data.product_key
-            : k == 'operation' ? this.job_data.operation_key
-            : k == 'phase' ? this.job_data.phase_key
-            : k == 'work_order' ? this.job_data.wo_key
-            : k == 'job' ? this.job_data._key
-            : null
-          )
-          if (value) links.push({ type: k, key: value  })
-        })
-      }
+      Object.entries(this.links).forEach(([k,v]) => {
+        if (v) links.push({ type: k, key: v._key})
+      })
       return links
     },
 
@@ -450,10 +470,8 @@ export default {
         issue_data.close_within = this.issue_type ? this.issue_type.close_within : 0
 
         // Map links to list of objects, including only populated properties
-        const link_data = this.prepareLinks()
-        issue_data.linked_to = link_data
+        issue_data.linked_to = this.prepareLinks()
       }
-
       // Add _key and data fields for ISSUE_UPDATED event
       else issue_data._key = this.issue._key
 
@@ -473,7 +491,7 @@ export default {
 
         // If from work session, fetch issues directly, otherwise signal the parent component to do so
         if (!this.with_links) {
-          await this.$store.dispatch('getIssues', { job_key: this.job_data._key })
+          await this.$store.dispatch('getIssues', { work_order_key: this.job_data.wo_key })
         }
         else {
           this.$emit('issue_created')
@@ -493,9 +511,7 @@ export default {
   created() {
     this.initIssueType()
     this.initFormData()
-
-    // Inser links step if required
-    if (this.mode == 'new' && this.with_links) this.form_step = 'links'
+    this.initLinks()
   },
 
   watch: {
@@ -503,11 +519,11 @@ export default {
       deep: true,
       handler: 'initFormData'
     },
-    link_form: {
-      handler: 'initLinks'
-    },
     show: {
-      handler: 'initFormData'
+      handler() {
+        this.initFormData()
+        this.initLinks()
+      }
     },
   }
 }

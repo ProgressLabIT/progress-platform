@@ -9,7 +9,14 @@
           {{ issue.issue_type_name || $t('issue') }}
         </span>
         <span class="smaller text-body2 text-uppercase low-text q-ml-md">
-          <span class="q-mr-sm">{{ issue.phase_alias }}</span>
+          <span class="q-mr-sm">
+            <template v-if="issue.phase_alias">
+              {{ issue.phase_alias}}
+            </template>
+            <template v-else>
+              {{ $t('order') }}
+            </template>
+          </span>
           <span>#{{ issue._key }}</span>
         </span>
         <span class="col q-ml-xl">

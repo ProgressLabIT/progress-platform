@@ -310,6 +310,7 @@ export default {
     "long": "fase di lavorazione | fasi di lavorazione",
     "media_deleted": "eliminato",
     "multiline_field": "multiriga",
+    "no_phase": "Nessuna fase",
     "no_procedure": "nessuna procedura",
     "params": {
       "auto_new_batch" : {
