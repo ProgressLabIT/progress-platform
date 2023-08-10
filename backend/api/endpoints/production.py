@@ -2,7 +2,7 @@ import traceback
 from datetime import datetime
 from typing import Dict, List, Union
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 
 from models.product import ProductDetails
@@ -326,21 +326,35 @@ async def delete_work_order(wo_key: str):
 # ----------------------------------------------------------------------
 
 @router.get('/work-order-archive')
-async def get_work_order_archive(search: str = None):
+async def get_work_order_archive(
+  search: str = None,
+  open: bool = False,
+  closed: bool = True,
+  limit: int = 100
+):
+  """By default searches for closed orders only. Can change the behavior by setting the `open` and `closed` parameters."""
   query = """
     FOR wo IN WorkOrder
-    FILTER wo.status == 'closed'
+    FILTER
+      // closed and open parameters define whether these orders should be included in results
+      @closed ? true : wo.status != 'closed'
+      && @open ? true : wo.status == 'closed'
     LET code_match = @search ? CONTAINS(LOWER(wo.wo_code), LOWER(@search)) : true
     LET product_match = @search ? CONTAINS(LOWER(wo.product_code), LOWER(@search)) : true
     LET project_match = @search ? CONTAINS(LOWER(wo.project_code), LOWER(@search)) : true
     FILTER code_match || product_match || project_match
     SORT wo.end DESC
-    LIMIT 100
+    LIMIT @limit
     LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == wo._id RETURN 1)
     RETURN MERGE(wo, { issue_count })
   """
   try:
-    cursor = db.aql.execute(query, bind_vars=dict(search=search))
+    cursor = db.aql.execute(query, bind_vars=dict(
+      search = search,
+      closed = closed,
+      open = open,
+      limit = limit
+    ))
     return [WorkOrderFull(**r) for r in cursor]
   except StopIteration:
     return []
@@ -394,9 +408,29 @@ async def update_queue(queue_update: Queue):
 
 
 @router.get('/job')
-async def get_job_list():
+async def get_job_list(
+  job_key: List[str] = Query(None),
+  work_order_key: List[str] = Query(None),
+  phase_key: List[str] = Query(None)
+  ):
 
-  db_resp = db.aql.execute("FOR j IN Job FILTER !j.trash RETURN j")
+  query = """
+    // parameters are passed as lists
+    FOR j IN Job
+    FILTER
+      (@job_key ? POSITION(@job_key, j._key) : true)
+      && (@work_order_key ? POSITION(@work_order_key, j.wo_key) : true)
+      && (@phase_key ? POSITION(@phase_key, j.phase_key) : true)
+      && !j.trash
+    LET assigned_to = DOCUMENT(User, j.assigned_to)
+    RETURN MERGE(j, { assigned_to })
+  """
+
+  db_resp = db.aql.execute(query, bind_vars=dict(
+    job_key = job_key,
+    work_order_key = work_order_key,
+    phase_key = phase_key
+  ))
   job_list = [Job(**j) for j in db_resp]
 
   return APIResponse(detail=job_list)

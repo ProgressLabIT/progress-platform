@@ -1,19 +1,23 @@
 <template>
   <q-select
     use-input
-    dense
+    :dense="dense"
+    :hint="hint"
+    filled
     clearable
     :options="options"
     option-label="code"
     @filter="filter"
     :model-value="value"
+    :label="label"
     input-debounce="100"
     :option-value="key_only ? '_key' : null"
     :emit-value="key_only"
     :map-options="key_only"
+    popup-content-style="width: 0px"
     @update:model-value="(selection) => $emit('select', selection)">
     <template #option="scope">
-      <q-item v-bind="scope.itemProps" style="max-width: 300px;">
+      <q-item v-bind="scope.itemProps">
         <q-item-section>
           <q-item-label class="highlight">
             {{ scope.opt.code }}
@@ -36,7 +40,7 @@ export default {
 
   props: {
     value: {
-      type: Object,
+      type: [String, Object],
       deafult: null
     },
 
@@ -45,10 +49,18 @@ export default {
       default: true
     },
 
+    dense: {
+      type: Boolean,
+      default: false
+    },
+
     key_only: {
       type: Boolean,
       default: false
-    }
+    },
+
+    label: String,
+    hint: String
   },
 
   data () {

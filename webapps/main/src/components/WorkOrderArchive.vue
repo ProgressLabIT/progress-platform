@@ -39,7 +39,7 @@
           :props="props"
           @dblclick="showWorkOrderScreen(props.row._key)">
           <template v-for="c in columns" :key="c.name">
-            <q-td :props="props">
+            <q-td :props="props" class="ellipsis">
               <template v-if="['start', 'end'].includes(c.name)">
                 <div>
                   {{ getHumanDate(props.row[c.name]) }}
@@ -134,19 +134,22 @@ export default {
           field: 'wo_code',
           name: 'wo_code',
           label: this.$t('work_order.list_headers.wo_code').toUpperCase(),
-          align: 'left'
+          align: 'left',
+          style: 'max-width: 10vw'
         },
         {
           field: 'project_code',
           name: 'project_code',
           label: this.$t('project').toUpperCase(),
-          align: 'left'
+          align: 'left',
+          style: 'max-width: 10vw'
         },
         {
           field: 'product_code',
           name: 'product_code',
           label: this.$t('work_order.list_headers.product_code').toUpperCase(),
-          align: 'left'
+          align: 'left',
+          style: 'max-width: 10vw'
         },
         {
           field: 'qt_completed',

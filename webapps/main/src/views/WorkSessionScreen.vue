@@ -182,6 +182,8 @@
       <IssueForm
         :show="show_issue_form"
         mode="new"
+        auto_link_mode="work_session"
+        :auto_links="issue_links"
         @close="show_issue_form = false">
       </IssueForm>
 
@@ -314,6 +316,16 @@ export default {
 
     can_work() {
       return this.has_material_to_proceed && !this.job_closed
+    },
+
+    issue_links() {
+      return {
+        product: this.j.product_key,
+        operation: this.j.operation_key,
+        phase: this.j.phase_key,
+        work_order: this.j.wo_key,
+        job: this.j._key
+      }
     }
   },
 

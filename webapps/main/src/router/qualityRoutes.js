@@ -1,0 +1,24 @@
+const qualityRoutes = [
+  {
+    path: 'quality',
+    name: 'qualityRoot',
+    component: () => import("@/views/QualityRoot.vue"),
+    redirect: { name: 'issueOverview' },
+    meta: { scope: 'admin', screen_title: 'Quality' },
+    children: [
+      {
+        path: 'issues',
+        name: 'issueOverview',
+        component: () => import("@/views/IssueOverview.vue"),
+      },
+      {
+        path: 'issues/:issue_key',
+        name: 'issueDetail',
+        component: () => import('@/components/IssueDetail.vue'),
+        props: true
+      }
+    ]
+  }
+]
+
+export default qualityRoutes

@@ -2,7 +2,7 @@
   <q-select
     use-input
     filled
-    :label="$capitalize($t('phase.add'))"
+    :label="label"
     :dense="dense"
     :clearable="clearable"
     :options="options"
@@ -31,11 +31,11 @@ import multiMatch from '@/lib/MultiFieldSearch.js'
 
 export default {
 
-  name: 'BaseAutocompleteProduct',
+  name: 'BaseAutocompleteOperation',
 
   props: {
     value: {
-      type: Object,
+      type: [String, Object],
       deafult: null
     },
 
@@ -51,12 +51,16 @@ export default {
 
     dense: {
       type: Boolean,
-      default: true
+      default: false
     },
 
     clearable: {
       type: Boolean,
       default: true
+    },
+
+    label: {
+      type: String,
     }
   },
 

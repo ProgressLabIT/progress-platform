@@ -4,7 +4,7 @@ from enum import Enum
 from typing import List, Optional
 from fnmatch import fnmatch
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 
@@ -151,6 +151,21 @@ async def get_production_process(product_key):
     )
 
   return results
+
+
+
+@router.get("/phase")
+async def get_phase_data(phase_key: List[str] = Query(...)):
+  try:
+    phase_db_data = db.collection('Phase').get_many(phase_key)
+  except DocumentGetError:
+    raise HTTPException(
+      status_code=404,
+      detail=f"Could not find phase with key {phase_key} in the db"
+    )
+
+  return [PhaseRecord(**p) for p in phase_db_data]
+
 
 
 @router.put(

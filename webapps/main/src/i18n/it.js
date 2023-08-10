@@ -46,6 +46,10 @@ export default {
   "close": "chiudi",
   "close_within": "Chiudere entro",
   "closed": "chiuso",
+  "closed_date": "Chiusura",
+  "closed_by": "Utente chiusura",
+  "closed_max": "Chiusura (max)",
+  "closed_min": "Chiusura (min)",
   "code": "codice",
   "component": "componente | componenti",
   "confirm": "conferma",
@@ -121,6 +125,7 @@ export default {
   "filter": "filtro | filtri",
   "form_title": "campi modulo",
   "form_missing_fields_alert": "compilare tutti i campi",
+  "general": "Generale",
   "greeting": {
     "afternoon": "buon pomeriggio",
     "evening": "buonasera",
@@ -139,14 +144,19 @@ export default {
   "issue_button_reopen_critical": "Riapri come critica",
   "issue_button_add_critical": "Trasforma in critica",
   "issue_button_remove_critical": "Segna come non critica",
+  "issue_closed": "Chiusa",
+  "issue_critical": "Critica",
   "issue_delete_confirm_title": "Elimina segnalazione",
   "issue_delete_confirm_question": "Eliminando la segnalazione vengono cancellati tutti i dati relativi. Vuoi procedere?",
   "issue_delete_success": "Segnalazione eliminata con successo",
   "issue_edit_type": "modifica tipo",
+  "issue_key": "ID segnalazione",
   "issue_missing": "Nessuna segnalazione",
   "issue_new_success": "Segnalazione creata con successo",
   "issue_new_title": "Nuova segnalazione",
-  "issue_new_link_step_helper": "Indicare a quali elementi dovrebbe essere collegata la segnalazione",
+  "issue_new_link_type_label": "Collega a",
+  "issue_non_critical": "Non critica",
+  "issue_open": "Aperta",
   "issue_type": "tipo di segnalazione | tipi di segnalazione",
   "issue_type_alerts_code_missing": "Indicare un codice per il tipo di segnalazione",
   "issue_type_alerts_name_missing": "Indicare un nome per il tipo di segnalazione",
@@ -227,7 +237,11 @@ export default {
   "notes_production": "Note produzione",
   "of": "di",
   "on_time": "In tempo",
-  "open": "aperto",
+  "open": "Aperto",
+  "opened_date": "Apertura",
+  "opened_max": "Apertura (max)",
+  "opened_min": "Apertura (min)",
+  "opened_by": "Utente apertura",
   "operation": {
     "add_op": "aggiungi operazione",
     "alerts": {
@@ -296,6 +310,7 @@ export default {
     "long": "fase di lavorazione | fasi di lavorazione",
     "media_deleted": "eliminato",
     "multiline_field": "multiriga",
+    "no_phase": "Nessuna fase",
     "no_procedure": "nessuna procedura",
     "params": {
       "auto_new_batch" : {
@@ -375,7 +390,7 @@ export default {
       }
     },
     "rename": "Rinomina fase",
-    "short": "fase | fasi",
+    "short": "Fase | Fasi",
     "step_types": {
       "checklist": "controlli",
       "form": "modulo",
@@ -406,7 +421,7 @@ export default {
       "show_images": "mostra immagini"
     },
     "key": "ID prodotto",
-    "label": "prodotto | prodotti",
+    "label": "Prodotto | Prodotti",
     "minimum_order": "ordine minimo",
     "new_modal_title": "nuovo prodotto",
     "no_image": "nessuna immagine",
@@ -541,6 +556,7 @@ export default {
     "enabled": "abilitato | abilitati",
     "hourly_cost": "costo orario",
     "key": "codice utente",
+    "label": "Utente",
     "last_login": "ultimo accesso",
     "less_filters": "meno filtri",
     "logged_in": "collegato | collegati",
@@ -578,9 +594,11 @@ export default {
     "jobList": "lavori",
     "libraryRoot": "libreria prodotti",
     "issueTypeLibrary": "tipi di segnalazione",
+    "issueOverview": "Segnalazioni",
     "operationLibrary": "operazioni",
     "workSession": "sessione di lavoro",
     "productionRoot": "monitoraggio produzione",
+    "qualityRoot": "Qualità",
     "userLibrary": "utenti",
     "userJobs": "selezione lavoro",
     "workOrderArchive": "Archivio",
@@ -607,7 +625,7 @@ export default {
       "start_from": "Inizio da",
       "wo_code": "codice op"
     },
-    "long": "ordine di produzione",
+    "long": "Ordine di produzione",
     "move_title": "Cambia priorità ordine {wo_code}",
     "new": "crea ordini di produzione",
     "new_quantity": "nuova quantità",
@@ -622,5 +640,6 @@ export default {
     "update_due_date": "modifica data scadenza",
     "update_from_date": "modifica data rilascio",
     "wo_code": "codice"
-  }
+  },
+  "work_order_autocomplete_hint": "Inserisci il testo da ricercare (min 3 caratteri) fra codice ordine, prodotto, commessa. Verranno mostrati i primi 100 risultati."
 }

@@ -2,7 +2,7 @@
   <q-select
     use-input
     filled
-    :label-slot="!!label"
+    :label="label"
     :stack-label="stackLabel"
     :dense="dense"
     :placeholder="placeholder_computed"
@@ -23,10 +23,6 @@
       </q-item>
     </template>
 
-    <template #label v-if="!!label">
-      {{ label }}
-    </template>
-
     <template #selected-item="scope">
       <BaseUserAvatar :user="scope.opt" :show_avatar="show_avatar" :dense="dense" reverse/>
     </template>
@@ -38,7 +34,7 @@ import multiMatch from '@/lib/MultiFieldSearch.js'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 export default {
 
-  name: 'BaseAutocompletOperator',
+  name: 'BaseAutocompletUser',
 
   components: {
     BaseUserAvatar
@@ -65,6 +61,11 @@ export default {
       default: false
     },
 
+    operator_only: {
+      type: Boolean,
+      default: true
+    },
+
     dense: {
       type: Boolean,
       default: false
@@ -77,7 +78,7 @@ export default {
 
     placeholder: {
       type: String,
-      default: false
+      default: ''
     },
 
     stackLabel: {
@@ -101,7 +102,9 @@ export default {
 
   computed: {
     origin_list() {
-      return this.$store.getters.operator_list()
+      return this.operator_only
+        ? this.$store.getters.operator_list()
+        : this.$store.state.user.user_list
     },
 
     placeholder_computed() {

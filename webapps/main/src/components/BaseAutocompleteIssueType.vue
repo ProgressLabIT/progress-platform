@@ -45,7 +45,7 @@ export default {
 
   props: {
     value: {
-      type: Object,
+      type: [String, Object],
       deafult: null
     },
 

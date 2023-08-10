@@ -173,7 +173,7 @@ export default {
     },
 
     goToNextUndoneStep() {
-      if (this.batch_data.length) {
+      if (this.batch_data?.length) {
         const procedure_length = this.j.step_sequence.length
         for (let i = this.current_step_index; i < procedure_length ; i++) {
           if (!this.batch_data[i].done) {
