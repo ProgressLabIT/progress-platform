@@ -1,3 +1,5 @@
+import traceback
+
 from fastapi import APIRouter, HTTPException
 
 from utils.api import APIResponse
@@ -9,11 +11,14 @@ router = APIRouter()
 
 @router.post('/field')
 def create_field(field_data: CustomField):
-  field_key = db.collection('CustomField').insert(field_data)['_key']
-  return APIResponse(
-    message = "Field created successfully",
-    detail = dict(field_key=field_key)
-  )
+  try:
+    field_key = db.collection('CustomField').insert(field_data)['_key']
+    return APIResponse(
+      message = "Field created successfully",
+      detail = dict(field_key=field_key)
+    )
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
 @router.get('/field')
@@ -25,14 +30,41 @@ def fetch_field(name: str = None, key: str = None):
     match['_key'] = key
 
   cursor = db.collection('CustomField').find(match)
-  return [CustomField(**f) for f in cursor]
+  result = [CustomField(**f) for f in cursor]
+  return sorted(result, key=lambda x: x.name.lower())
+
+
+
+@router.put('/field/{field_key}')
+def update_field(field_key: str, field_data: CustomField):
+  """Field data must contain _key"""
+  try:
+    db.collection('CustomField').update(field_data.dict(by_alias=True))
+    return APIResponse(message = "Field updated successfully")
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
 
 @router.get('/list')
 def fetch_custom_list_values(field_key: str):
   match = dict(field_key=field_key)
-  return [CustomListValue(**v) for v in db.collection('CustomListValue').find(match)]
+  cursor = db.collection('CustomListValue').find(match)
+  result = [CustomListValue(**v) for v in cursor]
+  return sorted(result, key=lambda x: x.value)
 
 
+@router.post('/list/{field_key}')
+def create_or_update_custom_list_values(
+  field_key: str,
+  new_values: list[CustomListValue]
+  ):
+  try:
+    tx = db.begin_transaction(write=['CustomListValue'])
+    collection = tx.collection('CustomListValue')
+    collection.delete_match(dict(field_key=field_key))
+    collection.insert_many(new_values)
+    tx.commit_transaction()
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
 
