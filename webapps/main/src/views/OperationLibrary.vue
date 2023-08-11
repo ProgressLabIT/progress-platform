@@ -5,7 +5,8 @@
 
       <q-input
         dense
-        class="q-px-lg q-py-sm"
+        filled
+        class="q-px-md q-pt-md"
         :placeholder="$capitalize($t('search'))"
         v-model="search_text">
         <template #append>
