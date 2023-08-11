@@ -52,7 +52,7 @@ import form from '@/mixins/form.js'
 
 export default {
 
-  name: 'CustomFieldNew',
+  name: 'FormFieldNew',
 
   components: {
     BaseActionCard
@@ -79,7 +79,10 @@ export default {
         default_label: this.new_field.label,
         default_hint: this.new_field.hint
       }
-      this.$api.post('field', data).then(() => this.$emit('close'))
+      this.$api.post('field', data).then(() => {
+        this.$emit('created')
+        this.$emit('close')
+      })
     }
   }
 }

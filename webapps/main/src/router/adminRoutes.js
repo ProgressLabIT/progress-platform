@@ -97,6 +97,19 @@ const adminRoutes = [
         ]
       },
       {
+        path: 'field',
+        name: 'formFieldLibrary',
+        component: () => import('@/views/FormFieldLibrary.vue'),
+        children: [
+          {
+            path: ':field_key',
+            name: 'formFieldDetail',
+            component: () => import("@/views/FormFieldDetail.vue") ,
+            props: true
+          }
+        ]
+      },
+      {
         path: 'flows',
         name: 'flowLibrary',
         component: () => import("@/views/FlowLibrary.vue")

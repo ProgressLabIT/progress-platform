@@ -590,6 +590,7 @@ export default {
     "companyDetails": "dettagli azienda",
     "defaultPhaseParams": "fase di default",
     "flowLibrary": "Flussi dati",
+    "formFieldLibrary": "Campi moduli",
     "generalSettings": "generale",
     "jobList": "lavori",
     "libraryRoot": "libreria prodotti",

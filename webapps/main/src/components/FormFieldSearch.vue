@@ -53,13 +53,13 @@
     </q-card-section>
 
     <BaseDialog :show="show_new_field" @close="show_new_field=false">
-      <CustomFieldNew @close="() => {show_new_field=false; fetchFields();}"/>
+      <FormFieldNew @close="() => {show_new_field=false; fetchFields();}"/>
     </BaseDialog>
   </q-card>
 </template>
 
 <script>
-import CustomFieldNew from '@/components/CustomFieldNew.vue'
+import FormFieldNew from '@/components/FormFieldNew.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import form from '@/mixins/form.js'
@@ -69,7 +69,7 @@ export default {
   name: 'FormFieldSearch',
 
   components: {
-    CustomFieldNew,
+    FormFieldNew,
     BaseDialog
   },
 
