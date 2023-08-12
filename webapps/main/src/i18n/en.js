@@ -108,6 +108,7 @@ export default {
     'MESSAGE_DELETED': "Message deleted"
   },
   "export": "Export",
+  "ext_key": "External key",
   "field_add": "Add field",
   "field_multiple": "Multiple values",
   "field_new": "New field",
@@ -579,6 +580,7 @@ export default {
     "temp_password": "temporary password",
     "username": "username"
   },
+  "value": "Value | Values",
   "views": {
     "PhaseParameters": "parameters",
     "PhaseSteps": "procedure",

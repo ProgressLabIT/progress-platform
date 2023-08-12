@@ -109,6 +109,7 @@ export default {
     'MESSAGE_DELETED': "Messaggio cancellato"
   },
   "export": "Esporta",
+  "ext_key": "Chiave esterna",
   "field_add": "Aggiungi campo",
   "field_multiple": "Valori multipli",
   "field_new": "Nuovo campo",
@@ -582,6 +583,7 @@ export default {
     "temp_password": "password temporanea",
     "username": "nome utente"
   },
+  "value": "Valore | Valori",
   "views": {
     "PhaseParameters": "parametri",
     "PhaseSteps": "procedura",
