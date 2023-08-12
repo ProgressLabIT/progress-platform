@@ -55,7 +55,7 @@ def fetch_custom_list_values(field_key: str):
 
 
 @router.post('/list/{field_key}')
-def create_or_update_custom_list_values(
+def create_or_replace_custom_list_values(
   field_key: str,
   new_values: list[CustomListValue]
   ):
@@ -63,7 +63,9 @@ def create_or_update_custom_list_values(
     tx = db.begin_transaction(write=['CustomListValue'])
     collection = tx.collection('CustomListValue')
     collection.delete_match(dict(field_key=field_key))
-    collection.insert_many(new_values)
+    # The current version of the python-arango driver ignores the json encoder when doing bulk operations
+    prepped = [l.dict(exclude={'id','key', 'rev'}) for l in new_values]
+    collection.insert_many(prepped)
     tx.commit_transaction()
   except:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
