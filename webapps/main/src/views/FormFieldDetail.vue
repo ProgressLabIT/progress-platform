@@ -165,10 +165,11 @@
           :rows-per-page-options="[0]"
           row-key="_key">
           <template #body-cell="props" v-if="edit_mode">
+
             <q-td
               :props="props"
               @click="openEditDialog(props)"
-              :class="{ 'bg-orange-backdrop': props.row.touched.includes(props.col.field) }">
+              :class="getItemClasses(props)">
               {{ props.value }}
             </q-td>
           </template>
@@ -240,7 +241,6 @@ export default {
         field: null,
         edit_value: null
       },
-      touched_items: 0
     }
   },
 
@@ -248,42 +248,72 @@ export default {
     list_cols() {
       return [
         {
-          name: 'ext_key',
-          field: 'ext_key',
-          label: this.$t('ext_key'),
-          style: 'width: 25%',
-          align: 'left'
-        },
-        {
           name: 'value',
           field: 'value',
           label: this.$t('value'),
           align: 'left',
           style: { "white-space": 'pre-wrap'}
         },
+        {
+          name: 'ext_key',
+          field: 'ext_key',
+          label: this.$t('ext_key'),
+          style: 'width: 25%',
+          align: 'left'
+        },
       ]
     },
 
     shown_list_values() {
+      // Map must happen before the filter so the index is preserved, otherwise the same index would refer to different records depending on the filter
       return this.temp_values.map( (row, index) => ({ ...row, index })).filter(
         row => multiMatch(this.list_search, row, ['ext_key', 'value'])
       )
+    },
+
+    new_or_updated_items() {
+      // This is the list of values to send to the POST endpoint
+      return this.temp_values.filter(row => row.new || (!row.delete && row.touched.length))
+    },
+
+    deleted_items() {
+      // This is the list of values to send to the DELETE endpoint
+      return this.temp_values.filter(row => row.delete)
     }
   },
 
   methods: {
+    enrichTempData(list) {
+      return list.map(row => ({ ...row, touched: [], new: false, delete: false }) )
+    },
+
     initTempData() {
       Object.keys(this.temp_data).forEach(k => this.temp_data[k] = this.field[k])
-      this.temp_values = this.original_values.map(row => ({ ...row, touched: [] }) )
-      this.touched_items = 0
+      this.temp_values = this.enrichTempData(this.original_values)
+    },
+
+    getItemClasses(props) {
+      return props.row.delete ? 'bg-red-backdrop text-strike'
+        : props.row.new ? 'bg-green-backdrop text-italic'
+        : props.row.touched.includes(props.col.field) ? 'bg-orange-backdrop'
+        : ''
     },
 
     save() {
       this.saving = true
-      this.$axios.all([
+      const calls = [
         this.$api.put(`field/${this.field._key}`, { ...this.field, ...this.temp_data }),
-        this.$api.post(`list/${this.field._key}`, this.temp_values)
-      ]).then(() => {
+        this.$api.post(`list/${this.field._key}`, this.new_or_updated_items)
+      ]
+
+      if (this.deleted_items.length) {
+        // Need to use URLSearchParams to avoid square brackets in the query param name (e.g. ?value_key[]=XXX -> ?value_key=XXX)
+        let params = new URLSearchParams()
+        this.deleted_items.forEach(item => params.append('value_key', item._key))
+        calls.push(this.$api.delete(`list/${this.field._key}`, { params }))
+      }
+
+      this.$axios.all(calls).then(() => {
         this.$emit('saved')
         this.saving = false
         this.edit_mode = false
@@ -300,7 +330,11 @@ export default {
       this.$api.get('list', { params: { field_key: this.field._key }})
       .then( resp => {
         this.original_values = [...resp.data]
-        this.temp_values = resp.data.map(row => ({ ...row, touched: [] }) )
+        this.temp_values = resp.data.map(row => ({
+          ...row,
+          touched: [],
+          delete: false
+        }))
       })
     },
 
@@ -309,12 +343,20 @@ export default {
         field_key: this.field._key,
         ext_key: null,
         value: null,
-        touched: ['ext_key', 'value']
+        new: true,
+        touched: ['ext_key', 'value'],
+        delete: false
       })
     },
 
     deleteListItems() {
-      this.selected_items.forEach(i => this.temp_values.splice(i.index, 1))
+      // Flag for deletion original values, remove temporary ones
+      this.selected_items.forEach(i => {
+        this.temp_values[i.index].new
+          ? this.temp_values.splice(i.idex, 1)
+          : this.temp_values[i.index].delete = true
+      })
+      this.selected_items = []
     },
 
     openEditDialog(props) {
@@ -328,7 +370,6 @@ export default {
       const edit_row = this.temp_values[this.edit_list.index]
       edit_row[this.edit_list.field] = this.edit_list.value
       edit_row.touched.push(this.edit_list.field)
-      this.touched_items ++
       this.initListEditData()
     },
 

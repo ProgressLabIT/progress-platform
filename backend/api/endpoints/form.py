@@ -1,10 +1,10 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from utils.api import APIResponse
 from models.form import CustomField, CustomListValue
-from utils.db import db
+from utils.db import db, model_to_db_dict
 
 router = APIRouter()
 
@@ -55,18 +55,28 @@ def fetch_custom_list_values(field_key: str):
 
 
 @router.post('/list/{field_key}')
-def create_or_replace_custom_list_values(
+def create_or_update_custom_list_values(
   field_key: str,
-  new_values: list[CustomListValue]
+  new_values: list[CustomListValue],
+  reset: bool = False
   ):
   try:
     tx = db.begin_transaction(write=['CustomListValue'])
     collection = tx.collection('CustomListValue')
-    collection.delete_match(dict(field_key=field_key))
-    # The current version of the python-arango driver ignores the json encoder when doing bulk operations
-    prepped = [l.dict(exclude={'id','key', 'rev'}) for l in new_values]
-    collection.insert_many(prepped)
+
+    if reset:
+      collection.delete_match(dict(field_key=field_key))
+
+    # The current version of the python-arango client ignores the custom serializer when doing bulk operations, must use it explicitly here
+    prepped = [model_to_db_dict(l) for l in new_values]
+    collection.insert_many(prepped, overwrite=True)
     tx.commit_transaction()
   except:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
+@router.delete('/list/{field_key}')
+def delete_custom_list_value(
+  field_key: str,
+  value_key: list[str] = Query(...)
+  ):
+  db.collection('CustomListValue').delete_many(value_key, check_rev=False)
