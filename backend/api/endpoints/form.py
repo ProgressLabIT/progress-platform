@@ -39,7 +39,7 @@ def fetch_field(name: str = None, key: str = None):
 def update_field(field_key: str, field_data: CustomField):
   """Field data must contain _key"""
   try:
-    db.collection('CustomField').update(field_data.dict(by_alias=True))
+    db.collection('CustomField').update(field_data.dict(by_alias=True), check_rev=False)
     return APIResponse(message = "Field updated successfully")
   except:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
