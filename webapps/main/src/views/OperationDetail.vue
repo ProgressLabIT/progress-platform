@@ -149,26 +149,22 @@ export default {
     products_using_operation() {
       return this.operation.used_for
     },
-
-    operation_key() {
-      return this.$route.query.operation_key
-    }
   },  
 
 
   methods: {
     setTempData(){
-      Object.keys(this.temp_metadata).forEach( key => {
-        if (key in this.operation) {
+      // At first render, sometimes the function runs before the prop has been passed, resulting in error
+      if (this.operation) {
+        Object.keys(this.temp_metadata).forEach( key => {
           this.temp_metadata[key] = this.operation[key]
-        }
-      })
-      const saved_params = this.operation.default_phase_parameters
-      Object.keys(this.temp_params).forEach( key => {
-        if (key in saved_params) {
+        })
+
+        const saved_params = this.operation.default_phase_parameters
+        Object.keys(this.temp_params).forEach( key => {
           this.temp_params[key] = saved_params[key]
-        }
-      })
+        })
+      }
     },
 
     updateParam({ param, value }) {
@@ -209,12 +205,8 @@ export default {
   },
 
   watch: {
-    edit_mode() {
-      this.setTempData()
-    },
-    operation_key: {
-      handler: 'setTempData'
-    }
+    edit_mode: 'setTempData',
+    operation: 'setTempData'
   }
 }
 </script>

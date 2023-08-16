@@ -44,11 +44,10 @@ field_type_map = {
 # if the field model has multiple = True, the type becomes List[type]
 
 
-class CustomListValue(BaseModel):
+class CustomListValue(ArangoDocument):
   field_key: str # Reference to CustomField
   ext_key: str = None # Optional reference to external identification, e.g. ERP id
   value: str
-
 
 class CustomField(ArangoDocument):
   type: FieldType

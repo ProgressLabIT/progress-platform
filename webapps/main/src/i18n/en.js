@@ -108,7 +108,11 @@ export default {
     'MESSAGE_DELETED': "Message deleted"
   },
   "export": "Export",
+  "ext_key": "External key",
   "field_add": "Add field",
+  "field_delete": "Delete field",
+  "field_delete_success": "Field deleted",
+  "field_delete_text": "The field will be deleted. It will not be shown anymore in forms that used it, but data already recorded will not be deleted.",
   "field_multiple": "Multiple values",
   "field_new": "New field",
   "field_none": "No fields",
@@ -579,6 +583,7 @@ export default {
     "temp_password": "temporary password",
     "username": "username"
   },
+  "value": "Value | Values",
   "views": {
     "PhaseParameters": "parameters",
     "PhaseSteps": "procedure",
@@ -586,9 +591,11 @@ export default {
     "adminPanel": "settings",
     "companyDetails": "company details",
     "defaultPhaseParams": "default phase",
+    "formFieldLibrary": "Form fields",
     "flowLibrary": "Data flows",
-    "generalSettings": "general",
+    "generalSettings": "General",
     "issueOverview": "Issues",
+    "issueTypeLibrary": "Issue types",
     "jobList": "jobs",
     "libraryRoot": "product library",
     "operationLibrary": "operations",

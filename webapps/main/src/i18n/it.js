@@ -109,7 +109,11 @@ export default {
     'MESSAGE_DELETED': "Messaggio cancellato"
   },
   "export": "Esporta",
+  "ext_key": "Chiave esterna",
   "field_add": "Aggiungi campo",
+  "field_delete": "Elimina campo",
+  "field_delete_success": "Campo eliminato",
+  "field_delete_text": "Il campo verrà eliminato. Non sarà più visualizzato nei moduli che lo utilizzavano, ma i dati già registrati non verranno cancellati.",
   "field_multiple": "Valori multipli",
   "field_new": "Nuovo campo",
   "field_none": "Nessun campo",
@@ -582,6 +586,7 @@ export default {
     "temp_password": "password temporanea",
     "username": "nome utente"
   },
+  "value": "Valore | Valori",
   "views": {
     "PhaseParameters": "parametri",
     "PhaseSteps": "procedura",
@@ -590,6 +595,7 @@ export default {
     "companyDetails": "dettagli azienda",
     "defaultPhaseParams": "fase di default",
     "flowLibrary": "Flussi dati",
+    "formFieldLibrary": "Campi moduli",
     "generalSettings": "generale",
     "jobList": "lavori",
     "libraryRoot": "libreria prodotti",

@@ -1,19 +1,24 @@
-from fastapi import APIRouter, HTTPException
+import traceback
+
+from fastapi import APIRouter, HTTPException, Query
 
 from utils.api import APIResponse
-from models.form import CustomField, CustomListValue
-from utils.db import db
+from models.form import CustomField, CustomListValue, FieldType
+from utils.db import db, model_to_db_dict
 
 router = APIRouter()
 
 
 @router.post('/field')
 def create_field(field_data: CustomField):
-  field_key = db.collection('CustomField').insert(field_data)['_key']
-  return APIResponse(
-    message = "Field created successfully",
-    detail = dict(field_key=field_key)
-  )
+  try:
+    field_key = db.collection('CustomField').insert(field_data)['_key']
+    return APIResponse(
+      message = "Field created successfully",
+      detail = dict(field_key=field_key)
+    )
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
 @router.get('/field')
@@ -25,14 +30,72 @@ def fetch_field(name: str = None, key: str = None):
     match['_key'] = key
 
   cursor = db.collection('CustomField').find(match)
-  return [CustomField(**f) for f in cursor]
+  result = [CustomField(**f) for f in cursor]
+  return sorted(result, key=lambda x: x.name.lower())
+
+
+
+@router.put('/field/{field_key}')
+def replace_field_metadata(field_key: str, field_data: CustomField):
+  """Field data must contain _key"""
+  try:
+    db.collection('CustomField').update(field_data.dict(by_alias=True), check_rev=False)
+    return APIResponse(message = "Field updated successfully")
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
+
+
+
+@router.delete('/field/{field_key}')
+def delete_field(field_key: str):
+  """Delete custom field and linked list values"""
+  try:
+    tx = db.begin_transaction(write=['CustomField', 'CustomListValue'])
+    deleted = tx.collection('CustomField').delete(field_key, return_old=True)['old']
+
+    # Delete list values
+    if CustomField(**deleted).type == FieldType.CHOICE:
+      tx.collection('CustomListValue').delete_match(dict(field_key=field_key))
+
+    tx.commit_transaction()
+
+    return APIResponse(message = "Field deleted successfully")
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
 
 @router.get('/list')
 def fetch_custom_list_values(field_key: str):
   match = dict(field_key=field_key)
-  return [CustomListValue(**v) for v in db.collection('CustomListValue').find(match)]
+  cursor = db.collection('CustomListValue').find(match)
+  result = [CustomListValue(**v) for v in cursor]
+  return sorted(result, key=lambda x: x.value)
 
 
+@router.post('/list/{field_key}')
+def create_or_update_custom_list_values(
+  field_key: str,
+  new_values: list[CustomListValue],
+  reset: bool = False
+  ):
+  try:
+    tx = db.begin_transaction(write=['CustomListValue'])
+    collection = tx.collection('CustomListValue')
 
+    if reset:
+      collection.delete_match(dict(field_key=field_key))
+
+    # The current version of the python-arango client ignores the custom serializer when doing bulk operations, must use it explicitly here
+    prepped = [model_to_db_dict(l) for l in new_values]
+    collection.insert_many(prepped, overwrite=True)
+    tx.commit_transaction()
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
+
+@router.delete('/list/{field_key}')
+def delete_custom_list_value(
+  field_key: str,
+  value_key: list[str] = Query(...)
+  ):
+  db.collection('CustomListValue').delete_many(value_key, check_rev=False)

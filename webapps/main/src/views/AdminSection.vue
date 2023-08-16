@@ -39,6 +39,7 @@ export default {
         'userLibrary',
         'operationLibrary',
         'issueTypeLibrary',
+        'formFieldLibrary',
         'flowLibrary'
       ]
     }

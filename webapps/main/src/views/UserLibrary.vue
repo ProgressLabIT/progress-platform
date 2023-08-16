@@ -7,7 +7,8 @@
 
       <q-input
         dense
-        class="q-px-lg q-py-sm"
+        filled
+        class="q-px-md q-pt-md"
         :placeholder="$capitalize($t('search'))"
         v-model="search_text">
         <template #append>
@@ -126,9 +127,7 @@ export default {
       department_filter: null,
       bool_filters: [
         { name: 'enabled', value: true },
-        { name: 'disabled', value: true },
-        { name: 'logged_in', value: true },
-        { name: 'logged_out', value: true }
+        { name: 'disabled', value: true }
       ],
       filter_panel: undefined,
     }
