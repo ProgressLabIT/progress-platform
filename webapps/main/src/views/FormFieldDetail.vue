@@ -104,7 +104,7 @@
 
 
     <!-- List values if necessary -->
-    <template v-if="field.type == 'choice'">
+    <template v-if="is_choice">
       <div class="row full-width items-center q-col-gutter-md q-my-md q-px-xs">
         <div class="text-h3 col-2 q-px-none">
           {{ $t('value', 2) }}
@@ -181,6 +181,17 @@
       </div>
 
     </template>
+
+    <BaseDialog :show="show_delete">
+      <BaseActionCard
+        :save_label="$t('confirm')"
+        :title="$t('field_delete')"
+        save_color="theme-red"
+        @save="deleteField"
+        @cancel="show_delete = false">
+        {{ $t('field_delete_text') }}
+      </BaseActionCard>
+    </BaseDialog>
   </div>
 </template>
 
@@ -245,6 +256,10 @@ export default {
       ]
     },
 
+    is_choice() {
+      return this.field.type == 'choice'
+    },
+
     shown_list_values() {
       // Map must happen before the filter so the index is preserved, otherwise the same index would refer to different records depending on the filter
       return this.temp_values.map( (row, index) => ({ ...row, index })).filter(
@@ -300,10 +315,10 @@ export default {
       }
 
       this.$axios.all(calls).then(() => {
-        this.$emit('saved')
+        this.$emit('reload')
         this.saving = false
         this.edit_mode = false
-        if (this.field.type == 'choice') this.loadListValues()
+        if (this.is_choice) this.loadListValues()
       })
     },
 
@@ -346,19 +361,32 @@ export default {
         index: null,
         field: null
       }
+    },
+
+    deleteField() {
+      this.$api.delete(`field/${this.field._key}`).then(() => {
+        this.$q.notify({
+          message: this.$t('field_delete_success'),
+          color: 'theme-green',
+          timeout: 1500,
+          position: 'top'
+        })
+        this.$emit('reload')
+        this.$router.push({ name: 'formFieldLibrary' })
+      })
     }
   },
 
   mounted() {
     this.initTempFieldData()
-    if (this.field.type == 'choice') this.loadListValues()
+    if (this.is_choice) this.loadListValues()
   },
 
   watch: {
     field: {
       handler() {
         this.initTempFieldData()
-        if (this.field.type == 'choice') this.loadListValues()
+        if (this.is_choice) this.loadListValues()
         this.edit_mode = false
       }
     }

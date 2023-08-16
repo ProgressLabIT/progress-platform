@@ -15,12 +15,12 @@
     <q-card-section class="row justify-between">
       <slot name="actions">
         <q-btn
-          color="theme-blue"
+          :color="save_color"
           @click="$emit('save')">
           {{ save_label ?? $t('save') }}
         </q-btn>
         <q-btn
-          color="theme-grey"
+          :color="cancel_color"
           @click="$emit('cancel')">
           {{ cancel_label ?? $t('cancel') }}
         </q-btn>
@@ -37,7 +37,15 @@ export default {
   props: {
     title: String,
     save_label: String,
-    cancel_label: String
+    cancel_label: String,
+    save_color: {
+      type: String,
+      default: 'theme-blue'
+    },
+    cancel_color: {
+      type: String,
+      default: 'theme-grey'
+    }
   },
 
   data () {

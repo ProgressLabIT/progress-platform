@@ -13,6 +13,7 @@ class Queries:
         FILTER fdef._key == f._key
         RETURN fdef
       )
+      FILTER field_definition
       RETURN MERGE(f, { type: field_definition.type })
     )
     SORT i.name
@@ -49,7 +50,9 @@ class Queries:
     LET issue_data = (
       FOR field IN NOT_NULL(i.data, [])
       FOR fdef IN NOT_NULL(type_data.form_template, [])
-      FILTER fdef._key == field._key
+      FILTER
+        fdef._key == field._key
+        && DOCUMENT(CustomField, field._key)
       RETURN MERGE(fdef, field)
     )
 

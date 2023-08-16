@@ -161,7 +161,6 @@ export default {
         })
 
         const saved_params = this.operation.default_phase_parameters
-        console.log({saved_params})
         Object.keys(this.temp_params).forEach( key => {
           this.temp_params[key] = saved_params[key]
         })

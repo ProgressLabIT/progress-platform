@@ -3,7 +3,7 @@ import traceback
 from fastapi import APIRouter, HTTPException, Query
 
 from utils.api import APIResponse
-from models.form import CustomField, CustomListValue
+from models.form import CustomField, CustomListValue, FieldType
 from utils.db import db, model_to_db_dict
 
 router = APIRouter()
@@ -36,11 +36,30 @@ def fetch_field(name: str = None, key: str = None):
 
 
 @router.put('/field/{field_key}')
-def update_field(field_key: str, field_data: CustomField):
+def replace_field_metadata(field_key: str, field_data: CustomField):
   """Field data must contain _key"""
   try:
     db.collection('CustomField').update(field_data.dict(by_alias=True), check_rev=False)
     return APIResponse(message = "Field updated successfully")
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
+
+
+
+@router.delete('/field/{field_key}')
+def delete_field(field_key: str):
+  """Delete custom field and linked list values"""
+  try:
+    tx = db.begin_transaction(write=['CustomField', 'CustomListValue'])
+    deleted = tx.collection('CustomField').delete(field_key, return_old=True)['old']
+
+    # Delete list values
+    if CustomField(**deleted).type == FieldType.CHOICE:
+      tx.collection('CustomListValue').delete_match(dict(field_key=field_key))
+
+    tx.commit_transaction()
+
+    return APIResponse(message = "Field deleted successfully")
   except:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 

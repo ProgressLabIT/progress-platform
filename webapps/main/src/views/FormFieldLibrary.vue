@@ -76,7 +76,7 @@
     <div class="col full-height" v-if="data_ready">
       <router-view
         :field="selected_field"
-        @saved="getFields">
+        @reload="getFields">
       </router-view>
     </div>
   </div>
