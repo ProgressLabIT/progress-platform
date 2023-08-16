@@ -153,7 +153,7 @@
           id="list-values"
           class="full-height"
           table-class="text-high "
-          card-class="surface1"
+          card-class="surface2 shadow-2"
           flat
           dense
           square
@@ -163,7 +163,7 @@
           :selection="edit_mode ? 'multiple' : 'none'"
           v-model:selected="selected_items"
           :rows-per-page-options="[0]"
-          row-key="_key">
+          row-key="index">
           <template #body-cell="props">
             <q-td
               :props="props"
@@ -180,23 +180,6 @@
         </q-table>
       </div>
 
-      <BaseDialog
-        :show="edit_list.show">
-        <BaseActionCard
-          square
-          class="surface2 q-pa-md"
-          :save_label="$t('confirm')"
-          @save="confirmEdit"
-          @cancel="initListEditData">
-          <q-input
-            autogrow
-            autofocus
-            filled
-            debounce="300"
-            v-model="edit_list.value">
-          </q-input>
-        </BaseActionCard>
-      </BaseDialog>
     </template>
   </div>
 </template>
@@ -238,13 +221,7 @@ export default {
       show_delete: false,
       edit_mode: false,
       list_search: null,
-      selected_items: [],
-      edit_list: {
-        show: false,
-        index: null,
-        field: null,
-        edit_value: null
-      },
+      selected_items: []
     }
   },
 
@@ -287,13 +264,18 @@ export default {
   },
 
   methods: {
-    enrichTempData(list) {
-      return list.map(row => ({ ...row, touched: [], new: false, delete: false }) )
+
+    initTempFieldData() {
+      Object.keys(this.temp_data).forEach(k => this.temp_data[k] = this.field[k])
     },
 
-    initTempData() {
-      Object.keys(this.temp_data).forEach(k => this.temp_data[k] = this.field[k])
-      this.temp_values = this.enrichTempData(this.original_values)
+    initTempValues() {
+      this.temp_values = this.original_values.map(row => ({
+        ...row,
+        touched: [],
+        new: false,
+        delete: false
+      }))
     },
 
     getItemClasses(props) {
@@ -326,19 +308,17 @@ export default {
     },
 
     cancel() {
+      this.selected_items = []
+      this.initTempFieldData()
+      this.initTempValues()
       this.edit_mode = false
-      this.initTempData()
     },
 
     loadListValues() {
       this.$api.get('list', { params: { field_key: this.field._key }})
       .then( resp => {
-        this.original_values = [...resp.data]
-        this.temp_values = resp.data.map(row => ({
-          ...row,
-          touched: [],
-          delete: false
-        }))
+        this.original_values = resp.data
+        this.initTempValues()
       })
     },
 
@@ -346,7 +326,7 @@ export default {
       this.temp_values.unshift({
         field_key: this.field._key,
         ext_key: null,
-        value: null,
+        value: this.$t('new'),
         new: true,
         touched: ['ext_key', 'value'],
         delete: false
@@ -355,26 +335,9 @@ export default {
 
     deleteListItems() {
       // Flag for deletion original values, remove temporary ones
-      this.selected_items.forEach(i => {
-        this.temp_values[i.index].new
-          ? this.temp_values.splice(i.idex, 1)
-          : this.temp_values[i.index].delete = true
-      })
+      this.selected_items.forEach(i => this.temp_values[i.index].delete = true)
+      this.temp_values = this.temp_values.filter(v => !(v.delete && v.new))
       this.selected_items = []
-    },
-
-    openEditDialog(props) {
-      this.edit_list.show = true
-      this.edit_list.index = props.row.index
-      this.edit_list.field = props.col.field
-      this.edit_list.value = this.temp_values[props.row.index][props.col.field]
-    },
-
-    confirmEdit() {
-      const edit_row = this.temp_values[this.edit_list.index]
-      edit_row[this.edit_list.field] = this.edit_list.value
-      edit_row.touched.push(this.edit_list.field)
-      this.initListEditData()
     },
 
     initListEditData() {
@@ -387,14 +350,15 @@ export default {
   },
 
   mounted() {
-    this.initTempData()
+    this.initTempFieldData()
     if (this.field.type == 'choice') this.loadListValues()
   },
 
   watch: {
     field: {
       handler() {
-        this.initTempData()
+        this.initTempFieldData()
+        if (this.field.type == 'choice') this.loadListValues()
         this.edit_mode = false
       }
     }
@@ -405,13 +369,21 @@ export default {
 <style lang="sass">
 #list-values
   td::before
+    // remove hover highlight
     background-color: transparent
+
   .q-table--dense .q-table td:first-child
   thead tr:first-child th /* bg color is important for th; just specify one */
-    background-color: var(--surface-1)
+    background-color: var(--surface-2)
+    padding-top: 8px
+    padding-bottom: 8px
+    border-bottom: 1px solid rgba(255, 255, 255, .3)
 
   thead
     position: sticky
     z-index: 1
     top: 0
+
+  tbody tr:first-child td
+    padding-top: 8px !important
 </style>
