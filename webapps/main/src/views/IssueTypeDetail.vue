@@ -205,26 +205,6 @@
             </q-input>
           </div>
 
-          <!-- multiple / required -->
-          <!-- <div class="col-auto">
-            <q-checkbox
-              size="sm"
-              dense
-              :disable="!edit_mode"
-              :label="$t('field_multiple')"
-              v-model="field.multiple">
-            </q-checkbox>
-          </div>
-          <div class="col-auto">
-            <q-checkbox
-              size="sm"
-              dense
-              :disable="!edit_mode"
-              :label="$t('field_required')"
-              v-model="field.required">
-            </q-checkbox>
-          </div> -->
-
           <div class="col-auto">
 
           </div>
@@ -334,11 +314,13 @@ export default {
   methods: {
 
     setTempData(){
-      Object.keys(this.temp_metadata).forEach( key => {
-        if (key in this.issue_type) {
-          this.temp_metadata[key] = _cloneDeep(this.issue_type[key])
-        }
-      })
+      if (this.issue_type) {
+        Object.keys(this.temp_metadata).forEach( key => {
+          if (key in this.issue_type) {
+            this.temp_metadata[key] = _cloneDeep(this.issue_type[key])
+          }
+        })
+      }
     },
 
     pickIcon(value) {
@@ -416,7 +398,7 @@ export default {
     }
   },
 
-  created() {
+  mounted() {
     this.setTempData()
   },
 
@@ -425,10 +407,7 @@ export default {
       this.setTempData()
       this.initSortable()
     },
-    issue_type: {
-      handler: 'setTempData',
-      deep: true
-    }
+    issue_type: 'setTempData'
   }
 }
 </script>

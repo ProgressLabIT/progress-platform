@@ -127,9 +127,7 @@ export default {
       department_filter: null,
       bool_filters: [
         { name: 'enabled', value: true },
-        { name: 'disabled', value: true },
-        { name: 'logged_in', value: true },
-        { name: 'logged_out', value: true }
+        { name: 'disabled', value: true }
       ],
       filter_panel: undefined,
     }
