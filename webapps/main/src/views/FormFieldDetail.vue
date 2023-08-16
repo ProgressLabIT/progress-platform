@@ -150,27 +150,31 @@
           :columns="list_cols"
           :rows="shown_list_values"
           color="primary"
-          class="full-height sticky-header-table"
+          id="list-values"
+          class="full-height"
           table-class="text-high "
-          card-class="surface2"
-          bordered
+          card-class="surface1"
           flat
           dense
           square
           virtual-scroll
-          separator="cell"
+          separator="none"
           hide-bottom
           :selection="edit_mode ? 'multiple' : 'none'"
           v-model:selected="selected_items"
           :rows-per-page-options="[0]"
           row-key="_key">
-          <template #body-cell="props" v-if="edit_mode">
-
+          <template #body-cell="props">
             <q-td
               :props="props"
-              @click="openEditDialog(props)"
-              :class="getItemClasses(props)">
-              {{ props.value }}
+              class="q-pl-none">
+              <q-input
+                filled
+                dense
+                :disable="!edit_mode"
+                v-model="temp_values[props.row.index][props.col.field]"
+                :class="getItemClasses(props)">
+              </q-input>
             </q-td>
           </template>
         </q-table>
@@ -295,7 +299,7 @@ export default {
     getItemClasses(props) {
       return props.row.delete ? 'bg-red-backdrop text-strike'
         : props.row.new ? 'bg-green-backdrop text-italic'
-        : props.row.touched.includes(props.col.field) ? 'bg-orange-backdrop'
+        : props.value != this.original_values.find(v => v._key == props.row._key)[props.col.field] ? 'bg-orange-backdrop'
         : ''
     },
 
@@ -399,13 +403,15 @@ export default {
 </script>
 
 <style lang="sass">
-.sticky-header-table
+#list-values
+  td::before
+    background-color: transparent
+  .q-table--dense .q-table td:first-child
   thead tr:first-child th /* bg color is important for th; just specify one */
-    background-color: var(--surface-2)
+    background-color: var(--surface-1)
+
   thead
     position: sticky
     z-index: 1
     top: 0
-  tbody tr:last-child td
-    border-bottom: .5px solid rgba(255,255,255,.28)
 </style>
