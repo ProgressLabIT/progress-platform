@@ -156,6 +156,7 @@
           card-class="surface2 shadow-2"
           flat
           dense
+          :loading="table_loading"
           :separator="edit_mode ? 'none' : 'horizontal'"
           square
           virtual-scroll
@@ -165,6 +166,9 @@
           v-model:selected="selected_items"
           :rows-per-page-options="[0]"
           row-key="index">
+          <template v-slot:loading>
+            <q-inner-loading showing color="primary" />
+          </template>
           <template #body-cell="props">
             <q-td
               :props="props"
@@ -234,6 +238,7 @@ export default {
         default_label: null,
         default_hint: null
       },
+      table_loading: false,
       saving: false,
       original_values: [],
       temp_values: [],
@@ -348,10 +353,12 @@ export default {
     },
 
     loadListValues() {
+      this.table_loading = true
       this.$api.get('list', { params: { field_key: this.field._key }})
       .then( resp => {
         this.original_values = resp.data
         this.initTempValues()
+        this.table_loading = false
       })
     },
 
