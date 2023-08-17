@@ -156,6 +156,7 @@
           card-class="surface2 shadow-2"
           flat
           dense
+          :separator="edit_mode ? 'none' : 'horizontal'"
           square
           virtual-scroll
           separator="none"
@@ -168,13 +169,20 @@
             <q-td
               :props="props"
               class="q-pl-none">
-              <q-input
-                filled
-                dense
-                :disable="!edit_mode"
-                v-model="temp_values[props.row.index][props.col.field]"
-                :class="getItemClasses(props)">
-              </q-input>
+              <div :class="getItemClasses(props)">
+                <q-input
+                  v-if="edit_mode"
+                  filled
+                  dense
+                  autogrow
+                  input-style="white-space: pre-wrap"
+                  :disable="!edit_mode"
+                  v-model="temp_values[props.row.index][props.col.field]">
+                </q-input>
+                <div v-else>
+                  {{ props.value }}
+                </div>
+              </div>
             </q-td>
           </template>
         </q-table>
@@ -269,7 +277,18 @@ export default {
 
     new_or_updated_items() {
       // This is the list of values to send to the POST endpoint
-      return this.temp_values.filter(row => row.new || (!row.delete && row.touched.length))
+      return this.temp_values.filter(row => {
+        if (row.new) {
+          return true
+        }
+        else if (row.delete) {
+          return false
+        }
+        else {
+          const original = this.original_values.find(v => v._key == row._key)
+          return row.value != original.value || row.ext_key != original.ext_key
+        }
+      })
     },
 
     deleted_items() {
@@ -287,7 +306,6 @@ export default {
     initTempValues() {
       this.temp_values = this.original_values.map(row => ({
         ...row,
-        touched: [],
         new: false,
         delete: false
       }))
@@ -343,7 +361,6 @@ export default {
         ext_key: null,
         value: this.$t('new'),
         new: true,
-        touched: ['ext_key', 'value'],
         delete: false
       })
     },
@@ -396,10 +413,6 @@ export default {
 
 <style lang="sass">
 #list-values
-  td::before
-    // remove hover highlight
-    background-color: transparent
-
   .q-table--dense .q-table td:first-child
   thead tr:first-child th /* bg color is important for th; just specify one */
     background-color: var(--surface-2)
@@ -412,6 +425,8 @@ export default {
     z-index: 1
     top: 0
 
-  tbody tr:first-child td
-    padding-top: 8px !important
+.table-no-hover
+  td::before
+    // remove hover highlight
+    background-color: transparent
 </style>
