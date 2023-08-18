@@ -126,6 +126,7 @@ export default {
   "field_type_text": "Text",
   "field_type_time": "Time",
   "filter": "filter",
+  "first_x_shown": "First {x} records shown",
   "form_title": "form fields",
   "form_missing_fields_alert": "please fill in all fields",
   "general": "General",
@@ -489,6 +490,7 @@ export default {
   "restore": "restore",
   "resume": "resume",
   "save": "save",
+  "save_or_cancel_before_change": "Save or cancel changes before",
   "scroll": {
     "to_top": "back to top"
   },

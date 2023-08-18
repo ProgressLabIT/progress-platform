@@ -105,9 +105,12 @@
 
     <!-- List values if necessary -->
     <template v-if="is_choice">
-      <div class="row full-width items-center q-col-gutter-md q-my-md q-px-xs">
-        <div class="text-h3 col-2 q-px-none">
+      <div class="row full-width items-baseline q-col-gutter-md q-my-md q-px-xs">
+        <div class="text-h3 col-auto q-px-none">
           {{ $t('value', 2) }}
+        </div>
+        <div class="smaller col-auto text-low" v-if="shown_list_values.length == search_limit">
+          {{ $t('first_x_shown', { x: search_limit }) }}
         </div>
         <q-space />
 
@@ -133,16 +136,26 @@
           </div>
         </template>
 
-        <q-input
-          filled
-          dense
-          :label="$capitalize($t('search'))"
-          debounce="500"
-          v-model="list_search">
-          <template #append>
-            <q-icon name="mdi-magnify" />
-          </template>
-        </q-input>
+        <div>
+          <q-input
+            filled
+            dense
+            :disable="search_disabled"
+            :label="$capitalize($t('search'))"
+            debounce="500"
+            v-model="list_search">
+            <template #append>
+              <q-icon name="mdi-magnify" />
+            </template>
+          </q-input>
+          <q-tooltip
+            delay="200"
+            anchor="top middle"
+            self="center middle"
+            v-if="search_disabled">
+            {{ $t('save_or_cancel_before_change') }}
+          </q-tooltip>
+        </div>
       </div>
 
       <div class="col">
@@ -245,7 +258,8 @@ export default {
       show_delete: false,
       edit_mode: false,
       list_search: null,
-      selected_items: []
+      selected_items: [],
+      search_limit: 100
     }
   },
 
@@ -275,9 +289,7 @@ export default {
 
     shown_list_values() {
       // Map must happen before the filter so the index is preserved, otherwise the same index would refer to different records depending on the filter
-      return this.temp_values.map( (row, index) => ({ ...row, index })).filter(
-        row => multiMatch(this.list_search, row, ['ext_key', 'value'])
-      )
+      return this.temp_values.map( (row, index) => ({ ...row, index }))
     },
 
     new_or_updated_items() {
@@ -299,6 +311,10 @@ export default {
     deleted_items() {
       // This is the list of values to send to the DELETE endpoint
       return this.temp_values.filter(row => row.delete)
+    },
+
+    search_disabled() {
+      return this.edit_mode && (!!this.new_or_updated_items.length || !!this.deleted_items.length)
     }
   },
 
@@ -354,7 +370,11 @@ export default {
 
     loadListValues() {
       this.table_loading = true
-      this.$api.get('list', { params: { field_key: this.field._key }})
+      this.$api.get('list', { params: {
+        field_key: this.field._key,
+        search: this.list_search,
+        limit: this.search_limit,
+      }})
       .then( resp => {
         this.original_values = resp.data
         this.initTempValues()
@@ -413,7 +433,8 @@ export default {
         if (this.is_choice) this.loadListValues()
         this.edit_mode = false
       }
-    }
+    },
+    list_search: 'loadListValues'
   }
 }
 </script>

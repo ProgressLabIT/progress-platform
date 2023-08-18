@@ -127,6 +127,7 @@ export default {
   "field_type_text": "Testo",
   "field_type_time": "Ora",
   "filter": "filtro | filtri",
+  "first_x_shown": "Primi {x} record visualizzati",
   "form_title": "campi modulo",
   "form_missing_fields_alert": "compilare tutti i campi",
   "general": "Generale",
@@ -492,6 +493,7 @@ export default {
   "restore": "ripristina",
   "resume": "riprendi",
   "save": "salva",
+  "save_or_cancel_before_change": "Salva o annulla le modifiche prima",
   "scroll": {
     "to_top": "torna su"
   },

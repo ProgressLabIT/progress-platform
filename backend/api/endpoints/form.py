@@ -66,11 +66,29 @@ def delete_field(field_key: str):
 
 
 @router.get('/list')
-def fetch_custom_list_values(field_key: str):
-  match = dict(field_key=field_key)
-  cursor = db.collection('CustomListValue').find(match)
-  result = [CustomListValue(**v) for v in cursor]
-  return sorted(result, key=lambda x: x.value)
+def fetch_custom_list_values(
+  field_key: str,
+  limit: int = 100,
+  search: str = None,
+  sort_by: str = 'value'
+  ):
+  query = """
+    FOR v IN CustomListValue
+    FILTER
+      v.field_key == @field_key
+      && (@search ? CONCAT(v.value, v.ext_key) LIKE CONCAT('%', @search, '%') : true)
+    SORT v[@sort_by]
+    LIMIT @limit
+    RETURN v
+  """
+  cursor = db.aql.execute(query, bind_vars=dict(
+    field_key = field_key,
+    limit = limit,
+    search = search,
+    sort_by = sort_by
+  ))
+  results = [CustomListValue(**v) for v in cursor]
+  return results
 
 
 @router.post('/list/{field_key}')
