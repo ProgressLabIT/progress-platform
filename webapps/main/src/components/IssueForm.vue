@@ -395,7 +395,7 @@ export default {
         const to_delete = []
         const to_add = []
 
-        field.value.forEach(file => {
+        field.value?.forEach(file => {
           if (file.temp) {
             to_add.push(file.content)
           }
@@ -452,7 +452,7 @@ export default {
           if (field.type == 'files') {
             return {
               ...field,
-              value: field.value.filter(file => !file.delete).map(file => ({
+              value: field.value?.filter(file => !file.delete).map(file => ({
                 size: file.size,
                 name: file.name
               }))
