@@ -57,6 +57,8 @@
       :dense="dense"
       :label="field_data.label"
       :options="options"
+      :debounce="300"
+      :loading="loading"
       option-label="value"
       @filter="filter"
       :model-value="field_data.value"
@@ -176,21 +178,19 @@ export default {
 
   data() {
     return {
-      origin_list: [],
       options: [],
+      loading: false
     }
   },
 
   methods: {
     initOptions() {
       this.$api.get('list', { params: { field_key: this.field_data._key }})
-      .then( resp => {
-        this.origin_list = resp.data
-        this.options = resp.data
-      })
+      .then(resp => this.options = resp.data)
     },
 
     filter(value, update) {
+      this.loading = true
       if (value === '') {
         update(() => {
           this.initOptions()
@@ -199,10 +199,17 @@ export default {
       }
       update(() => {
         const needle = value.toLowerCase()
-        this.options = this.origin_list.filter(option => {
-          return option.value.toLowerCase().includes(needle)
+        this.$api.get('list', {
+          params: {
+            field_key: this.field_data._key,
+            search: value
+          }
+        })
+        .then(resp =>{
+          this.options = resp.data
         })
       })
+      this.loading = false
     },
 
     addFiles(file_list) {
