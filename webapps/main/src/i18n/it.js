@@ -579,6 +579,7 @@ export default {
       "library": "area prodotti",
       "operator": "operatore",
       "production": "area produzione",
+      "quality": "Area qualità",
       "title": "permessi"
     },
     "reset_password": "reimposta password",

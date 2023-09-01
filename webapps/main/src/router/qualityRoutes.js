@@ -4,7 +4,7 @@ const qualityRoutes = [
     name: 'qualityRoot',
     component: () => import("@/views/QualityRoot.vue"),
     redirect: { name: 'issueOverview' },
-    meta: { scope: 'admin', screen_title: 'Quality' },
+    meta: { scope: 'quality', screen_title: 'Quality' },
     children: [
       {
         path: 'issues',
