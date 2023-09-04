@@ -93,17 +93,17 @@
 
           <template v-else>
             <div class="col-3">
-              <div class="text-h5 uppercase">
+              <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.name') }}
               </div>
-              <q-input dense v-model="temp_data.name" />
+              <q-input filled dense v-model="temp_data.name" />
             </div>
 
             <div class="col-3">
-              <div class="text-h5 uppercase">
+              <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.surname') }}
               </div>
-              <q-input dense v-model="temp_data.surname" />
+              <q-input filled dense v-model="temp_data.surname" />
             </div>
 
             <div class="q-ml-auto">
@@ -130,19 +130,20 @@
         <!-- OTHER DATA -->
 
         <div class="row q-mt-xl">
-          <div class="col-4 column q-gutter-xl">
+          <div class="col-5 column q-gutter-xl">
 
             <!-- USERNAME -->
             <div>
-              <div class="text-h5 uppercase">
+              <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.username') }}
               </div>
-              <div v-if="!edit_mode" class="q-mt-sm">
+              <div v-if="!edit_mode">
                 {{ user.username || '-' }}
               </div>
               <q-input
-                dense
                 v-else
+                filled
+                dense
                 v-model="temp_data.username">
               </q-input>
             </div>
@@ -150,29 +151,32 @@
             <!-- EMAIL -->
 
             <div>
-              <div class="text-h5 uppercase">
+              <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.email') }}
               </div>
-              <div v-if="!edit_mode" class="q-mt-sm">
+              <div v-if="!edit_mode">
                 {{ user.email || '-' }}
               </div>
               <q-input
-                dense
                 v-else
+                dense
+                filled
                 v-model="temp_data.email">
               </q-input>
             </div>
 
             <!-- DEPARTMENT -->
             <div>
-              <div class="text-h5 uppercase">
+              <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.department') }}
               </div>
-              <div v-if="!edit_mode" class="q-mt-sm">
+              <div v-if="!edit_mode">
                 {{ temp_data.department ? temp_data.department.name : '-'}}
               </div>
               <BaseAutocompleteDepartment
                 v-else
+                filled
+                dense
                 :value="temp_data.department"
                 @select="updateTempDep">
               </BaseAutocompleteDepartment>
@@ -180,16 +184,17 @@
 
             <!-- HOURLY COST -->
             <div>
-              <div class="text-h5 uppercase">
+              <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.hourly_cost') }}
               </div>
-              <div v-if="!edit_mode" class="q-mt-sm">
+              <div v-if="!edit_mode">
                 {{ $numberFormat((temp_data.hourly_cost || '-'), locale) }}
               </div>
               <q-input
                 v-else
                 type="number"
                 dense
+                filled
                 v-model.number="temp_data.hourly_cost">
               </q-input>
             </div>
@@ -197,7 +202,7 @@
           </div>
 
 
-          <div class="col-4 offset-2 column q-gutter-xl">
+          <div class="col offset-1 column q-gutter-xl">
 
             <!-- STATUS -->
             <div>
@@ -209,7 +214,7 @@
               </div>
               <q-toggle
                 v-else
-                dense
+                filled
                 class="q-mt-sm"
                 v-model="temp_data.active"
                 :label="user_active_text">
@@ -224,6 +229,7 @@
               <q-checkbox
                 v-for="check in scopes"
                 :key="check.name"
+                filled
                 dense
                 :val="check.name"
                 :disable="!edit_mode"

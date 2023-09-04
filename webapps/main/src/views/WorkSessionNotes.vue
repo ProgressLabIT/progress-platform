@@ -1,40 +1,20 @@
 <template>
-  <div class="fit column q-pa-md">
-    <div v-if="no_notes">
-      <NoDataAlert>{{ $t('notes_empty') }}</NoDataAlert>
-    </div>
-    <template v-else>
-      <!-- WORK ORDER NOTES -->
-      <div
-        v-if="job.order_notes"
-        class="surface2 full-width multiline-text q-mb-md q-pa-md"
-        style="min-height: 100px">
-        <div class="text-uppercase text-h5 q-mb-md">
-          {{ $t('notes_order') }}
+  <div class="fit column q-gutter-md q-pt-md q-pl-md">
+    <template v-if="notes.length">
+      <div v-for="note in notes"
+        class="surface2 shadow-2 multiline-text col column q-px-md q-pt-md">
+        <div class="text-uppercase text-h5 q-mb-md col-auto">
+          {{ note.label }}
         </div>
-        <div>{{ job.order_notes }}</div>
-      </div>
-      <!-- PHASE NOTES -->
-      <div
-        v-if="job.phase_notes"
-        class="surface2 full-width multiline-text q-mb-md q-pa-md"
-        style="min-height: 100px">
-        <div class="text-uppercase text-h5 q-mb-md">
-          {{ $t('notes_production') }}
+        <div class="col scroll q-pb-md">
+          {{ note.value }}
         </div>
-        <div>{{ job.phase_notes }}</div>
-      </div>
-      <!-- PRODUCT NOTES -->
-      <div
-        v-if="job.product_notes"
-        class="surface2 full-width multiline-text q-pa-md"
-        style="min-height: 100px">
-        <div class="text-uppercase text-h5 q-mb-md">
-          {{ $t('notes_product') }}
-        </div>
-        <div>{{ job.product_notes }}</div>
       </div>
     </template>
+
+    <NoDataAlert v-else>
+      {{ $t('notes_empty') }}
+    </NoDataAlert>
   </div>
 </template>
 
@@ -56,11 +36,23 @@ export default {
     }
   },
 
+  data() {
+    return {
+      note_types: ['order', 'phase', 'product']
+    }
+  },
+
   computed: {
-    no_notes() {
-      return !this.job.order_notes
-        && !this.job.phase_notes
-        && !this.job.product_notes
+    notes() {
+      let notes = []
+      this.note_types.forEach(t => {
+        const value = this.job[`${t}_notes`]
+        if (value) notes.push({
+          label: this.$t(`notes_${t}`),
+          value
+        })
+      })
+      return notes
     }
   }
 }

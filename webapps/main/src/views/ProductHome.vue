@@ -147,12 +147,12 @@
     <!-- RIGHT SECTION -->
 
     <!-- NOTES -->
-    <div class="col-4 q-px-md">
-      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md">
-        <q-card-section class="text-h5 display weight-bold text-uppercase">
+    <div class="col-4 q-px-md full-height">
+      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md full-height column">
+        <q-card-section class="text-h5 display weight-bold text-uppercase col-auto">
           {{ $t('notes_production') }}
         </q-card-section>
-        <q-card-section>
+        <q-card-section class="col scroll">
           <div v-if="!edit_mode" style="white-space: pre-line;">
             {{ temp_notes }}
           </div>
@@ -160,11 +160,10 @@
             v-else
             filled
             dense
-            type="textarea"
+            autogrow
             :readonly="!edit_mode"
             :model-value="temp_notes"
-            @update:model-value="value => updateField('production_notes', value)"
-            class="q-mt-md">
+            @update:model-value="value => updateField('production_notes', value)">
           </q-input>
         </q-card-section>
       </q-card>

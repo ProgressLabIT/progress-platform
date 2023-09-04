@@ -2,7 +2,7 @@
   <div class="fit q-pa-lg">
     <q-input
       filled
-      type="textarea"
+      autogrow
       :model-value="wo_data.notes"
       @update:model-value="updateNotes"
       debounce="1000"

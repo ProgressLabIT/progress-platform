@@ -1,6 +1,6 @@
 <template>
   <q-page-container>
-    <q-page class="q-px-md q-pb-md column">
+    <q-page class="q-px-md q-pb-md column full-height">
 
       <q-circular-progress
         v-if="!vuex_ready"
@@ -29,7 +29,7 @@
         <!-- ################################ -->
 
         <div
-          class="column q-px-sm gt-sm"
+          class="column q-px-sm gt-sm full-height"
           id="job-info-section"
           :class="$route.name === 'jobIssueDetail' ? 'col-12' : 'col-8'">
 
