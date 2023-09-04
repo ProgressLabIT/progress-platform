@@ -337,8 +337,8 @@ async def get_work_order_archive(
     FOR wo IN WorkOrder
     FILTER
       // closed and open parameters define whether these orders should be included in results
-      @closed ? true : wo.status != 'closed'
-      && @open ? true : wo.status == 'closed'
+      (@closed ? true : wo.status != 'closed')
+      && (@open ? true : wo.status == 'closed')
     LET code_match = @search ? CONTAINS(LOWER(wo.wo_code), LOWER(@search)) : true
     LET product_match = @search ? CONTAINS(LOWER(wo.product_code), LOWER(@search)) : true
     LET project_match = @search ? CONTAINS(LOWER(wo.project_code), LOWER(@search)) : true
