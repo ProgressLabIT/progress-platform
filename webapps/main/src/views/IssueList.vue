@@ -33,6 +33,8 @@
         @issue_created="getIssues">
       </IssueForm>
     </template>
+
+    <router-view />
   </div>
 </template>
 

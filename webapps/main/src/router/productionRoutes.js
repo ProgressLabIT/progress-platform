@@ -17,10 +17,48 @@ const productionRoutes = [
             component: () => import("@/components/WorkOrderList.vue"),
             children: [
               {
-                path: "workorder/new",
+                path: "new",
                 name: "newWorkOrder",
                 component: () => import("@/views/WorkOrderNew.vue")
               },
+              {
+                path: ":wo_key",
+                name: "workOrderScreen",
+                redirect: { name: "workOrderJobs" },
+                component: () => import("@/components/WorkOrderScreen.vue"),
+                props: true,
+                children: [
+                  {
+                    path: "job-list",
+                    name: "workOrderJobs",
+                    component: () => import("@/views/WorkOrderJobs.vue")
+                  },
+                  {
+                    path: 'history',
+                    name: "workOrderHistory",
+                    component: () => import ("@/views/WorkOrderHistory.vue")
+                  },
+                  {
+                    path: 'issues',
+                    name: 'workOrderIssues',
+                    component: () => import("@/views/IssueList.vue"),
+                    props: true,
+                    children: [
+                      {
+                        path: ':issue_key',
+                        name: 'workOrderIssueDetail',
+                        component: () => import("@/components/IssueDetail.vue"),
+                        props: true
+                      },
+                    ]
+                  },
+                  {
+                    path: 'notes',
+                    name: 'workOrderNotes',
+                    component: () => import("@/views/WorkOrderNotes.vue")
+                  }
+                ]
+              }
             ]
           },
           {
@@ -35,42 +73,6 @@ const productionRoutes = [
           }
         ]
       },
-      {
-        path: "workorder/:wo_key",
-        name: "workOrderScreen",
-        redirect: { name: "workOrderJobs" },
-        component: () => import("@/components/WorkOrderScreen.vue"),
-        props: true,
-        children: [
-          {
-            path: "job-list",
-            name: "workOrderJobs",
-            component: () => import("@/views/WorkOrderJobs.vue")
-          },
-          {
-            path: 'history',
-            name: "workOrderHistory",
-            component: () => import ("@/views/WorkOrderHistory.vue")
-          },
-          {
-            path: 'issues',
-            name: 'workOrderIssues',
-            component: () => import("@/views/IssueList.vue"),
-            props: true
-          },
-          {
-            path: 'issues/:issue_key',
-            name: 'workOrderIssueDetail',
-            component: () => import("@/components/IssueDetail.vue"),
-            props: true
-          },
-          {
-            path: 'notes',
-            name: 'workOrderNotes',
-            component: () => import("@/views/WorkOrderNotes.vue")
-          }
-        ]
-      }
     ]
   }
 ]

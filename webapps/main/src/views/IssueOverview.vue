@@ -65,6 +65,9 @@
       </template>
 
     </q-table>
+
+    <!-- ISSUE DETAIL -->
+    <router-view />
   </div>
 </template>
 
