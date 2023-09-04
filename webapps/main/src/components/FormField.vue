@@ -194,6 +194,7 @@ export default {
       if (value === '') {
         update(() => {
           this.initOptions()
+          this.loading = false
         })
         return
       }
@@ -208,8 +209,8 @@ export default {
         .then(resp =>{
           this.options = resp.data
         })
+        this.loading = false
       })
-      this.loading = false
     },
 
     addFiles(file_list) {
