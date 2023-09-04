@@ -4,11 +4,11 @@ from utils.file import FileHandler
 class Queries:
 
   GET_PRODUCT_LIST = """
-    LET search = CONCAT('%', @search, '%')
+    LET search = CONCAT('%', LOWER(@search), '%')
     FOR p IN Product
 
       // find active products matching the search pattern provided
-      LET search_context = CONCAT(p.code, ' ', 'p.description')
+      LET search_context = LOWER(CONCAT(p.code, ' ', 'p.description'))
       FILTER !p.trash && LIKE(search_context, search, true)
 
       // keep only required attributes
