@@ -334,7 +334,7 @@ export default {
               break
 
             case 'start_from_max':
-              if (!!value && new Date(value) < new Date(wo.start_from)) match = false
+              if (!!value && new Date(value).setHours(23,59,59,999) <= new Date(wo.start_from)) match = false
               break
 
             case 'due_by_min':
@@ -342,7 +342,7 @@ export default {
               break
 
             case 'due_by_max':
-              if (!!value && new Date(value) < new Date(wo.due_by)) match = false
+              if (!!value && new Date(value).setHours(23,59,59,999) < new Date(wo.due_by)) match = false
               break
           }
 
