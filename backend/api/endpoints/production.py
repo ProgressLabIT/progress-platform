@@ -325,12 +325,16 @@ async def delete_work_order(wo_key: str):
 
 # ----------------------------------------------------------------------
 
-@router.get('/work-order-archive')
-async def get_work_order_archive(
+@router.get('/work-order')
+async def search_work_orders(
   search: str = None,
   open: bool = False,
   closed: bool = True,
-  limit: int = 100
+  limit: int = 100,
+  time_start_from: datetime = None,
+  time_start_to: datetime = None,
+  time_end_from: datetime = None,
+  time_end_to: datetime = None
 ):
   """By default searches for closed orders only. Can change the behavior by setting the `open` and `closed` parameters."""
   query = """
@@ -339,10 +343,15 @@ async def get_work_order_archive(
       // closed and open parameters define whether these orders should be included in results
       (@closed ? true : wo.status != 'closed')
       && (@open ? true : wo.status == 'closed')
-    LET code_match = @search ? CONTAINS(LOWER(wo.wo_code), LOWER(@search)) : true
-    LET product_match = @search ? CONTAINS(LOWER(wo.product_code), LOWER(@search)) : true
-    LET project_match = @search ? CONTAINS(LOWER(wo.project_code), LOWER(@search)) : true
-    FILTER code_match || product_match || project_match
+      && (@search ? (
+        CONTAINS(LOWER(wo.wo_code), LOWER(@search))
+        || CONTAINS(LOWER(wo.product_code), LOWER(@search))
+        || CONTAINS(LOWER(wo.project_code), LOWER(@search))
+        ) : true)
+      && (@time_start_from ? wo.start >= @time_start_from : true)
+      && (@time_start_to ? wo.start <= @time_start_to : true)
+      && (@time_end_from ? wo.end >= @time_end_from : true)
+      && (@time_end_to ? wo.end <= @time_end_to : true)
     SORT wo.end DESC
     LIMIT @limit
     LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == wo._id RETURN 1)
@@ -353,6 +362,10 @@ async def get_work_order_archive(
       search = search,
       closed = closed,
       open = open,
+      time_start_from = time_start_from,
+      time_start_to = time_start_to,
+      time_end_from = time_end_from,
+      time_end_to = time_end_to,
       limit = limit
     ))
     return [WorkOrderFull(**r) for r in cursor]

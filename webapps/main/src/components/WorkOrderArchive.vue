@@ -7,8 +7,10 @@
       row-key="_key"
       :style="`height: ${table_height}`"
       virtual-scroll
+      color="primary"
       :loading="loading"
       dense
+      hide-bottom
       separator="none"
       table-class="text-high"
       card-class="background no-shadow q-mt-sm"
@@ -21,18 +23,135 @@
         </q-th>
       </template>
 
-      <template #loading>
-        <div class="absolute-center">
-          <q-spinner indeterminate />
+      <template #top>
+        <div class="row full-width justify-between text-low q-mb-md">
+          <div class="row col-9 q-gutter-md">
+
+            <!-- SEARCH BOX -->
+            <q-input
+              clearable
+              filled
+              dense
+              hide-bottom-space
+              autocomplete="off"
+              name="search"
+              debounce="300"
+              :label="$capitalize($t('search'))"
+              v-model="search"
+              class="col-3">
+              <template v-slot:append>
+                <q-icon name="mdi-magnify" size="xs"/>
+              </template>
+            </q-input>
+
+            <!-- START MIN -->
+            <q-input
+              filled
+              dense
+              clearable
+              mask="date"
+              v-model="time_start_from"
+              debounce="1000"
+              label="Start min"
+              class="col">
+              <template #append>
+                <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-date minimal v-model="time_start_from">
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Close" color="primary" flat />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+
+            <!-- START MAX -->
+            <q-input
+              filled
+              dense
+              clearable
+              mask="date"
+              v-model="time_start_to"
+              debounce="1000"
+              label="Start max"
+              class="col">
+              <template #append>
+                <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-date minimal v-model="time_start_to">
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Close" color="primary" flat />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+
+            <!-- END MIN -->
+            <q-input
+              filled
+              dense
+              clearable
+              mask="date"
+              v-model="time_end_from"
+              debounce="1000"
+              label="End min"
+              class="col">
+              <template #append>
+                <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-date minimal v-model="time_end_from">
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Close" color="primary" flat />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+
+            <!-- END MAX -->
+            <q-input
+              filled
+              dense
+              clearable
+              mask="date"
+              v-model="time_end_to"
+              debounce="1000"
+              label="End max"
+              class="col">
+              <template #append>
+                <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-date minimal v-model="time_end_to">
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Close" color="primary" flat />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+          </div>
+
+          <!-- COUNT AND EXPORT -->
+          <div class="row q-gutter-md items-center">
+            <div class="smaller">
+              {{ wo_list.length }} Record (Max 100)
+            </div>
+            <q-btn
+              color="theme-blue"
+              :label="$t('export')"
+              @click="export_csv">
+            </q-btn>
+          </div>
         </div>
       </template>
 
-      <template #bottom>
-        <div class="row full-width justify-end text-low">
-          <div>{{ wo_list.length }} Record (Max 100)</div>
-        </div>
-      </template>
-
+      <!-- TABLE CONTENT -->
       <template #body="props">
         <q-tr
           :key="props.row._key"
@@ -50,14 +169,6 @@
                 <span>{{ props.row[c.name] || 0 }}</span>
               </template>
 
-              <!--<template v-else-if="c.name == 'processing_time'">
-                <span>{{ props.row.processing_time }} / {{ props.row.unit_processing_time }}</span>
-              </template>
-
-              <template v-else-if="c.name == 'processing_cost'">
-                <span>{{ props.row.processing_cost }} / {{ props.row.unit_processing_cost }}</span>
-              </template>-->
-
               <template v-else>
                 <span class="table-data">
                   {{ $capitalizeAll(props.row[c.name] || '') }}
@@ -69,13 +180,7 @@
       </template>
     </q-table>
 
-    <q-btn
-      class="fixed"
-      style="top: 60px; right: 20px"
-      color="theme-blue"
-      :label="$t('export')"
-      @click="export_csv">
-    </q-btn>
+
   </div>
 </template>
 
@@ -83,6 +188,7 @@
 import { DateTime as DT } from 'luxon'
 import { mapState } from 'vuex'
 import { durationFromMillisec as duration } from '@/lib/duration.js'
+import queryModel from '@/lib/queryModelFactory.js'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
@@ -91,25 +197,6 @@ export default {
 
   components: {
     NoDataAlert
-  },
-
-  props: {
-    filters: {
-      type: Object,
-      required: true,
-      default: () => { return {
-        "search_string": "",
-        "archive_search":"",
-        "started":true,
-        "queued":true,
-        "on_time":true,
-        "late":true,
-        "active":true,
-        "idle":true,
-        "critical":true,
-        "not_critical":true
-      }}
-    }
   },
 
   data () {
@@ -121,12 +208,39 @@ export default {
         fontWeight: 'bold',
         borderCollapse: 'separate'
       },
+      filter_list: ['search','time_start_from','time_start_to','time_end_from','time_end_to'],
       search_fields: ['wo_code', 'product_code', 'project_code', 'product_description'],
       wo_list: []
     }
   },
 
   computed: {
+
+    search: queryModel(String, 'search', null),
+    time_start_from: queryModel(String, 'date_start_from', null),
+    time_start_to: queryModel(String, 'date_start_to', null),
+    time_end_from: queryModel(String, 'date_end_from', null),
+    time_end_to: queryModel(String, 'date_end_to', null),
+
+    filters() {
+      let filters_object = {}
+
+      this.filter_list.forEach(f => {
+        if (this[f]) {
+          if (f.startsWith('time')) {
+            const date = new Date(this[f])
+            // The api handles full timestamps, thus to include issues created/closed during the day indicated we need to set the filter at the end of the same
+            if (f.endsWith('_to')) {
+              // Not using UTC time on purpose, to correctly represent the filter wanted by the user
+              date.setHours(23,59,59,999)
+            }
+            filters_object[f] = date.toISOString()
+          }
+          else filters_object[f] = this[f]
+        }
+      })
+      return filters_object
+    },
 
     columns() {
       return [
@@ -206,12 +320,11 @@ export default {
 
     fetchData() {
       this.loading = true
-      setTimeout(() => {
-        this.$api.get('work-order-archive', {
-          params: {
-            search: this.filters.archive_search
-          }
-        }).then(resp => {
+      console.log('fetching')
+      this.$api.get('work-order', {
+        params: { ...this.filters }
+      }).then(resp => {
+        setTimeout(() => {
           this.wo_list = resp.data.map(wo => {
             return {
               ...wo,
@@ -222,8 +335,8 @@ export default {
             }
           })
           this.loading = false
-        })
-      }, 1000)
+        }, 1000)
+      })
     },
 
     showWorkOrderScreen(wo_key) {
@@ -263,8 +376,9 @@ export default {
   },
 
   watch: {
-    'filters.archive_search'() {
-      this.fetchData()
+    filters: {
+      deep: true,
+      handler: 'fetchData'
     }
   }
 }
@@ -286,17 +400,9 @@ export default {
   thead tr:first-child th /* bg color is important for th; just specify one */
     background-color: var(--bg-color)
 
-  thead tr th
+  thead
     position: sticky
     z-index: 1
-  /* this will be the loading indicator */
-  thead tr:last-child th
-    /* height of all previous header rows */
-    top: 48px
-  thead tr:first-child th
     top: 0
-
-  .q-table__bottom
-    border-top: 1px solid #fff2
 
 </style>
