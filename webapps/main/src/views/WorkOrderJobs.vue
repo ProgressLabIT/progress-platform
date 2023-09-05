@@ -191,24 +191,36 @@
                       {{ $t('update_time') }}
                     </q-card-section>
                     <q-card-section>
-                      <div class="row q-gutter-md">
+                      <div class="row q-col-gutter-md">
                         <q-input
                           type="number"
+                          filled
+                          stack-label
                           v-model.number="jobs_temp_data.hours"
+                          @keyup.enter="forceProcessingTime"
                           min="0"
-                          :label="$t('time.hour', 2)">
+                          :label="$t('time.hour', 2)"
+                          class="col">
                         </q-input>
                         <q-input
                           type="number"
+                          filled
+                          stack-label
                           v-model.number="jobs_temp_data.minutes"
+                          @keyup.enter="forceProcessingTime"
                           min="0"
-                          :label="$t('time.minute', 2)">
+                          :label="$t('time.minute', 2)"
+                          class="col">
                         </q-input>
                         <q-input
                           type="number"
+                          filled
+                          stack-label
                           v-model.number="jobs_temp_data.seconds"
+                          @keyup.enter="forceProcessingTime"
                           min="0"
-                          :label="$t('time.second', 2)">
+                          :label="$t('time.second', 2)"
+                          class="col">
                         </q-input>
                       </div>
                     </q-card-section>
@@ -238,10 +250,13 @@
                     <q-card-section>
                       <q-input
                         type="number"
+                        filled
+                        stack-label
                         v-model.number="jobs_temp_data.new_job_qt_completed"
                         :min="jobs_temp_data.min_progress_qt"
                         :max="jobs_temp_data.max_progress_qt"
                         :label="$t('quantity.completed.long')"
+                        @keyup.enter="forceProgress"
                         autofocus>
                       </q-input>
                     </q-card-section>
@@ -608,11 +623,11 @@ export default {
     },
 
     forceProcessingTime() {
-      const new_job_duration = Duration.fromObject({
-        hours: this.jobs_temp_data.hours,
-        minutes: this.jobs_temp_data.minutes,
-        seconds: this.jobs_temp_data.seconds
-      }).toMillis()
+      const new_job_duration = (
+        this.jobs_temp_data.hours * 3600
+        + this.jobs_temp_data.minutes * 60
+        + this.jobs_temp_data.seconds
+      ) * 1000
 
       this.sendEvent({
         event_type: 'TIME_OVERRIDE_REQUESTED',

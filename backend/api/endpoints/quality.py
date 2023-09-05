@@ -113,7 +113,7 @@ async def delete_issue_type(issue_type_key: str):
 # ---------------------------------------------
 
 @router.get('/issue')
-async def get_issues(
+async def search_issues(
   issue_key: Union[List[str], None] = Query(default=None),
   issue_key_search: str = None,
   issue_type_key: Union[List[str], None] = Query(default=None),

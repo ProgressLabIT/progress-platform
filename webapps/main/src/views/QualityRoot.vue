@@ -409,7 +409,15 @@ export default {
       this.filter_list.forEach(f => {
         if (this[f] != undefined) {
           if (f.startsWith('time')) {
-            filters_object[f] = new Date(this[f]).toISOString()
+            const date = new Date(this[f])
+
+            // The api handles full timestamps, thus to include issues created/closed during the day indicated we need to set the filter at the end of the same
+            if (f.endsWith('_to')) {
+              // Not using UTC time on purpose, to correctly represent the filter wanted by the user
+              date.setHours(23,59,59,999)
+            }
+
+            filters_object[f] = date.toISOString()
           }
           else if (this.bool_filters.includes(f)) {
             if (this[f] == false) {

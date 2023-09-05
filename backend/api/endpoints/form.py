@@ -76,7 +76,7 @@ def fetch_custom_list_values(
     FOR v IN CustomListValue
     FILTER
       v.field_key == @field_key
-      && (@search ? CONCAT(v.value, ' ', v.ext_key) LIKE CONCAT('%', @search, '%') : true)
+      && (@search ? LOWER(CONCAT(v.value, ' ', v.ext_key)) LIKE CONCAT('%', LOWER(@search), '%') : true)
       // space is added to avoid finding matches valid only with the concatenation (across the two fields)
     SORT v[@sort_by]
     LIMIT @limit

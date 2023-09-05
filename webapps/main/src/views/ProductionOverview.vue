@@ -22,25 +22,6 @@
             </q-route-tab>
           </q-tabs>
 
-          <!-- ARCHIVE SEARCH BOX -->
-          <template v-if="$route.name == 'workOrderArchive'">
-            <q-input
-              clearable
-              filled
-              dense
-              hide-bottom-space
-              autocomplete="off"
-              name="search"
-              debounce="300"
-              :label="$capitalize($t('search'))"
-              v-model="archive_search"
-              class="col-3 q-ml-xl">
-              <template v-slot:append>
-                <q-icon name="mdi-magnify" size="xs"/>
-              </template>
-            </q-input>
-          </template>
-
 
 
           <!-- CREATE NEW WORK ORDER -->
