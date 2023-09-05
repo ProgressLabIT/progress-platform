@@ -320,7 +320,6 @@ export default {
 
     fetchData() {
       this.loading = true
-      console.log('fetching')
       this.$api.get('work-order', {
         params: { ...this.filters }
       }).then(resp => {
