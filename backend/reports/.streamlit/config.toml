@@ -1,0 +1,13 @@
+[client]
+toolbarMode = "minimal"
+
+[server]
+runOnSave = true
+enableCORS = false
+enableXsrfProtection = false
+
+[theme]
+# base = "dark"
+primaryColor = "#22AED1"
+# backgroundColor = "#1F2A2D"
+# secondaryBackgroundColor = "#FFFFFF08"
