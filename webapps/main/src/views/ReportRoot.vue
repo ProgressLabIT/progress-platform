@@ -10,8 +10,9 @@ export default {
 
   computed: {
     src() {
-      // return window.location.hostname
-      return 'http://91.229.245.119:30002'
+      const port = '8501'
+      const domain = window.location.hostname
+      return `http://${domain}:${port}`
     }
   },
 
