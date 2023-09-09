@@ -88,7 +88,7 @@ export default {
   data() {
     return {
       $q: useQuasar(),
-      tab_routes: ['adminPanel', 'libraryRoot', 'productionRoot', 'userJobs', 'qualityRoot'],
+      tab_routes: ['adminPanel', 'libraryRoot', 'productionRoot', 'userJobs', 'qualityRoot', 'reportRoot'],
       locale_index: null,
       locale_list: this.$root.$i18n.availableLocales,
       dark_mode_on: true
