@@ -581,6 +581,7 @@ export default {
       "operator": "operatore",
       "production": "area produzione",
       "quality": "Area qualità",
+      "reporting": "Area rapporti",
       "title": "permessi"
     },
     "reset_password": "reimposta password",

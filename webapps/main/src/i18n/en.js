@@ -578,6 +578,7 @@ export default {
       "operator": "operator",
       "production": "production area",
       "quality": "Quality area",
+      "reporting": "Reports area",
       "title": "permissions"
     },
     "reset_password": "reset password",

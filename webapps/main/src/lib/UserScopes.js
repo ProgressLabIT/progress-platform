@@ -8,5 +8,6 @@ const scopes = [
   // { name: 'prod:w', label: 'Produzione: modifica' },
   { name: 'production', label: 'Produzione' },
   { name: 'quality', label: 'Qualità' },
+  { name: 'reporting', label: 'Rapporti' },
 ]
 export default scopes
