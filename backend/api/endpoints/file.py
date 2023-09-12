@@ -14,7 +14,8 @@ collection_map = {
   FileBucket.ISSUE: 'Issue',
   FileBucket.PRODUCT: 'Product',
   FileBucket.STEP: 'Step',
-  FileBucket.USER: 'User'
+  FileBucket.USER: 'User',
+  FileBucket.PRINT: 'PrintTemplate'
 }
 
 
