@@ -4,6 +4,7 @@ from .bom import router as bom
 from .file import router as file
 from .form import router as form
 from .org import router as org
+from .print import router as print
 from .process import router as process
 from .product import router as product
 from .production import router as production

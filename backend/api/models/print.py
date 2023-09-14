@@ -3,8 +3,8 @@ from typing import Union
 
 from pydantic import BaseModel, Field
 
+from models.form import FormFieldInstance
 from utils.base_models import ArangoDocument
-
 
 class Alignment(Enum):
   CENTER = 'center'
@@ -60,7 +60,7 @@ class TextFieldSpec(BaseModel):
 
 class VisualFieldSpec(BaseModel):
   """Image or linear/2D codes"""
-  type: VisualFieldTypes
+  type: VisualFieldType
   position: Position
   height: float
   rotate: float = None
@@ -69,8 +69,12 @@ class VisualFieldSpec(BaseModel):
 FieldSpec = Union[TextFieldSpec, VisualFieldSpec]
 PageSchema = dict[str, FieldSpec] # field name -> field details
 
-class PrintTemplate(ArangoDocument):
+class PrintTemplate(BaseModel):
   basePdf: str = None
-  schemas: list[PageSchema] = Field([], union_mode='left_to_right')
+  schemas: list[PageSchema] = Field(..., union_mode='left_to_right')
+
+class PrintTemplateRecord(ArangoDocument):
+  name: str
+  template: PrintTemplate = None
 
 
