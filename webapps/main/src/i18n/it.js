@@ -402,6 +402,8 @@ export default {
       "instruction": "istruzioni"
     }
   },
+  "print_template_new": "Nuovo template",
+  "print_template_load_pdf": "Carica pdf base",
   "procedure": "procedura",
   "process": "processo",
   "processing_cost": "costo lavorazione",
@@ -609,6 +611,7 @@ export default {
     "operationLibrary": "operazioni",
     "workSession": "sessione di lavoro",
     "productionRoot": "monitoraggio produzione",
+    "printTemplateLibrary": "Stampe",
     "qualityRoot": "Qualità",
     "reportRoot": "Rapporti",
     "userLibrary": "utenti",

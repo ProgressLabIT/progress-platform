@@ -17,6 +17,7 @@
 
       <!-- SCREEN HEADER -->
       <div class="row justify-start items-center q-px-sm text-high">
+
         <slot name="menu">
           <q-btn
             flat
@@ -25,12 +26,15 @@
             @click="show_drawer=true">
           </q-btn>
         </slot>
+
         <slot name="header"></slot>
+
         <slot name="close">
           <q-btn flat dense @click="$emit('close')">
             <q-icon size="xs" name="mdi-close" class="text-low" />
           </q-btn>
         </slot>
+
       </div>
 
       <!-- WINDOW CONTAINER -->

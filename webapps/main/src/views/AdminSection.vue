@@ -40,7 +40,8 @@ export default {
         'operationLibrary',
         'issueTypeLibrary',
         'formFieldLibrary',
-        'flowLibrary'
+        'flowLibrary',
+        'printTemplateLibrary'
       ]
     }
   },

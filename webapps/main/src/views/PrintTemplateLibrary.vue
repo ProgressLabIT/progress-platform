@@ -1,95 +1,51 @@
 <template>
-  <LoadingSignal v-if="!data_ready" />
+  <div>
+    <LoadingSignal v-if="!data_ready" />
 
-  <div v-else class="row full-height">
-    <div class="full-height column col-3">
+    <q-list class="q-pr-xl scroll">
+      <q-item v-for="template in template_list" :key="template._key">
+        <q-item-section top class="q-pa-md col-5 q-pr-xl">
+          <q-item-label class="text-h4 highlight">
+            {{ template.name }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section class="col-auto">
+          <q-btn
+            @click="editTemplate(template._key)"
+            :label="$t('edit')"
+            color="theme-blue">
+          </q-btn>
+        </q-item-section>
+      </q-item>
+    </q-list>
 
-      <q-input
-        dense
-        filled
-        class="q-px-md q-pt-md"
-        :placeholder="$capitalize($t('search'))"
-        v-model="search_text">
-        <template #append>
-          <q-icon name="mdi-magnify" />
-        </template>
-      </q-input>
+    <q-btn
+      class="full-width q-mt-auto"
+      color="theme-blue"
+      :label="$t('new')"
+      @click="openNewTemplate">
+    </q-btn>
 
-      <div class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold">
-        <div class="col-3">
-          {{ $t('type') }}
-        </div>
-        <div class="col">
-          {{ $t('name') }}
-        </div>
-      </div>
-
-      <q-separator />
-
-      <!-- ISSUE TYPE LIST -->
-      <div class="scroll col">
-        <div
-          v-for="(field, index) in filtered_fields"
-          class="row pointer q-px-lg q-py-xs medium full-width"
-          :class="{ 'alternate-row': index % 2 == 0, 'bg-blue-backdrop': field._key == selected_field_key }"
-          :key="field._key"
-          style="white-space: nowrap;"
-          @click="showFieldDetail(field._key)">
-          <div class="col-3">
-            <q-icon :name="getFieldIcon(field.type)" />
-          </div>
-          <div class="col">
-            {{ $capitalize(field.name) }}
-          </div>
-        </div>
-      </div>
-
-      <q-separator />
-
-      <!-- ISSUE TYPE LIST COUNT -->
-      <div class="row flex-center smaller q-py-xs">
-        {{ filtered_fields.length }} {{ $t('of') }} {{ field_list.length }}
-      </div>
-
-      <div class="q-pa-md q-mt-auto">
-        <q-btn
-          class="full-width q-mt-auto"
-          color="theme-blue"
-          :label="$t('new')"
-          @click="show_designer = true">
-        </q-btn>
-      </div>
-    </div>
-
-    <BaseDialog
+    <PrintTemplateDesigner
       :show="show_designer"
-      :no-backdrop-dismiss="false">
-      <FormFieldNew
-        @close="show_designer = false"
-        @created="getFields">
-      </FormFieldNew>
-    </BaseDialog>
+      :edit_template="edit_template"
+      @close="resetDesigner"
+      @saved="getTemplates()">
+    </PrintTemplateDesigner>
 
-    <q-separator vertical />
-
-    <!-- FIELD DATA -->
-    <div class="col full-height" v-if="data_ready">
-      <router-view
-        :template="selected_template"
-        @reload="getTemplates">
-      </router-view>
-    </div>
   </div>
 </template>
 
 <script>
-import BaseModalScreen from '@/components/BaseModalScreen.vue'
+import LoadingSignal from '@/components/LoadingSignal.vue'
+import PrintTemplateDesigner from '@/components/PrintTemplateDesigner.vue'
 
 export default {
   name: 'PrintTemplateLibrary',
 
   components: {
-    BaseModalScreen
+    LoadingSignal,
+    PrintTemplateDesigner
   },
 
   data () {
@@ -97,13 +53,8 @@ export default {
       data_ready: false,
       search_text: null,
       template_list: [],
-      show_designer: false
-    }
-  },
-
-  computed: {
-    filtered_templates() {
-      return this.template_list.filter(t => t.toLowerCase().includes(this.search_text.toLowerCase()))
+      show_designer: false,
+      edit_template: null
     }
   },
 
@@ -113,6 +64,22 @@ export default {
         this.template_list = resp.data.sort()
         this.data_ready = true
       })
+    },
+
+    editTemplate(template_key) {
+      this.$api.get('print-template', { params: { template_key }}).then(resp =>{
+        this.edit_template = resp.data
+        this.show_designer = true
+      })
+    },
+
+    openNewTemplate() {
+      this.show_designer = true
+    },
+
+    resetDesigner() {
+      this.show_designer = false
+      this.edit_template = null
     }
   },
 
@@ -122,3 +89,6 @@ export default {
 }
 
 </script>
+<style lang="sass">
+
+</style>

@@ -399,6 +399,8 @@ export default {
       "instruction": "instructions"
     }
   },
+  "print_template_new": "New template",
+  "print_template_load_pdf": "Upload base pdf",
   "procedure": "procedure",
   "process": "process",
   "processing_cost": "processing cost",
@@ -606,6 +608,7 @@ export default {
     "operationLibrary": "operations",
     "workSession": "work session",
     "productionRoot": "production monitoring",
+    "printTemplateLibrary": "Prints",
     "qualityRoot": "Quality",
     "reportRoot": "Reports",
     "userLibrary": "users",
