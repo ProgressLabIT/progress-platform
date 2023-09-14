@@ -7,7 +7,7 @@ from utils.quality import Queries
 from utils.file import FileHandler
 
 class IssueEvent:
-  issue_collections = ['Event', 'Issue', 'issue_rel', 'WorkOrder', 'Job']
+  issue_collections = ['Event', 'Issue', 'issue_rel', 'WorkOrder', 'Job', 'message']
   message_collections = ['Event', 'message']
   # Mapping of event types to metadata
 
