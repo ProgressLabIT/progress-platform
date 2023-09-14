@@ -12,17 +12,17 @@ router = APIRouter()
 
 # Fetch Print Templates
 @router.get('/print-template')
-async def get_print_templates(key: str = None):
+async def get_print_templates(template_key: str = None):
   """Fetch a specific template with full specs or a list of template without basePdf"""
-  bind_vars = dict(key = key)
+  bind_vars = dict(template_key = template_key)
   cursor = db.aql.execute("""
     FOR t IN PrintTemplate
-    FILTER @key ? t._key == @key : true
+    FILTER @template_key ? t._key == @template_key : true
     LET slim_template = UNSET(t.template, 'basePdf')
-    RETURN @key ? t : MERGE(t, {specs: slim_template})
+    RETURN @template_key ? t : MERGE(t, {specs: slim_template})
   """, bind_vars=bind_vars)
 
-  result = PrintTemplateRecord(**cursor.next()) if key else [PrintTemplateRecord(**t) for t in cursor]
+  result = PrintTemplateRecord(**cursor.next()) if template_key else [PrintTemplateRecord(**t) for t in cursor]
 
   return result
 
