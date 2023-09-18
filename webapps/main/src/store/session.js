@@ -120,11 +120,15 @@ const session = {
       const hasProductionScope = /production/.test(state.scope)
       const hasLibrayScope = /library/.test(state.scope)
       const hasOperatorScope = /operator/.test(state.scope)
+      const hasQaulityScope = /quality/.test(state.scope)
+      const hasReportingScope = /reporting/.test(state.scope)
 
       if (hasOperatorScope) { first_page = 'operatorRoot' }
       else if (hasProductionScope) { first_page = 'productionRoot' }
       else if (hasLibrayScope) { first_page = 'libraryRoot' }
       else if (hasAdminScope) { first_page = 'adminPanel' }
+      else if (hasQaulityScope) { first_page = 'qualityRoot' }
+      else if (hasReportingScope) { first_page = 'reportRoot' }
 
       return first_page
     }

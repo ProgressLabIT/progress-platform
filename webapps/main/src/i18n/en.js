@@ -74,7 +74,7 @@ export default {
   "delete": "delete",
   "deleted": "Deleted",
   "department": "department",
-  "description": "description",
+  "description": "Description",
   "deselect_all": "deselect all",
   "document": {
     "add": "add document | add documents",

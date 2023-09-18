@@ -75,7 +75,7 @@ export default {
   "delete": "elimina",
   "deleted": "Eliminato",
   "department": "reparto | reparti",
-  "description": "descrizione",
+  "description": "Descrizione",
   "deselect_all": "deseleziona tutti",
   "document": {
     "add": "aggiungi documento | aggiungi documenti",
