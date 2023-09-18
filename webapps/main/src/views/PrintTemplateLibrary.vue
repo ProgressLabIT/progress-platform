@@ -1,28 +1,45 @@
 <template>
-  <div>
+  <div class="fit">
     <LoadingSignal v-if="!data_ready" />
 
-    <q-list class="q-pr-xl scroll">
-      <q-item v-for="template in template_list" :key="template._key">
-        <q-item-section top class="q-pa-md col-5 q-pr-xl">
-          <q-item-label class="text-h4 highlight">
-            {{ template.name }}
-          </q-item-label>
-        </q-item-section>
-        <q-item-section class="col-auto">
-          <q-btn
-            @click="editTemplate(template._key)"
-            :label="$t('edit')"
-            color="theme-blue">
-          </q-btn>
-        </q-item-section>
-      </q-item>
-    </q-list>
+    <div v-else class="row q-col-gutter-md q-ml-none q-mt-none">
+      <div class="col-2"
+        v-for="template in template_list"
+        :key="template._key">
+        <q-card
+          square
+          bordered
+          class="surface2">
+          <q-card-section class="text-h3 row items-end">
+            <q-icon
+              class=""
+              name="mdi-file-document"
+              size="sm">
+            </q-icon>
+            <div class="q-ml-sm">
+              {{ template.name }}
+            </div>
+          </q-card-section>
+          <q-card-section>
+            {{ template.description }}
+          </q-card-section>
+          <q-card-section class="row justify-end">
+            <q-btn
+              size="sm"
+              @click="editTemplate(template._key)"
+              :label="$t('edit')"
+              color="theme-blue">
+            </q-btn>
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
 
     <q-btn
-      class="full-width q-mt-auto"
+      round
+      class="absolute-bottom-right q-mb-lg q-mr-lg"
       color="theme-blue"
-      :label="$t('new')"
+      icon="mdi-plus"
       @click="openNewTemplate">
     </q-btn>
 
