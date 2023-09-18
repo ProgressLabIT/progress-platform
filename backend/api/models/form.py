@@ -19,7 +19,6 @@ class FileTargetData(BaseModel):
   object_key: str
   subfolder: str = None
 
-
 class FieldType(Enum):
   TEXT = 'text'
   NUMBER = 'number'
@@ -29,7 +28,6 @@ class FieldType(Enum):
   DATE = 'date'
   TIME = 'time'
   FILES = 'files'
-
 
 field_type_map = {
   FieldType.TEXT.value: str,
@@ -43,7 +41,6 @@ field_type_map = {
 }
 # if the field model has multiple = True, the type becomes List[type]
 
-
 class CustomListValue(ArangoDocument):
   field_key: str # Reference to CustomField
   ext_key: str = None # Optional reference to external identification, e.g. ERP id
@@ -55,8 +52,7 @@ class CustomField(ArangoDocument):
   default_label: str = None # To show to the user when filling up the forms
   default_hint: str = None # To show to the user when filling up the forms
 
-
-class CustomFieldInstance(BaseModel):
+class FormFieldDefinition(BaseModel):
   field_key: str
   multiple: bool = False
   label: str
@@ -70,3 +66,8 @@ class CustomFieldInstance(BaseModel):
     if values.get('hidden') and values.get('default') == None:
       raise ValueError('Hidden fields must have a default value')
     return values
+
+class FormFieldInstance(BaseModel):
+  field_key: str
+  name: str = None
+  value: Any = None
