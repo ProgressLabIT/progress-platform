@@ -71,10 +71,13 @@ PageSchema = dict[str, FieldSpec] # field name -> field details
 
 class PrintTemplate(BaseModel):
   basePdf: str = None
+  columns: list[str] = []
+  sampledata: list[dict[str, str]] = []
   schemas: list[PageSchema] = Field(..., union_mode='left_to_right')
 
 class PrintTemplateRecord(ArangoDocument):
   name: str
+  description: str = None
   template: PrintTemplate = None
 
 

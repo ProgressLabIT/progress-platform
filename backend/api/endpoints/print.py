@@ -1,6 +1,6 @@
 import traceback
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from models.print import PrintTemplateRecord
 from utils.api import APIResponse
@@ -53,7 +53,26 @@ async def create_print_template(template_data: PrintTemplateRecord):
 # Update Print Template
 @router.put('/print-template')
 async def update_print_template(template_data: PrintTemplateRecord):
-  ...
+  try:
+    update = template_data.dict(by_alias=True)
+    print(update)
+    resp = db.collection('PrintTemplate').update(update)
+    return APIResponse(
+      status_code = 200,
+      message = f"Print template {template_data.key} updated successfully"
+    )
+  except Exception:
+    status_code = 500
+    error_str = traceback.format_exc()
+    response=dict(
+      status=status_code,
+      message="There was a problem saving the data into the database. Please contact support if it happens again",
+      error=error_str
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
 
 
 # Delete Print Template
