@@ -32,7 +32,7 @@ class TokenRecord(ArangoDocument):
   expires_at: datetime
 
 
-class Scope(Enum):
+class Scope(str, Enum):
   ADMIN_USER_WRITE: 'admin.user'
   OPERATOR: 'operator'
   LIBRARY_READ: 'lib:r'
@@ -75,7 +75,7 @@ class NewSessionData(BaseModel):
   scope: str
   timeout: timedelta = timedelta(minutes=30)
 
-class GrantType(Enum):
+class GrantType(str, Enum):
   AUTHORIZATION_CODE: 'authorization_code'
   PASSWORD: 'password'
 

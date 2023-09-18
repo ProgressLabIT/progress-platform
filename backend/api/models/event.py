@@ -8,7 +8,7 @@ from models.quality import IssueWithLinks, Issue, Message
 from utils.base_models import ArangoDocument
 from utils.dt import timestamp
 
-class EventType(Enum):
+class EventType(str, Enum):
   # Production Events
   JOB_STARTED = 'JOB_STARTED'
   JOB_PAUSED = 'JOB_PAUSED'

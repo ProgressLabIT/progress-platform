@@ -8,7 +8,7 @@ from utils.base_models import ArangoDocument
 
 
 
-class FileBucket(Enum):
+class FileBucket(str, Enum):
   ISSUE = 'issue'
   PRODUCT = 'product'
   STEP = 'step'
@@ -19,7 +19,7 @@ class FileTargetData(BaseModel):
   object_key: str
   subfolder: str = None
 
-class FieldType(Enum):
+class FieldType(str, Enum):
   TEXT = 'text'
   NUMBER = 'number'
   BOOLEAN = 'boolean'

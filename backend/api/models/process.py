@@ -7,14 +7,14 @@ from utils.base_models import FlexModel, ArangoDocument
 
 
 
-class ReleaseStyle(Enum):
+class ReleaseStyle(str, Enum):
   CONTINUOUS = 'continuous'
   BATCH = 'batch'
   SESSION = 'session'
   MANUAL = 'manual'
   JOB = 'job'
 
-class WIPAccess(Enum):
+class WIPAccess(str, Enum):
   LINE = 'line'
   BUFFER = 'buffer'
 
@@ -38,13 +38,13 @@ class Operation(ArangoDocument):
   default_phase_parameters: PhaseParameters = PhaseParameters()
 
 
-class StepType(Enum):
+class StepType(str, Enum):
   INSTRUCTION = 'instruction'
   FORM = 'form'
   CHECKLIST = 'checklist'
 
 
-class FieldType(Enum):
+class FieldType(str, Enum):
   SHORT = 'short'
   LONG = 'long'
 

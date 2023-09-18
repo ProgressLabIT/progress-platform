@@ -40,7 +40,7 @@ class TargetActualTimeDelta(FlexModel):
 #   delta: timedelta = None
 
 
-class WorkStatus(Enum):
+class WorkStatus(str, Enum):
   CREATED = 'created'
   PLANNED = 'planned'
   STARTED = 'started'
@@ -190,7 +190,7 @@ class Job(FlexModel):
 #   active: bool
 #   jobs: List[Job]
 
-class JobUpdateType(Enum):
+class JobUpdateType(str, Enum):
   INSERT = 'insert'
   UPDATE = 'update'
   CLOSE = 'close'
@@ -226,7 +226,7 @@ class AssignmentsResponse(FlexModel):
   unassigned_jobs: List[Job] = []
 
 
-class QueueType(Enum):
+class QueueType(str, Enum):
   OPERATOR = 'o'
   EQUIPMENT = 'e'
   SITE = 's'
