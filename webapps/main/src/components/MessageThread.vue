@@ -56,11 +56,10 @@ export default {
   props: {
     context: {
       type: String,
-      validator: value => ['issue', 'work_order'].includes(value)
+      validator: value => ['issue', 'work_order', 'job'].includes(value)
     },
     context_key: {
       type: String,
-      required: true
     }
   },
 
@@ -78,7 +77,12 @@ export default {
 
   computed: {
     recipient_id() {
-      return this.recipient_prefix_map[this.context] + this.context_key
+      if (this.context == 'job') {
+        return 'WorkOrder/' + this.$store.state.traceability.working_job_data.wo_key
+      }
+      else {
+        return this.recipient_prefix_map[this.context] + this.context_key
+      }
     }
   },
 

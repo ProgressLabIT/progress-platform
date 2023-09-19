@@ -260,6 +260,11 @@ export default {
           route_name: 'jobNotes',
           text: this.$t('notes', 2),
           item_count: !!this.j.order_notes + !!this.j.phase_notes + !!this.j.product_notes
+        },
+        {
+          route_name: 'jobMessages',
+          text: this.$t('message', 2),
+          item_count: this.j.message_count
         }
       ]
     },

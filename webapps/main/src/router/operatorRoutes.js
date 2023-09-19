@@ -67,6 +67,14 @@ const operatorRoutes = [
         name: "jobIssueDetail",
         component: () => import ("@/components/IssueDetail.vue"),
         props: true
+      },
+      {
+        path: 'messages',
+        name: 'jobMessages',
+        component: () => import("@/components/MessageThread.vue"),
+        props: route => ({
+          context: 'job'
+        })
       }
     ]
   }
