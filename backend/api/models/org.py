@@ -20,6 +20,16 @@ class Department(ArangoDocument):
   code: str = None
   description: str = None  
 
+class DepartmentLinks(BaseModel):
+  """Keep this class separate for updating links only"""
+  equipment: list[str] = []   # keys of equimpent
+  users: list[str] = []       # keys of users
+  operations: list[str] = []  # keys of operations
+
+class DepartmentWithlinks(Department, DepartmentLinks):
+  """Merge the two classes for creating/updating departments"""
+  pass
+
 
 class UserListItem(ArangoDocument):
   active: bool = True
