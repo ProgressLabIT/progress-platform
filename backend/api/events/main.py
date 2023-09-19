@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 from events import (
-  IssueEvent,
+  CollaborationEvent,
   ProductionActivityEvent,
   ProductionAdminEvent,
   SharedEventMethods
@@ -11,7 +11,7 @@ from utils.db import db
 
 
 class Event(
-  IssueEvent,
+  CollaborationEvent,
   ProductionActivityEvent,
   ProductionAdminEvent,
   SharedEventMethods

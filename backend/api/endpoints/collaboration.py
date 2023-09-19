@@ -5,11 +5,11 @@ from typing import Dict, List, Union
 from fastapi import APIRouter, Body, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 
-from models.quality import *
+from models.collaboration import *
 from models.event import EventModel, EventType
 from utils.api import APIResponse
 from utils.db import db
-from utils.quality import Queries
+from utils.collaboration import Queries
 
 router = APIRouter()
 
@@ -175,9 +175,9 @@ async def search_issues(
 # ---------------------------------------------
 
 @router.get('/message')
-async def get_messages(issue_key: str):
+async def get_messages(recipient_id: str):
   try:
-    cursor = db.collection('message').find(dict(_to=f'Issue/{issue_key}'))
+    cursor = db.collection('message').find(dict(_to=recipient_id))
     messages = [Message(**m) for m in cursor]
     # Ensure sorting by posting time
     return sorted(messages, key=lambda m: m.created)

@@ -1,12 +1,12 @@
 from fastapi import HTTPException
 
 from events.shared import EventMeta
-from models.quality import Issue, IssueLink, IssueWithLinks
+from models.collaboration import Issue, IssueLink, IssueWithLinks
 from utils.dt import timestamp
-from utils.quality import Queries
+from utils.collaboration import Queries
 from utils.file import FileHandler
 
-class IssueEvent:
+class CollaborationEvent:
   issue_collections = ['Event', 'Issue', 'issue_rel', 'WorkOrder', 'Job']
   message_collections = ['Event', 'message']
   # Mapping of event types to metadata
