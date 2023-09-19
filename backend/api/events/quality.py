@@ -27,7 +27,7 @@ class IssueEvent:
   )
 
   ISSUE_DELETED = EventMeta(
-    collections=issue_collections,
+    collections=issue_collections + ['message'],
     action="delete_issue"
   )
 
