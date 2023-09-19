@@ -647,7 +647,8 @@ export default {
       "workOrderHistory": "storico",
       "workOrderJobs": "lavori",
       "workOrderIssues": 'segnalazioni',
-      "workOrderNotes": "Note"
+      "workOrderNotes": "Note",
+      "workOrderMessages": 'Messaggi'
     },
     "update_due_date": "modifica data scadenza",
     "update_from_date": "modifica data rilascio",
