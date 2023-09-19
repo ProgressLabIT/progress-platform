@@ -9,7 +9,7 @@
       <div class="col-1 offset-2">
         <q-icon size="lg" :name="progress_button.icon" />
       </div>
-      <div class="display medium offset-1">
+      <div class="col display medium offset-1 text-left q-pr-lg">
         <span>{{ progress_button.text }}</span>
       </div>
     </div>

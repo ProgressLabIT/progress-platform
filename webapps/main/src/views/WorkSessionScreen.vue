@@ -29,32 +29,42 @@
         <!-- ################################ -->
 
         <div
-          class="column q-px-sm gt-sm full-height"
+          class="column q-px-sm full-height col-8"
           id="job-info-section"
-          :class="$route.name === 'jobIssueDetail' ? 'col-12' : 'col-8'">
+          v-show="$q.screen.width > 800">
 
           <!-- PANEL NAVIGATION -->
           <q-tabs
             class="transparent text-low"
             active-class="text-high weight-bold"
             align="left"
-            shrink
             indicator-color="transparent">
             <q-route-tab
               v-for="link in links"
               :key="link.route_name"
               :to="{ name: link.route_name }">
-              <div class="row items-center justify-start">
-                <div class="display">
+              <div class="row items-center justify-start display">
+                <div v-if="$q.screen.width > 1220" :class="{ smaller: $q.screen.md }">
                   {{ link.text }}
                 </div>
-                <q-chip
-                  v-if="link.item_count"
-                  size="xs"
-                  :color="getItemCountColor(link)"
-                  class="q-ml-sm weight-bold text-body2">
-                  {{ link.item_count }}
-                </q-chip>
+                <q-icon v-else size="xs" :name="link.icon" class="q-mr-xs"/>
+                <template v-if="link.item_count">
+                  <q-chip
+                    v-if="link.route_name == 'jobIssues'"
+                    size="9px"
+                    :color="getItemCountColor(link)"
+                    class="q-ml-sm weight-bold text-body2">
+                    {{ link.item_count }}
+                  </q-chip>
+
+                  <q-avatar
+                    v-else
+                    size="xs"
+                    :color="getItemCountColor(link)"
+                    class="q-ml-sm weight-bold text-body2">
+                    {{ link.item_count }}
+                  </q-avatar>
+                </template>
               </div>
             </q-route-tab>
           </q-tabs>
@@ -239,31 +249,37 @@ export default {
         {
           route_name: 'jobSteps',
           text: this.$t('procedure'),
+          icon: 'mdi-order-bool-descending-variant',
           item_count: this.j.step_sequence.length
         },
         {
           route_name: 'jobDocs',
           text: this.$t('document.label', 2),
+          icon: 'mdi-file-document-multiple',
           item_count: this.j.job_docs.length
         },
         {
           route_name: 'jobBom',
           text: this.$t('material', 2),
+          icon: 'mdi-file-tree',
           item_count: this.j.job_bom.length
         },
         {
           route_name: 'jobIssues',
           text: this.$t('issue', 2),
+          icon: 'mdi-flag',
           item_count: this.$store.getters.getIssueCount(true) + '/' + this.$store.getters.getIssueCount(false)
         },
         {
           route_name: 'jobNotes',
           text: this.$t('notes', 2),
+          icon: 'mdi-note-edit',
           item_count: !!this.j.order_notes + !!this.j.phase_notes + !!this.j.product_notes
         },
         {
           route_name: 'jobMessages',
           text: this.$t('message', 2),
+          icon: 'mdi-message-text-outline',
           item_count: this.j.message_count
         }
       ]
