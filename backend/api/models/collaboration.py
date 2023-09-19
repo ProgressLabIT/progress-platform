@@ -84,6 +84,12 @@ class IssueWithLinks(Issue):
 
 
 # MESSAGE
+
+class MessageContext(str, Enum):
+  issue = 'issue'
+  work_order = 'work_order'
+
+
 class Message(ArangoDocument):
   sender: str = Field(..., alias="_from") # ID of creator (User/Machine/etc.)
   recipient: str = Field(..., alias="_to") # related issue or user

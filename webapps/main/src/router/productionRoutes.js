@@ -56,6 +56,15 @@ const productionRoutes = [
                     path: 'notes',
                     name: 'workOrderNotes',
                     component: () => import("@/views/WorkOrderNotes.vue")
+                  },
+                  {
+                    path: 'messages',
+                    name: 'workOrderMessages',
+                    component: () => import("@/components/MessageThread.vue"),
+                    props: route => ({
+                      context_key: route.params.wo_key,
+                      context: 'work_order'
+                    })
                   }
                 ]
               }

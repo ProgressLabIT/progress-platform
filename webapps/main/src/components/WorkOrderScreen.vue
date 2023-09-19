@@ -78,7 +78,8 @@ export default {
       tabs: [
         'workOrderJobs',
         'workOrderIssues',
-        'workOrderNotes'
+        'workOrderNotes',
+        'workOrderMessages'
         // 'workOrderHistory'
       ],
       vuex_ready: false,

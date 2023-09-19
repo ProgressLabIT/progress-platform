@@ -645,7 +645,8 @@ export default {
       "workOrderHistory": "history",
       "workOrderJobs": "jobs",
       "workOrderIssues": "issues",
-      "workOrderNotes": "Notes"
+      "workOrderNotes": "Notes",
+      "workOrderMessages": "Messages"
     },
     "update_due_date": "change due date",
     "update_from_date": "change release date",
