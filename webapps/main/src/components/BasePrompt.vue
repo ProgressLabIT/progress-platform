@@ -7,6 +7,8 @@
         </div>
         <q-input
           autofocus
+          filled
+          autogrow
           class="q-mt-md"
           input-class="text-body1"
           hide-bottom-space

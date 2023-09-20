@@ -439,7 +439,7 @@ export default {
       saving: false,
       expanded_phase: null,
       selected_jobs: [],
-      jobs_temp_data: {},
+      jobs_temp_data: undefined,
       edit_mode: 'actions',
       edit_job_time: null,
       edit_job_progress: null,
@@ -591,9 +591,9 @@ export default {
         _key: job_data._key,
         phase_key: job_data.phase_key,
         work_order_key: job_data.wo_key,
-        hours: duration.hours,
-        minutes: duration.minutes,
-        seconds: duration.seconds
+        hours: duration.hours ?? 0,
+        minutes: duration.minutes ?? 0,
+        seconds: duration.seconds ?? 0
       }
       this.edit_job_time = job_data._key
     },

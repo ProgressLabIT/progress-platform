@@ -29,7 +29,6 @@
             clearable
             emit-value
             map-options
-            :display-value="label"
             :model-value="link_form"
             @update:model-value="updateLinkForm"
             :label="$t('issue_new_link_type_label')">
