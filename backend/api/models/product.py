@@ -19,7 +19,7 @@ class TargetAverageTime(TargetAverageCost):
   average: float = target * (1 + uniform(-0.2, 0.2))
 
 
-class KPIWindowType(Enum):
+class KPIWindowType(str, Enum):
   TIME = 'time'
   COUNT = 'count'
 

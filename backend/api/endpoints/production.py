@@ -481,7 +481,8 @@ async def get_job_data(job_key: str):
     LET product_notes = DOCUMENT(Product, j.product_key).production_notes
     LET phase_notes = DOCUMENT(Phase, j.phase_key).notes
     LET order_notes = DOCUMENT(WorkOrder, j.wo_key).notes
-    RETURN MERGE(j, { issue_count, product_notes, phase_notes, order_notes })
+    LET message_count = COUNT(FOR m IN message FILTER m._to == CONCAT('WorkOrder/', j.wo_key) RETURN 1)
+    RETURN MERGE(j, { issue_count, product_notes, phase_notes, order_notes, message_count })
   """
   bind_vars = dict(job_key = job_key)
 

@@ -9,7 +9,7 @@ from utils.base_models import FlexModel, ArangoDocument, ArangoEdge
 
 
 
-class StepStatus(Enum):
+class StepStatus(str, Enum):
   TODO = 'to_do'
   DONE = 'done'
   CRITICAL = 'critical'

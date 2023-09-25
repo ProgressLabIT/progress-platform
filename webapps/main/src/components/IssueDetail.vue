@@ -142,45 +142,18 @@
       <q-separator vertical spaced />
 
       <!-- RIGHT SECTION -->
-      <div class="col column q-pa-md full-height">
-        <div class="display low-text text-h5 col-auto q-pb-md">
-          {{ $t('message', 2) }}
-        </div>
-        <q-separator></q-separator>
-        <div class="col scroll q-py-md">
-          <Message
-            v-for="m in messages"
-            :key="m._key"
-            :message="m"
-            @change="getMessages">
-          </Message>
-        </div>
-        <div class="col-auto">
-          <q-separator spaced></q-separator>
-          <div class="row justify-between items-center">
-            <div class="col">
-              <q-input
-                v-if="!recording"
-                filled
-                autogrow
-                v-model="new_message"
-                :placeholder="$t('message_prompt')">
-                <template #append>
-                  <q-btn
-                    v-if="new_message.length"
-                    round
-                    icon="mdi-send"
-                    :loading="loading"
-                    color="theme-blue"
-                    size="12px"
-                    @click="postMessage">
-                  </q-btn>
-                </template>
-              </q-input>
-            </div>
+      <MessageThread
+        :messages="messages"
+        context="issue"
+        :context_key="issue._key">
+        <template #header>
+          <div class="display low-text text-h5 col-auto q-pb-md">
+            {{ $t('message', 2) }}
           </div>
-        </div>
-      </div>
+          <q-separator></q-separator>
+        </template>
+      </MessageThread>
+
     </q-card>
   </BaseDialog>
 </template>
@@ -189,10 +162,10 @@
 import event from '@/mixins/event.js'
 import IssueHeader from '@/components/IssueHeader.vue'
 import enrichIssue from '@/mixins/issues.js'
-import Message from '@/components/Message.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import FormField from '@/components/FormField.vue'
+import MessageThread from '@/components/MessageThread.vue'
 
 
 export default {
@@ -201,7 +174,7 @@ export default {
 
   components: {
     IssueHeader,
-    Message,
+    MessageThread,
     BaseUserAvatar,
     BaseDialog,
     FormField
@@ -223,7 +196,6 @@ export default {
     return {
       messages: [],
       history: [],
-      new_message: '',
       loading: false,
       recording: false,
       base_path: '/media/user/',
@@ -242,11 +214,6 @@ export default {
   },
 
   methods: {
-    getMessages() {
-      this.$api.get('message', { params: { issue_key: this.issue._key }})
-      .then(resp => this.messages = resp.data)
-    },
-
     getHistory() {
       this.$api.get('event', { params: { issue_key: this.issue._key }})
       .then(resp => this.history = resp.data)
@@ -366,24 +333,6 @@ export default {
       })
     },
 
-    postMessage() {
-      const message_data = {
-        sender: `User/${this.$store.state.session.user._key}`,
-        recipient: `Issue/${this.issue._key}`,
-        content: this.new_message
-      }
-      this.loading = true
-      this.sendEvent({
-        event_type: 'MESSAGE_POSTED',
-        event_data: { message_data }
-      }).then(() => {
-        this.new_message = ''
-        this.getMessages()
-        this.getHistory()
-        this.loading = false
-      })
-    },
-
     exit() {
       this.$router.back()
     }
@@ -391,7 +340,6 @@ export default {
 
   created() {
     this.$store.dispatch('loadUsers')
-    this.getMessages()
     this.getHistory()
   }
 }

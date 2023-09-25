@@ -11,7 +11,7 @@ from pydantic import (
   validator
 )
 
-from models.form import CustomFieldInstance
+from models.form import FormFieldDefinition
 from utils.base_models import ArangoDocument, ArangoEdge
 from utils.dt import timestamp
 
@@ -23,7 +23,7 @@ class IssueType(ArangoDocument):
   active: bool = True
   description: str = None
   icon: str = None
-  form_template: List[CustomFieldInstance] = []
+  form_template: List[FormFieldDefinition] = []
   critical: bool = False
   # close_within: NonNegativeInt = 0 # Time in hours. After this make critical. If 0 ignore.
 
@@ -84,6 +84,12 @@ class IssueWithLinks(Issue):
 
 
 # MESSAGE
+
+class MessageContext(str, Enum):
+  issue = 'issue'
+  work_order = 'work_order'
+
+
 class Message(ArangoDocument):
   sender: str = Field(..., alias="_from") # ID of creator (User/Machine/etc.)
   recipient: str = Field(..., alias="_to") # related issue or user

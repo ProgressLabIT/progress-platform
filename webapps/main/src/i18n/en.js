@@ -74,7 +74,7 @@ export default {
   "delete": "delete",
   "deleted": "Deleted",
   "department": "department",
-  "description": "description",
+  "description": "Description",
   "deselect_all": "deselect all",
   "document": {
     "add": "add document | add documents",
@@ -648,7 +648,8 @@ export default {
       "workOrderHistory": "history",
       "workOrderJobs": "jobs",
       "workOrderIssues": "issues",
-      "workOrderNotes": "Notes"
+      "workOrderNotes": "Notes",
+      "workOrderMessages": "Messages"
     },
     "update_due_date": "change due date",
     "update_from_date": "change release date",

@@ -8,5 +8,5 @@ from .print import router as print
 from .process import router as process
 from .product import router as product
 from .production import router as production
-from .quality import router as quality
+from .collaboration import router as collaboration
 from .traceability import router as traceability
