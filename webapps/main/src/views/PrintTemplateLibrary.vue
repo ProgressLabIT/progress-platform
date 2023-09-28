@@ -83,9 +83,21 @@ export default {
       })
     },
 
+    removeNullValues(obj) {
+      return Object.entries(obj)
+      .filter(([_, v]) => v != null)
+      .reduce((acc, [k, v]) => ({ ...acc, [k]: v === Object(v) ? this.removeNullValues(v) : v }), {})
+    },
+
     editTemplate(template_key) {
       this.$api.get('print-template', { params: { template_key }}).then(resp =>{
-        this.edit_template = resp.data
+        this.edit_template = {
+          ...resp.data,
+          template: {
+            ...resp.data.template,
+            schemas: resp.data.template.schemas.map(this.removeNullValues)
+          }
+        }
         this.show_designer = true
       })
     },

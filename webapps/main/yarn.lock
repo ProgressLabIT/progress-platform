@@ -333,14 +333,23 @@
   dependencies:
     pako "^1.0.10"
 
-"@pdfme/generator@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@pdfme/generator/-/generator-2.2.0.tgz#1ae756bd068d4c1950a74742dd479e787924a822"
-  integrity sha512-1Cj0mrHzmIcF3Fn0u92va5Z42V+P5v1uik3BtHJH4nSv/2PetWk9uQLjN0Bs2Ic+FSw2vgrAUXJNQBfBAU1U5A==
+"@pdfme/common@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@pdfme/common/-/common-2.2.1.tgz#274c345c7603cb93c7ad843e11625756f63acc1b"
+  integrity sha512-rtG1fef1MAPi8esQ9Jg0OLkEH1ut45HQrn/7dSKSPmIzTlJcKZ9sU5qQmlW9jGzvkos3GQhYKhDe3DwHe0jXJQ==
+  dependencies:
+    buffer "^6.0.3"
+    bwip-js "^3.4.5"
+    fontkit "^2.0.2"
+    zod "^3.20.2"
+
+"@pdfme/generator@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@pdfme/generator/-/generator-2.2.1.tgz#4722e918bbe63aae41bb9de75caa08ddd3309ddb"
+  integrity sha512-677fDlZY7WIs++sR+9gN+ZY+awBkwuSOJJxff4Xo70GL3l6tQsO0n8GHhtoVWmULUj7h2nKxv+e9bsO3s0GZ0w==
   dependencies:
     "@pdfme/pdf-lib" "^1.17.3"
     atob "^2.1.2"
-    bwip-js "^3.2.2"
     fontkit "^2.0.2"
 
 "@pdfme/pdf-lib@^1.17.3":
@@ -353,10 +362,10 @@
     pako "^1.0.11"
     tslib "^1.11.1"
 
-"@pdfme/ui@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@pdfme/ui/-/ui-2.2.0.tgz#7277f2b1fa303ccf8bc2c4fbc9e0172c2424b412"
-  integrity sha512-Qevr4bMshis7mQVq4IygLpM+xiB5Z9HIRRniRUc5MkF3kzSPHA2OpaKdytYWwTh/OBo67s9IsKF6umrImXs30g==
+"@pdfme/ui@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@pdfme/ui/-/ui-2.2.1.tgz#14651eaa075b465f850e9f5921e175275136e6c2"
+  integrity sha512-P0QEGoyTxqBz65FPMJl7zG8QhZbJZtNskRxo75ilz0UkrLTtdMNtiHLMxnSIAgXs8d7z6WDkAS/zFIaUo6QX9A==
   dependencies:
     "@dnd-kit/core" "^5.0.1"
     "@dnd-kit/sortable" "^6.0.0"
@@ -1065,6 +1074,14 @@ buffer@^5.5.0:
     base64-js "^1.3.1"
     ieee754 "^1.1.13"
 
+buffer@^6.0.3:
+  version "6.0.3"
+  resolved "https://registry.yarnpkg.com/buffer/-/buffer-6.0.3.tgz#2ace578459cc8fbe2a70aaa8f52ee63b6a74c6c6"
+  integrity sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==
+  dependencies:
+    base64-js "^1.3.1"
+    ieee754 "^1.2.1"
+
 builtins@^5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/builtins/-/builtins-5.0.1.tgz#87f6db9ab0458be728564fa81d876d8d74552fa9"
@@ -1072,7 +1089,7 @@ builtins@^5.0.1:
   dependencies:
     semver "^7.0.0"
 
-bwip-js@^3.2.2:
+bwip-js@^3.4.5:
   version "3.4.5"
   resolved "https://registry.yarnpkg.com/bwip-js/-/bwip-js-3.4.5.tgz#e55a9ce5cd13a17b6f2b1370cda367741764d169"
   integrity sha512-qeMBeeHkELC+ZTU3UjUFF0mkIQmhqKzo4B5fYfx98hitsdBMytSuAE9oVz2mE02GQ09u3QmgU/kke0qONumuGQ==
@@ -2622,7 +2639,7 @@ iconv-lite@0.4.24, iconv-lite@^0.4.24:
   dependencies:
     safer-buffer ">= 2.1.2 < 3"
 
-ieee754@^1.1.13:
+ieee754@^1.1.13, ieee754@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/ieee754/-/ieee754-1.2.1.tgz#8eb7a10a63fff25d15a57b001586d177d1b0d352"
   integrity sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==
@@ -4658,3 +4675,8 @@ zip-stream@^4.1.0:
     archiver-utils "^2.1.0"
     compress-commons "^4.1.0"
     readable-stream "^3.6.0"
+
+zod@^3.20.2:
+  version "3.22.2"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.22.2.tgz#3add8c682b7077c05ac6f979fea6998b573e157b"
+  integrity sha512-wvWkphh5WQsJbVk1tbx1l1Ly4yg+XecD+Mq280uBGt9wa5BKSWf4Mhp6GmrkPixhMxmabYY7RbzlwVP32pbGCg==

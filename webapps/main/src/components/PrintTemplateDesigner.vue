@@ -20,47 +20,58 @@
         <div id="pdf-designer" class="absolute-full" />
 
         <div
-          class="absolute-top-left q-mt-sm q-ml-sm col q-gutter-md"
+          class="absolute-top-left full-height scroll q-pa-md"
           style="min-width: 300px;">
-          <q-input
-            filled
-            :label="$t('name')"
-            stack-label
-            class="shadow-3"
-            input-class="transparent"
-            v-model="working_template.name">
-          </q-input>
-          <q-input
-            filled
-            class="shadow-3"
-            stack-label
-            :label="$t('description')"
-            autogrow
-            v-model="working_template.description">
-          </q-input>
+          <div class="q-gutter-md">
+            <q-input
+              filled
+              :label="$t('name')"
+              stack-label
+              class="shadow-3"
+              input-class="transparent"
+              v-model="working_template.name">
+            </q-input>
+            <q-input
+              filled
+              class="shadow-3"
+              stack-label
+              :label="$t('description')"
+              autogrow
+              v-model="working_template.description">
+            </q-input>
+
+            <div class="text-h5 q-mt-lg">
+              COLLEGAMENTI
+            </div>
+            <div v-for="f in working_template.template.columns">
+              <q-select
+                :label="f"
+                stack-label
+                class="shadow-3"
+                filled
+                :options="template_data_options"
+                v-model="template_data_links[f]">
+              </q-select>
+            </div>
+
+            <q-space></q-space>
+            <!-- ACTION MENU -->
+            <q-btn
+              color="primary"
+              icon="mdi-upload"
+              label="UPLOAD PDF"
+              @click="$refs.upload_pdf.click()">
+            </q-btn>
+
+            <q-btn
+              color="primary"
+              icon="mdi-database-check"
+              label="SAVE"
+              @click="saveTemplate">
+            </q-btn>
+          </div>
         </div>
 
-        <!-- ACTION MENU -->
-        <div class="absolute-bottom-left q-ml-md q-mb-md">
-          <q-list>
-            <q-item clickable v-ripple @click="$refs.upload_pdf.click()">
-              <q-item-section side>
-                <q-icon name="mdi-upload" />
-              </q-item-section>
-              <q-item-section class="display weight-bold">
-                UPLOAD PDF
-              </q-item-section>
-            </q-item>
-            <q-item clickable v-ripple @click="saveTemplate">
-              <q-item-section side>
-                <q-icon name="mdi-database-check" />
-              </q-item-section>
-              <q-item-section class="display weight-bold">
-                SAVE
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </div>
 
         <input
           ref="upload_pdf"
@@ -118,6 +129,8 @@ export default {
       show_rename: false,
       mode: undefined,
       working_template: undefined,
+      template_data_options: [1,2,3],
+      template_data_links: {}
     }
   },
 
@@ -149,7 +162,7 @@ export default {
       const reader = new FileReader()
       reader.readAsDataURL(file)
       reader.onload = () => {
-        this.template.basePdf = reader.result
+        this.working_template.template.basePdf = reader.result
         this.initDesigner()
       }
     },
@@ -173,9 +186,10 @@ export default {
       const container = document.getElementById('pdf-designer')
       this.designer = new Designer({
         domContainer: container,
-        template: this.working_template.template
+        template: this.working_template.template,
+        options: { lang: 'it' }
       })
-      this.designer.onChangeTemplate = t => console.log(t)
+      this.designer.onChangeTemplate(t => this.working_template.template = cloneDeep(t))
     },
 
     closeDesigner() {
