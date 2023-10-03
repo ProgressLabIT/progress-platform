@@ -39,6 +39,11 @@ issue/
 integration_db/
 backup/
 
+# Docker Volumes
+db_data/
+db_backup/
+logs/
+
 # Dev utility scripts
 *.app/
 
