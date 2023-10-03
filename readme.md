@@ -5,7 +5,6 @@
 
 ### Prerequisites:
 - Docker (or Docker Desktop if on a Mac)
-- You need `gcc` available in the system. If you're on a MAC it's included in XCode. Make sure it's installed, updated and active.
 
 ### Steps
 1. Clone the repo
