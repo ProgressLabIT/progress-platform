@@ -124,7 +124,7 @@ export default {
       let bg_color = ''
       let text_color = this.$theme.text_low
       let cursor = this.allowClick(index) ? 'pointer' : 'not-allowed'
-      
+
       if (this.batch_data) {
         step_done = this.batch_data[index].done
         step_critical = this.batch_data[index].critical
@@ -154,7 +154,7 @@ export default {
     },
 
     allowClick(index) {
-      let allow = true 
+      let allow = true
       if (this.force_order) {
         for (let i = 0; i < index; i++) {
           allow *= this.batch_data[i].done

@@ -1,6 +1,6 @@
 <template>
   <div class="col column q-pt-lg q-px-xl">
-    
+
     <!-- CHECKLIST TITLE -->
     <div class="col-auto q-pt-md">
       <div class="text-h3 display q-px-none q-pt-none nowrap">
@@ -85,6 +85,9 @@ export default {
   },
 
   computed: {
+    // TODO: Due to polling the data gets refreshed regularly, and since checks
+    // doesn't have a unique key, they keep getting force refreshed and re-rendered
+    // This is possibly the case for a lot of other data/components as well
     step_checks() {
       return this.step.checks
     },
@@ -96,7 +99,7 @@ export default {
     batch_step() {
       return this.$store.getters.getBatchStep(this.step._key)
     },
-    
+
     values() {
       const data = this.batch_step.user_data
       return data ? data : []

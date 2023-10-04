@@ -56,10 +56,6 @@ export default {
       type: Object,
       required: true,
     },
-    height: {
-      type: Number,
-      required: true
-    }
   },
 
   data () {
