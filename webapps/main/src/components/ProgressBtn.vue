@@ -4,7 +4,9 @@
     :style="`background-color: ${progress_button_color}`"
     :disable="!progress_button_active"
     @click="progress_button.action()"
-    class="fit">
+    class="fit"
+    v-touch-hold.mouse="progress_button.holdAction"
+  >
     <div class="row items-center absolute-full">
       <div class="col-1 offset-2">
         <q-icon size="lg" :name="progress_button.icon" />
@@ -44,6 +46,7 @@ export default {
         icon: 'mdi-check',
         text: this.$t('job.complete_step'),
         action: this.completeStep,
+        holdAction: undefined
       }
 
       const declare_batch = {
@@ -51,7 +54,8 @@ export default {
         text: this.j.parameters.production_batch_qt == 1
           ? this.$t('job.complete_piece')
           : this.$t('job.complete_batch'),
-        action: this.declareBatch
+        action: this.declareBatch,
+        holdAction: this.declareCustomBatch
       }
 
       if ('parameters' in this.j) {
@@ -63,18 +67,18 @@ export default {
     },
 
     current_step_done() {
-      let current_step = this.batch_data ? this.batch_data[this.current_step_index] : null
+      const current_step = this.batch_data ? this.batch_data[this.current_step_index] : null
       return current_step ? current_step.done : null
     },
 
     completed_steps_count() {
       return this.batch_data
-        ? this.batch_data.reduce( (total, current) => total + current.done, 0)
+        ? this.batch_data.reduce((total, current) => total + current.done, 0)
         : 0
     },
 
     current_step_is_last() {
-      return this.completed_steps_count === this.j.step_sequence.length -1
+      return this.completed_steps_count === this.j.step_sequence.length - 1
     },
 
     current_batch_is_last() {
@@ -168,6 +172,35 @@ export default {
       }
     },
 
+    async declareCustomBatch() {
+      // TODO: Use a custom dialog
+      const batchQuantity = parseInt(window.prompt('Declare custom batch quantity', 0))
+      if (batchQuantity === 0) {
+        return
+      }
+      // TODO: enforce a max value
+
+      const remainingQuantity = this.j.qt_planned - this.j.qt_completed
+      const isLastBatch = batchQuantity === remainingQuantity
+      if (isLastBatch) {
+        if (!window.confirm(this.confirm_job_done_message)) {
+          return
+        }
+      }
+      else if (!this.j.next_batch_available) {
+        if (!window.confirm(this.confirm_stop_session_message)) {
+          return
+        }
+      }
+
+      await this.$store.dispatch('declareBatch', {
+        batch_qt: batchQuantity,
+      })
+      if (isLastBatch || (!this.j.next_batch_available && !this.j.active_batch_qt)) {
+        this.$router.push({ name: 'userJobs' })
+      }
+    },
+
     goToStep(step_index) {
       this.current_step_index = step_index
     },
@@ -175,13 +208,13 @@ export default {
     goToNextUndoneStep() {
       if (this.batch_data?.length) {
         const procedure_length = this.j.step_sequence.length
-        for (let i = this.current_step_index; i < procedure_length ; i++) {
+        for (let i = this.current_step_index; i < procedure_length; i++) {
           if (!this.batch_data[i].done) {
             this.goToStep(i)
             return
           }
         }
-        const next_step_index = this.batch_data.findIndex( step => !step.done )
+        const next_step_index = this.batch_data.findIndex(step => !step.done)
         this.goToStep(next_step_index)
       }
     },

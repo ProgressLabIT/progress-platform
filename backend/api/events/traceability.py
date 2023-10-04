@@ -604,7 +604,7 @@ class ProductionActivityEvent:
       pass
 
     self.info.completed_batch_key = self.job.active_batch_key
-    self.info.completed_batch_qt = self.job.active_batch_qt
+    self.info.completed_batch_qt = self.info.completed_batch_qt or self.job.active_batch_qt
     self.info.work_session_key = self.job.last_work_session_started
 
     self.close_work_session()
