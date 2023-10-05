@@ -5,7 +5,8 @@
     :disable="!progress_button_active"
     @click="progress_button.action()"
     class="fit"
-    v-touch-hold.mouse="progress_button.holdAction"
+    v-touch-hold.mouse="progress_button.altAction"
+    @dblclick="progress_button.altAction"
   >
     <div class="row items-center absolute-full">
       <div class="col-1 offset-2">
@@ -19,7 +20,9 @@
 </template>
 
 <script>
+import { Dialog } from 'quasar'
 import { mapState } from 'vuex'
+import QuantityPickerDialog from './QuantityPickerDialog.vue'
 
 export default {
 
@@ -46,7 +49,7 @@ export default {
         icon: 'mdi-check',
         text: this.$t('job.complete_step'),
         action: this.completeStep,
-        holdAction: undefined
+        altAction: undefined
       }
 
       const declare_batch = {
@@ -55,7 +58,7 @@ export default {
           ? this.$t('job.complete_piece')
           : this.$t('job.complete_batch'),
         action: this.declareBatch,
-        holdAction: this.declareCustomBatch
+        altAction: this.declareCustomBatch
       }
 
       if ('parameters' in this.j) {
@@ -172,17 +175,37 @@ export default {
       }
     },
 
+    async getCustomBatchInput({ initialValue, max }) {
+      return new Promise(resolve => {
+        Dialog.create({
+          component: QuantityPickerDialog,
+          componentProps: {
+            initialValue,
+            max,
+          }
+        })
+          .onOk(quantity => {
+            resolve(quantity)
+          })
+          .onCancel(() => {
+            resolve(0)
+          })
+      })
+    },
     async declareCustomBatch() {
-      // TODO: Use a custom dialog
-      const batchQuantity = parseInt(window.prompt('Declare custom batch quantity', 0))
+      const remainingQuantity = this.j.qt_planned - this.j.qt_completed
+
+      const batchQuantity = await this.getCustomBatchInput({
+        initialValue: this.j.active_batch_qt,
+        // TODO: Use the amount that is allowed by upstream wip (endpoint: get_wip_availability_for_job)
+        max: remainingQuantity
+      })
       if (batchQuantity === 0) {
         return
       }
-      // TODO: enforce a max value
 
-      const remainingQuantity = this.j.qt_planned - this.j.qt_completed
-      const isLastBatch = batchQuantity === remainingQuantity
-      if (isLastBatch) {
+      const isCompletingBatch = batchQuantity === remainingQuantity
+      if (isCompletingBatch) {
         if (!window.confirm(this.confirm_job_done_message)) {
           return
         }
@@ -196,7 +219,7 @@ export default {
       await this.$store.dispatch('declareBatch', {
         batch_qt: batchQuantity,
       })
-      if (isLastBatch || (!this.j.next_batch_available && !this.j.active_batch_qt)) {
+      if (isCompletingBatch || (!this.j.next_batch_available && !this.j.active_batch_qt)) {
         this.$router.push({ name: 'userJobs' })
       }
     },
