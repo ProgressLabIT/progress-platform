@@ -1,12 +1,12 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide">
-    <q-card class="dialog-card q-pa-sm">
+    <q-card class="dialog-card q-pa-lg surface2">
       <q-card-section class="row items-center justify-between">
         <q-btn
           round
           color="primary"
           icon="mdi-minus"
-          size="13px"
+          size="2.5em"
           :disable="quantity === min"
           @click="quantity--"
         />
@@ -14,7 +14,7 @@
         <q-input
           v-model.number="quantity"
           type="number"
-          class="col q-mx-lg"
+          class="col q-mx-xl number-input"
           filled
           stack-label
           hide-bottom-space
@@ -26,7 +26,7 @@
           round
           color="primary"
           icon="mdi-plus"
-          size="13px"
+          size="2.5em"
           :disable="quantity === max"
           @click="quantity++"
         />
@@ -45,13 +45,16 @@
             [min]: min,
             [max]: max
           }"
+          marker-labels-class="text-h3 q-mt-xs"
+          track-size="12px"
+          thumb-size="36px"
           class="q-px-sm"
         />
       </q-card-section>
 
-      <q-card-actions align="between">
-        <q-btn flat color="primary" label="Cancel" @click="onDialogCancel" />
-        <q-btn flat color="primary" label="Confirm" @click="onDialogOK(quantity)" />
+      <q-card-actions align="between" class="q-mt-md">
+        <q-btn flat color="theme-grey" size="xl" label="Cancel" @click="onDialogCancel" />
+        <q-btn color="primary" size="xl" label="Confirm" @click="onDialogOK(quantity)" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -85,6 +88,16 @@ const quantity = ref(props.initialValue)
 
 <style lang="scss" scoped>
 .dialog-card {
-  width: 300px;
+  min-width: 650px;
+  max-width: 800px;
+}
+
+.number-input :deep(.q-field__control) {
+  height: 1.25em;
+  font-size: 10em;
+
+  .q-field__native {
+    text-align: center;
+  }
 }
 </style>
