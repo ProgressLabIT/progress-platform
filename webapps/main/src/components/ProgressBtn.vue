@@ -20,9 +20,10 @@
 </template>
 
 <script>
-import { Dialog } from 'quasar'
+import { Dialog, Loading } from 'quasar'
 import { mapState } from 'vuex'
 import QuantityPickerDialog from './QuantityPickerDialog.vue'
+import { api } from 'boot/axios'
 
 export default {
 
@@ -195,10 +196,14 @@ export default {
     async declareCustomBatch() {
       const remainingQuantity = this.j.qt_planned - this.j.qt_completed
 
+      Loading.show()
+      const { data } = await api.get('/wip', { params: { job_key: this.j._key } })
+      Loading.hide()
+      const maxQuantity = data.free_wip_qt_upstream || remainingQuantity
+
       const batchQuantity = await this.getCustomBatchInput({
         initialValue: this.j.active_batch_qt,
-        // TODO: Use the amount that is allowed by upstream wip (endpoint: get_wip_availability_for_job)
-        max: remainingQuantity
+        max: maxQuantity
       })
       if (batchQuantity === 0) {
         return
