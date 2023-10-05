@@ -54,8 +54,21 @@
         </q-card-section>
 
         <q-card-actions align="between" class="q-mt-md">
-          <q-btn flat color="theme-grey" size="xl" label="Cancel" @click="onDialogCancel" />
-          <q-btn color="primary" size="xl" label="Confirm" type="submit" form="quantity-form" />
+          <q-btn
+            flat
+            color="theme-grey"
+            size="xl"
+            :label="t('cancel')"
+            @click="onDialogCancel"
+          />
+
+          <q-btn
+            type="submit"
+            form="quantity-form"
+            color="primary"
+            size="xl"
+            :label="t('confirm')"
+          />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -65,6 +78,7 @@
 <script setup>
 import { useDialogPluginComponent } from 'quasar'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   initialValue: {
@@ -84,6 +98,8 @@ const props = defineProps({
 defineEmits(useDialogPluginComponent.emitsObject)
 
 const { dialogRef, onDialogHide, onDialogCancel, onDialogOK } = useDialogPluginComponent()
+
+const { t } = useI18n()
 
 // It's between min and max, except when the user uses the input field
 // It's validated on submit, so we don't need to worry about it
