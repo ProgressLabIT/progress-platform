@@ -387,6 +387,7 @@ import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js'
 import { ref, watch } from 'vue'
 import { Dialog } from 'quasar'
 import FormField from '../components/FormField.vue'
+import { api } from '../boot/axios'
 
 export default {
 
@@ -419,6 +420,22 @@ export default {
       },
       { deep: true }
     )
+
+    const initialQuery = advancedFilterQuery.value
+    if (initialQuery && initialQuery.length > 0) {
+      ;(async () => {
+        const { data: fields } = await api.get('field')
+        advancedFilters.value = initialQuery.map(({ _key, value }) => {
+          const { default_label, default_hint, ...field } = fields.find((field) => field._key === _key)
+          return {
+            ...field,
+            label: default_label,
+            hint: default_hint,
+            value,
+          }
+        })
+      })()
+    }
 
     return {
       advancedFilters,
