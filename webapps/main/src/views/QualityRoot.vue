@@ -335,25 +335,58 @@
             </template>
           </q-input>
 
+          <div class="row items-center justify-between">
+            <div class="highlight text-uppercase text-h6">
+              {{ $t('advanced_filters') }}
+            </div>
+
+            <q-btn
+              round
+              color="theme-blue"
+              icon="mdi-plus"
+              size="xs"
+              @click="addAdvancedFilter"
+            />
+          </div>
+
+          <div v-for="(filter, index) in advancedFilters" :key="filter._key" class="row items-center justify-between q-mt-sm">
+            <div class="col">
+              <!-- We override q-mb-lg of FormField with style -->
+              <FormField
+                :field_data="filter"
+                style="margin-bottom: 0"
+                @update="filter.value = $event"
+              />
+            </div>
+
+            <q-btn
+              class="q-ml-md"
+              round
+              color="theme-grey"
+              icon="mdi-minus"
+              size="xs"
+              @click="advancedFilters.splice(index, 1)"
+            />
+          </div>
+
           <div class="q-mb-xl"></div>
-
         </div>
-
         <div class="fade-bottom-bg"></div>
-
       </div>
-
     </q-page>
   </q-page-container>
 </template>
 
 <script>
+import AddAdvancedFilterDialog from '@/components/AddAdvancedFilterDialog.vue'
 import IssueForm from '@/components/IssueForm.vue'
-import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue'
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue'
-import queryModel from '@/lib/queryModelFactory.js'
+import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js'
+import { ref, watch } from 'vue'
+import { Dialog } from 'quasar'
+import FormField from '../components/FormField.vue'
 
 export default {
 
@@ -364,7 +397,34 @@ export default {
     BaseAutocompleteOperation,
     BaseAutocompleteUser,
     IssueForm,
-    NoDataAlert
+    FormField,
+  },
+
+  setup () {
+    const advancedFilters = ref([])
+
+    function addAdvancedFilter() {
+      Dialog.create({
+        component: AddAdvancedFilterDialog,
+      }).onOk((field) => {
+        advancedFilters.value.push(field)
+      })
+    }
+
+    const advancedFilterQuery = useQueryModel(Object, 'advanced_filters', null)
+    watch(
+      advancedFilters,
+      () => {
+        advancedFilterQuery.value = advancedFilters.value.map(({ _key, value }) => ({ _key, value }))
+      },
+      { deep: true }
+    )
+
+    return {
+      advancedFilters,
+      addAdvancedFilter,
+      advancedFilterQuery,
+    }
   },
 
   data () {
@@ -427,7 +487,12 @@ export default {
           else filters_object[f] = this[f]
         }
       })
-      return filters_object
+      return {
+        ...filters_object,
+        advanced_filters: this.advancedFilterQuery && this.advancedFilterQuery.length > 0
+          ? btoa(JSON.stringify(this.advancedFilterQuery))
+          : null,
+      }
     }
   },
 
@@ -438,7 +503,8 @@ export default {
 
     getIssues() {
       this.loading = true
-      this.$store.dispatch('getIssues', { with_links: true, ...this.filters }).then(() => setTimeout(() => this.loading = false, 1000))
+      this.$store.dispatch('getIssues', { with_links: true, ...this.filters })
+        .then(() => setTimeout(() => { this.loading = false }, 1000))
     }
   },
 
@@ -450,7 +516,7 @@ export default {
     filters: {
       deep: true,
       handler: 'getIssues'
-    }
+    },
   }
 }
 </script>

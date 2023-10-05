@@ -40,6 +40,13 @@ class Queries:
       && (@issue_closed != null ? i.open == !@issue_closed : true)
       && (@issue_critical != null ? i.critical == @issue_critical : true)
       && (@issue_non_critical != null ? i.critical == !@issue_non_critical : true)
+      && (@advanced_filters
+        ? (
+            FOR advanced_filter IN NOT_NULL(@advanced_filters, [])
+            RETURN i.data ? i.data[* FILTER CURRENT._key == advanced_filter._key AND CURRENT.value == advanced_filter.value] : []
+          )[**] != []
+        : true
+      )
 
     LET type_data = FIRST(
       FOR it IN IssueType
