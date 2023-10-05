@@ -3,10 +3,10 @@
     square
     :style="`background-color: ${progress_button_color}`"
     :disable="!progress_button_active"
-    @click="progress_button.action()"
     class="fit"
     v-touch-hold.mouse="progress_button.altAction"
-    @dblclick="progress_button.altAction"
+    @click="handleClick"
+    @dblclick="handleDoubleClick"
   >
     <div class="row items-center absolute-full">
       <div class="col-1 offset-2">
@@ -26,8 +26,13 @@ import QuantityPickerDialog from './QuantityPickerDialog.vue'
 import { api } from 'boot/axios'
 
 export default {
-
   name: 'ProgressBtn',
+
+  data() {
+    return {
+      clickTimer: null
+    }
+  },
 
   computed: {
     ...mapState({
@@ -114,6 +119,21 @@ export default {
   },
 
   methods: {
+    // The single click handler gets triggered on double click as well, so we use a trick to differentiate them
+    handleClick({ detail: clickCount }) {
+      if (clickCount !== 1) {
+        return
+      }
+
+      this.clickTimer = setTimeout(() => {
+        this.progress_button.action()
+      }, 200)
+    },
+    handleDoubleClick() {
+      clearTimeout(this.clickTimer)
+      this.progress_button.altAction?.()
+    },
+
     async completeStep() {
       let can_proceed = true
 
