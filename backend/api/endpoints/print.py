@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from models.print import PrintTemplateRecord
 from utils.api import APIResponse
 from utils.db import db
+from utils.print import preprocess_template, build_template_assignment_record
 
 router = APIRouter()
 
@@ -22,7 +23,7 @@ async def get_print_templates(template_key: str = None):
     RETURN @template_key ? t : MERGE(t, {specs: slim_template})
   """, bind_vars=bind_vars)
 
-  result = PrintTemplateRecord(**cursor.next()) if template_key else [PrintTemplateRecord(**t) for t in cursor]
+  result = preprocess_template(cursor.next()) if template_key else [preprocess_template(t) for t in cursor]
 
   return result
 
