@@ -2,7 +2,7 @@ import traceback
 
 from fastapi import APIRouter, HTTPException
 
-from models.print import PrintTemplateRecord
+from models.print import PrintTemplateRecord, TemplateAssignmentUpdateList
 from utils.api import APIResponse
 from utils.db import db
 from utils.print import preprocess_template, build_template_assignment_record
