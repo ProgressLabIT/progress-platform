@@ -80,3 +80,45 @@ async def update_print_template(template_data: PrintTemplateRecord):
 @router.delete('/print-template/{template_key}')
 async def delete_print_template(template_key: str):
   ...
+
+
+
+@router.post('/update-template-assignments')
+async def update_template_assignments(update=TemplateAssignmentUpdateList):
+
+  context_map = {
+    TemplateAssignmentContext.PRODUCT.value: 'Product',
+    TemplateAssignmentContext.PHASE.value: 'Phase',
+    TemplateAssignmentContext.STEP.value: 'Step',
+    TemplateAssignmentContext.ISSUE_TYPE.value: 'IssueType',
+  }
+
+
+  try:
+    tx = db.begin_transaction()
+    tx.insert_many([build_template_assignment_record(r) for r in update.add])
+
+    delete_list = [build_template_assignment_record(r) for r in update.remove]
+    delete_query = """
+      FOR d IN @delete_list
+        FOR record IN can_use
+        FILTER
+          record.type == 'TemplateAssignment'
+          && record._from = d._from
+          && record._to == d._to
+        REMOVE record IN can_use
+    """
+    bind_vars = dict(delete_list=delete_list)
+    tx.aql.execute(delete_query, bind_vars=bind_vars)
+
+    tx.commit_transaction()
+
+    return APIResponse(message='Assignments updated correctly')
+
+  finally:
+    if tx.transaction_status != 'committed':
+      tx.abort_transaction()
+
+
+
+

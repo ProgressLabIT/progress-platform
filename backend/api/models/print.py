@@ -4,7 +4,7 @@ from typing import Union
 from pydantic import BaseModel, Field
 
 from models.form import FormFieldInstance
-from utils.base_models import ArangoDocument
+from utils.base_models import ArangoDocument, ArangoEdge
 
 class Alignment(str, Enum):
   CENTER = 'center'
@@ -78,6 +78,24 @@ class PrintTemplate(BaseModel):
 class PrintTemplateRecord(ArangoDocument):
   name: str
   description: str = None
+  presets: dict[str, str] = dict()
   template: PrintTemplate = None
 
 
+class TemplateAssignment(ArangoEdge):
+  type: str = 'TemplateAssignment'
+
+class TemplateAssignmentContext(str, Enum):
+  PRODUCT = 'product'
+  PHASE = 'phase'
+  STEP = 'step'
+  ISSUE_TYPE = 'issue_type'
+
+class TemplateAssignmentUpdate(BaseModel):
+  template_key: str
+  context: TemplateAssignmentContext
+  context_key: str
+
+class TemplateAssignmentUpdateList(BaseModel):
+  add: list[TemplateAssignmentUpdate] = []
+  remove: list[TemplateAssignmentUpdate] = []
