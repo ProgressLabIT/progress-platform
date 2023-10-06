@@ -176,13 +176,15 @@
       </q-card>
     </div>
 
-    <!-- DOCS -->
-    <div class="col-4 q-pl-md">
-      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md">
-        <q-card-section class="text-h5 display highlight">
+    <!-- RIGHT COLUMN -->
+    <div class="col-4 q-pl-md column full-height no-wrap">
+
+      <!-- DOCS -->
+      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap">
+        <q-card-section class="text-h5 display highlight col-auto">
           {{ $capitalize($t('document.label', 2)) }}
         </q-card-section>
-        <q-list>
+        <q-list class="col-shrink scroll">
           <q-item
             v-for="(doc, index) in docs"
             :key="index"
@@ -227,6 +229,42 @@
 
       </q-card>
 
+      <!-- PRINT TEMPLATES -->
+      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md q-mt-lg col-shrink column no-wrap">
+        <q-card-section class="text-h5 display highlight col-auto">
+          STAMPE ORDINE
+        </q-card-section>
+        <q-list class="col-shrink scroll">
+          <q-item
+            v-for="t in print_templates"
+            :key="t._key"
+            @mouseenter="over_print=t._key"
+            @mouseleave="over_print=null">
+            <q-item-section>
+              <q-item-label>{{ t.name }}</q-item-label>
+              <q-item-label caption>{{ t.description }}</q-item-label>
+            </q-item-section>
+            <q-item-section side v-show="over_print==t._key">
+              <div class="row q-gutter-sm">
+                <q-btn
+                  flat
+                  round
+                  icon="mdi-file-search-outline"
+                  size="10px"
+                  @click="showTemplatePreview(t)">
+                </q-btn>
+              </div>
+            </q-item-section>
+          </q-item>
+        </q-list>
+
+        <!-- <BaseAutocompleteTemplate
+          @select="(key) => ">
+
+        </BaseAutocompleteTemplate> -->
+
+      </q-card>
+
       <!-- DOCUMENT VIEWER -->
       <MediaViewer
         v-if="show_media >= 0 || show_media === 'img' "
@@ -238,11 +276,21 @@
         </template>
       </MediaViewer>
 
+      <!-- PRINT FORM/PREVIEW -->
+      <MediaViewer
+        :show="show_template != null"
+        :media_name="show_template?.name"
+        :media_src="show_template?.pdf"
+        @close="show_template = null">
+      </MediaViewer>
+
+
     </div>
   </div>
 </template>
 
 <script>
+import { generate } from '@pdfme/generator'
 import ProductParamsCard from '@/components/ProductParamsCard.vue'
 import { mapState, mapActions } from 'vuex'
 import MediaViewer from '@/components/MediaViewer.vue'
@@ -269,8 +317,10 @@ export default {
       new_files: null,
       new_image: null,
       new_image_url: '',
-      no_image: false
-      // zoom: 100
+      no_image: false,
+      print_templates: [],
+      show_template: null,
+      over_print: null
     };
   },
 
@@ -413,7 +463,17 @@ export default {
     },
 
     showMedia(value) {
-        this.show_media = value
+      this.show_media = value
+    },
+
+    async showTemplatePreview(t) {
+      const inputs = t.template.sampledata
+      const template = t.template
+      console.log({inputs, template})
+      this.show_template = {
+        name: t.name,
+        pdf: await generate({ template, inputs })
+      }
     },
 
     saveChanges() {
@@ -462,6 +522,10 @@ export default {
     //   this.$store.dispatch('moveToTrash', this.product)
     //   this.$router.push({ name: 'productList' })
     // }
+  },
+
+  created() {
+    this.$api.get('print-template').then(resp => this.print_templates = resp.data)
   },
 
   watch: {
