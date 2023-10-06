@@ -236,7 +236,7 @@
         </q-card-section>
         <q-list class="col-shrink scroll">
           <q-item
-            v-for="t in print_templates"
+            v-for="t in product.print_templates"
             :key="t._key"
             @mouseenter="over_print=t._key"
             @mouseleave="over_print=null">
@@ -257,11 +257,6 @@
             </q-item-section>
           </q-item>
         </q-list>
-
-        <!-- <BaseAutocompleteTemplate
-          @select="(key) => ">
-
-        </BaseAutocompleteTemplate> -->
 
       </q-card>
 
@@ -294,7 +289,6 @@ import { generate } from '@pdfme/generator'
 import ProductParamsCard from '@/components/ProductParamsCard.vue'
 import { mapState, mapActions } from 'vuex'
 import MediaViewer from '@/components/MediaViewer.vue'
-// import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
 
 export default {
 
@@ -467,9 +461,8 @@ export default {
     },
 
     async showTemplatePreview(t) {
-      const inputs = t.template.sampledata
-      const template = t.template
-      console.log({inputs, template})
+      const { data: { template } } = await this.$api.get(`print-template/${t._key}`)
+      const inputs = template.sampledata
       this.show_template = {
         name: t.name,
         pdf: await generate({ template, inputs })
@@ -524,10 +517,6 @@ export default {
     // }
   },
 
-  created() {
-    this.$api.get('print-template').then(resp => this.print_templates = resp.data)
-  },
-
   watch: {
     img_src() {
       if (!this.img_src.startsWith('blob')) {
@@ -540,7 +529,7 @@ export default {
       }
     }
   }
-};
+}
 </script>
 
 <style lang="css" scoped>

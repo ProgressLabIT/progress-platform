@@ -154,11 +154,17 @@ const product = {
       })
     },
 
-    loadProductDetails({ commit }, product_key) {
-      api.get(`product/${product_key}`)
-        .then( resp => {
-          commit('LOAD_PRODUCT_DETAILS', resp.data)
+    async loadProductDetails({ commit }, product_key) {
+      axios.all([
+        api.get(`product/${product_key}`),
+        api.get(`print-template`, { params: { product_key }})
+      ]).then(axios.spread(({ data: product }, { data: print_templates}) => {
+          commit('LOAD_PRODUCT_DETAILS', {
+            ...product,
+            print_templates
+          })
         })
+      )
     },
 
 

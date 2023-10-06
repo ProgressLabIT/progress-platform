@@ -84,7 +84,7 @@ export default {
     },
 
     editTemplate(template_key) {
-      this.$api.get('print-template', { params: { template_key }}).then(resp =>{
+      this.$api.get(`print-template/${template_key}`).then(resp =>{
         this.edit_template = resp.data
         this.show_designer = true
       })
