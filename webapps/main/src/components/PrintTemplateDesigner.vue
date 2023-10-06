@@ -50,7 +50,7 @@
                 class="shadow-3"
                 filled
                 :options="template_data_options"
-                v-model="template_data_links[f]">
+                v-model="working_template.presets[f]">
               </q-select>
             </div>
 
@@ -129,8 +129,36 @@ export default {
       show_rename: false,
       mode: undefined,
       working_template: undefined,
-      template_data_options: [1,2,3],
-      template_data_links: {}
+      template_data_options: [
+        'current_date',
+        'current_time',
+        'current_user',
+        'job_key',
+        'job_qt_planned',
+        'job_qt_completed',
+        'job_phase_alias',
+        'job_start_date',
+        'job_start_time',
+        'job_end_date',
+        'job_end_time',
+        'work_order_code',
+        'project_code',
+        'work_order_qt_planned',
+        'work_order_qt_completed',
+        'work_order_start_date',
+        'work_order_start_time',
+        'work_order_end_date',
+        'work_order_end_time',
+        'product_code',
+        'product_description',
+        'issue_open_date',
+        'issue_open_time',
+        'issue_open_user',
+        'issue_close_date',
+        'issue_close_time',
+        'issue_close_user',
+        'issue_status'
+      ],
     }
   },
 
@@ -139,6 +167,7 @@ export default {
       return {
         name: this.$t('print_template_new'),
         description: undefined,
+        presets: {},
         template: {
           basePdf: BLANK_PDF,
           schemas: []
