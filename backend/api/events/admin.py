@@ -74,7 +74,6 @@ class ProductionAdminEvent:
     job_batches = [Batch(**b) for b in cursor]
 
     # Define new duration, either the one provided or using unit standard time for phase
-    # use getattr with default zero to avoid errors in case the value is not provided
     if hasattr(self.info, 'new_job_duration'):
       new_job_duration = self.info.new_job_duration
     else: #
