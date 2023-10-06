@@ -1,11 +1,18 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
+  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss no-shake>
     <q-card class="dialog-card q-pa-lg surface2">
+      <q-card-section class="q-mb-md">
+          <div
+            class="text-h2 highlight text-center"
+            style="font-family: 'Red Hat Display'">
+          {{ $t('batch_completed_quantity_question') }}
+        </div>
+      </q-card-section>
       <q-form id="quantity-form" @submit="onDialogOK(quantity)">
         <q-card-section class="row items-center justify-between">
           <q-btn
             round
-            color="primary"
+            flat
             icon="mdi-minus"
             size="2.5em"
             :disable="quantity === min"
@@ -15,7 +22,7 @@
           <q-input
             v-model.number="quantity"
             type="number"
-            class="col q-mx-xl number-input"
+            class="col q-mx-xl text-h1 number-input"
             filled
             stack-label
             hide-bottom-space
@@ -24,8 +31,8 @@
           />
 
           <q-btn
+            flat
             round
-            color="primary"
             icon="mdi-plus"
             size="2.5em"
             :disable="quantity === max"
@@ -38,16 +45,13 @@
             v-model.number="quantity"
             :min="min"
             :max="max"
-            :step="1"
-            snap
             color="primary"
-            markers
             :marker-labels="{
               [min]: min,
               [max]: max
             }"
             marker-labels-class="text-h3 q-mt-xs"
-            track-size="12px"
+            track-size="6px"
             thumb-size="36px"
             class="q-px-sm"
           />
@@ -55,9 +59,8 @@
 
         <q-card-actions align="between" class="q-mt-md">
           <q-btn
-            flat
             color="theme-grey"
-            size="xl"
+            padding="md xl"
             :label="t('cancel')"
             @click="onDialogCancel"
           />
@@ -66,7 +69,7 @@
             type="submit"
             form="quantity-form"
             color="primary"
-            size="xl"
+            padding="md xl"
             :label="t('confirm')"
           />
         </q-card-actions>
@@ -136,7 +139,7 @@ function increment() {
 
 .number-input :deep(.q-field__control) {
   height: 1.25em;
-  font-size: 10em;
+  font-size: 6rem;
 
   .q-field__native {
     text-align: center;

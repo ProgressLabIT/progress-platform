@@ -17,6 +17,7 @@ export default {
   "assignment_success": "Jobs assigned successfully",
   "back": "back",
   "batch": "batch",
+  "batch_completed_quantity_question": "How many new pieces do you want to declare?",
   "bom": {
     "add_line": "add line",
     "alerts": {

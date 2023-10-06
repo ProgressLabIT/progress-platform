@@ -18,6 +18,7 @@ export default {
   "assignment_success": "Lavori assegnati con successo",
   "back": "Indietro",
   "batch": "lotto",
+  "batch_completed_quantity_question": "Quanti nuovi pezzi vuoi dichiarare?",
   "bom": {
     "add_line": "aggiungi riga",
     "alerts": {
