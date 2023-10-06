@@ -6,17 +6,17 @@ from pydantic import BaseModel, Field
 from models.form import FormFieldInstance
 from utils.base_models import ArangoDocument
 
-class Alignment(Enum):
+class Alignment(str, Enum):
   CENTER = 'center'
   LEFT = 'left'
   RIGHT = 'right'
 
-class VerticalAlignment(Enum):
+class VerticalAlignment(str, Enum):
   TOP = 'top'
   MIDDLE = 'middle'
   BOTTOM = 'bottom'
 
-class VisualFieldType(Enum):
+class VisualFieldType(str, Enum):
   IMAGE = 'image'
   QRCODE = 'qrcode'
   EAN13 = 'ean13'
