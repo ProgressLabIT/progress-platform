@@ -13,19 +13,40 @@ router = APIRouter()
 
 # Fetch Print Templates
 @router.get('/print-template')
-async def get_print_templates(template_key: str = None):
+async def find_print_templates(
+  product_key: str = None,
+  phase_key: str = None,
+  issue_key: str = None
+  ):
   """Fetch a specific template with full specs or a list of template without basePdf"""
-  bind_vars = dict(template_key = template_key)
-  cursor = db.aql.execute("""
-    FOR t IN PrintTemplate
-    FILTER @template_key ? t._key == @template_key : true
-    LET slim_template = UNSET(t.template, 'basePdf')
-    RETURN @template_key ? t : MERGE(t, {specs: slim_template})
-  """, bind_vars=bind_vars)
+  bind_vars = dict(
+    product_key = product_key,
+    phase_key = phase_key,
+    issue_key = issue_key
+  )
 
-  result = preprocess_template(cursor.next()) if template_key else [preprocess_template(t) for t in cursor]
+  if product_key is None and phase_key is None and issue_key is None:
+    cursor = db.collection('PrintTemplate').all()
+
+  else:
+    cursor = db.aql.execute("""
+      for e in can_use_print_template
+      FILTER
+          (@phase_key ? e._from == CONCAT('Phase/', @phase_key) : true)
+          && (@product_key ? e._from == CONCAT('Product/', @product_key) : true)
+          && (@issue_key ? e._from == CONCAT('Issue/', @issue_key) : true)
+      return keep(DOCUMENT(PrintTemplate, e._to), '_key', 'name', 'description')
+    """, bind_vars=bind_vars)
+
+  result = [t for t in cursor]
 
   return result
+
+
+@router.get('/print-template/{template_key}')
+async def get_print_template_details(template_key: str):
+  template = db.collection('PrintTemplate').get(template_key)
+  return preprocess_template(template)
 
 
 # Create PrintTemplate
