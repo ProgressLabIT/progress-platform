@@ -219,7 +219,7 @@ export default {
       Loading.show()
       const { data } = await api.get('/wip', { params: { job_key: this.j._key } })
       Loading.hide()
-      const maxQuantity = data.free_wip_qt_upstream || remainingQuantity
+      const maxQuantity = data.free_wip_qt_upstream + this.j.active_batch_qt || remainingQuantity
 
       const batchQuantity = await this.getCustomBatchInput({
         initialValue: this.j.active_batch_qt,
