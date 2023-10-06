@@ -101,7 +101,10 @@
         <div class="text-h4 weight-bold text-uppercase">
           {{ $t('description') }}
         </div>
-        <div v-if="!edit_mode" class="text-h3 highlight weight-bold q-mt-xs">
+        <div
+          v-if="!edit_mode"
+          class="text-h3 q-mt-xs"
+          style="white-space: pre-line">
           {{ product.description }}
         </div>
         <q-input v-else
