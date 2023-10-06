@@ -151,7 +151,10 @@
 
     <!-- NOTES -->
     <div class="col-4 q-px-md full-height">
-      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md full-height column">
+      <q-card
+        square
+        class="surface2 q-px-sm q-pt-sm q-pb-md column no-wrap"
+        style="max-height: 100%">
         <q-card-section class="text-h5 display weight-bold text-uppercase col-auto">
           {{ $t('notes_production') }}
         </q-card-section>
@@ -166,7 +169,8 @@
             autogrow
             :readonly="!edit_mode"
             :model-value="temp_notes"
-            @update:model-value="value => updateField('production_notes', value)">
+            @update:model-value="value => updateField('production_notes', value)"
+            style="max-height: 100%;">
           </q-input>
         </q-card-section>
       </q-card>
