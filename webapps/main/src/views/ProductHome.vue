@@ -184,7 +184,7 @@
         <q-card-section class="text-h5 display highlight col-auto">
           {{ $capitalize($t('document.label', 2)) }}
         </q-card-section>
-        <q-list class="col-shrink scroll">
+        <q-list class="col-shrink scroll" dense>
           <q-item
             v-for="(doc, index) in docs"
             :key="index"
@@ -193,15 +193,21 @@
             <q-item-section
               class="col"
               :class="{ 'text-italic': doc.temp}">
+              <q-item-label>
               {{ doc.name }} {{ doc.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}
+              </q-item-label>
             </q-item-section>
             <q-item-section class="col-1">
-              <q-icon
+              <div>
+              <q-btn
+                flat round
+                size="10px"
                 v-if="edit_mode"
-                name="mdi-close"
+                icon="mdi-close"
                 class="hover-red"
                 @click.stop="deleteDoc(index)">
-              </q-icon>
+              </q-btn>
+              </div>
             </q-item-section>
             <q-item-section class="col-auto text-right">
               {{ $bytes(doc.size) }}
@@ -219,7 +225,7 @@
         <q-btn
           v-if="edit_mode"
           flat
-          class="full-width"
+          class="full-width q-mt-md"
           color="theme-blue"
           @click="$refs.upload_doc.click()">
           <span>{{ $t('document.add', 2) }}</span>
@@ -236,7 +242,7 @@
         </q-card-section>
         <q-list class="col-shrink scroll">
           <q-item
-            v-for="t in product.print_templates"
+            v-for="(t, index) in product.print_templates"
             :key="t._key"
             @mouseenter="over_print=t._key"
             @mouseleave="over_print=null">
@@ -244,19 +250,37 @@
               <q-item-label>{{ t.name }}</q-item-label>
               <q-item-label caption>{{ t.description }}</q-item-label>
             </q-item-section>
-            <q-item-section side v-show="over_print==t._key">
-              <div class="row q-gutter-sm">
+            <q-item-section side>
+              <div class="row q-gutter-sm items-center">
                 <q-btn
+                  v-show="over_print==t._key || edit_mode"
                   flat
                   round
                   icon="mdi-file-search-outline"
                   size="10px"
                   @click="showTemplatePreview(t)">
                 </q-btn>
+                <q-btn
+                  v-if="edit_mode"
+                  flat
+                  round
+                  size="10px"
+                  icon="mdi-close"
+                  class="hover-red"
+                  @click.stop="deleteTemplate(index)">
+                </q-btn>
               </div>
             </q-item-section>
           </q-item>
         </q-list>
+
+        <BaseAutocompleteTemplate
+          v-if="edit_mode"
+          class="q-px-sm q-mt-md"
+          :label="$t('print_template_add')"
+          @select="addTemplate"
+          :selected="product.print_templates">
+        </BaseAutocompleteTemplate>
 
       </q-card>
 
@@ -289,6 +313,7 @@ import { generate } from '@pdfme/generator'
 import ProductParamsCard from '@/components/ProductParamsCard.vue'
 import { mapState, mapActions } from 'vuex'
 import MediaViewer from '@/components/MediaViewer.vue'
+import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue'
 
 export default {
 
@@ -297,7 +322,8 @@ export default {
   components: {
     // BaseConfirmationDialog,
     MediaViewer,
-    ProductParamsCard
+    ProductParamsCard,
+    BaseAutocompleteTemplate
   },
 
   data() {
@@ -312,7 +338,6 @@ export default {
       new_image: null,
       new_image_url: '',
       no_image: false,
-      print_templates: [],
       show_template: null,
       over_print: null
     };
@@ -325,7 +350,8 @@ export default {
     },
 
     ...mapState({
-      product: state => state.product.temp
+      product: state => state.product.temp,
+      saved_product: state => state.product.saved
     }),
 
     edit_mode: {
@@ -456,6 +482,14 @@ export default {
       this.$store.commit('DELETE_TEMP_DOC', index)
     },
 
+    addTemplate(selection) {
+      this.product.print_templates.push({...selection, temp: true})
+    },
+
+    deleteTemplate(index) {
+      this.$store.commit('DELETE_TEMP_TEMPLATE', index)
+    },
+
     showMedia(value) {
       this.show_media = value
     },
@@ -471,12 +505,19 @@ export default {
 
     saveChanges() {
       this.saving = true
-      const old_doc_list = this.$store.state.product.saved.docs
+
+      const old_doc_list = this.saved_product.docs
       const new_doc_list = this.product.docs
+      const old_template_list = this.saved_product.print_templates
+      const new_template_list = this.product.print_templates
+
       let product_update = {
         new_product_data: this.product,
         deleted_docs: old_doc_list.filter( 
-          o => !new_doc_list.some( n => n.name === o.name)
+          o => !new_doc_list.some(n => n.name === o.name)
+        ),
+        deleted_templates: old_template_list.filter(
+          o => !new_template_list.some(n => n._key === o._key)
         ),
         image: {
           new: this.new_image,
@@ -485,7 +526,11 @@ export default {
       }
 
       if (new_doc_list){
-        product_update.new_docs = new_doc_list.filter( d => 'temp' in d )
+        product_update.new_docs = new_doc_list.filter(d => 'temp' in d)
+      }
+
+      if (new_template_list) {
+        product_update.new_templates = new_template_list.filter(t => 'temp' in t)
       }
 
       this.$store.dispatch('saveProductChanges', product_update)

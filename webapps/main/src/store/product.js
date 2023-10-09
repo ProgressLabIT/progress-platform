@@ -78,6 +78,14 @@ const product = {
       state.temp.docs.splice(doc_index, 1)
     },
 
+    ADD_TEMP_TEMPLATE(state, template) {
+      state.temp.print_templates.push({ ...template, temp: true })
+    },
+
+    DELETE_TEMP_TEMPLATE(state, template_index) {
+      state.temp.print_templates.splice(template_index, 1)
+    },
+
     UPDATE_TEMP_IMAGE(state, new_image) {
       state.temp_files.image = new_image
     },
@@ -172,6 +180,8 @@ const product = {
       new_product_data,
       new_docs,
       deleted_docs,
+      new_templates,
+      deleted_templates,
       image
     }) {
 
@@ -192,6 +202,24 @@ const product = {
         deleted_docs.forEach( d => {
           api_calls.push(api.delete(`product/${product_key}/doc/${d.name}`))
         })
+      }
+
+      if (deleted_templates != null || new_templates != null) {
+        const template_updates = [
+          ...deleted_templates.map(t => ({
+            type: 'remove',
+            context: 'product',
+            context_key: product_key,
+            template_key: t._key
+          })),
+          ...new_templates.map(t => ({
+            type: 'add',
+            context: 'product',
+            context_key: product_key,
+            template_key: t._key
+          }))
+        ]
+        api_calls.push(api.post('update-template-assignments', template_updates))
       }
 
       // Queue api calls to add product docs
