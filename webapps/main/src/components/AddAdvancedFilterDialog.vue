@@ -20,10 +20,9 @@
           />
         </q-card-section>
 
-        <q-card-actions align="between" class="q-mt-md">
+        <q-card-actions align="between" class="q-px-md">
           <q-btn
             color="theme-grey"
-            padding="md xl"
             :label="t('cancel')"
             @click="onDialogCancel"
           />
@@ -32,7 +31,6 @@
             type="submit"
             form="filter-form"
             color="primary"
-            padding="md xl"
             :label="t('confirm')"
           />
         </q-card-actions>
@@ -68,32 +66,7 @@ watch(formField, ({ default_label, default_hint, ...field }) => {
 })
 </script>
 
-<style lang="scss" scoped>
-.dialog-card {
-  min-width: 650px;
-  max-width: 800px;
-}
-
-.input-field {
-  :deep(.q-field__label) {
-    height: 1em;
-    font-size: 0.5em;
-  }
-
-  :deep(.q-field__prepend), :deep(.q-field__append) {
-    height: 1.3em;
-    font-size: 1.25em;
-  }
-
-  :deep(.q-field__control) {
-    height: 1.75em;
-    font-size: 4em;
-    padding: 0.1em 0.3em;
-
-    .q-field__native .q-field__input {
-      height: 100%;
-      padding-left: 0.25em;
-    }
-  }
-}
+<style lang="sass" scoped>
+.dialog-card
+  min-width: 400px
 </style>
