@@ -3,8 +3,11 @@
     square
     :style="`background-color: ${progress_button_color}`"
     :disable="!progress_button_active"
-    @click="progress_button.action()"
-    class="fit">
+    class="fit"
+    v-touch-hold.mouse="progress_button.altAction"
+    @click="handleClick"
+    @dblclick="handleDoubleClick"
+  >
     <div class="row items-center absolute-full">
       <div class="col-1 offset-2">
         <q-icon size="lg" :name="progress_button.icon" />
@@ -17,11 +20,19 @@
 </template>
 
 <script>
+import { Dialog, Loading } from 'quasar'
 import { mapState } from 'vuex'
+import QuantityPickerDialog from './QuantityPickerDialog.vue'
+import { api } from 'boot/axios'
 
 export default {
-
   name: 'ProgressBtn',
+
+  data() {
+    return {
+      clickTimer: null
+    }
+  },
 
   computed: {
     ...mapState({
@@ -44,6 +55,7 @@ export default {
         icon: 'mdi-check',
         text: this.$t('job.complete_step'),
         action: this.completeStep,
+        altAction: undefined
       }
 
       const declare_batch = {
@@ -51,7 +63,8 @@ export default {
         text: this.j.parameters.production_batch_qt == 1
           ? this.$t('job.complete_piece')
           : this.$t('job.complete_batch'),
-        action: this.declareBatch
+        action: this.declareBatch,
+        altAction: this.declareCustomBatch
       }
 
       if ('parameters' in this.j) {
@@ -63,18 +76,18 @@ export default {
     },
 
     current_step_done() {
-      let current_step = this.batch_data ? this.batch_data[this.current_step_index] : null
+      const current_step = this.batch_data ? this.batch_data[this.current_step_index] : null
       return current_step ? current_step.done : null
     },
 
     completed_steps_count() {
       return this.batch_data
-        ? this.batch_data.reduce( (total, current) => total + current.done, 0)
+        ? this.batch_data.reduce((total, current) => total + current.done, 0)
         : 0
     },
 
     current_step_is_last() {
-      return this.completed_steps_count === this.j.step_sequence.length -1
+      return this.completed_steps_count === this.j.step_sequence.length - 1
     },
 
     current_batch_is_last() {
@@ -106,6 +119,28 @@ export default {
   },
 
   methods: {
+    // The single click handler gets triggered on double click as well, so we use a trick to differentiate them
+    handleClick({ detail: clickCount }) {
+      if (clickCount !== 1 || this.clickTimer !== null) {
+        return
+      }
+
+      this.clickTimer = setTimeout(async () => {
+        await this.progress_button.action()
+        this.resetClickTimer()
+      }, 300)
+    },
+    handleDoubleClick() {
+      this.resetClickTimer()
+      this.progress_button.altAction?.()
+    },
+    resetClickTimer() {
+      if (this.clickTimer) {
+        clearTimeout(this.clickTimer)
+      }
+      this.clickTimer = null
+    },
+
     async completeStep() {
       let can_proceed = true
 
@@ -168,6 +203,59 @@ export default {
       }
     },
 
+    async getCustomBatchInput({ initialValue, max }) {
+      return new Promise(resolve => {
+        Dialog.create({
+          component: QuantityPickerDialog,
+          componentProps: {
+            initialValue,
+            max,
+          }
+        })
+          .onOk(quantity => {
+            resolve(quantity)
+          })
+          .onCancel(() => {
+            resolve(0)
+          })
+      })
+    },
+    async declareCustomBatch() {
+      const remainingQuantity = this.j.qt_planned - this.j.qt_completed
+
+      Loading.show()
+      const { data } = await api.get('/wip', { params: { job_key: this.j._key } })
+      Loading.hide()
+      const maxQuantity = data.free_wip_qt_upstream + this.j.active_batch_qt || remainingQuantity
+
+      const batchQuantity = await this.getCustomBatchInput({
+        initialValue: this.j.active_batch_qt,
+        max: maxQuantity
+      })
+      if (batchQuantity === 0) {
+        return
+      }
+
+      const isCompletingBatch = batchQuantity === remainingQuantity
+      if (isCompletingBatch) {
+        if (!window.confirm(this.confirm_job_done_message)) {
+          return
+        }
+      }
+      else if (!this.j.next_batch_available) {
+        if (!window.confirm(this.confirm_stop_session_message)) {
+          return
+        }
+      }
+
+      await this.$store.dispatch('declareBatch', {
+        batch_qt: batchQuantity,
+      })
+      if (isCompletingBatch || (!this.j.next_batch_available && !this.j.active_batch_qt)) {
+        this.$router.push({ name: 'userJobs' })
+      }
+    },
+
     goToStep(step_index) {
       this.current_step_index = step_index
     },
@@ -175,13 +263,13 @@ export default {
     goToNextUndoneStep() {
       if (this.batch_data?.length) {
         const procedure_length = this.j.step_sequence.length
-        for (let i = this.current_step_index; i < procedure_length ; i++) {
+        for (let i = this.current_step_index; i < procedure_length; i++) {
           if (!this.batch_data[i].done) {
             this.goToStep(i)
             return
           }
         }
-        const next_step_index = this.batch_data.findIndex( step => !step.done )
+        const next_step_index = this.batch_data.findIndex(step => !step.done)
         this.goToStep(next_step_index)
       }
     },

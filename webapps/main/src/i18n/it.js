@@ -18,6 +18,7 @@ export default {
   "assignment_success": "Lavori assegnati con successo",
   "back": "Indietro",
   "batch": "lotto",
+  "batch_completed_quantity_question": "Quanti nuovi pezzi vuoi dichiarare?",
   "bom": {
     "add_line": "aggiungi riga",
     "alerts": {
@@ -233,6 +234,7 @@ export default {
   "name": "Nome",
   "new": "nuovo",
   "next": "avanti",
+  "no": "No",
   "no_class": "nessuna classe",
   "no_department": "nessun reparto",
   "notes": "Note",
@@ -654,5 +656,6 @@ export default {
     "update_from_date": "modifica data rilascio",
     "wo_code": "codice"
   },
-  "work_order_autocomplete_hint": "Inserisci il testo da ricercare (min 3 caratteri) fra codice ordine, prodotto, commessa. Verranno mostrati i primi 100 risultati."
+  "work_order_autocomplete_hint": "Inserisci il testo da ricercare (min 3 caratteri) fra codice ordine, prodotto, commessa. Verranno mostrati i primi 100 risultati.",
+  "yes": "Sì",
 }

@@ -22,7 +22,7 @@
         </div>
       </div>
 
-      <div v-else class="row absolute-full q-pb-md q-px-xs" v-if="vuex_ready & !job_closed">
+      <div v-else-if="vuex_ready & !job_closed" class="row absolute-full q-pb-md q-px-xs">
 
         <!-- ################################ -->
         <!--          JOB DETAILS             -->
@@ -204,18 +204,15 @@
 <script>
 import { mapState } from 'vuex'
 
-import BaseDialog from '@/components/BaseDialog.vue'
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import IssueForm from '@/components/IssueForm.vue'
 import ProgressBtn from '@/components/ProgressBtn.vue'
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue'
 
 export default {
-
   name: 'WorkSessionScreen',
 
   components: {
-    BaseDialog,
     BaseProgressBar,
     IssueForm,
     ProgressBtn,
