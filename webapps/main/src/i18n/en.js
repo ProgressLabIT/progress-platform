@@ -17,6 +17,7 @@ export default {
   "assignment_success": "Jobs assigned successfully",
   "back": "back",
   "batch": "batch",
+  "batch_completed_quantity_question": "How many new pieces do you want to declare?",
   "bom": {
     "add_line": "add line",
     "alerts": {
@@ -229,6 +230,7 @@ export default {
   "name": "Name",
   "new": "new",
   "next": "next",
+  "no": "No",
   "no_class": "no class",
   "no_department": "no department",
   "notes": "Notes",
@@ -657,5 +659,6 @@ export default {
     "wo_code": "code",
   },
   "work_order_autocomplete_hint": "Input the text to search (min 3 characters) between order code, product and project. Will show first 100 results.",
-  "write": "Write"
+  "write": "Write",
+  "yes": "Yes",
 }

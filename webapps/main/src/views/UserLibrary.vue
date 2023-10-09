@@ -218,7 +218,8 @@ export default {
   },
 
   created() {
-    this.$store.dispatch('loadUsers').then(() => {
+    const active_only = false
+    this.$store.dispatch('loadUsers', active_only).then(() => {
       this.vuex_ready = true
     })
   }

@@ -25,10 +25,10 @@ const user = {
   },
 
   actions: {
-    loadUsers({ commit }) {
+    loadUsers({ commit }, active_only=true) {
       return new Promise( resolve=> {
         api
-          .get('user')
+          .get('user', { params: { active_only }})
           .then( resp => {
             commit('LOAD_USERS', resp.data.detail)
             resolve()
@@ -41,7 +41,7 @@ const user = {
         api
           .post('user', new_user_data)
           .then( async (resp) => {
-            await dispatch('loadUsers')
+            await dispatch('loadUsers', false)
             resolve(resp.data.detail.temp_psw)
           })
           .catch( err => reject(err) )

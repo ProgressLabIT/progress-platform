@@ -33,7 +33,7 @@ services:
       - media:/media
 
   db:
-    image: arangodb:3.9
+    image: arangodb:3.11
     volumes:
       - db_data:/var/lib/arangodb3
       - db_backup:/db_backup
