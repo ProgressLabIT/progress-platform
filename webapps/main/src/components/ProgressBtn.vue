@@ -121,17 +121,24 @@ export default {
   methods: {
     // The single click handler gets triggered on double click as well, so we use a trick to differentiate them
     handleClick({ detail: clickCount }) {
-      if (clickCount !== 1) {
+      if (clickCount !== 1 || this.clickTimer !== null) {
         return
       }
 
-      this.clickTimer = setTimeout(() => {
-        this.progress_button.action()
-      }, 200)
+      this.clickTimer = setTimeout(async () => {
+        await this.progress_button.action()
+        this.resetClickTimer()
+      }, 300)
     },
     handleDoubleClick() {
-      clearTimeout(this.clickTimer)
+      this.resetClickTimer()
       this.progress_button.altAction?.()
+    },
+    resetClickTimer() {
+      if (this.clickTimer) {
+        clearTimeout(this.clickTimer)
+      }
+      this.clickTimer = null
     },
 
     async completeStep() {
