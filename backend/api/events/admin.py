@@ -22,7 +22,14 @@ class Queries:
     UPDATE ws WITH { canceled: @event_id } IN WorkSession
     RETURN NEW
   """
+  NON_CANCELLED_BATCHES_BY_JOB = """
+    LET now = DATE_NOW()
 
+    FOR b IN Batch
+    FILTER b.job_key == @job_key && !b.canceled
+    SORT b.end DESC
+    RETURN b
+    """
 
 class ProductionAdminEvent:
 
@@ -123,7 +130,7 @@ class ProductionAdminEvent:
 
   # -----------------------------------------------------
 
-  def _create_forced_traceability_records(self, quantity):
+  def _create_forced_traceability_records(self, quantity, duration=None):
     """
     1. Create new batch with:
     - qt_pass/qt_total: provided quantity
@@ -190,7 +197,7 @@ class ProductionAdminEvent:
       work_order_key = self.job.wo_key,
       product_key = self.job.product_key,
       hourly_cost = hourly_cost,
-      duration = unit_processing_time * quantity,
+      duration = duration or (unit_processing_time * quantity),
       forced = self.info.id
     )
 
@@ -259,8 +266,19 @@ class ProductionAdminEvent:
     elif self.info.new_job_qt_completed > self.job.qt_planned:
       raise ValueError('Quantity is higher than the total planned')
 
+    total_duration = self.tx.aql.execute(
+      """
+      RETURN SUM(
+        FOR ws IN WorkSession
+        FILTER ws.job_key == @job_key && !ws.canceled
+        RETURN ws.duration
+      )
+      """,
+      bind_vars = dict(job_key=self.job.key)
+    ).next()
+
     # Progress increase: check there's wip available to pick from
-    elif quantity_update > 0:
+    if quantity_update > 0:
       if quantity_update > free_wip_qt_upstream and not self.job.first_phase:
         raise WipNotAvailableError("The previous phase has not made enough progress to make this change")
 
@@ -281,7 +299,52 @@ class ProductionAdminEvent:
         )
 
       # 2. Create forced batch, work_session and downstream wip:
-      new_batch_key, batch_value = self._create_forced_traceability_records(quantity_update)
+      if self.info.should_adjust_duration:
+        new_batch_key, batch_value = self._create_forced_traceability_records(quantity_update)
+      else:
+        # Cancel all work sessions to recreate them with the new durations
+        self.tx.aql.execute(
+          Queries.CANCEL_JOB_WORK_SESSIONS,
+          bind_vars = dict(
+            job_key = self.job.key,
+            event_id = self.info.id
+          )
+        )
+
+        # distribute total processing time evenly per each batch
+        # create a new work session for each existing batch with the split duration
+        active_batches_cursor = self.tx.aql.execute(
+          Queries.NON_CANCELLED_BATCHES_BY_JOB,
+          bind_vars=dict(job_key=self.job.key)
+        )
+        active_batches = deque(Batch(**b) for b in active_batches_cursor)
+
+        new_work_sessions = []
+        for batch in active_batches:
+          quantity_ratio = batch.qt_pass / self.info.new_job_qt_completed
+          work_session = WorkSession(
+            batch_key = batch.key,
+            job_key = self.job.key,
+            phase_key = self.job.phase_key,
+            work_order_key = self.job.wo_key,
+            product_key = self.job.product_key,
+            # TODO: use the average hourly cost of cancelled work sessions above
+            # hourly_cost = hourly_cost,
+            duration = total_duration * quantity_ratio,
+            forced = self.info.id
+          )
+          new_work_sessions.append(
+            work_session.dict(exclude={'key', 'id', 'rev'})
+          )
+
+        self.tx.collection('WorkSession').insert_many(new_work_sessions)
+
+        # For the increased quantity, create a new batch/work session/wip, use the leftover duration
+        quantity_ratio = quantity_update / self.info.new_job_qt_completed
+        new_batch_key, batch_value = self._create_forced_traceability_records(
+          quantity=quantity_update,
+          duration=total_duration * quantity_ratio
+        )
 
       # 3. Delete free wip from previous phase to current (if not first phase)
       if not self.job.first_phase:
@@ -320,14 +383,7 @@ class ProductionAdminEvent:
 
       # 2. Flag last N batches with `canceled: true`
       job_batches_cursor = self.tx.aql.execute(
-        """
-        FOR b IN Batch
-        FILTER
-          b.job_key == @job_key
-          && !b.canceled
-        SORT b.end DESC
-        RETURN b
-        """,
+        Queries.NON_CANCELLED_BATCHES_BY_JOB,
         bind_vars=dict(job_key=self.job.key)
       )
       job_batches = deque(Batch(**b) for b in job_batches_cursor)
@@ -346,18 +402,51 @@ class ProductionAdminEvent:
       self.tx.collection('Batch').update_many(batch_updates)
       canceled_batches_keys = [b.key for b in batches_to_cancel]
 
-      # 3. Flag the work sessions of the canceled batches with `canceled: true`
-      self.tx.aql.execute(
-        """
-        FOR ws IN WorkSession
-        FILTER ws.batch_key IN @canceled_batches_keys
-        UPDATE ws WITH { canceled: @event_id } in WorkSession
-        """,
-        bind_vars = dict(
-          canceled_batches_keys = canceled_batches_keys,
-          event_id = self.info.id
+      if self.info.should_adjust_duration:
+        # 3. Flag the work sessions of the canceled batches with `canceled: true`
+        self.tx.aql.execute(
+          """
+          FOR ws IN WorkSession
+          FILTER ws.batch_key IN @canceled_batches_keys
+          UPDATE ws WITH { canceled: @event_id } in WorkSession
+          """,
+          bind_vars = dict(
+            canceled_batches_keys = canceled_batches_keys,
+            event_id = self.info.id
+          )
         )
-      )
+      else:
+        # 3. Flag all work sessions with `canceled: true`
+        self.tx.aql.execute(
+          Queries.CANCEL_JOB_WORK_SESSIONS,
+          bind_vars = dict(
+            job_key = self.job.key,
+            event_id = self.info.id
+          )
+        )
+
+        # Split the total processing time evenly per each non-canceled batch
+        # and create a new work session for each one with the split duration
+        new_work_sessions = []
+        for batch in job_batches:
+          quantity_ratio = batch.qt_pass / self.info.new_job_qt_completed
+          work_session = WorkSession(
+            batch_key = batch.key,
+            job_key = self.job.key,
+            phase_key = self.job.phase_key,
+            work_order_key = self.job.wo_key,
+            product_key = self.job.product_key,
+            # TODO: use the average hourly cost of cancelled work sessions above
+            # hourly_cost = hourly_cost,
+            duration = total_duration * quantity_ratio,
+            forced = self.info.id
+          )
+          new_work_sessions.append(work_session.dict(exclude={'key', 'id', 'rev'}))
+
+        self.tx.collection('WorkSession').insert_many(new_work_sessions)
+
+        # If remaining_qt_to_remove < 0, we'll have to create a new batch with lesser quantity than the others
+        # So, while splitting the total processing time, we'll have to account for that (see #5 below)
 
       # 4. Delete wip to next phase related to canceled batches (if not last phase)
       if not self.job.last_phase:
@@ -374,7 +463,12 @@ class ProductionAdminEvent:
 
       # 5. If we canceled more than required, create a forced batch/work session/wip to compensate
       if remaining_qt_to_remove < 0:
-        new_batch_key, batch_value = self._create_forced_traceability_records(abs(remaining_qt_to_remove))
+        quantity_ratio = abs(remaining_qt_to_remove) / self.info.new_job_qt_completed
+        duration_to_preserve_total = total_duration * quantity_ratio
+        new_batch_key, batch_value = self._create_forced_traceability_records(
+          quantity=abs(remaining_qt_to_remove),
+          duration=duration_to_preserve_total if not self.info.should_adjust_duration else None
+        )
 
         # Update potential booked wip from canceled batches
         self.tx.aql.execute(

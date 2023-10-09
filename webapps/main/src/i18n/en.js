@@ -499,7 +499,8 @@ export default {
       "short": "remq"
     },
     "short": "qt",
-    "update": "update quantity"
+    "update": "update quantity",
+    "should_adjust_duration": "Adjust durations accordingly",
   },
   "reactivate": "reactivate",
   "remove_assignment": "remove assignment",

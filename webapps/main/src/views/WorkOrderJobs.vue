@@ -247,6 +247,7 @@
                     <q-card-section class="text-h3 display highlight">
                       {{ $t('update_progress') }}
                     </q-card-section>
+
                     <q-card-section>
                       <q-input
                         type="number"
@@ -260,6 +261,14 @@
                         autofocus>
                       </q-input>
                     </q-card-section>
+
+                    <q-card-section>
+                      <q-checkbox
+                        v-model="jobs_temp_data.should_adjust_duration"
+                        :label="$t('quantity.should_adjust_duration')"
+                      />
+                    </q-card-section>
+
                     <q-card-section>
                       <div class="row justify-between">
                         <q-btn
@@ -609,7 +618,8 @@ export default {
         work_order_key: job_data.wo_key,
         new_job_qt_completed: job_data.qt_completed,
         min_progress_qt,
-        max_progress_qt
+        max_progress_qt,
+        should_adjust_duration: true
       }
 
       this.edit_job_progress = job_data._key
@@ -651,35 +661,38 @@ export default {
       })
     },
 
-    forceProgress() {
+    async forceProgress() {
       const td = this.jobs_temp_data
       const new_qt_within_bounds = (
-        td.min_progress_qt <= td.new_job_qt_completed
-        && td.new_job_qt_completed <= td.max_progress_qt
+        td.min_progress_qt <= td.new_job_qt_completed &&
+        td.new_job_qt_completed <= td.max_progress_qt
       )
-      if (new_qt_within_bounds) {
-        this.sendEvent({
-          event_type: 'PROGRESS_OVERRIDE_REQUESTED',
-          event_data: this.jobs_temp_data
-        }).then(async () => {
-          this.resetEditing()
-          await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
-          this.$q.notify({
-            message: this.$t('update_progress_success'),
-            color: 'theme-green',
-            timeout: 1500,
-            position: 'top'
-          })
-        }).catch(err => {
-          window.alert(err)
-        })
-      }
-      else {
+
+      if (!new_qt_within_bounds) {
+        // TODO: i18n
         window.alert(`Quantità deve essere fra ${td.min_progress_qt} e ${td.max_progress_qt}`)
         // Set value to closest limit
         td.new_job_qt_completed = td.new_job_qt_completed < td.min_progress_qt
           ? td.min_progress_qt
           : td.max_progress_qt
+        return
+      }
+
+      try {
+        await this.sendEvent({
+          event_type: 'PROGRESS_OVERRIDE_REQUESTED',
+          event_data: this.jobs_temp_data,
+        })
+        this.resetEditing()
+        await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
+        this.$q.notify({
+          message: this.$t('update_progress_success'),
+          color: 'theme-green',
+          timeout: 1500,
+          position: 'top'
+        })
+      } catch (error) {
+        window.alert(error)
       }
     },
 
