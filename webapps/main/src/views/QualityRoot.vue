@@ -355,7 +355,7 @@
               <FormField
                 :field_data="filter"
                 style="margin-bottom: 0"
-                @update="filter.value = $event"
+                @update="filter.value = filter.type === 'choice' ? $event.value : $event"
               />
             </div>
 

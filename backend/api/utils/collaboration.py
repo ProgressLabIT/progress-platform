@@ -43,7 +43,9 @@ class Queries:
       && (@advanced_filters
         ? (
             FOR advanced_filter IN NOT_NULL(@advanced_filters, [])
-            RETURN i.data ? i.data[* FILTER CURRENT._key == advanced_filter._key AND CURRENT.value == advanced_filter.value] : []
+            RETURN i.data
+              ? i.data[* FILTER CURRENT._key == advanced_filter._key AND (CURRENT.type == "choice" ? CURRENT.value.value == advanced_filter.value : CURRENT.value == advanced_filter.value)]
+              : []
           )[**] != []
         : true
       )
