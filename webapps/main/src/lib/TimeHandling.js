@@ -6,8 +6,11 @@ export function formatDateString(string, locale, options) {
 }
 
 export function formatDateTime(string, locale, format) {
-  if (!string) return '-'
-  else return DT.fromISO(string).setLocale(locale).toLocaleString(format)
+  if (!string) {
+    return '-'
+  }
+
+  return DT.fromISO(string).setLocale(locale).toLocaleString(format)
 }
 
 export function shortDateString(string, locale) {
@@ -16,8 +19,11 @@ export function shortDateString(string, locale) {
     month: 'short',
     year: '2-digit'
   }
-  if (string === undefined) return '-'
-  else return formatDateString(string, locale, options)
+  if (string === undefined) {
+    return '-'
+  }
+
+  return formatDateString(string, locale, options)
 }
 
 export function timestamp() {
