@@ -91,11 +91,12 @@ class TemplateAssignmentContext(str, Enum):
   STEP = 'step'
   ISSUE_TYPE = 'issue_type'
 
+class TemplateAssignmentUpdateType(str, Enum):
+  ADD = 'add'
+  REMOVE = 'remove'
+
 class TemplateAssignmentUpdate(BaseModel):
+  type: TemplateAssignmentUpdateType
   template_key: str
   context: TemplateAssignmentContext
   context_key: str
-
-class TemplateAssignmentUpdateList(BaseModel):
-  add: list[TemplateAssignmentUpdate] = []
-  remove: list[TemplateAssignmentUpdate] = []

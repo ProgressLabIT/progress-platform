@@ -2,7 +2,7 @@ import traceback
 
 from fastapi import APIRouter, HTTPException
 
-from models.print import PrintTemplateRecord, TemplateAssignmentUpdateList
+from models.print import PrintTemplateRecord, TemplateAssignmentUpdate, TemplateAssignmentUpdateType
 from utils.api import APIResponse
 from utils.db import db
 from utils.print import preprocess_template, build_template_assignment_record
@@ -26,7 +26,10 @@ async def find_print_templates(
   )
 
   if product_key is None and phase_key is None and issue_key is None:
-    cursor = db.collection('PrintTemplate').all()
+    cursor = db.aql.execute("""
+      FOR t IN PrintTemplate
+      RETURN KEEP(t, '_key', 'name', 'description')
+    """)
 
   else:
     cursor = db.aql.execute("""
@@ -38,7 +41,7 @@ async def find_print_templates(
       return keep(DOCUMENT(PrintTemplate, e._to), '_key', 'name', 'description')
     """, bind_vars=bind_vars)
 
-  result = [t for t in cursor]
+  result = [PrintTemplateRecord(**t) for t in cursor]
 
   return result
 
@@ -105,39 +108,39 @@ async def delete_print_template(template_key: str):
 
 
 @router.post('/update-template-assignments')
-async def update_template_assignments(update=TemplateAssignmentUpdateList):
-
-  context_map = {
-    TemplateAssignmentContext.PRODUCT.value: 'Product',
-    TemplateAssignmentContext.PHASE.value: 'Phase',
-    TemplateAssignmentContext.STEP.value: 'Step',
-    TemplateAssignmentContext.ISSUE_TYPE.value: 'IssueType',
-  }
-
+async def update_template_assignments(updates: list[TemplateAssignmentUpdate]):
 
   try:
-    tx = db.begin_transaction()
-    tx.insert_many([build_template_assignment_record(r) for r in update.add])
 
-    delete_list = [build_template_assignment_record(r) for r in update.remove]
+    tx = db.begin_transaction(write=['can_use_print_template'])
+
+    print([u for u in updates])
+    new = [build_template_assignment_record(u) for u in updates if u.type == TemplateAssignmentUpdateType.ADD]
+
+    if new:
+      tx.collection('can_use_print_template').insert_many(new)
+
+
     delete_query = """
-      FOR d IN @delete_list
-        FOR record IN can_use
+      FOR d IN @to_remove
+        FOR record IN can_use_print_template
         FILTER
-          record.type == 'TemplateAssignment'
-          && record._from = d._from
+          record._from == d._from
           && record._to == d._to
-        REMOVE record IN can_use
+        REMOVE record IN can_use_print_template
     """
-    bind_vars = dict(delete_list=delete_list)
-    tx.aql.execute(delete_query, bind_vars=bind_vars)
+    to_remove = [build_template_assignment_record(u) for u in updates if u.type == TemplateAssignmentUpdateType.REMOVE]
+
+    if len(to_remove):
+      bind_vars = dict(to_remove=to_remove)
+      tx.aql.execute(delete_query, bind_vars=bind_vars)
 
     tx.commit_transaction()
 
     return APIResponse(message='Assignments updated correctly')
 
   finally:
-    if tx.transaction_status != 'committed':
+    if tx.transaction_status() != 'committed':
       tx.abort_transaction()
 
 
