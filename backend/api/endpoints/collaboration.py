@@ -1,7 +1,7 @@
 import traceback
 from datetime import datetime
 from typing import Dict, List, Union
-from base64 import urlsafe_b64decode
+from base64 import b64decode
 import json
 
 from fastapi import APIRouter, Body, HTTPException, Query
@@ -166,7 +166,8 @@ async def search_issues(
     issue_closed = issue_closed,
     issue_critical = issue_critical,
     issue_non_critical = issue_non_critical,
-    advanced_filters = json.loads(urlsafe_b64decode(advanced_filters)) if advanced_filters else None,
+    # Browser API (btoa) encodes strings in latin-1 (ISO-8859-1)
+    advanced_filters = json.loads(b64decode(advanced_filters).decode('latin-1')) if advanced_filters else None,
     limit = limit,
     with_links = with_links
   )
