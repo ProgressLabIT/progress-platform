@@ -22,9 +22,8 @@
 
         <q-card-actions align="between" class="q-mt-md">
           <q-btn
-            flat
             color="theme-grey"
-            size="xl"
+            padding="md xl"
             :label="t('cancel')"
             @click="onDialogCancel"
           />
@@ -33,7 +32,7 @@
             type="submit"
             form="filter-form"
             color="primary"
-            size="xl"
+            padding="md xl"
             :label="t('confirm')"
           />
         </q-card-actions>
