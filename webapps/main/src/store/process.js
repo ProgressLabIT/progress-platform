@@ -206,7 +206,7 @@ const process = {
             if (template.temp) {
               template_updates.push({
                 type: 'add',
-                context: 'product',
+                context: 'phase',
                 context_key: phase._key,
                 template_key: template._key
               })
@@ -214,7 +214,7 @@ const process = {
             if (template.trash) {
               template_updates.push({
                 type: 'remove',
-                context: 'product',
+                context: 'phase',
                 context_key: phase._key,
                 template_key: template._key
               })

@@ -40,9 +40,9 @@
       </div>
     </div>
 
-    <v-else>
+    <div v-else>
       <NoDataAlert />
-    </v-else>
+    </div>
 
     <q-space></q-space>
 
