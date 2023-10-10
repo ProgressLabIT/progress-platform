@@ -3,8 +3,8 @@ from typing import List, Optional, Union
 
 from pydantic import Field
 
+from models.print import PrintTemplateRecord
 from utils.base_models import FlexModel, ArangoDocument
-
 
 
 class ReleaseStyle(str, Enum):
@@ -84,6 +84,7 @@ class PhaseRecord(ArangoDocument):
 
 class PhaseData(PhaseRecord):
   steps: List[Step] = []
+  print_templates: List[PrintTemplateRecord] = []
 
 
 class ProcessUpdate(FlexModel):
