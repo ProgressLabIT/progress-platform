@@ -194,6 +194,7 @@ async def update_work_order(
 
     if new_qt is not None:
       wo_update['qt_planned'] = new_qt
+      # WARNING: Qt of work order jobs must be updated separately!
 
     if new_from_date is not None:
       wo_update['start_from'] = new_from_date
