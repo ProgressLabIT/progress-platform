@@ -245,9 +245,10 @@
             v-for="(t, index) in product.print_templates"
             :key="t._key"
             @mouseenter="over_print=t._key"
-            @mouseleave="over_print=null">
+            @mouseleave="over_print=null"
+            :class="{ 'text-italic': t.temp }">
             <q-item-section>
-              <q-item-label>{{ t.name }}</q-item-label>
+              <q-item-label>{{ t.name }} {{ t.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}</q-item-label>
               <q-item-label caption>{{ t.description }}</q-item-label>
             </q-item-section>
             <q-item-section side>
