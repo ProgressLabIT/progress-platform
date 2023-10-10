@@ -516,6 +516,7 @@ export default {
   methods: {
     resetFilters() {
       this.$router.replace({ query: null })
+      this.advancedFilters = []
     },
 
     getIssues() {
