@@ -3,14 +3,15 @@
     square
     bordered
     class="surface2">
-    <q-card-section class="text-h3 row items-end">
+    <q-card-section class="row items-baseline">
       <q-icon
         class=""
         name="mdi-file-document"
         size="sm">
       </q-icon>
-      <div class="q-ml-sm">
-        {{ template.name }}
+      <div class="q-ml-sm text-h3" :class="{ 'text-italic': template.temp}">
+        <div>{{ template.name }}</div>
+        <div v-if="template.temp" class="smaller">({{ $capitalize($t('unsaved')) }})</div>
       </div>
     </q-card-section>
     <q-card-section>
@@ -34,10 +35,11 @@
       </q-btn>
       <!-- TODO: Implement delete method -->
       <q-btn
+        v-if="allow_delete"
         flat
         round
         size="sm"
-        @click=""
+        @click="$emit('delete')"
         icon="mdi-delete">
       </q-btn>
     </q-card-section>
@@ -81,6 +83,11 @@ export default {
     },
 
     allow_edit: {
+      type: Boolean,
+      default: false
+    },
+
+    allow_delete: {
       type: Boolean,
       default: false
     }
