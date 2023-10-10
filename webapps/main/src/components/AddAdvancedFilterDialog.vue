@@ -16,7 +16,7 @@
           <FormField
             :field_data="editableField"
             class="input-field"
-            @update="editableField.value = $event"
+            @update="editableField.value = editableField.type === 'choice' ? $event?.value : $event"
           />
         </q-card-section>
 
