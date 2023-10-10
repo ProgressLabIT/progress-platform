@@ -412,7 +412,7 @@ export default {
       })
     }
 
-    const advancedFilterQuery = useQueryModel(Object, 'advanced_filters', null)
+    const advancedFilterQuery = useQueryModel(Array, 'advanced_filters', null)
     watch(
       advancedFilters,
       () => {

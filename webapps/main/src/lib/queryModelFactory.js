@@ -7,12 +7,12 @@ function baseQueryModelFactory(data_type, query_param_name, default_value, getRo
   return {
     get() {
       let value = getRoute.call(this).query[query_param_name]
-      if (data_type == Number) {
+      if (data_type === Number) {
         value = parseFloat(value)
       }
-      else if (data_type == Boolean) {
+      else if (data_type === Boolean) {
         value = value != 'false'
-      } else if (data_type == Object) {
+      } else if (data_type === Object || data_type === Array) {
         value = value ? JSON.parse(atob(value)) : null
       }
       return value ?? default_value
@@ -20,13 +20,17 @@ function baseQueryModelFactory(data_type, query_param_name, default_value, getRo
     set(value) {
       const query = {
         ...getRoute.call(this).query,
-        [query_param_name]: data_type == Object
+        [query_param_name]: (data_type === Object || data_type === Array)
           ? btoa(JSON.stringify(value))
           : value
       }
 
       // Remove query param from url if value is empty, null, undefined or true (for booleans)
-      if ([null, undefined, '', true].includes(value)) {
+      if (
+        [null, undefined, '', true].includes(value) ||
+        (data_type === Object && Object.keys(value).length === 0) ||
+        (data_type === Array && value.length === 0)
+      ) {
         delete query[query_param_name]
       }
 
