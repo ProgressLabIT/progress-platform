@@ -460,7 +460,7 @@ export default {
     filters_active() {
       return this.filter_list.some(f => {
         return this.bool_filters.includes(f) ? this[f] === false : !!this[f]
-      })
+      }) || this.advancedFilters.length
     },
 
     issue_key_search: queryModel(String, 'issue_search', null),
