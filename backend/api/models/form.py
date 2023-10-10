@@ -53,7 +53,8 @@ class CustomField(ArangoDocument):
   default_hint: str = None # To show to the user when filling up the forms
 
 class FormFieldDefinition(BaseModel):
-  field_key: str
+  _key: str # CustomField key
+  type: FieldType
   multiple: bool = False
   label: str
   hint: str = None

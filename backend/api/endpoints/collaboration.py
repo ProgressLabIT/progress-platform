@@ -37,7 +37,7 @@ async def get_issue_type(
   )
 
   cursor = db.aql.execute(Queries.FETCH_ISSUE_TYPES, bind_vars=match)
-  return [_ for _ in cursor]
+  return [IssueTypeFull(**it) for it in cursor]
 
 # ----------------------------------------------------------------------
 
@@ -71,13 +71,13 @@ async def create_issue_type(data: IssueType):
 # ----------------------------------------------------------------------
 
 @router.patch('/issue-type/{issue_type_key}')
-async def update_issue_type(issue_type_key: str, data: dict):
+async def update_issue_type(issue_type_key: str, data: IssueTypeUpdate):
 
-  if '_key' not in data:
-    data['_key'] = issue_type_key
+  if not hasattr(data, 'key'):
+    data.key = issue_type_key
 
   try:
-    updated_issue_type = issue_types.update(data, return_new=True, keep_none=False)['new']
+    updated_issue_type = issue_types.update(data.dict(by_alias=True), return_new=True, keep_none=False)['new']
     return APIResponse(
       message = "Issue type updated corretly",
       detail = updated_issue_type
