@@ -7,6 +7,7 @@
     :width="400"
     show-if-above
     :overlay="$q.screen.lt.lg"
+    persistent
   >
     <div class="column q-px-lg">
       <div class="col-auto row items-center justify-between q-mt-sm q-mb-md">
