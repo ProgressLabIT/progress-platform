@@ -1,37 +1,17 @@
 <template>
-  <div class="fit">
+  <div class="fit scroll q-pa-md">
     <LoadingSignal v-if="!data_ready" />
 
-    <div v-else class="row q-col-gutter-md q-ml-none q-mt-none">
-      <div class="col-2"
+    <div v-else class="row q-col-gutter-md">
+      <div
+        class="col-3"
         v-for="template in template_list"
         :key="template._key">
-        <q-card
-          square
-          bordered
-          class="surface2">
-          <q-card-section class="text-h3 row items-end">
-            <q-icon
-              class=""
-              name="mdi-file-document"
-              size="sm">
-            </q-icon>
-            <div class="q-ml-sm">
-              {{ template.name }}
-            </div>
-          </q-card-section>
-          <q-card-section>
-            {{ template.description }}
-          </q-card-section>
-          <q-card-section class="row justify-end">
-            <q-btn
-              size="sm"
-              @click="editTemplate(template._key)"
-              :label="$t('edit')"
-              color="theme-blue">
-            </q-btn>
-          </q-card-section>
-        </q-card>
+        <PrintTemplateCard
+          :template="template"
+          :allow_edit="true"
+          @saved="getTemplates">
+        </PrintTemplateCard>
       </div>
     </div>
 
@@ -45,7 +25,6 @@
 
     <PrintTemplateDesigner
       :show="show_designer"
-      :edit_template="edit_template"
       @close="resetDesigner"
       @saved="getTemplates()">
     </PrintTemplateDesigner>
@@ -55,6 +34,7 @@
 
 <script>
 import LoadingSignal from '@/components/LoadingSignal.vue'
+import PrintTemplateCard from '@/components/PrintTemplateCard.vue'
 import PrintTemplateDesigner from '@/components/PrintTemplateDesigner.vue'
 
 export default {
@@ -62,6 +42,7 @@ export default {
 
   components: {
     LoadingSignal,
+    PrintTemplateCard,
     PrintTemplateDesigner
   },
 
@@ -71,7 +52,6 @@ export default {
       search_text: null,
       template_list: [],
       show_designer: false,
-      edit_template: null
     }
   },
 
@@ -83,20 +63,12 @@ export default {
       })
     },
 
-    editTemplate(template_key) {
-      this.$api.get(`print-template/${template_key}`).then(resp =>{
-        this.edit_template = resp.data
-        this.show_designer = true
-      })
-    },
-
     openNewTemplate() {
       this.show_designer = true
     },
 
     resetDesigner() {
       this.show_designer = false
-      this.edit_template = null
     }
   },
 
