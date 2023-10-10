@@ -148,94 +148,136 @@
         </div>
       </div>
 
-      <!-- ISSUE TYPE FORM -->
-      <div class="text-h4 text-uppercase weight-bold q-mt-lg q-mb-sm col-auto">
-        {{ $t('form_title')}}
-      </div>
+      <!-- FORM AND PRINT TEMPLATES -->
+      <q-tabs
+        align="left"
+        v-model="tab"
+        dense
+        indicator-color="theme-blue"
+        active-class="text-high weight-bold"
+        class="q-mt-lg text-low col-auto">
+        <q-tab content-class="weight-bold" name="form" :label="$t('form_title')" />
+        <q-tab name="prints" :label="$t('print_templates')" />
+      </q-tabs>
 
-      <div
-        v-if="!temp_metadata.form_template.length"
-        class="q-mt-md text-italic">
-        {{ $t('field_none') }}
-      </div>
+      <q-card square class="col">
 
-      <div v-else class="col scroll" id="issue-type-fields">
 
-        <div
-          class="row items-center q-col-gutter-lg q-py-sm"
-          v-for="(field, index) in temp_metadata.form_template"
-          :key="field._key">
+      <q-tab-panels v-model="tab" class="fit">
 
-          <div class="col-auto">
-            <q-icon
-              v-if="edit_mode"
-              name="mdi-drag-horizontal-variant"
-              class="q-mr-sm dragme"
-              size="sm">
-            </q-icon>
-            <q-icon
-              :name="getFieldIcon(field.type)"
-              size="sm">
-            </q-icon>
+        <!-- ISSUE TYPE FORM -->
+        <q-tab-panel name="form" class="fit surface2 column">
+
+          <!-- NO FORM FIELDS -->
+          <div
+            v-if="!temp_metadata.form_template.length"
+            class="q-mt-md text-italic">
+            {{ $t('field_none') }}
           </div>
 
-          <!-- Label -->
-          <div class="col">
-            <q-input
-              stack-label
-              filled
-              dense
-              autogrow
-              :readonly="!edit_mode"
-              :label="$t('label')"
-              v-model="field.label">
-            </q-input>
+          <!-- FORM FIELDS LIST -->
+          <div v-else class="col scroll" id="issue-type-fields">
+            <div
+              class="row items-center q-col-gutter-lg q-py-sm"
+              v-for="(field, index) in temp_metadata.form_template"
+              :key="field._key">
+
+              <div class="col-auto">
+                <q-icon
+                  v-if="edit_mode"
+                  name="mdi-drag-horizontal-variant"
+                  class="q-mr-sm dragme"
+                  size="sm">
+                </q-icon>
+                <q-icon
+                  :name="getFieldIcon(field.type)"
+                  size="sm">
+                </q-icon>
+              </div>
+
+              <!-- Label -->
+              <div class="col">
+                <q-input
+                  stack-label
+                  filled
+                  dense
+                  autogrow
+                  :readonly="!edit_mode"
+                  :label="$t('label')"
+                  v-model="field.label">
+                </q-input>
+              </div>
+
+              <!-- Hint -->
+              <div class="col">
+                <q-input
+                  stack-label
+                  filled
+                  dense
+                  autogrow
+                  :readonly="!edit_mode"
+                  :label="$t('hint')"
+                  v-model="field.hint">
+                </q-input>
+              </div>
+
+              <div class="col-auto">
+
+              </div>
+
+              <div class="col-auto">
+                <q-btn
+                  v-if="edit_mode"
+                  round flat
+                  icon="mdi-close"
+                  @click="deleteField(index)">
+                </q-btn>
+              </div>
+              <!-- TODO: default value and hidden -->
+            </div>
           </div>
 
-          <!-- Hint -->
-          <div class="col">
-            <q-input
-              stack-label
-              filled
-              dense
-              autogrow
-              :readonly="!edit_mode"
-              :label="$t('hint')"
-              v-model="field.hint">
-            </q-input>
-          </div>
-
-          <div class="col-auto">
-
-          </div>
-
-          <div class="col-auto">
+          <!-- BUTTON: Add field -->
+          <div>
             <q-btn
               v-if="edit_mode"
-              round flat
-              icon="mdi-close"
-              @click="deleteField(index)">
+              size="sm"
+              color="theme-blue"
+              icon="mdi-plus"
+              :label="$t('field_add')"
+              @click="show_field_dialog=true"
+              class="q-mt-lg">
             </q-btn>
           </div>
-          <!-- TODO: default value and hidden -->
-        </div>
+        </q-tab-panel>
 
-        <!-- BUTTON: Add field -->
-      </div>
+        <!-- PRINT TEMPLATES -->
+        <q-tab-panel name="prints" class="surface2 column">
+          <div class="row col q-col-gutter-md scroll">
+            <div
+              class="col-3"
+              v-for="(t, index) in temp_metadata.print_templates.filter(t => !t.trash)"
+              :key="t._key">
+              <PrintTemplateCard
+                :template="t"
+                :allow_delete="edit_mode"
+                @delete="deleteTemplate(index)"
+                />
+            </div>
+          </div>
 
-      <div class="row">
-        <q-btn
-          v-if="edit_mode"
-          size="sm"
-          color="theme-blue"
-          icon="mdi-plus"
-          :label="$t('field_add')"
-          @click="show_field_dialog=true"
-          class="q-mt-lg">
-        </q-btn>
-      </div>
-
-
+          <div class="col-auto">
+            <BaseAutocompleteTemplate
+              v-if="edit_mode"
+              class="q-px-sm q-mt-md"
+              :label="$t('print_template_add')"
+              @select="addTemplate"
+              :selected="temp_metadata.print_templates">
+            </BaseAutocompleteTemplate>
+          </div>
+        </q-tab-panel>
+      </q-tab-panels>
+      </q-card>
 
       <BaseDialog
         :show="show_field_dialog"
@@ -260,9 +302,11 @@ import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import FormFieldSearch from '@/components/FormFieldSearch.vue'
+import PrintTemplateCard from '@/components/PrintTemplateCard.vue'
 import form from '@/mixins/form.js'
 import { cloneDeep as _cloneDeep } from 'lodash'
 import Sortable from 'sortablejs'
+import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue'
 
 
 export default {
@@ -270,11 +314,13 @@ export default {
   name: 'IssueTypeDetail',
 
   components: {
+    BaseAutocompleteTemplate,
     BaseDialog,
     BaseTooltipIcon,
     FormFieldSearch,
     NoDataAlert,
-    IconLibrary
+    IconLibrary,
+    PrintTemplateCard
   },
 
   mixins: [form],
@@ -292,6 +338,7 @@ export default {
       show_field_dialog: false,
       edit_mode: false,
       saving: false,
+      tab: 'form',
       temp_metadata: {
         name: '',
         code: '',
@@ -299,7 +346,8 @@ export default {
         description: '',
         icon: '',
         critical: undefined,
-        form_template: []
+        form_template: [],
+        print_templates: []
         // close_within: 0
       },
     }
@@ -339,6 +387,20 @@ export default {
       })
     },
 
+    addTemplate(template) {
+      this.temp_metadata.print_templates.push({
+        ...template,
+        temp: true
+      })
+    },
+
+    deleteTemplate(template_index) {
+      const template = this.temp_metadata.print_templates[template_index]
+      template.temp
+        ? this.temp_metadata.print_templates.splice(template_index, 1)
+        : template.trash = true
+    },
+
     async save() {
       this.saving = true
       const data = {
@@ -365,6 +427,7 @@ export default {
 
     addField(field_data) {
       this.temp_metadata.form_template.push({
+        // TODO: The _key property should really be named field_key. Updating it would be a breaking change.
         _key: field_data._key,
         type: field_data.type,
         label: field_data.default_label,

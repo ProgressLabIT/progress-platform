@@ -1,4 +1,4 @@
-import { api } from '@/boot/axios.js'
+import { api, axios } from '@/boot/axios.js'
 
 const quality = {
 
@@ -50,8 +50,22 @@ const quality = {
       })
     },
     updateIssueType({ commit, dispatch }, issue_type_data) {
+      /*
+       * issue_type_data includes `print_templates`, which is not part of the
+       * issue type model in the backend and the property will be ignored.
+       * Templates must be updated separately.
+       */
       return new Promise((resolve, reject) => {
-        api.patch(`issue-type/${issue_type_data._key}`, issue_type_data)
+        const template_updates = issue_type_data.print_templates.filter(t => t.temp || t.trash).map(t => ({
+          type: t.temp ? 'add' : 'remove',
+          context: 'issue_type',
+          context_key: issue_type_data._key,
+          template_key: t._key
+        }))
+        axios.all([
+          api.patch(`issue-type/${issue_type_data._key}`, issue_type_data),
+          api.post('update-template-assignments', template_updates)
+        ])
         .then( async () => {
           await dispatch('getIssueTypes')
           resolve()

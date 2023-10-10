@@ -404,6 +404,7 @@ export default {
       "instruction": "istruzioni"
     }
   },
+  "print_templates": "Stampe",
   "print_template_new": "Nuovo template",
   "print_template_add": "Aggiungi stampa",
   "print_template_load_pdf": "Carica pdf base",
