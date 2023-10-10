@@ -15,6 +15,8 @@
           {{ $t('filter', 2) }}
         </div>
 
+        <q-space />
+
         <div class="col-auto">
           <q-btn
             v-show="hasActiveFilters"
@@ -29,7 +31,7 @@
           </q-btn>
         </div>
 
-        <div class="col-auto">
+        <div class="col-auto q-ml-md">
           <q-btn
             color="theme-grey"
             size="sm"
