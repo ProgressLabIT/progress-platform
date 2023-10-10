@@ -61,7 +61,7 @@ watch(formField, ({ default_label, default_hint, ...field }) => {
     ...field,
     label: default_label,
     hint: default_hint,
-    value: null
+    value: field.type === 'boolean' ? false : null
   }
 })
 </script>
