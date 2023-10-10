@@ -28,6 +28,7 @@ async def find_print_templates(
   if product_key is None and phase_key is None and issue_key is None:
     cursor = db.aql.execute("""
       FOR t IN PrintTemplate
+      SORT t.name
       RETURN KEEP(t, '_key', 'name', 'description')
     """)
 
@@ -38,7 +39,9 @@ async def find_print_templates(
           (@phase_key ? e._from == CONCAT('Phase/', @phase_key) : true)
           && (@product_key ? e._from == CONCAT('Product/', @product_key) : true)
           && (@issue_key ? e._from == CONCAT('Issue/', @issue_key) : true)
-      return keep(DOCUMENT(PrintTemplate, e._to), '_key', 'name', 'description')
+      LET t = DOCUMENT(PrintTemplate, e._to)
+      SORT t.name
+      RETURN KEEP(t, '_key', 'name', 'description')
     """, bind_vars=bind_vars)
 
   result = [PrintTemplateRecord(**t) for t in cursor]
@@ -80,7 +83,6 @@ async def create_print_template(template_data: PrintTemplateRecord):
 async def update_print_template(template_data: PrintTemplateRecord):
   try:
     update = template_data.dict(by_alias=True)
-    print(update)
     resp = db.collection('PrintTemplate').update(update)
     return APIResponse(
       status_code = 200,
@@ -111,10 +113,7 @@ async def delete_print_template(template_key: str):
 async def update_template_assignments(updates: list[TemplateAssignmentUpdate]):
 
   try:
-
     tx = db.begin_transaction(write=['can_use_print_template'])
-
-    print([u for u in updates])
     new = [build_template_assignment_record(u) for u in updates if u.type == TemplateAssignmentUpdateType.ADD]
 
     if new:
