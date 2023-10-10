@@ -71,6 +71,17 @@ const process = {
       temp_procedure.splice(step_index, 1)
     },
 
+    ADD_TEMP_PHASE_TEMPLATE(state, { phase_index, template }) {
+      state.temp[phase_index].print_templates.push({ ...template, temp: true })
+    },
+
+    DELETE_TEMP_PHASE_TEMPLATE(state, { phase_index, template_index }) {
+      let phase = state.temp[phase_index]
+      phase.print_templates[template_index].temp
+        ? phase.print_templates.splice(template_index, 1)
+        : phase.print_templates[template_index].trash = true
+    },
+
     DELETE_PHASE(state, phase_index) {
       state.temp.splice(phase_index, 1)
     },
@@ -167,9 +178,11 @@ const process = {
     saveTempProcess({ dispatch }, data) {
       return new Promise( (resolve, reject) => {
 
-        // map added/deleted media
+        // map added/deleted media and print templates
         let new_media = []
         let deleted_media = []
+
+        let template_updates = []
 
         data.new_process.forEach( phase => {
           phase.steps.forEach( step => {
@@ -187,6 +200,25 @@ const process = {
                 media_file: media.data
               })
             })
+          })
+
+          phase.print_templates.forEach( template => {
+            if (template.temp) {
+              template_updates.push({
+                type: 'add',
+                context: 'product',
+                context_key: phase._key,
+                template_key: template._key
+              })
+            }
+            if (template.trash) {
+              template_updates.push({
+                type: 'remove',
+                context: 'product',
+                context_key: phase._key,
+                template_key: template._key
+              })
+            }
           })
         })
 
@@ -210,6 +242,10 @@ const process = {
             )
           )
         })
+
+        api_calls.push(
+          api.post('update-template-assignments', template_updates)
+        )
 
         api_calls.push(
           api.put(`product/${data.product_key}/process`, data.new_process)

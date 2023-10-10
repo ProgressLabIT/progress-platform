@@ -159,6 +159,7 @@ import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vu
 import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
 import PhaseNotes from '@/components/PhaseNotes.vue'
+import PhasePrintTemplates from '@/components/PhasePrintTemplates.vue'
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import BasePrompt from '@/components/BasePrompt.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
@@ -166,7 +167,8 @@ import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 const views_map = [
   'PhaseSteps', 
   'PhaseParameters',
-  'PhaseNotes'
+  'PhaseNotes',
+  'PhasePrintTemplates'
   // 'PhaseAssignments' 
 ]
 
@@ -178,6 +180,7 @@ export default {
     PhaseParameters,
     PhaseSteps,
     PhaseNotes,
+    PhasePrintTemplates,
     // PhaseAssignments,
     BasePrompt,
     BaseTooltipIcon,

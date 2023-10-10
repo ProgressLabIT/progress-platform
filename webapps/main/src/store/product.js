@@ -78,11 +78,11 @@ const product = {
       state.temp.docs.splice(doc_index, 1)
     },
 
-    ADD_TEMP_TEMPLATE(state, template) {
+    ADD_TEMP_PRODUCT_TEMPLATE(state, template) {
       state.temp.print_templates.push({ ...template, temp: true })
     },
 
-    DELETE_TEMP_TEMPLATE(state, template_index) {
+    DELETE_TEMP_PRODUCT_TEMPLATE(state, template_index) {
       state.temp.print_templates.splice(template_index, 1)
     },
 

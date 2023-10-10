@@ -601,6 +601,7 @@ export default {
     "PhaseParameters": "parametri",
     "PhaseSteps": "procedura",
     "PhaseNotes": "Note produzione",
+    "PhasePrintTemplates": "Stampe",
     "adminPanel": "impostazioni",
     "companyDetails": "dettagli azienda",
     "defaultPhaseParams": "fase di default",

@@ -483,11 +483,11 @@ export default {
     },
 
     addTemplate(selection) {
-      this.product.print_templates.push({...selection, temp: true})
+      this.$store.commit('ADD_TEMP_PRODUCT_TEMPLATE', selection)
     },
 
     deleteTemplate(index) {
-      this.$store.commit('DELETE_TEMP_TEMPLATE', index)
+      this.$store.commit('DELETE_TEMP_PRODUCT_TEMPLATE', index)
     },
 
     showMedia(value) {
