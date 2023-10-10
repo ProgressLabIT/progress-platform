@@ -1,7 +1,6 @@
 <template>
-  <q-page-container class="absolute-full">
+  <q-page-container>
     <q-page class="row full-height">
-
       <!-- MAIN CONTENT -->
       <div class="column col full-height">
         <div class="row col-auto items-center justify-between q-pl-xs q-pr-md q-py-sm">
@@ -23,6 +22,8 @@
             </q-route-tab>
           </q-tabs>
 
+          <q-space />
+
           <!-- NEW ISSUE BUTTON -->
           <q-btn
             size="0.75rem"
@@ -38,26 +39,42 @@
             @close="show_issue_form = false"
             @issue_created="getIssues">
           </IssueForm>
-        </div>
 
+          <q-btn
+            v-if="!showFilterDrawer"
+            class="q-ml-sm"
+            size="sm"
+            round
+            icon="mdi-filter"
+            color="theme-grey"
+            @click="showFilterDrawer = true"
+          />
+        </div>
 
         <!-- MAIN CONTENT -->
         <div class="col relative-position">
           <router-view :loading="loading"/>
         </div>
       </div>
-
-      <!-- DIVIDER -->
-      <q-separator vertical inset/>
+    </q-page>
 
       <!-- FILTERS -->
-      <div class="col-3 full-height column q-px-lg">
-
+    <q-drawer
+      v-model="showFilterDrawer"
+      side="right"
+      bordered
+      class="background"
+      width="400"
+      show-if-above
+      :overlay="$q.screen.lt.lg"
+    >
+      <div class="column q-px-lg">
         <!-- FILTERS HEADING -->
         <div class="col-auto row items-center justify-between q-mt-sm q-mb-md">
           <div class="col-auto highlight text-uppercase text-h5">
             {{ $t('filter', 2) }}
           </div>
+
           <!-- FILTERS RESET -->
           <div class="col-auto">
             <q-btn
@@ -71,10 +88,21 @@
               </span>
             </q-btn>
           </div>
+
+          <!-- FILTERS MINIMIZE -->
+          <div class="col-auto">
+            <q-btn
+              color="theme-grey"
+              size="sm"
+              round
+              icon="mdi-minus"
+              @click="showFilterDrawer = false"
+            />
+          </div>
         </div>
 
         <!-- FILTER FORM -->
-      <div class="col scroll q-pb-xl">
+        <div class="col scroll q-pb-xl">
           <div class="row q-col-gutter-md q-mb-md">
             <div class="col-6">
               <q-checkbox
@@ -390,8 +418,8 @@
           <div class="q-mb-xl"></div>
         </div>
         <div class="fade-bottom-bg"></div>
-      </div>
-    </q-page>
+        </div>
+    </q-drawer>
   </q-page-container>
 </template>
 
@@ -420,6 +448,7 @@ export default {
   },
 
   setup () {
+    const showFilterDrawer = ref(false)
     const advancedFilterOperator = ref('AND')
     const advancedFilters = ref([])
 
@@ -466,6 +495,7 @@ export default {
     }
 
     return {
+      showFilterDrawer,
       advancedFilterOperator,
       advancedFilters,
       addAdvancedFilter,
