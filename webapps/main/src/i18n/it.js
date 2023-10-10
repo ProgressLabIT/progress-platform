@@ -14,6 +14,7 @@ export default {
   "advanced_filters": "filtri avanzati",
   "all": "tutto | tutti",
   "and": "e",
+  "any": "qualsiasi",
   "archive": "archivia",
   "assign": "assegna",
   "assignment_success": "Lavori assegnati con successo",

@@ -41,12 +41,12 @@ class Queries:
       && (@issue_critical != null ? i.critical == @issue_critical : true)
       && (@issue_non_critical != null ? i.critical == !@issue_non_critical : true)
       && (@advanced_filters
-        ? (
-            FOR advanced_filter IN NOT_NULL(@advanced_filters, [])
+        ? LENGTH((
+            FOR advanced_filter IN NOT_NULL(@advanced_filters.filters, [])
             RETURN i.data
               ? i.data[* FILTER CURRENT._key == advanced_filter._key AND (CURRENT.type == "choice" ? CURRENT.value.value == advanced_filter.value : CURRENT.value == advanced_filter.value)]
               : []
-          )[**] != []
+          )[**]) >= (@advanced_filters.operator == "OR" ? 1 : LENGTH(@advanced_filters.filters))
         : true
       )
 

@@ -340,6 +340,18 @@
               {{ $t('advanced_filters') }}
             </div>
 
+            <q-space />
+
+            <q-btn-toggle
+              v-model="advancedFilterOperator"
+              :options="[
+                { label: $t('all'), value: 'AND' },
+                { label: $t('any'), value: 'OR' },
+              ]"
+              size="xs"
+              class="q-mr-md"
+            />
+
             <q-btn
               round
               color="theme-blue"
@@ -402,6 +414,7 @@ export default {
   },
 
   setup () {
+    const advancedFilterOperator = ref('AND')
     const advancedFilters = ref([])
 
     function addAdvancedFilter() {
@@ -412,20 +425,29 @@ export default {
       })
     }
 
-    const advancedFilterQuery = useQueryModel(Array, 'advanced_filters', null)
+    const advancedFilterQuery = useQueryModel(Object, 'advanced_filters', null)
     watch(
-      advancedFilters,
-      () => {
-        advancedFilterQuery.value = advancedFilters.value.map(({ _key, value }) => ({ _key, value }))
+      [advancedFilters, advancedFilterOperator],
+      ([advancedFilters, operator]) => {
+        if (advancedFilters.length === 0) {
+          advancedFilterQuery.value = null
+          return
+        }
+
+        advancedFilterQuery.value = {
+          operator,
+          filters: advancedFilters.map(({ _key, value }) => ({ _key, value }))
+        }
       },
       { deep: true }
     )
 
     const initialQuery = advancedFilterQuery.value
-    if (initialQuery && initialQuery.length > 0) {
+    if (initialQuery) {
       ;(async () => {
         const { data: fields } = await api.get('field')
-        advancedFilters.value = initialQuery.map(({ _key, value }) => {
+        advancedFilterOperator.value = initialQuery.operator
+        advancedFilters.value = initialQuery.filters.map(({ _key, value }) => {
           const { default_label, default_hint, ...field } = fields.find((field) => field._key === _key)
           return {
             ...field,
@@ -438,6 +460,7 @@ export default {
     }
 
     return {
+      advancedFilterOperator,
       advancedFilters,
       addAdvancedFilter,
       advancedFilterQuery,
@@ -506,7 +529,7 @@ export default {
       })
       return {
         ...filters_object,
-        advanced_filters: this.advancedFilterQuery && this.advancedFilterQuery.length > 0
+        advanced_filters: this.advancedFilterQuery
           ? btoa(JSON.stringify(this.advancedFilterQuery))
           : null,
       }

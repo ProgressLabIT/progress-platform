@@ -13,6 +13,7 @@ export default {
   "advanced_filters": "advanced filters",
   "all": "all",
   "and": "and",
+  "any": "any",
   "archive": "archive",
   "assign": "assign",
   "assignment_success": "Jobs assigned successfully",
