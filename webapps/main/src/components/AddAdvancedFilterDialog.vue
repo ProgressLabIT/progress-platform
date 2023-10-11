@@ -13,7 +13,13 @@
         </q-card-section>
 
         <q-card-section v-if="formField">
+          <q-checkbox
+            v-if="editableField.type == 'files'"
+            v-model="editableField.value"
+            :label="t('has_attachments')">
+          </q-checkbox>
           <FormField
+            v-else
             :field_data="editableField"
             class="input-field"
             @update="editableField.value = editableField.type === 'choice' ? $event?.value : $event"
@@ -56,12 +62,14 @@ const { t } = useI18n()
 const formField = ref(null)
 
 const editableField = ref(null)
+
 watch(formField, ({ default_label, default_hint, ...field }) => {
+  const value = ['boolean','files'].includes(field.type) ? false : null
   editableField.value = {
     ...field,
     label: default_label,
     hint: default_hint,
-    value: field.type === 'boolean' ? false : null
+    value
   }
 })
 </script>

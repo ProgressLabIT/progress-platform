@@ -140,6 +140,7 @@ export default {
     "evening": "buonasera",
     "morning": "buongiorno"
   },
+  "has_attachments": "Contiene allegati",
   "hint": "Testo aiuto",
   "history": "Storico",
   "icon": "icona",

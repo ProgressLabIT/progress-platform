@@ -49,6 +49,7 @@ class Queries:
                 && advanced_filter.value == (
                   CURRENT.type == "choice" ? CURRENT.value.value
                   : CURRENT.type == "boolean" ? !!CURRENT.value
+                  : CURRENT.type == "files" ? !!LENGTH(CURRENT.value)
                   : CURRENT.value
                 )]
               : []

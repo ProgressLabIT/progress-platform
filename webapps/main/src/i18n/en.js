@@ -139,6 +139,7 @@ export default {
     "evening": "good evening",
     "morning": "good morning"
   },
+  "has_attachments": "Has attachments",
   "hint": "Help text",
   "history": "History",
   "icon": "icon",

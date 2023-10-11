@@ -364,7 +364,13 @@
           <div v-for="(filter, index) in advancedFilters" :key="filter._key" class="row items-center justify-between q-mt-sm">
             <div class="col">
               <!-- We override q-mb-lg of FormField with style -->
+              <q-checkbox
+                v-if="filter.type == 'files'"
+                v-model="filter.value"
+                :label="$t('has_attachments')">
+              </q-checkbox>
               <FormField
+                v-else
                 :field_data="filter"
                 style="margin-bottom: 0"
                 @update="filter.value = filter.type === 'choice' ? $event?.value : $event"
