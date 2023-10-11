@@ -67,6 +67,7 @@
     </q-select>
 
     <!-- DATE -->
+    <!-- FIXME: Do not mutate the prop, emit 'update' event like other types instead -->
     <q-input
       v-if="field_data.type == 'date'"
       filled
@@ -89,6 +90,7 @@
     </q-input>
 
     <!-- TIME -->
+    <!-- FIXME: Do not mutate the prop, emit 'update' event like other types instead -->
     <q-input
       v-if="field_data.type == 'time'"
       stack-label

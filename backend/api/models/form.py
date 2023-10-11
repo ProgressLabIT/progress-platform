@@ -66,8 +66,3 @@ class FormFieldDefinition(BaseModel):
     if values.get('hidden') and values.get('default') == None:
       raise ValueError('Hidden fields must have a default value')
     return values
-
-class FormFieldInstance(BaseModel):
-  field_key: str
-  name: str = None
-  value: Any = None

@@ -1,6 +1,11 @@
-
-
-
+/**
+ * @template T
+ *
+ * @param {string} searchString
+ * @param {T} testItem
+ * @param {Extract<keyof T, string>[]} fieldList
+ * @returns
+ */
 export default function multiFieldSearch(searchString, testItem, fieldList) {
   // create the list of search terms removing duplicates
   const user_searching = !!searchString
@@ -9,11 +14,11 @@ export default function multiFieldSearch(searchString, testItem, fieldList) {
   // create the list of words to search in, removing duplicates
   let matchString = ''
   fieldList.forEach( field => {
-    // handle both string and arrays of strings. 
+    // handle both string and arrays of strings.
     // If field is array, consider each item as a term in itself
     let field_content = testItem[field]
 
-    // Check both "nonnullity" via truthyness and type, since typeof null === 'object' 
+    // Check both "nonnullity" via truthyness and type, since typeof null === 'object'
     if (field_content && typeof field_content === 'object') {
       field_content = ''.concat(...field_content.map( i => i + ' ' ))
     }
@@ -29,6 +34,6 @@ export default function multiFieldSearch(searchString, testItem, fieldList) {
     return termMatch
   })
 
-  // return true if search matches or if search box empty 
+  // return true if search matches or if search box empty
   return match
 }

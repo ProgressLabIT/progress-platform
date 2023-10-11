@@ -45,7 +45,6 @@ import IssueForm from '@/components/IssueForm.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
-
   name: 'IssueList',
 
   components: {
