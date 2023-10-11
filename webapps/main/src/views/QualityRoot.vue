@@ -335,25 +335,77 @@
             </template>
           </q-input>
 
+          <div class="row items-center justify-between">
+            <div class="highlight text-uppercase text-h6">
+              {{ $t('advanced_filters') }}
+            </div>
+
+            <q-space />
+
+            <q-btn-toggle
+              v-model="advancedFilterOperator"
+              :options="[
+                { label: $t('all', 2), value: 'AND' },
+                { label: $t('any'), value: 'OR' },
+              ]"
+              size="xs"
+              class="q-mr-md"
+            />
+
+            <q-btn
+              round
+              color="theme-blue"
+              icon="mdi-plus"
+              size="xs"
+              @click="addAdvancedFilter"
+            />
+          </div>
+
+          <div v-for="(filter, index) in advancedFilters" :key="filter._key" class="row items-center justify-between q-mt-sm">
+            <div class="col">
+              <!-- We override q-mb-lg of FormField with style -->
+              <q-checkbox
+                v-if="filter.type == 'files'"
+                v-model="filter.value"
+                :label="$t('has_attachments')">
+              </q-checkbox>
+              <FormField
+                v-else
+                :field_data="filter"
+                style="margin-bottom: 0"
+                @update="filter.value = filter.type === 'choice' ? $event?.value : $event"
+              />
+            </div>
+
+            <q-btn
+              class="q-ml-md"
+              round
+              color="theme-grey"
+              icon="mdi-minus"
+              size="xs"
+              @click="advancedFilters.splice(index, 1)"
+            />
+          </div>
+
           <div class="q-mb-xl"></div>
-
         </div>
-
         <div class="fade-bottom-bg"></div>
-
       </div>
-
     </q-page>
   </q-page-container>
 </template>
 
 <script>
+import AddAdvancedFilterDialog from '@/components/AddAdvancedFilterDialog.vue'
 import IssueForm from '@/components/IssueForm.vue'
-import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue'
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue'
-import queryModel from '@/lib/queryModelFactory.js'
+import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js'
+import { ref, watch } from 'vue'
+import { Dialog } from 'quasar'
+import FormField from '../components/FormField.vue'
+import { api } from '../boot/axios'
 
 export default {
 
@@ -364,7 +416,61 @@ export default {
     BaseAutocompleteOperation,
     BaseAutocompleteUser,
     IssueForm,
-    NoDataAlert
+    FormField,
+  },
+
+  setup () {
+    const advancedFilterOperator = ref('AND')
+    const advancedFilters = ref([])
+
+    function addAdvancedFilter() {
+      Dialog.create({
+        component: AddAdvancedFilterDialog,
+      }).onOk((field) => {
+        advancedFilters.value.push(field)
+      })
+    }
+
+    const advancedFilterQuery = useQueryModel(Object, 'advanced_filters', null)
+    watch(
+      [advancedFilters, advancedFilterOperator],
+      ([advancedFilters, operator]) => {
+        if (advancedFilters.length === 0) {
+          advancedFilterQuery.value = null
+          return
+        }
+
+        advancedFilterQuery.value = {
+          operator,
+          filters: advancedFilters.map(({ _key, value }) => ({ _key, value }))
+        }
+      },
+      { deep: true }
+    )
+
+    const initialQuery = advancedFilterQuery.value
+    if (initialQuery) {
+      ;(async () => {
+        const { data: fields } = await api.get('field')
+        advancedFilterOperator.value = initialQuery.operator
+        advancedFilters.value = initialQuery.filters.map(({ _key, value }) => {
+          const { default_label, default_hint, ...field } = fields.find((field) => field._key === _key)
+          return {
+            ...field,
+            label: default_label,
+            hint: default_hint,
+            value,
+          }
+        })
+      })()
+    }
+
+    return {
+      advancedFilterOperator,
+      advancedFilters,
+      addAdvancedFilter,
+      advancedFilterQuery,
+    }
   },
 
   data () {
@@ -383,7 +489,7 @@ export default {
     filters_active() {
       return this.filter_list.some(f => {
         return this.bool_filters.includes(f) ? this[f] === false : !!this[f]
-      })
+      }) || this.advancedFilters.length
     },
 
     issue_key_search: queryModel(String, 'issue_search', null),
@@ -427,18 +533,25 @@ export default {
           else filters_object[f] = this[f]
         }
       })
-      return filters_object
+      return {
+        ...filters_object,
+        advanced_filters: this.advancedFilterQuery
+          ? btoa(JSON.stringify(this.advancedFilterQuery))
+          : null,
+      }
     }
   },
 
   methods: {
     resetFilters() {
       this.$router.replace({ query: null })
+      this.advancedFilters = []
     },
 
     getIssues() {
       this.loading = true
-      this.$store.dispatch('getIssues', { with_links: true, ...this.filters }).then(() => setTimeout(() => this.loading = false, 1000))
+      this.$store.dispatch('getIssues', { with_links: true, ...this.filters })
+        .then(() => setTimeout(() => { this.loading = false }, 1000))
     }
   },
 
@@ -450,7 +563,7 @@ export default {
     filters: {
       deep: true,
       handler: 'getIssues'
-    }
+    },
   }
 }
 </script>

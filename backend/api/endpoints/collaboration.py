@@ -1,6 +1,8 @@
 import traceback
 from datetime import datetime
 from typing import Dict, List, Union
+from base64 import b64decode
+import json
 
 from fastapi import APIRouter, Body, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
@@ -136,6 +138,7 @@ async def search_issues(
   issue_closed: bool = None,
   issue_critical: bool = None,
   issue_non_critical: bool = None,
+  advanced_filters: str = Query(default=None),
   limit: int = None,
   with_links: bool = False
   ):
@@ -163,6 +166,8 @@ async def search_issues(
     issue_closed = issue_closed,
     issue_critical = issue_critical,
     issue_non_critical = issue_non_critical,
+    # Browser API (btoa) encodes strings in latin-1 (ISO-8859-1)
+    advanced_filters = json.loads(b64decode(advanced_filters).decode('latin-1')) if advanced_filters else None,
     limit = limit,
     with_links = with_links
   )

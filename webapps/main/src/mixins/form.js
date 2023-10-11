@@ -1,3 +1,6 @@
+/**
+ * @see {@link ../composables/form.js}
+ */
 export default {
   computed: {
     field_types() {
