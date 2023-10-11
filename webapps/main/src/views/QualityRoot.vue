@@ -345,7 +345,7 @@
             <q-btn-toggle
               v-model="advancedFilterOperator"
               :options="[
-                { label: $t('all'), value: 'AND' },
+                { label: $t('all', 2), value: 'AND' },
                 { label: $t('any'), value: 'OR' },
               ]"
               size="xs"
