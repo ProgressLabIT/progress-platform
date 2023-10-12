@@ -21,18 +21,20 @@
             </q-route-tab>
           </q-tabs>
 
+          <q-space />
+
           <!-- CREATE NEW WORK ORDER -->
           <template v-if="$route.name == 'workOrderList'">
-            <q-space />
 
             <div class="col-auto" v-if="!editing">
               <q-btn
                 size="0.75rem"
                 color="theme-blue"
+                :label="$t('new')"
                 @click="$router.push({ name: 'newWorkOrder'})">
-                {{ $t('new') }}
               </q-btn>
             </div>
+
             <template v-else>
               <!-- REORDER WORK ORDER QUEUE -->
               <div class="col-auto">
@@ -57,17 +59,28 @@
                 </q-btn>
               </div>
             </template>
-
-            <q-btn
-              v-if="!showFilterDrawer"
-              class="q-ml-sm"
-              size="sm"
-              round
-              icon="mdi-filter"
-              color="theme-grey"
-              @click="showFilterDrawer = true"
-            />
           </template>
+
+          <!-- FILTER BUTTON -->
+          <q-btn
+            v-if="!showFilterDrawer && $route.name != 'workOrderArchive'"
+            class="q-ml-sm"
+            size="sm"
+            round
+            :color="filters_active ? 'theme-blue' : 'theme-grey'"
+            icon="mdi-filter"
+            @click="showFilterDrawer = true"
+            >
+            <q-badge
+              v-if="filters_active"
+              floating
+              rounded
+              color="theme-red"
+              :label="filters_active"
+              size="4px"
+              style="font-family: 'Red Hat Text'; font-size: 8px"
+              />
+          </q-btn>
         </div>
 
         <!-- MAIN CONTENT -->
@@ -85,11 +98,11 @@
     </q-page>
 
     <FilterDrawer
-      v-if="$route.name !== 'workOrderArchive'"
+      v-if="$route.name != 'workOrderArchive'"
       v-model="showFilterDrawer"
-      :has-active-filters="filters_active"
+      :active-filters="filters_active"
       @reset="resetFilters"
-    >
+      >
       <!-- FILTERS SPECIFIC TO JOB LIST -->
       <template v-if="$route.name == 'jobList'">
         <!-- BY DEPARTMENT -->
@@ -281,6 +294,7 @@
         </template>
       </div>
     </FilterDrawer>
+
   </q-page-container>
 </template>
 
@@ -375,9 +389,9 @@ export default {
     },
 
     filters_active() {
-      return Object.entries(this.filters).some(([name, value]) => {
+      return Object.entries(this.filters).filter(([name, value]) => {
         return [...this.bool_filters, ...this.job_filters].includes(name) ? value === false : !!value
-      })
+      }).length
     },
 
     operator_list () {

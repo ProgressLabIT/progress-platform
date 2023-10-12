@@ -3,42 +3,46 @@
     v-model="drawerModel"
     side="right"
     bordered
+    :behavior="$q.screen.lt.lg ? 'mobile' : null"
     class="background"
-    :width="400"
+    :width="350"
     show-if-above
     :overlay="$q.screen.lt.lg"
     persistent
-  >
-    <div class="column q-px-lg">
-      <div class="col-auto row items-center justify-between q-mt-sm q-mb-md">
+    >
+    <div class="column full-height q-px-lg">
+      <div class="col-auto row items-center q-mt-sm q-mb-md">
         <div class="col-auto highlight text-uppercase text-h5">
           {{ $t('filter', 2) }}
+        </div>
+        <q-badge
+          v-if="activeFilters"
+          class="q-ml-md smaller weight-bold"
+          rounded
+          :label="activeFilters"
+          color="theme-grey"
+          />
+        <div class="col-auto q-ml-md">
+          <q-btn
+            size="sm"
+            round
+            flat
+            icon="mdi-eye-off-outline"
+            @click="drawerModel = false"
+          />
         </div>
 
         <q-space />
 
         <div class="col-auto">
           <q-btn
-            v-show="hasActiveFilters"
+            v-show="!!activeFilters"
+            size="sm"
             color="theme-blue"
-            size="sm"
-            padding="xs sm"
+            :label="$t('filters_reset')"
             @click="emit('reset')"
-          >
-            <span>
-              {{ $t('reset_filters') }}
-            </span>
+            >
           </q-btn>
-        </div>
-
-        <div class="col-auto q-ml-md">
-          <q-btn
-            color="theme-grey"
-            size="sm"
-            round
-            icon="mdi-minus"
-            @click="drawerModel = false"
-          />
         </div>
       </div>
 
@@ -46,7 +50,6 @@
         <slot />
       </div>
 
-      <div class="fade-bottom-bg" />
     </div>
   </q-drawer>
 </template>
@@ -59,9 +62,9 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  hasActiveFilters: {
-    type: Boolean,
-    default: false
+  activeFilters: {
+    type: Number,
+    default: 0
   }
 })
 

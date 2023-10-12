@@ -1,5 +1,5 @@
 <template>
-  <q-page-container>
+  <q-page-container class="absolute-full">
     <q-page class="row full-height">
       <!-- MAIN CONTENT -->
       <div class="column col full-height">
@@ -32,7 +32,7 @@
             @click="show_issue_form = true">
           </q-btn>
 
-           <IssueForm
+          <IssueForm
             :show="show_issue_form"
             mode="new"
             with_links
@@ -41,14 +41,24 @@
           </IssueForm>
 
           <q-btn
-            v-if="!showFilterDrawer"
+            v-if="!showFilterDrawer && $route.name != 'workOrderArchive'"
             class="q-ml-sm"
             size="sm"
             round
+            :color="filters_active ? 'theme-blue' : 'theme-grey'"
             icon="mdi-filter"
-            color="theme-grey"
             @click="showFilterDrawer = true"
-          />
+            >
+            <q-badge
+              v-if="filters_active"
+              floating
+              rounded
+              color="theme-red"
+              :label="filters_active"
+              size="4px"
+              style="font-family: 'Red Hat Text'; font-size: 8px"
+              />
+          </q-btn>
         </div>
 
         <!-- MAIN CONTENT -->
@@ -60,9 +70,9 @@
 
     <FilterDrawer
       v-model="showFilterDrawer"
-      :has-active-filters="filters_active"
+      :active-filters="filters_active"
       @reset="resetFilters"
-    >
+      >
       <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
           <q-checkbox
@@ -474,9 +484,9 @@ export default {
 
   computed: {
     filters_active() {
-      return this.advancedFilters.length > 0 || this.filter_list.some(f => {
+      return this.advancedFilters.length + this.filter_list.filter(f => {
         return this.bool_filters.includes(f) ? this[f] === false : !!this[f]
-      })
+      }).length
     },
 
     issue_key_search: queryModel(String, 'issue_search', null),
