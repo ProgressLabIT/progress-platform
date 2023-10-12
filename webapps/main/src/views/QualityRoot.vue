@@ -540,8 +540,8 @@ export default {
   },
 
   methods: {
-    resetFilters() {
-      this.$router.replace({ query: null })
+    async resetFilters() {
+      await this.$router.replace({ query: null })
       this.advancedFilters = []
     },
 
