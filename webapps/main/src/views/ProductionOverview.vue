@@ -1,7 +1,6 @@
 <template>
-  <q-page-container class="absolute-full">
+  <q-page-container>
     <q-page class="row full-height">
-
       <div class="column col full-height">
         <div class="row col-auto items-center q-pl-xs q-pr-md q-py-sm">
 
@@ -22,18 +21,17 @@
             </q-route-tab>
           </q-tabs>
 
-
+          <q-space />
 
           <!-- CREATE NEW WORK ORDER -->
           <template v-if="$route.name == 'workOrderList'">
-            <q-space />
 
             <div class="col-auto" v-if="!editing">
               <q-btn
                 size="0.75rem"
                 color="theme-blue"
+                :label="$t('new')"
                 @click="$router.push({ name: 'newWorkOrder'})">
-                {{ $t('new') }}
               </q-btn>
             </div>
 
@@ -62,6 +60,27 @@
               </div>
             </template>
           </template>
+
+          <!-- FILTER BUTTON -->
+          <q-btn
+            v-if="!showFilterDrawer && $route.name != 'workOrderArchive'"
+            class="q-ml-sm"
+            size="sm"
+            round
+            :color="filters_active ? 'theme-blue' : 'theme-grey'"
+            icon="mdi-filter"
+            @click="showFilterDrawer = true"
+            >
+            <q-badge
+              v-if="filters_active"
+              floating
+              rounded
+              color="theme-red"
+              :label="filters_active"
+              size="4px"
+              style="font-family: 'Red Hat Text'; font-size: 8px"
+              />
+          </q-btn>
         </div>
 
         <!-- MAIN CONTENT -->
@@ -75,231 +94,214 @@
           </router-view>
           <NoDataAlert v-else />
         </div>
+      </div>
+    </q-page>
 
+    <FilterDrawer
+      v-if="$route.name != 'workOrderArchive'"
+      v-model="showFilterDrawer"
+      :active-filters="filters_active"
+      @reset="resetFilters"
+      >
+      <!-- FILTERS SPECIFIC TO JOB LIST -->
+      <template v-if="$route.name == 'jobList'">
+        <!-- BY DEPARTMENT -->
+        <q-select
+          ref="department_filter"
+          filled
+          dense
+          use-input
+          clearable
+          v-model="department_selected"
+          :options="filtered_departments"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          @filter="filterDepartment"
+          :label="$capitalize($t('department', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1">
+        </q-select>
 
+        <!-- BY OPERATOR -->
+        <BaseAutocompleteUser
+          :placeholder="$capitalize($t('operator'))"
+          dense
+          class="q-mb-md"
+          key_only
+          :value="operator_selected"
+          @select="(selection) => operator_selected = selection">
+        </BaseAutocompleteUser>
+      </template>
+      <!-- END OF JOB-SPECIFIC FILTERS -->
+
+      <!-- SEARCH BOX -->
+      <div class="row items-baseline q-col-gutter-md">
+        <q-input
+          filled
+          dense
+          clearable
+          autocomplete="off"
+          name="search"
+          debounce="300"
+          :label="$capitalize($t('search'))"
+          v-model="search_string"
+          class="q-mb-md col">
+          <template v-slot:append>
+            <q-icon name="mdi-information-outline" class="col-auto" size="sm">
+              <q-tooltip :delay="300" class="text-body2">
+                <span>
+                  {{ $capitalize($t('production.search_explainer')) }}:
+                </span>
+                <ul>
+                  <li>{{ $capitalize($t('product.code')) }}</li>
+                  <li>{{ $capitalize($t('work_order.long')) }}</li>
+                  <li>{{ $capitalize($t('project')) }}</li>
+                  <li>{{ $capitalize($t('phase.long')) }}</li>
+                </ul>
+              </q-tooltip>
+            </q-icon>
+          </template>
+        </q-input>
       </div>
 
-      <template v-if="$route.name != 'workOrderArchive'">
-
-        <!-- DIVIDER -->
-        <q-separator vertical inset/>
-
-        <!-- FILTERS -->
-        <div class="col-3 column q-px-lg">
-          <div class="highlight text-uppercase text-h5 q-mt-sm q-mb-md">
-            {{ $t('filter', 2) }}
-          </div>
-
-          <!-- FILTERS SPECIFIC TO JOB LIST  -->
-          <template v-if="$route.name == 'jobList'">
-            <!-- BY DEPARTMENT -->
-            <q-select
-              ref="department_filter"
-              filled
-              dense
-              use-input
-              clearable
-              v-model="department_selected"
-              :options="filtered_departments"
-              option-label="name"
-              option-value="_key"
-              emit-value
-              map-options
-              @filter="filterDepartment"
-              :label="$capitalize($t('department', 1))"
-              class="q-mb-md"
-              popup-content-class="surface1">
-            </q-select>
-
-            <!-- BY OPERATOR -->
-            <BaseAutocompleteUser
-              :placeholder="$capitalize($t('operator'))"
-              dense
-              class="q-mb-md"
-              key_only
-              :value="operator_selected"
-              @select="(selection) => operator_selected = selection">
-            </BaseAutocompleteUser>
-          </template>
-          <!-- END OF JOB-SPECIFIC FILTERS -->
-
-          <!-- SEARCH BOX -->
-          <div class="row items-baseline q-col-gutter-md">
-            <q-input
-              filled
-              dense
-              clearable
-              autocomplete="off"
-              name="search"
-              debounce="300"
-              :label="$capitalize($t('search'))"
-              v-model="search_string"
-              class="q-mb-md col">
-              <template v-slot:append>
-                <q-icon name="mdi-information-outline" class="col-auto" size="sm">
-                  <q-tooltip :delay="300" class="text-body2">
-                    <span>
-                      {{ $capitalize($t('production.search_explainer')) }}:
-                    </span>
-                    <ul>
-                      <li>{{ $capitalize($t('product.code')) }}</li>
-                      <li>{{ $capitalize($t('work_order.long')) }}</li>
-                      <li>{{ $capitalize($t('project')) }}</li>
-                      <li>{{ $capitalize($t('phase.long')) }}</li>
-                    </ul>
-                  </q-tooltip>
-                </q-icon>
-              </template>
-            </q-input>
-          </div>
-
-          <!-- DATE START RANGE -->
-          <div class="row q-col-gutter-sm">
-            <div class="col">
-              <q-input
-                filled
-                dense
-                clearable
-                debounce="1000"
-                mask="date"
-                v-model="start_from_min"
-                :label="$capitalize($t('work_order.list_headers.start_from')) + ' (' + $t('min') + ')'">
-                <template #append>
-                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date minimal v-model="start_from_min">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-            <div class="col">
-              <q-input
-                filled
-                dense
-                clearable
-                mask="date"
-                debounce="1000"
-                v-model="start_from_max"
-                :label="$capitalize($t('work_order.list_headers.start_from')) + ' (' + $t('max') + ')'">
-                <template #append>
-                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date minimal v-model="start_from_max">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-          </div>
-
-          <!-- DUE BY RANGE -->
-          <div class="row q-col-gutter-sm q-mt-sm">
-            <div class="col">
-              <q-input
-                filled
-                dense
-                clearable
-                mask="date"
-                debounce="1000"
-                v-model="due_by_min"
-                :label="$capitalize($t('work_order.list_headers.due_by')) + ' (' + $t('min') + ')'">
-                <template #append>
-                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date minimal v-model="due_by_min">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-            <div class="col">
-              <q-input
-                filled
-                dense
-                clearable
-                mask="date"
-                v-model="due_by_max"
-                debounce="1000"
-                :label="$capitalize($t('work_order.list_headers.due_by')) + ' (' + $t('max') + ')'">
-                <template #append>
-                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date minimal v-model="due_by_max">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-          </div>
-
-          <!-- BOOLEAN FILTERS -->
-          <div class="row q-mt-sm">
-            <div
-              class="col-6"
-              v-for="filter in bool_filters"
-              :key="filter">
-              <q-checkbox
-                dense
-                color="theme-blue"
-                size="sm"
-                :label="$capitalize($t(`production.filters.${filter}`))"
-                v-model="_this[filter]"
-                class="q-mt-md text-body1 low-text">
-              </q-checkbox>
-            </div>
-            <template v-if="$route.name=='jobList'">
-              <div
-                class="col-6"
-                v-for="filter in job_filters"
-                :key="filter">
-                <q-checkbox
-                  dense
-                  color="theme-blue"
-                  size="sm"
-                  :label="$capitalize($t(`production.filters.${filter}`))"
-                  v-model="_this[filter]"
-                  class="q-mt-md text-body1 low-text">
-                </q-checkbox>
-              </div>
+      <!-- DATE START RANGE -->
+      <div class="row q-col-gutter-sm">
+        <div class="col">
+          <q-input
+            filled
+            dense
+            clearable
+            debounce="1000"
+            mask="date"
+            v-model="start_from_min"
+            :label="$capitalize($t('work_order.list_headers.start_from')) + ' (' + $t('min') + ')'">
+            <template #append>
+              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                  <q-date minimal v-model="start_from_min">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
             </template>
-          </div>
-
-          <q-space />
-
-          <q-btn
-            color="theme-blue"
-            v-show="filters_active"
-            class="q-mb-md"
-            @click="resetFilters">
-            {{ $t('reset_filters') }}
-          </q-btn>
+          </q-input>
         </div>
-      </template>
-    </q-page>
+        <div class="col">
+          <q-input
+            filled
+            dense
+            clearable
+            mask="date"
+            debounce="1000"
+            v-model="start_from_max"
+            :label="$capitalize($t('work_order.list_headers.start_from')) + ' (' + $t('max') + ')'">
+            <template #append>
+              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                  <q-date minimal v-model="start_from_max">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+        </div>
+      </div>
+
+      <!-- DUE BY RANGE -->
+      <div class="row q-col-gutter-sm q-mt-sm">
+        <div class="col">
+          <q-input
+            filled
+            dense
+            clearable
+            mask="date"
+            debounce="1000"
+            v-model="due_by_min"
+            :label="$capitalize($t('work_order.list_headers.due_by')) + ' (' + $t('min') + ')'">
+            <template #append>
+              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                  <q-date minimal v-model="due_by_min">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+        </div>
+        <div class="col">
+          <q-input
+            filled
+            dense
+            clearable
+            mask="date"
+            v-model="due_by_max"
+            debounce="1000"
+            :label="$capitalize($t('work_order.list_headers.due_by')) + ' (' + $t('max') + ')'">
+            <template #append>
+              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                  <q-date minimal v-model="due_by_max">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+        </div>
+      </div>
+
+      <!-- BOOLEAN FILTERS -->
+      <div class="row q-mt-sm">
+        <div
+          class="col-6"
+          v-for="filter in bool_filters"
+          :key="filter">
+          <q-checkbox
+            dense
+            color="theme-blue"
+            size="sm"
+            :label="$capitalize($t(`production.filters.${filter}`))"
+            v-model="_this[filter]"
+            class="q-mt-md text-body1 low-text">
+          </q-checkbox>
+        </div>
+        <template v-if="$route.name=='jobList'">
+          <div
+            class="col-6"
+            v-for="filter in job_filters"
+            :key="filter">
+            <q-checkbox
+              dense
+              color="theme-blue"
+              size="sm"
+              :label="$capitalize($t(`production.filters.${filter}`))"
+              v-model="_this[filter]"
+              class="q-mt-md text-body1 low-text">
+            </q-checkbox>
+          </div>
+        </template>
+      </div>
+    </FilterDrawer>
+
   </q-page-container>
 </template>
 
 <script>
 import NoDataAlert from '@/components/NoDataAlert.vue'
-import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue'
+import FilterDrawer from '@/components/FilterDrawer.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import queryModel from '@/lib/queryModelFactory.js'
 
@@ -316,9 +318,9 @@ export default {
   name: 'ProductionOverview',
 
   components: {
-    BaseUserAvatar,
     BaseAutocompleteUser,
-    NoDataAlert
+    NoDataAlert,
+    FilterDrawer,
   },
 
   data () {
@@ -329,12 +331,14 @@ export default {
       current_view: 0,
       bool_filters: ['started','queued','on_time','late','active','idle','ready','not_ready','critical','not_critical'],
       job_filters: ['assigned', 'unassigned'],
-        // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
+      // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       department_search_text: undefined,
       editing: false,
       saving: false,
       polling_instance: undefined,
-      operator_search_text: undefined
+      operator_search_text: undefined,
+
+      showFilterDrawer: false,
     }
   },
 
@@ -385,10 +389,9 @@ export default {
     },
 
     filters_active() {
-      return Object.entries(this.filters).map( ([f,v]) => {
-        const active = [...this.bool_filters, ...this.job_filters].includes(f) ? v === false : !!v
-        return active
-      }).some(f => f)
+      return Object.entries(this.filters).filter(([name, value]) => {
+        return [...this.bool_filters, ...this.job_filters].includes(name) ? value === false : !!value
+      }).length
     },
 
     operator_list () {

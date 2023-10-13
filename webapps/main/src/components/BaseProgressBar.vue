@@ -1,17 +1,19 @@
 <template>
-  <q-linear-progress
+  <component
+    :is="progressComponent"
     animation-speed="300"
     :value="progress"
     :color="color.foreground"
     :track-color="color.background"
     :buffer="1"
-    :size="size">
-  </q-linear-progress>
+    :size="size"
+  />
 </template>
 
 <script>
-export default {
+import { QCircularProgress, QLinearProgress } from 'quasar'
 
+export default {
   name: 'BaseProgressBar',
 
   props: {
@@ -22,12 +24,20 @@ export default {
     size: {
       type: String,
       default: '4px'
+    },
+    type: {
+      type: String,
+      default: 'linear'
     }
   },
 
   computed: {
+    progressComponent() {
+      return this.type === 'linear' ? QLinearProgress : QCircularProgress
+    },
+
     progress() {
-      return this.data.progress / 100
+      return this.type === 'linear' ? this.data.progress / 100 : this.data.progress
     },
 
     color() {

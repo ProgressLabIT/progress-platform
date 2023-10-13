@@ -41,13 +41,18 @@
               </div>
 
               <!-- PROGRESS BAR -->
-              <template v-else-if="c.name==='progress'">
-                <div class="row items-center">
-                  <div class="col q-pr-sm">
-                    <BaseProgressBar :data="props.row" />
-                  </div>
-                  <q-space></q-space>
-                  <span class="col-2 text-right">{{ props.row.progress }} %</span>
+              <template v-else-if="c.name === 'progress'">
+                <div v-if="$q.screen.lt.lg" class="row items-center q-px-md">
+                  <BaseProgressBar :data="props.row" type="circular" size="16px" />
+
+                  <q-space />
+
+                  <span>{{ props.row.progress }} %</span>
+                </div>
+                <div v-else class="row items-center q-px-md">
+                  <BaseProgressBar class="col" :data="props.row" />
+
+                  <span class="col-2 q-pl-sm">{{ props.row.progress }} %</span>
                 </div>
               </template>
               <!-- ADD ALERT ICONS HERE -->
@@ -119,7 +124,6 @@ import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import Sortable from 'sortablejs'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 import { mapState } from 'vuex'
-import { throttle as _throttle } from 'lodash'
 import { DateTime as DT } from 'luxon'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BasePrompt from '@/components/BasePrompt.vue'
@@ -177,14 +181,14 @@ export default {
 
     columns() {
       return [
-        { 
+        {
           field: 'sequence',
           name: 'sequence',
           sortable: true,
           label: this.$t('work_order.list_headers.sequence').toUpperCase(),
           align: 'left'
         },
-        { 
+        {
           field: 'wo_code',
           name: 'wo_code',
           sortable: true,
@@ -208,38 +212,40 @@ export default {
           style: 'max-width: 10vw',
           align: 'left'
         },
-        { 
+        {
           field: 'progress',
           name: 'progress',
           sortable: true,
           label: this.$t('work_order.list_headers.progress').toUpperCase(),
-          align: 'left',
-          style: 'min-width: 15vw'
+          align: 'center',
+          style: () => this.$q.screen.lt.lg ? undefined : 'min-width: 15vw'
         },
         {
           field: 'issue_count',
           sortable: true,
           name: 'issue_count',
         },
-        { 
+        {
           field: 'qt_completed',
           name: 'qt_completed',
           sortable: true,
           label: this.$t('work_order.list_headers.qt_completed').toUpperCase(),
           align: 'right'
         },
-        { 
+        {
           field: 'qt_planned',
           name: 'qt_planned',
           sortable: true,
           label: this.$t('work_order.list_headers.qt_planned').toUpperCase(),
-          align: 'right'},
-        { 
+          align: 'right'
+        },
+        {
           field: 'qt_remaining',
           name: 'qt_remaining',
           sortable: true,
           label: this.$t('work_order.list_headers.qt_remaining').toUpperCase(),
-          align: 'right'},
+          align: 'right'
+        },
         {
           field: 'start_from',
           sortable: true,
@@ -248,7 +254,7 @@ export default {
           label: this.$t('work_order.list_headers.start_from').toUpperCase(),
           sort: this.sortDate
         },
-        { 
+        {
           field: 'due_by',
           sortable: true,
           name: 'due_by',
@@ -271,16 +277,16 @@ export default {
     filtered_wo_list() {
       return this.wo_list.filter( wo => {
 
-        /* 
-        Initialize filter results. 
+        /*
+        Initialize filter results.
         If any false will be found in this array the filter function will return false
         */
         let filter_match_map = []
 
-        for (const [filter, value] of Object.entries(this.filters)) {          
+        for (const [filter, value] of Object.entries(this.filters)) {
           // by default show wo in the list
           let match = true
-          
+
           switch (filter) {
             // Perform text search in the defined fields
             case 'search_string':
@@ -297,7 +303,7 @@ export default {
 
             case 'on_time':
               if (!value && !this.isLate(wo.due_by)) match = false
-              break 
+              break
 
             case 'late':
               if (!value && this.isLate(wo.due_by)) match = false
@@ -401,7 +407,7 @@ export default {
           return -1
       }
       // standard sorting
-      else { 
+      else {
           return a < b ? 1 : -1
       }
     },
