@@ -42,17 +42,18 @@
 
               <!-- PROGRESS BAR -->
               <template v-else-if="c.name === 'progress'">
-                <div v-if="$q.screen.lt.lg" class="row items-center q-px-md">
-                  <BaseProgressBar :data="props.row" type="circular" size="16px" />
-
-                  <q-space />
-
-                  <span>{{ props.row.progress }} %</span>
-                </div>
-                <div v-else class="row items-center q-px-md">
-                  <BaseProgressBar class="col" :data="props.row" />
-
-                  <span class="col-2 q-pl-sm">{{ props.row.progress }} %</span>
+                <div class="row items-center">
+                  <div class="col-2 col-md q-pr-sm">
+                    <q-avatar
+                      v-if="$q.screen.lt.md"
+                      size="10px"
+                      :color="props.row.critical ? 'theme-red' : props.row.active ? 'theme-blue' : 'theme-grey'"
+                      class="q-pr-sm"
+                      style="opacity:.6"
+                      />
+                    <BaseProgressBar v-else :data="props.row" />
+                  </div>
+                  <div class="col-2 text-right">{{ props.row.progress }} %</div>
                 </div>
               </template>
               <!-- ADD ALERT ICONS HERE -->
@@ -217,8 +218,8 @@ export default {
           name: 'progress',
           sortable: true,
           label: this.$t('work_order.list_headers.progress').toUpperCase(),
-          align: 'center',
-          style: () => this.$q.screen.lt.lg ? undefined : 'min-width: 15vw'
+          align: 'left',
+          style: () => this.$q.screen.lt.md ? undefined : 'min-width: 15vw'
         },
         {
           field: 'issue_count',

@@ -62,7 +62,7 @@
                 <!-- PROGRESS -->
                 <template v-if="field.name==='progress'">
                   <div class="row items-center q-col-gutter-sm">
-                    <div class="col-9">
+                    <div class="col">
                       <BaseProgressBar :data="props.row" />
                     </div>
                     <span class="col-2 text-right">{{ props.row[field.name] }} %</span>
