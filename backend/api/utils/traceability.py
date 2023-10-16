@@ -16,6 +16,16 @@ class Queries:
     RETURN e
   """
 
+  CLOSE_UNALLOWED_PARALLEL_WORK_SESSIONS = """
+    FOR ws IN WorkSession
+    FILTER
+      ws.user_key == @user_key
+      && ws.active
+      && !DOCUMENT(Phase, ws.phase_key).params.allow_unsupervised_work
+    UPDATE ws WITH { active: false, end: @timestamp } IN WorkSession
+    RETURN NEW
+  """
+
   CREATE_WORK_SESSION = """
     LET new_ws = {
       batch_key: @batch_key,
