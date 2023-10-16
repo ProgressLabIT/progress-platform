@@ -90,12 +90,9 @@ class ProductionAdminEvent:
     for b in job_batches:
       batch_quota = b.qt_total / self.job.qt_completed
       batch_duration = new_job_duration * batch_quota
-      new_unit_processing_time = batch_duration / b.qt_total
 
       batch_update = dict(
         _key = b.key,
-        unit_processing_time = new_unit_processing_time,
-        unit_processing_cost = new_unit_processing_time * hourly_cost / 3600000, # No. of milliseconds in an hour
         forced = self.info.id
       )
 
@@ -156,7 +153,10 @@ class ProductionAdminEvent:
         FILTER b.product_key == @product_key
         SORT b.end DESC
         LIMIT 100
-        RETURN b.unit_processing_time
+        LET total_duration = SUM(
+          FOR ws IN WorkSession FILTER ws.batch_key == b._key RETURN ws.duration
+        )
+        RETURN total_duration / b.qt_pass
       )
       """,
       bind_vars=dict(product_key=self.job.product_key)
@@ -182,8 +182,6 @@ class ProductionAdminEvent:
       end = self.info.timestamp,
       qt_pass = quantity,
       qt_total = quantity,
-      unit_processing_time = unit_processing_time,
-      unit_processing_cost = unit_processing_cost,
       value = batch_value,
       forced = self.info.id
     )
