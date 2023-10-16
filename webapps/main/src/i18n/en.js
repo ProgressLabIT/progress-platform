@@ -321,6 +321,17 @@ export default {
     "no_phase": "No phase",
     "no_procedure": "no procedure",
     "params": {
+      "allow_unsupervised_work": {
+        "title": "Unsupervised work",
+        "false": {
+          "desc": "This phase requires the active presence of an operator. They will not be allowed to start work on other jobs without stopping an ongoing session in this phase.",
+          "title": "Not allowed"
+        },
+        "true": {
+          "desc": "This phase can proceed without the active presence of an operator (e.g. it's carried out by automatic equipment). The operator will be able to start work on other jobs without stopping an ongoing session on this phase.",
+          "title": "Allowed"
+        }
+      },
       "auto_new_batch" : {
         "false": {
           "desc": "When a batch is completed the work session is interrupted. The next batch will be created when the work session is restarted.",
