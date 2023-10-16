@@ -22,7 +22,7 @@ class Queries:
     UPDATE ws WITH { canceled: @event_id } IN WorkSession
     RETURN NEW
   """
-  NON_CANCELLED_BATCHES_BY_JOB = """
+  NON_CANCELED_BATCHES_BY_JOB = """
     LET now = DATE_NOW()
 
     FOR b IN Batch
@@ -301,22 +301,25 @@ class ProductionAdminEvent:
         new_batch_key, batch_value = self._create_forced_traceability_records(quantity_update)
       else:
         # Cancel all work sessions to recreate them with the new durations
-        self.tx.aql.execute(
+        ws_cursor = self.tx.aql.execute(
           Queries.CANCEL_JOB_WORK_SESSIONS,
           bind_vars = dict(
             job_key = self.job.key,
             event_id = self.info.id
           )
         )
+        canceled_work_sessions = [WorkSession(**ws) for ws in ws_cursor]
 
         # distribute total processing time evenly per each batch
         # create a new work session for each existing batch with the split duration
         active_batches_cursor = self.tx.aql.execute(
-          Queries.NON_CANCELLED_BATCHES_BY_JOB,
+          Queries.NON_CANCELED_BATCHES_BY_JOB,
           bind_vars=dict(job_key=self.job.key)
         )
-        active_batches = deque(Batch(**b) for b in active_batches_cursor)
+        active_batches = [Batch(**b) for b in active_batches_cursor]
 
+        work_session_amount_ratio = len(canceled_work_sessions) / len(active_batches)
+        average_hourly_cost = sum(ws.hourly_cost or 0 for ws in canceled_work_sessions) / len(canceled_work_sessions) * work_session_amount_ratio
         new_work_sessions = []
         for batch in active_batches:
           quantity_ratio = batch.qt_pass / self.info.new_job_qt_completed
@@ -326,8 +329,7 @@ class ProductionAdminEvent:
             phase_key = self.job.phase_key,
             work_order_key = self.job.wo_key,
             product_key = self.job.product_key,
-            # TODO: use the average hourly cost of cancelled work sessions above
-            # hourly_cost = hourly_cost,
+            hourly_cost = average_hourly_cost,
             duration = total_duration * quantity_ratio,
             forced = self.info.id
           )
@@ -381,7 +383,7 @@ class ProductionAdminEvent:
 
       # 2. Flag last N batches with `canceled: true`
       job_batches_cursor = self.tx.aql.execute(
-        Queries.NON_CANCELLED_BATCHES_BY_JOB,
+        Queries.NON_CANCELED_BATCHES_BY_JOB,
         bind_vars=dict(job_key=self.job.key)
       )
       job_batches = deque(Batch(**b) for b in job_batches_cursor)
@@ -415,16 +417,19 @@ class ProductionAdminEvent:
         )
       else:
         # 3. Flag all work sessions with `canceled: true`
-        self.tx.aql.execute(
+        ws_cursor = self.tx.aql.execute(
           Queries.CANCEL_JOB_WORK_SESSIONS,
           bind_vars = dict(
             job_key = self.job.key,
             event_id = self.info.id
           )
         )
+        canceled_work_sessions = [WorkSession(**ws) for ws in ws_cursor]
 
         # Split the total processing time evenly per each non-canceled batch
         # and create a new work session for each one with the split duration
+        work_session_amount_ratio = len(canceled_work_sessions) / len(active_batches)
+        average_hourly_cost = sum(ws.hourly_cost or 0 for ws in canceled_work_sessions) / len(canceled_work_sessions) * work_session_amount_ratio
         new_work_sessions = []
         for batch in job_batches:
           quantity_ratio = batch.qt_pass / self.info.new_job_qt_completed
@@ -434,8 +439,7 @@ class ProductionAdminEvent:
             phase_key = self.job.phase_key,
             work_order_key = self.job.wo_key,
             product_key = self.job.product_key,
-            # TODO: use the average hourly cost of cancelled work sessions above
-            # hourly_cost = hourly_cost,
+            hourly_cost = average_hourly_cost,
             duration = total_duration * quantity_ratio,
             forced = self.info.id
           )
