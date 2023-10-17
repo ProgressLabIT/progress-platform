@@ -101,11 +101,11 @@ class ProductionActivityEvent:
     # Create new work session
     new_work_session = self.tx.aql.execute(
       TraceabilityQueries.CREATE_WORK_SESSION, bind_vars=dict(
-        job_key = self.info.job_key,
+        job_key = self.job.key,
         batch_key = self.batch.key, # in self info can be under new_batch_key or active_batch_key, taking it from self.batch makes it more consistent.
-        work_order_key = self.info.work_order_key,
-        phase_key = self.info.phase_key,
-        product_key = self.info.product_key,
+        work_order_key = self.job.wo_key,
+        phase_key = self.job.phase_key,
+        product_key = self.job.product_key,
         user_key = self.info.user_key,
         user_session_key = self.info.user_session_key,
         start = self.info.timestamp,
