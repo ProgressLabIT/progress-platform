@@ -454,7 +454,7 @@ export default {
   },
 
   beforeRouteLeave (to, from, next) {
-    if (this.j.active && !can_leave) {
+    if (this.j.active && !this.can_leave) {
       const confirm = window.confirm(this.$t('job.alerts.confirm_exit'))
       if (confirm) {
         this.$store.dispatch('pauseJob')
