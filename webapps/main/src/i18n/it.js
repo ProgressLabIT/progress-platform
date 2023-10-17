@@ -325,6 +325,17 @@ export default {
     "no_phase": "Nessuna fase",
     "no_procedure": "nessuna procedura",
     "params": {
+      "allow_unsupervised_work": {
+        "false": {
+          "desc": "Questa fase richiede la presenza attiva di un operatore. L'operatore non potrà avviare ulteriori sessioni di lavoro senza fermare quella in questa fase.",
+          "title": "Non autorizzato"
+        },
+        "title": "Lavoro senza supervisione",
+        "true": {
+          "desc": "Questa fase può procedere senza la presenza attiva di un operatore (es. fase eseguita da un macchinario automatico). L'operatore potrà avviare sessioni in altri lavori senza fermare quella in questa fase.",
+          "title": "Autorizzato"
+        }
+      },
       "auto_new_batch" : {
         "false": {
           "desc": "Al termine di un lotto di un produzione la sessione di lavoro viene interrotta. Il nuovo lotto verrà creato al momento del riavvio della sessione.",

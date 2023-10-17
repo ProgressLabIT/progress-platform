@@ -77,28 +77,35 @@ class ProductionActivityEvent:
   # ===================================================================
 
   def create_work_session(self):
-    # Check no other work session is active from the user and close it if necessary
-    match = dict(
-      user_key=self.info.user_key,
-      active=True
+    # Close unallowed parallel work sessions
+    bind_vars = dict(
+      user_key = self.info.user_key,
+      timestamp = self.info.timestamp
     )
-    cursor = self.tx.collection('WorkSession').find(match)
-    if cursor.count():
-      for ws in cursor:
-        ws.update(dict(
-          active=False,
-          end=self.info.timestamp
-        ))
-        self.tx.collection('WorkSession').update(ws)
-        self.tx.collection('Job').update({ '_key': ws['job_key'], 'active': False })
 
+    closed_sessions_cursor = self.tx.aql.execute(
+      TraceabilityQueries.CLOSE_UNALLOWED_PARALLEL_WORK_SESSIONS,
+      bind_vars=bind_vars
+    )
+    closed_sessions_jobs = [ws['job_key'] for ws in closed_sessions_cursor]
+    if len(closed_sessions_jobs):
+      self.tx.aql.execute(
+        """
+        FOR j IN Job
+        FILTER j._key IN @jobs
+        UPDATE j WITH { 'active': false } IN Job
+        """,
+        bind_vars=dict(jobs=closed_sessions_jobs)
+      )
+
+    # Create new work session
     new_work_session = self.tx.aql.execute(
       TraceabilityQueries.CREATE_WORK_SESSION, bind_vars=dict(
-        job_key = self.info.job_key,
+        job_key = self.job.key,
         batch_key = self.batch.key, # in self info can be under new_batch_key or active_batch_key, taking it from self.batch makes it more consistent.
-        work_order_key = self.info.work_order_key,
-        phase_key = self.info.phase_key,
-        product_key = self.info.product_key,
+        work_order_key = self.job.wo_key,
+        phase_key = self.job.phase_key,
+        product_key = self.job.product_key,
         user_key = self.info.user_key,
         user_session_key = self.info.user_session_key,
         start = self.info.timestamp,
