@@ -2,123 +2,128 @@
   <!-- Search and options bar -->
   <q-page class="q-pa-lg">
 
-  <div class="row items-center q-gutter-md q-mb-lg">
+    <div class="row items-center q-gutter-md q-mb-lg">
 
-    <!-- Text field for product filter and search -->
-    <div class="column col-12 col-sm-5 col-lg-3">
-      <q-input
-        filled
-        dense
-        clearable
-        clear-icon="mdi-close"
-        autocomplete="off"
-        name="search"
-        :label="$capitalize($t('search'))"
-        value="search"
-        v-model="search_string"
-        class="q-ma-none q-pa-none text-uppercase">
-        <template v-slot:append>
-          <q-icon name="mdi-magnify" />
+      <!-- Text field for product filter and search -->
+      <div class="column col-12 col-sm-5 col-lg-3">
+        <q-input
+          filled
+          dense
+          clearable
+          clear-icon="mdi-close"
+          autocomplete="off"
+          name="search"
+          :label="$capitalize($t('search'))"
+          value="search"
+          v-model="search_string"
+          class="q-ma-none q-pa-none text-uppercase">
+          <template v-slot:append>
+            <q-icon name="mdi-magnify" />
+          </template>
+        </q-input>
+      </div>
+
+      <!-- View controls -->
+      <div class="row col items-center justify-between">
+        <q-checkbox
+          :label="$capitalize($t('job.filters.started_only'))"
+          v-model="started_only"
+          hide-bottom-space
+          no-ripple
+          class="q-ma-none q-pa-none nowrap text-low col-auto"
+          />
+        <div color="text-low" class="col-auto">
+          <q-btn
+            flat
+            icon="mdi-view-grid"
+            :color="layout == 'card' ? 'text-high' : 'theme-grey'"
+            @click="layout = 'card'"
+            size="md"
+            padding="sm sm"
+            />
+          <q-btn
+            flat
+            icon="mdi-view-agenda"
+            :color="layout == 'list' ? 'text-high' : 'theme-grey'"
+            @click="layout = 'list'"
+            size="md"
+            padding="sm sm"
+            />
+        </div>
+
+      </div>
+    </div>
+
+    <q-tabs>
+
+    </q-tabs>
+    <!-- JOBS -->
+
+    <div v-for="([k, v]) in Object.entries(jobs_view)">
+
+      <!-- LIST HEADER -->
+      <div class="row items-center q-mb-md q-mt-lg">
+
+        <!-- LIST TITLE -->
+        <span class="text-body1">{{ v.label }}</span>
+
+        <q-separator class="q-mx-md" style="flex-grow: 1"/>
+
+        <!-- SHOWN VS TOTAL -->
+        <q-chip dense color="transparent" class="smaller">
+          <i18n-t keypath="job.shown_jobs_message" tag="span">
+            <template v-slot:shown>
+              <span class="highlight q-mr-xs">
+                {{ v.list.length }}
+              </span>
+            </template>
+            <template v-slot:total>
+              <span class="highlight q-mx-xs">
+                {{ v.total_count }}
+              </span>
+            </template>
+          </i18n-t>
+        </q-chip>
+
+      </div>
+
+      <!-- JOB LIST -->
+      <div class="row q-col-gutter-lg">
+
+        <!-- CARDS LAYOUT -->
+        <template v-if="layout === 'card'">
+          <div class="column col-12 col-sm-6 col-md-4 col-lg-3"
+            v-for="j in v.list"
+            :key="j._key"
+            @click="goToSelectedJob(j._key)">
+            <JobCard
+              :job="j"
+              class="pointer">
+            </JobCard>
+          </div>
         </template>
-      </q-input>
-    </div>
 
-    <!-- View controls -->
-    <div class="column col-auto items-center">
-      <q-checkbox
-        :label="$capitalize($t('job.filters.started_only'))"
-        v-model="started_only"
-        hide-bottom-space
-        no-ripple
-        class="q-ma-none q-pa-none nowrap text-low"/>
-    </div>
-  </div>
-
-
-  <!-- ASSIGNED JOBS -->
-    <div class="row items-center q-mb-md">
-
-      <span class="text-body1">
-        {{ $capitalize($t('job.assigned_to_me')) }}
-      </span>
-
-      <q-separator class="q-mx-md" style="flex-grow: 1"/>
-
-      <!-- Assigned jobs shown vs total -->
-      <q-chip dense color="transparent" class="smaller">
-        <i18n-t keypath="job.shown_jobs_message" tag="span">
-          <template v-slot:shown>
-            <span class="highlight q-mr-xs">
-              {{ filtered_assigned_to_user.length }}
-            </span>
-          </template>
-          <template v-slot:total>
-            <span class="highlight q-mx-xs">
-              {{ assigned_to_user.length }}
-            </span>
-          </template>
-        </i18n-t>
-      </q-chip>
-
-    </div>
-
-    <div class="row q-col-gutter-lg">
-      <div class="column col-12 col-sm-6 col-md-4 col-lg-3"
-        v-for="j in filtered_assigned_to_user"
-        :key="j._key"
-        @click="goToSelectedJob(j._key)">
-        <JobCard
-          :job="j"
-          class="pointer"
-          v-ripple>
-        </JobCard>
-      </div>
-    </div>
-
-    <!-- UNASSIGNED JOBS -->
-    <div class="row q-mt-md items-center">
-
-      <div class="text-body1 q-my-md">
-        {{ $capitalize($t('unassigned')) }}
+        <!-- LIST LAYOUT -->
+        <template v-if="layout === 'list'">
+          <div
+            class="col-12 items-center q-my-sm"
+            v-for="j in v.list"
+            :key="j._key">
+            <JobCardSlim
+              :job="j"
+              @click="goToSelectedJob(j._key)"
+              />
+          </div>
+        </template>
       </div>
 
-      <q-separator class="q-mx-md" style="flex-grow: 1;" />
-
-      <!-- Jobs shown vs total -->
-      <q-chip small color="transparent" class="smaller">
-        <i18n-t keypath="job.shown_jobs_message" tag="span">
-          <template v-slot:shown>
-            <span class="highlight q-mr-xs">
-              {{ filtered_unassigned.length }}
-            </span>
-          </template>
-          <template v-slot:total>
-            <span class="highlight q-mx-xs">
-              {{ unassigned.length }}
-            </span>
-          </template>
-        </i18n-t>
-      </q-chip>
-
     </div>
-
-    <div class="row q-col-gutter-lg">
-      <div class="column col-12 col-sm-6 col-md-4 col-lg-3"
-        v-for="j in filtered_unassigned"
-        :key="j._key"
-        @click="goToSelectedJob(j._key)">
-        <JobCard
-          :job="j"
-          class="pointer"
-          v-ripple>
-        </JobCard>
-      </div>
-    </div>
-    </q-page>
+  </q-page>
 </template>
 
 <script>
 import JobCard from '@/components/JobCard.vue'
+import JobCardSlim from '@/components/JobCardSlim.vue'
 import multiMatch from '@/lib/MultiFieldSearch.js'
 
 
@@ -126,7 +131,7 @@ export default {
 
   name: 'UserJobsAll',
 
-  components: { JobCard },
+  components: { JobCard, JobCardSlim },
 
   props: {
     job_list: {
@@ -139,10 +144,18 @@ export default {
     return {
       search_string: '',
       started_only: false,
+      layout: 'list'
     }
   },
 
   computed: {
+    layout_options() {
+      return [
+        { value: 'card', slot: 'card' },
+        { value: 'row', slot: 'row'}
+      ]
+    },
+
     assigned_to_user() {
       return this.job_list.filter( j => j.assigned )
     },
@@ -157,6 +170,21 @@ export default {
 
     filtered_unassigned() {
       return this.unassigned.filter( j => this.match(j) )
+    },
+
+    jobs_view() {
+      return {
+        assigned: {
+          list: this.filtered_assigned_to_user,
+          total_count: this.assigned_to_user.length,
+          label: this.$capitalize(this.$t('job.assigned_to_me'))
+        },
+        unassigned: {
+          list: this.filtered_unassigned,
+          total_count: this.unassigned.length,
+          label: this.$capitalize(this.$t('unassigned'))
+        }
+      }
     }
   },
 
