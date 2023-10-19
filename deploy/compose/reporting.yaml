@@ -1,5 +1,11 @@
 version: "3.9"
 
+volumes:
+  reports:
+    external: true
+  cmounts:
+    external: true
+
 networks:
   progress:
     external: true
@@ -13,7 +19,8 @@ services:
     image: python:3.11-slim
     restart: unless-stopped
     volumes:
-      - /opt/progress/reports:/app
+      - reports:/app
+      - cmounts:/cmounts
     networks:
       - progress
     ports:
