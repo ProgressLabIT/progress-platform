@@ -638,6 +638,7 @@ export default {
     deleteWorkOrder() {
       this.loading = true
       this.$api.delete(`work-order/${this.wo_data._key}`).then(() => {
+        this.$store.dispatch('loadWorkOrders')
         this.delete_stage = 'success'
       })
     }
