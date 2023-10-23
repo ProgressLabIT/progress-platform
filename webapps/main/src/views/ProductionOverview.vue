@@ -1,5 +1,5 @@
 <template>
-  <q-page-container>
+  <q-page-container class="absolute-full">
     <q-page class="row full-height">
       <div class="column col full-height">
         <div class="row col-auto items-center q-pl-xs q-pr-md q-py-sm">

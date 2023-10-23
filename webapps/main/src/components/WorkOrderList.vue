@@ -1,5 +1,5 @@
 <template>
-  <div ref="container" id="table_container" class="q-px-sm q-pt-sm full-height">
+  <div ref="container" id="table_container" class="q-px-sm q-pt-sm col full-height">
     <q-table
       id="wo_list"
       :columns="columns"
