@@ -36,8 +36,8 @@
           <q-btn
             flat
             icon="mdi-view-grid"
-            :color="layout == 'card' ? 'text-high' : 'theme-grey'"
-            @click="layout = 'card'"
+            :color="layout != 'list' ? 'text-high' : 'theme-grey'"
+            @click="setLayout('card')"
             size="md"
             padding="sm sm"
             />
@@ -45,7 +45,7 @@
             flat
             icon="mdi-view-agenda"
             :color="layout == 'list' ? 'text-high' : 'theme-grey'"
-            @click="layout = 'list'"
+            @click="setLayout('list')"
             size="md"
             padding="sm sm"
             />
@@ -54,9 +54,6 @@
       </div>
     </div>
 
-    <q-tabs>
-
-    </q-tabs>
     <!-- JOBS -->
 
     <div v-for="([k, v]) in Object.entries(jobs_view)">
@@ -90,8 +87,8 @@
       <!-- JOB LIST -->
       <div class="row q-col-gutter-lg">
 
-        <!-- CARDS LAYOUT -->
-        <template v-if="layout === 'card'">
+        <!-- CARDS LAYOUT (DEFAULT) -->
+        <template v-if="layout != 'list'">
           <div class="column col-12 col-sm-6 col-md-4 col-lg-3"
             v-for="j in v.list"
             :key="j._key"
@@ -189,6 +186,11 @@ export default {
   },
 
   methods: {
+    setLayout(layout) {
+      this.layout = layout
+      localStorage.setItem('LAYOUT', layout)
+    },
+
     match(job) {
       const fields_to_search = [
         'wo_code',
@@ -210,6 +212,10 @@ export default {
       }
       this.$router.push(selected_job_route)
     }
+  },
+
+  created() {
+    this.layout = localStorage.getItem('LAYOUT')
   }
 }
 </script>
