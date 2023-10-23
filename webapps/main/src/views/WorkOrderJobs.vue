@@ -495,7 +495,7 @@ export default {
 
     phase_data() {
       return this.wo_data.phase_sequence.map( phase_key => {
-        const jobs = this.wo_data.jobs.filter( job => job.phase_key === phase_key )
+        const jobs = this.wo_data.jobs.filter( job => job.phase_key === phase_key ).sort((a,b) => a._key > b._key ? -1 : a._key < b._key ? 1 : 0)
         const params = jobs[0].parameters
         const phase_alias = jobs[0].phase_alias
         const issue_count = jobs.reduce( (sum, job) => sum + job.issue_count, 0)
