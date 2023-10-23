@@ -600,8 +600,8 @@ export default {
 
     async editJobProgress(job_data) {
       const resp = await this.$api.get('wip', { params: { job_key: job_data._key }})
-      const min_progress_qt = job_data.last_phase ? 0 : job_data.qt_completed - resp.data.free_wip_qt_downstream
-      const max_progress_qt = job_data.first_phase ? job_data.qt_planned : job_data.qt_completed + resp.data.free_wip_qt_upstream
+      const min_progress_qt = job_data.last_phase ? 0 : Math.max(0, job_data.qt_completed - resp.data.free_wip_qt_downstream)
+      const max_progress_qt = job_data.first_phase ? job_data.qt_planned : Math.min(job_data.qt_completed + resp.data.free_wip_qt_upstream, job_data.qt_planned)
 
       this.jobs_temp_data = {
         job_key: job_data._key,
