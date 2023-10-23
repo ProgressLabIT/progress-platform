@@ -99,7 +99,7 @@
       <q-date
         v-if="temp_date"
         minimal
-        mask="YYYY-MM-DDTHH:mm:ss"
+        mask="YYYY-MM-DD"
         :model-value="temp_date.value"
         @update:model-value="val => updateWorkOrder(val)">
       </q-date>
@@ -174,7 +174,7 @@ export default {
       search_fields: ['wo_code', 'product_code', 'project_code', 'product_description'],
       temp_date: null,
       change_sequence_for_wo: null,
-      now: new Date().getTime()
+      now: new Date()
     }
   },
 
@@ -392,7 +392,8 @@ export default {
     },
 
     isReleased(wo) {
-      return new Date(wo.start_from).getTime() <= this.now
+      // Set start_from as beginning of day in case there's an hour set
+      return new Date(wo.start_from).setHours(0,0,0) <= this.now
     },
 
     sortDate(a,b) {

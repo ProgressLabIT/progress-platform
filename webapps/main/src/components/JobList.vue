@@ -263,7 +263,7 @@ export default {
       show_assignment_dialog: false,
       batch_assign_to: null,
       jobs_to_assign: [],
-      now: new Date().toISOString(),
+      now: new Date(),
       saving: false
     }
   },
@@ -447,7 +447,8 @@ export default {
 
   methods: {
     isReleased(item) {
-      return item.start_from <= this.now
+      // Set start_from as beginning of day in case there's an hour set
+      return new Date(item.start_from).setHours(0,0,0) <= this.now
     },
 
     jobIcon(job) {
