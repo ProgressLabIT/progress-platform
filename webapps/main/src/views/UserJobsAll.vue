@@ -144,7 +144,7 @@ export default {
     return {
       search_string: '',
       started_only: false,
-      layout: 'list'
+      layout: 'card'
     }
   },
 
