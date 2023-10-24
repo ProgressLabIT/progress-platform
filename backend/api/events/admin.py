@@ -150,16 +150,17 @@ class ProductionAdminEvent:
       """
       RETURN AVG(
         FOR b IN Batch
-        FILTER b.product_key == @product_key
+        FILTER b.job_key == @job_key && !b.canceled
         SORT b.end DESC
-        LIMIT 100
         LET total_duration = SUM(
-          FOR ws IN WorkSession FILTER ws.batch_key == b._key RETURN ws.duration
+          FOR ws IN WorkSession
+          FILTER ws.batch_key == b._key && !ws.canceled
+          RETURN ws.duration
         )
         RETURN total_duration / b.qt_pass
       )
       """,
-      bind_vars=dict(product_key=self.job.product_key)
+      bind_vars=dict(job_key=self.job.key)
     ).next()
 
     if avg_unit_processing_time:
@@ -425,6 +426,14 @@ class ProductionAdminEvent:
           )
         )
         canceled_work_sessions = [WorkSession(**ws) for ws in ws_cursor]
+
+        # distribute total processing time evenly per each batch
+        # create a new work session for each existing batch with the split duration
+        active_batches_cursor = self.tx.aql.execute(
+          Queries.NON_CANCELED_BATCHES_BY_JOB,
+          bind_vars=dict(job_key=self.job.key)
+        )
+        active_batches = [Batch(**b) for b in active_batches_cursor]
 
         # Split the total processing time evenly per each non-canceled batch
         # and create a new work session for each one with the split duration
