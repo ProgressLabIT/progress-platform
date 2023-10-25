@@ -53,6 +53,7 @@
         :icon="job.active ? 'mdi-pause' : 'mdi-play'"
         :color="job.active ? 'theme-blue' : 'theme-grey'"
         @click.stop="toggleJob"
+        :class="{ 'animate-pulse': job.active }"
         />
     </div>
 
