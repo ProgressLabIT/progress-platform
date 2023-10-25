@@ -21,7 +21,7 @@ class Queries:
     FILTER
       ws.user_key == @user_key
       && ws.active
-      && !DOCUMENT(Job, ws.job_key).parameters.allow_unsupervised_work
+      && !DOCUMENT(Job, ws.job_key).parameters.unsupervised_work_allowed
     UPDATE ws WITH { active: false, end: @timestamp } IN WorkSession
     RETURN NEW
   """

@@ -180,7 +180,7 @@
         <div class="row justify-between">
           <div
             class="col"
-            v-if="j.parameters.allow_unsupervised_work"
+            v-if="j.parameters.unsupervised_work_allowed"
             >
             <q-btn
               flat

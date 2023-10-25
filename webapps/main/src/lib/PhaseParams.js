@@ -39,7 +39,7 @@ export const std_processing_time = {
   type: 'int'
 }
 
-export const allow_unsupervised_work = {
+export const unsupervised_work_allowed = {
   type: 'bool',
   values: [true, false]
 }
@@ -71,7 +71,7 @@ export default {
   max_offline,
   auto_new_batch,
   std_processing_time,
-  allow_unsupervised_work
+  unsupervised_work_allowed
   // release_batch_qt,
   // wip_flow
 }

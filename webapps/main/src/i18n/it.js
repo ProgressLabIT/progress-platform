@@ -325,7 +325,7 @@ export default {
     "no_phase": "Nessuna fase",
     "no_procedure": "nessuna procedura",
     "params": {
-      "allow_unsupervised_work": {
+      "unsupervised_work_allowed": {
         "false": {
           "desc": "Questa fase richiede la presenza attiva di un operatore. L'operatore non potrà avviare ulteriori sessioni di lavoro senza fermare quella in questa fase.",
           "title": "Non autorizzato"

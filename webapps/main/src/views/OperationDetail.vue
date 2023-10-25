@@ -141,7 +141,7 @@ export default {
         step_check_force_order: false,
         production_batch_qt: 1,
         auto_new_batch: true,
-        allow_unsupervised_work: false
+        unsupervised_work_allowed: false
       }
     }
   },

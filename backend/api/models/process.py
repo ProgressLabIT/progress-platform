@@ -26,7 +26,7 @@ class PhaseParameters(FlexModel):
   max_offline: int = 60 # seconds
   auto_new_batch: bool = True
   std_processing_time: int = 60 # seconds
-  allow_unsupervised_work: bool = False
+  unsupervised_work_allowed: bool = False
   # release_style: ReleaseStyle = ReleaseStyle.JOB
   # release_batch_qt: int = 1
   # wip_flow: WIPFlow = WIPFlow.BUFFER
