@@ -160,7 +160,7 @@
                   square
                   height="auto"
                   class="fit"
-                  @click="j.active ? showExitAlert(true) : exitJob()">
+                  @click="j.active ? show_exit_alert = true : exitJob()">
                   <q-icon color="text-high" size="lg" name="mdi-close" />
                 </q-btn>
               </div>
@@ -175,7 +175,8 @@
         v-model="show_exit_alert"
         maximized
         transition-show="none"
-        transition-hide="fade">
+        transition-hide="fade"
+        style="z-index: 99999">
         <div class="fixed-full glass" />
         <div class="row justify-between">
           <div
@@ -409,10 +410,6 @@ export default {
         : 'theme-grey'
     },
 
-    showExitAlert(bool) {
-      this.show_exit_alert = bool
-    },
-
     exitJob(stop_session) {
       if (stop_session) {
         this.$store.dispatch('pauseJob')
@@ -455,14 +452,8 @@ export default {
 
   beforeRouteLeave (to, from, next) {
     if (this.j.active && !this.can_leave) {
-      const confirm = window.confirm(this.$t('job.alerts.confirm_exit'))
-      if (confirm) {
-        this.$store.dispatch('pauseJob')
-        next()
-      }
-      else {
-        next(false)
-      }
+      this.show_exit_alert = true
+      next(false)
     }
     else {
       next()
