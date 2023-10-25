@@ -75,7 +75,7 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
   active: bool = False
   on_time: bool = True
   critical: bool = False
-  progress: int = Field(0, ge=0, le=100)
+  progress: int = Field(0, ge=0)
 
   created: datetime = Field(default_factory=timestamp)
   start: datetime = None
@@ -146,7 +146,7 @@ class Job(FlexModel):
   issues_total: int = None
   issues_open: int = None
 
-  progress: int = Field(0, ge=0, le=100)
+  progress: int = Field(0, ge=0)
   active_batch_key: str = None # batch _key
   active_batch_qt: int = 0
   next_batch_available: bool = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders
