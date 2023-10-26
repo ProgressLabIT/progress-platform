@@ -1,9 +1,6 @@
 from collections import deque
-from typing import List
 
-from fastapi import HTTPException
-from pydantic import BaseModel
-
+from events.base import BaseEvent
 from events.shared import EventMeta
 from models.production import Job, WorkStatus
 from models.traceability import Batch, WIP, WorkSession
@@ -28,7 +25,7 @@ class Queries:
   """
 
 
-class ProductionAdminEvent:
+class ProductionAdminEvent(BaseEvent):
 
   # =====================================================================================
   # TIME OVERRIDE

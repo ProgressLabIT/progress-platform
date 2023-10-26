@@ -1,15 +1,16 @@
+from events.base import BaseEvent
 from events.shared import EventMeta
 
 from models.traceability import *
-from models.production import Job, WorkOrderFull, WorkStatus
+from models.production import Job, WorkStatus
 
 from utils.exceptions import JobIsStartedError
 from utils.production import Queries as ProductionQueries, update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
-from utils.db import db, model_to_db_dict
+from utils.db import model_to_db_dict
 
 
-class ProductionActivityEvent:
+class ProductionActivityEvent(BaseEvent):
   production_collections = [
     'Batch',
     'Event',
