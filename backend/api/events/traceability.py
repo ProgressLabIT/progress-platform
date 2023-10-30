@@ -336,7 +336,7 @@ class ProductionActivityEvent(BaseEvent):
         break
 
     if quantity > 0:
-      raise WipNotAvailableError("Not enough booked wip to remove. Needed %s more" % quantity)
+      raise WipNotAvailableError(f"Not enough booked wip to remove. Needed { quantity } more")
 
   def book_wip(self, quantity):
     if quantity == 0:
@@ -387,7 +387,7 @@ class ProductionActivityEvent(BaseEvent):
         break
 
     if quantity > 0:
-      raise WipNotAvailableError("Not enough free wip available to book. Needed %s more" % quantity)
+      raise WipNotAvailableError(f"Not enough free wip available to book. Needed { quantity } more")
 
     # Update input availability for jobs in this phase
     self.tx.aql.execute(
@@ -441,7 +441,7 @@ class ProductionActivityEvent(BaseEvent):
         break
 
     if quantity > 0:
-      raise WipNotAvailableError("Not enough booked wip available to unbook. Needed %s more" % quantity)
+      raise WipNotAvailableError(f"Not enough booked wip available to unbook. Needed { quantity } more")
 
     # Update input availability for jobs in this phase
     self.tx.aql.execute(
