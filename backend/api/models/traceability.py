@@ -1,12 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, List
+from typing import List
 
 from pydantic import Field
 
-from models.process import StepWithMediaInfo
-from utils.base_models import FlexModel, ArangoDocument, ArangoEdge
-
+from utils.base_models import FlexModel, ArangoEdge
 
 
 class StepStatus(str, Enum):
@@ -48,8 +46,6 @@ class Batch(FlexModel):
   qt_scrap: float = 0
   qt_total: float = 0
 
-  unit_processing_time: float = 0
-  unit_processing_cost: float = 0
   unit_material_cost: float = 0
   value: float = 0
 
