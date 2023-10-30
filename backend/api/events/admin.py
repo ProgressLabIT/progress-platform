@@ -127,7 +127,25 @@ class ProductionAdminEvent:
 
   # -----------------------------------------------------
 
-  def _create_forced_traceability_records(self, quantity, duration=None):
+  def _calculate_avg_unit_processing_time(self):
+    return self.tx.aql.execute(
+      """
+      RETURN AVG(
+        FOR b IN Batch
+        FILTER b.job_key == @job_key && !b.canceled
+        SORT b.end DESC
+        LET total_duration = SUM(
+          FOR ws IN WorkSession
+          FILTER ws.batch_key == b._key && !ws.canceled
+          RETURN ws.duration
+        )
+        RETURN total_duration / b.qt_pass
+      )
+      """,
+      bind_vars=dict(job_key=self.job.key)
+    ).next()
+
+  def _create_forced_traceability_records(self, quantity, duration=None, unit_processing_time=None):
     """
     1. Create new batch with:
     - qt_pass/qt_total: provided quantity
@@ -146,27 +164,8 @@ class ProductionAdminEvent:
 
     ASSUMPTION: Event id, job data etc are already stored in the event class
     """
-    avg_unit_processing_time = self.tx.aql.execute(
-      """
-      RETURN AVG(
-        FOR b IN Batch
-        FILTER b.job_key == @job_key && !b.canceled
-        SORT b.end DESC
-        LET total_duration = SUM(
-          FOR ws IN WorkSession
-          FILTER ws.batch_key == b._key && !ws.canceled
-          RETURN ws.duration
-        )
-        RETURN total_duration / b.qt_pass
-      )
-      """,
-      bind_vars=dict(job_key=self.job.key)
-    ).next()
-
-    if avg_unit_processing_time:
-      unit_processing_time = avg_unit_processing_time
-    else:
-      unit_processing_time = self.job.parameters.std_processing_time
+    if not unit_processing_time:
+      unit_processing_time = self._calculate_avg_unit_processing_time() or self.job.parameters.std_processing_time
 
     operator_data = self.tx.collection('User').get(self.job.assigned_to)
     hourly_cost = operator_data.get('hourly_cost', 0)
@@ -399,6 +398,11 @@ class ProductionAdminEvent:
         batches_to_cancel.append(current_batch)
         remaining_qt_to_remove -= current_batch.qt_pass
 
+      avg_unit_processing_time = None
+      # If we will end up canceling all batches, calculate the average unit processing time before executing the canceling query
+      if not job_batches:
+        avg_unit_processing_time = self._calculate_avg_unit_processing_time()
+
       batch_updates = [b.dict(by_alias=True) for b in batches_to_cancel]
       self.tx.collection('Batch').update_many(batch_updates)
       canceled_batches_keys = [b.key for b in batches_to_cancel]
@@ -478,7 +482,8 @@ class ProductionAdminEvent:
         duration_to_preserve_total = total_duration * quantity_ratio
         new_batch_key, batch_value = self._create_forced_traceability_records(
           quantity=abs(remaining_qt_to_remove),
-          duration=duration_to_preserve_total if not self.info.should_adjust_duration else None
+          duration=duration_to_preserve_total if not self.info.should_adjust_duration else None,
+          unit_processing_time=avg_unit_processing_time
         )
 
         # Update potential booked wip from canceled batches
