@@ -306,14 +306,17 @@ class ProductionActivityEvent(BaseEvent):
 
   def remove_wip(self, quantity):
     """
-    Remove booked wips for the completed batch
+    Remove upstream wip records related to the completed batch
     """
     booked_wips_cursor = self.tx.collection('wip').find(dict(
       _to=f'Job/{self.info.job_key}',
     ))
     booked_wips = [WIP(**wip) for wip in booked_wips_cursor]
+    # Here we sort the wip by quantity in ascending order to remove as many full records as possible, starting from the smallest one.
+    # NEXT: In the future, when serial number management will be implemented, this logic will have to be reviewed to account for specific wip selection.
     booked_wips = sorted(booked_wips, key=lambda wip: wip.quantity)
 
+    # Remove/reduce wip, record by record up to declared quantity
     for wip in booked_wips:
       if quantity >= wip.quantity:
         # Remove entire wip for job
