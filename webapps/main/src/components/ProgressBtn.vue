@@ -221,39 +221,42 @@ export default {
       })
     },
     async declareCustomBatch() {
-      const remainingQuantity = this.j.qt_planned - this.j.qt_completed
+      const remainingTotalQuantity = this.j.qt_planned - this.j.qt_completed
 
       Loading.show()
       const { data } = await api.get('/wip', { params: { job_key: this.j._key } })
       Loading.hide()
-      const maxQuantity = this.j.first_phase
-        ? remainingQuantity
+      const maxDeclarableQuantity = this.j.first_phase
+        ? remainingTotalQuantity
         : data.free_wip_qt_upstream + this.j.active_batch_qt
 
       const batchQuantity = await this.getCustomBatchInput({
         initialValue: this.j.active_batch_qt,
-        max: maxQuantity
+        max: maxDeclarableQuantity
       })
       if (batchQuantity === 0) {
         return
       }
 
-      const isCompletingBatch = batchQuantity === remainingQuantity
-      if (isCompletingBatch) {
+      let willStopSession = false
+      const isCompletingJob = batchQuantity === remainingTotalQuantity
+      if (isCompletingJob) {
         if (!window.confirm(this.confirm_job_done_message)) {
           return
         }
+        willStopSession = true
       }
-      else if (!this.j.next_batch_available) {
+      else if (!this.j.next_batch_available || batchQuantity === maxDeclarableQuantity) {
         if (!window.confirm(this.confirm_stop_session_message)) {
           return
         }
+        willStopSession = true
       }
 
       await this.$store.dispatch('declareBatch', {
         batch_qt: batchQuantity,
       })
-      if (isCompletingBatch || (!this.j.next_batch_available && !this.j.active_batch_qt)) {
+      if (willStopSession) {
         this.$router.push({ name: 'userJobs' })
       }
     },
