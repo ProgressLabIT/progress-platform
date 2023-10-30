@@ -207,12 +207,7 @@ class Queries:
       RETURN ws
     )
 
-    LET unit_processing_time = SUM(
-      FOR ws IN work_sessions
-      RETURN ws.duration
-    ) / @qt_pass
-
-    // To be added when material cost will be handled
+    // TODO: Update when material cost will be handled
     LET material_cost = 0
 
     LET processing_cost = SUM(
@@ -220,13 +215,10 @@ class Queries:
       RETURN ws.duration * ws.hourly_cost
     ) / 3600000
 
-
     UPDATE batch WITH {
       qt_pass: @qt_pass,
       active: false,
       end: @end,
-      unit_processing_time,
-      unit_processing_cost: processing_cost / @qt_pass,
       value: processing_cost + material_cost
     } in Batch
   """

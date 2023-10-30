@@ -71,3 +71,4 @@ class EventModel(ArangoDocument):
   new_job_duration: int = None # milliseconds
   new_job_qt_completed: float = None
   new_job_qt_released: float = None
+  should_adjust_duration: bool = None

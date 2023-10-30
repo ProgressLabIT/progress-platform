@@ -42,11 +42,19 @@ class Queries:
       FOR b IN Batch
       FILTER POSITION(phases, b.phase_key) && POSITION(wo_keys, b.work_order_key)
       COLLECT phase = b.phase_key
+
+      LET work_sessions = (
+        FOR ws IN WorkSession
+        FILTER ws.batch_key == b._key
+        RETURN ws
+      )
+      LET total_processing_time = SUM(FOR ws IN work_sessions RETURN ws.duration)
+      LET total_processing_cost = SUM(FOR ws IN work_sessions RETURN ws.hourly_cost * ws.duration) / 3600000
       AGGREGATE
-        processing_time = AVERAGE(b.unit_processing_time),
-        processing_cost = AVERAGE(b.unit_processing_cost),
+        processing_time = AVERAGE(total_processing_time / b.qt_pass),
+        processing_cost = AVERAGE(total_processing_cost / b.qt_pass),
         material_cost = AVERAGE(b.unit_material_cost),
-        total_cost = AVERAGE(b.unit_processing_cost + b.unit_material_cost)
+        total_cost = AVERAGE((total_processing_cost / b.qt_pass) + b.unit_material_cost)
 
       RETURN {
         phase_key: phase,
@@ -106,7 +114,12 @@ class Queries:
 
     LET phase_processing_times = (
       FOR p IN phases
-      LET phase_batch_times = batches[* FILTER CURRENT.phase_key == p._key].unit_processing_time
+      LET phase_batch_times = (
+        FOR b IN batches
+        FILTER b.phase_key == p._key
+        LET total_processing_time = SUM(FOR ws IN WorkSession FILTER ws.batch_key == b._key RETURN ws.duration)
+        RETURN total_processing_time / b.qt_pass
+      )
       RETURN MERGE(p,
         {
           processing_time: {

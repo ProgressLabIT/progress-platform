@@ -502,7 +502,8 @@ export default {
       "short": "qrim"
     },
     "short": "qt",
-    "update": "modifica quantità"
+    "update": "modifica quantità",
+    "should_adjust_duration": "Aggiorna i tempi di processo",
   },
   "reactivate": "riattiva",
   "remove_assignment": "rimuovi assegnazione",
