@@ -318,8 +318,8 @@ class ProductionAdminEvent:
         )
         active_batches = [Batch(**b) for b in active_batches_cursor]
 
-        work_session_amount_ratio = len(canceled_work_sessions) / len(active_batches)
-        average_hourly_cost = sum(ws.hourly_cost or 0 for ws in canceled_work_sessions) / len(canceled_work_sessions) * work_session_amount_ratio
+        work_session_amount_ratio = 1 if not active_batches else len(canceled_work_sessions) / len(active_batches)
+        average_hourly_cost = 0 if not canceled_work_sessions else sum(ws.hourly_cost or 0 for ws in canceled_work_sessions) / len(canceled_work_sessions) * work_session_amount_ratio
         new_work_sessions = []
         for batch in active_batches:
           quantity_ratio = batch.qt_pass / self.info.new_job_qt_completed
@@ -441,8 +441,8 @@ class ProductionAdminEvent:
 
         # Split the total processing time evenly per each non-canceled batch
         # and create a new work session for each one with the split duration
-        work_session_amount_ratio = len(canceled_work_sessions) / len(active_batches)
-        average_hourly_cost = sum(ws.hourly_cost or 0 for ws in canceled_work_sessions) / len(canceled_work_sessions) * work_session_amount_ratio
+        work_session_amount_ratio = 1 if not active_batches else len(canceled_work_sessions) / len(active_batches)
+        average_hourly_cost = 0 if not canceled_work_sessions else sum(ws.hourly_cost or 0 for ws in canceled_work_sessions) / len(canceled_work_sessions) * work_session_amount_ratio
         new_work_sessions = []
         for batch in job_batches:
           quantity_ratio = batch.qt_pass / self.info.new_job_qt_completed
