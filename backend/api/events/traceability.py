@@ -1,15 +1,16 @@
+from events.base import BaseEvent
 from events.shared import EventMeta
 
 from models.traceability import *
-from models.production import Job, WorkOrderFull, WorkStatus
+from models.production import Job, WorkStatus
 
-from utils.exceptions import JobIsStartedError
+from utils.exceptions import JobIsStartedError, WipNotAvailableError
 from utils.production import Queries as ProductionQueries, update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
-from utils.db import db, model_to_db_dict
+from utils.db import model_to_db_dict
 
 
-class ProductionActivityEvent:
+class ProductionActivityEvent(BaseEvent):
   production_collections = [
     'Batch',
     'Event',
@@ -303,63 +304,90 @@ class ProductionActivityEvent:
     )
 
 
-  def remove_wip(self):
-    # Delete booked WIP from the previous phase
-    wip_match_filter=dict(_to=f'Job/{self.info.job_key}')
-    self.tx.collection('wip').delete_match(wip_match_filter)
+  def remove_wip(self, quantity):
+    """
+    Remove upstream wip records related to the completed batch
+    """
+    booked_wips_cursor = self.tx.collection('wip').find(dict(
+      _to=f'Job/{self.info.job_key}',
+    ))
+    booked_wips = [WIP(**wip) for wip in booked_wips_cursor]
+    # Here we sort the wip by quantity in ascending order to remove as many full records as possible, starting from the smallest one.
+    # NEXT: In the future, when serial number management will be implemented, this logic will have to be reviewed to account for specific wip selection.
+    booked_wips = sorted(booked_wips, key=lambda wip: wip.quantity)
 
-    # TODO: Make sure only wip related to active batch gets deleted
-    # This setup would delete also other wip booked in advance.
+    # Remove/reduce wip, record by record up to declared quantity
+    for wip in booked_wips:
+      if quantity >= wip.quantity:
+        # Remove entire wip for job
+        self.tx.collection('wip').delete(wip.key)
+        quantity -= wip.quantity
+        if quantity == 0:
+          break
+      else:
+        # Partially remove wip by reducing the quantity
+        unbooking_percentage = quantity / wip.quantity
+        self.tx.collection('wip').update(dict(
+          _key=wip.key,
+          quantity=wip.quantity - quantity,
+          value=wip.value * (1 - unbooking_percentage)
+        ))
+        quantity = 0
+        break
 
-  def book_wip(self, booking_qt):
-    if not self.job:
-      self.get_job_data()
+    if quantity > 0:
+      raise WipNotAvailableError(f"Not enough booked wip to remove. Needed { quantity } more")
 
-    available_batches_cursor = self.tx.aql.execute(
+  def book_wip(self, quantity):
+    if quantity == 0:
+      return
+
+    free_wips_cursor = self.tx.aql.execute(
       TraceabilityQueries.RETRIEVE_AVAILABLE_WIP,
       bind_vars=dict(phase_key=self.info.phase_key, wo_key=self.info.work_order_key)
     )
-
-    available_batches = [WIP(**b) for b in available_batches_cursor]
-    total_available = sum(wip.quantity for wip in available_batches)
+    free_wips = [WIP(**wip) for wip in free_wips_cursor]
+    free_wips = sorted(free_wips, key=lambda wip: wip.quantity)
 
     # TODO: change using while loop like in events/admin.py@override_progress
-    for b in available_batches:
-      if b.quantity <= booking_qt:
+    for wip in free_wips:
+      if quantity >= wip.quantity:
         # Book entire batch for job
         self.tx.collection('wip').update(dict(
-          _key = b.key,
+          _key = wip.key,
           _to = f'Job/{self.info.job_key}',
           active = True
         ))
-        # Decrease booking quantity
-        booking_qt -= b.quantity
-        if not booking_qt:
+        quantity -= wip.quantity
+        if quantity == 0:
           break
 
       else:
-        # Book only booking_qt
-        booking_percentage = booking_qt / b.quantity
+        # Partially book batch for job
+        booking_percentage = quantity / wip.quantity
         self.tx.collection('wip').update(dict(
-          _key=b.key,
-          quantity=b.quantity - booking_qt,
-          value=b.value * (1 - booking_percentage)
+          _key=wip.key,
+          quantity=wip.quantity - quantity,
+          value=wip.value * (1 - booking_percentage)
         ))
 
         # Add wip record with partially booked batch
         new_wip = WIP(
-          from_doc=b.from_doc,
+          from_doc=wip.from_doc,
           to_doc=f'Job/{self.info.job_key}',
-          wo_key=b.wo_key,
-          batch_key=b.batch_key,
-          product_key=b.product_key,
-          quantity=booking_qt,
-          value=b.quantity * booking_percentage,
+          wo_key=wip.wo_key,
+          batch_key=wip.batch_key,
+          product_key=wip.product_key,
+          quantity=quantity,
+          value=wip.quantity * booking_percentage,
           active=True
         )
         self.tx.collection('wip').insert(new_wip)
-
+        quantity = 0
         break
+
+    if quantity > 0:
+      raise WipNotAvailableError(f"Not enough free wip available to book. Needed { quantity } more")
 
     # Update input availability for jobs in this phase
     self.tx.aql.execute(
@@ -367,8 +395,59 @@ class ProductionActivityEvent:
       bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
     )
 
-    return total_available
 
+  def unbook_wip(self, quantity):
+    if quantity == 0:
+      return
+
+    booked_wips_cursor = self.tx.collection('wip').find(dict(
+      _to=f'Job/{self.info.job_key}',
+    ))
+    booked_wips = [WIP(**wip) for wip in booked_wips_cursor]
+    booked_wips = sorted(booked_wips, key=lambda wip: wip.quantity)
+
+    for wip in booked_wips:
+      if quantity >= wip.quantity:
+        # Unbook entire batch for job
+        self.tx.collection('wip').update(dict(
+          _key = wip.key,
+          _to = f'Phase/{self.info.phase_key}'
+        ))
+        quantity -= wip.quantity
+        if quantity == 0:
+          break
+      else:
+        # Partially unbook batch for job
+        unbooking_percentage = quantity / wip.quantity
+        self.tx.collection('wip').update(dict(
+          _key=wip.key,
+          quantity=wip.quantity - quantity,
+          value=wip.value * (1 - unbooking_percentage)
+        ))
+
+        # Add free wip record with partially unbooked batch
+        new_wip = WIP(
+          from_doc=wip.from_doc,
+          to_doc=f'Phase/{self.info.phase_key}',
+          wo_key=wip.wo_key,
+          batch_key=wip.batch_key,
+          product_key=wip.product_key,
+          quantity=quantity,
+          value=wip.quantity * unbooking_percentage,
+          active=True
+        )
+        self.tx.collection('wip').insert(new_wip)
+        quantity = 0
+        break
+
+    if quantity > 0:
+      raise WipNotAvailableError(f"Not enough booked wip available to unbook. Needed { quantity } more")
+
+    # Update input availability for jobs in this phase
+    self.tx.aql.execute(
+      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
+    )
 
   # ===================================================================
   # Job
@@ -602,16 +681,32 @@ class ProductionActivityEvent:
   # ===================================================================
 
   def complete_batch(self):
-
     if not hasattr(self, 'job'):
       self.get_job_data()
 
+    # save into a variable since self.job gets updated in the process
+    active_batch_qt = self.job.active_batch_qt
+    completed_batch_qt = self.info.completed_batch_qt or active_batch_qt
+
+    if completed_batch_qt <= 0:
+      raise ValueError("Quantity cannot be zero or negative")
+
+    is_next_batch_available = self.job.next_batch_available
     if not self.job.first_phase:
-      # TODO: check for wip availability
-      pass
+      wip = self.tx.aql.execute(
+        TraceabilityQueries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB,
+        bind_vars=dict(job_key=self.info.job_key)
+      ).next()
+
+      free_wip_qt_upstream = sum(w['quantity'] for w in wip['upstream_free_wip'])
+      max_declarable_qt = free_wip_qt_upstream + self.job.active_batch_qt
+      if completed_batch_qt > max_declarable_qt:
+        raise WipNotAvailableError("The previous phase has not made enough progress to make this change")
+      if completed_batch_qt == max_declarable_qt:
+        is_next_batch_available = False
 
     self.info.completed_batch_key = self.job.active_batch_key
-    self.info.completed_batch_qt = self.info.completed_batch_qt or self.job.active_batch_qt
+    self.info.completed_batch_qt = completed_batch_qt
     self.info.work_session_key = self.job.last_work_session_started
 
     self.close_work_session()
@@ -628,7 +723,7 @@ class ProductionActivityEvent:
     new_qt_completed = self.job.qt_completed + self.info.completed_batch_qt
 
     # NO REMAINING QUANTITY TO DO - LAST BATCH
-    if new_qt_completed >= self.job.qt_planned: # No more pieces to work
+    if new_qt_completed == self.job.qt_planned: # No more pieces to work
       self.complete_job(new_qt_completed)
       self.response = dict(
         message = f"Batch {self.info.active_batch_key} and Job {self.info.job_key} completed.",
@@ -648,8 +743,7 @@ class ProductionActivityEvent:
         active = False
       )
 
-      create_new_batch = self.job.parameters.auto_new_batch and self.job.next_batch_available
-
+      create_new_batch = self.job.parameters.auto_new_batch and is_next_batch_available
       if create_new_batch:
         self.create_batch()
         job_update['active_batch_key'] = self.batch.key
@@ -671,7 +765,15 @@ class ProductionActivityEvent:
         self.response['batch_data'] = self.get_batch_execution_data()
 
     if not self.job.first_phase:
-      self.remove_wip()
+      # If there is more or less free wip than the booked wip, book or unbook the difference before removing the booked wip
+      booked_wip_quantity = active_batch_qt
+      free_wip_delta = completed_batch_qt - booked_wip_quantity
+      if free_wip_delta > 0:
+        self.book_wip(free_wip_delta)
+      elif free_wip_delta < 0:
+        self.unbook_wip(abs(free_wip_delta))
+
+      self.remove_wip(completed_batch_qt)
 
     # is next_phase generate a WIP record and update job input availability state
     if not self.job.last_phase:

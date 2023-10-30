@@ -1,5 +1,6 @@
 from collections import deque
 
+from events.base import BaseEvent
 from events.shared import EventMeta
 from models.production import Job, WorkStatus
 from models.traceability import Batch, WIP, WorkSession
@@ -31,7 +32,7 @@ class Queries:
     RETURN b
     """
 
-class ProductionAdminEvent:
+class ProductionAdminEvent(BaseEvent):
 
   # =====================================================================================
   # TIME OVERRIDE
