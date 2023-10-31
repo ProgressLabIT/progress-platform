@@ -1,6 +1,6 @@
 import traceback
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import List
 
 from fastapi import APIRouter, Body, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
@@ -513,7 +513,7 @@ async def get_job_data(job_key: str):
 @router.post('/job/update')
 async def update_jobs(job_updates:List[JobUpdate]):
 
-  tx = db.begin_transaction(write=['Job', 'Queue'])
+  tx = db.begin_transaction(write=['Job', 'Queue', 'WorkOrder'])
   job_db = tx.collection('Job')
 
   results = []
@@ -546,6 +546,19 @@ async def update_jobs(job_updates:List[JobUpdate]):
 
         if 'qt_planned' in u.data:
           _update_job_progress(db=tx, job_key=new_job_data.key)
+
+          if new_job_data.qt_completed >= new_job_data.qt_planned:
+            bind_vars = dict(
+              job_key=new_job_data.key,
+              stage=WorkStatus.CLOSED,
+              end=timestamp(),
+              notes=new_job_data.notes
+            )
+
+            new_job_data = Job(**tx.aql.execute(
+              Queries.CLOSE_JOB,
+              bind_vars=bind_vars,
+            ).next())
 
         if 'assigned_to' in u.data:
           if hasattr(old_job_data, 'assigned_to'):
@@ -600,9 +613,10 @@ async def update_jobs(job_updates:List[JobUpdate]):
           )
 
 
-    # Update next_batch_available throughout the work order
-    work_order_data = tx.collection('WorkOrder').get(results[0].wo_key)
+    wo_key = results[0].wo_key
+    work_order_data = tx.collection('WorkOrder').get(wo_key)
 
+    # Update next_batch_available throughout the work order
     tx.aql.execute(
       TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
       bind_vars = dict(
@@ -610,6 +624,21 @@ async def update_jobs(job_updates:List[JobUpdate]):
         phase_keys = work_order_data['phase_sequence']
       )
     )
+
+    is_all_jobs_closed = all([j.stage == WorkStatus.CLOSED for j in results])
+    is_wo_closed = work_order_data['status'] == WorkStatus.CLOSED.value
+    # Close the work order and remove it from the queue if all jobs are closed
+    if is_all_jobs_closed and not is_wo_closed:
+      tx.collection('WorkOrder').update(dict(
+        _key = wo_key,
+        status = WorkStatus.CLOSED,
+        active = False,
+        end = timestamp()
+      ))
+      tx.aql.execute(
+        Queries.REMOVE_WORK_ORDER_FROM_QUEUE,
+        bind_vars=dict(wo_key=wo_key)
+      )
 
     tx.commit_transaction()
     return APIResponse(detail=results, message="Jobs updated successfully")
