@@ -9,7 +9,6 @@ from utils.exceptions import (
   JobHasNoActiveBatchError,
   JobHasNoAssigneeError,
   JobIsActiveError,
-  JobIsOpenError,
   WipNotAvailableError
 )
 from utils.traceability import Queries as TraceabilityQueries
@@ -56,17 +55,15 @@ class ProductionAdminEvent(BaseEvent):
     if not 'work_order_key' in self.info:
       self.info.work_order_key = self.job.wo_key
 
-    # Don't allow updating times on an open job
-    job_is_open = self.job.stage != WorkStatus.CLOSED
-
-    if job_is_open:
-      raise JobIsOpenError("You can't override processing time while the job is still open")
+    if self.job.active:
+      raise JobIsActiveError("You can't override processing time while the job is still active")
 
     # Cancel existing job work sessions, while fetching data
     # for calculation of weighted average hourly cost
-    bind_vars = dict(job_key = job_key, event_id=self.info.id)
-    ws_cursor = self.tx.aql.execute(Queries.CANCEL_JOB_WORK_SESSIONS, bind_vars=bind_vars)
-    old_work_sessions = [WorkSession(**ws) for ws in ws_cursor]
+    self.tx.aql.execute(
+      Queries.CANCEL_JOB_WORK_SESSIONS,
+      bind_vars=dict(job_key=job_key, event_id=self.info.id)
+    )
 
     # Define hourly cost as defined for the operator
     operator_data = self.tx.collection('User').get(self.job.assigned_to)
