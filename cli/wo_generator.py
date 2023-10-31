@@ -124,9 +124,6 @@ wo_progress_query = """
 
   LET end = still_open ? null : DATE_ISO8601(now)
 
-  // Calculate Throughput Time at Work order Closure
-  LET throughput_time = still_open ? null : DATE_DIFF(wo.start, now, 'f')
-
   // Verify if WO is critical
   LET critical = TO_BOOL(COUNT(FOR j IN jobs FILTER j.critical RETURN 1)))
 
@@ -141,7 +138,6 @@ wo_progress_query = """
     end,
     processing_time,
     processing_cost,
-    throughput_time,
     critical
 
   } IN WorkOrder RETURN NEW

@@ -152,9 +152,6 @@ class Queries:
 
     LET end = still_open ? null : DATE_ISO8601(now)
 
-    // Calculate Throughput Time at Work order Closure
-    LET throughput_time = still_open ? null : DATE_DIFF(wo.start, now, 'f')
-
     // Apply changes and return updated record
     UPDATE wo WITH {
 
@@ -164,8 +161,7 @@ class Queries:
       status,
       end,
       processing_time,
-      processing_cost,
-      throughput_time
+      processing_cost
 
     } IN WorkOrder RETURN NEW
   """
