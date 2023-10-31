@@ -558,7 +558,7 @@ export default {
   "update_progress_disabled": "Available with no active quantity present",
   "update_progress_success": "Progress updated successfully",
   "update_time": "Update time",
-  "update_time_disabled": "Available if order is closed",
+  "update_time_disabled": "Available if job is not active",
   "update_time_success": "Time updated successfully",
   "user": {
     "add": "add user",
