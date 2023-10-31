@@ -526,7 +526,7 @@ async def get_job_data(job_key: str):
 @router.post('/job/update')
 async def update_jobs(job_updates:List[JobUpdate]):
 
-  tx = db.begin_transaction(write=['Job', 'Queue', 'WorkOrder'])
+  tx = db.begin_transaction(write=['Job', 'Queue'])
   job_db = tx.collection('Job')
 
   results = []
