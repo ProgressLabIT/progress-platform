@@ -181,7 +181,7 @@ async def update_work_order(
   ):
 
   try:
-    tx = db.begin_transaction(write=['WorkOrder', 'Job'])
+    tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue'])
     wo_update = dict(_key=wo_key)
     job_match = dict(wo_key=wo_key)
     job_update = dict()
@@ -207,6 +207,19 @@ async def update_work_order(
       tx.collection('Job').update_match(job_match, job_update)
 
     updated_wo_data = tx.collection('WorkOrder').update(wo_update, return_new=True)['new']
+
+    # Handle status, progress, and performance metrics
+    updated_wo_data = tx.aql.execute(
+      TraceabilityQueries.UPDATE_WORK_ORDER,
+      bind_vars=dict(wo_key=wo_key)
+    ).next()
+
+    # If the work order became closed, remove it from the queue
+    if updated_wo_data['status'] == WorkStatus.CLOSED:
+      tx.aql.execute(
+        Queries.REMOVE_WORK_ORDER_FROM_QUEUE,
+        bind_vars=dict(wo_key=wo_key)
+      )
 
     tx.commit_transaction()
 
@@ -624,21 +637,6 @@ async def update_jobs(job_updates:List[JobUpdate]):
         phase_keys = work_order_data['phase_sequence']
       )
     )
-
-    is_all_jobs_closed = all([j.stage == WorkStatus.CLOSED for j in results])
-    is_wo_closed = work_order_data['status'] == WorkStatus.CLOSED.value
-    # Close the work order and remove it from the queue if all jobs are closed
-    if is_all_jobs_closed and not is_wo_closed:
-      tx.collection('WorkOrder').update(dict(
-        _key = wo_key,
-        status = WorkStatus.CLOSED,
-        active = False,
-        end = timestamp()
-      ))
-      tx.aql.execute(
-        Queries.REMOVE_WORK_ORDER_FROM_QUEUE,
-        bind_vars=dict(wo_key=wo_key)
-      )
 
     tx.commit_transaction()
     return APIResponse(detail=results, message="Jobs updated successfully")
