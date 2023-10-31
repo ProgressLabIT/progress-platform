@@ -200,8 +200,7 @@ def set_progress() -> None:
 
     LET end = still_open ? null : DATE_ISO8601(now)
 
-    // Calculate Throughput Time and Lead Time at Work order Closure
-    LET lead_time = still_open ? null : DATE_DIFF(wo.created, now, 'f')
+    // Calculate Throughput Time at Work order Closure
     LET throughput_time = still_open ? null : DATE_DIFF(wo.start, now, 'f')
 
     // Verify if WO is critical
@@ -219,7 +218,6 @@ def set_progress() -> None:
       processing_time,
       processing_cost,
       throughput_time,
-      lead_time,
       critical
 
     } IN WorkOrder RETURN NEW

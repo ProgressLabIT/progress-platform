@@ -222,7 +222,6 @@ export default {
   "label": "Label",
   "language": "language",
   "late": "late",
-  "lead_time": "lead time",
   "link": "Link | Links",
   "list": "List",
   "loading_text": "getting data...",
@@ -275,11 +274,6 @@ export default {
   "people": "people",
   "performance": {
     "actual": "actual",
-    "lead_time": {
-      "long": "lead time",
-      "medium": "lead time",
-      "short": "LT"
-    },
     "processing_cost": {
       "long": "processing cost",
       "medium": "proc. cost",

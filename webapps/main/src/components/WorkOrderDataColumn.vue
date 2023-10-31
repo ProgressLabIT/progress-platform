@@ -395,10 +395,6 @@ export default {
           name: 'processing_time',
           text: this.$t('processing_time')
         },
-        // {
-        //   name: 'lead_time',
-        //   text: this.$t('lead_time')
-        // },
         {
           name: 'processing_cost',
           text: this.$t('processing_cost')
@@ -551,14 +547,6 @@ export default {
           const benchmark = start ? start : DT.utc()
           return this.wo_data.start
             ? durationFromMillisec(benchmark - created, { precision: 'h'})
-            : '-'
-        }
-
-        case 'lead_time': {
-          const start = DT.fromISO(this.wo_data.start)
-          const end = DT.fromISO(this.wo_data.end)
-          return this.wo_data.end
-            ? durationFromMillisec(end - start, { precision: 'h'})
             : '-'
         }
 

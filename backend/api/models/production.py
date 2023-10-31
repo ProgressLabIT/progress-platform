@@ -83,7 +83,6 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
 
   issue_count: int = None
 
-  lead_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
   throughput_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
   processing_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
 
