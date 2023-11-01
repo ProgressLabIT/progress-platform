@@ -1,3 +1,5 @@
+import traceback
+
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 
