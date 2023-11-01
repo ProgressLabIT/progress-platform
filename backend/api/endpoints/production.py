@@ -391,7 +391,10 @@ async def search_work_orders(
       time_end_to = time_end_to,
       limit = limit
     ))
-    return [WorkOrderFull(**r) for r in cursor]
+    # Return results as is without wrapping them in WorkOrderFull
+    # otherwise, performance measure properties such as processing_time will be missing
+    # as they are computed in the query and not specified in the WorkOrderFull model
+    return [wo for wo in cursor]
   except StopIteration:
     return []
 
