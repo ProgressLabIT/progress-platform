@@ -382,8 +382,7 @@ export default {
             filtered_jobs.forEach(j => {
               const data = {
                 ...j,
-                // TODO: Investigate how wo_map doesn't have the entry for the job
-                wo_sequence: this.wo_map[j.wo_key]?.sequence
+                wo_sequence: this.wo_map[j.wo_key].sequence
               }
               j.active ? active_jobs.push(data) : queued_jobs.push(data)
             })

@@ -615,6 +615,13 @@ async def update_jobs(job_updates:List[JobUpdate]):
             bind_vars = bind_vars,
           ).next())
 
+          update_target_queue(
+            job_key = job_key,
+            target_key = current_job_data.assigned_to,
+            action = 'remove',
+            tx = tx
+          )
+
           results.append(new_job_data)
 
         if 'assigned_to' in current_job_data:
