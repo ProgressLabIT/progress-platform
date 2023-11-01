@@ -5,6 +5,12 @@ export function formatDateString(string, locale, options) {
   return date.toLocaleDateString(locale, options) || ''
 }
 
+/**
+ * @param {string} string
+ * @param {string} locale
+ * @param {Intl.DateTimeFormatOptions} format
+ * @returns {string}
+ */
 export function formatDateTime(string, locale, format) {
   if (!string) {
     return '-'

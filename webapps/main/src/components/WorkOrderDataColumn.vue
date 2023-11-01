@@ -489,19 +489,6 @@ export default {
 
   methods: {
     woInfoValue(info_name) {
-      const formatDate = (timestamp) => {
-        if (!timestamp) {
-          return '-'
-        }
-
-        return formatDateTime(timestamp, this.$i18n.locale, {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric',
-          year: '2-digit'
-        })
-      }
-
       switch (info_name) {
         case 'status': {
           if (this.wo_data.status == 'closed') {
@@ -529,12 +516,37 @@ export default {
         }
 
         case 'created':
-        case 'start':
         case 'start_from':
-        case 'end':
-        case 'due_by':
-          return formatDate(this.wo_data[info_name])
+        case 'due_by': {
+          const value = this.wo_data[info_name]
+          if (!value) {
+            return '-'
+          }
 
+          return formatDateTime(value, this.$i18n.locale, {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit'
+          })
+        }
+
+        case 'start':
+        case 'end': {
+          const value = this.wo_data[info_name]
+          if (!value) {
+            return '-'
+          }
+
+          return formatDateTime(value, this.$i18n.locale, {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit',
+            hour: 'numeric',
+            minute: 'numeric',
+          })
+        }
 
         case 'processing_time': {
           const processing_time = this.wo_data.processing_time
