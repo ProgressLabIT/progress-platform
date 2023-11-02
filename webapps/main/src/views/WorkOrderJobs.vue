@@ -127,8 +127,8 @@
                   <q-popup-proxy>
                     <q-list>
                       <q-item
-                        :disable="job.active"
-                        clickable
+                        :disable="job.stage == 'created'"
+                        :clickable="job.stage != 'created'"
                         v-ripple
                         v-close-popup
                         @click="editJobTime(job)">

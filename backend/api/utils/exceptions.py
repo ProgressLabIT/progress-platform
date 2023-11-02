@@ -20,6 +20,8 @@ class JobIsActiveError(Exception): pass
 
 class JobIsStartedError(Exception): pass
 
+class JobIsNotStartedError(Exception): pass
+
 class JobHasActiveBatchError(Exception): pass
 
 class JobHasNoAssigneeError(Exception): pass

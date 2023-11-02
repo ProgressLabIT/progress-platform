@@ -8,6 +8,7 @@ from utils.exceptions import (
   JobHasActiveBatchError,
   JobHasNoActiveBatchError,
   JobHasNoAssigneeError,
+  JobIsNotStartedError,
   JobIsActiveError,
   WipNotAvailableError
 )
@@ -54,8 +55,8 @@ class ProductionAdminEvent(BaseEvent):
     if self.job.active:
       raise JobIsActiveError("You can't override processing time while the job is still active")
 
-    if self.job.active_batch_qt > 0:
-      raise JobHasActiveBatchError("You can't override processing time if there is an active batch")
+    if self.job.stage == WorkStatus.CREATED:
+      raise JobIsNotStartedError("You can't override processing time if the job hasn't started yet")
 
     # Store work order key for later update
     if not 'work_order_key' in self.info:

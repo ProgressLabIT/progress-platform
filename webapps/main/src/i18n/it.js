@@ -561,7 +561,7 @@ export default {
   "update_progress_disabled": "Disponibile in assenza di quantità attiva",
   "update_progress_success": "Avanzamento modificato con successo",
   "update_time": "Modifica tempi",
-  "update_time_disabled": "Disponibile in assenza di quantità attiva",
+  "update_time_disabled": "Disponibile per lavori iniziati",
   "update_time_success": "Tempo modificato con successo",
   "user": {
     "add": "aggiungi utente",
