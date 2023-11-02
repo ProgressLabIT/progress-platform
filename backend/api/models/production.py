@@ -81,15 +81,7 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
   start: datetime = None
   end: datetime = None
 
-  issue_count: int = None
-
-  lead_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
-  throughput_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
-  processing_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
-
-  processing_cost: float = None
   material_cost: float = None
-  total_cost: float = None
 
   phase_sequence: List[str] = []
   wo_docs: List[ProductDoc] = []

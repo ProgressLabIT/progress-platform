@@ -1,10 +1,10 @@
 # THIS WAS A FIRST DRAFT OF A KPI DB IN ARANGODB
 # FURTHER ANALYSIS RECOMMENDS THE USE OF A TIME-SERIES DB, LIKELY INFLUXDB
-# TO STORE AND QUERY KPIS NOT JUST AS FIRST/LAST/CUMULATIVE, BUT AT ANY GRANULARITY 
+# TO STORE AND QUERY KPIS NOT JUST AS FIRST/LAST/CUMULATIVE, BUT AT ANY GRANULARITY
 # AND TO ALLOW COMPARISON BETWEEN PERIODS
 # ===================================================
 
-# KPIs are stored on a different DB, 
+# KPIs are stored on a different DB,
 # each entity has its own dedicated collection
 # Direct link between the DBs is not necessary, but
 # records must have the same _key as the entity they refer to
@@ -12,24 +12,24 @@
 
 # ProductKPI
   observations_count: int
-  first_observation: 
+  first_observation:
     time: ISOdts
     event: str
-  last_observation: 
+  last_observation:
     time: ISOdts
     event: str
 
   unit_processing_time:
     target: float
     observations_count: int
-    first_observation: 
+    first_observation:
       time: ISOdts
       event: str
       value: float
-    last_observation: 
+    last_observation:
       time: ISOdts
       event: str
-      value: float     
+      value: float
     avg: float
     sdev: float
     max: float
@@ -38,11 +38,11 @@
   unit_throughput_time:
     target: float
     observations_count: int
-    first_observation: 
+    first_observation:
       time: ISOdts
       event: str
       value: float
-    last_observation: 
+    last_observation:
       time: ISOdts
       event: str
       value: float
@@ -55,11 +55,11 @@
   takt_time:
     target: float
     observations_count: int
-    first_observation: 
+    first_observation:
       time: ISOdts
       event: str
       value: float
-    last_observation: 
+    last_observation:
       time: ISOdts
       event: str
       value: float
@@ -72,11 +72,11 @@
   overall_equipment_efficiency:
     target: float
     observations_count: int
-    first_observation: 
+    first_observation:
       time: ISOdts
       event: str
       value: float
-    last_observation: 
+    last_observation:
       time: ISOdts
       event: str
       value: float
@@ -87,11 +87,11 @@
 # Task
   execution_time:
     target: float
-    first_observation: 
+    first_observation:
       time: ISOdts
       event: str
       value: float
-    last_observation: 
+    last_observation:
       time: ISOdts
       event: str
       value: float
@@ -107,12 +107,11 @@
   started_at: ISOdts
   planned_at: ISOdts
   finished_at: ISOdts
-  lead_time: float
   delay: float
   troughput_time: float
   processing_time: float
-  
 
-      
+
+
 
 

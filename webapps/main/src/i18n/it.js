@@ -223,7 +223,6 @@ export default {
   "label": "Etichetta",
   "language": "lingua",
   "late": "in ritardo",
-  "lead_time": "t. evasione",
   "link": "Collegamento | Collegamenti",
   "list": "Lista",
   "loading_signal": {
@@ -279,11 +278,6 @@ export default {
   "people": "persone",
   "performance": {
     "actual": "consuntivo",
-    "lead_time": {
-      "long": "tempo di evasione",
-      "medium": "t. evasione",
-      "short": "TE"
-    },
     "processing_cost": {
       "long": "costo di processo",
       "medium": "c. processo",
