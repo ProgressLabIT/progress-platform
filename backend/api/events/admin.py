@@ -51,12 +51,15 @@ class ProductionAdminEvent(BaseEvent):
 
     self.job = Job(**self.tx.document(f'Job/{job_key}'))
 
+    if self.job.active:
+      raise JobIsActiveError("You can't override processing time while the job is still active")
+
+    if self.job.active_batch_qt > 0:
+      raise JobHasActiveBatchError("You can't override processing time if there is an active batch")
+
     # Store work order key for later update
     if not 'work_order_key' in self.info:
       self.info.work_order_key = self.job.wo_key
-
-    if self.job.active:
-      raise JobIsActiveError("You can't override processing time while the job is still active")
 
     # Cancel existing job work sessions, while fetching data
     # for calculation of weighted average hourly cost
