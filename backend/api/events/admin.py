@@ -70,7 +70,7 @@ class ProductionAdminEvent(BaseEvent):
 
     # Define hourly cost as defined for the operator
     operator_data = self.tx.collection('User').get(self.job.assigned_to)
-    hourly_cost = operator_data.get('assigned_to', 0)
+    hourly_cost = operator_data.get('hourly_cost', 0)
 
     # Get job batches to update
     match = dict(job_key=job_key, canceled=None)
