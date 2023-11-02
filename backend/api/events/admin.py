@@ -90,7 +90,12 @@ class ProductionAdminEvent(BaseEvent):
     batch_updates = []
 
     for b in job_batches:
-      batch_quota = b.qt_total / self.job.qt_completed
+      try:
+        batch_quota = b.qt_total / self.job.qt_completed
+      # Handle cases where there's active quantity but no completed quantity
+      except ZeroDivisionError:
+        batch_quota = 1
+
       batch_duration = new_job_duration * batch_quota
 
       batch_update = dict(
