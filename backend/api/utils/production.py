@@ -1,3 +1,5 @@
+import traceback
+
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 
@@ -15,7 +17,7 @@ class Queries:
   GET_SITE_WORK_ORDER_DATA = """
     LET queue = FIRST(
       FOR q IN Queue
-      FILTER q.type == 's' && q.site_key == @site_key 
+      FILTER q.type == 's' && q.site_key == @site_key
       RETURN q.work_orders
     )
 
@@ -28,6 +30,7 @@ class Queries:
       RETURN MERGE (wo, { qt_remaining: qt_remaining, issue_count })
   """
 
+  # See endpoints/production.py@search_work_orders
   GET_WORK_ORDER_DATA = """
     LET now = DATE_NOW()
 
@@ -35,7 +38,7 @@ class Queries:
       FILTER wo._key == @wo_key
 
       // get job data
-      LET jobs =  ( 
+      LET jobs = (
         FOR j IN Job
         FILTER j.wo_key == wo._key && !j.trash
         LET operator = KEEP(DOCUMENT(User, j.assigned_to), '_key', 'name', 'surname', 'active')
@@ -125,7 +128,7 @@ class Queries:
         )
         RETURN jobs
       )
-      
+
       RETURN {
         operator: KEEP(o, '_key', 'name', 'surname', 'active', 'department_key'),
         assigned_jobs: assigned_jobs
@@ -134,10 +137,10 @@ class Queries:
 
     LET unassigned_jobs = (
       LET wo_queue = FIRST(FOR q IN Queue FILTER q.type == 's' RETURN q.work_orders)
-      
+
       FOR j in Job
         FILTER !j.trash && j.assigned_to == null
-        
+
         // Order by WorkOrder Queue position and Phase sequence
         LET wo_data = DOCUMENT(WorkOrder, j.wo_key)
         LET issues = (FOR v IN 1..1 INBOUND wo_data._id issue_rel RETURN v)
@@ -147,14 +150,14 @@ class Queries:
         LET due_by = wo_data.due_by
         LET job_phase_index = POSITION(wo_phase_sequence, j.phase_key, true)
         SORT wo_queue_index, job_phase_index
-      
-        RETURN MERGE(j, { issues_open, issues_total:  LENGTH(issues), due_by })
+
+        RETURN MERGE(j, { issues_open, issues_total: LENGTH(issues), due_by })
     )
 
     RETURN {
       assigned_jobs_by_operator,
       unassigned_jobs
-    }  
+    }
   """
 
   GET_PHASE_STEP_DATA = """
@@ -173,7 +176,7 @@ class Queries:
   ADD_JOB_TO_QUEUE = """
     FOR q IN Queue
     FILTER q.subqueue_target_key == @target_key
-    
+
     // the third parameter = true makes sure the job is added only if not already present
     UPDATE q WITH { jobs: PUSH(q.jobs, @job_key, true) } in Queue
   """

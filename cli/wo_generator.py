@@ -124,10 +124,6 @@ wo_progress_query = """
 
   LET end = still_open ? null : DATE_ISO8601(now)
 
-  // Calculate Throughput Time and Lead Time at Work order Closure
-  LET lead_time = still_open ? null : DATE_DIFF(wo.created, now, 'f')
-  LET throughput_time = still_open ? null : DATE_DIFF(wo.start, now, 'f')
-
   // Verify if WO is critical
   LET critical = TO_BOOL(COUNT(FOR j IN jobs FILTER j.critical RETURN 1)))
 
@@ -142,8 +138,6 @@ wo_progress_query = """
     end,
     processing_time,
     processing_cost,
-    throughput_time,
-    lead_time,
     critical
 
   } IN WorkOrder RETURN NEW
@@ -151,9 +145,9 @@ wo_progress_query = """
 
 
 def generate_random_wos(
-    quantity: int, 
+    quantity: int,
     start_number: int = 2300137,
-    prefix: str = 'WO', 
+    prefix: str = 'WO',
     min_wo_quantity: int = 1,
     max_wo_quantity: int = 20,
     min_due_days: int = 7,
@@ -188,7 +182,7 @@ def generate_random_wos(
                 print(r.json())
                 print(f"Created {wo_code}")
                 count += 1
-                    
+
             # Assign jobs when not already assigned, leaving some unassigned
             users = client.get('user', params={'active_only': True}).json()['detail']
             operators = [o['_key'] for o in users if 'operator' in o['scope']]
@@ -196,9 +190,9 @@ def generate_random_wos(
 
             for j in [j['_key'] for j in jobs.all() if j['assigned_to'] is not None]:
                 job_update = dict(
-                    action='update', 
+                    action='update',
                     data=dict(
-                        _key=j, 
+                        _key=j,
                         assigned_to=random.choice(operators_choice)
                     )
                 )

@@ -24,7 +24,6 @@ async def apply_production_event(data: EventModel):
 
   except (
     JobIsActiveError,
-    JobIsOpenError,
     JobHasActiveBatchError,
     JobHasNoAssigneeError,
     JobHasNoActiveBatchError,

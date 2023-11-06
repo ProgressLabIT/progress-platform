@@ -8,8 +8,8 @@ from utils.exceptions import (
   JobHasActiveBatchError,
   JobHasNoActiveBatchError,
   JobHasNoAssigneeError,
+  JobIsNotStartedError,
   JobIsActiveError,
-  JobIsOpenError,
   WipNotAvailableError
 )
 from utils.traceability import Queries as TraceabilityQueries
@@ -52,25 +52,26 @@ class ProductionAdminEvent(BaseEvent):
 
     self.job = Job(**self.tx.document(f'Job/{job_key}'))
 
+    if self.job.active:
+      raise JobIsActiveError("You can't override processing time while the job is still active")
+
+    if self.job.stage == WorkStatus.CREATED:
+      raise JobIsNotStartedError("You can't override processing time if the job hasn't started yet")
+
     # Store work order key for later update
     if not 'work_order_key' in self.info:
       self.info.work_order_key = self.job.wo_key
 
-    # Don't allow updating times on an open job
-    job_is_open = self.job.stage != WorkStatus.CLOSED
-
-    if job_is_open:
-      raise JobIsOpenError("You can't override processing time while the job is still open")
-
     # Cancel existing job work sessions, while fetching data
     # for calculation of weighted average hourly cost
-    bind_vars = dict(job_key = job_key, event_id=self.info.id)
-    ws_cursor = self.tx.aql.execute(Queries.CANCEL_JOB_WORK_SESSIONS, bind_vars=bind_vars)
-    old_work_sessions = [WorkSession(**ws) for ws in ws_cursor]
+    self.tx.aql.execute(
+      Queries.CANCEL_JOB_WORK_SESSIONS,
+      bind_vars=dict(job_key=job_key, event_id=self.info.id)
+    )
 
     # Define hourly cost as defined for the operator
     operator_data = self.tx.collection('User').get(self.job.assigned_to)
-    hourly_cost = operator_data.get('assigned_to', 0)
+    hourly_cost = operator_data.get('hourly_cost', 0)
 
     # Get job batches to update
     match = dict(job_key=job_key, canceled=None)
@@ -89,7 +90,12 @@ class ProductionAdminEvent(BaseEvent):
     batch_updates = []
 
     for b in job_batches:
-      batch_quota = b.qt_total / self.job.qt_completed
+      try:
+        batch_quota = b.qt_total / self.job.qt_completed
+      # Handle cases where there's active quantity but no completed quantity
+      except ZeroDivisionError:
+        batch_quota = 1
+
       batch_duration = new_job_duration * batch_quota
 
       batch_update = dict(
@@ -284,6 +290,7 @@ class ProductionAdminEvent(BaseEvent):
       # Set job as started if not already
       if self.job.stage == WorkStatus.CREATED:
         job_update['stage'] = WorkStatus.STARTED
+        job_update['start'] = self.info.timestamp
 
       # Set job as closed and remove it from queues if necessary
       if self.info.new_job_qt_completed == self.job.qt_planned:

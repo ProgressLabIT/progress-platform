@@ -2,7 +2,7 @@
   <div class="q-px-sm q-py-sm full-height column">
 
     <!-- HEADERS -->
-    <div class="row low-text items-center q-px-sm q-py-sm">
+    <div class="row low-text items-center q-py-sm q-pl-xs">
       <div
         v-for="header in headers" :key="header.value"
         class="text-h5 text-uppercase"
@@ -107,15 +107,35 @@
 
             <!-- SELECT CHECKBOX -->
             <template v-if="header.value === 'phase_alias'">
-              <div class="row items-center" style="margin-left: -6px;">
+              <div class="row items-center" style="margin-left: -12px;">
                 <q-checkbox
+                  v-if="job.stage != 'closed'"
                   color="theme-blue"
-                  :disable="job.active || job.stage === 'closed'"
+                  :disable="job.active"
                   :val="job._key"
-                  v-model="selected_jobs">
-                </q-checkbox>
+                  v-model="selected_jobs"
+                  />
+                <q-icon
+                  v-else
+                  color="theme-green"
+                  name="mdi-check-circle-outline"
+                  size="sm"
+                  class="q-ma-sm"
+                  />
+
                 <div class="smaller">
                   {{ job._key }}
+                  <q-tooltip
+                    delay="500"
+                    anchor="bottom left"
+                    self="top left"
+                    :offset="[10, 0]"
+                    transition-show="fade"
+                    transition-hide="fade"
+                    class="surface1 text-high">
+                     <div>{{ $t('start_short') }}: {{ formatJobTimes(job.start) }}</div>
+                    <div>{{ $t('end') }}: {{ formatJobTimes(job.end) }}</div>
+                  </q-tooltip>
                 </div>
 
                 <!-- JOB FORCED UPDATES MENU -->
@@ -125,10 +145,10 @@
                   icon="mdi-dots-horizontal"
                   class="q-ml-sm">
                   <q-popup-proxy>
-                    <q-list>
+                    <q-list style="max-width: 400px;">
                       <q-item
-                        :disable="job.stage != 'closed'"
-                        :clickable="job.stage == 'closed'"
+                        :disable="job.stage == 'created'"
+                        :clickable="job.stage != 'created'"
                         v-ripple
                         v-close-popup
                         @click="editJobTime(job)">
@@ -139,7 +159,7 @@
                           <q-item-label>
                             {{ $t('update_time') }}
                           </q-item-label>
-                          <q-item-label caption>
+                          <q-item-label caption lines="2">
                             {{ $t('update_time_disabled') }}
                           </q-item-label>
                         </q-item-section>
@@ -399,6 +419,7 @@
           <template v-if="edit_mode == 'modify' ">
             <JobRebalanceActionCard
               :jobs="selected_jobs_data"
+              :qt_to_allocate="qt_to_allocate"
               @changeEditMode="edit_mode = $event">
             </JobRebalanceActionCard>
           </template>
@@ -418,6 +439,7 @@ import BaseDialog from '@/components/BaseDialog.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import JobRebalanceActionCard from '@/components/JobRebalanceActionCard.vue'
 import sendEvent from '@/mixins/event.js'
+import { formatDateTime } from '@/lib/TimeHandling'
 
 export default {
 
@@ -502,6 +524,16 @@ export default {
       return this.wo_data.jobs.filter(job => this.selected_jobs.includes(job._key))
     },
 
+    qt_to_allocate() {
+      const selected_qt_remaining = Object.values(this.selected_jobs_data).reduce( (sum, job) => {
+        return sum + job.qt_planned - job.qt_completed - job.active_batch_qt
+      }, 0)
+      const wo_qt_remaining = this.wo_data.qt_planned - Object.values(this.selected_jobs_data).reduce((sum, job) => {
+        return sum + job.qt_completed + job.active_batch_qt
+      }, 0)
+      return Math.min(selected_qt_remaining, wo_qt_remaining)
+    },
+
     phase_data() {
       return this.wo_data.phase_sequence.map( phase_key => {
         const jobs = this.wo_data.jobs.filter( job => job.phase_key === phase_key ).sort((a,b) => a._key > b._key ? -1 : a._key < b._key ? 1 : 0)
@@ -551,7 +583,7 @@ export default {
     getHeaderClass(phase_key) {
       const base_classes = 'row items-center q-py-lg'
       const highlight = this.expanded_phase === phase_key ? ' highlight' : ''
-      return base_classes + highlight + ' q-pl-sm q-pr-none'
+      return base_classes + highlight + ' q-pl-xs q-pr-none'
     },
 
     getColClass(header) {
@@ -592,6 +624,14 @@ export default {
     updateSelectedJobData(job, selected) {
       this.selected_jobs.push(job._key)
       this.edit_mode = 'modify'
+    },
+
+    formatJobTimes(date) {
+      return formatDateTime(date, this.$i18n.locale, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      })
     },
 
     editJobTime(job_data) {

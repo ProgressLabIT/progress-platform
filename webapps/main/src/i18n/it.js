@@ -88,7 +88,7 @@ export default {
   "due_by": "scadenza",
   "edit": "modifica",
   "element": "elemento | elementi",
-  "end": "fine",
+  "end": "Fine",
   "end_date": "data chiusura",
   "equipment": "attrezzatura | attrezzature",
   "equipment_classes": "classe di attrezzature | classi di attrezzature",
@@ -223,7 +223,6 @@ export default {
   "label": "Etichetta",
   "language": "lingua",
   "late": "in ritardo",
-  "lead_time": "t. evasione",
   "link": "Collegamento | Collegamenti",
   "list": "Lista",
   "loading_signal": {
@@ -279,11 +278,6 @@ export default {
   "people": "persone",
   "performance": {
     "actual": "consuntivo",
-    "lead_time": {
-      "long": "tempo di evasione",
-      "medium": "t. evasione",
-      "short": "TE"
-    },
     "processing_cost": {
       "long": "costo di processo",
       "medium": "c. processo",
@@ -540,6 +534,7 @@ export default {
     "product_updated": "prodotto aggiornato"
   },
   "start_date": "data inizio",
+  "start_short": "Inizio",
   "start_from_date": "data rilascio",
   "start_end_totals": "totale iniziale/finale",
   "status": "stato",
@@ -561,7 +556,7 @@ export default {
   "update_progress_disabled": "Disponibile in assenza di quantità attiva",
   "update_progress_success": "Avanzamento modificato con successo",
   "update_time": "Modifica tempi",
-  "update_time_disabled": "Disponibile con lavoro chiuso",
+  "update_time_disabled": "Disponibile per lavori iniziati",
   "update_time_success": "Tempo modificato con successo",
   "user": {
     "add": "aggiungi utente",

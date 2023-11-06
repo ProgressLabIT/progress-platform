@@ -243,7 +243,7 @@
       # Last try failed when loading flows because the agent container was not ready, probably busy installing python dependencies
       - name: Wait for agent setup to finish
         ansible.builtin.wait_for:
-          timeout: 10
+          timeout: 30
 
       - name: Deploy system workflows
         ansible.builtin.shell:

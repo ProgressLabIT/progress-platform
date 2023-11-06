@@ -87,7 +87,7 @@ export default {
   "due_by": "due by",
   "edit": "edit",
   "element": "element",
-  "end": "end",
+  "end": "End",
   "end_date": "end date",
   "equipment": "equipment",
   "equipment_class": "equipment class | equipment classes",
@@ -222,7 +222,6 @@ export default {
   "label": "Label",
   "language": "language",
   "late": "late",
-  "lead_time": "lead time",
   "link": "Link | Links",
   "list": "List",
   "loading_text": "getting data...",
@@ -275,11 +274,6 @@ export default {
   "people": "people",
   "performance": {
     "actual": "actual",
-    "lead_time": {
-      "long": "lead time",
-      "medium": "lead time",
-      "short": "LT"
-    },
     "processing_cost": {
       "long": "processing cost",
       "medium": "proc. cost",
@@ -537,6 +531,7 @@ export default {
     "product_updated": "product updated"
   },
   "start_date": "start date",
+  "start_short": "Start",
   "start_from_date": "release date",
   "start_end_totals": "start/end total",
   "status": "status",
@@ -558,7 +553,7 @@ export default {
   "update_progress_disabled": "Available with no active quantity present",
   "update_progress_success": "Progress updated successfully",
   "update_time": "Update time",
-  "update_time_disabled": "Available if order is closed",
+  "update_time_disabled": "Available for started jobs",
   "update_time_success": "Time updated successfully",
   "user": {
     "add": "add user",
