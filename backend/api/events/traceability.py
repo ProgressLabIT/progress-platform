@@ -720,11 +720,12 @@ class ProductionActivityEvent(BaseEvent):
       )
     )
 
-    new_qt_completed = self.job.qt_completed + self.info.completed_batch_qt
+    # Update job completed quantity as reference for methods being called later (e.g. create_batch)
+    self.job.qt_completed += self.info.completed_batch_qt
 
     # NO REMAINING QUANTITY TO DO - LAST BATCH
-    if new_qt_completed == self.job.qt_planned: # No more pieces to work
-      self.complete_job(new_qt_completed)
+    if self.job.qt_completed == self.job.qt_planned: # No more pieces to work
+      self.complete_job(self.job.qt_completed)
       self.response = dict(
         message = f"Batch {self.info.active_batch_key} and Job {self.info.job_key} completed.",
         job_data = self.job
@@ -732,13 +733,13 @@ class ProductionActivityEvent(BaseEvent):
 
     # JOB HAS REMAINING QUANTITY
     else:
-      new_progress = round(100 * new_qt_completed / self.job.qt_planned)
+      new_progress = round(100 * self.job.qt_completed / self.job.qt_planned)
       job_update = dict(
         _key = self.info.job_key,
         active_batch_key = None,
         active_batch_qt = 0,
-        qt_completed = new_qt_completed,
-        qt_released = new_qt_completed,
+        qt_completed = self.job.qt_completed,
+        qt_released = self.job.qt_completed,
         progress = new_progress,
         active = False
       )
