@@ -399,6 +399,7 @@
           <template v-if="edit_mode == 'modify' ">
             <JobRebalanceActionCard
               :jobs="selected_jobs_data"
+              :qt_to_allocate="qt_to_allocate"
               @changeEditMode="edit_mode = $event">
             </JobRebalanceActionCard>
           </template>
@@ -500,6 +501,16 @@ export default {
 
     selected_jobs_data() {
       return this.wo_data.jobs.filter(job => this.selected_jobs.includes(job._key))
+    },
+
+    qt_to_allocate() {
+      const selected_qt_remaining = Object.values(this.selected_jobs_data).reduce( (sum, job) => {
+        return sum + job.qt_planned - job.qt_completed - job.active_batch_qt
+      }, 0)
+      const wo_qt_remaining = this.wo_data.qt_planned - Object.values(this.selected_jobs_data).reduce((sum, job) => {
+        return sum + job.qt_completed + job.active_batch_qt
+      }, 0)
+      return Math.min(selected_qt_remaining, wo_qt_remaining)
     },
 
     phase_data() {
