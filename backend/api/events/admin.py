@@ -290,6 +290,7 @@ class ProductionAdminEvent(BaseEvent):
       # Set job as started if not already
       if self.job.stage == WorkStatus.CREATED:
         job_update['stage'] = WorkStatus.STARTED
+        job_update['start'] = self.info.timestamp
 
       # Set job as closed and remove it from queues if necessary
       if self.info.new_job_qt_completed == self.job.qt_planned:
