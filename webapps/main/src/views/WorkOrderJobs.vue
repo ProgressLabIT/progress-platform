@@ -125,7 +125,7 @@
                   icon="mdi-dots-horizontal"
                   class="q-ml-sm">
                   <q-popup-proxy>
-                    <q-list>
+                    <q-list style="max-width: 400px;">
                       <q-item
                         :disable="job.stage == 'created'"
                         :clickable="job.stage != 'created'"
@@ -139,7 +139,7 @@
                           <q-item-label>
                             {{ $t('update_time') }}
                           </q-item-label>
-                          <q-item-label caption>
+                          <q-item-label caption lines="2">
                             {{ $t('update_time_disabled') }}
                           </q-item-label>
                         </q-item-section>
