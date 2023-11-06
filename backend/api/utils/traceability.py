@@ -112,11 +112,12 @@ class Queries:
     // Update progress
     LET progress = ROUND(AVERAGE(
       FOR phase IN wo.phase_sequence
-      RETURN SUM(
+      // Do not consider quantities beyond the planned quantity for wo
+      RETURN 100 * MIN([wo.qt_planned, SUM(
         FOR j IN jobs
         FILTER j.phase_key == phase
-        RETURN j.progress * j.qt_planned
-      ) / wo.qt_planned
+        RETURN j.progress * j.qt_planned / 100
+      )]) / wo.qt_planned
     ))
 
     // Update active state
