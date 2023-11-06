@@ -88,7 +88,7 @@ export default {
   "due_by": "scadenza",
   "edit": "modifica",
   "element": "elemento | elementi",
-  "end": "fine",
+  "end": "Fine",
   "end_date": "data chiusura",
   "equipment": "attrezzatura | attrezzature",
   "equipment_classes": "classe di attrezzature | classi di attrezzature",
@@ -534,6 +534,7 @@ export default {
     "product_updated": "prodotto aggiornato"
   },
   "start_date": "data inizio",
+  "start_short": "Inizio",
   "start_from_date": "data rilascio",
   "start_end_totals": "totale iniziale/finale",
   "status": "stato",

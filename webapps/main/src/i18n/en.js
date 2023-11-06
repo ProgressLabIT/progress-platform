@@ -87,7 +87,7 @@ export default {
   "due_by": "due by",
   "edit": "edit",
   "element": "element",
-  "end": "end",
+  "end": "End",
   "end_date": "end date",
   "equipment": "equipment",
   "equipment_class": "equipment class | equipment classes",
@@ -531,6 +531,7 @@ export default {
     "product_updated": "product updated"
   },
   "start_date": "start date",
+  "start_short": "Start",
   "start_from_date": "release date",
   "start_end_totals": "start/end total",
   "status": "status",

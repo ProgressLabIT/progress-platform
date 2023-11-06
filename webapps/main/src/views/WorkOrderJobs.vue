@@ -116,6 +116,17 @@
                 </q-checkbox>
                 <div class="smaller">
                   {{ job._key }}
+                  <q-tooltip
+                    delay="500"
+                    anchor="bottom left"
+                    self="top left"
+                    :offset="[10, 0]"
+                    transition-show="fade"
+                    transition-hide="fade"
+                    class="surface1 text-high">
+                     <div>{{ $t('start_short') }}: {{ formatJobTimes(job.start) }}</div>
+                    <div>{{ $t('end') }}: {{ formatJobTimes(job.end) }}</div>
+                  </q-tooltip>
                 </div>
 
                 <!-- JOB FORCED UPDATES MENU -->
@@ -419,6 +430,7 @@ import BaseDialog from '@/components/BaseDialog.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import JobRebalanceActionCard from '@/components/JobRebalanceActionCard.vue'
 import sendEvent from '@/mixins/event.js'
+import { formatDateTime } from '@/lib/TimeHandling'
 
 export default {
 
@@ -603,6 +615,14 @@ export default {
     updateSelectedJobData(job, selected) {
       this.selected_jobs.push(job._key)
       this.edit_mode = 'modify'
+    },
+
+    formatJobTimes(date) {
+      return formatDateTime(date, this.$i18n.locale, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      })
     },
 
     editJobTime(job_data) {
