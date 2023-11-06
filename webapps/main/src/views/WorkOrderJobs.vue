@@ -2,7 +2,7 @@
   <div class="q-px-sm q-py-sm full-height column">
 
     <!-- HEADERS -->
-    <div class="row low-text items-center q-px-sm q-py-sm">
+    <div class="row low-text items-center q-py-sm q-pl-xs">
       <div
         v-for="header in headers" :key="header.value"
         class="text-h5 text-uppercase"
@@ -107,13 +107,22 @@
 
             <!-- SELECT CHECKBOX -->
             <template v-if="header.value === 'phase_alias'">
-              <div class="row items-center" style="margin-left: -6px;">
+              <div class="row items-center" style="margin-left: -12px;">
                 <q-checkbox
+                  v-if="job.stage != 'closed'"
                   color="theme-blue"
-                  :disable="job.active || job.stage === 'closed'"
+                  :disable="job.active"
                   :val="job._key"
-                  v-model="selected_jobs">
-                </q-checkbox>
+                  v-model="selected_jobs"
+                  />
+                <q-icon
+                  v-else
+                  color="theme-green"
+                  name="mdi-check-circle-outline"
+                  size="sm"
+                  class="q-ma-sm"
+                  />
+
                 <div class="smaller">
                   {{ job._key }}
                   <q-tooltip
@@ -574,7 +583,7 @@ export default {
     getHeaderClass(phase_key) {
       const base_classes = 'row items-center q-py-lg'
       const highlight = this.expanded_phase === phase_key ? ' highlight' : ''
-      return base_classes + highlight + ' q-pl-sm q-pr-none'
+      return base_classes + highlight + ' q-pl-xs q-pr-none'
     },
 
     getColClass(header) {
