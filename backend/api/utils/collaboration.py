@@ -16,14 +16,8 @@ class Queries:
       FILTER field_definition
       RETURN MERGE(f, { type: field_definition.type })
     )
-
-    LET print_templates = (
-      FOR v IN 1..1 OUTBOUND i can_use_print_template
-      RETURN v
-    )
-
     SORT i.name
-    RETURN MERGE(i, { form_template, print_templates })
+    RETURN MERGE(i, { form_template })
   """
 
   FIND_ISSUES = """
@@ -52,11 +46,12 @@ class Queries:
             FOR advanced_filter IN NOT_NULL(@advanced_filters.filters, [])
             RETURN i.data
               ? i.data[* FILTER CURRENT._key == advanced_filter._key
-                && advanced_filter.value == (
-                  CURRENT.type == "choice" ? CURRENT.value.value
+                && (
+                  CURRENT.type == "text" ? CONTAINS(LOWER(CURRENT.value), LOWER(advanced_filter.value))
+                  : CURRENT.type == "choice" ? CURRENT.value.value == advanced_filter.value
                   : CURRENT.type == "boolean" ? !!CURRENT.value
                   : CURRENT.type == "files" ? !!LENGTH(CURRENT.value)
-                  : CURRENT.value
+                  : CURRENT.value == advanced_filter.value
                 )]
               : []
           )[**]) >= (@advanced_filters.operator == "OR" ? 1 : LENGTH(@advanced_filters.filters))

@@ -47,7 +47,7 @@
         <q-card-section>
         <div id="flow-log"
           class="background smaller full-with scroll relative-position q-pa-md"
-          style="height: 400px; font-family: monospace;">
+          style="height: 400px; font-family: monospace; white-space: pre-line;">
           <div v-for="(l, index) in flow_logs" :key="index" class="q-mb-sm">
             {{ l }}
           </div>

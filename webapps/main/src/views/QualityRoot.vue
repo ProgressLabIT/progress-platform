@@ -1,7 +1,6 @@
 <template>
   <q-page-container class="absolute-full">
     <q-page class="row full-height">
-
       <!-- MAIN CONTENT -->
       <div class="column col full-height">
         <div class="row col-auto items-center justify-between q-pl-xs q-pr-md q-py-sm">
@@ -23,6 +22,8 @@
             </q-route-tab>
           </q-tabs>
 
+          <q-space />
+
           <!-- NEW ISSUE BUTTON -->
           <q-btn
             size="0.75rem"
@@ -31,367 +32,359 @@
             @click="show_issue_form = true">
           </q-btn>
 
-           <IssueForm
+          <IssueForm
             :show="show_issue_form"
             mode="new"
             with_links
             @close="show_issue_form = false"
             @issue_created="getIssues">
           </IssueForm>
-        </div>
 
+          <q-btn
+            v-if="!showFilterDrawer && $route.name != 'workOrderArchive'"
+            class="q-ml-sm"
+            size="sm"
+            round
+            :color="filters_active ? 'theme-blue' : 'theme-grey'"
+            icon="mdi-filter"
+            @click="showFilterDrawer = true"
+            >
+            <q-badge
+              v-if="filters_active"
+              floating
+              rounded
+              color="theme-red"
+              :label="filters_active"
+              size="4px"
+              style="font-family: 'Red Hat Text'; font-size: 8px"
+              />
+          </q-btn>
+        </div>
 
         <!-- MAIN CONTENT -->
         <div class="col relative-position">
           <router-view :loading="loading"/>
         </div>
       </div>
-
-      <!-- DIVIDER -->
-      <q-separator vertical inset/>
-
-      <!-- FILTERS -->
-      <div class="col-3 full-height column q-px-lg">
-
-        <!-- FILTERS HEADING -->
-        <div class="col-auto row items-center justify-between q-mt-sm q-mb-md">
-          <div class="col-auto highlight text-uppercase text-h5">
-            {{ $t('filter', 2) }}
-          </div>
-          <!-- FILTERS RESET -->
-          <div class="col-auto">
-            <q-btn
-              color="theme-blue"
-              size="sm"
-              padding="xs sm"
-              v-show="filters_active"
-              @click="resetFilters">
-              <span>
-                {{ $t('reset_filters') }}
-              </span>
-            </q-btn>
-          </div>
-        </div>
-
-        <!-- FILTER FORM -->
-      <div class="col scroll q-pb-xl">
-          <div class="row q-col-gutter-md q-mb-md">
-            <div class="col-6">
-              <q-checkbox
-                dense
-                v-model="issue_open"
-                :label="$t('issue_open')">
-              </q-checkbox>
-            </div>
-
-            <div class="col-6">
-              <q-checkbox
-                dense
-                v-model="issue_closed"
-                :label="$t('issue_closed')">
-              </q-checkbox>
-            </div>
-
-            <div class="col-6">
-              <q-checkbox
-                dense
-                v-model="issue_critical"
-                :label="$t('issue_critical')">
-              </q-checkbox>
-            </div>
-
-            <div class="col-6">
-              <q-checkbox
-                dense
-                v-model="issue_non_critical"
-                :label="$t('issue_non_critical')">
-              </q-checkbox>
-            </div>
-          </div>
-
-          <!-- ISSUE KEY -->
-          <q-input
-            clearable
-            filled
-            dense
-            hide-bottom-space
-            autocomplete="off"
-            name="search"
-            debounce="1000"
-            :label="$t('issue_key')"
-            v-model="issue_key_search"
-            class="q-mb-md">
-            <template #append>
-              <q-icon name="mdi-magnify" />
-            </template>
-          </q-input>
-
-          <!-- ISSUE TYPE -->
-          <BaseAutocompleteIssueType
-            dense
-            key_only
-            class="q-mb-md"
-            :value="issue_type_key"
-            @select="selection => issue_type_key = selection">
-          </BaseAutocompleteIssueType>
-
-
-          <!-- OPENED DATE RANGE -->
-          <div class="row q-col-gutter-sm">
-            <div class="col">
-              <q-input
-                filled
-                dense
-                clearable
-                debounce="1000"
-                mask="date"
-                v-model="time_created_from"
-                :label="$t('opened_min')">
-                <template #append>
-                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date minimal v-model="time_created_from">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-            <div class="col">
-              <q-input
-                filled
-                dense
-                clearable
-                mask="date"
-                debounce="1000"
-                v-model="time_created_to"
-                :label="$t('opened_max')">
-                <template #append>
-                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date minimal v-model="time_created_to">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-          </div>
-
-          <!-- CLOSED DATE RANGE -->
-          <div class="row q-col-gutter-sm q-mt-sm q-mb-md">
-            <div class="col">
-              <q-input
-                filled
-                dense
-                clearable
-                mask="date"
-                debounce="1000"
-                v-model="time_closed_from"
-                :label="$t('closed_min')">
-                <template #append>
-                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date minimal v-model="time_closed_from">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-            <div class="col">
-              <q-input
-                filled
-                dense
-                clearable
-                mask="date"
-                v-model="time_closed_to"
-                debounce="1000"
-                :label="$t('closed_max')">
-                <template #append>
-                  <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date minimal v-model="time_closed_to">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-          </div>
-
-          <!-- OPENED BY -->
-          <BaseAutocompleteUser
-            :placeholder="$capitalize($t('opened_by'))"
-            dense
-            class="q-mb-md"
-            key_only
-            :label="$t('opened_by')"
-            :operator_only="false"
-            :value="created_by"
-            @select="(selection) => created_by = selection">
-          </BaseAutocompleteUser>
-
-          <!-- CLOSED BY -->
-          <BaseAutocompleteUser
-            :placeholder="$capitalize($t('closed_by'))"
-            dense
-            class="q-mb-md"
-            key_only
-            :label="$t('closed_by')"
-            :operator_only="false"
-            :value="closed_by"
-            @select="(selection) => closed_by = selection">
-          </BaseAutocompleteUser>
-
-          <!-- OPERATION -->
-          <BaseAutocompleteOperation
-            dense
-            filled
-            class="q-mb-md"
-            key_only
-            :label="$capitalize($t('operation.label'))"
-            :value="operation_key"
-            @select="(selection) => operation_key = selection">
-          </BaseAutocompleteOperation>
-
-          <!-- PRODUCT -->
-          <q-input
-            clearable
-            dense
-            filled
-            hide-bottom-space
-            autocomplete="off"
-            name="work_order"
-            debounce="1000"
-            class="q-mb-md"
-            :label="$t('product.label')"
-            v-model="product_code_search">
-            <template #append>
-              <q-icon name="mdi-magnify" />
-            </template>
-          </q-input>
-
-          <!-- PHASE -->
-          <q-input
-            clearable
-            dense
-            filled
-            hide-bottom-space
-            autocomplete="off"
-            name="work_order"
-            debounce="1000"
-            :label="$t('phase.short')"
-            class="q-mb-md"
-            v-model="phase_alias_search">
-            <template #append>
-              <q-icon name="mdi-magnify" />
-            </template>
-          </q-input>
-
-          <!-- WORK ORDER -->
-          <q-input
-            clearable
-            filled
-            dense
-            hide-bottom-space
-            autocomplete="off"
-            name="work_order"
-            debounce="1000"
-            :label="$capitalize($t('work_order.long'))"
-            v-model="work_order_code_search"
-            class="q-mb-md">
-            <template #append>
-              <q-icon name="mdi-magnify" />
-            </template>
-          </q-input>
-
-          <!-- PROJECT -->
-          <q-input
-            clearable
-            filled
-            dense
-            hide-bottom-space
-            autocomplete="off"
-            name="work_order"
-            debounce="1000"
-            :label="$capitalize($t('project'))"
-            v-model="project_search"
-            class="q-mb-md">
-            <template #append>
-              <q-icon name="mdi-magnify" />
-            </template>
-          </q-input>
-
-          <div class="row items-center justify-between">
-            <div class="highlight text-uppercase text-h6">
-              {{ $t('advanced_filters') }}
-            </div>
-
-            <q-space />
-
-            <q-btn-toggle
-              v-model="advancedFilterOperator"
-              :options="[
-                { label: $t('all', 2), value: 'AND' },
-                { label: $t('any'), value: 'OR' },
-              ]"
-              size="xs"
-              class="q-mr-md"
-            />
-
-            <q-btn
-              round
-              color="theme-blue"
-              icon="mdi-plus"
-              size="xs"
-              @click="addAdvancedFilter"
-            />
-          </div>
-
-          <div v-for="(filter, index) in advancedFilters" :key="filter._key" class="row items-center justify-between q-mt-sm">
-            <div class="col">
-              <!-- We override q-mb-lg of FormField with style -->
-              <q-checkbox
-                v-if="filter.type == 'files'"
-                v-model="filter.value"
-                :label="$t('has_attachments')">
-              </q-checkbox>
-              <FormField
-                v-else
-                :field_data="filter"
-                style="margin-bottom: 0"
-                @update="filter.value = filter.type === 'choice' ? $event?.value : $event"
-              />
-            </div>
-
-            <q-btn
-              class="q-ml-md"
-              round
-              color="theme-grey"
-              icon="mdi-minus"
-              size="xs"
-              @click="advancedFilters.splice(index, 1)"
-            />
-          </div>
-
-          <div class="q-mb-xl"></div>
-        </div>
-        <div class="fade-bottom-bg"></div>
-      </div>
     </q-page>
+
+    <FilterDrawer
+      v-model="showFilterDrawer"
+      :active-filters="filters_active"
+      @reset="resetFilters"
+      >
+      <div class="row q-col-gutter-md q-mb-md">
+        <div class="col-6">
+          <q-checkbox
+            dense
+            v-model="issue_open"
+            :label="$t('issue_open')">
+          </q-checkbox>
+        </div>
+
+        <div class="col-6">
+          <q-checkbox
+            dense
+            v-model="issue_closed"
+            :label="$t('issue_closed')">
+          </q-checkbox>
+        </div>
+
+        <div class="col-6">
+          <q-checkbox
+            dense
+            v-model="issue_critical"
+            :label="$t('issue_critical')">
+          </q-checkbox>
+        </div>
+
+        <div class="col-6">
+          <q-checkbox
+            dense
+            v-model="issue_non_critical"
+            :label="$t('issue_non_critical')">
+          </q-checkbox>
+        </div>
+      </div>
+
+      <!-- ISSUE KEY -->
+      <q-input
+        clearable
+        filled
+        dense
+        hide-bottom-space
+        autocomplete="off"
+        name="search"
+        debounce="1000"
+        :label="$t('issue_key')"
+        v-model="issue_key_search"
+        class="q-mb-md">
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
+      <!-- ISSUE TYPE -->
+      <BaseAutocompleteIssueType
+        dense
+        key_only
+        class="q-mb-md"
+        :value="issue_type_key"
+        @select="selection => issue_type_key = selection">
+      </BaseAutocompleteIssueType>
+
+
+      <!-- OPENED DATE RANGE -->
+      <div class="row q-col-gutter-sm">
+        <div class="col">
+          <q-input
+            filled
+            dense
+            clearable
+            debounce="1000"
+            mask="date"
+            v-model="time_created_from"
+            :label="$t('opened_min')">
+            <template #append>
+              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                  <q-date minimal v-model="time_created_from">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+        </div>
+        <div class="col">
+          <q-input
+            filled
+            dense
+            clearable
+            mask="date"
+            debounce="1000"
+            v-model="time_created_to"
+            :label="$t('opened_max')">
+            <template #append>
+              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                  <q-date minimal v-model="time_created_to">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+        </div>
+      </div>
+
+      <!-- CLOSED DATE RANGE -->
+      <div class="row q-col-gutter-sm q-mt-sm q-mb-md">
+        <div class="col">
+          <q-input
+            filled
+            dense
+            clearable
+            mask="date"
+            debounce="1000"
+            v-model="time_closed_from"
+            :label="$t('closed_min')">
+            <template #append>
+              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                  <q-date minimal v-model="time_closed_from">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+        </div>
+        <div class="col">
+          <q-input
+            filled
+            dense
+            clearable
+            mask="date"
+            v-model="time_closed_to"
+            debounce="1000"
+            :label="$t('closed_max')">
+            <template #append>
+              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
+                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                  <q-date minimal v-model="time_closed_to">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+        </div>
+      </div>
+
+      <!-- OPENED BY -->
+      <BaseAutocompleteUser
+        :placeholder="$capitalize($t('opened_by'))"
+        dense
+        class="q-mb-md"
+        key_only
+        :label="$t('opened_by')"
+        :operator_only="false"
+        :value="created_by"
+        @select="(selection) => created_by = selection">
+      </BaseAutocompleteUser>
+
+      <!-- CLOSED BY -->
+      <BaseAutocompleteUser
+        :placeholder="$capitalize($t('closed_by'))"
+        dense
+        class="q-mb-md"
+        key_only
+        :label="$t('closed_by')"
+        :operator_only="false"
+        :value="closed_by"
+        @select="(selection) => closed_by = selection">
+      </BaseAutocompleteUser>
+
+      <!-- OPERATION -->
+      <BaseAutocompleteOperation
+        dense
+        filled
+        class="q-mb-md"
+        key_only
+        :label="$capitalize($t('operation.label'))"
+        :value="operation_key"
+        @select="(selection) => operation_key = selection">
+      </BaseAutocompleteOperation>
+
+      <!-- PRODUCT -->
+      <q-input
+        clearable
+        dense
+        filled
+        hide-bottom-space
+        autocomplete="off"
+        name="work_order"
+        debounce="1000"
+        class="q-mb-md"
+        :label="$t('product.label')"
+        v-model="product_code_search">
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
+      <!-- PHASE -->
+      <q-input
+        clearable
+        dense
+        filled
+        hide-bottom-space
+        autocomplete="off"
+        name="work_order"
+        debounce="1000"
+        :label="$t('phase.short')"
+        class="q-mb-md"
+        v-model="phase_alias_search">
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
+      <!-- WORK ORDER -->
+      <q-input
+        clearable
+        filled
+        dense
+        hide-bottom-space
+        autocomplete="off"
+        name="work_order"
+        debounce="1000"
+        :label="$capitalize($t('work_order.long'))"
+        v-model="work_order_code_search"
+        class="q-mb-md">
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
+      <!-- PROJECT -->
+      <q-input
+        clearable
+        filled
+        dense
+        hide-bottom-space
+        autocomplete="off"
+        name="work_order"
+        debounce="1000"
+        :label="$capitalize($t('project'))"
+        v-model="project_search"
+        class="q-mb-md">
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
+      <div class="row items-center justify-between">
+        <div class="highlight text-uppercase text-h6">
+          {{ $t('advanced_filters') }}
+        </div>
+
+        <q-space />
+
+        <q-btn-toggle
+          v-model="advancedFilterOperator"
+          :options="[
+            { label: $t('all', 2), value: 'AND' },
+            { label: $t('any'), value: 'OR' },
+          ]"
+          size="xs"
+          class="q-mr-md"
+        />
+
+        <q-btn
+          round
+          color="theme-blue"
+          icon="mdi-plus"
+          size="xs"
+          @click="addAdvancedFilter"
+        />
+      </div>
+
+      <div v-for="(filter, index) in advancedFilters" :key="filter._key" class="row items-center justify-between q-mt-sm">
+        <div class="col">
+          <q-checkbox
+            v-if="filter.type === 'files'"
+            v-model="filter.value"
+            :label="$t('has_attachments')"
+          />
+          <!-- We override q-mb-lg of FormField with style -->
+          <FormField
+            v-else
+            :field_data="filter"
+            style="margin-bottom: 0"
+            @update="filter.value = filter.type === 'choice' ? $event?.value : $event"
+          />
+        </div>
+
+        <q-btn
+          class="q-ml-md"
+          round
+          color="theme-grey"
+          icon="mdi-minus"
+          size="xs"
+          @click="advancedFilters.splice(index, 1)"
+        />
+      </div>
+    </FilterDrawer>
   </q-page-container>
 </template>
 
@@ -401,6 +394,7 @@ import IssueForm from '@/components/IssueForm.vue'
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue'
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue'
+import FilterDrawer from '@/components/FilterDrawer.vue'
 import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js'
 import { ref, watch } from 'vue'
 import { Dialog } from 'quasar'
@@ -417,9 +411,11 @@ export default {
     BaseAutocompleteUser,
     IssueForm,
     FormField,
-  },
+    FilterDrawer
+},
 
   setup () {
+    const showFilterDrawer = ref(false)
     const advancedFilterOperator = ref('AND')
     const advancedFilters = ref([])
 
@@ -466,6 +462,7 @@ export default {
     }
 
     return {
+      showFilterDrawer,
       advancedFilterOperator,
       advancedFilters,
       addAdvancedFilter,
@@ -487,9 +484,9 @@ export default {
 
   computed: {
     filters_active() {
-      return this.filter_list.some(f => {
+      return this.advancedFilters.length + this.filter_list.filter(f => {
         return this.bool_filters.includes(f) ? this[f] === false : !!this[f]
-      }) || this.advancedFilters.length
+      }).length
     },
 
     issue_key_search: queryModel(String, 'issue_search', null),
@@ -543,8 +540,8 @@ export default {
   },
 
   methods: {
-    resetFilters() {
-      this.$router.replace({ query: null })
+    async resetFilters() {
+      await this.$router.replace({ query: null })
       this.advancedFilters = []
     },
 

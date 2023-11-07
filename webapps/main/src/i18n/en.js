@@ -87,7 +87,7 @@ export default {
   "due_by": "due by",
   "edit": "edit",
   "element": "element",
-  "end": "end",
+  "end": "End",
   "end_date": "end date",
   "equipment": "equipment",
   "equipment_class": "equipment class | equipment classes",
@@ -130,6 +130,7 @@ export default {
   "field_type_text": "Text",
   "field_type_time": "Time",
   "filter": "filter",
+  "filters_reset": "Reset filters",
   "first_x_shown": "First {x} records shown",
   "form_title": "form fields",
   "form_missing_fields_alert": "please fill in all fields",
@@ -221,7 +222,6 @@ export default {
   "label": "Label",
   "language": "language",
   "late": "late",
-  "lead_time": "lead time",
   "link": "Link | Links",
   "list": "List",
   "loading_text": "getting data...",
@@ -274,11 +274,6 @@ export default {
   "people": "people",
   "performance": {
     "actual": "actual",
-    "lead_time": {
-      "long": "lead time",
-      "medium": "lead time",
-      "short": "LT"
-    },
     "processing_cost": {
       "long": "processing cost",
       "medium": "proc. cost",
@@ -320,6 +315,17 @@ export default {
     "no_phase": "No phase",
     "no_procedure": "no procedure",
     "params": {
+      "unsupervised_work_allowed": {
+        "title": "Unsupervised work",
+        "false": {
+          "desc": "This phase requires the active presence of an operator. They will not be allowed to start work on other jobs without stopping an ongoing session in this phase.",
+          "title": "Not allowed"
+        },
+        "true": {
+          "desc": "This phase can proceed without the active presence of an operator (e.g. it's carried out by automatic equipment). The operator will be able to start work on other jobs without stopping an ongoing session on this phase.",
+          "title": "Allowed"
+        }
+      },
       "auto_new_batch" : {
         "false": {
           "desc": "When a batch is completed the work session is interrupted. The next batch will be created when the work session is restarted.",
@@ -491,13 +497,13 @@ export default {
       "short": "remq"
     },
     "short": "qt",
-    "update": "update quantity"
+    "update": "update quantity",
+    "should_adjust_duration": "Adjust durations accordingly",
   },
   "reactivate": "reactivate",
   "remove_assignment": "remove assignment",
   "rename": "rename",
   "report": "Reports",
-  "reset_filters": "reset filters",
   "restore": "restore",
   "resume": "resume",
   "save": "save",
@@ -529,6 +535,7 @@ export default {
     "product_updated": "product updated"
   },
   "start_date": "start date",
+  "start_short": "Start",
   "start_from_date": "release date",
   "start_end_totals": "start/end total",
   "status": "status",
@@ -550,7 +557,7 @@ export default {
   "update_progress_disabled": "Available with no active quantity present",
   "update_progress_success": "Progress updated successfully",
   "update_time": "Update time",
-  "update_time_disabled": "Available if order is closed",
+  "update_time_disabled": "Available for started jobs",
   "update_time_success": "Time updated successfully",
   "user": {
     "add": "add user",

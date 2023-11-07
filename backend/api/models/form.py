@@ -53,8 +53,7 @@ class CustomField(ArangoDocument):
   default_hint: str = None # To show to the user when filling up the forms
 
 class FormFieldDefinition(BaseModel):
-  _key: str # CustomField key
-  type: FieldType
+  field_key: str
   multiple: bool = False
   label: str
   hint: str = None
@@ -67,8 +66,3 @@ class FormFieldDefinition(BaseModel):
     if values.get('hidden') and values.get('default') == None:
       raise ValueError('Hidden fields must have a default value')
     return values
-
-class FormFieldInstance(BaseModel):
-  field_key: str
-  name: str = None
-  value: Any = None

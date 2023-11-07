@@ -2,7 +2,7 @@
   <div class="q-px-sm q-py-sm full-height column">
 
     <!-- HEADERS -->
-    <div class="row low-text items-center q-px-sm q-py-sm">
+    <div class="row low-text items-center q-py-sm q-pl-xs">
       <div
         v-for="header in headers" :key="header.value"
         class="text-h5 text-uppercase"
@@ -107,15 +107,35 @@
 
             <!-- SELECT CHECKBOX -->
             <template v-if="header.value === 'phase_alias'">
-              <div class="row items-center" style="margin-left: -6px;">
+              <div class="row items-center" style="margin-left: -12px;">
                 <q-checkbox
+                  v-if="job.stage != 'closed'"
                   color="theme-blue"
-                  :disable="job.active || job.stage === 'closed'"
+                  :disable="job.active"
                   :val="job._key"
-                  v-model="selected_jobs">
-                </q-checkbox>
+                  v-model="selected_jobs"
+                  />
+                <q-icon
+                  v-else
+                  color="theme-green"
+                  name="mdi-check-circle-outline"
+                  size="sm"
+                  class="q-ma-sm"
+                  />
+
                 <div class="smaller">
                   {{ job._key }}
+                  <q-tooltip
+                    delay="500"
+                    anchor="bottom left"
+                    self="top left"
+                    :offset="[10, 0]"
+                    transition-show="fade"
+                    transition-hide="fade"
+                    class="surface1 text-high">
+                     <div>{{ $t('start_short') }}: {{ formatJobTimes(job.start) }}</div>
+                    <div>{{ $t('end') }}: {{ formatJobTimes(job.end) }}</div>
+                  </q-tooltip>
                 </div>
 
                 <!-- JOB FORCED UPDATES MENU -->
@@ -125,10 +145,10 @@
                   icon="mdi-dots-horizontal"
                   class="q-ml-sm">
                   <q-popup-proxy>
-                    <q-list>
+                    <q-list style="max-width: 400px;">
                       <q-item
-                        :disable="job.stage != 'closed'"
-                        :clickable="job.stage == 'closed'"
+                        :disable="job.stage == 'created'"
+                        :clickable="job.stage != 'created'"
                         v-ripple
                         v-close-popup
                         @click="editJobTime(job)">
@@ -139,7 +159,7 @@
                           <q-item-label>
                             {{ $t('update_time') }}
                           </q-item-label>
-                          <q-item-label caption>
+                          <q-item-label caption lines="2">
                             {{ $t('update_time_disabled') }}
                           </q-item-label>
                         </q-item-section>
@@ -247,6 +267,7 @@
                     <q-card-section class="text-h3 display highlight">
                       {{ $t('update_progress') }}
                     </q-card-section>
+
                     <q-card-section>
                       <q-input
                         type="number"
@@ -260,6 +281,14 @@
                         autofocus>
                       </q-input>
                     </q-card-section>
+
+                    <q-card-section>
+                      <q-checkbox
+                        v-model="jobs_temp_data.should_adjust_duration"
+                        :label="$t('quantity.should_adjust_duration')"
+                      />
+                    </q-card-section>
+
                     <q-card-section>
                       <div class="row justify-between">
                         <q-btn
@@ -390,6 +419,7 @@
           <template v-if="edit_mode == 'modify' ">
             <JobRebalanceActionCard
               :jobs="selected_jobs_data"
+              :qt_to_allocate="qt_to_allocate"
               @changeEditMode="edit_mode = $event">
             </JobRebalanceActionCard>
           </template>
@@ -409,6 +439,7 @@ import BaseDialog from '@/components/BaseDialog.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
 import JobRebalanceActionCard from '@/components/JobRebalanceActionCard.vue'
 import sendEvent from '@/mixins/event.js'
+import { formatDateTime } from '@/lib/TimeHandling'
 
 export default {
 
@@ -493,9 +524,19 @@ export default {
       return this.wo_data.jobs.filter(job => this.selected_jobs.includes(job._key))
     },
 
+    qt_to_allocate() {
+      const selected_qt_remaining = Object.values(this.selected_jobs_data).reduce( (sum, job) => {
+        return sum + job.qt_planned - job.qt_completed - job.active_batch_qt
+      }, 0)
+      const wo_qt_remaining = this.wo_data.qt_planned - Object.values(this.selected_jobs_data).reduce((sum, job) => {
+        return sum + job.qt_completed + job.active_batch_qt
+      }, 0)
+      return Math.min(selected_qt_remaining, wo_qt_remaining)
+    },
+
     phase_data() {
       return this.wo_data.phase_sequence.map( phase_key => {
-        const jobs = this.wo_data.jobs.filter( job => job.phase_key === phase_key )
+        const jobs = this.wo_data.jobs.filter( job => job.phase_key === phase_key ).sort((a,b) => a._key > b._key ? -1 : a._key < b._key ? 1 : 0)
         const params = jobs[0].parameters
         const phase_alias = jobs[0].phase_alias
         const issue_count = jobs.reduce( (sum, job) => sum + job.issue_count, 0)
@@ -542,7 +583,7 @@ export default {
     getHeaderClass(phase_key) {
       const base_classes = 'row items-center q-py-lg'
       const highlight = this.expanded_phase === phase_key ? ' highlight' : ''
-      return base_classes + highlight + ' q-pl-sm q-pr-none'
+      return base_classes + highlight + ' q-pl-xs q-pr-none'
     },
 
     getColClass(header) {
@@ -585,6 +626,14 @@ export default {
       this.edit_mode = 'modify'
     },
 
+    formatJobTimes(date) {
+      return formatDateTime(date, this.$i18n.locale, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      })
+    },
+
     editJobTime(job_data) {
       const duration = Duration.fromMillis(job_data.processing_time).rescale().toObject()
       this.jobs_temp_data = {
@@ -600,8 +649,8 @@ export default {
 
     async editJobProgress(job_data) {
       const resp = await this.$api.get('wip', { params: { job_key: job_data._key }})
-      const min_progress_qt = job_data.last_phase ? 0 : job_data.qt_completed - resp.data.free_wip_qt_downstream
-      const max_progress_qt = job_data.first_phase ? job_data.qt_planned : job_data.qt_completed + resp.data.free_wip_qt_upstream
+      const min_progress_qt = job_data.last_phase ? 0 : Math.max(0, job_data.qt_completed - resp.data.free_wip_qt_downstream)
+      const max_progress_qt = job_data.first_phase ? job_data.qt_planned : Math.min(job_data.qt_completed + resp.data.free_wip_qt_upstream, job_data.qt_planned)
 
       this.jobs_temp_data = {
         job_key: job_data._key,
@@ -609,7 +658,8 @@ export default {
         work_order_key: job_data.wo_key,
         new_job_qt_completed: job_data.qt_completed,
         min_progress_qt,
-        max_progress_qt
+        max_progress_qt,
+        should_adjust_duration: true
       }
 
       this.edit_job_progress = job_data._key
@@ -651,35 +701,38 @@ export default {
       })
     },
 
-    forceProgress() {
+    async forceProgress() {
       const td = this.jobs_temp_data
       const new_qt_within_bounds = (
-        td.min_progress_qt <= td.new_job_qt_completed
-        && td.new_job_qt_completed <= td.max_progress_qt
+        td.min_progress_qt <= td.new_job_qt_completed &&
+        td.new_job_qt_completed <= td.max_progress_qt
       )
-      if (new_qt_within_bounds) {
-        this.sendEvent({
-          event_type: 'PROGRESS_OVERRIDE_REQUESTED',
-          event_data: this.jobs_temp_data
-        }).then(async () => {
-          this.resetEditing()
-          await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
-          this.$q.notify({
-            message: this.$t('update_progress_success'),
-            color: 'theme-green',
-            timeout: 1500,
-            position: 'top'
-          })
-        }).catch(err => {
-          window.alert(err)
-        })
-      }
-      else {
+
+      if (!new_qt_within_bounds) {
+        // TODO: i18n
         window.alert(`Quantità deve essere fra ${td.min_progress_qt} e ${td.max_progress_qt}`)
         // Set value to closest limit
         td.new_job_qt_completed = td.new_job_qt_completed < td.min_progress_qt
           ? td.min_progress_qt
           : td.max_progress_qt
+        return
+      }
+
+      try {
+        await this.sendEvent({
+          event_type: 'PROGRESS_OVERRIDE_REQUESTED',
+          event_data: this.jobs_temp_data,
+        })
+        this.resetEditing()
+        await this.$store.dispatch('loadWorkOrderData', this.wo_data._key)
+        this.$q.notify({
+          message: this.$t('update_progress_success'),
+          color: 'theme-green',
+          timeout: 1500,
+          position: 'top'
+        })
+      } catch (error) {
+        window.alert(error)
       }
     },
 

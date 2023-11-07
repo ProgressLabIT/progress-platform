@@ -146,6 +146,11 @@ $separator-dark-color: rgba(255, 255, 255, .12);
   filter: blur(5px);
 }
 
+.glass {
+  background-color: rgb(100, 100, 100, .5);
+  backdrop-filter: blur(10px);
+}
+
 body.body--dark {
   color: var(--high-white) !important;
 }
@@ -386,4 +391,18 @@ span .display {
   transition: inherit;
   border-color: rgba(255, 255, 255, 0.12);
   overflow: visible;
+}
+
+
+.animate-pulse {
+  animation: q-pulse 2s infinite /* rtl:ignore */
+}
+
+@keyframes q-pulse {
+  0% {
+    box-shadow: 0 0 0 0px #fff3
+  }
+  100% {
+    box-shadow: 0 0 0 15px rgba(0, 0, 0, 0)
+  }
 }

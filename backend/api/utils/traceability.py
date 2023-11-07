@@ -16,6 +16,16 @@ class Queries:
     RETURN e
   """
 
+  CLOSE_UNALLOWED_PARALLEL_WORK_SESSIONS = """
+    FOR ws IN WorkSession
+    FILTER
+      ws.user_key == @user_key
+      && ws.active
+      && !DOCUMENT(Job, ws.job_key).parameters.unsupervised_work_allowed
+    UPDATE ws WITH { active: false, end: @timestamp } IN WorkSession
+    RETURN NEW
+  """
+
   CREATE_WORK_SESSION = """
     LET new_ws = {
       batch_key: @batch_key,
@@ -102,11 +112,12 @@ class Queries:
     // Update progress
     LET progress = ROUND(AVERAGE(
       FOR phase IN wo.phase_sequence
-      RETURN SUM(
+      // Do not consider quantities beyond the planned quantity for wo
+      RETURN 100 * MIN([wo.qt_planned, SUM(
         FOR j IN jobs
         FILTER j.phase_key == phase
-        RETURN j.progress * j.qt_planned
-      ) / wo.qt_planned
+        RETURN j.progress * j.qt_planned / 100
+      )]) / wo.qt_planned
     ))
 
     // Update active state
@@ -142,10 +153,6 @@ class Queries:
 
     LET end = still_open ? null : DATE_ISO8601(now)
 
-    // Calculate Throughput Time and Lead Time at Work order Closure
-    LET lead_time = still_open ? null : DATE_DIFF(wo.created, now, 'f')
-    LET throughput_time = still_open ? null : DATE_DIFF(wo.start, now, 'f')
-
     // Apply changes and return updated record
     UPDATE wo WITH {
 
@@ -155,9 +162,7 @@ class Queries:
       status,
       end,
       processing_time,
-      processing_cost,
-      throughput_time,
-      lead_time
+      processing_cost
 
     } IN WorkOrder RETURN NEW
   """
@@ -197,12 +202,7 @@ class Queries:
       RETURN ws
     )
 
-    LET unit_processing_time = SUM(
-      FOR ws IN work_sessions
-      RETURN ws.duration
-    ) / @qt_pass
-
-    // To be added when material cost will be handled
+    // TODO: Update when material cost will be handled
     LET material_cost = 0
 
     LET processing_cost = SUM(
@@ -210,13 +210,10 @@ class Queries:
       RETURN ws.duration * ws.hourly_cost
     ) / 3600000
 
-
     UPDATE batch WITH {
       qt_pass: @qt_pass,
       active: false,
       end: @end,
-      unit_processing_time,
-      unit_processing_cost: processing_cost / @qt_pass,
       value: processing_cost + material_cost
     } in Batch
   """

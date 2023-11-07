@@ -75,21 +75,13 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
   active: bool = False
   on_time: bool = True
   critical: bool = False
-  progress: int = Field(0, ge=0, le=100)
+  progress: int = Field(0, ge=0)
 
   created: datetime = Field(default_factory=timestamp)
   start: datetime = None
   end: datetime = None
 
-  issue_count: int = None
-
-  lead_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
-  throughput_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
-  processing_time: float = None # TargetActualTimeDelta = TargetActualTimeDelta()
-
-  processing_cost: float = None
   material_cost: float = None
-  total_cost: float = None
 
   phase_sequence: List[str] = []
   wo_docs: List[ProductDoc] = []
@@ -146,7 +138,7 @@ class Job(FlexModel):
   issues_total: int = None
   issues_open: int = None
 
-  progress: int = Field(0, ge=0, le=100)
+  progress: int = Field(0, ge=0)
   active_batch_key: str = None # batch _key
   active_batch_qt: int = 0
   next_batch_available: bool = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders

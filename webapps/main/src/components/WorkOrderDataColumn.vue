@@ -310,6 +310,7 @@ import BaseDialog from '@/components/BaseDialog.vue'
 import WorkOrderJobQtRebalance from '@/components/WorkOrderJobQtRebalance.vue'
 import BaseProgressBar from '@/components/BaseProgressBar.vue'
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
+import { formatDateTime } from '../lib/TimeHandling'
 
 export default {
 
@@ -348,13 +349,13 @@ export default {
 
     views() {
       return [
-        { 
-          name: 'info', 
+        {
+          name: 'info',
           text: this.$t('info'),
           class: 'justify-start'
         },
-        { 
-          name: 'people', 
+        {
+          name: 'people',
           text: this.$t('people') + ' (' + this.people_count + ')',
           class: 'justify-end'
         },
@@ -364,21 +365,21 @@ export default {
 
     wo_info() {
       return [
-        { 
-          name: 'status', 
+        {
+          name: 'status',
           text: this.$t('status')
         },
-        { 
-          name: 'created', 
+        {
+          name: 'created',
           text: this.$t('creation_date'),
-          value: '' 
+          value: ''
         },
         {
           name: 'start_from',
           text: this.$t('start_from_date'),
         },
-        { 
-          name: 'start', 
+        {
+          name: 'start',
           text: this.$t('start_date')
         },
         {
@@ -386,18 +387,14 @@ export default {
           text: this.$t('due_by')
         },
         // { name: 'queueing_time', text: 'T. coda' },
-        { 
-          name: 'end', 
+        {
+          name: 'end',
           text: this.$t('end_date')
         },
-        { 
-          name: 'processing_time', 
+        {
+          name: 'processing_time',
           text: this.$t('processing_time')
         },
-        // {
-        //   name: 'lead_time',
-        //   text: this.$t('lead_time')
-        // },
         {
           name: 'processing_cost',
           text: this.$t('processing_cost')
@@ -491,21 +488,7 @@ export default {
   },
 
   methods: {
-
     woInfoValue(info_name) {
-      function formatDate(timestamp) {
-        if (timestamp) {
-          return DT.fromISO(timestamp)
-                  .setLocale('it').toLocaleString({ 
-                    weekday: 'short', 
-                    month: 'short',
-                    day: 'numeric',
-                    year: '2-digit'
-                  })
-        }
-        else return '-'
-      }
-
       switch (info_name) {
         case 'status': {
           if (this.wo_data.status == 'closed') {
@@ -533,12 +516,37 @@ export default {
         }
 
         case 'created':
-        case 'start':
         case 'start_from':
-        case 'end':
-        case 'due_by':
-          return formatDate(this.wo_data[info_name])
-               
+        case 'due_by': {
+          const value = this.wo_data[info_name]
+          if (!value) {
+            return '-'
+          }
+
+          return formatDateTime(value, this.$i18n.locale, {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit'
+          })
+        }
+
+        case 'start':
+        case 'end': {
+          const value = this.wo_data[info_name]
+          if (!value) {
+            return '-'
+          }
+
+          return formatDateTime(value, this.$i18n.locale, {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit',
+            hour: 'numeric',
+            minute: 'numeric',
+          })
+        }
 
         case 'processing_time': {
           const processing_time = this.wo_data.processing_time
@@ -549,16 +557,8 @@ export default {
           const created = DT.fromISO(this.wo_data.created)
           const start = DT.fromISO(this.wo_data.start)
           const benchmark = start ? start : DT.utc()
-          return this.wo_data.start 
+          return this.wo_data.start
             ? durationFromMillisec(benchmark - created, { precision: 'h'})
-            : '-'
-        }
-
-        case 'lead_time': {
-          const start = DT.fromISO(this.wo_data.start)
-          const end = DT.fromISO(this.wo_data.end)
-          return this.wo_data.end 
-            ? durationFromMillisec(end - start, { precision: 'h'})
             : '-'
         }
 
@@ -638,6 +638,7 @@ export default {
     deleteWorkOrder() {
       this.loading = true
       this.$api.delete(`work-order/${this.wo_data._key}`).then(() => {
+        this.$store.dispatch('loadWorkOrders')
         this.delete_stage = 'success'
       })
     }
