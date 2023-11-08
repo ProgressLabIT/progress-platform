@@ -91,19 +91,12 @@ const workorder = {
       })
     },
 
-    updateWorkOrder({ dispatch }, { wo_key, new_qt, new_due_date, new_from_date, new_project_code, job_updates, notes }) {
-      return new Promise( (resolve, reject) => {
-        const updates = []
-        updates.push( api.patch(`work-order/${wo_key}`, { new_qt, new_due_date, new_from_date, new_project_code, notes }) )
-        
-        if (job_updates) {
-          updates.push(api.post(`job/update`, job_updates))
-        }
+    async updateWorkOrder({ dispatch }, { wo_key, ...work_order_updates }) {
+      await api.patch(`work-order/${wo_key}`, work_order_updates)
+    },
 
-        axios.all(updates)
-        .then(resolve)
-        .catch( err => reject(err) )
-      })
+    async updateWorkOrderQuantities(_, payload) {
+      await api.patch(`work-order/${payload.wo_key}/update-quantities`, payload)
     },
 
     saveQueueChanges({ dispatch, state }) {
