@@ -127,8 +127,8 @@ export default {
 
   computed: {
     phases_delta() {
-      let deltas = {}
-      this.phase_data.forEach( phase => {
+      const deltas = {}
+      this.phase_data.forEach(phase => {
         const phase_new_remaining = this.new_wo_qt - phase.qt_completed - phase.active_batch_qt
         const current_remaining = this.job_updates[phase.phase_key].reduce((sum, job) => sum + job.new_remaining, 0)
         deltas[phase.phase_key] = phase_new_remaining - current_remaining
@@ -138,15 +138,14 @@ export default {
 
     can_save() {
       // Check if any delta is not zero
-      return Object.values(this.phases_delta).every( delta => delta === 0 )
+      return Object.values(this.phases_delta).every(delta => delta === 0)
     }
   },
 
   methods: {
-
     spreadRemaining() {
       Object.entries(this.job_updates).forEach(([phase_key, phase_jobs]) => {
-        let delta = this.phases_delta[phase_key]
+        const delta = this.phases_delta[phase_key]
         let remainder = delta % phase_jobs.length
         const base_job_variation = (delta - remainder) / phase_jobs.length
 
@@ -162,60 +161,57 @@ export default {
       })
     },
 
-    save() {
-      if (this.can_save) {
-        this.saving = true
-        let job_updates = []
+    async save() {
+      if (!this.can_save) {
+        window.alert(this.$t('work_order.alerts.assign_workload_first'))
+        return
+      }
 
-        // Job update data is in an object divided by phase. First get a full, flat list
-        const flat_list = Object.entries(this.job_updates).reduce((full_list, [phase_key, phase_jobs]) => {
-          return full_list.concat(phase_jobs)
-        }, [])
+      this.saving = true
 
-        // Then build the data to be sent to the backend
-        flat_list.forEach( data => {
-          let update
+      // Job update data is in an object divided by phase. First get a full, flat list
+      const flat_list = Object.values(this.job_updates).flat()
 
-          if (data._key == 'NA') { return }
+      // Then build the data to be sent to the backend
+      const job_updates = []
+      flat_list.forEach(data => {
+        if (data._key == 'NA') {
+          return
+        }
 
-          else if (data._key == 'NEW') {
-            update = {
-              action: 'insert',
-              data: {
-                work_order_key: this.wo_key,
-                phase_key: data.phase_key,
-                qt_planned: data.new_remaining
-              }
+        if (data._key == 'NEW') {
+          job_updates.push({
+            action: 'insert',
+            data: {
+              phase_key: data.phase_key,
+              qt_planned: data.new_remaining
             }
-          }
-
-          else {
-            update =  {
-              action: 'update',
-              data: {
-                _key: data._key,
-                qt_planned: data.qt_completed + data.active_batch_qt + data.new_remaining
-              }
+          })
+        } else {
+          job_updates.push({
+            action: 'update',
+            data: {
+              _key: data._key,
+              qt_planned: data.qt_completed + data.active_batch_qt + data.new_remaining
             }
-          }
-          job_updates.push(update)
-        })
-        // dispatch wo and job updates
-        this.$store.dispatch('updateWorkOrder', {
+          })
+        }
+      })
+
+      try {
+        await this.$store.dispatch('updateWorkOrderQuantities', {
           wo_key: this.wo_key,
           new_qt: this.new_wo_qt,
           job_updates
         })
-        .then(() => {
-          this.$store.dispatch('loadWorkOrderData', this.wo_key)
-          .then(() => {
-            this.saving = false
-            this.$emit('close')
-          })
-        })
-        .catch( err => window.alert(err) )
+        await this.$store.dispatch('loadWorkOrderData', this.wo_key)
+        this.saving = false
+        this.$emit('close')
+      } catch (error) {
+        console.error(error)
+        // TODO: Add better error handling
+        window.alert(error)
       }
-      else window.alert(this.$t('work_order.alerts.assign_workload_first'))
     }
   },
 
@@ -228,14 +224,13 @@ export default {
       else (if increase)
         add new job
     */
-    this.job_updates = this.phase_data.reduce( (obj, phase) => {
-
+    this.job_updates = this.phase_data.reduce((obj, phase) => {
       obj[phase.phase_key] = []
-      let delta = this.new_wo_qt - (phase.qt_completed + phase.qt_remaining)
+      const delta = this.new_wo_qt - (phase.qt_completed + phase.qt_remaining)
 
       if (phase.qt_remaining) {
         const open_jobs = phase.jobs.filter(j => j.stage != 'closed')
-        open_jobs.forEach( j => {
+        open_jobs.forEach(j => {
           obj[phase.phase_key].push({ ...j, new_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt })
         })
       }

@@ -91,11 +91,12 @@ const workorder = {
       })
     },
 
-    async updateWorkOrder({ dispatch }, { job_updates, wo_key, ...work_order_updates }) {
-      // Update the job assignments first, then the work order in order to
-      // correctly reflect the status, the progress and performance metrics
-      await api.post('job/update', job_updates)
+    async updateWorkOrder({ dispatch }, { wo_key, ...work_order_updates }) {
       await api.patch(`work-order/${wo_key}`, work_order_updates)
+    },
+
+    async updateWorkOrderQuantities(_, payload) {
+      await api.patch(`work-order/${payload.wo_key}/update-quantities`, payload)
     },
 
     saveQueueChanges({ dispatch, state }) {

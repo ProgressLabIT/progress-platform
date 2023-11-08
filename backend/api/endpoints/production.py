@@ -12,6 +12,7 @@ from utils.bom import get_bom_from_db
 from utils.counter import _generate_counter
 from utils.db import db
 from utils.dt import timestamp
+from utils.exceptions import HTTPError
 from utils.product import get_product_docs
 from utils.production import (
   Queries,
@@ -175,13 +176,12 @@ async def update_work_order(
   wo_key: str,
   new_due_date: datetime | date | None = Body(None),
   new_from_date: datetime | date | None = Body(None),
-  new_qt: float | None = Body(None),
   new_project_code: str | None = Body(None),
   notes: str | None = Body(None)
   ):
 
   try:
-    tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue'])
+    tx = db.begin_transaction(write=['WorkOrder', 'Job'])
     wo_update = dict(_key=wo_key)
     job_match = dict(wo_key=wo_key)
     job_update = dict()
@@ -191,9 +191,6 @@ async def update_work_order(
 
     if notes is not None:
       wo_update['notes'] = notes
-
-    if new_qt is not None:
-      wo_update['qt_planned'] = new_qt
 
     if new_from_date is not None:
       wo_update['start_from'] = new_from_date
@@ -207,6 +204,87 @@ async def update_work_order(
       tx.collection('Job').update_match(job_match, job_update)
 
     updated_wo_data = tx.collection('WorkOrder').update(wo_update, return_new=True)['new']
+
+    tx.commit_transaction()
+
+    return APIResponse(detail=updated_wo_data)
+
+  except Exception:
+    tx.abort_transaction()
+    raise HTTPError(500, "There was a problem updating the work order")
+
+# ----------------------------------------------------------------------
+
+@router.patch('/work-order/{wo_key}/update-quantities')
+async def update_work_order_quantities(
+  wo_key: str,
+  new_quantity: float | None = Body(None),
+  job_updates: List[JobUpdate] = Body(None)
+):
+  """
+  Updates the planned quantity of the work order and the planned quantity of each job.
+  The progress of the work order and each job is updated accordingly.
+  If the planned quantity of a job is updated to be equal or greater than the completed quantity,
+  the job is closed and removed from the queue.
+  If all the jobs are closed, the work order is closed and removed from the queue.
+  """
+
+  if not new_quantity:
+    raise HTTPError(422, "Please provide a new work order quantity")
+
+  if not job_updates:
+    raise HTTPError(422, "Please provide a list of job updates")
+
+  try:
+    tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue'])
+    wo_data = WorkOrderFull(**tx.collection('WorkOrder').get(wo_key))
+
+    for update in job_updates:
+      if 'qt_planned' not in update.data:
+        tx.abort_transaction()
+        raise HTTPError(422, "Please provide a planned quantity for each update")
+
+      if update.action == JobUpdateType.INSERT:
+        if 'phase_key' not in update.data:
+          tx.abort_transaction()
+          raise HTTPError(422, "Please provide a phase key for each update")
+
+        create_job_record(
+          tx,
+          wo_data = wo_data,
+          **update.data
+        )
+      elif update.action == JobUpdateType.UPDATE:
+        if '_key' not in update.data:
+          tx.abort_transaction()
+          raise HTTPError(422, "Please provide a job key for each update")
+
+        result = tx.collection('Job').update(update.data, return_new=True)
+        job = Job(**result['new'])
+
+        _update_job_progress(db=tx, job_key=job.key)
+
+        if job.qt_completed >= job.qt_planned:
+          tx.aql.execute(
+            Queries.CLOSE_JOB,
+            bind_vars=dict(
+              job_key=job.key,
+              stage=WorkStatus.CLOSED,
+              end=timestamp(),
+              notes=job.notes
+            ),
+          )
+      else:
+        tx.abort_transaction()
+        raise HTTPError(422, "Invalid job update action")
+
+    updated_wo_data = tx.collection('WorkOrder').update(
+      dict(
+        _key=wo_key,
+        qt_planned=new_quantity
+      ),
+      return_new=True
+    )['new']
 
     # Handle status, progress, and performance metrics
     updated_wo_data = tx.aql.execute(
@@ -227,19 +305,10 @@ async def update_work_order(
 
   except Exception:
     tx.abort_transaction()
-    status_code=500
-    response = dict(
-      status=status_code,
-      message="There was a problem updating the work order",
-      error=traceback.format_exc()
-    )
-    raise HTTPException(
-      status_code=status_code,
-      detail=response
-    )
+    raise HTTPError(500, "There was a problem updating the work order quantities")
+
 
 # ----------------------------------------------------------------------
-
 
 @router.get('/work-order/{wo_key}')
 async def get_wo_data(wo_key: str):

@@ -1,3 +1,17 @@
+from traceback import format_exc
+from fastapi import HTTPException
+
+class HTTPError(HTTPException):
+  def __init__(self, status_code: int, message: str):
+    super().__init__(
+      status_code=status_code,
+      detail=dict(
+        status=status_code,
+        message=message,
+        error=format_exc()
+      )
+    )
+
 class UserNotFoundError(Exception): pass
 
 class UserDisabledError(Exception): pass
