@@ -201,7 +201,7 @@ export default {
       try {
         await this.$store.dispatch('updateWorkOrderQuantities', {
           wo_key: this.wo_key,
-          new_qt: this.new_wo_qt,
+          new_quantity: this.new_wo_qt,
           job_updates
         })
         await this.$store.dispatch('loadWorkOrderData', this.wo_key)
