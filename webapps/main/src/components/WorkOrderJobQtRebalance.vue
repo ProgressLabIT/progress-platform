@@ -41,11 +41,12 @@
               </BaseUserAvatar>
             </div>
             <q-space />
-            <template v-if="job_update._key != 'NA'">
+            <template v-if="job_update._key != 'NA' && job_update.new_remaining">
               <div class="col-auto text-uppercase q-mr-md">
                 {{ $t('quantity.remaining.short') }}
               </div>
               <q-input
+                v-if="job_update.new_remaining"
                 class="col-2"
                 :key="index"
                 dense
@@ -54,9 +55,19 @@
                 type="number"
                 v-model.number="job_update.new_remaining"
                 min="0"
-                :max="new_wo_qt">
-              </q-input>
+                :max="new_wo_qt"
+                />
             </template>
+            <q-chip
+              v-else-if="job_update._key != 'NA'"
+              square
+              class="text-uppercase highlight q-ml-lg"
+              color="theme-grey"
+              size="md"
+              :removable="phase.qt_completed < new_wo_qt"
+              :label="$t('closed')"
+              @remove="job_update.new_remaining = 1"
+              />
 
           </div>
         </div>
@@ -129,9 +140,14 @@ export default {
     phases_delta() {
       const deltas = {}
       this.phase_data.forEach(phase => {
-        const phase_new_remaining = this.new_wo_qt - phase.qt_completed - phase.active_batch_qt
-        const current_remaining = this.job_updates[phase.phase_key].reduce((sum, job) => sum + job.new_remaining, 0)
-        deltas[phase.phase_key] = phase_new_remaining - current_remaining
+        if (phase.qt_completed >= this.new_wo_qt) {
+          deltas[phase.phase_key] = 0
+        }
+        else {
+          const phase_new_remaining = this.new_wo_qt - phase.qt_completed - phase.active_batch_qt
+          const current_remaining = this.job_updates[phase.phase_key].reduce((sum, job) => sum + job.new_remaining, 0)
+          deltas[phase.phase_key] = phase_new_remaining - current_remaining
+        }
       })
       return deltas
     },
@@ -188,6 +204,7 @@ export default {
             }
           })
         } else {
+          // In case a new completed is greater or equal than the new planned the job will be closed
           job_updates.push({
             action: 'update',
             data: {
@@ -228,10 +245,23 @@ export default {
       obj[phase.phase_key] = []
       const delta = this.new_wo_qt - (phase.qt_completed + phase.qt_remaining)
 
-      if (phase.qt_remaining) {
+      if (phase.qt_completed >= this.new_wo_qt) {
+        phase.jobs.forEach(j => {
+          const update = j.stage != 'closed'
+            ? { ...j, new_remaining: 0 }
+            : { _key: 'NA', new_remaining: 0 }
+
+          obj[phase.phase_key].push(update)
+        })
+      }
+
+      else if (phase.qt_remaining) {
         const open_jobs = phase.jobs.filter(j => j.stage != 'closed')
         open_jobs.forEach(j => {
-          obj[phase.phase_key].push({ ...j, new_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt })
+          obj[phase.phase_key].push({
+            ...j,
+            new_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt
+          })
         })
       }
 
