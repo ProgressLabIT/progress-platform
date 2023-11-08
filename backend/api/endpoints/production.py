@@ -233,7 +233,9 @@ async def update_work_order_quantities(
     raise HTTPError(422, "Please provide a new work order quantity")
 
   if not job_updates:
-    raise HTTPError(422, "Please provide a list of job updates")
+    raise HTTPError(422, "Please provide the necessary job updates to ensure the new work order quantity is correctly planned for.")
+
+  # TODO: Ensure job_updates are coherent with the work order update
 
   try:
     tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue'])
@@ -242,18 +244,19 @@ async def update_work_order_quantities(
     for update in job_updates:
       if 'qt_planned' not in update.data:
         tx.abort_transaction()
-        raise HTTPError(422, "Please provide a planned quantity for each update")
+        raise HTTPError(422, "Please provide a planned quantity for each job update")
 
       if update.action == JobUpdateType.INSERT:
         if 'phase_key' not in update.data:
           tx.abort_transaction()
-          raise HTTPError(422, "Please provide a phase key for each update")
+          raise HTTPError(422, "Please provide a phase key for each new job")
 
         create_job_record(
           tx,
           wo_data = wo_data,
           **update.data
         )
+
       elif update.action == JobUpdateType.UPDATE:
         if '_key' not in update.data:
           tx.abort_transaction()
