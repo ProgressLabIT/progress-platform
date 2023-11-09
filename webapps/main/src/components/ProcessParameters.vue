@@ -2,15 +2,15 @@
   <q-list>
     <template
       v-for="(p_value, p_key, index) in params"
-      :key="p_key">
-
+      :key="p_key"
+    >
       <q-separator v-if="index > 0" />
 
       <q-expansion-item
         :expand-icon="paramType(p_key) == 'int' || !edit_mode ? 'none' : ''"
         :model-value="expansion_map == p_key"
-        @update:model-value="(new_val) => updateExpansionMap(p_key, new_val)">
-
+        @update:model-value="(new_val) => updateExpansionMap(p_key, new_val)"
+      >
         <!-- SELECTED OPTION -->
         <template #header>
           <div class="full-width q-pa-lg">
@@ -43,7 +43,8 @@
               :key="index"
               clickable
               v-ripple
-              @click="updateParam(p_key, value)">
+              @click="updateParam(p_key, value)"
+            >
               <q-item-label class="q-pa-lg">
                 <div class="text-h5 highlight q-mb-sm">
                   {{ paramHumanValue(p_key, value) }}
@@ -56,8 +57,6 @@
           </q-list>
         </template>
       </q-expansion-item>
-
-
     </template>
   </q-list>
 </template>
@@ -126,16 +125,17 @@ export default {
     updateParam(param_key, value) {
       this.$emit('update', {
         param: param_key,
-        value: value,
+        value,
       })
       this.expansion_map = null
     },
   },
 
   watch: {
-    edit_mode: function (newValue, oldValue) {
-      if (newValue == false && oldValue == true)
-      this.expansion_map = null
+    edit_mode (newValue, oldValue) {
+      if (newValue == false && oldValue == true) {
+        this.expansion_map = null
+      }
     }
   }
 }
