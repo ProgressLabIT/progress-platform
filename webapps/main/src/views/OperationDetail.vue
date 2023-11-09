@@ -206,8 +206,11 @@ export default {
   },
 
   watch: {
-    edit_mode: 'setTempData',
-    operation: 'setTempData'
+    operation: {
+      handler: 'setTempData',
+      immediate: true
+    },
+    edit_mode: 'setTempData'
   }
 }
 </script>
