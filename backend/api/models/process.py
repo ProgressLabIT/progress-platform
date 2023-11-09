@@ -37,6 +37,7 @@ class Operation(ArangoDocument):
   code: str = None
   description: str = None
   default_phase_parameters: PhaseParameters = PhaseParameters()
+  default_phase_notes: str = None
 
 
 class StepType(str, Enum):
