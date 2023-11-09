@@ -1,7 +1,7 @@
 <template>
   <div class="column full-height">
     <template v-if="operation">
-      <div class="row q-pa-lg q-ma-md">
+      <div class="row q-px-lg q-pt-lg q-mx-md q-mt-md">
         <template v-if="!edit_mode">
           <div class="col" v-if="!edit_mode">
             <div class="text-h2 uppercase display highlight">
@@ -28,7 +28,6 @@
             @iconClick="showDelete">
           </BaseTooltipIcon>
         </template>
-
         <template v-else>
           <div class="column justify-between col-4">
             <q-input
@@ -88,25 +87,62 @@
         </template>
       </div>
 
+      <q-tabs
+        v-model="activeTab"
+        class="transparent text-low display"
+        active-class="highlight"
+        align="right"
+        shrink
+        dense
+        indicator-color="theme-blue"
+      >
+        <!-- TODO: #326 - Add default steps -->
+        <!-- <q-tab name="procedure">
+          {{ $t('views.PhaseSteps') }}
+        </q-tab> -->
+
+        <q-tab name="parameters">
+          {{ $t('views.PhaseParameters') }}
+        </q-tab>
+
+        <q-tab name="notes">
+          {{ $t('views.PhaseNotes') }}
+        </q-tab>
+      </q-tabs>
+
       <q-separator />
 
-      <div class="col scroll">
-        <ProcessParameters
-          :edit_mode="edit_mode"
-          :params="temp_params"
-          @update="updateParam">
-        </ProcessParameters>
-      </div>
-    </template>
+      <q-tab-panels v-model="activeTab" class="col scroll">
+        <!-- <q-tab-panel name="procedure" /> -->
 
+        <q-tab-panel name="parameters">
+          <ProcessParameters
+            :edit_mode="edit_mode"
+            :params="temp_params"
+            @update="updateParam"
+          />
+        </q-tab-panel>
+
+        <q-tab-panel name="notes">
+          <ProductionNotes
+            v-model="temp_notes"
+            :edit-mode="edit_mode"
+            class="q-pa-lg"
+          />
+        </q-tab-panel>
+      </q-tab-panels>
+    </template>
     <NoDataAlert v-else />
   </div>
 </template>
 
 <script>
+import { ref } from 'vue'
+
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import ProcessParameters from '@/components/ProcessParameters.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
+import ProductionNotes from '../components/ProductionNotes.vue'
 
 export default {
   name: 'OperationDetail',
@@ -114,13 +150,22 @@ export default {
   components: {
     BaseTooltipIcon,
     NoDataAlert,
-    ProcessParameters
+    ProcessParameters,
+    ProductionNotes
   },
 
   props: {
     operation: {
       type: Object,
       required: true
+    }
+  },
+
+  setup() {
+    const tab = ref('parameters')
+
+    return {
+      activeTab: tab
     }
   },
 
@@ -141,7 +186,8 @@ export default {
         production_batch_qt: 1,
         auto_new_batch: true,
         unsupervised_work_allowed: false
-      }
+      },
+      temp_notes: ''
     }
   },
 
@@ -157,6 +203,8 @@ export default {
       if (!this.operation) {
         return
       }
+
+      this.temp_notes = this.operation.default_phase_notes ?? ''
 
       Object.keys(this.temp_metadata).forEach(key => {
         this.temp_metadata[key] = this.operation[key]
@@ -188,7 +236,8 @@ export default {
         key: this.operation._key,
         update: {
           ...this.temp_metadata,
-          default_phase_parameters: this.temp_params
+          default_phase_parameters: this.temp_params,
+          default_phase_notes: this.temp_notes
         }
       }
       await this.$store.dispatch('updateOperation', data)

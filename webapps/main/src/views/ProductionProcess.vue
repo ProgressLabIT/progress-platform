@@ -164,10 +164,10 @@ import BasePrompt from '@/components/BasePrompt.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 
 const views_map = [
-  'PhaseSteps', 
+  'PhaseSteps',
   'PhaseParameters',
   'PhaseNotes'
-  // 'PhaseAssignments' 
+  // 'PhaseAssignments'
 ]
 
 export default {
@@ -187,7 +187,7 @@ export default {
   data() {
     return {
       views: views_map,
-      tab:0,
+      tab: 0,
       new_op: null,
       over_phase: null,
       confirming_delete: null,
@@ -202,10 +202,10 @@ export default {
     card_height() {
       return this.$q.screen.height - 114
     },
-    
+
     product_key() {
       return this.$route.params.product_key
-    }, 
+    },
 
     product_data() {
       return this.$store.getters.productData(this.product_key)
@@ -227,8 +227,8 @@ export default {
 
       set(value) {
         this.$store.commit(
-          'UPDATE_PRODUCT_NAV_STATE', 
-          { _key: this.product_key, last_phase: value}
+          'UPDATE_PRODUCT_NAV_STATE',
+          { _key: this.product_key, last_phase: value }
         )
       }
     },
@@ -275,14 +275,15 @@ export default {
     },
 
     addPhase(new_operation) {
-      let new_process = this.process
-      new_process.push({ 
+      const new_process = this.process
+      new_process.push({
         // Add temp _key so that sorting works with new phases too
         _key: Date.now(),
-        alias: new_operation.name, 
-        operation_key: new_operation._key, 
+        alias: new_operation.name,
+        operation_key: new_operation._key,
         product_key: this.product_key,
         params: new_operation.default_phase_parameters,
+        production_notes: new_operation.default_phase_notes,
         steps: []
       })
       this.process = new_process

@@ -1,25 +1,17 @@
 <template>
   <div class="fit q-pa-lg">
-    <template v-if="!edit_mode">
-      <div v-if="!!phase_notes" style="white-space: pre-line" class="q-pa-md text-body1">
-        {{ phase_notes }}
-      </div>
-      <NoDataAlert v-else>
-        {{ $t('notes_empty') }}
-      </NoDataAlert>
-    </template>
-    <q-input v-else filled type="textarea" v-model="phase_notes" class="fit" />
+    <ProductionNotes v-model="phase_notes" :edit-mode="edit_mode" />
   </div>
 </template>
 
 <script>
-import NoDataAlert from '@/components/NoDataAlert.vue'
-export default {
+import ProductionNotes from './ProductionNotes.vue'
 
+export default {
   name: 'PhaseNotes',
 
   components: {
-    NoDataAlert
+    ProductionNotes
   },
 
   props: {
