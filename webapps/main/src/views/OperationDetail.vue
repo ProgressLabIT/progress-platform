@@ -109,7 +109,6 @@ import ProcessParameters from '@/components/ProcessParameters.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 
 export default {
-
   name: 'OperationDetail',
 
   components: {
@@ -150,22 +149,28 @@ export default {
     products_using_operation() {
       return this.operation.used_for
     },
-  },  
-
+  },
 
   methods: {
-    setTempData(){
+    setTempData() {
       // At first render, sometimes the function runs before the prop has been passed, resulting in error
-      if (this.operation) {
-        Object.keys(this.temp_metadata).forEach( key => {
-          this.temp_metadata[key] = this.operation[key]
-        })
-
-        const saved_params = this.operation.default_phase_parameters
-        Object.keys(this.temp_params).forEach( key => {
-          this.temp_params[key] = saved_params[key]
-        })
+      if (!this.operation) {
+        return
       }
+
+      Object.keys(this.temp_metadata).forEach(key => {
+        this.temp_metadata[key] = this.operation[key]
+      })
+
+      const saved_params = this.operation.default_phase_parameters
+      Object.keys(this.temp_params).forEach(key => {
+        const value = saved_params[key]
+        // If the value is undefined, then the parameter is not present in the saved data
+        // and we should not overwrite the default value
+        if (value !== undefined) {
+          this.temp_params[key] = value
+        }
+      })
     },
 
     updateParam({ param, value }) {
@@ -180,7 +185,7 @@ export default {
     async save() {
       this.saving = true
       const data = {
-        key: this.operation._key, 
+        key: this.operation._key,
         update: {
           ...this.temp_metadata,
           default_phase_parameters: this.temp_params
@@ -193,8 +198,8 @@ export default {
 
     showDelete() {
       if (this.products_using_operation.length) {
-        const product_codes = this.products_using_operation.map( o => o.code )
-        window.alert(this.$capitalize(this.$t('operation.alerts.op_in_use') + ": " +  product_codes))
+        const product_codes = this.products_using_operation.map(({ code }) => code)
+        window.alert(this.$capitalize(this.$t('operation.alerts.op_in_use') + ": " + product_codes))
       }
       else {
         this.$router.push({
