@@ -489,7 +489,10 @@ async def search_work_orders(
 @router.get('/queue/site/{site_key}')
 async def get_site_queue(site_key: str):
 
-  cursor = db.aql.execute(Queries.GET_SITE_WORK_ORDER_DATA, bind_vars=dict(site_key=site_key))
+  try:
+    cursor = db.aql.execute(Queries.GET_SITE_WORK_ORDER_DATA, bind_vars=dict(site_key=site_key))
+  except Exception:
+    raise HTTPError(500, "There was an error while fetching work orders")
   return APIResponse(detail=[wo for wo in cursor])
 
 
