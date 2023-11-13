@@ -24,7 +24,7 @@ import NoDataAlert from '@/components/NoDataAlert.vue'
 
 const props = defineProps({
   modelValue: {
-    type: String,
+    type: [String, null],
     required: true
   },
   editMode: {

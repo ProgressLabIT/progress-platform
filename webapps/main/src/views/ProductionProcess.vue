@@ -125,28 +125,50 @@
     <!-- PHASE DETAILS -->
     <div class="col q-pr-md">
       <q-tabs
-        v-model="tab"
+        v-model="activeTab"
         class="transparent text-low display"
         active-class="highlight"
         align="right"
         shrink dense
-        indicator-color="theme-blue">
-        <q-tab
-          v-for="(view, idx) in views"
-          :key="idx"
-          :name="idx">
-          {{ $t(`views.${view}`) }}
+        indicator-color="theme-blue"
+      >
+        <q-tab name="steps">
+          {{ $t('views.PhaseSteps') }}
+        </q-tab>
+
+        <q-tab name="parameters">
+          {{ $t('views.PhaseParameters') }}
+        </q-tab>
+
+        <q-tab name="notes">
+          {{ $t('views.PhaseNotes') }}
         </q-tab>
       </q-tabs>
       <q-card square class="surface2 scroll" :style="`height: ${card_height}px`">
-        <keep-alive>
-          <Component
-            :is="views[tab]"
-            :phase="process[current_phase]"
-            :product_data="product_data"
-            :edit_mode="edit_mode">
-          </Component>
-        </keep-alive>
+        <q-tab-panels v-model="activeTab" keep-alive class="fit">
+          <q-tab-panel name="steps">
+            <PhaseSteps
+              :phase="process[current_phase]"
+              :product_data="product_data"
+              :edit_mode="edit_mode"
+            />
+          </q-tab-panel>
+
+          <q-tab-panel name="parameters">
+            <PhaseParameters
+              :phase="process[current_phase]"
+              :product_data="product_data"
+              :edit_mode="edit_mode"
+            />
+          </q-tab-panel>
+
+          <q-tab-panel name="notes">
+            <ProductionNotes
+              v-model="process[current_phase].production_notes"
+              :edit-mode="edit_mode"
+            />
+          </q-tab-panel>
+        </q-tab-panels>
       </q-card>
     </div>
 </div>
@@ -158,17 +180,10 @@ import Sortable from 'sortablejs'
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
 import PhaseParameters from '@/components/PhaseParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
-import PhaseNotes from '@/components/PhaseNotes.vue'
+import ProductionNotes from '@/components/ProductionNotes.vue'
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import BasePrompt from '@/components/BasePrompt.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
-
-const views_map = [
-  'PhaseSteps',
-  'PhaseParameters',
-  'PhaseNotes'
-  // 'PhaseAssignments'
-]
 
 export default {
 
@@ -177,7 +192,7 @@ export default {
   components: {
     PhaseParameters,
     PhaseSteps,
-    PhaseNotes,
+    ProductionNotes,
     // PhaseAssignments,
     BasePrompt,
     BaseTooltipIcon,
@@ -186,8 +201,7 @@ export default {
 
   data() {
     return {
-      views: views_map,
-      tab: 0,
+      activeTab: 'steps',
       new_op: null,
       over_phase: null,
       confirming_delete: null,

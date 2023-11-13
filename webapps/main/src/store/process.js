@@ -75,10 +75,6 @@ const process = {
       state.temp.splice(phase_index, 1)
     },
 
-    UPDATE_PHASE_PRODUCTION_NOTES(state, { phase_index, content }) {
-      state.temp[phase_index].production_notes = content
-    },
-
     LOAD_OPERATIONS(state, op_list) {
       state.operations = op_list
     },
@@ -97,7 +93,7 @@ const process = {
           commit('LOAD_OPERATIONS', resp.data)
           resolve()
         })
-      }) 
+      })
     },
 
     createOperation({ dispatch }, new_operation_data) {
@@ -123,7 +119,7 @@ const process = {
       })
     },
 
-    
+
     async getProcess({ commit }, product_key) {
       function get_step_media(step) {
         return new Promise( resolve => {
@@ -159,9 +155,9 @@ const process = {
           }
           await Promise.all(promises)
           commit('LOAD_SAVED_PROCESS', phases)
-          resolve() 
+          resolve()
         })
-      }) 
+      })
     },
 
     saveTempProcess({ dispatch }, data) {
@@ -173,7 +169,7 @@ const process = {
 
         data.new_process.forEach( phase => {
           phase.steps.forEach( step => {
-            
+
             if (typeof step.media == 'undefined') return
 
             step.media.forEach( media => {
@@ -194,7 +190,7 @@ const process = {
         let api_calls = []
 
         deleted_media.forEach( ({ step_key, filename }) => {
-          api_calls.push( 
+          api_calls.push(
             api.delete(`step/${step_key}/media/${filename}`)
           )
         })
@@ -204,8 +200,8 @@ const process = {
           body.append('media_file', media_file)
           api_calls.push(
             api.post(
-              `step/${step_key}/media`, 
-              body, 
+              `step/${step_key}/media`,
+              body,
               { headers: { 'Content-type': 'multipart/form-data' } }
             )
           )
