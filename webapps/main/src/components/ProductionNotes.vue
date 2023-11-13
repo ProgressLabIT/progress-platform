@@ -1,19 +1,17 @@
 <template>
-  <template v-if="!editMode">
-    <NoDataAlert v-if="!notes">
-      {{ $t('notes_empty') }}
-    </NoDataAlert>
-    <div v-else style="white-space: pre-line" class="q-pa-md text-body1">
-      {{ notes }}
-    </div>
-  </template>
   <q-input
-    v-else
+    v-if="editMode"
     v-model="notes"
     type="textarea"
     filled
     class="fit"
   />
+  <NoDataAlert v-else-if="!notes">
+    {{ $t('notes_empty') }}
+  </NoDataAlert>
+  <div v-else style="white-space: pre-line" class="q-pa-md text-body1">
+    {{ notes }}
+  </div>
 </template>
 
 <script setup>
