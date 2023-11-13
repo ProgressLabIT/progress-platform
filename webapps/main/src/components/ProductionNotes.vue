@@ -15,27 +15,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 
-// TODO: Use defineModel macro to simplify the model related logic (Vue 3.3+)
-
-const props = defineProps({
-  modelValue: {
-    type: [String, null],
-    required: true
-  },
+defineProps({
   editMode: {
     type: Boolean,
     required: true
   },
 })
-const emit = defineEmits(['update:modelValue'])
 
-const notes = computed({
-  get: () => props.modelValue,
-  set(value) {
-    emit('update:modelValue', value)
-  }
-})
+const notes = defineModel({ type: [String, null] })
 </script>

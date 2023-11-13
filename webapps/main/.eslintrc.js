@@ -27,14 +27,12 @@ module.exports = {
     // 'plugin:vue/vue3-recommended', // Priority C: Recommended (Minimizing Arbitrary Choices and Cognitive Overhead)
 
     'standard'
-    
   ],
 
   plugins: [
     // https://eslint.vuejs.org/user-guide/#why-doesn-t-it-work-on-vue-files
     // required to lint *.vue files
     'vue',
-    
   ],
 
   globals: {
@@ -47,12 +45,14 @@ module.exports = {
     __QUASAR_SSR_PWA__: 'readonly',
     process: 'readonly',
     Capacitor: 'readonly',
-    chrome: 'readonly'
+    chrome: 'readonly',
+
+    // Can be removed once defineModel is released as stable and included in eslint-plugin-vue
+    defineModel: "readonly",
   },
 
   // add your custom rules here
   rules: {
-    
     // allow async-await
     'generator-star-spacing': 'off',
     // allow paren-less arrow functions
@@ -69,7 +69,7 @@ module.exports = {
     'import/extensions': 'off',
     'import/no-unresolved': 'off',
     'import/no-extraneous-dependencies': 'off',
-    
+
     'prefer-promise-reject-errors': 'off',
 
     // Added by Luca
