@@ -23,10 +23,6 @@ const process = {
       state.temp = _cloneDeep(process)
     },
 
-    UPDATE_PHASE_PARAMS(state, { phase_index, param, value }) {
-      state.temp[phase_index].params[param] = value
-    },
-
     UPDATE_PROCEDURE(state, { phase_index, procedure }) {
       state.temp[phase_index].steps = procedure
     },

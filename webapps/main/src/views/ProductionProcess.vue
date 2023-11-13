@@ -155,10 +155,10 @@
           </q-tab-panel>
 
           <q-tab-panel name="parameters">
-            <PhaseParameters
-              :phase="process[current_phase]"
-              :product_data="product_data"
-              :edit_mode="edit_mode"
+            <ProcessParameters
+              v-model="process[current_phase].params"
+              :process-has-steps="process[current_phase].steps.length > 0"
+              :edit-mode="edit_mode"
             />
           </q-tab-panel>
 
@@ -178,7 +178,7 @@
 import { mapActions } from 'vuex'
 import Sortable from 'sortablejs'
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
-import PhaseParameters from '@/components/PhaseParameters.vue'
+import ProcessParameters from '@/components/ProcessParameters.vue'
 import PhaseSteps from '@/components/PhaseSteps.vue'
 import ProductionNotes from '@/components/ProductionNotes.vue'
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
@@ -190,7 +190,7 @@ export default {
   name: 'ProductionProcess',
 
   components: {
-    PhaseParameters,
+    ProcessParameters,
     PhaseSteps,
     ProductionNotes,
     // PhaseAssignments,
