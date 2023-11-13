@@ -23,50 +23,6 @@ const process = {
       state.temp = _cloneDeep(process)
     },
 
-    UPDATE_PROCEDURE(state, { phase_index, procedure }) {
-      state.temp[phase_index].steps = procedure
-    },
-
-    UPDATE_STEP_DETAILS(state,  { phase_index, step_index, field, value })  {
-      state.temp[phase_index].steps[step_index][field] = value
-    },
-
-    ADD_TEMP_MEDIA(state, { phase_index, step_index, media }) {
-      let phase = state.temp[phase_index]
-      let step = phase.steps[step_index]
-      step.media.push(media)
-    },
-
-    DELETE_SAVED_MEDIA(state, { phase_index, step_index, index }) {
-      let phase = state.temp[phase_index]
-      let step = phase.steps[step_index]
-      let media = step.media[index]
-      media.trash = true
-    },
-
-    RESTORE_SAVED_MEDIA(state, { phase_index, step_index, index }) {
-      let phase = state.temp[phase_index]
-      let step = phase.steps[step_index]
-      let media = step.media[index]
-      media.trash = false
-    },
-
-    DELETE_TEMP_MEDIA(state, { phase_index, step_index, index }) {
-      let phase = state.temp[phase_index]
-      let media_list = phase.steps[step_index].media
-      media_list.splice(index, 1)
-    },
-
-    ADD_OR_UPDATE_STEP(state, { phase_index, step_index, step_data}) {
-      let procedure = state.temp[phase_index].steps
-      procedure[step_index] = step_data
-    },
-
-    DELETE_STEP(state, { phase_index, step_index }) {
-      let temp_procedure = state.temp[phase_index].steps
-      temp_procedure.splice(step_index, 1)
-    },
-
     DELETE_PHASE(state, phase_index) {
       state.temp.splice(phase_index, 1)
     },

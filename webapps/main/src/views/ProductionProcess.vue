@@ -147,10 +147,9 @@
       <q-card square class="surface2 scroll" :style="`height: ${card_height}px`">
         <q-tab-panels v-model="activeTab" keep-alive class="fit">
           <q-tab-panel name="steps">
-            <PhaseSteps
-              :phase="process[current_phase]"
-              :product_data="product_data"
-              :edit_mode="edit_mode"
+            <ProcessSteps
+              v-model="process[current_phase].steps"
+              :edit-mode="edit_mode"
             />
           </q-tab-panel>
 
@@ -179,7 +178,7 @@ import { mapActions } from 'vuex'
 import Sortable from 'sortablejs'
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
 import ProcessParameters from '@/components/ProcessParameters.vue'
-import PhaseSteps from '@/components/PhaseSteps.vue'
+import ProcessSteps from '@/components/process-steps/ProcessSteps.vue'
 import ProductionNotes from '@/components/ProductionNotes.vue'
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import BasePrompt from '@/components/BasePrompt.vue'
@@ -191,7 +190,7 @@ export default {
 
   components: {
     ProcessParameters,
-    PhaseSteps,
+    ProcessSteps,
     ProductionNotes,
     // PhaseAssignments,
     BasePrompt,
