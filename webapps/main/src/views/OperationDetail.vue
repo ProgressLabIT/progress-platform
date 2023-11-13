@@ -117,9 +117,9 @@
 
         <q-tab-panel name="parameters">
           <ProcessParameters
-            :edit_mode="edit_mode"
-            :params="temp_params"
-            @update="updateParam"
+            v-model="temp_params"
+            :process-has-steps="false"
+            :edit-mode="edit_mode"
           />
         </q-tab-panel>
 
@@ -219,10 +219,6 @@ export default {
           this.temp_params[key] = value
         }
       })
-    },
-
-    updateParam({ param, value }) {
-      this.temp_params[param] = value
     },
 
     cancel() {
