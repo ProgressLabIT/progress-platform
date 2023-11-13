@@ -67,20 +67,14 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import params_map from '@/lib/PhaseParams.js'
 import { capitalize } from '../boot/filters'
 
-// TODO: Use defineModel macro to simplify the model related logic (Vue 3.3+)
-
 const props = defineProps({
-  modelValue: {
-    type: Object,
-    required: true
-  },
   processHasSteps: {
     type: Boolean,
     required: true
@@ -91,14 +85,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue'])
-
-const paramsModel = computed({
-  get: () => props.modelValue,
-  set(value) {
-    emit('update:modelValue', value)
-  }
-})
+const paramsModel = defineModel({ type: Object })
 
 const expandedParamKey = ref()
 
@@ -114,11 +101,11 @@ const { t } = useI18n()
 function getParamHumanValue(key, value) {
   if (params_map[key].type === 'int') {
     // Show "JOB" label if zero. See parameter explanation for details
-    if (key === 'production_batch_qt' && props.modelValue[key] === 0) {
+    if (key === 'production_batch_qt' && paramsModel.value[key] === 0) {
       return props.editMode ? 0 : t('job.label').toUpperCase()
     }
 
-    return props.modelValue[key]
+    return paramsModel.value[key]
   }
 
   return t(`phase.params.${key}.${value}.title`)

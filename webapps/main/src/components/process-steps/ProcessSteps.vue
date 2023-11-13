@@ -9,7 +9,7 @@
         <div class="col-9 scroll" v-if="hasSteps">
           <q-list dense id="steps">
             <q-item
-              v-for="(step, index) in steps"
+              v-for="(step, index) in stepsModel"
               :key="step._key"
               v-ripple
               clickable
@@ -85,7 +85,7 @@
         </div>
         <q-input
           v-if="editMode"
-          v-model="steps[currentStepIndex].title"
+          v-model="stepsModel[currentStepIndex].title"
           filled
           dense
           name="step_title"
@@ -93,7 +93,7 @@
           debounce="200"
         />
         <div v-else class="q-mb-lg q-mt-md">
-          {{ steps[currentStepIndex].title }}
+          {{ stepsModel[currentStepIndex].title }}
         </div>
 
         <!-- STEP DESCRIPTION -->
@@ -102,7 +102,7 @@
         </div>
         <q-input
           v-if="editMode"
-          v-model="steps[currentStepIndex].description"
+          v-model="stepsModel[currentStepIndex].description"
           filled
           dense
           type="textarea"
@@ -111,12 +111,12 @@
           :placeholder="$t('description')"
         />
         <div v-else class="q-mt-md">
-          {{ steps[currentStepIndex].description }}
+          {{ stepsModel[currentStepIndex].description }}
         </div>
 
         <component
           :is="activeStepComponent"
-          v-model:step="steps[currentStepIndex]"
+          v-model:step="stepsModel[currentStepIndex]"
           :edit-mode="editMode"
         />
 
@@ -169,26 +169,14 @@ import StepInstruction from './StepInstruction.vue'
 import StepChecklist from './StepChecklist.vue'
 import StepForm from './StepForm.vue'
 
-// TODO: Use defineModel macro to simplify the model related logic (Vue 3.3+)
-
 const props = defineProps({
-  modelValue: {
-    type: Array,
-    required: true
-  },
   editMode: {
     type: Boolean,
     required: true
   }
 })
-const emit = defineEmits(['update:modelValue'])
 
-const steps = computed({
-  get: () => props.modelValue,
-  set(value) {
-    emit('update:modelValue', value)
-  }
-})
+const stepsModel = defineModel({ type: Array })
 
 const store = useStore()
 const $theme = computed(() => store.getters.theme)
@@ -220,8 +208,8 @@ function initSortable() {
     ...store.state.drag_options,
     filter: '.undraggable',
     onEnd: ({ newIndex, oldIndex }) => {
-      const [moved] = steps.value.splice(oldIndex, 1)
-      steps.value.splice(newIndex, 0, moved)
+      const [moved] = stepsModel.value.splice(oldIndex, 1)
+      stepsModel.value.splice(newIndex, 0, moved)
 
       // Preserve the current step index at the same step
       if (currentStepIndex.value === oldIndex) {
@@ -241,7 +229,7 @@ function initSortable() {
   })
 }
 
-const hasSteps = computed(() => steps.value !== null && steps.value.length > 0)
+const hasSteps = computed(() => stepsModel.value !== null && stepsModel.value.length > 0)
 const currentStepIndex = ref(0)
 
 function handleStepClick(index) {
@@ -250,7 +238,7 @@ function handleStepClick(index) {
 }
 
 function addStep(type) {
-  steps.value.push({
+  stepsModel.value.push({
     type,
     title: '',
     description: '',
@@ -258,7 +246,7 @@ function addStep(type) {
     input_fields: [],
     media: []
   })
-  currentStepIndex.value = steps.value.length - 1
+  currentStepIndex.value = stepsModel.value.length - 1
 }
 
 const stepTypeToComponentMap = {
@@ -267,18 +255,18 @@ const stepTypeToComponentMap = {
   form: StepForm
 }
 const activeStepComponent = computed(() => {
-  const currentStep = steps.value[currentStepIndex.value]
+  const currentStep = stepsModel.value[currentStepIndex.value]
 
   return stepTypeToComponentMap[currentStep.type]
 })
 
 function deleteStep(stepIndex) {
   // If deleting the last step, move the current step index back by one
-  if (stepIndex === steps.value.length - 1) {
-    currentStepIndex.value = steps.value.length > 1 ? steps.value.length - 2 : 0
+  if (stepIndex === stepsModel.value.length - 1) {
+    currentStepIndex.value = stepsModel.value.length > 1 ? stepsModel.value.length - 2 : 0
   }
 
-  steps.value.splice(stepIndex, 1)
+  stepsModel.value.splice(stepIndex, 1)
   isConfirmingDelete.value = false
 }
 </script>

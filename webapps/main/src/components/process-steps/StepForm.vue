@@ -114,28 +114,16 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 
-// TODO: Use defineModel macro to simplify the model related logic (Vue 3.3+)
-
-const props = defineProps({
-  step: {
-    type: Object,
-    required: true
-  },
+defineProps({
   editMode: {
     type: Boolean,
     required: true
   }
 })
-const emit = defineEmits(['update:step'])
 
-const stepModel = computed({
-  get: () => props.step,
-  set(value) {
-    emit('update:step', value)
-  }
-})
+const stepModel = defineModel('step', { type: Object })
 
 const confirmingDeleteIndex = ref(null)
 const onUpIndex = ref(null)
