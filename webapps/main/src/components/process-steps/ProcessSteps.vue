@@ -231,6 +231,14 @@ function initSortable() {
 
 const hasSteps = computed(() => stepsModel.value !== null && stepsModel.value.length > 0)
 const currentStepIndex = ref(0)
+// Make sure the current step index is always within the bounds
+watch(stepsModel, (steps) => {
+  if (steps.length === 0) {
+    currentStepIndex.value = 0
+  } else if (currentStepIndex.value >= steps.length) {
+    currentStepIndex.value = steps.length - 1
+  }
+})
 
 function handleStepClick(index) {
   currentStepIndex.value = index
