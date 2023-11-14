@@ -4,8 +4,8 @@
     id="new-operation-form"
     @submit="submit"
     max_width="700px"
-    @cancel="$router.back()">
-
+    @cancel="$router.back()"
+  >
      <template #title>
       {{ $t('operation.new') }}
     </template>
@@ -41,8 +41,6 @@
         </div>
       </div>
     </template>
-
-
   </BaseModalForm>
 </template>
 
@@ -75,12 +73,12 @@ export default {
   methods: {
     submit() {
       if (!this.new_operation_data.name) {
-        window.alert(c(this.$t('operations.alerts.op_name_missing')))
+        window.alert(this.$capitalize(this.$t('operations.alerts.op_name_missing')))
+        return
       }
 
-      else {
-        this.$store.dispatch('createOperation', this.new_operation_data)
-        .then( (new_operation_key) => {
+      this.$store.dispatch('createOperation', this.new_operation_data)
+        .then((new_operation_key) => {
           this.$router.push({
             name: 'operationDetail',
             params: {
@@ -88,13 +86,14 @@ export default {
             }
           })
         })
-        .catch( err => {
-          if (err.response.status === 409) {
-            window.alert(c(this.$t('operations.alerts.op_name_used')))
+        .catch(error => {
+          if (error.response.status === 409) {
+            window.alert(this.$capitalize(this.$t('operations.alerts.op_name_used')))
           }
-          else { window.alert(err) }
+          else {
+            window.alert(error)
+          }
         })
-      }
     }
   }
 }
