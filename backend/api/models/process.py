@@ -32,14 +32,6 @@ class PhaseParameters(FlexModel):
   # wip_flow: WIPFlow = WIPFlow.BUFFER
 
 
-class Operation(ArangoDocument):
-  name: str
-  code: str = None
-  description: str = None
-  default_phase_parameters: PhaseParameters = PhaseParameters()
-  default_phase_notes: str = None
-
-
 class StepType(str, Enum):
   INSTRUCTION = 'instruction'
   FORM = 'form'
@@ -72,6 +64,14 @@ class Media(FlexModel):
 
 class StepWithMediaInfo(Step):
   media: List[Union[Media, str]] = None
+
+class Operation(ArangoDocument):
+  name: str
+  code: str = None
+  description: str = None
+  default_phase_parameters: PhaseParameters = PhaseParameters()
+  default_phase_notes: str = None
+  default_phase_steps: List[Step] = []
 
 
 class PhaseRecord(ArangoDocument):
