@@ -63,12 +63,12 @@
     <q-separator vertical />
 
     <!-- OPERATION DATA -->
-    <div class="col full-height" v-if="selected_operation">
-      <router-view v-slot="{ Component }">
-        <component :is="Component" :operation="selected_operation"/>
+    <div class="col full-height">
+      <router-view v-slot="{ Component, route }">
+        <component v-if="route.name === 'operationNew'" :is="Component" />
+        <component v-else-if="selected_operation" :is="Component" :operation="selected_operation"/>
       </router-view>
     </div>
-
   </div>
 
   <LoadingSignal v-else />
@@ -93,7 +93,7 @@ export default {
   },
 
   computed: {
-    
+
     operation_list() {
       return this.$store.state.process.operations
     },
@@ -103,12 +103,12 @@ export default {
     },
 
     selected_operation() {
-      return this.operation_list.find( op => op._key == this.selected_operation_key )
+      return this.operation_list.find(op => op._key == this.selected_operation_key)
     },
 
     filtered_operations() {
       const fields_to_search = ['name', 'code', 'description']
-      return this.operation_list.filter( op => multiMatch(this.search_text, op, fields_to_search) )
+      return this.operation_list.filter(op => multiMatch(this.search_text, op, fields_to_search))
     }
   },
 
@@ -126,7 +126,9 @@ export default {
   },
 
   created() {
-    this.$store.dispatch('getOperations').then( () => this.vuex_ready = true )
+    this.$store.dispatch('getOperations').then(() => {
+      this.vuex_ready = true
+    })
   },
 }
 </script>
