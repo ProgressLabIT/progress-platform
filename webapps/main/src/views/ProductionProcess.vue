@@ -274,10 +274,11 @@ export default {
       const active_phase = this.process[this.current_phase]
       if (active_phase) {
         const original_process = this.$store.state.process.saved
-        const original_phase_index = original_process.findIndex(p => p._key = active_phase._key)
+        const original_phase_index = original_process.findIndex(p => p._key === active_phase._key)
         this.updateActivePhaseIndex({
           oldIndex: this.current_phase,
-          newIndex: original_phase_index
+          // If we canceled a newly created phase, set it to the first one
+          newIndex: original_phase_index === -1 ? 0 : original_phase_index
         })
       }
 
@@ -316,22 +317,20 @@ export default {
 
     updateActivePhaseIndex({ oldIndex, newIndex }) {
       // Moved active phase
-      if (this.current_phase == oldIndex) {
+      if (this.current_phase === oldIndex) {
         this.current_phase = newIndex
       }
       // Moved earlier phase after active one
-      else if ( oldIndex < this.current_phase
-                && newIndex >= this.current_phase ) {
-        this.current_phase --
+      else if (oldIndex < this.current_phase && newIndex >= this.current_phase) {
+        this.current_phase--
       }
       // Moved later phase before active one
-      else if ( oldIndex > this.current_phase
-                && newIndex <= this.current_phase ) {
-        this.current_phase ++
+      else if (oldIndex > this.current_phase && newIndex <= this.current_phase) {
+        this.current_phase++
       }
 
       // ADD HERE REORDERING OF last_steps MAP
-      let new_steps_map = [...this.product_data.last_steps]
+      const new_steps_map = [...this.product_data.last_steps]
       const moved = new_steps_map.splice(oldIndex, 1)[0]
       new_steps_map.splice(newIndex, 0, moved)
 
@@ -345,7 +344,7 @@ export default {
 
     saveChanges() {
       this.saving = true
-      let process_update = {
+      const process_update = {
         product_key: this.product_key,
         new_process: this.process.map(p => {
           // remove temp _key
@@ -378,12 +377,14 @@ export default {
     this.updateStepsMap(step_map)
 
     // Initialize draggable phases
-    let container = document.querySelector("#phases")
+    const container = document.querySelector("#phases")
     const _self = this
     Sortable.create(container, {
       ..._self.$store.state.drag_options,
       filter: '.undraggable',
-      onStart: () => _self.dragging = true,
+      onStart: () => {
+        _self.dragging = true
+      },
       // use onEnd event provided by SortableJs library
       onEnd: ({ newIndex, oldIndex }) => {
         _self.dragging = false
@@ -411,7 +412,7 @@ export default {
       }
     }
   }
-};
+}
 </script>
 
 <style lang="sass" scoped>
