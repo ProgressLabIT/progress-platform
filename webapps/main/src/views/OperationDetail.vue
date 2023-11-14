@@ -89,7 +89,7 @@
 
       <q-tabs
         v-model="activeTab"
-        class="transparent text-low display"
+        class="transparent text-low display q-mx-md"
         active-class="highlight"
         align="right"
         shrink
@@ -109,32 +109,33 @@
         </q-tab>
       </q-tabs>
 
-      <q-separator />
+      <q-card square class="col scroll q-mx-md q-mb-md">
+        <q-tab-panels v-model="activeTab" class="fit surface2">
+          <q-tab-panel name="steps">
+            <ProcessSteps
+              v-model="temp_steps"
+              :edit-mode="edit_mode"
+            />
+          </q-tab-panel>
 
-      <q-tab-panels v-model="activeTab" class="col scroll">
-        <q-tab-panel name="steps">
-          <ProcessSteps
-            v-model="temp_steps"
-            :edit-mode="edit_mode"
-          />
-        </q-tab-panel>
+          <q-tab-panel name="parameters">
+            <ProcessParameters
+              v-model="temp_params"
+              :process-has-steps="false"
+              :edit-mode="edit_mode"
+            />
+          </q-tab-panel>
 
-        <q-tab-panel name="parameters">
-          <ProcessParameters
-            v-model="temp_params"
-            :process-has-steps="false"
-            :edit-mode="edit_mode"
-          />
-        </q-tab-panel>
+          <q-tab-panel name="notes">
+            <ProductionNotes
+              v-model="temp_notes"
+              :edit-mode="edit_mode"
+              class="q-pa-lg"
+            />
+          </q-tab-panel>
+        </q-tab-panels>
+      </q-card>
 
-        <q-tab-panel name="notes">
-          <ProductionNotes
-            v-model="temp_notes"
-            :edit-mode="edit_mode"
-            class="q-pa-lg"
-          />
-        </q-tab-panel>
-      </q-tab-panels>
     </template>
     <NoDataAlert v-else />
   </div>
