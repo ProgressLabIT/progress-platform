@@ -144,8 +144,8 @@
           {{ $t('views.PhaseNotes') }}
         </q-tab>
       </q-tabs>
-      <q-card square class="surface2 scroll" :style="`height: ${card_height}px`">
-        <q-tab-panels v-model="activeTab" keep-alive class="fit">
+      <q-card square class="scroll" :style="`height: ${card_height}px`">
+        <q-tab-panels v-model="activeTab" keep-alive class="fit surface2">
           <q-tab-panel name="steps">
             <ProcessSteps
               v-model="process[current_phase].steps"
