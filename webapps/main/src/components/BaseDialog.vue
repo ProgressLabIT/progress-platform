@@ -47,6 +47,7 @@ export default {
       default: null
     },
   },
+  emits: ['close'],
 
   created() {
     this.default_background = this.$theme.background

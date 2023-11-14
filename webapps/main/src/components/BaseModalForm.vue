@@ -67,6 +67,7 @@ export default {
       default: false
     }
   },
+  emits: ['submit', 'cancel'],
 
   data () {
     return {
