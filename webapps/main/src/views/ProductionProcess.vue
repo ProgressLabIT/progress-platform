@@ -288,8 +288,7 @@ export default {
     },
 
     addPhase(new_operation) {
-      const new_process = this.process
-      new_process.push({
+      this.process.push({
         // Add temp _key so that sorting works with new phases too
         _key: Date.now(),
         alias: new_operation.name,
@@ -297,10 +296,9 @@ export default {
         product_key: this.product_key,
         params: new_operation.default_phase_parameters,
         production_notes: new_operation.default_phase_notes,
-        steps: []
+        steps: new_operation.default_phase_steps
       })
-      this.process = new_process
-      this.current_phase = new_process.length - 1
+      this.current_phase = this.process.length - 1
     },
 
     deletePhase(phase_index) {

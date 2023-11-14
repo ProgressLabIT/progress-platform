@@ -96,10 +96,9 @@
         dense
         indicator-color="theme-blue"
       >
-        <!-- TODO: #326 - Add default steps -->
-        <!-- <q-tab name="procedure">
+        <q-tab name="steps">
           {{ $t('views.PhaseSteps') }}
-        </q-tab> -->
+        </q-tab>
 
         <q-tab name="parameters">
           {{ $t('views.PhaseParameters') }}
@@ -113,7 +112,12 @@
       <q-separator />
 
       <q-tab-panels v-model="activeTab" class="col scroll">
-        <!-- <q-tab-panel name="procedure" /> -->
+        <q-tab-panel name="steps">
+          <ProcessSteps
+            v-model="temp_steps"
+            :edit-mode="edit_mode"
+          />
+        </q-tab-panel>
 
         <q-tab-panel name="parameters">
           <ProcessParameters
@@ -138,11 +142,13 @@
 
 <script>
 import { ref } from 'vue'
+import { cloneDeep } from 'lodash' // TODO: replace with lodash-es
 
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import ProcessParameters from '@/components/ProcessParameters.vue'
-import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
-import ProductionNotes from '../components/ProductionNotes.vue'
+import ProductionNotes from '@/components/ProductionNotes.vue'
+import ProcessSteps from '@/components/process-steps/ProcessSteps.vue'
 
 export default {
   name: 'OperationDetail',
@@ -151,7 +157,8 @@ export default {
     BaseTooltipIcon,
     NoDataAlert,
     ProcessParameters,
-    ProductionNotes
+    ProductionNotes,
+    ProcessSteps
   },
 
   props: {
@@ -187,7 +194,8 @@ export default {
         auto_new_batch: true,
         unsupervised_work_allowed: false
       },
-      temp_notes: ''
+      temp_notes: '',
+      temp_steps: []
     }
   },
 
@@ -205,6 +213,8 @@ export default {
       }
 
       this.temp_notes = this.operation.default_phase_notes ?? ''
+
+      this.temp_steps = cloneDeep(this.operation.default_phase_steps ?? [])
 
       Object.keys(this.temp_metadata).forEach(key => {
         this.temp_metadata[key] = this.operation[key]
@@ -233,7 +243,8 @@ export default {
         update: {
           ...this.temp_metadata,
           default_phase_parameters: this.temp_params,
-          default_phase_notes: this.temp_notes
+          default_phase_notes: this.temp_notes,
+          default_phase_steps: this.temp_steps
         }
       }
       await this.$store.dispatch('updateOperation', data)
