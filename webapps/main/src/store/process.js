@@ -1,8 +1,10 @@
 import { cloneDeep as _cloneDeep } from 'lodash'
-import { api, axios } from '@/boot/axios.js'
+import { api } from '@/boot/axios.js'
 
+/**
+ * @type {import('vuex').Module}
+ */
 const process = {
-
   state: {
     saved: [],
     temp: [],
@@ -37,143 +39,102 @@ const process = {
   },
 
   actions: {
-    getOperations({commit}) {
-      return new Promise( resolve => {
-        api
-        .get('operation')
-        .then(resp => {
-          commit('LOAD_OPERATIONS', resp.data)
-          resolve()
-        })
-      })
+    async getOperations({ commit }) {
+      const { data } = await api.get('operation')
+      commit('LOAD_OPERATIONS', data)
     },
 
-    createOperation({ dispatch }, new_operation_data) {
-      return new Promise(resolve => {
-        api
-        .post(`operation`, new_operation_data)
-        .then( async (resp) => {
-          const new_op_key = resp.data.detail._key
-          await dispatch('getOperations')
-          resolve(new_op_key)
-        })
-      })
+    async createOperation({ dispatch }, new_operation_data) {
+      const { data } = await api.post('operation', new_operation_data)
+      await dispatch('getOperations')
+      return data.detail._key
     },
 
-    updateOperation({ dispatch }, { key, update }) {
-      return new Promise( resolve => {
-        api
-        .patch(`operation/${key}`, update)
-        .then( async () => {
-          await dispatch('getOperations')
-          resolve()
-        })
-      })
+    async updateOperation({ dispatch }, { key, update }) {
+      await api.patch(`operation/${key}`, update)
+      await dispatch('getOperations')
     },
-
 
     async getProcess({ commit }, product_key) {
-      function get_step_media(step) {
-        return new Promise( resolve => {
-          api
-          .get(`step/${step._key}/media`)
-          .then( resp => {
-            const media_list = resp.data.map( filename => {
-              return {
-                filename,
-                src: `/media/step/${step._key}/${filename}`,
-                temp: false,
-                trash: false
-              }
-            })
-            step.media = media_list
-            resolve(step)
-          })
-        })
+      async function loadStepMedia(step) {
+        const { data } = await api.get(`step/${step._key}/media`)
+        step.media = data.map(filename => ({
+          filename,
+          src: `/media/step/${step._key}/${filename}`,
+          temp: false,
+          trash: false
+        }))
       }
 
-      return new Promise( (resolve) => {
-        api
-        .get(`product/${product_key}/process`)
-        .then( async resp => {
-          let phases = resp.data
-          let promises = []
-          for (let phase of phases) {
-            for (let step of phase.steps) {
-              if (step.type === 'instruction') {
-                promises.push(get_step_media(step))
-              }
-            }
+      const { data: phases } = await api.get(`product/${product_key}/process`)
+      const promises = []
+      phases.forEach(phase => {
+        phase.steps.forEach(step => {
+          if (step.type === 'instruction') {
+            promises.push(loadStepMedia(step))
           }
-          await Promise.all(promises)
-          commit('LOAD_SAVED_PROCESS', phases)
-          resolve()
         })
       })
+      await Promise.all(promises)
+      commit('LOAD_SAVED_PROCESS', phases)
     },
 
-    saveTempProcess({ dispatch }, data) {
-      return new Promise( (resolve, reject) => {
+    async saveTempProcess({ dispatch }, data) {
+      const newMedia = []
+      const deletedMedia = []
 
-        // map added/deleted media
-        let new_media = []
-        let deleted_media = []
+      data.new_process.forEach(phase => {
+        phase.steps.forEach(step => {
+          if (step.media === undefined) {
+            step.media = []
+          }
 
-        data.new_process.forEach( phase => {
-          phase.steps.forEach( step => {
-
-            if (typeof step.media == 'undefined') return
-
-            step.media.forEach( media => {
-              if (media.trash) deleted_media.push({
+          step.media.forEach(media => {
+            if (media.trash) {
+              deletedMedia.push({
                 step_key: step._key,
-                filename: media.filename
+                filename: media.filename,
               })
+            }
 
-              if (media.temp) new_media.push({
+            if (media.temp) {
+              newMedia.push({
                 step_key: step._key,
-                media_file: media.data
+                media_file: media.data,
               })
-            })
+            }
           })
         })
-
-        // set up api calls
-        let api_calls = []
-
-        deleted_media.forEach( ({ step_key, filename }) => {
-          api_calls.push(
-            api.delete(`step/${step_key}/media/${filename}`)
-          )
-        })
-
-        new_media.forEach( ({ step_key, media_file }) => {
-          let body = new FormData()
-          body.append('media_file', media_file)
-          api_calls.push(
-            api.post(
-              `step/${step_key}/media`,
-              body,
-              { headers: { 'Content-type': 'multipart/form-data' } }
-            )
-          )
-        })
-
-        api_calls.push(
-          api.put(`product/${data.product_key}/process`, data.new_process)
-        )
-
-        // update process & product data
-        axios.all(api_calls)
-        .then(async () => {
-          await axios.all([
-            dispatch('getProcess', data.product_key),
-            dispatch('loadProductDetails', data.product_key)
-          ])
-          resolve()
-        })
-        .catch(err => reject(err))
       })
+
+      const promises = []
+
+      deletedMedia.forEach(({ step_key, filename }) => {
+        promises.push(api.delete(`step/${step_key}/media/${filename}`))
+      })
+
+      newMedia.forEach(({ step_key, media_file }) => {
+        const body = new FormData()
+        body.append('media_file', media_file)
+        promises.push(
+          api.post(
+            `step/${step_key}/media`,
+            body,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+          )
+        )
+      })
+
+      promises.push(
+        api.put(`product/${data.product_key}/process`, data.new_process)
+      )
+
+      // update process & product data
+      await Promise.all(promises)
+      await Promise.all([
+        dispatch('getProcess', data.product_key),
+        dispatch('loadProductDetails', data.product_key),
+      ])
     }
   },
 }
