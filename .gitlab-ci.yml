@@ -70,7 +70,7 @@ build:webapp:
       --cache-from $WEBAPP_IMAGE:develop-stage
       --cache-from $$WEBAPP_IMAGE:latest
       -t $WEBAPP_IMAGE:latest
-      -t $WEBAPP_IMAGE:$CI_PIPELINE_ID
+      -t $WEBAPP_IMAGE:$CI_PIPELINE_CREATED_AT
       -f $WEBAPP_DOCKERFILE
       .
 
@@ -78,7 +78,7 @@ build:webapp:
     - docker push $WEBAPP_IMAGE:global-deps-stage
     - docker push $WEBAPP_IMAGE:develop-stage
     - docker push $WEBAPP_IMAGE:latest
-    - docker push $WEBAPP_IMAGE:$CI_PIPELINE_ID
+    - docker push $WEBAPP_IMAGE:$CI_PIPELINE_CREATED_AT
 
 
 build:api:
@@ -105,14 +105,14 @@ build:api:
       docker build
       --pull
       --cache-from $API_IMAGE:latest
-      -t $API_IMAGE:$CI_PIPELINE_ID
+      -t $API_IMAGE:$CI_PIPELINE_CREATED_AT
       -t $API_IMAGE:latest
       -f $API_DOCKERFILE
       .
 
     # Push new images to the registry
     - docker push $API_IMAGE:latest
-    - docker push $API_IMAGE:$CI_PIPELINE_ID
+    - docker push $API_IMAGE:$CI_PIPELINE_CREATED_AT
 
 
 build:workflow:
@@ -138,12 +138,12 @@ build:workflow:
       docker build
       --pull
       --cache-from $WF_SYS_AGENT_IMAGE:latest
-      -t $WF_SYS_AGENT_IMAGE:$CI_PIPELINE_ID
+      -t $WF_SYS_AGENT_IMAGE:$CI_PIPELINE_CREATED_AT
       -t $WF_SYS_AGENT_IMAGE:latest
       -f $WF_SYS_AGENT_DOCKERFILE
       .
 
     # Push new images to the registry
     - docker push $WF_SYS_AGENT_IMAGE:latest
-    - docker push $WF_SYS_AGENT_IMAGE:$CI_PIPELINE_ID
+    - docker push $WF_SYS_AGENT_IMAGE:$CI_PIPELINE_CREATED_AT
 
