@@ -109,6 +109,9 @@ export default {
       })
     },
   },
+  created() {
+    this.$store.dispatch('loadUsers')
+  },
 
   mounted() {
     this.getMessages()
