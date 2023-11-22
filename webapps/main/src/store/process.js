@@ -80,6 +80,15 @@ const process = {
     },
 
     async saveTempProcess({ dispatch }, data) {
+      const { data: updatedProcess } = await api.put(`product/${data.product_key}/process`, data.new_process)
+      // update newly created steps with _key so that the media can be uploaded accordingly
+      updatedProcess.forEach((phase, phaseIndex) => {
+        phase.steps.forEach((step, stepIndex) => {
+          const stepUpdateData = data.new_process[phaseIndex].steps[stepIndex]
+          stepUpdateData._key = step._key
+        })
+      })
+
       const newMedia = []
       const deletedMedia = []
 
@@ -107,16 +116,16 @@ const process = {
         })
       })
 
-      const promises = []
+      const mediaPromises = []
 
       deletedMedia.forEach(({ step_key, filename }) => {
-        promises.push(api.delete(`step/${step_key}/media/${filename}`))
+        mediaPromises.push(api.delete(`step/${step_key}/media/${filename}`))
       })
 
       newMedia.forEach(({ step_key, media_file }) => {
         const body = new FormData()
         body.append('media_file', media_file)
-        promises.push(
+        mediaPromises.push(
           api.post(
             `step/${step_key}/media`,
             body,
@@ -125,12 +134,7 @@ const process = {
         )
       })
 
-      promises.push(
-        api.put(`product/${data.product_key}/process`, data.new_process)
-      )
-
-      // update process & product data
-      await Promise.all(promises)
+      await Promise.all(mediaPromises)
       await Promise.all([
         dispatch('getProcess', data.product_key),
         dispatch('loadProductDetails', data.product_key),
