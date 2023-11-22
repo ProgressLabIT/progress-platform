@@ -26,14 +26,7 @@ yarn-error.log*
 
 
 # Media
-pics/
-company/
-customer/
-equipment/
-product/
-step/
-user/
-issue/
+media/
 
 # DBs
 integration_db/
