@@ -183,6 +183,7 @@ import ProductionNotes from '@/components/ProductionNotes.vue'
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import BasePrompt from '@/components/BasePrompt.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
+import { api } from '../boot/axios'
 
 export default {
 
@@ -288,7 +289,28 @@ export default {
       this.$emit('changes_canceled')
     },
 
-    addPhase(new_operation) {
+    async addPhase(new_operation) {
+      // Load media from default steps as temp files so that they can be uploaded as fresh
+      // TODO: Migrate process to new media structure so that this is not needed and we don't end up with duplicate files
+      const steps = await Promise.all(
+        new_operation.default_phase_steps?.map(async (step) => ({
+          ...step,
+          media: await Promise.all(
+            step.media.map(async (media) => {
+              const { data: blob } = await api.get(`/media/${media._key}`, {
+                responseType: 'blob'
+              })
+
+              return {
+                ...media,
+                temp: true,
+                data: new File([blob], media.filename, { type: blob.type })
+              }
+            })
+          )
+        })) ?? []
+      )
+
       this.process.push({
         // Add temp _key so that sorting works with new phases too
         _key: Date.now(),
@@ -297,7 +319,7 @@ export default {
         product_key: this.product_key,
         params: new_operation.default_phase_parameters,
         production_notes: new_operation.default_phase_notes,
-        steps: new_operation.default_phase_steps
+        steps
       })
       this.current_phase = this.process.length - 1
     },

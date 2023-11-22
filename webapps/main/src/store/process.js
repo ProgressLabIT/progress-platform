@@ -29,8 +29,8 @@ const process = {
       state.temp.splice(phase_index, 1)
     },
 
-    LOAD_OPERATIONS(state, op_list) {
-      state.operations = op_list
+    LOAD_OPERATIONS(state, operations) {
+      state.operations = operations
     },
 
     CANCEL_PROCESS_CHANGES(state) {
@@ -40,8 +40,21 @@ const process = {
 
   actions: {
     async getOperations({ commit }) {
-      const { data } = await api.get('operation')
-      commit('LOAD_OPERATIONS', data)
+      const { data: operations } = await api.get('operation')
+
+      operations.forEach(operation => {
+        operation.default_phase_steps?.forEach(step => {
+          step.media = step.media?.map(media => ({
+            _key: media._key,
+            filename: media.name,
+            src: `/media/${media._key}`,
+            temp: false,
+            trash: false
+          })) ?? []
+        })
+      })
+
+      commit('LOAD_OPERATIONS', operations)
     },
 
     async createOperation({ dispatch }, new_operation_data) {
@@ -51,7 +64,40 @@ const process = {
     },
 
     async updateOperation({ dispatch }, { key, update }) {
-      await api.patch(`operation/${key}`, update)
+      const newMediaByStepIndex = new Map()
+      // TODO: use Promise.allSettled and offer retry or abandon for failed requests
+      await Promise.all(
+        update.default_phase_steps?.flatMap((step, stepIndex) =>
+          step.media.map(async (media) => {
+            if (!media.temp) {
+              return
+            }
+
+            const formData = new FormData()
+            formData.append('file', media.data)
+            const { data: newMedia } = await api.post('media/create', formData)
+            if (!newMediaByStepIndex.has(stepIndex)) {
+              newMediaByStepIndex.set(stepIndex, [])
+            }
+            newMediaByStepIndex.get(stepIndex).push(newMedia.detail._key)
+          })
+        ) ?? []
+      )
+
+      await api.patch(`operation/${key}`, {
+        ...update,
+        default_phase_steps: update.default_phase_steps.map((step, stepIndex) => ({
+          ...step,
+          media: [
+            ...step.media
+              .filter(({ trash, temp }) => !trash && !temp)
+              .map(({ _key }) => _key),
+
+            ...(newMediaByStepIndex.get(stepIndex) ?? []),
+          ],
+        })),
+      })
+
       await dispatch('getOperations')
     },
 

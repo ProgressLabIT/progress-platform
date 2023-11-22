@@ -99,6 +99,7 @@
     </div>
 
     <div class="col-3">
+      <!-- TODO: Offer a way to browse existing media to select from, as an alternative to uploading a new one (?) -->
       <q-btn
         v-if="editMode"
         flat
