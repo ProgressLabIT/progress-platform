@@ -58,8 +58,12 @@ class Step(FlexModel):
   input_fields: List[InputField] = []
 
 
+# TODO: Add validation for size, content_type, etc.
 class Media(FlexModel):
+  key: str = Field(None, alias="_key")
   name: str
+  size: int
+  content_type: str
 
 
 class StepWithMediaInfo(Step):
