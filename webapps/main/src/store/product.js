@@ -1,7 +1,7 @@
 import { createStore } from 'vuex'
 import { cloneDeep as _cloneDeep } from 'lodash'
 import { api, axios } from '@/boot/axios.js'
-import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js' 
+import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js'
 
 const product = {
 
@@ -33,7 +33,7 @@ const product = {
     },
 
     /**
-     * The mutation below is the exact copy of the one above. 
+     * The mutation below is the exact copy of the one above.
      * The duplication is to semantically separate the update
      * of fields that do not need backend sync from those that do
      */
@@ -55,23 +55,26 @@ const product = {
       state.temp[param].target = new_target
     },
 
-    ADD_TEMP_DOC(state, file) {     
-      // check if the file is not already saved but temporarily deleted
-      const already_saved = state.saved.docs.some( d => d.name == file.name)
-      
-      // simply restore metadata if the file is already saved
-      const file_to_add = {
+    ADD_TEMP_DOC(state, { file, force = false }) {
+      const savedFile = state.saved.docs.find(({ name }) => name === file.name)
+
+      // If the file is already saved, and has the same size, the user PROBABLY is trying to restore.
+      // They deleted the file, didn't save, and is now trying to re-add it.
+      // TODO: Use a better way to check if the file is the same.
+      if (savedFile && savedFile.size === file.size && !force) {
+        state.temp.docs.push({
+          name: file.name,
+          size: file.size,
+        })
+        return
+      }
+
+      state.temp.docs.push({
         name: file.name,
         size: file.size,
-      }
-
-      // if not, add file content and temp flag
-      if (!already_saved) {
-        file_to_add.data = file
-        file_to_add.temp = true
-      }
-
-      state.temp.docs.push(file_to_add)
+        data: file,
+        temp: true
+      })
     },
 
     DELETE_TEMP_DOC(state, doc_index) {
@@ -121,7 +124,7 @@ const product = {
       )
       .then( resp => {
         commit('UPDATE_PRODUCT', resp.data.detail )
-      }) 
+      })
     },
 
     restoreProduct({ commit }, product_key) {
@@ -147,7 +150,7 @@ const product = {
           commit('LOAD_PRODUCT_LIST', productList)
           resolve()
         })
-        .catch(err => {        
+        .catch(err => {
           window.alert(`Couldn't fetch data from db:\n ${err}`)
           reject()
         })
@@ -170,14 +173,14 @@ const product = {
     }) {
 
       /**
-       * this action queues up as many api calls as needed 
+       * this action queues up as many api calls as needed
        * to add/delete product docs and finally to update
        * product parameters. Then returns a promise which resolves
        * only after successfully making all calls and re-fetching
        * updated product data.
        */
       const product_key = new_product_data._key
-      
+
       // Initialize requests queue
       const api_calls = []
 
@@ -239,7 +242,7 @@ const product = {
 
     productCatalog: (state) => (show_active_only) => {
       return state.list.filter( p => {
-        const deleted = p.trash 
+        const deleted = p.trash
         const active_filter = !show_active_only || p.active
         return !deleted && active_filter
       })

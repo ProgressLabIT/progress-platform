@@ -400,7 +400,7 @@ export default {
           this.$store.commit('DELETE_TEMP_DOC', existingIndex)
         }
 
-        this.$store.commit('ADD_TEMP_DOC', file)
+        this.$store.commit('ADD_TEMP_DOC', { file, force: isExisting })
       }
     },
 
