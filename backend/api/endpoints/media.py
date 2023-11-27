@@ -15,7 +15,7 @@ from models.process import Media
 router = APIRouter()
 media_root_path = get_config().media_path
 
-# TODO: If a created media is not connected to any entity in a reasonable amount of time, delete it (cron job?)
+# TODO: If a created media is not connected to any entity in a reasonable amount of time, delete it (cron job?) (use created_at field as reference)
 @router.post('/media/create')
 def create_media(file: UploadFile):
   try:
