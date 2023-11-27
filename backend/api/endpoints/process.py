@@ -35,15 +35,17 @@ async def get_operation_list():
         operation_id=op_data['_id']
       )
     )
+    operation_media = [media for media in operation_media_cursor]
+
     for step in op_data.get('default_phase_steps', []):
       if not step.get('media'):
         step['media'] = []
         continue
 
       step_media = []
-      for operation_media in operation_media_cursor:
-        if operation_media['_key'] in step['media']:
-          step_media.append(operation_media)
+      for media in operation_media:
+        if media['_key'] in step['media']:
+          step_media.append(media)
 
       step['media'] = step_media
 
