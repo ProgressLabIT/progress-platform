@@ -1,9 +1,11 @@
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Union
 
 from pydantic import Field
 
 from utils.base_models import FlexModel, ArangoDocument
+from utils.dt import timestamp
 
 
 
@@ -63,6 +65,7 @@ class Media(ArangoDocument):
   name: str
   size: int
   content_type: str
+  created_at: datetime = Field(default_factory=timestamp)
 
 
 class StepWithMediaInfo(Step):
