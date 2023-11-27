@@ -59,8 +59,7 @@ class Step(FlexModel):
 
 
 # TODO: Add validation for size, content_type, etc.
-class Media(FlexModel):
-  key: str = Field(None, alias="_key")
+class Media(ArangoDocument):
   name: str
   size: int
   content_type: str
