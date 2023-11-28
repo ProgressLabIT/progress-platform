@@ -160,7 +160,15 @@
                   square
                   height="auto"
                   class="fit"
-                  @click="j.active ? show_exit_alert = true : exitJob()">
+                  @click="() => {
+                    exit_destination = { name: 'userJobs' }
+                    if (j.active) {
+                      show_exit_alert = true
+                    } else {
+                      exitJob(false)
+                    }
+                  }"
+                >
                   <q-icon color="text-high" size="lg" name="mdi-close" />
                 </q-btn>
               </div>
@@ -258,6 +266,7 @@ export default {
     return {
       vuex_ready: false,
       show_exit_alert: false,
+      exit_destination: { name: 'userJobs' },
       show_issue_form: false,
       alert_timeout: 4000,
       can_leave: false
@@ -413,11 +422,11 @@ export default {
     exitJob(stop_session) {
       if (stop_session) {
         this.$store.dispatch('pauseJob')
-        .then(() => this.$router.push({ name: 'userJobs'}))
+        .then(() => this.$router.push(this.exit_destination))
       }
       else {
         this.can_leave = true
-        this.$router.push({ name: 'userJobs'})
+        this.$router.push(this.exit_destination)
       }
     },
 
@@ -452,6 +461,7 @@ export default {
 
   beforeRouteLeave (to, from, next) {
     if (this.j.active && !this.can_leave) {
+      this.exit_destination = to
       this.show_exit_alert = true
       next(false)
     }
