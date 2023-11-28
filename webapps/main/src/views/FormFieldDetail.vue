@@ -1,211 +1,220 @@
 <template>
   <div class="q-pa-lg column full-height">
-    <div class="row justify-between items-start">
+    <q-form @submit="save">
+      <div class="row justify-between items-start">
+        <div class="col-10 row q-col-gutter-md">
+        <!-- Field type -->
+          <div class="col-4">
+            <q-select
+              v-model="temp_data.type"
+              :options="field_types"
+              emit-value
+              map-options
+              :disable="!edit_mode"
+              filled
+              :label="$t('type')"
+            >
+              <template #option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section avatar>
+                    <q-icon :name="scope.opt.icon" />
+                  </q-item-section>
 
-      <div class="col-10 row q-col-gutter-md">
-      <!-- Field type -->
-        <div class="col-4">
-          <q-select
-            filled
-            :disable="!edit_mode"
-            :label="$t('type')"
-            :options="field_types"
-            v-model="temp_data.type"
-            emit-value
-            map-options>
-            <template #option="scope">
-              <q-item v-bind="scope.itemProps">
-                <q-item-section avatar>
-                  <q-icon :name="scope.opt.icon" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>
-                    {{ scope.opt.label }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
-        </div>
-
-
-        <!-- Field default name -->
-        <div class="col-4">
-          <q-input
-            filled
-            :disable="!edit_mode"
-            :label="$t('name')"
-            stack-label
-            v-model="temp_data.name">
-          </q-input>
-        </div>
-
-        <!-- Field default Label -->
-        <div class="col-4">
-          <q-input
-            filled
-            :label="$t('label')"
-            :disable="!edit_mode"
-            stack-label
-            v-model="temp_data.default_label">
-          </q-input>
-        </div>
-
-        <!-- Field default hint -->
-        <div class="col-12">
-          <q-input
-            filled
-            :disable="!edit_mode"
-            :label="$t('hint')"
-            stack-label
-            autogrow
-            v-model="temp_data.default_hint">
-          </q-input>
-        </div>
-      </div>
-
-      <!-- ACTION BUTTONS -->
-      <div class="col-auto">
-        <template v-if="!edit_mode">
-          <BaseTooltipIcon
-            icon="mdi-pencil"
-            :tooltip="$capitalize($t('edit'))"
-            :color="$theme.blue"
-            @iconClick="edit_mode=true">
-          </BaseTooltipIcon>
-
-          <BaseTooltipIcon
-            icon="mdi-delete"
-            :tooltip="$capitalize($t('delete'))"
-            :color="$theme.red"
-            @iconClick="show_delete = true">
-          </BaseTooltipIcon>
-        </template>
-
-        <template v-else>
-          <div class="col column q-gutter-md">
-            <q-btn
-              size="12px"
-              color="theme-blue"
-              @click="save"
-              :loading="saving"
-              :label="$t('save')">
-            </q-btn>
-            <q-btn
-              size="12px"
-              color="theme-grey"
-              @click="cancel"
-              :label="$t('cancel')">
-            </q-btn>
-          </div>
-        </template>
-      </div>
-    </div>
-
-
-    <!-- List values if necessary -->
-    <template v-if="is_choice">
-      <div class="row full-width items-baseline q-col-gutter-md q-my-md q-px-xs">
-        <div class="text-h3 col-auto q-px-none">
-          {{ $t('value', 2) }}
-        </div>
-        <div class="smaller col-auto text-low" v-if="shown_list_values.length == search_limit">
-          {{ $t('first_x_shown', { x: search_limit }) }}
-        </div>
-        <q-space />
-
-        <template v-if="edit_mode">
-          <div class="col-auto">
-            <q-btn
-              size="10px"
-              icon="mdi-plus"
-              color="theme-blue"
-              :label="$t('add')"
-              @click="addListItem">
-            </q-btn>
+                  <q-item-section>
+                    <q-item-label>
+                      {{ scope.opt.label }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
           </div>
 
-          <div class="col-auto" v-if="selected_items.length">
-            <q-btn
-              size="10px"
+          <!-- Field default name -->
+          <div class="col-4">
+            <q-input
+              v-model="temp_data.name"
+              :rules="[value => !!value || $t('field_required_alert')]"
+              filled
+              :disable="!edit_mode"
+              :label="$t('name')"
+              stack-label
+            />
+          </div>
+
+          <!-- Field default Label -->
+          <div class="col-4">
+            <q-input
+              v-model="temp_data.default_label"
+              filled
+              :label="$t('label')"
+              :disable="!edit_mode"
+              stack-label
+            />
+          </div>
+
+          <!-- Field default hint -->
+          <div class="col-12">
+            <q-input
+              v-model="temp_data.default_hint"
+              filled
+              :disable="!edit_mode"
+              :label="$t('hint')"
+              stack-label
+              autogrow
+            />
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="col-auto">
+          <template v-if="!edit_mode">
+            <BaseTooltipIcon
+              icon="mdi-pencil"
+              :tooltip="$capitalize($t('edit'))"
+              :color="$theme.blue"
+              @iconClick="edit_mode=true"
+            />
+
+            <BaseTooltipIcon
               icon="mdi-delete"
-              color="theme-red"
-              :label="$t('delete')"
-              @click="deleteListItems">
-            </q-btn>
-          </div>
-        </template>
+              :tooltip="$capitalize($t('delete'))"
+              :color="$theme.red"
+              @iconClick="show_delete = true"
+            />
+          </template>
 
-        <div>
-          <q-input
-            filled
-            dense
-            :disable="search_disabled"
-            :label="$capitalize($t('search'))"
-            debounce="500"
-            v-model="list_search">
-            <template #append>
-              <q-icon name="mdi-magnify" />
-            </template>
-          </q-input>
-          <q-tooltip
-            delay="200"
-            anchor="top middle"
-            self="center middle"
-            v-if="search_disabled">
-            {{ $t('save_or_cancel_before_change') }}
-          </q-tooltip>
+          <template v-else>
+            <div class="col column q-gutter-md">
+              <q-btn
+                type="submit"
+                size="12px"
+                color="theme-blue"
+                :loading="saving"
+                :label="$t('save')"
+              />
+
+              <q-btn
+                size="12px"
+                color="theme-grey"
+                @click="cancel"
+                :label="$t('cancel')"
+              />
+            </div>
+          </template>
         </div>
       </div>
 
-      <div class="col">
-        <q-table
-          :columns="list_cols"
-          :rows="shown_list_values"
-          color="primary"
-          id="list-values"
-          class="full-height"
-          table-class="text-high "
-          card-class="surface2 shadow-2"
-          flat
-          dense
-          :loading="table_loading"
-          :separator="edit_mode ? 'none' : 'horizontal'"
-          square
-          virtual-scroll
-          separator="none"
-          hide-bottom
-          :selection="edit_mode ? 'multiple' : 'none'"
-          v-model:selected="selected_items"
-          :rows-per-page-options="[0]"
-          row-key="index">
-          <template v-slot:loading>
-            <q-inner-loading showing color="primary" />
-          </template>
-          <template #body-cell="props">
-            <q-td
-              :props="props"
-              class="q-pl-none">
-              <div :class="getItemClasses(props)">
-                <q-input
-                  v-if="edit_mode"
-                  filled
-                  dense
-                  autogrow
-                  input-style="white-space: pre-wrap"
-                  :disable="!edit_mode"
-                  v-model="temp_values[props.row.index][props.col.field]">
-                </q-input>
-                <div v-else>
-                  {{ props.value }}
-                </div>
-              </div>
-            </q-td>
-          </template>
-        </q-table>
-      </div>
+      <!-- List values if necessary -->
+      <template v-if="is_choice">
+        <div class="row full-width items-baseline q-col-gutter-md q-my-md q-px-xs">
+          <div class="text-h3 col-auto q-px-none">
+            {{ $t('value', 2) }}
+          </div>
 
-    </template>
+          <div class="smaller col-auto text-low" v-if="shown_list_values.length === search_limit">
+            {{ $t('first_x_shown', { x: search_limit }) }}
+          </div>
+
+          <q-space />
+
+          <template v-if="edit_mode">
+            <div class="col-auto">
+              <q-btn
+                size="10px"
+                icon="mdi-plus"
+                color="theme-blue"
+                :label="$t('add')"
+                @click="addListItem"
+              />
+            </div>
+
+            <div class="col-auto" v-if="selected_items.length">
+              <q-btn
+                size="10px"
+                icon="mdi-delete"
+                color="theme-red"
+                :label="$t('delete')"
+                @click="deleteListItems">
+              </q-btn>
+            </div>
+          </template>
+
+          <div>
+            <q-input
+              v-model="list_search"
+              :disable="search_disabled"
+              debounce="500"
+              filled
+              dense
+              :label="$capitalize($t('search'))"
+            >
+              <template #append>
+                <q-icon name="mdi-magnify" />
+              </template>
+            </q-input>
+
+            <q-tooltip
+              v-if="search_disabled"
+              delay="200"
+              anchor="top middle"
+              self="center middle"
+            >
+              {{ $t('save_or_cancel_before_change') }}
+            </q-tooltip>
+          </div>
+        </div>
+
+        <div class="col">
+          <q-table
+            :columns="list_cols"
+            :rows="shown_list_values"
+            color="primary"
+            id="list-values"
+            class="full-height"
+            table-class="text-high "
+            card-class="surface2 shadow-2"
+            flat
+            dense
+            :loading="table_loading"
+            :separator="edit_mode ? 'none' : 'horizontal'"
+            square
+            virtual-scroll
+            hide-bottom
+            :selection="edit_mode ? 'multiple' : 'none'"
+            v-model:selected="selected_items"
+            :rows-per-page-options="[0]"
+            row-key="index"
+          >
+            <template #loading>
+              <q-inner-loading showing color="primary" />
+            </template>
+
+            <template #body-cell="props">
+              <q-td
+                :props="props"
+                class="q-pl-none"
+              >
+                <div :class="getItemClasses(props)">
+                  <q-input
+                    v-if="edit_mode"
+                    v-model="temp_values[props.row.index][props.col.field]"
+                    :disable="!edit_mode"
+                    filled
+                    dense
+                    autogrow
+                    input-style="white-space: pre-wrap"
+                  />
+                  <div v-else>
+                    {{ props.value }}
+                  </div>
+                </div>
+              </q-td>
+            </template>
+          </q-table>
+        </div>
+      </template>
+    </q-form>
 
     <BaseDialog :show="show_delete">
       <BaseActionCard
@@ -225,10 +234,8 @@ import form from '@/mixins/form.js'
 import BaseActionCard from '@/components/BaseActionCard.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
-import multiMatch from '@/lib/MultiFieldSearch.js'
 
 export default {
-
   name: 'FormFieldDetail',
 
   mixins: [form],
@@ -332,11 +339,14 @@ export default {
       }))
     },
 
-    getItemClasses(props) {
-      return props.row.delete ? 'bg-red-backdrop text-strike'
-        : props.row.new ? 'bg-green-backdrop text-italic'
-        : props.value != this.original_values.find(v => v._key == props.row._key)[props.col.field] ? 'bg-orange-backdrop'
-        : ''
+    getItemClasses({ row, col, value }) {
+      return row.delete
+        ? 'bg-red-backdrop text-strike'
+        : row.new
+          ? 'bg-green-backdrop text-italic'
+          : value !== this.original_values.find(({ _key }) => _key === row._key)[col.field]
+            ? 'bg-orange-backdrop'
+            : ''
     },
 
     save() {
@@ -348,7 +358,7 @@ export default {
 
       if (this.deleted_items.length) {
         // Need to use URLSearchParams to avoid square brackets in the query param name (e.g. ?value_key[]=XXX -> ?value_key=XXX)
-        let params = new URLSearchParams()
+        const params = new URLSearchParams()
         this.deleted_items.forEach(item => params.append('value_key', item._key))
         calls.push(this.$api.delete(`list/${this.field._key}`, { params }))
       }
@@ -440,18 +450,16 @@ export default {
 </script>
 
 <style lang="sass">
-#list-values
-  .q-table--dense .q-table td:first-child
-  thead tr:first-child th /* bg color is important for th; just specify one */
+#list-values thead
+  position: sticky
+  z-index: 1
+  top: 0
+
+  tr:first-child th /* bg color is important for th; just specify one */
     background-color: var(--surface-2)
     padding-top: 8px
     padding-bottom: 8px
     border-bottom: 1px solid rgba(255, 255, 255, .3)
-
-  thead
-    position: sticky
-    z-index: 1
-    top: 0
 
 .table-no-hover
   td::before

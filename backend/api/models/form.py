@@ -2,10 +2,9 @@ from enum import Enum
 from datetime import date, time
 from typing import Any, List, Union
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, Field, root_validator
 
 from utils.base_models import ArangoDocument
-
 
 
 class FileBucket(str, Enum):
@@ -48,7 +47,7 @@ class CustomListValue(ArangoDocument):
 
 class CustomField(ArangoDocument):
   type: FieldType
-  name: str # To search when building the form
+  name: str = Field(..., min_length=1) # To search when building the form
   default_label: str = None # To show to the user when filling up the forms
   default_hint: str = None # To show to the user when filling up the forms
 
