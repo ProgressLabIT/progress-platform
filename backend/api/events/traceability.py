@@ -724,7 +724,7 @@ class ProductionActivityEvent(BaseEvent):
     self.job.qt_completed += self.info.completed_batch_qt
 
     # NO REMAINING QUANTITY TO DO - LAST BATCH
-    if self.job.qt_completed == self.job.qt_planned: # No more pieces to work
+    if self.job.qt_completed >= self.job.qt_planned: # No more pieces to work
       self.complete_job(self.job.qt_completed)
       self.response = dict(
         message = f"Batch {self.info.active_batch_key} and Job {self.info.job_key} completed.",
