@@ -84,15 +84,18 @@
         <div
           id="session-control-section"
           v-if="$route.name != 'jobIssueDetail'"
-          class="column col q-px-sm q-pt-md"
+          class="column col q-px-sm q-pt-xs"
           style="min-height: 600px">
 
           <!-- JOB DATA -->
           <div id="job-data" class="col-auto">
 
             <!-- PRODUCT CODE & DESCRIPTION -->
-            <div class="text-h2 display highlight text-uppercase">
-              {{ j.product_code }}
+
+            <div class="text-h2 display highlight row text-uppercase items-center" style="word-wrap: n;">
+              <div class="nowrap q-mr-md">{{ j.phase_alias }}</div>
+              <div class="nowrap q-mr-sm">{{ j.product_code }}</div>
+              <q-btn class="" icon="mdi-information-outline" flat round />
             </div>
             <p class="q-mt-sm">
               {{ j.product_description }}
@@ -309,6 +312,12 @@ export default {
           text: this.$t('message', 2),
           icon: 'mdi-message-text-outline',
           item_count: this.j.message_count
+        },
+        {
+          route_name: 'jobProcessView',
+          text: this.$t('process'),
+          icon: 'mdi-chevron-triple-right',
+          item_count: this.wo_data.phase_sequence.length
         }
       ]
     },
@@ -317,7 +326,6 @@ export default {
       return [
         { name: 'wo_code', text: this.$t('work_order.list_headers.wo_code') },
         { name: 'project_code', text: this.$t('project') },
-        { name: 'phase_alias', text: this.$t('phase.short') },
         { name: 'active_batch_qt', text: this.$t('quantity.active.medium') }
       ]
     },
