@@ -5,6 +5,8 @@ volumes:
     external: true
   cmounts:
     external: true
+  media:
+    external: true
 
 networks:
   progress:
@@ -20,6 +22,7 @@ services:
     restart: unless-stopped
     volumes:
       - reports:/app
+      - media:/media
       - cmounts:/cmounts
     networks:
       - progress
