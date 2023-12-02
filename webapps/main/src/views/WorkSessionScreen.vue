@@ -309,6 +309,11 @@ export default {
           text: this.$t('message', 2),
           icon: 'mdi-message-text-outline',
           item_count: this.j.message_count
+        },
+        {
+          route_name: 'jobProcessView',
+          text: this.$t('process'),
+          icon: 'mdi-chevron-triple-right'
         }
       ]
     },

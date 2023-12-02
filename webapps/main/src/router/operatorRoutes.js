@@ -75,6 +75,12 @@ const operatorRoutes = [
         props: route => ({
           context: 'job'
         })
+      },
+      {
+        path: 'process',
+        name: 'jobProcessView',
+        component: () => import ("@/views/WorkSessionProcess.vue"),
+        props: true
       }
     ]
   }
