@@ -684,6 +684,9 @@ class ProductionActivityEvent(BaseEvent):
     if not hasattr(self, 'job'):
       self.get_job_data()
 
+    if self.job.stage == 'closed':
+      raise ValueError("Job is already closed")
+
     # save into a variable since self.job gets updated in the process
     active_batch_qt = self.job.active_batch_qt
     completed_batch_qt = self.info.completed_batch_qt or active_batch_qt
