@@ -201,12 +201,13 @@
         </q-list>
 
         <input
-          multiple
           type="file"
+          multiple
           ref="upload_doc"
           style="display: none"
           accept="application/pdf, image/*"
-          @change="addFiles($event.target.files)"/>
+          @change="addFiles($event.target.files)"
+        />
         <q-btn
           v-if="edit_mode"
           flat
@@ -236,7 +237,6 @@
 </template>
 
 <script>
-import ProductParamsCard from '@/components/ProductParamsCard.vue'
 import { mapState, mapActions } from 'vuex'
 import MediaViewer from '@/components/MediaViewer.vue'
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
@@ -244,11 +244,10 @@ import MediaViewer from '@/components/MediaViewer.vue'
 export default {
 
   name: 'ProductHome',
-  
+
   components: {
     // BaseConfirmationDialog,
     MediaViewer,
-    ProductParamsCard
   },
 
   data() {
@@ -264,7 +263,7 @@ export default {
       new_image_url: '',
       no_image: false
       // zoom: 100
-    };
+    }
   },
 
   computed: {
@@ -316,12 +315,11 @@ export default {
 
     media_name() {
       if (this.show_media == -1) { return '' }
-      else if (this.show_media === 'img') { return 'Product image'}
+      else if (this.show_media === 'img') { return 'Product image' }
       else { return this.docs[this.show_media].name }
     },
 
     media_src() {
-      
       if (this.show_media === 'img') {
         return this.img_src
       }
@@ -379,26 +377,31 @@ export default {
     },
 
     updateField(field, value) {
-      this.$store.commit('UPDATE_TEMP_PARAMETER', { 
-        param: field, 
-        new_value: value 
+      this.$store.commit('UPDATE_TEMP_PARAMETER', {
+        param: field,
+        new_value: value
       })
     },
 
-    addFiles(file_list) {
-      const files = Array.from(file_list)
-      // Don't add files already in the list
-      files.forEach( (f, i) => {
-        const already_in_list = this.docs.some( d => f.name == d.name )
-        if (already_in_list) {
+    addFiles(fileList) {
+      for (const file of fileList) {
+        const existingIndex = this.docs.findIndex(({ name }) => name === file.name)
+        const isExisting = existingIndex !== -1
+        if (isExisting) {
           const replace = window.confirm(
-            this.$capitalize(this.$t('product.alerts.doc_name_exists',1, {filename: f.name}))
+            this.$capitalize(
+              this.$t('product.alerts.doc_name_exists', 1, { filename: file.name })
+            )
           )
-          if (replace) { this.$store.commit('DELETE_TEMP_DOC', i) }
-          else { return }
+          if (!replace) {
+            return
+          }
+
+          this.$store.commit('DELETE_TEMP_DOC', existingIndex)
         }
-        this.$store.commit('ADD_TEMP_DOC', f)
-      }) 
+
+        this.$store.commit('ADD_TEMP_DOC', { file, force: isExisting })
+      }
     },
 
     deleteDoc(index) {
@@ -406,7 +409,7 @@ export default {
     },
 
     showMedia(value) {
-        this.show_media = value
+      this.show_media = value
     },
 
     saveChanges() {
@@ -415,7 +418,7 @@ export default {
       const new_doc_list = this.product.docs
       let product_update = {
         new_product_data: this.product,
-        deleted_docs: old_doc_list.filter( 
+        deleted_docs: old_doc_list.filter(
           o => !new_doc_list.some( n => n.name === o.name)
         ),
         image: {
@@ -469,7 +472,7 @@ export default {
       }
     }
   }
-};
+}
 </script>
 
 <style lang="css" scoped>
