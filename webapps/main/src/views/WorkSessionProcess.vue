@@ -1,67 +1,63 @@
 <template>
   <div class="fit column">
-    <div v-if="vuex_ready">
-      <q-list
-        class="transparent medium text-left q-pa-md"
-        align="left"
+    <q-list
+      class="transparent medium text-left q-pa-md"
+      align="left"
+      >
+      <q-item
+        clickable
+        v-for="(p, index) in phase_data"
+        :key="p.phase_key"
+        :name="index"
+        class="full-width text-left"
         >
-        <q-item
-          clickable
-          v-for="(p, index) in phase_data"
-          :key="p._key"
-          :name="index"
-          class="full-width text-left"
-          >
 
-          <!-- PHASE INDEX -->
-          <q-item-section avatar class="col-auto">
-            <q-avatar
-              size="20px"
-              :color="p.phase_key == job.phase_key ? 'theme-blue' : 'theme-grey'"
-              class="display smaller"
-              :class="{ highlight: p.phase_key == job.phase_key }">
-              {{ index + 1 }}
-            </q-avatar>
-          </q-item-section>
+        <!-- PHASE INDEX -->
+        <q-item-section avatar class="col-auto">
+          <q-avatar
+            size="20px"
+            :color="p.phase_key == job.phase_key ? 'theme-blue' : 'theme-grey'"
+            class="display smaller"
+            :class="{ highlight: p.phase_key == job.phase_key }">
+            {{ index + 1 }}
+          </q-avatar>
+        </q-item-section>
 
-          <!-- PHASE ALIAS -->
-          <q-item-section>
-            <q-item-label
-              class="display ellipsis"
-              :class="p.phase_key == job.phase_key ? 'highlight' : 'text-low weight-medium'">
-              {{ p.phase_alias }}
-            </q-item-label>
-          </q-item-section>
+        <!-- PHASE ALIAS -->
+        <q-item-section>
+          <q-item-label
+            class="display ellipsis"
+            :class="p.phase_key == job.phase_key ? 'highlight' : 'text-low weight-medium'">
+            {{ p.phase_alias }}
+          </q-item-label>
+        </q-item-section>
 
-          <!-- PHASE PROGRESS -->
-          <q-item-section>
-            <div class="row items-center">
-              <div class="col">
-                <BaseProgressBar :data="p" />
-              </div>
-              <div class="col-1" />
-              <div class="col-auto">
-                {{ p.qt_released }} / {{ wo_data.qt_planned }}
-              </div>
+        <!-- PHASE PROGRESS -->
+        <q-item-section>
+          <div class="row items-center">
+            <div class="col">
+              <BaseProgressBar :data="p" />
             </div>
-          </q-item-section>
-
-          <!-- PHASE PEOPLE -->
-          <q-item-section>
-            <div class="row q-gutter-sm justify-end">
-              <BaseUserAvatar
-                v-for="o in p.assignments.filter(o => o)"
-                :key="o._key"
-                :user="o"
-                :show_name="false"
-                />
+            <div class="col-1" />
+            <div class="col-auto">
+              {{ p.qt_released }} / {{ wo_data.qt_planned }}
             </div>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </div>
+          </div>
+        </q-item-section>
 
-    <LoadingSignal v-else />
+        <!-- PHASE PEOPLE -->
+        <q-item-section>
+          <div class="row q-gutter-sm justify-end">
+            <BaseUserAvatar
+              v-for="o in p.assignments.filter(o => o)"
+              :key="o._key"
+              :user="o"
+              :show_name="false"
+              />
+          </div>
+        </q-item-section>
+      </q-item>
+    </q-list>
   </div>
 </template>
 
@@ -98,7 +94,7 @@ export default {
 
   computed: {
     wo_data() {
-      return this.$store.state.workorder.wo_data || { phase_sequence: []}
+      return this.$store.state.workorder.wo_data || { phase_sequence: [] }
     },
 
     phase_data() {
@@ -124,18 +120,6 @@ export default {
         }
       })
     }
-  },
-
-  created() {
-    this.$store.dispatch('loadWorkOrderData', this.job.wo_key).then(() => {
-      this.vuex_ready = true
-      console.log(this.phase_data)
-    })
-    this.polling_instance = setInterval(() => this.$store.dispatch('loadWorkOrderData', this.job.wo_key), 10000)
-  },
-
-  beforeUnmount() {
-    clearInterval(this.polling_instance)
   }
 }
 </script>

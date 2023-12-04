@@ -281,7 +281,8 @@ export default {
     ...mapState({
       j: state => state.traceability.working_job_data,
       ws_list: state => state.traceability.work_session_list,
-      batch_data: state => state.traceability.current_batch_data.step_data
+      batch_data: state => state.traceability.current_batch_data.step_data,
+      wo_data: state => state.workorder.wo_data
     }),
 
     links() {
@@ -326,7 +327,7 @@ export default {
           route_name: 'jobProcessView',
           text: this.$t('process'),
           icon: 'mdi-chevron-triple-right',
-          item_count: this.wo_data.phase_sequence.length
+          item_count: this.wo_data.phase_sequence?.length
         }
       ]
     },
@@ -397,7 +398,10 @@ export default {
 
   methods: {
     loadJob() {
-      this.$store.dispatch('loadWorkingJobData', this.job_key)
+      Promise.all([
+        this.$store.dispatch('loadWorkingJobData', this.job_key),
+        this.$store.dispatch('loadWorkOrderData', this.j.wo_key)
+      ])
       .then(() => {
         const data = this.$store.state.traceability
         const job_data = data.working_job_data
@@ -444,7 +448,10 @@ export default {
     },
 
     updateJobData() {
-      this.$api.get(`job/${this.job_key}`).then(resp => {
+      Promise.all([
+        this.$api.get(`job/${this.job_key}`),
+        this.$store.dispatch('loadWorkOrderData', this.j.wo_key)
+      ]).then(resp => {
         this.$store.commit('UPDATE_JOB', resp.data.detail)
       })
     }
