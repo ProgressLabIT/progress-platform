@@ -1,6 +1,6 @@
 from enum import Enum
 from datetime import date, time
-from typing import Any, List, Union
+from typing import Any, Union
 
 from pydantic import BaseModel, Field, root_validator
 
@@ -52,7 +52,8 @@ class CustomField(ArangoDocument):
   default_hint: str = None # To show to the user when filling up the forms
 
 class FormFieldDefinition(BaseModel):
-  field_key: str
+  # TODO: rename to field_key for consistency
+  key: str = Field(..., alias='_key') # Reference to CustomField record
   multiple: bool = False
   label: str
   hint: str = None
@@ -65,3 +66,7 @@ class FormFieldDefinition(BaseModel):
     if values.get('hidden') and values.get('default') == None:
       raise ValueError('Hidden fields must have a default value')
     return values
+
+class FormFieldValue(BaseModel):
+  field_key: str # Reference to CustomField record
+  value: Any

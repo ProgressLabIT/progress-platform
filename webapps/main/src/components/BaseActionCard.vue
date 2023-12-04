@@ -31,7 +31,6 @@
 
 <script>
 export default {
-
   name: 'BaseActionCard',
 
   props: {
@@ -47,14 +46,6 @@ export default {
       default: 'theme-grey'
     }
   },
-
-  data () {
-    return {
-
-    }
-  }
+  emits: ['save', 'cancel']
 }
 </script>
-
-<style lang="css" scoped>
-</style>

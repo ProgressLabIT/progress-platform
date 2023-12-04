@@ -4,6 +4,7 @@ from typing import List
 
 from pydantic import Field
 
+from models.form import FormFieldValue
 from utils.base_models import FlexModel, ArangoEdge
 
 
@@ -24,7 +25,7 @@ class StepExecutionData(FlexModel):
   completed: datetime = None
   # duration: timedesslta = None
   status: StepStatus = StepStatus.TODO
-  user_data: list = None
+  form_data: list[FormFieldValue] = []
 
   modified: str = None
   canceled: str = None

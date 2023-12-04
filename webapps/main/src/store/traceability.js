@@ -9,20 +9,20 @@ function createEmptyBatch(state, startDT, job) {
   }
 
   const procedure = state.working_job_data.step_sequence
-  if (procedure.length) new_batch.step_data = procedure.map( step => {
-    return {
+  if (procedure.length > 0) {
+    new_batch.step_data = procedure.map(step => ({
       _key: step._key,
       type: step.type,
       done: false,
       critical: false,
-      user_data: []
-    }
-  })
+      form_data: []
+    }))
+  }
 
   return new_batch
 }
 
-function createEvent(state, session_state, { event_type, timestamp, step_key=null, user_data=null, completed_batch_qt=null }) {
+function createEvent(state, session_state, { event_type, timestamp, step_key = null, form_data = [], completed_batch_qt = null }) {
   const user_key = session_state.user._key
   const job = state.working_job_data
 
@@ -37,7 +37,7 @@ function createEvent(state, session_state, { event_type, timestamp, step_key=nul
     active_batch_key: job.active_batch_key,
     project_code: job.project_code,
     step_key,
-    user_data,
+    form_data,
     completed_batch_qt,
     timestamp // ISO format
   }
@@ -47,7 +47,7 @@ function createEvent(state, session_state, { event_type, timestamp, step_key=nul
 
 function getCurrentWorkSession(state) {
   const ws_count = state.work_session_list.length
-  return state.work_session_list[ws_count-1]
+  return state.work_session_list[ws_count - 1]
 }
 
 function getClosedWorkSessionData(state, endDT) {
@@ -82,7 +82,7 @@ const traceability = {
     getBatchStep: state => step_key => {
       const batch_procedure = state.current_batch_data.step_data
       if (batch_procedure) {
-        const batch_step = batch_procedure.find( step => step._key === step_key )
+        const batch_step = batch_procedure.find(({ _key }) => _key === step_key)
         return batch_step
       }
       else return []
@@ -113,7 +113,7 @@ const traceability = {
     CLOSE_WORK_SESSION(state, work_session) {
       // Update general list of work sessions
       const ws_list_length = state.work_session_list.length
-      state.work_session_list[ws_list_length-1] = work_session
+      state.work_session_list[ws_list_length - 1] = work_session
 
       // Update Job status
       state.working_job_data.active = false
@@ -125,9 +125,16 @@ const traceability = {
         : clearInterval(state.heartbeat)
     },
 
-    UPDATE_STEP_USER_DATA(state, { step_key, value_index, value }) {
-      const step_data = this.getters.getBatchStep(step_key)
-      step_data.user_data[value_index] = value
+    UPDATE_STEP_FORM_DATA(state, { stepKey, index, data }) {
+      const batchStep = this.getters.getBatchStep(stepKey)
+      if (batchStep.form_data === undefined) {
+        batchStep.form_data = []
+      }
+      if (index !== undefined) {
+        batchStep.form_data[index] = data
+      } else {
+        batchStep.form_data.push(data)
+      }
     },
 
     UPDATE_JOB(state, job_data) {
@@ -146,7 +153,7 @@ const traceability = {
 
   actions: {
     loadWorkingJobData({ commit, dispatch }, job_key) {
-      return new Promise( async resolve => {
+      return new Promise(async resolve => {
         // Get job data
         const job_resp = await api.get(`job/${job_key}`)
         const job_data = job_resp.data.detail
@@ -180,25 +187,18 @@ const traceability = {
       })
     },
 
-    pauseJob({ commit, state, rootState }) {
-      return new Promise( (resolve, reject) => {
-        const now = DT.utc()
-        const work_session = getClosedWorkSessionData(state, now)
+    async pauseJob({ commit, state, rootState }) {
+      const now = DT.utc()
+      const work_session = getClosedWorkSessionData(state, now)
 
-        const event = createEvent(state, rootState.session, {
-          event_type: 'JOB_PAUSED',
-          timestamp: now.toISO()
-        })
-
-        api.post('event', event).then(() => {
-          commit('CLOSE_WORK_SESSION', work_session)
-          commit('SET_HEARTBEAT', false)
-          resolve()
-        })
-        .catch(() => {
-          reject()
-        })
+      const event = createEvent(state, rootState.session, {
+        event_type: 'JOB_PAUSED',
+        timestamp: now.toISO()
       })
+
+      await api.post('event', event)
+      commit('CLOSE_WORK_SESSION', work_session)
+      commit('SET_HEARTBEAT', false)
     },
 
     resumeJob({ commit, state, rootState }) {
@@ -230,7 +230,7 @@ const traceability = {
           event_type: 'STEP_COMPLETED',
           step_key: step_data._key,
           timestamp: now.toISO(),
-          user_data: step_data.user_data,
+          form_data: step_data.form_data,
           completed_batch_qt: batch_qt
         })
 

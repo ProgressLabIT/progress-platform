@@ -3,7 +3,7 @@
 
     <!-- TEXT -->
     <q-input
-      v-if="field_data.type == 'text'"
+      v-if="field_type == 'text'"
       filled
       stack-label
       autogrow
@@ -20,7 +20,7 @@
 
     <!-- NUMBER -->
     <q-input
-      v-if="field_data.type == 'number'"
+      v-if="field_type == 'number'"
       type="number"
       filled
       stack-label
@@ -37,7 +37,7 @@
 
     <!-- BOOLEAN -->
     <q-checkbox
-      v-if="field_data.type == 'boolean'"
+      v-if="field_type == 'boolean'"
       :disable="disable"
       :dense="dense"
       :label="field_data.label"
@@ -48,7 +48,7 @@
 
     <!-- CHOICE -->
     <q-select
-      v-if="field_data.type == 'choice'"
+      v-if="field_type == 'choice'"
       filled
       stack-label
       use-input
@@ -69,7 +69,7 @@
     <!-- DATE -->
     <!-- FIXME: Do not mutate the prop, emit 'update' event like other types instead -->
     <q-input
-      v-if="field_data.type == 'date'"
+      v-if="field_type == 'date'"
       filled
       stack-label
       :disable="disable"
@@ -92,7 +92,7 @@
     <!-- TIME -->
     <!-- FIXME: Do not mutate the prop, emit 'update' event like other types instead -->
     <q-input
-      v-if="field_data.type == 'time'"
+      v-if="field_type == 'time'"
       stack-label
       filled
       :label="field_data.label"
@@ -114,7 +114,7 @@
 
     <!-- FILES -->
     <!-- <q-file
-      v-if="field_data.type == 'files'"
+      v-if="field_type == 'files'"
       multiple
       append
       :use-chips="!disable"
@@ -129,7 +129,7 @@
         <q-icon name="mdi-folder-open-outline" />
       </template>
     </q-file> -->
-    <div v-if="field_data.type == 'files'">
+    <div v-if="field_type == 'files'">
       <FilesList
         :label="field_data.label"
         :disable="disable"
@@ -182,6 +182,12 @@ export default {
     return {
       options: [],
       loading: false
+    }
+  },
+
+  computed: {
+    field_type() {
+      return this.$store.getters.getCustomFieldByKey(this.field_data._key)?.type
     }
   },
 
@@ -259,7 +265,7 @@ export default {
   },
 
   created() {
-    if (this.field_data.type == 'choice') {
+    if (this.field_type == 'choice') {
       this.initOptions()
     }
   }

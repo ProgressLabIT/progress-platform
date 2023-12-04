@@ -4,6 +4,7 @@ from typing import List, Optional, Union
 
 from pydantic import Field
 
+from models.form import FormFieldDefinition
 from utils.base_models import FlexModel, ArangoDocument
 from utils.dt import timestamp
 
@@ -40,24 +41,13 @@ class StepType(str, Enum):
   CHECKLIST = 'checklist'
 
 
-class FieldType(str, Enum):
-  SHORT = 'short'
-  LONG = 'long'
-
-
-class InputField(FlexModel):
-  type: FieldType = 'short'
-  name: str = None
-  # Add mandatory flag and field description
-
-
 class Step(FlexModel):
   key: str = Field(None, alias="_key")
   title: str = None
   description: str = None
   type: StepType = StepType.INSTRUCTION
   checks: List[str] = []
-  input_fields: List[InputField] = []
+  form_fields: List[FormFieldDefinition] = []
 
 
 # TODO: Add validation for size, content_type, etc.

@@ -65,12 +65,12 @@ class Queries:
     )
 
     LET issue_data = (
-      FOR field IN NOT_NULL(i.data, [])
-      FOR fdef IN NOT_NULL(type_data.form_template, [])
+      FOR field_value IN NOT_NULL(i.data, [])
+      FOR field IN NOT_NULL(type_data.form_template, [])
       FILTER
-        fdef._key == field._key
+        field._key == field_value.field_key
         && DOCUMENT(CustomField, field._key)
-      RETURN MERGE(fdef, field)
+      RETURN MERGE(field, { value: field_value.value })
     )
 
     // FILTER BY LINKS

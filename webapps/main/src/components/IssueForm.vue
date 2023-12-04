@@ -447,18 +447,17 @@ export default {
       const issue_data = {
         issue_type_key: this.issue_type?._key || null,
         critical: this.critical,
-        data: this.form_data.map(field => {
-          if (field.type == 'files') {
-            return {
-              ...field,
-              value: field.value?.filter(file => !file.delete).map(file => ({
+        data: this.form_data.map(field => ({
+          field_key: field._key,
+          value: field.type === 'files'
+            ? field.value
+              ?.filter(file => !file.delete)
+              .map(file => ({
                 size: file.size,
                 name: file.name
               }))
-            }
-          }
-          else return field
-        })
+            : field.value
+        }))
       }
 
       const user = this.session_data.user._key

@@ -1,18 +1,11 @@
-from datetime import datetime, date, time
+from datetime import datetime
 from enum import Enum
-from typing import Any, List, Union
+from typing import List
 
-from pydantic import (
-  BaseModel,
-  constr,
-  NonNegativeInt,
-  Field,
-  root_validator,
-  validator
-)
+from pydantic import BaseModel, Field, root_validator
 
-from models.form import FormFieldDefinition
-from utils.base_models import ArangoDocument, ArangoEdge
+from models.form import FormFieldDefinition, FormFieldValue
+from utils.base_models import ArangoDocument
 from utils.dt import timestamp
 
 
@@ -26,11 +19,6 @@ class IssueType(ArangoDocument):
   form_template: List[FormFieldDefinition] = []
   critical: bool = False
   # close_within: NonNegativeInt = 0 # Time in hours. After this make critical. If 0 ignore.
-
-
-class FieldValue(BaseModel):
-  field_key: str # Reference to CustomField record
-  value: Any
 
 
 # ISSUE
@@ -47,7 +35,7 @@ class Issue(ArangoDocument):
   closed_by: str = None # Closer ID
   critical: bool # Default value set at the IssueType level
   # close_within: NonNegativeInt # Value set at the IssueType level
-  data: List[dict] = None
+  data: List[FormFieldValue] = None
   open: bool = True
 
   # Require issue type only when closing.

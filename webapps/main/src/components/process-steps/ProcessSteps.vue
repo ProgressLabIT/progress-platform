@@ -251,7 +251,7 @@ function addStep(type) {
     title: '',
     description: '',
     checks: [],
-    input_fields: [],
+    form_fields: [],
     media: []
   })
   currentStepIndex.value = stepsModel.value.length - 1

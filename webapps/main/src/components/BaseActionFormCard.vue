@@ -67,7 +67,7 @@ defineProps({
   },
 })
 
-const emit = defineEmits(['submit', 'validation-error'])
+const emit = defineEmits(['submit', 'validation-error', 'cancel'])
 
 // Avoids collisions when there's more than one active component instance at the same time
 const uniqueFormId = `dialog-form-${uid()}`
