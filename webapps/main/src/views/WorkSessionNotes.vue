@@ -1,5 +1,5 @@
 <template>
-  <div class="fit column q-gutter-md q-pt-md q-pl-md">
+  <div class="fit column">
     <template v-if="notes.length">
       <div v-for="note in notes"
         class="surface2 shadow-2 multiline-text col column q-px-md q-pt-md">

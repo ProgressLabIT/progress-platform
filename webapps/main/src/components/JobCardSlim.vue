@@ -1,61 +1,79 @@
 <template>
   <q-card
-    class="q-pa-md row shadow-6 q-col-gutter-sm q-pb-lg q-pr-xl"
+    class="q-pa-md shadow-6 q-pr-xl"
     :class="job.active ? 'bg-blue-backdrop' : 'surface1' "
     >
+    <div class="row q-col-gutter-xl q-pb-sm">
+      <div class="col col-md-6">
+        <div class="row q-col-gutter-md">
+          <div class="col-12 col-sm-5">
+            <div class="overline">
+              {{ $t("work_order.list_headers.wo_code") }}
+            </div>
+            <div class="text-h4 display highlight full-width ellipsis">
+              {{ job.wo_code }}
+            </div>
+          </div>
 
-    <!-- WORK ORDER & PROJECT DATA -->
-    <div class="col-3 column">
-      <div class="col-auto">
-        <div class="overline">
-          {{ $t("work_order.list_headers.wo_code") }}
+          <div class="col-12 col-sm-7">
+            <div class="overline q-mt-auto">
+              {{ $t("project") }}
+            </div>
+            <div class="text-h4 display highlight full-width ellipsis">
+              {{ job.project_code || '-' }}
+            </div>
+          </div>
         </div>
-        <div class="text-h4 display highlight text-truncate full-width ellipsis q-pr-sm">
-          {{ job.wo_code }}
+
+        <div class="q-my-lg"></div>
+
+        <div class="overline">
+          {{ $t('phase.short')}} - {{ $t("product.label", 1) }}
+        </div>
+        <div class="text-h4 display highlight text-uppercase">
+           {{ job.phase_alias }} - {{ job.product_code }}
+        </div>
+        <div class="smaller text-low ellipsis-2-lines q-mt-xs">
+          {{ job.product_description }}
         </div>
       </div>
+
+
+      <div class="col-auto gt-xs">
+        <div class="overline">
+            <q-icon dense name="mdi-flag" class="q-pb-xs q-mr-xs"></q-icon>
+            <span>AP - TOT</span>
+          </div>
+          <div class="text-h4 display highlight">
+            {{ job.issues_open }} / {{ job.issues_total }}
+          </div>
+
+        <div class="q-my-lg"></div>
+
+        <div class="overline">
+          {{ $t('quantity.completed_total')}}
+        </div>
+        <div class="text-h4 q-mt-sm display column justify-center">
+          {{ job.qt_completed }} / {{ job.qt_planned }}
+        </div>
+
+      </div>
+
       <q-space></q-space>
 
-      <div class="col-auto full-width">
-        <div class="overline">
-          {{ $t("project") }}
-        </div>
-        <div class="text-h4 display highlight full-width ellipsis">
-          {{ job.project_code || '-' }}
-        </div>
+      <div class="col-auto column flex-center">
+        <q-btn
+          outline
+          round
+          size="xl"
+          :icon="job.active ? 'mdi-pause' : 'mdi-play'"
+          :color="job.active ? 'theme-blue' : 'theme-grey'"
+          @click.stop="toggleJob"
+          :class="{ 'animate-pulse': job.active }"
+          />
       </div>
     </div>
 
-
-    <!-- PRODUCT & PHASE DATA  -->
-    <div class="col-3">
-      <div class="overline">
-        {{ $t("product.code", 1) }}
-      </div>
-      <div class="text-h4 display highlight text-uppercase">
-        {{ job.product_code }}
-      </div>
-
-      <div class="overline q-mt-lg">
-        {{ $t("phase.short", 1) }}
-      </div>
-      <div class="text-h4 display highlight">
-        {{ job.phase_alias }}
-      </div>
-    </div>
-
-    <div class="col row items-center q-gutter-lg">
-      <q-space></q-space>
-      <q-btn
-        outline
-        round
-        size="xl"
-        :icon="job.active ? 'mdi-pause' : 'mdi-play'"
-        :color="job.active ? 'theme-blue' : 'theme-grey'"
-        @click.stop="toggleJob"
-        :class="{ 'animate-pulse': job.active }"
-        />
-    </div>
 
     <BaseProgressBar class="absolute-bottom" :data="job"></BaseProgressBar>
   </q-card>

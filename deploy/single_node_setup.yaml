@@ -16,6 +16,7 @@
       - logs
       - reports
       - cmounts
+      - notebooks
     additional_folders:
       - config
     swarm_join_tkn_manager: '{{ init.swarm_facts.JoinTokens.Manager }}'
