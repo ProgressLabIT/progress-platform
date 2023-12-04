@@ -1,9 +1,11 @@
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Union
 
 from pydantic import Field
 
 from utils.base_models import FlexModel, ArangoDocument
+from utils.dt import timestamp
 
 
 
@@ -32,13 +34,6 @@ class PhaseParameters(FlexModel):
   # wip_flow: WIPFlow = WIPFlow.BUFFER
 
 
-class Operation(ArangoDocument):
-  name: str
-  code: str = None
-  description: str = None
-  default_phase_parameters: PhaseParameters = PhaseParameters()
-
-
 class StepType(str, Enum):
   INSTRUCTION = 'instruction'
   FORM = 'form'
@@ -65,12 +60,24 @@ class Step(FlexModel):
   input_fields: List[InputField] = []
 
 
-class Media(FlexModel):
+# TODO: Add validation for size, content_type, etc.
+class Media(ArangoDocument):
   name: str
+  size: int
+  content_type: str
+  created_at: datetime = Field(default_factory=timestamp)
 
 
 class StepWithMediaInfo(Step):
   media: List[Union[Media, str]] = None
+
+class Operation(ArangoDocument):
+  name: str
+  code: str = None
+  description: str = None
+  default_phase_parameters: PhaseParameters = PhaseParameters()
+  default_phase_notes: str = None
+  default_phase_steps: List[Step] = []
 
 
 class PhaseRecord(ArangoDocument):

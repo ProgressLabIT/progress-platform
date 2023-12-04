@@ -89,6 +89,8 @@ collections = [
   'issue_rel',
   'Job',
   'message',
+  'Media',
+  'media_connection',
   'Operation',
   'Phase',
   'Product',

@@ -1,55 +1,59 @@
 <template>
-  <q-list>
+  <NoDataAlert v-if="Object.keys(paramsModel) === 0" />
+  <q-list v-else>
     <template
-      v-for="(p_value, p_key, index) in params"
-      :key="p_key">
-
-      <q-separator v-if="index > 0" />
-
+      v-for="(paramValue, paramKey, index) in paramsModel"
+      :key="paramKey"
+    >
       <q-expansion-item
-        :expand-icon="paramType(p_key) == 'int' || !edit_mode ? 'none' : ''"
-        :model-value="expansion_map == p_key"
-        @update:model-value="(new_val) => updateExpansionMap(p_key, new_val)">
-
+        :expand-icon="params_map[paramKey].type === 'int' || !editMode ? 'none' : ''"
+        :model-value="expandedParamKey === paramKey"
+        @update:model-value="(isExpanded) => {
+          expandedParamKey = isExpanded ? param_key : null
+        }"
+      >
         <!-- SELECTED OPTION -->
         <template #header>
           <div class="full-width q-pa-lg">
             <div class="text-h5 uppercase q-mb-sm low-text">
-              {{ paramHumanName(p_key, p_value) }}
+              {{ $t(`phase.params.${paramKey}.title`) }}
             </div>
             <div
-              v-if="!edit_mode || paramType(p_key) != 'int'"
-              class="text-h3 highlight">
-              {{ paramHumanValue(p_key, p_value) }}
+              v-if="!editMode || params_map[paramKey].type !== 'int'"
+              class="text-h3 highlight"
+            >
+              {{ getParamHumanValue(paramKey, paramValue) }}
             </div>
             <q-input
               v-else
-              type="number" min="0"
-              :readonly="!edit_mode"
-              :model-value="paramHumanValue(p_key)"
-              @update:model-value="(value) => updateParam(p_key, value)">
-            </q-input>
+              :model-value="getParamHumanValue(paramKey)"
+              type="number"
+              min="0"
+              :readonly="!editMode"
+              @update:model-value="(value) => updateParam(paramKey, value)"
+            />
             <div class="q-mt-sm">
-              {{ paramValueDesc(p_key, p_value) }}
+              {{ getParamValueDesc(paramKey, paramValue) }}
             </div>
           </div>
         </template>
 
         <!-- OTHER OPTIONS -->
-        <template v-if="paramType(p_key) != 'int' && edit_mode">
+        <template v-if="params_map[paramKey].type !== 'int' && editMode">
           <q-list>
             <q-item
-              v-for="(value, index) in paramOtherValues(p_key, p_value)"
+              v-for="(value, index) in getParamOtherValues(paramKey, paramValue)"
+              v-ripple
               :key="index"
               clickable
-              v-ripple
-              @click="updateParam(p_key, value)">
+              @click="updateParam(paramKey, value)"
+            >
               <q-item-label class="q-pa-lg">
                 <div class="text-h5 highlight q-mb-sm">
-                  {{ paramHumanValue(p_key, value) }}
+                  {{ getParamHumanValue(paramKey, value) }}
                 </div>
                 <div>
-                  {{ paramValueDesc(p_key, value) }}
+                  {{ getParamValueDesc(paramKey, value) }}
                 </div>
               </q-item-label>
             </q-item>
@@ -57,89 +61,78 @@
         </template>
       </q-expansion-item>
 
-
+      <q-separator v-if="index < Object.keys(paramsModel).length - 1" />
     </template>
   </q-list>
 </template>
 
-<script>
+<script setup>
+import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+import NoDataAlert from '@/components/NoDataAlert.vue'
 import params_map from '@/lib/PhaseParams.js'
+import { capitalize } from '../boot/filters'
 
-export default {
-
-  name: 'ProcessParameters',
-
-  props: {
-    edit_mode: {
-      type: Boolean,
-      required: true
-    },
-    params: {
-      type: Object,
-      required: true
-    }
+const props = defineProps({
+  processHasSteps: {
+    type: Boolean,
+    required: true
   },
-
-  data () {
-    return {
-      expansion_map: null
-    }
-  },
-
-  methods: {
-    paramHumanName(param_key) {
-      return this.$t(`phase.params.${param_key}.title`)
-    },
-
-    paramType(param_key) {
-      return params_map[param_key].type
-    },
-
-    updateExpansionMap(param_key, expanded) {
-      if (expanded) {
-        this.expansion_map = param_key
-      }
-      else {
-        this.expansion_map = null
-      }
-    },
-
-    paramHumanValue(param_key, value_key) {
-      if (this.paramType(param_key) == 'int') {
-        return this.params[param_key]
-      }
-      return this.$t(`phase.params.${param_key}.${value_key}.title`)
-    },
-
-    paramValueDesc(param_key, value_key) {
-      if (this.paramType(param_key) == 'int') {
-        return this.$t(`phase.params.${param_key}.desc`)
-      }
-      else return this.$t(`phase.params.${param_key}.${value_key}.desc`)
-    },
-
-    paramOtherValues(param_key, param_value) {
-      const param_all_values = params_map[param_key].values
-      return param_all_values.filter(v => v != param_value)
-    },
-
-    updateParam(param_key, value) {
-      this.$emit('update', {
-        param: param_key,
-        value: value,
-      })
-      this.expansion_map = null
-    },
-  },
-
-  watch: {
-    edit_mode: function (newValue, oldValue) {
-      if (newValue == false && oldValue == true)
-      this.expansion_map = null
-    }
+  editMode: {
+    type: Boolean,
+    required: true
   }
+})
+
+const paramsModel = defineModel({ type: Object })
+
+const expandedParamKey = ref()
+
+watch(() => props.editMode, (newValue, oldValue) => {
+  // If edit mode got disabled, close the expanded param
+  if (newValue === false && oldValue === true) {
+    expandedParamKey.value = null
+  }
+})
+
+const { t } = useI18n()
+
+function getParamHumanValue(key, value) {
+  if (params_map[key].type === 'int') {
+    // Show "JOB" label if zero. See parameter explanation for details
+    if (key === 'production_batch_qt' && paramsModel.value[key] === 0) {
+      return props.editMode ? 0 : t('job.label').toUpperCase()
+    }
+
+    return paramsModel.value[key]
+  }
+
+  return t(`phase.params.${key}.${value}.title`)
+}
+
+function getParamValueDesc(key, value) {
+  if (params_map[key].type === 'int') {
+    return t(`phase.params.${key}.desc`)
+  }
+
+  return t(`phase.params.${key}.${value}.desc`)
+}
+
+function getParamOtherValues(key, value) {
+  const paramAllValues = params_map[key].values
+  return paramAllValues.filter(v => v !== value)
+}
+
+function updateParam(key, value) {
+  if (key === 'step_check' && !props.processHasSteps && value === true) {
+    window.alert(
+      capitalize(t('phase.alerts.add_steps_first'))
+    )
+    expandedParamKey.value = null
+    return
+  }
+
+  paramsModel.value[key] = value
 }
 </script>
-
-<style lang="css" scoped>
-</style>

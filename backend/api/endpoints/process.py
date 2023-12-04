@@ -1,12 +1,9 @@
-import os
 import traceback
-from enum import Enum
-from typing import List, Optional
-from fnmatch import fnmatch
+from typing import List
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
+from arango import DocumentGetError
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel, Field
 
 from models.process import *
 from utils import dt
@@ -14,33 +11,56 @@ from utils.api import APIResponse
 from utils.db import db
 from utils.file import FileHandler
 from utils.process import *
+from utils.exceptions import HTTPError
+from utils.media import delete_media
 
 
 router = APIRouter()
 
-operation_db = db.collection('Operation')
 
-
-
-
+# TODO: optimize queries
 @router.get('/operation')
 async def get_operation_list():
-  
+
   def enrich_op_data(op_data):
     op_data['used_for'] = get_products_using_operation(op_data['_key'])
+
+    operation_media_cursor = db.aql.execute(
+      """
+      FOR mc IN media_connection
+        FILTER mc._from == @operation_id
+        RETURN DOCUMENT(mc._to)
+      """,
+      bind_vars=dict(
+        operation_id=op_data['_id']
+      )
+    )
+    operation_media = [media for media in operation_media_cursor]
+
+    for step in op_data.get('default_phase_steps', []):
+      if not step.get('media'):
+        step['media'] = []
+        continue
+
+      step_media = []
+      for media in operation_media:
+        if media['_key'] in step['media']:
+          step_media.append(media)
+
+      step['media'] = step_media
+
     return op_data
 
-  db_list = [enrich_op_data(o) for o in operation_db.all()]
+  db_list = [enrich_op_data(o) for o in db.collection('Operation').all()]
   # Sort by operation name
   return sorted(db_list, key=lambda o: o['name'].lower())
-
 
 
 @router.post('/operation')
 async def create_operation(new_op_data: Operation):
 
   try:
-    new_op_record = operation_db.insert(new_op_data, return_new=True)['new']
+    new_op_record = db.collection('Operation').insert(new_op_data, return_new=True)['new']
     return APIResponse(detail=new_op_record, message="Operation created successfully")
 
   except:
@@ -55,14 +75,107 @@ async def create_operation(new_op_data: Operation):
     raise HTTPException(status_code=status_code, detail=response)
 
 
-@router.patch('/operation/{op_key}')
-async def update_operation(op_key: str, op_update: dict):
-  
+@router.patch('/operation/{operation_key}')
+async def update_operation(operation_key: str, operation_update: dict):
   try:
-    updated_op_record = operation_db.update(dict(_key=op_key, **op_update), return_new=True)['new']
-    return APIResponse(message="Operation updated successfully", detail=updated_op_record)
-
+    operation_data = db.collection('Operation').get(operation_key)
   except:
+    raise HTTPError(404, "Could not find Operation in the DB")
+
+  try:
+    existing_steps = operation_data.get('default_phase_steps', [])
+    old_media_keys = {
+      media_key
+      for step in existing_steps
+      for media_key in step.get('media', [])
+    }
+
+    new_steps = operation_update.get('default_phase_steps', [])
+    new_media_keys = {
+      media_key
+      for step in new_steps
+      for media_key in step.get('media', [])
+    }
+
+    media_to_connect = new_media_keys - old_media_keys
+    media_to_disconnect = old_media_keys - new_media_keys
+  except:
+    raise HTTPError(500, "Could not update Operation in the db. Please contact the administrator.")
+
+  if not media_to_connect and not media_to_disconnect:
+    try:
+      updated_operation = db.collection('Operation').update(
+        dict(_key=operation_key, **operation_update),
+        return_new=True
+      )['new']
+      return APIResponse(message="Operation updated successfully", detail=updated_operation)
+    except:
+      raise HTTPError(500, "Could not update Operation in the db. Please contact the administrator.")
+
+  try:
+    tx = db.begin_transaction(write=['Operation', 'Media', 'media_connection'])
+
+    # Handle media connections to the operation so the media is not orphaned due to lack of connections
+    # The Media-Operation connection is only used for this purpose, at least for now
+    if media_to_connect:
+      _from = f'Operation/{operation_key}'
+      tx.collection('media_connection').insert_many([
+        dict(
+          _from=_from,
+          _to=f'Media/{media}'
+        )
+        for media in media_to_connect
+      ])
+
+    # Handle media disconnections from the operation
+    if media_to_disconnect:
+      media_to_disconnect=[f'Media/{media}' for media in media_to_disconnect]
+
+      tx.aql.execute(
+        """
+        FOR mc IN media_connection
+          FILTER mc._from == @operation_id AND mc._to IN @media_to_disconnect
+          REMOVE mc IN media_connection
+        """,
+        bind_vars=dict(
+          operation_id=f'Operation/{operation_key}',
+          media_to_disconnect=media_to_disconnect
+        )
+      )
+
+      orphaned_media_ids_cursor = tx.aql.execute(
+        """
+        FOR disconnected_media_id IN @media_to_disconnect
+          FILTER LENGTH(
+            FOR mc IN media_connection FILTER mc._to == disconnected_media_id RETURN mc
+          ) == 0
+          RETURN disconnected_media_id
+        """,
+        bind_vars=dict(
+          media_to_disconnect=media_to_disconnect
+        )
+      )
+
+      for media_id in orphaned_media_ids_cursor:
+        media_key = media_id.split('/')[1]
+        try:
+          delete_media(media_key)
+        except Exception as ex:
+          # As delete_media also deletes the file from disk, if we break the flow here by aborting the transaction,
+          # the steps will point to Media(db+file) that does not exist anymore. So, we just log a warning and continue.
+          print(f'WARNING: Could not delete media {media_key} due to error: {ex}, skipping...')
+          continue
+
+    updated_operation = tx.collection('Operation').update(
+      dict(_key=operation_key, **operation_update),
+      return_new=True
+    )['new']
+
+    tx.commit_transaction()
+
+    return APIResponse(message="Operation updated successfully", detail=updated_operation)
+  except:
+    tx.abort_transaction()
     status_code = 500
     response=dict(
       status_code=status_code,
@@ -72,11 +185,10 @@ async def update_operation(op_key: str, op_update: dict):
     raise HTTPException(status_code=status_code, detail=response)
 
 
-
 @router.delete('/operation/{op_key}')
 async def delete_operation(op_key: str):
 
-  try: 
+  try:
     is_used_for_products = [p.code for p in get_products_using_operation(op_key)]
 
   except:
@@ -102,7 +214,7 @@ async def delete_operation(op_key: str):
     removed_op = db.collection('Operation').delete(dict(_key=op_key), return_old=True)['old']
     return APIResponse(message="Operation successfully deleted", detail=removed_op)
 
-  
+
 
 @router.get("/step/{step_key}/media")
 async def get_step_media(step_key: str):
@@ -115,7 +227,7 @@ async def get_production_process(product_key):
 
   try:
     process_data = db.aql.execute(
-      Queries.GET_PRODUCTION_PROCESS, 
+      Queries.GET_PRODUCTION_PROCESS,
       bind_vars=dict(product_key=product_key)
     )
 
@@ -132,10 +244,10 @@ async def get_production_process(product_key):
       status_code=status_code,
       detail=response
     )
-  
+
   try:
     results = [PhaseData(**phase) for phase in process_data]
-    
+
   except Exception as e:
     status_code = 500
     message = "Error validating data from DB"
@@ -169,14 +281,12 @@ async def get_phase_data(phase_key: List[str] = Query(...)):
 
 
 @router.put(
-  "/product/{product_key}/process", 
+  "/product/{product_key}/process",
   response_model = List[PhaseData],
   response_model_exclude = {'step_sequence'}
 )
 async def update_process(product_key, process: List[PhaseData]):
- 
-  
-  tx_db = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'])
+  tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'])
   timestamp = dt.timestamp()
   new_phase_sequence = []
 
@@ -197,24 +307,24 @@ async def update_process(product_key, process: List[PhaseData]):
         exclude_set = { 'key' } if new_step else None
         prepped_step_data = jsonable_encoder(s, by_alias=True, exclude=exclude_set)
 
-        step_update = tx_db.insert_document('Step', 
+        step_update = tx.insert_document('Step',
           prepped_step_data, overwrite=True, return_new=True )
 
         phase.steps[index] = Step(**step_update['new'])
 
       phase.step_sequence = [s.key for s in phase.steps]
 
-      # Flag removed steps for deletion by TTL 
-      old_step_sequence = tx_db.document(f'Phase/{phase.key}')['step_sequence'] if phase.key else []
+      # Flag removed steps for deletion by TTL
+      old_step_sequence = tx.document(f'Phase/{phase.key}')['step_sequence'] if phase.key else []
       removed_steps = [s for s in old_step_sequence if s not in phase.step_sequence]
 
       for r in removed_steps:
-        tx_db.collection('Step').update(dict(_key=r, trashed=timestamp))
+        tx.collection('Step').update(dict(_key=r, trashed=timestamp))
 
       # Insert/replace phase
       exclude_set = {'id', 'rev', 'steps'}
 
-      # do not 'export' _id field with value null if none is set, so that the DB 
+      # do not 'export' _id field with value null if none is set, so that the DB
       # will set it automatically
       new_phase = phase.key == None
 
@@ -223,34 +333,35 @@ async def update_process(product_key, process: List[PhaseData]):
 
       prepped_phase_data = jsonable_encoder(phase, by_alias=True, exclude=exclude_set)
 
-      db_resp = tx_db.insert_document('Phase', prepped_phase_data, return_new=True, overwrite=True )['new']
+      db_resp = tx.insert_document('Phase', prepped_phase_data, return_new=True, overwrite=True )['new']
 
       phase_update = PhaseRecord(**db_resp)
-      
+
       if new_phase:
         # Insert new ProductPhase relationship
         new_phase_id= phase_update.id
-        tx_db.insert_document('requires', dict(
+        tx.insert_document('requires', dict(
           _from=f'Product/{product_key}',
           _to=new_phase_id,
           type='ProductPhase'
         ))
 
         # Insert new PhaseOperation relationship
-        tx_db.insert_document('requires', dict(
+        tx.insert_document('requires', dict(
           _from=new_phase_id,
           _to=f'Operation/{phase.operation_key}',
           type='PhaseOperation'
         ))
 
+        process[seq].id = phase_update.id
         process[seq].key = phase_update.key
 
       new_phase_sequence.append(phase_update.key)
 
     # Update new sequence, returning old one for deletion check
-    phase_sequence_update = tx_db.collection('Product').update(dict(
-      _key=product_key, 
-      process_phases=new_phase_sequence 
+    phase_sequence_update = tx.collection('Product').update(dict(
+      _key=product_key,
+      process_phases=new_phase_sequence
     ), return_old=True)
 
     # Flag removed phases (and relationships) for deletion by TTL index
@@ -259,28 +370,28 @@ async def update_process(product_key, process: List[PhaseData]):
 
     for p in removed_phases:
       # Flag phase document
-      tx_db.collection('Phase').update(dict(_key=p, trashed=timestamp))
-      
+      tx.collection('Phase').update(dict(_key=p, trashed=timestamp))
+
       # Flag phase relationships
-      tx_db.aql.execute(
-        Queries.TRASH_FLAG_PHASE_RELATIONSHIP, 
+      tx.aql.execute(
+        Queries.TRASH_FLAG_PHASE_RELATIONSHIP,
         bind_vars=dict(phase_key=p, timestamp=timestamp)
       )
 
     # Commit transaction
-    tx_db.commit_transaction()
+    tx.commit_transaction()
 
     return process
 
   except Exception as e:
-    tx_id = tx_db.transaction_id
+    tx_id = tx.transaction_id
     error_str = traceback.format_exc()
     response = dict(
       exception=e,
       transaction=tx_id,
       error_str=error_str
     )
-    tx_db.abort_transaction()
+    tx.abort_transaction()
     raise HTTPException(
       status_code = 500,
       detail = error_str
@@ -291,12 +402,12 @@ async def update_process(product_key, process: List[PhaseData]):
 async def get_phase_procedure(phase_key: str):
 
   db_steps = db.aql.execute(
-    Queries.GET_PHASE_PROCEDURE, 
+    Queries.GET_PHASE_PROCEDURE,
     bind_vars=dict(phase_key=phase_key)
   )
 
   async def get_full_step_data(step_from_db):
-    step_from_db['media'] = search_step_media(step['_key'])
+    step_from_db['media'] = search_step_media(step_from_db['_key'])
     return StepWithMediaInfo(**step_from_db)
 
   return [await get_full_step_data(step) for step in db_steps]
@@ -307,13 +418,13 @@ async def save_step_media(
   step_key: str,
   media_file: UploadFile = File(...)
 ):
-  
+
   new_media = FileHandler.step_media(
     object_key=step_key,
     file=media_file,
     name=media_file.filename
   )
-  
+
   try:
     await new_media.write_file()
   except:
@@ -332,7 +443,7 @@ async def save_step_media(
   return new_media.name
 
 
-  
+
 
 @router.delete("/step/{step_key}/media/{filename}")
 async def delete_step_media(
@@ -344,7 +455,7 @@ async def delete_step_media(
     object_key=step_key,
     name=filename
   )
-  
+
   try:
     media_to_delete.delete_file()
   except:
