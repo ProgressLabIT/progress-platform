@@ -52,8 +52,8 @@ class CustomField(ArangoDocument):
   default_hint: str = None # To show to the user when filling up the forms
 
 class FormFieldDefinition(BaseModel):
-  # TODO: rename to field_key for consistency
-  key: str = Field(..., alias='_key') # Reference to CustomField record
+  # TODO: Add _key field
+  custom_field_key: str
   multiple: bool = False
   label: str
   hint: str = None
@@ -68,5 +68,6 @@ class FormFieldDefinition(BaseModel):
     return values
 
 class FormFieldValue(BaseModel):
-  field_key: str # Reference to CustomField record
+  #  TODO: Rename to `form_field_key` and point to `FormFieldDefinition`
+  custom_field_key: str # Reference to CustomField record
   value: Any

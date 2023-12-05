@@ -42,7 +42,7 @@ const formFields = computed(
   // FIXME: _key points to CustomField, we should join the data to get extra data like `type`
   // TODO: migrate the data, and ensure the server returns an empty array
   () => props.step.form_fields?.map(field => {
-    const index = formDataIndexByFieldKey.value[field._key]
+    const index = formDataIndexByFieldKey.value[field.custom_field_key]
     return {
       ...field,
       value: formData.value[index]?.value
@@ -54,17 +54,17 @@ const formFields = computed(
 const formData = computed(() => batchStep.value.form_data ?? [])
 const formDataIndexByFieldKey = computed(() => {
   const indexByKey = {}
-  formData.value.forEach(({ field_key }, index) => {
-    indexByKey[field_key] = index
+  formData.value.forEach(({ custom_field_key }, index) => {
+    indexByKey[custom_field_key] = index
   })
   return indexByKey
 })
 function updateField(field, value) {
   store.commit('UPDATE_STEP_FORM_DATA', {
     stepKey: props.step._key,
-    index: formDataIndexByFieldKey.value[field._key],
+    index: formDataIndexByFieldKey.value[field.custom_field_key],
     data: {
-      field_key: field._key,
+      custom_field_key: field.custom_field_key,
       value
     }
   })

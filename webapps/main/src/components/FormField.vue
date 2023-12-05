@@ -236,13 +236,14 @@ export default {
 
   computed: {
     field_type() {
-      return this.$store.getters.getCustomFieldByKey(this.field_data._key)?.type
+      return this.$store.getters.getCustomFieldByKey(this.field_data.custom_field_key)?.type
     }
   },
 
   methods: {
+    // TODO: Use the store instead of refetching the data
     initOptions() {
-      this.$api.get('list', { params: { field_key: this.field_data._key }})
+      this.$api.get('list', { params: { field_key: this.field_data.custom_field_key }})
       .then(resp => this.options = resp.data)
     },
 
@@ -259,7 +260,7 @@ export default {
         const needle = value.toLowerCase()
         this.$api.get('list', {
           params: {
-            field_key: this.field_data._key,
+            field_key: this.field_data.custom_field_key,
             search: value
           }
         })

@@ -5,7 +5,7 @@
   <div v-else id="form-template-fields" class="col scroll">
     <div
       v-for="(field, index) in fieldsModel"
-      :key="field._key"
+      :key="field.custom_field_key"
       class="row items-center q-col-gutter-lg q-py-sm"
     >
       <div class="col-auto">
@@ -91,7 +91,7 @@ const store = useStore()
 
 const { getFieldIcon: _getIcon } = useFormFields()
 function getFieldIcon(field) {
-  const customField = store.getters.getCustomFieldByKey(field._key)
+  const customField = store.getters.getCustomFieldByKey(field.custom_field_key)
   return _getIcon(customField?.type)
 }
 
@@ -134,12 +134,12 @@ function addField() {
     component: AddCustomFieldDialog,
     componentProps: {
       // TODO: Remove this limitation to properly support using 'ternary' field to create a checklist
-      // `_key` needs to be converted to `field_key` and `_key` must be independently unique for each form field
-      selectedFieldKeys: fieldsModel.value.map(({ _key }) => _key)
+      // An independently unique key as `_key` must be added to each form field to support this
+      selectedFieldKeys: fieldsModel.value.map(({ custom_field_key }) => custom_field_key)
     }
   }).onOk((customField) => {
     fieldsModel.value.push({
-      _key: customField._key,
+      custom_field_key: customField._key,
       label: customField.default_label,
       hint: customField.default_hint
     })
