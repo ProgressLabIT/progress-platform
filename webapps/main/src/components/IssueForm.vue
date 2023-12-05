@@ -114,7 +114,7 @@
           <q-card-section>
             <template v-if="issue_type">
               <FormField
-                v-for="field in form_data"
+                v-for="field in form_fields"
                 :key="field._key"
                 :field_data="field"
                 :root_path="`/media/issue/${issue?._key}`"
@@ -231,7 +231,7 @@ export default {
       saving: false,
       issue_type: null,
       form_step: 'data',
-      form_data: [],
+      form_fields: [],
       confirmed: false,
       critical: false,
       link_form: null,
@@ -306,16 +306,21 @@ export default {
     },
 
     initFormData() {
-      const use_clean_form = this.mode == 'new' || this.issue_type?._key != this.issue.issue_type_key
+      const form_template = this.issue_type?.form_template ?? []
 
+      const use_clean_form = this.mode === 'new' || this.issue_type?._key !== this.issue.issue_type_key
       if (use_clean_form) {
         // Use fields from issue type template adding empty value
-        // If no template, force null, otherwise `undefiend` will not be included in the api body and the issue data will not be updated
-        this.form_data = this.issue_type?.form_template.map(f => {
-          return { ...f, value: null }
-        }) ?? []
+        // If no template, force null, otherwise `undefined` will not be included in the api body and the issue data will not be updated
+        this.form_fields = form_template.map(field => ({ ...field, value: null }))
+        return
       }
-      else this.form_data = [ ...this.issue.data ]
+
+      this.form_fields = form_template.map(field => ({
+        ...field,
+        value: this.issue.data
+          .find(({ form_field_key }) => form_field_key === field._key)?.value
+      }))
     },
 
     initIssueType() {
@@ -388,7 +393,7 @@ export default {
     },
 
     saveFiles(issue_key) {
-      this.form_data
+      this.form_fields
       .filter(field => field.type == 'files')
       .forEach(async field => {
         const to_delete = []
@@ -447,8 +452,8 @@ export default {
       const issue_data = {
         issue_type_key: this.issue_type?._key || null,
         critical: this.critical,
-        data: this.form_data.map(field => ({
-          field_key: field._key,
+        data: this.form_fields.map(field => ({
+          form_field_key: field._key,
           value: field.type === 'files'
             ? field.value
               ?.filter(file => !file.delete)
