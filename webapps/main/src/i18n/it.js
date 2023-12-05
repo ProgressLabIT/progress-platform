@@ -129,6 +129,7 @@ export default {
   "field_type_date": "Data",
   "field_type_number": "Numero",
   "field_type_text": "Testo",
+  "field_type_ternary": "Vero/Falso/NA",
   "field_type_time": "Ora",
   "filter": "filtro | filtri",
   "filters_reset": "rimuovi filtri",
@@ -298,16 +299,13 @@ export default {
   "personnel": "personale",
   "phase": {
     "add": "aggiungi fase",
-    "add_check": "aggiungi controllo",
     "add_field": "aggiungi campo",
     "add_media": "aggiungi media",
     "add_steps": "comincia ad aggiungere fasi o passi",
     "alerts": {
       "add_steps_first": "Aggiungi dei passi alla procedura per modificare il valore di questo parametro"
     },
-    "checklist_title": "lista di controllo",
     "delete": "elimina fase | elimina fasi",
-    "delete_check": "rimuovi controllo",
     "delete_field": "rimuovi campo",
     "field_name": "nome campo {field_index}",
     "form_title": "campi modulo",
@@ -409,7 +407,6 @@ export default {
     "rename": "Rinomina fase",
     "short": "Fase | Fasi",
     "step_types": {
-      "checklist": "controlli",
       "form": "modulo",
       "instruction": "istruzioni"
     }

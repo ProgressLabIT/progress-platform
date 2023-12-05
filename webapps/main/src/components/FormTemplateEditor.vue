@@ -133,7 +133,8 @@ function addField() {
   Dialog.create({
     component: AddCustomFieldDialog,
     componentProps: {
-      // TODO: Does this exclusion really make sense? It will not make sense with at least the 'ternary' field to form a checklist.
+      // TODO: Remove this limitation to properly support using 'ternary' field to create a checklist
+      // `_key` needs to be converted to `field_key` and `_key` must be independently unique for each form field
       selectedFieldKeys: fieldsModel.value.map(({ _key }) => _key)
     }
   }).onOk((customField) => {

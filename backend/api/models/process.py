@@ -38,7 +38,6 @@ class PhaseParameters(FlexModel):
 class StepType(str, Enum):
   INSTRUCTION = 'instruction'
   FORM = 'form'
-  CHECKLIST = 'checklist'
 
 
 class Step(FlexModel):
@@ -46,7 +45,6 @@ class Step(FlexModel):
   title: str = None
   description: str = None
   type: StepType = StepType.INSTRUCTION
-  checks: List[str] = []
   form_fields: List[FormFieldDefinition] = []
 
 

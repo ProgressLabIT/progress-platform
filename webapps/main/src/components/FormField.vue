@@ -46,6 +46,56 @@
       @update:model-value="val => $emit('update', val)">
     </q-checkbox>
 
+    <!-- TERNARY -->
+    <!-- TODO: Implement required behavior (?) -->
+    <div v-if="field_type === 'ternary'" class="row items-center">
+      <div class="col-1 items-center">
+        <q-avatar
+          :color="field_data.value !== undefined ? 'theme-green' : 'transparent'"
+          size="24px"
+          class="row flex-center text-center text-body2 font-weight-medium"
+        >
+          <q-icon v-if="field_data.value === undefined" size="sm" name="mdi-progress-question" />
+          <q-icon v-else class="solid-white" name="mdi-check" />
+        </q-avatar>
+      </div>
+
+      <div class="col-6 items-center">
+        <p class="text-body1 q-ma-none">{{ field_data.label }}</p>
+      </div>
+
+      <q-space />
+
+      <div class="col-auto">
+        <q-btn
+          size="lg"
+          unelevated
+          :flat="field_data.value !== false"
+          :disable="disable"
+          :dense="dense"
+          color="theme-red"
+          style="width: 100px"
+          @click="$emit('update', field_data.value === false ? undefined : false)"
+        >
+          <span class="text-h4 display weight-bold">{{ $t('no') }}</span>
+        </q-btn>
+
+        <q-btn
+          size="lg"
+          unelevated
+          :flat="field_data.value !== true"
+          :disable="disable"
+          :dense="dense"
+          color="theme-green"
+          style="width: 100px"
+          class="q-ml-lg"
+          @click="$emit('update', field_data.value === true ? undefined : true)"
+        >
+          <span class="text-h4 display weight-bold">{{ $t('yes') }}</span>
+        </q-btn>
+      </div>
+    </div>
+
     <!-- CHOICE -->
     <q-select
       v-if="field_type == 'choice'"
@@ -153,7 +203,6 @@
 import FilesList from '@/components/FilesList.vue'
 
 export default {
-
   name: 'FormField',
 
   components: {

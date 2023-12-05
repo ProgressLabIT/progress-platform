@@ -128,6 +128,7 @@ export default {
   "field_type_date": "Date",
   "field_type_number": "Number",
   "field_type_text": "Text",
+  "field_type_ternary": "True/False/NA",
   "field_type_time": "Time",
   "filter": "filter",
   "filters_reset": "Reset filters",
@@ -294,16 +295,13 @@ export default {
   "personnel": "personnel",
   "phase": {
     "add": "add phase",
-    "add_check": "add check",
     "add_field": "add field",
     "add_media": "add media",
     "add_steps": "start adding phases or steps",
     "alerts": {
       "add_steps_first": "Add steps to the procedure first to set this parameter"
     },
-    "checklist_title": "checklist",
     "delete": "delete phase | delete phases",
-    "delete_check": "delete check",
     "delete_field": "delete field",
     "field_name": "field name {field_index}",
     "form_title": "form fields",
@@ -406,7 +404,6 @@ export default {
     "rename": "Rename phase",
     "short": "Phase | Phases",
     "step_types": {
-      "checklist": "checklist",
       "form": "form",
       "instruction": "instructions"
     }

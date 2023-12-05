@@ -4,7 +4,6 @@ import operator from "./operatorRoutes.js"
 import admin from "./adminRoutes.js"
 import quality from "./qualityRoutes.js"
 import report from "./reportRoutes.js"
-import store from "@/store/index"
 
 const routes = [
   {

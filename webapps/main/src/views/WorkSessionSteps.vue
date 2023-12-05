@@ -41,21 +41,16 @@
 </template>
 
 <script>
-import { throttle as _throttle } from 'lodash'
-
 import JobInstruction from '@/components/JobInstruction.vue'
 import JobForm from '@/components/JobForm.vue'
-import JobChecklist from '@/components/JobChecklist.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
-
   name: 'WorkSessionSteps',
 
   components: {
     JobInstruction,
     JobForm,
-    JobChecklist,
     NoDataAlert
   },
 
@@ -93,18 +88,7 @@ export default {
     },
 
     step_component() {
-      let component = 'JobInstruction'
-      if (this.current_step) {
-        switch (this.current_step.type) {
-          case 'checklist':
-            component = 'JobChecklist'
-            break
-          case 'form':
-            component = 'JobForm'
-            break
-        }
-      }
-      return component
+      return this.current_step.type === 'form' ? 'JobForm' : 'JobInstruction'
     },
 
     batch_data() {
@@ -122,8 +106,8 @@ export default {
       let step_done = false
       let step_critical = false
       let bg_color = ''
-      let text_color = this.$theme.text_low
-      let cursor = this.allowClick(index) ? 'pointer' : 'not-allowed'
+      const text_color = this.$theme.text_low
+      const cursor = this.allowClick(index) ? 'pointer' : 'not-allowed'
 
       if (this.batch_data) {
         step_done = this.batch_data[index].done
