@@ -1,10 +1,7 @@
 <template>
   <!-- TODO: Create a better base component for using with custom dialog plugin components -->
   <BaseDialog :show="true" :get-dialog-ref="getDialogRef" :no-backdrop-dismiss="false" @close="onDialogHide">
-    <FormFieldSearch
-      :exclude-keys="selectedFieldKeys"
-      @select="onDialogOK"
-    />
+    <FormFieldSearch @select="onDialogOK" />
   </BaseDialog>
 </template>
 
@@ -12,13 +9,6 @@
 import { useDialogPluginComponent } from 'quasar'
 import BaseDialog from '@/components/BaseDialog.vue'
 import FormFieldSearch from '@/components/FormFieldSearch.vue'
-
-defineProps({
-  selectedFieldKeys: {
-    type: Array,
-    required: true
-  }
-})
 
 defineEmits(useDialogPluginComponent.emitsObject)
 

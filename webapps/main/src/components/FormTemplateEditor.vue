@@ -5,7 +5,7 @@
   <div v-else id="form-template-fields" class="col scroll">
     <div
       v-for="(field, index) in fieldsModel"
-      :key="field.custom_field_key"
+      :key="field._key"
       class="row items-center q-col-gutter-lg q-py-sm"
     >
       <div class="col-auto">
@@ -71,7 +71,7 @@
 </template>
 
 <script setup>
-import { Dialog } from 'quasar'
+import { Dialog, uid } from 'quasar'
 import Sortable from 'sortablejs'
 import { ref, watch } from 'vue'
 import { useStore } from 'vuex'
@@ -132,13 +132,9 @@ watch(() => props.editMode, () => {
 function addField() {
   Dialog.create({
     component: AddCustomFieldDialog,
-    componentProps: {
-      // TODO: Remove this limitation to properly support using 'ternary' field to create a checklist
-      // An independently unique key as `_key` must be added to each form field to support this
-      selectedFieldKeys: fieldsModel.value.map(({ custom_field_key }) => custom_field_key)
-    }
   }).onOk((customField) => {
     fieldsModel.value.push({
+      _key: uid(),
       custom_field_key: customField._key,
       label: customField.default_label,
       hint: customField.default_hint
