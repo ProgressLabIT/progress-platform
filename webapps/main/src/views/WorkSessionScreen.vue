@@ -397,12 +397,10 @@ export default {
   },
 
   methods: {
-    loadJob() {
-      Promise.all([
-        this.$store.dispatch('loadWorkingJobData', this.job_key),
-        this.$store.dispatch('loadWorkOrderData', this.j.wo_key)
-      ])
-      .then(() => {
+    async loadJob() {
+      this.$store.dispatch('loadWorkingJobData', this.job_key)
+      .then(async () => {
+        await this.$store.dispatch('loadWorkOrderData', this.j.wo_key)
         const data = this.$store.state.traceability
         const job_data = data.working_job_data
 
