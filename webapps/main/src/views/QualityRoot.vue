@@ -369,7 +369,7 @@
           <!-- We override q-mb-lg of FormField with style -->
           <FormField
             v-else
-            :field_data="filter"
+            :field="filter"
             style="margin-bottom: 0"
             @update="filter.value = filter.type === 'choice' ? $event?.value : $event"
           />

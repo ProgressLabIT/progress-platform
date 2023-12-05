@@ -105,9 +105,9 @@
           <!-- ISSUE TYPE SELECTION -->
           <q-card-section>
             <BaseAutocompleteIssueType
+              :value="issue_type"
               @select="(value) => setIssueType(value)"
-              :value="issue_type">
-            </BaseAutocompleteIssueType>
+            />
           </q-card-section>
 
           <!-- FORM FIELDS -->
@@ -116,14 +116,13 @@
               <FormField
                 v-for="field in form_fields"
                 :key="field._key"
-                :field_data="field"
-                :root_path="`/media/issue/${issue?._key}`"
-                @update="val => field.value = val">
-              </FormField>
+                :field="field"
+                :root-path="`/media/issue/${issue?._key}`"
+                @update="val => field.value = val"
+              />
             </template>
           </q-card-section>
         </div>
-
 
         <!-- FORM ACTIONS -->
         <q-card-section>

@@ -21,12 +21,13 @@
 
         <div class="row q-px-lg q-pt-md q-mb-md">
           <template v-if="issue.data.length > 0">
+            <!-- FIXME: issue.data only contains the value now, not the field info -->
             <div v-for="field in issue.data" :key="field._key" class="col-auto q-pr-md">
               <FormField
-                :field_data="field"
+                :field="field"
+                :root-path="`/media/issue/${issue_key}`"
                 dense
-                :disable="true"
-                :root_path="`/media/issue/${issue_key}`"
+                disable
               />
             </div>
           </template>

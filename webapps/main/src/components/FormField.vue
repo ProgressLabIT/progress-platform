@@ -1,67 +1,66 @@
 <template>
   <div class="q-mb-lg">
-
     <!-- TEXT -->
     <q-input
-      v-if="field_type == 'text'"
+      v-if="fieldType === 'text'"
+      :model-value="field.value"
+      :disable="disable"
+      :dense="dense"
+      :label="field.label"
       filled
       stack-label
       autogrow
       lazy-rules
       input-debounce="100"
       hide-bottom-space
-      :disable="disable"
-      :dense="dense"
-      :label="field_data.label"
-      :model-value="field_data.value"
-      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-      @update:model-value="(val) => $emit('update', val)">
-    </q-input>
+      :rules="[value => (field.required ? !!value : true) || $t('field_required_alert')]"
+      @update:model-value="(val) => emit('update', val)"
+    />
 
     <!-- NUMBER -->
     <q-input
-      v-if="field_type == 'number'"
+      v-if="fieldType === 'number'"
+      :model-value="field.value"
       type="number"
+      :disable="disable"
+      :dense="dense"
+      :label="field.label"
       filled
       stack-label
       hide-bottom-space
       input-debounce="100"
-      :disable="disable"
-      :dense="dense"
-      :label="field_data.label"
-      :model-value="field_data.value"
       lazy-rules
-      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-      @update:model-value="val => $emit('update', parseFloat(val))">
-    </q-input>
+      :rules="[value => (field.required ? !!value : true) || $t('field_required_alert')]"
+      @update:model-value="val => emit('update', parseFloat(val))"
+    />
 
     <!-- BOOLEAN -->
     <q-checkbox
-      v-if="field_type == 'boolean'"
+      v-if="fieldType == 'boolean'"
+      :model-value="field.value ?? false"
       :disable="disable"
       :dense="dense"
-      :label="field_data.label"
-      :model-value="field_data.value ?? false"
-      :rules="[value => (field_data.required ? !!value : true) || $t('field_required_alert')]"
-      @update:model-value="val => $emit('update', val)">
-    </q-checkbox>
+      :label="field.label"
+      :rules="[value => (field.required ? !!value : true) || $t('field_required_alert')]"
+      @update:model-value="val => emit('update', val)"
+    />
 
     <!-- TERNARY -->
     <!-- TODO: Implement required behavior (?) -->
-    <div v-if="field_type === 'ternary'" class="row items-center">
+    <div v-if="fieldType === 'ternary'" class="row items-center">
       <div class="col-1 items-center">
         <q-avatar
-          :color="field_data.value !== undefined ? 'theme-green' : 'transparent'"
+          :color="field.value !== undefined ? 'theme-green' : 'transparent'"
           size="24px"
           class="row flex-center text-center text-body2 font-weight-medium"
         >
-          <q-icon v-if="field_data.value === undefined" size="sm" name="mdi-progress-question" />
+          <q-icon v-if="field.value === undefined" size="sm" name="mdi-progress-question" />
           <q-icon v-else class="solid-white" name="mdi-check" />
         </q-avatar>
       </div>
 
       <div class="col-6 items-center">
-        <p class="text-body1 q-ma-none">{{ field_data.label }}</p>
+        <p class="text-body1 q-ma-none">{{ field.label }}</p>
       </div>
 
       <q-space />
@@ -70,12 +69,12 @@
         <q-btn
           size="lg"
           unelevated
-          :flat="field_data.value !== false"
+          :flat="field.value !== false"
           :disable="disable"
           :dense="dense"
           color="theme-red"
           style="width: 100px"
-          @click="$emit('update', field_data.value === false ? undefined : false)"
+          @click="emit('update', field.value === false ? undefined : false)"
         >
           <span class="text-h4 display weight-bold">{{ $t('no') }}</span>
         </q-btn>
@@ -83,13 +82,13 @@
         <q-btn
           size="lg"
           unelevated
-          :flat="field_data.value !== true"
+          :flat="field.value !== true"
           :disable="disable"
           :dense="dense"
           color="theme-green"
           style="width: 100px"
           class="q-ml-lg"
-          @click="$emit('update', field_data.value === true ? undefined : true)"
+          @click="emit('update', field.value === true ? undefined : true)"
         >
           <span class="text-h4 display weight-bold">{{ $t('yes') }}</span>
         </q-btn>
@@ -98,40 +97,41 @@
 
     <!-- CHOICE -->
     <q-select
-      v-if="field_type == 'choice'"
-      filled
-      stack-label
-      use-input
-      clearable
+      v-if="fieldType === 'choice'"
+      :model-value="field.value"
+      :options="options"
+      option-label="value"
       :disable="disable"
       :dense="dense"
-      :label="field_data.label"
-      :options="options"
-      :debounce="300"
+      :label="field.label"
       :loading="loading"
-      option-label="value"
-      @filter="filter"
-      :model-value="field_data.value"
-      @update:model-value="val => $emit('update', val)"
-      input-class="cursor-pointer">
-    </q-select>
+      :debounce="300"
+      use-input
+      clearable
+      filled
+      stack-label
+      input-class="cursor-pointer"
+      @filter="onFilter"
+      @update:model-value="val => emit('update', val)"
+    />
 
     <!-- DATE -->
     <!-- FIXME: Do not mutate the prop, emit 'update' event like other types instead -->
     <q-input
-      v-if="field_type == 'date'"
+      v-if="fieldType === 'date'"
+      v-model="field.value"
+      :disable="disable"
+      :label="field.label"
       filled
       stack-label
-      :disable="disable"
-      :label="field_data.label"
-      v-model="field_data.value"
       :placeholder="$t('date_format')"
-      input-class="cursor-pointer">
+      input-class="cursor-pointer"
+    >
       <template v-slot:append>
         <q-icon name="mdi-calendar" />
       </template>
       <q-popup-proxy anchor="center middle" self="center middle" @hide="blur">
-        <q-date minimal v-model="field_data.value">
+        <q-date v-model="field.value" minimal>
           <div class="row items-center justify-end">
             <q-btn v-close-popup :label="$t('close')" color="primary" flat />
           </div>
@@ -142,19 +142,20 @@
     <!-- TIME -->
     <!-- FIXME: Do not mutate the prop, emit 'update' event like other types instead -->
     <q-input
-      v-if="field_type == 'time'"
+      v-if="fieldType === 'time'"
+      v-model="field.value"
+      :disable="disable"
+      :label="field.label"
       stack-label
       filled
-      :label="field_data.label"
-      :disable="disable"
-      v-model="field_data.value"
       input-class="cursor-pointer"
-      placeholder="HH:mm">
+      placeholder="HH:mm"
+    >
       <template v-slot:append>
         <q-icon name="mdi-clock-outline" />
       </template>
       <q-popup-proxy anchor="center middle" self="center middle" @hide="blur">
-        <q-time v-model="field_data.value" format24h>
+        <q-time v-model="field.value" format24h>
           <div class="row items-center justify-end">
             <q-btn v-close-popup :label="$t('close')" color="primary" flat />
           </div>
@@ -179,148 +180,135 @@
         <q-icon name="mdi-folder-open-outline" />
       </template>
     </q-file> -->
-    <div v-if="field_type == 'files'">
+    <div v-if="fieldType === 'files'">
       <FilesList
-        :label="field_data.label"
+        :files="field.value"
+        :root_path="`${rootPath}/${field._key}`"
+        :label="field.label"
         :disable="disable"
-        :files="field_data.value"
-        :root_path="`${root_path}/${field_data._key}`"
         @addFiles="addFiles"
         @deleteFile="deleteFile"
-        @restoreFile="restoreFile">
-      </FilesList>
+        @restoreFile="restoreFile"
+      />
     </div>
 
-
-    <!-- HINT -->
     <div class="smaller q-px-sm q-mt-xs">
-      {{ field_data.hint }}
+      {{ field.hint }}
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useStore } from 'vuex'
+import { api } from '@/boot/axios'
+import { capitalize } from '@/boot/filters'
 import FilesList from '@/components/FilesList.vue'
 
-export default {
-  name: 'FormField',
-
-  components: {
-    FilesList
+const props = defineProps({
+  field: {
+    type: Object,
+    required: true
   },
-
-  props: {
-    field_data: {
-      type: Object,
-      required: true
-    },
-    dense: {
-      type: Boolean,
-      default: false
-    },
-    disable: {
-      type: Boolean,
-      default: false
-    },
-    root_path: {
-      type: String,
-    }
+  rootPath: {
+    type: String,
+    required: true
   },
-
-  data() {
-    return {
-      options: [],
-      loading: false
-    }
+  dense: {
+    type: Boolean,
+    default: false
   },
+  disable: {
+    type: Boolean,
+    default: false
+  }
+})
 
-  computed: {
-    field_type() {
-      return this.$store.getters.getCustomFieldByKey(this.field_data.custom_field_key)?.type
+const emit = defineEmits(['update'])
+
+const { t } = useI18n()
+const store = useStore()
+
+const loading = ref(false)
+const options = ref([])
+async function getOptions(searchTerm) {
+  loading.value = true
+  const { data } = await api.get('list', {
+    params: {
+      field_key: props.field.custom_field_key,
+      searchTerm: searchTerm || undefined
     }
-  },
-
-  methods: {
-    // TODO: Use the store instead of refetching the data
-    initOptions() {
-      this.$api.get('list', { params: { field_key: this.field_data.custom_field_key }})
-      .then(resp => this.options = resp.data)
-    },
-
-    filter(value, update) {
-      this.loading = true
-      if (value === '') {
-        update(() => {
-          this.initOptions()
-          this.loading = false
-        })
-        return
-      }
-      update(() => {
-        const needle = value.toLowerCase()
-        this.$api.get('list', {
-          params: {
-            field_key: this.field_data.custom_field_key,
-            search: value
-          }
-        })
-        .then(resp =>{
-          this.options = resp.data
-        })
-        this.loading = false
-      })
-    },
-
-    addFiles(file_list) {
-      let working_list = this.field_data.value ?? []
-      const files = Array.from(file_list)
-      // Don't add files already in the list
-      files.forEach( (new_file, index) => {
-        const already_in_list = working_list.some( existing_file => existing_file.name == new_file.name )
-        if (already_in_list) {
-          const replace = window.confirm(
-            this.$capitalize(this.$t('product.alerts.doc_name_exists',1, {filename: new_file.name}))
-          )
-          if (replace) {
-            working_list.splice(index, 1)
-          }
-          else {
-            return
-          }
-        }
-        working_list.push({
-          content: new_file,
-          name: new_file.name,
-          temp: true,
-          delete: false,
-          path: window.URL.createObjectURL(new_file),
-          size: new_file.size
-        })
-      })
-      this.field_data.value = working_list
-    },
-
-    deleteFile(index) {
-      const file = this.field_data.value[index]
-      file.temp ? this.field_data.value.splice(index, 1) : file.delete = true
-    },
-
-    restoreFile(index) {
-      this.field_data.value[index].delete = false
-    },
-
-    blur() {
-      document.activeElement.blur()
-    }
-  },
-
-  created() {
-    if (this.field_type == 'choice') {
-      this.initOptions()
-    }
+  })
+  loading.value = false
+  return data
+}
+async function onFilter(value, update, abort) {
+  try {
+    const optionsToLoad = await getOptions(value)
+    update(() => {
+      options.value = optionsToLoad
+    })
+  } catch (error) {
+    abort()
+    console.error(error)
   }
 }
-</script>
 
-<style lang="css" scoped>
-</style>
+const fieldType = computed(() => store.getters.getCustomFieldByKey(props.field.custom_field_key)?.type)
+if (fieldType.value === 'choice') {
+  void getOptions().then(optionsToLoad => {
+    options.value = optionsToLoad
+  })
+}
+
+function addFiles(fileList) {
+  const existingFiles = props.field.value ?? []
+  for (const newFile of fileList) {
+    const existingIndex = existingFiles.some(({ name }) => name === newFile.name)
+    if (existingIndex !== -1) {
+      const shouldReplace = window.confirm(
+        capitalize(
+          t('product.alerts.doc_name_exists', 1, { filename: newFile.name })
+        )
+      )
+      if (!shouldReplace) {
+        return
+      }
+
+      existingFiles.splice(existingIndex, 1)
+    }
+
+    existingFiles.push({
+      content: newFile,
+      name: newFile.name,
+      temp: true,
+      delete: false,
+      // TODO: Revoke the object URL when needed
+      path: URL.createObjectURL(newFile),
+      size: newFile.size
+    })
+  }
+  // eslint-disable-next-line vue/no-mutating-props -- FIXME:
+  props.field.value = existingFiles
+}
+
+function deleteFile(index) {
+  const file = props.field.value[index]
+  if (file.temp) {
+    // eslint-disable-next-line vue/no-mutating-props -- FIXME:
+    props.field.value.splice(index, 1)
+  } else {
+    file.delete = true
+  }
+}
+
+function restoreFile(index) {
+  // eslint-disable-next-line vue/no-mutating-props -- FIXME:
+  props.field.value[index].delete = false
+}
+
+function blur() {
+  document.activeElement.blur()
+}
+</script>

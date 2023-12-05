@@ -13,9 +13,9 @@
       <FormField
         v-for="field in formFields"
         :key="field._key"
-        :field_data="field"
+        :field="field"
         :disable="!isJobActive || batchStep.done"
-        :root_path="`/media/step/${step._key}`"
+        :root-path="`/media/step/${step._key}`"
         @update="value => updateField(field, value)"
       />
     </q-scroll-area>

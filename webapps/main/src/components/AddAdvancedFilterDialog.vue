@@ -20,7 +20,7 @@
           </q-checkbox>
           <FormField
             v-else
-            :field_data="editableField"
+            :field="editableField"
             class="input-field"
             @update="editableField.value = editableField.type === 'choice' ? $event?.value : $event"
           />
