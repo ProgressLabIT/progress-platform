@@ -1,0 +1,165 @@
+// NOTE: Execute the sections marked with headers containing "--------" separately, in the order they appear in this file
+
+// ------------------------------------------------------------------------
+// ------------------------------ Form ------------------------------------
+// ------------------------------------------------------------------------
+
+// Convert input fields (short, long) into form fields pointing to text custom field
+LET text_key = (INSERT { name: 'Text', type: 'text' } INTO CustomField RETURN NEW._key)[0]
+LET form_step_results = (
+  FOR step IN Step
+    FILTER step.type == 'form'
+    LET form_fields = (
+      FOR input IN step.input_fields
+        // type short/long is not important as the text field expands automatically
+        RETURN {
+          _key: UUID(),
+          custom_field_key: text_key,
+          label: input.name,
+          required: false,
+          multiple: false
+        }
+    )
+    // See https://github.com/arangodb/arangodb/issues/8843#issuecomment-486557137 for why we need to use keepNull: false
+    UPDATE step WITH { form_fields, input_fields: null, checks: null } IN Step OPTIONS { keepNull: false }
+    RETURN { step_key: step._key, field_keys: form_fields[*]._key }
+)
+
+// Convert form user data into field_key/value pairs, pointing them to individual form fields
+FOR form_step_data IN StepExecutionData
+  FILTER form_step_data.step_key IN form_step_results[*].step_key
+  LET form_step_result = FIRST(
+    FOR result IN form_step_results
+      FILTER result.step_key == form_step_data.step_key
+      RETURN result
+  )
+  LET new_form_data = (
+    FOR form_index IN 0..(LENGTH(form_step_data.user_data) - 1)
+      LET new_data = {
+        form_field_key: form_step_result.field_keys[form_index],
+        value: form_step_data.user_data[form_index]
+      }
+      RETURN new_data
+  )
+  UPDATE form_step_data WITH { form_data: new_form_data, user_data: null } IN StepExecutionData OPTIONS { keepNull: false }
+
+// ------------------------------------------------------------------------
+// ------------------------------ Checklist -------------------------------
+// ------------------------------------------------------------------------
+
+// Convert checks into form fields pointing to ternary custom field
+LET ternary_key = (INSERT { name: 'True/False/NA', type: 'ternary' } INTO CustomField RETURN NEW._key)[0]
+LET check_step_results = (
+  FOR step IN Step
+    FILTER step.type == 'checklist'
+    LET form_fields = (
+      FOR check_name IN step.checks
+        RETURN {
+          _key: UUID(),
+          custom_field_key: ternary_key,
+          label: check_name,
+          required: false,
+          multiple: false
+        }
+    )
+    UPDATE step WITH { type: 'form', form_fields, input_fields: null, checks: null } IN Step OPTIONS { keepNull: false }
+    RETURN { step_key: step._key, field_keys: form_fields[*]._key }
+)
+
+// Convert check user data into field_key/value pairs, pointing them to individual form fields
+FOR check_step_data IN StepExecutionData
+  FILTER check_step_data.step_key IN check_step_results[*].step_key
+  LET check_step_result = FIRST(
+    FOR result IN check_step_results
+      FILTER result.step_key == check_step_data.step_key
+      RETURN result
+  )
+  LET new_check_data = (
+    FOR check_index IN 0..(LENGTH(check_step_data.user_data) - 1)
+      LET value = check_step_data.user_data[check_index]
+      LET new_data = {
+        form_field_key: check_step_result.field_keys[check_index],
+        value: value == 1 ? true : value == 0 ? false : null
+      }
+      RETURN new_data
+  )
+  UPDATE check_step_data WITH { form_data: new_check_data, user_data: null } IN StepExecutionData OPTIONS { keepNull: false }
+
+// ------------------------------------------------------------------------
+// ------------------------------ Job Step --------------------------------
+// ------------------------------------------------------------------------
+
+// re-use the previously created text custom field
+LET text_key = LAST(FOR custom_field IN CustomField FILTER custom_field.name == 'Text' RETURN custom_field._key)
+
+FOR job IN Job
+  LET updated_steps = (
+    FOR step IN job.step_sequence
+      FILTER step.type == 'form'
+      LET form_fields = (
+        FOR input IN step.input_fields
+          // type short/long is not important as the text field expands automatically
+          RETURN {
+            _key: UUID(),
+            custom_field_key: text_key,
+            label: input.name,
+            required: false,
+            multiple: false
+          }
+      )
+      RETURN UNSET(MERGE(step, { form_fields }), 'input_fields', 'checks')
+  )
+  UPDATE job WITH { step_sequence: updated_steps } IN Job
+
+// ------------------------------------------------------------------------
+// ------------------------------ Issue -----------------------------------
+// ------------------------------------------------------------------------
+
+// Convert issue type form template into new form fields specs
+LET issue_type_results = (
+  FOR issue_type IN IssueType
+    FILTER issue_type.form_template != null
+    LET form_fields = (
+      FOR field IN issue_type.form_template
+        RETURN MERGE(UNSET(field, 'type'), {
+          _key: UUID(),
+          custom_field_key: field._key,
+        })
+    )
+    UPDATE issue_type WITH { form_template: form_fields } IN IssueType
+    RETURN { issue_type_key: issue_type._key, field_keys: form_fields[*]._key }
+)
+
+// Convert issue data into new form fields specs - previously it was a duplicate of the form template but with the values
+FOR issue IN Issue
+  FILTER issue.data != null && issue.issue_type_key IN issue_type_results[*].issue_type_key
+  LET issue_type_result = FIRST(
+    FOR result IN issue_type_results
+      FILTER result.issue_type_key == issue.issue_type_key
+      RETURN result
+  )
+  LET new_issue_form_data = (
+    FOR data_index IN 0..(LENGTH(issue.data) - 1)
+      LET new_data = {
+        form_field_key: issue_type_result.field_keys[data_index],
+        value: issue.data[data_index].value
+      }
+      RETURN new_data
+  )
+  UPDATE issue WITH { data: new_issue_form_data } IN Issue
+
+// ------------------------------------------------------------------------
+// ------------------------------ Issue Media -----------------------------
+// ------------------------------------------------------------------------
+
+// Use the results of the query below in a script(Python, bash, etc.) to rename media folders
+FOR issue IN Issue
+  LET issue_type = DOCUMENT(IssueType, issue.issue_type_key)
+  FILTER issue_type.form_template != null
+  FOR form_field IN issue_type.form_template
+    LET custom_field = DOCUMENT(CustomField, form_field.custom_field_key)
+    FILTER custom_field.type == 'files'
+    RETURN {
+      old_name: CONCAT('issue/', issue._key, '/', form_field.custom_field_key),
+      new_name: CONCAT('issue/', issue._key, '/', form_field._key)
+    }

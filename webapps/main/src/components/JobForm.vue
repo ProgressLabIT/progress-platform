@@ -42,18 +42,16 @@ const batchStep = computed(() => store.getters.getBatchStep(props.step._key))
 // TODO: add file handling like in IssueForm
 
 const formFields = computed(
-  // TODO: migrate the data, and ensure the server returns an empty array
-  () => props.step.form_fields?.map(field => {
+  () => props.step.form_fields.map(field => {
     const index = formDataIndexByFieldKey.value[field._key]
     return {
       ...field,
       value: formData.value[index]?.value
     }
-  }) ?? []
+  })
 )
 
-// TODO: migrate the data, and ensure the server returns an empty array
-const formData = computed(() => batchStep.value.form_data ?? [])
+const formData = computed(() => batchStep.value.form_data)
 const formDataIndexByFieldKey = computed(() => {
   const indexByKey = {}
   formData.value.forEach(({ form_field_key }, index) => {
