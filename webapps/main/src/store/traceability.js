@@ -201,49 +201,43 @@ const traceability = {
       commit('SET_HEARTBEAT', false)
     },
 
-    resumeJob({ commit, state, rootState }) {
-      return new Promise( resolve => {
-        const now = DT.utc()
-        // const new_work_session = createWorkSession(state, rootState.session, now)
+    async resumeJob({ commit, state, rootState }) {
+      const now = DT.utc()
+      // const new_work_session = createWorkSession(state, rootState.session, now)
 
-        const event = createEvent(state, rootState.session, {
-          event_type: 'JOB_RESUMED',
-          timestamp: now.toISO()
-        })
-
-        api.post('event', event).then( resp => {
-          const { new_work_session_data, job_data, batch_data } = resp.data.detail
-          commit('UPDATE_JOB', job_data)
-          commit('UPDATE_BATCH', batch_data)
-          commit('SET_HEARTBEAT', true)
-          resolve()
-        })
+      const event = createEvent(state, rootState.session, {
+        event_type: 'JOB_RESUMED',
+        timestamp: now.toISO()
       })
+
+      const { data } = await api.post('event', event)
+      const { /* new_work_session_data, */ job_data, batch_data } = data.detail
+      commit('UPDATE_JOB', job_data)
+      commit('UPDATE_BATCH', batch_data)
+      commit('SET_HEARTBEAT', true)
     },
 
-    completeStep({ commit, state, rootState }, { step_index, batch_qt }) {
-      return new Promise( resolve => {
-        const now = DT.utc()
-        const step_data = state.current_batch_data.step_data[step_index] || null
+    async completeStep({ commit, state, rootState }, { step_index, batch_qt }) {
+      const now = DT.utc()
+      const step = state.current_batch_data.step_data[step_index]
 
-        const event = createEvent(state, rootState.session, {
-          event_type: 'STEP_COMPLETED',
-          step_key: step_data._key,
-          timestamp: now.toISO(),
-          form_data: step_data.form_data,
-          completed_batch_qt: batch_qt
-        })
-
-        api.post('event', event).then( resp => {
-          const { job_data, batch_data } = resp.data.detail
-          commit('UPDATE_JOB', job_data)
-          commit('UPDATE_BATCH', batch_data)
-          if (job_data.status === 'closed') {
-            commit('SET_HEARTBEAT', false)
-          }
-          resolve()
-        })
+      const event = createEvent(state, rootState.session, {
+        event_type: 'STEP_COMPLETED',
+        step_key: step._key,
+        timestamp: now.toISO(),
+        form_data: step.form_data,
+        completed_batch_qt: batch_qt
       })
+
+      // TODO: Handle and save files in form_data
+
+      const { data } = await api.post('event', event)
+      const { job_data, batch_data } = data.detail
+      commit('UPDATE_JOB', job_data)
+      commit('UPDATE_BATCH', batch_data)
+      if (job_data.status === 'closed') {
+        commit('SET_HEARTBEAT', false)
+      }
     },
 
     declareBatch({ commit, state, rootState }, { batch_qt }) {

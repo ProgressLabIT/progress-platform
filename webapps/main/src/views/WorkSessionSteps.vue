@@ -27,15 +27,13 @@
               :key="index"
               class="step-divider">
           </template>
-
         </div>
       </q-toolbar>
 
-      <component
-        v-if="procedure.length"
-        :is="step_component"
-        :step="current_step">
-      </component>
+      <template v-if="procedure.length > 0">
+        <JobForm v-if="current_step.type === 'form'" :step="current_step" />
+        <JobInstruction v-else :step="current_step" />
+      </template>
     </template>
   </div>
 </template>
@@ -85,10 +83,6 @@ export default {
 
     current_step() {
       return this.procedure?.[this.current_step_index] ?? {}
-    },
-
-    step_component() {
-      return this.current_step.type === 'form' ? 'JobForm' : 'JobInstruction'
     },
 
     batch_data() {
