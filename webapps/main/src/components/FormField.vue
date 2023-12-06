@@ -267,7 +267,7 @@ if (fieldType.value === 'choice') {
 function addFiles(fileList) {
   const existingFiles = fieldValue.value ?? []
   for (const newFile of fileList) {
-    const existingIndex = existingFiles.some(({ name }) => name === newFile.name)
+    const existingIndex = existingFiles.findIndex(({ name }) => name === newFile.name)
     if (existingIndex !== -1) {
       const shouldReplace = window.confirm(
         capitalize(
