@@ -64,7 +64,7 @@ const formField = ref(null)
 const editableField = ref(null)
 
 watch(formField, ({ default_label, default_hint, ...field }) => {
-  const value = ['boolean','files'].includes(field.type) ? false : null
+  const value = ['boolean', 'files'].includes(field.type) ? false : null
   editableField.value = {
     ...field,
     label: default_label,
