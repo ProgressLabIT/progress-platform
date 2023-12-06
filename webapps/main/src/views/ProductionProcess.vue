@@ -175,7 +175,9 @@
 
 <script>
 import { mapActions } from 'vuex'
+import { uid } from 'quasar'
 import Sortable from 'sortablejs'
+import { api } from '@/boot/axios'
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
 import ProcessParameters from '@/components/ProcessParameters.vue'
 import ProcessSteps from '@/components/process-steps/ProcessSteps.vue'
@@ -183,7 +185,6 @@ import ProductionNotes from '@/components/ProductionNotes.vue'
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import BasePrompt from '@/components/BasePrompt.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
-import { api } from '../boot/axios'
 
 export default {
 
@@ -307,7 +308,12 @@ export default {
                 data: new File([blob], media.filename, { type: blob.type })
               }
             })
-          )
+          ),
+          // Copy the steps over with a different _key to "break the link"
+          form_fields: step.form_fields.map(field => ({
+            ...field,
+            _key: uid()
+          }))
         })) ?? []
       )
 
