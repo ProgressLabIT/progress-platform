@@ -3,7 +3,7 @@
     <!-- TEXT -->
     <q-input
       v-if="fieldType === 'text'"
-      :model-value="field.value"
+      v-model="fieldValue"
       :disable="disable"
       :dense="dense"
       :label="field.label"
@@ -14,13 +14,12 @@
       input-debounce="100"
       hide-bottom-space
       :rules="[value => (field.required ? !!value : true) || $t('field_required_alert')]"
-      @update:model-value="(val) => emit('update', val)"
     />
 
     <!-- NUMBER -->
     <q-input
       v-if="fieldType === 'number'"
-      :model-value="field.value"
+      v-model.number="fieldValue"
       type="number"
       :disable="disable"
       :dense="dense"
@@ -31,18 +30,17 @@
       input-debounce="100"
       lazy-rules
       :rules="[value => (field.required ? !!value : true) || $t('field_required_alert')]"
-      @update:model-value="val => emit('update', parseFloat(val))"
     />
 
     <!-- BOOLEAN -->
     <q-checkbox
       v-if="fieldType == 'boolean'"
-      :model-value="field.value ?? false"
+      :model-value="fieldValue ?? false"
       :disable="disable"
       :dense="dense"
       :label="field.label"
       :rules="[value => (field.required ? !!value : true) || $t('field_required_alert')]"
-      @update:model-value="val => emit('update', val)"
+      @update:model-value="fieldValue = $event"
     />
 
     <!-- TERNARY -->
@@ -50,11 +48,11 @@
     <div v-if="fieldType === 'ternary'" class="row items-center">
       <div class="col-1 items-center">
         <q-avatar
-          :color="field.value !== undefined ? 'theme-green' : 'transparent'"
+          :color="fieldValue !== undefined ? 'theme-green' : 'transparent'"
           size="24px"
           class="row flex-center text-center text-body2 font-weight-medium"
         >
-          <q-icon v-if="field.value === undefined" size="sm" name="mdi-progress-question" />
+          <q-icon v-if="fieldValue === undefined" size="sm" name="mdi-progress-question" />
           <q-icon v-else class="solid-white" name="mdi-check" />
         </q-avatar>
       </div>
@@ -69,12 +67,12 @@
         <q-btn
           size="lg"
           unelevated
-          :flat="field.value !== false"
+          :flat="fieldValue !== false"
           :disable="disable"
           :dense="dense"
           color="theme-red"
           style="width: 100px"
-          @click="emit('update', field.value === false ? undefined : false)"
+          @click="fieldValue = fieldValue === false ? undefined : false"
         >
           <span class="text-h4 display weight-bold">{{ $t('no') }}</span>
         </q-btn>
@@ -82,13 +80,13 @@
         <q-btn
           size="lg"
           unelevated
-          :flat="field.value !== true"
+          :flat="fieldValue !== true"
           :disable="disable"
           :dense="dense"
           color="theme-green"
           style="width: 100px"
           class="q-ml-lg"
-          @click="emit('update', field.value === true ? undefined : true)"
+          @click="fieldValue = fieldValue === true ? undefined : true"
         >
           <span class="text-h4 display weight-bold">{{ $t('yes') }}</span>
         </q-btn>
@@ -98,7 +96,7 @@
     <!-- CHOICE -->
     <q-select
       v-if="fieldType === 'choice'"
-      :model-value="field.value"
+      v-model="fieldValue"
       :options="options"
       option-label="value"
       :disable="disable"
@@ -112,14 +110,12 @@
       stack-label
       input-class="cursor-pointer"
       @filter="onFilter"
-      @update:model-value="val => emit('update', val)"
     />
 
     <!-- DATE -->
-    <!-- FIXME: Do not mutate the prop, emit 'update' event like other types instead -->
     <q-input
       v-if="fieldType === 'date'"
-      v-model="field.value"
+      v-model="fieldValue"
       :disable="disable"
       :label="field.label"
       filled
@@ -131,7 +127,7 @@
         <q-icon name="mdi-calendar" />
       </template>
       <q-popup-proxy anchor="center middle" self="center middle" @hide="blur">
-        <q-date v-model="field.value" minimal>
+        <q-date v-model="fieldValue" minimal>
           <div class="row items-center justify-end">
             <q-btn v-close-popup :label="$t('close')" color="primary" flat />
           </div>
@@ -140,10 +136,9 @@
     </q-input>
 
     <!-- TIME -->
-    <!-- FIXME: Do not mutate the prop, emit 'update' event like other types instead -->
     <q-input
       v-if="fieldType === 'time'"
-      v-model="field.value"
+      v-model="fieldValue"
       :disable="disable"
       :label="field.label"
       stack-label
@@ -155,7 +150,7 @@
         <q-icon name="mdi-clock-outline" />
       </template>
       <q-popup-proxy anchor="center middle" self="center middle" @hide="blur">
-        <q-time v-model="field.value" format24h>
+        <q-time v-model="fieldValue" format24h>
           <div class="row items-center justify-end">
             <q-btn v-close-popup :label="$t('close')" color="primary" flat />
           </div>
@@ -182,7 +177,7 @@
     </q-file> -->
     <div v-if="fieldType === 'files'">
       <FilesList
-        :files="field.value"
+        :files="fieldValue"
         :root_path="`${rootPath}/${field._key}`"
         :label="field.label"
         :disable="disable"
@@ -227,6 +222,13 @@ const props = defineProps({
 
 const emit = defineEmits(['update'])
 
+const fieldValue = computed({
+  get: () => props.field.value,
+  set(value) {
+    emit('update', value)
+  }
+})
+
 const { t } = useI18n()
 const store = useStore()
 
@@ -263,7 +265,7 @@ if (fieldType.value === 'choice') {
 }
 
 function addFiles(fileList) {
-  const existingFiles = props.field.value ?? []
+  const existingFiles = fieldValue.value ?? []
   for (const newFile of fileList) {
     const existingIndex = existingFiles.some(({ name }) => name === newFile.name)
     if (existingIndex !== -1) {
@@ -289,23 +291,20 @@ function addFiles(fileList) {
       size: newFile.size
     })
   }
-  // eslint-disable-next-line vue/no-mutating-props -- FIXME:
-  props.field.value = existingFiles
+  fieldValue.value = existingFiles
 }
 
 function deleteFile(index) {
-  const file = props.field.value[index]
+  const file = fieldValue.value[index]
   if (file.temp) {
-    // eslint-disable-next-line vue/no-mutating-props -- FIXME:
-    props.field.value.splice(index, 1)
+    fieldValue.value.splice(index, 1)
   } else {
     file.delete = true
   }
 }
 
 function restoreFile(index) {
-  // eslint-disable-next-line vue/no-mutating-props -- FIXME:
-  props.field.value[index].delete = false
+  fieldValue.value[index].delete = false
 }
 
 function blur() {
