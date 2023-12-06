@@ -23,19 +23,34 @@ def verify_target_data(
   object_key: str,
   subfolder: str = None
 ):
+  object = db.collection(collection_map[bucket]).get(object_key)
   # Check whether an entity with the key provided exists
-  if not db.collection(collection_map[bucket]).has(object_key):
+  if not object:
     raise HTTPException(
       status_code = 404,
-      detail = f'No {target.value} with key {object_key} exists on the database'
+      detail = f'No {collection_map[bucket]} with key {object_key} exists on the database'
     )
 
   # Check whether the field key corresponds to an actual field (does not check whether the field is used in a specific form)
-  if subfolder and not db.collection('CustomField').has(subfolder):
-    raise HTTPException(
-      status_code = 404,
-      detail = f'No field with with key {field_key} exists on the database'
-    )
+  if subfolder:
+    invalid = True
+    if bucket == FileBucket.ISSUE:
+      for data in object['data']:
+        if data['form_field_key'] == subfolder:
+          invalid = False
+          break
+    elif bucket == FileBucket.STEP:
+      print(object['form_fields'])
+      for field in object['form_fields']:
+        if field['_key'] == subfolder:
+          invalid = False
+          break
+
+    if invalid:
+      raise HTTPException(
+        status_code = 404,
+        detail = f'No field with with key {subfolder} exists on the database'
+      )
 
   return FileTargetData(bucket=bucket, object_key=object_key, subfolder=subfolder)
 

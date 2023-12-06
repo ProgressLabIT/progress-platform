@@ -1,5 +1,6 @@
-import { api } from '@/boot/axios.js'
+import { cloneDeep } from 'lodash'
 import { DateTime as DT } from 'luxon'
+import { api } from '@/boot/axios'
 
 function createEmptyBatch(state, startDT, job) {
   const job_key = job._key
@@ -67,8 +68,8 @@ function sendHeartBeat(state) {
 }
 
 
+/** @type {import('vuex').Module} */
 const traceability = {
-
   state: {
     working_job_data: {},
     work_session_list: [],
@@ -217,19 +218,93 @@ const traceability = {
       commit('SET_HEARTBEAT', true)
     },
 
-    async completeStep({ commit, state, rootState }, { step_index, batch_qt }) {
-      const now = DT.utc()
+    async completeStep({ commit, state, rootState, rootGetters }, { step_index, batch_qt }) {
       const step = state.current_batch_data.step_data[step_index]
 
+      const formData = cloneDeep(step.form_data)
+
+      // TODO: Unify file handling logic with IssueForm
+      const stepDefinition = state.working_job_data.step_sequence.find(({ _key }) => _key === step._key)
+      if (stepDefinition.type === 'form') {
+        const fields = stepDefinition.form_fields
+          .map(field => ({
+            ...field,
+            type: rootGetters.getCustomFieldByKey(field.custom_field_key)?.type,
+            value: formData.find(({ form_field_key }) => form_field_key === field._key)?.value,
+          }))
+
+        const promises = fields
+          .filter(({ type }) => type === 'files')
+          .map(async (field) => {
+            const to_delete = []
+            const to_add = []
+
+            field.value?.forEach((file) => {
+              if (file.temp) {
+                to_add.push(file.content)
+              }
+              else if (file.delete) {
+                to_delete.push(file.name)
+              }
+            })
+
+            // update formData to only contain the file metadata
+            const formDataIndex = formData.findIndex(({ form_field_key }) => form_field_key === field._key)
+            formData[formDataIndex].value = field.value
+              ?.filter(file => !file.delete)
+              .map(file => ({
+                size: file.size,
+                name: file.name,
+              }))
+
+            const target = {
+              bucket: 'step',
+              object_key: step._key,
+              subfolder: field._key
+            }
+
+            // Upload new files
+            if (to_add.length) {
+              // Populate form data
+              const add_body = new FormData()
+              Object.entries(target).forEach(([k, v]) => add_body.append(k, v))
+              to_add.forEach(file => add_body.append('contents', file))
+              // Post files
+              try {
+                await api.post('/files', add_body)
+              } catch (error) {
+                console.error(error)
+                window.alert(error)
+              }
+            }
+
+            // Delete files
+            if (to_delete.length) {
+              try {
+                await api.delete('/files', {
+                  data: {
+                    ...target,
+                    filenames: to_delete
+                  }
+                })
+              } catch (error) {
+                console.error(error)
+                window.alert(error)
+              }
+            }
+          })
+        await Promise.all(promises)
+      }
+
+      const now = DT.utc()
       const event = createEvent(state, rootState.session, {
         event_type: 'STEP_COMPLETED',
         step_key: step._key,
         timestamp: now.toISO(),
-        form_data: step.form_data,
+        form_data: formData,
         completed_batch_qt: batch_qt
       })
-
-      // TODO: Handle and save files in form_data
+      console.log('event', event)
 
       const { data } = await api.post('event', event)
       const { job_data, batch_data } = data.detail
