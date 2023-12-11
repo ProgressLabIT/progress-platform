@@ -2,9 +2,10 @@
   <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss no-shake>
     <q-card class="dialog-card q-pa-lg surface2">
       <q-card-section class="q-mb-md">
-          <div
-            class="text-h2 highlight text-center"
-            style="font-family: 'Red Hat Display'">
+        <div
+          class="text-h2 highlight text-center"
+          style="font-family: 'Red Hat Display'"
+        >
           {{ $t('batch_completed_quantity_question') }}
         </div>
       </q-card-section>
@@ -48,7 +49,7 @@
             color="primary"
             :marker-labels="{
               [min]: min,
-              [max]: max
+              [max]: max,
             }"
             marker-labels-class="text-h3 q-mt-xs"
             track-size="6px"
@@ -79,51 +80,52 @@
 </template>
 
 <script setup>
-import { useDialogPluginComponent } from 'quasar'
-import { ref } from 'vue'
+import { useDialogPluginComponent } from 'quasar';
+import { ref } from 'vue';
 
 const props = defineProps({
   initialValue: {
     type: Number,
-    default: 1
+    default: 1,
   },
   min: {
     type: Number,
-    default: 0
+    default: 0,
   },
   max: {
     type: Number,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-defineEmits(useDialogPluginComponent.emitsObject)
+defineEmits(useDialogPluginComponent.emitsObject);
 
-const { dialogRef, onDialogHide, onDialogCancel, onDialogOK } = useDialogPluginComponent()
+const { dialogRef, onDialogHide, onDialogCancel, onDialogOK } =
+  useDialogPluginComponent();
 
 // It's between min and max, except when the user uses the input field
 // It's validated on submit, so we don't need to worry about it
-const quantity = ref(props.initialValue)
+const quantity = ref(props.initialValue);
 
 // Mimics the behavior of the native number input
 function decrement() {
   if (quantity.value > props.max) {
-    quantity.value = props.max
+    quantity.value = props.max;
   } else if (quantity.value < props.min) {
-    quantity.value = props.min
+    quantity.value = props.min;
   } else {
-    quantity.value--
+    quantity.value--;
   }
 }
 
 // Mimics the behavior of the native number input
 function increment() {
   if (quantity.value < props.min) {
-    quantity.value = props.min
+    quantity.value = props.min;
   } else if (quantity.value > props.max) {
-    quantity.value = props.max
+    quantity.value = props.max;
   } else {
-    quantity.value++
+    quantity.value++;
   }
 }
 </script>

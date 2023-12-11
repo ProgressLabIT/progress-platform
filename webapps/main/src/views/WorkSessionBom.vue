@@ -1,6 +1,5 @@
 <template>
   <div class="absolute-full column">
-
     <NoDataAlert v-if="!bom.length">
       {{ $t('bom.missing') }}
     </NoDataAlert>
@@ -17,7 +16,8 @@
         :pagination="{ rowsPerPage: 0 }"
         :rows-per-page-options="[0]"
         :virtual-scroll-sticky-size-start="48"
-        hide-bottom>
+        hide-bottom
+      >
       </q-table>
 
       <q-separator />
@@ -31,7 +31,8 @@
           v-model="quantity_type"
           :key="type"
           :val="type"
-          :label="$t('bom.quantity_type.' + type).toUpperCase()">
+          :label="$t('bom.quantity_type.' + type).toUpperCase()"
+        >
         </q-radio>
         <q-space />
         <q-btn size="sm" color="theme-blue" @click="$refs.bom.scrollTo(0)">
@@ -58,65 +59,91 @@
         </template>
       </BaseModalForm> -->
     </template>
-
   </div>
 </template>
 
 <script>
 // import BaseModalForm from '@/components/BaseModalForm.vue'
-import NoDataAlert from '@/components/NoDataAlert.vue'
+import NoDataAlert from '@/components/NoDataAlert.vue';
 
 export default {
-
   name: 'WorkSessionBom',
 
   props: {
     job: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
 
   components: {
-  //  BaseModalForm,
-    NoDataAlert
+    //  BaseModalForm,
+    NoDataAlert,
   },
 
-  data () {
+  data() {
     return {
       quantity_type: 'job',
       qt_types: ['job', 'batch'],
       show_lot_input: false,
-    }
+    };
   },
 
   computed: {
     columns() {
-    // TODO: refactor into mixin / composition function, used also in ProductBoM
+      // TODO: refactor into mixin / composition function, used also in ProductBoM
       return [
-        {  name:'code', field: 'component_code', label: this.$t('code').toUpperCase(), align: 'left' },
-        {  name:'description', field: 'component_description', label: this.$t('description').toUpperCase(), align: 'left' },
-        {  name:'item_type', field: 'item_type', label: this.$t('type').toUpperCase(), align: 'left' },
-        {  name:'phase_name', field: 'phase_name', label: this.$t('phase.short', 1).toUpperCase(), align: 'left' },
-        {  name:'qt', field: 'qt', label: this.$t('quantity.short').toUpperCase() },
-      ]
+        {
+          name: 'code',
+          field: 'component_code',
+          label: this.$t('code').toUpperCase(),
+          align: 'left',
+        },
+        {
+          name: 'description',
+          field: 'component_description',
+          label: this.$t('description').toUpperCase(),
+          align: 'left',
+        },
+        {
+          name: 'item_type',
+          field: 'item_type',
+          label: this.$t('type').toUpperCase(),
+          align: 'left',
+        },
+        {
+          name: 'phase_name',
+          field: 'phase_name',
+          label: this.$t('phase.short', 1).toUpperCase(),
+          align: 'left',
+        },
+        {
+          name: 'qt',
+          field: 'qt',
+          label: this.$t('quantity.short').toUpperCase(),
+        },
+      ];
     },
 
-    bom () {
+    bom() {
       return this.job.hasOwnProperty('job_bom')
-        ? this.job.job_bom.map(i => {
-          // multiply items by job quantity. Does not apply to tools and safety items
-          let quantity = i.qt
-          const factor = this.quantity_type === 'job' ? this.job.qt_planned : this.job.parameters.production_batch_qt
-          quantity = i.qt * factor
-          return {
-            ...i,
-            qt: quantity
-          }
-        }) : []
-    }
-  }
-}
+        ? this.job.job_bom.map((i) => {
+            // multiply items by job quantity. Does not apply to tools and safety items
+            let quantity = i.qt;
+            const factor =
+              this.quantity_type === 'job'
+                ? this.job.qt_planned
+                : this.job.parameters.production_batch_qt;
+            quantity = i.qt * factor;
+            return {
+              ...i,
+              qt: quantity,
+            };
+          })
+        : [];
+    },
+  },
+};
 </script>
 
 <style lang="sass" scoped>

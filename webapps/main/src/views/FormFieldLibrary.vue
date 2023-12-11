@@ -3,19 +3,21 @@
 
   <div v-else class="row full-height">
     <div class="full-height column col-3">
-
       <q-input
         dense
         filled
         class="q-px-md q-pt-md"
         :placeholder="$capitalize($t('search'))"
-        v-model="search_text">
+        v-model="search_text"
+      >
         <template #append>
           <q-icon name="mdi-magnify" />
         </template>
       </q-input>
 
-      <div class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold">
+      <div
+        class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
+      >
         <div class="col-3">
           {{ $t('type') }}
         </div>
@@ -31,10 +33,14 @@
         <div
           v-for="(field, index) in filtered_fields"
           class="row pointer q-px-lg q-py-xs medium full-width"
-          :class="{ 'alternate-row': index % 2 == 0, 'bg-blue-backdrop': field._key == selected_field_key }"
+          :class="{
+            'alternate-row': index % 2 == 0,
+            'bg-blue-backdrop': field._key == selected_field_key,
+          }"
           :key="field._key"
-          style="white-space: nowrap;"
-          @click="showFieldDetail(field._key)">
+          style="white-space: nowrap"
+          @click="showFieldDetail(field._key)"
+        >
           <div class="col-3">
             <q-icon :name="getFieldIcon(field.type)" />
           </div>
@@ -56,17 +62,14 @@
           class="full-width q-mt-auto"
           color="theme-blue"
           :label="$t('new')"
-          @click="show_new_field_form = true">
+          @click="show_new_field_form = true"
+        >
         </q-btn>
       </div>
     </div>
 
-    <BaseDialog
-      :show="show_new_field_form"
-      :no-backdrop-dismiss="false">
-      <FormFieldNew
-        @close="show_new_field_form = false"
-        @created="getFields">
+    <BaseDialog :show="show_new_field_form" :no-backdrop-dismiss="false">
+      <FormFieldNew @close="show_new_field_form = false" @created="getFields">
       </FormFieldNew>
     </BaseDialog>
 
@@ -74,23 +77,19 @@
 
     <!-- FIELD DATA -->
     <div class="col full-height" v-if="data_ready">
-      <router-view
-        :field="selected_field"
-        @reload="getFields">
-      </router-view>
+      <router-view :field="selected_field" @reload="getFields"> </router-view>
     </div>
   </div>
 </template>
 
 <script>
-import BaseDialog from '@/components/BaseDialog.vue'
-import FormFieldNew from "@/components/FormFieldNew.vue"
-import LoadingSignal from "@/components/LoadingSignal.vue"
-import multiMatch from "@/lib/MultiFieldSearch.js"
-import form from '@/mixins/form.js'
+import BaseDialog from '@/components/BaseDialog.vue';
+import FormFieldNew from '@/components/FormFieldNew.vue';
+import LoadingSignal from '@/components/LoadingSignal.vue';
+import multiMatch from '@/lib/MultiFieldSearch.js';
+import form from '@/mixins/form.js';
 
 export default {
-
   name: 'FormFieldLibrary',
 
   mixins: [form],
@@ -98,55 +97,56 @@ export default {
   components: {
     BaseDialog,
     FormFieldNew,
-    LoadingSignal
+    LoadingSignal,
   },
 
-  data () {
+  data() {
     return {
       data_ready: false,
       search_text: undefined,
       field_list: [],
-      show_new_field_form: false
-    }
+      show_new_field_form: false,
+    };
   },
 
   computed: {
-
     selected_field_key() {
-      return this.$route.params.field_key
+      return this.$route.params.field_key;
     },
 
     selected_field() {
-      return this.field_list.find(field => field._key == this.selected_field_key)
+      return this.field_list.find(
+        (field) => field._key == this.selected_field_key,
+      );
     },
 
     filtered_fields() {
-      const fields_to_search = ['name', 'hint', 'label']
-      return this.field_list.filter( field => multiMatch(this.search_text, field, fields_to_search) )
-    }
+      const fields_to_search = ['name', 'hint', 'label'];
+      return this.field_list.filter((field) =>
+        multiMatch(this.search_text, field, fields_to_search),
+      );
+    },
   },
 
   methods: {
-
     showFieldDetail(field_key) {
       this.$router.push({
         name: 'formFieldDetail',
-        params: { field_key }
-      })
+        params: { field_key },
+      });
     },
     getFields() {
-      this.$api.get('field').then( resp => {
-        this.field_list = resp.data.sort()
-        this.data_ready = true
-      })
-    }
+      this.$api.get('field').then((resp) => {
+        this.field_list = resp.data.sort();
+        this.data_ready = true;
+      });
+    },
   },
 
   created() {
-    this.getFields()
+    this.getFields();
   },
-}
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

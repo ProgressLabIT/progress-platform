@@ -34,22 +34,22 @@
 export default {
   name: 'AdminSection',
 
-  data () {
+  data() {
     return {
       admin_views: [
         'userLibrary',
         'operationLibrary',
         'issueTypeLibrary',
         'formFieldLibrary',
-        'flowLibrary'
-      ]
-    }
+        'flowLibrary',
+      ],
+    };
   },
 
   computed: {
     card_height() {
-      return this.$q.screen.height - 140
-    }
-  }
-}
+      return this.$q.screen.height - 140;
+    },
+  },
+};
 </script>

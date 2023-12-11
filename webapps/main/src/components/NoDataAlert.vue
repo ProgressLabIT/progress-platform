@@ -11,11 +11,8 @@
 
 <script>
 export default {
-
   name: 'NoDataAlert',
-
-}
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

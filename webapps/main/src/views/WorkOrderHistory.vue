@@ -1,6 +1,10 @@
 <template>
   <div class="q-pa-lg">
-    <q-virtual-scroll class="full-height" :items="items" v-slot="{ item, index }">
+    <q-virtual-scroll
+      class="full-height"
+      :items="items"
+      v-slot="{ item, index }"
+    >
       <q-item :key="index">
         <q-item-section v-for="n in 3" :key="n">
           {{ n }} {{ item }}
@@ -12,16 +16,14 @@
 
 <script>
 export default {
-
   name: 'WorkOrderHistory',
 
-  data () {
+  data() {
     return {
-      items: Array(20).fill('test')
-    }
-  }
-}
+      items: Array(20).fill('test'),
+    };
+  },
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

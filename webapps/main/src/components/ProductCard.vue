@@ -3,79 +3,88 @@
     square
     class="surface1 product-card"
     :class="{ faded: !product.active }"
-    @dblclick="$router.push(to_product_route)">
+    @dblclick="$router.push(to_product_route)"
+  >
     <img
       v-if="product.image & show_image"
-      style="object-fit: cover;"
+      style="object-fit: cover"
       :src="`/media/product/${product._key}/image.jpg`"
       class="fit"
-      :style="product.active ? '' : 'filter:grayscale(1)'">
+      :style="product.active ? '' : 'filter:grayscale(1)'"
+    />
     <div
       class="absolute-top q-pa-sm"
-      :style="`background-color: ${show_image ? ($q.dark.isActive ? 'rgba(0,0,0,.7)' : 'rgba(230,230,230,.8)') : 'transparent'}`"
+      :style="`background-color: ${
+        show_image
+          ? $q.dark.isActive
+            ? 'rgba(0,0,0,.7)'
+            : 'rgba(230,230,230,.8)'
+          : 'transparent'
+      }`"
       @mouseenter="overDesc = true"
-      @mouseleave="overDesc = false" >
+      @mouseleave="overDesc = false"
+    >
       <div class="text-h3 display">
         {{ product.code }}
       </div>
       <div
         class="text-uppercase low-text"
-        :class="['px-0 pb-1', overDesc ? '' : 'nowrap']">
+        :class="['px-0 pb-1', overDesc ? '' : 'nowrap']"
+      >
         {{ product.description }}
       </div>
     </div>
     <ProductCardActions
       class="absolute-bottom"
       :product="product"
-      @showDelete="showDelete = true">
+      @showDelete="showDelete = true"
+    >
     </ProductCardActions>
 
     <!-- DELETE CONFIRMATION -->
     <div
       v-if="showDelete"
       class="absolute-full surface1 column"
-      :class="show_image ? 'q-pa-md' : 'q-pa-sm'">
+      :class="show_image ? 'q-pa-md' : 'q-pa-sm'"
+    >
       <div>
         {{ $t('product.confirm_delete_question') }}
       </div>
       <div class="display weight-medium q-mt-sm">
         {{ product.code }}
       </div>
-      <q-space/>
+      <q-space />
       <div class="row justify-between">
         <q-btn color="theme-red" size="12px" @click.stop="trash">
           {{ $t('confirm') }}
         </q-btn>
-        <q-btn color='theme-grey' size="12px" @click.stop="showDelete = false">
+        <q-btn color="theme-grey" size="12px" @click.stop="showDelete = false">
           {{ $t('cancel') }}
         </q-btn>
       </div>
     </div>
-
   </q-card>
 </template>
 
 <script>
-import { mapActions } from 'vuex'
-import { useQuasar } from 'quasar'
-import ProductCardActions from '@/components/ProductCardActions.vue'
-
+import { mapActions } from 'vuex';
+import { useQuasar } from 'quasar';
+import ProductCardActions from '@/components/ProductCardActions.vue';
 
 export default {
-
   name: 'ProductCard',
   props: ['product', 'show_image'],
 
   components: {
-    ProductCardActions
+    ProductCardActions,
   },
 
-  data () {
+  data() {
     return {
       overCard: false,
       overDesc: false,
-      showDelete: false
-    }
+      showDelete: false,
+    };
   },
 
   computed: {
@@ -83,24 +92,26 @@ export default {
       return {
         name: 'productHome',
         params: {
-          product_key: this.product._key
+          product_key: this.product._key,
         },
         query: {
           back_to: 'productList',
-          ...this.$route.query
-        }
-      }
-    }
+          ...this.$route.query,
+        },
+      };
+    },
   },
 
   methods: {
     ...mapActions(['moveToTrash', 'restoreProduct']),
 
     trash() {
-      this.moveToTrash(this.product)
+      this.moveToTrash(this.product);
       this.$q.notify({
         progress: true,
-        message: this.$t('product.snackbars.delete_confirmed', { code: this.product.code }).toUpperCase(),
+        message: this.$t('product.snackbars.delete_confirmed', {
+          code: this.product.code,
+        }).toUpperCase(),
         color: 'theme-background',
         multiline: true,
         actions: [
@@ -111,14 +122,13 @@ export default {
           {
             label: this.$t('undo'),
             color: 'theme-orange',
-            handler: () => this.restoreProduct(this.product._key)
-          }
-        ]
-      })
-    }
-  }
-
-}
+            handler: () => this.restoreProduct(this.product._key),
+          },
+        ],
+      });
+    },
+  },
+};
 </script>
 
 <style lang="sass" scoped>

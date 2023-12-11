@@ -7,24 +7,23 @@
       indeterminate
       size="40px"
       color="theme-blue"
-      class="q-mt-md">
+      class="q-mt-md"
+    >
     </q-circular-progress>
   </div>
 </template>
 
 <script>
 export default {
-
   name: 'LoadingSignal',
 
   props: {
     title: {
       type: String,
-      default: null
+      default: null,
     },
-  }
-}
+  },
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

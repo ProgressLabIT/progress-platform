@@ -15,7 +15,8 @@
     :emit-value="key_only"
     :map-options="key_only"
     popup-content-style="width: 0px"
-    @update:model-value="(selection) => $emit('select', selection)">
+    @update:model-value="(selection) => $emit('select', selection)"
+  >
     <template #option="scope">
       <q-item v-bind="scope.itemProps">
         <q-item-section>
@@ -32,84 +33,81 @@
 </template>
 
 <script>
-import multiMatch from '@/lib/MultiFieldSearch.js'
+import multiMatch from '@/lib/MultiFieldSearch.js';
 
 export default {
-
   name: 'BaseAutocompleteProduct',
 
   props: {
     value: {
       type: [String, Object],
-      deafult: null
+      deafult: null,
     },
 
     load_data: {
       type: Boolean,
-      default: true
+      default: true,
     },
 
     dense: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     key_only: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     label: String,
-    hint: String
+    hint: String,
   },
 
-  data () {
+  data() {
     return {
       loading: false,
       options: [],
-      search_fields: ['code', 'description']
-    }
+      search_fields: ['code', 'description'],
+    };
   },
 
   computed: {
     origin_list() {
-      return this.$store.getters.productCatalog(true)
-    }
+      return this.$store.getters.productCatalog(true);
+    },
   },
 
   methods: {
-
     initOptions() {
-      this.options = [...this.origin_list]
+      this.options = [...this.origin_list];
     },
 
     filter(value, update) {
       if (value === '') {
         update(() => {
-          this.initOptions()
-        })
-        return
+          this.initOptions();
+        });
+        return;
       }
       update(() => {
-        const needle = value.toLowerCase()
-        this.options = this.origin_list.filter(option => {
-          return multiMatch(needle, option, this.search_fields)
-        })
-      })
+        const needle = value.toLowerCase();
+        this.options = this.origin_list.filter((option) => {
+          return multiMatch(needle, option, this.search_fields);
+        });
+      });
     },
   },
 
   created() {
     if (this.load_data) {
-      this.loading = true
+      this.loading = true;
       this.$store.dispatch('loadProductList').then(() => {
-        this.initOptions()
-        this.loading = false
-      })
+        this.initOptions();
+        this.loading = false;
+      });
     }
-  }
-}
+  },
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

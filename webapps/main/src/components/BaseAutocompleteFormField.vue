@@ -35,10 +35,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { api } from 'boot/axios'
-import { useFormFields } from '@/composables/form'
-import searchFields from '@/lib/MultiFieldSearch'
+import { ref } from 'vue';
+import { api } from 'boot/axios';
+import { useFormFields } from '@/composables/form';
+import searchFields from '@/lib/MultiFieldSearch';
 
 /**
  * @typedef {{
@@ -53,48 +53,48 @@ import searchFields from '@/lib/MultiFieldSearch'
 defineProps({
   modelValue: {
     type: [String, Object, null],
-    required: true
+    required: true,
   },
   keyOnly: {
     type: Boolean,
-    default: false
+    default: false,
   },
-})
+});
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue']);
 
-const { getFieldIcon } = useFormFields()
+const { getFieldIcon } = useFormFields();
 
-const loading = ref(false)
+const loading = ref(false);
 /**
  * @type {import('vue').Ref<FormField[]>}
  */
-const fields = ref([])
-;(async () => {
-  loading.value = true
+const fields = ref([]);
+(async () => {
+  loading.value = true;
 
-  const { data } = await api.get('field')
-  fields.value = data
+  const { data } = await api.get('field');
+  fields.value = data;
 
-  loading.value = false
-})()
+  loading.value = false;
+})();
 
-const options = ref(fields.value)
+const options = ref(fields.value);
 
-const searchableFields = ['type', 'name', 'default_label']
+const searchableFields = ['type', 'name', 'default_label'];
 function onFilter(value, update) {
   if (value === '') {
     update(() => {
-      options.value = fields.value
-    })
-    return
+      options.value = fields.value;
+    });
+    return;
   }
 
   update(() => {
-    const needle = value.toLowerCase()
-    options.value = fields.value.filter(
-      option => searchFields(needle, option, searchableFields)
-    )
-  })
+    const needle = value.toLowerCase();
+    options.value = fields.value.filter((option) =>
+      searchFields(needle, option, searchableFields),
+    );
+  });
 }
 </script>

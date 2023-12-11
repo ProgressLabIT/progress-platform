@@ -7,11 +7,10 @@
 // 	}
 // }
 
-
 // Other possible implementation with .find()
 
 function updateListItemByKey(list, key, func) {
-	func(list.find(el => el._key === key))
+  func(list.find((el) => el._key === key));
 }
 
-export { updateListItemByKey }
+export { updateListItemByKey };

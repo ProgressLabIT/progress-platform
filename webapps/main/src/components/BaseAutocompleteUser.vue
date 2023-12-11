@@ -16,135 +16,138 @@
     input-debounce="200"
     :emit-value="key_only"
     :map-options="key_only"
-    @update:model-value="(selection) => $emit('select', selection)">
+    @update:model-value="(selection) => $emit('select', selection)"
+  >
     <template #option="scope">
       <q-item v-bind="scope.itemProps">
-        <BaseUserAvatar :user="scope.opt"/>
+        <BaseUserAvatar :user="scope.opt" />
       </q-item>
     </template>
 
     <template #selected-item="scope">
-      <BaseUserAvatar :user="scope.opt" :show_avatar="show_avatar" :dense="dense" reverse/>
+      <BaseUserAvatar
+        :user="scope.opt"
+        :show_avatar="show_avatar"
+        :dense="dense"
+        reverse
+      />
     </template>
   </q-select>
 </template>
 
 <script>
-import multiMatch from '@/lib/MultiFieldSearch.js'
-import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
+import multiMatch from '@/lib/MultiFieldSearch.js';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 export default {
-
   name: 'BaseAutocompletUser',
 
   components: {
-    BaseUserAvatar
+    BaseUserAvatar,
   },
 
   props: {
     value: {
       type: [Object, String],
-      deafult: null
+      deafult: null,
     },
 
     load_data: {
       type: Boolean,
-      default: true
+      default: true,
     },
 
     label: {
       type: String,
-      default: ''
+      default: '',
     },
 
     key_only: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     operator_only: {
       type: Boolean,
-      default: true
+      default: true,
     },
 
     dense: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     clearable: {
       type: Boolean,
-      default: true
+      default: true,
     },
 
     placeholder: {
       type: String,
-      default: ''
+      default: '',
     },
 
     stackLabel: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     show_avatar: {
       type: Boolean,
-      default: true
-    }
+      default: true,
+    },
   },
 
-  data () {
+  data() {
     return {
       loading: false,
       options: [],
-      search_fields: ['name', 'surname']
-    }
+      search_fields: ['name', 'surname'],
+    };
   },
 
   computed: {
     origin_list() {
       return this.operator_only
         ? this.$store.getters.operator_list()
-        : this.$store.state.user.user_list
+        : this.$store.state.user.user_list;
     },
 
     placeholder_computed() {
-      return this.value ? null : this.placeholder
-    }
+      return this.value ? null : this.placeholder;
+    },
   },
 
   methods: {
-
     initOptions() {
-      this.options = [...this.origin_list]
+      this.options = [...this.origin_list];
     },
 
     filter(value, update) {
       if (value === '') {
         update(() => {
-          this.initOptions()
-        })
-        return
+          this.initOptions();
+        });
+        return;
       }
       update(() => {
-        const needle = value.toLowerCase()
-        this.options = this.origin_list.filter(option => {
-          return multiMatch(needle, option, this.search_fields)
-        })
-      })
+        const needle = value.toLowerCase();
+        this.options = this.origin_list.filter((option) => {
+          return multiMatch(needle, option, this.search_fields);
+        });
+      });
     },
   },
 
   created() {
     if (this.load_data) {
-      this.loading = true
+      this.loading = true;
       this.$store.dispatch('loadUsers').then(() => {
-        this.initOptions()
-        this.loading = false
-      })
+        this.initOptions();
+        this.loading = false;
+      });
     }
-  }
-}
+  },
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

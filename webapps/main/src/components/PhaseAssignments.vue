@@ -3,17 +3,17 @@
     <v-row class="fill-height">
       <v-col cols="4" class="px-10 py-6 d-flex flex-column fill-height">
         <h5 class="text-uppercase mb-8">
-          {{ $t("equipment", 2) }}
+          {{ $t('equipment', 2) }}
         </h5>
         <div class="fill-height scroll">
           <v-list two-line>
-
             <v-subheader>
-              {{ $t("equipment_class", 2) | capitalize }}
+              {{ $t('equipment_class', 2) | capitalize }}
             </v-subheader>
-            
-            <BaseAvatarListElement 
-              v-for="ec in assigned_eq_classes" :key="ec._id"
+
+            <BaseAvatarListElement
+              v-for="ec in assigned_eq_classes"
+              :key="ec._id"
               :src="`/media/equipment/${ec.src}`"
               :title="ec.name"
               :subtitle="$t('equipment_class', 1) | capitalize"
@@ -21,15 +21,17 @@
               :tooltip="$t('remove_assignment') | capitalize"
               :color="$theme.red"
               icon="close"
-              @iconClick="cancelAssignment(ec._id)">
+              @iconClick="cancelAssignment(ec._id)"
+            >
             </BaseAvatarListElement>
 
             <v-divider class="mt-2 mb-3"></v-divider>
-            
+
             <v-subheader>Attrezzature</v-subheader>
 
             <BaseAvatarListElement
-              v-for="e in assigned_equipment" :key="e._id"
+              v-for="e in assigned_equipment"
+              :key="e._id"
               :src="`/media/equipment/${e.src}`"
               :title="e.name"
               :subtitle="e.class"
@@ -37,9 +39,9 @@
               :tooltip="$t('remove_assignment') | capitalize"
               :color="$theme.red"
               icon="close"
-              @iconClick="cancelAssignment(e._id)">
+              @iconClick="cancelAssignment(e._id)"
+            >
             </BaseAvatarListElement>
-
           </v-list>
         </div>
 
@@ -50,25 +52,25 @@
           :items="add_equipment_list"
           item-value="_id"
           item-text="name"
-          single-line hide-details
+          single-line
+          hide-details
           return-object
           :label="$t('add_equipment') | capitalize"
           :menu-props="{ top: true, offsetY: true }"
           class="mt-auto flex-grow-0"
           @input="addAssignment($event)"
           @blur="new_assignment = null"
-          >
+        >
           <template v-slot:item="{ item }">
             <BaseAvatarListElement
               :src="`/media/equipment/${item.src}`"
               :title="item.name"
-              :subtitle="item.class">
+              :subtitle="item.class"
+            >
             </BaseAvatarListElement>
           </template>
         </v-autocomplete>
-
-
-      </v-col> 
+      </v-col>
       <v-divider vertical inset></v-divider>
       <v-col class="px-10 py-6 d-flex flex-column fill-height">
         <h5 class="text-uppercase mb-8">
@@ -79,11 +81,10 @@
           <v-subheader>
             {{ $t('department', 2) | capitalize }}
           </v-subheader>
-          
+
           <v-row>
-            <v-col cols="auto"
-              v-for="d in assigned_departments" :key="d._id">
-              <BaseAvatarListElement 
+            <v-col cols="auto" v-for="d in assigned_departments" :key="d._id">
+              <BaseAvatarListElement
                 :src="null"
                 :title="d.name"
                 :subtitle="$t('department', 1) | capitalize"
@@ -91,21 +92,25 @@
                 :tooltip="$t('remove_assignment') | capitalize"
                 :color="$theme.red"
                 icon="close"
-                @iconClick="cancelAssignment(d._id)">
+                @iconClick="cancelAssignment(d._id)"
+              >
               </BaseAvatarListElement>
             </v-col>
-          </v-row>          
+          </v-row>
 
           <v-divider class="mb-3"></v-divider>
-          
+
           <v-subheader>
             {{ $t('operator', 2) | capitalize }}
           </v-subheader>
 
-          <v-row >
-            <v-col cols="auto" 
-              v-for="o in assigned_operators" :key="o._id"
-              class="flex-shrink-1">   
+          <v-row>
+            <v-col
+              cols="auto"
+              v-for="o in assigned_operators"
+              :key="o._id"
+              class="flex-shrink-1"
+            >
               <BaseAvatarListElement
                 :src="`/media/user/${o.src}`"
                 :title="o.name"
@@ -114,12 +119,11 @@
                 :tooltip="$t('remove_assignment') | capitalize"
                 :color="$theme.red"
                 icon="close"
-                @iconClick="cancelAssignment(o._id)">
+                @iconClick="cancelAssignment(o._id)"
+              >
               </BaseAvatarListElement>
             </v-col>
-
           </v-row>
-
         </div>
 
         <v-autocomplete
@@ -129,19 +133,21 @@
           :items="add_operator_list"
           item-value="_id"
           item-text="name"
-          single-line hide-details
+          single-line
+          hide-details
           return-object
           :label="$t('add_operator', 2)"
           :menu-props="{ top: true, offsetY: true }"
           class="mt-auto flex-grow-0"
           @input="addAssignment($event)"
           @blur="new_assignment = null"
-          >
+        >
           <template v-slot:item="{ item }">
             <BaseAvatarListElement
               :src="`/media/user/${item.src}`"
               :title="item.name"
-              :subtitle="item.class">
+              :subtitle="item.class"
+            >
             </BaseAvatarListElement>
           </template>
         </v-autocomplete>
@@ -200,7 +206,7 @@ export default {
         equipment_classes: ['ec/2'],
         equipment: ['e/a', 'e/b'],
         departments: ['d/1'],
-        operators: ['o/1','o/3'] 
+        operators: ['o/1','o/3']
       },
 
       id_root_map: {
@@ -234,11 +240,11 @@ export default {
     add_equipment_list() {
       return [
         { header: this.capitalize(this.$t('equipment_class', 2) },
-        ...this.equipment_classes.map(c => { 
+        ...this.equipment_classes.map(c => {
           return {
-             ...c, 
+             ...c,
              'class': this.capitalize(this.$t('equipment_class', 1))
-          } 
+          }
         }),
         { divider: true },
         { header: this.capitalize(this.$t('equipment')) },
@@ -254,11 +260,11 @@ export default {
     add_operator_list() {
       return [
         { header: this.capitalize($t('department', 2)) },
-        ...this.departments.map(d => { 
+        ...this.departments.map(d => {
           return {
-             ...d, 
+             ...d,
              'department': this.capitalize($t('department', 1))
-          } 
+          }
         }),
         { divider: true },
         { header: this.capitalize($t('operator', 2)) },
@@ -286,7 +292,7 @@ export default {
       const assignment_list_name = this.id_root_map[assignee._id.split("/")[0]]
 
       this.assignments[assignment_list_name].push(assignee._id)
-      
+
       setTimeout(() => {
         this.new_assignment = null
         this.$refs.assign_equipment.blur()
@@ -304,6 +310,4 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
-
-</style>
+<style lang="css" scoped></style>

@@ -13,7 +13,8 @@
             :placeholder="$t('search')"
             input-class="text-uppercase text-body1"
             v-model="search_string"
-            :debounce="300">
+            :debounce="300"
+          >
             <template #append>
               <q-icon name="mdi-magnify" />
             </template>
@@ -24,12 +25,14 @@
         <q-checkbox
           class="col-auto text-body1 low-text"
           :label="$capitalize($t('product.filters.active_only'))"
-          v-model="filter_inactive">
+          v-model="filter_inactive"
+        >
         </q-checkbox>
         <q-checkbox
           class="col-auto text-body1 low-text"
           :label="$capitalize($t('product.filters.show_images'))"
-          v-model="show_images">
+          v-model="show_images"
+        >
         </q-checkbox>
 
         <q-space />
@@ -37,7 +40,8 @@
         <div class="col-auto">
           <q-btn
             color="theme-blue"
-            @click="$router.push({ name: 'newProduct' })">
+            @click="$router.push({ name: 'newProduct' })"
+          >
             {{ $t('new') }}
           </q-btn>
         </div>
@@ -51,11 +55,13 @@
             class="col-12 col-sm-6 col-md-3 col-xl-2"
             :style="`height: ${card_height}px`"
             v-for="(product, index) in product_list"
-            :key="index">
+            :key="index"
+          >
             <ProductCard
               :key="product._key"
               :product="product"
-              :show_image="show_images">
+              :show_image="show_images"
+            >
             </ProductCard>
           </div>
         </div>
@@ -64,7 +70,8 @@
             v-if="!loading && max_shown < filtered_products.length"
             flat
             color="theme-blue"
-            @click="showMore">
+            @click="showMore"
+          >
             CARICA ALTRI
           </q-btn>
           <q-spinner v-if="loading" />
@@ -72,28 +79,25 @@
       </div>
 
       <router-view />
-
     </q-page>
   </q-page-container>
 </template>
 
 <script>
-import NoDataAlert from '@/components/NoDataAlert.vue'
-import ProductCard from '@/components/ProductCard.vue'
+import NoDataAlert from '@/components/NoDataAlert.vue';
+import ProductCard from '@/components/ProductCard.vue';
 
-import multiMatch from '@/lib/MultiFieldSearch.js'
+import multiMatch from '@/lib/MultiFieldSearch.js';
 
-import { mapGetters, mapActions } from 'vuex'
-import { debounce as _debounce } from 'lodash'
-
+import { mapGetters, mapActions } from 'vuex';
+import { debounce as _debounce } from 'lodash';
 
 export default {
-
   name: 'ProductList',
-  
+
   components: {
     NoDataAlert,
-    ProductCard
+    ProductCard,
   },
 
   data() {
@@ -102,127 +106,120 @@ export default {
       loading: false,
       vuex_ready: false,
       load_quantity: 100,
-      loading_round: 1
-    }
+      loading_round: 1,
+    };
   },
 
   computed: {
     ...mapGetters(['productCatalog']),
 
     catalog() {
-      return this.productCatalog(this.filter_inactive)
+      return this.productCatalog(this.filter_inactive);
     },
 
     filtered_products() {
-      return this.catalog.filter(this.match)
+      return this.catalog.filter(this.match);
     },
 
     product_list() {
-      return this.filtered_products.slice(0, this.max_shown)
+      return this.filtered_products.slice(0, this.max_shown);
     },
 
     max_shown() {
-      return this.load_quantity * this.loading_round
+      return this.load_quantity * this.loading_round;
     },
 
     search_string: {
       get() {
-        return this.$route.query.search
+        return this.$route.query.search;
       },
       set(value) {
         this.$router.replace({
           query: {
             ...this.$route.query,
-            search: value
-          }
-        })
-      }
+            search: value,
+          },
+        });
+      },
     },
 
     show_images: {
       get() {
-        return this.$route.query.show_images === 'true'
-          ? true
-          : false
+        return this.$route.query.show_images === 'true' ? true : false;
       },
       set(value) {
-        this.$router.replace({ 
-          query: { 
+        this.$router.replace({
+          query: {
             ...this.$route.query,
-            show_images: value 
-          }
-        })
-      }
+            show_images: value,
+          },
+        });
+      },
     },
 
     filter_inactive: {
       get() {
-        return this.$route.query.filter_inactive === 'true'
-          ? true
-          : false
+        return this.$route.query.filter_inactive === 'true' ? true : false;
       },
       set(value) {
         this.$router.replace({
-          query: { 
+          query: {
             ...this.$route.query,
             filter_inactive: value,
-          }
-        })
-      }
+          },
+        });
+      },
     },
 
     card_height() {
-      return this.show_images
-        ? 240
-        : 140
-    }
+      return this.show_images ? 240 : 140;
+    },
   },
 
   methods: {
     fetchProducts() {
-      return new Promise( resolve => {
-        this.loading = true
+      return new Promise((resolve) => {
+        this.loading = true;
         this.$store.dispatch('loadProductList').then(() => {
-          setTimeout(() => this.loading = false, 2000)
-          resolve()
-        })
-      })
+          setTimeout(() => (this.loading = false), 2000);
+          resolve();
+        });
+      });
     },
 
     match(product) {
-      return multiMatch(this.search_string, product, ['code', 'description'])
+      return multiMatch(this.search_string, product, ['code', 'description']);
     },
 
     showMore() {
-      this.loading = true
+      this.loading = true;
       setTimeout(() => {
-        this.loading_round ++
-        this.loading = false
-      }, 700)
-    }
+        this.loading_round++;
+        this.loading = false;
+      }, 700);
+    },
   },
 
   created() {
     this.fetchProducts().then(() => {
-      this.vuex_ready = true
-    })
+      this.vuex_ready = true;
+    });
   },
 
   watch: {
     search_string: {
       immediate: true,
       handler() {
-        this.loading = true
-        this.loading_round = 0
+        this.loading = true;
+        this.loading_round = 0;
         setTimeout(() => {
-          this.loading = false
-          this.loading_round = 1
-        }, 700)
-      }
-    }
-  }
+          this.loading = false;
+          this.loading_round = 1;
+        }, 700);
+      },
+    },
+  },
 };
 </script>
 
-<style lang="sass" scoped>
-</style>
+<style lang="sass" scoped></style>

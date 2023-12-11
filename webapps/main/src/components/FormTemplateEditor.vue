@@ -71,63 +71,66 @@
 </template>
 
 <script setup>
-import { Dialog, uid } from 'quasar'
-import Sortable from 'sortablejs'
-import { ref, watch } from 'vue'
-import { useStore } from 'vuex'
-import AddCustomFieldDialog from './process-steps/AddCustomFieldDialog.vue'
-import { useFormFields } from '@/composables/form'
+import { Dialog, uid } from 'quasar';
+import Sortable from 'sortablejs';
+import { ref, watch } from 'vue';
+import { useStore } from 'vuex';
+import AddCustomFieldDialog from './process-steps/AddCustomFieldDialog.vue';
+import { useFormFields } from '@/composables/form';
 
 const props = defineProps({
   editMode: {
     type: Boolean,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-const fieldsModel = defineModel({ type: Array, required: true })
+const fieldsModel = defineModel({ type: Array, required: true });
 
-const store = useStore()
+const store = useStore();
 
-const { getFieldIcon: _getIcon } = useFormFields()
+const { getFieldIcon: _getIcon } = useFormFields();
 function getFieldIcon(field) {
-  const customField = store.getters.getCustomFieldByKey(field.custom_field_key)
-  return _getIcon(customField?.type)
+  const customField = store.getters.getCustomFieldByKey(field.custom_field_key);
+  return _getIcon(customField?.type);
 }
 
-const isDragging = ref(false)
+const isDragging = ref(false);
 /** @type {ReturnType<typeof Sortable.create> | undefined} */
-let sortable
+let sortable;
 function initSortable() {
-  const container = document.querySelector("#form-template-fields")
+  const container = document.querySelector('#form-template-fields');
   if (!container) {
-    return
+    return;
   }
 
   sortable = Sortable.create(container, {
     ...store.state.drag_options,
-    handle: ".drag-handle",
+    handle: '.drag-handle',
     onStart: () => {
-      isDragging.value = true
+      isDragging.value = true;
     },
     onEnd: ({ newIndex, oldIndex }) => {
-      isDragging.value = false
-      const [moved] = fieldsModel.value.splice(oldIndex, 1)
-      fieldsModel.value.splice(newIndex, 0, moved)
-    }
-  })
+      isDragging.value = false;
+      const [moved] = fieldsModel.value.splice(oldIndex, 1);
+      fieldsModel.value.splice(newIndex, 0, moved);
+    },
+  });
 }
-watch(() => props.editMode, () => {
-  if (props.editMode) {
-    initSortable()
-    return
-  }
+watch(
+  () => props.editMode,
+  () => {
+    if (props.editMode) {
+      initSortable();
+      return;
+    }
 
-  if (sortable) {
-    sortable.destroy()
-    sortable = undefined
-  }
-})
+    if (sortable) {
+      sortable.destroy();
+      sortable = undefined;
+    }
+  },
+);
 
 function addField() {
   Dialog.create({
@@ -137,12 +140,12 @@ function addField() {
       _key: uid(),
       custom_field_key: customField._key,
       label: customField.default_label,
-      hint: customField.default_hint
-    })
-  })
+      hint: customField.default_hint,
+    });
+  });
 }
 
 function deleteField(index) {
-  fieldsModel.value.splice(index, 1)
+  fieldsModel.value.splice(index, 1);
 }
 </script>

@@ -1,17 +1,14 @@
-<template>
-</template>
+<template></template>
 
 <script>
-import { cloneDeep as _cloneDeep } from 'lodash'
+import { cloneDeep as _cloneDeep } from 'lodash';
 export default {
-
   name: 'ProductParamsCard',
 
   props: ['product', 'edit_mode'],
 
-  data () {
+  data() {
     return {
-
       // Map performances for temporary population in created hook
       time_perfs: ['processing_time', 'throughput_time'],
 
@@ -58,11 +55,10 @@ export default {
       //     average: 58780,
       //   }
       // }
-    }
+    };
   },
 
   computed: {
-
     params() {
       return {
         active: this.$t('status'),
@@ -70,42 +66,43 @@ export default {
         minimum_order_qt: this.$t('product.minimum_order'),
         processing_time: this.$t('performance.processing_time.medium'),
         throughput_time: this.$t('performance.throughput_time.medium'),
-        cost: this.$t('cost.label')
-      }
+        cost: this.$t('cost.label'),
+      };
     },
 
-    perfs() { return [...this.time_perfs, 'cost'] },
+    perfs() {
+      return [...this.time_perfs, 'cost'];
+    },
 
     temp_params() {
-      let temp = _cloneDeep(this.product)
+      let temp = _cloneDeep(this.product);
 
       let temp_params = Object.fromEntries(
         Object.entries(temp)
           // keep only keys included in the param object
-          .filter( e => e[0] in this.params )
+          .filter((e) => e[0] in this.params)
 
-          .map( ([k,v]) => {
+          .map(([k, v]) => {
             // add the translated name
             let new_value = {
               name: this.params[k],
-              value: v
-            }
+              value: v,
+            };
 
             // if time related param, populate hour and minute fields
-            const is_time_perf = this.time_perfs.includes(k)
+            const is_time_perf = this.time_perfs.includes(k);
             if (is_time_perf) {
-              let target = this.$options.filters.duration( temp[k].target, { returnValue: 'object' })
-              new_value.value.hours = target.h
-              new_value.value.minutes = target.m
+              let target = this.$options.filters.duration(temp[k].target, {
+                returnValue: 'object',
+              });
+              new_value.value.hours = target.h;
+              new_value.value.minutes = target.m;
             }
-            return [ k, new_value ]
-          })
-      )
-      return temp_params
-    }
-
-
-
+            return [k, new_value];
+          }),
+      );
+      return temp_params;
+    },
 
     // perf_list() {
     //   return Object.fromEntries(
@@ -130,48 +127,47 @@ export default {
   },
 
   methods: {
-
     getTargetTime(event) {
-      const msPerMinute = 1000 * 60
-      const msPerHour = msPerMinute * 60
+      const msPerMinute = 1000 * 60;
+      const msPerHour = msPerMinute * 60;
 
       // $refs returns an array
-      const [param, hm] = event.target.id.split('/')
+      const [param, hm] = event.target.id.split('/');
 
-      let hours = null
-      let minutes = null
+      let hours = null;
+      let minutes = null;
 
       switch (hm) {
         case 'hours':
-          hours = event.target.value
-          minutes = this.$refs[`${param}/minutes`][0].value
-          break
+          hours = event.target.value;
+          minutes = this.$refs[`${param}/minutes`][0].value;
+          break;
 
         case 'minutes':
-          hours = this.$refs[`${param}/hours`][0].value
-          minutes = event.target.value
-          break
+          hours = this.$refs[`${param}/hours`][0].value;
+          minutes = event.target.value;
+          break;
       }
 
-      const new_target = hours * msPerHour + minutes * msPerMinute
-      return new_target
+      const new_target = hours * msPerHour + minutes * msPerMinute;
+      return new_target;
     },
 
     updateTarget(param, event) {
       if (this.time_perfs.includes(param)) {
-        const target = this.getTargetTime(event)
-        this.$store.commit('UPDATE_TEMP_TARGET', { param, new_target: target })
-      }
-      else if (param == 'cost') {
-        this.$store.commit('UPDATE_TEMP_TARGET', { param, new_target: event.target.value })
+        const target = this.getTargetTime(event);
+        this.$store.commit('UPDATE_TEMP_TARGET', { param, new_target: target });
+      } else if (param == 'cost') {
+        this.$store.commit('UPDATE_TEMP_TARGET', {
+          param,
+          new_target: event.target.value,
+        });
       }
     },
 
     updateParam(param, new_value) {
-      this.$store.commit('UPDATE_TEMP_PARAMETER', { param, new_value })
+      this.$store.commit('UPDATE_TEMP_PARAMETER', { param, new_value });
     },
-
-
 
     // updateTempHoursMinutes(param) {
     //   let target = this.duration( param.target, { returnValue: 'object' })
@@ -179,8 +175,7 @@ export default {
     //   param.temp_minutes = target.m
     // }
   },
-}
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

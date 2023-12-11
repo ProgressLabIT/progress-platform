@@ -2,11 +2,11 @@
   <div class="full-height column" :class="edit_mode ? 'q-pa-lg' : 'q-pa-xl'">
     <template v-if="issue_type">
       <div class="row q-col-gutter-lg col-auto">
-
         <template v-if="!edit_mode">
           <div class="col" v-if="!edit_mode">
             <div class="text-h2 uppercase display highlight q-mb-sm">
-              {{ issue_type.name }} {{ issue_type.code ? '(' + issue_type.code + ')' : ''}}
+              {{ issue_type.name }}
+              {{ issue_type.code ? '(' + issue_type.code + ')' : '' }}
             </div>
             <div style="width: 50%">
               {{ issue_type.description || '— No Description —' }}
@@ -19,14 +19,16 @@
             icon="mdi-pencil"
             :tooltip="$capitalize($t('edit'))"
             :color="$theme.blue"
-            @iconClick="edit_mode=true">
+            @iconClick="edit_mode = true"
+          >
           </BaseTooltipIcon>
 
           <BaseTooltipIcon
             icon="mdi-delete"
             :tooltip="$capitalize($t('archive'))"
             :color="$theme.red"
-            @iconClick="showDelete">
+            @iconClick="showDelete"
+          >
           </BaseTooltipIcon>
         </template>
 
@@ -40,7 +42,8 @@
                 stack-label
                 hide-bottom-space
                 :label="$capitalize($t('code'))"
-                v-model="temp_metadata.code">
+                v-model="temp_metadata.code"
+              >
               </q-input>
             </div>
             <div class="col">
@@ -50,7 +53,8 @@
                 stack-label
                 hide-bottom-space
                 :label="$capitalize($t('name'))"
-                v-model="temp_metadata.name">
+                v-model="temp_metadata.name"
+              >
               </q-input>
             </div>
 
@@ -62,10 +66,10 @@
                 autogrow
                 hide-bottom-space
                 :label="$capitalize($t('description'))"
-                v-model="temp_metadata.description">
+                v-model="temp_metadata.description"
+              >
               </q-input>
             </div>
-
           </div>
 
           <div class="col column q-pl-xl q-gutter-md">
@@ -74,34 +78,36 @@
               color="theme-blue"
               @click="save"
               :loading="saving"
-              :label="$t('save')">
+              :label="$t('save')"
+            >
             </q-btn>
             <q-btn
               size="12px"
               color="theme-grey"
               @click="cancel"
-              :label="$t('cancel')">
+              :label="$t('cancel')"
+            >
             </q-btn>
           </div>
         </template>
       </div>
 
-
       <!-- ISSUE TYPE OPTIONS -->
       <div class="row q-gutter-lg items-center col-auto">
-
         <!-- ACTIVE -->
         <q-toggle
           :disable="!edit_mode"
           :label="$capitalize($t('active'))"
-          v-model="temp_metadata.active">
+          v-model="temp_metadata.active"
+        >
         </q-toggle>
 
         <!-- DEFAULT CRITICAL -->
         <q-toggle
           :disable="!edit_mode"
           :label="$capitalize($t('critical'))"
-          v-model="temp_metadata.critical">
+          v-model="temp_metadata.critical"
+        >
         </q-toggle>
 
         <!-- CLOSE WITHIN -->
@@ -135,7 +141,8 @@
               :label="$t('change')"
               @click="show_icon_library = true"
               color="theme-blue"
-              class="q-ml-xl">
+              class="q-ml-xl"
+            >
             </q-btn>
           </div>
 
@@ -144,13 +151,12 @@
               <IconLibrary @choice="(value) => pickIcon(value)" />
             </div>
           </BaseDialog>
-
         </div>
       </div>
 
       <!-- ISSUE TYPE FORM -->
       <div class="text-h4 text-uppercase weight-bold q-mt-lg q-mb-sm col-auto">
-        {{ $t('form_title')}}
+        {{ $t('form_title') }}
       </div>
 
       <FormTemplateEditor
@@ -164,13 +170,13 @@
 </template>
 
 <script>
-import { cloneDeep as _cloneDeep } from 'lodash'
-import IconLibrary from '@/components/IconLibrary.vue'
-import NoDataAlert from '@/components/NoDataAlert.vue'
-import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
-import BaseDialog from '@/components/BaseDialog.vue'
-import FormTemplateEditor from '@/components/FormTemplateEditor.vue'
-import form from '@/mixins/form.js'
+import { cloneDeep as _cloneDeep } from 'lodash';
+import IconLibrary from '@/components/IconLibrary.vue';
+import NoDataAlert from '@/components/NoDataAlert.vue';
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
+import BaseDialog from '@/components/BaseDialog.vue';
+import FormTemplateEditor from '@/components/FormTemplateEditor.vue';
+import form from '@/mixins/form.js';
 
 export default {
   name: 'IssueTypeDetail',
@@ -180,7 +186,7 @@ export default {
     BaseTooltipIcon,
     NoDataAlert,
     IconLibrary,
-    FormTemplateEditor
+    FormTemplateEditor,
   },
 
   mixins: [form],
@@ -188,11 +194,11 @@ export default {
   props: {
     issue_type: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
 
-  data () {
+  data() {
     return {
       show_icon_library: false,
       edit_mode: false,
@@ -204,74 +210,73 @@ export default {
         description: '',
         icon: '',
         critical: undefined,
-        form_template: []
+        form_template: [],
         // close_within: 0
       },
-    }
+    };
   },
 
   methods: {
     setTempData() {
       if (this.issue_type) {
-        Object.keys(this.temp_metadata).forEach(key => {
+        Object.keys(this.temp_metadata).forEach((key) => {
           if (key in this.issue_type) {
-            this.temp_metadata[key] = _cloneDeep(this.issue_type[key])
+            this.temp_metadata[key] = _cloneDeep(this.issue_type[key]);
           }
-        })
+        });
       }
     },
 
     pickIcon(value) {
-      this.temp_metadata.icon = value
-      this.show_icon_library = false
+      this.temp_metadata.icon = value;
+      this.show_icon_library = false;
     },
 
     cancel() {
-      this.saving = false
-      this.edit_mode = false
+      this.saving = false;
+      this.edit_mode = false;
       this.$q.notify({
         message: this.$capitalize(this.$t('snackbars.changes_canceled')),
         color: 'theme-grey',
         timeout: 1500,
-        position: 'top'
-      })
+        position: 'top',
+      });
     },
 
     async save() {
-      this.saving = true
+      this.saving = true;
       const data = {
         _key: this.issue_type._key,
-        ...this.temp_metadata
-      }
-      await this.$store.dispatch('updateIssueType', data)
-      this.saving = false
-      this.edit_mode = false
+        ...this.temp_metadata,
+      };
+      await this.$store.dispatch('updateIssueType', data);
+      this.saving = false;
+      this.edit_mode = false;
       this.$q.notify({
         message: this.$t('issue_type_update_success'),
         color: 'theme-green',
         timeout: 1500,
-        position: 'top'
-      })
+        position: 'top',
+      });
     },
 
     showDelete() {
       this.$router.push({
         name: 'issueTypeDelete',
-        params: { issue_type_key: this.issue_type._key }
-      })
-    }
+        params: { issue_type_key: this.issue_type._key },
+      });
+    },
   },
 
   mounted() {
-    this.setTempData()
+    this.setTempData();
   },
 
   watch: {
     edit_mode: 'setTempData',
-    issue_type: 'setTempData'
-  }
-}
+    issue_type: 'setTempData',
+  },
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

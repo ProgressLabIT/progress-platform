@@ -53,28 +53,6 @@ module.exports = {
 
   // add your custom rules here
   rules: {
-    // allow async-await
-    'generator-star-spacing': 'off',
-    // allow paren-less arrow functions
-    'arrow-parens': 'off',
-    'one-var': 'off',
-    'no-void': 'off',
-    'multiline-ternary': 'off',
-
-    'prefer-promise-reject-errors': 'off',
-
-    // Added by Luca
-    'space-before-function-paren': 'off',
-    camelcase: 'off',
-    quotes: 'off',
-    eqeqeq: 'off',
-    'brace-style': 'off',
-    'no-async-promise-executor': 'off',
-    'no-trailing-spaces': 'off',
-    'comma-dangle': 'off',
-    'no-multiple-empty-lines': 'off',
-    'object-curly-spacing': 'off',
-
     // allow debugger during development only
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
   },

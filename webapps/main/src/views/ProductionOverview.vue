@@ -3,7 +3,6 @@
     <q-page class="row full-height">
       <div class="column col full-height">
         <div class="row col-auto items-center q-pl-xs q-pr-md q-py-sm">
-
           <!-- TAB LINKS -->
           <q-tabs
             class="transparent text-low"
@@ -11,12 +10,14 @@
             align="left"
             shrink
             dense
-            indicator-color="theme-blue">
+            indicator-color="theme-blue"
+          >
             <q-route-tab
               v-for="(view, index) in views"
               :key="index"
               :to="{ name: view.route_name, query: $route.query }"
-              class="display">
+              class="display"
+            >
               {{ $t(`views.${view.route_name}`) }}
             </q-route-tab>
           </q-tabs>
@@ -25,13 +26,13 @@
 
           <!-- CREATE NEW WORK ORDER -->
           <template v-if="$route.name == 'workOrderList'">
-
             <div class="col-auto" v-if="!editing">
               <q-btn
                 size="0.75rem"
                 color="theme-blue"
                 :label="$t('new')"
-                @click="$router.push({ name: 'newWorkOrder'})">
+                @click="$router.push({ name: 'newWorkOrder' })"
+              >
               </q-btn>
             </div>
 
@@ -43,7 +44,8 @@
                   color="theme-orange"
                   :loading="saving"
                   @click="updateQueue"
-                  class="q-ml-sm">
+                  class="q-ml-sm"
+                >
                   {{ $t('production.save_new_sequence') }}
                 </q-btn>
               </div>
@@ -54,7 +56,8 @@
                   size="0.7rem"
                   color="theme-grey"
                   @click="cancelQueueChanges"
-                  class="q-ml-md">
+                  class="q-ml-md"
+                >
                   {{ $t('cancel_changes') }}
                 </q-btn>
               </div>
@@ -70,7 +73,7 @@
             :color="filters_active ? 'theme-blue' : 'theme-grey'"
             icon="mdi-filter"
             @click="showFilterDrawer = true"
-            >
+          >
             <q-badge
               v-if="filters_active"
               floating
@@ -79,7 +82,7 @@
               :label="filters_active"
               size="4px"
               style="font-family: 'Red Hat Text'; font-size: 8px"
-              />
+            />
           </q-btn>
         </div>
 
@@ -87,10 +90,11 @@
         <div class="col relative-position">
           <router-view
             v-if="vuex_ready"
-            v-bind="{filters}"
+            v-bind="{ filters }"
             @setSearch="setSearch($event)"
             @itemDblClick="showWorkOrderScreen($event)"
-            @editing="editing = true">
+            @editing="editing = true"
+          >
           </router-view>
           <NoDataAlert v-else />
         </div>
@@ -102,7 +106,7 @@
       v-model="showFilterDrawer"
       :active-filters="filters_active"
       @reset="resetFilters"
-      >
+    >
       <!-- FILTERS SPECIFIC TO JOB LIST -->
       <template v-if="$route.name == 'jobList'">
         <!-- BY DEPARTMENT -->
@@ -121,7 +125,8 @@
           @filter="filterDepartment"
           :label="$capitalize($t('department', 1))"
           class="q-mb-md"
-          popup-content-class="surface1">
+          popup-content-class="surface1"
+        >
         </q-select>
 
         <!-- BY OPERATOR -->
@@ -131,7 +136,8 @@
           class="q-mb-md"
           key_only
           :value="operator_selected"
-          @select="(selection) => operator_selected = selection">
+          @select="(selection) => (operator_selected = selection)"
+        >
         </BaseAutocompleteUser>
       </template>
       <!-- END OF JOB-SPECIFIC FILTERS -->
@@ -147,7 +153,8 @@
           debounce="300"
           :label="$capitalize($t('search'))"
           v-model="search_string"
-          class="q-mb-md col">
+          class="q-mb-md col"
+        >
           <template v-slot:append>
             <q-icon name="mdi-information-outline" class="col-auto" size="sm">
               <q-tooltip :delay="300" class="text-body2">
@@ -176,10 +183,20 @@
             debounce="1000"
             mask="date"
             v-model="start_from_min"
-            :label="$capitalize($t('work_order.list_headers.start_from')) + ' (' + $t('min') + ')'">
+            :label="
+              $capitalize($t('work_order.list_headers.start_from')) +
+              ' (' +
+              $t('min') +
+              ')'
+            "
+          >
             <template #append>
               <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                <q-popup-proxy
+                  cover
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
                   <q-date minimal v-model="start_from_min">
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
@@ -198,10 +215,20 @@
             mask="date"
             debounce="1000"
             v-model="start_from_max"
-            :label="$capitalize($t('work_order.list_headers.start_from')) + ' (' + $t('max') + ')'">
+            :label="
+              $capitalize($t('work_order.list_headers.start_from')) +
+              ' (' +
+              $t('max') +
+              ')'
+            "
+          >
             <template #append>
               <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                <q-popup-proxy
+                  cover
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
                   <q-date minimal v-model="start_from_max">
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
@@ -224,10 +251,20 @@
             mask="date"
             debounce="1000"
             v-model="due_by_min"
-            :label="$capitalize($t('work_order.list_headers.due_by')) + ' (' + $t('min') + ')'">
+            :label="
+              $capitalize($t('work_order.list_headers.due_by')) +
+              ' (' +
+              $t('min') +
+              ')'
+            "
+          >
             <template #append>
               <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                <q-popup-proxy
+                  cover
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
                   <q-date minimal v-model="due_by_min">
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
@@ -246,10 +283,20 @@
             mask="date"
             v-model="due_by_max"
             debounce="1000"
-            :label="$capitalize($t('work_order.list_headers.due_by')) + ' (' + $t('max') + ')'">
+            :label="
+              $capitalize($t('work_order.list_headers.due_by')) +
+              ' (' +
+              $t('max') +
+              ')'
+            "
+          >
             <template #append>
               <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                <q-popup-proxy
+                  cover
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
                   <q-date minimal v-model="due_by_max">
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
@@ -264,57 +311,51 @@
 
       <!-- BOOLEAN FILTERS -->
       <div class="row q-mt-sm">
-        <div
-          class="col-6"
-          v-for="filter in bool_filters"
-          :key="filter">
+        <div class="col-6" v-for="filter in bool_filters" :key="filter">
           <q-checkbox
             dense
             color="theme-blue"
             size="sm"
             :label="$capitalize($t(`production.filters.${filter}`))"
             v-model="_this[filter]"
-            class="q-mt-md text-body1 low-text">
+            class="q-mt-md text-body1 low-text"
+          >
           </q-checkbox>
         </div>
-        <template v-if="$route.name=='jobList'">
-          <div
-            class="col-6"
-            v-for="filter in job_filters"
-            :key="filter">
+        <template v-if="$route.name == 'jobList'">
+          <div class="col-6" v-for="filter in job_filters" :key="filter">
             <q-checkbox
               dense
               color="theme-blue"
               size="sm"
               :label="$capitalize($t(`production.filters.${filter}`))"
               v-model="_this[filter]"
-              class="q-mt-md text-body1 low-text">
+              class="q-mt-md text-body1 low-text"
+            >
             </q-checkbox>
           </div>
         </template>
       </div>
     </FilterDrawer>
-
   </q-page-container>
 </template>
 
 <script>
-import NoDataAlert from '@/components/NoDataAlert.vue'
-import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue'
-import FilterDrawer from '@/components/FilterDrawer.vue'
-import multiMatch from '@/lib/MultiFieldSearch.js'
-import queryModel from '@/lib/queryModelFactory.js'
+import NoDataAlert from '@/components/NoDataAlert.vue';
+import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
+import FilterDrawer from '@/components/FilterDrawer.vue';
+import multiMatch from '@/lib/MultiFieldSearch.js';
+import queryModel from '@/lib/queryModelFactory.js';
 
 const production_views = [
   { component: 'WorkOrderList', route_name: 'workOrderList' },
   { component: 'JobList', route_name: 'jobList' },
-  { component: 'WorkOrderArchive', route_name: 'workOrderArchive' }
-]
+  { component: 'WorkOrderArchive', route_name: 'workOrderArchive' },
+];
 
-const header_plus_footer_height = 80
+const header_plus_footer_height = 80;
 
 export default {
-
   name: 'ProductionOverview',
 
   components: {
@@ -323,13 +364,24 @@ export default {
     FilterDrawer,
   },
 
-  data () {
+  data() {
     return {
       vuex_ready: false,
       // content_height: 0,
       views: production_views,
       current_view: 0,
-      bool_filters: ['started','queued','on_time','late','active','idle','ready','not_ready','critical','not_critical'],
+      bool_filters: [
+        'started',
+        'queued',
+        'on_time',
+        'late',
+        'active',
+        'idle',
+        'ready',
+        'not_ready',
+        'critical',
+        'not_critical',
+      ],
       job_filters: ['assigned', 'unassigned'],
       // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       department_search_text: undefined,
@@ -339,7 +391,7 @@ export default {
       operator_search_text: undefined,
 
       showFilterDrawer: false,
-    }
+    };
   },
 
   computed: {
@@ -368,12 +420,14 @@ export default {
     assigned: queryModel(Boolean, 'assigned', true),
     unassigned: queryModel(Boolean, 'unassigned', true),
 
-    _this() { return this },
+    _this() {
+      return this;
+    },
 
     filters() {
-      let bools = {}
-      this.bool_filters.forEach(f => bools[f] = this[f])
-      this.job_filters.forEach(f => bools[f] = this[f])
+      let bools = {};
+      this.bool_filters.forEach((f) => (bools[f] = this[f]));
+      this.job_filters.forEach((f) => (bools[f] = this[f]));
 
       return {
         search_string: this.search_string,
@@ -384,52 +438,56 @@ export default {
         start_from_min: this.start_from_min,
         start_from_max: this.start_from_max,
         due_by_min: this.due_by_min,
-        due_by_max: this.due_by_max
-      }
+        due_by_max: this.due_by_max,
+      };
     },
 
     filters_active() {
       return Object.entries(this.filters).filter(([name, value]) => {
-        return [...this.bool_filters, ...this.job_filters].includes(name) ? value === false : !!value
-      }).length
+        return [...this.bool_filters, ...this.job_filters].includes(name)
+          ? value === false
+          : !!value;
+      }).length;
     },
 
-    operator_list () {
-      return this.$store.getters.operator_list()
+    operator_list() {
+      return this.$store.getters.operator_list();
     },
 
     filtered_operators() {
-      return this.operator_list.filter(
-        o => multiMatch(this.operator_search_text, o, ['name', 'surname'])
-      )
+      return this.operator_list.filter((o) =>
+        multiMatch(this.operator_search_text, o, ['name', 'surname']),
+      );
     },
 
     department_list() {
-      return this.$store.state.org.departments
+      return this.$store.state.org.departments;
     },
 
     filtered_departments() {
       return this.department_search_text
-        ? this.department_list.filter(d => d.name.toLowerCase().includes(this.department_search_text))
-        : this.department_list
-    }
-
+        ? this.department_list.filter((d) =>
+            d.name.toLowerCase().includes(this.department_search_text),
+          )
+        : this.department_list;
+    },
   },
 
   methods: {
     updateHeight() {
-      this.content_height = document.documentElement.clientHeight - header_plus_footer_height
+      this.content_height =
+        document.documentElement.clientHeight - header_plus_footer_height;
     },
 
     setSearch(text) {
-      this.search_string = text
+      this.search_string = text;
     },
 
     resetFilters() {
-      this.$router.replace({ query: null })
+      this.$router.replace({ query: null });
     },
 
-    showWorkOrderScreen({wo_key, back_to_route_name}) {
+    showWorkOrderScreen({ wo_key, back_to_route_name }) {
       const to_route = {
         name: 'workOrderJobs',
         params: {
@@ -437,57 +495,55 @@ export default {
         },
         query: {
           back_to: back_to_route_name,
-          ...this.$route.query
-        }
-      }
-      this.$router.push(to_route)
+          ...this.$route.query,
+        },
+      };
+      this.$router.push(to_route);
     },
 
     async updateQueue() {
-      this.saving = true
-      await this.$store.dispatch('saveQueueChanges')
-      this.saving = false
-      this.editing = false
+      this.saving = true;
+      await this.$store.dispatch('saveQueueChanges');
+      this.saving = false;
+      this.editing = false;
     },
 
     cancelQueueChanges() {
-      this.$store.commit('RESET_TEMP_QUEUE')
-      this.editing = false
+      this.$store.commit('RESET_TEMP_QUEUE');
+      this.editing = false;
     },
 
-    async filterDepartment (val, update, abort) {
+    async filterDepartment(val, update, abort) {
       update(() => {
-        this.department_search_text = val.toLowerCase()
-      })
+        this.department_search_text = val.toLowerCase();
+      });
     },
 
-    async filterOperator (val, update, abort) {
+    async filterOperator(val, update, abort) {
       update(() => {
-        this.operator_search_text = val.toLowerCase()
-      })
-    }
+        this.operator_search_text = val.toLowerCase();
+      });
+    },
   },
 
   created() {
     Promise.all([
-      this.$store.dispatch("loadWorkOrders"),
-      this.$store.dispatch("loadDepartments"),
-      this.$store.dispatch("loadUsers"),
-      this.$store.dispatch("loadJobAssignments")
-      ])
-    .then(this.vuex_ready = true)
+      this.$store.dispatch('loadWorkOrders'),
+      this.$store.dispatch('loadDepartments'),
+      this.$store.dispatch('loadUsers'),
+      this.$store.dispatch('loadJobAssignments'),
+    ]).then((this.vuex_ready = true));
 
     this.polling_instance = setInterval(() => {
-      this.$store.dispatch("updateWorkOrderList")
-      this.$store.dispatch("loadJobAssignments")
-    }, 10000)
+      this.$store.dispatch('updateWorkOrderList');
+      this.$store.dispatch('loadJobAssignments');
+    }, 10000);
   },
 
   beforeUnmount() {
-    clearInterval(this.polling_instance)
-  }
-}
+    clearInterval(this.polling_instance);
+  },
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

@@ -5,7 +5,8 @@
         <template v-if="!edit_mode">
           <div class="col" v-if="!edit_mode">
             <div class="text-h2 uppercase display highlight">
-              {{ operation.name }} {{ operation.code ? '(' + operation.code + ')' : ''}}
+              {{ operation.name }}
+              {{ operation.code ? '(' + operation.code + ')' : '' }}
             </div>
             <div style="width: 50%">
               {{ operation.description || '— No Description —' }}
@@ -18,14 +19,16 @@
             icon="mdi-pencil"
             :tooltip="$capitalize($t('edit'))"
             :color="$theme.blue"
-            @iconClick="edit_mode=true">
+            @iconClick="edit_mode = true"
+          >
           </BaseTooltipIcon>
 
           <BaseTooltipIcon
             icon="mdi-delete"
             :tooltip="$capitalize($t('archive'))"
             :color="$theme.red"
-            @iconClick="showDelete">
+            @iconClick="showDelete"
+          >
           </BaseTooltipIcon>
         </template>
         <template v-else>
@@ -35,7 +38,8 @@
               stack-label
               hide-bottom-space
               :label="$capitalize($t('name'))"
-              v-model="temp_metadata.name">
+              v-model="temp_metadata.name"
+            >
             </q-input>
             <q-input
               filled
@@ -43,7 +47,8 @@
               hide-bottom-space
               :label="$capitalize($t('code'))"
               v-model="temp_metadata.code"
-              class="q-mt-md">
+              class="q-mt-md"
+            >
             </q-input>
           </div>
           <div class="col-5 q-ml-xl">
@@ -53,7 +58,8 @@
               autogrow
               hide-bottom-space
               :label="$capitalize($t('description'))"
-              v-model="temp_metadata.description">
+              v-model="temp_metadata.description"
+            >
             </q-input>
           </div>
 
@@ -75,13 +81,15 @@
               color="theme-blue"
               @click="save"
               :loading="saving"
-              :label="$t('save')">
+              :label="$t('save')"
+            >
             </q-btn>
             <q-btn
               size="12px"
               color="theme-grey"
               @click="cancel"
-              :label="$t('cancel')">
+              :label="$t('cancel')"
+            >
             </q-btn>
           </div>
         </template>
@@ -112,10 +120,7 @@
       <q-card square class="col scroll q-mx-md q-mb-md">
         <q-tab-panels v-model="activeTab" class="fit surface2">
           <q-tab-panel name="steps">
-            <ProcessSteps
-              v-model="temp_steps"
-              :edit-mode="edit_mode"
-            />
+            <ProcessSteps v-model="temp_steps" :edit-mode="edit_mode" />
           </q-tab-panel>
 
           <q-tab-panel name="parameters">
@@ -135,21 +140,20 @@
           </q-tab-panel>
         </q-tab-panels>
       </q-card>
-
     </template>
     <NoDataAlert v-else />
   </div>
 </template>
 
 <script>
-import { ref } from 'vue'
-import { cloneDeep } from 'lodash' // TODO: replace with lodash-es
+import { ref } from 'vue';
+import { cloneDeep } from 'lodash'; // TODO: replace with lodash-es
 
-import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
-import NoDataAlert from '@/components/NoDataAlert.vue'
-import ProcessParameters from '@/components/ProcessParameters.vue'
-import ProductionNotes from '@/components/ProductionNotes.vue'
-import ProcessSteps from '@/components/process-steps/ProcessSteps.vue'
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
+import NoDataAlert from '@/components/NoDataAlert.vue';
+import ProcessParameters from '@/components/ProcessParameters.vue';
+import ProductionNotes from '@/components/ProductionNotes.vue';
+import ProcessSteps from '@/components/process-steps/ProcessSteps.vue';
 
 export default {
   name: 'OperationDetail',
@@ -159,32 +163,32 @@ export default {
     NoDataAlert,
     ProcessParameters,
     ProductionNotes,
-    ProcessSteps
+    ProcessSteps,
   },
 
   props: {
     operation: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
 
   setup() {
-    const tab = ref('parameters')
+    const tab = ref('parameters');
 
     return {
-      activeTab: tab
-    }
+      activeTab: tab,
+    };
   },
 
-  data () {
+  data() {
     return {
       edit_mode: false,
       saving: false,
       temp_metadata: {
         name: '',
         code: '',
-        description: ''
+        description: '',
       },
       temp_params: {
         max_offline: 60,
@@ -193,16 +197,16 @@ export default {
         step_check_force_order: false,
         production_batch_qt: 1,
         auto_new_batch: true,
-        unsupervised_work_allowed: false
+        unsupervised_work_allowed: false,
       },
       temp_notes: '',
-      temp_steps: []
-    }
+      temp_steps: [],
+    };
   },
 
   computed: {
     products_using_operation() {
-      return this.operation.used_for
+      return this.operation.used_for;
     },
   },
 
@@ -210,59 +214,64 @@ export default {
     setTempData() {
       // At first render, sometimes the function runs before the prop has been passed, resulting in error
       if (!this.operation) {
-        return
+        return;
       }
 
-      this.temp_notes = this.operation.default_phase_notes ?? ''
+      this.temp_notes = this.operation.default_phase_notes ?? '';
 
-      this.temp_steps = cloneDeep(this.operation.default_phase_steps ?? [])
+      this.temp_steps = cloneDeep(this.operation.default_phase_steps ?? []);
 
-      Object.keys(this.temp_metadata).forEach(key => {
-        this.temp_metadata[key] = this.operation[key]
-      })
+      Object.keys(this.temp_metadata).forEach((key) => {
+        this.temp_metadata[key] = this.operation[key];
+      });
 
-      const saved_params = this.operation.default_phase_parameters
-      Object.keys(this.temp_params).forEach(key => {
-        const value = saved_params[key]
+      const saved_params = this.operation.default_phase_parameters;
+      Object.keys(this.temp_params).forEach((key) => {
+        const value = saved_params[key];
         // If the value is undefined, then the parameter is not present in the saved data
         // and we should not overwrite the default value
         if (value !== undefined) {
-          this.temp_params[key] = value
+          this.temp_params[key] = value;
         }
-      })
+      });
     },
 
     cancel() {
-      this.saving = false
-      this.edit_mode = false
+      this.saving = false;
+      this.edit_mode = false;
     },
 
     async save() {
-      this.saving = true
+      this.saving = true;
       const data = {
         key: this.operation._key,
         update: {
           ...this.temp_metadata,
           default_phase_parameters: this.temp_params,
           default_phase_notes: this.temp_notes,
-          default_phase_steps: this.temp_steps
-        }
-      }
-      await this.$store.dispatch('updateOperation', data)
-      this.saving = false
-      this.edit_mode = false
+          default_phase_steps: this.temp_steps,
+        },
+      };
+      await this.$store.dispatch('updateOperation', data);
+      this.saving = false;
+      this.edit_mode = false;
     },
 
     showDelete() {
       if (this.products_using_operation.length) {
-        const product_codes = this.products_using_operation.map(({ code }) => code)
-        window.alert(this.$capitalize(this.$t('operation.alerts.op_in_use') + ": " + product_codes))
-      }
-      else {
+        const product_codes = this.products_using_operation.map(
+          ({ code }) => code,
+        );
+        window.alert(
+          this.$capitalize(
+            this.$t('operation.alerts.op_in_use') + ': ' + product_codes,
+          ),
+        );
+      } else {
         this.$router.push({
           name: 'operationDelete',
-          params: { operation_key: this.operation._key }
-        })
+          params: { operation_key: this.operation._key },
+        });
       }
     },
   },
@@ -270,12 +279,11 @@ export default {
   watch: {
     operation: {
       handler: 'setTempData',
-      immediate: true
+      immediate: true,
     },
-    edit_mode: 'setTempData'
-  }
-}
+    edit_mode: 'setTempData',
+  },
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

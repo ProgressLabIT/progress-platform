@@ -10,83 +10,84 @@
     :option-value="key_only ? '_key' : false"
     :emit-value="key_only"
     :map-options="key_only"
-    @update:model-value="(selection) => $emit('select', selection)">
+    @update:model-value="(selection) => $emit('select', selection)"
+  >
   </q-select>
 </template>
 
 <script>
 export default {
-
   name: 'BaseAutocompleteDepartment',
 
   props: {
     value: {
       type: Object,
-      deafult: null
+      deafult: null,
     },
 
     load_departments: {
       type: Boolean,
-      default: true
+      default: true,
     },
 
     key_only: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
 
-  data () {
+  data() {
     return {
       loading: false,
-      options: []
-    }
+      options: [],
+    };
   },
 
   computed: {
     department_list() {
-      return [ ...this.$store.state.org.departments , {
-        name: this.$t("unassigned", 1),
-        _key: 'none', 
-        code: '-' 
-      }]
-    }
+      return [
+        ...this.$store.state.org.departments,
+        {
+          name: this.$t('unassigned', 1),
+          _key: 'none',
+          code: '-',
+        },
+      ];
+    },
   },
 
   methods: {
-
     initOptions() {
-      this.options = [...this.department_list]
+      this.options = [...this.department_list];
     },
 
     filterDepartments(value, update) {
       if (value === '') {
         update(() => {
-          this.initOptions()
-        })
-        return
+          this.initOptions();
+        });
+        return;
       }
       update(() => {
-        const needle = value.toLowerCase()
-        this.options = this.department_list.filter(d => {
-          const include = d.name.toLowerCase().includes(needle)
-          return include
-        })
-      })
+        const needle = value.toLowerCase();
+        this.options = this.department_list.filter((d) => {
+          const include = d.name.toLowerCase().includes(needle);
+          return include;
+        });
+      });
     },
   },
 
   created() {
     if (this.load_departments) {
-      this.loading = true
+      this.loading = true;
       this.$store.dispatch('loadDepartments').then(() => {
-        this.initOptions()
-        this.loading = false
-      })
+        this.initOptions();
+        this.loading = false;
+      });
     }
-  }
-}
+  },
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

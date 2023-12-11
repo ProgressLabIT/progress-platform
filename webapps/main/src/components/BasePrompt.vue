@@ -15,15 +15,12 @@
           :type="input_type"
           :max="max"
           :min="min"
-          v-model="value">
+          v-model="value"
+        >
         </q-input>
       </q-card-section>
       <q-card-actions align="between">
-        <q-btn
-          size="12px"
-          flat
-          color="theme-grey"
-          @click="$emit('close')">
+        <q-btn size="12px" flat color="theme-grey" @click="$emit('close')">
           {{ $t('cancel') }}
         </q-btn>
         <q-btn
@@ -31,7 +28,8 @@
           flat
           v-if="value != initial_value"
           color="theme-blue"
-          @click="update">
+          @click="update"
+        >
           {{ $t('save') }}
         </q-btn>
       </q-card-actions>
@@ -40,63 +38,60 @@
 </template>
 
 <script>
-import BaseDialog from '@/components/BaseDialog.vue'
+import BaseDialog from '@/components/BaseDialog.vue';
 export default {
-
   name: 'BasePrompt',
 
   components: {
-    BaseDialog
+    BaseDialog,
   },
 
   props: {
     show: {
       type: Boolean,
-      default: true
+      default: true,
     },
     width: {
       type: String,
-      default: '300px'
+      default: '300px',
     },
     prompt: {
       type: String,
-      default: undefined
+      default: undefined,
     },
     input_type: {
       type: String,
-      default: 'text'
+      default: 'text',
     },
     initial_value: {
-      required: true
+      required: true,
     },
     max: {
       type: Number,
-      default: null
+      default: null,
     },
     min: {
       type: Number,
-      default: null
-    }
-
+      default: null,
+    },
   },
 
-  data () {
+  data() {
     return {
-      value: null
-    }
+      value: null,
+    };
   },
 
   methods: {
     update() {
-      this.$emit('update', this.value)
-    }
+      this.$emit('update', this.value);
+    },
   },
 
   updated() {
-    this.value = this.initial_value
-  }
-}
+    this.value = this.initial_value;
+  },
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

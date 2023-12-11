@@ -6,7 +6,7 @@
     @cancel="$router.back()"
     @submit="submit"
   >
-     <template #title>
+    <template #title>
       {{ $t('operation.new') }}
     </template>
 
@@ -17,7 +17,8 @@
             filled
             stack-label
             :label="$capitalize($t('name'))"
-            v-model="new_operation_data.name">
+            v-model="new_operation_data.name"
+          >
           </q-input>
         </div>
 
@@ -26,7 +27,8 @@
             filled
             stack-label
             :label="$capitalize($t('code'))"
-            v-model="new_operation_data.code">
+            v-model="new_operation_data.code"
+          >
           </q-input>
         </div>
 
@@ -36,7 +38,8 @@
             stack-label
             autogrow
             :label="$capitalize($t('description'))"
-            v-model="new_operation_data.description">
+            v-model="new_operation_data.description"
+          >
           </q-input>
         </div>
       </div>
@@ -45,48 +48,54 @@
 </template>
 
 <script>
-import BaseModalForm from '@/components/BaseModalForm.vue'
+import BaseModalForm from '@/components/BaseModalForm.vue';
 
 export default {
   name: 'OperationNew',
 
   components: { BaseModalForm },
 
-  data () {
+  data() {
     return {
       new_operation_data: {
         name: undefined,
         code: undefined,
-        description: undefined
-      }
-    }
+        description: undefined,
+      },
+    };
   },
 
   methods: {
     async submit() {
       if (!this.new_operation_data.name) {
-        window.alert(this.$capitalize(this.$t('operations.alerts.op_name_missing')))
-        return
+        window.alert(
+          this.$capitalize(this.$t('operations.alerts.op_name_missing')),
+        );
+        return;
       }
 
       try {
-        const new_operation_key = await this.$store.dispatch('createOperation', this.new_operation_data)
+        const new_operation_key = await this.$store.dispatch(
+          'createOperation',
+          this.new_operation_data,
+        );
 
         await this.$router.push({
           name: 'operationDetail',
           params: {
-            operation_key: new_operation_key
-          }
-        })
+            operation_key: new_operation_key,
+          },
+        });
       } catch (error) {
         if (error.response.status === 409) {
-          window.alert(this.$capitalize(this.$t('operations.alerts.op_name_used')))
-        }
-        else {
-          window.alert(error)
+          window.alert(
+            this.$capitalize(this.$t('operations.alerts.op_name_used')),
+          );
+        } else {
+          window.alert(error);
         }
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>

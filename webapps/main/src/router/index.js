@@ -1,6 +1,11 @@
-import { route } from 'quasar/wrappers'
-import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
-import routes from './routes'
+import { route } from 'quasar/wrappers';
+import {
+  createRouter,
+  createMemoryHistory,
+  createWebHistory,
+  createWebHashHistory,
+} from 'vue-router';
+import routes from './routes';
 
 /*
  * If not building with SSR mode, you can
@@ -14,7 +19,9 @@ import routes from './routes'
 export default route(function ({ store }) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
-    : (process.env.VUE_ROUTER_MODE === 'history' ? createWebHistory : createWebHashHistory)
+    : process.env.VUE_ROUTER_MODE === 'history'
+      ? createWebHistory
+      : createWebHashHistory;
 
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
@@ -23,37 +30,40 @@ export default route(function ({ store }) {
     // Leave this as is and make changes in quasar.conf.js instead!
     // quasar.conf.js -> build -> vueRouterMode
     // quasar.conf.js -> build -> publicPath
-    history: createHistory(process.env.VUE_ROUTER_BASE)
-  })
+    history: createHistory(process.env.VUE_ROUTER_BASE),
+  });
 
   function hasRoutePermission(route) {
-    return store.getters.hasPermission(route.meta.scope)
+    return store.getters.hasPermission(route.meta.scope);
   }
 
   Router.beforeEach((to, from, next) => {
     // Make sure user is authenticated
-    const ignore_route = ['root', 'login'].includes(to.name)
+    const ignore_route = ['root', 'login'].includes(to.name);
 
     if (!ignore_route && !store.getters.isLoggedIn) {
-      window.alert("Per visualizzare questa pagina è necessario fare prima l'accesso")
-      next({ name: 'login', query: { redirect_to: to.fullPath } })
+      window.alert(
+        "Per visualizzare questa pagina è necessario fare prima l'accesso",
+      );
+      next({ name: 'login', query: { redirect_to: to.fullPath } });
     }
     // Make sure user has appropriate permissions to access the page
     else {
-      const not_authorized = to.matched.some( r => !hasRoutePermission(r) )
+      const not_authorized = to.matched.some((r) => !hasRoutePermission(r));
       if (not_authorized) {
-        window.alert("L'utente non ha le autorizzazioni necessarie per accedere a questa pagina")
-        next(false)
-      }
-      else {
+        window.alert(
+          "L'utente non ha le autorizzazioni necessarie per accedere a questa pagina",
+        );
+        next(false);
+      } else {
         // Consider the navigation as an interaction > Reset session timeout
         if (!ignore_route) {
-          store.commit('SET_SESSION_TIMEOUT')
+          store.commit('SET_SESSION_TIMEOUT');
         }
-        next()
+        next();
       }
     }
-  })
+  });
 
-  return Router
-})
+  return Router;
+});

@@ -2,27 +2,28 @@
   <BaseDialog :show="true" :maximized="true">
     <div class="fixed-full row fit background flex-center">
       <q-card square class="surface1 q-pa-md" style="max-width: 600px">
-
         <!-- DIALOG TITLE -->
         <q-card-section class="text-h2 display weight-bold">
           {{ $t('user.new') }}
         </q-card-section>
 
         <transition name="slide-fade" mode="out-in">
-          <div v-if="stage==='form'" key="form">
+          <div v-if="stage === 'form'" key="form">
             <q-card-section>
               <div class="row q-col-gutter-xl text-low">
                 <div
                   class="col-6"
                   v-for="field in text_fields"
-                  :key="field.model">
+                  :key="field.model"
+                >
                   <div class="text-h5 uppercase">
                     {{ $t(`user.${field.model}`) }}
                   </div>
                   <q-input
                     dense
                     autocomplete="null"
-                    v-model="new_user_data[field.model]">
+                    v-model="new_user_data[field.model]"
+                  >
                   </q-input>
                 </div>
                 <div class="col-6">
@@ -32,7 +33,8 @@
                   <BaseAutocompleteDepartment
                     :value="new_user_data.department_key"
                     :key_only="true"
-                    @select="new_user_data.department_key = $event">
+                    @select="new_user_data.department_key = $event"
+                  >
                   </BaseAutocompleteDepartment>
                 </div>
                 <div class="col-6">
@@ -43,7 +45,8 @@
                     dense
                     type="number"
                     autocomplete="null"
-                    v-model.number="new_user_data.hourly_cost">
+                    v-model.number="new_user_data.hourly_cost"
+                  >
                   </q-input>
                 </div>
               </div>
@@ -55,11 +58,13 @@
                 <div
                   v-for="check in permissions"
                   :key="check.name"
-                  class="col-6">
+                  class="col-6"
+                >
                   <q-checkbox
                     dense
                     :val="check.name"
-                    v-model="new_user_data.scopes">
+                    v-model="new_user_data.scopes"
+                  >
                     {{ check.label }}
                   </q-checkbox>
                 </div>
@@ -69,10 +74,7 @@
             <q-card-section>
               <div class="row">
                 <div class="col">
-                  <q-btn
-                    class="full-width"
-                    color="theme-blue"
-                    @click="submit">
+                  <q-btn class="full-width" color="theme-blue" @click="submit">
                     {{ $t('save') }}
                   </q-btn>
                 </div>
@@ -81,7 +83,8 @@
                   <q-btn
                     class="full-width"
                     color="theme-grey"
-                    @click="$router.back()">
+                    @click="$router.back()"
+                  >
                     {{ $t('cancel') }}
                   </q-btn>
                 </div>
@@ -89,11 +92,11 @@
             </q-card-section>
           </div>
 
-          <div v-else-if="stage==='creating'" key="creating">
+          <div v-else-if="stage === 'creating'" key="creating">
             <LoadingSignal />
           </div>
 
-          <div v-else-if="stage==='show_psw'" key="password">
+          <div v-else-if="stage === 'show_psw'" key="password">
             <q-card-section>
               {{ $capitalize($t('user.new_success')) }}
             </q-card-section>
@@ -106,14 +109,15 @@
               <div class="row items-center justify-between q-mt-md">
                 <div class="col-auto background q-pa-sm">
                   <div class="text-h2 highlight">
-                    {{ temp_psw}}
+                    {{ temp_psw }}
                   </div>
                 </div>
 
                 <q-btn
                   color="theme-grey"
                   :label="$t('close')"
-                  @click="$router.back()">
+                  @click="$router.back()"
+                >
                 </q-btn>
               </div>
             </q-card-section>
@@ -125,23 +129,22 @@
 </template>
 
 <script>
-import user_scopes from "@/lib/UserScopes.js"
-import BaseDialog from "@/components/BaseDialog.vue"
-import BaseAutocompleteDepartment from '@/components/BaseAutocompleteDepartment.vue'
-import LoadingSignal from '@/components/LoadingSignal.vue'
+import user_scopes from '@/lib/UserScopes.js';
+import BaseDialog from '@/components/BaseDialog.vue';
+import BaseAutocompleteDepartment from '@/components/BaseAutocompleteDepartment.vue';
+import LoadingSignal from '@/components/LoadingSignal.vue';
 // import generateTempPassword from '@/lib/TokenGenerator.js'
 
 export default {
-
   name: 'UserNew',
 
-  components: { 
+  components: {
     BaseAutocompleteDepartment,
     BaseDialog,
-    LoadingSignal
+    LoadingSignal,
   },
 
-  data () {
+  data() {
     return {
       text_fields: [
         { model: 'name' },
@@ -150,11 +153,11 @@ export default {
         { model: 'email' },
       ],
       permissions: user_scopes,
-      
+
       stage: 'form',
       valid: true,
       temp_psw: '',
-      
+
       new_user_data: {
         name: null,
         surname: null,
@@ -163,48 +166,45 @@ export default {
         department_key: null,
         hourly_cost: null,
         scopes: [], // permissions list
-        scope: ''
-      }
-    }
+        scope: '',
+      },
+    };
   },
 
   watch: {
-    'new_user_data.scopes': function(value) {
-      this.new_user_data.scope = value.join(' ')
-    }
+    'new_user_data.scopes': function (value) {
+      this.new_user_data.scope = value.join(' ');
+    },
   },
 
   methods: {
     submit() {
       if (!this.new_user_data.username) {
-        window.alert(this.$t('user.alerts.username_missing'))
-      }
-
-      else if (!this.new_user_data.scopes.length) {
-        window.alert(this.$t('user.alerts.permission_missing'))
-      }
-      
-      else {
-        this.stage = 'creating'
+        window.alert(this.$t('user.alerts.username_missing'));
+      } else if (!this.new_user_data.scopes.length) {
+        window.alert(this.$t('user.alerts.permission_missing'));
+      } else {
+        this.stage = 'creating';
         // this.new_user_data.temp_psw = generateTempPassword(8)
-        
-        this.$store.dispatch('createUser', this.new_user_data)
-        .then( (temp_psw) => {
-          this.stage = 'show_psw'
-          this.temp_psw = temp_psw
-        })
-        .catch( err => {
-          if (err.response.status === 409) {
-            window.alert(this.$t('user.alerts.username_already_exists'))
-          }
-          else { window.alert(err) }
-          this.stage = 'form'
-        })
+
+        this.$store
+          .dispatch('createUser', this.new_user_data)
+          .then((temp_psw) => {
+            this.stage = 'show_psw';
+            this.temp_psw = temp_psw;
+          })
+          .catch((err) => {
+            if (err.response.status === 409) {
+              window.alert(this.$t('user.alerts.username_already_exists'));
+            } else {
+              window.alert(err);
+            }
+            this.stage = 'form';
+          });
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>

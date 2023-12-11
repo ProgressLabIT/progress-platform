@@ -1,13 +1,15 @@
 <template>
   <BaseDialog :show="true" @close="exit" maximized>
-    <q-card class="surface1 row" bordered square style="width: 95vw; height: 95vh">
-
+    <q-card
+      class="surface1 row"
+      bordered
+      square
+      style="width: 95vw; height: 95vh"
+    >
       <!-- LEFT SECTION -->
       <div class="col-7 column full-height">
-
         <!-- HEADER -->
-        <IssueHeader :issue="issue" @type-change="refreshIssue"/>
-
+        <IssueHeader :issue="issue" @type-change="refreshIssue" />
 
         <!-- FORM DATA -->
         <div class="row items-center q-pl-lg q-mt-sm">
@@ -21,7 +23,11 @@
 
         <div class="row q-px-lg q-pt-md q-mb-md">
           <template v-if="issue.data.length > 0">
-            <div v-for="field in issue.data" :key="field._key" class="col-auto q-pr-md">
+            <div
+              v-for="field in issue.data"
+              :key="field._key"
+              class="col-auto q-pr-md"
+            >
               <FormField
                 :field="field"
                 :root-path="`/media/issue/${issue_key}`"
@@ -30,9 +36,7 @@
               />
             </div>
           </template>
-          <div v-else class="col-auto text-italic">
-            No data
-          </div>
+          <div v-else class="col-auto text-italic">No data</div>
         </div>
 
         <!-- ISSUE EVENTS -->
@@ -45,15 +49,22 @@
           </div>
         </div>
 
-
         <q-list class="q-ml-lg q-px-xl col scroll q-pb-lg">
           <q-item
-            v-for="e, index in history"
+            v-for="(e, index) in history"
             :key="e._key"
-            class="q-mt-md relative-position row justify-between full-width items-baseline">
-
+            class="q-mt-md relative-position row justify-between full-width items-baseline"
+          >
             <!-- TIMELINE DOT & LINE -->
-            <div style="position: absolute; left: -30px; top: 13px; height: 100%; width: 32px">
+            <div
+              style="
+                position: absolute;
+                left: -30px;
+                top: 13px;
+                height: 100%;
+                width: 32px;
+              "
+            >
               <div class="column full-height">
                 <div class="dot"></div>
                 <div v-if="index < history.length - 1" class="thread"></div>
@@ -84,7 +95,8 @@
               size="12px"
               icon="mdi-check"
               :label="$t('issue_button_close')"
-              @click="closeIssue">
+              @click="closeIssue"
+            >
             </q-btn>
             <q-btn
               v-if="issue.critical"
@@ -92,7 +104,8 @@
               icon="mdi-alert-circle-outline"
               color="theme-blue"
               :label="$t('issue_button_remove_critical')"
-              @click="toggleCritical">
+              @click="toggleCritical"
+            >
             </q-btn>
             <q-btn
               v-else
@@ -100,7 +113,8 @@
               color="theme-red"
               icon="mdi-alert-octagon"
               :label="$t('issue_button_add_critical')"
-              @click="toggleCritical">
+              @click="toggleCritical"
+            >
             </q-btn>
           </template>
           <template v-else>
@@ -109,14 +123,26 @@
               color="theme-blue"
               icon="mdi-restore"
               :label="$t('issue_button_reopen')"
-              @click="() => { issue.critical=false; reopenIssue() }">
+              @click="
+                () => {
+                  issue.critical = false;
+                  reopenIssue();
+                }
+              "
+            >
             </q-btn>
             <q-btn
               color="theme-red"
               size="12px"
               icon="mdi-restore-alert"
               :label="$t('issue_button_reopen_critical')"
-              @click="() => { issue.critical=true; reopenIssue() }">
+              @click="
+                () => {
+                  issue.critical = true;
+                  reopenIssue();
+                }
+              "
+            >
             </q-btn>
           </template>
           <q-space />
@@ -126,18 +152,19 @@
             size="12px"
             icon="mdi-delete"
             :label="$t('delete')"
-            @click="deleteIssue">
+            @click="deleteIssue"
+          >
           </q-btn>
           <q-btn
             size="12px"
             icon="mdi-keyboard-return"
             color="theme-grey"
             :label="$t('back')"
-            @click="exit">
+            @click="exit"
+          >
           </q-btn>
         </div>
       </div>
-
 
       <q-separator vertical spaced />
 
@@ -145,7 +172,8 @@
       <MessageThread
         :messages="messages"
         context="issue"
-        :context_key="issue._key">
+        :context_key="issue._key"
+      >
         <template #header>
           <div class="display low-text text-h5 col-auto q-pb-md">
             {{ $t('message', 2) }}
@@ -153,23 +181,20 @@
           <q-separator></q-separator>
         </template>
       </MessageThread>
-
     </q-card>
   </BaseDialog>
 </template>
 
 <script>
-import event from '@/mixins/event.js'
-import IssueHeader from '@/components/IssueHeader.vue'
-import enrichIssue from '@/mixins/issues.js'
-import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
-import BaseDialog from '@/components/BaseDialog.vue'
-import FormField from '@/components/FormField.vue'
-import MessageThread from '@/components/MessageThread.vue'
-
+import event from '@/mixins/event.js';
+import IssueHeader from '@/components/IssueHeader.vue';
+import enrichIssue from '@/mixins/issues.js';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import BaseDialog from '@/components/BaseDialog.vue';
+import FormField from '@/components/FormField.vue';
+import MessageThread from '@/components/MessageThread.vue';
 
 export default {
-
   name: 'IssueDetail',
 
   components: {
@@ -177,7 +202,7 @@ export default {
     MessageThread,
     BaseUserAvatar,
     BaseDialog,
-    FormField
+    FormField,
   },
 
   mixins: [enrichIssue, event],
@@ -186,10 +211,10 @@ export default {
     // from router
     issue_key: {
       type: String,
-      required: true
+      required: true,
     },
     job_key: String,
-    wo_key: String
+    wo_key: String,
   },
 
   data() {
@@ -199,50 +224,54 @@ export default {
       loading: false,
       recording: false,
       base_path: '/media/user/',
-    }
+    };
   },
 
   computed: {
     issue() {
-      const issue_data = this.$store.getters.getIssueData(this.issue_key)
-      return this.enrichIssue(issue_data)
+      const issue_data = this.$store.getters.getIssueData(this.issue_key);
+      return this.enrichIssue(issue_data);
     },
 
     issue_type() {
-      return this.$store.getters.getIssueType(this.issue.issue_type_key)
+      return this.$store.getters.getIssueType(this.issue.issue_type_key);
     },
 
     form_fields() {
-      const form_template = this.issue_type?.form_template ?? []
-      return form_template.map(field => ({
+      const form_template = this.issue_type?.form_template ?? [];
+      return form_template.map((field) => ({
         ...field,
-        value: this.issue.data
-          .find(({ form_field_key }) => form_field_key === field._key)?.value
-      }))
+        value: this.issue.data.find(
+          ({ form_field_key }) => form_field_key === field._key,
+        )?.value,
+      }));
     },
 
     user_can_delete() {
-      return this.$store.getters.hasPermission('production')
-    }
+      return this.$store.getters.hasPermission('production');
+    },
   },
 
   methods: {
     getHistory() {
-      this.$api.get('event', { params: { issue_key: this.issue._key }})
-      .then(resp => this.history = resp.data)
+      this.$api
+        .get('event', { params: { issue_key: this.issue._key } })
+        .then((resp) => (this.history = resp.data));
     },
 
     getAvatarSrc(user) {
-      return this.base_path + (user.name + user.surname).replace(/\s+/g, '') + '.jpg'
+      return (
+        this.base_path + (user.name + user.surname).replace(/\s+/g, '') + '.jpg'
+      );
     },
 
     getUserData(event) {
-      const user = this.$store.getters.user_data(event.user_key)
+      const user = this.$store.getters.user_data(event.user_key);
       return {
         ...user,
         full_name: user.name + ' ' + user.surname,
-        src: this.getAvatarSrc(user)
-      }
+        src: this.getAvatarSrc(user),
+      };
     },
 
     getHumanDate(timestamp) {
@@ -253,23 +282,25 @@ export default {
         hour: 'numeric',
         minute: '2-digit',
         second: '2-digit',
-        weekday: 'short'
-      }
-      return this.$capitalize(this.$formatDateTime(timestamp, this.$i18n.locale, config))
+        weekday: 'short',
+      };
+      return this.$capitalize(
+        this.$formatDateTime(timestamp, this.$i18n.locale, config),
+      );
     },
 
-    notify({ message, color='theme-green' }) {
+    notify({ message, color = 'theme-green' }) {
       this.$q.notify({
         message,
         color,
         timeout: '1500',
-        position: 'top'
-      })
+        position: 'top',
+      });
     },
 
     refreshIssue() {
-      this.$store.dispatch('getIssues', { issue_key: this.issue_key })
-      this.getHistory()
+      this.$store.dispatch('getIssues', { issue_key: this.issue_key });
+      this.getHistory();
     },
 
     closeIssue() {
@@ -277,32 +308,32 @@ export default {
         event_type: 'ISSUE_CLOSED',
         event_data: {
           issue_data: {
-            _key: this.issue._key
-          }
-        }
+            _key: this.issue._key,
+          },
+        },
       }).then(() => {
-        this.refreshIssue()
-        this.notify({ message: this.$t('issue_update_success') })
-      })
+        this.refreshIssue();
+        this.notify({ message: this.$t('issue_update_success') });
+      });
     },
 
     toggleCritical() {
-      this.issue.critical = !this.issue.critical
+      this.issue.critical = !this.issue.critical;
       this.sendEvent({
         event_type: 'ISSUE_UPDATED',
         event_data: {
           issue_data: {
             _key: this.issue._key,
-            critical: this.issue.critical
-          }
-        }
+            critical: this.issue.critical,
+          },
+        },
       }).then(() => {
-        this.refreshIssue()
+        this.refreshIssue();
         this.notify({
           message: this.$t('issue_update_success'),
-          color: this.issue.critical ? 'theme-red' : 'theme-green'
-        })
-      })
+          color: this.issue.critical ? 'theme-red' : 'theme-green',
+        });
+      });
     },
 
     reopenIssue() {
@@ -312,50 +343,53 @@ export default {
           issue_data: {
             _key: this.issue._key,
             critical: this.issue.critical,
-          }
-        }
+          },
+        },
       }).then(() => {
-        this.refreshIssue()
+        this.refreshIssue();
         this.notify({
-          message: this.$t('issue_updated')
-        })
-      })
+          message: this.$t('issue_updated'),
+        });
+      });
     },
 
     deleteIssue() {
-      this.$q.dialog({
-        cancel: true,
-        title: this.$t('issue_delete_confirm_title'),
-        message: this.$t('issue_delete_confirm_question')
-      }).onOk(() => {
-        this.sendEvent({
-          event_type: 'ISSUE_DELETED',
-          event_data: {
-            issue_data: {
-              _key: this.issue_key
-            }
-          }
-        }).then(async () => {
-          const work_order_key = this.$store.state.traceability.working_job_data.wo_key
-          await this.$store.dispatch('getIssues', { work_order_key })
-          this.exit()
-          this.notify({
-            message: this.$t('issue_delete_success')
-          })
+      this.$q
+        .dialog({
+          cancel: true,
+          title: this.$t('issue_delete_confirm_title'),
+          message: this.$t('issue_delete_confirm_question'),
         })
-      })
+        .onOk(() => {
+          this.sendEvent({
+            event_type: 'ISSUE_DELETED',
+            event_data: {
+              issue_data: {
+                _key: this.issue_key,
+              },
+            },
+          }).then(async () => {
+            const work_order_key =
+              this.$store.state.traceability.working_job_data.wo_key;
+            await this.$store.dispatch('getIssues', { work_order_key });
+            this.exit();
+            this.notify({
+              message: this.$t('issue_delete_success'),
+            });
+          });
+        });
     },
 
     exit() {
-      this.$router.back()
-    }
+      this.$router.back();
+    },
   },
 
   created() {
-    this.$store.dispatch('loadUsers')
-    this.getHistory()
-  }
-}
+    this.$store.dispatch('loadUsers');
+    this.getHistory();
+  },
+};
 </script>
 
 <style lang="sass" scoped>

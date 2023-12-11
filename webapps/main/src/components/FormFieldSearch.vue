@@ -1,5 +1,5 @@
 <template>
-  <q-card square class="surface1" style="min-width: 400px;">
+  <q-card square class="surface1" style="min-width: 400px">
     <q-card-section>
       <q-input
         v-model="search_text"
@@ -7,8 +7,10 @@
         icon="mdi-magnify"
         debounce="300"
         dense
-        square filled
-        class="full-width">
+        square
+        filled
+        class="full-width"
+      >
         <template #append>
           <q-icon name="mdi-magnify" />
         </template>
@@ -17,10 +19,11 @@
 
     <q-card-section>
       <q-virtual-scroll
-        style="max-height: 200px;"
+        style="max-height: 200px"
         :items="filtered_fields"
         v-slot="{ item, index }"
-        class="surface2">
+        class="surface2"
+      >
         <q-item clickable @click="$emit('select', item)">
           <q-item-section avatar>
             <q-icon :name="getFieldIcon(item.type)" />
@@ -30,9 +33,7 @@
               <span class="highlight">
                 {{ item.name }}
               </span>
-              <span class="smaller q-ml-sm">
-                ({{ item.default_label }})
-              </span>
+              <span class="smaller q-ml-sm"> ({{ item.default_label }}) </span>
             </q-item-label>
             <q-item-label caption v-if="item.default_hint">
               {{ item.default_hint }}
@@ -47,30 +48,37 @@
         color="theme-blue"
         :label="$t('new')"
         icon="mdi-plus"
-        @click="show_new_field=true"
-        class="full-width q-">
+        @click="show_new_field = true"
+        class="full-width q-"
+      >
       </q-btn>
     </q-card-section>
 
-    <BaseDialog :show="show_new_field" @close="show_new_field=false">
-      <FormFieldNew @close="() => {show_new_field=false; fetchFields();}"/>
+    <BaseDialog :show="show_new_field" @close="show_new_field = false">
+      <FormFieldNew
+        @close="
+          () => {
+            show_new_field = false;
+            fetchFields();
+          }
+        "
+      />
     </BaseDialog>
   </q-card>
 </template>
 
 <script>
-import FormFieldNew from '@/components/FormFieldNew.vue'
-import BaseDialog from '@/components/BaseDialog.vue'
-import multiMatch from '@/lib/MultiFieldSearch.js'
-import form from '@/mixins/form.js'
+import FormFieldNew from '@/components/FormFieldNew.vue';
+import BaseDialog from '@/components/BaseDialog.vue';
+import multiMatch from '@/lib/MultiFieldSearch.js';
+import form from '@/mixins/form.js';
 
 export default {
-
   name: 'FormFieldSearch',
 
   components: {
     FormFieldNew,
-    BaseDialog
+    BaseDialog,
   },
 
   mixins: [form],
@@ -78,40 +86,39 @@ export default {
   props: {
     excludeKeys: {
       type: Array,
-      default: () => []
-    }
+      default: () => [],
+    },
   },
 
-  data () {
+  data() {
     return {
       search_text: null,
       field_list: [],
       show_new_field: false,
-      search_fields: ['name', 'default_label', 'default_hint']
-    }
+      search_fields: ['name', 'default_label', 'default_hint'],
+    };
   },
 
   computed: {
     filtered_fields() {
       return this.field_list
-        .filter(f => !this.excludeKeys.includes(f._key))
-        .filter(f => multiMatch(this.search_text, f, this.search_fields))
+        .filter((f) => !this.excludeKeys.includes(f._key))
+        .filter((f) => multiMatch(this.search_text, f, this.search_fields));
     },
   },
 
   methods: {
     fetchFields() {
-      this.$api.get('field').then( resp => {
-        this.field_list = resp.data
-      })
-    }
+      this.$api.get('field').then((resp) => {
+        this.field_list = resp.data;
+      });
+    },
   },
 
   created() {
-    this.fetchFields()
-  }
-}
+    this.fetchFields();
+  },
+};
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>
