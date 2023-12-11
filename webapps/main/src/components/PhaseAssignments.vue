@@ -342,7 +342,7 @@ export default {
         ...this.equipment.map((e) => {
           return {
             ...e,
-            class: e.class ? e.class : this.capitalize($t('no_class')),
+            class: e.class ? e.class : this.capitalize(this.$t('no_class')),
           };
         }),
       ];
@@ -350,21 +350,21 @@ export default {
 
     add_operator_list() {
       return [
-        { header: this.capitalize($t('department', 2)) },
+        { header: this.capitalize(this.$t('department', 2)) },
         ...this.departments.map((d) => {
           return {
             ...d,
-            department: this.capitalize($t('department', 1)),
+            department: this.capitalize(this.$t('department', 1)),
           };
         }),
         { divider: true },
-        { header: this.capitalize($t('operator', 2)) },
+        { header: this.capitalize(this.$t('operator', 2)) },
         ...this.operators.map((o) => {
           return {
             ...o,
             department: o.department
               ? o.department
-              : this.capitalize($t('no_department')),
+              : this.capitalize(this.$t('no_department')),
           };
         }),
       ];

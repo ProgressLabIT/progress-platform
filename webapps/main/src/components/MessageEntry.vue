@@ -142,9 +142,6 @@ export default {
   },
 
   methods: {
-    getUserKey(message) {
-      return this.message._from.split('/')[1];
-    },
     updateMessage(content) {
       const message_data = {
         ...this.message,

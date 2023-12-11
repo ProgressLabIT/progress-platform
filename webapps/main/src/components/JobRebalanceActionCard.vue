@@ -357,7 +357,7 @@ export default {
       });
     },
 
-    filterOperator(val, update, abort) {
+    filterOperator(val, update) {
       update(() => {
         const search_fields = ['name', 'surname'];
         this.filtered_operators = this.operators.filter((o) =>

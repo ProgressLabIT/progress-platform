@@ -72,9 +72,7 @@ const operatorRoutes = [
         path: 'messages',
         name: 'jobMessages',
         component: () => import('@/components/MessageThread.vue'),
-        props: (route) => ({
-          context: 'job',
-        }),
+        props: () => ({ context: 'job' }),
       },
       {
         path: 'process',

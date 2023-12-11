@@ -512,13 +512,13 @@ export default {
       this.editing = false;
     },
 
-    async filterDepartment(val, update, abort) {
+    async filterDepartment(val, update) {
       update(() => {
         this.department_search_text = val.toLowerCase();
       });
     },
 
-    async filterOperator(val, update, abort) {
+    async filterOperator(val, update) {
       update(() => {
         this.operator_search_text = val.toLowerCase();
       });

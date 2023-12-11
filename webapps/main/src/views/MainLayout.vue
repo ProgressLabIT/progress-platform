@@ -63,7 +63,6 @@
 
 <script>
 import { useQuasar } from 'quasar';
-import { DateTime as DT } from 'luxon';
 import AppBar from '@/components/AppBar.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import drawer from '@/mixins/drawer.js';

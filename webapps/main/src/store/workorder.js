@@ -89,7 +89,7 @@ const workorder = {
       });
     },
 
-    async updateWorkOrder({ dispatch }, { wo_key, ...work_order_updates }) {
+    async updateWorkOrder(_, { wo_key, ...work_order_updates }) {
       await api.patch(`work-order/${wo_key}`, work_order_updates);
     },
 

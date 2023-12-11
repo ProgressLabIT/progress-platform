@@ -128,7 +128,6 @@ export default {
       }
       update(() => {
         this.loading = true;
-        const needle = value.toLowerCase();
         // No need of multiFieldSearch here. The api already checks all the necessary fields with a single search term.
         this.$api
           .get('work-order', { params: { search: value, open: true } })

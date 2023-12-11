@@ -82,7 +82,6 @@
 </template>
 
 <script>
-import { throttle as _throttle } from 'lodash';
 import enrichIssue from '@/mixins/issues.js';
 
 export default {

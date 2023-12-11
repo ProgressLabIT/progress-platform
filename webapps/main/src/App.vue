@@ -16,7 +16,7 @@ export default defineComponent({
 
   created() {
     // Save vuex state in localStorage before refresh or tab close
-    window.addEventListener('beforeunload', async (event) => {
+    window.addEventListener('beforeunload', async () => {
       if (this.$route.name != 'login') {
         localStorage.setItem(
           'TEMP_SESSION',

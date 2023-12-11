@@ -77,9 +77,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
-import ProgressBtn from '@/components/ProgressBtn.vue';
 import { useStore } from 'vuex';
 import { timestamp } from '@/lib/TimeHandling.js';
 import { api } from '@/boot/axios.js';
@@ -113,7 +111,3 @@ async function toggleJob() {
   await store.dispatch('loadJobAssignments', user_key);
 }
 </script>
-
-<style lang="sass" scoped>
-.glass
-</style>

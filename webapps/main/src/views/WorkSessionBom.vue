@@ -126,7 +126,7 @@ export default {
     },
 
     bom() {
-      return this.job.hasOwnProperty('job_bom')
+      return Object.hasOwn(this.job, 'job_bom')
         ? this.job.job_bom.map((i) => {
             // multiply items by job quantity. Does not apply to tools and safety items
             let quantity = i.qt;

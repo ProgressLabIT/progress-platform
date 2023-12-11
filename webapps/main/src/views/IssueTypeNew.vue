@@ -132,7 +132,7 @@ export default {
     submit() {
       this.saving = true;
       if (!this.new_issue_type.name) {
-        window.alert(c(this.$t('issue_type_alerts_name_missing')));
+        window.alert(this.$capitalize(this.$t('issue_type_alerts_name_missing')));
       } else {
         this.$store
           .dispatch('createIssueType', this.new_issue_type)
@@ -146,7 +146,7 @@ export default {
           })
           .catch((err) => {
             if (err.response.status === 409) {
-              window.alert(c(this.$t('issue_type_alerts_name_or_code_used')));
+              window.alert(this.$capitalize(this.$t('issue_type_alerts_name_or_code_used')));
             } else {
               window.alert(err);
             }

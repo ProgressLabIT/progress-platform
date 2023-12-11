@@ -446,12 +446,10 @@ export default {
     },
 
     updateSequence(new_sequence) {
-      const old_queue_index = this.change_sequence_for_wo.sequence - 1;
-      const new_queue_index = new_sequence - 1;
       this.$emit('editing');
       this.$store.commit('UPDATE_TEMP_QUEUE', {
         new_queue_index: new_sequence - 1,
-        old_queue_index,
+        old_queue_index: this.change_sequence_for_wo.sequence - 1,
       });
       this.change_sequence_for_wo = null;
     },

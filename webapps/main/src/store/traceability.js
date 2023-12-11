@@ -165,24 +165,21 @@ const traceability = {
   },
 
   actions: {
-    loadWorkingJobData({ commit, dispatch }, job_key) {
-      return new Promise(async (resolve) => {
-        // Get job data
-        const job_resp = await api.get(`job/${job_key}`);
-        const job_data = job_resp.data.detail;
+    async loadWorkingJobData({ commit, dispatch }, job_key) {
+      // Get job data
+      const job_resp = await api.get(`job/${job_key}`);
+      const job_data = job_resp.data.detail;
 
-        // Get active batch data (if any)
-        let batch_data = {};
-        if (job_data.active_batch_key) {
-          const batch_resp = await api.get(
-            `batch/${job_data.active_batch_key}`,
-          );
-          batch_data = batch_resp.data.detail;
-        }
-        commit('LOAD_WORKING_JOB_DATA', { job_data, batch_data });
-        await dispatch('getIssues', { work_order_key: job_data.wo_key });
-        resolve();
-      });
+      // Get active batch data (if any)
+      let batch_data = {};
+      if (job_data.active_batch_key) {
+        const batch_resp = await api.get(
+          `batch/${job_data.active_batch_key}`,
+        );
+        batch_data = batch_resp.data.detail;
+      }
+      commit('LOAD_WORKING_JOB_DATA', { job_data, batch_data });
+      await dispatch('getIssues', { work_order_key: job_data.wo_key });
     },
 
     startJob({ commit, state, rootState }) {

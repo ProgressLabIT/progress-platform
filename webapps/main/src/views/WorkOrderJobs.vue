@@ -381,7 +381,7 @@
                   color="theme-blue"
                   icon="mdi-account-plus"
                   :label="$t('assign')"
-                  @click="updateSelectedJobData(job, true)"
+                  @click="updateSelectedJobData(job)"
                 >
                 </q-btn>
               </div>
@@ -666,7 +666,7 @@ export default {
       }
     },
 
-    updateSelectedJobData(job, selected) {
+    updateSelectedJobData(job) {
       this.selected_jobs.push(job._key);
       this.editMode = 'modify';
     },

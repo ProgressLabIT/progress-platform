@@ -3,7 +3,7 @@ import { timestamp } from '@/lib/TimeHandling.js';
 export default {
   methods: {
     sendEvent({ event_type, event_data }) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const session_data = this.$store.state.session;
         const event = {
           event_type,

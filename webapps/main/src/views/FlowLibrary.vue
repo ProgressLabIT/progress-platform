@@ -193,12 +193,11 @@ export default {
 
     fetchFlows() {
       // Get flow name from flows. Deployment data provides parameters and endpoint info
-      let flows_data, deployment_data;
       const calls = [
         this.$axios.post(this.flows_url, this.flow_query_filter),
         this.$axios.post(this.deployments_url, this.flow_query_filter),
       ];
-      this.$axios.all(calls).then((responses) => {
+      Promise.all(calls).then((responses) => {
         const flows_data = responses[0].data;
         const deployments_data = responses[1].data;
         this.flows = flows_data.map((f) => {

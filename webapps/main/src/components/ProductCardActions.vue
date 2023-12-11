@@ -120,7 +120,7 @@ export default {
     },
 
     showCopy() {
-      const dialog_title = this.$q
+      this.$q
         .dialog({
           title:
             this.$t('code') +
@@ -153,7 +153,7 @@ export default {
               });
             })
             .catch((err) => {
-              if ((err.response.status = 400)) {
+              if ((err.response.status === 400)) {
                 window.alert(err.response.data.detail.message);
               } else {
                 window.alert('An error occurred');

@@ -67,30 +67,26 @@ const session = {
   },
 
   actions: {
-    logout({ commit, dispatch, state, rootState }) {
-      return new Promise(async (resolve) => {
-        const is_working =
-          rootState.traceability.working_job_data.active || false;
-        if (is_working) {
-          try {
-            await dispatch('pauseJob');
-          } catch {
-            /*
-            Some edge cases caused by unknown bugs may leave active work sessions
-            in the vuex store, triggering the puaseJob action, which will cause error
-            because there are no active work sessions in the backend
-            */
-          }
+    async logout({ commit, dispatch, state, rootState }) {
+      const is_working =
+        rootState.traceability.working_job_data.active || false;
+      if (is_working) {
+        try {
+          await dispatch('pauseJob');
+        } catch {
+          /*
+          Some edge cases caused by unknown bugs may leave active work sessions
+          in the vuex store, triggering the puaseJob action, which will cause error
+          because there are no active work sessions in the backend
+          */
         }
-        api.delete(`session/${state.session_key}`).then(async () => {
-          commit('CLOSE_USER_SESSION');
-          this.$router.push({ name: 'login' });
-          resolve();
-        });
-      });
+      }
+      await api.delete(`session/${state.session_key}`)
+      commit('CLOSE_USER_SESSION');
+      this.$router.push({ name: 'login' });
     },
 
-    unlockSession({ commit, dispatch }) {
+    unlockSession({ commit }) {
       commit('TOGGLE_SESSION_LOCK', false);
       commit('SET_SESSION_TIMEOUT');
     },

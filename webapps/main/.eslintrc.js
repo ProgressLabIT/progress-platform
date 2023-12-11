@@ -17,7 +17,7 @@ module.exports = {
   // Rules order is important, please avoid shuffling them
   extends: [
     // Base ESLint recommended rules
-    // 'eslint:recommended',
+    'eslint:recommended',
 
     // Uncomment any of the lines below to choose desired strictness,
     // but leave only one uncommented!
@@ -55,6 +55,8 @@ module.exports = {
   rules: {
     // TODO: Enable this rule after gradually converting all prop names to camelCase
     'vue/prop-name-casing': 'off',
+
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 
     // allow debugger during development only
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',

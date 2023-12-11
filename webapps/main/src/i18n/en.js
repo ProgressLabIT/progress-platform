@@ -392,7 +392,7 @@ export default {
         title: 'Standard processing time',
       },
       step_check: {
-        title: 'Step declaration',
+        title: 'Step check batch',
         true: {
           title: 'Active',
           desc: 'Require the operator to declare each step of the procedure. The step will be considered executed on all the pieces included in the active batch. After the completion of all the steps in the procedure, the whole batch will be considered completed.',
@@ -401,7 +401,6 @@ export default {
           title: 'Not active',
           desc: 'No step verification. If a procedure is set for this phase it will be shown purely for informational purposes, without any check or control. The operator will declare directly the completion of the current batch.',
         },
-        title: 'Step check batch',
       },
       step_check_force_order: {
         false: {

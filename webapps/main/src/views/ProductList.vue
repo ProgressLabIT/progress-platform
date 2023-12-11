@@ -90,7 +90,6 @@ import ProductCard from '@/components/ProductCard.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 
 import { mapGetters } from 'vuex';
-import { debounce as _debounce } from 'lodash';
 
 export default {
   name: 'ProductList',
