@@ -9,7 +9,7 @@
 
       <JobCard v-if="selected_job" :job="selected_job"></JobCard>
 
-      <div class="row q-mt-lg justify-between" v-if="selected_job">
+      <div v-if="selected_job" class="row q-mt-lg justify-between">
         <q-btn size="md" color="theme-grey" @click="goToJobList">
           {{ $t('show_all') }}
         </q-btn>
@@ -79,6 +79,12 @@ export default {
     },
   },
 
+  created() {
+    if (!this.job_query_param) {
+      this.$router.replace({ query: 'first' });
+    }
+  },
+
   methods: {
     goToJob() {
       this.$router.push({
@@ -92,12 +98,6 @@ export default {
     goToJobList() {
       this.$router.push({ name: 'userJobsAll' });
     },
-  },
-
-  created() {
-    if (!this.job_query_param) {
-      this.$router.replace({ query: 'first' });
-    }
   },
 };
 </script>

@@ -5,11 +5,11 @@
     <div class="row full-height">
       <div class="col-3 full-height column">
         <q-input
+          v-model="search_text"
           dense
           filled
           class="q-px-md q-pt-md"
           :placeholder="$capitalize($t('search'))"
-          v-model="search_text"
         >
           <template #append>
             <q-icon name="mdi-magnify" />
@@ -23,11 +23,11 @@
         >
           <div class="row q-col-gutter-md q-pa-lg">
             <div
-              class="col-6"
               v-for="(check, index) in bool_filters"
               :key="index"
+              class="col-6"
             >
-              <q-checkbox dense size="xs" v-model="check.value">
+              <q-checkbox v-model="check.value" dense size="xs">
                 <span class="medium">
                   {{ $capitalize($t(`user.${check.name}`)) }}
                 </span>
@@ -53,13 +53,13 @@
         <!-- USER LIST -->
         <div class="scroll col">
           <div
+            v-for="(user, index) in filtered_users"
+            :key="index"
             class="row pointer q-px-lg q-py-xs medium"
             :class="{
               'alternate-row': index % 2 == 0,
               'bg-blue-backdrop': user._key == selected_user_key,
             }"
-            v-for="(user, index) in filtered_users"
-            :key="index"
             style="white-space: nowrap"
             @click="showUser(user)"
           >
@@ -204,6 +204,13 @@ export default {
     },
   },
 
+  created() {
+    const active_only = false;
+    this.$store.dispatch('loadUsers', active_only).then(() => {
+      this.vuex_ready = true;
+    });
+  },
+
   methods: {
     setDepartment(event) {
       this.department_filter = event;
@@ -219,13 +226,6 @@ export default {
     openUserNew() {
       this.$router.push({ name: 'newUser' });
     },
-  },
-
-  created() {
-    const active_only = false;
-    this.$store.dispatch('loadUsers', active_only).then(() => {
-      this.vuex_ready = true;
-    });
   },
 };
 </script>

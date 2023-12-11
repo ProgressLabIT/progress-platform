@@ -1,9 +1,9 @@
 <template>
   <BaseModalForm
     id="new-work-order-form"
-    @submit="postNewWorkOrder"
     :loading="loading"
     max-width="80vw"
+    @submit="postNewWorkOrder"
     @cancel="$router.back()"
   >
     <template #title>
@@ -25,9 +25,9 @@
 
       <!-- NEW WORK ORDER DATA  -->
       <div
-        class="row q-col-gutter-md q-py-sm items-center"
         v-for="(line, index) in new_work_orders"
         :key="index"
+        class="row q-col-gutter-md q-py-sm items-center"
       >
         <div
           v-for="(info, field_name) in new_wo_data"
@@ -35,13 +35,13 @@
           :class="info.cols"
         >
           <q-input
+            v-if="['start_from', 'due_by'].includes(field_name)"
+            v-model="new_work_orders[index][field_name]"
             dense
             filled
-            v-model="new_work_orders[index][field_name]"
             mask="####-##-##"
             hide-bottom-space
             :rules="[checkDate]"
-            v-if="['start_from', 'due_by'].includes(field_name)"
           >
             <template #append>
               <q-icon name="mdi-calendar" class="cursor-pointer">
@@ -51,9 +51,9 @@
                   transition-hide="scale"
                 >
                   <q-date
+                    v-model="new_work_orders[index][field_name]"
                     minimal
                     mask="YYYY-MM-DD"
-                    v-model="new_work_orders[index][field_name]"
                   >
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
@@ -75,11 +75,11 @@
 
           <q-input
             v-else
+            v-model="new_work_orders[index][field_name]"
             dense
             filled
             autocomplete="false"
             :type="field_name === 'qt_planned' ? 'number' : ''"
-            v-model="new_work_orders[index][field_name]"
           >
           </q-input>
         </div>
@@ -179,6 +179,11 @@ export default {
     },
   },
 
+  created() {
+    this.$store.dispatch('loadProductList');
+    this.addLine();
+  },
+
   methods: {
     addLine() {
       let empty_line = Object.fromEntries(
@@ -239,11 +244,6 @@ export default {
     deleteRow(index) {
       this.new_work_orders.splice(index, 1);
     },
-  },
-
-  created() {
-    this.$store.dispatch('loadProductList');
-    this.addLine();
   },
 };
 </script>

@@ -10,11 +10,11 @@
     :options="options"
     :option-label="(operator) => operator.name + ' ' + operator.surname"
     :option-value="keyOnly ? '_key' : null"
-    @filter="filter"
     :model-value="value"
     input-debounce="200"
     :emit-value="keyOnly"
     :map-options="keyOnly"
+    @filter="filter"
     @update:model-value="(selection) => $emit('select', selection)"
   >
     <template #option="scope">
@@ -118,6 +118,16 @@ export default {
     },
   },
 
+  created() {
+    if (this.loadData) {
+      this.loading = true;
+      this.$store.dispatch('loadUsers').then(() => {
+        this.initOptions();
+        this.loading = false;
+      });
+    }
+  },
+
   methods: {
     initOptions() {
       this.options = [...this.origin_list];
@@ -137,16 +147,6 @@ export default {
         });
       });
     },
-  },
-
-  created() {
-    if (this.loadData) {
-      this.loading = true;
-      this.$store.dispatch('loadUsers').then(() => {
-        this.initOptions();
-        this.loading = false;
-      });
-    }
   },
 };
 </script>

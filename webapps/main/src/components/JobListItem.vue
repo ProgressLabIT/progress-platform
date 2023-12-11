@@ -1,6 +1,6 @@
 <template>
   <q-item :class="{ 'text-low': job_data.stage == 'closed' }">
-    <q-item-section avatar v-if="show_key">
+    <q-item-section v-if="show_key" avatar>
       {{ job_data._key }}
     </q-item-section>
     <q-item-section v-if="show_assignee">
@@ -11,7 +11,7 @@
     <q-item-section v-if="show_progress">
       <BaseProgressBar :data="job_data" />
     </q-item-section>
-    <q-item-section side v-if="show_quantities">
+    <q-item-section v-if="show_quantities" side>
       {{ job_data.qt_completed + '/' + job_data.qt_planned }}
     </q-item-section>
   </q-item>

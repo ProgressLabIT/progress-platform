@@ -7,12 +7,12 @@
     :clearable="clearable"
     :options="options"
     option-label="name"
-    @filter="filter"
     :model-value="value"
     input-debounce="100"
     :option-value="keyOnly ? '_key' : null"
     :emit-value="keyOnly"
     :map-options="keyOnly"
+    @filter="filter"
     @update:model-value="(selection) => $emit('select', selection)"
   >
     <template #option="scope">
@@ -83,6 +83,16 @@ export default {
     },
   },
 
+  created() {
+    if (this.loadData) {
+      this.loading = true;
+      this.$store.dispatch('getIssueTypes', true).then(() => {
+        this.initOptions();
+        this.loading = false;
+      });
+    }
+  },
+
   methods: {
     initOptions() {
       this.options = [...this.origin_list];
@@ -102,16 +112,6 @@ export default {
         });
       });
     },
-  },
-
-  created() {
-    if (this.loadData) {
-      this.loading = true;
-      this.$store.dispatch('getIssueTypes', true).then(() => {
-        this.initOptions();
-        this.loading = false;
-      });
-    }
   },
 };
 </script>

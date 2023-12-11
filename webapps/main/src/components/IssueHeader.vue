@@ -18,8 +18,8 @@
           <q-btn
             flat
             round
-            @click.stop="show_issue_update = true"
             icon="mdi-pencil"
+            @click.stop="show_issue_update = true"
           />
         </span>
       </q-item-label>
@@ -52,6 +52,8 @@ export default {
     IssueForm,
   },
 
+  mixins: [event],
+
   props: {
     issue: {
       type: Object,
@@ -64,8 +66,6 @@ export default {
   },
 
   emits: ['typeChange'],
-
-  mixins: [event],
 
   data() {
     return {
@@ -99,6 +99,13 @@ export default {
       return base + critical;
     },
   },
+  watch: {
+    show_type_picker() {
+      if (this.show_type_picker == false) {
+        this.new_issue_type = null;
+      }
+    },
+  },
 
   methods: {
     changeIssueType() {
@@ -126,13 +133,6 @@ export default {
         );
         this.show_type_picker = false;
       });
-    },
-  },
-  watch: {
-    show_type_picker() {
-      if (this.show_type_picker == false) {
-        this.new_issue_type = null;
-      }
     },
   },
 };

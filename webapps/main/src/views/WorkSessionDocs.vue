@@ -24,8 +24,8 @@
 
     <MediaViewer
       :show="show_media >= 0 || show_media === 'img'"
-      @close="show_media = -1"
       v-bind="{ media_name, media_src }"
+      @close="show_media = -1"
     >
       <template #context-title>
         {{ $t('product.code').toUpperCase() }}: {{ product.code }}

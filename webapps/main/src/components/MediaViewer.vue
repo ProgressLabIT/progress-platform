@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="show" @close="$emit('close')" maximized>
+  <BaseDialog :show="show" maximized @close="$emit('close')">
     <!-- FILE NAME -->
     <div class="fixed-top-left medium highlight q-ma-md" style="z-index: 99">
       <div v-if="info === 'name'" class="q-pa-md row" :style="darkGlassStyle">
@@ -8,9 +8,9 @@
           <template v-if="isWorkSession">
             <template v-for="field in job_info">
               <div
-                class="row items-center q-py-xs"
                 v-if="job[field.name] != undefined"
                 :key="field.name"
+                class="row items-center q-py-xs"
               >
                 <div class="col text-h5 text-uppercase font-weight-medium">
                   {{ field.text }}
@@ -103,9 +103,9 @@
         <q-img v-if="is_image" fit="contain" :src="media_src"> </q-img>
         <div v-else class="q-py-xl">
           <vue-pdf-embed
+            ref="pdf"
             disable-text-layer
             disable-annotation-layer
-            ref="pdf"
             :source="media_src"
             :width="doc_width"
           >
@@ -225,6 +225,11 @@ export default {
     },
   },
 
+  created() {
+    this.doc_width = Math.min(this.$q.screen.width * 0.8, 1200);
+    this.darkGlassStyle = `z-index: 99; backdrop-filter: blur(4px); background-color: ${this.$theme.background}aa`;
+  },
+
   methods: {
     zoomIn() {
       this.doc_width = this.doc_width * 1.2;
@@ -233,11 +238,6 @@ export default {
     zoomOut() {
       this.doc_width = this.doc_width / 1.2;
     },
-  },
-
-  created() {
-    this.doc_width = Math.min(this.$q.screen.width * 0.8, 1200);
-    this.darkGlassStyle = `z-index: 99; backdrop-filter: blur(4px); background-color: ${this.$theme.background}aa`;
   },
 };
 </script>

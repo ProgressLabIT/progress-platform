@@ -20,15 +20,15 @@
             <div class="row justify-between">
               <q-btn
                 color="theme-red"
-                @click="deleteIssueType"
                 :label="$t('confirm')"
+                @click="deleteIssueType"
               >
               </q-btn>
               <q-btn
                 color="theme-grey"
-                @click="$router.back()"
                 :label="$t('cancel')"
                 class="q-ml-md"
+                @click="$router.back()"
               >
               </q-btn>
             </div>
@@ -43,8 +43,8 @@
               </span>
               <q-btn
                 color="theme-grey"
-                @click="$router.push({ name: 'issueTypeLibrary' })"
                 :label="$t('close')"
+                @click="$router.push({ name: 'issueTypeLibrary' })"
               >
               </q-btn>
             </div>

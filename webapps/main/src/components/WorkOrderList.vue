@@ -1,7 +1,7 @@
 <template>
   <div
-    ref="container"
     id="table_container"
+    ref="container"
     class="q-px-sm q-pt-sm col full-height"
   >
     <q-table
@@ -40,8 +40,8 @@
               <!-- SEQUENCE -->
               <div
                 v-if="c.name == 'sequence'"
-                @click="change_sequence_for_wo = props.row"
                 class="pointer"
+                @click="change_sequence_for_wo = props.row"
               >
                 {{ props.row.sequence }}
               </div>
@@ -129,8 +129,8 @@
 
     <BaseDialog
       :show="temp_date != null"
-      @close="temp_date = null"
       :no-backdrop-dismiss="false"
+      @close="temp_date = null"
     >
       <q-date
         v-if="temp_date"
@@ -427,6 +427,45 @@ export default {
     },
   },
 
+  mounted() {
+    // make the table rows draggable
+    let table = document.querySelector('.q-virtual-scroll__content');
+    const _self = this;
+    Sortable.create(table, {
+      ..._self.$store.state.drag_options,
+      // use onEnd event provided by SortableJs library
+      onEnd: (evt) => {
+        /*
+        the sortable DOM list is shorter than the actual work order list due to the virtual scroll (only part of the list is actually rendered).
+
+        Sortable can only see the rendered list so the old and new index will not be referred to the actual work order queue, but to the position in the rendered list and are not useful as such.
+
+        For this reason each table row has been tagged with its key as the dom element id, so that it can be retrieved after dragging and retrieve the index based on the sequence number  position of the key in the queue.
+
+        The new index will be calculated using the difference between the indexes detected by Sortable.
+        */
+        const moved_item = evt.item;
+        const old_queue_index = this.temp_queue.findIndex(
+          (wo) => wo == moved_item.id,
+        );
+        const moving_down = evt.newIndex > evt.oldIndex;
+        const reference_item = moving_down
+          ? moved_item.previousSibling
+          : moved_item.nextSibling;
+        const reference_index = this.temp_queue.findIndex(
+          (wo) => wo == reference_item.id,
+        );
+        const new_queue_index = reference_index;
+
+        _self.$emit('editing');
+        _self.$store.commit('UPDATE_TEMP_QUEUE', {
+          new_queue_index,
+          old_queue_index,
+        });
+      },
+    });
+  },
+
   methods: {
     progressColor(wo) {
       return wo.active ? 'theme-blue' : 'theme-grey';
@@ -499,45 +538,6 @@ export default {
     isLate(due_by_date) {
       return DT.fromISO(due_by_date).toMillis() < this.now;
     },
-  },
-
-  mounted() {
-    // make the table rows draggable
-    let table = document.querySelector('.q-virtual-scroll__content');
-    const _self = this;
-    Sortable.create(table, {
-      ..._self.$store.state.drag_options,
-      // use onEnd event provided by SortableJs library
-      onEnd: (evt) => {
-        /*
-        the sortable DOM list is shorter than the actual work order list due to the virtual scroll (only part of the list is actually rendered).
-
-        Sortable can only see the rendered list so the old and new index will not be referred to the actual work order queue, but to the position in the rendered list and are not useful as such.
-
-        For this reason each table row has been tagged with its key as the dom element id, so that it can be retrieved after dragging and retrieve the index based on the sequence number  position of the key in the queue.
-
-        The new index will be calculated using the difference between the indexes detected by Sortable.
-        */
-        const moved_item = evt.item;
-        const old_queue_index = this.temp_queue.findIndex(
-          (wo) => wo == moved_item.id,
-        );
-        const moving_down = evt.newIndex > evt.oldIndex;
-        const reference_item = moving_down
-          ? moved_item.previousSibling
-          : moved_item.nextSibling;
-        const reference_index = this.temp_queue.findIndex(
-          (wo) => wo == reference_item.id,
-        );
-        const new_queue_index = reference_index;
-
-        _self.$emit('editing');
-        _self.$store.commit('UPDATE_TEMP_QUEUE', {
-          new_queue_index,
-          old_queue_index,
-        });
-      },
-    });
   },
 };
 </script>

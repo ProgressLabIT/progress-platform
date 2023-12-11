@@ -28,8 +28,8 @@
         </span>
         <q-radio
           v-for="qt_type in qt_types"
-          v-model="quantity_type"
           :key="qt_type"
+          v-model="quantity_type"
           :val="qt_type"
           :label="$t('bom.quantity_type.' + qt_type).toUpperCase()"
         >
@@ -69,16 +69,16 @@ import NoDataAlert from '@/components/NoDataAlert.vue';
 export default {
   name: 'WorkSessionBom',
 
+  components: {
+    //  BaseModalForm,
+    NoDataAlert,
+  },
+
   props: {
     job: {
       type: Object,
       required: true,
     },
-  },
-
-  components: {
-    //  BaseModalForm,
-    NoDataAlert,
   },
 
   data() {

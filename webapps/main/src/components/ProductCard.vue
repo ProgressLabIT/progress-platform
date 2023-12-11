@@ -73,6 +73,10 @@ import ProductCardActions from '@/components/ProductCardActions.vue';
 export default {
   name: 'ProductCard',
 
+  components: {
+    ProductCardActions,
+  },
+
   props: {
     product: {
       type: Object,
@@ -82,10 +86,6 @@ export default {
       type: Boolean,
       default: false,
     },
-  },
-
-  components: {
-    ProductCardActions,
   },
 
   data() {

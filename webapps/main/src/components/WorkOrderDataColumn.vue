@@ -49,10 +49,10 @@
     <div id="panels" class="row q-mt-lg justify-between text-h6 text-uppercase">
       <div
         v-for="tab in views"
-        @click="current_view = tab.name"
-        style="cursor: pointer"
         :key="tab.name"
+        style="cursor: pointer"
         :class="current_view === tab.name ? 'weight-bold' : 'low-text'"
+        @click="current_view = tab.name"
       >
         {{ tab.text }}
       </div>
@@ -130,35 +130,35 @@
       <q-menu fit :style="`background-color: ${$theme.surface2}`">
         <q-list class="text-uppercase capitalize text-body2">
           <q-item
-            clickable
-            v-close-popup
             v-if="!wo_data.active"
+            v-close-popup
+            clickable
             @click="edit_project = true"
           >
             <q-item-section>
               {{ $t('project_update') }}
             </q-item-section>
           </q-item>
-          <q-item clickable v-close-popup @click="edit_qt = true">
+          <q-item v-close-popup clickable @click="edit_qt = true">
             <q-item-section>
               {{ $t('quantity.update') }}
             </q-item-section>
           </q-item>
-          <q-item clickable v-close-popup @click="editDate('start_from')">
+          <q-item v-close-popup clickable @click="editDate('start_from')">
             <q-item-section>
               {{ $t('work_order.update_from_date') }}
             </q-item-section>
           </q-item>
-          <q-item clickable v-close-popup @click="editDate('due_by')">
+          <q-item v-close-popup clickable @click="editDate('due_by')">
             <q-item-section>
               {{ $t('work_order.update_due_date') }}
             </q-item-section>
           </q-item>
           <q-item
-            clickable
-            v-close-popup
-            class="text-theme-red"
             v-if="wo_data.status == 'created'"
+            v-close-popup
+            clickable
+            class="text-theme-red"
             @click="delete_stage = 'confirm'"
           >
             <q-item-section>
@@ -177,11 +177,11 @@
             {{ $t('project') }}
           </div>
           <q-input
+            v-model="temp_project_code"
             autofocus
             class="q-mt-md"
             input-class="text-body1 text-uppercase"
             hide-bottom-space
-            v-model="temp_project_code"
           >
           </q-input>
         </q-card-section>
@@ -190,9 +190,9 @@
             {{ $t('cancel') }}
           </q-btn>
           <q-btn
+            v-if="temp_project_code != wo_data.project_code"
             size="12px"
             flat
-            v-if="temp_project_code != wo_data.project_code"
             color="theme-blue"
             @click="saveWorkOrderUpdate"
           >
@@ -210,13 +210,13 @@
             {{ $t('work_order.new_quantity') }}
           </div>
           <q-input
+            v-model.number="new_qt"
             autofocus
             class="q-mt-md"
             input-class="text-body1"
             hide-bottom-space
             type="number"
             :min="min_allowable_wo_qt"
-            v-model.number="new_qt"
           >
           </q-input>
         </q-card-section>
@@ -225,9 +225,9 @@
             {{ $t('cancel') }}
           </q-btn>
           <q-btn
+            v-if="new_qt != wo_data.qt_planned"
             size="12px"
             flat
-            v-if="new_qt != wo_data.qt_planned"
             color="theme-blue"
             @click="show_job_qt_rebalance = true"
           >
@@ -249,7 +249,7 @@
     <!-- EDIT DATES DIALOG -->
     <BaseDialog :show="edit_date != null" @close="closeEditDialogs">
       <q-card class="surface2">
-        <q-date minimal v-model="temp_date" mask="YYYY-MM-DD"> </q-date>
+        <q-date v-model="temp_date" minimal mask="YYYY-MM-DD"> </q-date>
         <div class="row justify-between q-pa-sm">
           <q-btn flat size="12px" color="theme-grey" @click="closeEditDialogs">
             {{ $t('cancel') }}
@@ -501,6 +501,12 @@ export default {
     },
   },
 
+  created() {
+    this.temp_project_code = this.wo_data.project_code;
+    this.temp_due_date = this.wo_data.due_by;
+    this.new_qt = this.wo_data.qt_planned;
+  },
+
   methods: {
     woInfoValue(info_name) {
       switch (info_name) {
@@ -658,12 +664,6 @@ export default {
         this.delete_stage = 'success';
       });
     },
-  },
-
-  created() {
-    this.temp_project_code = this.wo_data.project_code;
-    this.temp_due_date = this.wo_data.due_by;
-    this.new_qt = this.wo_data.qt_planned;
   },
 };
 </script>

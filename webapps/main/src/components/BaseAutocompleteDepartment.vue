@@ -4,12 +4,12 @@
     dense
     :options="options"
     :option-label="(item) => $capitalize(item.name)"
-    @filter="filterDepartments"
     :model-value="value"
     input-debounce="0"
     :option-value="keyOnly ? '_key' : false"
     :emit-value="keyOnly"
     :map-options="keyOnly"
+    @filter="filterDepartments"
     @update:model-value="(selection) => $emit('select', selection)"
   >
   </q-select>
@@ -58,6 +58,16 @@ export default {
     },
   },
 
+  created() {
+    if (this.loadDepartments) {
+      this.loading = true;
+      this.$store.dispatch('loadDepartments').then(() => {
+        this.initOptions();
+        this.loading = false;
+      });
+    }
+  },
+
   methods: {
     initOptions() {
       this.options = [...this.department_list];
@@ -78,16 +88,6 @@ export default {
         });
       });
     },
-  },
-
-  created() {
-    if (this.loadDepartments) {
-      this.loading = true;
-      this.$store.dispatch('loadDepartments').then(() => {
-        this.initOptions();
-        this.loading = false;
-      });
-    }
   },
 };
 </script>

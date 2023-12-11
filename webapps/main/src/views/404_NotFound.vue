@@ -6,9 +6,9 @@
         <p class="mb-6">Questa pagina non esiste.</p>
 
         <v-btn
-          block
           v-for="link in links"
           :key="link"
+          block
           class="mb-2"
           :color="$theme.blue"
           @click="$router.push({ name: link })"

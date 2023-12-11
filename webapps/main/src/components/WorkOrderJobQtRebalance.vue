@@ -39,9 +39,9 @@
 
           <!-- PHASE JOBS -->
           <div
-            class="row items-center q-py-sm"
             v-for="job_update in job_updates[phase.phase_key]"
             :key="job_update._key"
+            class="row items-center q-py-sm"
           >
             <div class="col-3">
               {{ job_update._key }}
@@ -62,13 +62,13 @@
               </div>
               <q-input
                 v-if="job_update.new_remaining"
-                class="col-2"
                 :key="index"
+                v-model.number="job_update.new_remaining"
+                class="col-2"
                 dense
                 input-class="text-right"
                 hide-bottom-space
                 type="number"
-                v-model.number="job_update.new_remaining"
                 min="0"
                 :max="new_wo_qt"
               />
@@ -88,12 +88,12 @@
       </q-card-section>
 
       <q-card-actions align="between">
-        <q-btn color="theme-grey" @click="$emit('close')" :label="$t('cancel')">
+        <q-btn color="theme-grey" :label="$t('cancel')" @click="$emit('close')">
         </q-btn>
         <q-btn
           color="theme-orange"
-          @click="spreadRemaining"
           :label="$t('job.rebalance.spread')"
+          @click="spreadRemaining"
         >
         </q-btn>
         <q-space />
@@ -101,8 +101,8 @@
           v-if="can_save"
           color="theme-blue"
           :loading="saving"
-          @click="save"
           :label="$t('save')"
+          @click="save"
         >
         </q-btn>
       </q-card-actions>
@@ -173,6 +173,55 @@ export default {
       // Check if any delta is not zero
       return Object.values(this.phases_delta).every((delta) => delta === 0);
     },
+  },
+
+  created() {
+    /*
+    for each phase
+      check remaining quantity
+      if any
+        get open jobs
+      else (if increase)
+        add new job
+    */
+    this.job_updates = this.phase_data.reduce((obj, phase) => {
+      obj[phase.phase_key] = [];
+      const delta = this.new_wo_qt - (phase.qt_completed + phase.qt_remaining);
+
+      if (phase.qt_completed >= this.new_wo_qt) {
+        phase.jobs.forEach((j) => {
+          const update =
+            j.stage != 'closed'
+              ? { ...j, new_remaining: 0 }
+              : { _key: 'NA', new_remaining: 0 };
+
+          obj[phase.phase_key].push(update);
+        });
+      } else if (phase.qt_remaining) {
+        const open_jobs = phase.jobs.filter((j) => j.stage != 'closed');
+        open_jobs.forEach((j) => {
+          obj[phase.phase_key].push({
+            ...j,
+            new_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt,
+          });
+        });
+      } else {
+        const job_data =
+          delta > 0
+            ? {
+                _key: 'NEW',
+                phase_key: phase.phase_key,
+                qt_completed: 0,
+                active_batch_qt: 0,
+                new_remaining: delta,
+              }
+            : { _key: 'NA', new_remaining: 0 };
+
+        obj[phase.phase_key].push(job_data);
+      }
+
+      return obj;
+    }, {});
   },
 
   methods: {
@@ -248,55 +297,6 @@ export default {
         window.alert(error);
       }
     },
-  },
-
-  created() {
-    /*
-    for each phase
-      check remaining quantity
-      if any
-        get open jobs
-      else (if increase)
-        add new job
-    */
-    this.job_updates = this.phase_data.reduce((obj, phase) => {
-      obj[phase.phase_key] = [];
-      const delta = this.new_wo_qt - (phase.qt_completed + phase.qt_remaining);
-
-      if (phase.qt_completed >= this.new_wo_qt) {
-        phase.jobs.forEach((j) => {
-          const update =
-            j.stage != 'closed'
-              ? { ...j, new_remaining: 0 }
-              : { _key: 'NA', new_remaining: 0 };
-
-          obj[phase.phase_key].push(update);
-        });
-      } else if (phase.qt_remaining) {
-        const open_jobs = phase.jobs.filter((j) => j.stage != 'closed');
-        open_jobs.forEach((j) => {
-          obj[phase.phase_key].push({
-            ...j,
-            new_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt,
-          });
-        });
-      } else {
-        const job_data =
-          delta > 0
-            ? {
-                _key: 'NEW',
-                phase_key: phase.phase_key,
-                qt_completed: 0,
-                active_batch_qt: 0,
-                new_remaining: delta,
-              }
-            : { _key: 'NA', new_remaining: 0 };
-
-        obj[phase.phase_key].push(job_data);
-      }
-
-      return obj;
-    }, {});
   },
 };
 </script>

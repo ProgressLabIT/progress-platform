@@ -35,16 +35,16 @@
         :key="phase.phase_key"
         expand-separator
         :model-value="expanded_phase === phase.phase_key"
-        @click="togglePhase(phase.phase_key)"
         :header-class="getHeaderClass(phase.phase_key)"
         hide-expand-icon
+        @click="togglePhase(phase.phase_key)"
       >
         <!-- PHASE SUMMARY DATA -->
         <template #header>
           <div
             v-for="header in headers"
-            :class="getColClass(header)"
             :key="header.value"
+            :class="getColClass(header)"
           >
             <!-- PHASE PROGRESS -->
             <template v-if="header.value === 'phase_alias'">
@@ -92,8 +92,8 @@
         <!-- JOB DATA & PHASE/JOB ACTIONS -->
         <div
           v-for="job in phase.jobs"
-          :key="job._key"
           :id="job._key"
+          :key="job._key"
           class="row items-center q-py-md q-pl-sm"
         >
           <!-- JOB DATA -->
@@ -107,10 +107,10 @@
               <div class="row items-center" style="margin-left: -12px">
                 <q-checkbox
                   v-if="job.stage != 'closed'"
+                  v-model="selected_jobs"
                   color="theme-blue"
                   :disable="job.active"
                   :val="job._key"
-                  v-model="selected_jobs"
                 />
                 <q-icon
                   v-else
@@ -150,10 +150,10 @@
                   <q-popup-proxy>
                     <q-list style="max-width: 400px">
                       <q-item
-                        :disable="job.stage == 'created'"
-                        :clickable="job.stage != 'created'"
                         v-ripple
                         v-close-popup
+                        :disable="job.stage == 'created'"
+                        :clickable="job.stage != 'created'"
                         @click="editJobTime(job)"
                       >
                         <q-item-section avatar>
@@ -169,10 +169,10 @@
                         </q-item-section>
                       </q-item>
                       <q-item
-                        :disable="job.active_batch_qt > 0"
-                        :clickable="job.active_batch_qt == 0"
                         v-ripple
                         v-close-popup
+                        :disable="job.active_batch_qt > 0"
+                        :clickable="job.active_batch_qt == 0"
                         @click="editJobProgress(job)"
                       >
                         <q-item-section avatar>
@@ -182,16 +182,16 @@
                           <q-item-label>
                             {{ $t('update_progress') }}
                           </q-item-label>
-                          <q-item-label caption v-if="job.active_batch_qt > 0">
+                          <q-item-label v-if="job.active_batch_qt > 0" caption>
                             {{ $t('update_progress_disabled') }}
                           </q-item-label>
                         </q-item-section>
                       </q-item>
                       <q-item
-                        :disable="job.active_batch_qt == 0"
-                        :clickable="job.active_batch_qt > 0"
                         v-ripple
                         v-close-popup
+                        :disable="job.active_batch_qt == 0"
+                        :clickable="job.active_batch_qt > 0"
                         @click="confirm_cancel_batch = job._key"
                       >
                         <q-item-section avatar>
@@ -201,7 +201,7 @@
                           <q-item-label>
                             {{ $t('cancel_active_batch') }}
                           </q-item-label>
-                          <q-item-label caption v-if="job.active_batch_qt == 0">
+                          <q-item-label v-if="job.active_batch_qt == 0" caption>
                             {{ $t('cancel_active_batch_disabled') }}
                           </q-item-label>
                         </q-item-section>
@@ -219,36 +219,36 @@
                     <q-card-section>
                       <div class="row q-col-gutter-md">
                         <q-input
+                          v-model.number="jobs_temp_data.hours"
                           type="number"
                           filled
                           stack-label
-                          v-model.number="jobs_temp_data.hours"
-                          @keyup.enter="forceProcessingTime"
                           min="0"
                           :label="$t('time.hour', 2)"
                           class="col"
+                          @keyup.enter="forceProcessingTime"
                         >
                         </q-input>
                         <q-input
+                          v-model.number="jobs_temp_data.minutes"
                           type="number"
                           filled
                           stack-label
-                          v-model.number="jobs_temp_data.minutes"
-                          @keyup.enter="forceProcessingTime"
                           min="0"
                           :label="$t('time.minute', 2)"
                           class="col"
+                          @keyup.enter="forceProcessingTime"
                         >
                         </q-input>
                         <q-input
+                          v-model.number="jobs_temp_data.seconds"
                           type="number"
                           filled
                           stack-label
-                          v-model.number="jobs_temp_data.seconds"
-                          @keyup.enter="forceProcessingTime"
                           min="0"
                           :label="$t('time.second', 2)"
                           class="col"
+                          @keyup.enter="forceProcessingTime"
                         >
                         </q-input>
                       </div>
@@ -281,15 +281,15 @@
 
                     <q-card-section>
                       <q-input
+                        v-model.number="jobs_temp_data.new_job_qt_completed"
                         type="number"
                         filled
                         stack-label
-                        v-model.number="jobs_temp_data.new_job_qt_completed"
                         :min="jobs_temp_data.min_progress_qt"
                         :max="jobs_temp_data.max_progress_qt"
                         :label="$t('quantity.completed.long')"
-                        @keyup.enter="forceProgress"
                         autofocus
+                        @keyup.enter="forceProgress"
                       >
                       </q-input>
                     </q-card-section>
@@ -413,8 +413,8 @@
           <template v-if="editMode == 'actions'">
             <!-- SELECT ALL -->
             <q-btn
-              size="12px"
               v-if="phase.jobs.length > 1"
+              size="12px"
               color="theme-grey"
               :label="
                 selected_jobs.length == 0
@@ -623,6 +623,28 @@ export default {
     },
   },
 
+  watch: {
+    // Reset selection when toggling phases
+    expanded_phase() {
+      this.selected_jobs = [];
+    },
+
+    // reset editMode after closing/switching phase details
+    selected_jobs() {
+      if (!this.selected_jobs.length) this.editMode = 'actions';
+    },
+
+    editMode() {
+      if (this.editMode === 'actions') {
+        this.selected_jobs = [];
+      }
+    },
+  },
+
+  created() {
+    this.temp_due_date = this.wo_data.due_by;
+  },
+
   methods: {
     getHeaderClass(phase_key) {
       const base_classes = 'row items-center q-py-lg';
@@ -816,28 +838,6 @@ export default {
         .catch((err) => {
           window.alert(err);
         });
-    },
-  },
-
-  created() {
-    this.temp_due_date = this.wo_data.due_by;
-  },
-
-  watch: {
-    // Reset selection when toggling phases
-    expanded_phase() {
-      this.selected_jobs = [];
-    },
-
-    // reset editMode after closing/switching phase details
-    selected_jobs() {
-      if (!this.selected_jobs.length) this.editMode = 'actions';
-    },
-
-    editMode() {
-      if (this.editMode === 'actions') {
-        this.selected_jobs = [];
-      }
     },
   },
 };

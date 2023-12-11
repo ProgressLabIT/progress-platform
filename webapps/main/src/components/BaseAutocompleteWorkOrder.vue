@@ -12,19 +12,19 @@
     :options="options"
     :display-value="value?.wo_code"
     :option-value="keyOnly ? '_key' : null"
-    @filter="filter"
     :model-value="value"
     input-debounce="500"
     :emit-value="keyOnly"
     :map-options="keyOnly"
     popup-content-style="width: 0px"
+    @filter="filter"
     @update:model-value="(selection) => $emit('select', selection)"
   >
     <template #option="scope">
       <q-item
         v-bind="scope.itemProps"
-        @click.stop="print"
         :class="{ 'text-low': scope.opt.status == 'closed' }"
+        @click.stop="print"
       >
         <q-item-section class="text-h4 highlight col-auto q-pr-md">
           {{ scope.opt.wo_code }}
@@ -53,7 +53,7 @@
       </q-item>
     </template>
 
-    <template #label v-if="!!label">
+    <template v-if="!!label" #label>
       {{ label }}
     </template>
 

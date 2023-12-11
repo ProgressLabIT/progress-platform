@@ -1,7 +1,7 @@
 <template>
   <BaseModalForm
-    :show="true"
     id="new-operation-form"
+    :show="true"
     max-width="700px"
     @cancel="$router.back()"
     @submit="submit"
@@ -14,31 +14,31 @@
       <div class="row q-col-gutter-xl" style="min-width: 400px">
         <div class="col-6">
           <q-input
+            v-model="new_operation_data.name"
             filled
             stack-label
             :label="$capitalize($t('name'))"
-            v-model="new_operation_data.name"
           >
           </q-input>
         </div>
 
         <div class="col-6">
           <q-input
+            v-model="new_operation_data.code"
             filled
             stack-label
             :label="$capitalize($t('code'))"
-            v-model="new_operation_data.code"
           >
           </q-input>
         </div>
 
         <div class="col-12">
           <q-input
+            v-model="new_operation_data.description"
             filled
             stack-label
             autogrow
             :label="$capitalize($t('description'))"
-            v-model="new_operation_data.description"
           >
           </q-input>
         </div>

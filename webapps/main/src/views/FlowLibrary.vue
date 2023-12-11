@@ -7,7 +7,7 @@
       </q-item-section>
       <q-item-section top class="q-pa-md q-mr-xl">
         <div class="row q-pt-md q-col-gutter-md">
-          <div class="col" v-for="field in flow.parameters" :key="field.title">
+          <div v-for="field in flow.parameters" :key="field.title" class="col">
             <q-input
               v-model="field.value"
               stack-label
@@ -28,7 +28,7 @@
         </div>
       </q-item-section>
       <q-item-section class="col-auto">
-        <q-btn @click="run(flow)" label="launch" color="theme-blue" />
+        <q-btn label="launch" color="theme-blue" @click="run(flow)" />
       </q-item-section>
     </q-item>
 
@@ -177,6 +177,10 @@ export default {
     },
   },
 
+  created() {
+    this.fetchFlows();
+  },
+
   methods: {
     defineFlowParameters(deployment_data) {
       const params_data = deployment_data.parameter_openapi_schema;
@@ -260,10 +264,6 @@ export default {
       this.flow_logs = [];
       this.flow_state = null;
     },
-  },
-
-  created() {
-    this.fetchFlows();
   },
 };
 </script>

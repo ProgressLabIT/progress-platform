@@ -13,7 +13,7 @@
         size="md"
         @click="$refs.upload_files.click()"
       >
-        <span class="smaller q-mr-xs" v-if="!disable">
+        <span v-if="!disable" class="smaller q-mr-xs">
           {{ $t('add') }}
         </span>
         <q-icon
@@ -43,7 +43,7 @@
         <q-item-section side class="text-right">
           {{ $bytes(file.size) }}
         </q-item-section>
-        <q-item-section side v-if="!disable">
+        <q-item-section v-if="!disable" side>
           <q-btn
             round
             flat
@@ -60,9 +60,9 @@
     </q-list>
 
     <input
+      ref="upload_files"
       multiple
       type="file"
-      ref="upload_files"
       style="display: none"
       accept="application/pdf, image/*"
       @change="$emit('addFiles', $event.target.files)"
@@ -71,8 +71,8 @@
     <MediaViewer
       v-if="show_media >= 0"
       :show="show_media >= 0"
-      @close="show_media = -1"
       v-bind="{ media_name, media_src }"
+      @close="show_media = -1"
     >
     </MediaViewer>
   </div>

@@ -1,8 +1,8 @@
 <template>
   <BaseDialog
     :show="true"
-    @close="$emit('changeEditMode', 'actions')"
     :maximized="true"
+    @close="$emit('changeEditMode', 'actions')"
   >
     <div class="column flex-center">
       <div class="text-h4 highlight display text-uppercase q-mb-sm">
@@ -13,9 +13,9 @@
         <div class="row items-center">
           <div
             v-for="col in headers"
+            :key="col.value"
             class="text-uppercase text-h5"
             :class="`col-${col.cols} offset-${col.offset}`"
-            :key="col.value"
           >
             {{ col.text }}
           </div>
@@ -29,8 +29,8 @@
         >
           <div
             v-for="col in headers"
-            :class="`col-${col.cols} offset-${col.offset}`"
             :key="col.value"
+            :class="`col-${col.cols} offset-${col.offset}`"
           >
             <!-- JOB JEY -->
             <template v-if="col.value === 'key'">
@@ -57,10 +57,10 @@
                 type="number"
                 dense
                 :model-value="j.qt_remaining"
-                @update:model-value="updateRemainingQt(index, parseInt($event))"
                 min="0"
                 :max="qtToAllocate"
                 content-class="text-right"
+                @update:model-value="updateRemainingQt(index, parseInt($event))"
               >
               </q-input>
             </template>
@@ -80,9 +80,9 @@
                   :model-value="j.assigned_to"
                   :options="filtered_operators"
                   :option-label="(item) => item.name + ' ' + item.surname"
-                  @filter="filterOperator"
                   class="q-mb-md"
                   popup-content-class="surface1"
+                  @filter="filterOperator"
                   @update:model-value="setAssignment(index, $event)"
                 >
                   <template #label-slot>
@@ -104,8 +104,8 @@
           </div>
 
           <div
-            class="col-auto q-ml-auto q-pr-lg"
             v-if="deletable(index) && !j.close"
+            class="col-auto q-ml-auto q-pr-lg"
           >
             <BaseTooltipIcon
               :color="$theme.red"
@@ -121,8 +121,8 @@
         <div class="row items-center">
           <div
             v-for="col in headers"
-            :class="`col-${col.cols} offset-${col.offset}`"
             :key="col.value"
+            :class="`col-${col.cols} offset-${col.offset}`"
             class="text-uppercase text-body2"
           >
             <template v-if="col.value === 'key'">
@@ -144,8 +144,8 @@
 
         <div class="row q-mt-md q-gutter-sm">
           <q-btn
-            size="12px"
             v-if="job_template.parameters.parallel_job_allowed"
+            size="12px"
             color="theme-blue"
             @click="addJob"
           >
@@ -165,7 +165,7 @@
             {{ $t('cancel') }}
           </q-btn>
           <q-space />
-          <q-btn size="12px" color="theme-blue" @click="save" :loading="saving">
+          <q-btn size="12px" color="theme-blue" :loading="saving" @click="save">
             {{ $t('save') }}
           </q-btn>
         </div>
@@ -285,6 +285,34 @@ export default {
       const sign = delta < 0 ? '' : '+';
       return `${sign}${delta}`;
     },
+  },
+
+  watch: {
+    temp_jobs: {
+      immediate: true,
+      deep: true,
+      handler: 'updateNewTotal',
+    },
+  },
+
+  created() {
+    this.temp_jobs = Object.values(this.jobs).map((j) => {
+      return {
+        ...j,
+        qt_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt,
+      };
+    });
+
+    // this.updateNewTotal()
+
+    // Use the first job of the phase to retrieve job metadata for new ones
+    this.job_template = Object.fromEntries(
+      this.new_job_keys.map((k) => {
+        return [k, this.temp_jobs[0][k]];
+      }, this),
+    );
+    // This is just temporary data to properly handle presentation to the user. The quantity will eventually be the planned quantity of the new job
+    this.job_template.qt_remaining = 0;
   },
 
   methods: {
@@ -453,34 +481,6 @@ export default {
             this.saving = false;
           });
       }
-    },
-  },
-
-  created() {
-    this.temp_jobs = Object.values(this.jobs).map((j) => {
-      return {
-        ...j,
-        qt_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt,
-      };
-    });
-
-    // this.updateNewTotal()
-
-    // Use the first job of the phase to retrieve job metadata for new ones
-    this.job_template = Object.fromEntries(
-      this.new_job_keys.map((k) => {
-        return [k, this.temp_jobs[0][k]];
-      }, this),
-    );
-    // This is just temporary data to properly handle presentation to the user. The quantity will eventually be the planned quantity of the new job
-    this.job_template.qt_remaining = 0;
-  },
-
-  watch: {
-    temp_jobs: {
-      immediate: true,
-      deep: true,
-      handler: 'updateNewTotal',
     },
   },
 };

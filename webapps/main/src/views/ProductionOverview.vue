@@ -26,7 +26,7 @@
 
           <!-- CREATE NEW WORK ORDER -->
           <template v-if="$route.name == 'workOrderList'">
-            <div class="col-auto" v-if="!editing">
+            <div v-if="!editing" class="col-auto">
               <q-btn
                 size="0.75rem"
                 color="theme-blue"
@@ -43,8 +43,8 @@
                   size="0.7rem"
                   color="theme-orange"
                   :loading="saving"
-                  @click="updateQueue"
                   class="q-ml-sm"
+                  @click="updateQueue"
                 >
                   {{ $t('production.save_new_sequence') }}
                 </q-btn>
@@ -55,8 +55,8 @@
                 <q-btn
                   size="0.7rem"
                   color="theme-grey"
-                  @click="cancelQueueChanges"
                   class="q-ml-md"
+                  @click="cancelQueueChanges"
                 >
                   {{ $t('cancel_changes') }}
                 </q-btn>
@@ -111,20 +111,20 @@
         <!-- BY DEPARTMENT -->
         <q-select
           ref="department_filter"
+          v-model="department_selected"
           filled
           dense
           use-input
           clearable
-          v-model="department_selected"
           :options="filtered_departments"
           option-label="name"
           option-value="_key"
           emit-value
           map-options
-          @filter="filterDepartment"
           :label="$capitalize($t('department', 1))"
           class="q-mb-md"
           popup-content-class="surface1"
+          @filter="filterDepartment"
         >
         </q-select>
 
@@ -144,6 +144,7 @@
       <!-- SEARCH BOX -->
       <div class="row items-baseline q-col-gutter-md">
         <q-input
+          v-model="search_string"
           filled
           dense
           clearable
@@ -151,7 +152,6 @@
           name="search"
           debounce="300"
           :label="$capitalize($t('search'))"
-          v-model="search_string"
           class="q-mb-md col"
         >
           <template #append>
@@ -176,12 +176,12 @@
       <div class="row q-col-gutter-sm">
         <div class="col">
           <q-input
+            v-model="start_from_min"
             filled
             dense
             clearable
             debounce="1000"
             mask="date"
-            v-model="start_from_min"
             :label="
               $capitalize($t('work_order.list_headers.start_from')) +
               ' (' +
@@ -196,7 +196,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date minimal v-model="start_from_min">
+                  <q-date v-model="start_from_min" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -208,12 +208,12 @@
         </div>
         <div class="col">
           <q-input
+            v-model="start_from_max"
             filled
             dense
             clearable
             mask="date"
             debounce="1000"
-            v-model="start_from_max"
             :label="
               $capitalize($t('work_order.list_headers.start_from')) +
               ' (' +
@@ -228,7 +228,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date minimal v-model="start_from_max">
+                  <q-date v-model="start_from_max" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -244,12 +244,12 @@
       <div class="row q-col-gutter-sm q-mt-sm">
         <div class="col">
           <q-input
+            v-model="due_by_min"
             filled
             dense
             clearable
             mask="date"
             debounce="1000"
-            v-model="due_by_min"
             :label="
               $capitalize($t('work_order.list_headers.due_by')) +
               ' (' +
@@ -264,7 +264,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date minimal v-model="due_by_min">
+                  <q-date v-model="due_by_min" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -276,11 +276,11 @@
         </div>
         <div class="col">
           <q-input
+            v-model="due_by_max"
             filled
             dense
             clearable
             mask="date"
-            v-model="due_by_max"
             debounce="1000"
             :label="
               $capitalize($t('work_order.list_headers.due_by')) +
@@ -296,7 +296,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date minimal v-model="due_by_max">
+                  <q-date v-model="due_by_max" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -310,25 +310,25 @@
 
       <!-- BOOLEAN FILTERS -->
       <div class="row q-mt-sm">
-        <div class="col-6" v-for="filter in bool_filters" :key="filter">
+        <div v-for="filter in bool_filters" :key="filter" class="col-6">
           <q-checkbox
+            v-model="_this[filter]"
             dense
             color="theme-blue"
             size="sm"
             :label="$capitalize($t(`production.filters.${filter}`))"
-            v-model="_this[filter]"
             class="q-mt-md text-body1 low-text"
           >
           </q-checkbox>
         </div>
         <template v-if="$route.name == 'jobList'">
-          <div class="col-6" v-for="filter in job_filters" :key="filter">
+          <div v-for="filter in job_filters" :key="filter" class="col-6">
             <q-checkbox
+              v-model="_this[filter]"
               dense
               color="theme-blue"
               size="sm"
               :label="$capitalize($t(`production.filters.${filter}`))"
-              v-model="_this[filter]"
               class="q-mt-md text-body1 low-text"
             >
             </q-checkbox>
@@ -472,6 +472,24 @@ export default {
     },
   },
 
+  created() {
+    Promise.all([
+      this.$store.dispatch('loadWorkOrders'),
+      this.$store.dispatch('loadDepartments'),
+      this.$store.dispatch('loadUsers'),
+      this.$store.dispatch('loadJobAssignments'),
+    ]).then((this.vuex_ready = true));
+
+    this.polling_instance = setInterval(() => {
+      this.$store.dispatch('updateWorkOrderList');
+      this.$store.dispatch('loadJobAssignments');
+    }, 10000);
+  },
+
+  beforeUnmount() {
+    clearInterval(this.polling_instance);
+  },
+
   methods: {
     updateHeight() {
       this.content_height =
@@ -523,24 +541,6 @@ export default {
         this.operator_search_text = val.toLowerCase();
       });
     },
-  },
-
-  created() {
-    Promise.all([
-      this.$store.dispatch('loadWorkOrders'),
-      this.$store.dispatch('loadDepartments'),
-      this.$store.dispatch('loadUsers'),
-      this.$store.dispatch('loadJobAssignments'),
-    ]).then((this.vuex_ready = true));
-
-    this.polling_instance = setInterval(() => {
-      this.$store.dispatch('updateWorkOrderList');
-      this.$store.dispatch('loadJobAssignments');
-    }, 10000);
-  },
-
-  beforeUnmount() {
-    clearInterval(this.polling_instance);
   },
 };
 </script>

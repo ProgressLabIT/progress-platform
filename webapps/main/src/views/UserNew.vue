@@ -12,17 +12,17 @@
             <q-card-section>
               <div class="row q-col-gutter-xl text-low">
                 <div
-                  class="col-6"
                   v-for="field in text_fields"
                   :key="field.model"
+                  class="col-6"
                 >
                   <div class="text-h5 uppercase">
                     {{ $t(`user.${field.model}`) }}
                   </div>
                   <q-input
+                    v-model="new_user_data[field.model]"
                     dense
                     autocomplete="null"
-                    v-model="new_user_data[field.model]"
                   >
                   </q-input>
                 </div>
@@ -42,10 +42,10 @@
                     {{ $t('user.hourly_cost') }}
                   </div>
                   <q-input
+                    v-model.number="new_user_data.hourly_cost"
                     dense
                     type="number"
                     autocomplete="null"
-                    v-model.number="new_user_data.hourly_cost"
                   >
                   </q-input>
                 </div>
@@ -61,9 +61,9 @@
                   class="col-6"
                 >
                   <q-checkbox
+                    v-model="new_user_data.scopes"
                     dense
                     :val="check.name"
-                    v-model="new_user_data.scopes"
                   >
                     {{ check.label }}
                   </q-checkbox>

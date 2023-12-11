@@ -1,8 +1,8 @@
 <template>
-  <div class="full-height q-mx-xs q-px-sm q-py-lg scroll" id="job-list">
+  <div id="job-list" class="full-height q-mx-xs q-px-sm q-py-lg scroll">
     <NoDataAlert v-if="!jobs_view.length" />
 
-    <template v-else v-for="(o, index) in jobs_view" :key="index">
+    <template v-for="(o, index) in jobs_view" v-else :key="index">
       <div class="row items-center q-pl-sm">
         <BaseUserAvatar
           :user="o.operator"
@@ -101,8 +101,8 @@
                 </template>
 
                 <div
-                  class="row items-center justify-end q-gutter-xs"
                   v-else-if="field.name == 'due_by'"
+                  class="row items-center justify-end q-gutter-xs"
                 >
                   <q-icon
                     v-if="props.row.due_by < now"
@@ -130,16 +130,16 @@
       </q-table>
 
       <q-separator
-        class="q-my-lg q-mr-xs q-ml-sm"
         v-if="index < jobs_view.length - 1"
+        class="q-my-lg q-mr-xs q-ml-sm"
       />
     </template>
 
     <BaseDialog
       :show="show_assignment_dialog"
-      @close="show_assignment_dialog = false"
       maximized
       background="#0004"
+      @close="show_assignment_dialog = false"
     >
       <q-card
         style="width: 60vw; height: 90vh"
@@ -159,11 +159,11 @@
               </div>
             </div>
             <q-input
+              v-model="assign_search_string"
               filled
               clearable
               :placeholder="$t('search').toUpperCase()"
               dense
-              v-model="assign_search_string"
             >
               <template #append>
                 <q-icon name="mdi-magnify" size="xs" />
@@ -172,6 +172,7 @@
           </div>
 
           <q-table
+            v-model:selected="jobs_to_assign"
             square
             :columns="batch_assignment_cols"
             :rows="batch_assignment_view"
@@ -188,13 +189,12 @@
             table-header-class="surface1"
             :pagination="{ rowsPerPage: 0 }"
             :rows-per-page-options="[0]"
-            v-model:selected="jobs_to_assign"
             selection="multiple"
           >
             <template #body-cell="props">
               <q-td
-                :props="props"
                 v-if="search_fields.includes(props.col.name)"
+                :props="props"
                 class="filter-field"
                 @click="assign_search_string = props.value"
               >
@@ -207,8 +207,8 @@
           </q-table>
 
           <div
-            class="row text-h5 text-uppercase q-mb-sm"
             v-show="jobs_to_assign.length"
+            class="row text-h5 text-uppercase q-mb-sm"
           >
             {{
               $t('assign') +
@@ -221,8 +221,8 @@
           <div class="row q-gutter-md items-center">
             <div class="col-6">
               <BaseAutocompleteUser
-                :placeholder="$t('operator_select_prompt')"
                 v-show="jobs_to_assign.length"
+                :placeholder="$t('operator_select_prompt')"
                 :value="batch_assign_to"
                 @select="(selection) => (batch_assign_to = selection)"
               >
@@ -517,6 +517,17 @@ export default {
     },
   },
 
+  watch: {
+    assign_search_string() {
+      this.jobs_to_assign = [];
+    },
+    jobs_to_assign(val) {
+      if (!val.length) {
+        this.batch_assign_to = null;
+      }
+    },
+  },
+
   methods: {
     isReleased(item) {
       // Set start_from as beginning of day in case there's an hour set
@@ -687,17 +698,6 @@ export default {
       // standard sorting
       else {
         return a < b ? 1 : -1;
-      }
-    },
-  },
-
-  watch: {
-    assign_search_string() {
-      this.jobs_to_assign = [];
-    },
-    jobs_to_assign(val) {
-      if (!val.length) {
-        this.batch_assign_to = null;
       }
     },
   },

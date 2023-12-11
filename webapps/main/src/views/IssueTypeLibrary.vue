@@ -4,11 +4,11 @@
   <div v-else class="row full-height">
     <div class="full-height column col-3">
       <q-input
+        v-model="search_text"
         dense
         filled
         class="q-px-md q-pt-md"
         :placeholder="$capitalize($t('search'))"
-        v-model="search_text"
       >
         <template #append>
           <q-icon name="mdi-magnify" />
@@ -35,12 +35,12 @@
       <div class="scroll col">
         <div
           v-for="(issue_type, index) in filtered_issue_types"
+          :key="index"
           class="row pointer q-px-lg q-py-xs medium full-width"
           :class="{
             'alternate-row': index % 2 == 0,
             'bg-blue-backdrop': issue_type._key == selected_issue_type_key,
           }"
-          :key="index"
           style="white-space: nowrap"
           @click="showIssueTypeDetail(issue_type._key)"
         >
@@ -78,7 +78,7 @@
     <q-separator vertical />
 
     <!-- ISSUE TYPE DATA -->
-    <div class="col full-height" v-if="vuex_ready">
+    <div v-if="vuex_ready" class="col full-height">
       <router-view v-slot="{ Component }">
         <component :is="Component" :issue-type="selected_issue_type" />
       </router-view>
@@ -129,6 +129,12 @@ export default {
     },
   },
 
+  created() {
+    this.$store.dispatch('getIssueTypes').then(() => {
+      this.vuex_ready = true;
+    });
+  },
+
   methods: {
     showIssueTypeDetail(issueTypeKey) {
       this.$router.push({
@@ -140,12 +146,6 @@ export default {
     openIssueTypeNew() {
       this.$router.push({ name: 'issueTypeNew' });
     },
-  },
-
-  created() {
-    this.$store.dispatch('getIssueTypes').then(() => {
-      this.vuex_ready = true;
-    });
   },
 };
 </script>

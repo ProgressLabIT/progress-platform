@@ -1,6 +1,6 @@
 <template>
   <BaseActionCard :title="title">
-    <template #title v-if="$slots.title">
+    <template v-if="$slots.title" #title>
       <slot name="title" />
     </template>
 

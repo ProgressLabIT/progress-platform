@@ -19,15 +19,15 @@
               <div class="row justify-between">
                 <q-btn
                   color="theme-red"
-                  @click="deleteOperation"
                   :label="$t('confirm')"
+                  @click="deleteOperation"
                 >
                 </q-btn>
                 <q-btn
                   color="theme-grey"
-                  @click="$router.back()"
                   :label="$t('cancel')"
                   class="q-ml-md"
+                  @click="$router.back()"
                 >
                 </q-btn>
               </div>
@@ -43,8 +43,8 @@
               </span>
               <q-btn
                 color="theme-grey"
-                @click="goToLibrary"
                 :label="$t('close')"
+                @click="goToLibrary"
               >
               </q-btn>
             </div>

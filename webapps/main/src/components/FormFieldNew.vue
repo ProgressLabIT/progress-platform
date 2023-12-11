@@ -64,9 +64,9 @@ export default {
     BaseActionFormCard,
   },
 
-  emits: ['close', 'created'],
-
   mixins: [form],
+
+  emits: ['close', 'created'],
 
   data() {
     return {

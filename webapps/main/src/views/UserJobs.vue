@@ -58,6 +58,13 @@ export default {
     },
   },
 
+  created() {
+    const user_key = this.$store.state.session.user._key;
+    this.$store
+      .dispatch('loadJobAssignments', user_key)
+      .then(() => (this.vuex_ready = true));
+  },
+
   methods: {
     showJob(job) {
       const batch_available = job.next_batch_available || job.active_batch_qt;
@@ -65,13 +72,6 @@ export default {
         new Date(job.start_from).getTime() <= new Date().getTime();
       return batch_available && start_from_is_past;
     },
-  },
-
-  created() {
-    const user_key = this.$store.state.session.user._key;
-    this.$store
-      .dispatch('loadJobAssignments', user_key)
-      .then(() => (this.vuex_ready = true));
   },
 };
 </script>

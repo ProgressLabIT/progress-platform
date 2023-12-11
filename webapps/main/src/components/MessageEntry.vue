@@ -5,7 +5,7 @@
         <div class="weight-bold text-italic q-mb-sm">
           {{ sender.name }} {{ sender.surname }}
         </div>
-        <div class="text-italic text-theme-grey" v-if="message.deleted">
+        <div v-if="message.deleted" class="text-italic text-theme-grey">
           {{ $t('deleted') }}
         </div>
         <div v-else style="white-space: pre-line">
@@ -20,7 +20,7 @@
           <q-btn round dense size="xs" flat icon="mdi-dots-horizontal">
             <q-popup-proxy style="min-width: 150px" auto-close>
               <q-list>
-                <q-item clickable v-ripple @click="show_update_prompt = true">
+                <q-item v-ripple clickable @click="show_update_prompt = true">
                   <q-item-section avatar>
                     <q-icon name="mdi-pencil" size="xs" />
                   </q-item-section>
@@ -28,7 +28,7 @@
                     {{ $capitalize($t('edit')) }}
                   </q-item-section>
                 </q-item>
-                <q-item clickable v-ripple @click="show_delete = true">
+                <q-item v-ripple clickable @click="show_delete = true">
                   <q-item-section avatar>
                     <q-icon name="mdi-delete" size="xs" />
                   </q-item-section>
@@ -42,8 +42,8 @@
         </div>
 
         <div
-          class="absolute-full surface2 row items-center justify-between q-px-lg"
           v-if="show_delete"
+          class="absolute-full surface2 row items-center justify-between q-px-lg"
         >
           <div class="display highlight">
             {{ $t('confirm_question') }}
@@ -54,8 +54,8 @@
               size="sm"
               color="theme-red"
               icon="mdi-delete"
-              @click="deleteMessage"
               class="q-mr-sm"
+              @click="deleteMessage"
             >
             </q-btn>
             <q-btn
@@ -93,12 +93,12 @@ import event from '@/mixins/event.js';
 export default {
   name: 'MessageEntry',
 
-  mixins: [event],
-
   components: {
     BaseUserAvatar,
     BasePrompt,
   },
+
+  mixins: [event],
 
   props: {
     message: {

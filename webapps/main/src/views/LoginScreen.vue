@@ -58,7 +58,7 @@
             </q-card-section>
           </q-form>
 
-          <div key="progress" v-else-if="logging_in">
+          <div v-else-if="logging_in" key="progress">
             <q-spinner
               size="80px"
               :thickness="4"
@@ -79,7 +79,7 @@
 
               <div class="col q-ml-md">
                 <transition name="slide-fade" mode="out-in">
-                  <span class="highlight text-uppercase" :key="user_message">
+                  <span :key="user_message" class="highlight text-uppercase">
                     {{ user_message }}
                   </span>
                 </transition>

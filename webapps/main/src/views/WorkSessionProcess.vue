@@ -2,9 +2,9 @@
   <div class="fit column">
     <q-list class="transparent medium text-left q-pa-md" align="left">
       <q-item
-        clickable
         v-for="(p, index) in phase_data"
         :key="p.phase_key"
+        clickable
         :name="index"
         class="full-width text-left"
       >

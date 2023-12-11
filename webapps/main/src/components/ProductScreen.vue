@@ -1,8 +1,8 @@
 <template>
   <BaseModalScreen
     :show="show_modal"
-    @close="exit()"
     :no-esc-dismiss="user_is_editing"
+    @close="exit()"
   >
     <template #header>
       <span class="q-ml-md display highlight weight-medium">
@@ -48,15 +48,15 @@ import BaseModalScreen from '@/components/BaseModalScreen.vue';
 export default {
   name: 'ProductScreen',
 
+  components: {
+    BaseModalScreen,
+  },
+
   props: {
     product_key: {
       type: String,
       required: true,
     },
-  },
-
-  components: {
-    BaseModalScreen,
   },
 
   data() {
@@ -92,6 +92,17 @@ export default {
     },
   },
 
+  created() {
+    let actions = [
+      'getProcess',
+      'getBom',
+      'loadProductDetails',
+      'getOperations',
+    ];
+
+    actions.forEach((a) => this.$store.dispatch(a, this.product_key));
+  },
+
   methods: {
     exit() {
       if (this.user_is_editing) {
@@ -121,17 +132,6 @@ export default {
         position: 'top',
       });
     },
-  },
-
-  created() {
-    let actions = [
-      'getProcess',
-      'getBom',
-      'loadProductDetails',
-      'getOperations',
-    ];
-
-    actions.forEach((a) => this.$store.dispatch(a, this.product_key));
   },
 };
 </script>

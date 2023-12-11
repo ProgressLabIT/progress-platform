@@ -10,9 +10,9 @@
         <q-img
           class="fit"
           :src="img_src"
+          :style="product.active ? '' : 'filter:grayscale(1) brightness(.5)'"
           @mouseenter="over_image = true"
           @mouseleave="over_image = false"
-          :style="product.active ? '' : 'filter:grayscale(1) brightness(.5)'"
         >
         </q-img>
         <div class="absolute-full column q-pa-md">
@@ -55,8 +55,8 @@
               </q-btn>
               <q-space />
               <input
-                type="file"
                 ref="upload_img"
+                type="file"
                 style="display: none"
                 accept="image/*"
                 @change="updateImg($event.target.files[0])"
@@ -72,8 +72,8 @@
                 v-if="img_src != ''"
                 size="12px"
                 color="theme-grey"
-                @click.stop="showMedia('img')"
                 class="q-ml-sm"
+                @click.stop="showMedia('img')"
               >
                 <q-icon name="mdi-magnify" />
               </q-btn>
@@ -103,10 +103,10 @@
           filled
           dense
           :model-value="temp_code"
+          class="input-uppercase q-mt-md"
           @update:model-value="
             (value) => updateField('code', value.toUpperCase())
           "
-          class="input-uppercase q-mt-md"
         >
         </q-input>
       </div>
@@ -125,8 +125,8 @@
           dense
           type="textarea"
           :model-value="temp_desc"
-          @update:model-value="(value) => updateField('description', value)"
           class="q-mt-md"
+          @update:model-value="(value) => updateField('description', value)"
         >
         </q-input>
       </div>
@@ -232,9 +232,9 @@
         </q-list>
 
         <input
+          ref="upload_doc"
           type="file"
           multiple
-          ref="upload_doc"
           style="display: none"
           accept="application/pdf, image/*"
           @change="addFiles($event.target.files)"
@@ -256,8 +256,8 @@
       <MediaViewer
         v-if="show_media >= 0 || show_media === 'img'"
         :show="show_media >= 0 || show_media === 'img'"
-        @close="show_media = -1"
         v-bind="{ media_name, media_src }"
+        @close="show_media = -1"
       >
         <template #context-title>
           {{ $t('product.code').toUpperCase() }}: {{ product.code }}
@@ -370,6 +370,19 @@ export default {
 
         return path;
       } else return null;
+    },
+  },
+
+  watch: {
+    img_src() {
+      if (!this.img_src.startsWith('blob')) {
+        let test = new XMLHttpRequest();
+        test.open('HEAD', this.img_src, false);
+        test.send();
+        if (test.status === 404) {
+          this.no_image = true;
+        }
+      }
     },
   },
 
@@ -495,19 +508,6 @@ export default {
     //   this.$store.dispatch('moveToTrash', this.product)
     //   this.$router.push({ name: 'productList' })
     // }
-  },
-
-  watch: {
-    img_src() {
-      if (!this.img_src.startsWith('blob')) {
-        let test = new XMLHttpRequest();
-        test.open('HEAD', this.img_src, false);
-        test.send();
-        if (test.status === 404) {
-          this.no_image = true;
-        }
-      }
-    },
   },
 };
 </script>

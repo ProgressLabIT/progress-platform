@@ -6,8 +6,8 @@
         <div class="text-h5 text-uppercase q-px-lg q-my-md col-auto">
           {{ $t('step_sequence') }}
         </div>
-        <div class="col-9 scroll" v-if="hasSteps">
-          <q-list dense id="steps">
+        <div v-if="hasSteps" class="col-9 scroll">
+          <q-list id="steps" dense>
             <q-item
               v-for="(step, index) in stepsModel"
               :key="step._key"

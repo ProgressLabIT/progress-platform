@@ -98,6 +98,15 @@ export default {
     },
   },
 
+  created() {
+    this.get_wo_data();
+    this.polling_instance = setInterval(this.get_wo_data, 10000);
+  },
+
+  beforeUnmount() {
+    clearInterval(this.polling_instance);
+  },
+
   methods: {
     exit() {
       let query = { ...this.$route.query };
@@ -120,15 +129,6 @@ export default {
         ])
         .then(() => (this.vuex_ready = true));
     },
-  },
-
-  created() {
-    this.get_wo_data();
-    this.polling_instance = setInterval(this.get_wo_data, 10000);
-  },
-
-  beforeUnmount() {
-    clearInterval(this.polling_instance);
   },
 };
 </script>

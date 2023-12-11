@@ -19,11 +19,11 @@
 
     <slot name="content">
       <q-virtual-scroll
+        v-slot="{ item, index }"
         style="max-height: 400px"
         :items="icon_rows"
-        v-slot="{ item, index }"
       >
-        <div class="row text-body2 smaller justify-center" :key="index" dense>
+        <div :key="index" class="row text-body2 smaller justify-center" dense>
           <div
             v-for="icon in item"
             :key="icon"

@@ -5,6 +5,7 @@
       <div class="col-auto q-py-md row q-col-gutter-lg items-center">
         <div class="col-12 col-sm-5 col-md-3">
           <q-input
+            v-model="search_string"
             dense
             filled
             hide-bottom-space
@@ -12,7 +13,6 @@
             name="search"
             :placeholder="$t('search')"
             input-class="text-uppercase text-body1"
-            v-model="search_string"
             :debounce="300"
           >
             <template #append>
@@ -23,15 +23,15 @@
 
         <!-- View controls -->
         <q-checkbox
+          v-model="filter_inactive"
           class="col-auto text-body1 low-text"
           :label="$capitalize($t('product.filters.active_only'))"
-          v-model="filter_inactive"
         >
         </q-checkbox>
         <q-checkbox
+          v-model="show_images"
           class="col-auto text-body1 low-text"
           :label="$capitalize($t('product.filters.show_images'))"
-          v-model="show_images"
         >
         </q-checkbox>
 
@@ -48,14 +48,14 @@
       </div>
 
       <!-- PRODUCT LIST -->
-      <div class="col scroll flex-center" id="product-list">
+      <div id="product-list" class="col scroll flex-center">
         <div v-if="vuex_ready" class="row q-col-gutter-lg q-mb-md">
           <NoDataAlert v-if="!productCatalog(filter_inactive).length" />
           <div
-            class="col-12 col-sm-6 col-md-3 col-xl-2"
-            :style="`height: ${card_height}px`"
             v-for="(product, index) in product_list"
             :key="index"
+            class="col-12 col-sm-6 col-md-3 col-xl-2"
+            :style="`height: ${card_height}px`"
           >
             <ProductCard
               :key="product._key"
@@ -175,6 +175,26 @@ export default {
     },
   },
 
+  watch: {
+    search_string: {
+      immediate: true,
+      handler() {
+        this.loading = true;
+        this.loading_round = 0;
+        setTimeout(() => {
+          this.loading = false;
+          this.loading_round = 1;
+        }, 700);
+      },
+    },
+  },
+
+  created() {
+    this.fetchProducts().then(() => {
+      this.vuex_ready = true;
+    });
+  },
+
   methods: {
     fetchProducts() {
       return new Promise((resolve) => {
@@ -196,26 +216,6 @@ export default {
         this.loading_round++;
         this.loading = false;
       }, 700);
-    },
-  },
-
-  created() {
-    this.fetchProducts().then(() => {
-      this.vuex_ready = true;
-    });
-  },
-
-  watch: {
-    search_string: {
-      immediate: true,
-      handler() {
-        this.loading = true;
-        this.loading_round = 0;
-        setTimeout(() => {
-          this.loading = false;
-          this.loading_round = 1;
-        }, 700);
-      },
     },
   },
 };

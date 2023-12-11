@@ -25,14 +25,14 @@
           >
             <q-btn
               color="theme-red"
-              @click="resetPassword"
               :label="$t('confirm')"
+              @click="resetPassword"
             >
             </q-btn>
             <q-btn
               color="theme-grey"
-              @click="$router.back()"
               :label="$t('cancel')"
+              @click="$router.back()"
             >
             </q-btn>
           </div>
@@ -55,8 +55,8 @@
               <div class="col-auto">
                 <q-btn
                   color="theme-grey"
-                  @click="$router.back()"
                   :label="$t('close')"
+                  @click="$router.back()"
                 >
                 </q-btn>
               </div>

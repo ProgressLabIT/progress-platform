@@ -1,23 +1,23 @@
 <template>
-  <div class="col relative-position" id="media-container">
+  <div id="media-container" class="col relative-position">
     <div class="absolute-full row q-pa-none">
       <!-- MEDIA CONTAINER -->
-      <div class="absolute-full scroll" v-if="step_media.length">
+      <div v-if="step_media.length" class="absolute-full scroll">
         <div
           class="q-mx-auto flex flex-center full-width relative-position"
           style="z-index: 0"
         >
           <!-- INVISIBLE NAVIGATION -->
           <div class="row absolute-full">
-            <div class="col-6" @click="show('prev')" style="z-index: 1" />
-            <div class="col-6" @click="show('next')" style="z-index: 1" />
+            <div class="col-6" style="z-index: 1" @click="show('prev')" />
+            <div class="col-6" style="z-index: 1" @click="show('next')" />
           </div>
 
           <!-- IMAGE CONTENT -->
           <q-img
-            class="full-width"
-            id="step-image"
             v-if="is_image"
+            id="step-image"
+            class="full-width"
             fit="cover"
             :src="media_src"
           >
@@ -26,11 +26,11 @@
           <!-- PDF CONTENT -->
           <div v-else class="q-py-xl">
             <vue-pdf-embed
+              id="pdf"
+              ref="pdf"
               class="vue-pdf-embed"
               disable-text-layer
               disable-annotation-layer
-              ref="pdf"
-              id="pdf"
               :source="media_src"
               :width="pdf_width"
             >
@@ -41,12 +41,12 @@
 
       <!-- INSTRUCTIONS -->
       <div
+        v-show="step_media.length ? show_details : true"
         :class="
           step_media.length
             ? 'absolute-top q-pa-md'
             : 'absolute q-pa-md q-ma-xl'
         "
-        v-show="step_media.length ? show_details : true"
         :style="step_media.length ? 'background-color: #111a' : ''"
       >
         <div class="text-h3 display">{{ step.title }}</div>
@@ -77,13 +77,13 @@
 
       <MediaViewer
         :show="show_full_screen"
-        @close="show_full_screen = false"
         v-bind="{
           media_name,
           media_src,
           instruction_title: step.title,
           instruction_detail: step.description,
         }"
+        @close="show_full_screen = false"
       >
         <template #context-title>
           {{ $t('product.code').toUpperCase() }}: {{ product.code }}
@@ -99,9 +99,9 @@
     style="z-index: 3"
   >
     <q-img
-      loading="eager"
       v-for="(media, index) in step_media"
       :key="media"
+      loading="eager"
       style="height: 50px; width: 70px"
       :style="
         step_media_index == index
@@ -109,8 +109,8 @@
           : ''
       "
       :src="media_base_path + '/' + media"
-      @mouseenter="show(index)"
       class="shadow-6"
+      @mouseenter="show(index)"
     >
       <template #error>
         <div class="row fit flex-center surface1">
@@ -191,6 +191,17 @@ export default {
     },
   },
 
+  watch: {
+    current_step_index() {
+      this.step_media_index = 0;
+    },
+  },
+
+  mounted() {
+    const container = document.getElementById('media-container');
+    this.pdf_width = !this.is_image ? container.clientWidth * 0.9 : undefined;
+  },
+
   methods: {
     show(which) {
       const len = this.step_media.length;
@@ -207,17 +218,6 @@ export default {
         this.step_media_index = which;
       }
     },
-  },
-
-  watch: {
-    current_step_index() {
-      this.step_media_index = 0;
-    },
-  },
-
-  mounted() {
-    const container = document.getElementById('media-container');
-    this.pdf_width = !this.is_image ? container.clientWidth * 0.9 : undefined;
   },
 };
 </script>

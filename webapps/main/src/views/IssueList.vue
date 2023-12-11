@@ -2,7 +2,7 @@
   <div class="q-pa-md absolute-full scroll">
     <q-list v-if="issues.length">
       <template v-for="(issue, index) in issues" :key="index">
-        <q-separator inset v-if="index > 0" />
+        <q-separator v-if="index > 0" inset />
         <IssueHeader
           clickable
           :issue="issue"
@@ -15,7 +15,7 @@
     <NoDataAlert v-else>
       {{ $t('issue_missing') }}
     </NoDataAlert>
-    <template v-if="this.$route.name == 'workOrderIssues'">
+    <template v-if="$route.name == 'workOrderIssues'">
       <q-btn
         round
         color="theme-blue"
@@ -104,6 +104,10 @@ export default {
     },
   },
 
+  created() {
+    this.getIssues();
+  },
+
   methods: {
     openIssue(issueKey) {
       const next_route_name =
@@ -124,10 +128,6 @@ export default {
         work_order_key: this.work_order_key,
       });
     },
-  },
-
-  created() {
-    this.getIssues();
   },
 };
 </script>

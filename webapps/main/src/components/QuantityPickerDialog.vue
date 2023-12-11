@@ -1,5 +1,5 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss no-shake>
+  <q-dialog ref="dialogRef" no-backdrop-dismiss no-shake @hide="onDialogHide">
     <q-card class="dialog-card q-pa-lg surface2">
       <q-card-section class="q-mb-md">
         <div

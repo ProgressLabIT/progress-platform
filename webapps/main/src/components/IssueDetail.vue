@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="true" @close="exit" maximized>
+  <BaseDialog :show="true" maximized @close="exit">
     <q-card
       class="surface1 row"
       bordered
@@ -250,6 +250,11 @@ export default {
     },
   },
 
+  created() {
+    this.$store.dispatch('loadUsers');
+    this.getHistory();
+  },
+
   methods: {
     getHistory() {
       this.$api
@@ -381,11 +386,6 @@ export default {
     exit() {
       this.$router.back();
     },
-  },
-
-  created() {
-    this.$store.dispatch('loadUsers');
-    this.getHistory();
   },
 };
 </script>

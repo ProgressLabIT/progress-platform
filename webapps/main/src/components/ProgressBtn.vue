@@ -1,10 +1,10 @@
 <template>
   <q-btn
+    v-touch-hold.mouse="progress_button.altAction"
     square
     :style="`background-color: ${progress_button_color}`"
     :disable="!progress_button_active"
     class="fit"
-    v-touch-hold.mouse="progress_button.altAction"
     @click="handleClick"
     @dblclick="handleDoubleClick"
   >
@@ -115,6 +115,10 @@ export default {
         this.$store.state.traceability.current_step_index = index;
       },
     },
+  },
+
+  mounted() {
+    this.goToNextUndoneStep();
   },
 
   methods: {
@@ -279,10 +283,6 @@ export default {
         this.goToStep(next_step_index);
       }
     },
-  },
-
-  mounted() {
-    this.goToNextUndoneStep();
   },
 };
 </script>

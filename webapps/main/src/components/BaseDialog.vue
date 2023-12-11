@@ -9,9 +9,9 @@
     square
     transition-show="scale"
     transition-hide="scale"
+    :style="{ ...CSSVars, '--backdrop-color': background }"
     @escape-key="$emit('close')"
     @hide="$emit('close')"
-    :style="{ ...CSSVars, '--backdrop-color': background }"
   >
     <template v-if="maximized">
       <div

@@ -8,8 +8,8 @@
     <template v-else>
       <q-toolbar dense class="col-1 q-pa-md shadow-4 surface2">
         <div
-          class="row full-width justify-between items-center q-col-gutter-xs"
           ref="stepper"
+          class="row full-width justify-between items-center q-col-gutter-xs"
         >
           <template v-for="(step, index) in procedure" :key="step._key">
             <div class="col-auto q-px-xs">

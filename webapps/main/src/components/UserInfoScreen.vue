@@ -12,13 +12,13 @@
             v-if="!new_image_url"
             size="12px"
             color="theme-blue"
-            @click="$refs.upload_image.click()"
             icon="mdi-camera"
             :label="$t('edit')"
+            @click="$refs.upload_image.click()"
           >
             <input
-              type="file"
               ref="upload_image"
+              type="file"
               style="display: none"
               accept="image/*"
               @change="updateImg($event.target.files[0])"
@@ -28,9 +28,9 @@
             v-else
             size="12px"
             color="theme-orange"
-            @click="clearTempImg"
             icon="mdi-restore"
             :label="$t('restore')"
+            @click="clearTempImg"
           >
           </q-btn>
         </template>
@@ -98,14 +98,14 @@
               <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.name') }}
               </div>
-              <q-input filled dense v-model="temp_data.name" />
+              <q-input v-model="temp_data.name" filled dense />
             </div>
 
             <div class="col-3">
               <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.surname') }}
               </div>
-              <q-input filled dense v-model="temp_data.surname" />
+              <q-input v-model="temp_data.surname" filled dense />
             </div>
 
             <div class="q-ml-auto">
@@ -113,18 +113,18 @@
                 size="12px"
                 color="theme-blue"
                 class="q-ml-auto"
-                @click="save"
                 :loading="saving"
                 :label="$t('save')"
+                @click="save"
               >
               </q-btn>
               <q-btn
                 size="12px"
                 class="q-ml-md"
                 color="theme-grey"
-                @click="cancel"
                 :loading="saving"
                 :label="$t('cancel')"
+                @click="cancel"
               >
               </q-btn>
             </div>
@@ -143,7 +143,7 @@
               <div v-if="!editMode">
                 {{ user.username || '-' }}
               </div>
-              <q-input v-else filled dense v-model="temp_data.username">
+              <q-input v-else v-model="temp_data.username" filled dense>
               </q-input>
             </div>
 
@@ -156,7 +156,7 @@
               <div v-if="!editMode">
                 {{ user.email || '-' }}
               </div>
-              <q-input v-else dense filled v-model="temp_data.email"> </q-input>
+              <q-input v-else v-model="temp_data.email" dense filled> </q-input>
             </div>
 
             <!-- DEPARTMENT -->
@@ -184,15 +184,15 @@
               </div>
               <div v-if="!editMode">
                 {{
-                  $numberFormat(temp_data.hourly_cost || '-', this.$i18n.locale)
+                  $numberFormat(temp_data.hourly_cost || '-', $i18n.locale)
                 }}
               </div>
               <q-input
                 v-else
+                v-model.number="temp_data.hourly_cost"
                 type="number"
                 dense
                 filled
-                v-model.number="temp_data.hourly_cost"
               >
               </q-input>
             </div>
@@ -209,9 +209,9 @@
               </div>
               <q-toggle
                 v-else
+                v-model="temp_data.active"
                 filled
                 class="q-mt-sm"
-                v-model="temp_data.active"
                 :label="user_active_text"
               >
               </q-toggle>
@@ -225,11 +225,11 @@
               <q-checkbox
                 v-for="check in scopes"
                 :key="check.name"
+                v-model="user_permissions"
                 filled
                 dense
                 :val="check.name"
                 :disable="!editMode"
-                v-model="user_permissions"
                 class="q-mt-md"
               >
                 <span class="high-text">
@@ -328,6 +328,12 @@ export default {
     },
   },
 
+  created() {
+    if (this.user) {
+      this.setTempData();
+    }
+  },
+
   methods: {
     setTempData() {
       Object.keys(this.temp_data).forEach((key) => {
@@ -408,12 +414,6 @@ export default {
       this.saving = false;
       this.editMode = false;
     },
-  },
-
-  created() {
-    if (this.user) {
-      this.setTempData();
-    }
   },
 };
 </script>

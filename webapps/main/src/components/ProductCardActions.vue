@@ -5,8 +5,8 @@
         <q-toggle
           :toggle-indeterminate="false"
           :model-value="product.active"
-          @update:model-value="toggleActive(product)"
           class="q-pa-none col-6"
+          @update:model-value="toggleActive(product)"
         >
           <span class="text-body2">
             {{ $capitalize(product.active ? $t('active') : $t('inactive')) }}

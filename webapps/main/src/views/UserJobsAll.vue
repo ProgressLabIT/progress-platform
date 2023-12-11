@@ -5,6 +5,7 @@
       <!-- Text field for product filter and search -->
       <div class="column col-12 col-sm-5 col-lg-3">
         <q-input
+          v-model="search_string"
           filled
           dense
           clearable
@@ -13,7 +14,6 @@
           name="search"
           :label="$capitalize($t('search'))"
           value="search"
-          v-model="search_string"
           class="q-ma-none q-pa-none text-uppercase"
         >
           <template #append>
@@ -25,8 +25,8 @@
       <!-- View controls -->
       <div class="row col items-center justify-between">
         <q-checkbox
-          :label="$capitalize($t('job.filters.started_only'))"
           v-model="started_only"
+          :label="$capitalize($t('job.filters.started_only'))"
           hide-bottom-space
           no-ripple
           class="q-ma-none q-pa-none nowrap text-low col-auto"
@@ -36,17 +36,17 @@
             flat
             icon="mdi-view-grid"
             :color="layout != 'list' ? 'text-high' : 'theme-grey'"
-            @click="setLayout('card')"
             size="md"
             padding="sm sm"
+            @click="setLayout('card')"
           />
           <q-btn
             flat
             icon="mdi-view-agenda"
             :color="layout == 'list' ? 'text-high' : 'theme-grey'"
-            @click="setLayout('list')"
             size="md"
             padding="sm sm"
+            @click="setLayout('list')"
           />
         </div>
       </div>
@@ -84,9 +84,9 @@
         <!-- CARDS LAYOUT (DEFAULT) -->
         <template v-if="layout != 'list'">
           <div
-            class="column col-12 col-sm-6 col-md-4 col-lg-3"
             v-for="j in details.list"
             :key="j._key"
+            class="column col-12 col-sm-6 col-md-4 col-lg-3"
             @click="goToSelectedJob(j._key)"
           >
             <JobCard :job="j" class="pointer"> </JobCard>
@@ -96,9 +96,9 @@
         <!-- LIST LAYOUT -->
         <template v-if="layout === 'list'">
           <div
-            class="col-12 items-center q-my-sm"
             v-for="j in details.list"
             :key="j._key"
+            class="col-12 items-center q-my-sm"
           >
             <JobCardSlim :job="j" @click="goToSelectedJob(j._key)" />
           </div>
@@ -173,6 +173,10 @@ export default {
     },
   },
 
+  created() {
+    this.layout = localStorage.getItem('LAYOUT');
+  },
+
   methods: {
     setLayout(layout) {
       this.layout = layout;
@@ -200,10 +204,6 @@ export default {
       };
       this.$router.push(selected_job_route);
     },
-  },
-
-  created() {
-    this.layout = localStorage.getItem('LAYOUT');
   },
 };
 </script>

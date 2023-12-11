@@ -35,8 +35,8 @@
             emit-value
             map-options
             :model-value="link_form"
-            @update:model-value="updateLinkForm"
             :label="$t('issue_new_link_type_label')"
+            @update:model-value="updateLinkForm"
           >
           </q-select>
 
@@ -68,12 +68,12 @@
           <q-select
             v-if="phase_data"
             :model-value="links.phase"
-            @update:model-value="(selection) => loadPhase(selection)"
             :label="$t('phase.short')"
             filled
             clearable
             :options="phase_data"
             option-label="alias"
+            @update:model-value="(selection) => loadPhase(selection)"
           >
           </q-select>
 
@@ -159,13 +159,13 @@
                 v-if="!critical_only"
                 color="theme-orange"
                 :label="$t('save')"
+                :loading="saving"
                 @click="
                   () => {
                     critical = false;
                     save();
                   }
                 "
-                :loading="saving"
               >
               </q-btn>
               <q-btn
@@ -294,6 +294,25 @@ export default {
         },
       ];
     },
+  },
+
+  watch: {
+    issue_type: {
+      deep: true,
+      handler: 'initFormData',
+    },
+    show: {
+      handler() {
+        this.initFormData();
+        this.initLinks();
+      },
+    },
+  },
+
+  created() {
+    this.initIssueType();
+    this.initFormData();
+    this.initLinks();
   },
 
   methods: {
@@ -550,25 +569,6 @@ export default {
         timeout: 1500,
         position: 'top',
       });
-    },
-  },
-
-  created() {
-    this.initIssueType();
-    this.initFormData();
-    this.initLinks();
-  },
-
-  watch: {
-    issue_type: {
-      deep: true,
-      handler: 'initFormData',
-    },
-    show: {
-      handler() {
-        this.initFormData();
-        this.initLinks();
-      },
     },
   },
 };

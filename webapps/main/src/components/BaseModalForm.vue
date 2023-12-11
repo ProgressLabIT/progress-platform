@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="show" @close="$router.back()" :maximized="maximized">
+  <BaseDialog :show="show" :maximized="maximized" @close="$router.back()">
     <q-card class="surface1 q-pa-md" :style="{ maxWidth: maxWidth }">
       <!-- DIALOG TITLE -->
       <q-card-section class="text-h3 display weight-medium">

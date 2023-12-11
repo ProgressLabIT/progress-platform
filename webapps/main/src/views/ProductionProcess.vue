@@ -19,16 +19,16 @@
       <div class="scroll col q-py-sm full-width">
         <q-list
           id="phases"
+          v-model="current_phase"
           dense
           class="transparent medium text-left q-pl-sm"
           align="left"
-          v-model="current_phase"
         >
           <q-item
             v-for="(phase, index) in process"
-            clickable
-            v-ripple
             :key="phase._key"
+            v-ripple
+            clickable
             :name="index"
             :class="`full-width text-left ${editMode ? '' : 'undraggable'}`"
             @mouseenter="dragging ? undefined : (over_phase = index)"
@@ -102,26 +102,26 @@
       <div class="column q-gutter-y-sm q-px-lg q-mt-sm q-pb-sm col-auto">
         <q-btn
           v-if="!editMode"
-          @click="toggleEdit"
           class="full-width"
           color="theme-blue"
+          @click="toggleEdit"
         >
           {{ $t('edit') }}
         </q-btn>
 
         <template v-else>
           <BaseAutocompleteOperation
-            @select="addPhase"
             dense
             :label="$capitalize($t('phase.add'))"
             :clearable="false"
+            @select="addPhase"
           >
           </BaseAutocompleteOperation>
           <q-btn
             class="full-width q-mt-md"
             color="theme-green"
-            @click="saveChanges"
             :loading="saving"
+            @click="saveChanges"
           >
             {{ $t('save') }}
           </q-btn>
@@ -275,6 +275,51 @@ export default {
     },
   },
 
+  watch: {
+    confirming_delete() {
+      const index = this.confirming_delete;
+      if (index != null) {
+        const phase = this.process[index];
+        this.$q
+          .dialog({
+            title: phase.alias,
+            cancel: true,
+            message: `Confermi di voler eliminare questa fase?`,
+          })
+          .onOk(() => {
+            this.deletePhase(index);
+          })
+          .onDismiss(() => {
+            this.confirming_delete = null;
+          });
+      }
+    },
+  },
+
+  mounted() {
+    // Create step map
+    const step_map = Array(this.process.length).fill(0);
+    this.updateStepsMap(step_map);
+
+    // Initialize draggable phases
+    const container = document.querySelector('#phases');
+    const _self = this;
+    Sortable.create(container, {
+      ..._self.$store.state.drag_options,
+      filter: '.undraggable',
+      onStart: () => {
+        _self.dragging = true;
+      },
+      // use onEnd event provided by SortableJs library
+      onEnd: ({ newIndex, oldIndex }) => {
+        _self.dragging = false;
+        const moved = _self.process.splice(oldIndex, 1)[0];
+        _self.process.splice(newIndex, 0, moved);
+        _self.updateActivePhaseIndex({ oldIndex, newIndex });
+      },
+    });
+  },
+
   methods: {
     ...mapActions(['loadProductDetails']),
 
@@ -421,51 +466,6 @@ export default {
           window.alert(err);
           this.saving = false;
         });
-    },
-  },
-
-  mounted() {
-    // Create step map
-    const step_map = Array(this.process.length).fill(0);
-    this.updateStepsMap(step_map);
-
-    // Initialize draggable phases
-    const container = document.querySelector('#phases');
-    const _self = this;
-    Sortable.create(container, {
-      ..._self.$store.state.drag_options,
-      filter: '.undraggable',
-      onStart: () => {
-        _self.dragging = true;
-      },
-      // use onEnd event provided by SortableJs library
-      onEnd: ({ newIndex, oldIndex }) => {
-        _self.dragging = false;
-        const moved = _self.process.splice(oldIndex, 1)[0];
-        _self.process.splice(newIndex, 0, moved);
-        _self.updateActivePhaseIndex({ oldIndex, newIndex });
-      },
-    });
-  },
-
-  watch: {
-    confirming_delete() {
-      const index = this.confirming_delete;
-      if (index != null) {
-        const phase = this.process[index];
-        this.$q
-          .dialog({
-            title: phase.alias,
-            cancel: true,
-            message: `Confermi di voler eliminare questa fase?`,
-          })
-          .onOk(() => {
-            this.deletePhase(index);
-          })
-          .onDismiss(() => {
-            this.confirming_delete = null;
-          });
-      }
     },
   },
 };

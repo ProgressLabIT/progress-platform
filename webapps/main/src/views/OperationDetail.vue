@@ -3,7 +3,7 @@
     <template v-if="operation">
       <div class="row q-px-lg q-pt-lg q-mx-md q-mt-md">
         <template v-if="!editMode">
-          <div class="col" v-if="!editMode">
+          <div v-if="!editMode" class="col">
             <div class="text-h2 uppercase display highlight">
               {{ operation.name }}
               {{ operation.code ? '(' + operation.code + ')' : '' }}
@@ -34,31 +34,31 @@
         <template v-else>
           <div class="column justify-between col-4">
             <q-input
+              v-model="temp_metadata.name"
               filled
               stack-label
               hide-bottom-space
               :label="$capitalize($t('name'))"
-              v-model="temp_metadata.name"
             >
             </q-input>
             <q-input
+              v-model="temp_metadata.code"
               filled
               stack-label
               hide-bottom-space
               :label="$capitalize($t('code'))"
-              v-model="temp_metadata.code"
               class="q-mt-md"
             >
             </q-input>
           </div>
           <div class="col-5 q-ml-xl">
             <q-input
+              v-model="temp_metadata.description"
               filled
               stack-label
               autogrow
               hide-bottom-space
               :label="$capitalize($t('description'))"
-              v-model="temp_metadata.description"
             >
             </q-input>
           </div>
@@ -79,16 +79,16 @@
             <q-btn
               size="12px"
               color="theme-blue"
-              @click="save"
               :loading="saving"
               :label="$t('save')"
+              @click="save"
             >
             </q-btn>
             <q-btn
               size="12px"
               color="theme-grey"
-              @click="cancel"
               :label="$t('cancel')"
+              @click="cancel"
             >
             </q-btn>
           </div>
@@ -210,6 +210,14 @@ export default {
     },
   },
 
+  watch: {
+    operation: {
+      handler: 'setTempData',
+      immediate: true,
+    },
+    editMode: 'setTempData',
+  },
+
   methods: {
     setTempData() {
       // At first render, sometimes the function runs before the prop has been passed, resulting in error
@@ -274,14 +282,6 @@ export default {
         });
       }
     },
-  },
-
-  watch: {
-    operation: {
-      handler: 'setTempData',
-      immediate: true,
-    },
-    editMode: 'setTempData',
   },
 };
 </script>

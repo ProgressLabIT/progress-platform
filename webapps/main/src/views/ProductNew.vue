@@ -1,10 +1,10 @@
 <template>
   <BaseModalForm
-    :show="true"
     id="new-product-form"
-    @submit="postNewProduct"
+    :show="true"
     max-width="700px"
     maximized
+    @submit="postNewProduct"
     @cancel="$router.back()"
   >
     <template #title>
@@ -14,28 +14,28 @@
     <template #form>
       <div class="column q-gutter-lg" style="min-width: 400px">
         <q-input
+          v-model="new_product_code"
           dense
           :label="$capitalize($t('code'))"
-          v-model="new_product_code"
           class="input-uppercase"
           clearable
         >
         </q-input>
         <q-input
+          v-model="new_product_desc"
           dense
           type="textarea"
           clearable
           :label="$capitalize($t('description'))"
-          v-model="new_product_desc"
         >
         </q-input>
         <q-file
+          v-model="new_product_pic"
           dense
           :label="$capitalize($t('image'))"
           accept="image/*"
           clearable
           counter
-          v-model="new_product_pic"
         >
           <template #append>
             <q-icon name="mdi-image" />

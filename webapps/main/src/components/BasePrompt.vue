@@ -1,11 +1,12 @@
 <template>
-  <BaseDialog :show="show" @keyup.enter="update" :no-backdrop-dismiss="false">
+  <BaseDialog :show="show" :no-backdrop-dismiss="false" @keyup.enter="update">
     <q-card class="surface2 q-pa-md" :style="`width: ${width}`">
       <q-card-section>
         <div class="text-h4 display highlight text-uppercase">
           {{ prompt ?? $t('update') }}
         </div>
         <q-input
+          v-model="value"
           autofocus
           filled
           autogrow
@@ -15,7 +16,6 @@
           :type="input_type"
           :max="max"
           :min="min"
-          v-model="value"
         >
         </q-input>
       </q-card-section>
@@ -24,9 +24,9 @@
           {{ $t('cancel') }}
         </q-btn>
         <q-btn
+          v-if="value != initial_value"
           size="12px"
           flat
-          v-if="value != initial_value"
           color="theme-blue"
           @click="update"
         >
@@ -85,14 +85,14 @@ export default {
     };
   },
 
+  updated() {
+    this.value = this.initial_value;
+  },
+
   methods: {
     update() {
       this.$emit('update', this.value);
     },
-  },
-
-  updated() {
-    this.value = this.initial_value;
   },
 };
 </script>

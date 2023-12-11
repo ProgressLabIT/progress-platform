@@ -47,8 +47,8 @@
         </div>
 
         <v-autocomplete
-          ref="assign_equipment"
           v-if="editMode"
+          ref="assign_equipment"
           v-model="new_assignment"
           :items="add_equipment_list"
           item-value="_id"
@@ -84,7 +84,7 @@
           </v-subheader>
 
           <v-row>
-            <v-col cols="auto" v-for="d in assigned_departments" :key="d._id">
+            <v-col v-for="d in assigned_departments" :key="d._id" cols="auto">
               <BaseAvatarListElement
                 :src="null"
                 :title="d.name"
@@ -107,9 +107,9 @@
 
           <v-row>
             <v-col
-              cols="auto"
               v-for="o in assigned_operators"
               :key="o._id"
+              cols="auto"
               class="flex-shrink-1"
             >
               <BaseAvatarListElement
@@ -128,8 +128,8 @@
         </div>
 
         <v-autocomplete
-          ref="assign_operator"
           v-if="editMode"
+          ref="assign_operator"
           v-model="new_assignment"
           :items="add_operator_list"
           item-value="_id"
@@ -163,6 +163,10 @@ import BaseAvatarListElement from '@/components/BaseAvatarListElement';
 export default {
   name: 'PhaseAssignments',
 
+  components: {
+    BaseAvatarListElement,
+  },
+
   props: {
     phase: {
       type: Object,
@@ -176,10 +180,6 @@ export default {
       type: Object,
       required: true,
     },
-  },
-
-  components: {
-    BaseAvatarListElement,
   },
 
   data() {

@@ -1,5 +1,5 @@
 <template>
-  <div ref="container" id="table_container" class="q-px-sm">
+  <div id="table_container" ref="container" class="q-px-sm">
     <q-table
       id="wo_list"
       :columns="columns"
@@ -28,6 +28,7 @@
           <div class="row col-9 q-gutter-md">
             <!-- SEARCH BOX -->
             <q-input
+              v-model="search"
               clearable
               filled
               dense
@@ -36,7 +37,6 @@
               name="search"
               debounce="300"
               :label="$capitalize($t('search'))"
-              v-model="search"
               class="col-3"
             >
               <template #append>
@@ -46,11 +46,11 @@
 
             <!-- START MIN -->
             <q-input
+              v-model="time_start_from"
               filled
               dense
               clearable
               mask="date"
-              v-model="time_start_from"
               debounce="1000"
               label="Start min"
               class="col"
@@ -62,7 +62,7 @@
                     transition-show="scale"
                     transition-hide="scale"
                   >
-                    <q-date minimal v-model="time_start_from">
+                    <q-date v-model="time_start_from" minimal>
                       <div class="row items-center justify-end">
                         <q-btn
                           v-close-popup
@@ -79,11 +79,11 @@
 
             <!-- START MAX -->
             <q-input
+              v-model="time_start_to"
               filled
               dense
               clearable
               mask="date"
-              v-model="time_start_to"
               debounce="1000"
               label="Start max"
               class="col"
@@ -95,7 +95,7 @@
                     transition-show="scale"
                     transition-hide="scale"
                   >
-                    <q-date minimal v-model="time_start_to">
+                    <q-date v-model="time_start_to" minimal>
                       <div class="row items-center justify-end">
                         <q-btn
                           v-close-popup
@@ -112,11 +112,11 @@
 
             <!-- END MIN -->
             <q-input
+              v-model="time_end_from"
               filled
               dense
               clearable
               mask="date"
-              v-model="time_end_from"
               debounce="1000"
               label="End min"
               class="col"
@@ -128,7 +128,7 @@
                     transition-show="scale"
                     transition-hide="scale"
                   >
-                    <q-date minimal v-model="time_end_from">
+                    <q-date v-model="time_end_from" minimal>
                       <div class="row items-center justify-end">
                         <q-btn
                           v-close-popup
@@ -145,11 +145,11 @@
 
             <!-- END MAX -->
             <q-input
+              v-model="time_end_to"
               filled
               dense
               clearable
               mask="date"
-              v-model="time_end_to"
               debounce="1000"
               label="End max"
               class="col"
@@ -161,7 +161,7 @@
                     transition-show="scale"
                     transition-hide="scale"
                   >
-                    <q-date minimal v-model="time_end_to">
+                    <q-date v-model="time_end_to" minimal>
                       <div class="row items-center justify-end">
                         <q-btn
                           v-close-popup
@@ -363,6 +363,17 @@ export default {
     },
   },
 
+  watch: {
+    filters: {
+      deep: true,
+      handler: 'fetchData',
+    },
+  },
+
+  created() {
+    this.fetchData();
+  },
+
   methods: {
     fetchData() {
       this.loading = true;
@@ -423,17 +434,6 @@ export default {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    },
-  },
-
-  created() {
-    this.fetchData();
-  },
-
-  watch: {
-    filters: {
-      deep: true,
-      handler: 'fetchData',
     },
   },
 };

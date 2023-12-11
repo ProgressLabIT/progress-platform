@@ -7,7 +7,6 @@
     clearable
     :options="options"
     option-label="code"
-    @filter="filter"
     :model-value="value"
     :label="label"
     input-debounce="100"
@@ -15,6 +14,7 @@
     :emit-value="keyOnly"
     :map-options="keyOnly"
     popup-content-style="width: 0px"
+    @filter="filter"
     @update:model-value="(selection) => $emit('select', selection)"
   >
     <template #option="scope">
@@ -85,6 +85,16 @@ export default {
     },
   },
 
+  created() {
+    if (this.loadData) {
+      this.loading = true;
+      this.$store.dispatch('loadProductList').then(() => {
+        this.initOptions();
+        this.loading = false;
+      });
+    }
+  },
+
   methods: {
     initOptions() {
       this.options = [...this.origin_list];
@@ -104,16 +114,6 @@ export default {
         });
       });
     },
-  },
-
-  created() {
-    if (this.loadData) {
-      this.loading = true;
-      this.$store.dispatch('loadProductList').then(() => {
-        this.initOptions();
-        this.loading = false;
-      });
-    }
   },
 };
 </script>

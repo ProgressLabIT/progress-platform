@@ -7,18 +7,18 @@
 
     <q-drawer
       id="menu"
+      v-model="show_drawer"
       class="surface2"
       behavior="mobile"
       bordered
       :width="400"
-      v-model="show_drawer"
     >
       <div class="column fit q-pa-lg">
         <q-tabs class="col-auto" vertical switch-indicator>
           <q-route-tab
             v-for="tab in tab_routes"
-            :to="{ name: tab }"
             :key="tab"
+            :to="{ name: tab }"
             active-class="text-theme-blue"
             indicator-color="theme-blue"
             content-class="display"
@@ -106,16 +106,6 @@ export default {
     },
   },
 
-  methods: {
-    toggleDarkMode(bool) {
-      const theme = bool ? 'dark' : 'light';
-      document.body.setAttribute('progress-theme', theme);
-      // Set theme
-      this.$store.dispatch('changeTheme', bool);
-      this.$q.dark.set(bool);
-    },
-  },
-
   watch: {
     // locale_index(new_locale_index) {
     //   this.$root.$i18n.locale = this.locale_list[new_locale_index]
@@ -129,6 +119,16 @@ export default {
   created() {
     // Set dark mode on
     this.toggleDarkMode(true);
+  },
+
+  methods: {
+    toggleDarkMode(bool) {
+      const theme = bool ? 'dark' : 'light';
+      document.body.setAttribute('progress-theme', theme);
+      // Set theme
+      this.$store.dispatch('changeTheme', bool);
+      this.$q.dark.set(bool);
+    },
   },
   // beforeMount() {
   //   let locale = this.$root.$i18n.locale

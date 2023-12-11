@@ -15,20 +15,20 @@
           {{ $t('filter', 2) }}
         </div>
         <q-input
+          v-model="search_text"
           dense
           placeholder="Codice o Descrizione"
-          v-model="search_text"
           append-icon="mdi-magnify"
         >
         </q-input>
       </div>
 
-      <q-btn v-if="!editMode" @click="toggleEdit" color="theme-blue">
+      <q-btn v-if="!editMode" color="theme-blue" @click="toggleEdit">
         {{ $t('bom.edit') }}
       </q-btn>
 
       <div v-else class="column q-gutter-sm">
-        <q-btn color="theme-green" @click="saveChanges" :loading="saving">
+        <q-btn color="theme-green" :loading="saving" @click="saveChanges">
           {{ $t('save') }}
         </q-btn>
         <q-btn :disabled="saving" color="theme-grey" @click="cancelChanges">
@@ -39,9 +39,10 @@
 
     <div class="col-9 column">
       <q-table
-        square
         id="bom"
         ref="bom"
+        v-model:selected="delete_lines"
+        square
         row-key="table_key"
         class="my-sticky-header-table col text-body1"
         card-class="surface2"
@@ -49,7 +50,6 @@
         virtual-scroll
         :selection="editMode ? 'multiple' : 'none'"
         table-header-class="low-text"
-        v-model:selected="delete_lines"
         :rows="filtered_bom"
         :columns="table_headers"
         :pagination="{ rowsPerPage: 0 }"
@@ -112,30 +112,30 @@
         <q-card-section>
           <div class="row q-col-gutter-md items-center">
             <q-select
+              v-model="new_line_phase"
               class="col-4"
               use-input
               dense
-              v-model="new_line_phase"
               input-debounce="0"
-              @filter="filterOperations"
               :options="filtered_process"
               :label="$capitalize($t('phase.short'))"
               option-label="alias"
               popup-content-class="text-capitalize"
+              @filter="filterOperations"
             >
             </q-select>
 
             <q-select
+              v-model="new_line_product"
               class="col-6"
               use-input
               dense
-              v-model="new_line_product"
-              @filter="filterProducts"
               :loading="catalog_loading"
               :options="filtered_products"
               :label="$capitalize($t('code') + ' / ' + $t('description'))"
               option-label="code"
               input-class="text-capitalize"
+              @filter="filterProducts"
             >
               <template #option="scope">
                 <q-item v-bind="scope.itemProps">
@@ -152,9 +152,9 @@
             </q-select>
 
             <q-input
+              v-model="new_line_qt"
               dense
               class="col-2"
-              v-model="new_line_qt"
               type="number"
               :label="$t('quantity.short')"
             >
@@ -166,8 +166,8 @@
             <q-btn
               class="full-width"
               color="theme-blue"
-              @click="addItem"
               :label="$t('add')"
+              @click="addItem"
             >
             </q-btn>
           </div>
@@ -175,8 +175,8 @@
             <q-btn
               class="full-width"
               color="theme-grey"
-              @click="show_product_catalog = false"
               :label="$t('cancel')"
+              @click="show_product_catalog = false"
             >
             </q-btn>
           </div>
@@ -297,6 +297,26 @@ export default {
         return multiMatch(this.search_text, line, fields_to_search);
       });
     },
+  },
+
+  watch: {
+    // Reset form when closing/opening modal
+    show_product_catalog() {
+      this.new_line_product = null;
+      this.new_line_qt = null;
+      this.new_line_phase = null;
+    },
+  },
+
+  mounted() {
+    /* *
+     * remove from container its padding and that of the column,
+     * plus the footer height
+     */
+    this.filtered_process = [...this.saved_process];
+    // const resizeTable = () => this.table_height = this.$refs.container.clientHeight - 24 - 52
+    // resizeTable()
+    // window.onresize = _throttle(resizeTable, 100)
   },
 
   methods: {
@@ -440,26 +460,6 @@ export default {
           }
           this.saving = false;
         });
-    },
-  },
-
-  mounted() {
-    /* *
-     * remove from container its padding and that of the column,
-     * plus the footer height
-     */
-    this.filtered_process = [...this.saved_process];
-    // const resizeTable = () => this.table_height = this.$refs.container.clientHeight - 24 - 52
-    // resizeTable()
-    // window.onresize = _throttle(resizeTable, 100)
-  },
-
-  watch: {
-    // Reset form when closing/opening modal
-    show_product_catalog() {
-      this.new_line_product = null;
-      this.new_line_qt = null;
-      this.new_line_phase = null;
     },
   },
 };

@@ -4,11 +4,11 @@
   <div v-else class="row full-height">
     <div class="full-height column col-3">
       <q-input
+        v-model="search_text"
         dense
         filled
         class="q-px-md q-pt-md"
         :placeholder="$capitalize($t('search'))"
-        v-model="search_text"
       >
         <template #append>
           <q-icon name="mdi-magnify" />
@@ -32,12 +32,12 @@
       <div class="scroll col">
         <div
           v-for="(field, index) in filtered_fields"
+          :key="field._key"
           class="row pointer q-px-lg q-py-xs medium full-width"
           :class="{
             'alternate-row': index % 2 == 0,
             'bg-blue-backdrop': field._key == selected_field_key,
           }"
-          :key="field._key"
           style="white-space: nowrap"
           @click="showFieldDetail(field._key)"
         >
@@ -76,7 +76,7 @@
     <q-separator vertical />
 
     <!-- FIELD DATA -->
-    <div class="col full-height" v-if="data_ready">
+    <div v-if="data_ready" class="col full-height">
       <router-view :field="selected_field" @reload="getFields"> </router-view>
     </div>
   </div>
@@ -92,13 +92,13 @@ import form from '@/mixins/form.js';
 export default {
   name: 'FormFieldLibrary',
 
-  mixins: [form],
-
   components: {
     BaseDialog,
     FormFieldNew,
     LoadingSignal,
   },
+
+  mixins: [form],
 
   data() {
     return {
@@ -128,6 +128,10 @@ export default {
     },
   },
 
+  created() {
+    this.getFields();
+  },
+
   methods: {
     showFieldDetail(field_key) {
       this.$router.push({
@@ -141,10 +145,6 @@ export default {
         this.data_ready = true;
       });
     },
-  },
-
-  created() {
-    this.getFields();
   },
 };
 </script>

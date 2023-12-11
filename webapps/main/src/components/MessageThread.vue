@@ -16,9 +16,9 @@
       <div class="row justify-between items-center">
         <div class="col">
           <q-input
+            v-model="new_message"
             filled
             autogrow
-            v-model="new_message"
             :placeholder="$t('message_prompt')"
           >
             <template #append>
@@ -88,6 +88,17 @@ export default {
       }
     },
   },
+  created() {
+    this.$store.dispatch('loadUsers');
+  },
+
+  mounted() {
+    this.getMessages();
+    this.polling_instance = setInterval(this.getMessages, 10000);
+  },
+  unmounted() {
+    clearInterval(this.polling_instance);
+  },
 
   methods: {
     getMessages() {
@@ -112,17 +123,6 @@ export default {
         this.loading = false;
       });
     },
-  },
-  created() {
-    this.$store.dispatch('loadUsers');
-  },
-
-  mounted() {
-    this.getMessages();
-    this.polling_instance = setInterval(this.getMessages, 10000);
-  },
-  unmounted() {
-    clearInterval(this.polling_instance);
   },
 };
 </script>

@@ -9,10 +9,10 @@
     square
     transition-show="scale"
     transition-hide="scale"
+    :style="CSSVars"
     @escape-key="$emit('close')"
     @hide="$emit('close')"
     @click="show_drawer = false"
-    :style="CSSVars"
   >
     <q-card class="background q-pa-sm">
       <!-- SCREEN HEADER -->

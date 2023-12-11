@@ -1,9 +1,9 @@
 <template>
   <div class="q-pa-lg">
     <q-virtual-scroll
+      v-slot="{ item, index }"
       class="full-height"
       :items="items"
-      v-slot="{ item, index }"
     >
       <q-item :key="index">
         <q-item-section v-for="n in 3" :key="n">

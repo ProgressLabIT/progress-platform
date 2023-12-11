@@ -7,8 +7,8 @@
         <v-tabs vertical background-color="transparent" color="white">
           <v-tab
             v-for="tab in sections"
-            :to="{ name: tab }"
             :key="tab"
+            :to="{ name: tab }"
             class="menu display mb-2"
           >
             {{ $t(`views.${tab}`) }}

@@ -80,19 +80,19 @@
     >
       <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
-          <q-checkbox dense v-model="issue_open" :label="$t('issue_open')">
+          <q-checkbox v-model="issue_open" dense :label="$t('issue_open')">
           </q-checkbox>
         </div>
 
         <div class="col-6">
-          <q-checkbox dense v-model="issue_closed" :label="$t('issue_closed')">
+          <q-checkbox v-model="issue_closed" dense :label="$t('issue_closed')">
           </q-checkbox>
         </div>
 
         <div class="col-6">
           <q-checkbox
-            dense
             v-model="issue_critical"
+            dense
             :label="$t('issue_critical')"
           >
           </q-checkbox>
@@ -100,8 +100,8 @@
 
         <div class="col-6">
           <q-checkbox
-            dense
             v-model="issue_non_critical"
+            dense
             :label="$t('issue_non_critical')"
           >
           </q-checkbox>
@@ -110,6 +110,7 @@
 
       <!-- ISSUE KEY -->
       <q-input
+        v-model="issue_key_search"
         clearable
         filled
         dense
@@ -118,7 +119,6 @@
         name="search"
         debounce="1000"
         :label="$t('issue_key')"
-        v-model="issue_key_search"
         class="q-mb-md"
       >
         <template #append>
@@ -140,12 +140,12 @@
       <div class="row q-col-gutter-sm">
         <div class="col">
           <q-input
+            v-model="time_created_from"
             filled
             dense
             clearable
             debounce="1000"
             mask="date"
-            v-model="time_created_from"
             :label="$t('opened_min')"
           >
             <template #append>
@@ -155,7 +155,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date minimal v-model="time_created_from">
+                  <q-date v-model="time_created_from" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -167,12 +167,12 @@
         </div>
         <div class="col">
           <q-input
+            v-model="time_created_to"
             filled
             dense
             clearable
             mask="date"
             debounce="1000"
-            v-model="time_created_to"
             :label="$t('opened_max')"
           >
             <template #append>
@@ -182,7 +182,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date minimal v-model="time_created_to">
+                  <q-date v-model="time_created_to" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -198,12 +198,12 @@
       <div class="row q-col-gutter-sm q-mt-sm q-mb-md">
         <div class="col">
           <q-input
+            v-model="time_closed_from"
             filled
             dense
             clearable
             mask="date"
             debounce="1000"
-            v-model="time_closed_from"
             :label="$t('closed_min')"
           >
             <template #append>
@@ -213,7 +213,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date minimal v-model="time_closed_from">
+                  <q-date v-model="time_closed_from" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -225,11 +225,11 @@
         </div>
         <div class="col">
           <q-input
+            v-model="time_closed_to"
             filled
             dense
             clearable
             mask="date"
-            v-model="time_closed_to"
             debounce="1000"
             :label="$t('closed_max')"
           >
@@ -240,7 +240,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date minimal v-model="time_closed_to">
+                  <q-date v-model="time_closed_to" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -292,6 +292,7 @@
 
       <!-- PRODUCT -->
       <q-input
+        v-model="product_code_search"
         clearable
         dense
         filled
@@ -301,7 +302,6 @@
         debounce="1000"
         class="q-mb-md"
         :label="$t('product.label')"
-        v-model="product_code_search"
       >
         <template #append>
           <q-icon name="mdi-magnify" />
@@ -310,6 +310,7 @@
 
       <!-- PHASE -->
       <q-input
+        v-model="phase_alias_search"
         clearable
         dense
         filled
@@ -319,7 +320,6 @@
         debounce="1000"
         :label="$t('phase.short')"
         class="q-mb-md"
-        v-model="phase_alias_search"
       >
         <template #append>
           <q-icon name="mdi-magnify" />
@@ -328,6 +328,7 @@
 
       <!-- WORK ORDER -->
       <q-input
+        v-model="work_order_code_search"
         clearable
         filled
         dense
@@ -336,7 +337,6 @@
         name="work_order"
         debounce="1000"
         :label="$capitalize($t('work_order.long'))"
-        v-model="work_order_code_search"
         class="q-mb-md"
       >
         <template #append>
@@ -346,6 +346,7 @@
 
       <!-- PROJECT -->
       <q-input
+        v-model="project_search"
         clearable
         filled
         dense
@@ -354,7 +355,6 @@
         name="work_order"
         debounce="1000"
         :label="$capitalize($t('project'))"
-        v-model="project_search"
         class="q-mb-md"
       >
         <template #append>
@@ -597,6 +597,17 @@ export default {
     },
   },
 
+  watch: {
+    filters: {
+      deep: true,
+      handler: 'getIssues',
+    },
+  },
+
+  created() {
+    this.getIssues();
+  },
+
   methods: {
     async resetFilters() {
       await this.$router.replace({ query: null });
@@ -612,17 +623,6 @@ export default {
             this.loading = false;
           }, 1000),
         );
-    },
-  },
-
-  created() {
-    this.getIssues();
-  },
-
-  watch: {
-    filters: {
-      deep: true,
-      handler: 'getIssues',
     },
   },
 };

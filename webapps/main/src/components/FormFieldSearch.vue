@@ -19,9 +19,9 @@
 
     <q-card-section>
       <q-virtual-scroll
+        v-slot="{ item }"
         style="max-height: 200px"
         :items="filtered_fields"
-        v-slot="{ item }"
         class="surface2"
       >
         <q-item clickable @click="$emit('select', item)">
@@ -35,7 +35,7 @@
               </span>
               <span class="smaller q-ml-sm"> ({{ item.default_label }}) </span>
             </q-item-label>
-            <q-item-label caption v-if="item.default_hint">
+            <q-item-label v-if="item.default_hint" caption>
               {{ item.default_hint }}
             </q-item-label>
           </q-item-section>
@@ -48,8 +48,8 @@
         color="theme-blue"
         :label="$t('new')"
         icon="mdi-plus"
-        @click="show_new_field = true"
         class="full-width q-"
+        @click="show_new_field = true"
       >
       </q-btn>
     </q-card-section>
@@ -109,16 +109,16 @@ export default {
     },
   },
 
+  created() {
+    this.fetchFields();
+  },
+
   methods: {
     fetchFields() {
       this.$api.get('field').then((resp) => {
         this.field_list = resp.data;
       });
     },
-  },
-
-  created() {
-    this.fetchFields();
   },
 };
 </script>

@@ -1,6 +1,6 @@
 <template>
   <!-- TODO: This component is not used anywhere -->
-  <template />
+  TEST
 </template>
 
 <script>

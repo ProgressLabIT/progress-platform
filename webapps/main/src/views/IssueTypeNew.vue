@@ -1,10 +1,10 @@
 <template>
   <BaseModalForm
-    :show="true"
     id="new-issue-type-form"
-    @submit="submit"
+    :show="true"
     :loading="saving"
     max-width="700px"
+    @submit="submit"
     @cancel="$router.back()"
   >
     <template #title>
@@ -15,28 +15,28 @@
       <div class="row q-col-gutter-lg items-center" style="min-width: 400px">
         <div class="col-6">
           <q-input
+            v-model="new_issue_type.name"
             filled
             stack-label
             :label="$capitalize($t('name').toUpperCase())"
-            v-model="new_issue_type.name"
           >
           </q-input>
         </div>
 
         <div class="col-3 text-uppercase">
           <q-input
+            v-model="new_issue_type.code"
             filled
             stack-label
             :label="$t('code').toUpperCase()"
-            v-model="new_issue_type.code"
           >
           </q-input>
         </div>
 
         <div class="col-3 text-uppercase">
           <q-toggle
-            :label="$t('critical').toUpperCase()"
             v-model="new_issue_type.critical"
+            :label="$t('critical').toUpperCase()"
           >
           </q-toggle>
         </div>
@@ -58,12 +58,12 @@
  -->
         <div class="col-12">
           <q-input
+            v-model="new_issue_type.description"
             filled
             stack-label
             autogrow
             clearable
             :label="$t('description').toUpperCase()"
-            v-model="new_issue_type.description"
           >
           </q-input>
         </div>
@@ -79,8 +79,8 @@
           <q-btn
             flat
             :label="$t('change')"
-            @click="show_icon_library = true"
             color="theme-blue"
+            @click="show_icon_library = true"
           >
           </q-btn>
           <BaseDialog :show="show_icon_library">

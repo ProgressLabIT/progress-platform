@@ -8,14 +8,14 @@
       }}</q-toolbar-title>
 
       <div
+        class="row items-center pointer"
         @mouseover="show_logout = true"
         @mouseleave="show_logout = false"
-        class="row items-center pointer"
       >
         <div class="app-bar-user-name q-mr-sm">{{ username }}</div>
         <q-avatar size="28px">
           <q-img v-if="!show_logout" :src="avatar_url"></q-img>
-          <q-icon v-else @click="logout" name="mdi-exit-to-app" size="sm" />
+          <q-icon v-else name="mdi-exit-to-app" size="sm" @click="logout" />
         </q-avatar>
       </div>
     </q-toolbar>
@@ -66,6 +66,19 @@ export default {
     },
   },
 
+  watch: {
+    $route(to) {
+      this.update_screen_title(to);
+    },
+    locale() {
+      this.update_screen_title(this.$route);
+    },
+  },
+
+  created() {
+    this.update_screen_title(this.$route);
+  },
+
   methods: {
     async logout() {
       const confirm = window.confirm(
@@ -86,19 +99,6 @@ export default {
           this.$t(`views.${route_with_title.name}`) || 'PROGRESS';
         this.screen_title = new_screen_title;
       }
-    },
-  },
-
-  created() {
-    this.update_screen_title(this.$route);
-  },
-
-  watch: {
-    $route(to) {
-      this.update_screen_title(to);
-    },
-    locale() {
-      this.update_screen_title(this.$route);
     },
   },
 };

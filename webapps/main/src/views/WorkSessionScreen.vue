@@ -39,9 +39,9 @@
         <!-- ################################ -->
 
         <div
-          class="column q-px-sm full-height col-8"
-          id="job-info-section"
           v-show="$q.screen.width > 800"
+          id="job-info-section"
+          class="column q-px-sm full-height col-8"
         >
           <!-- PANEL NAVIGATION -->
           <q-tabs
@@ -97,8 +97,8 @@
         <!-- ################################ -->
 
         <div
-          id="session-control-section"
           v-if="$route.name !== 'jobIssueDetail'"
+          id="session-control-section"
           class="column col q-px-sm q-pt-xs"
           style="min-height: 600px"
         >
@@ -121,9 +121,9 @@
             <!-- WORK ORDER DATA -->
             <template v-for="field in job_info">
               <div
-                class="row items-center q-py-xs"
                 v-if="j[field.name] != undefined"
                 :key="field.name"
+                class="row items-center q-py-xs"
               >
                 <div class="col-5 text-h5 text-uppercase font-weight-medium">
                   {{ field.text }}
@@ -149,7 +149,7 @@
           <!-- ************************** -->
           <!-- JOB ACTIONS                -->
           <!-- ************************** -->
-          <div class="col column q-mt-lg q-col-gutter-y-sm" id="job-actions">
+          <div id="job-actions" class="col column q-mt-lg q-col-gutter-y-sm">
             <!-- START/PAUSE BUTTOM -->
             <div class="col-4">
               <StartPauseResumeBtn />
@@ -209,7 +209,7 @@
       >
         <div class="fixed-full glass" />
         <div class="row justify-between">
-          <div class="col" v-if="j.parameters.unsupervised_work_allowed">
+          <div v-if="j.parameters.unsupervised_work_allowed" class="col">
             <q-btn flat class="fit q-pa-lg" @click="exitJob(false)">
               <div class="column items-center">
                 <q-icon name="mdi-play" size="100px" />
@@ -265,6 +265,16 @@ export default {
     IssueForm,
     ProgressBtn,
     StartPauseResumeBtn,
+  },
+
+  beforeRouteLeave(to, _from, next) {
+    if (this.j.active && !this.can_leave) {
+      this.exit_destination = to;
+      this.show_exit_alert = true;
+      next(false);
+    } else {
+      next();
+    }
   },
 
   props: {
@@ -413,6 +423,23 @@ export default {
     },
   },
 
+  created() {
+    // Load job data
+    this.loadJob();
+    this.polling_instance = setInterval(this.updateJobData, 10000);
+  },
+
+  // Make sure an alert is raised if user tries to close the page
+  mounted() {
+    window.addEventListener('beforeunload', this.beforeUnloadAlert);
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('beforeunload', this.beforeUnloadAlert);
+    clearInterval(this.polling_instance);
+    this.$store.state.traceability.current_step_index = 0;
+  },
+
   methods: {
     async loadJob() {
       this.$store
@@ -472,33 +499,6 @@ export default {
         this.$store.commit('UPDATE_JOB', jobResponse.data.detail);
       });
     },
-  },
-
-  created() {
-    // Load job data
-    this.loadJob();
-    this.polling_instance = setInterval(this.updateJobData, 10000);
-  },
-
-  // Make sure an alert is raised if user tries to close the page
-  mounted() {
-    window.addEventListener('beforeunload', this.beforeUnloadAlert);
-  },
-
-  beforeUnmount() {
-    window.removeEventListener('beforeunload', this.beforeUnloadAlert);
-    clearInterval(this.polling_instance);
-    this.$store.state.traceability.current_step_index = 0;
-  },
-
-  beforeRouteLeave(to, from, next) {
-    if (this.j.active && !this.can_leave) {
-      this.exit_destination = to;
-      this.show_exit_alert = true;
-      next(false);
-    } else {
-      next();
-    }
   },
 };
 </script>

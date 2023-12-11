@@ -97,8 +97,8 @@
               <q-btn
                 size="12px"
                 color="theme-grey"
-                @click="cancel"
                 :label="$t('cancel')"
+                @click="cancel"
               />
             </div>
           </template>
@@ -115,8 +115,8 @@
           </div>
 
           <div
-            class="smaller col-auto text-low"
             v-if="shown_list_values.length === search_limit"
+            class="smaller col-auto text-low"
           >
             {{ $t('first_x_shown', { x: search_limit }) }}
           </div>
@@ -134,7 +134,7 @@
               />
             </div>
 
-            <div class="col-auto" v-if="selected_items.length">
+            <div v-if="selected_items.length" class="col-auto">
               <q-btn
                 size="10px"
                 icon="mdi-delete"
@@ -173,10 +173,11 @@
 
         <div class="col">
           <q-table
+            id="list-values"
+            v-model:selected="selected_items"
             :columns="list_cols"
             :rows="shown_list_values"
             color="primary"
-            id="list-values"
             class="full-height"
             table-class="text-high "
             card-class="surface2 shadow-2"
@@ -188,7 +189,6 @@
             virtual-scroll
             hide-bottom
             :selection="editMode ? 'multiple' : 'none'"
-            v-model:selected="selected_items"
             :rows-per-page-options="[0]"
             row-key="index"
           >
@@ -242,13 +242,13 @@ import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 export default {
   name: 'FormFieldDetail',
 
-  mixins: [form],
-
   components: {
     BaseActionCard,
     BaseDialog,
     BaseTooltipIcon,
   },
+
+  mixins: [form],
 
   props: {
     field: {
@@ -333,6 +333,22 @@ export default {
         (!!this.new_or_updated_items.length || !!this.deleted_items.length)
       );
     },
+  },
+
+  watch: {
+    field: {
+      handler() {
+        this.initTempFieldData();
+        if (this.is_choice) this.loadListValues();
+        this.editMode = false;
+      },
+    },
+    list_search: 'loadListValues',
+  },
+
+  mounted() {
+    this.initTempFieldData();
+    if (this.is_choice) this.loadListValues();
   },
 
   methods: {
@@ -453,22 +469,6 @@ export default {
         this.$router.push({ name: 'formFieldLibrary' });
       });
     },
-  },
-
-  mounted() {
-    this.initTempFieldData();
-    if (this.is_choice) this.loadListValues();
-  },
-
-  watch: {
-    field: {
-      handler() {
-        this.initTempFieldData();
-        if (this.is_choice) this.loadListValues();
-        this.editMode = false;
-      },
-    },
-    list_search: 'loadListValues',
   },
 };
 </script>

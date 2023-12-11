@@ -3,7 +3,7 @@
     <template v-if="issueType">
       <div class="row q-col-gutter-lg col-auto">
         <template v-if="!editMode">
-          <div class="col" v-if="!editMode">
+          <div v-if="!editMode" class="col">
             <div class="text-h2 uppercase display highlight q-mb-sm">
               {{ issueType.name }}
               {{ issueType.code ? '(' + issueType.code + ')' : '' }}
@@ -37,36 +37,36 @@
           <div class="col-10 row q-col-gutter-lg q-mb-lg">
             <div class="col-3">
               <q-input
+                v-model="temp_metadata.code"
                 filled
                 dense
                 stack-label
                 hide-bottom-space
                 :label="$capitalize($t('code'))"
-                v-model="temp_metadata.code"
               >
               </q-input>
             </div>
             <div class="col">
               <q-input
+                v-model="temp_metadata.name"
                 filled
                 dense
                 stack-label
                 hide-bottom-space
                 :label="$capitalize($t('name'))"
-                v-model="temp_metadata.name"
               >
               </q-input>
             </div>
 
             <div class="col-12">
               <q-input
+                v-model="temp_metadata.description"
                 filled
                 dense
                 stack-label
                 autogrow
                 hide-bottom-space
                 :label="$capitalize($t('description'))"
-                v-model="temp_metadata.description"
               >
               </q-input>
             </div>
@@ -76,16 +76,16 @@
             <q-btn
               size="12px"
               color="theme-blue"
-              @click="save"
               :loading="saving"
               :label="$t('save')"
+              @click="save"
             >
             </q-btn>
             <q-btn
               size="12px"
               color="theme-grey"
-              @click="cancel"
               :label="$t('cancel')"
+              @click="cancel"
             >
             </q-btn>
           </div>
@@ -96,17 +96,17 @@
       <div class="row q-gutter-lg items-center col-auto">
         <!-- ACTIVE -->
         <q-toggle
+          v-model="temp_metadata.active"
           :disable="!editMode"
           :label="$capitalize($t('active'))"
-          v-model="temp_metadata.active"
         >
         </q-toggle>
 
         <!-- DEFAULT CRITICAL -->
         <q-toggle
+          v-model="temp_metadata.critical"
           :disable="!editMode"
           :label="$capitalize($t('critical'))"
-          v-model="temp_metadata.critical"
         >
         </q-toggle>
 
@@ -139,9 +139,9 @@
               v-if="editMode"
               flat
               :label="$t('change')"
-              @click="show_icon_library = true"
               color="theme-blue"
               class="q-ml-xl"
+              @click="show_icon_library = true"
             >
             </q-btn>
           </div>
@@ -216,6 +216,15 @@ export default {
     };
   },
 
+  watch: {
+    editMode: 'setTempData',
+    issue_type: 'setTempData',
+  },
+
+  mounted() {
+    this.setTempData();
+  },
+
   methods: {
     setTempData() {
       if (this.issueType) {
@@ -266,15 +275,6 @@ export default {
         params: { issueTypeKey: this.issueType._key },
       });
     },
-  },
-
-  mounted() {
-    this.setTempData();
-  },
-
-  watch: {
-    editMode: 'setTempData',
-    issue_type: 'setTempData',
   },
 };
 </script>
