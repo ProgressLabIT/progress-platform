@@ -47,8 +47,8 @@
 </template>
 
 <script>
-import JobInstruction from '@/components/JobInstruction.vue';
 import JobForm from '@/components/JobForm.vue';
+import JobInstruction from '@/components/JobInstruction.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 
 export default {

@@ -158,7 +158,7 @@
 </template>
 
 <script>
-import BaseAvatarListElement from '@/components/BaseAvatarListElement';
+import BaseAvatarListElement from '@/components/BaseAvatarListElement.vue';
 
 export default {
   name: 'PhaseAssignments',

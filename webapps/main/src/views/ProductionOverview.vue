@@ -340,9 +340,9 @@
 </template>
 
 <script>
-import NoDataAlert from '@/components/NoDataAlert.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
+import NoDataAlert from '@/components/NoDataAlert.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import queryModel from '@/lib/queryModelFactory.js';
 

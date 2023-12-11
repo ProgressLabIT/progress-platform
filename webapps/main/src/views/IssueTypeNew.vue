@@ -95,8 +95,8 @@
 </template>
 
 <script>
-import BaseModalForm from '@/components/BaseModalForm.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
+import BaseModalForm from '@/components/BaseModalForm.vue';
 import IconLibrary from '@/components/IconLibrary.vue';
 
 export default {

@@ -1,8 +1,8 @@
+import icons from '@quasar/extras/mdi-v6/icons.json';
 import { DateTime as DT } from 'luxon';
 import { debounce } from 'quasar';
 import { createStore } from 'vuex';
 
-import icons from '@quasar/extras/mdi-v6/icons.json';
 
 const icon_list = icons.map((string) => {
   // Transform icon names from camelCase to kebab-case
@@ -15,6 +15,8 @@ const icon_list = icons.map((string) => {
 
 import { dark, light } from '@/boot/theme.js';
 
+import bom from './bom';
+import form from './form';
 import job from './job';
 import org from './org';
 import process from './process';
@@ -24,8 +26,6 @@ import session from './session';
 import traceability from './traceability';
 import user from './user';
 import workorder from './workorder';
-import bom from './bom';
-import form from './form';
 
 // import example from './module-example'
 

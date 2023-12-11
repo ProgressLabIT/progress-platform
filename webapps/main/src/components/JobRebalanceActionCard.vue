@@ -176,9 +176,9 @@
 
 <script>
 import BaseDialog from '@/components/BaseDialog.vue';
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
-import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 
 export default {
   name: 'JobRebalanceActionCard',

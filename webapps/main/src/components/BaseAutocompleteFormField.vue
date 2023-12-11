@@ -36,9 +36,9 @@
 
 <script setup>
 import { ref } from 'vue';
-import { api } from 'boot/axios';
 import { useFormFields } from '@/composables/form';
 import searchFields from '@/lib/MultiFieldSearch';
+import { api } from 'boot/axios';
 
 /**
  * @typedef {{

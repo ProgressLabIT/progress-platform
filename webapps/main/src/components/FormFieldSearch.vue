@@ -68,8 +68,8 @@
 </template>
 
 <script>
-import FormFieldNew from '@/components/FormFieldNew.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
+import FormFieldNew from '@/components/FormFieldNew.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import form from '@/mixins/form.js';
 

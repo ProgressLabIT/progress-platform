@@ -163,13 +163,13 @@
 </template>
 
 <script>
-import BaseProgressBar from '@/components/BaseProgressBar.vue';
-import Sortable from 'sortablejs';
-import multiMatch from '@/lib/MultiFieldSearch.js';
-import { mapState } from 'vuex';
 import { DateTime as DT } from 'luxon';
+import Sortable from 'sortablejs';
+import { mapState } from 'vuex';
 import BaseDialog from '@/components/BaseDialog.vue';
+import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BasePrompt from '@/components/BasePrompt.vue';
+import multiMatch from '@/lib/MultiFieldSearch.js';
 
 export default {
   name: 'WorkOrderList',

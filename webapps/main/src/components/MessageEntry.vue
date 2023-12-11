@@ -86,8 +86,8 @@
 </template>
 
 <script>
-import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import BasePrompt from '@/components/BasePrompt.vue';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import event from '@/mixins/event.js';
 
 export default {

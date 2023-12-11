@@ -84,12 +84,12 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import ProductCard from '@/components/ProductCard.vue';
 
 import multiMatch from '@/lib/MultiFieldSearch.js';
 
-import { mapGetters } from 'vuex';
 
 export default {
   name: 'ProductList',

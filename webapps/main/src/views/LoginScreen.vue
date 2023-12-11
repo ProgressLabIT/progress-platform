@@ -133,9 +133,9 @@
 </template>
 
 <script>
-import { api } from 'boot/axios.js';
 import jwt_decode from 'jwt-decode';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import { api } from 'boot/axios.js';
 
 export default {
   name: 'LoginScreen',

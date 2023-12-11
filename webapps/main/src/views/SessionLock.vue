@@ -66,7 +66,7 @@
 </template>
 
 <script>
-import { capitalize } from '@/lib/filters.js';
+import { capitalize } from '@/boot/filters';
 import { api } from '@/lib/apiCall';
 
 export default {

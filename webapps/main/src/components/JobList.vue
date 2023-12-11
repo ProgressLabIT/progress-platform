@@ -261,11 +261,11 @@
 
 <script>
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
+import BaseDialog from '@/components/BaseDialog.vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
-import BaseDialog from '@/components/BaseDialog.vue';
-import multiMatch from '@/lib/MultiFieldSearch.js';
 import NoDataAlert from '@/components/NoDataAlert.vue';
+import multiMatch from '@/lib/MultiFieldSearch.js';
 export default {
   name: 'JobList',
 

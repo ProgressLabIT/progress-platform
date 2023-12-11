@@ -234,10 +234,10 @@
 </template>
 
 <script>
-import form from '@/mixins/form.js';
 import BaseActionCard from '@/components/BaseActionCard.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
+import form from '@/mixins/form.js';
 
 export default {
   name: 'FormFieldDetail',

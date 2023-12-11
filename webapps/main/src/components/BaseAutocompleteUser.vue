@@ -35,8 +35,8 @@
 </template>
 
 <script>
-import multiMatch from '@/lib/MultiFieldSearch.js';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import multiMatch from '@/lib/MultiFieldSearch.js';
 export default {
   name: 'BaseAutocompletUser',
 

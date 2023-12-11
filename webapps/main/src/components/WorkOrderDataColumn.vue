@@ -312,13 +312,13 @@
 </template>
 
 <script>
-import { getPicPath } from '@/lib/media.js';
-import { durationFromMillisec } from '@/lib/duration.js';
 import { DateTime as DT } from 'luxon';
 import BaseDialog from '@/components/BaseDialog.vue';
-import WorkOrderJobQtRebalance from '@/components/WorkOrderJobQtRebalance.vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import WorkOrderJobQtRebalance from '@/components/WorkOrderJobQtRebalance.vue';
+import { durationFromMillisec } from '@/lib/duration.js';
+import { getPicPath } from '@/lib/media.js';
 import { formatDateTime } from '../lib/TimeHandling';
 
 export default {

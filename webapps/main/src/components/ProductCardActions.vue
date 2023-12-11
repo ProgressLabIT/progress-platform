@@ -73,9 +73,9 @@
 </template>
 
 <script>
-import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 import { mapActions } from 'vuex';
 import { api } from '@/boot/axios.js';
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 
 export default {
   name: 'ProductCardActions',

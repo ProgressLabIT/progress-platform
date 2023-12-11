@@ -75,8 +75,8 @@ import { Dialog, uid } from 'quasar';
 import Sortable from 'sortablejs';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
-import AddCustomFieldDialog from './process-steps/AddCustomFieldDialog.vue';
 import { useFormFields } from '@/composables/form';
+import AddCustomFieldDialog from './process-steps/AddCustomFieldDialog.vue';
 
 const props = defineProps({
   editMode: {

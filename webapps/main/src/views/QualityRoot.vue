@@ -424,16 +424,16 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
 import { Dialog } from 'quasar';
+import { ref, watch } from 'vue';
 import { api } from '@/boot/axios';
 import AddAdvancedFilterDialog from '@/components/AddAdvancedFilterDialog.vue';
-import IssueForm from '@/components/IssueForm.vue';
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import FormField from '@/components/FormField.vue';
+import IssueForm from '@/components/IssueForm.vue';
 import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js';
 
 export default {

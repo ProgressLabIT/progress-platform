@@ -1,7 +1,7 @@
-import library from './libraryRoutes.js';
-import production from './productionRoutes.js';
-import operator from './operatorRoutes.js';
 import admin from './adminRoutes.js';
+import library from './libraryRoutes.js';
+import operator from './operatorRoutes.js';
+import production from './productionRoutes.js';
 import quality from './qualityRoutes.js';
 import report from './reportRoutes.js';
 

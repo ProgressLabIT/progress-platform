@@ -1,3 +1,5 @@
+const path = require('node:path');
+
 module.exports = {
   // https://eslint.org/docs/user-guide/configuring#configuration-cascading-and-hierarchy
   // This option interrupts the configuration hierarchy at this file
@@ -26,6 +28,8 @@ module.exports = {
     // 'plugin:vue/vue3-strongly-recommended', // Priority B: Strongly Recommended (Improving Readability)
     'plugin:vue/vue3-recommended', // Priority C: Recommended (Minimizing Arbitrary Choices and Cognitive Overhead)
 
+    'plugin:import/recommended',
+
     'prettier',
   ],
 
@@ -51,13 +55,43 @@ module.exports = {
     defineModel: 'readonly',
   },
 
+  settings: {
+    'import/extensions': ['.js', '.vue'],
+    'import/parsers': { 'vue-eslint-parser': ['.vue'] },
+    // To avoid import/default error with <script setup>
+    'import/ignore': ['.vue$'],
+    'import/resolver': {
+      typescript: {
+        project: path.resolve(__dirname, './jsconfig.json'),
+      },
+    },
+  },
+
   // add your custom rules here
   rules: {
     // TODO: Enable this rule after gradually converting all prop names to camelCase
     'vue/prop-name-casing': 'off',
 
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    // To make the following work: `import Sortable from 'sortablejs'`
+    'import/no-named-as-default': 'off',
+    'import/order': [
+      'warn',
+      {
+        alphabetize: { order: 'asc' },
+        groups: [
+          'builtin',
+          'external',
+          'internal',
+          'parent',
+          'sibling',
+          'index',
+          'object',
+          'type',
+        ],
+      },
+    ],
 
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     // allow debugger during development only
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
   },

@@ -456,12 +456,12 @@
 
 <script>
 import { Duration } from 'luxon';
-import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
+import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import JobRebalanceActionCard from '@/components/JobRebalanceActionCard.vue';
-import sendEvent from '@/mixins/event.js';
 import { formatDateTime } from '@/lib/TimeHandling';
+import sendEvent from '@/mixins/event.js';
 
 export default {
   name: 'WorkOrderJobs',

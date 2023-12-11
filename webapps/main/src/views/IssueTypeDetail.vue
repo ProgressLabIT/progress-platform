@@ -171,11 +171,11 @@
 
 <script>
 import { cloneDeep as _cloneDeep } from 'lodash';
+import BaseDialog from '@/components/BaseDialog.vue';
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
+import FormTemplateEditor from '@/components/FormTemplateEditor.vue';
 import IconLibrary from '@/components/IconLibrary.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
-import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
-import BaseDialog from '@/components/BaseDialog.vue';
-import FormTemplateEditor from '@/components/FormTemplateEditor.vue';
 import form from '@/mixins/form.js';
 
 export default {

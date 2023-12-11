@@ -69,9 +69,9 @@
 </template>
 
 <script>
+import { api } from '@/boot/axios.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
-import { api } from '@/boot/axios.js';
 // import NonExistentUserGuard from '@/mixins/NonExistentUserGuard.js'
 
 export default {

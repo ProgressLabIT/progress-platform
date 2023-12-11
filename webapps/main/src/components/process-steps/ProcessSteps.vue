@@ -178,8 +178,8 @@ import Sortable from 'sortablejs';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 
-import StepInstruction from './StepInstruction.vue';
 import StepForm from './StepForm.vue';
+import StepInstruction from './StepInstruction.vue';
 
 const props = defineProps({
   editMode: {

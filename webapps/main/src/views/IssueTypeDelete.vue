@@ -56,8 +56,8 @@
 </template>
 
 <script>
-import BaseDialog from '@/components/BaseDialog.vue';
 import { api } from '@/boot/axios.js';
+import BaseDialog from '@/components/BaseDialog.vue';
 
 export default {
   name: 'IssueTypeDelete',

@@ -42,10 +42,10 @@
 </template>
 
 <script>
-import enrichIssue from '@/mixins/issues.js';
-import IssueHeader from '@/components/IssueHeader.vue';
 import IssueForm from '@/components/IssueForm.vue';
+import IssueHeader from '@/components/IssueHeader.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
+import enrichIssue from '@/mixins/issues.js';
 
 export default {
   name: 'IssueList',

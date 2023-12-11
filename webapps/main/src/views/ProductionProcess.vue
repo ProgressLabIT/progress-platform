@@ -190,17 +190,17 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
 import { uid } from 'quasar';
 import Sortable from 'sortablejs';
+import { mapActions } from 'vuex';
 import { api } from '@/boot/axios';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
-import ProcessParameters from '@/components/ProcessParameters.vue';
-import ProcessSteps from '@/components/process-steps/ProcessSteps.vue';
-import ProductionNotes from '@/components/ProductionNotes.vue';
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import BasePrompt from '@/components/BasePrompt.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
+import ProcessParameters from '@/components/ProcessParameters.vue';
+import ProductionNotes from '@/components/ProductionNotes.vue';
+import ProcessSteps from '@/components/process-steps/ProcessSteps.vue';
 
 export default {
   name: 'ProductionProcess',

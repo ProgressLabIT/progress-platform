@@ -129,8 +129,8 @@
 </template>
 
 <script>
-import MediaViewer from '@/components/MediaViewer.vue';
 import VuePdfEmbed from 'vue-pdf-embed';
+import MediaViewer from '@/components/MediaViewer.vue';
 
 export default {
   name: 'JobInstruction',

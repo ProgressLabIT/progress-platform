@@ -77,10 +77,10 @@
 </template>
 
 <script setup>
-import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import { useStore } from 'vuex';
-import { timestamp } from '@/lib/TimeHandling.js';
 import { api } from '@/boot/axios.js';
+import BaseProgressBar from '@/components/BaseProgressBar.vue';
+import { timestamp } from '@/lib/TimeHandling.js';
 
 const props = defineProps({
   job: {

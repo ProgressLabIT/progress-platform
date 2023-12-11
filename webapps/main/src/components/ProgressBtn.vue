@@ -22,8 +22,8 @@
 <script>
 import { Dialog, Loading } from 'quasar';
 import { mapState } from 'vuex';
-import QuantityPickerDialog from './QuantityPickerDialog.vue';
 import { api } from 'boot/axios';
+import QuantityPickerDialog from './QuantityPickerDialog.vue';
 
 export default {
   name: 'ProgressBtn',

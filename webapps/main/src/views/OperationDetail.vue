@@ -146,8 +146,8 @@
 </template>
 
 <script>
-import { ref } from 'vue';
 import { cloneDeep } from 'lodash'; // TODO: replace with lodash-es
+import { ref } from 'vue';
 
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';

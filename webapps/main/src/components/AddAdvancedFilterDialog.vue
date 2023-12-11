@@ -53,8 +53,8 @@
 import { useDialogPluginComponent } from 'quasar';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BaseAutocompleteFormField from './BaseAutocompleteFormField.vue';
 import { capitalize } from 'boot/filters';
+import BaseAutocompleteFormField from './BaseAutocompleteFormField.vue';
 import FormField from './FormField.vue';
 
 defineEmits(useDialogPluginComponent.emitsObject);

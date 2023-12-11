@@ -151,9 +151,9 @@
 <script>
 import VuePdfEmbed from 'vue-pdf-embed';
 import BaseDialog from '@/components/BaseDialog.vue';
-import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
-import ProgressBtn from '@/components/ProgressBtn.vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
+import ProgressBtn from '@/components/ProgressBtn.vue';
+import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
 
 export default {
   name: 'MediaViewer',

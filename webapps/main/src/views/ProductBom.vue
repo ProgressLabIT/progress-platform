@@ -189,9 +189,9 @@
 <script>
 import { mapState, mapActions } from 'vuex';
 
-import multiMatch from '@/lib/MultiFieldSearch.js';
-import BaseDialog from '@/components/BaseDialog.vue';
 import { api } from '@/boot/axios.js';
+import BaseDialog from '@/components/BaseDialog.vue';
+import multiMatch from '@/lib/MultiFieldSearch.js';
 // import { throttle as _throttle } from 'lodash';
 
 export default {

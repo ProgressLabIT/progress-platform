@@ -1,5 +1,5 @@
-import { api, axios } from '@/boot/axios.js';
 import { isEmpty as _isEmpty } from 'lodash/fp';
+import { api, axios } from '@/boot/axios.js';
 
 const user = {
   state: {

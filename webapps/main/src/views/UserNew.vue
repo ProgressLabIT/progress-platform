@@ -129,10 +129,10 @@
 </template>
 
 <script>
-import user_scopes from '@/lib/UserScopes.js';
-import BaseDialog from '@/components/BaseDialog.vue';
 import BaseAutocompleteDepartment from '@/components/BaseAutocompleteDepartment.vue';
+import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
+import user_scopes from '@/lib/UserScopes.js';
 // import generateTempPassword from '@/lib/TokenGenerator.js'
 
 export default {

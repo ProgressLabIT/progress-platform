@@ -246,11 +246,11 @@
 </template>
 
 <script>
-import scopes_list from '@/lib/UserScopes.js';
-import NoDataAlert from '@/components/NoDataAlert.vue';
+import { DateTime as DT } from 'luxon';
 import BaseAutocompleteDepartment from '@/components/BaseAutocompleteDepartment.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
-import { DateTime as DT } from 'luxon';
+import NoDataAlert from '@/components/NoDataAlert.vue';
+import scopes_list from '@/lib/UserScopes.js';
 
 export default {
   name: 'UserInfoScreen',

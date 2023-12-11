@@ -186,13 +186,13 @@
 </template>
 
 <script>
-import event from '@/mixins/event.js';
-import IssueHeader from '@/components/IssueHeader.vue';
-import enrichIssue from '@/mixins/issues.js';
-import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
+import IssueHeader from '@/components/IssueHeader.vue';
 import MessageThread from '@/components/MessageThread.vue';
+import event from '@/mixins/event.js';
+import enrichIssue from '@/mixins/issues.js';
 
 export default {
   name: 'IssueDetail',

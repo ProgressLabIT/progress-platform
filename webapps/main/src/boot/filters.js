@@ -1,6 +1,6 @@
+import bytes from 'bytes';
 import { boot } from 'quasar/wrappers';
 
-import bytes from 'bytes';
 
 import { shortDateString, formatDateTime } from '@/lib/TimeHandling.js';
 import { durationFromMillisec } from '@/lib/duration.js';

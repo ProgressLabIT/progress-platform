@@ -56,8 +56,8 @@
 <script>
 import axios from 'axios';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
-import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
+import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue';
 
 export default {
   name: 'WorkOrderScreen',
