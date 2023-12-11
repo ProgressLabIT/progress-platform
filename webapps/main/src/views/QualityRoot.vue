@@ -41,7 +41,7 @@
             mode="new"
             with_links
             @close="show_issue_form = false"
-            @issue_created="getIssues"
+            @issue-created="getIssues"
           >
           </IssueForm>
 

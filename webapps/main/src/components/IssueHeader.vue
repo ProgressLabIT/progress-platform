@@ -63,6 +63,8 @@ export default {
     },
   },
 
+  emits: ['typeChange'],
+
   mixins: [event],
 
   data() {
@@ -119,7 +121,7 @@ export default {
 
       this.sendEvent(event).then(() => {
         this.$emit(
-          'type-change',
+          'typeChange',
           this.new_issue_type ? this.new_issue_type._key : null,
         );
         this.show_type_picker = false;

@@ -213,8 +213,6 @@ export default {
       type: String,
       required: true,
     },
-    job_key: String,
-    wo_key: String,
   },
 
   data() {

@@ -30,9 +30,18 @@ export default {
   name: 'BaseActionCard',
 
   props: {
-    title: String,
-    save_label: String,
-    cancel_label: String,
+    title: {
+      type: String,
+      default: undefined,
+    },
+    save_label: {
+      type: String,
+      default: undefined,
+    },
+    cancel_label: {
+      type: String,
+      default: undefined,
+    },
     save_color: {
       type: String,
       default: 'theme-blue',

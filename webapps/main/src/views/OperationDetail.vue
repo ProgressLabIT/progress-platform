@@ -2,8 +2,8 @@
   <div class="column full-height">
     <template v-if="operation">
       <div class="row q-px-lg q-pt-lg q-mx-md q-mt-md">
-        <template v-if="!edit_mode">
-          <div class="col" v-if="!edit_mode">
+        <template v-if="!editMode">
+          <div class="col" v-if="!editMode">
             <div class="text-h2 uppercase display highlight">
               {{ operation.name }}
               {{ operation.code ? '(' + operation.code + ')' : '' }}
@@ -19,7 +19,7 @@
             icon="mdi-pencil"
             :tooltip="$capitalize($t('edit'))"
             :color="$theme.blue"
-            @iconClick="edit_mode = true"
+            @icon-click="editMode = true"
           >
           </BaseTooltipIcon>
 
@@ -27,7 +27,7 @@
             icon="mdi-delete"
             :tooltip="$capitalize($t('archive'))"
             :color="$theme.red"
-            @iconClick="showDelete"
+            @icon-click="showDelete"
           >
           </BaseTooltipIcon>
         </template>
@@ -120,21 +120,21 @@
       <q-card square class="col scroll q-mx-md q-mb-md">
         <q-tab-panels v-model="activeTab" class="fit surface2">
           <q-tab-panel name="steps">
-            <ProcessSteps v-model="temp_steps" :edit-mode="edit_mode" />
+            <ProcessSteps v-model="temp_steps" :edit-mode="editMode" />
           </q-tab-panel>
 
           <q-tab-panel name="parameters">
             <ProcessParameters
               v-model="temp_params"
               :process-has-steps="false"
-              :edit-mode="edit_mode"
+              :edit-mode="editMode"
             />
           </q-tab-panel>
 
           <q-tab-panel name="notes">
             <ProductionNotes
               v-model="temp_notes"
-              :edit-mode="edit_mode"
+              :edit-mode="editMode"
               class="q-pa-lg"
             />
           </q-tab-panel>
@@ -183,7 +183,7 @@ export default {
 
   data() {
     return {
-      edit_mode: false,
+      editMode: false,
       saving: false,
       temp_metadata: {
         name: '',
@@ -238,7 +238,7 @@ export default {
 
     cancel() {
       this.saving = false;
-      this.edit_mode = false;
+      this.editMode = false;
     },
 
     async save() {
@@ -254,7 +254,7 @@ export default {
       };
       await this.$store.dispatch('updateOperation', data);
       this.saving = false;
-      this.edit_mode = false;
+      this.editMode = false;
     },
 
     showDelete() {
@@ -281,7 +281,7 @@ export default {
       handler: 'setTempData',
       immediate: true,
     },
-    edit_mode: 'setTempData',
+    editMode: 'setTempData',
   },
 };
 </script>

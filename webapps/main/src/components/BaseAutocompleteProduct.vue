@@ -41,7 +41,7 @@ export default {
   props: {
     value: {
       type: [String, Object],
-      deafult: null,
+      default: null,
     },
 
     load_data: {
@@ -59,9 +59,17 @@ export default {
       default: false,
     },
 
-    label: String,
-    hint: String,
+    label: {
+      type: String,
+      default: undefined,
+    },
+    hint: {
+      type: String,
+      default: undefined,
+    },
   },
+
+  emits: ['select'],
 
   data() {
     return {

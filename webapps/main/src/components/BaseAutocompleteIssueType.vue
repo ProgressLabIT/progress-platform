@@ -8,7 +8,6 @@
     :options="options"
     option-label="name"
     @filter="filter"
-    @clear="$emit('selection', null)"
     :model-value="value"
     input-debounce="100"
     :option-value="key_only ? '_key' : null"
@@ -44,7 +43,7 @@ export default {
   props: {
     value: {
       type: [String, Object],
-      deafult: null,
+      default: null,
     },
 
     load_data: {
@@ -67,6 +66,8 @@ export default {
       default: true,
     },
   },
+
+  emits: ['select'],
 
   data() {
     return {

@@ -30,7 +30,7 @@
             v-ripple
             :key="phase._key"
             :name="index"
-            :class="`full-width text-left ${edit_mode ? '' : 'undraggable'}`"
+            :class="`full-width text-left ${editMode ? '' : 'undraggable'}`"
             @mouseenter="dragging ? undefined : (over_phase = index)"
             @mouseleave="dragging ? undefined : (over_phase = null)"
             @click="goToPhase(index)"
@@ -59,20 +59,20 @@
               </q-item-label>
             </q-item-section>
 
-            <q-item-section v-if="edit_mode" v-show="over_phase == index" side>
+            <q-item-section v-if="editMode" v-show="over_phase == index" side>
               <div class="row items-center">
                 <BaseTooltipIcon
                   icon="mdi-pencil"
                   :tooltip="$t('rename')"
                   :color="$theme.blue"
-                  @iconClick="update_alias_at_index = index"
+                  @icon-click="update_alias_at_index = index"
                 >
                 </BaseTooltipIcon>
                 <BaseTooltipIcon
                   icon="mdi-delete"
                   :tooltip="$t('delete')"
                   :color="$theme.red"
-                  @iconClick="confirming_delete = index"
+                  @icon-click="confirming_delete = index"
                 >
                 </BaseTooltipIcon>
               </div>
@@ -101,7 +101,7 @@
       <!-- ACTION BUTTONS -->
       <div class="column q-gutter-y-sm q-px-lg q-mt-sm q-pb-sm col-auto">
         <q-btn
-          v-if="!edit_mode"
+          v-if="!editMode"
           @click="toggleEdit"
           class="full-width"
           color="theme-blue"
@@ -165,7 +165,7 @@
           <q-tab-panel name="steps">
             <ProcessSteps
               v-model="process[current_phase].steps"
-              :edit-mode="edit_mode"
+              :edit-mode="editMode"
             />
           </q-tab-panel>
 
@@ -173,14 +173,14 @@
             <ProcessParameters
               v-model="process[current_phase].params"
               :process-has-steps="process[current_phase].steps.length > 0"
-              :edit-mode="edit_mode"
+              :edit-mode="editMode"
             />
           </q-tab-panel>
 
           <q-tab-panel name="notes">
             <ProductionNotes
               v-model="process[current_phase].production_notes"
-              :edit-mode="edit_mode"
+              :edit-mode="editMode"
             />
           </q-tab-panel>
         </q-tab-panels>
@@ -215,6 +215,8 @@ export default {
     BaseAutocompleteOperation,
   },
 
+  emits: ['changes_saved', 'changes_canceled'],
+
   data() {
     return {
       activeTab: 'steps',
@@ -240,7 +242,7 @@ export default {
       return this.$store.getters.productData(this.product_key);
     },
 
-    edit_mode: {
+    editMode: {
       get() {
         return this.$store.state.product.edit_modes.process;
       },
@@ -277,7 +279,7 @@ export default {
     ...mapActions(['loadProductDetails']),
 
     toggleEdit() {
-      this.edit_mode = true;
+      this.editMode = true;
     },
 
     goToPhase(index) {
@@ -301,7 +303,7 @@ export default {
 
       this.$store.commit('CANCEL_PROCESS_CHANGES');
       this.confirming_delete = null;
-      this.edit_mode = false;
+      this.editMode = false;
       this.$emit('changes_canceled');
     },
 
@@ -411,7 +413,7 @@ export default {
           setTimeout(() => {
             this.confirming_delete = null;
             this.saving = false;
-            this.edit_mode = false;
+            this.editMode = false;
             this.$emit('changes_saved');
           }, 500);
         })

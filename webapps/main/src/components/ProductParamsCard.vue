@@ -8,7 +8,16 @@ import { cloneDeep as _cloneDeep } from 'lodash';
 export default {
   name: 'ProductParamsCard',
 
-  props: ['product', 'edit_mode'],
+  props: {
+    product: {
+      type: Object,
+      required: true,
+    },
+    editMode: {
+      type: Boolean,
+      default: false,
+    },
+  },
 
   data() {
     return {

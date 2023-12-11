@@ -269,7 +269,10 @@ export default {
 
   props: {
     // from router
-    job_key: String,
+    job_key: {
+      type: String,
+      required: true,
+    },
   },
 
   data() {

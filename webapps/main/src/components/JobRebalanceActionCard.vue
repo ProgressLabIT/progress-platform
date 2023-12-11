@@ -57,7 +57,7 @@
                 type="number"
                 dense
                 :model-value="j.qt_remaining"
-                @update:modelValue="updateRemainingQt(index, parseInt($event))"
+                @update:model-value="updateRemainingQt(index, parseInt($event))"
                 min="0"
                 :max="qt_to_allocate"
                 content-class="text-right"
@@ -83,7 +83,7 @@
                   @filter="filterOperator"
                   class="q-mb-md"
                   popup-content-class="surface1"
-                  @update:modelValue="setAssignment(index, $event)"
+                  @update:model-value="setAssignment(index, $event)"
                 >
                   <template #label-slot>
                     {{ $capitalize($t('job.assign_to')) }}
@@ -111,7 +111,7 @@
               :color="$theme.red"
               :tooltip="$capitalize($t('delete'))"
               icon="mdi-delete"
-              @iconClick="closeJob(index)"
+              @icon-click="closeJob(index)"
             >
             </BaseTooltipIcon>
           </div>
@@ -199,6 +199,8 @@ export default {
       required: true,
     },
   },
+
+  emits: ['changeEditMode'],
 
   data() {
     return {

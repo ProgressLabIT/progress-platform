@@ -29,8 +29,7 @@
         </div>
       </slot>
 
-      <slot name="subtitle" :class="subtitle_class" :style="subtitle_style">
-      </slot>
+      <slot name="subtitle"> </slot>
     </div>
   </div>
 </template>
@@ -82,15 +81,7 @@ export default {
 
     name_style: {
       type: String,
-    },
-
-    subtitle_class: {
-      type: String,
-      default: 'text-body2',
-    },
-
-    subtitle_style: {
-      type: String,
+      default: undefined,
     },
   },
 

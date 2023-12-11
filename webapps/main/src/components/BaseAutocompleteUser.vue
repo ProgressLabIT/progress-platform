@@ -11,7 +11,6 @@
     :option-label="(operator) => operator.name + ' ' + operator.surname"
     :option-value="key_only ? '_key' : null"
     @filter="filter"
-    @clear="$emit('selection', null)"
     :model-value="value"
     input-debounce="200"
     :emit-value="key_only"
@@ -48,7 +47,7 @@ export default {
   props: {
     value: {
       type: [Object, String],
-      deafult: null,
+      default: null,
     },
 
     load_data: {
@@ -96,6 +95,8 @@ export default {
       default: true,
     },
   },
+
+  emits: ['select'],
 
   data() {
     return {

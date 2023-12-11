@@ -22,7 +22,7 @@ export default {
   props: {
     value: {
       type: Object,
-      deafult: null,
+      default: null,
     },
 
     load_departments: {
@@ -35,6 +35,8 @@ export default {
       default: false,
     },
   },
+
+  emits: ['select'],
 
   data() {
     return {

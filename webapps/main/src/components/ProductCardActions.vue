@@ -32,7 +32,7 @@
           icon_size="xs"
           :tooltip="$capitalize($t('product.actions.details'))"
           :color="$theme.blue"
-          @iconClick="goToProductPage('productHome')"
+          @icon-click="goToProductPage('productHome')"
         >
         </BaseTooltipIcon>
         <BaseTooltipIcon
@@ -40,7 +40,7 @@
           icon_size="xs"
           :tooltip="$capitalize($t('process'))"
           :color="$theme.blue"
-          @iconClick="goToProductPage('productionProcess')"
+          @icon-click="goToProductPage('productionProcess')"
         >
         </BaseTooltipIcon>
         <BaseTooltipIcon
@@ -48,7 +48,7 @@
           icon_size="xs"
           :tooltip="$capitalize($t('component', 2))"
           :color="$theme.blue"
-          @iconClick="goToProductPage('bom')"
+          @icon-click="goToProductPage('bom')"
         >
         </BaseTooltipIcon>
         <BaseTooltipIcon
@@ -56,7 +56,7 @@
           icon_size="xs"
           :tooltip="$capitalize($t('copy'))"
           :color="$theme.orange"
-          @iconClick="showCopy()"
+          @icon-click="showCopy()"
         >
         </BaseTooltipIcon>
         <BaseTooltipIcon
@@ -64,7 +64,7 @@
           icon_size="xs"
           :tooltip="$capitalize($t('delete'))"
           :color="$theme.red"
-          @iconClick="confirmDelete"
+          @icon-click="confirmDelete"
         >
         </BaseTooltipIcon>
       </div>
@@ -79,11 +79,18 @@ import { api } from '@/boot/axios.js';
 
 export default {
   name: 'ProductCardActions',
+
   components: {
     BaseTooltipIcon,
   },
 
-  props: ['product'],
+  props: {
+    product: {
+      type: Object,
+      required: true,
+    },
+  },
+
   emits: ['showDelete'],
 
   data() {

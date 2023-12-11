@@ -69,6 +69,7 @@ export default {
   props: {
     issue_type: {
       type: Object,
+      required: true,
     },
   },
 

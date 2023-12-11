@@ -16,7 +16,7 @@
           v-model="search_string"
           class="q-ma-none q-pa-none text-uppercase"
         >
-          <template v-slot:append>
+          <template #append>
             <q-icon name="mdi-magnify" />
           </template>
         </q-input>
@@ -65,12 +65,12 @@
         <!-- SHOWN VS TOTAL -->
         <q-chip dense color="transparent" class="smaller">
           <i18n-t keypath="job.shown_jobs_message" tag="span">
-            <template v-slot:shown>
+            <template #shown>
               <span class="highlight q-mr-xs">
                 {{ details.list.length }}
               </span>
             </template>
-            <template v-slot:total>
+            <template #total>
               <span class="highlight q-mx-xs">
                 {{ details.total_count }}
               </span>

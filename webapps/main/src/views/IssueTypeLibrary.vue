@@ -107,7 +107,7 @@ export default {
       const issue_types = [...this.$store.state.quality.issue_types];
       issue_types.sort((a, b) =>
         a.code > b.code ? 1 : a.code < b.code ? -1 : 0,
-      )
+      );
       return issue_types;
     },
 

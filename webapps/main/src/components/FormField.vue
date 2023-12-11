@@ -138,7 +138,7 @@
       :placeholder="$t('date_format')"
       input-class="cursor-pointer"
     >
-      <template v-slot:append>
+      <template #append>
         <q-icon name="mdi-calendar" />
       </template>
       <q-popup-proxy anchor="center middle" self="center middle" @hide="blur">
@@ -161,7 +161,7 @@
       input-class="cursor-pointer"
       placeholder="HH:mm"
     >
-      <template v-slot:append>
+      <template #append>
         <q-icon name="mdi-clock-outline" />
       </template>
       <q-popup-proxy anchor="center middle" self="center middle" @hide="blur">
@@ -196,9 +196,9 @@
         :root_path="`${rootPath}/${field._key}`"
         :label="field.label"
         :disable="disable"
-        @addFiles="addFiles"
-        @deleteFile="deleteFile"
-        @restoreFile="restoreFile"
+        @add-files="addFiles"
+        @delete-file="deleteFile"
+        @restore-file="restoreFile"
       />
     </div>
 

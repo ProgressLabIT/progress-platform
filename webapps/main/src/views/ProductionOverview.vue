@@ -91,11 +91,10 @@
           <router-view
             v-if="vuex_ready"
             v-bind="{ filters }"
-            @setSearch="setSearch($event)"
-            @itemDblClick="showWorkOrderScreen($event)"
+            @set-search="setSearch($event)"
+            @item-dbl-click="showWorkOrderScreen($event)"
             @editing="editing = true"
-          >
-          </router-view>
+          />
           <NoDataAlert v-else />
         </div>
       </div>
@@ -155,7 +154,7 @@
           v-model="search_string"
           class="q-mb-md col"
         >
-          <template v-slot:append>
+          <template #append>
             <q-icon name="mdi-information-outline" class="col-auto" size="sm">
               <q-tooltip :delay="300" class="text-body2">
                 <span>

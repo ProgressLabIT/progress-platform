@@ -1,5 +1,5 @@
 <template>
-  <div id="icons" :style="style" :class="classes">
+  <div id="icons">
     <slot name="input">
       <q-input
         v-model="search_text"
@@ -47,12 +47,6 @@ export default {
   name: 'IconLibrary',
 
   props: {
-    classes: {
-      type: String,
-    },
-    style: {
-      type: String,
-    },
     icons_per_row: {
       type: Number,
       default: 12,
@@ -62,6 +56,8 @@ export default {
       default: 'xs',
     },
   },
+
+  emits: ['choice', 'hide'],
 
   data() {
     return {

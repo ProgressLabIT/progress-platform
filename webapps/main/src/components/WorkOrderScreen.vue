@@ -1,6 +1,6 @@
 <template>
   <BaseModalScreen :show="true" @close="exit">
-    <template v-slot:header>
+    <template #header>
       <span
         class="q-ml-md display medium highlight weight-medium text-uppercase"
       >
@@ -26,7 +26,7 @@
       </div>
     </template>
 
-    <template v-slot:content>
+    <template #content>
       <q-splitter
         v-if="vuex_ready"
         v-model="data_column_width"
@@ -38,14 +38,10 @@
         </template>
 
         <template #after>
-          <router-view
-            v-if="vuex_ready"
-            v-bind="{ wo_data }"
-            v-slot="{ Component }"
-          >
+          <router-view v-if="vuex_ready" v-slot="{ Component }">
             <keep-alive>
               <div class="full-height relative-position q-pl-sm">
-                <component :is="Component" />
+                <component :is="Component" v-bind="{ wo_data }" />
               </div>
             </keep-alive>
           </router-view>
@@ -72,7 +68,12 @@ export default {
     WorkOrderDataColumn,
   },
 
-  props: ['wo_key'],
+  props: {
+    wo_key: {
+      type: String,
+      required: true,
+    },
+  },
 
   data() {
     return {

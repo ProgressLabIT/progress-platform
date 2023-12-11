@@ -235,16 +235,16 @@ export default {
     },
     auto_link_mode: {
       type: String,
-      validator(value) {
-        // The value must match one of these strings
-        return ['work_order', 'work_session'].includes(value);
-      },
+      default: undefined,
+      validator: (value) => ['work_order', 'work_session'].includes(value),
     },
     auto_links: {
       type: Object,
       default: null,
     },
   },
+
+  emits: ['close', 'issueCreated'],
 
   data() {
     return {
@@ -540,7 +540,7 @@ export default {
           work_order_key: this.job_data.wo_key,
         });
       } else {
-        this.$emit('issue_created');
+        this.$emit('issueCreated');
       }
       this.cancel();
       this.saving = false;

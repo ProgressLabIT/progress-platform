@@ -27,8 +27,8 @@
           <div v-else class="q-py-xl">
             <vue-pdf-embed
               class="vue-pdf-embed"
-              disableTextLayer
-              disableAnnotationLayer
+              disable-text-layer
+              disable-annotation-layer
               ref="pdf"
               id="pdf"
               :source="media_src"
@@ -85,7 +85,7 @@
           instruction_detail: step.description,
         }"
       >
-        <template v-slot:context-title>
+        <template #context-title>
           {{ $t('product.code').toUpperCase() }}: {{ product.code }}
         </template>
       </MediaViewer>
@@ -143,10 +143,7 @@ export default {
   props: {
     step: {
       type: Object,
-      default: () => {},
-    },
-    height: {
-      type: Number,
+      default: () => ({}),
     },
   },
 

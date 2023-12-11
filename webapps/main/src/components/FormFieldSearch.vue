@@ -90,6 +90,8 @@ export default {
     },
   },
 
+  emits: ['select'],
+
   data() {
     return {
       search_text: null,

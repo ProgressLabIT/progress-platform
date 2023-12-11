@@ -17,7 +17,7 @@
         </q-img>
         <div class="absolute-full column q-pa-md">
           <q-btn
-            v-if="over_image && !edit_mode && !no_image"
+            v-if="over_image && !editMode && !no_image"
             class="absolute-bottom-right q-ma-md"
             color="theme-grey"
             size="12px"
@@ -26,7 +26,7 @@
             <q-icon name="mdi-magnify" />
           </q-btn>
 
-          <template v-if="edit_mode">
+          <template v-if="editMode">
             <div
               class="absolute-top text-center q-py-xs"
               style="background: rgba(0, 0, 0, 0.5)"
@@ -95,7 +95,7 @@
         <div class="text-h4 weight-bold text-uppercase">
           {{ $t('product.code') }}
         </div>
-        <div v-if="!edit_mode" class="text-h1 display highlight">
+        <div v-if="!editMode" class="text-h1 display highlight">
           {{ product.code }}
         </div>
         <q-input
@@ -116,7 +116,7 @@
         <div class="text-h4 weight-bold text-uppercase">
           {{ $t('description') }}
         </div>
-        <div v-if="!edit_mode" class="text-h3 highlight weight-bold q-mt-xs">
+        <div v-if="!editMode" class="text-h3 highlight weight-bold q-mt-xs">
           {{ product.description }}
         </div>
         <q-input
@@ -136,7 +136,7 @@
       <!-- EDIT MODE ACTIONS -->
       <div class="col-auto">
         <q-btn
-          v-if="!edit_mode"
+          v-if="!editMode"
           color="theme-blue"
           class="full-width"
           @click="activateEditMode"
@@ -180,7 +180,7 @@
           {{ $t('notes_production') }}
         </q-card-section>
         <q-card-section class="col scroll">
-          <div v-if="!edit_mode" style="white-space: pre-line">
+          <div v-if="!editMode" style="white-space: pre-line">
             {{ temp_notes }}
           </div>
           <q-input
@@ -188,7 +188,7 @@
             filled
             dense
             autogrow
-            :readonly="!edit_mode"
+            :readonly="!editMode"
             :model-value="temp_notes"
             @update:model-value="
               (value) => updateField('production_notes', value)
@@ -218,7 +218,7 @@
             </q-item-section>
             <q-item-section class="col-1">
               <q-icon
-                v-if="edit_mode"
+                v-if="editMode"
                 name="mdi-close"
                 class="hover-red"
                 @click.stop="deleteDoc(index)"
@@ -240,7 +240,7 @@
           @change="addFiles($event.target.files)"
         />
         <q-btn
-          v-if="edit_mode"
+          v-if="editMode"
           flat
           class="full-width"
           color="theme-blue"
@@ -280,6 +280,8 @@ export default {
     MediaViewer,
   },
 
+  emits: ['changes_saved', 'changes_canceled'],
+
   data() {
     return {
       over_image: false,
@@ -305,7 +307,7 @@ export default {
       product: (state) => state.product.temp,
     }),
 
-    edit_mode: {
+    editMode: {
       get() {
         return this.$store.state.product.edit_modes.product;
       },
@@ -383,7 +385,7 @@ export default {
       this.temp_code = this.product.code;
       this.temp_desc = this.product.description;
 
-      this.edit_mode = true;
+      this.editMode = true;
     },
 
     updateImg(img) {
@@ -473,7 +475,7 @@ export default {
           // setTimeout(() => {
           await this.$store.dispatch('loadProductDetails', this.product_key);
           this.$emit('changes_saved');
-          this.edit_mode = false;
+          this.editMode = false;
           this.clearTempImg();
           this.saving = false;
           // }, 1500)
@@ -486,7 +488,7 @@ export default {
     cancelChanges() {
       this.$store.commit('CANCEL_PRODUCT_CHANGES');
       this.$emit('changes_canceled');
-      this.edit_mode = false;
+      this.editMode = false;
     },
 
     // deleteProduct() {

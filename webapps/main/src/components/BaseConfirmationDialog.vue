@@ -1,4 +1,5 @@
 <template>
+  <!-- TODO: Migrate to Quasar if the component will end up being used -->
   <v-dialog
     :value="show"
     :overlay-color="$theme.background"
@@ -47,24 +48,31 @@ export default {
     },
     confirm_color: {
       type: String,
+      default: undefined,
     },
     confirm_prompt: {
       type: String,
+      default: undefined,
     },
     confirm_action: {
       type: Function,
+      required: true,
     },
     cancel_color: {
       type: String,
+      default: undefined,
     },
     cancel_prompt: {
       type: String,
+      default: undefined,
     },
     max_width: {
       type: String,
       default: '60%',
     },
   },
+
+  emits: ['close'],
 };
 </script>
 

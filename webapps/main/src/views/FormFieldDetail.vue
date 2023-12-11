@@ -10,7 +10,7 @@
               :options="field_types"
               emit-value
               map-options
-              :disable="!edit_mode"
+              :disable="!editMode"
               filled
               :label="$t('type')"
             >
@@ -36,7 +36,7 @@
               v-model="temp_data.name"
               :rules="[(value) => !!value || $t('field_required_alert')]"
               filled
-              :disable="!edit_mode"
+              :disable="!editMode"
               :label="$t('name')"
               stack-label
             />
@@ -48,7 +48,7 @@
               v-model="temp_data.default_label"
               filled
               :label="$t('label')"
-              :disable="!edit_mode"
+              :disable="!editMode"
               stack-label
             />
           </div>
@@ -58,7 +58,7 @@
             <q-input
               v-model="temp_data.default_hint"
               filled
-              :disable="!edit_mode"
+              :disable="!editMode"
               :label="$t('hint')"
               stack-label
               autogrow
@@ -68,19 +68,19 @@
 
         <!-- ACTION BUTTONS -->
         <div class="col-auto">
-          <template v-if="!edit_mode">
+          <template v-if="!editMode">
             <BaseTooltipIcon
               icon="mdi-pencil"
               :tooltip="$capitalize($t('edit'))"
               :color="$theme.blue"
-              @iconClick="edit_mode = true"
+              @icon-click="editMode = true"
             />
 
             <BaseTooltipIcon
               icon="mdi-delete"
               :tooltip="$capitalize($t('delete'))"
               :color="$theme.red"
-              @iconClick="show_delete = true"
+              @icon-click="show_delete = true"
             />
           </template>
 
@@ -123,7 +123,7 @@
 
           <q-space />
 
-          <template v-if="edit_mode">
+          <template v-if="editMode">
             <div class="col-auto">
               <q-btn
                 size="10px"
@@ -183,11 +183,11 @@
             flat
             dense
             :loading="table_loading"
-            :separator="edit_mode ? 'none' : 'horizontal'"
+            :separator="editMode ? 'none' : 'horizontal'"
             square
             virtual-scroll
             hide-bottom
-            :selection="edit_mode ? 'multiple' : 'none'"
+            :selection="editMode ? 'multiple' : 'none'"
             v-model:selected="selected_items"
             :rows-per-page-options="[0]"
             row-key="index"
@@ -200,9 +200,9 @@
               <q-td :props="props" class="q-pl-none">
                 <div :class="getItemClasses(props)">
                   <q-input
-                    v-if="edit_mode"
+                    v-if="editMode"
                     v-model="temp_values[props.row.index][props.col.field]"
-                    :disable="!edit_mode"
+                    :disable="!editMode"
                     filled
                     dense
                     autogrow
@@ -251,8 +251,13 @@ export default {
   },
 
   props: {
-    field: Object,
+    field: {
+      type: Object,
+      required: true,
+    },
   },
+
+  emits: ['reload'],
 
   data() {
     return {
@@ -267,7 +272,7 @@ export default {
       original_values: [],
       temp_values: [],
       show_delete: false,
-      edit_mode: false,
+      editMode: false,
       list_search: null,
       selected_items: [],
       search_limit: 100,
@@ -324,7 +329,7 @@ export default {
 
     search_disabled() {
       return (
-        this.edit_mode &&
+        this.editMode &&
         (!!this.new_or_updated_items.length || !!this.deleted_items.length)
       );
     },
@@ -377,10 +382,10 @@ export default {
         calls.push(this.$api.delete(`list/${this.field._key}`, { params }));
       }
 
-      this.$axios.all(calls).then(() => {
+      Promise.all(calls).then(() => {
         this.$emit('reload');
         this.saving = false;
-        this.edit_mode = false;
+        this.editMode = false;
         if (this.is_choice) this.loadListValues();
       });
     },
@@ -389,7 +394,7 @@ export default {
       this.selected_items = [];
       this.initTempFieldData();
       this.initTempValues();
-      this.edit_mode = false;
+      this.editMode = false;
     },
 
     loadListValues() {
@@ -460,7 +465,7 @@ export default {
       handler() {
         this.initTempFieldData();
         if (this.is_choice) this.loadListValues();
-        this.edit_mode = false;
+        this.editMode = false;
       },
     },
     list_search: 'loadListValues',

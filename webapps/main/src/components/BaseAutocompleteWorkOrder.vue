@@ -13,7 +13,6 @@
     :display-value="value?.wo_code"
     :option-value="key_only ? '_key' : null"
     @filter="filter"
-    @clear="$emit('selection', null)"
     :model-value="value"
     input-debounce="500"
     :emit-value="key_only"
@@ -76,7 +75,7 @@ export default {
   props: {
     value: {
       type: [Object, String],
-      deafult: null,
+      default: null,
     },
 
     label: {
@@ -104,6 +103,8 @@ export default {
       default: null,
     },
   },
+
+  emits: ['select'],
 
   data() {
     return {

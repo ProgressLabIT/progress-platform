@@ -41,7 +41,7 @@ import BaseActionCard from '@/components/BaseActionCard.vue';
 defineProps({
   title: {
     type: String,
-    required: false,
+    default: undefined,
   },
   greedy: {
     type: Boolean,
@@ -49,7 +49,7 @@ defineProps({
   },
   submitLabel: {
     type: String,
-    required: false,
+    default: undefined,
   },
   submitColor: {
     type: String,
@@ -58,7 +58,7 @@ defineProps({
   },
   cancelLabel: {
     type: String,
-    required: false,
+    default: undefined,
   },
   cancelColor: {
     type: String,

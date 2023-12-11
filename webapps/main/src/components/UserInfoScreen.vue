@@ -7,7 +7,7 @@
           <img :src="avatar_src" />
         </q-avatar>
 
-        <template v-if="edit_mode">
+        <template v-if="editMode">
           <q-btn
             v-if="!new_image_url"
             size="12px"
@@ -61,7 +61,7 @@
       <div class="col q-pl-xl">
         <!-- NAME AND SURNAME -->
         <div class="row q-gutter-xl items-center">
-          <template v-if="!edit_mode">
+          <template v-if="!editMode">
             <div class="text-h2 uppercase display highlight q-mr-md">
               {{ full_name }}
             </div>
@@ -72,7 +72,7 @@
               icon="mdi-pencil"
               :tooltip="$capitalize($t('edit'))"
               :color="$theme.blue"
-              @iconClick="edit_mode = true"
+              @icon-click="editMode = true"
             >
             </BaseTooltipIcon>
 
@@ -80,7 +80,7 @@
               icon="mdi-lock-reset"
               :tooltip="$capitalize($t('user.reset_password'))"
               :color="$theme.orange"
-              @iconClick="showPasswordReset"
+              @icon-click="showPasswordReset"
             >
             </BaseTooltipIcon>
 
@@ -88,7 +88,7 @@
               icon="mdi-delete"
               :tooltip="$capitalize($t('archive'))"
               :color="$theme.red"
-              @iconClick="showDelete"
+              @icon-click="showDelete"
             >
             </BaseTooltipIcon>
           </template>
@@ -140,7 +140,7 @@
               <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.username') }}
               </div>
-              <div v-if="!edit_mode">
+              <div v-if="!editMode">
                 {{ user.username || '-' }}
               </div>
               <q-input v-else filled dense v-model="temp_data.username">
@@ -153,7 +153,7 @@
               <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.email') }}
               </div>
-              <div v-if="!edit_mode">
+              <div v-if="!editMode">
                 {{ user.email || '-' }}
               </div>
               <q-input v-else dense filled v-model="temp_data.email"> </q-input>
@@ -164,7 +164,7 @@
               <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.department') }}
               </div>
-              <div v-if="!edit_mode">
+              <div v-if="!editMode">
                 {{ temp_data.department ? temp_data.department.name : '-' }}
               </div>
               <BaseAutocompleteDepartment
@@ -182,7 +182,7 @@
               <div class="text-h5 uppercase q-mb-sm">
                 {{ $t('user.hourly_cost') }}
               </div>
-              <div v-if="!edit_mode">
+              <div v-if="!editMode">
                 {{
                   $numberFormat(temp_data.hourly_cost || '-', this.$i18n.locale)
                 }}
@@ -204,7 +204,7 @@
               <div class="text-h5 uppercase">
                 {{ $t('user.status_title') }}
               </div>
-              <div v-if="!edit_mode" class="q-mt-sm">
+              <div v-if="!editMode" class="q-mt-sm">
                 {{ user_active_text }}
               </div>
               <q-toggle
@@ -228,7 +228,7 @@
                 filled
                 dense
                 :val="check.name"
-                :disable="!edit_mode"
+                :disable="!editMode"
                 v-model="user_permissions"
                 class="q-mt-md"
               >
@@ -270,7 +270,7 @@ export default {
 
   data() {
     return {
-      edit_mode: false,
+      editMode: false,
       saving: false,
       scopes: scopes_list,
       base_path: '/media/user/',
@@ -396,7 +396,7 @@ export default {
         .then(() => {
           this.setTempData();
           this.saving = false;
-          this.edit_mode = false;
+          this.editMode = false;
         })
         .catch((err) => window.alert(err));
     },
@@ -406,7 +406,7 @@ export default {
       this.setTempData();
       this.clearTempImg();
       this.saving = false;
-      this.edit_mode = false;
+      this.editMode = false;
     },
   },
 

@@ -47,7 +47,12 @@ import BaseModalScreen from '@/components/BaseModalScreen.vue';
 export default {
   name: 'ProductScreen',
 
-  props: ['product_key'],
+  props: {
+    product_key: {
+      type: String,
+      required: true,
+    },
+  },
 
   components: {
     BaseModalScreen,

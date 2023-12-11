@@ -23,7 +23,7 @@
         </q-input>
       </div>
 
-      <q-btn v-if="!edit_mode" @click="toggleEdit" color="theme-blue">
+      <q-btn v-if="!editMode" @click="toggleEdit" color="theme-blue">
         {{ $t('bom.edit') }}
       </q-btn>
 
@@ -47,7 +47,7 @@
         card-class="surface2"
         wrap-cells
         virtual-scroll
-        :selection="edit_mode ? 'multiple' : 'none'"
+        :selection="editMode ? 'multiple' : 'none'"
         table-header-class="low-text"
         v-model:selected="delete_lines"
         :rows="filtered_bom"
@@ -70,7 +70,7 @@
             >
               <div class="col-4">
                 <q-btn
-                  v-show="edit_mode"
+                  v-show="editMode"
                   size="sm"
                   padding="xs lg"
                   color="theme-red"
@@ -88,7 +88,7 @@
 
               <div class="col-4 row justify-end">
                 <q-btn
-                  v-show="edit_mode"
+                  v-show="editMode"
                   size="sm"
                   padding="xm lg"
                   color="theme-blue"
@@ -201,6 +201,8 @@ export default {
     BaseDialog,
   },
 
+  emits: ['changes_saved', 'changes_canceled'],
+
   data() {
     return {
       search_text: '',
@@ -257,7 +259,7 @@ export default {
       ];
     },
 
-    edit_mode: {
+    editMode: {
       get() {
         return this.$store.state.product.edit_modes.bom;
       },
@@ -301,10 +303,10 @@ export default {
     ...mapActions(['loadProductDetails']),
 
     toggleEdit() {
-      if (this.edit_mode == false) {
-        this.edit_mode = true;
+      if (this.editMode == false) {
+        this.editMode = true;
       } else {
-        this.edit_mode = false;
+        this.editMode = false;
         this.delete_lines = [];
       }
     },
@@ -407,7 +409,7 @@ export default {
 
     cancelChanges() {
       this.temp_bom = [...this.saved_bom];
-      this.edit_mode = false;
+      this.editMode = false;
       this.delete_lines = [];
       this.$emit('changes_canceled');
     },
@@ -423,7 +425,7 @@ export default {
         .then(() => {
           setTimeout(() => {
             this.saving = false;
-            this.edit_mode = false;
+            this.editMode = false;
             this.$emit('changes_saved');
           }, 1500);
         })

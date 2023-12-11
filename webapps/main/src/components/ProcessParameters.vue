@@ -46,21 +46,21 @@
         <template v-if="params_map[paramKey].type !== 'int' && editMode">
           <q-list>
             <q-item
-              v-for="(value, index) in getParamOtherValues(
+              v-for="(otherValue, otherIndex) in getParamOtherValues(
                 paramKey,
                 paramValue,
               )"
+              :key="otherIndex"
               v-ripple
-              :key="index"
               clickable
-              @click="updateParam(paramKey, value)"
+              @click="updateParam(paramKey, otherValue)"
             >
               <q-item-label class="q-pa-lg">
                 <div class="text-h5 highlight q-mb-sm">
-                  {{ getParamHumanValue(paramKey, value) }}
+                  {{ getParamHumanValue(paramKey, otherValue) }}
                 </div>
                 <div>
-                  {{ getParamValueDesc(paramKey, value) }}
+                  {{ getParamValueDesc(paramKey, otherValue) }}
                 </div>
               </q-item-label>
             </q-item>

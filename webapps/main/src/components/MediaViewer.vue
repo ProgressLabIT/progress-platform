@@ -103,8 +103,8 @@
         <q-img v-if="is_image" fit="contain" :src="media_src"> </q-img>
         <div v-else class="q-py-xl">
           <vue-pdf-embed
-            disableTextLayer
-            disableAnnotationLayer
+            disable-text-layer
+            disable-annotation-layer
             ref="pdf"
             :source="media_src"
             :width="doc_width"
@@ -166,13 +166,30 @@ export default {
     BaseProgressBar,
   },
 
-  props: [
-    'show',
-    'media_name',
-    'media_src',
-    'instruction_title',
-    'instruction_details',
-  ],
+  props: {
+    show: {
+      type: Boolean,
+      required: true,
+    },
+    media_name: {
+      type: String,
+      default: '',
+    },
+    media_src: {
+      type: String,
+      default: '',
+    },
+    instruction_title: {
+      type: String,
+      default: '',
+    },
+    instruction_details: {
+      type: String,
+      default: '',
+    },
+  },
+
+  emits: ['close'],
 
   data() {
     return {

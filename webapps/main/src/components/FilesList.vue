@@ -107,6 +107,8 @@ export default {
     },
   },
 
+  emits: ['addFiles', 'deleteFile', 'restoreFile'],
+
   data() {
     return {
       show_media: -1,

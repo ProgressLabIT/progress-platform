@@ -141,6 +141,8 @@ export default {
     },
   },
 
+  emits: ['close'],
+
   data() {
     return {
       job_updates: {}, // job_key => qt

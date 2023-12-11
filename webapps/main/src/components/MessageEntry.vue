@@ -107,6 +107,8 @@ export default {
     },
   },
 
+  emits: ['change'],
+
   data() {
     return {
       show_update_prompt: false,

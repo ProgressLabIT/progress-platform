@@ -27,7 +27,7 @@
       @close="show_media = -1"
       v-bind="{ media_name, media_src }"
     >
-      <template v-slot:context-title>
+      <template #context-title>
         {{ $t('product.code').toUpperCase() }}: {{ product.code }}
       </template>
     </MediaViewer>

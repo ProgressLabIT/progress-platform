@@ -1,4 +1,5 @@
 <template>
+  <!-- TODO: Migrate to Quasar if the component will end up being used -->
   <div class="fill-height d-flex flex-column">
     <!-- PRODUCT IMAGE -->
     <v-card
@@ -34,7 +35,12 @@
 export default {
   name: 'ProductAside',
 
-  props: ['product'],
+  props: {
+    product: {
+      type: Object,
+      required: true,
+    },
+  },
 };
 </script>
 

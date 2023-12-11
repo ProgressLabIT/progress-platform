@@ -90,7 +90,7 @@
             icon="mdi-close"
             :tooltip="$t('delete')"
             :color="$theme.red"
-            @iconClick="deleteRow(index)"
+            @icon-click="deleteRow(index)"
           >
           </BaseTooltipIcon>
         </div>

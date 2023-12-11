@@ -37,7 +37,7 @@
     <ProductCardActions
       class="absolute-bottom"
       :product="product"
-      @showDelete="showDelete = true"
+      @show-delete="showDelete = true"
     >
     </ProductCardActions>
 
@@ -68,12 +68,21 @@
 
 <script>
 import { mapActions } from 'vuex';
-import { useQuasar } from 'quasar';
 import ProductCardActions from '@/components/ProductCardActions.vue';
 
 export default {
   name: 'ProductCard',
-  props: ['product', 'show_image'],
+
+  props: {
+    product: {
+      type: Object,
+      required: true,
+    },
+    show_image: {
+      type: Boolean,
+      default: false,
+    },
+  },
 
   components: {
     ProductCardActions,

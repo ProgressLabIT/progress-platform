@@ -32,7 +32,7 @@
         auto_link_mode="work_order"
         :auto_links="{ work_order: wo_data }"
         @close="show_form = false"
-        @issue_created="getIssues"
+        @issue-created="getIssues"
       >
       </IssueForm>
     </template>
@@ -60,12 +60,24 @@ export default {
 
   props: {
     // from route
-    job_key: String,
-    wo_key: String,
+    job_key: {
+      type: String,
+      default: undefined,
+    },
+    wo_key: {
+      type: String,
+      default: undefined,
+    },
 
     // from component at parent route
-    job: Object,
-    wo_data: Object,
+    job: {
+      type: Object,
+      default: undefined,
+    },
+    wo_data: {
+      type: Object,
+      default: undefined,
+    },
   },
 
   data() {

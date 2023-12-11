@@ -106,9 +106,6 @@ export default {
       type: Object,
       required: true,
     },
-    background: {
-      type: String,
-    },
   },
 };
 </script>

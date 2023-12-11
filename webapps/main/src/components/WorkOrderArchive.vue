@@ -39,7 +39,7 @@
               v-model="search"
               class="col-3"
             >
-              <template v-slot:append>
+              <template #append>
                 <q-icon name="mdi-magnify" size="xs" />
               </template>
             </q-input>
@@ -226,6 +226,8 @@ import queryModel from '@/lib/queryModelFactory.js';
 
 export default {
   name: 'WorkOrderArchive',
+
+  emits: ['itemDblClick'],
 
   data() {
     return {

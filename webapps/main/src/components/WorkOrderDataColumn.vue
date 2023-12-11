@@ -98,12 +98,11 @@
             :key="operator._key"
             :user="operator"
             name_class="highlight text-body1"
-            subtitle_class="low-text"
             class="q-mb-md q-py-xs"
             size="40px"
           >
             <template #subtitle>
-              <div class="text-low">
+              <div class="text-low low-text">
                 {{ $capitalizeAll(getAssignedPhases(operator)) }}
               </div>
             </template>

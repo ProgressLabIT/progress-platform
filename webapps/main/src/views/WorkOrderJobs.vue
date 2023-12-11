@@ -410,7 +410,7 @@
         <!-- JOB ACTIONS -->
         <div class="row items-center q-pa-lg">
           <!-- STARTING ACTION BUTTONS -->
-          <template v-if="edit_mode == 'actions'">
+          <template v-if="editMode == 'actions'">
             <!-- SELECT ALL -->
             <q-btn
               size="12px"
@@ -430,7 +430,7 @@
               <q-btn
                 size="12px"
                 color="theme-blue"
-                @click="edit_mode = 'modify'"
+                @click="editMode = 'modify'"
               >
                 {{ $t('edit') }}
               </q-btn>
@@ -439,11 +439,11 @@
           <!-- END OF STARTING ACTION BUTTONS -->
 
           <!-- REBALANCE ACTION CARD -->
-          <template v-if="edit_mode == 'modify'">
+          <template v-if="editMode == 'modify'">
             <JobRebalanceActionCard
               :jobs="selected_jobs_data"
               :qt_to_allocate="qt_to_allocate"
-              @changeEditMode="edit_mode = $event"
+              @change-edit-mode="editMode = $event"
             >
             </JobRebalanceActionCard>
           </template>
@@ -492,7 +492,7 @@ export default {
       expanded_phase: null,
       selected_jobs: [],
       jobs_temp_data: undefined,
-      edit_mode: 'actions',
+      editMode: 'actions',
       edit_job_time: null,
       edit_job_progress: null,
       confirm_cancel_batch: null,
@@ -668,7 +668,7 @@ export default {
 
     updateSelectedJobData(job, selected) {
       this.selected_jobs.push(job._key);
-      this.edit_mode = 'modify';
+      this.editMode = 'modify';
     },
 
     formatJobTimes(date) {
@@ -829,13 +829,13 @@ export default {
       this.selected_jobs = [];
     },
 
-    // reset edit_mode after closing/switching phase details
+    // reset editMode after closing/switching phase details
     selected_jobs() {
-      if (!this.selected_jobs.length) this.edit_mode = 'actions';
+      if (!this.selected_jobs.length) this.editMode = 'actions';
     },
 
-    edit_mode() {
-      if (this.edit_mode === 'actions') {
+    editMode() {
+      if (this.editMode === 'actions') {
         this.selected_jobs = [];
       }
     },

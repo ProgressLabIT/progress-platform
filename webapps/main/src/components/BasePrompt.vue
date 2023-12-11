@@ -64,6 +64,7 @@ export default {
       default: 'text',
     },
     initial_value: {
+      type: [String, Number],
       required: true,
     },
     max: {
@@ -75,6 +76,8 @@ export default {
       default: null,
     },
   },
+
+  emits: ['close', 'update'],
 
   data() {
     return {

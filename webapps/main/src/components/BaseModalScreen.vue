@@ -51,8 +51,18 @@ import drawer from '@/mixins/drawer.js';
 
 export default {
   name: 'BaseModalScreen',
-  props: ['show', 'no_esc_dismiss'],
   mixins: [CSSVars, drawer],
+  props: {
+    show: {
+      type: Boolean,
+      required: true,
+    },
+    no_esc_dismiss: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  emits: ['close'],
 
   computed: {
     card_height() {

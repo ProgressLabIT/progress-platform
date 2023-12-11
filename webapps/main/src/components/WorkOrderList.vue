@@ -206,6 +206,8 @@ export default {
     },
   },
 
+  emits: ['editing', 'setSearch', 'itemDblClick'],
+
   data() {
     return {
       table_height: '80vh',

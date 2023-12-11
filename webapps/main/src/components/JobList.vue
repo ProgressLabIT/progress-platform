@@ -305,6 +305,8 @@ export default {
     },
   },
 
+  emits: ['setSearch', 'itemDblClick'],
+
   data() {
     return {
       search_fields: [

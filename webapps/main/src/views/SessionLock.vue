@@ -22,14 +22,16 @@
                 $t('session.lock_salutation', 1, {
                   name: user.name,
                   surname: user.surname,
-                })
+                }),
               )
             }}.
           </strong>
         </p>
         <p>
           {{
-            $capitalize($t('session.lock_explainer', 1, { timeout: session_timeout }))
+            $capitalize(
+              $t('session.lock_explainer', 1, { timeout: session_timeout }),
+            )
           }}
         </p>
 
@@ -102,7 +104,9 @@ export default {
     },
 
     async logout() {
-      const confirm = window.confirm(capitalize(this.$t('session.alerts.close_alert')));
+      const confirm = window.confirm(
+        capitalize(this.$t('session.alerts.close_alert')),
+      );
       if (confirm) {
         await this.$store.dispatch('logout');
       }

@@ -1,9 +1,9 @@
 <template>
-  <div class="full-height column" :class="edit_mode ? 'q-pa-lg' : 'q-pa-xl'">
+  <div class="full-height column" :class="editMode ? 'q-pa-lg' : 'q-pa-xl'">
     <template v-if="issue_type">
       <div class="row q-col-gutter-lg col-auto">
-        <template v-if="!edit_mode">
-          <div class="col" v-if="!edit_mode">
+        <template v-if="!editMode">
+          <div class="col" v-if="!editMode">
             <div class="text-h2 uppercase display highlight q-mb-sm">
               {{ issue_type.name }}
               {{ issue_type.code ? '(' + issue_type.code + ')' : '' }}
@@ -19,7 +19,7 @@
             icon="mdi-pencil"
             :tooltip="$capitalize($t('edit'))"
             :color="$theme.blue"
-            @iconClick="edit_mode = true"
+            @icon-click="editMode = true"
           >
           </BaseTooltipIcon>
 
@@ -27,7 +27,7 @@
             icon="mdi-delete"
             :tooltip="$capitalize($t('archive'))"
             :color="$theme.red"
-            @iconClick="showDelete"
+            @icon-click="showDelete"
           >
           </BaseTooltipIcon>
         </template>
@@ -96,7 +96,7 @@
       <div class="row q-gutter-lg items-center col-auto">
         <!-- ACTIVE -->
         <q-toggle
-          :disable="!edit_mode"
+          :disable="!editMode"
           :label="$capitalize($t('active'))"
           v-model="temp_metadata.active"
         >
@@ -104,7 +104,7 @@
 
         <!-- DEFAULT CRITICAL -->
         <q-toggle
-          :disable="!edit_mode"
+          :disable="!editMode"
           :label="$capitalize($t('critical'))"
           v-model="temp_metadata.critical"
         >
@@ -115,7 +115,7 @@
             filled
             stack-label
             :label="$t('close_within')"
-            :disable="!edit_mode"
+            :disable="!editMode"
             type="number"
             min="0"
             v-model.number="temp_metadata.close_within"
@@ -136,7 +136,7 @@
               <div class="text-body2 text-italic">{{ temp_metadata.icon }}</div>
             </div>
             <q-btn
-              v-if="edit_mode"
+              v-if="editMode"
               flat
               :label="$t('change')"
               @click="show_icon_library = true"
@@ -161,7 +161,7 @@
 
       <FormTemplateEditor
         v-model="temp_metadata.form_template"
-        :edit-mode="edit_mode"
+        :edit-mode="editMode"
       />
     </template>
 
@@ -201,7 +201,7 @@ export default {
   data() {
     return {
       show_icon_library: false,
-      edit_mode: false,
+      editMode: false,
       saving: false,
       temp_metadata: {
         name: '',
@@ -234,7 +234,7 @@ export default {
 
     cancel() {
       this.saving = false;
-      this.edit_mode = false;
+      this.editMode = false;
       this.$q.notify({
         message: this.$capitalize(this.$t('snackbars.changes_canceled')),
         color: 'theme-grey',
@@ -251,7 +251,7 @@ export default {
       };
       await this.$store.dispatch('updateIssueType', data);
       this.saving = false;
-      this.edit_mode = false;
+      this.editMode = false;
       this.$q.notify({
         message: this.$t('issue_type_update_success'),
         color: 'theme-green',
@@ -273,7 +273,7 @@ export default {
   },
 
   watch: {
-    edit_mode: 'setTempData',
+    editMode: 'setTempData',
     issue_type: 'setTempData',
   },
 };
