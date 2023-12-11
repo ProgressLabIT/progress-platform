@@ -7,6 +7,7 @@
   "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
+    "format": "prettier --write \"**/*.{js,vue,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
@@ -30,12 +31,13 @@
     "autoprefixer": "^10.4.2",
     "esbuild": "^0.17.5",
     "eslint": "^8.55.0",
-    "eslint-config-standard": "^17.1.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-n": "^15.0.0",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-vue": "^9.19.2",
-    "postcss": "^8.4.14"
+    "postcss": "^8.4.14",
+    "prettier": "^3.1.1"
   },
   "engines": {
     "node": "^18 || ^16 || ^14.19",
