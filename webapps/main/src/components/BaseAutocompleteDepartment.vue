@@ -7,9 +7,9 @@
     @filter="filterDepartments"
     :model-value="value"
     input-debounce="0"
-    :option-value="key_only ? '_key' : false"
-    :emit-value="key_only"
-    :map-options="key_only"
+    :option-value="keyOnly ? '_key' : false"
+    :emit-value="keyOnly"
+    :map-options="keyOnly"
     @update:model-value="(selection) => $emit('select', selection)"
   >
   </q-select>
@@ -25,12 +25,12 @@ export default {
       default: null,
     },
 
-    load_departments: {
+    loadDepartments: {
       type: Boolean,
       default: true,
     },
 
-    key_only: {
+    keyOnly: {
       type: Boolean,
       default: false,
     },
@@ -81,7 +81,7 @@ export default {
   },
 
   created() {
-    if (this.load_departments) {
+    if (this.loadDepartments) {
       this.loading = true;
       this.$store.dispatch('loadDepartments').then(() => {
         this.initOptions();

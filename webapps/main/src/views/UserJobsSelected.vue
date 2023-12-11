@@ -34,7 +34,7 @@ export default {
   components: { JobCard },
 
   props: {
-    job_list: {
+    jobList: {
       type: Array,
       required: true,
     },
@@ -69,11 +69,11 @@ export default {
 
     selected_job() {
       let job = null;
-      if (this.job_list.length) {
+      if (this.jobList.length > 0) {
         job =
           this.job_query_param === 'first'
-            ? this.job_list[0]
-            : this.job_list.find((j) => j._key === this.job_query_param);
+            ? this.jobList[0]
+            : this.jobList.find((j) => j._key === this.job_query_param);
       }
       return job;
     },
@@ -84,7 +84,7 @@ export default {
       this.$router.push({
         name: 'workSession',
         params: {
-          job_key: this.selected_job._key,
+          jobKey: this.selected_job._key,
         },
       });
     },

@@ -101,7 +101,7 @@ export default {
       type: Boolean,
       default: true,
     },
-    root_path: {
+    rootPath: {
       type: String,
       required: true,
     },
@@ -123,7 +123,7 @@ export default {
     media_src() {
       return (
         this.files[this.show_media]?.path ||
-        this.root_path + '/' + this.media_name
+        this.rootPath + '/' + this.media_name
       );
     },
 

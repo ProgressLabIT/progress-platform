@@ -12,7 +12,7 @@
               {{ $capitalize($t('issue_type_delete_question')) }}
             </div>
             <div class="text-h3 uppercase highlight q-mt-md">
-              {{ issue_type.name }}
+              {{ issueType.name }}
             </div>
           </q-card-section>
 
@@ -67,7 +67,7 @@ export default {
   },
 
   props: {
-    issue_type: {
+    issueType: {
       type: Object,
       required: true,
     },
@@ -83,7 +83,7 @@ export default {
   methods: {
     deleteIssueType() {
       api
-        .delete(`issue-type/${this.issue_type._key}`)
+        .delete(`issue-type/${this.issueType._key}`)
         .then(async () => {
           // reload users from backend to make sure archived user is not present
           this.stage = 'success';

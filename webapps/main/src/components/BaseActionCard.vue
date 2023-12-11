@@ -34,19 +34,19 @@ export default {
       type: String,
       default: undefined,
     },
-    save_label: {
+    saveLabel: {
       type: String,
       default: undefined,
     },
-    cancel_label: {
+    cancelLabel: {
       type: String,
       default: undefined,
     },
-    save_color: {
+    saveColor: {
       type: String,
       default: 'theme-blue',
     },
-    cancel_color: {
+    cancelColor: {
       type: String,
       default: 'theme-grey',
     },

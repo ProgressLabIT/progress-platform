@@ -6,7 +6,7 @@
     @dblclick="$router.push(to_product_route)"
   >
     <img
-      v-if="product.image & show_image"
+      v-if="product.image & showImage"
       style="object-fit: cover"
       :src="`/media/product/${product._key}/image.jpg`"
       class="fit"
@@ -15,7 +15,7 @@
     <div
       class="absolute-top q-pa-sm"
       :style="`background-color: ${
-        show_image
+        showImage
           ? $q.dark.isActive
             ? 'rgba(0,0,0,.7)'
             : 'rgba(230,230,230,.8)'
@@ -45,7 +45,7 @@
     <div
       v-if="showDelete"
       class="absolute-full surface1 column"
-      :class="show_image ? 'q-pa-md' : 'q-pa-sm'"
+      :class="showImage ? 'q-pa-md' : 'q-pa-sm'"
     >
       <div>
         {{ $t('product.confirm_delete_question') }}
@@ -78,7 +78,7 @@ export default {
       type: Object,
       required: true,
     },
-    show_image: {
+    showImage: {
       type: Boolean,
       default: false,
     },

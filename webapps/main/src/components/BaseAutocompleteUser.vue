@@ -9,12 +9,12 @@
     :clearable="clearable"
     :options="options"
     :option-label="(operator) => operator.name + ' ' + operator.surname"
-    :option-value="key_only ? '_key' : null"
+    :option-value="keyOnly ? '_key' : null"
     @filter="filter"
     :model-value="value"
     input-debounce="200"
-    :emit-value="key_only"
-    :map-options="key_only"
+    :emit-value="keyOnly"
+    :map-options="keyOnly"
     @update:model-value="(selection) => $emit('select', selection)"
   >
     <template #option="scope">
@@ -26,7 +26,7 @@
     <template #selected-item="scope">
       <BaseUserAvatar
         :user="scope.opt"
-        :show_avatar="show_avatar"
+        :show-avatar="showAvatar"
         :dense="dense"
         reverse
       />
@@ -50,7 +50,7 @@ export default {
       default: null,
     },
 
-    load_data: {
+    loadData: {
       type: Boolean,
       default: true,
     },
@@ -60,12 +60,12 @@ export default {
       default: '',
     },
 
-    key_only: {
+    keyOnly: {
       type: Boolean,
       default: false,
     },
 
-    operator_only: {
+    operatorOnly: {
       type: Boolean,
       default: true,
     },
@@ -90,7 +90,7 @@ export default {
       default: false,
     },
 
-    show_avatar: {
+    showAvatar: {
       type: Boolean,
       default: true,
     },
@@ -108,7 +108,7 @@ export default {
 
   computed: {
     origin_list() {
-      return this.operator_only
+      return this.operatorOnly
         ? this.$store.getters.operator_list()
         : this.$store.state.user.user_list;
     },
@@ -140,7 +140,7 @@ export default {
   },
 
   created() {
-    if (this.load_data) {
+    if (this.loadData) {
       this.loading = true;
       this.$store.dispatch('loadUsers').then(() => {
         this.initOptions();

@@ -80,7 +80,7 @@ const adminRoutes = [
         component: () => import('@/views/IssueTypeLibrary.vue'),
         children: [
           {
-            path: ':issue_type_key',
+            path: ':issueTypeKey',
             name: 'issueTypeDetail',
             component: () => import('@/views/IssueTypeDetail.vue'),
             props: true,
@@ -91,7 +91,7 @@ const adminRoutes = [
             component: () => import('@/views/IssueTypeNew.vue'),
           },
           {
-            path: ':issue_type_key/delete',
+            path: ':issueTypeKey/delete',
             name: 'issueTypeDelete',
             component: () => import('@/views/IssueTypeDelete.vue'),
             props: true,

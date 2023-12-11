@@ -129,7 +129,7 @@
       <!-- ISSUE TYPE -->
       <BaseAutocompleteIssueType
         dense
-        key_only
+        key-only
         class="q-mb-md"
         :value="issue_type_key"
         @select="(selection) => (issue_type_key = selection)"
@@ -257,9 +257,9 @@
         :placeholder="$capitalize($t('opened_by'))"
         dense
         class="q-mb-md"
-        key_only
+        key-only
         :label="$t('opened_by')"
-        :operator_only="false"
+        :operator-only="false"
         :value="created_by"
         @select="(selection) => (created_by = selection)"
       >
@@ -270,9 +270,9 @@
         :placeholder="$capitalize($t('closed_by'))"
         dense
         class="q-mb-md"
-        key_only
+        key-only
         :label="$t('closed_by')"
-        :operator_only="false"
+        :operator-only="false"
         :value="closed_by"
         @select="(selection) => (closed_by = selection)"
       >
@@ -283,7 +283,7 @@
         dense
         filled
         class="q-mb-md"
-        key_only
+        key-only
         :label="$capitalize($t('operation.label'))"
         :value="operation_key"
         @select="(selection) => (operation_key = selection)"
@@ -424,17 +424,17 @@
 </template>
 
 <script>
+import { ref, watch } from 'vue';
+import { Dialog } from 'quasar';
+import { api } from '@/boot/axios';
 import AddAdvancedFilterDialog from '@/components/AddAdvancedFilterDialog.vue';
 import IssueForm from '@/components/IssueForm.vue';
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
+import FormField from '@/components/FormField.vue';
 import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js';
-import { ref, watch } from 'vue';
-import { Dialog } from 'quasar';
-import FormField from '../components/FormField.vue';
-import { api } from '../boot/axios';
 
 export default {
   name: 'QualityRoot',

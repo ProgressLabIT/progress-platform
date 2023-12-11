@@ -4,7 +4,7 @@
     id="new-issue-type-form"
     @submit="submit"
     :loading="saving"
-    max_width="700px"
+    max-width="700px"
     @cancel="$router.back()"
   >
     <template #title>
@@ -140,7 +140,7 @@ export default {
             this.$router.push({
               name: 'issueTypeDetail',
               params: {
-                issue_type_key: new_issue_type_key,
+                issueTypeKey: new_issue_type_key,
               },
             });
           })

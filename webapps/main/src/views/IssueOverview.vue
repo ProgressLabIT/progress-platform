@@ -209,10 +209,10 @@ export default {
       }
     },
 
-    showIssueDetails(issue_key) {
+    showIssueDetails(issueKey) {
       const to_route = {
         name: 'issueDetail',
-        params: { issue_key },
+        params: { issueKey },
         query: {
           back_to: this.$route.name,
           ...this.$route.query,

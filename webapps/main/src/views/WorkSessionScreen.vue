@@ -98,7 +98,7 @@
 
         <div
           id="session-control-section"
-          v-if="$route.name != 'jobIssueDetail'"
+          v-if="$route.name !== 'jobIssueDetail'"
           class="column col q-px-sm q-pt-xs"
           style="min-height: 600px"
         >
@@ -269,7 +269,7 @@ export default {
 
   props: {
     // from router
-    job_key: {
+    jobKey: {
       type: String,
       required: true,
     },
@@ -416,7 +416,7 @@ export default {
   methods: {
     async loadJob() {
       this.$store
-        .dispatch('loadWorkingJobData', this.job_key)
+        .dispatch('loadWorkingJobData', this.jobKey)
         .then(async () => {
           await this.$store.dispatch('loadWorkOrderData', this.j.wo_key);
           const data = this.$store.state.traceability;
@@ -466,7 +466,7 @@ export default {
 
     updateJobData() {
       Promise.all([
-        this.$api.get(`job/${this.job_key}`),
+        this.$api.get(`job/${this.jobKey}`),
         this.$store.dispatch('loadWorkOrderData', this.j.wo_key),
       ]).then(([jobResponse]) => {
         this.$store.commit('UPDATE_JOB', jobResponse.data.detail);

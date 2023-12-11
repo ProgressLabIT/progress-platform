@@ -27,11 +27,11 @@
           {{ $capitalize($t('bom.quantity_type.radio_label')) }}
         </span>
         <q-radio
-          v-for="type in qt_types"
+          v-for="qt_type in qt_types"
           v-model="quantity_type"
-          :key="type"
-          :val="type"
-          :label="$t('bom.quantity_type.' + type).toUpperCase()"
+          :key="qt_type"
+          :val="qt_type"
+          :label="$t('bom.quantity_type.' + qt_type).toUpperCase()"
         >
         </q-radio>
         <q-space />

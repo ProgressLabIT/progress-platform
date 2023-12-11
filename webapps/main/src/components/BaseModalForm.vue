@@ -1,6 +1,6 @@
 <template>
   <BaseDialog :show="show" @close="$router.back()" :maximized="maximized">
-    <q-card class="surface1 q-pa-md" :style="{ maxWidth: max_width }">
+    <q-card class="surface1 q-pa-md" :style="{ maxWidth: maxWidth }">
       <!-- DIALOG TITLE -->
       <q-card-section class="text-h3 display weight-medium">
         <slot name="title"></slot>
@@ -54,7 +54,7 @@ export default {
       default: true,
       required: false,
     },
-    max_width: {
+    maxWidth: {
       type: String,
       default: '500px',
     },

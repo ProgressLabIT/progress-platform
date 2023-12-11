@@ -133,7 +133,7 @@
           :placeholder="$capitalize($t('operator'))"
           dense
           class="q-mb-md"
-          key_only
+          key-only
           :value="operator_selected"
           @select="(selection) => (operator_selected = selection)"
         >

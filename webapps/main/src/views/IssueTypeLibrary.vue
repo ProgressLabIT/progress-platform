@@ -80,7 +80,7 @@
     <!-- ISSUE TYPE DATA -->
     <div class="col full-height" v-if="vuex_ready">
       <router-view v-slot="{ Component }">
-        <component :is="Component" :issue_type="selected_issue_type" />
+        <component :is="Component" :issue-type="selected_issue_type" />
       </router-view>
     </div>
   </div>
@@ -112,7 +112,7 @@ export default {
     },
 
     selected_issue_type_key() {
-      return this.$route.params.issue_type_key;
+      return this.$route.params.issueTypeKey;
     },
 
     selected_issue_type() {
@@ -130,10 +130,10 @@ export default {
   },
 
   methods: {
-    showIssueTypeDetail(issue_type_key) {
+    showIssueTypeDetail(issueTypeKey) {
       this.$router.push({
         name: 'issueTypeDetail',
-        params: { issue_type_key },
+        params: { issueTypeKey },
       });
     },
 

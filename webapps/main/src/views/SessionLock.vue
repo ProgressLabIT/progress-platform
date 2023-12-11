@@ -1,7 +1,7 @@
 <template>
   <!-- TODO: Migrate to Quasar if the component will end up being used -->
   <v-dialog
-    :value="session_locked"
+    :value="sessionLocked"
     :overlay-color="$theme.background"
     overlay-opacity="1"
     max-width="600px"
@@ -73,7 +73,10 @@ export default {
   name: 'SessionLock',
 
   props: {
-    session_locked: Boolean,
+    sessionLocked: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   data() {

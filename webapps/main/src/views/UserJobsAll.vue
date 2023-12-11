@@ -119,7 +119,7 @@ export default {
   components: { JobCard, JobCardSlim },
 
   props: {
-    job_list: {
+    jobList: {
       type: Array,
       required: true,
     },
@@ -142,11 +142,11 @@ export default {
     },
 
     assigned_to_user() {
-      return this.job_list.filter((j) => j.assigned);
+      return this.jobList.filter((j) => j.assigned);
     },
 
     unassigned() {
-      return this.job_list.filter((j) => !j.assigned);
+      return this.jobList.filter((j) => !j.assigned);
     },
 
     filtered_assigned_to_user() {

@@ -3,7 +3,7 @@
     <q-avatar
       color="theme-grey"
       :size="size"
-      v-if="initials && show_avatar"
+      v-if="initials && showAvatar"
       class="weight-bold"
       font-size=".4em"
     >
@@ -18,7 +18,7 @@
     </q-avatar>
 
     <div
-      v-if="show_name && show_avatar"
+      v-if="show_name && showAvatar"
       :class="dense ? 'q-mx-xs' : 'q-mx-sm'"
     ></div>
 
@@ -59,7 +59,7 @@ export default {
       default: '32px',
     },
 
-    show_avatar: {
+    showAvatar: {
       type: Boolean,
       default: true,
     },

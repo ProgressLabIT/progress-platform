@@ -32,7 +32,7 @@
                   </div>
                   <BaseAutocompleteDepartment
                     :value="new_user_data.department_key"
-                    :key_only="true"
+                    key-only
                     @select="new_user_data.department_key = $event"
                   >
                   </BaseAutocompleteDepartment>

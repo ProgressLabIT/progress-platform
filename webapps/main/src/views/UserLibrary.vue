@@ -109,7 +109,6 @@
 <script>
 // import axios from 'axios'
 import LoadingSignal from '@/components/LoadingSignal.vue';
-import BaseAutocompleteDepartment from '@/components/BaseAutocompleteDepartment.vue';
 // import UserInfoScreen from "@/components/UserInfoScreen.vue"
 import multiMatch from '@/lib/MultiFieldSearch.js';
 
@@ -118,7 +117,6 @@ export default {
 
   components: {
     // UserInfoScreen,
-    BaseAutocompleteDepartment,
     LoadingSignal,
   },
 

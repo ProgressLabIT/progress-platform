@@ -10,9 +10,9 @@
     @filter="filter"
     :model-value="value"
     input-debounce="100"
-    :option-value="key_only ? '_key' : null"
-    :emit-value="key_only"
-    :map-options="key_only"
+    :option-value="keyOnly ? '_key' : null"
+    :emit-value="keyOnly"
+    :map-options="keyOnly"
     @update:model-value="(selection) => $emit('select', selection)"
   >
     <template #option="scope">
@@ -39,12 +39,12 @@ export default {
       default: null,
     },
 
-    load_data: {
+    loadData: {
       type: Boolean,
       default: true,
     },
 
-    key_only: {
+    keyOnly: {
       type: Boolean,
       default: false,
     },
@@ -103,7 +103,7 @@ export default {
   },
 
   created() {
-    if (this.load_data) {
+    if (this.loadData) {
       this.loading = true;
       this.$store.dispatch('getOperations').then(() => {
         this.initOptions();

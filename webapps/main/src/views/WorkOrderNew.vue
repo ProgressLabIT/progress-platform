@@ -3,7 +3,7 @@
     id="new-work-order-form"
     @submit="postNewWorkOrder"
     :loading="loading"
-    max_width="80vw"
+    max-width="80vw"
     @cancel="$router.back()"
   >
     <template #title>
@@ -67,7 +67,7 @@
           <BaseAutocompleteProduct
             v-else-if="field_name === 'product'"
             dense
-            :load="false"
+            :load-data="false"
             :value="new_work_orders[index].product"
             @select="new_work_orders[index].product = $event"
           >

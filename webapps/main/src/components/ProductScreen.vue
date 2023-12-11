@@ -2,7 +2,7 @@
   <BaseModalScreen
     :show="show_modal"
     @close="exit()"
-    :no_esc_dismiss="user_is_editing"
+    :no-esc-dismiss="user_is_editing"
   >
     <template #header>
       <span class="q-ml-md display highlight weight-medium">
@@ -44,6 +44,7 @@
 
 <script>
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
+
 export default {
   name: 'ProductScreen',
 

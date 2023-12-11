@@ -60,7 +60,7 @@
             <ProductCard
               :key="product._key"
               :product="product"
-              :show_image="show_images"
+              :show-image="show_images"
             >
             </ProductCard>
           </div>
@@ -89,7 +89,7 @@ import ProductCard from '@/components/ProductCard.vue';
 
 import multiMatch from '@/lib/MultiFieldSearch.js';
 
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters } from 'vuex';
 import { debounce as _debounce } from 'lodash';
 
 export default {

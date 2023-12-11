@@ -60,7 +60,7 @@ export default {
 
   props: {
     // from route
-    job_key: {
+    jobKey: {
       type: String,
       default: undefined,
     },
@@ -89,7 +89,7 @@ export default {
   computed: {
     context() {
       // Check where the component is being used
-      return this.job_key ? 'job' : this.wo_key ? 'work-order' : undefined;
+      return this.jobKey ? 'job' : this.wo_key ? 'work-order' : undefined;
     },
 
     work_order_key() {
@@ -105,17 +105,17 @@ export default {
   },
 
   methods: {
-    openIssue(issue_key) {
+    openIssue(issueKey) {
       const next_route_name =
-        this.context == 'job'
+        this.context === 'job'
           ? 'jobIssueDetail'
-          : this.context == 'work-order'
+          : this.context === 'work-order'
             ? 'workOrderIssueDetail'
             : null;
 
       this.$router.push({
         name: next_route_name,
-        params: { issue_key },
+        params: { issueKey },
       });
     },
 

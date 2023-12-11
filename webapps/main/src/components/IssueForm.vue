@@ -58,7 +58,7 @@
                 ? $t('phase.no_phase')
                 : null
             "
-            key_only
+            key-only
             :label="$capitalize($t('product.label'))"
             @select="(selection) => loadProduct(selection)"
           >

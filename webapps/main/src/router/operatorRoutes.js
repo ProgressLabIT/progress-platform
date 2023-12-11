@@ -28,7 +28,7 @@ const operatorRoutes = [
     ],
   },
   {
-    path: 'job/:job_key',
+    path: 'job/:jobKey',
     name: 'workSession',
     component: () => import('@/views/WorkSessionScreen.vue'),
     props: true,
@@ -63,7 +63,7 @@ const operatorRoutes = [
         props: true,
       },
       {
-        path: 'issues/:issue_key',
+        path: 'issues/:issueKey',
         name: 'jobIssueDetail',
         component: () => import('@/components/IssueDetail.vue'),
         props: true,

@@ -2,7 +2,7 @@
   <BaseModalForm
     :show="true"
     id="new-operation-form"
-    max_width="700px"
+    max-width="700px"
     @cancel="$router.back()"
     @submit="submit"
   >

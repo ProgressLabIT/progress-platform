@@ -59,7 +59,7 @@
                 :model-value="j.qt_remaining"
                 @update:model-value="updateRemainingQt(index, parseInt($event))"
                 min="0"
-                :max="qt_to_allocate"
+                :max="qtToAllocate"
                 content-class="text-right"
               >
               </q-input>
@@ -132,7 +132,7 @@
             </template>
             <template v-if="col.value === 'qt_remaining'">
               <div class="text-body1">
-                <span>{{ qt_to_allocate }} / </span>
+                <span>{{ qtToAllocate }} / </span>
                 <span :style="remaining_style">{{
                   working_total_remaining
                 }}</span>
@@ -194,7 +194,7 @@ export default {
       type: Object,
       required: true,
     },
-    qt_to_allocate: {
+    qtToAllocate: {
       type: Number,
       required: true,
     },
@@ -267,7 +267,7 @@ export default {
     },
 
     remaining_match() {
-      return this.working_total_remaining === this.qt_to_allocate;
+      return this.working_total_remaining === this.qtToAllocate;
     },
 
     remaining_style() {
@@ -281,7 +281,7 @@ export default {
        * A minus is automatically shown in case of negative numbers.
        * Adds a plus in case of positive ones for better readability
        */
-      const delta = this.working_total_remaining - this.qt_to_allocate;
+      const delta = this.working_total_remaining - this.qtToAllocate;
       const sign = delta < 0 ? '' : '+';
       return `${sign}${delta}`;
     },
@@ -328,12 +328,12 @@ export default {
     rebalanceJobs() {
       // check if quantity is divisible by the number of jobs considered
       let jobs = this.temp_jobs.filter((j) => !j.close);
-      let remainder = this.qt_to_allocate % jobs.length;
+      let remainder = this.qtToAllocate % jobs.length;
 
       // Spread remaining quantity among all jobs, excluding started jobs to be closed
       for (let j of this.temp_jobs) {
         if (!j.close)
-          j.qt_remaining = Math.floor(this.qt_to_allocate / jobs.length);
+          j.qt_remaining = Math.floor(this.qtToAllocate / jobs.length);
       }
 
       // assign remainder starting from the first job, excluding started jobs to be closed

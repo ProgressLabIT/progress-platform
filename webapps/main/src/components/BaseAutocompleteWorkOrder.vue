@@ -11,12 +11,12 @@
     :clearable="clearable"
     :options="options"
     :display-value="value?.wo_code"
-    :option-value="key_only ? '_key' : null"
+    :option-value="keyOnly ? '_key' : null"
     @filter="filter"
     :model-value="value"
     input-debounce="500"
-    :emit-value="key_only"
-    :map-options="key_only"
+    :emit-value="keyOnly"
+    :map-options="keyOnly"
     popup-content-style="width: 0px"
     @update:model-value="(selection) => $emit('select', selection)"
   >
@@ -83,7 +83,7 @@ export default {
       default: '',
     },
 
-    key_only: {
+    keyOnly: {
       type: Boolean,
       default: false,
     },

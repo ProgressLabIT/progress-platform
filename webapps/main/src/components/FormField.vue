@@ -193,7 +193,7 @@
     <div v-if="fieldType === 'files'">
       <FilesList
         :files="fieldValue"
-        :root_path="`${rootPath}/${field._key}`"
+        :root-path="`${rootPath}/${field._key}`"
         :label="field.label"
         :disable="disable"
         @add-files="addFiles"

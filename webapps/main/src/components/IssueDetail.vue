@@ -30,7 +30,7 @@
             >
               <FormField
                 :field="field"
-                :root-path="`/media/issue/${issue_key}`"
+                :root-path="`/media/issue/${issueKey}`"
                 dense
                 disable
               />
@@ -209,7 +209,7 @@ export default {
 
   props: {
     // from router
-    issue_key: {
+    issueKey: {
       type: String,
       required: true,
     },
@@ -227,7 +227,7 @@ export default {
 
   computed: {
     issue() {
-      const issue_data = this.$store.getters.getIssueData(this.issue_key);
+      const issue_data = this.$store.getters.getIssueData(this.issueKey);
       return this.enrichIssue(issue_data);
     },
 
@@ -297,7 +297,7 @@ export default {
     },
 
     refreshIssue() {
-      this.$store.dispatch('getIssues', { issue_key: this.issue_key });
+      this.$store.dispatch('getIssues', { issue_key: this.issueKey });
       this.getHistory();
     },
 
@@ -363,7 +363,7 @@ export default {
             event_type: 'ISSUE_DELETED',
             event_data: {
               issue_data: {
-                _key: this.issue_key,
+                _key: this.issueKey,
               },
             },
           }).then(async () => {

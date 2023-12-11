@@ -57,7 +57,7 @@
     <AppFooter v-if="$q.screen.height > 400" />
 
     <!-- Pass session_locked as prop instead of computing it locally inside the component since it's already needed for the v-if -->
-    <!-- <SessionLock v-else v-bind="{session_locked}"></SessionLock> -->
+    <!-- <SessionLock v-else :session-locked="session_locked" /> -->
   </q-layout>
 </template>
 

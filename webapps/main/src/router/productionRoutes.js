@@ -45,7 +45,7 @@ const productionRoutes = [
                     props: true,
                     children: [
                       {
-                        path: ':issue_key',
+                        path: ':issueKey',
                         name: 'workOrderIssueDetail',
                         component: () => import('@/components/IssueDetail.vue'),
                         props: true,

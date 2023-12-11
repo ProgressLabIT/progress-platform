@@ -1,15 +1,15 @@
 <template>
   <div class="full-height column" :class="editMode ? 'q-pa-lg' : 'q-pa-xl'">
-    <template v-if="issue_type">
+    <template v-if="issueType">
       <div class="row q-col-gutter-lg col-auto">
         <template v-if="!editMode">
           <div class="col" v-if="!editMode">
             <div class="text-h2 uppercase display highlight q-mb-sm">
-              {{ issue_type.name }}
-              {{ issue_type.code ? '(' + issue_type.code + ')' : '' }}
+              {{ issueType.name }}
+              {{ issueType.code ? '(' + issueType.code + ')' : '' }}
             </div>
             <div style="width: 50%">
-              {{ issue_type.description || '— No Description —' }}
+              {{ issueType.description || '— No Description —' }}
             </div>
           </div>
 
@@ -192,7 +192,7 @@ export default {
   mixins: [form],
 
   props: {
-    issue_type: {
+    issueType: {
       type: Object,
       required: true,
     },
@@ -218,10 +218,10 @@ export default {
 
   methods: {
     setTempData() {
-      if (this.issue_type) {
+      if (this.issueType) {
         Object.keys(this.temp_metadata).forEach((key) => {
-          if (key in this.issue_type) {
-            this.temp_metadata[key] = _cloneDeep(this.issue_type[key]);
+          if (key in this.issueType) {
+            this.temp_metadata[key] = _cloneDeep(this.issueType[key]);
           }
         });
       }
@@ -246,7 +246,7 @@ export default {
     async save() {
       this.saving = true;
       const data = {
-        _key: this.issue_type._key,
+        _key: this.issueType._key,
         ...this.temp_metadata,
       };
       await this.$store.dispatch('updateIssueType', data);
@@ -263,7 +263,7 @@ export default {
     showDelete() {
       this.$router.push({
         name: 'issueTypeDelete',
-        params: { issue_type_key: this.issue_type._key },
+        params: { issueTypeKey: this.issueType._key },
       });
     },
   },

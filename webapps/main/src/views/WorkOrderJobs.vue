@@ -442,7 +442,7 @@
           <template v-if="editMode == 'modify'">
             <JobRebalanceActionCard
               :jobs="selected_jobs_data"
-              :qt_to_allocate="qt_to_allocate"
+              :qt-to-allocate="qtToAllocate"
               @change-edit-mode="editMode = $event"
             >
             </JobRebalanceActionCard>
@@ -546,7 +546,7 @@ export default {
       );
     },
 
-    qt_to_allocate() {
+    qtToAllocate() {
       const selected_qt_remaining = Object.values(
         this.selected_jobs_data,
       ).reduce((sum, job) => {

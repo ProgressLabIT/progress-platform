@@ -1,7 +1,7 @@
 <template>
   <q-page-container>
     <template v-if="vuex_ready">
-      <router-view v-bind="{ job_list }" />
+      <router-view :job-list="job_list" />
     </template>
 
     <div v-else class="row flex-center">

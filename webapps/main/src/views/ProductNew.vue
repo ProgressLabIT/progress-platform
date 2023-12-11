@@ -3,7 +3,7 @@
     :show="true"
     id="new-product-form"
     @submit="postNewProduct"
-    max_width="700px"
+    max-width="700px"
     maximized
     @cancel="$router.back()"
   >

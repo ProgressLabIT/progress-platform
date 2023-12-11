@@ -57,7 +57,7 @@ export default {
       type: Boolean,
       required: true,
     },
-    no_esc_dismiss: {
+    noEscDismiss: {
       type: Boolean,
       default: false,
     },

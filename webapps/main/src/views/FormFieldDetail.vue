@@ -221,9 +221,9 @@
 
     <BaseDialog :show="show_delete">
       <BaseActionCard
-        :save_label="$t('confirm')"
         :title="$t('field_delete')"
-        save_color="theme-red"
+        :save-label="$t('confirm')"
+        save-color="theme-red"
         @save="deleteField"
         @cancel="show_delete = false"
       >
