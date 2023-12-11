@@ -264,7 +264,6 @@ import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
-import BaseActionCard from '@/components/BaseActionCard.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 export default {
@@ -274,7 +273,6 @@ export default {
     BaseAutocompleteUser,
     BaseProgressBar,
     BaseUserAvatar,
-    BaseActionCard,
     BaseDialog,
     NoDataAlert,
   },

@@ -64,8 +64,6 @@
 </template>
 
 <script>
-import LoadingSignal from '@/components/LoadingSignal.vue';
-import NoDataAlert from '@/components/NoDataAlert.vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 
@@ -73,8 +71,6 @@ export default {
   name: 'WorkSessionProcess',
 
   components: {
-    LoadingSignal,
-    NoDataAlert,
     BaseProgressBar,
     BaseUserAvatar,
   },

@@ -5,8 +5,8 @@
         {{ $capitalize($t('operation.delete_title')) }}
       </q-card-section>
 
-      <transition name="slide-fade" mode="out-in">
-        <div>
+      <div>
+        <transition name="slide-fade" mode="out-in">
           <div v-if="stage === 'confirm'" key="confirm">
             <q-card-section>
               <div>{{ $capitalize($t('operation.delete_question')) }}?</div>
@@ -49,8 +49,8 @@
               </q-btn>
             </div>
           </q-card-section>
-        </div>
-      </transition>
+        </transition>
+      </div>
     </q-card>
   </BaseDialog>
 </template>
@@ -72,7 +72,7 @@ export default {
   props: {
     operation: {
       type: Object,
-      default: {},
+      default: () => ({}),
     },
   },
 

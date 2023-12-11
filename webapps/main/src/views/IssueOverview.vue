@@ -82,20 +82,11 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
 import { throttle as _throttle } from 'lodash';
 import enrichIssue from '@/mixins/issues.js';
-import NoDataAlert from '@/components/NoDataAlert.vue';
-import LoadingSignal from '@/components/LoadingSignal.vue';
-import queryModel from '@/lib/queryModelFactory.js';
 
 export default {
   name: 'IssueOverview',
-
-  components: {
-    LoadingSignal,
-    NoDataAlert,
-  },
 
   mixins: [enrichIssue],
 

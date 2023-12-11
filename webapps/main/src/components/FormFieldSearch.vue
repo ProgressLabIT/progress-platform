@@ -21,7 +21,7 @@
       <q-virtual-scroll
         style="max-height: 200px"
         :items="filtered_fields"
-        v-slot="{ item, index }"
+        v-slot="{ item }"
         class="surface2"
       >
         <q-item clickable @click="$emit('select', item)">

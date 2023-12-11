@@ -221,18 +221,11 @@
 </template>
 
 <script>
-import { DateTime as DT } from 'luxon';
-import { mapState } from 'vuex';
 import { durationFromMillisec as duration } from '@/lib/duration.js';
 import queryModel from '@/lib/queryModelFactory.js';
-import NoDataAlert from '@/components/NoDataAlert.vue';
 
 export default {
   name: 'WorkOrderArchive',
-
-  components: {
-    NoDataAlert,
-  },
 
   data() {
     return {

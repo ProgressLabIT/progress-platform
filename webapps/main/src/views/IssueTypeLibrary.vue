@@ -104,11 +104,11 @@ export default {
 
   computed: {
     issue_type_list() {
-      return (
-        this.$store.state.quality.issue_types.sort((a, b) =>
-          a.code > b.code ? 1 : a.code < b.code ? -1 : 0,
-        ) || []
-      );
+      const issue_types = [...this.$store.state.quality.issue_types];
+      issue_types.sort((a, b) =>
+        a.code > b.code ? 1 : a.code < b.code ? -1 : 0,
+      )
+      return issue_types;
     },
 
     selected_issue_type_key() {

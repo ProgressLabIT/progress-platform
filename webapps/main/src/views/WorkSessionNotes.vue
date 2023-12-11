@@ -3,6 +3,7 @@
     <template v-if="notes.length">
       <div
         v-for="note in notes"
+        :key="note.type"
         class="surface2 shadow-2 multiline-text col column q-px-md q-pt-md"
       >
         <div class="text-uppercase text-h5 q-mb-md col-auto">
@@ -46,11 +47,12 @@ export default {
   computed: {
     notes() {
       let notes = [];
-      this.note_types.forEach((t) => {
-        const value = this.job[`${t}_notes`];
+      this.note_types.forEach((type) => {
+        const value = this.job[`${type}_notes`];
         if (value)
           notes.push({
-            label: this.$t(`notes_${t}`),
+            type,
+            label: this.$t(`notes_${type}`),
             value,
           });
       });

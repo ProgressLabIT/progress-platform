@@ -18,50 +18,47 @@
 
       <q-card-section>
         <transition name="slide-fade" mode="out-in">
-          <div>
-            <div
-              v-if="stage === 'confirm'"
-              key="confirm"
-              class="row justify-between"
+          <div
+            v-if="stage === 'confirm'"
+            key="confirm"
+            class="row justify-between"
+          >
+            <q-btn
+              color="theme-red"
+              @click="resetPassword"
+              :label="$t('confirm')"
             >
-              <q-btn
-                color="theme-red"
-                @click="resetPassword"
-                :label="$t('confirm')"
-              >
-              </q-btn>
-              <q-btn
-                color="theme-grey"
-                @click="$router.back()"
-                :label="$t('cancel')"
-              >
-              </q-btn>
+            </q-btn>
+            <q-btn
+              color="theme-grey"
+              @click="$router.back()"
+              :label="$t('cancel')"
+            >
+            </q-btn>
+          </div>
+          <div v-else-if="stage === 'show_psw'" key="password">
+            <div class="q-mb-xl">
+              {{ $t('user.reset_password_success') }}
             </div>
 
-            <div v-else-if="stage === 'show_psw'" key="password">
-              <div class="q-mb-xl">
-                {{ $t('user.reset_password_success') }}
-              </div>
-
-              <div class="text-h5 uppercase">
-                {{ $capitalize($t('user.temp_password')) }}
-              </div>
-              <div class="row justify-between q-mt-sm items-center">
-                <div class="col-auto">
-                  <div class="background q-pa-sm">
-                    <span class="text-h2 highlight">
-                      {{ temp_psw }}
-                    </span>
-                  </div>
+            <div class="text-h5 uppercase">
+              {{ $capitalize($t('user.temp_password')) }}
+            </div>
+            <div class="row justify-between q-mt-sm items-center">
+              <div class="col-auto">
+                <div class="background q-pa-sm">
+                  <span class="text-h2 highlight">
+                    {{ temp_psw }}
+                  </span>
                 </div>
-                <div class="col-auto">
-                  <q-btn
-                    color="theme-grey"
-                    @click="$router.back()"
-                    :label="$t('close')"
-                  >
-                  </q-btn>
-                </div>
+              </div>
+              <div class="col-auto">
+                <q-btn
+                  color="theme-grey"
+                  @click="$router.back()"
+                  :label="$t('close')"
+                >
+                </q-btn>
               </div>
             </div>
           </div>

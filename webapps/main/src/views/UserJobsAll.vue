@@ -54,11 +54,11 @@
 
     <!-- JOBS -->
 
-    <div v-for="[k, v] in Object.entries(jobs_view)">
+    <div v-for="(details, type) in jobs_view" :key="type">
       <!-- LIST HEADER -->
       <div class="row items-center q-mb-md q-mt-lg">
         <!-- LIST TITLE -->
-        <span class="text-body1">{{ v.label }}</span>
+        <span class="text-body1">{{ details.label }}</span>
 
         <q-separator class="q-mx-md" style="flex-grow: 1" />
 
@@ -67,12 +67,12 @@
           <i18n-t keypath="job.shown_jobs_message" tag="span">
             <template v-slot:shown>
               <span class="highlight q-mr-xs">
-                {{ v.list.length }}
+                {{ details.list.length }}
               </span>
             </template>
             <template v-slot:total>
               <span class="highlight q-mx-xs">
-                {{ v.total_count }}
+                {{ details.total_count }}
               </span>
             </template>
           </i18n-t>
@@ -85,7 +85,7 @@
         <template v-if="layout != 'list'">
           <div
             class="column col-12 col-sm-6 col-md-4 col-lg-3"
-            v-for="j in v.list"
+            v-for="j in details.list"
             :key="j._key"
             @click="goToSelectedJob(j._key)"
           >
@@ -97,7 +97,7 @@
         <template v-if="layout === 'list'">
           <div
             class="col-12 items-center q-my-sm"
-            v-for="j in v.list"
+            v-for="j in details.list"
             :key="j._key"
           >
             <JobCardSlim :job="j" @click="goToSelectedJob(j._key)" />

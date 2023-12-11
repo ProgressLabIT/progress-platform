@@ -1,4 +1,5 @@
 <template>
+  <!-- TODO: Migrate to Quasar if the component will end up being used -->
   <v-container class="fill">
     <v-row class="fill-height">
       <v-col cols="4" class="px-10 py-6 d-flex flex-column fill-height">
@@ -8,7 +9,7 @@
         <div class="fill-height scroll">
           <v-list two-line>
             <v-subheader>
-              {{ $t('equipment_class', 2) | capitalize }}
+              {{ $capitalize($t('equipment_class', 2)) }}
             </v-subheader>
 
             <BaseAvatarListElement
@@ -16,9 +17,9 @@
               :key="ec._id"
               :src="`/media/equipment/${ec.src}`"
               :title="ec.name"
-              :subtitle="$t('equipment_class', 1) | capitalize"
+              :subtitle="$capitalize($t('equipment_class', 1))"
               :edit="edit_mode"
-              :tooltip="$t('remove_assignment') | capitalize"
+              :tooltip="$capitalize($t('remove_assignment'))"
               :color="$theme.red"
               icon="close"
               @iconClick="cancelAssignment(ec._id)"
@@ -36,7 +37,7 @@
               :title="e.name"
               :subtitle="e.class"
               :edit="edit_mode"
-              :tooltip="$t('remove_assignment') | capitalize"
+              :tooltip="$capitalize($t('remove_assignment'))"
               :color="$theme.red"
               icon="close"
               @iconClick="cancelAssignment(e._id)"
@@ -55,7 +56,7 @@
           single-line
           hide-details
           return-object
-          :label="$t('add_equipment') | capitalize"
+          :label="$capitalize($t('add_equipment'))"
           :menu-props="{ top: true, offsetY: true }"
           class="mt-auto flex-grow-0"
           @input="addAssignment($event)"
@@ -74,12 +75,12 @@
       <v-divider vertical inset></v-divider>
       <v-col class="px-10 py-6 d-flex flex-column fill-height">
         <h5 class="text-uppercase mb-8">
-          {{ $t('personnel') | capitalize }}
+          {{ $capitalize($t('personnel')) }}
         </h5>
 
         <div class="fill-height scroll">
           <v-subheader>
-            {{ $t('department', 2) | capitalize }}
+            {{ $capitalize($t('department', 2)) }}
           </v-subheader>
 
           <v-row>
@@ -87,9 +88,9 @@
               <BaseAvatarListElement
                 :src="null"
                 :title="d.name"
-                :subtitle="$t('department', 1) | capitalize"
+                :subtitle="$capitalize($t('department', 1))"
                 :edit="edit_mode"
-                :tooltip="$t('remove_assignment') | capitalize"
+                :tooltip="$capitalize($t('remove_assignment'))"
                 :color="$theme.red"
                 icon="close"
                 @iconClick="cancelAssignment(d._id)"
@@ -101,7 +102,7 @@
           <v-divider class="mb-3"></v-divider>
 
           <v-subheader>
-            {{ $t('operator', 2) | capitalize }}
+            {{ $capitalize($t('operator', 2)) }}
           </v-subheader>
 
           <v-row>
@@ -116,7 +117,7 @@
                 :title="o.name"
                 :subtitle="operatorDepartmentName(o.department)"
                 :edit="edit_mode"
-                :tooltip="$t('remove_assignment') | capitalize"
+                :tooltip="$capitalize($t('remove_assignment'))"
                 :color="$theme.red"
                 icon="close"
                 @iconClick="cancelAssignment(o._id)"
@@ -239,7 +240,7 @@ export default {
 
     add_equipment_list() {
       return [
-        { header: this.capitalize(this.$t('equipment_class', 2) },
+        { header: this.capitalize(this.$t('equipment_class', 2)) },
         ...this.equipment_classes.map(c => {
           return {
              ...c,

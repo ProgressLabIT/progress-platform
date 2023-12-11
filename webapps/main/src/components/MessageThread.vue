@@ -3,13 +3,12 @@
     <slot name="header"></slot>
 
     <div class="col scroll q-py-md">
-      <Message
+      <MessageEntry
         v-for="m in messages"
         :key="m._key"
         :message="m"
         @change="getMessages"
-      >
-      </Message>
+      />
     </div>
 
     <div class="col-auto">
@@ -42,14 +41,14 @@
 </template>
 
 <script>
-import Message from '@/components/Message.vue';
+import MessageEntry from '@/components/MessageEntry.vue';
 import event from '@/mixins/event.js';
 
 export default {
   name: 'MessageThread',
 
   components: {
-    Message,
+    MessageEntry,
   },
 
   mixins: [event],

@@ -1,4 +1,7 @@
-<template></template>
+<template>
+  <!-- TODO: This component is not used anywhere -->
+  <template />
+</template>
 
 <script>
 import { cloneDeep as _cloneDeep } from 'lodash';

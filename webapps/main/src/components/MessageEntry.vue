@@ -91,7 +91,7 @@ import BasePrompt from '@/components/BasePrompt.vue';
 import event from '@/mixins/event.js';
 
 export default {
-  name: 'Message',
+  name: 'MessageEntry',
 
   mixins: [event],
 

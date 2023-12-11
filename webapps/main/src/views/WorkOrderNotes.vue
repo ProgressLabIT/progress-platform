@@ -13,13 +13,8 @@
 </template>
 
 <script>
-import NoDataAlert from '@/components/NoDataAlert.vue';
 export default {
   name: 'WorkOrderNotes',
-
-  components: {
-    NoDataAlert,
-  },
 
   props: {
     wo_data: {

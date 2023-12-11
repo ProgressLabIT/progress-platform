@@ -1,4 +1,5 @@
 <template>
+  <!-- TODO: Migrate to Quasar if the component will end up being used -->
   <v-dialog
     :value="session_locked"
     :overlay-color="$theme.background"
@@ -17,17 +18,18 @@
         <p>
           <strong>
             {{
-              $t('session.lock_salutation', 1, {
-                name: user.name,
-                surname: user.surname,
-              }) | capitalize_all
+              $capitalizeAll(
+                $t('session.lock_salutation', 1, {
+                  name: user.name,
+                  surname: user.surname,
+                })
+              )
             }}.
           </strong>
         </p>
         <p>
           {{
-            $t('session.lock_explainer', 1, { timeout: session_timeout })
-              | capitalize
+            $capitalize($t('session.lock_explainer', 1, { timeout: session_timeout }))
           }}
         </p>
 
@@ -35,7 +37,7 @@
         <v-form @submit.prevent="verifyUser">
           <v-text-field
             v-model="password"
-            :label="$t('user.password') | capitalize"
+            :label="$capitalize($t('user.password'))"
             type="password"
             single-line
           >
@@ -62,7 +64,7 @@
 </template>
 
 <script>
-import { capitalize as c } from '@/lib/filters.js';
+import { capitalize } from '@/lib/filters.js';
 import { api } from '@/lib/apiCall';
 
 export default {
@@ -100,7 +102,7 @@ export default {
     },
 
     async logout() {
-      const confirm = window.confirm(c(this.$t('session.alerts.close_alert')));
+      const confirm = window.confirm(capitalize(this.$t('session.alerts.close_alert')));
       if (confirm) {
         await this.$store.dispatch('logout');
       }

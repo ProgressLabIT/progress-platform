@@ -42,17 +42,13 @@
 </template>
 
 <script>
-import BaseDialog from '@/components/BaseDialog.vue';
 import IssueForm from '@/components/IssueForm.vue';
-import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue';
 import event from '@/mixins/event.js';
 
 export default {
   name: 'IssueHeader',
 
   components: {
-    BaseAutocompleteIssueType,
-    BaseDialog,
     IssueForm,
   },
 
