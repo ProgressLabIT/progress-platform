@@ -74,9 +74,9 @@ module.exports = {
 
     // Added by Luca
     'space-before-function-paren': 'off',
-    'camelcase': 'off',
-    'quotes': 'off',
-    'eqeqeq': 'off',
+    camelcase: 'off',
+    quotes: 'off',
+    eqeqeq: 'off',
     'brace-style': 'off',
     'no-async-promise-executor': 'off',
     'no-trailing-spaces': 'off',
