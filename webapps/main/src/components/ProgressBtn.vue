@@ -70,7 +70,9 @@ export default {
 
       if ('parameters' in this.j) {
         return this.j.parameters.step_check ? complete_step : declare_batch;
-      } else return declare_batch;
+      } else {
+        return declare_batch;
+      }
     },
 
     current_step_done() {

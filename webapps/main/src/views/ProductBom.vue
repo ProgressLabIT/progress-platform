@@ -334,7 +334,9 @@ export default {
     toggleAll() {
       if (this.delete_lines.length) {
         this.delete_lines = [];
-      } else this.delete_lines = this.filtered_bom;
+      } else {
+        this.delete_lines = this.filtered_bom;
+      }
     },
 
     openItemSearch() {

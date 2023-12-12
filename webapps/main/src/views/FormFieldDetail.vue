@@ -339,7 +339,9 @@ export default {
     field: {
       handler() {
         this.initTempFieldData();
-        if (this.is_choice) this.loadListValues();
+        if (this.is_choice) {
+          this.loadListValues();
+        }
         this.editMode = false;
       },
     },
@@ -348,7 +350,9 @@ export default {
 
   mounted() {
     this.initTempFieldData();
-    if (this.is_choice) this.loadListValues();
+    if (this.is_choice) {
+      this.loadListValues();
+    }
   },
 
   methods: {
@@ -402,7 +406,9 @@ export default {
         this.$emit('reload');
         this.saving = false;
         this.editMode = false;
-        if (this.is_choice) this.loadListValues();
+        if (this.is_choice) {
+          this.loadListValues();
+        }
       });
     },
 

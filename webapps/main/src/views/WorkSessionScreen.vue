@@ -370,10 +370,16 @@ export default {
     },
 
     job_color() {
-      if (this.j.critical) return 'theme-red';
-      else if (!this.j.on_time) return 'theme-orange';
-      else if (this.j.active) return 'theme-blue';
-      else return 'theme-grey';
+      switch (true) {
+        case this.j.critical:
+          return 'theme-red';
+        case !this.j.on_time:
+          return 'theme-orange';
+        case this.j.active:
+          return 'theme-blue';
+        default:
+          return 'theme-grey';
+      }
     },
 
     current_step_index: {

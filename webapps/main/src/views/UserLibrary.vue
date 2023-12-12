@@ -151,7 +151,9 @@ export default {
     },
 
     selected_user() {
-      return this.user_list.find((user) => user._key === this.selected_user_key);
+      return this.user_list.find(
+        (user) => user._key === this.selected_user_key,
+      );
     },
 
     filtered_users() {
@@ -164,10 +166,14 @@ export default {
           if (u_dep) {
             // Selected users with no department assigned
             // Filter out all users that have a department
-            if (dep_filter != u_dep._key) department_match = false;
+            if (dep_filter != u_dep._key) {
+              department_match = false;
+            }
           } else {
             // Filter out users with department different from the one selected
-            if (dep_filter != 'none') department_match = false;
+            if (dep_filter != 'none') {
+              department_match = false;
+            }
           }
         }
 
@@ -189,8 +195,9 @@ export default {
               (filter.name == 'disabled' && !user.active) ||
               (filter.name == 'logged_in' && user.logged_in) ||
               (filter.name == 'logged_out' && !user.logged_in))
-          )
+          ) {
             bool_match = false;
+          }
 
           return bool_match;
         });

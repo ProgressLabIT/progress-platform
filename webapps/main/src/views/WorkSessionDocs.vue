@@ -91,13 +91,16 @@ export default {
 
         if (doc.temp) {
           path = window.URL.createObjectURL(doc.data);
-        } else
+        } else {
           path = `/media/product/${this.product_key}/doc/${encodeURI(
             this.media_name,
           )}`;
+        }
 
         return path;
-      } else return null;
+      } else {
+        return null;
+      }
     },
   },
 

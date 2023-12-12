@@ -202,7 +202,9 @@
               </template>
 
               <template
-                v-else-if="column.name.includes('qt') || column.name === 'issue_count'"
+                v-else-if="
+                  column.name.includes('qt') || column.name === 'issue_count'
+                "
               >
                 <span>{{ props.row[column.name] || 0 }}</span>
               </template>
@@ -275,7 +277,9 @@ export default {
               date.setHours(23, 59, 59, 999);
             }
             filters_object[f] = date.toISOString();
-          } else filters_object[f] = this[f];
+          } else {
+            filters_object[f] = this[f];
+          }
         }
       });
       return filters_object;

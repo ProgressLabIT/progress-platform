@@ -585,7 +585,9 @@ export default {
             if (this[f] == false) {
               filters_object[f] = this[f];
             }
-          } else filters_object[f] = this[f];
+          } else {
+            filters_object[f] = this[f];
+          }
         }
       });
       return {

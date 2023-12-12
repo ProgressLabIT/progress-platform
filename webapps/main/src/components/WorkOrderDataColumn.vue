@@ -437,7 +437,9 @@ export default {
           }
         });
         return assignments;
-      } else return {};
+      } else {
+        return {};
+      }
     },
 
     people_count() {

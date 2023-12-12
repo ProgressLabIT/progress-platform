@@ -49,12 +49,13 @@ export default {
       let notes = [];
       this.note_types.forEach((type) => {
         const value = this.job[`${type}_notes`];
-        if (value)
+        if (value) {
           notes.push({
             type,
             label: this.$t(`notes_${type}`),
             value,
           });
+        }
       });
       return notes;
     },

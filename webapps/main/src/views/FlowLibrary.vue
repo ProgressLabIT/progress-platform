@@ -173,7 +173,9 @@ export default {
     flow_list() {
       if (this.flows) {
         return;
-      } else return [];
+      } else {
+        return [];
+      }
     },
   },
 

@@ -201,7 +201,10 @@
                           <q-item-label>
                             {{ $t('cancel_active_batch') }}
                           </q-item-label>
-                          <q-item-label v-if="job.active_batch_qt === 0" caption>
+                          <q-item-label
+                            v-if="job.active_batch_qt === 0"
+                            caption
+                          >
                             {{ $t('cancel_active_batch_disabled') }}
                           </q-item-label>
                         </q-item-section>
@@ -631,7 +634,9 @@ export default {
 
     // reset editMode after closing/switching phase details
     selected_jobs() {
-      if (!this.selected_jobs.length) this.editMode = 'actions';
+      if (!this.selected_jobs.length) {
+        this.editMode = 'actions';
+      }
     },
 
     editMode() {

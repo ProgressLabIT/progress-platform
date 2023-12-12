@@ -12,7 +12,9 @@
         <q-item-section avatar class="col-auto">
           <q-avatar
             size="20px"
-            :color="phase.phase_key === job.phase_key ? 'theme-blue' : 'theme-grey'"
+            :color="
+              phase.phase_key === job.phase_key ? 'theme-blue' : 'theme-grey'
+            "
             class="display smaller"
             :class="{ highlight: phase.phase_key === job.phase_key }"
           >

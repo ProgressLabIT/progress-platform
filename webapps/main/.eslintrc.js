@@ -107,6 +107,7 @@ module.exports = {
       },
     ],
 
+    curly: 'error',
     'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     // allow debugger during development only
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',

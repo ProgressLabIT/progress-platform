@@ -46,8 +46,11 @@ export function durationFromMillisec(
   const millisecondsString = showMilliseconds ? milliseconds + 'ms' : '';
 
   let sign = '';
-  if (!below0) sign = showPlusSign ? '+' : '';
-  else sign = '-';
+  if (!below0) {
+    sign = showPlusSign ? '+' : '';
+  } else {
+    sign = '-';
+  }
 
   const durationString = (
     sign +

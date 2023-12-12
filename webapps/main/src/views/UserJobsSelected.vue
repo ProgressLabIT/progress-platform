@@ -61,10 +61,11 @@ export default {
     message() {
       if (this.selected_job === null) {
         return this.$t('job.empty_queue');
-      } else
+      } else {
         return this.job_query_param == 'first'
           ? this.$t('job.next_job_message')
           : this.$t('job.selected_job_message');
+      }
     },
 
     selected_job() {

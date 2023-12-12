@@ -346,51 +346,71 @@ export default {
               break;
 
             case 'started':
-              if (!value && wo.status === 'started') match = false;
+              if (!value && wo.status === 'started') {
+                match = false;
+              }
               break;
 
             case 'queued':
-              if (!value && ['created', 'planned'].includes(wo.status))
+              if (!value && ['created', 'planned'].includes(wo.status)) {
                 match = false;
+              }
               break;
 
             case 'on_time':
-              if (!value && !this.isLate(wo.due_by)) match = false;
+              if (!value && !this.isLate(wo.due_by)) {
+                match = false;
+              }
               break;
 
             case 'late':
-              if (!value && this.isLate(wo.due_by)) match = false;
+              if (!value && this.isLate(wo.due_by)) {
+                match = false;
+              }
               break;
 
             case 'critical':
-              if (!value && wo.critical) match = false;
+              if (!value && wo.critical) {
+                match = false;
+              }
               break;
 
             case 'not_critical':
-              if (!value && !wo.critical) match = false;
+              if (!value && !wo.critical) {
+                match = false;
+              }
               break;
 
             case 'active':
               // Do not show if control is false and wo is active
-              if (!value && wo.active) match = false;
+              if (!value && wo.active) {
+                match = false;
+              }
               break;
 
             case 'idle':
               // Do not show if control is false and wo is not active
-              if (!value && !wo.active) match = false;
+              if (!value && !wo.active) {
+                match = false;
+              }
               break;
 
             case 'ready':
-              if (!value && this.isReleased(wo)) match = false;
+              if (!value && this.isReleased(wo)) {
+                match = false;
+              }
               break;
 
             case 'not_ready':
-              if (!value && !this.isReleased(wo)) match = false;
+              if (!value && !this.isReleased(wo)) {
+                match = false;
+              }
               break;
 
             case 'start_from_min':
-              if (!!value && new Date(value) > new Date(wo.start_from))
+              if (!!value && new Date(value) > new Date(wo.start_from)) {
                 match = false;
+              }
               break;
 
             case 'start_from_max':
@@ -398,21 +418,24 @@ export default {
                 !!value &&
                 new Date(value).setHours(23, 59, 59, 999) <=
                   new Date(wo.start_from)
-              )
+              ) {
                 match = false;
+              }
               break;
 
             case 'due_by_min':
-              if (!!value && new Date(value) > new Date(wo.due_by))
+              if (!!value && new Date(value) > new Date(wo.due_by)) {
                 match = false;
+              }
               break;
 
             case 'due_by_max':
               if (
                 !!value &&
                 new Date(value).setHours(23, 59, 59, 999) < new Date(wo.due_by)
-              )
+              ) {
                 match = false;
+              }
               break;
           }
 

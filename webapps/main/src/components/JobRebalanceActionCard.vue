@@ -342,7 +342,9 @@ export default {
     closeJob(index) {
       if (this.temp_jobs[index]._key) {
         this.temp_jobs[index].close = true;
-      } else this.temp_jobs.splice(index, 1);
+      } else {
+        this.temp_jobs.splice(index, 1);
+      }
     },
 
     reopenJob(index) {
@@ -360,15 +362,18 @@ export default {
 
       // Spread remaining quantity among all jobs, excluding started jobs to be closed
       for (let j of this.temp_jobs) {
-        if (!j.close)
+        if (!j.close) {
           j.qt_remaining = Math.floor(this.qtToAllocate / jobs.length);
+        }
       }
 
       // assign remainder starting from the first job, excluding started jobs to be closed
       if (remainder) {
         for (let i = 0; i < remainder; i++) {
           let j = this.temp_jobs[i];
-          if (!j.close) j.qt_remaining++;
+          if (!j.close) {
+            j.qt_remaining++;
+          }
         }
       }
     },
@@ -376,8 +381,9 @@ export default {
     resetJobs() {
       // restore already existing jobs to their original quantity and reset to 0 those that are being created now
       this.temp_jobs.forEach((j) => {
-        if (!j._key) j.qt_remaining = 0;
-        else {
+        if (!j._key) {
+          j.qt_remaining = 0;
+        } else {
           j.close = false;
           const original = this.jobs.find((job) => job._key == j._key);
           j.qt_remaining = original.qt_planned - original.qt_completed;
@@ -453,7 +459,7 @@ export default {
           }
 
           // New job created
-          else
+          else {
             return {
               action: 'insert',
               data: {
@@ -465,6 +471,7 @@ export default {
                 notes: `Job added by ${user_full_name} on ${datetime}`,
               },
             };
+          }
         });
 
         this.$store

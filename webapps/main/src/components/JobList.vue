@@ -564,68 +564,92 @@ export default {
             break;
 
           case 'started':
-            if (!value && job.stage === 'started') match = false;
+            if (!value && job.stage === 'started') {
+              match = false;
+            }
             break;
 
           case 'queued':
-            if (!value && ['created', 'planned'].includes(job.stage))
+            if (!value && ['created', 'planned'].includes(job.stage)) {
               match = false;
+            }
             break;
 
           case 'on_time':
-            if (!value && job.due_by > this.now) match = false;
+            if (!value && job.due_by > this.now) {
+              match = false;
+            }
             break;
 
           case 'late':
-            if (!value && !job.due_by <= this.now) match = false;
+            if (!value && !job.due_by <= this.now) {
+              match = false;
+            }
             break;
 
           case 'critical':
-            if (!value && job.critical) match = false;
+            if (!value && job.critical) {
+              match = false;
+            }
             break;
 
           case 'not_critical':
-            if (!value && !job.critical) match = false;
+            if (!value && !job.critical) {
+              match = false;
+            }
             break;
 
           case 'active':
             // Do not show if control is false and job is active
-            if (!value && job.active) match = false;
+            if (!value && job.active) {
+              match = false;
+            }
             break;
 
           case 'idle':
             // Do not show if control is false and job is not active
-            if (!value && !job.active) match = false;
+            if (!value && !job.active) {
+              match = false;
+            }
             break;
 
           case 'ready':
-            if (!value && this.isReleased(job) && job.next_batch_available)
+            if (!value && this.isReleased(job) && job.next_batch_available) {
               match = false;
+            }
             break;
 
           case 'not_ready':
-            if (!value && (!this.isReleased(job) || !job.next_batch_available))
+            if (
+              !value &&
+              (!this.isReleased(job) || !job.next_batch_available)
+            ) {
               match = false;
+            }
             break;
 
           case 'start_from_min':
-            if (!!value && new Date(value) > new Date(job.start_from))
+            if (!!value && new Date(value) > new Date(job.start_from)) {
               match = false;
+            }
             break;
 
           case 'start_from_max':
-            if (!!value && new Date(value) < new Date(job.start_from))
+            if (!!value && new Date(value) < new Date(job.start_from)) {
               match = false;
+            }
             break;
 
           case 'due_by_min':
-            if (!!value && new Date(value) > new Date(job.due_by))
+            if (!!value && new Date(value) > new Date(job.due_by)) {
               match = false;
+            }
             break;
 
           case 'due_by_max':
-            if (!!value && new Date(value) < new Date(job.due_by))
+            if (!!value && new Date(value) < new Date(job.due_by)) {
               match = false;
+            }
             break;
         }
 

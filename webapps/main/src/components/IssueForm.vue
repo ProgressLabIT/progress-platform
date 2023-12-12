@@ -323,7 +323,9 @@ export default {
 
     initLinks() {
       // Inser links step if required
-      if (this.mode == 'new' && this.with_links) this.form_step = 'links';
+      if (this.mode == 'new' && this.with_links) {
+        this.form_step = 'links';
+      }
 
       // Reset links
       if (this.with_links) {

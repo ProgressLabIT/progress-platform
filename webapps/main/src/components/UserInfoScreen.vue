@@ -299,7 +299,9 @@ export default {
           (this.user.name + this.user.surname).replace(/\s+/g, '') +
           '.jpg'
         ).toLowerCase();
-      } else return this.new_image_url;
+      } else {
+        return this.new_image_url;
+      }
     },
 
     full_name() {
