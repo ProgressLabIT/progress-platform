@@ -1,5 +1,5 @@
 <template>
-  <div class="fit column q-px-md q-py-md" >
+  <div class="fit column q-px-md q-py-md scroll" >
 
     <template v-if="docs.length">
       <q-list>

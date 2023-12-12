@@ -125,28 +125,60 @@
     <!-- PHASE DETAILS -->
     <div class="col q-pr-md">
       <q-tabs
-        v-model="tab"
+        v-model="activeTab"
         class="transparent text-low display"
         active-class="highlight"
         align="right"
         shrink dense
-        indicator-color="theme-blue">
-        <q-tab
-          v-for="(view, idx) in views"
-          :key="idx"
-          :name="idx">
-          {{ $t(`views.${view}`) }}
+        indicator-color="theme-blue"
+      >
+        <q-tab name="steps">
+          {{ $t('views.PhaseSteps') }}
+        </q-tab>
+
+        <q-tab name="parameters">
+          {{ $t('views.PhaseParameters') }}
+        </q-tab>
+
+        <q-tab name="notes">
+          {{ $t('views.PhaseNotes') }}
+        </q-tab>
+
+        <q-tab name="print_templates">
+          {{ $t('views.PhasePrintTemplates') }}
         </q-tab>
       </q-tabs>
-      <q-card square class="surface2 scroll" :style="`height: ${card_height}px`">
-        <keep-alive>
-          <Component
-            :is="views[tab]"
-            :phase="process[current_phase]"
-            :product_data="product_data"
-            :edit_mode="edit_mode">
-          </Component>
-        </keep-alive>
+      <q-card square class="scroll" :style="`height: ${card_height}px`">
+        <q-tab-panels v-model="activeTab" keep-alive class="fit surface2">
+          <q-tab-panel name="steps">
+            <ProcessSteps
+              v-model="process[current_phase].steps"
+              :edit-mode="edit_mode"
+            />
+          </q-tab-panel>
+
+          <q-tab-panel name="parameters">
+            <ProcessParameters
+              v-model="process[current_phase].params"
+              :process-has-steps="process[current_phase].steps.length > 0"
+              :edit-mode="edit_mode"
+            />
+          </q-tab-panel>
+
+          <q-tab-panel name="notes">
+            <ProductionNotes
+              v-model="process[current_phase].production_notes"
+              :edit-mode="edit_mode"
+            />
+          </q-tab-panel>
+
+          <q-tab-panel name="print_templates">
+            <PhasePrintTemplates
+              v-model="process[current_phase].print_templates"
+              :edit-mode="edit_mode"
+            />
+          </q-tab-panel>
+        </q-tab-panels>
       </q-card>
     </div>
 </div>
@@ -156,30 +188,23 @@
 import { mapActions } from 'vuex'
 import Sortable from 'sortablejs'
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue'
-import PhaseParameters from '@/components/PhaseParameters.vue'
-import PhaseSteps from '@/components/PhaseSteps.vue'
-import PhaseNotes from '@/components/PhaseNotes.vue'
+import ProcessParameters from '@/components/ProcessParameters.vue'
+import ProcessSteps from '@/components/process-steps/ProcessSteps.vue'
+import ProductionNotes from '@/components/ProductionNotes.vue'
 import PhasePrintTemplates from '@/components/PhasePrintTemplates.vue'
 // import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import BasePrompt from '@/components/BasePrompt.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
-
-const views_map = [
-  'PhaseSteps', 
-  'PhaseParameters',
-  'PhaseNotes',
-  'PhasePrintTemplates'
-  // 'PhaseAssignments' 
-]
+import { api } from '../boot/axios'
 
 export default {
 
   name: 'ProductionProcess',
 
   components: {
-    PhaseParameters,
-    PhaseSteps,
-    PhaseNotes,
+    ProcessParameters,
+    ProcessSteps,
+    ProductionNotes,
     PhasePrintTemplates,
     // PhaseAssignments,
     BasePrompt,
@@ -189,8 +214,7 @@ export default {
 
   data() {
     return {
-      views: views_map,
-      tab:0,
+      activeTab: 'steps',
       new_op: null,
       over_phase: null,
       confirming_delete: null,
@@ -205,10 +229,10 @@ export default {
     card_height() {
       return this.$q.screen.height - 114
     },
-    
+
     product_key() {
       return this.$route.params.product_key
-    }, 
+    },
 
     product_data() {
       return this.$store.getters.productData(this.product_key)
@@ -230,8 +254,8 @@ export default {
 
       set(value) {
         this.$store.commit(
-          'UPDATE_PRODUCT_NAV_STATE', 
-          { _key: this.product_key, last_phase: value}
+          'UPDATE_PRODUCT_NAV_STATE',
+          { _key: this.product_key, last_phase: value }
         )
       }
     },
@@ -264,10 +288,11 @@ export default {
       const active_phase = this.process[this.current_phase]
       if (active_phase) {
         const original_process = this.$store.state.process.saved
-        const original_phase_index = original_process.findIndex(p => p._key = active_phase._key)
+        const original_phase_index = original_process.findIndex(p => p._key === active_phase._key)
         this.updateActivePhaseIndex({
           oldIndex: this.current_phase,
-          newIndex: original_phase_index
+          // If we canceled a newly created phase, set it to the first one
+          newIndex: original_phase_index === -1 ? 0 : original_phase_index
         })
       }
 
@@ -277,19 +302,39 @@ export default {
       this.$emit('changes_canceled')
     },
 
-    addPhase(new_operation) {
-      let new_process = this.process
-      new_process.push({ 
+    async addPhase(new_operation) {
+      // Load media from default steps as temp files so that they can be uploaded as fresh
+      // TODO: Migrate process to new media structure so that this is not needed and we don't end up with duplicate files
+      const steps = await Promise.all(
+        new_operation.default_phase_steps?.map(async (step) => ({
+          ...step,
+          media: await Promise.all(
+            step.media.map(async (media) => {
+              const { data: blob } = await api.get(`/media/${media._key}`, {
+                responseType: 'blob'
+              })
+
+              return {
+                ...media,
+                temp: true,
+                data: new File([blob], media.filename, { type: blob.type })
+              }
+            })
+          )
+        })) ?? []
+      )
+
+      this.process.push({
         // Add temp _key so that sorting works with new phases too
         _key: Date.now(),
-        alias: new_operation.name, 
-        operation_key: new_operation._key, 
+        alias: new_operation.name,
+        operation_key: new_operation._key,
         product_key: this.product_key,
         params: new_operation.default_phase_parameters,
-        steps: []
+        production_notes: new_operation.default_phase_notes,
+        steps
       })
-      this.process = new_process
-      this.current_phase = new_process.length - 1
+      this.current_phase = this.process.length - 1
     },
 
     deletePhase(phase_index) {
@@ -307,22 +352,20 @@ export default {
 
     updateActivePhaseIndex({ oldIndex, newIndex }) {
       // Moved active phase
-      if (this.current_phase == oldIndex) {
+      if (this.current_phase === oldIndex) {
         this.current_phase = newIndex
       }
       // Moved earlier phase after active one
-      else if ( oldIndex < this.current_phase
-                && newIndex >= this.current_phase ) {
-        this.current_phase --
+      else if (oldIndex < this.current_phase && newIndex >= this.current_phase) {
+        this.current_phase--
       }
       // Moved later phase before active one
-      else if ( oldIndex > this.current_phase
-                && newIndex <= this.current_phase ) {
-        this.current_phase ++
+      else if (oldIndex > this.current_phase && newIndex <= this.current_phase) {
+        this.current_phase++
       }
 
       // ADD HERE REORDERING OF last_steps MAP
-      let new_steps_map = [...this.product_data.last_steps]
+      const new_steps_map = [...this.product_data.last_steps]
       const moved = new_steps_map.splice(oldIndex, 1)[0]
       new_steps_map.splice(newIndex, 0, moved)
 
@@ -336,7 +379,7 @@ export default {
 
     saveChanges() {
       this.saving = true
-      let process_update = {
+      const process_update = {
         product_key: this.product_key,
         new_process: this.process.map(p => {
           // remove temp _key
@@ -369,12 +412,14 @@ export default {
     this.updateStepsMap(step_map)
 
     // Initialize draggable phases
-    let container = document.querySelector("#phases")
+    const container = document.querySelector("#phases")
     const _self = this
     Sortable.create(container, {
       ..._self.$store.state.drag_options,
       filter: '.undraggable',
-      onStart: () => _self.dragging = true,
+      onStart: () => {
+        _self.dragging = true
+      },
       // use onEnd event provided by SortableJs library
       onEnd: ({ newIndex, oldIndex }) => {
         _self.dragging = false
@@ -402,7 +447,7 @@ export default {
       }
     }
   }
-};
+}
 </script>
 
 <style lang="sass" scoped>

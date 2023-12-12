@@ -5,6 +5,7 @@ services:
 before_script:
   # - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.com
+  - export TIMESTAMP=$(date +%Y%m%d-%H%M)
 
 # Build Webapp image and push it to registry.
 # Uses a multi-stage dockerfile with intermediate builder image to reduce final image size and build time
@@ -70,7 +71,7 @@ build:webapp:
       --cache-from $WEBAPP_IMAGE:develop-stage
       --cache-from $$WEBAPP_IMAGE:latest
       -t $WEBAPP_IMAGE:latest
-      -t $WEBAPP_IMAGE:$CI_PIPELINE_ID
+      -t $WEBAPP_IMAGE:$TIMESTAMP
       -f $WEBAPP_DOCKERFILE
       .
 
@@ -78,7 +79,7 @@ build:webapp:
     - docker push $WEBAPP_IMAGE:global-deps-stage
     - docker push $WEBAPP_IMAGE:develop-stage
     - docker push $WEBAPP_IMAGE:latest
-    - docker push $WEBAPP_IMAGE:$CI_PIPELINE_ID
+    - docker push $WEBAPP_IMAGE:$TIMESTAMP
 
 
 build:api:
@@ -105,14 +106,14 @@ build:api:
       docker build
       --pull
       --cache-from $API_IMAGE:latest
-      -t $API_IMAGE:$CI_PIPELINE_ID
+      -t $API_IMAGE:$TIMESTAMP
       -t $API_IMAGE:latest
       -f $API_DOCKERFILE
       .
 
     # Push new images to the registry
     - docker push $API_IMAGE:latest
-    - docker push $API_IMAGE:$CI_PIPELINE_ID
+    - docker push $API_IMAGE:$TIMESTAMP
 
 
 build:workflow:
@@ -138,12 +139,12 @@ build:workflow:
       docker build
       --pull
       --cache-from $WF_SYS_AGENT_IMAGE:latest
-      -t $WF_SYS_AGENT_IMAGE:$CI_PIPELINE_ID
+      -t $WF_SYS_AGENT_IMAGE:$TIMESTAMP
       -t $WF_SYS_AGENT_IMAGE:latest
       -f $WF_SYS_AGENT_DOCKERFILE
       .
 
     # Push new images to the registry
     - docker push $WF_SYS_AGENT_IMAGE:latest
-    - docker push $WF_SYS_AGENT_IMAGE:$CI_PIPELINE_ID
+    - docker push $WF_SYS_AGENT_IMAGE:$TIMESTAMP
 

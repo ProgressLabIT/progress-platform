@@ -84,15 +84,18 @@
         <div
           id="session-control-section"
           v-if="$route.name != 'jobIssueDetail'"
-          class="column col q-px-sm q-pt-md"
+          class="column col q-px-sm q-pt-xs"
           style="min-height: 600px">
 
           <!-- JOB DATA -->
           <div id="job-data" class="col-auto">
 
             <!-- PRODUCT CODE & DESCRIPTION -->
-            <div class="text-h2 display highlight text-uppercase">
-              {{ j.product_code }}
+
+            <div class="text-h2 display highlight row text-uppercase items-center" style="word-wrap: n;">
+              <div class="nowrap q-mr-md">{{ j.phase_alias }}</div>
+              <div class="nowrap q-mr-sm">{{ j.product_code }}</div>
+              <q-btn class="" icon="mdi-information-outline" flat round />
             </div>
             <p class="q-mt-sm">
               {{ j.product_description }}
@@ -160,7 +163,15 @@
                   square
                   height="auto"
                   class="fit"
-                  @click="j.active ? showExitAlert(true) : exitJob()">
+                  @click="() => {
+                    exit_destination = { name: 'userJobs' }
+                    if (j.active) {
+                      show_exit_alert = true
+                    } else {
+                      exitJob(false)
+                    }
+                  }"
+                >
                   <q-icon color="text-high" size="lg" name="mdi-close" />
                 </q-btn>
               </div>
@@ -170,25 +181,55 @@
 
       </div>
 
-      <!-- Consider switching to banner or similar -->
-      <q-dialog v-model="show_exit_alert" max-width="480px">
-        <q-card class="surface2 q-pa-md">
-          <q-card-section class="text-h3">
-            {{ $t('job.alerts.confirm_exit')}}
-          </q-card-section>
-          <q-card-section>
-            <div class="row justify-between">
-              <q-btn @click="exitJob" color="theme-orange">
-                {{ $t('confirm') }}
-              </q-btn>
-              <q-btn @click="show_exit_alert=false" color="theme-grey">
-                {{ $t('cancel') }}
-              </q-btn>
-            </div>
-          </q-card-section>
-        </q-card>
+      <!-- Active session exit alert -->
+      <q-dialog
+        v-model="show_exit_alert"
+        maximized
+        transition-show="none"
+        transition-hide="fade"
+        style="z-index: 99999">
+        <div class="fixed-full glass" />
+        <div class="row justify-between">
+          <div
+            class="col"
+            v-if="j.parameters.unsupervised_work_allowed"
+            >
+            <q-btn
+              flat
+              class="fit q-pa-lg"
+              @click="exitJob(false)">
+              <div class="column items-center">
+                <q-icon name="mdi-play" size="100px" />
+                <div>Esci e continua la sessione</div>
+              </div>
+            </q-btn>
+          </div>
+          <div class="col">
+            <q-btn
+              flat
+              class="fit q-pa-lg"
+              @click="exitJob(true)">
+              <div class="column items-center">
+                <q-icon name="mdi-pause" size="100px" />
+                <div>Esci e ferma la sessione</div>
+              </div>
+            </q-btn>
+          </div>
+          <div class="col">
+            <q-btn
+              flat
+              class="fit q-pa-lg"
+              @click="show_exit_alert=false">
+              <div class="column items-center">
+                <q-icon name="mdi-close" size="100px" />
+                <div>Annulla</div>
+              </div>
+            </q-btn>
+          </div>
+        </div>
       </q-dialog>
 
+      <!-- NEW ISSUE -->
       <IssueForm
         :show="show_issue_form"
         mode="new"
@@ -228,8 +269,10 @@ export default {
     return {
       vuex_ready: false,
       show_exit_alert: false,
+      exit_destination: { name: 'userJobs' },
       show_issue_form: false,
-      alert_timeout: 4000
+      alert_timeout: 4000,
+      can_leave: false
     }
   },
 
@@ -238,7 +281,8 @@ export default {
     ...mapState({
       j: state => state.traceability.working_job_data,
       ws_list: state => state.traceability.work_session_list,
-      batch_data: state => state.traceability.current_batch_data.step_data
+      batch_data: state => state.traceability.current_batch_data.step_data,
+      wo_data: state => state.workorder.wo_data
     }),
 
     links() {
@@ -278,6 +322,12 @@ export default {
           text: this.$t('message', 2),
           icon: 'mdi-message-text-outline',
           item_count: this.j.message_count
+        },
+        {
+          route_name: 'jobProcessView',
+          text: this.$t('process'),
+          icon: 'mdi-chevron-triple-right',
+          item_count: this.wo_data.phase_sequence?.length
         }
       ]
     },
@@ -286,7 +336,6 @@ export default {
       return [
         { name: 'wo_code', text: this.$t('work_order.list_headers.wo_code') },
         { name: 'project_code', text: this.$t('project') },
-        { name: 'phase_alias', text: this.$t('phase.short') },
         { name: 'active_batch_qt', text: this.$t('quantity.active.medium') }
       ]
     },
@@ -348,9 +397,10 @@ export default {
   },
 
   methods: {
-    loadJob() {
+    async loadJob() {
       this.$store.dispatch('loadWorkingJobData', this.job_key)
-      .then(() => {
+      .then(async () => {
+        await this.$store.dispatch('loadWorkOrderData', this.j.wo_key)
         const data = this.$store.state.traceability
         const job_data = data.working_job_data
 
@@ -379,16 +429,15 @@ export default {
         : 'theme-grey'
     },
 
-    showExitAlert(bool) {
-      this.show_exit_alert = bool
-    },
-
-    exitJob() {
-      if (this.j.active) {
+    exitJob(stop_session) {
+      if (stop_session) {
         this.$store.dispatch('pauseJob')
-        .then(() => this.$router.push({ name: 'userJobs'}))
+        .then(() => this.$router.push(this.exit_destination))
       }
-      else this.$router.push({ name: 'userJobs'})
+      else {
+        this.can_leave = true
+        this.$router.push(this.exit_destination)
+      }
     },
 
     beforeUnloadAlert(event) {
@@ -397,7 +446,10 @@ export default {
     },
 
     updateJobData() {
-      this.$api.get(`job/${this.job_key}`).then(resp => {
+      Promise.all([
+        this.$api.get(`job/${this.job_key}`),
+        this.$store.dispatch('loadWorkOrderData', this.j.wo_key)
+      ]).then(resp => {
         this.$store.commit('UPDATE_JOB', resp.data.detail)
       })
     }
@@ -421,15 +473,10 @@ export default {
   },
 
   beforeRouteLeave (to, from, next) {
-    if (this.j.active) {
-      const confirm = window.confirm(this.$t('job.alerts.confirm_exit'))
-      if (confirm) {
-        this.$store.dispatch('pauseJob')
-        next()
-      }
-      else {
-        next(false)
-      }
+    if (this.j.active && !this.can_leave) {
+      this.exit_destination = to
+      this.show_exit_alert = true
+      next(false)
     }
     else {
       next()
@@ -438,5 +485,8 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="sass" scoped>
+.fixed-width-button
+  width: 150px
+  height: 200px
 </style>

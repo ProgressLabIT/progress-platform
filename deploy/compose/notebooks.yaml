@@ -1,0 +1,33 @@
+version: "3.9"
+
+volumes:
+  cmounts:
+    external: true
+  media:
+    external: true
+  notebooks:
+    external: true
+
+networks:
+  progress:
+    external: true
+
+secrets:
+  progress_api_db_pwd:
+    external: true
+
+services:
+  notebooks: # Jupyter lab
+    image: quay.io/jupyter/base-notebook
+    volumes:
+      - media:/media
+      - cmounts:/cmounts
+      - notebooks:/home/jovyan/work
+    networks:
+      - progress
+    ports:
+      - "8888:8888"
+    secrets:
+      - progress_api_db_pwd
+    deploy:
+      replicas: 1

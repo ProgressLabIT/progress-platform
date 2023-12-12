@@ -45,24 +45,22 @@
 #   finished_at: ISOdts
 #   due_by: ISOdts
 #   delay: float
-#   lead_time: float
-#   troughput_time: 
+#   troughput_time:
 #     target: float
 #     value: float
 #     perf_vs_target: float
-#   processing_time: 
+#   processing_time:
 #     target: float
 #     value: float
 #     perf_vs_target: float
 
 # JobPerf
-  lead_time: float
-  throughput_time: 
+  throughput_time:
     target: float
     value: float
     perf_vs_target: float
   processing_time:
-    target: float 
+    target: float
     value: float
     perf_vs_target: float
 
@@ -76,7 +74,7 @@
   # batch_qt: float
   pass_qt: float
   scrap_qt: float
-  shown_step_index: int 
+  shown_step_index: int
   steps: list(step)
     - _id
     - ...
@@ -84,7 +82,7 @@
   # serial_number: str
     # actual product serial numbers will not be included in the first version
     # this field holds "fake" SNs in the form of an underscore + sequence number in the job
-    # such as _1, _2, _3, etc. to distinguish from actual serial numbers 
+    # such as _1, _2, _3, etc. to distinguish from actual serial numbers
     # that may be introduced in the near future.
     # in case of multi-item batches, the SN will be in the form _n:m
 
@@ -101,7 +99,7 @@
   user_data: obj
     - <field_name_1>: <field_value_1>
     - ...
-    - <field_name_N>: <field_value_N> 
+    - <field_name_N>: <field_value_N>
 
 # WorkSessionBatchTiming
   * batch_id: str

@@ -78,7 +78,7 @@ export default {
   props: {
     excludeKeys: {
       type: Array,
-      default: []
+      default: () => []
     }
   },
 

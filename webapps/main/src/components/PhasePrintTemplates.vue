@@ -1,96 +1,61 @@
 <template>
   <div class="fit q-pa-lg column scroll">
-
     <div
-      v-if="phase.print_templates.length"
-      class="row q-col-gutter-md q-ma-none col-auto">
+      v-if="templatesModel.length > 0"
+      class="row q-col-gutter-md q-ma-none col-auto"
+    >
       <div class="col-3"
-        v-for="template in phase.print_templates.filter(t => !('trash' in t))"
-        :key="template._key">
+        v-for="template in templatesModel.filter(template => !('trash' in template))"
+        :key="template._key"
+      >
         <PrintTemplateCard :template="template" />
       </div>
     </div>
-
     <div v-else>
       <NoDataAlert />
     </div>
 
-    <q-space></q-space>
+    <q-space />
 
     <BaseAutocompleteTemplate
-      v-if="edit_mode"
+      v-if="editMode"
       class="q-px-sm q-mt-md"
       :label="$t('print_template_add')"
+      :selected="templatesModel"
       @select="addTemplate"
-      :selected="phase.print_templates">
-    </BaseAutocompleteTemplate>
-
+    />
   </div>
 </template>
 
-<script>
-import LoadingSignal from '@/components/LoadingSignal.vue'
+<script setup>
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue'
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue'
 
-export default {
-  name: 'PrintTemplateLibrary',
+const props = defineProps({
+  editMode: {
+    type: Boolean,
+    required: true
+  }
+})
 
-  components: {
-    BaseAutocompleteTemplate,
-    LoadingSignal,
-    NoDataAlert,
-    PrintTemplateCard
-  },
+const templatesModel = defineModel({ type: Array })
 
-  props: {
-    phase: {
-      type: Object,
-      required: true
-    },
-
-    product_data: {
-      type: Object,
-      required: true
-    },
-
-    edit_mode: {
-      type: Boolean
-    }
-  },
-
-  data () {
-    return {
-      template_list: [],
-    }
-  },
-
-  computed: {
-    current_phase_index() {
-      return this.product_data.last_phase
-    }
-  },
-
-  methods: {
-
-    addTemplate(selection) {
-      this.$store.commit('ADD_TEMP_PHASE_TEMPLATE', {
-        phase_index: this.current_phase_index,
-        template: selection
-      })
-    },
-
-    deleteTemplate(index) {
-      this.$store.commit('DELETE_TEMP_PHASE_TEMPLATE', {
-        phase_index: this.current_phase_index,
-        template_index: index
-      })
-    }
-  },
+function addTemplate(template) {
+  templatesModel.value.push({
+    ...template,
+    temp: true,
+  })
 }
 
+// TODO: Implement delete functionality
+/*
+function deleteTemplate(index) {
+  if (templatesModel.value[index].temp) {
+    templatesModel.value.splice(index, 1)
+  } else {
+    templatesModel.value[index].trash = true
+  }
+}
+*/
 </script>
-<style lang="sass">
-
-</style>

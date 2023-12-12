@@ -11,8 +11,10 @@ export default {
   "add_equipment": "aggiungi attrezzature",
   "add_field": "aggiungi campo",
   "add_operator": "aggiungi operatore | aggiungi operatori",
+  "advanced_filters": "filtri avanzati",
   "all": "tutto | tutti",
   "and": "e",
+  "any": "qualsiasi",
   "archive": "archivia",
   "assign": "assegna",
   "assignment_success": "Lavori assegnati con successo",
@@ -86,7 +88,7 @@ export default {
   "due_by": "scadenza",
   "edit": "modifica",
   "element": "elemento | elementi",
-  "end": "fine",
+  "end": "Fine",
   "end_date": "data chiusura",
   "equipment": "attrezzatura | attrezzature",
   "equipment_classes": "classe di attrezzature | classi di attrezzature",
@@ -111,6 +113,7 @@ export default {
   },
   "export": "Esporta",
   "ext_key": "Chiave esterna",
+  "field": "campo | campi",
   "field_add": "Aggiungi campo",
   "field_delete": "Elimina campo",
   "field_delete_success": "Campo eliminato",
@@ -128,6 +131,7 @@ export default {
   "field_type_text": "Testo",
   "field_type_time": "Ora",
   "filter": "filtro | filtri",
+  "filters_reset": "rimuovi filtri",
   "first_x_shown": "Primi {x} record visualizzati",
   "form_title": "campi modulo",
   "form_missing_fields_alert": "compilare tutti i campi",
@@ -137,6 +141,7 @@ export default {
     "evening": "buonasera",
     "morning": "buongiorno"
   },
+  "has_attachments": "Contiene allegati",
   "hint": "Testo aiuto",
   "history": "Storico",
   "icon": "icona",
@@ -218,7 +223,6 @@ export default {
   "label": "Etichetta",
   "language": "lingua",
   "late": "in ritardo",
-  "lead_time": "t. evasione",
   "link": "Collegamento | Collegamenti",
   "list": "Lista",
   "loading_signal": {
@@ -274,11 +278,6 @@ export default {
   "people": "persone",
   "performance": {
     "actual": "consuntivo",
-    "lead_time": {
-      "long": "tempo di evasione",
-      "medium": "t. evasione",
-      "short": "TE"
-    },
     "processing_cost": {
       "long": "costo di processo",
       "medium": "c. processo",
@@ -320,6 +319,17 @@ export default {
     "no_phase": "Nessuna fase",
     "no_procedure": "nessuna procedura",
     "params": {
+      "unsupervised_work_allowed": {
+        "false": {
+          "desc": "Questa fase richiede la presenza attiva di un operatore. L'operatore non potrà avviare ulteriori sessioni di lavoro senza fermare quella in questa fase.",
+          "title": "Non autorizzato"
+        },
+        "title": "Lavoro senza supervisione",
+        "true": {
+          "desc": "Questa fase può procedere senza la presenza attiva di un operatore (es. fase eseguita da un macchinario automatico). L'operatore potrà avviare sessioni in altri lavori senza fermare quella in questa fase.",
+          "title": "Autorizzato"
+        }
+      },
       "auto_new_batch" : {
         "false": {
           "desc": "Al termine di un lotto di un produzione la sessione di lavoro viene interrotta. Il nuovo lotto verrà creato al momento del riavvio della sessione.",
@@ -490,13 +500,13 @@ export default {
       "short": "qrim"
     },
     "short": "qt",
-    "update": "modifica quantità"
+    "update": "modifica quantità",
+    "should_adjust_duration": "Aggiorna i tempi di processo",
   },
   "reactivate": "riattiva",
   "remove_assignment": "rimuovi assegnazione",
   "rename": "rinomina",
   "report": "Rapporti",
-  "reset_filters": "rimuovi filtri",
   "restore": "ripristina",
   "resume": "riprendi",
   "save": "salva",
@@ -528,6 +538,7 @@ export default {
     "product_updated": "prodotto aggiornato"
   },
   "start_date": "data inizio",
+  "start_short": "Inizio",
   "start_from_date": "data rilascio",
   "start_end_totals": "totale iniziale/finale",
   "status": "stato",
@@ -549,7 +560,7 @@ export default {
   "update_progress_disabled": "Disponibile in assenza di quantità attiva",
   "update_progress_success": "Avanzamento modificato con successo",
   "update_time": "Modifica tempi",
-  "update_time_disabled": "Disponibile con lavoro chiuso",
+  "update_time_disabled": "Disponibile per lavori iniziati",
   "update_time_success": "Tempo modificato con successo",
   "user": {
     "add": "aggiungi utente",

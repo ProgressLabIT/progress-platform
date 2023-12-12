@@ -110,6 +110,10 @@ export default {
     },
   },
 
+  created() {
+    this.$store.dispatch('loadUsers')
+  },
+
   mounted() {
     this.getMessages()
     this.polling_instance = setInterval(this.getMessages, 10000)

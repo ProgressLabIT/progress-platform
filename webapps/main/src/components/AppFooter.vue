@@ -22,8 +22,16 @@ export default {
   },
 
   computed: {
-    time() { return this.now.toLocaleString(DateTime.TIME_WITH_SECONDS) },
-    date() { return this.now.setLocale("it").toLocaleString(DateTime.DATE_HUGE) }
+    time() {
+      return this.now
+        .setLocale(this.$i18n.locale)
+        .toLocaleString(DateTime.TIME_WITH_SECONDS)
+    },
+    date() {
+      return this.now
+        .setLocale(this.$i18n.locale)
+        .toLocaleString(DateTime.DATE_HUGE)
+    }
   },
 
   created() {

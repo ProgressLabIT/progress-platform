@@ -62,7 +62,7 @@
                 <!-- PROGRESS -->
                 <template v-if="field.name==='progress'">
                   <div class="row items-center q-col-gutter-sm">
-                    <div class="col-9">
+                    <div class="col">
                       <BaseProgressBar :data="props.row" />
                     </div>
                     <span class="col-2 text-right">{{ props.row[field.name] }} %</span>
@@ -253,7 +253,7 @@ export default {
   data () {
     return {
       search_fields: [
-        'wo_code', 
+        'wo_code',
         'product_code',
         'project_code',
         'product_description',
@@ -263,7 +263,7 @@ export default {
       show_assignment_dialog: false,
       batch_assign_to: null,
       jobs_to_assign: [],
-      now: new Date().toISOString(),
+      now: new Date(),
       saving: false
     }
   },
@@ -282,7 +282,7 @@ export default {
           label: this.$t('work_order.list_headers.sequence').toUpperCase(),
           align: 'left'
         },
-        { 
+        {
           label: this.$t('work_order.wo_code').toUpperCase(),
           field: 'wo_code',
           name: 'wo_code',
@@ -300,7 +300,7 @@ export default {
           style: 'max-width: 10vw',
           align: 'left',
         },
-        { 
+        {
           label: this.$t('product.label', 1).toUpperCase(),
           field: 'product_code',
           name: 'product_code',
@@ -309,7 +309,7 @@ export default {
           align: 'left',
           style: 'max-width: 10vw'
         },
-        { 
+        {
           label: this.$t('phase.short').toUpperCase(),
           field: 'phase_alias',
           name: 'phase_alias',
@@ -318,7 +318,7 @@ export default {
           align: 'left',
           style: 'max-width: 10vw'
         },
-        { 
+        {
           label: this.$t('progress').toUpperCase(),
           sortable: true,
           field: 'progress',
@@ -332,7 +332,7 @@ export default {
           sortable: true,
           align: 'right'
         },
-        { 
+        {
           label: this.$t('quantity.completed.short').toUpperCase(),
           sortable: true,
           field: 'qt_completed',
@@ -367,21 +367,19 @@ export default {
     },
 
     filtered_assignments() {
-
-      let list = []
+      const list = []
       for (let i = 0; i < this.assignments.length; i++) {
-        let a = this.assignments[i]
-        const department_match = [a.operator.department_key, undefined].includes(this.filters.department_key)
-        const operator_match = [a.operator._key, undefined].includes(this.filters.operator_key)
+        const assignment = this.assignments[i]
+        const department_match = [assignment.operator.department_key, undefined].includes(this.filters.department_key)
+        const operator_match = [assignment.operator._key, undefined].includes(this.filters.operator_key)
         // Check if operator is in department selected or no department filter is set
         if (operator_match && department_match) {
+          const filtered_jobs = assignment.assigned_jobs ? assignment.assigned_jobs.filter(this.matchJobToFilters) : []
 
-          const filtered_jobs = a.assigned_jobs ? a.assigned_jobs.filter(this.matchJobToFilters) : []
-          
           if (filtered_jobs.length) {
             const active_jobs = []
             const queued_jobs = []
-            filtered_jobs.forEach( j => {
+            filtered_jobs.forEach(j => {
               const data = {
                 ...j,
                 wo_sequence: this.wo_map[j.wo_key].sequence
@@ -390,8 +388,8 @@ export default {
             })
 
             const operator_filtered_assignments = {
-              operator: a.operator,
-              assigned_jobs_count: a.assigned_jobs.length,
+              operator: assignment.operator,
+              assigned_jobs_count: assignment.assigned_jobs.length,
               filtered_jobs: [...active_jobs, ...queued_jobs]
             }
             list.push(operator_filtered_assignments)
@@ -447,7 +445,8 @@ export default {
 
   methods: {
     isReleased(item) {
-      return item.start_from <= this.now
+      // Set start_from as beginning of day in case there's an hour set
+      return new Date(item.start_from).setHours(0,0,0) <= this.now
     },
 
     jobIcon(job) {

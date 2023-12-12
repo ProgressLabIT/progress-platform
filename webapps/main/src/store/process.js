@@ -1,8 +1,10 @@
 import { cloneDeep as _cloneDeep } from 'lodash'
-import { api, axios } from '@/boot/axios.js'
+import { api } from '@/boot/axios.js'
 
+/**
+ * @type {import('vuex').Module}
+ */
 const process = {
-
   state: {
     saved: [],
     temp: [],
@@ -23,54 +25,6 @@ const process = {
       state.temp = _cloneDeep(process)
     },
 
-    UPDATE_PHASE_PARAMS(state, { phase_index, param, value }) {
-      state.temp[phase_index].params[param] = value
-    },
-
-    UPDATE_PROCEDURE(state, { phase_index, procedure }) {
-      state.temp[phase_index].steps = procedure
-    },
-
-    UPDATE_STEP_DETAILS(state,  { phase_index, step_index, field, value })  {
-      state.temp[phase_index].steps[step_index][field] = value
-    },
-
-    ADD_TEMP_MEDIA(state, { phase_index, step_index, media }) {
-      let phase = state.temp[phase_index]
-      let step = phase.steps[step_index]
-      step.media.push(media)
-    },
-
-    DELETE_SAVED_MEDIA(state, { phase_index, step_index, index }) {
-      let phase = state.temp[phase_index]
-      let step = phase.steps[step_index]
-      let media = step.media[index]
-      media.trash = true
-    },
-
-    RESTORE_SAVED_MEDIA(state, { phase_index, step_index, index }) {
-      let phase = state.temp[phase_index]
-      let step = phase.steps[step_index]
-      let media = step.media[index]
-      media.trash = false
-    },
-
-    DELETE_TEMP_MEDIA(state, { phase_index, step_index, index }) {
-      let phase = state.temp[phase_index]
-      let media_list = phase.steps[step_index].media
-      media_list.splice(index, 1)
-    },
-
-    ADD_OR_UPDATE_STEP(state, { phase_index, step_index, step_data}) {
-      let procedure = state.temp[phase_index].steps
-      procedure[step_index] = step_data
-    },
-
-    DELETE_STEP(state, { phase_index, step_index }) {
-      let temp_procedure = state.temp[phase_index].steps
-      temp_procedure.splice(step_index, 1)
-    },
-
     ADD_TEMP_PHASE_TEMPLATE(state, { phase_index, template }) {
       state.temp[phase_index].print_templates.push({ ...template, temp: true })
     },
@@ -86,12 +40,8 @@ const process = {
       state.temp.splice(phase_index, 1)
     },
 
-    UPDATE_PHASE_PRODUCTION_NOTES(state, { phase_index, content }) {
-      state.temp[phase_index].production_notes = content
-    },
-
-    LOAD_OPERATIONS(state, op_list) {
-      state.operations = op_list
+    LOAD_OPERATIONS(state, operations) {
+      state.operations = operations
     },
 
     CANCEL_PROCESS_CHANGES(state) {
@@ -100,168 +50,177 @@ const process = {
   },
 
   actions: {
-    getOperations({commit}) {
-      return new Promise( resolve => {
-        api
-        .get('operation')
-        .then(resp => {
-          commit('LOAD_OPERATIONS', resp.data)
-          resolve()
-        })
-      }) 
-    },
+    async getOperations({ commit }) {
+      const { data: operations } = await api.get('operation')
 
-    createOperation({ dispatch }, new_operation_data) {
-      return new Promise(resolve => {
-        api
-        .post(`operation`, new_operation_data)
-        .then( async (resp) => {
-          const new_op_key = resp.data.detail._key
-          await dispatch('getOperations')
-          resolve(new_op_key)
+      operations.forEach(operation => {
+        operation.default_phase_steps?.forEach(step => {
+          step.media = step.media?.map(media => ({
+            _key: media._key,
+            filename: media.name,
+            src: `/media/${media._key}`,
+            temp: false,
+            trash: false
+          })) ?? []
         })
       })
+
+      commit('LOAD_OPERATIONS', operations)
     },
 
-    updateOperation({ dispatch }, { key, update }) {
-      return new Promise( resolve => {
-        api
-        .patch(`operation/${key}`, update)
-        .then( async () => {
-          await dispatch('getOperations')
-          resolve()
-        })
-      })
+    async createOperation({ dispatch }, new_operation_data) {
+      const { data } = await api.post('operation', new_operation_data)
+      await dispatch('getOperations')
+      return data.detail._key
     },
 
-    
-    async getProcess({ commit }, product_key) {
-      function get_step_media(step) {
-        return new Promise( resolve => {
-          api
-          .get(`step/${step._key}/media`)
-          .then( resp => {
-            const media_list = resp.data.map( filename => {
-              return {
-                filename,
-                src: `/media/step/${step._key}/${filename}`,
-                temp: false,
-                trash: false
-              }
-            })
-            step.media = media_list
-            resolve(step)
+    async updateOperation({ dispatch }, { key, update }) {
+      const newMediaByStepIndex = new Map()
+      // TODO: use Promise.allSettled and offer retry or abandon for failed requests
+      await Promise.all(
+        update.default_phase_steps?.flatMap((step, stepIndex) =>
+          step.media.map(async (media) => {
+            if (!media.temp) {
+              return
+            }
+
+            const formData = new FormData()
+            formData.append('file', media.data)
+            const { data: newMedia } = await api.post('media/create', formData)
+            if (!newMediaByStepIndex.has(stepIndex)) {
+              newMediaByStepIndex.set(stepIndex, [])
+            }
+            newMediaByStepIndex.get(stepIndex).push(newMedia.detail._key)
           })
-        })
+        ) ?? []
+      )
+
+      await api.patch(`operation/${key}`, {
+        ...update,
+        default_phase_steps: update.default_phase_steps.map((step, stepIndex) => ({
+          ...step,
+          media: [
+            ...step.media
+              .filter(({ trash, temp }) => !trash && !temp)
+              .map(({ _key }) => _key),
+
+            ...(newMediaByStepIndex.get(stepIndex) ?? []),
+          ],
+        })),
+      })
+
+      await dispatch('getOperations')
+    },
+
+    async getProcess({ commit }, product_key) {
+      async function loadStepMedia(step) {
+        const { data } = await api.get(`step/${step._key}/media`)
+        step.media = data.map(filename => ({
+          filename,
+          src: `/media/step/${step._key}/${filename}`,
+          temp: false,
+          trash: false
+        }))
       }
 
-      return new Promise( (resolve) => {
-        api
-        .get(`product/${product_key}/process`)
-        .then( async resp => {
-          let phases = resp.data
-          let promises = []
-          for (let phase of phases) {
-            for (let step of phase.steps) {
-              if (step.type === 'instruction') {
-                promises.push(get_step_media(step))
-              }
-            }
+      const { data: phases } = await api.get(`product/${product_key}/process`)
+      const promises = []
+      phases.forEach(phase => {
+        phase.steps.forEach(step => {
+          if (step.type === 'instruction') {
+            promises.push(loadStepMedia(step))
           }
-          await Promise.all(promises)
-          commit('LOAD_SAVED_PROCESS', phases)
-          resolve() 
         })
-      }) 
+      })
+      await Promise.all(promises)
+      commit('LOAD_SAVED_PROCESS', phases)
     },
 
-    saveTempProcess({ dispatch }, data) {
-      return new Promise( (resolve, reject) => {
-
-        // map added/deleted media and print templates
-        let new_media = []
-        let deleted_media = []
-
-        let template_updates = []
-
-        data.new_process.forEach( phase => {
-          phase.steps.forEach( step => {
-            
-            if (typeof step.media == 'undefined') return
-
-            step.media.forEach( media => {
-              if (media.trash) deleted_media.push({
-                step_key: step._key,
-                filename: media.filename
-              })
-
-              if (media.temp) new_media.push({
-                step_key: step._key,
-                media_file: media.data
-              })
-            })
-          })
-
-          phase.print_templates.forEach( template => {
-            if (template.temp) {
-              template_updates.push({
-                type: 'add',
-                context: 'phase',
-                context_key: phase._key,
-                template_key: template._key
-              })
-            }
-            if (template.trash) {
-              template_updates.push({
-                type: 'remove',
-                context: 'phase',
-                context_key: phase._key,
-                template_key: template._key
-              })
-            }
-          })
+    async saveTempProcess({ dispatch }, data) {
+      const { data: updatedProcess } = await api.put(`product/${data.product_key}/process`, data.new_process)
+      // update newly created steps with _key so that the media can be uploaded accordingly
+      updatedProcess.forEach((phase, phaseIndex) => {
+        phase.steps.forEach((step, stepIndex) => {
+          const stepUpdateData = data.new_process[phaseIndex].steps[stepIndex]
+          stepUpdateData._key = step._key
         })
-
-        // set up api calls
-        let api_calls = []
-
-        deleted_media.forEach( ({ step_key, filename }) => {
-          api_calls.push( 
-            api.delete(`step/${step_key}/media/${filename}`)
-          )
-        })
-
-        new_media.forEach( ({ step_key, media_file }) => {
-          let body = new FormData()
-          body.append('media_file', media_file)
-          api_calls.push(
-            api.post(
-              `step/${step_key}/media`, 
-              body, 
-              { headers: { 'Content-type': 'multipart/form-data' } }
-            )
-          )
-        })
-
-        api_calls.push(
-          api.post('update-template-assignments', template_updates)
-        )
-
-        api_calls.push(
-          api.put(`product/${data.product_key}/process`, data.new_process)
-        )
-
-        // update process & product data
-        axios.all(api_calls)
-        .then(async () => {
-          await axios.all([
-            dispatch('getProcess', data.product_key),
-            dispatch('loadProductDetails', data.product_key)
-          ])
-          resolve()
-        })
-        .catch(err => reject(err))
       })
+
+      const newMedia = []
+      const deletedMedia = []
+
+      const templateUpdates = []
+
+      data.new_process.forEach(phase => {
+        phase.steps.forEach(step => {
+          if (step.media === undefined) {
+            step.media = []
+          }
+
+          step.media.forEach(media => {
+            if (media.trash) {
+              deletedMedia.push({
+                step_key: step._key,
+                filename: media.filename,
+              })
+            }
+
+            if (media.temp) {
+              newMedia.push({
+                step_key: step._key,
+                media_file: media.data,
+              })
+            }
+          })
+        })
+
+        phase.print_templates.forEach(template => {
+          if (template.temp) {
+            templateUpdates.push({
+              type: 'add',
+              context: 'phase',
+              context_key: phase._key,
+              template_key: template._key
+            })
+          }
+
+          if (template.trash) {
+            templateUpdates.push({
+              type: 'remove',
+              context: 'phase',
+              context_key: phase._key,
+              template_key: template._key
+            })
+          }
+        })
+      })
+
+      const mediaPromises = []
+
+      deletedMedia.forEach(({ step_key, filename }) => {
+        mediaPromises.push(api.delete(`step/${step_key}/media/${filename}`))
+      })
+
+      newMedia.forEach(({ step_key, media_file }) => {
+        const body = new FormData()
+        body.append('media_file', media_file)
+        mediaPromises.push(
+          api.post(
+            `step/${step_key}/media`,
+            body,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+          )
+        )
+      })
+
+      await Promise.all([
+        ...mediaPromises,
+        api.post('update-template-assignments', templateUpdates),
+      ])
+      await Promise.all([
+        dispatch('getProcess', data.product_key),
+        dispatch('loadProductDetails', data.product_key),
+      ])
     }
   },
 }

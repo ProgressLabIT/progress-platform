@@ -7,6 +7,8 @@ volumes:
     external: true
   flows:
     external: true
+  cmounts:
+    external: true
 
 
 networks:
@@ -28,6 +30,7 @@ services:
       - server
     volumes:
       - flows:/flows
+      - cmounts:/cmounts
     networks:
       - progress
     secrets:

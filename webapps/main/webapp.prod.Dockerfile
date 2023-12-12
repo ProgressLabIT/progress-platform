@@ -1,4 +1,4 @@
-FROM node:lts-alpine as global-deps-stage
+FROM node:18-alpine as global-deps-stage
 RUN npm i --location=global @quasar/cli@latest
 
 FROM global-deps-stage as develop-stage

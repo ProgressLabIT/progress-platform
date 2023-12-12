@@ -188,7 +188,7 @@
                 {{ $t('user.hourly_cost') }}
               </div>
               <div v-if="!edit_mode">
-                {{ $numberFormat((temp_data.hourly_cost || '-'), locale) }}
+                {{ $numberFormat((temp_data.hourly_cost || '-'), this.$i18n.locale) }}
               </div>
               <q-input
                 v-else
@@ -277,7 +277,6 @@ export default {
 
   data () {
     return {
-      locale: 'it',
       edit_mode: false,
       saving: false,
       scopes: scopes_list,

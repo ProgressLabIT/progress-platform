@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Union
 
@@ -5,6 +6,7 @@ from pydantic import Field
 
 from models.print import PrintTemplateRecord
 from utils.base_models import FlexModel, ArangoDocument
+from utils.dt import timestamp
 
 
 class ReleaseStyle(str, Enum):
@@ -26,16 +28,10 @@ class PhaseParameters(FlexModel):
   max_offline: int = 60 # seconds
   auto_new_batch: bool = True
   std_processing_time: int = 60 # seconds
+  unsupervised_work_allowed: bool = False
   # release_style: ReleaseStyle = ReleaseStyle.JOB
   # release_batch_qt: int = 1
   # wip_flow: WIPFlow = WIPFlow.BUFFER
-
-
-class Operation(ArangoDocument):
-  name: str
-  code: str = None
-  description: str = None
-  default_phase_parameters: PhaseParameters = PhaseParameters()
 
 
 class StepType(str, Enum):
@@ -64,12 +60,24 @@ class Step(FlexModel):
   input_fields: List[InputField] = []
 
 
-class Media(FlexModel):
+# TODO: Add validation for size, content_type, etc.
+class Media(ArangoDocument):
   name: str
+  size: int
+  content_type: str
+  created_at: datetime = Field(default_factory=timestamp)
 
 
 class StepWithMediaInfo(Step):
   media: List[Union[Media, str]] = None
+
+class Operation(ArangoDocument):
+  name: str
+  code: str = None
+  description: str = None
+  default_phase_parameters: PhaseParameters = PhaseParameters()
+  default_phase_notes: str = None
+  default_phase_steps: List[Step] = []
 
 
 class PhaseRecord(ArangoDocument):

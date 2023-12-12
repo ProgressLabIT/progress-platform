@@ -24,7 +24,7 @@ class IssueType(ArangoDocument):
   active: bool = True
   description: str = None
   icon: str = None
-  form_template: List[Optional[FormFieldDefinition]] = None
+  form_template: List[FormFieldDefinition] = []
   critical: bool = False
   # close_within: NonNegativeInt = 0 # Time in hours. After this make critical. If 0 ignore.
 
@@ -36,7 +36,7 @@ class IssueTypeUpdate(BaseModel):
   active: bool = None
   description: str = None
   icon: str = None
-  form_template: List[Optional[FormFieldDefinition]] = None
+  form_template: List[FormFieldDefinition] = []
   critical: bool = False
 
 

@@ -1,7 +1,7 @@
 <template>
   <div class="column full-height">
     <template v-if="operation">
-      <div class="row q-pa-lg q-ma-md">
+      <div class="row q-px-lg q-pt-lg q-mx-md q-mt-md">
         <template v-if="!edit_mode">
           <div class="col" v-if="!edit_mode">
             <div class="text-h2 uppercase display highlight">
@@ -28,7 +28,6 @@
             @iconClick="showDelete">
           </BaseTooltipIcon>
         </template>
-
         <template v-else>
           <div class="column justify-between col-4">
             <q-input
@@ -88,40 +87,93 @@
         </template>
       </div>
 
-      <q-separator />
+      <q-tabs
+        v-model="activeTab"
+        class="transparent text-low display q-mx-md"
+        active-class="highlight"
+        align="right"
+        shrink
+        dense
+        indicator-color="theme-blue"
+      >
+        <q-tab name="steps">
+          {{ $t('views.PhaseSteps') }}
+        </q-tab>
 
-      <div class="col scroll">
-        <ProcessParameters
-          :edit_mode="edit_mode"
-          :params="temp_params"
-          @update="updateParam">
-        </ProcessParameters>
-      </div>
+        <q-tab name="parameters">
+          {{ $t('views.PhaseParameters') }}
+        </q-tab>
+
+        <q-tab name="notes">
+          {{ $t('views.PhaseNotes') }}
+        </q-tab>
+      </q-tabs>
+
+      <q-card square class="col scroll q-mx-md q-mb-md">
+        <q-tab-panels v-model="activeTab" class="fit surface2">
+          <q-tab-panel name="steps">
+            <ProcessSteps
+              v-model="temp_steps"
+              :edit-mode="edit_mode"
+            />
+          </q-tab-panel>
+
+          <q-tab-panel name="parameters">
+            <ProcessParameters
+              v-model="temp_params"
+              :process-has-steps="false"
+              :edit-mode="edit_mode"
+            />
+          </q-tab-panel>
+
+          <q-tab-panel name="notes">
+            <ProductionNotes
+              v-model="temp_notes"
+              :edit-mode="edit_mode"
+              class="q-pa-lg"
+            />
+          </q-tab-panel>
+        </q-tab-panels>
+      </q-card>
+
     </template>
-
     <NoDataAlert v-else />
   </div>
 </template>
 
 <script>
+import { ref } from 'vue'
+import { cloneDeep } from 'lodash' // TODO: replace with lodash-es
+
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import ProcessParameters from '@/components/ProcessParameters.vue'
-import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
+import ProductionNotes from '@/components/ProductionNotes.vue'
+import ProcessSteps from '@/components/process-steps/ProcessSteps.vue'
 
 export default {
-
   name: 'OperationDetail',
 
   components: {
     BaseTooltipIcon,
     NoDataAlert,
-    ProcessParameters
+    ProcessParameters,
+    ProductionNotes,
+    ProcessSteps
   },
 
   props: {
     operation: {
       type: Object,
       required: true
+    }
+  },
+
+  setup() {
+    const tab = ref('parameters')
+
+    return {
+      activeTab: tab
     }
   },
 
@@ -140,8 +192,11 @@ export default {
         step_check: false,
         step_check_force_order: false,
         production_batch_qt: 1,
-        auto_new_batch: true
-      }
+        auto_new_batch: true,
+        unsupervised_work_allowed: false
+      },
+      temp_notes: '',
+      temp_steps: []
     }
   },
 
@@ -149,26 +204,32 @@ export default {
     products_using_operation() {
       return this.operation.used_for
     },
-  },  
-
+  },
 
   methods: {
-    setTempData(){
+    setTempData() {
       // At first render, sometimes the function runs before the prop has been passed, resulting in error
-      if (this.operation) {
-        Object.keys(this.temp_metadata).forEach( key => {
-          this.temp_metadata[key] = this.operation[key]
-        })
-
-        const saved_params = this.operation.default_phase_parameters
-        Object.keys(this.temp_params).forEach( key => {
-          this.temp_params[key] = saved_params[key]
-        })
+      if (!this.operation) {
+        return
       }
-    },
 
-    updateParam({ param, value }) {
-      this.temp_params[param] = value
+      this.temp_notes = this.operation.default_phase_notes ?? ''
+
+      this.temp_steps = cloneDeep(this.operation.default_phase_steps ?? [])
+
+      Object.keys(this.temp_metadata).forEach(key => {
+        this.temp_metadata[key] = this.operation[key]
+      })
+
+      const saved_params = this.operation.default_phase_parameters
+      Object.keys(this.temp_params).forEach(key => {
+        const value = saved_params[key]
+        // If the value is undefined, then the parameter is not present in the saved data
+        // and we should not overwrite the default value
+        if (value !== undefined) {
+          this.temp_params[key] = value
+        }
+      })
     },
 
     cancel() {
@@ -179,10 +240,12 @@ export default {
     async save() {
       this.saving = true
       const data = {
-        key: this.operation._key, 
+        key: this.operation._key,
         update: {
           ...this.temp_metadata,
-          default_phase_parameters: this.temp_params
+          default_phase_parameters: this.temp_params,
+          default_phase_notes: this.temp_notes,
+          default_phase_steps: this.temp_steps
         }
       }
       await this.$store.dispatch('updateOperation', data)
@@ -192,8 +255,8 @@ export default {
 
     showDelete() {
       if (this.products_using_operation.length) {
-        const product_codes = this.products_using_operation.map( o => o.code )
-        window.alert(this.$capitalize(this.$t('operation.alerts.op_in_use') + ": " +  product_codes))
+        const product_codes = this.products_using_operation.map(({ code }) => code)
+        window.alert(this.$capitalize(this.$t('operation.alerts.op_in_use') + ": " + product_codes))
       }
       else {
         this.$router.push({
@@ -205,8 +268,11 @@ export default {
   },
 
   watch: {
-    edit_mode: 'setTempData',
-    operation: 'setTempData'
+    operation: {
+      handler: 'setTempData',
+      immediate: true
+    },
+    edit_mode: 'setTempData'
   }
 }
 </script>

@@ -186,6 +186,10 @@ export default {
     jobs: {
       type: Object,
       required: true,
+    },
+    qt_to_allocate: {
+      type: Number,
+      required: true
     }
   },
 
@@ -252,12 +256,6 @@ export default {
 
     operators() {
       return this.$store.getters.operator_list()
-    },
-
-    qt_to_allocate() {
-      return Object.values(this.jobs).reduce( (sum, job) => {
-        return sum + job.qt_planned - job.qt_completed - job.active_batch_qt
-      }, 0)
     },
 
     remaining_match() {
