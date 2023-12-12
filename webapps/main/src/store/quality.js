@@ -30,21 +30,21 @@ const quality = {
 
   actions: {
     async getIssueTypes({ commit }, active_only = false) {
-      const { data } = await api.get('issue-type', { params: { active_only } })
+      const { data } = await api.get('issue-type', { params: { active_only } });
       commit('LOAD_ISSUE_TYPES', data);
     },
     async createIssueType({ dispatch }, issue_type_data) {
-      const { data } = await api.post('issue-type', issue_type_data)
+      const { data } = await api.post('issue-type', issue_type_data);
       const new_issue_type_key = data.detail._key;
       await dispatch('getIssueTypes');
       return new_issue_type_key;
     },
     async updateIssueType({ dispatch }, issue_type_data) {
-      await api.patch(`issue-type/${issue_type_data._key}`, issue_type_data)
+      await api.patch(`issue-type/${issue_type_data._key}`, issue_type_data);
       await dispatch('getIssueTypes');
     },
     async getIssues({ commit }, search_params) {
-      const { data } = await api.get('issue', { params: search_params })
+      const { data } = await api.get('issue', { params: search_params });
       commit('LOAD_ISSUES', data);
     },
   },

@@ -75,8 +75,8 @@ export default {
   },
 
   methods: {
-    /* 
-    On the parent element, this allows to bubble up the click event correctly 
+    /*
+    On the parent element, this allows to bubble up the click event correctly
     with the event name equal to the tooltip text passed down
     */
     emit() {

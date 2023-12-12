@@ -71,6 +71,14 @@ module.exports = {
   rules: {
     // TODO: Enable this rule after gradually converting all prop names to camelCase
     'vue/prop-name-casing': 'off',
+    'vue/no-unsupported-features': [
+      'error',
+      {
+        version: require('vue').version,
+      },
+    ],
+    'vue/padding-line-between-blocks': 'warn',
+    'vue/no-empty-component-block': 'warn',
 
     // To make the following work: `import Sortable from 'sortablejs'`
     'import/no-named-as-default': 'off',

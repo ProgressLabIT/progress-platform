@@ -627,6 +627,7 @@ export default {
   },
 };
 </script>
+
 <style lang="sass" scoped>
 .fade-bottom-bg
   position: relative

@@ -173,9 +173,7 @@ const traceability = {
       // Get active batch data (if any)
       let batch_data = {};
       if (job_data.active_batch_key) {
-        const batch_resp = await api.get(
-          `batch/${job_data.active_batch_key}`,
-        );
+        const batch_resp = await api.get(`batch/${job_data.active_batch_key}`);
         batch_data = batch_resp.data.detail;
       }
       commit('LOAD_WORKING_JOB_DATA', { job_data, batch_data });

@@ -14,5 +14,3 @@ export default {
   name: 'NoDataAlert',
 };
 </script>
-
-<style lang="css" scoped></style>

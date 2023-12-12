@@ -90,7 +90,6 @@ import ProductCard from '@/components/ProductCard.vue';
 
 import multiMatch from '@/lib/MultiFieldSearch.js';
 
-
 export default {
   name: 'ProductList',
 
@@ -220,5 +219,3 @@ export default {
   },
 };
 </script>
-
-<style lang="sass" scoped></style>

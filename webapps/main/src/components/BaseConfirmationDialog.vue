@@ -76,5 +76,3 @@ export default {
   emits: ['close'],
 };
 </script>
-
-<style lang="css" scoped></style>

@@ -183,9 +183,7 @@
                 {{ $t('user.hourly_cost') }}
               </div>
               <div v-if="!editMode">
-                {{
-                  $numberFormat(temp_data.hourly_cost || '-', $i18n.locale)
-                }}
+                {{ $numberFormat(temp_data.hourly_cost || '-', $i18n.locale) }}
               </div>
               <q-input
                 v-else
@@ -417,5 +415,3 @@ export default {
   },
 };
 </script>
-
-<style lang="css" scoped></style>

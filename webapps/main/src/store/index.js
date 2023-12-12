@@ -3,7 +3,6 @@ import { DateTime as DT } from 'luxon';
 import { debounce } from 'quasar';
 import { createStore } from 'vuex';
 
-
 const icon_list = icons.map((string) => {
   // Transform icon names from camelCase to kebab-case
   return [...string]

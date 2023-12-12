@@ -153,7 +153,7 @@ export default {
               });
             })
             .catch((err) => {
-              if ((err.response.status === 400)) {
+              if (err.response.status === 400) {
                 window.alert(err.response.data.detail.message);
               } else {
                 window.alert('An error occurred');
@@ -168,5 +168,3 @@ export default {
   },
 };
 </script>
-
-<style lang="css" scoped></style>
