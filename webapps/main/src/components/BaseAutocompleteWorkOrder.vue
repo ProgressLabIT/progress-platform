@@ -23,7 +23,7 @@
     <template #option="scope">
       <q-item
         v-bind="scope.itemProps"
-        :class="{ 'text-low': scope.opt.status == 'closed' }"
+        :class="{ 'text-low': scope.opt.status === 'closed' }"
         @click.stop="print"
       >
         <q-item-section class="text-h4 highlight col-auto q-pr-md">

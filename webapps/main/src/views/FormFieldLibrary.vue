@@ -35,8 +35,8 @@
           :key="field._key"
           class="row pointer q-px-lg q-py-xs medium full-width"
           :class="{
-            'alternate-row': index % 2 == 0,
-            'bg-blue-backdrop': field._key == selected_field_key,
+            'alternate-row': index % 2 === 0,
+            'bg-blue-backdrop': field._key === selected_field_key,
           }"
           style="white-space: nowrap"
           @click="showFieldDetail(field._key)"

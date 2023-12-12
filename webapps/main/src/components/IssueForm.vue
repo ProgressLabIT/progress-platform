@@ -10,7 +10,7 @@
         <q-card-section>
           <div class="row justify-between items-center">
             <div class="text-h2 display highlight text-center">
-              <template v-if="mode == 'new'">
+              <template v-if="mode === 'new'">
                 {{ $t('issue_new_title') }}
               </template>
               <template v-else>
@@ -24,7 +24,7 @@
 
         <!-- ISSUE LINKS -->
         <q-card-section
-          v-if="mode == 'new' && with_links && form_step == 'links'"
+          v-if="mode === 'new' && with_links && form_step === 'links'"
           class="column q-gutter-md"
         >
           <!-- "Path" selection (Order, Product, General) -->
@@ -42,7 +42,7 @@
 
           <!-- WORK ORDER -->
           <BaseAutocompleteWorkOrder
-            v-if="link_form == 'order'"
+            v-if="link_form === 'order'"
             :value="links.work_order"
             :label="$capitalize($t('work_order.long'))"
             @select="(selection) => loadWorkOrder(selection)"
@@ -51,7 +51,7 @@
 
           <!-- PRODUCT -->
           <BaseAutocompleteProduct
-            v-if="link_form == 'product'"
+            v-if="link_form === 'product'"
             :value="links.product"
             :hint="
               (links.work_order || links.product) && !phase_data
@@ -79,7 +79,7 @@
 
           <!-- JOB -->
           <q-select
-            v-if="link_form == 'order' && links.phase"
+            v-if="link_form === 'order' && links.phase"
             v-model="links.job"
             :label="$capitalize($t('job.label'))"
             filled
@@ -99,7 +99,7 @@
             </template>
           </q-select>
 
-          <template v-if="link_form == 'general'">
+          <template v-if="link_form === 'general'">
             <BaseAutocompleteUser
               v-model="links.user"
               :label="$t('user.label')"
@@ -141,7 +141,7 @@
         <q-card-section>
           <div class="row q-gutter-md">
             <q-btn
-              v-if="mode == 'new' && with_links && form_step == 'links'"
+              v-if="mode === 'new' && with_links && form_step === 'links'"
               color="theme-blue"
               :label="$t('next')"
               @click="form_step = 'data'"

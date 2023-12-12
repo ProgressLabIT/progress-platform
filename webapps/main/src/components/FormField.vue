@@ -40,7 +40,7 @@
 
     <!-- BOOLEAN -->
     <q-checkbox
-      v-if="fieldType == 'boolean'"
+      v-if="fieldType === 'boolean'"
       :model-value="fieldValue ?? false"
       :disable="disable"
       :dense="dense"

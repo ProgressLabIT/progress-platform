@@ -15,7 +15,7 @@
     <NoDataAlert v-else>
       {{ $t('issue_missing') }}
     </NoDataAlert>
-    <template v-if="$route.name == 'workOrderIssues'">
+    <template v-if="$route.name === 'workOrderIssues'">
       <q-btn
         round
         color="theme-blue"

@@ -38,9 +38,9 @@
             <q-item-section avatar class="col-auto">
               <q-avatar
                 size="20px"
-                :color="current_phase == index ? 'theme-blue' : 'theme-grey'"
+                :color="current_phase === index ? 'theme-blue' : 'theme-grey'"
                 class="display smaller"
-                :class="{ highlight: current_phase == index }"
+                :class="{ highlight: current_phase === index }"
               >
                 {{ index + 1 }}
               </q-avatar>
@@ -50,7 +50,7 @@
               <q-item-label
                 class="display ellipsis"
                 :class="
-                  current_phase == index
+                  current_phase === index
                     ? 'highlight'
                     : 'text-low weight-medium'
                 "
@@ -59,7 +59,7 @@
               </q-item-label>
             </q-item-section>
 
-            <q-item-section v-if="editMode" v-show="over_phase == index" side>
+            <q-item-section v-if="editMode" v-show="over_phase === index" side>
               <div class="row items-center">
                 <BaseTooltipIcon
                   icon="mdi-pencil"
@@ -81,7 +81,7 @@
 
           <!-- PHASE ALIAS UPDATE PROMPT -->
           <BasePrompt
-            :show="update_alias_at_index != null"
+            :show="update_alias_at_index !== null"
             :initial_value="
               update_alias_at_index
                 ? process[update_alias_at_index].alias

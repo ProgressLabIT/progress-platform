@@ -77,8 +77,8 @@
             <q-icon
               v-if="
                 isLate(wo_data.due_by) &&
-                i.name == 'due_by' &&
-                wo_data.status != 'closed'
+                i.name === 'due_by' &&
+                wo_data.status !== 'closed'
               "
               class="q-mb-xs q-mr-xs"
               name="mdi-alert-octagon"
@@ -119,7 +119,7 @@
 
     <!-- ACTIONS -->
     <q-btn
-      v-if="wo_data.status != 'closed'"
+      v-if="wo_data.status !== 'closed'"
       outline
       square
       class="full-width q-mt-md"
@@ -155,7 +155,7 @@
             </q-item-section>
           </q-item>
           <q-item
-            v-if="wo_data.status == 'created'"
+            v-if="wo_data.status === 'created'"
             v-close-popup
             clickable
             class="text-theme-red"
@@ -190,7 +190,7 @@
             {{ $t('cancel') }}
           </q-btn>
           <q-btn
-            v-if="temp_project_code != wo_data.project_code"
+            v-if="temp_project_code !== wo_data.project_code"
             size="12px"
             flat
             color="theme-blue"
@@ -225,7 +225,7 @@
             {{ $t('cancel') }}
           </q-btn>
           <q-btn
-            v-if="new_qt != wo_data.qt_planned"
+            v-if="new_qt !== wo_data.qt_planned"
             size="12px"
             flat
             color="theme-blue"
@@ -247,7 +247,7 @@
     </WorkOrderJobQtRebalance>
 
     <!-- EDIT DATES DIALOG -->
-    <BaseDialog :show="edit_date != null" @close="closeEditDialogs">
+    <BaseDialog :show="edit_date !== null" @close="closeEditDialogs">
       <q-card class="surface2">
         <q-date v-model="temp_date" minimal mask="YYYY-MM-DD"> </q-date>
         <div class="row justify-between q-pa-sm">

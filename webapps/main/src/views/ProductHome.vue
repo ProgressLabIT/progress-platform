@@ -69,7 +69,7 @@
                 <q-icon name="mdi-upload" />
               </q-btn>
               <q-btn
-                v-if="img_src != ''"
+                v-if="img_src !== ''"
                 size="12px"
                 color="theme-grey"
                 class="q-ml-sm"

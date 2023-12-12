@@ -13,7 +13,7 @@
         </div>
         <div
           v-if="
-            sender_key == $store.state.session.user._key && !message.deleted
+            sender_key === $store.state.session.user._key && !message.deleted
           "
           class="absolute-top-right q-mt-xs q-mr-xs"
         >

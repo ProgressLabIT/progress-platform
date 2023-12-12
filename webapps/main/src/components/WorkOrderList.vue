@@ -31,15 +31,15 @@
           :props="props"
           @dblclick="showWorkOrderScreen(props.row._key)"
         >
-          <template v-for="c in columns" :key="c.name">
+          <template v-for="column in columns" :key="column.name">
             <q-td
               :props="props"
               class="ellipsis"
-              :class="{ 'filter-field': search_fields.includes(c.name) }"
+              :class="{ 'filter-field': search_fields.includes(column.name) }"
             >
               <!-- SEQUENCE -->
               <div
-                v-if="c.name == 'sequence'"
+                v-if="column.name === 'sequence'"
                 class="pointer"
                 @click="change_sequence_for_wo = props.row"
               >
@@ -47,7 +47,7 @@
               </div>
 
               <!-- PROGRESS BAR -->
-              <template v-else-if="c.name === 'progress'">
+              <template v-else-if="column.name === 'progress'">
                 <div class="row items-center">
                   <div class="col-2 col-md q-pr-sm">
                     <q-avatar
@@ -70,7 +70,7 @@
               </template>
               <!-- ADD ALERT ICONS HERE -->
 
-              <template v-else-if="c.name === 'due_by'">
+              <template v-else-if="column.name === 'due_by'">
                 <div
                   class="pointer"
                   @click="
@@ -83,14 +83,14 @@
                     name="mdi-alert-octagon"
                   />
                   {{
-                    props.row.due_by == null
+                    props.row.due_by === null
                       ? '-'
                       : $shortDateString(props.row.due_by, $i18n.locale)
                   }}
                 </div>
               </template>
 
-              <template v-else-if="c.name === 'start_from'">
+              <template v-else-if="column.name === 'start_from'">
                 <div
                   class="pointer"
                   @click="
@@ -98,27 +98,27 @@
                   "
                 >
                   {{
-                    props.row.start_from == null
+                    props.row.start_from === null
                       ? '-'
                       : $shortDateString(props.row.start_from, $i18n.locale)
                   }}
                 </div>
               </template>
 
-              <template v-else-if="c.name === 'issue_count'">
+              <template v-else-if="column.name === 'issue_count'">
                 {{ props.row.issue_count }}
               </template>
 
-              <template v-else-if="c.name.includes('qt')">
-                <span>{{ props.row[c.name] || 0 }}</span>
+              <template v-else-if="column.name.includes('qt')">
+                <span>{{ props.row[column.name] || 0 }}</span>
               </template>
 
               <template v-else>
                 <span
                   class="table-data"
-                  @click="setSearch(c.name, props.row[c.name])"
+                  @click="setSearch(column.name, props.row[column.name])"
                 >
-                  {{ $capitalizeAll(props.row[c.name] || '') }}
+                  {{ $capitalizeAll(props.row[column.name] || '') }}
                 </span>
               </template>
             </q-td>
@@ -128,7 +128,7 @@
     </q-table>
 
     <BaseDialog
-      :show="temp_date != null"
+      :show="temp_date !== null"
       :no-backdrop-dismiss="false"
       @close="temp_date = null"
     >
@@ -148,15 +148,14 @@
           wo_code: change_sequence_for_wo?.wo_code,
         })
       "
-      :show="change_sequence_for_wo != null"
+      :show="change_sequence_for_wo !== null"
       :initial_value="change_sequence_for_wo?.sequence"
       input_type="number"
       :min="1"
       :max="wo_list.length"
       @close="change_sequence_for_wo = null"
       @update="updateSequence"
-    >
-    </BasePrompt>
+    />
 
     <router-view />
   </div>

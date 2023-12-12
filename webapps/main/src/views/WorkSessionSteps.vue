@@ -21,7 +21,7 @@
               >
                 <span
                   :class="
-                    current_step_index == index ? 'solid-white weight-bold' : ''
+                    current_step_index === index ? 'solid-white weight-bold' : ''
                   "
                   class="smaller"
                 >

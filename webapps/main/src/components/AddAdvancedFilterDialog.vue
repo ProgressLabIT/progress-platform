@@ -14,7 +14,7 @@
 
         <q-card-section v-if="formField">
           <q-checkbox
-            v-if="editableField.type == 'files'"
+            v-if="editableField.type === 'files'"
             v-model="editableField.value"
             :label="t('has_attachments')"
           >

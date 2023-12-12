@@ -8,11 +8,11 @@
         class="text-h5 text-uppercase"
         :class="getColClass(header)"
       >
-        <div v-if="header.value == 'issue_count'">
+        <div v-if="header.value === 'issue_count'">
           <q-icon name="mdi-flag" size="14px" />
         </div>
 
-        <div v-else-if="header.value != 'assigned_to'">
+        <div v-else-if="header.value !== 'assigned_to'">
           {{ header.text }}
         </div>
 
@@ -50,7 +50,7 @@
             <template v-if="header.value === 'phase_alias'">
               <span>{{ $capitalizeAll(phase[header.value]) }}</span>
               <span
-                v-if="expanded_phase == phase.phase_key"
+                v-if="expanded_phase === phase.phase_key"
                 class="q-ml-sm text-body2 smaller text-disabled"
                 @click.stop="null"
               >
@@ -73,7 +73,7 @@
               {{ phase.issue_count }}
             </template>
 
-            <template v-else-if="header.value == 'assigned_to'">
+            <template v-else-if="header.value === 'assigned_to'">
               <div class="row">
                 <div class="col-3 text-right">
                   {{ phase.processing_time }}
@@ -106,7 +106,7 @@
             <template v-if="header.value === 'phase_alias'">
               <div class="row items-center" style="margin-left: -12px">
                 <q-checkbox
-                  v-if="job.stage != 'closed'"
+                  v-if="job.stage !== 'closed'"
                   v-model="selected_jobs"
                   color="theme-blue"
                   :disable="job.active"
@@ -152,8 +152,8 @@
                       <q-item
                         v-ripple
                         v-close-popup
-                        :disable="job.stage == 'created'"
-                        :clickable="job.stage != 'created'"
+                        :disable="job.stage === 'created'"
+                        :clickable="job.stage !== 'created'"
                         @click="editJobTime(job)"
                       >
                         <q-item-section avatar>
@@ -172,7 +172,7 @@
                         v-ripple
                         v-close-popup
                         :disable="job.active_batch_qt > 0"
-                        :clickable="job.active_batch_qt == 0"
+                        :clickable="job.active_batch_qt === 0"
                         @click="editJobProgress(job)"
                       >
                         <q-item-section avatar>
@@ -190,7 +190,7 @@
                       <q-item
                         v-ripple
                         v-close-popup
-                        :disable="job.active_batch_qt == 0"
+                        :disable="job.active_batch_qt === 0"
                         :clickable="job.active_batch_qt > 0"
                         @click="confirm_cancel_batch = job._key"
                       >
@@ -201,7 +201,7 @@
                           <q-item-label>
                             {{ $t('cancel_active_batch') }}
                           </q-item-label>
-                          <q-item-label v-if="job.active_batch_qt == 0" caption>
+                          <q-item-label v-if="job.active_batch_qt === 0" caption>
                             {{ $t('cancel_active_batch_disabled') }}
                           </q-item-label>
                         </q-item-section>
@@ -211,7 +211,7 @@
                 </q-btn>
 
                 <!-- PROCESSING TIME EDIT -->
-                <BaseDialog :show="edit_job_time == job._key">
+                <BaseDialog :show="edit_job_time === job._key">
                   <q-card square class="surface1 q-pa-md">
                     <q-card-section class="text-h3 display highlight">
                       {{ $t('update_time') }}
@@ -273,7 +273,7 @@
                 </BaseDialog>
 
                 <!-- PROGRESS EDIT -->
-                <BaseDialog :show="edit_job_progress == job._key">
+                <BaseDialog :show="edit_job_progress === job._key">
                   <q-card square class="surface1 q-pa-md">
                     <q-card-section class="text-h3 display highlight">
                       {{ $t('update_progress') }}
@@ -311,7 +311,7 @@
                         </q-btn>
                         <q-btn
                           v-if="
-                            jobs_temp_data.new_job_qt_completed !=
+                            jobs_temp_data.new_job_qt_completed !==
                             job.qt_completed
                           "
                           color="theme-blue"
@@ -325,7 +325,7 @@
                 </BaseDialog>
 
                 <!-- Consider switching to banner or similar -->
-                <BaseDialog :show="confirm_cancel_batch == job._key">
+                <BaseDialog :show="confirm_cancel_batch === job._key">
                   <q-card square class="surface1 q-pa-md">
                     <q-card-section class="text-h3 highlight">
                       {{ $t('cancel_active_batch_confirm') }}
@@ -366,7 +366,7 @@
               <div class="row items-center">
                 <div class="text-right q-mr-lg col-3">
                   {{
-                    job.stage != 'created'
+                    job.stage !== 'created'
                       ? $durationFromMillisec(job.processing_time, {
                           precision: 'm',
                         }) || '< 1m'
@@ -410,14 +410,14 @@
         <!-- JOB ACTIONS -->
         <div class="row items-center q-pa-lg">
           <!-- STARTING ACTION BUTTONS -->
-          <template v-if="editMode == 'actions'">
+          <template v-if="editMode === 'actions'">
             <!-- SELECT ALL -->
             <q-btn
               v-if="phase.jobs.length > 1"
               size="12px"
               color="theme-grey"
               :label="
-                selected_jobs.length == 0
+                selected_jobs.length === 0
                   ? $t('select_all')
                   : $t('deselect_all')
               "
@@ -439,7 +439,7 @@
           <!-- END OF STARTING ACTION BUTTONS -->
 
           <!-- REBALANCE ACTION CARD -->
-          <template v-if="editMode == 'modify'">
+          <template v-if="editMode === 'modify'">
             <JobRebalanceActionCard
               :jobs="selected_jobs_data"
               :qt-to-allocate="qtToAllocate"

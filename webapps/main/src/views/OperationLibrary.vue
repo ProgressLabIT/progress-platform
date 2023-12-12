@@ -33,8 +33,8 @@
           :key="index"
           class="row pointer q-px-lg q-py-xs medium"
           :class="{
-            'alternate-row': index % 2 == 0,
-            'bg-blue-backdrop': operation._key == selected_operation_key,
+            'alternate-row': index % 2 === 0,
+            'bg-blue-backdrop': operation._key === selected_operation_key,
           }"
           style="white-space: nowrap"
           @click="showOperationDetail(operation._key)"

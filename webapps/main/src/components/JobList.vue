@@ -11,7 +11,7 @@
         >
         </BaseUserAvatar>
         <q-btn
-          v-if="o.operator._key == 'unassigned'"
+          v-if="o.operator._key === 'unassigned'"
           size="sm"
           color="theme-blue"
           :label="$t('assign')"
@@ -82,7 +82,7 @@
                   {{ props.row[field.name] }}
                 </template>
 
-                <template v-else-if="field.name == 'issue_count'">
+                <template v-else-if="field.name === 'issue_count'">
                   {{
                     (props.row.issues_open ?? 0) +
                     '/' +
@@ -90,7 +90,7 @@
                   }}
                 </template>
 
-                <template v-else-if="field.name == 'ready'">
+                <template v-else-if="field.name === 'ready'">
                   <q-icon
                     :name="jobIcon(props.row).name"
                     :color="jobIcon(props.row).color"
@@ -101,7 +101,7 @@
                 </template>
 
                 <div
-                  v-else-if="field.name == 'due_by'"
+                  v-else-if="field.name === 'due_by'"
                   class="row items-center justify-end q-gutter-xs"
                 >
                   <q-icon
@@ -111,7 +111,7 @@
                   />
                   <div>
                     {{
-                      props.row.due_by == null
+                      props.row.due_by === null
                         ? '-'
                         : $shortDateString(props.row.due_by, $i18n.locale)
                     }}

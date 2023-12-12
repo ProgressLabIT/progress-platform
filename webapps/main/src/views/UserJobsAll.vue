@@ -35,7 +35,7 @@
           <q-btn
             flat
             icon="mdi-view-grid"
-            :color="layout != 'list' ? 'text-high' : 'theme-grey'"
+            :color="layout !== 'list' ? 'text-high' : 'theme-grey'"
             size="md"
             padding="sm sm"
             @click="setLayout('card')"
@@ -43,7 +43,7 @@
           <q-btn
             flat
             icon="mdi-view-agenda"
-            :color="layout == 'list' ? 'text-high' : 'theme-grey'"
+            :color="layout === 'list' ? 'text-high' : 'theme-grey'"
             size="md"
             padding="sm sm"
             @click="setLayout('list')"
@@ -82,7 +82,7 @@
       <!-- JOB LIST -->
       <div class="row q-col-gutter-lg">
         <!-- CARDS LAYOUT (DEFAULT) -->
-        <template v-if="layout != 'list'">
+        <template v-if="layout !== 'list'">
           <div
             v-for="j in details.list"
             :key="j._key"

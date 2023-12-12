@@ -24,7 +24,7 @@
           {{ $t('cancel') }}
         </q-btn>
         <q-btn
-          v-if="value != initial_value"
+          v-if="/* eslint-disable-line vue/eqeqeq */ value != initial_value"
           size="12px"
           flat
           color="theme-blue"

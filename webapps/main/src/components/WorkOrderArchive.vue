@@ -193,23 +193,23 @@
           :props="props"
           @dblclick="showWorkOrderScreen(props.row._key)"
         >
-          <template v-for="c in columns" :key="c.name">
+          <template v-for="column in columns" :key="column.name">
             <q-td :props="props" class="ellipsis">
-              <template v-if="['start', 'end'].includes(c.name)">
+              <template v-if="['start', 'end'].includes(column.name)">
                 <div>
-                  {{ getHumanDate(props.row[c.name]) }}
+                  {{ getHumanDate(props.row[column.name]) }}
                 </div>
               </template>
 
               <template
-                v-else-if="c.name.includes('qt') || c.name == 'issue_count'"
+                v-else-if="column.name.includes('qt') || column.name === 'issue_count'"
               >
-                <span>{{ props.row[c.name] || 0 }}</span>
+                <span>{{ props.row[column.name] || 0 }}</span>
               </template>
 
               <template v-else>
                 <span class="table-data">
-                  {{ $capitalizeAll(props.row[c.name] || '') }}
+                  {{ $capitalizeAll(props.row[column.name] || '') }}
                 </span>
               </template>
             </q-td>

@@ -57,8 +57,8 @@
             :key="index"
             class="row pointer q-px-lg q-py-xs medium"
             :class="{
-              'alternate-row': index % 2 == 0,
-              'bg-blue-backdrop': user._key == selected_user_key,
+              'alternate-row': index % 2 === 0,
+              'bg-blue-backdrop': user._key === selected_user_key,
             }"
             style="white-space: nowrap"
             @click="showUser(user)"
@@ -151,7 +151,7 @@ export default {
     },
 
     selected_user() {
-      return this.user_list.find((u) => u._key == this.selected_user_key);
+      return this.user_list.find((user) => user._key === this.selected_user_key);
     },
 
     filtered_users() {

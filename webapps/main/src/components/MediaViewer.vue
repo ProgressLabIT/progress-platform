@@ -8,7 +8,7 @@
           <template v-if="isWorkSession">
             <template v-for="field in job_info">
               <div
-                v-if="job[field.name] != undefined"
+                v-if="job[field.name] !== undefined"
                 :key="field.name"
                 class="row items-center q-py-xs"
               >

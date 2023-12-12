@@ -6,7 +6,7 @@
       </q-card-section>
 
       <transition name="slide-fade" mode="out-in">
-        <div v-if="stage == 'confirm'" key="confirm">
+        <div v-if="stage === 'confirm'" key="confirm">
           <q-card-section>
             <div>
               {{ $capitalize($t('issue_type_delete_question')) }}

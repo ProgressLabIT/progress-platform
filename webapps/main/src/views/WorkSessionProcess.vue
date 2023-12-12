@@ -2,8 +2,8 @@
   <div class="fit column">
     <q-list class="transparent medium text-left q-pa-md" align="left">
       <q-item
-        v-for="(p, index) in phase_data"
-        :key="p.phase_key"
+        v-for="(phase, index) in phase_data"
+        :key="phase.phase_key"
         clickable
         :name="index"
         class="full-width text-left"
@@ -12,9 +12,9 @@
         <q-item-section avatar class="col-auto">
           <q-avatar
             size="20px"
-            :color="p.phase_key == job.phase_key ? 'theme-blue' : 'theme-grey'"
+            :color="phase.phase_key === job.phase_key ? 'theme-blue' : 'theme-grey'"
             class="display smaller"
-            :class="{ highlight: p.phase_key == job.phase_key }"
+            :class="{ highlight: phase.phase_key === job.phase_key }"
           >
             {{ index + 1 }}
           </q-avatar>
@@ -25,12 +25,12 @@
           <q-item-label
             class="display ellipsis"
             :class="
-              p.phase_key == job.phase_key
+              phase.phase_key === job.phase_key
                 ? 'highlight'
                 : 'text-low weight-medium'
             "
           >
-            {{ p.phase_alias }}
+            {{ phase.phase_alias }}
           </q-item-label>
         </q-item-section>
 
@@ -38,11 +38,11 @@
         <q-item-section>
           <div class="row items-center">
             <div class="col">
-              <BaseProgressBar :data="p" />
+              <BaseProgressBar :data="phase" />
             </div>
             <div class="col-1" />
             <div class="col-auto">
-              {{ p.qt_released }} / {{ wo_data.qt_planned }}
+              {{ phase.qt_released }} / {{ wo_data.qt_planned }}
             </div>
           </div>
         </q-item-section>
@@ -51,7 +51,7 @@
         <q-item-section>
           <div class="row q-gutter-sm justify-end">
             <BaseUserAvatar
-              v-for="o in p.assignments.filter((o) => o)"
+              v-for="o in phase.assignments.filter((o) => o)"
               :key="o._key"
               :user="o"
               :show_name="false"

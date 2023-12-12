@@ -104,7 +104,7 @@
       loading="eager"
       style="height: 50px; width: 70px"
       :style="
-        step_media_index == index
+        step_media_index === index
           ? 'border-bottom: solid 3px' + $theme.blue
           : ''
       "

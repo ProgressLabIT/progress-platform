@@ -25,7 +25,7 @@
           <q-space />
 
           <!-- CREATE NEW WORK ORDER -->
-          <template v-if="$route.name == 'workOrderList'">
+          <template v-if="$route.name === 'workOrderList'">
             <div v-if="!editing" class="col-auto">
               <q-btn
                 size="0.75rem"
@@ -66,7 +66,7 @@
 
           <!-- FILTER BUTTON -->
           <q-btn
-            v-if="!showFilterDrawer && $route.name != 'workOrderArchive'"
+            v-if="!showFilterDrawer && $route.name !== 'workOrderArchive'"
             class="q-ml-sm"
             size="sm"
             round
@@ -101,13 +101,13 @@
     </q-page>
 
     <FilterDrawer
-      v-if="$route.name != 'workOrderArchive'"
+      v-if="$route.name !== 'workOrderArchive'"
       v-model="showFilterDrawer"
       :active-filters="filters_active"
       @reset="resetFilters"
     >
       <!-- FILTERS SPECIFIC TO JOB LIST -->
-      <template v-if="$route.name == 'jobList'">
+      <template v-if="$route.name === 'jobList'">
         <!-- BY DEPARTMENT -->
         <q-select
           ref="department_filter"
@@ -321,7 +321,7 @@
           >
           </q-checkbox>
         </div>
-        <template v-if="$route.name == 'jobList'">
+        <template v-if="$route.name === 'jobList'">
           <div v-for="filter in job_filters" :key="filter" class="col-6">
             <q-checkbox
               v-model="_this[filter]"

@@ -24,21 +24,21 @@
           :style="props.row.closed ? 'opacity: .5' : ''"
           @dblclick="showIssueDetails(props.row._key)"
         >
-          <template v-for="c in columns" :key="c.name">
+          <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
-              <template v-if="c.name == 'issue_type'">
+              <template v-if="column.name === 'issue_type'">
                 <q-icon :name="props.row.icon || 'mdi-help'" />
               </template>
 
-              <template v-else-if="['created', 'closed'].includes(c.name)">
+              <template v-else-if="['created', 'closed'].includes(column.name)">
                 {{
-                  props.row[c.name] == null
+                  props.row[column.name] === null
                     ? '-'
-                    : $shortDateString(props.row[c.name], $i18n.locale)
+                    : $shortDateString(props.row[column.name], $i18n.locale)
                 }}
               </template>
 
-              <template v-else-if="c.name == 'critical'">
+              <template v-else-if="column.name === 'critical'">
                 <q-avatar
                   v-if="props.row.critical"
                   :color="props.row.closed ? 'theme-grey' : 'theme-red'"
@@ -47,7 +47,7 @@
                 </q-avatar>
               </template>
 
-              <template v-else-if="c.name == 'open'">
+              <template v-else-if="column.name === 'open'">
                 <q-icon
                   v-if="!props.row.open"
                   name="mdi-check-circle"
@@ -60,15 +60,15 @@
               <template
                 v-else-if="
                   ['product_code', 'work_order_code', 'project_code'].includes(
-                    c.name,
+                    column.name,
                   )
                 "
               >
-                {{ $capitalizeAll(c.field(props.row) || '-') }}
+                {{ $capitalizeAll(column.field(props.row) || '-') }}
               </template>
 
               <template v-else>
-                {{ $capitalizeAll(props.row[c.name] || '-') }}
+                {{ $capitalizeAll(props.row[column.name] || '-') }}
               </template>
             </q-td>
           </template>

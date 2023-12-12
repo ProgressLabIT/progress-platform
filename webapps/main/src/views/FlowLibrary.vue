@@ -42,7 +42,7 @@
             <q-spinner-hourglass
               v-if="['SCHEDULED', 'PENDING'].includes(flow_state)"
             />
-            <q-spinner-dots v-else-if="flow_state == 'RUNNING'" />
+            <q-spinner-dots v-else-if="flow_state === 'RUNNING'" />
             <q-icon
               v-else-if="failed_states.includes(flow_state)"
               name="mdi-close-octagon"

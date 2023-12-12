@@ -10,7 +10,7 @@
 
       <q-card-section class="scroll col">
         <div v-for="(phase, index) in phase_data" :key="phase.phase_key">
-          <q-separator v-if="index != 0" class="q-my-md" />
+          <q-separator v-if="index !== 0" class="q-my-md" />
 
           <!-- PHASE HEADER -->
           <div class="row items-center justify-between">
@@ -55,7 +55,7 @@
             </div>
             <q-space />
             <template
-              v-if="job_update._key != 'NA' && job_update.new_remaining"
+              v-if="job_update._key !== 'NA' && job_update.new_remaining"
             >
               <div class="col-auto text-uppercase q-mr-md">
                 {{ $t('quantity.remaining.short') }}
@@ -74,7 +74,7 @@
               />
             </template>
             <q-chip
-              v-else-if="job_update._key != 'NA'"
+              v-else-if="job_update._key !== 'NA'"
               square
               class="text-uppercase highlight q-ml-lg"
               color="theme-grey"

@@ -65,7 +65,7 @@
                 <q-icon v-else size="xs" :name="link.icon" class="q-mr-xs" />
                 <template v-if="link.item_count">
                   <q-chip
-                    v-if="link.route_name == 'jobIssues'"
+                    v-if="link.route_name === 'jobIssues'"
                     size="9px"
                     :color="getItemCountColor(link)"
                     class="q-ml-sm weight-bold text-body2"
@@ -121,7 +121,7 @@
             <!-- WORK ORDER DATA -->
             <template v-for="field in job_info">
               <div
-                v-if="j[field.name] != undefined"
+                v-if="j[field.name] !== undefined"
                 :key="field.name"
                 class="row items-center q-py-xs"
               >

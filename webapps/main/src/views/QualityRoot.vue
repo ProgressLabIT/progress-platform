@@ -46,7 +46,7 @@
           </IssueForm>
 
           <q-btn
-            v-if="!showFilterDrawer && $route.name != 'workOrderArchive'"
+            v-if="!showFilterDrawer && $route.name !== 'workOrderArchive'"
             class="q-ml-sm"
             size="sm"
             round

@@ -38,8 +38,8 @@
           :key="index"
           class="row pointer q-px-lg q-py-xs medium full-width"
           :class="{
-            'alternate-row': index % 2 == 0,
-            'bg-blue-backdrop': issue_type._key == selected_issue_type_key,
+            'alternate-row': index % 2 === 0,
+            'bg-blue-backdrop': issue_type._key === selected_issue_type_key,
           }"
           style="white-space: nowrap"
           @click="showIssueTypeDetail(issue_type._key)"

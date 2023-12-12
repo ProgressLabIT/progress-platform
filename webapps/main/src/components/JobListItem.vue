@@ -1,5 +1,5 @@
 <template>
-  <q-item :class="{ 'text-low': job_data.stage == 'closed' }">
+  <q-item :class="{ 'text-low': job_data.stage === 'closed' }">
     <q-item-section v-if="show_key" avatar>
       {{ job_data._key }}
     </q-item-section>
