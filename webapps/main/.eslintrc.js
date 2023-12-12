@@ -82,6 +82,11 @@ module.exports = {
     'vue/eqeqeq': 'error',
     'vue/custom-event-name-casing': 'warn',
     'vue/no-unused-properties': ['warn', { groups: ['props', 'setup'] }],
+    'vue/v-for-delimiter-style': 'warn',
+    'vue/require-macro-variable-name': 'warn',
+    'vue/prefer-separate-static-class': 'warn',
+    // TODO: Enable this rule after gradually converting all non-translated strings to i18n
+    // 'vue/no-bare-strings-in-template': 'warn',
 
     // To make the following work: `import Sortable from 'sortablejs'`
     'import/no-named-as-default': 'off',

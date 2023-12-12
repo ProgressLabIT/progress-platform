@@ -28,8 +28,8 @@
         {{ product.code }}
       </div>
       <div
-        class="text-uppercase low-text"
-        :class="['px-0 pb-1', overDesc ? '' : 'nowrap']"
+        class="text-uppercase low-text px-0 pb-1"
+        :class="{ nowrap: !overDesc }"
       >
         {{ product.description }}
       </div>
