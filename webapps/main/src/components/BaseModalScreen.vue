@@ -4,7 +4,7 @@
     maximized
     no-backdrop-dismiss
     no-route-dismiss
-    :no-esc-dismiss="no_esc_dismiss"
+    :no-esc-dismiss="noEscDismiss"
     no-shake
     square
     transition-show="scale"

@@ -168,6 +168,7 @@ export default {
   },
 
   props: {
+    // eslint-disable-next-line vue/no-unused-properties
     phase: {
       type: Object,
       required: true,
@@ -176,7 +177,8 @@ export default {
       type: Boolean,
       default: false,
     },
-    product_data: {
+    // eslint-disable-next-line vue/no-unused-properties
+    productData: {
       type: Object,
       required: true,
     },

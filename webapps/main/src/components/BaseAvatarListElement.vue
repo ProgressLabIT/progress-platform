@@ -4,6 +4,7 @@
 </template>
 
 <script>
+/* eslint-disable vue/no-unused-properties */
 // import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 
 export default {

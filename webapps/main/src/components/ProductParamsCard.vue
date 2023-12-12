@@ -13,6 +13,7 @@ export default {
       type: Object,
       required: true,
     },
+    // eslint-disable-next-line vue/no-unused-properties
     editMode: {
       type: Boolean,
       default: false,

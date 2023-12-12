@@ -69,11 +69,6 @@ export default {
       default: true,
     },
 
-    name_el: {
-      type: String,
-      default: 'div',
-    },
-
     name_class: {
       type: String,
       default: 'text-body2',

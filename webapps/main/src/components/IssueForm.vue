@@ -89,13 +89,13 @@
             <template #option="scope">
               <JobListItem
                 v-bind="scope.itemProps"
-                :job_data="scope.opt"
-                show_progress
-                show_assignee
+                :job-data="scope.opt"
+                show-progress
+                show-assignee
               />
             </template>
             <template #selected-item="scope">
-              <JobListItem :job_data="scope.opt" />
+              <JobListItem :job-data="scope.opt" />
             </template>
           </q-select>
 

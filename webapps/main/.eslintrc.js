@@ -81,6 +81,7 @@ module.exports = {
     'vue/no-empty-component-block': 'warn',
     'vue/eqeqeq': 'error',
     'vue/custom-event-name-casing': 'warn',
+    'vue/no-unused-properties': ['warn', { groups: ['props', 'setup'] }],
 
     // To make the following work: `import Sortable from 'sortablejs'`
     'import/no-named-as-default': 'off',

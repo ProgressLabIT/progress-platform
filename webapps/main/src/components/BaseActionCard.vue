@@ -14,11 +14,11 @@
 
     <q-card-section class="row justify-between">
       <slot name="actions">
-        <q-btn :color="save_color" @click="$emit('save')">
-          {{ save_label ?? $t('save') }}
+        <q-btn :color="saveColor" @click="$emit('save')">
+          {{ saveLabel ?? $t('save') }}
         </q-btn>
-        <q-btn :color="cancel_color" @click="$emit('cancel')">
-          {{ cancel_label ?? $t('cancel') }}
+        <q-btn :color="cancelColor" @click="$emit('cancel')">
+          {{ cancelLabel ?? $t('cancel') }}
         </q-btn>
       </slot>
     </q-card-section>

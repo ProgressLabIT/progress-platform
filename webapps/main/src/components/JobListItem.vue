@@ -1,18 +1,18 @@
 <template>
-  <q-item :class="{ 'text-low': job_data.stage === 'closed' }">
-    <q-item-section v-if="show_key" avatar>
-      {{ job_data._key }}
+  <q-item :class="{ 'text-low': jobData.stage === 'closed' }">
+    <q-item-section v-if="showKey" avatar>
+      {{ jobData._key }}
     </q-item-section>
-    <q-item-section v-if="show_assignee">
-      <BaseUserAvatar v-if="job_data.assigned_to" :user="job_data.assigned_to">
+    <q-item-section v-if="showAssignee">
+      <BaseUserAvatar v-if="jobData.assigned_to" :user="jobData.assigned_to">
       </BaseUserAvatar>
       <div v-else class="smaller">not assigned</div>
     </q-item-section>
-    <q-item-section v-if="show_progress">
-      <BaseProgressBar :data="job_data" />
+    <q-item-section v-if="showProgress">
+      <BaseProgressBar :data="jobData" />
     </q-item-section>
-    <q-item-section v-if="show_quantities" side>
-      {{ job_data.qt_completed + '/' + job_data.qt_planned }}
+    <q-item-section v-if="showQuantities" side>
+      {{ jobData.qt_completed + '/' + jobData.qt_planned }}
     </q-item-section>
   </q-item>
 </template>
@@ -30,27 +30,23 @@ export default {
   },
 
   props: {
-    job_data: {
+    jobData: {
       type: Object,
       required: true,
     },
-    show_key: {
+    showKey: {
       type: Boolean,
       default: true,
     },
-    show_phase: {
+    showProgress: {
       type: Boolean,
       default: false,
     },
-    show_progress: {
-      type: Boolean,
-      default: false,
-    },
-    show_assignee: {
+    showAssignee: {
       type: Boolean,
       default: true,
     },
-    show_quantities: {
+    showQuantities: {
       type: Boolean,
       default: true,
     },
