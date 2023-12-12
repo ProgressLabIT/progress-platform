@@ -80,6 +80,7 @@ module.exports = {
     'vue/padding-line-between-blocks': 'warn',
     'vue/no-empty-component-block': 'warn',
     'vue/eqeqeq': 'error',
+    'vue/custom-event-name-casing': 'warn',
 
     // To make the following work: `import Sortable from 'sortablejs'`
     'import/no-named-as-default': 'off',

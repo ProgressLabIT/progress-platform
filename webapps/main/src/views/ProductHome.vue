@@ -280,7 +280,7 @@ export default {
     MediaViewer,
   },
 
-  emits: ['changes_saved', 'changes_canceled'],
+  emits: ['changesSaved', 'changesCanceled'],
 
   data() {
     return {
@@ -487,7 +487,7 @@ export default {
           // even if the update is instantaneous
           // setTimeout(() => {
           await this.$store.dispatch('loadProductDetails', this.product_key);
-          this.$emit('changes_saved');
+          this.$emit('changesSaved');
           this.editMode = false;
           this.clearTempImg();
           this.saving = false;
@@ -500,7 +500,7 @@ export default {
 
     cancelChanges() {
       this.$store.commit('CANCEL_PRODUCT_CHANGES');
-      this.$emit('changes_canceled');
+      this.$emit('changesCanceled');
       this.editMode = false;
     },
 

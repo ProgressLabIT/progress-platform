@@ -33,8 +33,8 @@
         <keep-alive>
           <component
             :is="Component"
-            @changes_saved="showSaveConfirmation"
-            @changes_canceled="showCancelConfirmation"
+            @changes-saved="showSaveConfirmation"
+            @changes-canceled="showCancelConfirmation"
           />
         </keep-alive>
       </router-view>

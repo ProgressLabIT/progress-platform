@@ -215,7 +215,7 @@ export default {
     BaseAutocompleteOperation,
   },
 
-  emits: ['changes_saved', 'changes_canceled'],
+  emits: ['changesSaved', 'changesCanceled'],
 
   data() {
     return {
@@ -349,7 +349,7 @@ export default {
       this.$store.commit('CANCEL_PROCESS_CHANGES');
       this.confirming_delete = null;
       this.editMode = false;
-      this.$emit('changes_canceled');
+      this.$emit('changesCanceled');
     },
 
     async addPhase(new_operation) {
@@ -459,7 +459,7 @@ export default {
             this.confirming_delete = null;
             this.saving = false;
             this.editMode = false;
-            this.$emit('changes_saved');
+            this.$emit('changesSaved');
           }, 500);
         })
         .catch((err) => {

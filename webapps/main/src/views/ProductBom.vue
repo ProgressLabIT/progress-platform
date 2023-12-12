@@ -201,7 +201,7 @@ export default {
     BaseDialog,
   },
 
-  emits: ['changes_saved', 'changes_canceled'],
+  emits: ['changesSaved', 'changesCanceled'],
 
   data() {
     return {
@@ -431,7 +431,7 @@ export default {
       this.temp_bom = [...this.saved_bom];
       this.editMode = false;
       this.delete_lines = [];
-      this.$emit('changes_canceled');
+      this.$emit('changesCanceled');
     },
 
     saveChanges() {
@@ -446,7 +446,7 @@ export default {
           setTimeout(() => {
             this.saving = false;
             this.editMode = false;
-            this.$emit('changes_saved');
+            this.$emit('changesSaved');
           }, 1500);
         })
         .catch((err) => {
