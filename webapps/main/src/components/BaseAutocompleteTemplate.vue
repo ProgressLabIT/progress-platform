@@ -1,20 +1,20 @@
 <template>
   <q-select
     :model-value="value"
-    use-input
-    dense
-    filled
-    :label="label"
+    :emit-value="keyOnly"
+    :map-options="keyOnly"
     :options="
       options.filter(
         (option) => !selected.some(({ _key }) => _key === option._key),
       )
     "
-    :option-label="(item) => $capitalize(item.name)"
-    input-debounce="100"
     :option-value="keyOnly ? '_key' : null"
-    :emit-value="keyOnly"
-    :map-options="keyOnly"
+    :option-label="(item) => $capitalize(item.name)"
+    use-input
+    input-debounce="100"
+    :label="label"
+    dense
+    filled
     @filter="filter"
     @update:model-value="(selection) => $emit('select', selection)"
   >
@@ -24,7 +24,8 @@
           <q-item-label>
             {{ scope.opt.name }}
           </q-item-label>
-          <q-item-label caption lines="2">
+
+          <q-item-label caption :lines="2">
             {{ scope.opt.description }}
           </q-item-label>
         </q-item-section>
@@ -72,7 +73,7 @@ export default {
   data() {
     return {
       loading: false,
-      origin_list: [],
+      templates: [],
       options: [],
     };
   },
@@ -84,14 +85,14 @@ export default {
 
     this.loading = true;
     const { data } = await this.$api.get('print-template');
-    this.origin_list = data;
+    this.templates = data;
     this.initOptions();
     this.loading = false;
   },
 
   methods: {
     initOptions() {
-      this.options = [...this.origin_list];
+      this.options = [...this.templates];
     },
 
     filter(value, update) {
@@ -101,10 +102,11 @@ export default {
         });
         return;
       }
+
       update(() => {
         const needle = value.toLowerCase();
-        this.options = this.origin_list.filter((o) => {
-          return multiMatch(needle, o, ['name', 'description']);
+        this.options = this.templates.filter((template) => {
+          return multiMatch(needle, template, ['name', 'description']);
         });
       });
     },

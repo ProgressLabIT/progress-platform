@@ -1,10 +1,11 @@
 <template>
+  <!-- TODO: i18n -->
   <BaseModalScreen :show="show" no-esc-dismiss @close="$emit('close')">
     <template #header>
       <div class="q-ml-md display highlight weight-medium col">
         TEMPLATE
-        <span v-if="working_template._key">
-          {{ working_template._key }}
+        <span v-if="workingTemplate._key">
+          {{ workingTemplate._key }}
         </span>
         <span v-else>
           {{ $t('new') }}
@@ -21,66 +22,68 @@
       >
         <div class="q-gutter-md">
           <q-input
-            v-model="working_template.name"
+            v-model="workingTemplate.name"
             filled
             :label="$t('name')"
             stack-label
             class="shadow-3"
             input-class="transparent"
           />
+
           <q-input
-            v-model="working_template.description"
-            filled
-            class="shadow-3"
-            stack-label
-            :label="$t('description')"
+            v-model="workingTemplate.description"
             autogrow
+            filled
+            :label="$t('description')"
+            stack-label
+            class="shadow-3"
           />
 
           <div class="text-h5 q-mt-lg">COLLEGAMENTI</div>
-          <div v-for="f in working_template.template.columns" :key="f">
+          <div v-for="column in workingTemplate.template.columns" :key="column">
             <q-select
-              v-model="working_template.presets[f]"
-              :label="f"
+              v-model="workingTemplate.presets[column]"
+              :options="templateDataOptions"
+              :label="column"
               stack-label
-              class="shadow-3"
               filled
-              :options="template_data_options"
+              class="shadow-3"
             />
           </div>
 
-          <q-space></q-space>
+          <q-space />
+
           <!-- ACTION MENU -->
           <q-btn
+            label="UPLOAD PDF"
             color="primary"
             icon="mdi-upload"
-            label="UPLOAD PDF"
-            @click="$refs.upload_pdf.click()"
+            @click="$refs.pdfFileInput.click()"
           />
 
           <q-btn
+            label="SAVE"
             color="primary"
             icon="mdi-database-check"
-            label="SAVE"
             @click="saveTemplate"
           />
         </div>
       </div>
 
       <input
-        ref="upload_pdf"
+        ref="pdfFileInput"
         type="file"
         accept="application/pdf"
         style="opacity: 0"
         @change="uploadPdf($event.target.files[0])"
       />
 
-      <BaseDialog :show="show_rename">
+      <BaseDialog :show="showRename">
         <BaseActionCard
-          :save_label="$t('confirm')"
           title="RINOMINA TEMPLATE"
+          :save-label="$t('confirm')"
           @cancel="cancelRename"
-          @save="show_rename = false"
+          @save="showRename = false"
         />
       </BaseDialog>
     </template>
@@ -88,9 +91,8 @@
 </template>
 
 <script>
-import { generate } from '@pdfme/generator';
 import { Designer, BLANK_PDF } from '@pdfme/ui';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 import BaseActionCard from '@/components/BaseActionCard.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -110,9 +112,9 @@ export default {
       type: Boolean,
       default: false,
     },
-    edit_template: {
+    editTemplate: {
       type: Object,
-      default: null,
+      default: undefined,
     },
   },
 
@@ -121,10 +123,10 @@ export default {
   data() {
     return {
       designer: null,
-      show_rename: false,
+      showRename: false,
       mode: undefined,
-      working_template: undefined,
-      template_data_options: [
+      workingTemplate: undefined,
+      templateDataOptions: [
         'current_date',
         'current_time',
         'current_user',
@@ -158,7 +160,7 @@ export default {
   },
 
   computed: {
-    empty_template() {
+    emptyTemplate() {
       return {
         name: this.$t('print_template_new'),
         description: undefined,
@@ -168,13 +170,6 @@ export default {
           schemas: [],
         },
       };
-    },
-
-    has_changed() {
-      return isEqual(
-        this.working_template,
-        this.mode == 'new' ? this.empty_template : this.edit_template,
-      );
     },
   },
 
@@ -188,50 +183,38 @@ export default {
   },
 
   methods: {
-    async generatePdf() {
-      const pdf = await generate({
-        template: this.template,
-        inputs: this.inputs,
-      });
-      const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
-      window.open(URL.createObjectURL(blob));
-    },
-
     async uploadPdf(file) {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => {
-        this.working_template.template.basePdf = reader.result;
+        this.workingTemplate.template.basePdf = reader.result;
         this.initDesigner();
       };
     },
 
-    saveTemplate() {
-      const data = {
-        ...this.working_template,
-        template: this.designer.getTemplate(),
-      };
-      const request =
-        this.mode == 'new'
-          ? this.$api.post('print-template', data)
-          : this.$api.put('print-template', data);
-
-      request.then(() => {
-        this.$emit('saved');
-        this.closeDesigner();
+    async saveTemplate() {
+      await this.$api.request({
+        method: this.mode === 'new' ? 'POST' : 'PUT',
+        url: 'print-template',
+        data: {
+          ...this.workingTemplate,
+          template: this.designer.getTemplate(),
+        },
       });
+      this.$emit('saved');
+      this.closeDesigner();
     },
 
     initDesigner() {
       const container = document.getElementById('pdf-designer');
       this.designer = new Designer({
         domContainer: container,
-        template: this.working_template.template,
-        options: { lang: 'it' },
+        template: this.workingTemplate.template,
+        options: { lang: 'it' }, // TODO: i18n
       });
-      this.designer.onChangeTemplate(
-        (t) => (this.working_template.template = cloneDeep(t)),
-      );
+      this.designer.onChangeTemplate((template) => {
+        this.workingTemplate.template = cloneDeep(template);
+      });
     },
 
     closeDesigner() {
@@ -242,18 +225,18 @@ export default {
     },
 
     initTemplate() {
-      if (this.edit_template) {
+      if (this.editTemplate) {
         this.mode = 'edit';
-        this.working_template = cloneDeep(this.edit_template);
+        this.workingTemplate = cloneDeep(this.editTemplate);
       } else {
         this.mode = 'new';
-        this.working_template = this.empty_template;
+        this.workingTemplate = this.emptyTemplate;
       }
     },
 
     cancelRename() {
       this.initName();
-      this.show_rename = false;
+      this.showRename = false;
     },
   },
 };

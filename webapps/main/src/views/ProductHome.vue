@@ -279,30 +279,30 @@
         </q-card-section>
         <q-list class="col-shrink scroll">
           <q-item
-            v-for="(t, index) in product.print_templates"
-            :key="t._key"
-            :class="{ 'text-italic': t.temp }"
-            @mouseenter="over_print = t._key"
+            v-for="(template, index) in product.print_templates"
+            :key="template._key"
+            :class="{ 'text-italic': template.temp }"
+            @mouseenter="over_print = template._key"
             @mouseleave="over_print = null"
           >
             <q-item-section>
               <q-item-label
-                >{{ t.name }}
+                >{{ template.name }}
                 {{
-                  t.temp ? '(' + $capitalize($t('unsaved')) + ')' : ''
+                  template.temp ? '(' + $capitalize($t('unsaved')) + ')' : ''
                 }}</q-item-label
               >
-              <q-item-label caption>{{ t.description }}</q-item-label>
+              <q-item-label caption>{{ template.description }}</q-item-label>
             </q-item-section>
             <q-item-section side>
               <div class="row q-gutter-sm items-center">
                 <q-btn
-                  v-show="over_print === t._key || editMode"
+                  v-show="over_print === template._key || editMode"
                   flat
                   round
                   icon="mdi-file-search-outline"
                   size="10px"
-                  @click="showTemplatePreview(t)"
+                  @click="showTemplatePreview(template)"
                 >
                 </q-btn>
                 <q-btn

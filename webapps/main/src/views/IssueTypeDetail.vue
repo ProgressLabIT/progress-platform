@@ -185,14 +185,16 @@
           <q-tab-panel name="prints" class="surface2 column">
             <div class="row col q-col-gutter-md scroll">
               <div
-                v-for="(t, index) in temp_metadata.print_templates.filter(
-                  (t) => !t.trash,
+                v-for="(
+                  template, index
+                ) in temp_metadata.print_templates.filter(
+                  ({ trash }) => !trash,
                 )"
-                :key="t._key"
+                :key="template._key"
                 class="col-3"
               >
                 <PrintTemplateCard
-                  :template="t"
+                  :template="template"
                   :allow-delete="editMode"
                   @delete="deleteTemplate(index)"
                 />

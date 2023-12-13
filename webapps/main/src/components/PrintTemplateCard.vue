@@ -1,7 +1,7 @@
 <template>
   <q-card square bordered class="surface2">
     <q-card-section class="row items-baseline">
-      <q-icon class="" name="mdi-file-document" size="sm" />
+      <q-icon name="mdi-file-document" size="sm" />
       <div class="q-ml-sm text-h3" :class="{ 'text-italic': template.temp }">
         <div>{{ template.name }}</div>
         <div v-if="template.temp" class="smaller">
@@ -42,18 +42,18 @@
     </q-card-section>
 
     <PrintTemplateDesigner
-      :show="edit_template !== null"
-      :edit_template="edit_template"
+      :show="templateToEdit !== null"
+      :edit-template="templateToEdit"
       @close="resetDesigner"
       @saved="$emit('saved')"
     />
 
     <!-- PRINT FORM/PREVIEW -->
     <MediaViewer
-      :show="!!show_preview"
-      :media_name="show_preview?.name"
-      :media_src="show_preview?.pdf"
-      @close="show_preview = null"
+      :show="!!showPreview"
+      :media_name="showPreview?.name"
+      :media_src="showPreview?.pdf"
+      @close="showPreview = null"
     />
   </q-card>
 </template>
@@ -92,8 +92,8 @@ export default {
 
   data() {
     return {
-      show_preview: false,
-      edit_template: null,
+      showPreview: false,
+      templateToEdit: null,
     };
   },
 
@@ -103,7 +103,7 @@ export default {
         data: { template },
       } = await this.$api.get(`print-template/${this.template._key}`);
       const inputs = template.sampledata;
-      this.show_preview = {
+      this.showPreview = {
         name: template.name,
         pdf: await generate({ template, inputs }),
       };
@@ -113,13 +113,11 @@ export default {
       const { data } = await this.$api.get(
         `print-template/${this.template._key}`,
       );
-      this.edit_template = data;
-      this.show_designer = true;
+      this.templateToEdit = data;
     },
 
     resetDesigner() {
-      this.show_designer = false;
-      this.edit_template = null;
+      this.templateToEdit = null;
     },
   },
 };

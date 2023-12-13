@@ -1,9 +1,8 @@
 <template>
   <div class="fit scroll q-pa-md">
-    <LoadingSignal v-if="!data_ready" />
-
+    <LoadingSignal v-if="isLoading" />
     <div v-else class="row q-col-gutter-md">
-      <div v-for="template in template_list" :key="template._key" class="col-3">
+      <div v-for="template in templates" :key="template._key" class="col-3">
         <PrintTemplateCard
           :template="template"
           allow-edit
@@ -21,7 +20,7 @@
     />
 
     <PrintTemplateDesigner
-      :show="show_designer"
+      :show="showDesigner"
       @close="resetDesigner"
       @saved="getTemplates"
     />
@@ -44,10 +43,9 @@ export default {
 
   data() {
     return {
-      data_ready: false,
-      search_text: null,
-      template_list: [],
-      show_designer: false,
+      isLoading: true,
+      templates: [],
+      showDesigner: false,
     };
   },
 
@@ -57,17 +55,18 @@ export default {
 
   methods: {
     async getTemplates() {
+      this.isLoading = true;
       const { data } = await this.$api.get('print-template');
-      this.template_list = data.sort();
-      this.data_ready = true;
+      this.templates = data.sort();
+      this.isLoading = false;
     },
 
     openNewTemplate() {
-      this.show_designer = true;
+      this.showDesigner = true;
     },
 
     resetDesigner() {
-      this.show_designer = false;
+      this.showDesigner = false;
     },
   },
 };
