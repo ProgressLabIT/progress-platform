@@ -51,7 +51,7 @@ const formFields = computed(
   })
 )
 
-const formData = computed(() => batchStep.value.form_data)
+const formData = computed(() => batchStep.value?.form_data ?? [])
 const formDataIndexByFieldKey = computed(() => {
   const indexByKey = {}
   formData.value.forEach(({ form_field_key }, index) => {

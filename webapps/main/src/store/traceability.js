@@ -80,13 +80,13 @@ const traceability = {
   },
 
   getters: {
-    getBatchStep: state => step_key => {
-      const batch_procedure = state.current_batch_data.step_data
-      if (batch_procedure) {
-        const batch_step = batch_procedure.find(({ _key }) => _key === step_key)
-        return batch_step
+    getBatchStep: state => stepKey => {
+      const batchSteps = state.current_batch_data.step_data
+      if (!batchSteps) {
+        return
       }
-      else return []
+
+      return batchSteps.find(({ _key }) => _key === stepKey)
     }
   },
 
