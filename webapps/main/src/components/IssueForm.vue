@@ -455,6 +455,7 @@ export default {
         critical: this.critical,
         data: this.form_fields.map(field => ({
           form_field_key: field._key,
+          custom_field_key: field.custom_field_key,
           value: field.type === 'files'
             ? field.value
               ?.filter(file => !file.delete)

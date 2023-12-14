@@ -37,6 +37,7 @@ FOR form_step_data IN StepExecutionData
     FOR form_index IN 0..(LENGTH(form_step_data.user_data) - 1)
       LET new_data = {
         form_field_key: form_step_result.field_keys[form_index],
+        custom_field_key: text_key,
         value: form_step_data.user_data[form_index]
       }
       RETURN new_data
@@ -79,6 +80,7 @@ FOR check_step_data IN StepExecutionData
       LET value = check_step_data.user_data[check_index]
       LET new_data = {
         form_field_key: check_step_result.field_keys[check_index],
+        custom_field_key: ternary_key,
         value: value == 1 ? true : value == 0 ? false : null
       }
       RETURN new_data
@@ -142,6 +144,7 @@ FOR issue IN Issue
     FOR data_index IN 0..(LENGTH(issue.data) - 1)
       LET new_data = {
         form_field_key: issue_type_result.field_keys[data_index],
+        custom_field_key: issue.data[data_index]._key,
         value: issue.data[data_index].value
       }
       RETURN new_data

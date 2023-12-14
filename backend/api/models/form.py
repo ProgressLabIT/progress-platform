@@ -69,4 +69,7 @@ class FormFieldDefinition(BaseModel):
 
 class FormFieldValue(BaseModel):
   form_field_key: str
+  # This causes data duplication, but it's for ease of access.
+  # It can't be changed in FormField, so there is no risk of data inconsistency, at least for now.
+  custom_field_key: str
   value: Any

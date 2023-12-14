@@ -65,6 +65,7 @@ function updateField(field, value) {
     index: formDataIndexByFieldKey.value[field._key],
     data: {
       form_field_key: field._key,
+      custom_field_key: field.custom_field_key,
       value
     }
   })
