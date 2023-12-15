@@ -191,7 +191,8 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
 
   def create_batch(self):
-    self.get_job_data()
+    if not hasattr(self, 'job'):
+      self.get_job_data()
 
     default_batch_qt = self.job.parameters.production_batch_qt
 
@@ -695,6 +696,7 @@ class ProductionActivityEvent(BaseEvent):
       raise ValueError("Quantity cannot be zero or negative")
 
     is_next_batch_available = self.job.next_batch_available
+
     if not self.job.first_phase:
       wip = self.tx.aql.execute(
         TraceabilityQueries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB,
@@ -707,6 +709,15 @@ class ProductionActivityEvent(BaseEvent):
         raise WipNotAvailableError("The previous phase has not made enough progress to make this change")
       if completed_batch_qt == max_declarable_qt:
         is_next_batch_available = False
+
+      # If there is more or less free wip than the booked wip, book or unbook the difference
+      if active_batch_qt != completed_batch_qt:
+        booked_wip_quantity = active_batch_qt
+        free_wip_delta = completed_batch_qt - booked_wip_quantity
+        if free_wip_delta > 0:
+          self.book_wip(free_wip_delta)
+        elif free_wip_delta < 0:
+          self.unbook_wip(abs(free_wip_delta))
 
     self.info.completed_batch_key = self.job.active_batch_key
     self.info.completed_batch_qt = completed_batch_qt
@@ -737,6 +748,7 @@ class ProductionActivityEvent(BaseEvent):
     # JOB HAS REMAINING QUANTITY
     else:
       new_progress = round(100 * self.job.qt_completed / self.job.qt_planned)
+
       job_update = dict(
         _key = self.info.job_key,
         active_batch_key = None,
@@ -748,6 +760,7 @@ class ProductionActivityEvent(BaseEvent):
       )
 
       create_new_batch = self.job.parameters.auto_new_batch and is_next_batch_available
+
       if create_new_batch:
         self.create_batch()
         job_update['active_batch_key'] = self.batch.key
@@ -759,6 +772,7 @@ class ProductionActivityEvent(BaseEvent):
       # Update job qt_completed and progress
       self.job = Job(**self.tx.collection('Job').update(job_update, check_rev=False, return_new=True)['new'])
 
+      # Must be done after new batch and session have been created, if they have to
       self.response = dict(
         message = f"Batch {self.info.active_batch_key} completed.",
         job_data = self.job,
@@ -769,14 +783,6 @@ class ProductionActivityEvent(BaseEvent):
         self.response['batch_data'] = self.get_batch_execution_data()
 
     if not self.job.first_phase:
-      # If there is more or less free wip than the booked wip, book or unbook the difference before removing the booked wip
-      booked_wip_quantity = active_batch_qt
-      free_wip_delta = completed_batch_qt - booked_wip_quantity
-      if free_wip_delta > 0:
-        self.book_wip(free_wip_delta)
-      elif free_wip_delta < 0:
-        self.unbook_wip(abs(free_wip_delta))
-
       self.remove_wip(completed_batch_qt)
 
     # is next_phase generate a WIP record and update job input availability state
