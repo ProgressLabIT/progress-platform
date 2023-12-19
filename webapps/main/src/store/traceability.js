@@ -236,10 +236,14 @@ const traceability = {
         const promises = fields
           .filter(({ type }) => type === 'files')
           .map(async (field) => {
+            if (field.value === undefined) {
+              return
+            }
+
             const to_delete = []
             const to_add = []
 
-            field.value?.forEach((file) => {
+            field.value.forEach((file) => {
               if (file.temp) {
                 to_add.push(file.content)
               }
@@ -249,9 +253,9 @@ const traceability = {
             })
 
             // update formData to only contain the file metadata
-            const formDataIndex = formData.findIndex(({ form_field_key }) => form_field_key === field._key)
-            formData[formDataIndex].value = field.value
-              ?.filter(file => !file.delete)
+            const formDataEntry = formData.find(({ form_field_key }) => form_field_key === field._key)
+            formDataEntry.value = field.value
+              .filter(file => !file.delete)
               .map(file => ({
                 size: file.size,
                 name: file.name,
