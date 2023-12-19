@@ -261,10 +261,11 @@ const traceability = {
                 name: file.name,
               }))
 
+            const batch = state.current_batch_data
             const target = {
-              bucket: 'step',
-              object_key: step._key,
-              subfolder: field._key
+              bucket: 'traceability',
+              object_key: batch.work_order_key,
+              subfolder: `${batch._key}/${step._key}/${field.custom_field_key}/${field._key}`
             }
 
             // Upload new files

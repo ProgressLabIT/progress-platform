@@ -13,7 +13,7 @@ router = APIRouter()
 collection_map = {
   FileBucket.ISSUE: 'Issue',
   FileBucket.PRODUCT: 'Product',
-  FileBucket.STEP: 'Step',
+  FileBucket.TRACEABILITY: 'WorkOrder',
   FileBucket.USER: 'User'
 }
 
@@ -39,10 +39,33 @@ def verify_target_data(
         if data['form_field_key'] == subfolder:
           invalid = False
           break
-    elif bucket == FileBucket.STEP:
-      print(object['form_fields'])
-      for field in object['form_fields']:
-        if field['_key'] == subfolder:
+    elif bucket == FileBucket.TRACEABILITY:
+      batch_key, step_key, custom_field_key, form_field_key = subfolder.split('/')
+      batch = db.collection('Batch').get(batch_key)
+      step = db.collection('Step').get(step_key)
+      custom_field = db.collection('CustomField').get(custom_field_key)
+      if not batch:
+        raise HTTPException(
+          status_code = 404,
+          detail = f'No Batch with key {batch_key} exists on the database'
+        )
+      if not step:
+        raise HTTPException(
+          status_code = 404,
+          detail = f'No Step with key {step_key} exists on the database'
+        )
+      if not custom_field:
+        raise HTTPException(
+          status_code = 404,
+          detail = f'No CustomField with key {custom_field_key} exists on the database'
+        )
+      for field in step['form_fields']:
+        if field['_key'] == form_field_key:
+          if field['custom_field_key'] != custom_field_key:
+            raise HTTPException(
+              status_code = 404,
+              detail = f'FormField with key {form_field_key} does not correspond to CustomField with key {custom_field_key}'
+            )
           invalid = False
           break
 
