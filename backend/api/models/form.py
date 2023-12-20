@@ -10,6 +10,7 @@ from utils.base_models import ArangoDocument
 class FileBucket(str, Enum):
   ISSUE = 'issue'
   PRODUCT = 'product'
+  STEP = 'step'
   TRACEABILITY = 'traceability'
   USER = 'user'
 

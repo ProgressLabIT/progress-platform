@@ -309,7 +309,6 @@ const traceability = {
         form_data: formData,
         completed_batch_qt: batch_qt
       })
-      console.log('event', event)
 
       const { data } = await api.post('event', event)
       const { job_data, batch_data } = data.detail
