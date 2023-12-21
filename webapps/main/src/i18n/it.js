@@ -433,6 +433,7 @@ export default {
   print_template_new: 'Nuovo template',
   print_template_add: 'Aggiungi stampa',
   print_template_load_pdf: 'Carica pdf base',
+  print_template_preview: 'Anteprima',
   procedure: 'procedura',
   process: 'processo',
   processing_cost: 'costo lavorazione',

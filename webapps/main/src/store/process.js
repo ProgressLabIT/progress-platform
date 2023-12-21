@@ -126,12 +126,27 @@ const process = {
         }));
       }
 
+      async function loadStepPrintTemplates(step) {
+        const { data } = await api.get('print-template', {
+          params: { context: 'step', context_key: step._key },
+        });
+        step.print_templates = data.map((template) => ({
+          ...template,
+          temp: false,
+          trash: false,
+        }));
+      }
+
       const { data: phases } = await api.get(`product/${product_key}/process`);
       const promises = [];
       phases.forEach((phase) => {
         phase.steps.forEach((step) => {
           if (step.type === 'instruction') {
             promises.push(loadStepMedia(step));
+          }
+
+          if (step.type === 'form') {
+            promises.push(loadStepPrintTemplates(step));
           }
         });
       });
@@ -175,6 +190,26 @@ const process = {
               newMedia.push({
                 step_key: step._key,
                 media_file: media.data,
+              });
+            }
+          });
+
+          step.print_templates?.forEach((template) => {
+            if (template.temp) {
+              templateUpdates.push({
+                type: 'add',
+                context: 'step',
+                context_key: step._key,
+                template_key: template._key,
+              });
+            }
+
+            if (template.trash) {
+              templateUpdates.push({
+                type: 'remove',
+                context: 'step',
+                context_key: step._key,
+                template_key: template._key,
               });
             }
           });

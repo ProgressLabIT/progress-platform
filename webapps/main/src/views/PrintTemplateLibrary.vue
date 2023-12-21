@@ -41,6 +41,20 @@ export default {
     PrintTemplateDesigner,
   },
 
+  props: {
+    context: {
+      type: String,
+      default: undefined,
+      validator: (value) =>
+        ['product', 'phase', 'step', 'issue_type'].includes(value),
+    },
+
+    contextKey: {
+      type: String,
+      default: undefined,
+    },
+  },
+
   data() {
     return {
       isLoading: true,
@@ -56,7 +70,12 @@ export default {
   methods: {
     async getTemplates() {
       this.isLoading = true;
-      const { data } = await this.$api.get('print-template');
+      const { data } = await this.$api.get('print-template', {
+        params: {
+          context: this.context,
+          context_key: this.contextKey,
+        },
+      });
       this.templates = data.sort();
       this.isLoading = false;
     },

@@ -2,7 +2,7 @@ import traceback
 
 from fastapi import APIRouter, HTTPException
 
-from models.print import PrintTemplateRecord, TemplateAssignmentUpdate, TemplateAssignmentUpdateType
+from models.print import PrintTemplateRecord, TemplateAssignmentUpdate, TemplateAssignmentUpdateType, TemplateAssignmentContext
 from utils.api import APIResponse
 from utils.db import db
 from utils.print import preprocess_template, build_template_assignment_record
@@ -10,39 +10,41 @@ from utils.print import preprocess_template, build_template_assignment_record
 router = APIRouter()
 
 
-
 # Fetch Print Templates
 @router.get('/print-template')
 async def find_print_templates(
-  product_key: str = None,
-  phase_key: str = None,
-  issue_key: str = None
-  ):
+  context: TemplateAssignmentContext = None,
+  context_key: str = None,
+):
   """Fetch a specific template with full specs or a list of template without basePdf"""
-  bind_vars = dict(
-    product_key = product_key,
-    phase_key = phase_key,
-    issue_key = issue_key
-  )
-
-  if product_key is None and phase_key is None and issue_key is None:
-    cursor = db.aql.execute("""
-      FOR t IN PrintTemplate
-      SORT t.name
-      RETURN KEEP(t, '_key', 'name', 'description')
-    """)
-
+  if context is None:
+    cursor = db.aql.execute(
+      """
+      FOR template IN PrintTemplate
+      SORT template.name
+      RETURN KEEP(template, '_key', 'name', 'description')
+      """
+    )
   else:
-    cursor = db.aql.execute("""
-      for e in can_use_print_template
-      FILTER
-          (@phase_key ? e._from == CONCAT('Phase/', @phase_key) : true)
-          && (@product_key ? e._from == CONCAT('Product/', @product_key) : true)
-          && (@issue_key ? e._from == CONCAT('Issue/', @issue_key) : true)
-      LET t = DOCUMENT(PrintTemplate, e._to)
-      SORT t.name
-      RETURN KEEP(t, '_key', 'name', 'description')
-    """, bind_vars=bind_vars)
+    context_to_collection = dict(
+      product='Product',
+      phase='Phase',
+      step='Step',
+      issue_type='IssueType'
+    )
+
+    cursor = db.aql.execute(
+      """
+      FOR edge IN can_use_print_template
+        FILTER edge._from == @from_id
+        LET template = DOCUMENT(PrintTemplate, edge._to)
+        SORT template.name
+        RETURN KEEP(template, '_key', 'name', 'description')
+      """,
+      bind_vars=dict(
+        from_id=f'{context_to_collection.get(context)}/{context_key}',
+      )
+    )
 
   result = [PrintTemplateRecord(**t) for t in cursor]
 
@@ -114,25 +116,24 @@ async def update_template_assignments(updates: list[TemplateAssignmentUpdate]):
 
   try:
     tx = db.begin_transaction(write=['can_use_print_template'])
-    new = [build_template_assignment_record(u) for u in updates if u.type == TemplateAssignmentUpdateType.ADD]
 
-    if new:
-      tx.collection('can_use_print_template').insert_many(new)
+    to_add = [build_template_assignment_record(u) for u in updates if u.type == TemplateAssignmentUpdateType.ADD]
+    if to_add:
+      tx.collection('can_use_print_template').insert_many(to_add)
 
-
-    delete_query = """
-      FOR d IN @to_remove
-        FOR record IN can_use_print_template
-        FILTER
-          record._from == d._from
-          && record._to == d._to
-        REMOVE record IN can_use_print_template
-    """
     to_remove = [build_template_assignment_record(u) for u in updates if u.type == TemplateAssignmentUpdateType.REMOVE]
-
     if len(to_remove):
-      bind_vars = dict(to_remove=to_remove)
-      tx.aql.execute(delete_query, bind_vars=bind_vars)
+      tx.aql.execute(
+        """
+        FOR d IN @to_remove
+          FOR record IN can_use_print_template
+          FILTER
+            record._from == d._from
+            && record._to == d._to
+          REMOVE record IN can_use_print_template
+        """,
+        bind_vars=dict(to_remove=to_remove)
+      )
 
     tx.commit_transaction()
 

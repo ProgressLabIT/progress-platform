@@ -155,7 +155,9 @@ const product = {
     async loadProductDetails({ commit }, product_key) {
       const [{ data: product }, { data: print_templates }] = await Promise.all([
         api.get(`product/${product_key}`),
-        api.get(`print-template`, { params: { product_key } }),
+        api.get('print-template', {
+          params: { context: 'product', context_key: product_key },
+        }),
       ]);
 
       commit('LOAD_PRODUCT_DETAILS', {

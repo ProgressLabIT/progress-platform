@@ -10,13 +10,14 @@
     "
     :option-value="keyOnly ? '_key' : null"
     :option-label="(item) => $capitalize(item.name)"
+    :loading="isLoading"
     use-input
     input-debounce="100"
     :label="label"
     dense
     filled
-    @filter="filter"
-    @update:model-value="(selection) => $emit('select', selection)"
+    @filter="onFilter"
+    @update:model-value="(selection) => emit('select', selection)"
   >
     <template #option="scope">
       <q-item v-bind="scope.itemProps">
@@ -34,82 +35,71 @@
   </q-select>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
+import { usePrintTemplates } from '@/composables/print-template';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 
-export default {
-  name: 'BaseAutocompleteTemplate',
-
-  props: {
-    // TODO: ? selected vs value
-    value: {
-      type: [Object, String],
-      default: null,
-    },
-
-    loadData: {
-      type: Boolean,
-      default: true,
-    },
-
-    keyOnly: {
-      type: Boolean,
-      default: false,
-    },
-
-    label: {
-      type: String,
-      default: undefined,
-    },
-
-    selected: {
-      type: Array,
-      default: () => [],
-    },
+const props = defineProps({
+  // TODO: value vs selected ?
+  value: {
+    type: [Object, String],
+    default: null,
   },
 
-  emits: ['select'],
-
-  data() {
-    return {
-      loading: false,
-      templates: [],
-      options: [],
-    };
+  keyOnly: {
+    type: Boolean,
+    default: false,
   },
 
-  async created() {
-    if (!this.loadData) {
-      return;
-    }
-
-    this.loading = true;
-    const { data } = await this.$api.get('print-template');
-    this.templates = data;
-    this.initOptions();
-    this.loading = false;
+  label: {
+    type: String,
+    default: undefined,
   },
 
-  methods: {
-    initOptions() {
-      this.options = [...this.templates];
-    },
-
-    filter(value, update) {
-      if (value === '') {
-        update(() => {
-          this.initOptions();
-        });
-        return;
-      }
-
-      update(() => {
-        const needle = value.toLowerCase();
-        this.options = this.templates.filter((template) => {
-          return multiMatch(needle, template, ['name', 'description']);
-        });
-      });
-    },
+  selected: {
+    type: Array,
+    default: () => [],
   },
-};
+
+  context: {
+    type: String,
+    default: undefined,
+    validator: (value) =>
+      ['product', 'phase', 'step', 'issue_type'].includes(value),
+  },
+
+  contextKey: {
+    type: String,
+    default: undefined,
+  },
+});
+
+const emit = defineEmits(['select']);
+
+const { fetchTemplates, templates, isLoading } = usePrintTemplates({
+  context: props.context,
+  contextKey: props.contextKey,
+});
+
+const options = ref([]);
+fetchTemplates().then(() => {
+  options.value = [...templates.value];
+});
+
+function onFilter(value, update) {
+  if (value === '') {
+    update(() => {
+      options.value = [...templates.value];
+    });
+    return;
+  }
+
+  update(() => {
+    const needle = value.toLowerCase();
+    options.value = templates.value.filter((template) =>
+      multiMatch(needle, template, ['name', 'description']),
+    );
+  });
+}
 </script>

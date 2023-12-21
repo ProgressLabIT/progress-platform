@@ -402,6 +402,7 @@ export default {
         params: new_operation.default_phase_parameters,
         production_notes: new_operation.default_phase_notes,
         steps,
+        print_templates: [],
       });
       this.current_phase = this.process.length - 1;
     },
@@ -476,8 +477,9 @@ export default {
             this.$emit('changesSaved');
           }, 500);
         })
-        .catch((err) => {
-          window.alert(err);
+        .catch((error) => {
+          window.alert(error);
+          console.error(error);
           this.saving = false;
         });
     },

@@ -425,6 +425,7 @@ export default {
   print_template_new: 'New template',
   print_template_add: 'Add print template',
   print_template_load_pdf: 'Upload base pdf',
+  print_template_preview: 'Preview template',
   procedure: 'procedure',
   process: 'process',
   processing_cost: 'processing cost',

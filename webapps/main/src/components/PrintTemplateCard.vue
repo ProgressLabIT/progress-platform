@@ -4,7 +4,10 @@
       <q-icon name="mdi-file-document" size="sm" />
       <div class="q-ml-sm text-h3" :class="{ 'text-italic': template.temp }">
         <div>{{ template.name }}</div>
-        <div v-if="template.temp" class="smaller">
+        <div v-if="template.trash" class="smaller">
+          ({{ $capitalize($t('deleted')) }})
+        </div>
+        <div v-else-if="template.temp" class="smaller">
           ({{ $capitalize($t('unsaved')) }})
         </div>
       </div>
@@ -14,14 +17,16 @@
       {{ template.description }}
     </q-card-section>
 
-    <q-card-section class="row justify-start q-gutter-sm">
+    <q-card-section class="row justify-start items-center q-gutter-sm">
       <q-btn
         size="sm"
         flat
         round
         icon="mdi-file-search-outline"
         @click="showTemplatePreview"
-      />
+      >
+        <q-tooltip>{{ $capitalize($t('print_template_preview')) }}</q-tooltip>
+      </q-btn>
       <q-btn
         v-if="allowEdit"
         flat
@@ -29,16 +34,21 @@
         size="sm"
         icon="mdi-pencil"
         @click="editTemplate"
-      />
-      <!-- TODO: Implement delete method -->
+      >
+        <q-tooltip>{{ $capitalize($t('edit')) }}</q-tooltip>
+      </q-btn>
       <q-btn
         v-if="allowDelete"
         flat
         round
         size="sm"
-        icon="mdi-delete"
-        @click="$emit('delete')"
-      />
+        :icon="template.trash ? 'mdi-restore' : 'mdi-delete'"
+        @click="template.trash ? $emit('restore') : $emit('delete')"
+      >
+        <q-tooltip>
+          {{ $capitalize(template.trash ? $t('restore') : $t('delete')) }}
+        </q-tooltip>
+      </q-btn>
     </q-card-section>
 
     <PrintTemplateDesigner
@@ -88,7 +98,7 @@ export default {
     },
   },
 
-  emits: ['saved', 'delete'],
+  emits: ['saved', 'delete', 'restore'],
 
   data() {
     return {
