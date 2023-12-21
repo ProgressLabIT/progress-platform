@@ -185,11 +185,7 @@
           <q-tab-panel name="prints" class="surface2 column">
             <div class="row col q-col-gutter-md scroll">
               <div
-                v-for="(
-                  template, index
-                ) in temp_metadata.print_templates.filter(
-                  ({ trash }) => !trash,
-                )"
+                v-for="(template, index) in tempMetadata.print_templates"
                 :key="template._key"
                 class="col-3"
               >
@@ -197,6 +193,7 @@
                   :template="template"
                   :allow-delete="editMode"
                   @delete="deleteTemplate(index)"
+                  @restore="template.trash = false"
                 />
               </div>
             </div>
