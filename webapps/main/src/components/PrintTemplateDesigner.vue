@@ -210,7 +210,7 @@ export default {
       this.designer = new Designer({
         domContainer: container,
         template: this.workingTemplate.template,
-        options: { lang: 'it' }, // TODO: i18n
+        options: { lang: this.$i18n.locale },
       });
       this.designer.onChangeTemplate((template) => {
         this.workingTemplate.template = cloneDeep(template);
