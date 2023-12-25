@@ -49,6 +49,8 @@
           {{ $capitalize(template.trash ? $t('restore') : $t('delete')) }}
         </q-tooltip>
       </q-btn>
+
+      <slot name="extra-actions" />
     </q-card-section>
 
     <PrintTemplateDesigner

@@ -1,11 +1,25 @@
 <template>
   <div class="col column q-pt-xl q-px-xl">
-    <div class="col-auto">
-      <div class="text-h3 q-px-none q-pt-none nowrap">
-        {{ step.title }}
+    <div class="col-auto row">
+      <div class="col">
+        <div class="text-h3 q-px-none q-pt-none nowrap">
+          {{ step.title }}
+        </div>
+        <div class="text-body2 text-low">
+          {{ step.description }}
+        </div>
       </div>
-      <div class="text-body2 text-low">
-        {{ step.description }}
+
+      <div>
+        <q-btn
+          color="secondary"
+          flat
+          round
+          icon="mdi-printer"
+          @click="openPrintDialog"
+        >
+          <q-tooltip>{{ $capitalize($t('print')) }}</q-tooltip>
+        </q-btn>
       </div>
     </div>
 
@@ -26,6 +40,7 @@
 import { computed } from 'vue';
 import { useStore } from 'vuex';
 import FormField from '@/components/FormField.vue';
+import { usePrintDialog } from '@/lib/print';
 
 const props = defineProps({
   step: {
@@ -74,4 +89,9 @@ function updateField(field, value) {
 const isJobActive = computed(
   () => store.state.traceability.working_job_data.active,
 );
+
+const { open: openPrintDialog } = usePrintDialog({
+  context: 'step',
+  contextData: props.step,
+});
 </script>

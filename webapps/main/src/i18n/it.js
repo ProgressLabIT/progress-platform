@@ -429,6 +429,26 @@ export default {
       instruction: 'istruzioni',
     },
   },
+  print: 'stampa',
+  printDialog: {
+    chooseTemplate: {
+      title: 'Scegli un template',
+      nextInstruction: 'Scegli un template per continuare',
+      noTemplates: 'Nessun template disponibile',
+    },
+
+    fillData: {
+      title: 'Compila i dati',
+      page: 'Pagina {number}',
+      noFields: 'Nessun campo da compilare',
+    },
+
+    preview: {
+      title: 'Anteprima',
+    },
+
+    downloadWillBegin: 'Il download inizierà a breve!',
+  },
   print_templates: 'Stampe',
   print_template_new: 'Nuovo template',
   print_template_add: 'Aggiungi stampa',
