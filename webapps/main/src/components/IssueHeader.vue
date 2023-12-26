@@ -54,7 +54,6 @@
 </template>
 
 <script>
-import { useStore } from 'vuex';
 import IssueForm from '@/components/IssueForm.vue';
 import { usePrintDialog } from '@/lib/print';
 import event from '@/mixins/event.js';
@@ -82,11 +81,9 @@ export default {
   emits: ['typeChange'],
 
   setup(props) {
-    const store = useStore();
-
     const { open: openPrintDialog } = usePrintDialog({
       context: 'issue_type',
-      contextData: store.getters.getIssueType(props.issue.issue_type_key),
+      contextData: props.issue,
     });
 
     return {

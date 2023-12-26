@@ -182,7 +182,6 @@ import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent } from 'quasar';
 import { nextTick, ref } from 'vue';
 import VuePdfEmbed from 'vue-pdf-embed';
-import { useStore } from 'vuex';
 import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
@@ -191,12 +190,6 @@ import { usePrintTemplates } from '@/composables/print-template';
 
 const props = defineProps({
   context: {
-    type: String,
-    required: true,
-    validator: (value) =>
-      ['product', 'phase', 'step', 'issue_type'].includes(value),
-  },
-  contextData: {
     type: Object,
     required: true,
   },
@@ -213,8 +206,8 @@ const getDialogRef = () => dialogRef;
 const activeStep = ref(0);
 
 const { templates, isLoading } = usePrintTemplates({
-  context: props.context,
-  contextKey: props.contextData._key,
+  context: props.context.type,
+  contextKey: props.context.getKey(),
 });
 
 const selectedTemplate = ref();
@@ -232,7 +225,7 @@ async function selectTemplate(template) {
     formModel.value = Object.fromEntries(
       data.template.columns.map((fieldName) => [
         fieldName,
-        String(getMappedValue(data.presets[fieldName]) ?? ''),
+        String(props.context.getPresetValue(data.presets[fieldName]) ?? ''),
       ]),
     );
   } catch (error) {
@@ -260,78 +253,4 @@ const dialogWidth = 615;
 const scrollBarWidth = 15;
 const contentPadding = 24 * 2;
 const pdfWidth = dialogWidth - scrollBarWidth - contentPadding;
-
-const extractDate = (datetime) => new Date(datetime).toLocaleDateString();
-const extractTime = (datetime) => new Date(datetime).toLocaleTimeString();
-
-const store = useStore();
-// TODO: not all parameters may will work with all contexts
-function getMappedValue(presetName) {
-  const job = store.state.traceability.working_job_data;
-  const batch = store.state.traceability.current_batch_data;
-
-  // TODO: Use a different date time format (?)
-  switch (presetName) {
-    case 'current_date':
-      return new Date().toLocaleDateString();
-    case 'current_time':
-      return new Date().toLocaleTimeString();
-    case 'current_user':
-      return store.state.auth.user.name;
-
-    case 'job_key':
-      return job._key;
-    case 'job_qt_planned':
-      return job.qt_planned;
-    case 'job_qt_completed':
-      return job.qt_completed;
-    case 'job_phase_alias':
-      return job.phase_alias;
-    case 'job_start_date':
-      return extractDate(job.start);
-    case 'job_start_time':
-      return extractTime(job.start);
-    case 'job_end_date':
-      return extractDate(job.end);
-    case 'job_end_time':
-      return extractTime(job.end);
-
-    case 'project_code':
-      return job.project_code;
-    case 'work_order_code':
-      return job.wo_code;
-    case 'work_order_qt_planned':
-      return batch.qt_planned;
-    case 'work_order_qt_completed':
-      return batch.qt_completed;
-    case 'work_order_start_date':
-      return extractDate(batch.start);
-    case 'work_order_start_time':
-      return extractTime(batch.start);
-    case 'work_order_end_date':
-      return extractDate(batch.end);
-    case 'work_order_end_time':
-      return extractTime(batch.end);
-
-    case 'product_code':
-      return job.product_code;
-    case 'product_description':
-      return job.product_description;
-
-    case 'issue_open_date':
-      return extractDate(props.contextData.open_date);
-    case 'issue_open_time':
-      return extractTime(props.contextData.open_date);
-    case 'issue_open_user':
-      return props.contextData.open_user;
-    case 'issue_close_date':
-      return extractDate(props.contextData.close_date);
-    case 'issue_close_time':
-      return extractTime(props.contextData.close_date);
-    case 'issue_close_user':
-      return props.contextData.close_user;
-    case 'issue_status':
-      return props.contextData.status;
-  }
-}
 </script>

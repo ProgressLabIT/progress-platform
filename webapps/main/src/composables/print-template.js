@@ -1,6 +1,15 @@
 import { ref } from 'vue';
 import { api } from '@/boot/axios';
 
+/**
+ * @typedef {Object} UsePrintTemplatesParams
+ * @property {string} context
+ * @property {string} contextKey
+ */
+
+/**
+ * @param {UsePrintTemplatesParams}
+ */
 export function usePrintTemplates({ context, contextKey } = {}) {
   const templates = ref([]);
   const isLoading = ref(false);
