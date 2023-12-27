@@ -441,11 +441,13 @@ export default {
 
     downloadWillBegin: 'Your download will begin shortly!',
   },
+  print_template: 'Template | Templates',
   print_templates: 'Prints',
   print_template_new: 'New template',
   print_template_add: 'Add print template',
   print_template_load_pdf: 'Upload base pdf',
   print_template_preview: 'Preview template',
+  print_template_rename: 'Rename template',
   procedure: 'procedure',
   process: 'process',
   processing_cost: 'processing cost',

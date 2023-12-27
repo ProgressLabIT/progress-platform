@@ -1,9 +1,8 @@
 <template>
-  <!-- TODO: i18n -->
   <BaseModalScreen :show="show" no-esc-dismiss @close="$emit('close')">
     <template #header>
       <div class="q-ml-md display highlight weight-medium col">
-        TEMPLATE
+        {{ $capitalize($t('print_template')) }}
         <span v-if="workingTemplate._key">
           {{ workingTemplate._key }}
         </span>
@@ -39,7 +38,7 @@
             class="shadow-3"
           />
 
-          <div class="text-h5 q-mt-lg">COLLEGAMENTI</div>
+          <div class="text-h5 q-mt-lg">{{ $capitalize($t('link', 2)) }}</div>
           <div v-for="column in workingTemplate.template.columns" :key="column">
             <q-select
               v-model="workingTemplate.presets[column]"
@@ -55,14 +54,14 @@
 
           <!-- ACTION MENU -->
           <q-btn
-            label="UPLOAD PDF"
+            :label="$t('print_template_load_pdf')"
             color="primary"
             icon="mdi-upload"
             @click="$refs.pdfFileInput.click()"
           />
 
           <q-btn
-            label="SAVE"
+            :label="$t('save')"
             color="primary"
             icon="mdi-database-check"
             @click="saveTemplate"
@@ -80,7 +79,7 @@
 
       <BaseDialog :show="showRename">
         <BaseActionCard
-          title="RINOMINA TEMPLATE"
+          :title="$capitalize($t('print_template_rename'))"
           :save-label="$t('confirm')"
           @cancel="cancelRename"
           @save="showRename = false"

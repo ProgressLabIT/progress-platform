@@ -449,11 +449,13 @@ export default {
 
     downloadWillBegin: 'Il download inizierà a breve!',
   },
+  print_template: 'Stampa | Stampe',
   print_templates: 'Stampe',
   print_template_new: 'Nuovo template',
   print_template_add: 'Aggiungi stampa',
   print_template_load_pdf: 'Carica pdf base',
   print_template_preview: 'Anteprima',
+  print_template_rename: 'Rinomina template',
   procedure: 'procedura',
   process: 'processo',
   processing_cost: 'costo lavorazione',
