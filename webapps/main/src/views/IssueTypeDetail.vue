@@ -1,6 +1,7 @@
 <template>
   <div class="full-height column" :class="editMode ? 'q-pa-lg' : 'q-pa-xl'">
-    <template v-if="issueType">
+    <NoDataAlert v-if="!issueType" />
+    <template v-else>
       <div class="row q-col-gutter-lg col-auto">
         <template v-if="!editMode">
           <div v-if="!editMode" class="col">
@@ -211,7 +212,6 @@
         </q-tab-panels>
       </q-card>
     </template>
-    <NoDataAlert v-else />
   </div>
 </template>
 
