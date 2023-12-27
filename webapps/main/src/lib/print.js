@@ -91,19 +91,19 @@ export class IssueTypeContext extends TemplateContext {
     }
 
     switch (presetName) {
-      case 'issue_open_date':
+      case 'issue.open_date':
         return extractDate(this.issue.open_date);
-      case 'issue_open_time':
+      case 'issue.open_time':
         return extractTime(this.issue.open_date);
-      case 'issue_open_user':
+      case 'issue.open_user':
         return this.issue.open_user;
-      case 'issue_close_date':
+      case 'issue.close_date':
         return extractDate(this.issue.close_date);
-      case 'issue_close_time':
+      case 'issue.close_time':
         return extractTime(this.issue.close_date);
-      case 'issue_close_user':
+      case 'issue.close_user':
         return this.issue.close_user;
-      case 'issue_status':
+      case 'issue.status':
         return this.issue.status;
 
       /*
@@ -142,43 +142,44 @@ export class StepContext extends TemplateContext {
     const batch = this.store.state.traceability.current_batch_data;
 
     switch (presetName) {
-      case 'job_key':
+      case 'job.key':
         return job._key;
-      case 'job_qt_planned':
+      case 'job.qt_planned':
         return job.qt_planned;
-      case 'job_qt_completed':
+      case 'job.qt_completed':
         return job.qt_completed;
-      case 'job_phase_alias':
+      case 'job.phase_alias':
         return job.phase_alias;
-      case 'job_start_date':
+      case 'job.start_date':
         return extractDate(job.start);
-      case 'job_start_time':
+      case 'job.start_time':
         return extractTime(job.start);
-      case 'job_end_date':
+      case 'job.end_date':
         return extractDate(job.end);
-      case 'job_end_time':
+      case 'job.end_time':
         return extractTime(job.end);
 
-      case 'project_code':
+      case 'project.code':
         return job.project_code;
-      case 'work_order_code':
+
+      case 'work_order.code':
         return job.wo_code;
-      case 'work_order_qt_planned':
+      case 'work_order.qt_planned':
         return batch.qt_planned;
-      case 'work_order_qt_completed':
+      case 'work_order.qt_completed':
         return batch.qt_completed;
-      case 'work_order_start_date':
+      case 'work_order.start_date':
         return extractDate(batch.start);
-      case 'work_order_start_time':
+      case 'work_order.start_time':
         return extractTime(batch.start);
-      case 'work_order_end_date':
+      case 'work_order.end_date':
         return extractDate(batch.end);
-      case 'work_order_end_time':
+      case 'work_order.end_time':
         return extractTime(batch.end);
 
-      case 'product_code':
+      case 'product.code':
         return job.product_code;
-      case 'product_description':
+      case 'product.description':
         return job.product_description;
 
       default:
