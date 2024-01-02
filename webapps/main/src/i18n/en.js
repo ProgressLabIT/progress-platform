@@ -432,7 +432,6 @@ export default {
     fillData: {
       title: 'Fill data',
       page: 'Page {number}',
-      noFields: 'No fields to fill in',
     },
 
     preview: {

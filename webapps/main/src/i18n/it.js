@@ -440,7 +440,6 @@ export default {
     fillData: {
       title: 'Compila i dati',
       page: 'Pagina {number}',
-      noFields: 'Nessun campo da compilare',
     },
 
     preview: {

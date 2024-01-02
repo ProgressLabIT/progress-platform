@@ -69,38 +69,39 @@
       >
         <LoadingSignal v-if="isLoadingTemplate" />
         <template v-else>
-          <fieldset
+          <template
             v-for="(pageSchema, index) in selectedTemplate.template.schemas"
             :key="index"
-            class="q-pa-md q-my-md column"
-            style="gap: 16px"
           >
-            <legend class="text-h5 q-px-sm">
-              {{ $t('printDialog.fillData.page', { number: index + 1 }) }}
-            </legend>
+            <fieldset
+              v-if="Object.keys(pageSchema).length > 0"
+              class="q-pa-md q-my-md column"
+              style="gap: 16px"
+            >
+              <legend class="text-h5 q-px-sm">
+                {{ $t('printDialog.fillData.page', { number: index + 1 }) }}
+              </legend>
 
-            <template v-if="Object.keys(pageSchema).length === 0">
-              <div class="text-h6 text-low">
-                {{ $t('printDialog.fillData.noFields') }}
-              </div>
-            </template>
-
-            <template v-for="(field, fieldName) in pageSchema" :key="fieldName">
-              <!-- TODO: Handle field type 'image' -->
-              <q-file
-                v-if="field.type === 'image'"
-                :label="fieldName"
-                hint="WIP"
-                readonly
-              />
-              <q-input
-                v-else
-                v-model="formModel[fieldName]"
-                :label="fieldName"
-                filled
-              />
-            </template>
-          </fieldset>
+              <template
+                v-for="(field, fieldName) in pageSchema"
+                :key="fieldName"
+              >
+                <!-- TODO: Handle field type 'image' -->
+                <q-file
+                  v-if="field.type === 'image'"
+                  :label="fieldName"
+                  hint="WIP"
+                  readonly
+                />
+                <q-input
+                  v-else
+                  v-model="formModel[fieldName]"
+                  :label="fieldName"
+                  filled
+                />
+              </template>
+            </fieldset>
+          </template>
         </template>
 
         <q-stepper-navigation class="flex q-gutter-sm">
