@@ -223,10 +223,24 @@ async function selectTemplate(template) {
     selectedTemplate.value = data;
 
     formModel.value = Object.fromEntries(
-      data.template.columns.map((fieldName) => [
-        fieldName,
-        String(props.context.getPresetValue(data.presets[fieldName]) ?? ''),
-      ]),
+      data.template.columns.map((fieldName) => {
+        const link = data.links[fieldName];
+        if (!link) {
+          return [fieldName, ''];
+        }
+
+        if (link.type === 'preset') {
+          return [
+            fieldName,
+            String(props.context.getPresetValue(link.value) ?? ''),
+          ];
+        }
+
+        return [
+          fieldName,
+          String(props.context.getCustomFieldValue(link.value) ?? ''),
+        ];
+      }),
     );
   } catch (error) {
     console.error(error);

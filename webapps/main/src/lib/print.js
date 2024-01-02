@@ -69,6 +69,10 @@ export class TemplateContext {
         return undefined;
     }
   }
+
+  getCustomFieldValue(_customFieldKey) {
+    return undefined;
+  }
 }
 
 export class IssueTypeContext extends TemplateContext {
@@ -117,6 +121,29 @@ export class IssueTypeContext extends TemplateContext {
         return undefined;
     }
   }
+
+  getCustomFieldValue(customFieldKey) {
+    const customField = this._store.getters.getCustomFieldByKey(customFieldKey);
+    const issueType = this._store.getters.getIssueType(
+      this.issue.issue_type_key,
+    );
+    if (!customField || !issueType) {
+      return undefined;
+    }
+
+    // Only uses the first matching field
+    const formField = issueType.form_template.find(
+      ({ custom_field_key }) => custom_field_key === customFieldKey,
+    );
+    if (!formField) {
+      return undefined;
+    }
+
+    const data = this.issue.data.find(
+      ({ form_field_key }) => form_field_key === formField._key,
+    );
+    return data?.value;
+  }
 }
 
 export class StepContext extends TemplateContext {
@@ -138,8 +165,8 @@ export class StepContext extends TemplateContext {
       return value;
     }
 
-    const job = this.store.state.traceability.working_job_data;
-    const batch = this.store.state.traceability.current_batch_data;
+    const job = this._store.state.traceability.working_job_data;
+    const batch = this._store.state.traceability.current_batch_data;
 
     switch (presetName) {
       case 'job.key':
@@ -185,5 +212,26 @@ export class StepContext extends TemplateContext {
       default:
         return undefined;
     }
+  }
+
+  getCustomFieldValue(customFieldKey) {
+    const customField = this._store.getters.getCustomFieldByKey(customFieldKey);
+    const batchStep = this._store.getters.getBatchStep(this.step._key);
+    if (!customField || !batchStep) {
+      return undefined;
+    }
+
+    // Only uses the first matching field
+    const formField = this.step.form_fields.find(
+      ({ custom_field_key }) => custom_field_key === customFieldKey,
+    );
+    if (!formField) {
+      return undefined;
+    }
+
+    const data = batchStep.form_data.find(
+      ({ form_field_key }) => form_field_key === formField._key,
+    );
+    return data?.value;
   }
 }

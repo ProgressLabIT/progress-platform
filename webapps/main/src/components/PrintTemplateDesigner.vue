@@ -3,7 +3,7 @@
     <template #header>
       <div class="q-ml-md display highlight weight-medium col">
         {{ $capitalize($t('print_template')) }}
-        <span v-if="workingTemplate._key">
+        <span v-if="workingTemplate?._key">
           {{ workingTemplate._key }}
         </span>
         <span v-else>
@@ -39,16 +39,38 @@
           />
 
           <div class="text-h5 q-mt-lg">{{ $capitalize($t('link', 2)) }}</div>
-          <div v-for="column in workingTemplate.template.columns" :key="column">
+          <fieldset
+            v-for="column in workingTemplate.template.columns"
+            :key="column"
+          >
+            <legend class="text-h5 q-px-sm">{{ column }}</legend>
+
+            <div class="row items-center q-mb-sm">
+              <span class="q-mr-sm">{{ $t('type') }}:</span>
+
+              <q-btn-toggle
+                v-model="workingTemplate.links[column].type"
+                :options="linkTypeOptions"
+                size="sm"
+                no-caps
+                @update:model-value="workingTemplate.links[column].value = null"
+              />
+            </div>
+
             <q-select
-              v-model="workingTemplate.presets[column]"
+              v-if="workingTemplate.links[column].type === 'preset'"
+              v-model="workingTemplate.links[column].value"
               :options="templateDataOptions"
-              :label="column"
-              stack-label
               filled
               class="shadow-3"
             />
-          </div>
+            <BaseAutocompleteFormField
+              v-else
+              v-model="workingTemplate.links[column].value"
+              key-only
+              class="shadow-3"
+            />
+          </fieldset>
 
           <q-space />
 
@@ -97,6 +119,7 @@ import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { api } from '@/boot/axios';
 import BaseActionCard from '@/components/BaseActionCard.vue';
+import BaseAutocompleteFormField from '@/components/BaseAutocompleteFormField.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
 
@@ -163,12 +186,23 @@ const { t, locale } = useI18n();
 const emptyTemplate = computed(() => ({
   name: t('print_template_new'),
   description: undefined,
-  presets: {},
+  links: {},
   template: {
     basePdf: BLANK_PDF,
     schemas: [],
   },
 }));
+
+const linkTypeOptions = computed(() => [
+  {
+    label: t('print_template_link_type.preset'),
+    value: 'preset',
+  },
+  {
+    label: t('print_template_link_type.custom_field'),
+    value: 'custom_field',
+  },
+]);
 
 const mode = ref();
 const workingTemplate = ref();
@@ -184,6 +218,15 @@ function initDesigner() {
   });
   designer.onChangeTemplate((template) => {
     workingTemplate.value.template = cloneDeep(template);
+
+    for (const column of template.columns ?? []) {
+      if (!workingTemplate.value.links[column]) {
+        workingTemplate.value.links[column] = {
+          type: 'preset',
+          value: null,
+        };
+      }
+    }
   });
 }
 function closeDesigner() {

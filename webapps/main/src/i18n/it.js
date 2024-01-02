@@ -454,6 +454,10 @@ export default {
   print_template_new: 'Nuovo template',
   print_template_add: 'Aggiungi stampa',
   print_template_load_pdf: 'Carica pdf base',
+  print_template_link_type: {
+    preset: 'Preimpostato',
+    custom_field: 'Campo personalizzato',
+  },
   print_template_preview: 'Anteprima',
   print_template_rename: 'Rinomina template',
   procedure: 'procedura',

@@ -75,10 +75,18 @@ class PrintTemplate(BaseModel):
   sampledata: list[dict[str, str]] = []
   schemas: list[PageSchema] = Field(..., union_mode='left_to_right')
 
+class PrintTemplateLinkType(str, Enum):
+  PRESET = 'preset'
+  CUSTOM_FIELD = 'custom_field'
+
+class PrintTemplateLink(BaseModel):
+  type: PrintTemplateLinkType
+  value: str = None
+
 class PrintTemplateRecord(ArangoDocument):
   name: str
   description: str = None
-  presets: dict[str, str] = dict()
+  links: dict[str, PrintTemplateLink] = dict()
   template: PrintTemplate = None
 
 
