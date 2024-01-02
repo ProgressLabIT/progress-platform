@@ -39,8 +39,13 @@
         </div>
       </q-toolbar>
 
-      <JobForm v-if="current_step.type === 'form'" :step="current_step" />
-      <JobInstruction v-else :step="current_step" />
+      <keep-alive>
+        <component
+          :is="current_step.type === 'form' ? 'JobForm' : 'JobInstruction'"
+          :key="current_step._key"
+          :step="current_step"
+        />
+      </keep-alive>
     </template>
   </div>
 </template>
