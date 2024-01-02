@@ -184,7 +184,13 @@
 
           <!-- PRINT TEMPLATES -->
           <q-tab-panel name="prints" class="surface2 column">
-            <div class="row col q-col-gutter-md scroll">
+            <div
+              v-if="tempMetadata.print_templates.length === 0"
+              class="q-mt-md text-italic"
+            >
+              {{ $t('print_template_none') }}
+            </div>
+            <div v-else class="row col q-col-gutter-md scroll">
               <div
                 v-for="(template, index) in tempMetadata.print_templates"
                 :key="template._key"

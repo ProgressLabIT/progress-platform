@@ -444,6 +444,7 @@ export default {
   print_template: 'Template | Templates',
   print_templates: 'Prints',
   print_template_new: 'New template',
+  print_template_none: 'No templates',
   print_template_add: 'Add print template',
   print_template_load_pdf: 'Upload base pdf',
   print_template_link_type: {

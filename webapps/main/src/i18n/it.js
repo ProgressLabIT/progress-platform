@@ -452,6 +452,7 @@ export default {
   print_template: 'Stampa | Stampe',
   print_templates: 'Stampe',
   print_template_new: 'Nuovo template',
+  print_template_none: 'Nessun template',
   print_template_add: 'Aggiungi stampa',
   print_template_load_pdf: 'Carica pdf base',
   print_template_link_type: {

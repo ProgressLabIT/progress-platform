@@ -10,7 +10,13 @@
       {{ $t('print_templates') }}
     </div>
 
-    <div class="col row scroll q-col-gutter-sm">
+    <div
+      v-if="stepModel.print_templates.length === 0"
+      class="q-mt-md text-italic"
+    >
+      {{ $t('print_template_none') }}
+    </div>
+    <div v-else class="col row scroll q-col-gutter-sm">
       <div
         v-for="template in stepModel.print_templates"
         :key="template._key"
