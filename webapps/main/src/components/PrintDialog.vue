@@ -18,8 +18,7 @@
         active-icon="mdi-file-document"
         :title="$t('printDialog.chooseTemplate.title')"
       >
-        <LoadingSignal v-if="isLoading" />
-        <q-card-section v-else-if="templates.length === 0" class="text-center">
+        <q-card-section v-if="templates.length === 0" class="text-center">
           <q-icon size="xl" color="low" name="mdi-alert-circle-outline" />
           <div class="text-h3 q-mt-sm">
             {{ $t('printDialog.chooseTemplate.noTemplates') }}
@@ -183,11 +182,14 @@ import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
-import { usePrintTemplates } from '@/composables/print-template';
 
 const props = defineProps({
   context: {
     type: Object,
+    required: true,
+  },
+  templates: {
+    type: Array,
     required: true,
   },
 });
@@ -201,11 +203,6 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
 const getDialogRef = () => dialogRef;
 
 const activeStep = ref(0);
-
-const { templates, isLoading } = usePrintTemplates({
-  context: props.context.type,
-  contextKey: props.context.getKey(),
-});
 
 const selectedTemplate = ref();
 const isLoadingTemplate = ref(false);

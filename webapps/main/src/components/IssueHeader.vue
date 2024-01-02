@@ -25,6 +25,7 @@
           </q-btn>
 
           <q-btn
+            v-if="isAvailable"
             flat
             round
             icon="mdi-printer"
@@ -81,13 +82,14 @@ export default {
   emits: ['typeChange'],
 
   setup(props) {
-    const { open: openPrintDialog } = usePrintDialog({
+    const { open: openPrintDialog, isAvailable } = usePrintDialog({
       context: 'issue_type',
       contextData: props.issue,
     });
 
     return {
       openPrintDialog,
+      isAvailable,
     };
   },
 

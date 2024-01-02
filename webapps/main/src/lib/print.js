@@ -1,17 +1,34 @@
 import { Dialog, Notify, exportFile } from 'quasar';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import PrintDialog from '@/components/PrintDialog.vue';
+import { usePrintTemplates } from '@/composables/print-template';
 
-export function usePrintDialog({ context, contextData }) {
+export function usePrintDialog({ context: contextType, contextData }) {
   const { t } = useI18n();
   const store = useStore();
 
-  function open() {
+  const context = TemplateContextFactory.create(
+    contextType,
+    contextData,
+    store,
+  );
+
+  const { templates, isLoading } = usePrintTemplates({
+    context: context.type,
+    contextKey: context.getKey(),
+  });
+  const isAvailable = computed(
+    () => !isLoading.value && templates.value.length > 0,
+  );
+
+  async function open() {
     return Dialog.create({
       component: PrintDialog,
       componentProps: {
-        context: TemplateContextFactory.create(context, contextData, store),
+        context,
+        templates: templates.value,
       },
     }).onOk(({ src, printTemplate }) => {
       Notify.create({
@@ -24,6 +41,7 @@ export function usePrintDialog({ context, contextData }) {
 
   return {
     open,
+    isAvailable,
   };
 }
 

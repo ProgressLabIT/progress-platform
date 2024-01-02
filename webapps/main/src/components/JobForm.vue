@@ -12,6 +12,7 @@
 
       <div>
         <q-btn
+          v-if="isAvailable"
           color="low"
           flat
           round
@@ -90,7 +91,7 @@ const isJobActive = computed(
   () => store.state.traceability.working_job_data.active,
 );
 
-const { open: openPrintDialog } = usePrintDialog({
+const { open: openPrintDialog, isAvailable } = usePrintDialog({
   context: 'step',
   contextData: props.step,
 });
