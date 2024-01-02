@@ -18,14 +18,14 @@
     </div>
     <div v-else class="col row scroll q-col-gutter-sm">
       <div
-        v-for="template in stepModel.print_templates"
+        v-for="(template, index) in stepModel.print_templates"
         :key="template._key"
         class="col-3"
       >
         <PrintTemplateCard
           :template="template"
           allow-delete
-          @delete="template.trash = true"
+          @delete="deleteTemplate(index)"
           @restore="template.trash = false"
         />
       </div>
@@ -72,5 +72,14 @@ function addPrintTemplate() {
       temp: true,
     });
   });
+}
+
+function deleteTemplate(templateIndex) {
+  const template = stepModel.value.print_templates[templateIndex];
+  if (template.temp) {
+    stepModel.value.print_templates.splice(templateIndex, 1);
+  } else {
+    template.trash = true;
+  }
 }
 </script>
