@@ -12,7 +12,7 @@
 
       <div>
         <q-btn
-          color="secondary"
+          color="low"
           flat
           round
           icon="mdi-printer"

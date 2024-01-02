@@ -35,16 +35,13 @@
               <q-space />
 
               <q-btn
-                flat
-                round
                 dense
                 size="md"
                 icon="mdi-check-circle"
+                :label="$t('select')"
                 color="primary"
                 @click="selectTemplate(template)"
-              >
-                <q-tooltip>{{ $capitalize($t('select')) }}</q-tooltip>
-              </q-btn>
+              />
             </template>
           </PrintTemplateCard>
         </q-card-section>
