@@ -269,8 +269,10 @@
         </q-btn>
       </q-card>
 
+      <!-- TODO: Enable after templates are being utilized somewhere -->
       <!-- PRINT TEMPLATES -->
       <q-card
+        v-if="false"
         square
         class="surface2 q-px-sm q-pt-sm q-pb-md q-mt-lg col-shrink column no-wrap"
       >

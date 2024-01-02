@@ -155,7 +155,8 @@
           {{ $t('views.PhaseNotes') }}
         </q-tab>
 
-        <q-tab name="print_templates">
+        <!-- TODO: Enable after templates are being utilized somewhere -->
+        <q-tab v-if="false" name="print_templates">
           {{ $t('views.PhasePrintTemplates') }}
         </q-tab>
       </q-tabs>
