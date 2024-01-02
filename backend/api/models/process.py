@@ -46,6 +46,7 @@ class Step(FlexModel):
   description: str = None
   type: StepType = StepType.INSTRUCTION
   form_fields: List[FormFieldDefinition] = []
+  print_templates: List[PrintTemplateRecord] = []
 
 
 # TODO: Add validation for size, content_type, etc.
