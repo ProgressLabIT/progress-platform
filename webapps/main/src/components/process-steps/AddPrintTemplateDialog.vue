@@ -6,24 +6,37 @@
     :no-backdrop-dismiss="false"
     @close="onDialogHide"
   >
-    <q-card square class="surface1" style="min-width: 400px">
-      <q-card-section>
-        <BaseAutocompleteTemplate
-          :selected="selectedTemplates"
-          @select="onDialogOK"
-        />
-      </q-card-section>
-    </q-card>
+    <EntityPicker
+      :options="nonSelectedTemplates"
+      :searchable-fields="['name', 'description']"
+      @select="onDialogOK"
+    >
+      <template #item="{ item, itemProps }">
+        <q-item v-bind="itemProps">
+          <q-item-section>
+            <q-item-label class="highlight">
+              {{ item.name }}
+            </q-item-label>
+
+            <q-item-label caption lines="2">
+              {{ item.description }}
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+    </EntityPicker>
   </BaseDialog>
 </template>
 
 <script setup>
 import { useDialogPluginComponent } from 'quasar';
-import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
+import { computed } from 'vue';
 import BaseDialog from '@/components/BaseDialog.vue';
+import EntityPicker from '@/components/EntityPicker.vue';
+import { usePrintTemplates } from '@/composables/print-template';
 
-defineProps({
-  selectedTemplates: {
+const props = defineProps({
+  selectedKeys: {
     type: Array,
     default: () => [],
   },
@@ -35,4 +48,10 @@ const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent();
 // This can't be inside the template due to unwrapping
 // See: https://github.com/vuejs/composition-api/issues/317#issuecomment-1069145915
 const getDialogRef = () => dialogRef;
+
+const { templates } = usePrintTemplates();
+
+const nonSelectedTemplates = computed(() =>
+  templates.value.filter(({ _key }) => !props.selectedKeys.includes(_key)),
+);
 </script>

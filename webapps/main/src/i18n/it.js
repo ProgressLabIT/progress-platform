@@ -255,6 +255,7 @@ export default {
   next: 'avanti',
   no: 'No',
   no_class: 'nessuna classe',
+  no_data: 'Nessun dato',
   no_department: 'nessun reparto',
   notes: 'Note',
   notes_empty: 'Nessuna nota',

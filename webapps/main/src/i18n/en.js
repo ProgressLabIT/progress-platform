@@ -248,6 +248,7 @@ export default {
   next: 'next',
   no: 'No',
   no_class: 'no class',
+  no_data: 'No Data',
   no_department: 'no department',
   notes: 'Notes',
   notes_empty: 'Notes empty',

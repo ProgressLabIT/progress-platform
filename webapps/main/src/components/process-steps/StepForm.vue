@@ -64,7 +64,7 @@ function addPrintTemplate() {
   Dialog.create({
     component: AddPrintTemplateDialog,
     componentProps: {
-      selectedTemplates: stepModel.value.print_templates,
+      selectedKeys: stepModel.value.print_templates.map(({ _key }) => _key),
     },
   }).onOk((template) => {
     stepModel.value.print_templates.push({
