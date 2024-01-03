@@ -7,7 +7,7 @@
 
     <q-drawer
       id="menu"
-      v-model="show_drawer"
+      v-model="drawerModel"
       class="surface2"
       behavior="mobile"
       bordered
@@ -65,7 +65,7 @@
 import { useQuasar } from 'quasar';
 import AppBar from '@/components/AppBar.vue';
 import AppFooter from '@/components/AppFooter.vue';
-import drawer from '@/mixins/drawer.js';
+import { useDrawer } from '@/composables/drawer';
 // import SessionLock from '@/views/SessionLock'
 
 export default {
@@ -77,7 +77,13 @@ export default {
     // SessionLock,
   },
 
-  mixins: [drawer],
+  setup() {
+    const { drawerModel } = useDrawer();
+
+    return {
+      drawerModel,
+    };
+  },
 
   data() {
     return {
