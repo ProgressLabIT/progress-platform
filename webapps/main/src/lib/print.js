@@ -112,29 +112,65 @@ export class IssueTypeContext extends TemplateContext {
       return value;
     }
 
+    const { issue } = this;
+    const { product, job, work_order: workOrder } = issue.links;
+
     switch (presetName) {
       case 'issue.open_date':
-        return extractDate(this.issue.open_date);
+        return extractDate(issue.open_date);
       case 'issue.open_time':
-        return extractTime(this.issue.open_date);
+        return extractTime(issue.open_date);
       case 'issue.open_user':
-        return this.issue.open_user;
+        return issue.open_user;
       case 'issue.close_date':
-        return extractDate(this.issue.close_date);
+        return extractDate(issue.close_date);
       case 'issue.close_time':
-        return extractTime(this.issue.close_date);
+        return extractTime(issue.close_date);
       case 'issue.close_user':
-        return this.issue.close_user;
+        return issue.close_user;
       case 'issue.status':
-        return this.issue.status;
+        return issue.status;
 
-      /*
-          TODO: Should we get the model data that is linked to the issue? (e.g. product, batch, etc.)
-          The issue can be linked to multiple models, so we can:
-          - use the first connection
-          - ask the user to pick one
-          - and/or try to pick it from the UI context (e.g. if the user opened the issue from the work session page, use the related product, job, batch, etc.)
-        */
+      case 'job.key':
+        return job._key;
+      case 'job.qt_planned':
+        return job.qt_planned;
+      case 'job.qt_completed':
+        return job.qt_completed;
+      case 'job.phase_alias':
+        return job.phase_alias;
+      case 'job.start_date':
+        return extractDate(job.start);
+      case 'job.start_time':
+        return extractTime(job.start);
+      case 'job.end_date':
+        return extractDate(job.end);
+      case 'job.end_time':
+        return extractTime(job.end);
+
+      case 'project.code':
+        return job.project_code;
+
+      case 'work_order.code':
+        return job.wo_code;
+      case 'work_order.qt_planned':
+        return workOrder.qt_planned;
+      case 'work_order.qt_completed':
+        return workOrder.qt_completed;
+      case 'work_order.start_date':
+        return extractDate(workOrder.start);
+      case 'work_order.start_time':
+        return extractTime(workOrder.start);
+      case 'work_order.end_date':
+        return extractDate(workOrder.end);
+      case 'work_order.end_time':
+        return extractTime(workOrder.end);
+
+      case 'product.code':
+        return product.code;
+      case 'product.description':
+        return product.description;
+
       default:
         return undefined;
     }

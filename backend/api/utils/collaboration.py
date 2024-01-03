@@ -145,7 +145,7 @@ class Queries:
       phase_alias: phase.alias
     })
 
-    LET issue_links = { product, operation, phase, work_order }
+    LET issue_links = { job, product, operation, phase, work_order }
 
     RETURN @with_links ? MERGE(base_result, { links: issue_links }) : base_result
   """
