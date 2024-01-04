@@ -12,8 +12,6 @@ const icon_list = icons.map((string) => {
     .join('');
 });
 
-import { dark, light } from '@/boot/theme.js';
-
 import bom from './bom';
 import form from './form';
 import job from './job';
@@ -25,8 +23,6 @@ import session from './session';
 import traceability from './traceability';
 import user from './user';
 import workorder from './workorder';
-
-// import example from './module-example'
 
 /*
  * If not building with SSR mode, you can
@@ -62,7 +58,7 @@ const store = createStore({
       },
       screen_title: 'progress',
       show_drawer: false,
-      theme_colors: dark,
+      theme_colors: {},
       icons: icon_list,
     };
   },
@@ -80,8 +76,8 @@ const store = createStore({
   },
 
   actions: {
-    changeTheme({ commit }, dark_mode_on) {
-      commit('SET_THEME', dark_mode_on ? dark : light);
+    changeTheme({ commit }, theme) {
+      commit('SET_THEME', theme);
     },
   },
 

@@ -15,6 +15,25 @@
 
         <q-menu>
           <q-list separator style="min-width: 200px">
+            <q-item
+              clickable
+              @click="theme = theme === 'dark' ? 'light' : 'dark'"
+            >
+              <q-item-section side>
+                <q-icon
+                  :name="
+                    theme === 'dark' ? 'mdi-weather-night' : 'mdi-weather-sunny'
+                  "
+                />
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label>
+                  {{ capitalizeAll($t('preferences.theme')) }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+
             <q-item clickable @click="logout">
               <q-item-section side>
                 <q-icon name="mdi-logout-variant" />
@@ -41,6 +60,7 @@ import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { capitalize, capitalizeAll } from '@/boot/filters.js';
 import { useDrawer } from '@/composables/drawer';
+import { useTheme } from '@/composables/theme';
 
 const store = useStore();
 const { drawerModel } = useDrawer();
@@ -88,4 +108,6 @@ async function logout() {
     await store.dispatch('logout');
   }
 }
+
+const { theme } = useTheme();
 </script>

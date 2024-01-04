@@ -29,26 +29,21 @@
 
         <q-space />
 
-        <!-- THEME SELECTION -->
-        <div class="q-px-sm">
+        <!-- LANGUAGE SELECTION -->
+        <!-- <div class="q-px-sm">
           <div class="row justify-between items-center">
-            <div class="display medium">TEMA SCURO</div>
-            <q-toggle v-model="dark_mode_on"></q-toggle>
+            <span class="display medium">{{ $t('language') }}</span>
+            <q-tabs v-model="locale_index" right>
+              <q-tab
+                v-for="(lang, i) in locale_list"
+                :key="i"
+                class="q-ma-none"
+              >
+                {{ lang }}
+              </q-tab>
+            </q-tabs>
           </div>
-
-          <!-- LANGUAGE SELECTION -->
-          <!--  <div class="row justify-between items-center">
-              <span class="display medium">{{ $t('language') }}</span>
-              <q-tabs right v-model="locale_index">
-                <q-tab
-                  v-for="(lang, i) in locale_list"
-                  :key="i"
-                  class="q-ma-none">
-                  {{ lang }}
-                </q-tab>
-              </q-tabs>
-            </div> -->
-        </div>
+        </div> -->
       </div>
     </q-drawer>
 
@@ -98,7 +93,6 @@ export default {
       ],
       locale_index: null,
       locale_list: this.$root.$i18n.availableLocales,
-      dark_mode_on: true,
     };
   },
 
@@ -117,25 +111,8 @@ export default {
     //   this.$root.$i18n.locale = this.locale_list[new_locale_index]
     //   this.$store.state.locale = this.locale_list[new_locale_index]
     // },
-    dark_mode_on(bool) {
-      this.toggleDarkMode(bool);
-    },
   },
 
-  created() {
-    // Set dark mode on
-    this.toggleDarkMode(true);
-  },
-
-  methods: {
-    toggleDarkMode(bool) {
-      const theme = bool ? 'dark' : 'light';
-      document.body.setAttribute('progress-theme', theme);
-      // Set theme
-      this.$store.dispatch('changeTheme', bool);
-      this.$q.dark.set(bool);
-    },
-  },
   // beforeMount() {
   //   let locale = this.$root.$i18n.locale
   //   const saved_locale = this.$store.state.locale

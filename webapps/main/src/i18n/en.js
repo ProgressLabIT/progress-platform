@@ -421,6 +421,9 @@ export default {
       instruction: 'instructions',
     },
   },
+  preferences: {
+    theme: 'Switch theme',
+  },
   procedure: 'procedure',
   process: 'process',
   processing_cost: 'processing cost',

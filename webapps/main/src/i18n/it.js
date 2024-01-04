@@ -429,6 +429,9 @@ export default {
       instruction: 'istruzioni',
     },
   },
+  preferences: {
+    theme: 'Tema scuro',
+  },
   procedure: 'procedura',
   process: 'processo',
   processing_cost: 'costo lavorazione',
