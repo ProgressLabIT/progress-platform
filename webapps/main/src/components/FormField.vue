@@ -45,7 +45,8 @@
 
     <!-- TERNARY -->
     <!-- TODO: Implement required behavior (?) -->
-    <div v-if="fieldType === 'ternary'" class="row items-center">
+    <q-card square v-if="fieldType === 'ternary'" style="background: rgba(255,255,255,0.07)" class="no-shadow q-px-lg q-py-md">
+      <div class="row items-center">
       <div class="col-1 items-center">
         <q-avatar
           :color="fieldValue !== undefined ? 'theme-green' : 'transparent'"
@@ -91,7 +92,8 @@
           <span class="text-h4 display weight-bold">{{ $t('yes') }}</span>
         </q-btn>
       </div>
-    </div>
+      </div>
+    </q-card>
 
     <!-- CHOICE -->
     <q-select
