@@ -10,14 +10,18 @@
     </div>
 
     <q-scroll-area class="col q-mt-lg q-pr-md">
-      <FormField
+      <div
         v-for="field in formFields"
         :key="field._key"
-        :field="field"
-        :disable="!isJobActive || batchStep.done"
-        :root-path="`/media/step/${step._key}`"
-        @update="value => updateField(field, value)"
-      />
+        class="q-py-xs"
+        >
+        <FormField
+          :field="field"
+          :disable="!isJobActive || batchStep.done"
+          :root-path="`/media/step/${step._key}`"
+          @update="value => updateField(field, value)"
+        />
+      </div>
     </q-scroll-area>
   </div>
 </template>
