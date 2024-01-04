@@ -1,53 +1,60 @@
 <template>
-  <BaseActionCard
+  <BaseActionFormCard
     :title="$t('field_new')"
-    @save="addField"
-    @cancel="$emit('close')">
+    @submit="addField"
+    @cancel="$emit('close')"
+  >
+    <q-select
+      v-model="new_field.type"
+      :options="field_types"
+      emit-value
+      map-options
+      :label="$t('type')"
+      filled
+    >
+      <template #option="scope">
+        <q-item v-bind="scope.itemProps">
+          <q-item-section avatar>
+            <q-icon :name="scope.opt.icon" />
+          </q-item-section>
 
-    <div
-      v-for="prop in Object.keys(new_field)"
-      class="q-my-md">
-
-      <!-- TYPE -->
-      <template v-if="prop == 'type'">
-        <q-select
-          filled
-          :label="$t('type')"
-          :options="field_types"
-          v-model="new_field.type"
-          emit-value
-          map-options>
-          <template #option="scope">
-            <q-item v-bind="scope.itemProps">
-              <q-item-section avatar>
-                <q-icon :name="scope.opt.icon" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>
-                  {{ scope.opt.label }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-select>
+          <q-item-section>
+            <q-item-label>{{ scope.opt.label }}</q-item-label>
+          </q-item-section>
+        </q-item>
       </template>
+    </q-select>
 
-      <template v-else>
-        <q-input
-          filled
-          autogrow
-          :label="$t(prop)"
-          v-model="new_field[prop]">
-        </q-input>
-      </template>
+    <q-input
+      v-model="new_field.name"
+      :rules="[value => !!value || $t('field_required_alert')]"
+      hide-bottom-space
+      autogrow
+      :label="$t('name')"
+      filled
+      class="q-mt-md"
+    />
 
-    </div>
+    <q-input
+      v-model="new_field.label"
+      autogrow
+      :label="$t('label')"
+      filled
+      class="q-mt-md"
+    />
 
-  </BaseActionCard>
+    <q-input
+      v-model="new_field.hint"
+      autogrow
+      :label="$t('hint')"
+      filled
+      class="q-mt-md"
+    />
+  </BaseActionFormCard>
 </template>
 
 <script>
-import BaseActionCard from '@/components/BaseActionCard.vue'
+import BaseActionFormCard from '@/components/BaseActionFormCard.vue'
 import form from '@/mixins/form.js'
 
 export default {
@@ -55,7 +62,7 @@ export default {
   name: 'FormFieldNew',
 
   components: {
-    BaseActionCard
+    BaseActionFormCard
   },
 
   mixins: [form],

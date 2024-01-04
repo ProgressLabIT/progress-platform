@@ -27,35 +27,28 @@
               :key="index"
               class="step-divider">
           </template>
-
         </div>
       </q-toolbar>
 
-      <component
-        v-if="procedure.length"
-        :is="step_component"
-        :step="current_step">
-      </component>
+      <template v-if="procedure.length > 0">
+        <JobForm v-if="current_step.type === 'form'" :step="current_step" />
+        <JobInstruction v-else :step="current_step" />
+      </template>
     </template>
   </div>
 </template>
 
 <script>
-import { throttle as _throttle } from 'lodash'
-
 import JobInstruction from '@/components/JobInstruction.vue'
 import JobForm from '@/components/JobForm.vue'
-import JobChecklist from '@/components/JobChecklist.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 
 export default {
-
   name: 'WorkSessionSteps',
 
   components: {
     JobInstruction,
     JobForm,
-    JobChecklist,
     NoDataAlert
   },
 
@@ -92,21 +85,6 @@ export default {
       return this.procedure?.[this.current_step_index] ?? {}
     },
 
-    step_component() {
-      let component = 'JobInstruction'
-      if (this.current_step) {
-        switch (this.current_step.type) {
-          case 'checklist':
-            component = 'JobChecklist'
-            break
-          case 'form':
-            component = 'JobForm'
-            break
-        }
-      }
-      return component
-    },
-
     batch_data() {
       return this.$store.state.traceability.current_batch_data.step_data
     },
@@ -122,8 +100,8 @@ export default {
       let step_done = false
       let step_critical = false
       let bg_color = ''
-      let text_color = this.$theme.text_low
-      let cursor = this.allowClick(index) ? 'pointer' : 'not-allowed'
+      const text_color = this.$theme.text_low
+      const cursor = this.allowClick(index) ? 'pointer' : 'not-allowed'
 
       if (this.batch_data) {
         step_done = this.batch_data[index].done

@@ -105,25 +105,24 @@
           <!-- ISSUE TYPE SELECTION -->
           <q-card-section>
             <BaseAutocompleteIssueType
+              :value="issue_type"
               @select="(value) => setIssueType(value)"
-              :value="issue_type">
-            </BaseAutocompleteIssueType>
+            />
           </q-card-section>
 
           <!-- FORM FIELDS -->
           <q-card-section>
             <template v-if="issue_type">
               <FormField
-                v-for="field in form_data"
+                v-for="field in form_fields"
                 :key="field._key"
-                :field_data="field"
-                :root_path="`/media/issue/${issue?._key}`"
-                @update="val => field.value = val">
-              </FormField>
+                :field="field"
+                :root-path="`/media/issue/${issue?._key}`"
+                @update="field.value = $event"
+              />
             </template>
           </q-card-section>
         </div>
-
 
         <!-- FORM ACTIONS -->
         <q-card-section>
@@ -231,7 +230,7 @@ export default {
       saving: false,
       issue_type: null,
       form_step: 'data',
-      form_data: [],
+      form_fields: [],
       confirmed: false,
       critical: false,
       link_form: null,
@@ -306,16 +305,21 @@ export default {
     },
 
     initFormData() {
-      const use_clean_form = this.mode == 'new' || this.issue_type?._key != this.issue.issue_type_key
+      const form_template = this.issue_type?.form_template ?? []
 
+      const use_clean_form = this.mode === 'new' || this.issue_type?._key !== this.issue.issue_type_key
       if (use_clean_form) {
         // Use fields from issue type template adding empty value
-        // If no template, force null, otherwise `undefiend` will not be included in the api body and the issue data will not be updated
-        this.form_data = this.issue_type?.form_template.map(f => {
-          return { ...f, value: null }
-        }) ?? []
+        // If no template, force null, otherwise `undefined` will not be included in the api body and the issue data will not be updated
+        this.form_fields = form_template.map(field => ({ ...field, value: null }))
+        return
       }
-      else this.form_data = [ ...this.issue.data ]
+
+      this.form_fields = form_template.map(field => ({
+        ...field,
+        value: this.issue.data
+          .find(({ form_field_key }) => form_field_key === field._key)?.value
+      }))
     },
 
     initIssueType() {
@@ -387,58 +391,60 @@ export default {
       this.$emit('close')
     },
 
-    saveFiles(issue_key) {
-      this.form_data
-      .filter(field => field.type == 'files')
-      .forEach(async field => {
-        const to_delete = []
-        const to_add = []
+    async saveFiles(issue_key) {
+      const promises = this.form_fields
+        .filter(({ type }) => type === 'files')
+        .map(async field => {
+          const to_delete = []
+          const to_add = []
 
-        field.value?.forEach(file => {
-          if (file.temp) {
-            to_add.push(file.content)
+          field.value?.forEach(file => {
+            if (file.temp) {
+              to_add.push(file.content)
+            }
+            else if (file.delete) {
+              to_delete.push(file.name)
+            }
+          })
+
+          const target = {
+            bucket: 'issue',
+            object_key: issue_key,
+            subfolder: field._key
           }
-          else if (file.delete) {
-            to_delete.push(file.name)
+
+          // Upload new files
+          if (to_add.length) {
+            // Populate form data
+            const add_body = new FormData()
+            Object.entries(target).forEach(([k, v]) => add_body.append(k, v))
+            to_add.forEach(file => add_body.append('contents', file))
+            // Post files
+            try {
+              await this.$api.post('/files', add_body)
+            } catch (error) {
+              console.error(error)
+              window.alert(error)
+            }
+          }
+
+          // Delete files
+          if (to_delete.length) {
+            try {
+              await this.$api.delete('/files', {
+                data: {
+                  ...target,
+                  filenames: to_delete
+                }
+              })
+            } catch (error) {
+              console.error(error)
+              window.alert(error)
+            }
           }
         })
 
-        const target = {
-          bucket: 'issue',
-          object_key: issue_key,
-          subfolder: field._key
-        }
-
-        // Upload new files
-        if (to_add.length) {
-          // Populate form data
-          let add_body = new FormData()
-          Object.entries(target).forEach(([k, v]) => add_body.append(k, v))
-          to_add.forEach(file => add_body.append('contents', file))
-          // Post files
-          this.$api.post('/files',
-            add_body, {
-            headers: {'Content-Type': 'multipart/form-data'}
-          }).catch( err => window.alert(err) )
-        }
-
-        // Delete files
-        if (to_delete.length) {
-          this.$api.delete('/files', { data: {
-            ...target,
-            filenames: to_delete
-          }}).catch( err => window.alert(err))
-        }
-      })
-    },
-
-    prepareLinks() {
-      // Create array of { type, key } objects from object keys and values
-      const links = []
-      Object.entries(this.links).forEach(([k,v]) => {
-        if (v) links.push({ type: k, key: v._key})
-      })
-      return links
+      return Promise.all(promises)
     },
 
     async save() {
@@ -447,62 +453,66 @@ export default {
       const issue_data = {
         issue_type_key: this.issue_type?._key || null,
         critical: this.critical,
-        data: this.form_data.map(field => {
-          if (field.type == 'files') {
-            return {
-              ...field,
-              value: field.value?.filter(file => !file.delete).map(file => ({
+        data: this.form_fields.map(field => ({
+          form_field_key: field._key,
+          custom_field_key: field.custom_field_key,
+          value: field.type === 'files'
+            ? field.value
+              ?.filter(file => !file.delete)
+              .map(file => ({
                 size: file.size,
                 name: file.name
               }))
-            }
-          }
-          else return field
-        })
+            : field.value
+        }))
       }
 
       const user = this.session_data.user._key
 
-      if (this.mode == 'new') {
+      if (this.mode === 'new') {
         // if link is active send data in the form e.g. { type: product, key: whatever }
         issue_data.created_by = `User/${user}` // temporarily hardcoding DB id
-        issue_data.close_within = this.issue_type ? this.issue_type.close_within : 0
+        issue_data.close_within = this.issue_type?.close_within ?? 0
 
         // Map links to list of objects, including only populated properties
-        issue_data.linked_to = this.prepareLinks()
+        const links = []
+        Object.entries(this.links).forEach(([key, value]) => {
+          if (value) {
+            links.push({ type: key, key: value._key })
+          }
+        })
+        issue_data.linked_to = links
+      } else {
+        issue_data._key = this.issue._key
       }
-      // Add _key and data fields for ISSUE_UPDATED event
-      else issue_data._key = this.issue._key
 
       const event = {
-        event_type: this.mode == 'new' ? 'ISSUE_CREATED' : 'ISSUE_UPDATED',
+        event_type: this.mode === 'new' ? 'ISSUE_CREATED' : 'ISSUE_UPDATED',
         user_key: user,
         user_session_key: this.session_data.session_key,
         timestamp: timestamp(),
         issue_data
       }
 
-      const message = this.mode == 'new' ? 'issue_new_success' : 'issue_update_success'
-      this.$api.post('event', event)
-      .then(async (resp) => {
-        const issue_key = this.mode == 'new' ? resp.data.detail.issue_key : issue_data._key
-        await this.saveFiles(issue_key)
+      const message = this.mode === 'new' ? 'issue_new_success' : 'issue_update_success'
+      const { data } = await this.$api.post('event', event)
+      const issue_key = this.mode === 'new' ? data.detail.issue_key : issue_data._key
+      await this.saveFiles(issue_key)
 
-        // If from work session, fetch issues directly, otherwise signal the parent component to do so
-        if (!this.with_links) {
-          await this.$store.dispatch('getIssues', { work_order_key: this.job_data.wo_key })
-        }
-        else {
-          this.$emit('issue_created')
-        }
-        this.cancel()
-        this.saving = false
-        this.$q.notify({
-          message: this.$t(message),
-          color: this.critical ? 'theme-red' : 'theme-orange',
-          timeout: 1500,
-          position: 'top'
-        })
+      // If from work session, fetch issues directly, otherwise signal the parent component to do so
+      if (!this.with_links) {
+        await this.$store.dispatch('getIssues', { work_order_key: this.job_data.wo_key })
+      }
+      else {
+        this.$emit('issue_created')
+      }
+      this.cancel()
+      this.saving = false
+      this.$q.notify({
+        message: this.$t(message),
+        color: this.critical ? 'theme-red' : 'theme-orange',
+        timeout: 1500,
+        position: 'top'
       })
     },
   },

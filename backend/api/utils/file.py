@@ -1,13 +1,12 @@
 import os
 import shutil
 from utils.config import get_config
+from models.form import FileBucket
 
 media_root_path = get_config().media_path
 
 class FileHandler:
-
-  def __init__(self, bucket, object_key=None, subfolder=None, file=None, name=None):
-
+  def __init__(self, bucket: FileBucket, object_key=None, subfolder=None, file=None, name=None):
     self.bucket = bucket # media type
     self.object_key = object_key # media item key
     self.subfolder = subfolder
@@ -44,19 +43,16 @@ class FileHandler:
 
   @classmethod
   def product_media(cls, object_key, subfolder=None, file=None, name=None):
-    bucket = "product"
-    return cls(bucket=bucket, object_key=object_key, subfolder=subfolder, file=file, name=name)
+    return cls(bucket=FileBucket.PRODUCT, object_key=object_key, subfolder=subfolder, file=file, name=name)
 
   @classmethod
   def user_image(cls, object_key=None, subfolder=None, file=None, name=None):
-    bucket = "user"
-    return cls(bucket=bucket, object_key=object_key, subfolder=subfolder, file=file, name=name)
+    return cls(bucket=FileBucket.USER, object_key=object_key, subfolder=subfolder, file=file, name=name)
 
 
   @classmethod
   def step_media(cls, object_key, subfolder=None, file=None, name=None):
-    bucket = "step"
-    return cls(bucket=bucket, object_key=object_key, subfolder=subfolder, file=file, name=name)
+    return cls(bucket=FileBucket.STEP, object_key=object_key, subfolder=subfolder, file=file, name=name)
 
 
   async def write_file(self, file=None, custom_name=None):

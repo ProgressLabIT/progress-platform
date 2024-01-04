@@ -20,14 +20,14 @@
         </div>
 
         <div class="row q-px-lg q-pt-md q-mb-md">
-          <template v-if="issue.data.length">
-            <div class="col-auto q-pr-md" v-for="field in issue.data">
+          <template v-if="issue.data.length > 0">
+            <div v-for="field in issue.data" :key="field._key" class="col-auto q-pr-md">
               <FormField
-                :field_data="field"
+                :field="field"
+                :root-path="`/media/issue/${issue_key}`"
                 dense
-                :disable="true"
-                :root_path="`/media/issue/${issue_key}`">
-              </FormField>
+                disable
+              />
             </div>
           </template>
           <div v-else class="col-auto text-italic">
@@ -208,9 +208,22 @@ export default {
       return this.enrichIssue(issue_data)
     },
 
+    issue_type() {
+      return this.$store.getters.getIssueType(this.issue.issue_type_key)
+    },
+
+    form_fields() {
+      const form_template = this.issue_type?.form_template ?? []
+      return form_template.map(field => ({
+        ...field,
+        value: this.issue.data
+          .find(({ form_field_key }) => form_field_key === field._key)?.value
+      }))
+    },
+
     user_can_delete() {
       return this.$store.getters.hasPermission('production')
-    },
+    }
   },
 
   methods: {

@@ -1,17 +1,17 @@
 from enum import Enum
 from datetime import date, time
-from typing import Any, List, Union
+from typing import Any, Union
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, Field, root_validator
 
 from utils.base_models import ArangoDocument
-
 
 
 class FileBucket(str, Enum):
   ISSUE = 'issue'
   PRODUCT = 'product'
   STEP = 'step'
+  TRACEABILITY = 'traceability'
   USER = 'user'
 
 class FileTargetData(BaseModel):
@@ -23,7 +23,7 @@ class FieldType(str, Enum):
   TEXT = 'text'
   NUMBER = 'number'
   BOOLEAN = 'boolean'
-  # TERNARY = 'ternary'
+  TERNARY = 'ternary'
   CHOICE = 'choice'
   DATE = 'date'
   TIME = 'time'
@@ -33,7 +33,7 @@ field_type_map = {
   FieldType.TEXT.value: str,
   FieldType.NUMBER.value: float,
   FieldType.BOOLEAN.value: bool,
-  # FieldType.TERNARY.value: Union[bool, None],
+  FieldType.TERNARY.value: Union[bool, None],
   FieldType.CHOICE.value: str,
   FieldType.DATE.value: date,
   FieldType.TIME.value: time,
@@ -48,12 +48,13 @@ class CustomListValue(ArangoDocument):
 
 class CustomField(ArangoDocument):
   type: FieldType
-  name: str # To search when building the form
+  name: str = Field(..., min_length=1) # To search when building the form
   default_label: str = None # To show to the user when filling up the forms
   default_hint: str = None # To show to the user when filling up the forms
 
 class FormFieldDefinition(BaseModel):
-  field_key: str
+  key: str = Field(None, alias="_key")
+  custom_field_key: str
   multiple: bool = False
   label: str
   hint: str = None
@@ -66,3 +67,10 @@ class FormFieldDefinition(BaseModel):
     if values.get('hidden') and values.get('default') == None:
       raise ValueError('Hidden fields must have a default value')
     return values
+
+class FormFieldValue(BaseModel):
+  form_field_key: str
+  # This causes data duplication, but it's for ease of access.
+  # It can't be changed in FormField, so there is no risk of data inconsistency, at least for now.
+  custom_field_key: str
+  value: Any

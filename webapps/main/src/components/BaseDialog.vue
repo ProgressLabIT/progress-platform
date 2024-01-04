@@ -1,5 +1,6 @@
 <template>
   <q-dialog
+    :ref="getDialogRef()"
     :model-value="show"
     :maximized="maximized"
     :no-backdrop-dismiss="noBackdropDismiss"
@@ -46,6 +47,10 @@ export default {
       type: String,
       default: null
     },
+    getDialogRef: {
+      type: Function,
+      default: () => {}
+    }
   },
   emits: ['close'],
 

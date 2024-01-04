@@ -166,7 +166,6 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useStore } from 'vuex'
 
 import StepInstruction from './StepInstruction.vue'
-import StepChecklist from './StepChecklist.vue'
 import StepForm from './StepForm.vue'
 
 const props = defineProps({
@@ -181,10 +180,9 @@ const stepsModel = defineModel({ type: Array })
 const store = useStore()
 const $theme = computed(() => store.getters.theme)
 
-const stepTypes = ['instruction', 'checklist', 'form']
+const stepTypes = ['instruction', 'form']
 const stepTypeToIconMap = {
   instruction: 'mdi-playlist-check',
-  checklist: 'mdi-format-list-checks',
   form: 'mdi-playlist-edit'
 }
 const isConfirmingDelete = ref(false)
@@ -250,8 +248,7 @@ function addStep(type) {
     type,
     title: '',
     description: '',
-    checks: [],
-    input_fields: [],
+    form_fields: [],
     media: []
   })
   currentStepIndex.value = stepsModel.value.length - 1
@@ -259,7 +256,6 @@ function addStep(type) {
 
 const stepTypeToComponentMap = {
   instruction: StepInstruction,
-  checklist: StepChecklist,
   form: StepForm
 }
 const activeStepComponent = computed(() => {

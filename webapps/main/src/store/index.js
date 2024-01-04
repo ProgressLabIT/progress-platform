@@ -1,4 +1,3 @@
-import { api } from '@/boot/axios.js'
 import { DateTime as DT } from 'luxon'
 import { debounce } from 'quasar'
 import { createStore } from 'vuex'
@@ -6,14 +5,13 @@ import { createStore } from 'vuex'
 import icons from '@quasar/extras/mdi-v6/icons.json'
 
 const icon_list = icons.map(string => {
-    // Transofrm icon names from camelCase to kebab-case
-    return [...string].map(char => {
-      return char.toUpperCase() == char
-        ? '-' + char.toLowerCase()
-        : char
-    }).join('')
-  })
-
+  // Transform icon names from camelCase to kebab-case
+  return [...string].map(char => {
+    return char.toUpperCase() == char
+      ? '-' + char.toLowerCase()
+      : char
+  }).join('')
+})
 
 import { dark, light } from '@/boot/theme.js'
 
@@ -27,6 +25,7 @@ import traceability from "./traceability"
 import user from "./user"
 import workorder from "./workorder"
 import bom from "./bom"
+import form from "./form"
 
 // import example from './module-example'
 
@@ -44,13 +43,12 @@ function resetSessionTimeoutAtStoreChange(store) {
     'CLOSE_SESSION',
     'SET_SESSION_TIMEOUT',
   ]
-  store.subscribe( debounce((mutation) => {
+  store.subscribe(debounce((mutation) => {
     if (!mutations_to_ignore.includes(mutation.type)) {
       store.commit('SET_SESSION_TIMEOUT')
     }
   }, 5000))
 }
-
 
 const store = createStore({
   state() {
@@ -78,7 +76,6 @@ const store = createStore({
     SHOW_DRAWER(state, value) {
       state.show_drawer = value
     }
-
   },
 
   actions: {
@@ -100,6 +97,7 @@ const store = createStore({
 
   modules: {
     bom,
+    form,
     job,
     org,
     process,

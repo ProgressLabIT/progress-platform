@@ -153,101 +153,10 @@
         {{ $t('form_title')}}
       </div>
 
-      <div
-        v-if="!temp_metadata.form_template.length"
-        class="q-mt-md text-italic">
-        {{ $t('field_none') }}
-      </div>
-
-      <div v-else class="col scroll" id="issue-type-fields">
-
-        <div
-          class="row items-center q-col-gutter-lg q-py-sm"
-          v-for="(field, index) in temp_metadata.form_template"
-          :key="field._key">
-
-          <div class="col-auto">
-            <q-icon
-              v-if="edit_mode"
-              name="mdi-drag-horizontal-variant"
-              class="q-mr-sm dragme"
-              size="sm">
-            </q-icon>
-            <q-icon
-              :name="getFieldIcon(field.type)"
-              size="sm">
-            </q-icon>
-          </div>
-
-          <!-- Label -->
-          <div class="col">
-            <q-input
-              stack-label
-              filled
-              dense
-              autogrow
-              :readonly="!edit_mode"
-              :label="$t('label')"
-              v-model="field.label">
-            </q-input>
-          </div>
-
-          <!-- Hint -->
-          <div class="col">
-            <q-input
-              stack-label
-              filled
-              dense
-              autogrow
-              :readonly="!edit_mode"
-              :label="$t('hint')"
-              v-model="field.hint">
-            </q-input>
-          </div>
-
-          <div class="col-auto">
-
-          </div>
-
-          <div class="col-auto">
-            <q-btn
-              v-if="edit_mode"
-              round flat
-              icon="mdi-close"
-              @click="deleteField(index)">
-            </q-btn>
-          </div>
-          <!-- TODO: default value and hidden -->
-        </div>
-
-        <!-- BUTTON: Add field -->
-      </div>
-
-      <div class="row">
-        <q-btn
-          v-if="edit_mode"
-          size="sm"
-          color="theme-blue"
-          icon="mdi-plus"
-          :label="$t('field_add')"
-          @click="show_field_dialog=true"
-          class="q-mt-lg">
-        </q-btn>
-      </div>
-
-
-
-      <BaseDialog
-        :show="show_field_dialog"
-        :no-backdrop-dismiss="false"
-        @close="show_field_dialog=false">
-        <!-- Field picker -->
-        <FormFieldSearch
-          @select="addField"
-          :exclude-keys="selected_field_keys">
-        </FormFieldSearch>
-      </BaseDialog>
-
+      <FormTemplateEditor
+        v-model="temp_metadata.form_template"
+        :edit-mode="edit_mode"
+      />
     </template>
 
     <NoDataAlert v-else />
@@ -255,26 +164,23 @@
 </template>
 
 <script>
+import { cloneDeep as _cloneDeep } from 'lodash'
 import IconLibrary from '@/components/IconLibrary.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
-import FormFieldSearch from '@/components/FormFieldSearch.vue'
+import FormTemplateEditor from '@/components/FormTemplateEditor.vue'
 import form from '@/mixins/form.js'
-import { cloneDeep as _cloneDeep } from 'lodash'
-import Sortable from 'sortablejs'
-
 
 export default {
-
   name: 'IssueTypeDetail',
 
   components: {
     BaseDialog,
     BaseTooltipIcon,
-    FormFieldSearch,
     NoDataAlert,
-    IconLibrary
+    IconLibrary,
+    FormTemplateEditor
   },
 
   mixins: [form],
@@ -289,7 +195,6 @@ export default {
   data () {
     return {
       show_icon_library: false,
-      show_field_dialog: false,
       edit_mode: false,
       saving: false,
       temp_metadata: {
@@ -305,17 +210,10 @@ export default {
     }
   },
 
-  computed: {
-    selected_field_keys() {
-      return this.temp_metadata.form_template.map(f => f._key)
-    }
-  },
-
   methods: {
-
-    setTempData(){
+    setTempData() {
       if (this.issue_type) {
-        Object.keys(this.temp_metadata).forEach( key => {
+        Object.keys(this.temp_metadata).forEach(key => {
           if (key in this.issue_type) {
             this.temp_metadata[key] = _cloneDeep(this.issue_type[key])
           }
@@ -361,40 +259,6 @@ export default {
         name: 'issueTypeDelete',
         params: { issue_type_key: this.issue_type._key }
       })
-    },
-
-    addField(field_data) {
-      this.temp_metadata.form_template.push({
-        _key: field_data._key,
-        type: field_data.type,
-        label: field_data.default_label,
-        hint: field_data.default_hint,
-        // multiple: false,
-        // required: false
-      })
-      this.show_field_dialog = false
-    },
-
-    deleteField(index) {
-      this.temp_metadata.form_template.splice(index, 1)
-    },
-
-    initSortable() {
-      const _self = this
-      let container = document.querySelector("#issue-type-fields")
-      if (container) {
-        Sortable.create(container, {
-          ..._self.$store.state.drag_options,
-          handle: ".dragme",
-          onStart: () => _self.dragging = true,
-          // use onEnd event provided by SortableJs library
-          onEnd: ({ newIndex, oldIndex }) => {
-            _self.dragging = false
-            const moved = _self.temp_metadata.form_template.splice(oldIndex, 1)[0]
-            _self.temp_metadata.form_template.splice(newIndex, 0, moved)
-          }
-        })
-      }
     }
   },
 
@@ -403,10 +267,7 @@ export default {
   },
 
   watch: {
-    edit_mode() {
-      this.setTempData()
-      this.initSortable()
-    },
+    edit_mode: 'setTempData',
     issue_type: 'setTempData'
   }
 }

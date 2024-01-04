@@ -11,7 +11,7 @@ export function useFormFields() {
     { value: 'text', label: t('field_type_text'), icon: 'mdi-alphabetical-variant' },
     { value: 'number', label: t('field_type_number'), icon: 'mdi-numeric' },
     { value: 'boolean', label: t('field_type_boolean'), icon: 'mdi-check-bold' },
-    // { value: 'ternary', label: t('field_type_ternary'), icon: '' }
+    { value: 'ternary', label: t('field_type_ternary'), icon: 'mdi-checkbox-intermediate-variant' },
     { value: 'choice', label: t('field_type_choice'), icon: 'mdi-format-list-checks' },
     { value: 'date', label: t('field_type_date'), icon: 'mdi-calendar' },
     { value: 'time', label: t('field_type_time'), icon: 'mdi-clock-outline' },

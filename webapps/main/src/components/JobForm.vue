@@ -1,7 +1,5 @@
 <template>
   <div class="col column q-pt-xl q-px-xl">
-
-    <!-- FORM TITLE -->
     <div class="col-auto">
       <div class="text-h3 q-px-none q-pt-none nowrap">
         {{ step.title }}
@@ -11,94 +9,71 @@
       </div>
     </div>
 
-    <!-- FORM BODY -->
     <q-scroll-area class="col q-mt-lg q-pr-md">
       <div
-        v-for="(field, index) in step_form"
-        :key="index"
-        class="q-mb-lg">
-        <q-input
-          v-if="field.type=='short'"
-          input-class="text-low"
-          filled square
-          :model-value="field_data[index]"
-          @update:model-value="updateField(index, $event)"
-          debounce="500"
-          :disabled="!job_active  || batch_step.done"
-          :label="field.name"
-          :key="index">
-        </q-input>
-        <q-input
-          v-if="field.type=='long'"
-          input-class="text-low"
-          filled square
-          :model-value="field_data[index]"
-          debounce="500"
-          @update:model-value="updateField(index, $event)"
-          :disabled="!job_active || batch_step.done"
-          :label="field.name"
-          :key="index"
-          type="textarea">
-        </q-input>
+        v-for="field in formFields"
+        :key="field._key"
+        class="q-py-xs"
+        >
+        <FormField
+          :field="field"
+          :disable="!isJobActive || batchStep.done"
+          :root-path="`/media/step/${step._key}`"
+          @update="value => updateField(field, value)"
+        />
       </div>
     </q-scroll-area>
   </div>
 </template>
 
-<script>
-import { debounce as _debounce } from 'lodash'
-export default {
+<script setup>
+import { computed } from 'vue'
+import { useStore } from 'vuex'
+import FormField from '@/components/FormField.vue'
 
-  name: 'JobForm',
-
-  props: {
-    step: {
-      type: Object,
-      required: true,
-    },
-  },
-
-  data () {
-    return {
-      // values: []
-    }
-  },
-
-  computed: {
-    step_form() {
-      return this.step.input_fields
-    },
-
-    job_active() {
-      return this.$store.state.traceability.working_job_data.active
-    },
-
-    batch_step() {
-      return this.$store.getters.getBatchStep(this.step._key)
-    },
-
-    field_data() {
-      const data = this.batch_step.user_data
-      return data ? data : []
-    }
-  },
-
-  methods: {
-    updateField(index, value) {
-      const field_data = {
-        step_key: this.step._key,
-        value_index: index,
-        value
-      }
-      this.$store.commit('UPDATE_STEP_USER_DATA', field_data)
-    }
-  },
-
-  created() {
-    this.debouncedFieldUpdate = _debounce(this.updateField, 1000)
+const props = defineProps({
+  step: {
+    type: Object,
+    required: true
   }
-}
-</script>
+})
 
-<style lang="css" scoped>
-</style>
+const store = useStore()
+
+const batchStep = computed(() => store.getters.getBatchStep(props.step._key))
+
+// TODO: unify and centralize form data handling with IssueForm
+// TODO: add file handling like in IssueForm
+
+const formFields = computed(
+  () => props.step.form_fields.map(field => {
+    const index = formDataIndexByFieldKey.value[field._key]
+    return {
+      ...field,
+      value: formData.value[index]?.value
+    }
+  })
+)
+
+const formData = computed(() => batchStep.value?.form_data ?? [])
+const formDataIndexByFieldKey = computed(() => {
+  const indexByKey = {}
+  formData.value.forEach(({ form_field_key }, index) => {
+    indexByKey[form_field_key] = index
+  })
+  return indexByKey
+})
+function updateField(field, value) {
+  store.commit('UPDATE_STEP_FORM_DATA', {
+    stepKey: props.step._key,
+    index: formDataIndexByFieldKey.value[field._key],
+    data: {
+      form_field_key: field._key,
+      custom_field_key: field.custom_field_key,
+      value
+    }
+  })
+}
+
+const isJobActive = computed(() => store.state.traceability.working_job_data.active)
+</script>

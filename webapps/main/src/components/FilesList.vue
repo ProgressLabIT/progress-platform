@@ -80,7 +80,7 @@ export default {
     },
     files: {
       type: Array,
-      default: []
+      default: () => []
     },
     disable: {
       type: Boolean,
