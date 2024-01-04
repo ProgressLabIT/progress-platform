@@ -54,57 +54,62 @@
 
     <!-- TERNARY -->
     <!-- TODO: Implement required behavior (?) -->
-    <q-card square v-if="fieldType === 'ternary'" style="background: rgba(255,255,255,0.07)" class="no-shadow q-px-lg q-py-md">
+    <q-card
+      v-if="fieldType === 'ternary'"
+      square
+      style="background: rgba(255, 255, 255, 0.07)"
+      class="no-shadow q-px-lg q-py-md"
+    >
       <div class="row items-center">
-      <div class="col-1 items-center">
-        <q-avatar
-          :color="fieldValue !== undefined ? 'theme-green' : 'transparent'"
-          size="24px"
-          class="row flex-center text-center text-body2 font-weight-medium"
-        >
-          <q-icon
-            v-if="fieldValue === undefined"
-            size="sm"
-            name="mdi-progress-question"
-          />
-          <q-icon v-else class="solid-white" name="mdi-check" />
-        </q-avatar>
-      </div>
+        <div class="col-1 items-center">
+          <q-avatar
+            :color="fieldValue !== undefined ? 'theme-green' : 'transparent'"
+            size="24px"
+            class="row flex-center text-center text-body2 font-weight-medium"
+          >
+            <q-icon
+              v-if="fieldValue === undefined"
+              size="sm"
+              name="mdi-progress-question"
+            />
+            <q-icon v-else class="solid-white" name="mdi-check" />
+          </q-avatar>
+        </div>
 
-      <div class="col-6 items-center">
-        <p class="text-body1 q-ma-none">{{ field.label }}</p>
-      </div>
+        <div class="col-6 items-center">
+          <p class="text-body1 q-ma-none">{{ field.label }}</p>
+        </div>
 
-      <q-space />
+        <q-space />
 
-      <div class="col-auto">
-        <q-btn
-          size="lg"
-          unelevated
-          :flat="fieldValue !== false"
-          :disable="disable"
-          :dense="dense"
-          color="theme-red"
-          style="width: 100px"
-          @click="fieldValue = fieldValue === false ? undefined : false"
-        >
-          <span class="text-h4 display weight-bold">{{ $t('no') }}</span>
-        </q-btn>
+        <div class="col-auto">
+          <q-btn
+            size="lg"
+            unelevated
+            :flat="fieldValue !== false"
+            :disable="disable"
+            :dense="dense"
+            color="theme-red"
+            style="width: 100px"
+            @click="fieldValue = fieldValue === false ? undefined : false"
+          >
+            <span class="text-h4 display weight-bold">{{ $t('no') }}</span>
+          </q-btn>
 
-        <q-btn
-          size="lg"
-          unelevated
-          :flat="fieldValue !== true"
-          :disable="disable"
-          :dense="dense"
-          color="theme-green"
-          style="width: 100px"
-          class="q-ml-lg"
-          @click="fieldValue = fieldValue === true ? undefined : true"
-        >
-          <span class="text-h4 display weight-bold">{{ $t('yes') }}</span>
-        </q-btn>
-      </div>
+          <q-btn
+            size="lg"
+            unelevated
+            :flat="fieldValue !== true"
+            :disable="disable"
+            :dense="dense"
+            color="theme-green"
+            style="width: 100px"
+            class="q-ml-lg"
+            @click="fieldValue = fieldValue === true ? undefined : true"
+          >
+            <span class="text-h4 display weight-bold">{{ $t('yes') }}</span>
+          </q-btn>
+        </div>
       </div>
     </q-card>
 

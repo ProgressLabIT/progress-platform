@@ -1,6 +1,6 @@
 <template>
   <div class="q-pa-lg column full-height">
-    <q-form @submit="save" class="full-height column">
+    <q-form class="full-height column" @submit="save">
       <div class="row justify-between items-start">
         <div class="col-10 row q-col-gutter-md">
           <!-- Field type -->
