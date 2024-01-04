@@ -9,7 +9,7 @@
         :expand-icon="params_map[paramKey].type === 'int' || !editMode ? 'none' : ''"
         :model-value="expandedParamKey === paramKey"
         @update:model-value="(isExpanded) => {
-          expandedParamKey = isExpanded ? param_key : null
+          expandedParamKey = isExpanded ? paramKey : null
         }"
       >
         <!-- SELECTED OPTION -->
