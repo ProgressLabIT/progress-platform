@@ -6,8 +6,13 @@
   "author": "Luca Sorgiacomo <luca@progresslab.it>",
   "private": true,
   "scripts": {
-    "lint": "eslint --ext .js,.vue ./",
-    "format": "prettier --write \"**/*.{js,vue,html,md,json}\" --ignore-path .gitignore",
+    "dev": "quasar dev",
+    "build": "quasar build",
+    "lint:check": "eslint --ext .js,.vue ./ --report-unused-disable-directives",
+    "lint": "yarn lint:check --fix",
+    "format:base": "prettier \"**/*.{js,vue,html,md,json}\" --ignore-path .gitignore",
+    "format:check": "yarn format:base --check",
+    "format": "yarn format:base --write",
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {

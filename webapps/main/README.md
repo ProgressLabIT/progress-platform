@@ -6,28 +6,28 @@ MES
 
 ```bash
 yarn
-# or
-npm install
 ```
 
 ### Start the app in development mode (hot-code reloading, error reporting, etc.)
 
 ```bash
-quasar dev
+yarn dev
 ```
 
-### Lint the files
+### Lint/format the files
 
 ```bash
-yarn lint
-# or
-npm run lint
+yarn lint # lint and fix the files with ESLint
+yarn lint:check # only check the files, no auto-fix (useful for CI)
+
+yarn format # format the files with Prettier
+yarn format:check # only check the files, no auto-format (useful for CI)
 ```
 
 ### Build the app for production
 
 ```bash
-quasar build
+yarn build
 ```
 
 ### Customize the configuration
