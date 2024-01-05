@@ -91,8 +91,8 @@ export default {
         'qualityRoot',
         'reportRoot',
       ],
-      locale_index: null,
-      locale_list: this.$root.$i18n.availableLocales,
+      // locale_index: null,
+      // locale_list: this.$root.$i18n.availableLocales,
     };
   },
 

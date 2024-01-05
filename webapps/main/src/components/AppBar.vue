@@ -15,6 +15,22 @@
 
         <q-menu>
           <q-list separator style="min-width: 200px">
+            <q-item>
+              <q-item-section side>
+                <q-icon name="mdi-web" />
+              </q-item-section>
+
+              <q-item-section class="flex flex-center">
+                <q-btn-toggle
+                  v-model="locale"
+                  :options="localeOptions"
+                  dense
+                  padding="xs md"
+                  color="theme-grey"
+                />
+              </q-item-section>
+            </q-item>
+
             <q-item
               clickable
               @click="theme = theme === 'dark' ? 'light' : 'dark'"
@@ -85,7 +101,7 @@ const avatarUrl = computed(() => {
   return `/media/user/${avatarName}.jpg`;
 });
 
-const { t, locale } = useI18n();
+const { t, locale, availableLocales } = useI18n();
 const route = useRoute();
 watch(
   [locale, route],
@@ -110,4 +126,9 @@ async function logout() {
 }
 
 const { theme } = useTheme();
+
+const localeOptions = availableLocales.map((locale) => ({
+  label: locale,
+  value: locale,
+}));
 </script>
