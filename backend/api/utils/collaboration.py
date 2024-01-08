@@ -10,7 +10,7 @@ class Queries:
       FOR f IN i.form_template
       LET field_definition = FIRST(
         FOR fdef IN CustomField
-        FILTER fdef._key == f._key
+        FILTER fdef._key == f.custom_field_key
         RETURN fdef
       )
       FILTER field_definition
@@ -68,8 +68,8 @@ class Queries:
       FOR field_value IN NOT_NULL(i.data, [])
       FOR field IN NOT_NULL(type_data.form_template, [])
       FILTER
-        field._key == field_value.field_key
-        && DOCUMENT(CustomField, field._key)
+        field._key == field_value.form_field_key
+        && DOCUMENT(CustomField, field.custom_field_key)
       RETURN MERGE(field, { value: field_value.value })
     )
 
