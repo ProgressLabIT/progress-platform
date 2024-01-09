@@ -155,15 +155,15 @@ const localeOptions = availableLocales.map((locale) => ({
 }));
 
 const homePage = computed(() => user.value?.preferences.home_page || null);
-const homePageOptions = [
-  { label: 'Default', value: null },
-  { label: 'Settings', value: 'adminPanel' },
-  { label: 'Product Library', value: 'libraryRoot' },
-  { label: 'Production Monitoring', value: 'productionRoot' },
-  { label: 'Job Selection', value: 'operatorRoot' },
-  { label: 'Quality', value: 'qualityRoot' },
-  { label: 'Reports', value: 'reportRoot' },
-];
+const homePageOptions = computed(() => [
+  { label: t('default'), value: null },
+  { label: capitalizeAll(t('views.adminPanel')), value: 'adminPanel' },
+  { label: capitalizeAll(t('views.libraryRoot')), value: 'libraryRoot' },
+  { label: capitalizeAll(t('views.productionRoot')), value: 'productionRoot' },
+  { label: capitalizeAll(t('views.userJobs')), value: 'operatorRoot' },
+  { label: capitalizeAll(t('views.qualityRoot')), value: 'qualityRoot' },
+  { label: capitalizeAll(t('views.reportRoot')), value: 'reportRoot' },
+]);
 const isUpdatingHomePage = ref(false);
 async function updateHomePage(newHomePage) {
   isUpdatingHomePage.value = true;

@@ -76,6 +76,7 @@ export default {
     qt: 'Quanti pezzi hai completato?',
     step: 'Quali passi hai completato?',
   },
+  default: 'Predefinito | Predefiniti',
   delete: 'elimina',
   deleted: 'Eliminato',
   department: 'reparto | reparti',

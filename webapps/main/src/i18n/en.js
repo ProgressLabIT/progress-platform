@@ -75,6 +75,7 @@ export default {
     step: 'Which steps have you completed?',
   },
   decrease: 'decrease',
+  default: 'Default',
   delete: 'delete',
   deleted: 'Deleted',
   department: 'department',
