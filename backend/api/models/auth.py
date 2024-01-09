@@ -1,14 +1,12 @@
 from datetime import datetime, timedelta
 from dateutil import tz
 from enum import Enum
-from typing import List
 
 from fastapi import Form
 from pydantic import BaseModel, Field
 
 from utils.base_models import ArangoDocument, FlexModel
-
-
+from models.org import UserPreferences
 
 
 class ConsumerType(str, Enum):
@@ -73,7 +71,7 @@ class NewSessionData(BaseModel):
   name: str = None
   surname: str = None
   scope: str
-  home_page: str = None
+  preferences: UserPreferences = UserPreferences()
   timeout: timedelta = timedelta(minutes=30)
 
 class GrantType(str, Enum):
@@ -86,6 +84,3 @@ class ConsumerCredentials(BaseModel):
   password: str = Form(...)
   # auth_code: str = None
   # grant_type: GrantType = Form(None)
-
-
-

@@ -96,7 +96,6 @@ import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
-import { api } from '@/boot/axios';
 import { capitalize, capitalizeAll } from '@/boot/filters.js';
 import { useDrawer } from '@/composables/drawer';
 import { useTheme } from '@/composables/theme';
@@ -155,10 +154,7 @@ const localeOptions = availableLocales.map((locale) => ({
   value: locale,
 }));
 
-const homePage = computed({
-  get: () => user.value?.home_page || null,
-  set: (newHomePage) => store.commit('UPDATE_HOME_PAGE', newHomePage),
-});
+const homePage = computed(() => user.value?.preferences.home_page || null);
 const homePageOptions = [
   { label: 'Default', value: null },
   { label: 'Settings', value: 'adminPanel' },
@@ -173,8 +169,7 @@ async function updateHomePage(newHomePage) {
   isUpdatingHomePage.value = true;
 
   try {
-    await api.patch(`/user/${user.value._key}`, { home_page: newHomePage });
-    homePage.value = newHomePage;
+    await store.dispatch('updatePreferences', { home_page: newHomePage });
   } catch (error) {
     console.error(error);
     Notify.create({

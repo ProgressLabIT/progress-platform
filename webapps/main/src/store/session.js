@@ -6,7 +6,7 @@ const session = {
       _key: '',
       name: '',
       surname: '',
-      home_page: '',
+      preferences: {},
     },
     session_key: '',
     auth_token: '',
@@ -30,7 +30,7 @@ const session = {
         _key: data.user_key,
         name: data.name,
         surname: data.surname,
-        home_page: data.home_page,
+        preferences: data.preferences,
       };
       state.session_key = data.session_key;
       state.scope = data.scope;
@@ -65,8 +65,8 @@ const session = {
       );
     },
 
-    UPDATE_HOME_PAGE(state, newHomePage) {
-      state.user.home_page = newHomePage;
+    UPDATE_PREFERENCES(state, preferences) {
+      state.user.preferences = preferences;
     },
   },
 
@@ -80,7 +80,7 @@ const session = {
         } catch {
           /*
           Some edge cases caused by unknown bugs may leave active work sessions
-          in the vuex store, triggering the puaseJob action, which will cause error
+          in the Vuex store, triggering the pauseJob action, which will cause error
           because there are no active work sessions in the backend
           */
         }
@@ -93,6 +93,17 @@ const session = {
     unlockSession({ commit }) {
       commit('TOGGLE_SESSION_LOCK', false);
       commit('SET_SESSION_TIMEOUT');
+    },
+
+    async updatePreferences({ commit, state }, preferencesToUpdate) {
+      const updatedPreferences = {
+        ...state.user.preferences,
+        ...preferencesToUpdate,
+      };
+      await api.patch(`user/${state.user._key}`, {
+        preferences: updatedPreferences,
+      });
+      commit('UPDATE_PREFERENCES', updatedPreferences);
     },
   },
 
@@ -118,7 +129,7 @@ const session = {
     },
 
     userHomepage: (state) => {
-      const userDefaultPage = state.user.home_page;
+      const userDefaultPage = state.user.preferences.home_page;
       if (userDefaultPage) {
         return userDefaultPage;
       }

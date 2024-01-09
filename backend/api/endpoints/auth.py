@@ -214,7 +214,7 @@ async def start_user_session(
     surname=updated_user.surname,
     session_key=new_user_session.key,
     scope=updated_user.scope,
-    home_page=updated_user.home_page,
+    preferences=updated_user.preferences,
   )
 
   tx.commit_transaction()

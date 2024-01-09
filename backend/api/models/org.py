@@ -1,8 +1,7 @@
 from datetime import datetime
 from dateutil import tz
-from typing import List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from utils.base_models import ArangoDocument
 
@@ -46,12 +45,14 @@ class UserNew(BaseModel):
   email: str = None
   scope: str
 
+class UserPreferences(BaseModel):
+  home_page: str = None
 
 class User(ArangoDocument, UserNew):
   created_at: datetime = datetime.now(tz.UTC)
   active: bool = True  # change to 'enabled'
   email: str = None
-  home_page: str = None
+  preferences: UserPreferences = UserPreferences()
 
   psw_hash: str = None
   reset_password: bool = False
