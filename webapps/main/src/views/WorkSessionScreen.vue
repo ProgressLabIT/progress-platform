@@ -46,12 +46,13 @@
           <!-- PANEL NAVIGATION -->
           <q-tabs
             class="transparent text-low"
+            content-class="drag-container"
             active-class="text-high weight-bold"
             align="left"
             indicator-color="transparent"
           >
             <q-route-tab
-              v-for="link in links"
+              v-for="link in sorted_links"
               :key="link.route_name"
               :to="{ name: link.route_name }"
             >
@@ -63,6 +64,7 @@
                   {{ link.text }}
                 </div>
                 <q-icon v-else size="xs" :name="link.icon" class="q-mr-xs" />
+
                 <template v-if="link.item_count">
                   <q-chip
                     v-if="link.route_name === 'jobIssues'"
@@ -72,7 +74,6 @@
                   >
                     {{ link.item_count }}
                   </q-chip>
-
                   <q-avatar
                     v-else
                     size="xs"
@@ -250,6 +251,9 @@
 </template>
 
 <script>
+import { until } from '@vueuse/core';
+import { LocalStorage } from 'quasar';
+import Sortable from 'sortablejs';
 import { mapState } from 'vuex';
 
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
@@ -293,6 +297,7 @@ export default {
       show_issue_form: false,
       alert_timeout: 4000,
       can_leave: false,
+      links_order: [],
     };
   },
 
@@ -355,6 +360,15 @@ export default {
           item_count: this.wo_data.phase_sequence?.length,
         },
       ];
+    },
+
+    sorted_links() {
+      const links = [...this.links];
+      return links.sort(
+        (a, b) =>
+          this.links_order.indexOf(a.route_name) -
+          this.links_order.indexOf(b.route_name),
+      );
     },
 
     job_info() {
@@ -435,9 +449,27 @@ export default {
     this.polling_instance = setInterval(this.updateJobData, 10000);
   },
 
-  // Make sure an alert is raised if user tries to close the page
-  mounted() {
+  async mounted() {
+    // Make sure an alert is raised if user tries to close the page
     window.addEventListener('beforeunload', this.beforeUnloadAlert);
+
+    this.links_order =
+      LocalStorage.getItem('work_session_tabs_order') ??
+      this.links.map(({ route_name }) => route_name);
+
+    // Wait until the condition for the content to be rendered is met
+    await until(() => this.vuex_ready & !this.job_closed).toBeTruthy();
+
+    const container = document.querySelector('.drag-container');
+    Sortable.create(container, {
+      ...this.$store.state.drag_options,
+      onEnd: ({ newIndex, oldIndex }) => {
+        const moved = this.links_order.splice(oldIndex, 1)[0];
+        this.links_order.splice(newIndex, 0, moved);
+
+        LocalStorage.set('work_session_tabs_order', this.links_order);
+      },
+    });
   },
 
   beforeUnmount() {
