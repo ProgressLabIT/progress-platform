@@ -1,5 +1,6 @@
 from datetime import datetime
 from dateutil import tz
+from enum import Enum
 
 from pydantic import BaseModel
 
@@ -45,8 +46,14 @@ class UserNew(BaseModel):
   email: str = None
   scope: str
 
+
+class JobSelectionLayout(str, Enum):
+  CARD = 'card'
+  LIST = 'list'
+
 class UserPreferences(BaseModel):
   home_page: str = None
+  job_selection_layout: JobSelectionLayout = JobSelectionLayout.CARD
 
 class User(ArangoDocument, UserNew):
   created_at: datetime = datetime.now(tz.UTC)

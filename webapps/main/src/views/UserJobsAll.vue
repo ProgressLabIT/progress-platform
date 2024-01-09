@@ -32,28 +32,24 @@
           class="q-ma-none q-pa-none nowrap text-low col-auto"
         />
         <div color="text-low" class="col-auto">
-          <q-btn
+          <q-btn-toggle
+            v-model="layout"
+            :options="[
+              { value: 'card', icon: 'mdi-view-grid' },
+              { value: 'list', icon: 'mdi-view-agenda' },
+            ]"
+            color="theme-grey"
+            toggle-color="text-high"
             flat
-            icon="mdi-view-grid"
-            :color="layout !== 'list' ? 'text-high' : 'theme-grey'"
             size="md"
             padding="sm sm"
-            @click="setLayout('card')"
-          />
-          <q-btn
-            flat
-            icon="mdi-view-agenda"
-            :color="layout === 'list' ? 'text-high' : 'theme-grey'"
-            size="md"
-            padding="sm sm"
-            @click="setLayout('list')"
+            class="q-ma-none q-pa-none"
           />
         </div>
       </div>
     </div>
 
     <!-- JOBS -->
-
     <div v-for="(details, type) in jobs_view" :key="type">
       <!-- LIST HEADER -->
       <div class="row items-center q-mb-md q-mt-lg">
@@ -129,7 +125,6 @@ export default {
     return {
       search_string: '',
       started_only: false,
-      layout: 'card',
     };
   },
 
@@ -171,18 +166,30 @@ export default {
         },
       };
     },
+
+    layout: {
+      get() {
+        const user = this.$store.state.session.user;
+        return user.preferences.job_selection_layout || 'card';
+      },
+      set(layout) {
+        this.$store.dispatch('updatePreferences', {
+          job_selection_layout: layout,
+        });
+      },
+    },
   },
 
   created() {
-    this.layout = localStorage.getItem('LAYOUT');
+    // Migrate from local storage to DB
+    const legacyLayout = localStorage.getItem('LAYOUT');
+    if (legacyLayout) {
+      this.layout = legacyLayout;
+      localStorage.removeItem('LAYOUT');
+    }
   },
 
   methods: {
-    setLayout(layout) {
-      this.layout = layout;
-      localStorage.setItem('LAYOUT', layout);
-    },
-
     match(job) {
       const fields_to_search = [
         'wo_code',
