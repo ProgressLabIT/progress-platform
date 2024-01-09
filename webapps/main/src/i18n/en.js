@@ -423,6 +423,10 @@ export default {
   },
   preferences: {
     theme: 'Switch theme',
+    homePage: {
+      label: 'Home page',
+      error: 'An error occurred while changing the default page',
+    },
   },
   procedure: 'procedure',
   process: 'process',

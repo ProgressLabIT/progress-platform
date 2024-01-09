@@ -50,6 +50,27 @@
               </q-item-section>
             </q-item>
 
+            <q-item>
+              <q-item-section side>
+                <q-icon name="mdi-file-star" />
+              </q-item-section>
+
+              <q-item-section class="flex flex-center">
+                <q-select
+                  :model-value="homePage"
+                  :options="homePageOptions"
+                  emit-value
+                  map-options
+                  :loading="isUpdatingHomePage"
+                  :label="$t('preferences.homePage.label')"
+                  dense
+                  filled
+                  class="full-width"
+                  @update:model-value="updateHomePage"
+                />
+              </q-item-section>
+            </q-item>
+
             <q-item clickable @click="logout">
               <q-item-section side>
                 <q-icon name="mdi-logout-variant" />
@@ -70,10 +91,12 @@
 
 <script setup>
 import { findLast } from 'lodash';
+import { Notify } from 'quasar';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
+import { api } from '@/boot/axios';
 import { capitalize, capitalizeAll } from '@/boot/filters.js';
 import { useDrawer } from '@/composables/drawer';
 import { useTheme } from '@/composables/theme';
@@ -131,4 +154,35 @@ const localeOptions = availableLocales.map((locale) => ({
   label: locale,
   value: locale,
 }));
+
+const homePage = computed({
+  get: () => user.value?.home_page || null,
+  set: (newHomePage) => store.commit('UPDATE_HOME_PAGE', newHomePage),
+});
+const homePageOptions = [
+  { label: 'Default', value: null },
+  { label: 'Settings', value: 'adminPanel' },
+  { label: 'Product Library', value: 'libraryRoot' },
+  { label: 'Production Monitoring', value: 'productionRoot' },
+  { label: 'Job Selection', value: 'operatorRoot' },
+  { label: 'Quality', value: 'qualityRoot' },
+  { label: 'Reports', value: 'reportRoot' },
+];
+const isUpdatingHomePage = ref(false);
+async function updateHomePage(newHomePage) {
+  isUpdatingHomePage.value = true;
+
+  try {
+    await api.patch(`/user/${user.value._key}`, { home_page: newHomePage });
+    homePage.value = newHomePage;
+  } catch (error) {
+    console.error(error);
+    Notify.create({
+      type: 'negative',
+      message: t('preferences.homePage.error'),
+    });
+  } finally {
+    isUpdatingHomePage.value = false;
+  }
+}
 </script>

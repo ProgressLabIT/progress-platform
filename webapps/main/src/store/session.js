@@ -3,10 +3,10 @@ import { api } from '@/boot/axios.js';
 const session = {
   state: {
     user: {
+      _key: '',
       name: '',
       surname: '',
-      _key: '',
-      home_page_name: '',
+      home_page: '',
     },
     session_key: '',
     auth_token: '',
@@ -26,12 +26,12 @@ const session = {
     },
 
     START_USER_SESSION(state, data) {
-      const user_data = {
+      state.user = {
+        _key: data.user_key,
         name: data.name,
         surname: data.surname,
-        _key: data.user_key,
+        home_page: data.home_page,
       };
-      state.user = user_data;
       state.session_key = data.session_key;
       state.scope = data.scope;
       // state.session_timeout = data.timeout
@@ -63,6 +63,10 @@ const session = {
         lockSession,
         state.max_idle_minutes * 60 * 1000,
       );
+    },
+
+    UPDATE_HOME_PAGE(state, newHomePage) {
+      state.user.home_page = newHomePage;
     },
   },
 
@@ -114,30 +118,30 @@ const session = {
     },
 
     userHomepage: (state) => {
-      let first_page = state.user.home_page_name;
-
-      const hasAdminScope = /admin/.test(state.scope);
-      const hasProductionScope = /production/.test(state.scope);
-      const hasLibrayScope = /library/.test(state.scope);
-      const hasOperatorScope = /operator/.test(state.scope);
-      const hasQaulityScope = /quality/.test(state.scope);
-      const hasReportingScope = /reporting/.test(state.scope);
-
-      if (hasOperatorScope) {
-        first_page = 'operatorRoot';
-      } else if (hasProductionScope) {
-        first_page = 'productionRoot';
-      } else if (hasLibrayScope) {
-        first_page = 'libraryRoot';
-      } else if (hasAdminScope) {
-        first_page = 'adminPanel';
-      } else if (hasQaulityScope) {
-        first_page = 'qualityRoot';
-      } else if (hasReportingScope) {
-        first_page = 'reportRoot';
+      const userDefaultPage = state.user.home_page;
+      if (userDefaultPage) {
+        return userDefaultPage;
       }
 
-      return first_page;
+      const scopes = state.scope.split(' ');
+      switch (true) {
+        case scopes.includes('operator'):
+          return 'operatorRoot';
+        case scopes.includes('production'):
+          return 'productionRoot';
+        case scopes.includes('library'):
+          return 'libraryRoot';
+        case scopes.includes('admin'):
+          return 'adminPanel';
+        case scopes.includes('quality'):
+          return 'qualityRoot';
+        case scopes.includes('reporting'):
+          return 'reportRoot';
+        default:
+          throw new Error(
+            'No homepage found for user with scopes: ' + scopes.join(', '),
+          );
+      }
     },
   },
 };

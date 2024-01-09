@@ -18,7 +18,7 @@ class Site(ArangoDocument):
 class Department(ArangoDocument):
   name: str
   code: str = None
-  description: str = None  
+  description: str = None
 
 
 class UserListItem(ArangoDocument):
@@ -51,6 +51,7 @@ class User(ArangoDocument, UserNew):
   created_at: datetime = datetime.now(tz.UTC)
   active: bool = True  # change to 'enabled'
   email: str = None
+  home_page: str = None
 
   psw_hash: str = None
   reset_password: bool = False

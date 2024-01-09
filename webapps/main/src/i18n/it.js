@@ -431,6 +431,11 @@ export default {
   },
   preferences: {
     theme: 'Tema scuro',
+    homePage: {
+      label: 'Pagina iniziale',
+      error:
+        'Si è verificato un errore durante il cambio della pagina iniziale',
+    },
   },
   procedure: 'procedura',
   process: 'processo',
