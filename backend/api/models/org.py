@@ -54,6 +54,7 @@ class JobSelectionLayout(str, Enum):
 class UserPreferences(BaseModel):
   home_page: str = None
   job_selection_layout: JobSelectionLayout = JobSelectionLayout.CARD
+  work_session_tabs_order: list[str] = None
 
 class User(ArangoDocument, UserNew):
   created_at: datetime = datetime.now(tz.UTC)

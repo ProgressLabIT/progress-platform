@@ -252,7 +252,6 @@
 
 <script>
 import { until } from '@vueuse/core';
-import { LocalStorage } from 'quasar';
 import Sortable from 'sortablejs';
 import { mapState } from 'vuex';
 
@@ -297,7 +296,6 @@ export default {
       show_issue_form: false,
       alert_timeout: 4000,
       can_leave: false,
-      links_order: [],
     };
   },
 
@@ -441,6 +439,20 @@ export default {
         job: this.j._key,
       };
     },
+
+    links_order: {
+      get() {
+        return (
+          this.$store.state.session.user.preferences.work_session_tabs_order ??
+          this.links.map(({ route_name }) => route_name)
+        );
+      },
+      set(order) {
+        this.$store.dispatch('updatePreferences', {
+          work_session_tabs_order: order,
+        });
+      },
+    },
   },
 
   created() {
@@ -453,10 +465,6 @@ export default {
     // Make sure an alert is raised if user tries to close the page
     window.addEventListener('beforeunload', this.beforeUnloadAlert);
 
-    this.links_order =
-      LocalStorage.getItem('work_session_tabs_order') ??
-      this.links.map(({ route_name }) => route_name);
-
     // Wait until the condition for the content to be rendered is met
     await until(() => this.vuex_ready & !this.job_closed).toBeTruthy();
 
@@ -465,9 +473,11 @@ export default {
       ...this.$store.state.drag_options,
       onEnd: ({ newIndex, oldIndex }) => {
         const moved = this.links_order.splice(oldIndex, 1)[0];
-        this.links_order.splice(newIndex, 0, moved);
-
-        LocalStorage.set('work_session_tabs_order', this.links_order);
+        this.links_order = [
+          ...this.links_order.slice(0, newIndex),
+          moved,
+          ...this.links_order.slice(newIndex),
+        ];
       },
     });
   },
