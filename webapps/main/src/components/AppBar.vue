@@ -157,18 +157,10 @@ const screenTitle = ref('PROGRESS');
 
 const user = computed(() => store.state.session.user);
 const username = computed(() => {
-  if (!user.value) {
-    return '';
-  }
-
   const { name, surname } = user.value;
   return `${name} ${surname}`;
 });
 const avatarUrl = computed(() => {
-  if (!user.value) {
-    return '';
-  }
-
   const avatarName = username.value.replace(/\s+/g, '').toLowerCase();
   return `/media/user/${avatarName}.jpg`;
 });
@@ -204,7 +196,7 @@ const localeOptions = availableLocales.map((locale) => ({
   value: locale,
 }));
 
-const homePage = computed(() => user.value?.preferences.home_page || null);
+const homePage = computed(() => user.value.preferences.home_page || null);
 const homePageOptions = computed(() => [
   { label: t('default'), value: null },
   { label: capitalizeAll(t('views.adminPanel')), value: 'adminPanel' },
@@ -232,7 +224,7 @@ async function updateHomePage(newHomePage) {
 }
 
 const displayFont = computed(
-  () => user.value?.preferences.display_font || 'orbitron',
+  () => user.value.preferences.display_font || 'orbitron',
 );
 async function updateDisplayFont(newFont) {
   await store.dispatch('updatePreferences', { display_font: newFont });

@@ -25,7 +25,7 @@ export default boot(({ app, store }) => {
   watch(
     () => store.state.session.user.preferences.locale,
     (preferredLocale) => {
-      if (preferredLocale !== i18n.global.locale) {
+      if (preferredLocale && preferredLocale !== i18n.global.locale) {
         i18n.global.locale.value = preferredLocale;
       }
     },

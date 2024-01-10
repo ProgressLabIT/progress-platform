@@ -13,11 +13,6 @@ const routes = [
     redirect: { name: 'login' },
     children: [
       {
-        path: '/login',
-        name: 'login',
-        component: () => import('views/LoginScreen.vue'),
-      },
-      {
         path: '/app',
         children: [
           ...admin,
@@ -29,6 +24,12 @@ const routes = [
         ],
       },
     ],
+  },
+
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('views/LoginScreen.vue'),
   },
 
   // Always leave this as last one,

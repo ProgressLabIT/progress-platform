@@ -86,8 +86,8 @@ const session = {
         }
       }
       await api.delete(`session/${state.session_key}`);
+      await this.$router.push({ name: 'login' });
       commit('CLOSE_USER_SESSION');
-      this.$router.push({ name: 'login' });
     },
 
     unlockSession({ commit }) {
