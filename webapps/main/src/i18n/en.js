@@ -423,7 +423,10 @@ export default {
     },
   },
   preferences: {
-    theme: 'Switch theme',
+    theme: {
+      light: 'Light',
+      dark: 'Dark',
+    },
     homePage: {
       label: 'Home page',
       error: 'An error occurred while changing the default page',

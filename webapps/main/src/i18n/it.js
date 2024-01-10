@@ -431,7 +431,10 @@ export default {
     },
   },
   preferences: {
-    theme: 'Tema scuro',
+    theme: {
+      light: 'Leggero',
+      dark: 'Scuro',
+    },
     homePage: {
       label: 'Pagina iniziale',
       error:

@@ -31,22 +31,36 @@
               </q-item-section>
             </q-item>
 
-            <q-item
-              clickable
-              @click="setTheme(theme === 'dark' ? 'light' : 'dark')"
-            >
+            <q-item>
               <q-item-section side>
-                <q-icon
-                  :name="
-                    theme === 'dark' ? 'mdi-weather-night' : 'mdi-weather-sunny'
-                  "
-                />
+                <q-icon name="mdi-palette-swatch" />
               </q-item-section>
 
-              <q-item-section>
-                <q-item-label>
-                  {{ capitalizeAll($t('preferences.theme')) }}
-                </q-item-label>
+              <q-item-section class="flex flex-center">
+                <q-btn-toggle
+                  :model-value="theme"
+                  :options="[
+                    { slot: 'light', value: 'light' },
+                    { slot: 'dark', value: 'dark' },
+                  ]"
+                  dense
+                  no-caps
+                  padding="xs md"
+                  color="theme-grey"
+                  @update:model-value="setTheme"
+                >
+                  <template #light>
+                    <q-icon name="mdi-weather-sunny">
+                      <q-tooltip>{{ $t('preferences.theme.light') }}</q-tooltip>
+                    </q-icon>
+                  </template>
+
+                  <template #dark>
+                    <q-icon name="mdi-weather-night">
+                      <q-tooltip>{{ $t('preferences.theme.dark') }}</q-tooltip>
+                    </q-icon>
+                  </template>
+                </q-btn-toggle>
               </q-item-section>
             </q-item>
 
