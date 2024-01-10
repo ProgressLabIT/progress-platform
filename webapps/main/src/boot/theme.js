@@ -1,4 +1,4 @@
-import { boot } from 'quasar/wrappers'
+import { boot } from 'quasar/wrappers';
 
 export const dark = {
   blue: '#22AED1',
@@ -20,8 +20,8 @@ export const dark = {
 
   text_low: 'rgba(255,255,255,.6)',
   text_high: 'rgba(255,255,255,.87)',
-  text_disabled: 'rgba(255,255,255,.38)'
-}
+  text_disabled: 'rgba(255,255,255,.38)',
+};
 
 export const light = {
   footer: 'rgba(30,52,58,1)',
@@ -40,15 +40,15 @@ export const light = {
   orange_bg: 'rgba(255,159,28,.3)',
   text_high: 'rgba(30,52,58)',
   text_low: 'rgba(0,0,0,.6)',
-  text_disabled: 'rgba(0,0,0,.38)'
-}
+  text_disabled: 'rgba(0,0,0,.38)',
+};
 
 export default boot(({ app }) => {
   app.mixin({
     computed: {
-      $theme () {
-        return this.$store.getters.theme
-      }
-    }
-  })
-})
+      $theme() {
+        return this.$store.getters.theme;
+      },
+    },
+  });
+});

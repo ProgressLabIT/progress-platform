@@ -1,19 +1,12 @@
-from datetime import datetime, date, time
+from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional
 
-from pydantic import (
-  BaseModel,
-  constr,
-  NonNegativeInt,
-  Field,
-  root_validator,
-  validator
-)
+from pydantic import BaseModel, Field, root_validator
 
-from models.form import FormFieldDefinition
+from models.form import FormFieldDefinition, FormFieldValue
 from models.print import PrintTemplateRecord
-from utils.base_models import ArangoDocument, ArangoEdge
+from utils.base_models import ArangoDocument
 from utils.dt import timestamp
 
 
@@ -63,7 +56,7 @@ class Issue(ArangoDocument):
   closed_by: str = None # Closer ID
   critical: bool # Default value set at the IssueType level
   # close_within: NonNegativeInt # Value set at the IssueType level
-  data: List[dict] = None
+  data: List[FormFieldValue] = None
   open: bool = True
 
   # Require issue type only when closing.

@@ -1,6 +1,7 @@
 from events.base import BaseEvent
 from events.shared import EventMeta
 from models.collaboration import Issue, IssueLink, IssueWithLinks
+from models.form import FileBucket
 from utils.dt import timestamp
 from utils.collaboration import Queries
 from utils.file import FileHandler
@@ -169,7 +170,7 @@ class CollaborationEvent(BaseEvent):
     self.tx.collection('issue_rel').delete_match(filters=dict(_from=f'Issue/{issue_key}'))
     self.tx.collection('message').delete_match(filters=dict(_to=f'Issue/{issue_key}'))
 
-    FileHandler(bucket='issue', object_key=issue_key).remove_dir()
+    FileHandler(bucket=FileBucket.ISSUE, object_key=issue_key).remove_dir()
 
     self._update_production_status(f'Issue/{issue_key}')
 

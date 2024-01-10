@@ -6,8 +6,8 @@
         <div class="text-h5 text-uppercase q-px-lg q-my-md col-auto">
           {{ $t('step_sequence') }}
         </div>
-        <div class="col-9 scroll" v-if="hasSteps">
-          <q-list dense id="steps">
+        <div v-if="hasSteps" class="col-9 scroll">
+          <q-list id="steps" dense>
             <q-item
               v-for="(step, index) in stepsModel"
               :key="step._key"
@@ -15,14 +15,16 @@
               clickable
               :class="[
                 !editMode ? 'undraggable' : '',
-                currentStepIndex === index ? 'highlight' : 'low-text'
+                currentStepIndex === index ? 'highlight' : 'low-text',
               ]"
               @click="handleStepClick(index)"
             >
               <q-item-section avatar class="col-auto">
                 <q-avatar
                   size="20px"
-                  :color="currentStepIndex === index ? 'theme-blue' : 'theme-grey'"
+                  :color="
+                    currentStepIndex === index ? 'theme-blue' : 'theme-grey'
+                  "
                   class="smaller text-high q-ml-sm"
                 >
                   {{ index + 1 }}
@@ -40,7 +42,11 @@
                   :name="stepTypeToIconMap[step.type]"
                   size="sm"
                   class="q-ml-auto"
-                  :color="currentStepIndex === index ? $theme.text_high : $theme.text_low"
+                  :color="
+                    currentStepIndex === index
+                      ? $theme.text_high
+                      : $theme.text_low
+                  "
                 />
               </q-item-section>
             </q-item>
@@ -49,7 +55,11 @@
 
         <!-- NO STEPS -->
         <div v-else class="column q-mt-xl items-center">
-          <q-icon name="mdi-alert-circle-outline" class="text-low q-mb-md" size="xl"/>
+          <q-icon
+            name="mdi-alert-circle-outline"
+            class="text-low q-mb-md"
+            size="xl"
+          />
           <div class="text-h3 uppercase">
             {{ $t('phase.no_procedure') }}
           </div>
@@ -64,12 +74,14 @@
             v-for="stepType in stepTypes"
             :key="stepType"
             flat
-            style="width: 105%;"
+            style="width: 105%"
             size="12px"
             align="between"
             @click="addStep(stepType)"
           >
-            <span>+ {{ $t('add') }} {{ $t(`phase.step_types.${stepType}`) }}</span>
+            <span
+              >+ {{ $t('add') }} {{ $t(`phase.step_types.${stepType}`) }}</span
+            >
             <q-icon :name="stepTypeToIconMap[stepType]" />
           </q-btn>
         </div>
@@ -138,7 +150,8 @@
               </span>
 
               <q-btn
-                fab padding="sm"
+                fab
+                padding="sm"
                 color="theme-grey"
                 icon="mdi-close"
                 @click="isConfirmingDelete = false"
@@ -161,88 +174,91 @@
 </template>
 
 <script setup>
-import Sortable from 'sortablejs'
-import { computed, onMounted, ref, watch } from 'vue'
-import { useStore } from 'vuex'
+import Sortable from 'sortablejs';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useStore } from 'vuex';
 
-import StepInstruction from './StepInstruction.vue'
-import StepChecklist from './StepChecklist.vue'
-import StepForm from './StepForm.vue'
+import StepForm from './StepForm.vue';
+import StepInstruction from './StepInstruction.vue';
 
 const props = defineProps({
   editMode: {
     type: Boolean,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-const stepsModel = defineModel({ type: Array })
+const stepsModel = defineModel({ type: Array });
 
-const store = useStore()
-const $theme = computed(() => store.getters.theme)
+const store = useStore();
+const $theme = computed(() => store.getters.theme);
 
-const stepTypes = ['instruction', 'checklist', 'form']
+const stepTypes = ['instruction', 'form'];
 const stepTypeToIconMap = {
   instruction: 'mdi-playlist-check',
-  checklist: 'mdi-format-list-checks',
-  form: 'mdi-playlist-edit'
-}
-const isConfirmingDelete = ref(false)
+  form: 'mdi-playlist-edit',
+};
+const isConfirmingDelete = ref(false);
 
-watch(() => props.editMode, (editMode) => {
-  isConfirmingDelete.value = false
-  if (editMode) {
-    initSortable()
-  }
-})
+watch(
+  () => props.editMode,
+  (editMode) => {
+    isConfirmingDelete.value = false;
+    if (editMode) {
+      initSortable();
+    }
+  },
+);
 onMounted(() => {
-  initSortable()
-})
+  initSortable();
+});
 function initSortable() {
-  const container = document.querySelector('#steps')
+  const container = document.querySelector('#steps');
   if (!container) {
-    return
+    return;
   }
 
   Sortable.create(container, {
     ...store.state.drag_options,
     filter: '.undraggable',
     onEnd: ({ newIndex, oldIndex }) => {
-      const [moved] = stepsModel.value.splice(oldIndex, 1)
-      stepsModel.value.splice(newIndex, 0, moved)
+      const [moved] = stepsModel.value.splice(oldIndex, 1);
+      stepsModel.value.splice(newIndex, 0, moved);
 
       // Preserve the current step index at the same step
       if (currentStepIndex.value === oldIndex) {
-        currentStepIndex.value = newIndex
+        currentStepIndex.value = newIndex;
       } else if (
         oldIndex < currentStepIndex.value &&
         newIndex >= currentStepIndex.value
       ) {
-        currentStepIndex.value--
+        currentStepIndex.value--;
       } else if (
         oldIndex > currentStepIndex.value &&
         newIndex <= currentStepIndex.value
       ) {
-        currentStepIndex.value++
+        currentStepIndex.value++;
       }
-    }
-  })
+    },
+  });
 }
 
-const hasSteps = computed(() => stepsModel.value !== null && stepsModel.value.length > 0)
-const currentStepIndex = ref(0)
+const hasSteps = computed(
+  () => stepsModel.value !== null && stepsModel.value.length > 0,
+);
+const currentStepIndex = ref(0);
 // Make sure the current step index is always within the bounds
 watch(stepsModel, (steps) => {
   if (steps.length === 0) {
-    currentStepIndex.value = 0
+    currentStepIndex.value = 0;
   } else if (currentStepIndex.value >= steps.length) {
-    currentStepIndex.value = steps.length - 1
+    currentStepIndex.value = steps.length - 1;
   }
-})
+});
 
 function handleStepClick(index) {
-  currentStepIndex.value = index
-  isConfirmingDelete.value = false
+  currentStepIndex.value = index;
+  isConfirmingDelete.value = false;
 }
 
 function addStep(type) {
@@ -250,31 +266,30 @@ function addStep(type) {
     type,
     title: '',
     description: '',
-    checks: [],
-    input_fields: [],
-    media: []
-  })
-  currentStepIndex.value = stepsModel.value.length - 1
+    form_fields: [],
+    media: [],
+  });
+  currentStepIndex.value = stepsModel.value.length - 1;
 }
 
 const stepTypeToComponentMap = {
   instruction: StepInstruction,
-  checklist: StepChecklist,
-  form: StepForm
-}
+  form: StepForm,
+};
 const activeStepComponent = computed(() => {
-  const currentStep = stepsModel.value[currentStepIndex.value]
+  const currentStep = stepsModel.value[currentStepIndex.value];
 
-  return stepTypeToComponentMap[currentStep.type]
-})
+  return stepTypeToComponentMap[currentStep.type];
+});
 
 function deleteStep(stepIndex) {
   // If deleting the last step, move the current step index back by one
   if (stepIndex === stepsModel.value.length - 1) {
-    currentStepIndex.value = stepsModel.value.length > 1 ? stepsModel.value.length - 2 : 0
+    currentStepIndex.value =
+      stepsModel.value.length > 1 ? stepsModel.value.length - 2 : 0;
   }
 
-  stepsModel.value.splice(stepIndex, 1)
-  isConfirmingDelete.value = false
+  stepsModel.value.splice(stepIndex, 1);
+  isConfirmingDelete.value = false;
 }
 </script>

@@ -1,122 +1,123 @@
 <template>
   <div>
-  <LoadingSignal v-if="!vuex_ready" />
+    <LoadingSignal v-if="!vuex_ready" />
 
-  <div class="row full-height">
-    <div class="col-3 full-height column">
+    <div class="row full-height">
+      <div class="col-3 full-height column">
+        <q-input
+          v-model="search_text"
+          dense
+          filled
+          class="q-px-md q-pt-md"
+          :placeholder="$capitalize($t('search'))"
+        >
+          <template #append>
+            <q-icon name="mdi-magnify" />
+          </template>
+        </q-input>
 
-      <q-input
-        dense
-        filled
-        class="q-px-md q-pt-md"
-        :placeholder="$capitalize($t('search'))"
-        v-model="search_text">
-        <template #append>
-          <q-icon name="mdi-magnify" />
-        </template>
-      </q-input>
-
-      <q-expansion-item
-        v-model="filter_panel"
-        :label="filters_label"
-        header-class="q-px-lg">
-        <div class="row q-col-gutter-md q-pa-lg">
-          <div
-            class="col-6"
-            v-for="(check, index) in bool_filters"
-            :key="index">
-            <q-checkbox
-              dense
-              size="xs"
-              v-model="check.value">
+        <q-expansion-item
+          v-model="filter_panel"
+          :label="filters_label"
+          header-class="q-px-lg"
+        >
+          <div class="row q-col-gutter-md q-pa-lg">
+            <div
+              v-for="(check, index) in bool_filters"
+              :key="index"
+              class="col-6"
+            >
+              <q-checkbox v-model="check.value" dense size="xs">
                 <span class="medium">
                   {{ $capitalize($t(`user.${check.name}`)) }}
                 </span>
-            </q-checkbox>
+              </q-checkbox>
+            </div>
           </div>
-        </div>
-      </q-expansion-item>
+        </q-expansion-item>
 
-      <!-- USER LIST HEADERS -->
-      <div class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold">
-        <div class="col-6">
-          {{ $t('name') }}
-        </div>
-        <div class="col-6">
-          {{ $t('user.surname') }}
-        </div>
-      </div>
-
-      <q-separator />
-
-      <!-- USER LIST -->
-      <div class="scroll col">
+        <!-- USER LIST HEADERS -->
         <div
-          class="row pointer q-px-lg q-py-xs medium"
-          :class="{ 'alternate-row': index % 2 == 0, 'bg-blue-backdrop': user._key == selected_user_key }"
-          v-for="(user, index) in filtered_users"
-          :key="index"
-          style="white-space: nowrap;"
-          @click="showUser(user)">
+          class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
+        >
           <div class="col-6">
-            {{ user.name }}
+            {{ $t('name') }}
           </div>
           <div class="col-6">
-            {{ user.surname }}
+            {{ $t('user.surname') }}
           </div>
+        </div>
+
+        <q-separator />
+
+        <!-- USER LIST -->
+        <div class="scroll col">
+          <div
+            v-for="(user, index) in filtered_users"
+            :key="index"
+            class="row pointer q-px-lg q-py-xs medium"
+            :class="{
+              'alternate-row': index % 2 === 0,
+              'bg-blue-backdrop': user._key === selected_user_key,
+            }"
+            style="white-space: nowrap"
+            @click="showUser(user)"
+          >
+            <div class="col-6">
+              {{ user.name }}
+            </div>
+            <div class="col-6">
+              {{ user.surname }}
+            </div>
+          </div>
+        </div>
+
+        <q-separator />
+
+        <!-- USER LIST COUNT -->
+        <div class="row flex-center smaller q-py-xs">
+          {{ filtered_users.length }} {{ $t('of') }} {{ user_list.length }}
+        </div>
+
+        <div class="q-pa-md q-mt-auto">
+          <q-btn
+            class="full-width q-mt-auto"
+            color="theme-blue"
+            :label="$t('user.add')"
+            @click="openUserNew"
+          >
+          </q-btn>
         </div>
       </div>
 
-      <q-separator />
+      <q-separator vertical />
 
-      <!-- USER LIST COUNT -->
-      <div class="row flex-center smaller q-py-xs">
-        {{ filtered_users.length }} {{ $t('of') }} {{ user_list.length }}
+      <!-- USER DATA -->
+      <div class="col">
+        <router-view v-slot="{ Component, route }">
+          <transition name="slide-fade" mode="out-in">
+            <div :key="route.fullPath">
+              <component :is="Component" :user="selected_user" />
+            </div>
+          </transition>
+        </router-view>
       </div>
-
-      <div class="q-pa-md q-mt-auto">
-        <q-btn
-          class="full-width q-mt-auto"
-          color="theme-blue"
-          :label="$t('user.add')"
-          @click="openUserNew">
-        </q-btn>
-      </div>
-
     </div>
-
-    <q-separator vertical />
-
-    <!-- USER DATA -->
-    <div class="col">
-      <router-view v-slot="{ Component, route }">
-        <transition name="slide-fade" mode="out-in">
-          <div :key="route.fullPath">
-            <component :is="Component" :user="selected_user" />
-          </div>
-        </transition>
-      </router-view>
-    </div>
-  </div>
   </div>
 </template>
 
 <script>
 // import axios from 'axios'
-import LoadingSignal from "@/components/LoadingSignal.vue"
-import BaseAutocompleteDepartment from "@/components/BaseAutocompleteDepartment.vue"
+import LoadingSignal from '@/components/LoadingSignal.vue';
 // import UserInfoScreen from "@/components/UserInfoScreen.vue"
-import multiMatch from "@/lib/MultiFieldSearch.js"
-
+import multiMatch from '@/lib/MultiFieldSearch.js';
 
 export default {
-
   name: 'UserLibrary',
 
-  components: { 
+  components: {
     // UserInfoScreen,
-    BaseAutocompleteDepartment,
-    LoadingSignal
+    LoadingSignal,
   },
 
   data() {
@@ -127,103 +128,113 @@ export default {
       department_filter: null,
       bool_filters: [
         { name: 'enabled', value: true },
-        { name: 'disabled', value: true }
+        { name: 'disabled', value: true },
       ],
       filter_panel: undefined,
-    }
+    };
   },
 
   computed: {
     user_list() {
-      return this.$store.state.user.user_list
+      return this.$store.state.user.user_list;
     },
 
     filters_label() {
       const string = this.filter_panel
         ? 'user.less_filters'
-        : 'user.more_filters'
-      return this.$capitalize(this.$t(string))
+        : 'user.more_filters';
+      return this.$capitalize(this.$t(string));
     },
 
     selected_user_key() {
-      return this.$route.params.user_key
+      return this.$route.params.user_key;
     },
 
     selected_user() {
-      return this.user_list.find(u => u._key == this.selected_user_key)
+      return this.user_list.find(
+        (user) => user._key === this.selected_user_key,
+      );
     },
 
     filtered_users() {
-      const dep_filter = this.department_filter
-      const list = this.user_list.filter( user => {
-        
-        const u_dep = user.department  
-        let department_match = true
+      const dep_filter = this.department_filter;
+      const list = this.user_list.filter((user) => {
+        const u_dep = user.department;
+        let department_match = true;
 
         if (dep_filter) {
           if (u_dep) {
             // Selected users with no department assigned
             // Filter out all users that have a department
-            if (dep_filter != u_dep._key) department_match = false
-          }
-          else {
+            if (dep_filter != u_dep._key) {
+              department_match = false;
+            }
+          } else {
             // Filter out users with department different from the one selected
-            if (dep_filter != 'none') department_match = false
+            if (dep_filter != 'none') {
+              department_match = false;
+            }
           }
         }
-          
+
         const user_match = this.search_text
-          ? multiMatch(this.search_text, user, ['name', 'surname', 'username', 'email'])
-          : true
+          ? multiMatch(this.search_text, user, [
+              'name',
+              'surname',
+              'username',
+              'email',
+            ])
+          : true;
 
-
-        let match_map = this.bool_filters.map( filter => {
-          let bool_match = true
+        let match_map = this.bool_filters.map((filter) => {
+          let bool_match = true;
 
           if (
-            !filter.value && (
-            (filter.name == 'enabled' && user.active)
-            || (filter.name == 'disabled' && !user.active)
-            || (filter.name == 'logged_in' && user.logged_in)
-            || (filter.name == 'logged_out' && !user.logged_in)
-            )
-          ) bool_match = false
+            !filter.value &&
+            ((filter.name == 'enabled' && user.active) ||
+              (filter.name == 'disabled' && !user.active) ||
+              (filter.name == 'logged_in' && user.logged_in) ||
+              (filter.name == 'logged_out' && !user.logged_in))
+          ) {
+            bool_match = false;
+          }
 
-          return bool_match
-        })
+          return bool_match;
+        });
 
-        return department_match && user_match && !match_map.some( _ => _ === false )
-      })
+        return (
+          department_match && user_match && !match_map.some((_) => _ === false)
+        );
+      });
 
-      return list
+      return list;
     },
+  },
 
+  created() {
+    const active_only = false;
+    this.$store.dispatch('loadUsers', active_only).then(() => {
+      this.vuex_ready = true;
+    });
   },
 
   methods: {
     setDepartment(event) {
-      this.department_filter = event
+      this.department_filter = event;
     },
 
     showUser(user) {
-      this.$router.push({ 
-        name: 'userInfo', 
-        params: { user_key: user._key }
-      })
+      this.$router.push({
+        name: 'userInfo',
+        params: { user_key: user._key },
+      });
     },
 
     openUserNew() {
-      this.$router.push({ name: 'newUser' })
-    }
+      this.$router.push({ name: 'newUser' });
+    },
   },
-
-  created() {
-    const active_only = false
-    this.$store.dispatch('loadUsers', active_only).then(() => {
-      this.vuex_ready = true
-    })
-  }
-}
+};
 </script>
 
 <style lang="css" scoped>
@@ -234,4 +245,4 @@ export default {
 .v-expansion-pane-content__wrap {
   padding: 0px;
 }
-</style>  
+</style>

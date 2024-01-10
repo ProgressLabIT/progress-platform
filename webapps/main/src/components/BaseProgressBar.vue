@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import { QCircularProgress, QLinearProgress } from 'quasar'
+import { QCircularProgress, QLinearProgress } from 'quasar';
 
 export default {
   name: 'BaseProgressBar',
@@ -19,35 +19,44 @@ export default {
   props: {
     data: {
       type: Object,
-      required: true
+      required: true,
     },
     size: {
       type: String,
-      default: '4px'
+      default: '4px',
     },
     type: {
       type: String,
-      default: 'linear'
-    }
+      default: 'linear',
+    },
   },
 
   computed: {
     progressComponent() {
-      return this.type === 'linear' ? QLinearProgress : QCircularProgress
+      return this.type === 'linear' ? QLinearProgress : QCircularProgress;
     },
 
     progress() {
-      return this.type === 'linear' ? this.data.progress / 100 : this.data.progress
+      return this.type === 'linear'
+        ? this.data.progress / 100
+        : this.data.progress;
     },
 
     color() {
-      const background = this.data.active ? (this.data.critical ? 'red-backdrop' : 'blue-backdrop') : 'grey-backdrop'
-      const foreground = this.data.critical ? (this.data.active ? 'theme-red' : 'red-backdrop') : (this.data.active ? 'theme-blue' : 'theme-grey')
-      return { foreground, background }
-    }
-  }
-}
+      const background = this.data.active
+        ? this.data.critical
+          ? 'red-backdrop'
+          : 'blue-backdrop'
+        : 'grey-backdrop';
+      const foreground = this.data.critical
+        ? this.data.active
+          ? 'theme-red'
+          : 'red-backdrop'
+        : this.data.active
+          ? 'theme-blue'
+          : 'theme-grey';
+      return { foreground, background };
+    },
+  },
+};
 </script>
-
-<style lang="css" scoped>
-</style>

@@ -1,30 +1,26 @@
-import { api } from '@/boot/axios.js'
+import { api } from '@/boot/axios.js';
 
 const org = {
-
   state: {
     departments: [],
   },
 
   mutations: {
     LOAD_DEPARTMENTS(state, dep_list) {
-      state.departments = dep_list
+      state.departments = dep_list;
     },
   },
 
   actions: {
     loadDepartments({ commit }) {
-      return new Promise(resolve => {
-        api
-          .get('department')
-          .then( resp => {
-            commit('LOAD_DEPARTMENTS', resp.data.detail)
-            resolve()
-          })
-      })
+      return new Promise((resolve) => {
+        api.get('department').then((resp) => {
+          commit('LOAD_DEPARTMENTS', resp.data.detail);
+          resolve();
+        });
+      });
     },
+  },
+};
 
-  }
-}
-
-export default org
+export default org;

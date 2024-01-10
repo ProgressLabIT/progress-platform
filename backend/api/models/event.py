@@ -4,7 +4,8 @@ from typing import Any, Union
 
 from pydantic import Field
 
-from models.collaboration import IssueWithLinks, Issue, Message
+from models.collaboration import Message
+from models.form import FormFieldValue
 from utils.base_models import ArangoDocument
 from utils.dt import timestamp
 
@@ -61,7 +62,7 @@ class EventModel(ArangoDocument):
   new_batch_key: str = None
   project_code: str = None
   message_key: str = None
-  user_data: Any
+  form_data: list[FormFieldValue] = []
 
   # Quality Fields
   issue_data: Any

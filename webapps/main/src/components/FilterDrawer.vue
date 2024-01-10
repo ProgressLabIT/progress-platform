@@ -9,7 +9,7 @@
     show-if-above
     :overlay="$q.screen.lt.lg"
     persistent
-    >
+  >
     <div class="column full-height q-px-lg">
       <div class="col-auto row items-center q-mt-sm q-mb-md">
         <div class="col-auto highlight text-uppercase text-h5">
@@ -21,7 +21,7 @@
           rounded
           :label="activeFilters"
           color="theme-grey"
-          />
+        />
         <div class="col-auto q-ml-md">
           <q-btn
             size="sm"
@@ -41,7 +41,7 @@
             color="theme-blue"
             :label="$t('filters_reset')"
             @click="emit('reset')"
-            >
+          >
           </q-btn>
         </div>
       </div>
@@ -49,29 +49,28 @@
       <div class="col scroll q-pb-xl">
         <slot />
       </div>
-
     </div>
   </q-drawer>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps({
   modelValue: {
     type: Boolean,
-    default: false
+    default: false,
   },
   activeFilters: {
     type: Number,
-    default: 0
-  }
-})
+    default: 0,
+  },
+});
 
-const emit = defineEmits(['update:modelValue', 'reset'])
+const emit = defineEmits(['update:modelValue', 'reset']);
 
 const drawerModel = computed({
   get: () => props.modelValue,
-  set: value => emit('update:modelValue', value)
-})
+  set: (value) => emit('update:modelValue', value),
+});
 </script>

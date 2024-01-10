@@ -3,8 +3,5 @@
 </template>
 
 <script>
-export default { name: 'EmptyParentRoute' }
+export default { name: 'EmptyParentRoute' };
 </script>
-
-<style lang="css" scoped>
-</style>

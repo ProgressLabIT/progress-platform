@@ -3,27 +3,34 @@
     <!-- LEFT COLUMN -->
     <div class="col-4 column full-height q-pr-md">
       <!-- PRODUCT IMAGE -->
-      <div class="relative-position col-auto"
-        style="border: solid 1px rgba(255,255,255,.12); height: 30vh;">
+      <div
+        class="relative-position col-auto"
+        style="border: solid 1px rgba(255, 255, 255, 0.12); height: 30vh"
+      >
         <q-img
           class="fit"
           :src="img_src"
+          :style="product.active ? '' : 'filter:grayscale(1) brightness(.5)'"
           @mouseenter="over_image = true"
           @mouseleave="over_image = false"
-          :style="product.active ? '' : 'filter:grayscale(1) brightness(.5)'">
+        >
         </q-img>
         <div class="absolute-full column q-pa-md">
           <q-btn
-            v-if="over_image && !edit_mode && !no_image"
+            v-if="over_image && !editMode && !no_image"
             class="absolute-bottom-right q-ma-md"
             color="theme-grey"
             size="12px"
-            @click.stop="showMedia('img')">
+            @click.stop="showMedia('img')"
+          >
             <q-icon name="mdi-magnify" />
           </q-btn>
 
-          <template v-if="edit_mode">
-            <div class="absolute-top text-center q-py-xs" style="background: rgba(0, 0, 0, .5);">
+          <template v-if="editMode">
+            <div
+              class="absolute-top text-center q-py-xs"
+              style="background: rgba(0, 0, 0, 0.5)"
+            >
               {{ $capitalize($t('product.update_image')) }}
             </div>
 
@@ -34,35 +41,40 @@
                 v-if="new_image || new_image_url === 'deleted'"
                 size="12px"
                 color="theme-orange"
-                @click="clearTempImg">
+                @click="clearTempImg"
+              >
                 {{ $t('product.restore_image') }}
               </q-btn>
               <q-btn
                 v-else-if="!no_image"
                 size="12px"
                 color="theme-red"
-                @click="deleteImg">
+                @click="deleteImg"
+              >
                 <q-icon name="mdi-delete" />
               </q-btn>
               <q-space />
               <input
-                type="file"
                 ref="upload_img"
+                type="file"
                 style="display: none"
                 accept="image/*"
-                @change="updateImg($event.target.files[0])" />
+                @change="updateImg($event.target.files[0])"
+              />
               <q-btn
                 size="12px"
                 color="theme-grey"
-                @click="$refs.upload_img.click()">
+                @click="$refs.upload_img.click()"
+              >
                 <q-icon name="mdi-upload" />
               </q-btn>
               <q-btn
-                v-if="img_src != ''"
+                v-if="img_src !== ''"
                 size="12px"
                 color="theme-grey"
+                class="q-ml-sm"
                 @click.stop="showMedia('img')"
-                class="q-ml-sm">
+              >
                 <q-icon name="mdi-magnify" />
               </q-btn>
             </div>
@@ -70,10 +82,7 @@
         </div>
 
         <div v-if="no_image" class="column absolute-full flex-center">
-          <q-icon
-            size="xl"
-            color="text-low"
-            name="mdi-image-off-outline">
+          <q-icon size="xl" color="text-low" name="mdi-image-off-outline">
           </q-icon>
           <div>
             {{ $t('product.no_image') }}
@@ -86,13 +95,19 @@
         <div class="text-h4 weight-bold text-uppercase">
           {{ $t('product.code') }}
         </div>
-        <div v-if="!edit_mode" class="text-h1 display highlight">
+        <div v-if="!editMode" class="text-h1 display highlight">
           {{ product.code }}
         </div>
-        <q-input v-else filled dense
+        <q-input
+          v-else
+          filled
+          dense
           :model-value="temp_code"
-          @update:model-value="value => updateField('code', value.toUpperCase())"
-          class="input-uppercase q-mt-md">
+          class="input-uppercase q-mt-md"
+          @update:model-value="
+            (value) => updateField('code', value.toUpperCase())
+          "
+        >
         </q-input>
       </div>
 
@@ -102,16 +117,21 @@
           {{ $t('description') }}
         </div>
         <div
-          v-if="!edit_mode"
+          v-if="!editMode"
           class="text-h3 q-mt-xs"
-          style="white-space: pre-line">
+          style="white-space: pre-line"
+        >
           {{ product.description }}
         </div>
-        <q-input v-else
-          filled dense type="textarea"
+        <q-input
+          v-else
+          filled
+          dense
+          type="textarea"
           :model-value="temp_desc"
-          @update:model-value="value => updateField('description', value)"
-          class="q-mt-md">
+          class="q-mt-md"
+          @update:model-value="(value) => updateField('description', value)"
+        >
         </q-input>
       </div>
 
@@ -120,10 +140,11 @@
       <!-- EDIT MODE ACTIONS -->
       <div class="col-auto">
         <q-btn
-          v-if="!edit_mode"
+          v-if="!editMode"
           color="theme-blue"
           class="full-width"
-          @click="activateEditMode">
+          @click="activateEditMode"
+        >
           {{ $t('edit') }}
         </q-btn>
 
@@ -132,14 +153,16 @@
             class="full-width q-mb-sm"
             :loading="saving"
             color="theme-green"
-            @click="saveChanges">
+            @click="saveChanges"
+          >
             {{ $t('save') }}
           </q-btn>
           <q-btn
             class="full-width"
             color="theme-grey"
             :disabled="saving"
-            @click="cancelChanges">
+            @click="cancelChanges"
+          >
             {{ $t('cancel') }}
           </q-btn>
         </div>
@@ -154,12 +177,15 @@
       <q-card
         square
         class="surface2 q-px-sm q-pt-sm q-pb-md column no-wrap"
-        style="max-height: 100%">
-        <q-card-section class="text-h5 display weight-bold text-uppercase col-auto">
+        style="max-height: 100%"
+      >
+        <q-card-section
+          class="text-h5 display weight-bold text-uppercase col-auto"
+        >
           {{ $t('notes_production') }}
         </q-card-section>
         <q-card-section class="col scroll">
-          <div v-if="!edit_mode" style="white-space: pre-line;">
+          <div v-if="!editMode" style="white-space: pre-line">
             {{ temp_notes }}
           </div>
           <q-input
@@ -167,10 +193,13 @@
             filled
             dense
             autogrow
-            :readonly="!edit_mode"
+            :readonly="!editMode"
             :model-value="temp_notes"
-            @update:model-value="value => updateField('production_notes', value)"
-            style="max-height: 100%;">
+            style="max-height: 100%"
+            @update:model-value="
+              (value) => updateField('production_notes', value)
+            "
+          >
           </q-input>
         </q-card-section>
       </q-card>
@@ -178,9 +207,11 @@
 
     <!-- RIGHT COLUMN -->
     <div class="col-4 q-pl-md column full-height no-wrap">
-
       <!-- DOCS -->
-      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap">
+      <q-card
+        square
+        class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap"
+      >
         <q-card-section class="text-h5 display highlight col-auto">
           {{ $capitalize($t('document.label', 2)) }}
         </q-card-section>
@@ -189,24 +220,26 @@
             v-for="(doc, index) in docs"
             :key="index"
             clickable
-            @click="showMedia(index)">
-            <q-item-section
-              class="col"
-              :class="{ 'text-italic': doc.temp}">
+            @click="showMedia(index)"
+          >
+            <q-item-section class="col" :class="{ 'text-italic': doc.temp }">
               <q-item-label>
-              {{ doc.name }} {{ doc.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}
+                {{ doc.name }}
+                {{ doc.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}
               </q-item-label>
             </q-item-section>
             <q-item-section class="col-1">
               <div>
-              <q-btn
-                flat round
-                size="10px"
-                v-if="edit_mode"
-                icon="mdi-close"
-                class="hover-red"
-                @click.stop="deleteDoc(index)">
-              </q-btn>
+                <q-btn
+                  v-if="editMode"
+                  flat
+                  round
+                  size="10px"
+                  icon="mdi-close"
+                  class="hover-red"
+                  @click.stop="deleteDoc(index)"
+                >
+                </q-btn>
               </div>
             </q-item-section>
             <q-item-section class="col-auto text-right">
@@ -216,28 +249,31 @@
         </q-list>
 
         <input
+          ref="upload_doc"
           type="file"
           multiple
-          ref="upload_doc"
           style="display: none"
           accept="application/pdf, image/*"
           @change="addFiles($event.target.files)"
         />
         <q-btn
-          v-if="edit_mode"
+          v-if="editMode"
           flat
           class="full-width q-mt-md"
           color="theme-blue"
-          @click="$refs.upload_doc.click()">
+          @click="$refs.upload_doc.click()"
+        >
           <span>{{ $t('document.add', 2) }}</span>
           <q-space />
           <q-icon name="mdi-paperclip" />
         </q-btn>
-
       </q-card>
 
       <!-- PRINT TEMPLATES -->
-      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md q-mt-lg col-shrink column no-wrap">
+      <q-card
+        square
+        class="surface2 q-px-sm q-pt-sm q-pb-md q-mt-lg col-shrink column no-wrap"
+      >
         <q-card-section class="text-h5 display highlight col-auto">
           STAMPE ORDINE
         </q-card-section>
@@ -245,31 +281,39 @@
           <q-item
             v-for="(t, index) in product.print_templates"
             :key="t._key"
-            @mouseenter="over_print=t._key"
-            @mouseleave="over_print=null"
-            :class="{ 'text-italic': t.temp }">
+            :class="{ 'text-italic': t.temp }"
+            @mouseenter="over_print = t._key"
+            @mouseleave="over_print = null"
+          >
             <q-item-section>
-              <q-item-label>{{ t.name }} {{ t.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}</q-item-label>
+              <q-item-label
+                >{{ t.name }}
+                {{
+                  t.temp ? '(' + $capitalize($t('unsaved')) + ')' : ''
+                }}</q-item-label
+              >
               <q-item-label caption>{{ t.description }}</q-item-label>
             </q-item-section>
             <q-item-section side>
               <div class="row q-gutter-sm items-center">
                 <q-btn
-                  v-show="over_print==t._key || edit_mode"
+                  v-show="over_print === t._key || editMode"
                   flat
                   round
                   icon="mdi-file-search-outline"
                   size="10px"
-                  @click="showTemplatePreview(t)">
+                  @click="showTemplatePreview(t)"
+                >
                 </q-btn>
                 <q-btn
-                  v-if="edit_mode"
+                  v-if="editMode"
                   flat
                   round
                   size="10px"
                   icon="mdi-close"
                   class="hover-red"
-                  @click.stop="deleteTemplate(index)">
+                  @click.stop="deleteTemplate(index)"
+                >
                 </q-btn>
               </div>
             </q-item-section>
@@ -277,21 +321,21 @@
         </q-list>
 
         <BaseAutocompleteTemplate
-          v-if="edit_mode"
+          v-if="editMode"
           class="q-px-sm q-mt-md"
           :label="$t('print_template_add')"
+          :selected="product.print_templates"
           @select="addTemplate"
-          :selected="product.print_templates">
-        </BaseAutocompleteTemplate>
-
+        />
       </q-card>
 
       <!-- DOCUMENT VIEWER -->
       <MediaViewer
-        v-if="show_media >= 0 || show_media === 'img' "
-        :show="show_media >= 0 || show_media === 'img' "
+        v-if="show_media >= 0 || show_media === 'img'"
+        :show="show_media >= 0 || show_media === 'img'"
+        v-bind="{ media_name, media_src }"
         @close="show_media = -1"
-        v-bind="{ media_name, media_src }">
+      >
         <template #context-title>
           {{ $t('product.code').toUpperCase() }}: {{ product.code }}
         </template>
@@ -299,25 +343,23 @@
 
       <!-- PRINT FORM/PREVIEW -->
       <MediaViewer
-        :show="show_template != null"
+        :show="show_template !== null"
         :media_name="show_template?.name"
         :media_src="show_template?.pdf"
-        @close="show_template = null">
-      </MediaViewer>
-
-
+        @close="show_template = null"
+      />
     </div>
   </div>
 </template>
 
 <script>
-import { generate } from '@pdfme/generator'
-import { mapState, mapActions } from 'vuex'
-import MediaViewer from '@/components/MediaViewer.vue'
-import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue'
+import { generate } from '@pdfme/generator';
+import { mapState, mapActions } from 'vuex';
+import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
+// import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
+import MediaViewer from '@/components/MediaViewer.vue';
 
 export default {
-
   name: 'ProductHome',
 
   components: {
@@ -325,6 +367,8 @@ export default {
     MediaViewer,
     BaseAutocompleteTemplate,
   },
+
+  emits: ['changesSaved', 'changesCanceled'],
 
   data() {
     return {
@@ -339,84 +383,100 @@ export default {
       new_image_url: '',
       no_image: false,
       show_template: null,
-      over_print: null
+      over_print: null,
     };
   },
 
   computed: {
-
     product_key() {
-      return this.$route.params.product_key
+      return this.$route.params.product_key;
     },
 
     ...mapState({
-      product: state => state.product.temp,
-      saved_product: state => state.product.saved
+      product: (state) => state.product.temp,
+      saved_product: (state) => state.product.saved,
     }),
 
-    edit_mode: {
+    editMode: {
       get() {
-        return this.$store.state.product.edit_modes.product
+        return this.$store.state.product.edit_modes.product;
       },
       set(value) {
-        this.$store.commit('TOGGLE_EDIT_MODE', { view: 'product', value })
-      }
+        this.$store.commit('TOGGLE_EDIT_MODE', { view: 'product', value });
+      },
     },
 
     saved_img_path() {
-      return `/media/product/${this.product_key}/image.jpg`
+      return `/media/product/${this.product_key}/image.jpg`;
     },
 
     img_src() {
-      return this.new_image_url ? this.new_image_url : this.saved_img_path
+      return this.new_image_url ? this.new_image_url : this.saved_img_path;
     },
 
     temp_code() {
-      return this.product.code
+      return this.product.code;
     },
 
     temp_desc() {
-      return this.product.description
+      return this.product.description;
     },
 
     temp_notes() {
-      return this.product.production_notes
+      return this.product.production_notes;
     },
 
     docs() {
-      return this.product.docs
+      return this.product.docs;
     },
 
     saved_docs() {
-      return this.$store.state.product.saved.docs
+      return this.$store.state.product.saved.docs;
     },
 
     media_name() {
-      if (this.show_media == -1) { return '' }
-      else if (this.show_media === 'img') { return 'Product image' }
-      else { return this.docs[this.show_media].name }
+      if (this.show_media == -1) {
+        return '';
+      } else if (this.show_media === 'img') {
+        return 'Product image';
+      } else {
+        return this.docs[this.show_media].name;
+      }
     },
 
     media_src() {
       if (this.show_media === 'img') {
-        return this.img_src
-      }
-
-      else if (this.show_media >= 0) {
-        const doc = this.docs[this.show_media]
-        let path = ''
+        return this.img_src;
+      } else if (this.show_media >= 0) {
+        const doc = this.docs[this.show_media];
+        let path = '';
 
         if (doc.temp) {
-          path = window.URL.createObjectURL(doc.data)
+          path = window.URL.createObjectURL(doc.data);
+        } else {
+          path = `/media/product/${this.product_key}/doc/${encodeURI(
+            this.media_name,
+          )}`;
         }
-        else path = `/media/product/${this.product_key}/doc/${encodeURI(this.media_name)}`
 
-        return path
+        return path;
+      } else {
+        return null;
       }
-
-      else return null
     },
+  },
 
+  watch: {
+    img_src() {
+      if (!this.img_src.startsWith('blob')) {
+        let test = new XMLHttpRequest();
+        test.open('HEAD', this.img_src, false);
+        test.send();
+        if (test.status === 404) {
+          this.no_image = true;
+        }
+      }
+    },
   },
 
   methods: {
@@ -428,136 +488,149 @@ export default {
     // },
 
     activateEditMode() {
-      this.temp_code = this.product.code
-      this.temp_desc = this.product.description
+      this.temp_code = this.product.code;
+      this.temp_desc = this.product.description;
 
-      this.edit_mode = true
+      this.editMode = true;
     },
 
     updateImg(img) {
       // let url = this.new_image_url
       // if (url) window.URL.revokeObjectURL(url)
-      this.new_image_url = window.URL.createObjectURL(img)
-      this.new_image = img
-      this.no_image = false
+      this.new_image_url = window.URL.createObjectURL(img);
+      this.new_image = img;
+      this.no_image = false;
     },
 
     clearTempImg() {
-      window.URL.revokeObjectURL(this.new_image_url)
-      this.new_image_url = null
-      this.new_image = null
-      this.no_image = false
+      window.URL.revokeObjectURL(this.new_image_url);
+      this.new_image_url = null;
+      this.new_image = null;
+      this.no_image = false;
     },
 
     deleteImg() {
       // this is a fake URL to make v-img show placeholder
-      this.new_image_url = 'deleted'
+      this.new_image_url = 'deleted';
     },
 
     updateField(field, value) {
       this.$store.commit('UPDATE_TEMP_PARAMETER', {
         param: field,
-        new_value: value
-      })
+        new_value: value,
+      });
     },
 
     addFiles(fileList) {
       for (const file of fileList) {
-        const existingIndex = this.docs.findIndex(({ name }) => name === file.name)
-        const isExisting = existingIndex !== -1
+        const existingIndex = this.docs.findIndex(
+          ({ name }) => name === file.name,
+        );
+        const isExisting = existingIndex !== -1;
         if (isExisting) {
           const replace = window.confirm(
             this.$capitalize(
-              this.$t('product.alerts.doc_name_exists', 1, { filename: file.name })
-            )
-          )
+              this.$t('product.alerts.doc_name_exists', 1, {
+                filename: file.name,
+              }),
+            ),
+          );
           if (!replace) {
-            return
+            return;
           }
 
-          this.$store.commit('DELETE_TEMP_DOC', existingIndex)
+          this.$store.commit('DELETE_TEMP_DOC', existingIndex);
         }
 
-        this.$store.commit('ADD_TEMP_DOC', { file, force: isExisting })
+        this.$store.commit('ADD_TEMP_DOC', { file, force: isExisting });
       }
     },
 
     deleteDoc(index) {
-      this.$store.commit('DELETE_TEMP_DOC', index)
+      this.$store.commit('DELETE_TEMP_DOC', index);
     },
 
     addTemplate(selection) {
-      this.$store.commit('ADD_TEMP_PRODUCT_TEMPLATE', selection)
+      this.$store.commit('ADD_TEMP_PRODUCT_TEMPLATE', selection);
     },
 
     deleteTemplate(index) {
-      this.$store.commit('DELETE_TEMP_PRODUCT_TEMPLATE', index)
+      this.$store.commit('DELETE_TEMP_PRODUCT_TEMPLATE', index);
     },
 
     showMedia(value) {
-      this.show_media = value
+      this.show_media = value;
     },
 
     async showTemplatePreview(t) {
-      const { data: { template } } = await this.$api.get(`print-template/${t._key}`)
-      const inputs = template.sampledata
+      const {
+        data: { template },
+      } = await this.$api.get(`print-template/${t._key}`);
+      const inputs = template.sampledata;
       this.show_template = {
         name: t.name,
-        pdf: await generate({ template, inputs })
-      }
+        pdf: await generate({ template, inputs }),
+      };
     },
 
     saveChanges() {
-      this.saving = true
+      this.saving = true;
 
-      const old_doc_list = this.saved_product.docs
-      const new_doc_list = this.product.docs
-      const old_template_list = this.saved_product.print_templates
-      const new_template_list = this.product.print_templates
+      const old_doc_list = this.saved_product.docs;
+      const new_doc_list = this.product.docs;
+      const old_template_list = this.saved_product.print_templates;
+      const new_template_list = this.product.print_templates;
 
       let product_update = {
         new_product_data: this.product,
         deleted_docs: old_doc_list.filter(
-          o => !new_doc_list.some(n => n.name === o.name)
+          (o) => !new_doc_list.some((n) => n.name === o.name),
         ),
         deleted_templates: old_template_list.filter(
-          o => !new_template_list.some(n => n._key === o._key)
+          (o) => !new_template_list.some((n) => n._key === o._key),
         ),
         image: {
           new: this.new_image,
-          delete: this.new_image_url === 'deleted'
-        }
+          delete: this.new_image_url === 'deleted',
+        },
+      };
+
+      if (new_doc_list) {
+        product_update.new_docs = new_doc_list.filter((d) => 'temp' in d);
       }
 
-      if (new_doc_list){
-        product_update.new_docs = new_doc_list.filter(d => 'temp' in d)
+      if (new_doc_list) {
+        product_update.new_docs = new_doc_list.filter((d) => 'temp' in d);
       }
 
       if (new_template_list) {
-        product_update.new_templates = new_template_list.filter(t => 'temp' in t)
+        product_update.new_templates = new_template_list.filter(
+          (t) => 'temp' in t,
+        );
       }
 
-      this.$store.dispatch('saveProductChanges', product_update)
+      this.$store
+        .dispatch('saveProductChanges', product_update)
         .then(async () => {
-        // Show progress long enough the let user notice something is going on
-        // even if the update is instantaneous
+          // Show progress long enough the let user notice something is going on
+          // even if the update is instantaneous
           // setTimeout(() => {
-            await this.$store.dispatch('loadProductDetails', this.product_key)
-            this.$emit('changes_saved')
-            this.edit_mode = false
-            this.clearTempImg()
-            this.saving = false
+          await this.$store.dispatch('loadProductDetails', this.product_key);
+          this.$emit('changesSaved');
+          this.editMode = false;
+          this.clearTempImg();
+          this.saving = false;
           // }, 1500)
         })
-        .catch(err => {
-          window.alert(err)
-        })
+        .catch((err) => {
+          window.alert(err);
+        });
     },
 
     cancelChanges() {
-      this.$store.commit('CANCEL_PRODUCT_CHANGES')
-      this.$emit('changes_canceled')
-      this.edit_mode = false
+      this.$store.commit('CANCEL_PRODUCT_CHANGES');
+      this.$emit('changesCanceled');
+      this.editMode = false;
     },
 
     // deleteProduct() {
@@ -565,21 +638,5 @@ export default {
     //   this.$router.push({ name: 'productList' })
     // }
   },
-
-  watch: {
-    img_src() {
-      if (!this.img_src.startsWith('blob')) {
-        let test = new XMLHttpRequest()
-        test.open('HEAD', this.img_src, false)
-        test.send()
-        if (test.status === 404) {
-          this.no_image = true
-        }
-      }
-    }
-  }
-}
+};
 </script>
-
-<style lang="css" scoped>
-</style>

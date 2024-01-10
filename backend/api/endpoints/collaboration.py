@@ -171,8 +171,17 @@ async def search_issues(
     limit = limit,
     with_links = with_links
   )
-  cursor = db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)
-  return [i for i in cursor]
+  try:
+    cursor = db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)
+    return [i for i in cursor]
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching issues from the db.",
+        error=traceback.format_exc()
+      )
+    )
 
 
 # ---------------------------------------------

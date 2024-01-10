@@ -23,6 +23,7 @@ class Queries:
 
     FOR wo_key IN queue
       LET wo = DOCUMENT(WorkOrder, wo_key)
+      FILTER wo != null // Prevent bugs in case queue has inexistent keys
       LET qt_remaining = wo.qt_planned - wo.qt_completed
       LET jobs = (FOR j IN Job FILTER !j.trash && j.wo_key == wo._key RETURN j)
       LET phases = (FOR j IN jobs RETURN DISTINCT j.phase_key)
@@ -120,6 +121,7 @@ class Queries:
         LET jobs = (
           FOR j IN q.jobs
           LET job_data = DOCUMENT(Job, j)
+          FILTER job_data != null // Prevent bugs in case queue has inexistent keys
           LET wo_data = DOCUMENT(WorkOrder, job_data.wo_key)
           LET issues = (FOR v IN 1..1 INBOUND wo_data._id issue_rel RETURN v)
           LET issues_open = LENGTH(issues[* FILTER CURRENT.open])

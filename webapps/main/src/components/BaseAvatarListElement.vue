@@ -1,36 +1,54 @@
 <template>
-   TEST
+  <!-- TODO: This component is only used within PhaseAssignments.vue which is not used anywhere -->
+  TEST
 </template>
 
 <script>
+/* eslint-disable vue/no-unused-properties */
 // import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
 
 export default {
-
   name: 'BaseAvatarListElement',
 
-  props: { 
-    src: String,
-    title: String, 
-    subtitle: String, 
-    edit: Boolean,
-    icon: {
-      type: String, 
-      default: 'close'
+  props: {
+    src: {
+      type: String,
+      required: true,
     },
-    tooltip: String,
-    color: String,
+    title: {
+      type: String,
+      required: true,
+    },
+    subtitle: {
+      type: String,
+      default: undefined,
+    },
+    edit: {
+      type: Boolean,
+      default: false,
+    },
+    icon: {
+      type: String,
+      default: 'close',
+    },
+    tooltip: {
+      type: String,
+      default: undefined,
+    },
+    color: {
+      type: String,
+      default: undefined,
+    },
   },
+
+  emits: ['iconClick'],
 
   // components: {BaseTooltipIcon},
 
   methods: {
     emit() {
-      this.$emit('iconClick')
+      this.$emit('iconClick');
     },
-  }
-}
+  },
+};
 </script>
-
-<style lang="css" scoped>
-</style>

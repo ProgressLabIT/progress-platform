@@ -1,15 +1,15 @@
 <template>
-  <div class="full-height column" :class="edit_mode ? 'q-pa-lg' : 'q-pa-xl'">
-    <template v-if="issue_type">
+  <div class="full-height column" :class="editMode ? 'q-pa-lg' : 'q-pa-xl'">
+    <template v-if="issueType">
       <div class="row q-col-gutter-lg col-auto">
-
-        <template v-if="!edit_mode">
-          <div class="col" v-if="!edit_mode">
+        <template v-if="!editMode">
+          <div v-if="!editMode" class="col">
             <div class="text-h2 uppercase display highlight q-mb-sm">
-              {{ issue_type.name }} {{ issue_type.code ? '(' + issue_type.code + ')' : ''}}
+              {{ issueType.name }}
+              {{ issueType.code ? '(' + issueType.code + ')' : '' }}
             </div>
             <div style="width: 50%">
-              {{ issue_type.description || '— No Description —' }}
+              {{ issueType.description || '— No Description —' }}
             </div>
           </div>
 
@@ -19,14 +19,16 @@
             icon="mdi-pencil"
             :tooltip="$capitalize($t('edit'))"
             :color="$theme.blue"
-            @iconClick="edit_mode=true">
+            @icon-click="editMode = true"
+          >
           </BaseTooltipIcon>
 
           <BaseTooltipIcon
             icon="mdi-delete"
             :tooltip="$capitalize($t('archive'))"
             :color="$theme.red"
-            @iconClick="showDelete">
+            @icon-click="showDelete"
+          >
           </BaseTooltipIcon>
         </template>
 
@@ -35,73 +37,77 @@
           <div class="col-10 row q-col-gutter-lg q-mb-lg">
             <div class="col-3">
               <q-input
+                v-model="temp_metadata.code"
                 filled
                 dense
                 stack-label
                 hide-bottom-space
                 :label="$capitalize($t('code'))"
-                v-model="temp_metadata.code">
+              >
               </q-input>
             </div>
             <div class="col">
               <q-input
+                v-model="temp_metadata.name"
                 filled
                 dense
                 stack-label
                 hide-bottom-space
                 :label="$capitalize($t('name'))"
-                v-model="temp_metadata.name">
+              >
               </q-input>
             </div>
 
             <div class="col-12">
               <q-input
+                v-model="temp_metadata.description"
                 filled
                 dense
                 stack-label
                 autogrow
                 hide-bottom-space
                 :label="$capitalize($t('description'))"
-                v-model="temp_metadata.description">
+              >
               </q-input>
             </div>
-
           </div>
 
           <div class="col column q-pl-xl q-gutter-md">
             <q-btn
               size="12px"
               color="theme-blue"
-              @click="save"
               :loading="saving"
-              :label="$t('save')">
+              :label="$t('save')"
+              @click="save"
+            >
             </q-btn>
             <q-btn
               size="12px"
               color="theme-grey"
+              :label="$t('cancel')"
               @click="cancel"
-              :label="$t('cancel')">
+            >
             </q-btn>
           </div>
         </template>
       </div>
 
-
       <!-- ISSUE TYPE OPTIONS -->
       <div class="row q-gutter-lg items-center col-auto">
-
         <!-- ACTIVE -->
         <q-toggle
-          :disable="!edit_mode"
+          v-model="temp_metadata.active"
+          :disable="!editMode"
           :label="$capitalize($t('active'))"
-          v-model="temp_metadata.active">
+        >
         </q-toggle>
 
         <!-- DEFAULT CRITICAL -->
         <q-toggle
-          :disable="!edit_mode"
+          v-model="temp_metadata.critical"
+          :disable="!editMode"
           :label="$capitalize($t('critical'))"
-          v-model="temp_metadata.critical">
+        >
         </q-toggle>
 
         <!-- CLOSE WITHIN -->
@@ -109,7 +115,7 @@
             filled
             stack-label
             :label="$t('close_within')"
-            :disable="!edit_mode"
+            :disable="!editMode"
             type="number"
             min="0"
             v-model.number="temp_metadata.close_within"
@@ -130,12 +136,13 @@
               <div class="text-body2 text-italic">{{ temp_metadata.icon }}</div>
             </div>
             <q-btn
-              v-if="edit_mode"
+              v-if="editMode"
               flat
               :label="$t('change')"
-              @click="show_icon_library = true"
               color="theme-blue"
-              class="q-ml-xl">
+              class="q-ml-xl"
+              @click="show_icon_library = true"
+            >
             </q-btn>
           </div>
 
@@ -144,199 +151,108 @@
               <IconLibrary @choice="(value) => pickIcon(value)" />
             </div>
           </BaseDialog>
-
         </div>
       </div>
 
       <!-- FORM AND PRINT TEMPLATES -->
       <q-tabs
-        align="left"
         v-model="tab"
+        align="left"
         dense
         indicator-color="theme-blue"
         active-class="text-high weight-bold"
-        class="q-mt-lg text-low col-auto">
-        <q-tab content-class="weight-bold" name="form" :label="$t('form_title')" />
+        class="q-mt-lg text-low col-auto"
+      >
+        <q-tab
+          content-class="weight-bold"
+          name="form"
+          :label="$t('form_title')"
+        />
         <q-tab name="prints" :label="$t('print_templates')" />
       </q-tabs>
 
       <q-card square class="col">
+        <q-tab-panels v-model="tab" class="fit">
+          <!-- ISSUE TYPE FORM -->
+          <q-tab-panel name="form" class="fit surface2 column">
+            <FormTemplateEditor
+              v-model="temp_metadata.form_template"
+              :edit-mode="editMode"
+            />
+          </q-tab-panel>
 
-
-      <q-tab-panels v-model="tab" class="fit">
-
-        <!-- ISSUE TYPE FORM -->
-        <q-tab-panel name="form" class="fit surface2 column">
-
-          <!-- NO FORM FIELDS -->
-          <div
-            v-if="!temp_metadata.form_template.length"
-            class="q-mt-md text-italic">
-            {{ $t('field_none') }}
-          </div>
-
-          <!-- FORM FIELDS LIST -->
-          <div v-else class="col scroll" id="issue-type-fields">
-            <div
-              class="row items-center q-col-gutter-lg q-py-sm"
-              v-for="(field, index) in temp_metadata.form_template"
-              :key="field._key">
-
-              <div class="col-auto">
-                <q-icon
-                  v-if="edit_mode"
-                  name="mdi-drag-horizontal-variant"
-                  class="q-mr-sm dragme"
-                  size="sm">
-                </q-icon>
-                <q-icon
-                  :name="getFieldIcon(field.type)"
-                  size="sm">
-                </q-icon>
-              </div>
-
-              <!-- Label -->
-              <div class="col">
-                <q-input
-                  stack-label
-                  filled
-                  dense
-                  autogrow
-                  :readonly="!edit_mode"
-                  :label="$t('label')"
-                  v-model="field.label">
-                </q-input>
-              </div>
-
-              <!-- Hint -->
-              <div class="col">
-                <q-input
-                  stack-label
-                  filled
-                  dense
-                  autogrow
-                  :readonly="!edit_mode"
-                  :label="$t('hint')"
-                  v-model="field.hint">
-                </q-input>
-              </div>
-
-              <div class="col-auto">
-
-              </div>
-
-              <div class="col-auto">
-                <q-btn
-                  v-if="edit_mode"
-                  round flat
-                  icon="mdi-close"
-                  @click="deleteField(index)">
-                </q-btn>
-              </div>
-              <!-- TODO: default value and hidden -->
-            </div>
-          </div>
-
-          <!-- BUTTON: Add field -->
-          <div>
-            <q-btn
-              v-if="edit_mode"
-              size="sm"
-              color="theme-blue"
-              icon="mdi-plus"
-              :label="$t('field_add')"
-              @click="show_field_dialog=true"
-              class="q-mt-lg">
-            </q-btn>
-          </div>
-        </q-tab-panel>
-
-        <!-- PRINT TEMPLATES -->
-        <q-tab-panel name="prints" class="surface2 column">
-          <div class="row col q-col-gutter-md scroll">
-            <div
-              class="col-3"
-              v-for="(t, index) in temp_metadata.print_templates.filter(t => !t.trash)"
-              :key="t._key">
-              <PrintTemplateCard
-                :template="t"
-                :allow_delete="edit_mode"
-                @delete="deleteTemplate(index)"
+          <!-- PRINT TEMPLATES -->
+          <q-tab-panel name="prints" class="surface2 column">
+            <div class="row col q-col-gutter-md scroll">
+              <div
+                v-for="(t, index) in temp_metadata.print_templates.filter(
+                  (t) => !t.trash,
+                )"
+                :key="t._key"
+                class="col-3"
+              >
+                <PrintTemplateCard
+                  :template="t"
+                  :allow-delete="editMode"
+                  @delete="deleteTemplate(index)"
                 />
+              </div>
             </div>
-          </div>
 
-          <div class="col-auto">
-            <BaseAutocompleteTemplate
-              v-if="edit_mode"
-              class="q-px-sm q-mt-md"
-              :label="$t('print_template_add')"
-              @select="addTemplate"
-              :selected="temp_metadata.print_templates">
-            </BaseAutocompleteTemplate>
-          </div>
-        </q-tab-panel>
-      </q-tab-panels>
+            <div class="col-auto">
+              <BaseAutocompleteTemplate
+                v-if="editMode"
+                class="q-px-sm q-mt-md"
+                :label="$t('print_template_add')"
+                :selected="temp_metadata.print_templates"
+                @select="addTemplate"
+              />
+            </div>
+          </q-tab-panel>
+        </q-tab-panels>
       </q-card>
-
-      <BaseDialog
-        :show="show_field_dialog"
-        :no-backdrop-dismiss="false"
-        @close="show_field_dialog=false">
-        <!-- Field picker -->
-        <FormFieldSearch
-          @select="addField"
-          :exclude-keys="selected_field_keys">
-        </FormFieldSearch>
-      </BaseDialog>
-
     </template>
-
     <NoDataAlert v-else />
   </div>
 </template>
 
 <script>
-import IconLibrary from '@/components/IconLibrary.vue'
-import NoDataAlert from '@/components/NoDataAlert.vue'
-import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
-import BaseDialog from '@/components/BaseDialog.vue'
-import FormFieldSearch from '@/components/FormFieldSearch.vue'
-import PrintTemplateCard from '@/components/PrintTemplateCard.vue'
-import form from '@/mixins/form.js'
-import { cloneDeep as _cloneDeep } from 'lodash'
-import Sortable from 'sortablejs'
-import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue'
-
+import { cloneDeep as _cloneDeep } from 'lodash';
+import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
+import BaseDialog from '@/components/BaseDialog.vue';
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
+import FormTemplateEditor from '@/components/FormTemplateEditor.vue';
+import IconLibrary from '@/components/IconLibrary.vue';
+import NoDataAlert from '@/components/NoDataAlert.vue';
+import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
+import form from '@/mixins/form.js';
 
 export default {
-
   name: 'IssueTypeDetail',
 
   components: {
     BaseAutocompleteTemplate,
     BaseDialog,
     BaseTooltipIcon,
-    FormFieldSearch,
     NoDataAlert,
     IconLibrary,
-    PrintTemplateCard
+    PrintTemplateCard,
+    FormTemplateEditor,
   },
 
   mixins: [form],
 
   props: {
-    issue_type: {
+    issueType: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
 
-  data () {
+  data() {
     return {
       show_icon_library: false,
-      show_field_dialog: false,
-      edit_mode: false,
+      editMode: false,
       saving: false,
       tab: 'form',
       temp_metadata: {
@@ -347,133 +263,84 @@ export default {
         icon: '',
         critical: undefined,
         form_template: [],
-        print_templates: []
         // close_within: 0
       },
-    }
+    };
   },
 
-  computed: {
-    selected_field_keys() {
-      return this.temp_metadata.form_template.map(f => f._key)
-    }
+  watch: {
+    editMode: 'setTempData',
+    issue_type: 'setTempData',
+  },
+
+  mounted() {
+    this.setTempData();
   },
 
   methods: {
-
-    setTempData(){
-      if (this.issue_type) {
-        Object.keys(this.temp_metadata).forEach( key => {
-          if (key in this.issue_type) {
-            this.temp_metadata[key] = _cloneDeep(this.issue_type[key])
+    setTempData() {
+      if (this.issueType) {
+        Object.keys(this.temp_metadata).forEach((key) => {
+          if (key in this.issueType) {
+            this.temp_metadata[key] = _cloneDeep(this.issueType[key]);
           }
-        })
+        });
       }
     },
 
     pickIcon(value) {
-      this.temp_metadata.icon = value
-      this.show_icon_library = false
+      this.temp_metadata.icon = value;
+      this.show_icon_library = false;
     },
 
     cancel() {
-      this.saving = false
-      this.edit_mode = false
+      this.saving = false;
+      this.editMode = false;
       this.$q.notify({
         message: this.$capitalize(this.$t('snackbars.changes_canceled')),
         color: 'theme-grey',
         timeout: 1500,
-        position: 'top'
-      })
+        position: 'top',
+      });
     },
 
     addTemplate(template) {
       this.temp_metadata.print_templates.push({
         ...template,
-        temp: true
-      })
+        temp: true,
+      });
     },
 
     deleteTemplate(template_index) {
-      const template = this.temp_metadata.print_templates[template_index]
+      const template = this.temp_metadata.print_templates[template_index];
       template.temp
         ? this.temp_metadata.print_templates.splice(template_index, 1)
-        : template.trash = true
+        : (template.trash = true);
     },
 
     async save() {
-      this.saving = true
+      this.saving = true;
       const data = {
-        _key: this.issue_type._key,
-        ...this.temp_metadata
-      }
-      await this.$store.dispatch('updateIssueType', data)
-      this.saving = false
-      this.edit_mode = false
+        _key: this.issueType._key,
+        ...this.temp_metadata,
+      };
+      await this.$store.dispatch('updateIssueType', data);
+      this.saving = false;
+      this.editMode = false;
       this.$q.notify({
         message: this.$t('issue_type_update_success'),
         color: 'theme-green',
         timeout: 1500,
-        position: 'top'
-      })
+        position: 'top',
+      });
     },
 
     showDelete() {
       this.$router.push({
         name: 'issueTypeDelete',
-        params: { issue_type_key: this.issue_type._key }
-      })
+        params: { issueTypeKey: this.issueType._key },
+      });
     },
-
-    addField(field_data) {
-      this.temp_metadata.form_template.push({
-        // TODO: The _key property should really be named field_key. Updating it would be a breaking change.
-        _key: field_data._key,
-        type: field_data.type,
-        label: field_data.default_label,
-        hint: field_data.default_hint,
-        // multiple: false,
-        // required: false
-      })
-      this.show_field_dialog = false
-    },
-
-    deleteField(index) {
-      this.temp_metadata.form_template.splice(index, 1)
-    },
-
-    initSortable() {
-      const _self = this
-      let container = document.querySelector("#issue-type-fields")
-      if (container) {
-        Sortable.create(container, {
-          ..._self.$store.state.drag_options,
-          handle: ".dragme",
-          onStart: () => _self.dragging = true,
-          // use onEnd event provided by SortableJs library
-          onEnd: ({ newIndex, oldIndex }) => {
-            _self.dragging = false
-            const moved = _self.temp_metadata.form_template.splice(oldIndex, 1)[0]
-            _self.temp_metadata.form_template.splice(newIndex, 0, moved)
-          }
-        })
-      }
-    }
   },
-
-  mounted() {
-    this.setTempData()
-  },
-
-  watch: {
-    edit_mode() {
-      this.setTempData()
-      this.initSortable()
-    },
-    issue_type: 'setTempData'
-  }
-}
+};
 </script>
-
-<style lang="css" scoped>
-</style>

@@ -1,3 +1,5 @@
+const path = require('node:path');
+
 module.exports = {
   // https://eslint.org/docs/user-guide/configuring#configuration-cascading-and-hierarchy
   // This option interrupts the configuration hierarchy at this file
@@ -11,22 +13,24 @@ module.exports = {
   env: {
     node: true,
     browser: true,
-    'vue/setup-compiler-macros': true
+    'vue/setup-compiler-macros': true,
   },
 
   // Rules order is important, please avoid shuffling them
   extends: [
     // Base ESLint recommended rules
-    // 'eslint:recommended',
+    'eslint:recommended',
 
     // Uncomment any of the lines below to choose desired strictness,
     // but leave only one uncommented!
     // See https://eslint.vuejs.org/rules/#available-rules
-    'plugin:vue/vue3-essential', // Priority A: Essential (Error Prevention)
+    // 'plugin:vue/vue3-essential', // Priority A: Essential (Error Prevention)
     // 'plugin:vue/vue3-strongly-recommended', // Priority B: Strongly Recommended (Improving Readability)
-    // 'plugin:vue/vue3-recommended', // Priority C: Recommended (Minimizing Arbitrary Choices and Cognitive Overhead)
+    'plugin:vue/vue3-recommended', // Priority C: Recommended (Minimizing Arbitrary Choices and Cognitive Overhead)
 
-    'standard'
+    'plugin:import/recommended',
+
+    'prettier',
   ],
 
   plugins: [
@@ -48,43 +52,64 @@ module.exports = {
     chrome: 'readonly',
 
     // Can be removed once defineModel is released as stable and included in eslint-plugin-vue
-    defineModel: "readonly",
+    defineModel: 'readonly',
+  },
+
+  settings: {
+    'import/extensions': ['.js', '.vue'],
+    'import/parsers': { 'vue-eslint-parser': ['.vue'] },
+    // To avoid import/default error with <script setup>
+    'import/ignore': ['.vue$'],
+    'import/resolver': {
+      typescript: {
+        project: path.resolve(__dirname, './jsconfig.json'),
+      },
+    },
   },
 
   // add your custom rules here
   rules: {
-    // allow async-await
-    'generator-star-spacing': 'off',
-    // allow paren-less arrow functions
-    'arrow-parens': 'off',
-    'one-var': 'off',
-    'no-void': 'off',
-    'multiline-ternary': 'off',
+    // TODO: Enable this rule after gradually converting all prop names to camelCase
+    'vue/prop-name-casing': 'off',
+    'vue/no-unsupported-features': [
+      'error',
+      {
+        version: require('vue').version,
+      },
+    ],
+    'vue/padding-line-between-blocks': 'warn',
+    'vue/no-empty-component-block': 'warn',
+    'vue/eqeqeq': 'error',
+    'vue/custom-event-name-casing': 'warn',
+    'vue/no-unused-properties': ['warn', { groups: ['props', 'setup'] }],
+    'vue/v-for-delimiter-style': 'warn',
+    'vue/require-macro-variable-name': 'warn',
+    'vue/prefer-separate-static-class': 'warn',
+    // TODO: Enable this rule after gradually converting all non-translated strings to i18n
+    // 'vue/no-bare-strings-in-template': 'warn',
 
-    'import/first': 'off',
-    'import/named': 'error',
-    'import/namespace': 'error',
-    'import/default': 'error',
-    'import/export': 'error',
-    'import/extensions': 'off',
-    'import/no-unresolved': 'off',
-    'import/no-extraneous-dependencies': 'off',
+    // To make the following work: `import Sortable from 'sortablejs'`
+    'import/no-named-as-default': 'off',
+    'import/order': [
+      'warn',
+      {
+        alphabetize: { order: 'asc' },
+        groups: [
+          'builtin',
+          'external',
+          'internal',
+          'parent',
+          'sibling',
+          'index',
+          'object',
+          'type',
+        ],
+      },
+    ],
 
-    'prefer-promise-reject-errors': 'off',
-
-    // Added by Luca
-    'space-before-function-paren': 'off',
-    'camelcase': 'off',
-    'quotes': 'off',
-    'eqeqeq': 'off',
-    'brace-style': 'off',
-    'no-async-promise-executor': 'off',
-    'no-trailing-spaces': 'off',
-    'comma-dangle': 'off',
-    'no-multiple-empty-lines': 'off',
-    'object-curly-spacing': 'off',
-
+    curly: 'error',
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     // allow debugger during development only
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
-  }
-}
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+  },
+};

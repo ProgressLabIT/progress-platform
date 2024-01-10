@@ -1,5 +1,6 @@
 <template>
   <q-dialog
+    :ref="getDialogRef()"
     :model-value="show"
     :maximized="maximized"
     :no-backdrop-dismiss="noBackdropDismiss"
@@ -8,11 +9,15 @@
     square
     transition-show="scale"
     transition-hide="scale"
+    :style="{ ...CSSVars, '--backdrop-color': background }"
     @escape-key="$emit('close')"
     @hide="$emit('close')"
-    :style="{ ...CSSVars, '--backdrop-color': background }">
+  >
     <template v-if="maximized">
-      <div class="fixed-full row flex-center" :style="`background-color: ${background || default_background};`">
+      <div
+        class="fixed-full row flex-center"
+        :style="`background-color: ${background || default_background};`"
+      >
         <slot></slot>
       </div>
     </template>
@@ -23,36 +28,39 @@
 </template>
 
 <script>
-import CSSVars from '@/mixins/CSSVars.js'
+import CSSVars from '@/mixins/CSSVars.js';
 
 export default {
-
   name: 'BaseDialog',
   mixins: [CSSVars],
   props: {
     show: {
       type: Boolean,
-      required: true
+      required: true,
     },
     maximized: {
       type: Boolean,
-      default: false
+      default: false,
     },
     noBackdropDismiss: {
       type: Boolean,
-      default: true
+      default: true,
     },
     background: {
       type: String,
-      default: null
+      default: null,
+    },
+    getDialogRef: {
+      type: Function,
+      default: () => {},
     },
   },
   emits: ['close'],
 
   created() {
-    this.default_background = this.$theme.background
-  }
-}
+    this.default_background = this.$theme.background;
+  },
+};
 </script>
 
 <style lang="sass">

@@ -4,9 +4,12 @@
       v-if="templatesModel.length > 0"
       class="row q-col-gutter-md q-ma-none col-auto"
     >
-      <div class="col-3"
-        v-for="template in templatesModel.filter(template => !('trash' in template))"
+      <div
+        v-for="template in templatesModel.filter(
+          (template) => !('trash' in template),
+        )"
         :key="template._key"
+        class="col-3"
       >
         <PrintTemplateCard :template="template" />
       </div>
@@ -28,24 +31,24 @@
 </template>
 
 <script setup>
-import NoDataAlert from '@/components/NoDataAlert.vue'
-import PrintTemplateCard from '@/components/PrintTemplateCard.vue'
-import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue'
+import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
+import NoDataAlert from '@/components/NoDataAlert.vue';
+import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
 
-const props = defineProps({
+defineProps({
   editMode: {
     type: Boolean,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-const templatesModel = defineModel({ type: Array })
+const templatesModel = defineModel({ type: Array });
 
 function addTemplate(template) {
   templatesModel.value.push({
     ...template,
     temp: true,
-  })
+  });
 }
 
 // TODO: Implement delete functionality

@@ -7,14 +7,14 @@
     :clearable="clearable"
     :options="options"
     option-label="name"
-    @filter="filter"
-    @clear="$emit('selection', null)"
     :model-value="value"
     input-debounce="100"
-    :option-value="key_only ? '_key' : null"
-    :emit-value="key_only"
-    :map-options="key_only"
-    @update:model-value="(selection) => $emit('select', selection)">
+    :option-value="keyOnly ? '_key' : null"
+    :emit-value="keyOnly"
+    :map-options="keyOnly"
+    @filter="filter"
+    @update:model-value="(selection) => $emit('select', selection)"
+  >
     <template #option="scope">
       <q-item v-bind="scope.itemProps" class="q-px-lg">
         <q-item-section avatar>
@@ -23,9 +23,7 @@
         <q-item-section>
           <q-item-label class="text-body1 highlight">
             {{ $capitalize(scope.opt.name) }}
-            <span v-if="scope.opt.code">
-              ({{ scope.opt.code }})
-            </span>
+            <span v-if="scope.opt.code"> ({{ scope.opt.code }}) </span>
           </q-item-label>
           <q-item-label caption>
             {{ scope.opt.description }}
@@ -37,86 +35,83 @@
 </template>
 
 <script>
-import multiMatch from '@/lib/MultiFieldSearch.js'
+import multiMatch from '@/lib/MultiFieldSearch.js';
 
 export default {
-
   name: 'BaseAutocompletIssueType',
 
   props: {
     value: {
       type: [String, Object],
-      deafult: null
+      default: null,
     },
 
-    load_data: {
+    loadData: {
       type: Boolean,
-      default: true
+      default: true,
     },
 
-    key_only: {
+    keyOnly: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     dense: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     clearable: {
       type: Boolean,
-      default: true
-    }
+      default: true,
+    },
   },
 
-  data () {
+  emits: ['select'],
+
+  data() {
     return {
       loading: false,
       options: [],
-      search_fields: ['name', 'code', 'description']
-    }
+      search_fields: ['name', 'code', 'description'],
+    };
   },
 
   computed: {
     origin_list() {
-      return this.$store.state.quality.issue_types
+      return this.$store.state.quality.issue_types;
+    },
+  },
+
+  created() {
+    if (this.loadData) {
+      this.loading = true;
+      this.$store.dispatch('getIssueTypes', true).then(() => {
+        this.initOptions();
+        this.loading = false;
+      });
     }
   },
 
   methods: {
-
     initOptions() {
-      this.options = [...this.origin_list]
+      this.options = [...this.origin_list];
     },
 
     filter(value, update) {
       if (value === '') {
         update(() => {
-          this.initOptions()
-        })
-        return
+          this.initOptions();
+        });
+        return;
       }
       update(() => {
-        const needle = value.toLowerCase()
-        this.options = this.origin_list.filter(option => {
-          return multiMatch(needle, option, this.search_fields)
-        })
-      })
+        const needle = value.toLowerCase();
+        this.options = this.origin_list.filter((option) => {
+          return multiMatch(needle, option, this.search_fields);
+        });
+      });
     },
   },
-
-  created() {
-    if (this.load_data) {
-      this.loading = true
-      this.$store.dispatch('getIssueTypes', true).then(() => {
-        this.initOptions()
-        this.loading = false
-      })
-    }
-  }
-}
+};
 </script>
-
-<style lang="css" scoped>
-</style>

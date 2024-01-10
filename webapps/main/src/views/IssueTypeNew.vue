@@ -1,13 +1,13 @@
 <template>
   <BaseModalForm
-    :show="true"
     id="new-issue-type-form"
-    @submit="submit"
+    :show="true"
     :loading="saving"
-    max_width="700px"
-    @cancel="$router.back()">
-
-     <template #title>
+    max-width="700px"
+    @submit="submit"
+    @cancel="$router.back()"
+  >
+    <template #title>
       {{ $t('issue_type_new') }}
     </template>
 
@@ -15,30 +15,33 @@
       <div class="row q-col-gutter-lg items-center" style="min-width: 400px">
         <div class="col-6">
           <q-input
+            v-model="new_issue_type.name"
             filled
             stack-label
             :label="$capitalize($t('name').toUpperCase())"
-            v-model="new_issue_type.name">
+          >
           </q-input>
         </div>
 
         <div class="col-3 text-uppercase">
           <q-input
+            v-model="new_issue_type.code"
             filled
             stack-label
             :label="$t('code').toUpperCase()"
-            v-model="new_issue_type.code">
+          >
           </q-input>
         </div>
 
         <div class="col-3 text-uppercase">
           <q-toggle
+            v-model="new_issue_type.critical"
             :label="$t('critical').toUpperCase()"
-            v-model="new_issue_type.critical">
+          >
           </q-toggle>
         </div>
 
-       <!--  <div class="col-3 text-uppercase">
+        <!--  <div class="col-3 text-uppercase">
           <q-input
             filled
             stack-label
@@ -55,12 +58,13 @@
  -->
         <div class="col-12">
           <q-input
+            v-model="new_issue_type.description"
             filled
             stack-label
             autogrow
             clearable
             :label="$t('description').toUpperCase()"
-            v-model="new_issue_type.description">
+          >
           </q-input>
         </div>
 
@@ -75,8 +79,9 @@
           <q-btn
             flat
             :label="$t('change')"
+            color="theme-blue"
             @click="show_icon_library = true"
-            color="theme-blue">
+          >
           </q-btn>
           <BaseDialog :show="show_icon_library">
             <div class="surface2 q-pa-md">
@@ -84,28 +89,26 @@
             </div>
           </BaseDialog>
         </div>
-
       </div>
     </template>
   </BaseModalForm>
 </template>
 
 <script>
-import BaseModalForm from '@/components/BaseModalForm.vue'
-import BaseDialog from '@/components/BaseDialog.vue'
-import IconLibrary from '@/components/IconLibrary.vue'
+import BaseDialog from '@/components/BaseDialog.vue';
+import BaseModalForm from '@/components/BaseModalForm.vue';
+import IconLibrary from '@/components/IconLibrary.vue';
 
 export default {
-
   name: 'IssueTypeNew',
 
   components: {
     BaseModalForm,
     BaseDialog,
-    IconLibrary
+    IconLibrary,
   },
 
-  data () {
+  data() {
     return {
       saving: false,
       show_icon_library: false,
@@ -115,44 +118,47 @@ export default {
         description: undefined,
         critical: false,
         close_within: 0,
-        icon: 'mdi-alert-circle'
-      }
-    }
+        icon: 'mdi-alert-circle',
+      },
+    };
   },
 
   methods: {
     pickIcon(value) {
-      this.new_issue_type.icon = value
-      this.show_icon_library = false
+      this.new_issue_type.icon = value;
+      this.show_icon_library = false;
     },
 
     submit() {
-      this.saving = true
+      this.saving = true;
       if (!this.new_issue_type.name) {
-        window.alert(c(this.$t('issue_type_alerts_name_missing')))
-      }
-
-      else {
-        this.$store.dispatch('createIssueType', this.new_issue_type)
-        .then( (new_issue_type_key) => {
-          this.$router.push({
-            name: 'issueTypeDetail',
-            params: {
-              issue_type_key: new_issue_type_key
-            }
+        window.alert(
+          this.$capitalize(this.$t('issue_type_alerts_name_missing')),
+        );
+      } else {
+        this.$store
+          .dispatch('createIssueType', this.new_issue_type)
+          .then((new_issue_type_key) => {
+            this.$router.push({
+              name: 'issueTypeDetail',
+              params: {
+                issueTypeKey: new_issue_type_key,
+              },
+            });
           })
-        })
-        .catch( err => {
-          if (err.response.status === 409) {
-            window.alert(c(this.$t('issue_type_alerts_name_or_code_used')))
-          }
-          else { window.alert(err) }
-        })
+          .catch((err) => {
+            if (err.response.status === 409) {
+              window.alert(
+                this.$capitalize(
+                  this.$t('issue_type_alerts_name_or_code_used'),
+                ),
+              );
+            } else {
+              window.alert(err);
+            }
+          });
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
-
-<style lang="css" scoped>
-</style>

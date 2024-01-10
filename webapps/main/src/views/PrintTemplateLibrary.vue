@@ -3,15 +3,12 @@
     <LoadingSignal v-if="!data_ready" />
 
     <div v-else class="row q-col-gutter-md">
-      <div
-        class="col-3"
-        v-for="template in template_list"
-        :key="template._key">
+      <div v-for="template in template_list" :key="template._key" class="col-3">
         <PrintTemplateCard
           :template="template"
-          :allow_edit="true"
-          @saved="getTemplates">
-        </PrintTemplateCard>
+          allow-edit
+          @saved="getTemplates"
+        />
       </div>
     </div>
 
@@ -20,22 +17,21 @@
       class="absolute-bottom-right q-mb-lg q-mr-lg"
       color="theme-blue"
       icon="mdi-plus"
-      @click="openNewTemplate">
-    </q-btn>
+      @click="openNewTemplate"
+    />
 
     <PrintTemplateDesigner
       :show="show_designer"
       @close="resetDesigner"
-      @saved="getTemplates()">
-    </PrintTemplateDesigner>
-
+      @saved="getTemplates"
+    />
   </div>
 </template>
 
 <script>
-import LoadingSignal from '@/components/LoadingSignal.vue'
-import PrintTemplateCard from '@/components/PrintTemplateCard.vue'
-import PrintTemplateDesigner from '@/components/PrintTemplateDesigner.vue'
+import LoadingSignal from '@/components/LoadingSignal.vue';
+import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
+import PrintTemplateDesigner from '@/components/PrintTemplateDesigner.vue';
 
 export default {
   name: 'PrintTemplateLibrary',
@@ -43,41 +39,36 @@ export default {
   components: {
     LoadingSignal,
     PrintTemplateCard,
-    PrintTemplateDesigner
+    PrintTemplateDesigner,
   },
 
-  data () {
+  data() {
     return {
       data_ready: false,
       search_text: null,
       template_list: [],
       show_designer: false,
-    }
-  },
-
-  methods: {
-    getTemplates() {
-      this.$api.get('print-template').then( resp => {
-        this.template_list = resp.data.sort()
-        this.data_ready = true
-      })
-    },
-
-    openNewTemplate() {
-      this.show_designer = true
-    },
-
-    resetDesigner() {
-      this.show_designer = false
-    }
+    };
   },
 
   created() {
-    this.getTemplates()
-  }
-}
+    this.getTemplates();
+  },
 
+  methods: {
+    async getTemplates() {
+      const { data } = await this.$api.get('print-template');
+      this.template_list = data.sort();
+      this.data_ready = true;
+    },
+
+    openNewTemplate() {
+      this.show_designer = true;
+    },
+
+    resetDesigner() {
+      this.show_designer = false;
+    },
+  },
+};
 </script>
-<style lang="sass">
-
-</style>

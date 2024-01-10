@@ -58,15 +58,15 @@ class Queries:
       LET execution_data = FIRST(
         FOR s IN StepExecutionData
         FILTER s.batch_key == batch._key && s.step_key == step_key
-        RETURN KEEP(s, 'status', 'user_data')
+        RETURN KEEP(s, 'status', 'form_data')
       )
       LET step_done = execution_data ? execution_data.status == 'done' : false
       LET step_critical = execution_data ? execution_data.status == 'critical' : false
-      LET user_data = execution_data ? execution_data.user_data : []
-      RETURN MERGE( step_data, {
+      LET form_data = execution_data ? execution_data.form_data : []
+      RETURN MERGE(step_data, {
         done: step_done,
         critical: step_critical,
-        user_data: user_data
+        form_data: form_data
       })
     )
     RETURN MERGE(batch, { step_data: batch_step_data })

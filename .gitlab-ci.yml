@@ -17,7 +17,7 @@ build:webapp:
       - master
     changes:
       - webapps/main/**/*
-  image: docker:latest
+  image: docker:stable
   variables:
     WEBAPP_ROOT: webapps/main
     WEBAPP_DOCKERFILE: webapp.prod.Dockerfile
@@ -90,7 +90,7 @@ build:api:
       - DEV
     changes:
       - backend/api/**/*
-  image: docker:latest
+  image: docker:stable
   variables:
     API_ROOT: backend/api
     API_DOCKERFILE: Dockerfile
@@ -124,7 +124,7 @@ build:workflow:
       - DEV
     changes:
       - backend/workflow/**/*
-  image: docker:latest
+  image: docker:stable
   variables:
     WF_SYS_AGENT_DOCKERFILE: Dockerfile
     WF_SYS_AGENT_IMAGE: $CI_REGISTRY_IMAGE/wf-sys-agent

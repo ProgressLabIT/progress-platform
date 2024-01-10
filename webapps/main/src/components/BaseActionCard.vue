@@ -1,5 +1,5 @@
 <template>
-  <q-card class="surface2 q-pa-md" style="min-width: 400px;">
+  <q-card class="surface2 q-pa-md" style="min-width: 400px">
     <slot name="title">
       <q-card-section v-if="title">
         <div class="text-h3 display highlight">
@@ -14,15 +14,11 @@
 
     <q-card-section class="row justify-between">
       <slot name="actions">
-        <q-btn
-          :color="save_color"
-          @click="$emit('save')">
-          {{ save_label ?? $t('save') }}
+        <q-btn :color="saveColor" @click="$emit('save')">
+          {{ saveLabel ?? $t('save') }}
         </q-btn>
-        <q-btn
-          :color="cancel_color"
-          @click="$emit('cancel')">
-          {{ cancel_label ?? $t('cancel') }}
+        <q-btn :color="cancelColor" @click="$emit('cancel')">
+          {{ cancelLabel ?? $t('cancel') }}
         </q-btn>
       </slot>
     </q-card-section>
@@ -31,30 +27,30 @@
 
 <script>
 export default {
-
   name: 'BaseActionCard',
 
   props: {
-    title: String,
-    save_label: String,
-    cancel_label: String,
-    save_color: {
+    title: {
       type: String,
-      default: 'theme-blue'
+      default: undefined,
     },
-    cancel_color: {
+    saveLabel: {
       type: String,
-      default: 'theme-grey'
-    }
+      default: undefined,
+    },
+    cancelLabel: {
+      type: String,
+      default: undefined,
+    },
+    saveColor: {
+      type: String,
+      default: 'theme-blue',
+    },
+    cancelColor: {
+      type: String,
+      default: 'theme-grey',
+    },
   },
-
-  data () {
-    return {
-
-    }
-  }
-}
+  emits: ['save', 'cancel'],
+};
 </script>
-
-<style lang="css" scoped>
-</style>

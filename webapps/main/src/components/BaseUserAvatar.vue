@@ -1,63 +1,57 @@
 <template>
-  <div
-    class="row items-center"
-    :class="name_first ? ' reverse' : ''">
+  <div class="row items-center" :class="name_first ? ' reverse' : ''">
     <q-avatar
+      v-if="initials && showAvatar"
       color="theme-grey"
       :size="size"
-      v-if="initials && show_avatar"
       class="weight-bold"
-      font-size=".4em">
-      <q-img
-        :src="avatar_src"
-        :alt="initials"
-        :style="avatar_style">
+      font-size=".4em"
+    >
+      <q-img :src="avatar_src" :alt="initials" :style="avatar_style">
         <template #error>
-          <div class="absolute-center bg-theme-grey" v-if="initials">{{ initials }}</div>
-          <q-icon v-else name="mdi-account-circle" :size="size"/>
+          <div v-if="initials" class="absolute-center bg-theme-grey">
+            {{ initials }}
+          </div>
+          <q-icon v-else name="mdi-account-circle" :size="size" />
         </template>
       </q-img>
     </q-avatar>
 
-    <div v-if="show_name && show_avatar" :class="dense ? 'q-mx-xs' : 'q-mx-sm'"></div>
+    <div
+      v-if="show_name && showAvatar"
+      :class="dense ? 'q-mx-xs' : 'q-mx-sm'"
+    ></div>
 
-    <div class="column col-auto" v-if="show_name">
+    <div v-if="show_name" class="column col-auto">
       <slot name="name">
-        <div
-          :class="name_class"
-          :style="name_style">
+        <div :class="name_class" :style="name_style">
           {{ full_name }}
         </div>
       </slot>
 
-      <slot
-        name="subtitle"
-        :class="subtitle_class"
-        :style="subtitle_style">
-      </slot>
+      <slot name="subtitle"> </slot>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-
   name: 'BaseUserAvatar',
 
   props: {
     dense: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     name_first: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     user: {
       type: Object,
-      required: true
+      required: true,
     },
 
     size: {
@@ -65,38 +59,25 @@ export default {
       default: '32px',
     },
 
-    show_avatar: {
+    showAvatar: {
       type: Boolean,
-      default: true
-    },
-    
-    show_name: {
-      type: Boolean,
-      default: true
+      default: true,
     },
 
-    name_el: {
-      type: String,
-      default: 'div'
+    show_name: {
+      type: Boolean,
+      default: true,
     },
-    
+
     name_class: {
       type: String,
-      default: 'text-body2'
+      default: 'text-body2',
     },
 
     name_style: {
-      type: String
-    },
-
-    subtitle_class: {
       type: String,
-      default: 'text-body2'
+      default: undefined,
     },
-
-    subtitle_style: {
-      type: String
-    }
   },
 
   data() {
@@ -105,30 +86,37 @@ export default {
       avatar_style: {
         height: this.size,
         width: this.size,
-        borderRadius: '100%'
-      }
-    }
+        borderRadius: '100%',
+      },
+    };
   },
 
   computed: {
     avatar_src() {
       return this.user.name && this.user.surname
-        ? (this.base_path + (this.user.name + this.user.surname).replace(/\s+/g, '') + '.jpg').toLowerCase()
-        : 'N/A'
+        ? (
+            this.base_path +
+            (this.user.name + this.user.surname).replace(/\s+/g, '') +
+            '.jpg'
+          ).toLowerCase()
+        : 'N/A';
     },
 
     initials() {
       try {
-        return this.user.name[0].toUpperCase() + this.user.surname[0].toUpperCase()
-      } catch { return 'N/A' }
+        return (
+          this.user.name[0].toUpperCase() + this.user.surname[0].toUpperCase()
+        );
+      } catch {
+        return 'N/A';
+      }
     },
 
     full_name() {
-      return this.$capitalizeAll(this.user.name + ' ' + this.user.surname) || ''
+      return (
+        this.$capitalizeAll(this.user.name + ' ' + this.user.surname) || ''
+      );
     },
-  }
-}
+  },
+};
 </script>
-
-<style lang="sass" scoped>
-</style>

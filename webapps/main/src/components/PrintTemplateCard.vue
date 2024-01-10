@@ -1,130 +1,126 @@
 <template>
-  <q-card
-    square
-    bordered
-    class="surface2">
+  <q-card square bordered class="surface2">
     <q-card-section class="row items-baseline">
-      <q-icon
-        class=""
-        name="mdi-file-document"
-        size="sm">
-      </q-icon>
-      <div class="q-ml-sm text-h3" :class="{ 'text-italic': template.temp}">
+      <q-icon class="" name="mdi-file-document" size="sm" />
+      <div class="q-ml-sm text-h3" :class="{ 'text-italic': template.temp }">
         <div>{{ template.name }}</div>
-        <div v-if="template.temp" class="smaller">({{ $capitalize($t('unsaved')) }})</div>
+        <div v-if="template.temp" class="smaller">
+          ({{ $capitalize($t('unsaved')) }})
+        </div>
       </div>
     </q-card-section>
+
     <q-card-section>
       {{ template.description }}
     </q-card-section>
+
     <q-card-section class="row justify-start q-gutter-sm">
       <q-btn
         size="sm"
         flat
         round
+        icon="mdi-file-search-outline"
         @click="showTemplatePreview"
-        icon="mdi-file-search-outline">
-      </q-btn>
+      />
       <q-btn
-        v-if="allow_edit"
+        v-if="allowEdit"
         flat
         round
         size="sm"
+        icon="mdi-pencil"
         @click="editTemplate"
-        icon="mdi-pencil">
-      </q-btn>
+      />
       <!-- TODO: Implement delete method -->
       <q-btn
-        v-if="allow_delete"
+        v-if="allowDelete"
         flat
         round
         size="sm"
+        icon="mdi-delete"
         @click="$emit('delete')"
-        icon="mdi-delete">
-      </q-btn>
+      />
     </q-card-section>
 
     <PrintTemplateDesigner
-      :show="edit_template != null"
+      :show="edit_template !== null"
       :edit_template="edit_template"
       @close="resetDesigner"
-      @saved="$emit('saved')">
-    </PrintTemplateDesigner>
+      @saved="$emit('saved')"
+    />
 
-     <!-- PRINT FORM/PREVIEW -->
+    <!-- PRINT FORM/PREVIEW -->
     <MediaViewer
       :show="!!show_preview"
       :media_name="show_preview?.name"
       :media_src="show_preview?.pdf"
-      @close="show_preview = null">
-    </MediaViewer>
+      @close="show_preview = null"
+    />
   </q-card>
 </template>
 
 <script>
-import { generate } from '@pdfme/generator'
-import MediaViewer from '@/components/MediaViewer.vue'
-import PrintTemplateDesigner from '@/components/PrintTemplateDesigner.vue'
-
+import { generate } from '@pdfme/generator';
+import MediaViewer from '@/components/MediaViewer.vue';
+import PrintTemplateDesigner from '@/components/PrintTemplateDesigner.vue';
 
 export default {
-
   name: 'PrintTemplateCard',
 
   components: {
     MediaViewer,
-    PrintTemplateDesigner
+    PrintTemplateDesigner,
   },
 
   props: {
     template: {
       type: Object,
-      required: true
+      required: true,
     },
 
-    allow_edit: {
+    allowEdit: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
-    allow_delete: {
+    allowDelete: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
+
+  emits: ['saved', 'delete'],
 
   data() {
     return {
       show_preview: false,
-      edit_template: null
-    }
+      edit_template: null,
+    };
   },
 
   methods: {
     async showTemplatePreview() {
-      const { data: { template } } = await this.$api.get(`print-template/${this.template._key}`)
-      const inputs = template.sampledata
+      const {
+        data: { template },
+      } = await this.$api.get(`print-template/${this.template._key}`);
+      const inputs = template.sampledata;
       this.show_preview = {
         name: template.name,
-        pdf: await generate({ template, inputs })
-      }
+        pdf: await generate({ template, inputs }),
+      };
     },
 
-    editTemplate(template_key) {
-      this.$api.get(`print-template/${this.template._key}`).then(resp =>{
-        this.edit_template = resp.data
-        this.show_designer = true
-      })
+    async editTemplate() {
+      const { data } = await this.$api.get(
+        `print-template/${this.template._key}`,
+      );
+      this.edit_template = data;
+      this.show_designer = true;
     },
 
     resetDesigner() {
-      this.show_designer = false
-      this.edit_template =null
-    }
-
-  }
-}
+      this.show_designer = false;
+      this.edit_template = null;
+    },
+  },
+};
 </script>
-
-<style lang="css" scoped>
-</style>

@@ -1,7 +1,11 @@
 <template>
   <BaseDialog :show="show" :maximized="true">
     <div class="fixed-full row fit background flex-center">
-      <q-card square class="surface1 shadow-12 q-pa-sm" style="max-width: 600px;">
+      <q-card
+        square
+        class="surface1 shadow-12 q-pa-sm"
+        style="max-width: 600px"
+      >
         <q-card-section>
           <div class="text-h3 display highlight">
             {{ $t('user.archive_action') }}
@@ -13,7 +17,8 @@
             :user="user"
             :size="70"
             name_class="solid-white"
-            name_style="font-size: 20px">
+            name_style="font-size: 20px"
+          >
           </BaseUserAvatar>
           <div class="q-mt-xl">
             {{ $t('user.archive_explainer') }}
@@ -22,26 +27,27 @@
 
         <transition name="slide-fade" mode="out-in">
           <q-card-section
-            v-if="stage==='confirm'"
+            v-if="stage === 'confirm'"
             key="confirm"
-            align="between">
+            align="between"
+          >
             <div class="row justify-between">
               <q-btn
                 color="theme-red"
                 :label="$t('confirm')"
-                @click="archiveUser">
+                @click="archiveUser"
+              >
               </q-btn>
               <q-btn
                 color="theme-grey"
                 :label="$t('cancel')"
-                @click="$router.back()">
+                @click="$router.back()"
+              >
               </q-btn>
             </div>
           </q-card-section>
 
-          <q-card-section
-            v-else-if="stage==='success'"
-            key="success">
+          <q-card-section v-else-if="stage === 'success'" key="success">
             <div class="row justify-between">
               <div class="weight-bold-highlight">
                 {{ $capitalize($t('user.archive_success')) }}
@@ -49,7 +55,8 @@
               <q-btn
                 color="theme-grey"
                 :label="$t('close')"
-                @click="$router.push({ name: 'userLibrary' })">
+                @click="$router.push({ name: 'userLibrary' })"
+              >
               </q-btn>
             </div>
           </q-card-section>
@@ -60,50 +67,44 @@
 </template>
 
 <script>
-import BaseDialog from '@/components/BaseDialog.vue'
-import BaseUserAvatar from '@/components/BaseUserAvatar.vue'
-import { api } from '@/boot/axios.js'
+import { api } from '@/boot/axios.js';
+import BaseDialog from '@/components/BaseDialog.vue';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 // import NonExistentUserGuard from '@/mixins/NonExistentUserGuard.js'
 
-
-
 export default {
-
   name: 'UserDelete',
 
   // mixins: [NonExistentUserGuard],
 
-  components: { 
+  components: {
     BaseUserAvatar,
-    BaseDialog
+    BaseDialog,
   },
 
   props: {
     user: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
 
   data() {
     return {
       show: true,
       stage: 'confirm',
-      temp_psw: ''
-    }
+      temp_psw: '',
+    };
   },
 
-  methods:{
+  methods: {
     archiveUser() {
-      api.delete(`user/${this.user._key}`).then( () => {
+      api.delete(`user/${this.user._key}`).then(() => {
         // reload users from backend to make sure archived user is not present
-        this.stage = 'success'
-        this.$store.dispatch('loadUsers')
-      })
-    }
+        this.stage = 'success';
+        this.$store.dispatch('loadUsers');
+      });
+    },
   },
-}
+};
 </script>
-
-<style lang="css" scoped>
-</style>

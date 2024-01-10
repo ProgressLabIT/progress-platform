@@ -8,7 +8,8 @@
         align="left"
         shrink
         dense
-        indicator-color="primary">
+        indicator-color="primary"
+      >
         <q-route-tab
           v-for="(view, index) in admin_views"
           :key="index"
@@ -33,7 +34,7 @@
 export default {
   name: 'AdminSection',
 
-  data () {
+  data() {
     return {
       admin_views: [
         'userLibrary',
@@ -41,9 +42,9 @@ export default {
         'issueTypeLibrary',
         'formFieldLibrary',
         'flowLibrary',
-        'printTemplateLibrary'
-      ]
-    }
+        'printTemplateLibrary',
+      ],
+    };
   },
-}
+};
 </script>
