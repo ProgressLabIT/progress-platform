@@ -1,6 +1,6 @@
 import { createSharedComposable } from '@vueuse/core';
-import { Dark, LocalStorage } from 'quasar';
-import { ref, watch } from 'vue';
+import { Dark } from 'quasar';
+import { computed, watch } from 'vue';
 import { useStore } from 'vuex';
 
 import { dark, light } from '@/boot/theme.js';
@@ -11,20 +11,23 @@ import { dark, light } from '@/boot/theme.js';
  * Call this during the boot process to ensure everything is set up as early as possible.
  */
 export const useTheme = createSharedComposable((store = useStore()) => {
-  /** @type {import('vue').Ref<'dark' | 'light'>} */
-  const theme = ref(LocalStorage.getItem('theme') ?? 'dark');
-
-  watch(
-    theme,
-    (theme) => {
-      LocalStorage.set('theme', theme);
-      document.body.setAttribute('progress-theme', theme);
-      const isDark = theme === 'dark';
-      store.dispatch('changeTheme', isDark ? dark : light);
-      Dark.set(isDark);
-    },
-    { immediate: true },
+  /** @type {import('vue').ComputedRef<'dark' | 'light'>} */
+  const theme = computed(
+    () => store.state.session.user.preferences.theme || 'dark',
   );
 
-  return { theme };
+  async function setTheme(theme) {
+    await store.dispatch('updatePreferences', { theme });
+  }
+
+  function applyTheme(newTheme) {
+    document.body.setAttribute('progress-theme', newTheme);
+    const isDark = newTheme === 'dark';
+    store.dispatch('changeTheme', isDark ? dark : light);
+    Dark.set(isDark);
+  }
+
+  watch(theme, applyTheme, { immediate: true });
+
+  return { theme, setTheme };
 });

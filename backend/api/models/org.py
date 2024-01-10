@@ -52,6 +52,8 @@ class JobSelectionLayout(str, Enum):
   LIST = 'list'
 
 class UserPreferences(BaseModel):
+  theme: str = None
+  locale: str = None
   home_page: str = None
   job_selection_layout: JobSelectionLayout = JobSelectionLayout.CARD
   work_session_tabs_order: list[str] = None

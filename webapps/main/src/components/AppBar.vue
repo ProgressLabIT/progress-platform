@@ -33,7 +33,7 @@
 
             <q-item
               clickable
-              @click="theme = theme === 'dark' ? 'light' : 'dark'"
+              @click="setTheme(theme === 'dark' ? 'light' : 'dark')"
             >
               <q-item-section side>
                 <q-icon
@@ -147,7 +147,7 @@ async function logout() {
   }
 }
 
-const { theme } = useTheme();
+const { theme, setTheme } = useTheme();
 
 const localeOptions = availableLocales.map((locale) => ({
   label: locale,
