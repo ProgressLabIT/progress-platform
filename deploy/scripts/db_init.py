@@ -91,8 +91,6 @@ collections = [
   'Media',
   'media_connection',
   'message',
-  'Media',
-  'media_connection',
   'Operation',
   'Phase',
   'Product',
