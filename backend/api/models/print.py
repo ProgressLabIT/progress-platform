@@ -3,7 +3,6 @@ from typing import Union
 
 from pydantic import BaseModel, Field
 
-from models.form import FormFieldInstance
 from utils.base_models import ArangoDocument, ArangoEdge
 
 class Alignment(str, Enum):
