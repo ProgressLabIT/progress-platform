@@ -27,7 +27,7 @@
 
     <q-input
       v-model="new_field.name"
-      :rules="[value => !!value || $t('field_required_alert')]"
+      :rules="[(value) => !!value || $t('field_required_alert')]"
       hide-bottom-space
       autogrow
       :label="$t('name')"
@@ -54,28 +54,29 @@
 </template>
 
 <script>
-import BaseActionFormCard from '@/components/BaseActionFormCard.vue'
-import form from '@/mixins/form.js'
+import BaseActionFormCard from '@/components/BaseActionFormCard.vue';
+import form from '@/mixins/form.js';
 
 export default {
-
   name: 'FormFieldNew',
 
   components: {
-    BaseActionFormCard
+    BaseActionFormCard,
   },
 
   mixins: [form],
 
-  data () {
+  emits: ['close', 'created'],
+
+  data() {
     return {
       new_field: {
         type: null,
         name: null,
         label: null,
-        hint: null
+        hint: null,
       },
-    }
+    };
   },
 
   methods: {
@@ -84,16 +85,13 @@ export default {
         type: this.new_field.type,
         name: this.new_field.name,
         default_label: this.new_field.label,
-        default_hint: this.new_field.hint
-      }
+        default_hint: this.new_field.hint,
+      };
       this.$api.post('field', data).then(() => {
-        this.$emit('created')
-        this.$emit('close')
-      })
-    }
-  }
-}
+        this.$emit('created');
+        this.$emit('close');
+      });
+    },
+  },
+};
 </script>
-
-<style lang="css" scoped>
-</style>

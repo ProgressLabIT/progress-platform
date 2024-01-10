@@ -1,7 +1,9 @@
 <template>
   <BaseModalScreen :show="true" @close="exit">
-    <template v-slot:header>
-      <span class="q-ml-md display medium highlight weight-medium text-uppercase">
+    <template #header>
+      <span
+        class="q-ml-md display medium highlight weight-medium text-uppercase"
+      >
         {{ $t('work_order.key') }}: {{ wo_key }}
       </span>
 
@@ -10,38 +12,36 @@
           class="transparent text-low"
           active-class="text-high weight-bold"
           indicator-color="theme-blue"
-          dense>
+          dense
+        >
           <q-route-tab
-            v-for="(page, index) in tabs" 
-            :key="index" 
+            v-for="(page, index) in tabs"
+            :key="index"
             :to="{ name: page, query: $route.query }"
-            class="display" >
+            class="display"
+          >
             {{ $t(`work_order.tabs.${page}`) }}
           </q-route-tab>
         </q-tabs>
       </div>
-  </template>
+    </template>
 
-    <template v-slot:content>
-
+    <template #content>
       <q-splitter
         v-if="vuex_ready"
         v-model="data_column_width"
         class="fit q-py-sm"
-        separator-class="text-disabled">
-
+        separator-class="text-disabled"
+      >
         <template #before>
           <WorkOrderDataColumn v-bind="{ wo_data }" />
         </template>
 
         <template #after>
-          <router-view
-            v-if="vuex_ready"
-            v-bind="{ wo_data }"
-            v-slot="{ Component }">
+          <router-view v-if="vuex_ready" v-slot="{ Component }">
             <keep-alive>
               <div class="full-height relative-position q-pl-sm">
-                <component :is="Component" />
+                <component :is="Component" v-bind="{ wo_data }" />
               </div>
             </keep-alive>
           </router-view>
@@ -49,19 +49,17 @@
       </q-splitter>
 
       <LoadingSignal v-else />
-
     </template>
   </BaseModalScreen>
 </template>
 
 <script>
-import axios from 'axios'
-import BaseModalScreen from '@/components/BaseModalScreen.vue'
-import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue'
-import LoadingSignal from '@/components/LoadingSignal.vue'
+import axios from 'axios';
+import BaseModalScreen from '@/components/BaseModalScreen.vue';
+import LoadingSignal from '@/components/LoadingSignal.vue';
+import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue';
 
 export default {
-
   name: 'WorkOrderScreen',
 
   components: {
@@ -70,66 +68,67 @@ export default {
     WorkOrderDataColumn,
   },
 
-  props: ['wo_key'],
+  props: {
+    wo_key: {
+      type: String,
+      required: true,
+    },
+  },
 
-  data () {
-    return { 
+  data() {
+    return {
       show_modal: true,
       tabs: [
         'workOrderJobs',
         'workOrderIssues',
         'workOrderNotes',
-        'workOrderMessages'
+        'workOrderMessages',
         // 'workOrderHistory'
       ],
       vuex_ready: false,
       column_height: '80vh',
       data_column_width: 25,
-      polling_instance: undefined
-    }
+      polling_instance: undefined,
+    };
   },
 
   computed: {
     wo_data() {
-      return this.$store.state.workorder.wo_data || { phase_sequence: []}
-    }
+      return this.$store.state.workorder.wo_data || { phase_sequence: [] };
+    },
+  },
+
+  created() {
+    this.get_wo_data();
+    this.polling_instance = setInterval(this.get_wo_data, 10000);
+  },
+
+  beforeUnmount() {
+    clearInterval(this.polling_instance);
   },
 
   methods: {
-
     exit() {
-      let query = {...this.$route.query}
+      let query = { ...this.$route.query };
 
       if (this.$route.query.back_to) {
-        delete query.back_to
-        const push_route = { name: this.$route.query.back_to, query }
-        this.$router.push(push_route)
-      }
-      else {
-        this.$router.push({ name: 'workOrderList', query })
+        delete query.back_to;
+        const push_route = { name: this.$route.query.back_to, query };
+        this.$router.push(push_route);
+      } else {
+        this.$router.push({ name: 'workOrderList', query });
       }
     },
 
     get_wo_data() {
-      axios.all([
-        this.$store.dispatch('loadWorkOrderData', this.wo_key),
-        this.$store.dispatch('loadUsers'),
-        this.$store.dispatch('getIssues', { work_order_key: this.wo_key })
-      ])
-      .then(() => this.vuex_ready = true)
-    }
+      axios
+        .all([
+          this.$store.dispatch('loadWorkOrderData', this.wo_key),
+          this.$store.dispatch('loadUsers'),
+          this.$store.dispatch('getIssues', { work_order_key: this.wo_key }),
+        ])
+        .then(() => (this.vuex_ready = true));
+    },
   },
-
-  created() {
-    this.get_wo_data()
-    this.polling_instance = setInterval(this.get_wo_data, 10000)
-  },
-
-  beforeUnmount() {
-    clearInterval(this.polling_instance)
-  }
-}
+};
 </script>
-
-<style lang="css" scoped>
-</style>

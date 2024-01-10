@@ -1,6 +1,6 @@
 <template>
   <BaseActionCard :title="title">
-    <template #title v-if="$slots.title">
+    <template v-if="$slots.title" #title>
       <slot name="title" />
     </template>
 
@@ -35,40 +35,40 @@
 </template>
 
 <script setup>
-import { uid } from 'quasar'
-import BaseActionCard from '@/components/BaseActionCard.vue'
+import { uid } from 'quasar';
+import BaseActionCard from '@/components/BaseActionCard.vue';
 
 defineProps({
   title: {
     type: String,
-    required: false
+    default: undefined,
   },
   greedy: {
     type: Boolean,
-    default: false
+    default: false,
   },
   submitLabel: {
     type: String,
-    required: false
+    default: undefined,
   },
   submitColor: {
     type: String,
     required: false,
-    default: 'theme-blue'
+    default: 'theme-blue',
   },
   cancelLabel: {
     type: String,
-    required: false
+    default: undefined,
   },
   cancelColor: {
     type: String,
     required: false,
-    default: 'theme-grey'
+    default: 'theme-grey',
   },
-})
+});
 
-const emit = defineEmits(['submit', 'validation-error', 'cancel'])
+const emit = defineEmits(['submit', 'validation-error', 'cancel']);
 
 // Avoids collisions when there's more than one active component instance at the same time
-const uniqueFormId = `dialog-form-${uid()}`
+const uniqueFormId = `dialog-form-${uid()}`;
 </script>

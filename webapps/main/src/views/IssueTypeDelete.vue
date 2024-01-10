@@ -1,37 +1,37 @@
 <template>
   <BaseDialog :show="true" @close="$router.back()">
     <q-card square class="surface1 q-pa-md" style="max-width: 600px">
-
       <q-card-section class="text-h3 display highlight">
         {{ $capitalize($t('issue_type_delete_title')) }}
       </q-card-section>
 
       <transition name="slide-fade" mode="out-in">
-
-        <div v-if="stage == 'confirm'" key="confirm">
+        <div v-if="stage === 'confirm'" key="confirm">
           <q-card-section>
             <div>
               {{ $capitalize($t('issue_type_delete_question')) }}
             </div>
             <div class="text-h3 uppercase highlight q-mt-md">
-              {{ issue_type.name }}
+              {{ issueType.name }}
             </div>
           </q-card-section>
 
           <q-card-section>
-          <div class="row justify-between">
-            <q-btn
-              color="theme-red"
-              @click="deleteIssueType"
-              :label="$t('confirm')">
-            </q-btn>
-            <q-btn
-              color="theme-grey"
-              @click="$router.back()"
-              :label="$t('cancel')"
-              class="q-ml-md">
-            </q-btn>
-          </div>
+            <div class="row justify-between">
+              <q-btn
+                color="theme-red"
+                :label="$t('confirm')"
+                @click="deleteIssueType"
+              >
+              </q-btn>
+              <q-btn
+                color="theme-grey"
+                :label="$t('cancel')"
+                class="q-ml-md"
+                @click="$router.back()"
+              >
+              </q-btn>
+            </div>
           </q-card-section>
         </div>
 
@@ -43,67 +43,65 @@
               </span>
               <q-btn
                 color="theme-grey"
+                :label="$t('close')"
                 @click="$router.push({ name: 'issueTypeLibrary' })"
-                :label="$t('close')">
+              >
               </q-btn>
             </div>
           </q-card-section>
         </div>
-
       </transition>
     </q-card>
-
   </BaseDialog>
 </template>
 
 <script>
-import BaseDialog from '@/components/BaseDialog.vue'
-import { api } from '@/boot/axios.js'
+import { api } from '@/boot/axios.js';
+import BaseDialog from '@/components/BaseDialog.vue';
 
 export default {
-
   name: 'IssueTypeDelete',
 
   components: {
-    BaseDialog
+    BaseDialog,
   },
 
   props: {
-    issue_type: {
-      type: Object
-    }
+    issueType: {
+      type: Object,
+      required: true,
+    },
   },
 
-  data () {
+  data() {
     return {
       showModal: true,
       stage: 'confirm',
-    }
+    };
   },
 
-  methods:{
+  methods: {
     deleteIssueType() {
-      api.delete(`issue-type/${this.issue_type._key}`)
-      .then( async () => {
-        // reload users from backend to make sure archived user is not present
-        this.stage="success"
-        this.$store.dispatch('getIssueTypes')
-      })
-      .catch(err => {
-        // Operation is in use in some process
-        if (err.response.status === 403) {
-          const error_message = this.$t('issue_type_alerts_in_use') + ": "
-          window.alert(error_message + err.response.data.detail.product_codes)
-          this.$router.back()
-        }
-        else {
-          window.alert(this.$t('issue_type_alerts_delete_general_error'))
-        }
-      })
-    }
+      api
+        .delete(`issue-type/${this.issueType._key}`)
+        .then(async () => {
+          // reload users from backend to make sure archived user is not present
+          this.stage = 'success';
+          this.$store.dispatch('getIssueTypes');
+        })
+        .catch((err) => {
+          // Operation is in use in some process
+          if (err.response.status === 403) {
+            const error_message = this.$t('issue_type_alerts_in_use') + ': ';
+            window.alert(
+              error_message + err.response.data.detail.product_codes,
+            );
+            this.$router.back();
+          } else {
+            window.alert(this.$t('issue_type_alerts_delete_general_error'));
+          }
+        });
+    },
   },
-}
+};
 </script>
-
-<style lang="css" scoped>
-</style>

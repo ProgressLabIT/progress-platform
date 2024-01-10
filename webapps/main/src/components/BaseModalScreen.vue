@@ -4,17 +4,17 @@
     maximized
     no-backdrop-dismiss
     no-route-dismiss
-    :no-esc-dismiss="no_esc_dismiss"
+    :no-esc-dismiss="noEscDismiss"
     no-shake
     square
     transition-show="scale"
     transition-hide="scale"
+    :style="CSSVars"
     @escape-key="$emit('close')"
     @hide="$emit('close')"
-    @click="show_drawer=false"
-    :style="CSSVars">
+    @click="show_drawer = false"
+  >
     <q-card class="background q-pa-sm">
-
       <!-- SCREEN HEADER -->
       <div class="row justify-start items-center q-px-sm text-high">
         <slot name="menu">
@@ -22,7 +22,8 @@
             flat
             icon="mdi-menu"
             padding="none"
-            @click="show_drawer=true">
+            @click="show_drawer = true"
+          >
           </q-btn>
         </slot>
         <slot name="header"></slot>
@@ -34,31 +35,39 @@
       </div>
 
       <!-- WINDOW CONTAINER -->
-      <q-card class="surface1 shadow-6 q-mx-sm scroll" :style="`height: ${card_height}px`">
+      <q-card
+        class="surface1 shadow-6 q-mx-sm scroll"
+        :style="`height: ${card_height}px`"
+      >
         <slot name="content"></slot>
       </q-card>
-
     </q-card>
   </q-dialog>
 </template>
 
 <script>
-import CSSVars from '@/mixins/CSSVars.js'
-import drawer from '@/mixins/drawer.js'
+import CSSVars from '@/mixins/CSSVars.js';
+import drawer from '@/mixins/drawer.js';
 
 export default {
-
   name: 'BaseModalScreen',
-  props: ['show', 'no_esc_dismiss'],
   mixins: [CSSVars, drawer],
+  props: {
+    show: {
+      type: Boolean,
+      required: true,
+    },
+    noEscDismiss: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  emits: ['close'],
 
   computed: {
     card_height() {
-      return this.$q.screen.height - 52
-    }
-  }
-}
+      return this.$q.screen.height - 52;
+    },
+  },
+};
 </script>
-
-<style lang="css" scoped>
-</style>

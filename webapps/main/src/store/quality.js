@@ -1,68 +1,53 @@
-import { api } from '@/boot/axios.js'
+import { api } from '@/boot/axios.js';
 
 const quality = {
-
   state: {
     issue_types: [],
-    issues: []
+    issues: [],
   },
 
   getters: {
     getIssueData: (state) => (issue_key) => {
-      return state.issues.find( i => i._key == issue_key)
+      return state.issues.find((i) => i._key == issue_key);
     },
     getIssueType: (state) => (issue_type_key) => {
-      return state.issue_types.find(it => it._key == issue_type_key)
+      return state.issue_types.find((it) => it._key == issue_type_key);
     },
     getIssueCount: (state) => (open_only) => {
-      return state.issues.filter(i => open_only == true ? i.open : true).length
-    }
+      return state.issues.filter((i) => (open_only == true ? i.open : true))
+        .length;
+    },
   },
 
   mutations: {
     LOAD_ISSUE_TYPES(state, types) {
-      state.issue_types = types
+      state.issue_types = types;
     },
     LOAD_ISSUES(state, issues) {
-      state.issues = issues
-    }
+      state.issues = issues;
+    },
   },
 
   actions: {
-    getIssueTypes({ commit }, active_only = false) {
-      return new Promise((resolve, reject) => {
-        api.get('issue-type', { params: { active_only }})
-          .then( resp => {
-            commit('LOAD_ISSUE_TYPES', resp.data)
-            resolve()
-          })
-          .catch(err => reject(err))
-        })
+    async getIssueTypes({ commit }, active_only = false) {
+      const { data } = await api.get('issue-type', { params: { active_only } });
+      commit('LOAD_ISSUE_TYPES', data);
     },
-    createIssueType({ commit, dispatch }, issue_type_data) {
-      return new Promise((resolve, reject) => {
-        api.post('issue-type', issue_type_data)
-        .then( async (resp) => {
-          const new_issue_type_key = resp.data.detail._key
-          await dispatch('getIssueTypes')
-          resolve(new_issue_type_key)
-        })
-      })
+    async createIssueType({ dispatch }, issue_type_data) {
+      const { data } = await api.post('issue-type', issue_type_data);
+      const new_issue_type_key = data.detail._key;
+      await dispatch('getIssueTypes');
+      return new_issue_type_key;
     },
-    updateIssueType({ commit, dispatch }, issue_type_data) {
-      return new Promise((resolve, reject) => {
-        api.patch(`issue-type/${issue_type_data._key}`, issue_type_data)
-        .then( async () => {
-          await dispatch('getIssueTypes')
-          resolve()
-        })
-      })
+    async updateIssueType({ dispatch }, issue_type_data) {
+      await api.patch(`issue-type/${issue_type_data._key}`, issue_type_data);
+      await dispatch('getIssueTypes');
     },
-    getIssues({ commit }, search_params) {
-      api.get('issue', { params: search_params })
-      .then(resp => commit('LOAD_ISSUES', resp.data))
-    }
-  }
-}
+    async getIssues({ commit }, search_params) {
+      const { data } = await api.get('issue', { params: search_params });
+      commit('LOAD_ISSUES', data);
+    },
+  },
+};
 
-export default quality
+export default quality;

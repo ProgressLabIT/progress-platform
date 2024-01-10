@@ -8,21 +8,25 @@
             :label="capitalize(t('field'))"
             class="input-field"
             autofocus
-            :rules="[value => !!value || t('field_required_alert')]"
+            :rules="[(value) => !!value || t('field_required_alert')]"
           />
         </q-card-section>
 
         <q-card-section v-if="formField">
           <q-checkbox
-            v-if="editableField.type == 'files'"
+            v-if="editableField.type === 'files'"
             v-model="editableField.value"
-            :label="t('has_attachments')">
+            :label="t('has_attachments')"
+          >
           </q-checkbox>
           <FormField
             v-else
             :field="editableField"
             class="input-field"
-            @update="editableField.value = editableField.type === 'choice' ? $event?.value : $event"
+            @update="
+              editableField.value =
+                editableField.type === 'choice' ? $event?.value : $event
+            "
           />
         </q-card-section>
 
@@ -46,32 +50,33 @@
 </template>
 
 <script setup>
-import { useDialogPluginComponent } from 'quasar'
-import { ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import BaseAutocompleteFormField from './BaseAutocompleteFormField.vue'
-import { capitalize } from 'boot/filters'
-import FormField from './FormField.vue'
+import { useDialogPluginComponent } from 'quasar';
+import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { capitalize } from 'boot/filters';
+import BaseAutocompleteFormField from './BaseAutocompleteFormField.vue';
+import FormField from './FormField.vue';
 
-defineEmits(useDialogPluginComponent.emitsObject)
+defineEmits(useDialogPluginComponent.emitsObject);
 
-const { dialogRef, onDialogHide, onDialogCancel, onDialogOK } = useDialogPluginComponent()
+const { dialogRef, onDialogHide, onDialogCancel, onDialogOK } =
+  useDialogPluginComponent();
 
-const { t } = useI18n()
+const { t } = useI18n();
 
-const formField = ref(null)
+const formField = ref(null);
 
-const editableField = ref(null)
+const editableField = ref(null);
 
 watch(formField, ({ default_label, default_hint, ...field }) => {
-  const value = ['boolean', 'files'].includes(field.type) ? false : null
+  const value = ['boolean', 'files'].includes(field.type) ? false : null;
   editableField.value = {
     ...field,
     label: default_label,
     hint: default_hint,
-    value
-  }
-})
+    value,
+  };
+});
 </script>
 
 <style lang="sass" scoped>

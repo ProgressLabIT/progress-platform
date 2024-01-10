@@ -10,16 +10,16 @@ export default {
 
   computed: {
     src() {
-      const port = '8501'
-      const domain = window.location.hostname
-      return `http://${domain}:${port}`
-    }
+      const port = '8501';
+      const domain = window.location.hostname;
+      return `http://${domain}:${port}`;
+    },
   },
 
   created() {
-    console.log(this.src)
-  }
-}
+    console.log(this.src);
+  },
+};
 </script>
 
 <style lang="sass" scoped>

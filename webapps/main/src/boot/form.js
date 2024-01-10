@@ -1,5 +1,5 @@
-import { boot } from 'quasar/wrappers'
-import { watch } from 'vue'
+import { boot } from 'quasar/wrappers';
+import { watch } from 'vue';
 
 export default boot(async ({ store }) => {
   // Make sure custom fields are ready before the app starts
@@ -8,14 +8,14 @@ export default boot(async ({ store }) => {
     () => store.getters.isLoggedIn,
     async (isLoggedIn) => {
       if (!isLoggedIn) {
-        return
+        return;
       }
 
-      await store.dispatch('getCustomFields')
-      stop()
+      await store.dispatch('getCustomFields');
+      stop();
     },
     {
       immediate: true,
     },
-  )
-})
+  );
+});

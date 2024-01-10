@@ -1,29 +1,35 @@
-import { computed } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 // uses `getRoute`/`getRouter` instead of just `router` since `this` is not available in the root level,
 // it's only available inside get() and set()
-function baseQueryModelFactory(data_type, query_param_name, default_value, getRoute, getRouter) {
+function baseQueryModelFactory(
+  data_type,
+  query_param_name,
+  default_value,
+  getRoute,
+  getRouter,
+) {
   return {
     get() {
-      let value = getRoute.call(this).query[query_param_name]
+      let value = getRoute.call(this).query[query_param_name];
       if (data_type === Number) {
-        value = parseFloat(value)
-      }
-      else if (data_type === Boolean) {
-        value = value != 'false'
+        value = parseFloat(value);
+      } else if (data_type === Boolean) {
+        value = value != 'false';
       } else if (data_type === Object || data_type === Array) {
-        value = value ? JSON.parse(atob(value)) : null
+        value = value ? JSON.parse(atob(value)) : null;
       }
-      return value ?? default_value
+      return value ?? default_value;
     },
     set(value) {
       const query = {
         ...getRoute.call(this).query,
-        [query_param_name]: (data_type === Object || data_type === Array)
-          ? btoa(JSON.stringify(value))
-          : value
-      }
+        [query_param_name]:
+          data_type === Object || data_type === Array
+            ? btoa(JSON.stringify(value))
+            : value,
+      };
 
       // Remove query param from url if value is empty, null, undefined or true (for booleans)
       if (
@@ -31,12 +37,12 @@ function baseQueryModelFactory(data_type, query_param_name, default_value, getRo
         (data_type === Object && Object.keys(value).length === 0) ||
         (data_type === Array && value.length === 0)
       ) {
-        delete query[query_param_name]
+        delete query[query_param_name];
       }
 
-      getRouter.call(this).replace({ query })
-    }
-  }
+      getRouter.call(this).replace({ query });
+    },
+  };
 }
 
 /**
@@ -52,25 +58,39 @@ function baseQueryModelFactory(data_type, query_param_name, default_value, getRo
  *
  * @see {@link useQueryModel} for Composition API
  */
-export default function optionsQueryModelFactory(data_type, query_param_name, default_value) {
+export default function optionsQueryModelFactory(
+  data_type,
+  query_param_name,
+  default_value,
+) {
   return baseQueryModelFactory(
     data_type,
     query_param_name,
     default_value,
     // using function() instead of () => to preserve `this` context
-    function() { return this.$route },
-    function() { return this.$router }
-  )
+    function () {
+      return this.$route;
+    },
+    function () {
+      return this.$router;
+    },
+  );
 }
 
 /**
  * @see {@link optionsQueryModelFactory} for Options API
  */
 export function useQueryModel(dataType, queryParamName, defaultValue) {
-  const route = useRoute()
-  const router = useRouter()
+  const route = useRoute();
+  const router = useRouter();
 
   return computed(
-    baseQueryModelFactory(dataType, queryParamName, defaultValue, () => route, () => router)
-  )
+    baseQueryModelFactory(
+      dataType,
+      queryParamName,
+      defaultValue,
+      () => route,
+      () => router,
+    ),
+  );
 }

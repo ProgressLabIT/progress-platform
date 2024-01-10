@@ -5,7 +5,8 @@
     :size="icon_size"
     class="q-mx-xs hover-color"
     :style="hoverColor"
-    @click.stop="emit">
+    @click.stop="emit"
+  >
     <q-tooltip
       :delay="100"
       :anchor="anchor"
@@ -14,7 +15,8 @@
       :transition-hide="transition_hide"
       transition-duration="200"
       :style="`background-color: ${color}`"
-      class="text-body2">
+      class="text-body2"
+    >
       {{ $capitalize(tooltip) }}
     </q-tooltip>
   </q-icon>
@@ -23,7 +25,6 @@
 
 <script>
 export default {
-
   name: 'BaseTooltipIcon',
   props: {
     icon: {
@@ -32,63 +33,61 @@ export default {
     },
     icon_size: {
       type: String,
-      default: 'sm'
+      default: 'sm',
     },
     tooltip: {
       type: String,
       required: true,
-    },    
+    },
     color: {
       type: String,
-      default: 'grey'
+      default: 'grey',
     },
     anchor: {
       type: String,
-      default: 'top middle'
+      default: 'top middle',
     },
     self: {
       type: String,
-      default: 'bottom middle'
+      default: 'bottom middle',
     },
     transition_show: {
       type: String,
-      default: 'scale'
+      default: 'scale',
     },
     transition_hide: {
       type: String,
-      default: 'scale'
-    }
+      default: 'scale',
+    },
   },
 
   emits: ['iconClick'],
 
-  data () {
-    return {
-    }
+  data() {
+    return {};
   },
   computed: {
-  	hoverColor() {
-  		return {
-  			'--hover-color': this.color
-  		}
-  	}
+    hoverColor() {
+      return {
+        '--hover-color': this.color,
+      };
+    },
   },
 
   methods: {
-
-    /* 
-    On the parent element, this allows to bubble up the click event correctly 
+    /*
+    On the parent element, this allows to bubble up the click event correctly
     with the event name equal to the tooltip text passed down
     */
     emit() {
-      this.$emit('iconClick')
-    }
-  }
-}
+      this.$emit('iconClick');
+    },
+  },
+};
 </script>
 
 <style lang="css" scoped>
-	.hover-color:hover {
-		color: var(--hover-color);
-	}
+.hover-color:hover {
+  color: var(--hover-color);
+}
 </style>

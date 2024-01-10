@@ -10,16 +10,12 @@
     </div>
 
     <q-scroll-area class="col q-mt-lg q-pr-md">
-      <div
-        v-for="field in formFields"
-        :key="field._key"
-        class="q-py-xs"
-        >
+      <div v-for="field in formFields" :key="field._key" class="q-py-xs">
         <FormField
           :field="field"
           :disable="!isJobActive || batchStep.done"
           :root-path="`/media/step/${step._key}`"
-          @update="value => updateField(field, value)"
+          @update="(value) => updateField(field, value)"
         />
       </div>
     </q-scroll-area>
@@ -27,42 +23,42 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useStore } from 'vuex'
-import FormField from '@/components/FormField.vue'
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+import FormField from '@/components/FormField.vue';
 
 const props = defineProps({
   step: {
     type: Object,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-const store = useStore()
+const store = useStore();
 
-const batchStep = computed(() => store.getters.getBatchStep(props.step._key))
+const batchStep = computed(() => store.getters.getBatchStep(props.step._key));
 
 // TODO: unify and centralize form data handling with IssueForm
 // TODO: add file handling like in IssueForm
 
-const formFields = computed(
-  () => props.step.form_fields.map(field => {
-    const index = formDataIndexByFieldKey.value[field._key]
+const formFields = computed(() =>
+  props.step.form_fields.map((field) => {
+    const index = formDataIndexByFieldKey.value[field._key];
     return {
       ...field,
-      value: formData.value[index]?.value
-    }
-  })
-)
+      value: formData.value[index]?.value,
+    };
+  }),
+);
 
-const formData = computed(() => batchStep.value?.form_data ?? [])
+const formData = computed(() => batchStep.value?.form_data ?? []);
 const formDataIndexByFieldKey = computed(() => {
-  const indexByKey = {}
+  const indexByKey = {};
   formData.value.forEach(({ form_field_key }, index) => {
-    indexByKey[form_field_key] = index
-  })
-  return indexByKey
-})
+    indexByKey[form_field_key] = index;
+  });
+  return indexByKey;
+});
 function updateField(field, value) {
   store.commit('UPDATE_STEP_FORM_DATA', {
     stepKey: props.step._key,
@@ -70,10 +66,12 @@ function updateField(field, value) {
     data: {
       form_field_key: field._key,
       custom_field_key: field.custom_field_key,
-      value
-    }
-  })
+      value,
+    },
+  });
 }
 
-const isJobActive = computed(() => store.state.traceability.working_job_data.active)
+const isJobActive = computed(
+  () => store.state.traceability.working_job_data.active,
+);
 </script>

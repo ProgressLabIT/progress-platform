@@ -4,22 +4,19 @@
       {{ $t('phase.form_title') }}
     </div>
 
-    <FormTemplateEditor
-      v-model="stepModel.form_fields"
-      :edit-mode="editMode"
-    />
+    <FormTemplateEditor v-model="stepModel.form_fields" :edit-mode="editMode" />
   </div>
 </template>
 
 <script setup>
-import FormTemplateEditor from '@/components/FormTemplateEditor.vue'
+import FormTemplateEditor from '@/components/FormTemplateEditor.vue';
 
 defineProps({
   editMode: {
     type: Boolean,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-const stepModel = defineModel('step', { type: Object })
+const stepModel = defineModel('step', { type: Object });
 </script>

@@ -18,17 +18,16 @@
           {{ media.filename }}
         </q-tooltip>
 
-        <q-img
-          :src="media.src"
-          ratio="1.7778"
-          no-native-menu
-          no-spinner
-        >
+        <q-img :src="media.src" ratio="1.7778" no-native-menu no-spinner>
           <template #error>
             <div class="row fit flex-center surface1">
               <q-icon
                 size="xl"
-                :name="media.filename.endsWith('.pdf') ? 'mdi-file-document-outline': 'mdi-error'"
+                :name="
+                  media.filename.endsWith('.pdf')
+                    ? 'mdi-file-document-outline'
+                    : 'mdi-error'
+                "
                 class="text-low"
               />
             </div>
@@ -38,14 +37,14 @@
         <div
           v-show="media.temp"
           class="absolute-top text-center smaller text-uppercase weight-bold"
-          style="background-color: rgba(100, 100, 100, .8);"
+          style="background-color: rgba(100, 100, 100, 0.8)"
         >
           {{ $capitalize($t('unsaved')) }}
         </div>
         <div
           v-show="media.trash"
           class="absolute-top text-center smaller text-uppercase weight-bold"
-          style="background-color: rgba(231, 29, 54, .8);"
+          style="background-color: rgba(231, 29, 54, 0.8)"
         >
           {{ $capitalize($t('phase.media_deleted')) }}
         </div>
@@ -53,12 +52,13 @@
         <div
           v-show="hoveredMediaIndex === index"
           class="absolute-full"
-          style="background-color: #0007;"
+          style="background-color: #0007"
         >
           <div class="row fit flex-center">
             <!-- SHOW MEDIA SCREEN -->
             <q-btn
-              fab padding="xs"
+              fab
+              padding="xs"
               color="theme-grey"
               icon="mdi-magnify"
               class="q-mr-sm"
@@ -132,27 +132,27 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-import MediaViewer from '@/components/MediaViewer.vue'
+import MediaViewer from '@/components/MediaViewer.vue';
 
 defineProps({
   editMode: {
     type: Boolean,
-    required: true
-  }
-})
-const stepModel = defineModel('step', { type: Object })
+    required: true,
+  },
+});
+const stepModel = defineModel('step', { type: Object });
 
-const fileInputRef = ref()
+const fileInputRef = ref();
 
-const selectedMedia = ref()
-const hoveredMediaIndex = ref()
-const showMediaScreen = ref(false)
+const selectedMedia = ref();
+const hoveredMediaIndex = ref();
+const showMediaScreen = ref(false);
 
 function showMedia(media) {
-  selectedMedia.value = media
-  showMediaScreen.value = true
+  selectedMedia.value = media;
+  showMediaScreen.value = true;
 }
 
 /**
@@ -160,29 +160,29 @@ function showMedia(media) {
  */
 function addMedia(fileList) {
   for (const file of fileList) {
-    const objectUrl = URL.createObjectURL(file)
+    const objectUrl = URL.createObjectURL(file);
 
     stepModel.value.media.push({
       filename: file.name,
       src: objectUrl,
       data: file,
       temp: true,
-      trash: false
-    })
+      trash: false,
+    });
   }
 }
 
 function deleteMedia(index) {
-  const media = stepModel.value.media[index]
+  const media = stepModel.value.media[index];
   if (media.temp) {
-    stepModel.value.media.splice(index, 1)
+    stepModel.value.media.splice(index, 1);
   } else {
-    media.trash = true
+    media.trash = true;
   }
 }
 
 function restoreMedia(index) {
-  const media = stepModel.value.media[index]
-  media.trash = false
+  const media = stepModel.value.media[index];
+  media.trash = false;
 }
 </script>

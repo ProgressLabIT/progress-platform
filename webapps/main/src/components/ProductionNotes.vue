@@ -1,11 +1,5 @@
 <template>
-  <q-input
-    v-if="editMode"
-    v-model="notes"
-    type="textarea"
-    filled
-    class="fit"
-  />
+  <q-input v-if="editMode" v-model="notes" type="textarea" filled class="fit" />
   <NoDataAlert v-else-if="!notes">
     {{ $t('notes_empty') }}
   </NoDataAlert>
@@ -15,14 +9,14 @@
 </template>
 
 <script setup>
-import NoDataAlert from '@/components/NoDataAlert.vue'
+import NoDataAlert from '@/components/NoDataAlert.vue';
 
 defineProps({
   editMode: {
     type: Boolean,
-    required: true
+    required: true,
   },
-})
+});
 
-const notes = defineModel({ type: [String, null] })
+const notes = defineModel({ type: [String, null] });
 </script>

@@ -6,7 +6,13 @@
   "author": "Luca Sorgiacomo <luca@progresslab.it>",
   "private": true,
   "scripts": {
-    "lint": "eslint --ext .js,.vue ./",
+    "dev": "quasar dev",
+    "build": "quasar build",
+    "lint:check": "eslint --ext .js,.vue ./ --report-unused-disable-directives",
+    "lint": "yarn lint:check --fix",
+    "format:base": "prettier \"**/*.{js,vue,html,md,json}\" --ignore-path .gitignore",
+    "format:check": "yarn format:base --check",
+    "format": "yarn format:base --write",
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
@@ -29,13 +35,15 @@
     "@quasar/cli": "^2.3.0",
     "autoprefixer": "^10.4.2",
     "esbuild": "^0.17.5",
-    "eslint": "^8.10.0",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.19.1",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-n": "^15.0.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "eslint-plugin-vue": "^9.0.0",
-    "postcss": "^8.4.14"
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-vue": "^9.19.2",
+    "postcss": "^8.4.14",
+    "prettier": "^3.1.1"
   },
   "engines": {
     "node": "^18 || ^16 || ^14.19",

@@ -4,16 +4,10 @@
 
 <script>
 export default {
-
   name: 'DefaultPhaseParams',
 
-  data () {
-    return {
-
-    }
-  }
-}
+  data() {
+    return {};
+  },
+};
 </script>
-
-<style lang="css" scoped>
-</style>

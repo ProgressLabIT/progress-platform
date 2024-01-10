@@ -4,16 +4,10 @@
 
 <script>
 export default {
-
   name: 'CompanyDetails',
 
-  data () {
-    return {
-
-    }
-  }
-}
+  data() {
+    return {};
+  },
+};
 </script>
-
-<style lang="css" scoped>
-</style>

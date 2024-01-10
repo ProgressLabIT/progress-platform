@@ -1,7 +1,6 @@
 <template>
-  <BaseDialog :show="show" @close="$router.back()" :maximized="maximized">
-    <q-card class="surface1 q-pa-md" :style="{ maxWidth: max_width }">
-
+  <BaseDialog :show="show" :maximized="maximized" @close="$router.back()">
+    <q-card class="surface1 q-pa-md" :style="{ maxWidth: maxWidth }">
       <!-- DIALOG TITLE -->
       <q-card-section class="text-h3 display weight-medium">
         <slot name="title"></slot>
@@ -19,7 +18,8 @@
                 class="full-width"
                 color="theme-blue"
                 :loading="loading"
-                @click="$emit('submit')">
+                @click="$emit('submit')"
+              >
                 {{ $t('save') }}
               </q-btn>
             </div>
@@ -27,7 +27,8 @@
               <q-btn
                 class="full-width"
                 color="theme-grey"
-                @click="$emit('cancel')">
+                @click="$emit('cancel')"
+              >
                 {{ $t('cancel') }}
               </q-btn>
             </div>
@@ -39,44 +40,40 @@
 </template>
 
 <script>
-import BaseDialog from '@/components/BaseDialog.vue'
+import BaseDialog from '@/components/BaseDialog.vue';
 export default {
-
   name: 'BaseModalForm',
 
   components: {
-    BaseDialog
+    BaseDialog,
   },
 
   props: {
     show: {
       type: Boolean,
       default: true,
-      required: false
+      required: false,
     },
-    max_width: {
+    maxWidth: {
       type: String,
-      default: '500px'
+      default: '500px',
     },
     loading: {
       type: Boolean,
-      default: false
+      default: false,
     },
     maximized: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   emits: ['submit', 'cancel'],
 
-  data () {
+  data() {
     return {
       saving: false,
-      valid: true
-    }
+      valid: true,
+    };
   },
-}
+};
 </script>
-
-<style>
-</style>
