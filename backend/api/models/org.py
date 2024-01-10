@@ -51,9 +51,14 @@ class JobSelectionLayout(str, Enum):
   CARD = 'card'
   LIST = 'list'
 
+class DisplayFont(str, Enum):
+  ORBITRON = 'orbitron'
+  RED_HAT_DISPLAY = 'red-hat-display'
+
 class UserPreferences(BaseModel):
   theme: str = None
   locale: str = None
+  display_font: DisplayFont = DisplayFont.ORBITRON
   home_page: str = None
   job_selection_layout: JobSelectionLayout = JobSelectionLayout.CARD
   work_session_tabs_order: list[str] = None

@@ -66,6 +66,42 @@
 
             <q-item>
               <q-item-section side>
+                <q-icon name="mdi-format-font" />
+              </q-item-section>
+
+              <q-item-section class="flex flex-center">
+                <q-btn-toggle
+                  :model-value="displayFont"
+                  :options="[
+                    { slot: 'orbitron', value: 'orbitron' },
+                    {
+                      slot: 'red-hat-display',
+                      value: 'red-hat-display',
+                    },
+                  ]"
+                  dense
+                  no-caps
+                  padding="xs md"
+                  color="theme-grey"
+                  @update:model-value="updateDisplayFont"
+                >
+                  <template #orbitron>
+                    <q-icon name="mdi-orbit">
+                      <q-tooltip>Orbitron</q-tooltip>
+                    </q-icon>
+                  </template>
+
+                  <template #red-hat-display>
+                    <q-icon name="mdi-redhat">
+                      <q-tooltip>Red Hat Display</q-tooltip>
+                    </q-icon>
+                  </template>
+                </q-btn-toggle>
+              </q-item-section>
+            </q-item>
+
+            <q-item>
+              <q-item-section side>
                 <q-icon name="mdi-file-star" />
               </q-item-section>
 
@@ -194,4 +230,21 @@ async function updateHomePage(newHomePage) {
     isUpdatingHomePage.value = false;
   }
 }
+
+const displayFont = computed(
+  () => user.value?.preferences.display_font || 'orbitron',
+);
+async function updateDisplayFont(newFont) {
+  await store.dispatch('updatePreferences', { display_font: newFont });
+}
+watch(
+  displayFont,
+  (newFont) => {
+    document.body.style.setProperty(
+      '--display-font',
+      newFont === 'orbitron' ? 'Orbitron' : 'Red Hat Display',
+    );
+  },
+  { immediate: true },
+);
 </script>
