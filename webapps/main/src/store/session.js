@@ -38,7 +38,7 @@ const session = {
     },
 
     CLOSE_USER_SESSION(state) {
-      state.user = { name: null, surname: null, _key: null };
+      state.user = { name: null, surname: null, _key: null, preferences: {} };
       state.session_key = null;
       state.scope = null;
       state.auth_token = null;
