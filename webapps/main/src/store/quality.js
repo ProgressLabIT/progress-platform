@@ -39,8 +39,25 @@ const quality = {
       await dispatch('getIssueTypes');
       return new_issue_type_key;
     },
-    async updateIssueType({ dispatch }, issue_type_data) {
-      await api.patch(`issue-type/${issue_type_data._key}`, issue_type_data);
+    async updateIssueType({ dispatch }, issueType) {
+      /*
+       * issue_type_data includes `print_templates`, which is not part of the
+       * issue type model in the backend and the property will be ignored.
+       * Templates must be updated separately.
+       */
+
+      const templateUpdates = issueType.print_templates
+        .filter(({ temp, trash }) => temp || trash)
+        .map(({ _key, temp }) => ({
+          type: temp ? 'add' : 'remove',
+          context: 'issue_type',
+          context_key: issueType._key,
+          template_key: _key,
+        }));
+      await Promise.all([
+        api.patch(`issue-type/${issueType._key}`, issueType),
+        api.post('update-template-assignments', templateUpdates),
+      ]);
       await dispatch('getIssueTypes');
     },
     async getIssues({ commit }, search_params) {

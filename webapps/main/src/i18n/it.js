@@ -255,6 +255,7 @@ export default {
   next: 'avanti',
   no: 'No',
   no_class: 'nessuna classe',
+  no_data: 'Nessun dato',
   no_department: 'nessun reparto',
   notes: 'Note',
   notes_empty: 'Nessuna nota',
@@ -429,6 +430,37 @@ export default {
       instruction: 'istruzioni',
     },
   },
+  print: 'stampa',
+  printDialog: {
+    chooseTemplate: {
+      title: 'Scegli un template',
+      nextInstruction: 'Scegli un template per continuare',
+      noTemplates: 'Nessun template disponibile',
+    },
+
+    fillData: {
+      title: 'Compila i dati',
+      page: 'Pagina {number}',
+    },
+
+    preview: {
+      title: 'Anteprima',
+    },
+
+    downloadWillBegin: 'Il download inizierà a breve!',
+  },
+  print_template: 'Stampa | Stampe',
+  print_templates: 'Stampe',
+  print_template_new: 'Nuovo template',
+  print_template_none: 'Nessun template',
+  print_template_add: 'Aggiungi stampa',
+  print_template_load_pdf: 'Carica pdf base',
+  print_template_link_type: {
+    preset: 'Preimpostato',
+    custom_field: 'Campo personalizzato',
+  },
+  print_template_preview: 'Anteprima',
+  print_template_rename: 'Rinomina template',
   procedure: 'procedura',
   process: 'processo',
   processing_cost: 'costo lavorazione',
@@ -630,6 +662,7 @@ export default {
     PhaseParameters: 'parametri',
     PhaseSteps: 'procedura',
     PhaseNotes: 'Note produzione',
+    PhasePrintTemplates: 'Stampe',
     adminPanel: 'impostazioni',
     companyDetails: 'dettagli azienda',
     defaultPhaseParams: 'fase di default',
@@ -643,6 +676,7 @@ export default {
     operationLibrary: 'operazioni',
     workSession: 'sessione di lavoro',
     productionRoot: 'monitoraggio produzione',
+    printTemplateLibrary: 'Stampe',
     qualityRoot: 'Qualità',
     reportRoot: 'Rapporti',
     userLibrary: 'utenti',

@@ -248,6 +248,7 @@ export default {
   next: 'next',
   no: 'No',
   no_class: 'no class',
+  no_data: 'No Data',
   no_department: 'no department',
   notes: 'Notes',
   notes_empty: 'Notes empty',
@@ -421,6 +422,37 @@ export default {
       instruction: 'instructions',
     },
   },
+  print: 'print',
+  printDialog: {
+    chooseTemplate: {
+      title: 'Choose a template',
+      nextInstruction: 'Choose a template to continue',
+      noTemplates: 'No templates available',
+    },
+
+    fillData: {
+      title: 'Fill data',
+      page: 'Page {number}',
+    },
+
+    preview: {
+      title: 'Preview',
+    },
+
+    downloadWillBegin: 'Your download will begin shortly!',
+  },
+  print_template: 'Template | Templates',
+  print_templates: 'Prints',
+  print_template_new: 'New template',
+  print_template_none: 'No templates',
+  print_template_add: 'Add print template',
+  print_template_load_pdf: 'Upload base pdf',
+  print_template_link_type: {
+    preset: 'Preset',
+    custom_field: 'Custom Field',
+  },
+  print_template_preview: 'Preview template',
+  print_template_rename: 'Rename template',
   procedure: 'procedure',
   process: 'process',
   processing_cost: 'processing cost',
@@ -622,6 +654,7 @@ export default {
     PhaseParameters: 'parameters',
     PhaseSteps: 'procedure',
     PhaseNotes: 'Production notes',
+    PhasePrintTemplates: 'Prints',
     adminPanel: 'settings',
     companyDetails: 'company details',
     defaultPhaseParams: 'default phase',
@@ -635,6 +668,7 @@ export default {
     operationLibrary: 'operations',
     workSession: 'work session',
     productionRoot: 'production monitoring',
+    printTemplateLibrary: 'Prints',
     qualityRoot: 'Quality',
     reportRoot: 'Reports',
     userLibrary: 'users',

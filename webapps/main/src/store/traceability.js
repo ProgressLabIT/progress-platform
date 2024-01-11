@@ -177,7 +177,10 @@ const traceability = {
         batch_data = batch_resp.data.detail;
       }
       commit('LOAD_WORKING_JOB_DATA', { job_data, batch_data });
-      await dispatch('getIssues', { work_order_key: job_data.wo_key });
+      await dispatch('getIssues', {
+        work_order_key: job_data.wo_key,
+        with_links: true,
+      });
     },
 
     startJob({ commit, state, rootState }) {

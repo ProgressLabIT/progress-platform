@@ -154,6 +154,11 @@
         <q-tab name="notes">
           {{ $t('views.PhaseNotes') }}
         </q-tab>
+
+        <!-- TODO: Enable after templates are being utilized somewhere -->
+        <q-tab v-if="false" name="print_templates">
+          {{ $t('views.PhasePrintTemplates') }}
+        </q-tab>
       </q-tabs>
       <q-card square class="scroll" :style="`height: ${card_height}px`">
         <q-tab-panels
@@ -183,6 +188,13 @@
               :edit-mode="editMode"
             />
           </q-tab-panel>
+
+          <q-tab-panel name="print_templates">
+            <PhasePrintTemplates
+              v-model="process[current_phase].print_templates"
+              :edit-mode="editMode"
+            />
+          </q-tab-panel>
         </q-tab-panels>
       </q-card>
     </div>
@@ -195,12 +207,13 @@ import Sortable from 'sortablejs';
 import { mapActions } from 'vuex';
 import { api } from '@/boot/axios';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
-// import PhaseAssignments from '@/components/PhaseAssignments.vue'
 import BasePrompt from '@/components/BasePrompt.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
+import PhasePrintTemplates from '@/components/PhasePrintTemplates.vue';
 import ProcessParameters from '@/components/ProcessParameters.vue';
 import ProductionNotes from '@/components/ProductionNotes.vue';
 import ProcessSteps from '@/components/process-steps/ProcessSteps.vue';
+// import PhaseAssignments from '@/components/PhaseAssignments.vue'
 
 export default {
   name: 'ProductionProcess',
@@ -209,6 +222,7 @@ export default {
     ProcessParameters,
     ProcessSteps,
     ProductionNotes,
+    PhasePrintTemplates,
     // PhaseAssignments,
     BasePrompt,
     BaseTooltipIcon,
@@ -284,6 +298,7 @@ export default {
           .dialog({
             title: phase.alias,
             cancel: true,
+            // TODO: i18n
             message: `Confermi di voler eliminare questa fase?`,
           })
           .onOk(() => {
@@ -388,6 +403,7 @@ export default {
         params: new_operation.default_phase_parameters,
         production_notes: new_operation.default_phase_notes,
         steps,
+        print_templates: [],
       });
       this.current_phase = this.process.length - 1;
     },
@@ -462,8 +478,9 @@ export default {
             this.$emit('changesSaved');
           }, 500);
         })
-        .catch((err) => {
-          window.alert(err);
+        .catch((error) => {
+          window.alert(error);
+          console.error(error);
           this.saving = false;
         });
     },

@@ -116,6 +116,11 @@ const adminRoutes = [
         name: 'flowLibrary',
         component: () => import('@/views/FlowLibrary.vue'),
       },
+      {
+        path: 'print-templates',
+        name: 'printTemplateLibrary',
+        component: () => import('@/views/PrintTemplateLibrary.vue'),
+      },
     ],
   },
 ];

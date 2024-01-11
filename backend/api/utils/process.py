@@ -33,22 +33,22 @@ class Queries:
     FOR phase_key in phases
         
       LET phase = DOCUMENT(Phase, phase_key)
-      LET operation_id = (
-        FOR v,e IN 1..1 OUTBOUND phase requires
-        FILTER e.type == 'PhaseOperation'
-        RETURN e._to
-      )[0]
 
       LET steps = (
         FOR step_key IN phase.step_sequence
         RETURN UNSET(DOCUMENT(Step, step_key), '_id', '_rev')
       )
 
+      LET print_templates = (
+        FOR t IN 1..1 OUTBOUND CONCAT('Phase/', phase_key) can_use_print_template
+        RETURN KEEP(t, '_key', 'name', 'description')
+      )
+
       LET phase_data =  MERGE(
         phase,
         { 
-          operation_key: PARSE_IDENTIFIER(operation_id).key,
-          steps
+          steps,
+          print_templates
         }
       )
       RETURN phase_data

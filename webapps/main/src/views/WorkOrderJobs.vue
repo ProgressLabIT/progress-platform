@@ -584,7 +584,7 @@ export default {
           return sum + job.qt_planned - job.qt_completed - job.active_batch_qt;
         }, 0);
         const total_progress = Math.floor(
-          jobs.reduce((sum, job) => sum + job.progress * job.qt_planned, 0) /
+          (100 * jobs.reduce((sum, job) => sum + job.qt_completed, 0)) /
             this.wo_data.qt_planned,
         );
         const critical = jobs.some((job) => job.critical);

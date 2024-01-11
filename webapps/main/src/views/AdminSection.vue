@@ -1,13 +1,14 @@
 <template>
-  <q-page-container>
-    <q-page class="q-px-md q-pb-md">
+  <q-page-container class="absolute-full">
+    <q-page class="q-px-md q-pb-md column full-height">
       <!-- TAB LINKS -->
       <q-tabs
-        class="transparent text-low"
+        class="transparent text-low col-auto"
         active-class="text-high weight-bold"
         align="left"
         shrink
-        indicator-color="transparent"
+        dense
+        indicator-color="primary"
       >
         <q-route-tab
           v-for="(view, index) in admin_views"
@@ -18,9 +19,8 @@
           {{ $t(`views.${view}`) }}
         </q-route-tab>
       </q-tabs>
-
-      <q-card class="surface1" :style="`height: ${card_height}px`" square>
-        <router-view v-slot="{ Component }">
+      <q-card class="surface1 col" square>
+        <router-view v-slot="{ Component }" class="">
           <keep-alive>
             <component :is="Component" class="full-height" />
           </keep-alive>
@@ -42,14 +42,9 @@ export default {
         'issueTypeLibrary',
         'formFieldLibrary',
         'flowLibrary',
+        'printTemplateLibrary',
       ],
     };
-  },
-
-  computed: {
-    card_height() {
-      return this.$q.screen.height - 140;
-    },
   },
 };
 </script>

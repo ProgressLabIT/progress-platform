@@ -1,10 +1,11 @@
 from datetime import datetime
 from enum import Enum
-from typing import List
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field, root_validator
 
 from models.form import FormFieldDefinition, FormFieldValue
+from models.print import PrintTemplateRecord
 from utils.base_models import ArangoDocument
 from utils.dt import timestamp
 
@@ -19,6 +20,26 @@ class IssueType(ArangoDocument):
   form_template: List[FormFieldDefinition] = []
   critical: bool = False
   # close_within: NonNegativeInt = 0 # Time in hours. After this make critical. If 0 ignore.
+
+
+class IssueTypeUpdate(BaseModel):
+  key: str = Field(None, alias='_key')
+  code: str = None
+  name: str = None
+  active: bool = None
+  description: str = None
+  icon: str = None
+  form_template: List[FormFieldDefinition] = []
+  critical: bool = False
+
+
+class IssueTypeFull(IssueType):
+  print_templates: List[Optional[PrintTemplateRecord]] = None
+
+
+class FieldValue(BaseModel):
+  field_key: str # Reference to CustomField record
+  value: Any
 
 
 # ISSUE

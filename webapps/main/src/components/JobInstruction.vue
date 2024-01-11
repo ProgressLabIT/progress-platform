@@ -33,8 +33,7 @@
               disable-annotation-layer
               :source="media_src"
               :width="pdf_width"
-            >
-            </vue-pdf-embed>
+            />
           </div>
         </div>
       </div>
@@ -149,6 +148,7 @@ export default {
 
   data() {
     return {
+      pdf_width: undefined,
       media_root_path: '/media/step/',
       show_details: true,
       image_extensions: ['png', 'jpeg', 'jpg'],
@@ -198,8 +198,12 @@ export default {
   },
 
   mounted() {
+    if (this.is_image) {
+      return;
+    }
+
     const container = document.getElementById('media-container');
-    this.pdf_width = !this.is_image ? container.clientWidth * 0.9 : undefined;
+    this.pdf_width = container.clientWidth * 0.9;
   },
 
   methods: {
