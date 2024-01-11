@@ -1,7 +1,7 @@
 <template>
   <div ref="step_card" class="full-height column">
     <!-- NO PROCEDURE -->
-    <NoDataAlert v-if="!procedure.length">
+    <NoDataAlert v-if="steps.length === 0">
       {{ $t('phase.no_procedure') }}
     </NoDataAlert>
 
@@ -11,7 +11,7 @@
           ref="stepper"
           class="row full-width justify-between items-center q-col-gutter-xs"
         >
-          <template v-for="(step, index) in procedure" :key="step._key">
+          <template v-for="(step, index) in steps" :key="step._key">
             <div class="col-auto q-px-xs">
               <q-avatar
                 size="20px"
@@ -32,7 +32,7 @@
               </q-avatar>
             </div>
             <hr
-              v-if="index < procedure.length - 1"
+              v-if="index < steps.length - 1"
               :key="index"
               class="step-divider"
             />
@@ -40,10 +40,13 @@
         </div>
       </q-toolbar>
 
-      <template v-if="procedure.length > 0">
-        <JobForm v-if="current_step.type === 'form'" :step="current_step" />
-        <JobInstruction v-else :step="current_step" />
-      </template>
+      <keep-alive>
+        <component
+          :is="current_step.type === 'form' ? 'JobForm' : 'JobInstruction'"
+          :key="current_step._key"
+          :step="current_step"
+        />
+      </keep-alive>
     </template>
   </div>
 </template>
@@ -86,12 +89,12 @@ export default {
       },
     },
 
-    procedure() {
+    steps() {
       return this.job.step_sequence;
     },
 
     current_step() {
-      return this.procedure?.[this.current_step_index] ?? {};
+      return this.steps?.[this.current_step_index] ?? {};
     },
 
     batch_data() {
@@ -137,11 +140,13 @@ export default {
     allowClick(index) {
       let allow = true;
       if (this.force_order) {
-        for (let i = 0; i < index; i++) {
-          allow *= this.batch_data[i].done;
+        // First step is always allowed, start from second
+        for (let i = 1; i < index; i++) {
+          this.batch_data == undefined
+            ? allow = false
+            : allow *= this.batch_data[i].done;
         }
       }
-
       return allow;
     },
 

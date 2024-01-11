@@ -78,6 +78,14 @@ const product = {
       state.temp.docs.splice(doc_index, 1);
     },
 
+    ADD_TEMP_PRODUCT_TEMPLATE(state, template) {
+      state.temp.print_templates.push({ ...template, temp: true });
+    },
+
+    DELETE_TEMP_PRODUCT_TEMPLATE(state, template_index) {
+      state.temp.print_templates.splice(template_index, 1);
+    },
+
     UPDATE_TEMP_IMAGE(state, new_image) {
       state.temp_files.image = new_image;
     },
@@ -144,15 +152,30 @@ const product = {
       });
     },
 
-    loadProductDetails({ commit }, product_key) {
-      api.get(`product/${product_key}`).then((resp) => {
-        commit('LOAD_PRODUCT_DETAILS', resp.data);
+    async loadProductDetails({ commit }, product_key) {
+      const [{ data: product }, { data: print_templates }] = await Promise.all([
+        api.get(`product/${product_key}`),
+        api.get('print-template', {
+          params: { context: 'product', context_key: product_key },
+        }),
+      ]);
+
+      commit('LOAD_PRODUCT_DETAILS', {
+        ...product,
+        print_templates,
       });
     },
 
     saveProductChanges(
       context,
-      { new_product_data, new_docs, deleted_docs, image },
+      {
+        new_product_data,
+        new_docs,
+        deleted_docs,
+        new_templates,
+        deleted_templates,
+        image,
+      },
     ) {
       /**
        * this action queues up as many api calls as needed
@@ -171,6 +194,26 @@ const product = {
         deleted_docs.forEach((d) => {
           api_calls.push(api.delete(`product/${product_key}/doc/${d.name}`));
         });
+      }
+
+      if (deleted_templates != null || new_templates != null) {
+        const template_updates = [
+          ...deleted_templates.map((t) => ({
+            type: 'remove',
+            context: 'product',
+            context_key: product_key,
+            template_key: t._key,
+          })),
+          ...new_templates.map((t) => ({
+            type: 'add',
+            context: 'product',
+            context_key: product_key,
+            template_key: t._key,
+          })),
+        ];
+        api_calls.push(
+          api.post('update-template-assignments', template_updates),
+        );
       }
 
       // Queue api calls to add product docs

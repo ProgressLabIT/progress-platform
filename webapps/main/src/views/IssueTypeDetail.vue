@@ -1,6 +1,7 @@
 <template>
   <div class="full-height column" :class="editMode ? 'q-pa-lg' : 'q-pa-xl'">
-    <template v-if="issueType">
+    <NoDataAlert v-if="!issueType" />
+    <template v-else>
       <div class="row q-col-gutter-lg col-auto">
         <template v-if="!editMode">
           <div v-if="!editMode" class="col">
@@ -154,38 +155,93 @@
         </div>
       </div>
 
-      <!-- ISSUE TYPE FORM -->
-      <div class="text-h4 text-uppercase weight-bold q-mt-lg q-mb-sm col-auto">
-        {{ $t('form_title') }}
-      </div>
+      <!-- FORM AND PRINT TEMPLATES -->
+      <q-tabs
+        v-model="tab"
+        align="left"
+        dense
+        indicator-color="theme-blue"
+        active-class="text-high weight-bold"
+        class="q-mt-lg text-low col-auto"
+      >
+        <q-tab
+          content-class="weight-bold"
+          name="form"
+          :label="$t('form_title')"
+        />
+        <q-tab name="prints" :label="$t('print_templates')" />
+      </q-tabs>
 
-      <FormTemplateEditor
-        v-model="temp_metadata.form_template"
-        :edit-mode="editMode"
-      />
+      <q-card square class="col">
+        <q-tab-panels v-model="tab" class="fit">
+          <!-- ISSUE TYPE FORM -->
+          <q-tab-panel name="form" class="fit surface2 column">
+            <FormTemplateEditor
+              v-model="temp_metadata.form_template"
+              :edit-mode="editMode"
+            />
+          </q-tab-panel>
+
+          <!-- PRINT TEMPLATES -->
+          <q-tab-panel name="prints" class="surface2 column">
+            <div
+              v-if="temp_metadata.print_templates.length === 0"
+              class="q-mt-md text-italic"
+            >
+              {{ $t('print_template_none') }}
+            </div>
+            <div v-else class="row col q-col-gutter-md scroll">
+              <div
+                v-for="(template, index) in temp_metadata.print_templates"
+                :key="template._key"
+                class="col-3"
+              >
+                <PrintTemplateCard
+                  :template="template"
+                  :allow-delete="editMode"
+                  @delete="deleteTemplate(index)"
+                  @restore="template.trash = false"
+                />
+              </div>
+            </div>
+
+            <div class="col-auto">
+              <BaseAutocompleteTemplate
+                v-if="editMode"
+                class="q-px-sm q-mt-md"
+                :label="$t('print_template_add')"
+                :selected="temp_metadata.print_templates"
+                @select="addTemplate"
+              />
+            </div>
+          </q-tab-panel>
+        </q-tab-panels>
+      </q-card>
     </template>
-
-    <NoDataAlert v-else />
   </div>
 </template>
 
 <script>
 import { cloneDeep as _cloneDeep } from 'lodash';
+import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 import FormTemplateEditor from '@/components/FormTemplateEditor.vue';
 import IconLibrary from '@/components/IconLibrary.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
+import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
 import form from '@/mixins/form.js';
 
 export default {
   name: 'IssueTypeDetail',
 
   components: {
+    BaseAutocompleteTemplate,
     BaseDialog,
     BaseTooltipIcon,
     NoDataAlert,
     IconLibrary,
+    PrintTemplateCard,
     FormTemplateEditor,
   },
 
@@ -203,6 +259,7 @@ export default {
       show_icon_library: false,
       editMode: false,
       saving: false,
+      tab: 'form',
       temp_metadata: {
         name: '',
         code: '',
@@ -211,6 +268,7 @@ export default {
         icon: '',
         critical: undefined,
         form_template: [],
+        print_templates: []
         // close_within: 0
       },
     };
@@ -250,6 +308,20 @@ export default {
         timeout: 1500,
         position: 'top',
       });
+    },
+
+    addTemplate(template) {
+      this.temp_metadata.print_templates.push({
+        ...template,
+        temp: true,
+      });
+    },
+
+    deleteTemplate(template_index) {
+      const template = this.temp_metadata.print_templates[template_index];
+      template.temp
+        ? this.temp_metadata.print_templates.splice(template_index, 1)
+        : (template.trash = true);
     },
 
     async save() {

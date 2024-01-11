@@ -191,7 +191,7 @@ def set_progress() -> None:
     LET processing_cost = SUM(
       FOR ws IN WorkSession
       FILTER ws.work_order_key == @wo_key
-      RETURN ws.duration * ws.hourly_cost
+      RETURN CEIL(ws.duration / (60*60*1000)) * ws.hourly_cost
     )
 
     // Check if any WO Job is still open

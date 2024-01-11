@@ -4,10 +4,10 @@ from typing import List, Optional, Union
 
 from pydantic import Field
 
+from models.print import PrintTemplateRecord
 from models.form import FormFieldDefinition
 from utils.base_models import FlexModel, ArangoDocument
 from utils.dt import timestamp
-
 
 
 class ReleaseStyle(str, Enum):
@@ -46,6 +46,7 @@ class Step(FlexModel):
   description: str = None
   type: StepType = StepType.INSTRUCTION
   form_fields: List[FormFieldDefinition] = []
+  print_templates: List[PrintTemplateRecord] = []
 
 
 # TODO: Add validation for size, content_type, etc.
@@ -80,6 +81,7 @@ class PhaseRecord(ArangoDocument):
 
 class PhaseData(PhaseRecord):
   steps: List[Step] = []
+  print_templates: List[PrintTemplateRecord] = []
 
 
 class ProcessUpdate(FlexModel):

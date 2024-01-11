@@ -126,6 +126,7 @@ export default {
     getIssues() {
       this.$store.dispatch('getIssues', {
         work_order_key: this.work_order_key,
+        with_links: true,
       });
     },
   },
