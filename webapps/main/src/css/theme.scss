@@ -1,21 +1,21 @@
-@use "sass:map";
+@use 'sass:map';
 
-$high-emphasis: .87;
-$low-emphasis: .6;
-$disabled-emphasis: .3;
+$high-emphasis: 0.87;
+$low-emphasis: 0.6;
+$disabled-emphasis: 0.3;
 
 $commons: (
-  theme-blue: #22AED1,
-  theme-green: #0DAB76,
+  theme-blue: #22aed1,
+  theme-green: #0dab76,
   theme-grey: #707070,
-  theme-red: #E71D36,
-  theme-orange: #FF9F1C,
-  theme-black: #090C0D,
-  blue-backdrop: rgba(39,174,209, .3),
-  green-backdrop: rgba(13,171,118, .3),
-  orange-backdrop: rgba(255,159,28,.3),
-  red-backdrop: rgba(213,29,54,.3),
-  grey-backdrop: #FFF3
+  theme-red: #e71d36,
+  theme-orange: #ff9f1c,
+  theme-black: #090c0d,
+  blue-backdrop: rgba(39, 174, 209, 0.3),
+  green-backdrop: rgba(13, 171, 118, 0.3),
+  orange-backdrop: rgba(255, 159, 28, 0.3),
+  red-backdrop: rgba(213, 29, 54, 0.3),
+  grey-backdrop: #fff3,
 );
 
 $primary: map-get($commons, 'theme-blue');
@@ -31,23 +31,23 @@ $primary: map-get($commons, 'theme-blue');
 
 $surfaces: (
   'dark': (
-    header: #131E21,
-    footer: #090C0D,
-    background: #131E21,
-    surface2: #242E31,
-    surface1: #1F2A2D,
+    header: #131e21,
+    footer: #090c0d,
+    background: #131e21,
+    surface2: #242e31,
+    surface1: #1f2a2d,
   ),
   'light': (
     header: #003d60,
     footer: #003d60,
     background: #eee,
     surface1: #fafafa,
-    surface2: #fff
-  )
+    surface2: #fff,
+  ),
 );
 
 @each $theme, $colors in $surfaces {
-  [progress-theme="#{$theme}"] {
+  [progress-theme='#{$theme}'] {
     @each $name, $color in $colors {
       .#{$name} {
         background-color: $color;
@@ -56,21 +56,21 @@ $surfaces: (
   }
 }
 
-$text-colors:(
+$text-colors: (
   'dark': (
-    text-high: rgba(255,255,255,$high-emphasis),
-    text-low: rgba(255,255,255,$low-emphasis),
-    text-disabled: rgba(255,255,255,$disabled-emphasis)
+    text-high: rgba(255, 255, 255, $high-emphasis),
+    text-low: rgba(255, 255, 255, $low-emphasis),
+    text-disabled: rgba(255, 255, 255, $disabled-emphasis),
   ),
   'light': (
-    text-high: rgba(30,52,58),
-    text-low: rgba(0,0,0,$low-emphasis),
-    text-disabled: rgba(0,0,0,$disabled-emphasis)
-  )
+    text-high: rgba(30, 52, 58),
+    text-low: rgba(0, 0, 0, $low-emphasis),
+    text-disabled: rgba(0, 0, 0, $disabled-emphasis),
+  ),
 );
 
 @each $theme, $colors in $text-colors {
-  [progress-theme="#{$theme}"] {
+  [progress-theme='#{$theme}'] {
     @each $name, $color in $colors {
       .#{$name} {
         color: $color !important;
@@ -81,14 +81,14 @@ $text-colors:(
 
 $disabled-colors: (
   'dark': (
-    color: rgba(255,255,255,$disabled-emphasis),
+    color: rgba(255, 255, 255, $disabled-emphasis),
     background-color: rgba(255, 255, 255, 0.12),
-  )
+  ),
 );
 
 @each $theme, $properties in $disabled-colors {
-  [progress-theme="#{$theme}"] .disabled {
-      @each $property, $color in $properties {
+  [progress-theme='#{$theme}'] .disabled {
+    @each $property, $color in $properties {
       $property: $color !important;
     }
   }

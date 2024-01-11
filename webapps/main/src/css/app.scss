@@ -4,15 +4,11 @@
 @use 'fonts';
 @use 'typography';
 
-
-
-
 $button-border-radius: 4px;
 $typography-font-family: 'Red Hat Text' !important;
 
 $toolbar-min-height: 45px;
-$separator-dark-color: rgba(255, 255, 255, .12);
-
+$separator-dark-color: rgba(255, 255, 255, 0.12);
 
 .hover-underline {
   cursor: pointer;
@@ -38,13 +34,12 @@ $separator-dark-color: rgba(255, 255, 255, .12);
   }
   /* after = background of selected rows */
   tbody td:after {
-    @extend .bg-blue-backdrop
+    @extend .bg-blue-backdrop;
   }
   /* before = background of hovered row */
-  tbody td:before{
+  tbody td:before {
   }
 }
-
 
 .my-sticky-header-table {
   .q-table__top,
@@ -52,58 +47,55 @@ $separator-dark-color: rgba(255, 255, 255, .12);
   thead tr th {
     position: sticky;
     z-index: 1;
-    font-weight: bold !important
+    font-weight: bold !important;
   }
   /* this will be the loading indicator */
   thead tr:last-child th {
     /* height of all previous header rows */
-    top: 48px
+    top: 48px;
   }
   thead tr:first-child th {
-    top: 0
+    top: 0;
   }
 
   thead tr th:last-child {
-    padding-right:38px
+    padding-right: 38px;
   }
 }
-
 
 .q-menu {
   @extend .surface1;
   border: 1px solid var(--theme-grey);
   border-radius: 0px;
-  color: var(--text-high)
+  color: var(--text-high);
 }
 
 .drag-handle {
-  cursor: grab
+  cursor: grab;
 }
 
 .dragging {
-  cursor: grabbing !important
+  cursor: grabbing !important;
 }
 
 .hover-red-bg:hover {
   background-color: var(--theme-red) !important;
 }
 
-
 .q-splitter__separator {
-  background-color: $separator-dark-color
+  background-color: $separator-dark-color;
 }
-
 
 .q-field--filled .q-field__control {
   border-radius: 0px;
 }
 
-
 .q-separator--dark {
-  background-color: rgba(255, 255, 255, .12);
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
-.q-field--dense .q-field__control, .q-field--dense .q-field__marginal {
+.q-field--dense .q-field__control,
+.q-field--dense .q-field__marginal {
   // height: 32px
 }
 
@@ -111,14 +103,12 @@ $separator-dark-color: rgba(255, 255, 255, .12);
   border-radius: 0px;
 }
 
-
 .q-btn {
   letter-spacing: var(--display-spacing);
   font-family: var(--display-font);
   font-weight: bold;
   // min-height: 28px;
 }
-
 
 .card-title {
   font-size: 1.25rem;
@@ -128,8 +118,6 @@ $separator-dark-color: rgba(255, 255, 255, .12);
   line-height: 2rem;
   text-transform: uppercase;
 }
-
-
 
 #q-app .no-transition {
   transition: none !important;
@@ -146,7 +134,7 @@ $separator-dark-color: rgba(255, 255, 255, .12);
 }
 
 .glass {
-  background-color: rgb(100, 100, 100, .5);
+  background-color: rgb(100, 100, 100, 0.5);
   backdrop-filter: blur(10px);
 }
 
@@ -167,10 +155,14 @@ body.body--dark {
 
 #q-app .q-avatar.highlight {
   color: #fff;
-  font-weight:  bold;
+  font-weight: bold;
 }
 
-#q-app h1, h2, h3, h4, h5 {
+#q-app h1,
+h2,
+h3,
+h4,
+h5 {
   font-family: var(--display-font);
   letter-spacing: var(--display-spacing);
   text-transform: uppercase;
@@ -197,13 +189,11 @@ body.body--dark {
   @extend .display;
   font-size: 1.17rem !important;
   font-weight: bold;
-  color: var(--high-white)
+  color: var(--high-white);
 }
 
-
-
 .surface-1 {
-  background-color: #1F2A2D !important;
+  background-color: #1f2a2d !important;
 }
 
 .parapraph {
@@ -211,7 +201,6 @@ body.body--dark {
   letter-spacing: var(--text-spacing);
   color: var(--low-white);
 }
-
 
 .fill {
   height: 100%;
@@ -232,22 +221,46 @@ body.body--dark {
 }
 
 span .display {
-  line-height: .8rem;
+  line-height: 0.8rem;
 }
 
 .fade-bottom {
   /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#131e21+0,131e21+50&0+0,1+50 */
-  background: -moz-linear-gradient(top,  rgba(19,30,33,1) 50%, rgba(19,30,33,0) 100%); /* FF3.6-15 */
-  background: -webkit-linear-gradient(top,  rgba(19,30,33,1) 50%,rgba(19,30,33,0) 100%); /* Chrome10-25,Safari5.1-6 */
-  background: linear-gradient(to bottom,  rgba(19,30,33,1) 50%,rgba(19,30,33,0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  background: -moz-linear-gradient(
+    top,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* FF3.6-15 */
+  background: -webkit-linear-gradient(
+    top,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(
+    to bottom,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#131e21', endColorstr='#00131e21',GradientType=0 ); /* IE6-9 */
 }
 
 .fade-top {
   /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#131e21+50,131e21+100&1+50,0+100 */
-  background: -moz-linear-gradient(bottom,  rgba(19,30,33,1) 50%, rgba(19,30,33,0) 100%); /* FF3.6-15 */
-  background: -webkit-linear-gradient(bottom,  rgba(19,30,33,1) 50%,rgba(19,30,33,0) 100%); /* Chrome10-25,Safari5.1-6 */
-  background: linear-gradient(to top,  rgba(19,30,33,1) 50%,rgba(19,30,33,0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  background: -moz-linear-gradient(
+    bottom,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* FF3.6-15 */
+  background: -webkit-linear-gradient(
+    bottom,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(
+    to top,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#131e21', endColorstr='#00131e21',GradientType=0 ); /* IE6-9 */
 }
 
@@ -262,12 +275,11 @@ span .display {
 
 /* Highlight color on hover for VDataTable rows */
 .q-data-table tr:hover:not(.q-data-table__expanded__content) {
-  background-color: rgba(39,174,209, .4) !important;
+  background-color: rgba(39, 174, 209, 0.4) !important;
   /*-webkit-box-shadow: 0px 0px 20px 0px rgba(34,174,209,1);
   -moz-box-shadow:  0px 0px 20px 0px rgba(34,174,209,1);
   box-shadow:  0px 0px 20px 0px rgba(34,174,209,1);*/
 }
-
 
 /*  Make Vertical tabs take all the width available
     Not possible using properties or inline style
@@ -297,7 +309,7 @@ span .display {
 
 /* Style bom rows for deletion */
 #bom .q-data-table__selected {
-  background-color: transparent !important
+  background-color: transparent !important;
 }
 
 /*.q-autocomplete__content {
@@ -308,7 +320,6 @@ span .display {
 .q-menu__content .q-card .q-list.q-sheet {
   background-color: var(--surface-2);
 }
-
 
 /* TRANSITIONS */
 /*.slide-fade-enter-active, .fade-enter-active {
@@ -325,7 +336,9 @@ span .display {
 
 .slide-fade-enter-active,
 .slide-fade-leave-active {
-  transition: opacity 0.2s, transform 0.3s;
+  transition:
+    opacity 0.2s,
+    transform 0.3s;
 }
 
 .slide-fade-leave-to {
@@ -338,7 +351,6 @@ span .display {
   opacity: 0;
 }
 
-
 /* UPPERCASE STYLING FOR VUETIFY INPUTS */
 .input-uppercase input {
   text-transform: uppercase;
@@ -350,7 +362,7 @@ span .display {
 }
 
 .theme-bg-color {
-  background-color: var(--bg-color)
+  background-color: var(--bg-color);
 }
 
 .opaque {
@@ -366,11 +378,11 @@ span .display {
 }
 
 .alternate-row {
-  background-color: #77777711
+  background-color: #77777711;
 }
 
 .hover-red:hover {
-  color: var(--theme-red)
+  color: var(--theme-red);
 }
 
 .step-divider {
@@ -392,16 +404,15 @@ span .display {
   overflow: visible;
 }
 
-
 .animate-pulse {
-  animation: q-pulse 2s infinite /* rtl:ignore */
+  animation: q-pulse 2s infinite; /* rtl:ignore */
 }
 
 @keyframes q-pulse {
   0% {
-    box-shadow: 0 0 0 0px #fff3
+    box-shadow: 0 0 0 0px #fff3;
   }
   100% {
-    box-shadow: 0 0 0 15px rgba(0, 0, 0, 0)
+    box-shadow: 0 0 0 15px rgba(0, 0, 0, 0);
   }
 }

@@ -9,13 +9,12 @@ body {
 }
 
 .q-dark {
-  color: var(--text-high)
+  color: var(--text-high);
 }
 
 body.body--dark {
-  color: var(--text-high)
+  color: var(--text-high);
 }
-
 
 .q-tab {
   font-weight: 500;
@@ -26,7 +25,7 @@ body.body--dark {
   font-size: 0.67rem;
   font-weight: bold;
   text-transform: uppercase;
-  color: var(--text-low)
+  color: var(--text-low);
 }
 
 .display {
@@ -39,8 +38,13 @@ body.body--dark {
   line-height: 1.2 !important;
 }
 
-.text-h1, .text-h2, .text-h3, .text-h4, .text-h5, .text-h6, {
-  line-height: 1.2
+.text-h1,
+.text-h2,
+.text-h3,
+.text-h4,
+.text-h5,
+.text-h6 {
+  line-height: 1.2;
 }
 
 .text-h1 {
@@ -66,15 +70,16 @@ body.body--dark {
 }
 
 .text-h6 {
-  font-size: 0.70rem
+  font-size: 0.7rem;
 }
 
-.text-body1, .text-body2 {
+.text-body1,
+.text-body2 {
   letter-spacing: normal !important;
 }
 
 .medium {
-  font-size: .89rem;
+  font-size: 0.89rem;
 }
 
 .weight-medium {
@@ -90,12 +95,11 @@ body.body--dark {
 }
 
 .smaller {
-  font-size: .7rem;
+  font-size: 0.7rem;
 }
 
-
 .low-text {
- color: var(--text-low);
+  color: var(--text-low);
 }
 
 .highlight {

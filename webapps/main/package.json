@@ -10,7 +10,7 @@
     "build": "quasar build",
     "lint:check": "eslint --ext .js,.vue ./ --report-unused-disable-directives",
     "lint": "yarn lint:check --fix",
-    "format:base": "prettier \"**/*.{js,vue,html,md,json}\" --ignore-path .gitignore",
+    "format:base": "prettier \"**/*.{js,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "format:check": "yarn format:base --check",
     "format": "yarn format:base --write",
     "test": "echo \"No test specified\" && exit 0"
