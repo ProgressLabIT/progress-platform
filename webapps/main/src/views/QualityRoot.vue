@@ -404,6 +404,7 @@
             v-else
             :field="filter"
             style="margin-bottom: 0"
+            dense
             @update="
               filter.value = filter.type === 'choice' ? $event?.value : $event
             "

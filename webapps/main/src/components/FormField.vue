@@ -58,7 +58,8 @@
       v-if="fieldType === 'ternary'"
       square
       style="background: rgba(255, 255, 255, 0.07)"
-      class="no-shadow q-px-lg q-py-md"
+      class="no-shadow"
+      :class="dense ? 'q-px-md q-py-sm' : 'q-px-lg q-py-md'"
     >
       <div class="row items-center">
         <div class="col-1 items-center">
@@ -76,7 +77,7 @@
           </q-avatar>
         </div>
 
-        <div class="col-6 items-center">
+        <div class="col items-center">
           <p class="text-body1 q-ma-none">{{ field.label }}</p>
         </div>
 
@@ -90,10 +91,15 @@
             :disable="disable"
             :dense="dense"
             color="theme-red"
-            style="width: 100px"
+            :style="{ width: dense ? '70px' : '100px' }"
             @click="fieldValue = fieldValue === false ? undefined : false"
           >
-            <span class="text-h4 display weight-bold">{{ $t('no') }}</span>
+            <span
+              class="display weight-bold"
+              :class="dense ? 'text-h5' : 'text-h4'"
+            >
+              {{ $t('no') }}
+            </span>
           </q-btn>
 
           <q-btn
@@ -103,11 +109,16 @@
             :disable="disable"
             :dense="dense"
             color="theme-green"
-            style="width: 100px"
-            class="q-ml-lg"
+            :style="{ width: dense ? '70px' : '100px' }"
+            :class="dense ? 'q-ml-sm' : 'q-ml-lg'"
             @click="fieldValue = fieldValue === true ? undefined : true"
           >
-            <span class="text-h4 display weight-bold">{{ $t('yes') }}</span>
+            <span
+              class="display weight-bold"
+              :class="dense ? 'text-h5' : 'text-h4'"
+            >
+              {{ $t('yes') }}
+            </span>
           </q-btn>
         </div>
       </div>
@@ -228,7 +239,7 @@ const props = defineProps({
   },
   rootPath: {
     type: String,
-    required: true,
+    default: undefined,
   },
   dense: {
     type: Boolean,
