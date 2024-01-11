@@ -4,6 +4,7 @@
     <NoDataAlert v-if="steps.length === 0">
       {{ $t('phase.no_procedure') }}
     </NoDataAlert>
+
     <template v-else>
       <q-toolbar dense class="col-1 q-pa-md shadow-4 surface2">
         <div
@@ -139,11 +140,13 @@ export default {
     allowClick(index) {
       let allow = true;
       if (this.force_order) {
-        for (let i = 0; i < index; i++) {
-          allow *= this.batch_data[i].done;
+        // First step is always allowed, start from second
+        for (let i = 1; i < index; i++) {
+          this.batch_data == undefined
+            ? allow = false
+            : allow *= this.batch_data[i].done;
         }
       }
-
       return allow;
     },
 
