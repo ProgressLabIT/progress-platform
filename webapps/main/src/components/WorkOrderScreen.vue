@@ -54,7 +54,6 @@
 </template>
 
 <script>
-import axios from 'axios';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue';
@@ -121,13 +120,14 @@ export default {
     },
 
     get_wo_data() {
-      axios
-        .all([
-          this.$store.dispatch('loadWorkOrderData', this.wo_key),
-          this.$store.dispatch('loadUsers'),
-          this.$store.dispatch('getIssues', { work_order_key: this.wo_key }),
-        ])
-        .then(() => (this.vuex_ready = true));
+      Promise.all([
+        this.$store.dispatch('loadWorkOrderData', this.wo_key),
+        this.$store.dispatch('loadUsers'),
+        this.$store.dispatch('getIssues', {
+          work_order_key: this.wo_key,
+          with_links: true,
+        }),
+      ]).then(() => (this.vuex_ready = true));
     },
   },
 };

@@ -26,7 +26,9 @@
           >
           </q-btn>
         </slot>
+
         <slot name="header"></slot>
+
         <slot name="close">
           <q-btn flat dense @click="$emit('close')">
             <q-icon size="xs" name="mdi-close" class="text-low" />

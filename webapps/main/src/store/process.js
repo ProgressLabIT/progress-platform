@@ -25,6 +25,17 @@ const process = {
       state.temp = _cloneDeep(process);
     },
 
+    ADD_TEMP_PHASE_TEMPLATE(state, { phase_index, template }) {
+      state.temp[phase_index].print_templates.push({ ...template, temp: true });
+    },
+
+    DELETE_TEMP_PHASE_TEMPLATE(state, { phase_index, template_index }) {
+      let phase = state.temp[phase_index];
+      phase.print_templates[template_index].temp
+        ? phase.print_templates.splice(template_index, 1)
+        : (phase.print_templates[template_index].trash = true);
+    },
+
     DELETE_PHASE(state, phase_index) {
       state.temp.splice(phase_index, 1);
     },
@@ -115,12 +126,27 @@ const process = {
         }));
       }
 
+      async function loadStepPrintTemplates(step) {
+        const { data } = await api.get('print-template', {
+          params: { context: 'step', context_key: step._key },
+        });
+        step.print_templates = data.map((template) => ({
+          ...template,
+          temp: false,
+          trash: false,
+        }));
+      }
+
       const { data: phases } = await api.get(`product/${product_key}/process`);
       const promises = [];
       phases.forEach((phase) => {
         phase.steps.forEach((step) => {
           if (step.type === 'instruction') {
             promises.push(loadStepMedia(step));
+          }
+
+          if (step.type === 'form') {
+            promises.push(loadStepPrintTemplates(step));
           }
         });
       });
@@ -144,6 +170,8 @@ const process = {
       const newMedia = [];
       const deletedMedia = [];
 
+      const templateUpdates = [];
+
       data.new_process.forEach((phase) => {
         phase.steps.forEach((step) => {
           if (step.media === undefined) {
@@ -165,6 +193,46 @@ const process = {
               });
             }
           });
+
+          step.print_templates?.forEach((template) => {
+            if (template.temp) {
+              templateUpdates.push({
+                type: 'add',
+                context: 'step',
+                context_key: step._key,
+                template_key: template._key,
+              });
+            }
+
+            if (template.trash) {
+              templateUpdates.push({
+                type: 'remove',
+                context: 'step',
+                context_key: step._key,
+                template_key: template._key,
+              });
+            }
+          });
+        });
+
+        phase.print_templates.forEach((template) => {
+          if (template.temp) {
+            templateUpdates.push({
+              type: 'add',
+              context: 'phase',
+              context_key: phase._key,
+              template_key: template._key,
+            });
+          }
+
+          if (template.trash) {
+            templateUpdates.push({
+              type: 'remove',
+              context: 'phase',
+              context_key: phase._key,
+              template_key: template._key,
+            });
+          }
         });
       });
 
@@ -184,7 +252,10 @@ const process = {
         );
       });
 
-      await Promise.all(mediaPromises);
+      await Promise.all([
+        ...mediaPromises,
+        api.post('update-template-assignments', templateUpdates),
+      ]);
       await Promise.all([
         dispatch('getProcess', data.product_key),
         dispatch('loadProductDetails', data.product_key),

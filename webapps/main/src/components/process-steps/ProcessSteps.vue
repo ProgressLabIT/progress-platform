@@ -266,8 +266,9 @@ function addStep(type) {
     type,
     title: '',
     description: '',
-    form_fields: [],
     media: [],
+    form_fields: [],
+    print_templates: [],
   });
   currentStepIndex.value = stepsModel.value.length - 1;
 }

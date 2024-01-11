@@ -14,14 +14,27 @@
           </span>
           <span>#{{ issue._key }}</span>
         </span>
-        <span class="col q-ml-xl">
+        <div class="col q-ml-xl">
           <q-btn
             flat
             round
             icon="mdi-pencil"
             @click.stop="show_issue_update = true"
-          />
-        </span>
+          >
+            <q-tooltip>{{ $capitalize($t('edit')) }}</q-tooltip>
+          </q-btn>
+
+          <q-btn
+            v-if="isAvailable"
+            flat
+            round
+            icon="mdi-printer"
+            class="q-ml-sm"
+            @click.stop="openPrintDialog"
+          >
+            <q-tooltip>{{ $capitalize($t('print')) }}</q-tooltip>
+          </q-btn>
+        </div>
       </q-item-label>
     </q-item-section>
     <q-item-section class="display col-auto weight-bold text-uppercase">
@@ -43,6 +56,7 @@
 
 <script>
 import IssueForm from '@/components/IssueForm.vue';
+import { usePrintDialog } from '@/lib/print';
 import event from '@/mixins/event.js';
 
 export default {
@@ -66,6 +80,18 @@ export default {
   },
 
   emits: ['typeChange'],
+
+  setup(props) {
+    const { open: openPrintDialog, isAvailable } = usePrintDialog({
+      context: 'issue_type',
+      contextData: props.issue,
+    });
+
+    return {
+      openPrintDialog,
+      isAvailable,
+    };
+  },
 
   data() {
     return {

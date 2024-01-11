@@ -49,11 +49,11 @@ async def get_operation_list():
 
       step['media'] = step_media
 
-    return op_data
+    return Operation(**op_data)
 
   db_list = [enrich_op_data(o) for o in db.collection('Operation').all()]
   # Sort by operation name
-  return sorted(db_list, key=lambda o: o['name'].lower())
+  return sorted(db_list, key=lambda o: o.name.lower())
 
 
 @router.post('/operation')

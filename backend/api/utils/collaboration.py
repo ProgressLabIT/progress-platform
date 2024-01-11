@@ -16,8 +16,14 @@ class Queries:
       FILTER field_definition
       RETURN MERGE(f, { type: field_definition.type })
     )
+
+    LET print_templates = (
+      FOR v IN 1..1 OUTBOUND i can_use_print_template
+      RETURN v
+    )
+
     SORT i.name
-    RETURN MERGE(i, { form_template })
+    RETURN MERGE(i, { form_template, print_templates })
   """
 
   FIND_ISSUES = """
@@ -139,7 +145,7 @@ class Queries:
       phase_alias: phase.alias
     })
 
-    LET issue_links = { product, operation, phase, work_order }
+    LET issue_links = { job, product, operation, phase, work_order }
 
     RETURN @with_links ? MERGE(base_result, { links: issue_links }) : base_result
   """

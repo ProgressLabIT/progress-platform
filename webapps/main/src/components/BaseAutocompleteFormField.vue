@@ -15,7 +15,15 @@
     @update:model-value="emit('update:modelValue', $event)"
   >
     <template v-if="modelValue" #prepend>
-      <q-icon :name="getFieldIcon(modelValue.type)" />
+      <q-icon
+        :name="
+          getFieldIcon(
+            keyOnly
+              ? options.find(({ _key }) => _key === modelValue)?.type
+              : modelValue.type,
+          )
+        "
+      />
     </template>
 
     <template #option="scope">
@@ -70,16 +78,16 @@ const loading = ref(false);
  * @type {import('vue').Ref<FormField[]>}
  */
 const fields = ref([]);
+const options = ref(fields.value);
 (async () => {
   loading.value = true;
 
   const { data } = await api.get('field');
   fields.value = data;
+  options.value = data;
 
   loading.value = false;
 })();
-
-const options = ref(fields.value);
 
 const searchableFields = ['type', 'name', 'default_label'];
 function onFilter(value, update) {
