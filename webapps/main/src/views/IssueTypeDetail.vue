@@ -185,14 +185,14 @@
           <!-- PRINT TEMPLATES -->
           <q-tab-panel name="prints" class="surface2 column">
             <div
-              v-if="tempMetadata.print_templates.length === 0"
+              v-if="temp_metadata.print_templates.length === 0"
               class="q-mt-md text-italic"
             >
               {{ $t('print_template_none') }}
             </div>
             <div v-else class="row col q-col-gutter-md scroll">
               <div
-                v-for="(template, index) in tempMetadata.print_templates"
+                v-for="(template, index) in temp_metadata.print_templates"
                 :key="template._key"
                 class="col-3"
               >
@@ -268,6 +268,7 @@ export default {
         icon: '',
         critical: undefined,
         form_template: [],
+        print_templates: []
         // close_within: 0
       },
     };
