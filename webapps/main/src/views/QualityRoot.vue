@@ -80,13 +80,15 @@
     >
       <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
-          <q-checkbox v-model="issue_open" dense :label="$t('issue_open')">
-          </q-checkbox>
+          <q-checkbox v-model="issue_open" dense :label="$t('issue_open')" />
         </div>
 
         <div class="col-6">
-          <q-checkbox v-model="issue_closed" dense :label="$t('issue_closed')">
-          </q-checkbox>
+          <q-checkbox
+            v-model="issue_closed"
+            dense
+            :label="$t('issue_closed')"
+          />
         </div>
 
         <div class="col-6">
@@ -94,8 +96,7 @@
             v-model="issue_critical"
             dense
             :label="$t('issue_critical')"
-          >
-          </q-checkbox>
+          />
         </div>
 
         <div class="col-6">
@@ -103,8 +104,7 @@
             v-model="issue_non_critical"
             dense
             :label="$t('issue_non_critical')"
-          >
-          </q-checkbox>
+          />
         </div>
       </div>
 
@@ -131,10 +131,10 @@
         dense
         key-only
         class="q-mb-md"
+        behavior="menu"
         :value="issue_type_key"
         @select="(selection) => (issue_type_key = selection)"
-      >
-      </BaseAutocompleteIssueType>
+      />
 
       <!-- OPENED DATE RANGE -->
       <div class="row q-col-gutter-sm">
@@ -257,38 +257,39 @@
         :placeholder="$capitalize($t('opened_by'))"
         dense
         class="q-mb-md"
+        behavior="menu"
         key-only
         :label="$t('opened_by')"
         :operator-only="false"
         :value="created_by"
         @select="(selection) => (created_by = selection)"
-      >
-      </BaseAutocompleteUser>
+      />
 
       <!-- CLOSED BY -->
       <BaseAutocompleteUser
         :placeholder="$capitalize($t('closed_by'))"
         dense
         class="q-mb-md"
+        behavior="menu"
         key-only
         :label="$t('closed_by')"
         :operator-only="false"
         :value="closed_by"
         @select="(selection) => (closed_by = selection)"
-      >
-      </BaseAutocompleteUser>
+      />
 
       <!-- OPERATION -->
       <BaseAutocompleteOperation
         dense
         filled
         class="q-mb-md"
+        behavior="menu"
+        popup-content-class="z-max"
         key-only
         :label="$capitalize($t('operation.label'))"
         :value="operation_key"
         @select="(selection) => (operation_key = selection)"
-      >
-      </BaseAutocompleteOperation>
+      />
 
       <!-- PRODUCT -->
       <q-input

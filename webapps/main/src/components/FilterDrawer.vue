@@ -74,3 +74,17 @@ const drawerModel = computed({
   set: (value) => emit('update:modelValue', value),
 });
 </script>
+
+<style lang="scss" scoped>
+// When the drawer is in overlay mode, the drawer will be on top everything else with z-index: 9999
+// So, we should give it a z-index that is less than $z-menu to allow placing q-selects inside
+$z-index: $z-menu - 1;
+
+:deep(.q-drawer--on-top) {
+  z-index: $z-index !important;
+}
+
+:deep(.q-drawer__backdrop) {
+  z-index: $z-index - 1 !important;
+}
+</style>
