@@ -64,7 +64,7 @@
               filled
               class="shadow-3"
             />
-            <BaseAutocompleteFormField
+            <BaseAutocompleteCustomField
               v-else
               v-model="workingTemplate.links[column].value"
               key-only
@@ -119,7 +119,7 @@ import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { api } from '@/boot/axios';
 import BaseActionCard from '@/components/BaseActionCard.vue';
-import BaseAutocompleteFormField from '@/components/BaseAutocompleteFormField.vue';
+import BaseAutocompleteCustomField from '@/components/BaseAutocompleteCustomField.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
 
