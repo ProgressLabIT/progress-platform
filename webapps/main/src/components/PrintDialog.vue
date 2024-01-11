@@ -113,11 +113,7 @@
 
           <q-space />
 
-          <q-btn
-            :label="$t('back')"
-            color="theme-grey"
-            @click="activeStep--"
-          />
+          <q-btn :label="$t('back')" color="theme-grey" @click="activeStep--" />
           <q-btn
             :label="$t('next')"
             color="primary"
@@ -152,11 +148,7 @@
 
           <q-space />
 
-          <q-btn
-            :label="$t('back')"
-            color="theme-grey"
-            @click="activeStep--"
-          />
+          <q-btn :label="$t('back')" color="theme-grey" @click="activeStep--" />
           <q-btn
             :label="$t('save')"
             color="primary"

@@ -268,7 +268,7 @@ export default {
         icon: '',
         critical: undefined,
         form_template: [],
-        print_templates: []
+        print_templates: [],
         // close_within: 0
       },
     };

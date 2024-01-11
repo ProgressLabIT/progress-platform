@@ -138,16 +138,22 @@ export default {
     },
 
     allowClick(index) {
-      let allow = true;
-      if (this.force_order) {
-        // First step is always allowed, start from second
-        for (let i = 1; i < index; i++) {
-          this.batch_data == undefined
-            ? allow = false
-            : allow *= this.batch_data[i].done;
+      if (!this.force_order || index === 0) {
+        return true;
+      }
+
+      if (this.batch_data === undefined) {
+        return false;
+      }
+
+      // First step is always allowed, start from second
+      for (let i = 1; i < index; i++) {
+        if (this.batch_data[i].done === false) {
+          return false;
         }
       }
-      return allow;
+
+      return true;
     },
 
     stepClick(index) {
