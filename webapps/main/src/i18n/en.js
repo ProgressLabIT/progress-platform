@@ -546,6 +546,7 @@ export default {
     login_title: 'login',
     login_welcome_message_1: 'welcome {name} {surname}',
     login_welcome_message_2: 'Getting ready for work...',
+    logout: 'logout',
     start_session: 'start session',
   },
   show_all: 'show all',

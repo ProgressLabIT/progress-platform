@@ -102,7 +102,7 @@
 
             <q-item>
               <q-item-section side>
-                <q-icon name="mdi-file-star" />
+                <q-icon name="mdi-home" />
               </q-item-section>
 
               <q-item-section class="flex flex-center">
@@ -128,7 +128,7 @@
 
               <q-item-section>
                 <q-item-label>
-                  {{ capitalizeAll($t('session.close_session')) }}
+                  {{ capitalizeAll($t('session.logout')) }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -234,7 +234,7 @@ watch(
   (newFont) => {
     document.body.style.setProperty(
       '--display-font',
-      newFont === 'orbitron' ? 'Orbitron' : 'Red Hat Display',
+      newFont === 'orbitron' ? 'Orbitron' : 'Red Hat Text',
     );
   },
   { immediate: true },

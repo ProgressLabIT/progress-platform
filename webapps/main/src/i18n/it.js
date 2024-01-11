@@ -555,6 +555,7 @@ export default {
     login_title: 'login',
     login_welcome_message_1: 'benvenuto {name} {surname}',
     login_welcome_message_2: 'buon lavoro!',
+    logout: 'esci',
     start_session: 'inizia sessione',
   },
   show_all: 'mostra tutti',
