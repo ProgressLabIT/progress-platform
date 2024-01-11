@@ -3,10 +3,10 @@ import { api } from '@/boot/axios.js';
 const session = {
   state: {
     user: {
+      _key: '',
       name: '',
       surname: '',
-      _key: '',
-      home_page_name: '',
+      preferences: {},
     },
     session_key: '',
     auth_token: '',
@@ -26,19 +26,19 @@ const session = {
     },
 
     START_USER_SESSION(state, data) {
-      const user_data = {
+      state.user = {
+        _key: data.user_key,
         name: data.name,
         surname: data.surname,
-        _key: data.user_key,
+        preferences: data.preferences,
       };
-      state.user = user_data;
       state.session_key = data.session_key;
       state.scope = data.scope;
       // state.session_timeout = data.timeout
     },
 
     CLOSE_USER_SESSION(state) {
-      state.user = { name: null, surname: null, _key: null };
+      state.user = { name: null, surname: null, _key: null, preferences: {} };
       state.session_key = null;
       state.scope = null;
       state.auth_token = null;
@@ -64,6 +64,10 @@ const session = {
         state.max_idle_minutes * 60 * 1000,
       );
     },
+
+    UPDATE_PREFERENCES(state, preferences) {
+      state.user.preferences = preferences;
+    },
   },
 
   actions: {
@@ -76,19 +80,30 @@ const session = {
         } catch {
           /*
           Some edge cases caused by unknown bugs may leave active work sessions
-          in the vuex store, triggering the puaseJob action, which will cause error
+          in the Vuex store, triggering the pauseJob action, which will cause error
           because there are no active work sessions in the backend
           */
         }
       }
       await api.delete(`session/${state.session_key}`);
+      await this.$router.push({ name: 'login' });
       commit('CLOSE_USER_SESSION');
-      this.$router.push({ name: 'login' });
     },
 
     unlockSession({ commit }) {
       commit('TOGGLE_SESSION_LOCK', false);
       commit('SET_SESSION_TIMEOUT');
+    },
+
+    async updatePreferences({ commit, state }, preferencesToUpdate) {
+      const updatedPreferences = {
+        ...state.user.preferences,
+        ...preferencesToUpdate,
+      };
+      await api.patch(`user/${state.user._key}`, {
+        preferences: updatedPreferences,
+      });
+      commit('UPDATE_PREFERENCES', updatedPreferences);
     },
   },
 
@@ -114,30 +129,30 @@ const session = {
     },
 
     userHomepage: (state) => {
-      let first_page = state.user.home_page_name;
-
-      const hasAdminScope = /admin/.test(state.scope);
-      const hasProductionScope = /production/.test(state.scope);
-      const hasLibrayScope = /library/.test(state.scope);
-      const hasOperatorScope = /operator/.test(state.scope);
-      const hasQaulityScope = /quality/.test(state.scope);
-      const hasReportingScope = /reporting/.test(state.scope);
-
-      if (hasOperatorScope) {
-        first_page = 'operatorRoot';
-      } else if (hasProductionScope) {
-        first_page = 'productionRoot';
-      } else if (hasLibrayScope) {
-        first_page = 'libraryRoot';
-      } else if (hasAdminScope) {
-        first_page = 'adminPanel';
-      } else if (hasQaulityScope) {
-        first_page = 'qualityRoot';
-      } else if (hasReportingScope) {
-        first_page = 'reportRoot';
+      const userDefaultPage = state.user.preferences.home_page;
+      if (userDefaultPage) {
+        return userDefaultPage;
       }
 
-      return first_page;
+      const scopes = state.scope.split(' ');
+      switch (true) {
+        case scopes.includes('operator'):
+          return 'operatorRoot';
+        case scopes.includes('production'):
+          return 'productionRoot';
+        case scopes.includes('library'):
+          return 'libraryRoot';
+        case scopes.includes('admin'):
+          return 'adminPanel';
+        case scopes.includes('quality'):
+          return 'qualityRoot';
+        case scopes.includes('reporting'):
+          return 'reportRoot';
+        default:
+          throw new Error(
+            'No homepage found for user with scopes: ' + scopes.join(', '),
+          );
+      }
     },
   },
 };

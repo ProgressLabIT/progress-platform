@@ -76,6 +76,7 @@ export default {
     qt: 'Quanti pezzi hai completato?',
     step: 'Quali passi hai completato?',
   },
+  default: 'Predefinito | Predefiniti',
   delete: 'elimina',
   deleted: 'Eliminato',
   department: 'reparto | reparti',
@@ -430,6 +431,17 @@ export default {
       instruction: 'istruzioni',
     },
   },
+  preferences: {
+    theme: {
+      light: 'Leggero',
+      dark: 'Scuro',
+    },
+    homePage: {
+      label: 'Pagina iniziale',
+      error:
+        'Si è verificato un errore durante il cambio della pagina iniziale',
+    },
+  },
   print: 'stampa',
   printDialog: {
     chooseTemplate: {
@@ -575,6 +587,7 @@ export default {
     login_title: 'login',
     login_welcome_message_1: 'benvenuto {name} {surname}',
     login_welcome_message_2: 'buon lavoro!',
+    logout: 'esci',
     start_session: 'inizia sessione',
   },
   show_all: 'mostra tutti',

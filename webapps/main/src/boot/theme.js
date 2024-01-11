@@ -1,4 +1,5 @@
 import { boot } from 'quasar/wrappers';
+import { useTheme } from '@/composables/theme';
 
 export const dark = {
   blue: '#22AED1',
@@ -43,7 +44,7 @@ export const light = {
   text_disabled: 'rgba(0,0,0,.38)',
 };
 
-export default boot(({ app }) => {
+export default boot(({ app, store }) => {
   app.mixin({
     computed: {
       $theme() {
@@ -51,4 +52,7 @@ export default boot(({ app }) => {
       },
     },
   });
+
+  // Setup the theme state
+  useTheme(store);
 });

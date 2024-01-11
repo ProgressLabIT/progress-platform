@@ -1,8 +1,8 @@
 from datetime import datetime
 from dateutil import tz
-from typing import List
+from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from utils.base_models import ArangoDocument
 
@@ -18,7 +18,7 @@ class Site(ArangoDocument):
 class Department(ArangoDocument):
   name: str
   code: str = None
-  description: str = None  
+  description: str = None
 
 
 class UserListItem(ArangoDocument):
@@ -47,10 +47,27 @@ class UserNew(BaseModel):
   scope: str
 
 
+class JobSelectionLayout(str, Enum):
+  CARD = 'card'
+  LIST = 'list'
+
+class DisplayFont(str, Enum):
+  ORBITRON = 'orbitron'
+  RED_HAT_DISPLAY = 'red-hat-display'
+
+class UserPreferences(BaseModel):
+  theme: str = None
+  locale: str = None
+  display_font: DisplayFont = DisplayFont.ORBITRON
+  home_page: str = None
+  job_selection_layout: JobSelectionLayout = JobSelectionLayout.CARD
+  work_session_tabs_order: list[str] = None
+
 class User(ArangoDocument, UserNew):
   created_at: datetime = datetime.now(tz.UTC)
   active: bool = True  # change to 'enabled'
   email: str = None
+  preferences: UserPreferences = UserPreferences()
 
   psw_hash: str = None
   reset_password: bool = False

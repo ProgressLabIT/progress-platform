@@ -36,11 +36,11 @@ USER_SESSION_TIMEOUT_MINUTES = 15
 
 @router.post("/auth")
 async def authenticate_user(
-  username: str = Body(...), 
+  username: str = Body(...),
   password: str = Body(...)
 ):
 
-  try: 
+  try:
     user = auth.verify_user(username=username, password=password, db=db)
 
   except (UserNotFoundError, UserDisabledError, UserPasswordMismatchError):
@@ -57,7 +57,7 @@ async def authenticate_user(
 
   # Verify user has no other active session. If yes, close them.
   active_user_sessions = db.collection('UserSession').find(dict(
-    user_key=user.key, 
+    user_key=user.key,
     active=True
   ))
   if active_user_sessions.count():
@@ -68,16 +68,16 @@ async def authenticate_user(
 
   # Check if user should reset the password
   if user.reset_password:
-    
+
     token, token_data = auth.issue_token(
       consumer_key = user.key,
       context = TokenContext.PASSWORD_RESET,
       seconds_until_expired = RESET_PASSWORD_TOKEN_EXPIRE_MINUTES * 60
     )
-    
-    response_data = AuthResponse( 
-      action='reset_password', 
-      token=token 
+
+    response_data = AuthResponse(
+      action='reset_password',
+      token=token
     )
 
   else:
@@ -88,9 +88,9 @@ async def authenticate_user(
       seconds_until_expired = ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
 
-    response_data = AuthResponse( 
-      action='start_session', 
-      token=token 
+    response_data = AuthResponse(
+      action='start_session',
+      token=token
     )
 
   # Store token data
@@ -114,16 +114,16 @@ async def authenticate_user(
   response_content = APIResponse(detail=response_data)
 
   return JSONResponse(
-    content= jsonable_encoder(response_content), 
+    content= jsonable_encoder(response_content),
     headers=response_headers
   )
-    
+
 
 # ----------------------------------------------------------------------
 
 @router.post('/user/{user_key}/verify')
 async def verify_user_password(
-  user_key: str, 
+  user_key: str,
   password: str = Body(..., embed=True),
   token: TokenData = Depends(auth.verify_token)
 ):
@@ -141,19 +141,19 @@ async def verify_user_password(
 
 @router.post("/session")
 async def start_user_session(
-  user_key: str = Body(..., embed=True), 
+  user_key: str = Body(..., embed=True),
   token: TokenData = Depends(auth.verify_token)
 ):
 
   # Check all token data matches the use for session creation
   if not (
-    user_key == token.consumer_key 
+    user_key == token.consumer_key
     and token.consumer_type == ConsumerType.USER
     and token.context == TokenContext.USER_SESSION
   ):
     auth.revoke_token(token.token_key)
     raise auth.credentials_exception
-  
+
 
   try:
     # -----------------------------------
@@ -170,7 +170,7 @@ async def start_user_session(
     try:
       new_session_data = tx.aql.execute(auth.Queries.INSERT_USER_SESSION, bind_vars=query_params).next()
       new_user_session = UserSession(
-        **new_session_data, 
+        **new_session_data,
         timeout = timedelta(minutes=USER_SESSION_TIMEOUT_MINUTES)
       )
 
@@ -185,8 +185,8 @@ async def start_user_session(
       raise HTTPException(status_code, detail=response)
 
     # Update User data
-    user_update = dict( 
-      _key=user_key, 
+    user_update = dict(
+      _key=user_key,
       last_user_session=new_user_session.key,
       last_login=new_user_session.login_at
     )
@@ -207,13 +207,14 @@ async def start_user_session(
       detail=response
     )
 
-  # Prepare response 
-  response_details = NewSessionData( 
+  # Prepare response
+  response_details = NewSessionData(
     user_key=user_key,
     name=updated_user.name,
     surname=updated_user.surname,
     session_key=new_user_session.key,
-    scope=updated_user.scope
+    scope=updated_user.scope,
+    preferences=updated_user.preferences,
   )
 
   tx.commit_transaction()
@@ -227,7 +228,7 @@ async def start_user_session(
 
 @router.delete("/session/{session_key}")
 async def close_user_session(
-  session_key: str, 
+  session_key: str,
   token_str: str = Depends(auth.bearer_token)
 ):
 

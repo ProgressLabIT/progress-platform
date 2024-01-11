@@ -1,14 +1,12 @@
 from datetime import datetime, timedelta
 from dateutil import tz
 from enum import Enum
-from typing import List
 
 from fastapi import Form
 from pydantic import BaseModel, Field
 
 from utils.base_models import ArangoDocument, FlexModel
-
-
+from models.org import UserPreferences
 
 
 class ConsumerType(str, Enum):
@@ -21,7 +19,7 @@ class ConsumerType(str, Enum):
 class TokenContext(str, Enum):
   JOB = "job"
   USER_SESSION = "session"
-  PASSWORD_RESET = 'pwd_reset'  
+  PASSWORD_RESET = 'pwd_reset'
 
 
 class TokenRecord(ArangoDocument):
@@ -41,7 +39,7 @@ class Scope(str, Enum):
   PRODUCTION_WRITE: 'prod:w'
 
 
-class TokenData(FlexModel): 
+class TokenData(FlexModel):
   token_key: str = Field(..., alias="jti")
   consumer_key: str = Field(..., alias="sub")
   consumer_type: ConsumerType = Field(ConsumerType.USER, alias="ctyp")
@@ -73,6 +71,7 @@ class NewSessionData(BaseModel):
   name: str = None
   surname: str = None
   scope: str
+  preferences: UserPreferences = UserPreferences()
   timeout: timedelta = timedelta(minutes=30)
 
 class GrantType(str, Enum):
@@ -85,6 +84,3 @@ class ConsumerCredentials(BaseModel):
   password: str = Form(...)
   # auth_code: str = None
   # grant_type: GrantType = Form(None)
-
-
-

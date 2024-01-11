@@ -12,7 +12,7 @@
     :style="CSSVars"
     @escape-key="$emit('close')"
     @hide="$emit('close')"
-    @click="show_drawer = false"
+    @click="drawerModel = false"
   >
     <q-card class="background q-pa-sm">
       <!-- SCREEN HEADER -->
@@ -22,7 +22,7 @@
             flat
             icon="mdi-menu"
             padding="none"
-            @click="show_drawer = true"
+            @click="drawerModel = true"
           >
           </q-btn>
         </slot>
@@ -48,12 +48,12 @@
 </template>
 
 <script>
+import { useDrawer } from '@/composables/drawer';
 import CSSVars from '@/mixins/CSSVars.js';
-import drawer from '@/mixins/drawer.js';
 
 export default {
   name: 'BaseModalScreen',
-  mixins: [CSSVars, drawer],
+  mixins: [CSSVars],
   props: {
     show: {
       type: Boolean,
@@ -65,6 +65,14 @@ export default {
     },
   },
   emits: ['close'],
+
+  setup() {
+    const { drawerModel } = useDrawer();
+
+    return {
+      drawerModel,
+    };
+  },
 
   computed: {
     card_height() {

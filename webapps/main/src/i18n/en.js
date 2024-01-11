@@ -75,6 +75,7 @@ export default {
     step: 'Which steps have you completed?',
   },
   decrease: 'decrease',
+  default: 'Default',
   delete: 'delete',
   deleted: 'Deleted',
   department: 'department',
@@ -422,6 +423,16 @@ export default {
       instruction: 'instructions',
     },
   },
+  preferences: {
+    theme: {
+      light: 'Light',
+      dark: 'Dark',
+    },
+    homePage: {
+      label: 'Home page',
+      error: 'An error occurred while changing the default page',
+    },
+  },
   print: 'print',
   printDialog: {
     chooseTemplate: {
@@ -567,6 +578,7 @@ export default {
     login_title: 'login',
     login_welcome_message_1: 'welcome {name} {surname}',
     login_welcome_message_2: 'Getting ready for work...',
+    logout: 'logout',
     start_session: 'start session',
   },
   show_all: 'show all',

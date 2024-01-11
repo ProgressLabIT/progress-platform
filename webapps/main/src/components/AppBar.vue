@@ -1,105 +1,242 @@
 <template>
   <q-header class="header">
     <q-toolbar>
-      <q-btn flat icon="mdi-menu" padding="none" @click="show_drawer = true">
-      </q-btn>
-      <q-toolbar-title shrink class="display q-ml-xs q-mr-auto">{{
-        screen_title
-      }}</q-toolbar-title>
+      <q-btn flat icon="mdi-menu" padding="none" @click="drawerModel = true" />
 
-      <div
-        class="row items-center pointer"
-        @mouseover="show_logout = true"
-        @mouseleave="show_logout = false"
-      >
+      <q-toolbar-title shrink class="display q-ml-xs q-mr-auto">
+        {{ screenTitle }}
+      </q-toolbar-title>
+
+      <div class="row items-center cursor-pointer">
         <div class="app-bar-user-name q-mr-sm">{{ username }}</div>
         <q-avatar size="28px">
-          <q-img v-if="!show_logout" :src="avatar_url"></q-img>
-          <q-icon v-else name="mdi-exit-to-app" size="sm" @click="logout" />
+          <q-img :src="avatarUrl"></q-img>
         </q-avatar>
+
+        <q-menu>
+          <q-list separator style="min-width: 200px">
+            <q-item>
+              <q-item-section side>
+                <q-icon name="mdi-web" />
+              </q-item-section>
+
+              <q-item-section class="flex flex-center">
+                <q-btn-toggle
+                  v-model="locale"
+                  :options="localeOptions"
+                  dense
+                  padding="xs md"
+                  color="theme-grey"
+                />
+              </q-item-section>
+            </q-item>
+
+            <q-item>
+              <q-item-section side>
+                <q-icon name="mdi-palette-swatch" />
+              </q-item-section>
+
+              <q-item-section class="flex flex-center">
+                <q-btn-toggle
+                  :model-value="theme"
+                  :options="[
+                    { slot: 'light', value: 'light' },
+                    { slot: 'dark', value: 'dark' },
+                  ]"
+                  dense
+                  no-caps
+                  padding="xs md"
+                  color="theme-grey"
+                  @update:model-value="setTheme"
+                >
+                  <template #light>
+                    <q-icon name="mdi-weather-sunny">
+                      <q-tooltip>{{ $t('preferences.theme.light') }}</q-tooltip>
+                    </q-icon>
+                  </template>
+
+                  <template #dark>
+                    <q-icon name="mdi-weather-night">
+                      <q-tooltip>{{ $t('preferences.theme.dark') }}</q-tooltip>
+                    </q-icon>
+                  </template>
+                </q-btn-toggle>
+              </q-item-section>
+            </q-item>
+
+            <q-item>
+              <q-item-section side>
+                <q-icon name="mdi-format-font" />
+              </q-item-section>
+
+              <q-item-section class="flex flex-center">
+                <q-btn-toggle
+                  :model-value="displayFont"
+                  :options="[
+                    { slot: 'orbitron', value: 'orbitron' },
+                    {
+                      slot: 'red-hat-display',
+                      value: 'red-hat-display',
+                    },
+                  ]"
+                  dense
+                  no-caps
+                  padding="xs md"
+                  color="theme-grey"
+                  @update:model-value="updateDisplayFont"
+                >
+                  <template #orbitron>
+                    <q-icon name="mdi-orbit">
+                      <q-tooltip>Orbitron</q-tooltip>
+                    </q-icon>
+                  </template>
+
+                  <template #red-hat-display>
+                    <q-icon name="mdi-redhat">
+                      <q-tooltip>Red Hat Display</q-tooltip>
+                    </q-icon>
+                  </template>
+                </q-btn-toggle>
+              </q-item-section>
+            </q-item>
+
+            <q-item>
+              <q-item-section side>
+                <q-icon name="mdi-home" />
+              </q-item-section>
+
+              <q-item-section class="flex flex-center">
+                <q-select
+                  :model-value="homePage"
+                  :options="homePageOptions"
+                  emit-value
+                  map-options
+                  :loading="isUpdatingHomePage"
+                  :label="$t('preferences.homePage.label')"
+                  dense
+                  filled
+                  class="full-width"
+                  @update:model-value="updateHomePage"
+                />
+              </q-item-section>
+            </q-item>
+
+            <q-item clickable @click="logout">
+              <q-item-section side>
+                <q-icon name="mdi-logout-variant" />
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label>
+                  {{ capitalizeAll($t('session.logout')) }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
       </div>
     </q-toolbar>
   </q-header>
 </template>
 
-<script>
-import { capitalize as c } from '@/boot/filters.js';
-import drawer from '@/mixins/drawer.js';
+<script setup>
+import { findLast } from 'lodash';
+import { Notify } from 'quasar';
+import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
+import { useStore } from 'vuex';
+import { capitalize, capitalizeAll } from '@/boot/filters.js';
+import { useDrawer } from '@/composables/drawer';
+import { useTheme } from '@/composables/theme';
 
-export default {
-  name: 'AppBar',
+const store = useStore();
+const { drawerModel } = useDrawer();
 
-  mixins: [drawer],
+const screenTitle = ref('PROGRESS');
 
-  data() {
-    return {
-      show_logout: false,
-      screen_title: 'Progress',
-    };
+const user = computed(() => store.state.session.user);
+const username = computed(() => {
+  const { name, surname } = user.value;
+  return `${name} ${surname}`;
+});
+const avatarUrl = computed(() => {
+  const avatarName = username.value.replace(/\s+/g, '').toLowerCase();
+  return `/media/user/${avatarName}.jpg`;
+});
+
+const { t, locale, availableLocales } = useI18n();
+const route = useRoute();
+watch(
+  [locale, route],
+  () => {
+    const routeWithTitle = findLast(
+      route.matched,
+      ({ meta }) => !!meta.screen_title,
+    );
+
+    if (routeWithTitle) {
+      screenTitle.value = t(`views.${routeWithTitle.name}`) || 'PROGRESS';
+    }
   },
+  { immediate: true },
+);
 
-  computed: {
-    session_data() {
-      return this.$store.state.session;
-    },
+async function logout() {
+  const confirm = window.confirm(capitalize(t('session.alerts.close_session')));
+  if (confirm) {
+    await store.dispatch('logout');
+  }
+}
 
-    user() {
-      return this.session_data.user;
-    },
+const { theme, setTheme } = useTheme();
 
-    username() {
-      return this.user ? this.user.name + ' ' + this.user.surname : '';
-    },
+const localeOptions = availableLocales.map((locale) => ({
+  label: locale,
+  value: locale,
+}));
 
-    avatar_name() {
-      return this.user
-        ? (this.user.name + this.user.surname).replace(/\s+/g, '').toLowerCase()
-        : '';
-    },
+const homePage = computed(() => user.value.preferences.home_page || null);
+const homePageOptions = computed(() => [
+  { label: t('default'), value: null },
+  { label: capitalizeAll(t('views.adminPanel')), value: 'adminPanel' },
+  { label: capitalizeAll(t('views.libraryRoot')), value: 'libraryRoot' },
+  { label: capitalizeAll(t('views.productionRoot')), value: 'productionRoot' },
+  { label: capitalizeAll(t('views.userJobs')), value: 'operatorRoot' },
+  { label: capitalizeAll(t('views.qualityRoot')), value: 'qualityRoot' },
+  { label: capitalizeAll(t('views.reportRoot')), value: 'reportRoot' },
+]);
+const isUpdatingHomePage = ref(false);
+async function updateHomePage(newHomePage) {
+  isUpdatingHomePage.value = true;
 
-    avatar_url() {
-      return this.user ? '/media/user/' + this.avatar_name + '.jpg' : '';
-    },
+  try {
+    await store.dispatch('updatePreferences', { home_page: newHomePage });
+  } catch (error) {
+    console.error(error);
+    Notify.create({
+      type: 'negative',
+      message: t('preferences.homePage.error'),
+    });
+  } finally {
+    isUpdatingHomePage.value = false;
+  }
+}
 
-    locale() {
-      return this.$root.$i18n.locale;
-    },
+const displayFont = computed(
+  () => user.value.preferences.display_font || 'orbitron',
+);
+async function updateDisplayFont(newFont) {
+  await store.dispatch('updatePreferences', { display_font: newFont });
+}
+watch(
+  displayFont,
+  (newFont) => {
+    document.body.style.setProperty(
+      '--display-font',
+      newFont === 'orbitron' ? 'Orbitron' : 'Red Hat Text',
+    );
   },
-
-  watch: {
-    $route(to) {
-      this.update_screen_title(to);
-    },
-    locale() {
-      this.update_screen_title(this.$route);
-    },
-  },
-
-  created() {
-    this.update_screen_title(this.$route);
-  },
-
-  methods: {
-    async logout() {
-      const confirm = window.confirm(
-        c(this.$t('session.alerts.close_session')),
-      );
-      if (confirm) {
-        await this.$store.dispatch('logout');
-      }
-    },
-
-    update_screen_title(route) {
-      const route_with_title = route.matched
-        .slice()
-        .reverse()
-        .find((r) => r.meta.screen_title);
-      if (route_with_title) {
-        const new_screen_title =
-          this.$t(`views.${route_with_title.name}`) || 'PROGRESS';
-        this.screen_title = new_screen_title;
-      }
-    },
-  },
-};
+  { immediate: true },
+);
 </script>
