@@ -424,9 +424,9 @@
 </template>
 
 <script>
-import { Dialog } from 'quasar';
+import { Dialog, uid } from 'quasar';
 import { ref, watch } from 'vue';
-import { api } from '@/boot/axios';
+import { useStore } from 'vuex';
 import AddAdvancedFilterDialog from '@/components/AddAdvancedFilterDialog.vue';
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
@@ -449,15 +449,18 @@ export default {
   },
 
   setup() {
+    const store = useStore();
+
     const showFilterDrawer = ref(false);
     const advancedFilterOperator = ref('AND');
+    // Contains local form fields referencing to actual custom fields
     const advancedFilters = ref([]);
 
     function addAdvancedFilter() {
       Dialog.create({
         component: AddAdvancedFilterDialog,
-      }).onOk((field) => {
-        advancedFilters.value.push(field);
+      }).onOk((formField) => {
+        advancedFilters.value.push(formField);
       });
     }
 
@@ -472,7 +475,10 @@ export default {
 
         advancedFilterQuery.value = {
           operator,
-          filters: advancedFilters.map(({ _key, value }) => ({ _key, value })),
+          filters: advancedFilters.map(({ custom_field_key, value }) => ({
+            _key: custom_field_key,
+            value,
+          })),
         };
       },
       { deep: true },
@@ -481,16 +487,14 @@ export default {
     const initialQuery = advancedFilterQuery.value;
     if (initialQuery) {
       (async () => {
-        const { data: fields } = await api.get('field');
         advancedFilterOperator.value = initialQuery.operator;
         advancedFilters.value = initialQuery.filters.map(({ _key, value }) => {
-          const { default_label, default_hint, ...field } = fields.find(
-            (field) => field._key === _key,
-          );
+          const customField = store.getters.getCustomFieldByKey(_key);
           return {
-            ...field,
-            label: default_label,
-            hint: default_hint,
+            _key: uid(), // local-only
+            custom_field_key: _key,
+            label: customField.default_label,
+            hint: customField.default_hint,
             value,
           };
         });
