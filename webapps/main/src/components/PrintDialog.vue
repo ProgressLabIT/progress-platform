@@ -115,7 +115,7 @@
 
           <q-btn
             :label="$t('back')"
-            color="theme-black"
+            color="theme-grey"
             @click="activeStep--"
           />
           <q-btn
@@ -132,6 +132,7 @@
         :disable="selectedTemplate === undefined && !isLoadingTemplate"
         :header-nav="false"
         icon="mdi-printer-eye"
+        active-icon="mdi-printer-eye"
         :title="$t('printDialog.preview.title')"
       >
         <div class="col scroll full-width flex flex-center">
@@ -153,11 +154,11 @@
 
           <q-btn
             :label="$t('back')"
-            color="theme-black"
+            color="theme-grey"
             @click="activeStep--"
           />
           <q-btn
-            :label="$t('print')"
+            :label="$t('save')"
             color="primary"
             :disable="isLoadingTemplate"
             @click="

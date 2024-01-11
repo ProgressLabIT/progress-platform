@@ -13,10 +13,9 @@
       <div>
         <q-btn
           v-if="isAvailable"
-          color="low"
-          flat
-          round
+          color="primary"
           icon="mdi-printer"
+          :label="$t('print')"
           @click="openPrintDialog"
         >
           <q-tooltip>{{ $capitalize($t('print')) }}</q-tooltip>
