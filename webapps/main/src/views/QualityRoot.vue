@@ -80,13 +80,15 @@
     >
       <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
-          <q-checkbox v-model="issue_open" dense :label="$t('issue_open')">
-          </q-checkbox>
+          <q-checkbox v-model="issue_open" dense :label="$t('issue_open')" />
         </div>
 
         <div class="col-6">
-          <q-checkbox v-model="issue_closed" dense :label="$t('issue_closed')">
-          </q-checkbox>
+          <q-checkbox
+            v-model="issue_closed"
+            dense
+            :label="$t('issue_closed')"
+          />
         </div>
 
         <div class="col-6">
@@ -94,8 +96,7 @@
             v-model="issue_critical"
             dense
             :label="$t('issue_critical')"
-          >
-          </q-checkbox>
+          />
         </div>
 
         <div class="col-6">
@@ -103,8 +104,7 @@
             v-model="issue_non_critical"
             dense
             :label="$t('issue_non_critical')"
-          >
-          </q-checkbox>
+          />
         </div>
       </div>
 
@@ -131,10 +131,10 @@
         dense
         key-only
         class="q-mb-md"
+        behavior="menu"
         :value="issue_type_key"
         @select="(selection) => (issue_type_key = selection)"
-      >
-      </BaseAutocompleteIssueType>
+      />
 
       <!-- OPENED DATE RANGE -->
       <div class="row q-col-gutter-sm">
@@ -257,38 +257,39 @@
         :placeholder="$capitalize($t('opened_by'))"
         dense
         class="q-mb-md"
+        behavior="menu"
         key-only
         :label="$t('opened_by')"
         :operator-only="false"
         :value="created_by"
         @select="(selection) => (created_by = selection)"
-      >
-      </BaseAutocompleteUser>
+      />
 
       <!-- CLOSED BY -->
       <BaseAutocompleteUser
         :placeholder="$capitalize($t('closed_by'))"
         dense
         class="q-mb-md"
+        behavior="menu"
         key-only
         :label="$t('closed_by')"
         :operator-only="false"
         :value="closed_by"
         @select="(selection) => (closed_by = selection)"
-      >
-      </BaseAutocompleteUser>
+      />
 
       <!-- OPERATION -->
       <BaseAutocompleteOperation
         dense
         filled
         class="q-mb-md"
+        behavior="menu"
+        popup-content-class="z-max"
         key-only
         :label="$capitalize($t('operation.label'))"
         :value="operation_key"
         @select="(selection) => (operation_key = selection)"
-      >
-      </BaseAutocompleteOperation>
+      />
 
       <!-- PRODUCT -->
       <q-input
@@ -404,6 +405,7 @@
             v-else
             :field="filter"
             style="margin-bottom: 0"
+            dense
             @update="
               filter.value = filter.type === 'choice' ? $event?.value : $event
             "
@@ -424,9 +426,9 @@
 </template>
 
 <script>
-import { Dialog } from 'quasar';
+import { Dialog, uid } from 'quasar';
 import { ref, watch } from 'vue';
-import { api } from '@/boot/axios';
+import { useStore } from 'vuex';
 import AddAdvancedFilterDialog from '@/components/AddAdvancedFilterDialog.vue';
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
@@ -449,15 +451,18 @@ export default {
   },
 
   setup() {
+    const store = useStore();
+
     const showFilterDrawer = ref(false);
     const advancedFilterOperator = ref('AND');
+    // Contains local form fields referencing to actual custom fields
     const advancedFilters = ref([]);
 
     function addAdvancedFilter() {
       Dialog.create({
         component: AddAdvancedFilterDialog,
-      }).onOk((field) => {
-        advancedFilters.value.push(field);
+      }).onOk((formField) => {
+        advancedFilters.value.push(formField);
       });
     }
 
@@ -472,7 +477,10 @@ export default {
 
         advancedFilterQuery.value = {
           operator,
-          filters: advancedFilters.map(({ _key, value }) => ({ _key, value })),
+          filters: advancedFilters.map(({ custom_field_key, value }) => ({
+            _key: custom_field_key,
+            value,
+          })),
         };
       },
       { deep: true },
@@ -481,16 +489,14 @@ export default {
     const initialQuery = advancedFilterQuery.value;
     if (initialQuery) {
       (async () => {
-        const { data: fields } = await api.get('field');
         advancedFilterOperator.value = initialQuery.operator;
         advancedFilters.value = initialQuery.filters.map(({ _key, value }) => {
-          const { default_label, default_hint, ...field } = fields.find(
-            (field) => field._key === _key,
-          );
+          const customField = store.getters.getCustomFieldByKey(_key);
           return {
-            ...field,
-            label: default_label,
-            hint: default_hint,
+            _key: uid(), // local-only
+            custom_field_key: _key,
+            label: customField.default_label,
+            hint: customField.default_hint,
             value,
           };
         });

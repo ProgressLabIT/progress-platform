@@ -43,10 +43,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { useStore } from 'vuex';
 import { useFormFields } from '@/composables/form';
 import searchFields from '@/lib/MultiFieldSearch';
-import { api } from 'boot/axios';
 
 /**
  * @typedef {{
@@ -55,7 +55,7 @@ import { api } from 'boot/axios';
  *  name: string;
  *  default_label: string;
  *  default_hint: string;
- * }} FormField
+ * }} CustomField
  */
 
 defineProps({
@@ -73,34 +73,26 @@ const emit = defineEmits(['update:modelValue']);
 
 const { getFieldIcon } = useFormFields();
 
-const loading = ref(false);
+const store = useStore();
 /**
- * @type {import('vue').Ref<FormField[]>}
+ * @type {import('vue').ComputedRef<CustomField[]>}
  */
-const fields = ref([]);
-const options = ref(fields.value);
-(async () => {
-  loading.value = true;
+const customFields = computed(() => store.state.form.customFields);
 
-  const { data } = await api.get('field');
-  fields.value = data;
-  options.value = data;
-
-  loading.value = false;
-})();
+const options = ref(customFields.value);
 
 const searchableFields = ['type', 'name', 'default_label'];
 function onFilter(value, update) {
   if (value === '') {
     update(() => {
-      options.value = fields.value;
+      options.value = customFields.value;
     });
     return;
   }
 
   update(() => {
     const needle = value.toLowerCase();
-    options.value = fields.value.filter((option) =>
+    options.value = customFields.value.filter((option) =>
       searchFields(needle, option, searchableFields),
     );
   });

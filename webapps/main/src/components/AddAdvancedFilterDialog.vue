@@ -1,10 +1,10 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide">
     <q-card class="dialog-card q-pa-lg surface2">
-      <q-form id="filter-form" @submit="onDialogOK(editableField)">
+      <q-form id="filter-form" @submit="onDialogOK(formField)">
         <q-card-section>
-          <BaseAutocompleteFormField
-            v-model="formField"
+          <BaseAutocompleteCustomField
+            v-model="customField"
             :label="capitalize(t('field'))"
             class="input-field"
             autofocus
@@ -12,20 +12,19 @@
           />
         </q-card-section>
 
-        <q-card-section v-if="formField">
+        <q-card-section v-if="customField">
           <q-checkbox
-            v-if="editableField.type === 'files'"
-            v-model="editableField.value"
+            v-if="formField.type === 'files'"
+            v-model="formField.value"
             :label="t('has_attachments')"
-          >
-          </q-checkbox>
+          />
           <FormField
             v-else
-            :field="editableField"
+            :field="formField"
             class="input-field"
             @update="
-              editableField.value =
-                editableField.type === 'choice' ? $event?.value : $event
+              formField.value =
+                formField.type === 'choice' ? $event?.value : $event
             "
           />
         </q-card-section>
@@ -50,11 +49,11 @@
 </template>
 
 <script setup>
-import { useDialogPluginComponent } from 'quasar';
+import { uid, useDialogPluginComponent } from 'quasar';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { capitalize } from 'boot/filters';
-import BaseAutocompleteFormField from './BaseAutocompleteFormField.vue';
+import BaseAutocompleteCustomField from './BaseAutocompleteCustomField.vue';
 import FormField from './FormField.vue';
 
 defineEmits(useDialogPluginComponent.emitsObject);
@@ -66,14 +65,14 @@ const { t } = useI18n();
 
 const formField = ref(null);
 
-const editableField = ref(null);
-
-watch(formField, ({ default_label, default_hint, ...field }) => {
-  const value = ['boolean', 'files'].includes(field.type) ? false : null;
-  editableField.value = {
-    ...field,
-    label: default_label,
-    hint: default_hint,
+const customField = ref(null);
+watch(customField, (customField) => {
+  const value = ['boolean', 'files'].includes(customField.type) ? false : null;
+  formField.value = {
+    _key: uid(), // local-only
+    custom_field_key: customField._key,
+    label: customField.default_label,
+    hint: customField.default_hint,
     value,
   };
 });
