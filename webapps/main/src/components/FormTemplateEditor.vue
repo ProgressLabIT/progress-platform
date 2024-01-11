@@ -10,7 +10,7 @@
     >
       <div class="col-auto">
         <q-icon
-          v-if="editMode"
+          v-if="isDragDropEnabled"
           name="mdi-drag-horizontal-variant"
           class="q-mr-sm drag-handle"
           size="sm"
@@ -73,7 +73,7 @@
 <script setup>
 import { Dialog, uid } from 'quasar';
 import Sortable from 'sortablejs';
-import { ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useFormFields } from '@/composables/form';
 import AddCustomFieldDialog from './process-steps/AddCustomFieldDialog.vue';
@@ -117,10 +117,16 @@ function initSortable() {
     },
   });
 }
+const isDragDropEnabled = computed(
+  () => props.editMode && fieldsModel.value.length > 1,
+);
 watch(
-  () => props.editMode,
-  () => {
-    if (props.editMode) {
+  isDragDropEnabled,
+  async (isEnabled) => {
+    // Ensure the container is rendered before initializing sortable
+    await nextTick();
+
+    if (isEnabled) {
       initSortable();
       return;
     }
@@ -130,6 +136,7 @@ watch(
       sortable = undefined;
     }
   },
+  { immediate: true },
 );
 
 function addField() {
