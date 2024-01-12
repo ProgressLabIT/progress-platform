@@ -52,6 +52,8 @@ services:
       - "traefik.http.routers.api.middlewares=strip_api_prefix"
 
   db:
+    # image: arangodb:3.11 # Use this for Intel Processors
+    image: arm64v8/arangodb:3.11 # This works for Apple Silicon M1-M3 processors
     restart: unless-stopped
     environment:
       - ARANGO_NO_AUTH=1
