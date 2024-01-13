@@ -78,6 +78,7 @@ with sys_db_connection.begin_batch_execution() as sys_db:
 # ————————————————————————————
 collections = [
   'Batch',
+  'can_use_print_template',
   'Config',
   'Counter',
   'CustomField',
@@ -93,6 +94,7 @@ collections = [
   'message',
   'Operation',
   'Phase',
+  'PrintTemplate',
   'Product',
   'ProductionItem',
   'Queue',
