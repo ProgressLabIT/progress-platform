@@ -366,7 +366,7 @@ export default {
       this.form_fields = form_template.map((field) => ({
         ...field,
         value: this.issue.data.find(
-          ({ form_field_key }) => form_field_key === field._key,
+          ({ _key }) => _key === field._key,
         )?.value,
       }));
     },
