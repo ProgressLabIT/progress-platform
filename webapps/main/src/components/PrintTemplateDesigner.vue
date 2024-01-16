@@ -60,7 +60,7 @@
             <q-select
               v-if="workingTemplate.links[column].type === 'preset'"
               v-model="workingTemplate.links[column].value"
-              :options="templateDataOptions"
+              :options="templateDataOptions.sort()"
               filled
               class="shadow-3"
             />
