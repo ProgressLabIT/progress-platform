@@ -76,6 +76,7 @@
             flat
             style="width: 105%"
             size="12px"
+            color="high"
             align="between"
             @click="addStep(stepType)"
           >
