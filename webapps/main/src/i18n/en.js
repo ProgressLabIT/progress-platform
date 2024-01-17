@@ -568,7 +568,10 @@ export default {
   send: 'Send',
   settings: {
     companyName: 'Name',
-    companyLogo: 'Logo',
+    companyLogo: {
+      label: 'Logo',
+      hint: 'Must be an image file with 1:1 aspect ratio and {size} size',
+    },
     operatorCost: {
       label: 'Default operator cost',
       mustBePositive: 'Must be greater than or equal to 0',

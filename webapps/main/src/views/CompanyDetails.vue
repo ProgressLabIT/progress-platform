@@ -13,7 +13,7 @@
 
     <div>
       <div v-if="editMode" class="q-ml-xs q-pl-sm text-body2 text-low">
-        {{ $t('settings.companyLogo') }}
+        {{ $t('settings.companyLogo.label') }}
       </div>
 
       <div class="logo q-mt-sm" :class="{ 'logo--editable': editMode }">
@@ -48,8 +48,9 @@
           accept="image/*"
           @update:model-value="onFilePicked"
         />
-
-        <!-- TODO: Add hint about size and format requirements -->
+      </div>
+      <div v-if="editMode" class="low-text q-pt-xs">
+        {{ $t('settings.companyLogo.hint', { size: logoSize }) }}
       </div>
     </div>
   </div>

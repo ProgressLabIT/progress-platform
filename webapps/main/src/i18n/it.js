@@ -577,7 +577,10 @@ export default {
   send: 'Invia',
   settings: {
     companyName: 'Nome',
-    companyLogo: 'Logo',
+    companyLogo: {
+      label: 'Logo',
+      hint: 'Deve essere un file immagine con rapporto 1:1 e dimensione {size}',
+    },
     operatorCost: {
       label: 'Costo orario operatore',
       mustBePositive: 'Deve essere maggiore o uguale a 0',
