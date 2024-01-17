@@ -42,5 +42,7 @@ class JobHasNoAssigneeError(Exception): pass
 
 class JobHasNoActiveBatchError(Exception): pass
 
+class JobHasNoAssigneeError(Exception): pass
+
 class WipNotAvailableError(Exception): pass
 

@@ -8,6 +8,13 @@
       :readonly="!editMode"
       :rules="[(val) => val >= 0 || 'Must be greater than or equal to 0']"
     />
+
+    <q-toggle
+      v-model="configModel.allowUnassignedJobs"
+      label="Allow working on unassigned jobs"
+      :disable="!editMode"
+      class="q-mt-md"
+    />
   </div>
 </template>
 

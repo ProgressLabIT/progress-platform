@@ -16,6 +16,7 @@ export const useConfigStore = defineStore('config', () => {
       unsupervised_work_allowed: false,
     },
     operatorCost: 0,
+    allowUnassignedJobs: true,
   };
 
   const isLoading = ref(true);
@@ -36,8 +37,11 @@ export const useConfigStore = defineStore('config', () => {
     if (appConfig.operation_parameters) {
       config.operationParameters = appConfig.operation_parameters;
     }
-    if (appConfig.operator_cost) {
+    if (typeof appConfig.operator_cost === 'number') {
       config.operatorCost = appConfig.operator_cost;
+    }
+    if (typeof appConfig.allow_unassigned_jobs === 'boolean') {
+      config.allowUnassignedJobs = appConfig.allow_unassigned_jobs;
     }
   }
   void (async () => {
@@ -68,6 +72,7 @@ export const useConfigStore = defineStore('config', () => {
       company_name: configToUpdate.companyName,
       operation_parameters: configToUpdate.operationParameters,
       operator_cost: configToUpdate.operatorCost,
+      allow_unassigned_jobs: configToUpdate.allowUnassignedJobs,
     });
 
     Object.assign(config, configToUpdate);
