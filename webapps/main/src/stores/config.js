@@ -15,6 +15,7 @@ export const useConfigStore = defineStore('config', () => {
       auto_new_batch: true,
       unsupervised_work_allowed: false,
     },
+    operatorCost: 0,
   };
 
   const isLoading = ref(true);
@@ -34,6 +35,9 @@ export const useConfigStore = defineStore('config', () => {
     }
     if (appConfig.operation_parameters) {
       config.operationParameters = appConfig.operation_parameters;
+    }
+    if (appConfig.operator_cost) {
+      config.operatorCost = appConfig.operator_cost;
     }
   }
   void (async () => {
@@ -63,6 +67,7 @@ export const useConfigStore = defineStore('config', () => {
     await api.patch('config', {
       company_name: configToUpdate.companyName,
       operation_parameters: configToUpdate.operationParameters,
+      operator_cost: configToUpdate.operatorCost,
     });
 
     Object.assign(config, configToUpdate);
