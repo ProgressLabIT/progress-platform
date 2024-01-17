@@ -144,7 +144,7 @@ class Queries:
         FILTER
           !j.trash
           && j.assigned_to == null // unassigned
-          && !j.stage != 'closed' // prevent bugs in case of jobs being closed before being assigned
+          && j.stage != 'closed' // prevent bugs in case of jobs being closed before being assigned
 
         // Order by WorkOrder Queue position and Phase sequence
         LET wo_data = DOCUMENT(WorkOrder, j.wo_key)
