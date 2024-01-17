@@ -105,9 +105,11 @@
 </template>
 
 <script>
+import { storeToRefs } from 'pinia';
 import JobCard from '@/components/JobCard.vue';
 import JobCardSlim from '@/components/JobCardSlim.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
+import { useConfigStore } from '../stores/config';
 
 export default {
   name: 'UserJobsAll',
@@ -119,6 +121,14 @@ export default {
       type: Array,
       required: true,
     },
+  },
+
+  setup() {
+    const configStore = useConfigStore();
+    const { config } = storeToRefs(configStore);
+    return {
+      config,
+    };
   },
 
   data() {
@@ -153,12 +163,18 @@ export default {
     },
 
     jobs_view() {
+      const assigned = {
+        list: this.filtered_assigned_to_user,
+        total_count: this.assigned_to_user.length,
+        label: this.$capitalize(this.$t('job.assigned_to_me')),
+      };
+
+      if (!this.config.allowUnassignedJobs) {
+        return { assigned };
+      }
+
       return {
-        assigned: {
-          list: this.filtered_assigned_to_user,
-          total_count: this.assigned_to_user.length,
-          label: this.$capitalize(this.$t('job.assigned_to_me')),
-        },
+        assigned,
         unassigned: {
           list: this.filtered_unassigned,
           total_count: this.unassigned.length,
