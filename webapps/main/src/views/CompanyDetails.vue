@@ -3,7 +3,7 @@
     <q-input
       v-if="editMode"
       v-model="configModel.companyName"
-      label="Name"
+      :label="$t('settings.companyName')"
       filled
       class="q-mb-md"
     />
@@ -13,7 +13,7 @@
 
     <div>
       <div v-if="editMode" class="q-ml-xs q-pl-sm text-body2 text-low">
-        Logo
+        {{ $t('settings.companyLogo') }}
       </div>
 
       <div class="logo q-mt-sm" :class="{ 'logo--editable': editMode }">

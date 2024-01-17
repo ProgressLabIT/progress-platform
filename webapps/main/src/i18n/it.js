@@ -575,6 +575,15 @@ export default {
   select: 'seleziona',
   select_all: 'seleziona tutti',
   send: 'Invia',
+  settings: {
+    companyName: 'Nome',
+    companyLogo: 'Logo',
+    operatorCost: {
+      label: 'Costo orario operatore',
+      mustBePositive: 'Deve essere maggiore o uguale a 0',
+    },
+    allowUnassignedJobs: 'Consenti lavori non assegnati',
+  },
   session: {
     alerts: {
       close_session: 'vuoi davvero chiudere la sessione?',
