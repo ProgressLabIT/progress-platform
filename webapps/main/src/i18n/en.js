@@ -566,6 +566,15 @@ export default {
   select: 'select',
   select_all: 'select all',
   send: 'Send',
+  settings: {
+    companyName: 'Name',
+    companyLogo: 'Logo',
+    operatorCost: {
+      label: 'Default operator cost',
+      mustBePositive: 'Must be greater than or equal to 0',
+    },
+    allowUnassignedJobs: 'Allow working on unassigned jobs',
+  },
   session: {
     alerts: {
       close_session: 'do you really want to close this session?',

@@ -3,15 +3,15 @@
     <q-input
       v-model.number="configModel.operatorCost"
       type="number"
-      label="Default operator cost"
+      :label="$t('settings.operatorCost.label')"
       :hint="$capitalize($t('user.hourly_cost'))"
       :readonly="!editMode"
-      :rules="[(val) => val >= 0 || 'Must be greater than or equal to 0']"
+      :rules="[(val) => val >= 0 || $t('settings.operatorCost.mustBePositive')]"
     />
 
     <q-toggle
       v-model="configModel.allowUnassignedJobs"
-      label="Allow working on unassigned jobs"
+      :label="$t('settings.allowUnassignedJobs')"
       :disable="!editMode"
       class="q-mt-md"
     />
