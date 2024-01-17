@@ -1,11 +1,22 @@
 <template>
   <div class="fit q-pa-md">
-    <q-input v-model="companyName" label="Name" filled class="q-mb-md" />
+    <q-input
+      v-if="editMode"
+      v-model="configModel.companyName"
+      label="Name"
+      filled
+      class="q-mb-md"
+    />
+    <div v-else class="text-h2 display q-pb-sm">
+      {{ configModel.companyName }}
+    </div>
 
     <div>
-      <div class="q-ml-xs q-pl-sm text-body2 text-low">Logo</div>
+      <div v-if="editMode" class="q-ml-xs q-pl-sm text-body2 text-low">
+        Logo
+      </div>
 
-      <div class="logo q-mt-sm">
+      <div class="logo q-mt-sm" :class="{ 'logo--editable': editMode }">
         <q-img
           :src="logoUrl"
           class="logo__avatar"
@@ -14,7 +25,7 @@
           fit="contain"
         />
 
-        <div class="logo__actions">
+        <div v-if="editMode" class="logo__actions">
           <q-btn
             flat
             round
@@ -41,13 +52,6 @@
         <!-- TODO: Add hint about size and format requirements -->
       </div>
     </div>
-
-    <q-btn
-      label="Save"
-      color="theme-blue"
-      class="full-width q-mt-md"
-      @click="save"
-    />
   </div>
 </template>
 
@@ -55,45 +59,49 @@
 import { onUnmounted, ref, watch } from 'vue';
 import { useConfigStore } from '@/stores/config';
 
+defineProps({
+  editMode: {
+    type: Boolean,
+    required: true,
+  },
+});
+
+const configModel = defineModel({ type: Object, required: true });
+
 const filePickerRef = ref();
 
-const { config, configDefaults, updateAppConfig } = useConfigStore();
-
-watch(
-  () => config,
-  (config) => {
-    companyName.value = config.companyName;
-    logoUrl.value = config.companyLogo;
-  },
-  { deep: true },
-);
-
-const companyName = ref(config.companyName);
-/** @type {import('vue').Ref<File | undefined | null>} */
-const logoFile = ref();
+const { config, configDefaults } = useConfigStore();
 const logoUrl = ref(config.companyLogo);
+watch(
+  () => config.companyLogo,
+  (logo) => {
+    logoUrl.value = logo;
+  },
+);
+// in case the pending changes get cancelled
+watch(
+  () => configModel.value.companyLogo,
+  (logo) => {
+    if (typeof logo === 'string') {
+      logoUrl.value = logo;
+    }
+  },
+);
 
 onUnmounted(() => {
   URL.revokeObjectURL(logoUrl.value);
 });
 
 function onFilePicked(file) {
-  logoFile.value = file;
+  configModel.value.companyLogo = file;
   logoUrl.value = URL.createObjectURL(file);
-}
-
-async function save() {
-  await updateAppConfig({
-    companyName: companyName.value,
-    companyLogo: logoFile.value,
-  });
 }
 
 function restoreDefaultLogo() {
   URL.revokeObjectURL(logoUrl.value);
 
   logoUrl.value = configDefaults.companyLogo;
-  logoFile.value = null;
+  configModel.value.companyLogo = null;
 }
 
 const logoSize = '300px';
@@ -130,8 +138,8 @@ const logoSize = '300px';
     z-index: 2;
   }
 
-  &:hover &__avatar::before,
-  &:hover &__actions {
+  &--editable:hover &__avatar::before,
+  &--editable:hover &__actions {
     opacity: 1;
   }
 }
