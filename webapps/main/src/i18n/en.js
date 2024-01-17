@@ -678,6 +678,7 @@ export default {
     jobList: 'jobs',
     libraryRoot: 'product library',
     operationLibrary: 'operations',
+    otherSettings: 'other',
     workSession: 'work session',
     productionRoot: 'production monitoring',
     printTemplateLibrary: 'Prints',

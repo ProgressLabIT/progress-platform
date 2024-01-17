@@ -687,6 +687,7 @@ export default {
     issueTypeLibrary: 'tipi di segnalazione',
     issueOverview: 'Segnalazioni',
     operationLibrary: 'operazioni',
+    otherSettings: 'altro',
     workSession: 'sessione di lavoro',
     productionRoot: 'monitoraggio produzione',
     printTemplateLibrary: 'Stampe',

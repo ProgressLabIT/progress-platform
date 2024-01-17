@@ -22,6 +22,11 @@ const adminRoutes = [
             name: 'defaultOperationParameters',
             component: () => import('@/views/DefaultOperationParams.vue'),
           },
+          {
+            path: 'other',
+            name: 'otherSettings',
+            component: () => import('@/views/OtherSettings.vue'),
+          },
         ],
       },
       {

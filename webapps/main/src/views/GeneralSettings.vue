@@ -52,7 +52,11 @@ import { ref } from 'vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import { useConfigStore } from '@/stores/config';
 
-const sections = ['companyDetails', 'defaultOperationParameters'];
+const sections = [
+  'companyDetails',
+  'defaultOperationParameters',
+  'otherSettings',
+];
 
 const configStore = useConfigStore();
 const { isLoading, config } = storeToRefs(configStore);
