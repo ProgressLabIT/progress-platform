@@ -35,6 +35,7 @@ async def hello():
 app.include_router(endpoints.admin, tags=['Administration'])
 app.include_router(endpoints.auth, tags=['Security'])
 app.include_router(endpoints.bom, prefix="/product", tags=['Product'])
+app.include_router(endpoints.config, tags=['Administration'])
 app.include_router(endpoints.file, tags=['Attachments'])
 app.include_router(endpoints.form, tags=['Quality', 'Traceability'])
 app.include_router(endpoints.media, tags=['Attachments'])

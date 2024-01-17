@@ -1,13 +1,3 @@
 <template>
-  <v-card>TEST</v-card>
+  <q-card> TODO: Implement default phase params </q-card>
 </template>
-
-<script>
-export default {
-  name: 'DefaultPhaseParams',
-
-  data() {
-    return {};
-  },
-};
-</script>
