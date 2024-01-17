@@ -6,6 +6,15 @@ export const useConfigStore = defineStore('config', () => {
   const configDefaults = {
     companyName: 'Progress Platform',
     companyLogo: '/progresslab.svg',
+    operationParameters: {
+      max_offline: 60,
+      parallel_job_allowed: true,
+      step_check: false,
+      step_check_force_order: false,
+      production_batch_qt: 1,
+      auto_new_batch: true,
+      unsupervised_work_allowed: false,
+    },
   };
 
   const isLoading = ref(true);
@@ -23,6 +32,9 @@ export const useConfigStore = defineStore('config', () => {
     if (appConfig.company_logo) {
       config.companyLogo = appConfig.company_logo;
     }
+    if (appConfig.operation_parameters) {
+      config.operationParameters = appConfig.operation_parameters;
+    }
   }
   void (async () => {
     try {
@@ -35,9 +47,9 @@ export const useConfigStore = defineStore('config', () => {
   })();
 
   async function updateAppConfig(configToUpdate) {
-    // If undefined, don't update. If null, delete. Otherwise, update.
+    // If undefined or string, don't update. If null, delete. Otherwise, update.
     const { companyLogo } = configToUpdate;
-    if (companyLogo !== undefined) {
+    if (companyLogo !== undefined && typeof companyLogo !== 'string') {
       const formData = new FormData();
       formData.append('file', companyLogo);
       const { data } = await api.put(
@@ -50,6 +62,7 @@ export const useConfigStore = defineStore('config', () => {
 
     await api.patch('config', {
       company_name: configToUpdate.companyName,
+      operation_parameters: configToUpdate.operationParameters,
     });
 
     Object.assign(config, configToUpdate);

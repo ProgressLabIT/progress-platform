@@ -678,7 +678,7 @@ export default {
     PhasePrintTemplates: 'Stampe',
     adminPanel: 'impostazioni',
     companyDetails: 'dettagli azienda',
-    defaultPhaseParams: 'fase di default',
+    defaultOperationParameters: 'fase di default',
     flowLibrary: 'Flussi dati',
     formFieldLibrary: 'Campi moduli',
     generalSettings: 'generale',

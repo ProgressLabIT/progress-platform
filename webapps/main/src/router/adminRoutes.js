@@ -19,8 +19,8 @@ const adminRoutes = [
           },
           {
             path: 'default-phase',
-            name: 'defaultPhaseParams',
-            component: () => import('@/views/DefaultPhaseParams.vue'),
+            name: 'defaultOperationParameters',
+            component: () => import('@/views/DefaultOperationParams.vue'),
           },
         ],
       },

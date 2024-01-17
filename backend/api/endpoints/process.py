@@ -58,8 +58,12 @@ async def get_operation_list():
 
 @router.post('/operation')
 async def create_operation(new_op_data: Operation):
-
   try:
+    config = db.collection('Config').get('operation_parameters')
+    if config:
+      config = {k: v for k, v in config.items() if k not in ['_id', '_key', '_rev']}
+      new_op_data.default_phase_parameters = config
+
     new_op_record = db.collection('Operation').insert(new_op_data, return_new=True)['new']
     return APIResponse(detail=new_op_record, message="Operation created successfully")
 
