@@ -1,51 +1,33 @@
 <template>
-  <v-card class="fill">
-    <LoadingSignal v-if="!ready"></LoadingSignal>
-
-    <v-row v-else class="fill-height">
-      <v-col cols="2" class="fill-height d-flex flex-column">
-        <v-tabs vertical background-color="transparent" color="white">
-          <v-tab
+  <LoadingSignal v-if="isLoading" />
+  <div v-else class="row full-height">
+    <div class="full-height column col-3">
+      <div class="col-2 full-height column">
+        <q-tabs vertical color="white">
+          <q-route-tab
             v-for="tab in sections"
             :key="tab"
             :to="{ name: tab }"
-            class="menu display mb-2"
+            class="display"
           >
             {{ $t(`views.${tab}`) }}
-          </v-tab>
-        </v-tabs>
-      </v-col>
+          </q-route-tab>
+        </q-tabs>
+      </div>
+    </div>
 
-      <v-divider vertical></v-divider>
+    <q-separator vertical />
 
-      <v-col>
-        <router-view></router-view>
-      </v-col>
-    </v-row>
-  </v-card>
+    <div class="col full-height">
+      <router-view />
+    </div>
+  </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 
-export default {
-  name: 'GeneralSettings',
-
-  components: {
-    LoadingSignal,
-  },
-
-  data() {
-    return {
-      ready: true,
-      sections: ['companyDetails', 'defaultPhaseParams'],
-    };
-  },
-};
+const isLoading = ref(false);
+const sections = ['companyDetails', 'defaultPhaseParams'];
 </script>
-
-<style lang="css" scoped>
-.v-tab.menu {
-  justify-content: flex-start;
-}
-</style>

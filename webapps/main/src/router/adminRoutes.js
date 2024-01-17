@@ -3,13 +3,14 @@ const adminRoutes = [
     path: 'admin',
     name: 'adminPanel',
     component: () => import('@/views/AdminSection.vue'),
-    redirect: { name: 'userLibrary' },
+    redirect: { name: 'generalSettings' },
     meta: { scope: 'admin', screen_title: 'Impostazioni' },
     children: [
       {
         path: 'general',
         name: 'generalSettings',
         component: () => import('@/views/GeneralSettings.vue'),
+        redirect: { name: 'companyDetails' },
         children: [
           {
             path: 'company',

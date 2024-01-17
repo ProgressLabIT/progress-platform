@@ -1,7 +1,7 @@
 <template>
   <q-footer class="footer footer-text">
     <div class="row q-pa-sm display smaller">
-      <div class="col">PROGRESS PLATFORM</div>
+      <div class="col">{{ config.companyName }}</div>
       <div style="width: 70px">{{ time }}</div>
       <div class="col text-right">{{ date }}</div>
     </div>
@@ -10,9 +10,17 @@
 
 <script>
 import { DateTime } from 'luxon';
+import { useConfigStore } from '../stores/config';
 
 export default {
   name: 'AppFooter',
+
+  setup() {
+    const { config } = useConfigStore();
+    return {
+      config,
+    };
+  },
 
   data() {
     return {
