@@ -270,7 +270,7 @@ async function getOptions(searchTerm) {
   const { data } = await api.get('list', {
     params: {
       field_key: props.field.custom_field_key,
-      searchTerm: searchTerm || undefined,
+      search: searchTerm || undefined,
     },
   });
   loading.value = false;
