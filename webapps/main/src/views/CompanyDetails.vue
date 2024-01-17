@@ -14,13 +14,23 @@
           fit="contain"
         />
 
-        <q-btn
-          flat
-          round
-          icon="mdi-pencil"
-          class="logo__update-btn"
-          @click="filePickerRef.pickFiles()"
-        />
+        <div class="logo__actions">
+          <q-btn
+            flat
+            round
+            icon="mdi-pencil"
+            @click="filePickerRef.pickFiles()"
+          />
+
+          <q-btn
+            v-if="logoUrl !== configDefaults.companyLogo"
+            flat
+            round
+            icon="mdi-delete"
+            color="negative"
+            @click="restoreDefaultLogo"
+          />
+        </div>
         <q-file
           ref="filePickerRef"
           class="hidden"
@@ -47,7 +57,7 @@ import { useConfigStore } from '@/stores/config';
 
 const filePickerRef = ref();
 
-const { config, updateAppConfig } = useConfigStore();
+const { config, configDefaults, updateAppConfig } = useConfigStore();
 
 watch(
   () => config,
@@ -59,14 +69,12 @@ watch(
 );
 
 const companyName = ref(config.companyName);
-/** @type {import('vue').Ref<File | undefined>} */
+/** @type {import('vue').Ref<File | undefined | null>} */
 const logoFile = ref();
 const logoUrl = ref(config.companyLogo);
 
 onUnmounted(() => {
-  if (logoUrl.value) {
-    URL.revokeObjectURL(logoUrl.value);
-  }
+  URL.revokeObjectURL(logoUrl.value);
 });
 
 function onFilePicked(file) {
@@ -79,6 +87,13 @@ async function save() {
     companyName: companyName.value,
     companyLogo: logoFile.value,
   });
+}
+
+function restoreDefaultLogo() {
+  URL.revokeObjectURL(logoUrl.value);
+
+  logoUrl.value = configDefaults.companyLogo;
+  logoFile.value = null;
 }
 
 const logoSize = '300px';
@@ -104,7 +119,7 @@ const logoSize = '300px';
     z-index: 1;
   }
 
-  &__update-btn {
+  &__actions {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -116,7 +131,7 @@ const logoSize = '300px';
   }
 
   &:hover &__avatar::before,
-  &:hover &__update-btn {
+  &:hover &__actions {
     opacity: 1;
   }
 }

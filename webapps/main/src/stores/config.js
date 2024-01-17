@@ -35,11 +35,17 @@ export const useConfigStore = defineStore('config', () => {
   })();
 
   async function updateAppConfig(configToUpdate) {
-    if (configToUpdate.companyLogo) {
+    // If undefined, don't update. If null, delete. Otherwise, update.
+    const { companyLogo } = configToUpdate;
+    if (companyLogo !== undefined) {
       const formData = new FormData();
-      formData.append('file', configToUpdate.companyLogo);
-      const { data } = await api.put('config/company_logo/file', formData);
-      configToUpdate.companyLogo = data.detail.file_path;
+      formData.append('file', companyLogo);
+      const { data } = await api.put(
+        'config/company_logo/file',
+        companyLogo !== null ? formData : undefined,
+      );
+      const newPath = data.detail.file_path;
+      configToUpdate.companyLogo = newPath || configDefaults.companyLogo;
     }
 
     await api.patch('config', {
@@ -51,6 +57,7 @@ export const useConfigStore = defineStore('config', () => {
 
   return {
     config,
+    configDefaults,
     isLoading,
     updateAppConfig,
   };

@@ -54,15 +54,22 @@ def update_config(config: dict):
     raise HTTPError(500, "Failed to update config")
 
 @router.put('/config/{key}/file')
-def update_config_file(key: str, file: UploadFile):
+def update_config_file(key: str, file: UploadFile | None = None):
   try:
     config = db.collection('Config').get(key)
     if not config:
       config = db.collection('Config').insert(dict(_key=key, value=""))
 
     # Remove the old file if it exists
-    if path.exists(config['value']):
+    if config['value'] is not None and path.exists(config['value']):
       remove(config['value'])
+
+    if not file:
+      db.collection('Config').update(dict(_key=key, value=None))
+      return APIResponse(
+        message = "File for config parameter updated successfully",
+        detail = dict(file_path=None)
+      )
 
     folder_path = path.join(media_root_path, 'config', key)
     if not path.exists(folder_path):
