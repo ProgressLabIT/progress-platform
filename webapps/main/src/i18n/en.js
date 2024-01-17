@@ -669,7 +669,7 @@ export default {
     PhasePrintTemplates: 'Prints',
     adminPanel: 'settings',
     companyDetails: 'company details',
-    defaultPhaseParams: 'default phase',
+    defaultOperationParameters: 'default operation parameters',
     formFieldLibrary: 'Form fields',
     flowLibrary: 'Data flows',
     generalSettings: 'General',
