@@ -95,7 +95,15 @@
       <!-- USER DATA -->
       <div class="col">
         <router-view v-slot="{ Component, route }">
-          <transition name="slide-fade" mode="out-in">
+          <!--
+            When changing routes, due to an unknown problem, views from other trees get placed here.
+            So, we need to check if the route is in the userLibrary tree.
+          -->
+          <transition
+            v-if="route.matched.some(({ name }) => name === 'userLibrary')"
+            name="slide-fade"
+            mode="out-in"
+          >
             <div :key="route.fullPath">
               <component :is="Component" :user="selected_user" />
             </div>
