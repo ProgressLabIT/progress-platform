@@ -1,35 +1,10 @@
 <template>
-  <div class="fit q-pa-lg scroll">
-    <div class="row items-center q-mb-sm">
-      <div class="text-h2 display q-pb-sm">Company Details</div>
-
-      <q-space />
-
-      <template v-if="editMode">
-        <q-btn
-          size="12px"
-          color="theme-blue"
-          class="q-ml-auto"
-          :label="$t('save')"
-          @click="save"
-        />
-        <q-btn
-          size="12px"
-          class="q-ml-md"
-          color="theme-grey"
-          :label="$t('cancel')"
-          @click="cancel"
-        />
-      </template>
-      <BaseTooltipIcon
-        v-else
-        icon="mdi-pencil"
-        :tooltip="$capitalize($t('edit'))"
-        :color="$theme.blue"
-        @icon-click="editMode = true"
-      />
-    </div>
-
+  <SettingsSection
+    v-slot="{ editMode }"
+    :title="$t('views.companyDetails')"
+    @cancel="cancel"
+    @save="save"
+  >
     <q-input
       v-if="editMode"
       v-model="configModel.companyName"
@@ -82,23 +57,21 @@
         {{ $t('settings.companyLogo.hint', { size: logoSize }) }}
       </div>
     </div>
-  </div>
+  </SettingsSection>
 </template>
 
 <script setup>
 import { cloneDeep } from 'lodash';
 import { onUnmounted, ref } from 'vue';
-import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
+import SettingsSection from '@/components/SettingsSection.vue';
 import { useConfigStore } from '@/stores/config';
 
 const filePickerRef = ref();
 
 const { config, configDefaults, updateAppConfig } = useConfigStore();
 
-const editMode = ref(false);
 const configModel = ref(cloneDeep(config));
 function cancel() {
-  editMode.value = false;
   configModel.value = cloneDeep(config);
   logoUrl.value = config.companyLogo;
   logoFile.value = undefined;
@@ -108,7 +81,6 @@ async function save() {
     companyName: configModel.value.companyName,
     companyLogo: logoFile.value,
   });
-  editMode.value = false;
 }
 
 const logoUrl = ref(config.companyLogo);
