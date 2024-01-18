@@ -40,8 +40,8 @@ export const useConfigStore = defineStore('config', () => {
     if (typeof appConfig.operator_cost === 'number') {
       config.operatorCost = appConfig.operator_cost;
     }
-    if (typeof appConfig.allow_unassigned_jobs === 'boolean') {
-      config.allowUnassignedJobs = appConfig.allow_unassigned_jobs;
+    if (typeof appConfig.show_unassigned_jobs_to_operators === 'boolean') {
+      config.allowUnassignedJobs = appConfig.show_unassigned_jobs_to_operators;
     }
   }
   void (async () => {
@@ -72,7 +72,7 @@ export const useConfigStore = defineStore('config', () => {
       company_name: configToUpdate.companyName,
       operation_parameters: configToUpdate.operationParameters,
       operator_cost: configToUpdate.operatorCost,
-      allow_unassigned_jobs: configToUpdate.allowUnassignedJobs,
+      show_unassigned_jobs_to_operators: configToUpdate.allowUnassignedJobs,
     });
 
     Object.assign(config, configToUpdate);
