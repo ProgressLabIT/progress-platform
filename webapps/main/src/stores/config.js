@@ -34,8 +34,8 @@ export const useConfigStore = defineStore('config', () => {
     if (appConfig.company_logo) {
       config.companyLogo = appConfig.company_logo;
     }
-    if (appConfig.operation_parameters) {
-      config.operationParameters = appConfig.operation_parameters;
+    if (appConfig.default_operation_parameters) {
+      config.operationParameters = appConfig.default_operation_parameters;
     }
     if (typeof appConfig.operator_cost === 'number') {
       config.operatorCost = appConfig.operator_cost;
