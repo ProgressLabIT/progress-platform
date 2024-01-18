@@ -56,7 +56,7 @@ class FormFieldDefinition(BaseModel):
   key: str = Field(None, alias="_key")
   custom_field_key: str
   multiple: bool = False
-  label: str
+  label: str = None
   hint: str = None
   default: str = None # this value should be able to be parsed to get current data
   required: bool = False
