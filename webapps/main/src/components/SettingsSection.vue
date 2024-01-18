@@ -7,11 +7,12 @@
 
       <template v-if="editMode">
         <q-btn
+          type="submit"
+          form="settings-form"
           size="12px"
           color="theme-blue"
           class="q-ml-auto"
           :label="$t('save')"
-          @click="save"
         />
         <q-btn
           size="12px"
@@ -30,7 +31,9 @@
       />
     </div>
 
-    <slot v-bind="{ editMode }" />
+    <q-form id="settings-form" @submit="save">
+      <slot v-bind="{ editMode }" />
+    </q-form>
   </div>
 </template>
 
