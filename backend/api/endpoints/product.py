@@ -1,7 +1,5 @@
 import os
 import traceback
-from typing import List
-from fnmatch import fnmatch
 
 from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body
 from fastapi.encoders import jsonable_encoder
@@ -168,7 +166,7 @@ async def copy_product(
     )
 
   # 0.2 Setup transaction
-  tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'], read=['Operation'])
+  tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires', 'can_use_print_template'], read=['Operation'])
   product_db = tx.collection('Product')
 
   # 0.3 Fetch product data
@@ -206,6 +204,15 @@ async def copy_product(
       status_code=status_code,
       detail=response
     )
+
+  def copy_print_templates(collection_name, from_key, to_key):
+    print_template_cursor = tx.collection('can_use_print_template').find(dict(_from=f'{collection_name}/{from_key}'))
+    if print_template_cursor.count() > 0:
+      new_print_templates = []
+      for edge in print_template_cursor:
+        new_print_templates.append(dict(_from=f'{collection_name}/{to_key}', _to=edge['_to']))
+
+      tx.collection('can_use_print_template').insert_many(new_print_templates, silent=True)
 
   try:
     # 1. CREATE NEW PRODUCT WITH PROVIDED CODE
@@ -250,6 +257,8 @@ async def copy_product(
         if os.path.isdir(step_media.folder_path):
           step_media.copy_media(new_step_key)
 
+        # 4.4. STEP: Copy print templates
+        copy_print_templates('Step', step.key, new_step_key)
 
       # 3.2 PHASE: create new phase with existing operation key and parameters and new step sequence
       phase.step_sequence = new_step_sequence
@@ -272,6 +281,9 @@ async def copy_product(
         type='PhaseOperation'
       )
       tx.insert_document('requires', phase_operation_edge)
+
+      # 3.5 PHASE: Copy print templates
+      copy_print_templates('Phase', phase.key, new_phase_key)
 
       # 4.1 BOM: Get BoM for phase
       match = dict(
@@ -312,7 +324,10 @@ async def copy_product(
     Delete media folders created if something goes wrong
     """
 
-    # 8. Commit transaction
+    # 8. Copy product print templates
+    copy_print_templates('Product', original_product_key, new_product_key)
+
+    # 9. Commit transaction
     tx.commit_transaction()
 
     return APIResponse(

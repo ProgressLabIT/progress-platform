@@ -122,6 +122,7 @@ export default {
     showCopy() {
       this.$q
         .dialog({
+          // TODO: use proper translation, this doesn't make sense in English, for example
           title:
             this.$t('code') +
             ' ' +
