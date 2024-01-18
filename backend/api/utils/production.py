@@ -137,10 +137,7 @@ class Queries:
       }
     )
 
-    LET allow_unassigned_jobs_config = Document(Config, 'allow_unassigned_jobs')
-    LET allow_unassigned_jobs = allow_unassigned_jobs_config ? allow_unassigned_jobs_config.value : true
-
-    LET unassigned_jobs = !allow_unassigned_jobs ? [] : (
+    LET unassigned_jobs = (
       LET wo_queue = FIRST(FOR q IN Queue FILTER q.type == 's' RETURN q.work_orders)
 
       FOR j in Job

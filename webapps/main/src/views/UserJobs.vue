@@ -20,8 +20,18 @@
 </template>
 
 <script>
+import { storeToRefs } from 'pinia';
+import { useConfigStore } from '@/stores/config';
+
 export default {
   name: 'UserJobs',
+
+  setup() {
+    const { config } = storeToRefs(useConfigStore());
+    return {
+      config,
+    };
+  },
 
   data() {
     return {
@@ -37,7 +47,11 @@ export default {
     },
 
     unassigned_jobs() {
-      return this.vuex_ready ? this.$store.state.job.unassigned_job_list : [];
+      if (!this.vuex_ready || this.config.allowUnassignedJobs === false) {
+        return [];
+      }
+
+      return this.$store.state.job.unassigned_job_list;
     },
 
     job_list() {

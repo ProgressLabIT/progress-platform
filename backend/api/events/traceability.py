@@ -542,9 +542,9 @@ class ProductionActivityEvent(BaseEvent):
     if self.job.stage != WorkStatus.CREATED:
       raise JobIsStartedError('Job has already been started')
 
-    allow_unassigned_jobs = self.tx.collection('Config').get('allow_unassigned_jobs')
-    if self.job.assigned_to is None and (allow_unassigned_jobs and allow_unassigned_jobs['value'] == False):
-      raise JobHasNoAssigneeError('Unassigned jobs cannot be worked on as config "allow_unassigned_jobs" is false')
+    show_unassigned_jobs_to_operators = self.tx.collection('Config').get('show_unassigned_jobs_to_operators')
+    if self.job.assigned_to is None and show_unassigned_jobs_to_operators.get('value', True):
+      raise JobHasNoAssigneeError('Unassigned jobs cannot be worked on as config "show_unassigned_jobs_to_operators" is false')
 
     # Create new batch and store _key in Event.info
     self.create_batch()
