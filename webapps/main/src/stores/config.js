@@ -55,9 +55,9 @@ export const useConfigStore = defineStore('config', () => {
   })();
 
   async function updateAppConfig(configToUpdate) {
-    // If undefined or string, don't update. If null, delete. Otherwise, update.
+    // If undefined, don't update. If null, delete. Otherwise, update.
     const { companyLogo } = configToUpdate;
-    if (companyLogo !== undefined && typeof companyLogo !== 'string') {
+    if (companyLogo !== undefined) {
       const formData = new FormData();
       formData.append('file', companyLogo);
       const { data } = await api.put(

@@ -18,7 +18,7 @@
       >
         <!-- SELECTED OPTION -->
         <template #header>
-          <div class="full-width q-pa-lg">
+          <div class="full-width" :class="dense ? 'q-py-sm' : 'q-pa-lg'">
             <div class="text-h5 uppercase q-mb-sm low-text">
               {{ $t(`phase.params.${paramKey}.title`) }}
             </div>
@@ -89,6 +89,10 @@ const props = defineProps({
   editMode: {
     type: Boolean,
     required: true,
+  },
+  dense: {
+    type: Boolean,
+    default: false,
   },
 });
 

@@ -567,6 +567,7 @@ export default {
   select_all: 'select all',
   send: 'Send',
   settings: {
+    section: 'Section',
     companyName: 'Name',
     companyLogo: {
       label: 'Logo',
