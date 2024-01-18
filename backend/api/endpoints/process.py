@@ -59,7 +59,7 @@ async def get_operation_list():
 @router.post('/operation')
 async def create_operation(new_op_data: Operation):
   try:
-    config = db.collection('Config').get('operation_parameters')
+    config = db.collection('Config').get('default_operation_parameters')
     if config:
       config = {k: v for k, v in config.items() if k not in ['_id', '_key', '_rev']}
       new_op_data.default_phase_parameters = config
