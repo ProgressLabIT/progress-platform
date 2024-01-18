@@ -1,17 +1,46 @@
 <template>
-  <div class="fit q-pa-md">
+  <div class="fit q-pa-lg scroll">
+    <div class="row items-center q-mb-sm">
+      <div class="text-h2 display q-pb-sm">Company Details</div>
+
+      <q-space />
+
+      <template v-if="editMode">
+        <q-btn
+          size="12px"
+          color="theme-blue"
+          class="q-ml-auto"
+          :label="$t('save')"
+          @click="save"
+        />
+        <q-btn
+          size="12px"
+          class="q-ml-md"
+          color="theme-grey"
+          :label="$t('cancel')"
+          @click="cancel"
+        />
+      </template>
+      <BaseTooltipIcon
+        v-else
+        icon="mdi-pencil"
+        :tooltip="$capitalize($t('edit'))"
+        :color="$theme.blue"
+        @icon-click="editMode = true"
+      />
+    </div>
+
     <q-input
       v-if="editMode"
       v-model="configModel.companyName"
       :label="$t('settings.companyName')"
       filled
-      class="q-mb-md"
     />
-    <div v-else class="text-h2 display q-pb-sm">
+    <div v-else class="text-h3 highlight">
       {{ configModel.companyName }}
     </div>
 
-    <div>
+    <div class="q-mt-md">
       <div v-if="editMode" class="q-ml-xs q-pl-sm text-body2 text-low">
         {{ $t('settings.companyLogo.label') }}
       </div>
@@ -57,44 +86,41 @@
 </template>
 
 <script setup>
-import { onUnmounted, ref, watch } from 'vue';
+import { cloneDeep } from 'lodash';
+import { onUnmounted, ref } from 'vue';
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 import { useConfigStore } from '@/stores/config';
-
-defineProps({
-  editMode: {
-    type: Boolean,
-    required: true,
-  },
-});
-
-const configModel = defineModel({ type: Object, required: true });
 
 const filePickerRef = ref();
 
-const { config, configDefaults } = useConfigStore();
+const { config, configDefaults, updateAppConfig } = useConfigStore();
+
+const editMode = ref(false);
+const configModel = ref(cloneDeep(config));
+function cancel() {
+  editMode.value = false;
+  configModel.value = cloneDeep(config);
+  logoUrl.value = config.companyLogo;
+  logoFile.value = undefined;
+}
+async function save() {
+  await updateAppConfig({
+    companyName: configModel.value.companyName,
+    companyLogo: logoFile.value,
+  });
+  editMode.value = false;
+}
+
 const logoUrl = ref(config.companyLogo);
-watch(
-  () => config.companyLogo,
-  (logo) => {
-    logoUrl.value = logo;
-  },
-);
-// in case the pending changes get cancelled
-watch(
-  () => configModel.value.companyLogo,
-  (logo) => {
-    if (typeof logo === 'string') {
-      logoUrl.value = logo;
-    }
-  },
-);
+// undefined: no change, null: restore default, otherwise: new file
+const logoFile = ref();
 
 onUnmounted(() => {
   URL.revokeObjectURL(logoUrl.value);
 });
 
 function onFilePicked(file) {
-  configModel.value.companyLogo = file;
+  logoFile.value = file;
   logoUrl.value = URL.createObjectURL(file);
 }
 
@@ -102,7 +128,7 @@ function restoreDefaultLogo() {
   URL.revokeObjectURL(logoUrl.value);
 
   logoUrl.value = configDefaults.companyLogo;
-  configModel.value.companyLogo = null;
+  logoFile.value = null;
 }
 
 const logoSize = '300px';
