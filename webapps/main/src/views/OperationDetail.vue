@@ -174,7 +174,7 @@ export default {
   },
 
   setup() {
-    const tab = ref('parameters');
+    const tab = ref('steps');
 
     return {
       activeTab: tab,
