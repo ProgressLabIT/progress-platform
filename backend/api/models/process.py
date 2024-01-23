@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from pydantic import Field
 
@@ -46,7 +46,7 @@ class Step(FlexModel):
   description: str = None
   type: StepType = StepType.INSTRUCTION
   form_fields: List[FormFieldDefinition] = []
-  print_templates: List[PrintTemplateRecord] = []
+  print_templates: List[PrintTemplateRecord | str] = []
 
 
 # TODO: Add validation for size, content_type, etc.
@@ -58,7 +58,7 @@ class Media(ArangoDocument):
 
 
 class StepWithMediaInfo(Step):
-  media: List[Union[Media, str]] = None
+  media: List[Media | str] = None
 
 class Operation(ArangoDocument):
   name: str

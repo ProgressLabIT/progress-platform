@@ -21,10 +21,7 @@ router = APIRouter()
 # TODO: optimize queries
 @router.get('/operation')
 async def get_operation_list():
-
-  def enrich_op_data(op_data):
-    op_data['used_for'] = get_products_using_operation(op_data['_key'])
-
+  def enrich_with_media(op_data):
     operation_media_cursor = db.aql.execute(
       """
       FOR mc IN media_connection
@@ -48,6 +45,29 @@ async def get_operation_list():
           step_media.append(media)
 
       step['media'] = step_media
+
+  def enrich_with_templates(op_data):
+    for step in op_data.get('default_phase_steps', []):
+      if not step.get('print_templates'):
+        step['print_templates'] = []
+        continue
+
+      step_templates = []
+      for template_key in step['print_templates']:
+        # account for faulty logic from previous versions
+        if not isinstance(template_key, str):
+          template_key = template_key['_key']
+
+        template = db.collection('PrintTemplate').get(template_key)
+        if template:
+          step_templates.append(template)
+
+      step['print_templates'] = step_templates
+
+  def enrich_op_data(op_data):
+    op_data['used_for'] = get_products_using_operation(op_data['_key'])
+    enrich_with_media(op_data)
+    enrich_with_templates(op_data)
 
     return Operation(**op_data)
 
