@@ -1,12 +1,23 @@
 import os
 import shutil
+from io import BufferedReader
+
+from fastapi import UploadFile
+
 from utils.config import get_config
 from models.form import FileBucket
 
 media_root_path = get_config().media_path
 
 class FileHandler:
-  def __init__(self, bucket: FileBucket, object_key=None, subfolder=None, file=None, name=None):
+  def __init__(
+    self,
+    bucket: FileBucket,
+    object_key: str | None = None,
+    subfolder: str | None = None,
+    file: UploadFile | BufferedReader | None = None,
+    name: str | None = None
+  ):
     self.bucket = bucket # media type
     self.object_key = object_key # media item key
     self.subfolder = subfolder
@@ -55,10 +66,11 @@ class FileHandler:
     return cls(bucket=FileBucket.STEP, object_key=object_key, subfolder=subfolder, file=file, name=name)
 
 
-  async def write_file(self, file=None, custom_name=None):
+  async def write_file(self, file: UploadFile | BufferedReader | None = None, custom_name: str | None = None):
     if file:
       self.file = file
-      self.name = file.filename
+      if not custom_name:
+        self.name = file.filename
 
     if custom_name:
       self.name = custom_name
@@ -66,9 +78,12 @@ class FileHandler:
     if not os.path.isdir(self.folder_path):
       os.makedirs(self.folder_path)
 
-    with open(os.path.join(self.folder_path, self.name), 'wb+') as f:
-      file = await self.file.read() # self.file is a `UploadFile` object, and the write method requires a bytes-like object
-      f.write(file)
+    with open(os.path.join(self.folder_path, self.name), 'wb+') as target_file:
+      if isinstance(self.file, BufferedReader):
+        file = self.file.read()
+      else:
+        file = await self.file.read()
+      target_file.write(file)
       print(f"File saved in {self.folder_path}")
 
 

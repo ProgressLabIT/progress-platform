@@ -66,7 +66,7 @@ class Operation(ArangoDocument):
   description: str = None
   default_phase_parameters: PhaseParameters = PhaseParameters()
   default_phase_notes: str = None
-  default_phase_steps: List[Step] = []
+  default_phase_steps: List[StepWithMediaInfo] = []
 
 
 class PhaseRecord(ArangoDocument):

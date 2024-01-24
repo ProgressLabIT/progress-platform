@@ -6,6 +6,9 @@ from utils.config import get_config
 
 media_root_path = get_config().media_path
 
+def get_media_path(media_key: str):
+  return path.join(media_root_path, media_key)
+
 def delete_media(media_key: str):
   """
   Delete the media from the disk and the database.

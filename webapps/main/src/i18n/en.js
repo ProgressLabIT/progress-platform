@@ -273,6 +273,12 @@ export default {
       op_name_missing: 'please indicate a name for the operation',
       op_name_used: 'name already used for another operation',
     },
+    copyToAll: {
+      title: 'Copy to All',
+      confirm: 'Are you sure you want to copy this operation to all phases?',
+      success: 'Successfully copied the operation to {count} phases',
+      error: 'An error occurred while copying the operation',
+    },
     default_params_explainer:
       'New phases associated with this operation will be created with the parameters indicated here. You will be able to set different phase-specific parameters after the creation',
     default_params_title: 'default parameters',

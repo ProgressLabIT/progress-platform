@@ -1,5 +1,6 @@
 import traceback
 from typing import List
+from uuid import uuid4
 
 from arango import DocumentGetError
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
@@ -12,7 +13,7 @@ from utils.db import db
 from utils.file import FileHandler
 from utils.process import *
 from utils.exceptions import HTTPError
-from utils.media import delete_media
+from utils.media import get_media_path, delete_media
 
 
 router = APIRouter()
@@ -238,6 +239,91 @@ async def delete_operation(op_key: str):
     removed_op = db.collection('Operation').delete(dict(_key=op_key), return_old=True)['old']
     return APIResponse(message="Operation successfully deleted", detail=removed_op)
 
+
+@router.post('/operation/{operation_key}/copy_to_all')
+async def copy_operation_to_all_phases(operation_key: str):
+  operation_data = db.collection('Operation').get(operation_key)
+  if not operation_data:
+    raise HTTPError(404, "Could not find Operation in the DB")
+
+  try:
+    tx = db.begin_transaction(write=['Phase', 'Step', 'can_use_print_template'])
+
+    phases_cursor = tx.collection('Phase').find(dict(operation_key=operation_key))
+    phases = [PhaseRecord(**phase) for phase in phases_cursor]
+    phase_updates = []
+    for phase in phases:
+      new_step_sequence = []
+      for step in operation_data['default_phase_steps']:
+        step_data = jsonable_encoder(step, exclude={'_key', 'form_fields', 'media', 'print_templates'})
+
+        step_data['form_fields'] = [
+          dict(
+            field,
+            _key=str(uuid4())
+          )
+          for field in step['form_fields']
+        ]
+
+        new_step = tx.collection('Step').insert(step_data, return_new=True)['new']
+
+        step_media = FileHandler.step_media(new_step['_key'])
+        media_keys = step.get('media', [])
+        media_cursor = tx.aql.execute(
+          """
+          FOR media IN Media
+            FILTER media._key IN @media_keys
+            RETURN media
+          """,
+          bind_vars=dict(
+            media_keys=media_keys
+          )
+        )
+        for media in media_cursor:
+          try:
+            media_path = get_media_path(media['_key'])
+            with open(media_path, 'rb') as file:
+              await step_media.write_file(file, media['name'])
+          except:
+            raise HTTPError(500, "Could not copy media to disk")
+
+        print_template_keys = step.get('print_templates', [])
+        print_template_updates = []
+        for template_key in print_template_keys:
+          # account for faulty logic from previous versions
+          if not isinstance(template_key, str):
+            template_key = template_key['_key']
+
+          print_template_updates.append(dict(
+            _from=new_step['_id'],
+            _to=f'PrintTemplate/{template_key}'
+          ))
+        if print_template_updates:
+          tx.collection('can_use_print_template').insert_many(print_template_updates)
+
+        new_step_sequence.append(new_step['_key'])
+
+      phase_updates.append(dict(
+        _key=phase.key,
+        params=operation_data['default_phase_parameters'],
+        production_notes=operation_data['default_phase_notes'],
+        step_sequence=new_step_sequence
+      ))
+
+    updated_phase_results = tx.collection('Phase').update_many(phase_updates, return_new=True)
+    updated_phases = [PhaseRecord(**result['new']) for result in updated_phase_results]
+
+    tx.commit_transaction()
+
+    return APIResponse(
+      message="Operation successfully copied to all related phases",
+      detail=updated_phases
+    )
+  except Exception as exception:
+    tx.abort_transaction()
+    if isinstance(exception, HTTPError):
+      raise exception
+    raise HTTPError(500, "Could not update Operation in the db. Please contact the administrator.")
 
 
 @router.get("/step/{step_key}/media")
