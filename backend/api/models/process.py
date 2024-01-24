@@ -71,10 +71,8 @@ class Operation(ArangoDocument):
 
 class PhaseRecord(ArangoDocument):
   alias: str
-  description: str = None
   product_key: str
   operation_key: str
-  operation_name: str = None
   params: PhaseParameters = PhaseParameters()
   step_sequence: List[Optional[str]] = []
   production_notes: str = None
