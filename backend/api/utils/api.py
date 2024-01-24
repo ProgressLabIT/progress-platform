@@ -1,9 +1,11 @@
-from typing import Any
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
-class APIResponse(BaseModel):
+T = TypeVar("T")
+
+class APIResponse(BaseModel, Generic[T]):
   status: int = 200
   message: str | None = None
   # error: str | None = None
-  detail: Any | None = None
+  detail: T = None
