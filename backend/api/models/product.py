@@ -25,17 +25,17 @@ class KPIWindowType(str, Enum):
 
 
 class ProductBaseData(FlexModel):
-  key: str = Field(None, alias="_key")
+  key: str | None = Field(None, alias="_key")
   code: str
-  description: Optional[str] = None
+  description: str | None = None
   active: bool = True
   image: bool = False # to be replaced with Object Storage url in the future
 
 class ProductDetails(ProductBaseData):
   trash: bool = False
 
-  created: datetime = None
-  updated: datetime = None
+  created: datetime | None = None
+  updated: datetime | None = None
 
   cost: TargetAverageCost = TargetAverageCost()
   # sale_price: float = 0
@@ -45,12 +45,12 @@ class ProductDetails(ProductBaseData):
   minimum_order_qt: int = 0
   # tags: List[str] = []
   process_phases: List[str] = []
-  production_notes: str = None
+  production_notes: str | None = None
 
-  throughput_time_target: float = None #TargetAverageTime = TargetAverageTime()
-  processing_time_target: float = None #TargetAverageTime = TargetAverageTime()
+  throughput_time_target: float | None = None #TargetAverageTime = TargetAverageTime()
+  processing_time_target: float | None = None #TargetAverageTime = TargetAverageTime()
 
-  kpi_window_size: int = None # if time, expressed in days, in 'count' in number of work orders
+  kpi_window_size: int | None = None # if time, expressed in days, in 'count' in number of work orders
   kpi_window_type: Optional[KPIWindowType] = KPIWindowType.COUNT
 
 class ProductDoc(FlexModel):
@@ -59,4 +59,4 @@ class ProductDoc(FlexModel):
 
 class ProductFull(ProductDetails):
   docs: List[ProductDoc] = []
-  img_name: str = None
+  img_name: str | None = None

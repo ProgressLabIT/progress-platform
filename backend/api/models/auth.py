@@ -46,8 +46,8 @@ class TokenData(FlexModel):
   issued_at: datetime = Field(..., alias="iat")
   expires_at: datetime = Field(..., alias="exp")
   context: TokenContext = Field(..., alias="ctx")
-  # audience: str = Field(None, alias="aud") # identify third party apps
-  # issuer: str = Field(None, alias="iss") # url of server
+  # audience: str | None = Field(None, alias="aud") # identify third party apps
+  # issuer: str | None = Field(None, alias="iss") # url of server
 
 
 class AuthResponse(BaseModel):
@@ -60,16 +60,16 @@ class UserSession(ArangoDocument):
   user_key: str
   token_key: str
   login_at: datetime = datetime.now(tz.UTC)
-  logout_at: datetime = None
+  logout_at: datetime | None = None
   scope: str
-  name: str = None
-  surname: str = None
+  name: str | None = None
+  surname: str | None = None
 
 class NewSessionData(BaseModel):
   session_key: str
   user_key: str
-  name: str = None
-  surname: str = None
+  name: str | None = None
+  surname: str | None = None
   scope: str
   preferences: UserPreferences = UserPreferences()
   timeout: timedelta = timedelta(minutes=30)
@@ -82,5 +82,5 @@ class GrantType(str, Enum):
 class ConsumerCredentials(BaseModel):
   username: str = Form(...)
   password: str = Form(...)
-  # auth_code: str = None
+  # auth_code: str | None = None
   # grant_type: GrantType = Form(None)

@@ -21,7 +21,7 @@ collection_map = {
 def verify_target_data(
   bucket: FileBucket,
   object_key: str,
-  subfolder: str = None
+  subfolder: str | None = None
 ):
   object = db.collection(collection_map[bucket]).get(object_key)
   # Check whether an entity with the key provided exists

@@ -22,7 +22,7 @@ def create_field(field_data: CustomField):
 
 
 @router.get('/field')
-def fetch_field(name: str = None, key: str = None):
+def fetch_field(name: str | None = None, key: str | None = None):
   match = dict()
   if name:
     match['name'] = name
@@ -69,7 +69,7 @@ def delete_field(field_key: str):
 def fetch_custom_list_values(
   field_key: str,
   limit: int = 100,
-  search: str = None,
+  search: str | None = None,
   sort_by: str = 'value'
   ):
   query = """

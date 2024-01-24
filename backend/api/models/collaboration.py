@@ -1,8 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any
 
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field, model_validator
 
 from models.form import FormFieldDefinition, FormFieldValue
 from models.print import PrintTemplateRecord
@@ -15,31 +15,31 @@ class IssueType(ArangoDocument):
   code: str
   name: str
   active: bool = True
-  description: str = None
-  icon: str = None
-  form_template: List[FormFieldDefinition] = []
+  description: str | None = None
+  icon: str | None = None
+  form_template: list[FormFieldDefinition] = []
   critical: bool = False
   # close_within: NonNegativeInt = 0 # Time in hours. After this make critical. If 0 ignore.
 
 
 class IssueTypeUpdate(BaseModel):
-  key: str = Field(None, alias='_key')
-  code: str = None
-  name: str = None
-  active: bool = None
-  description: str = None
-  icon: str = None
-  form_template: List[FormFieldDefinition] = []
+  key: str | None = Field(None, alias='_key')
+  code: str | None = None
+  name: str | None = None
+  active: bool | None = None
+  description: str | None = None
+  icon: str | None = None
+  form_template: list[FormFieldDefinition] = []
   critical: bool = False
 
 
 class IssueTypeFull(IssueType):
-  print_templates: List[Optional[PrintTemplateRecord]] = None
+  print_templates: list[PrintTemplateRecord] | None = None
 
 
 class FieldValue(BaseModel):
   field_key: str # Reference to CustomField record
-  value: Any
+  value: Any | None = None
 
 
 # ISSUE
@@ -49,18 +49,19 @@ class Issue(ArangoDocument):
 
   A job link is enough to establish within a graph single query all the relationships with Phase, Operation and Product and WorkOrder. However If the issue is raised within the WorkOrder in general there's no graph that can help, and the product must be associated explicitly.
   """
-  issue_type_key: str = None # _key of the issue type
+  issue_type_key: str | None = None # _key of the issue type
   created: datetime = Field(default_factory=timestamp)
   created_by: str # Creator ID
-  closed: datetime = None
-  closed_by: str = None # Closer ID
+  closed: datetime | None = None
+  closed_by: str | None = None # Closer ID
   critical: bool # Default value set at the IssueType level
   # close_within: NonNegativeInt # Value set at the IssueType level
-  data: List[FormFieldValue] = None
+  data: list[FormFieldValue] | None = None
   open: bool = True
 
   # Require issue type only when closing.
-  @root_validator
+  @model_validator(mode="before")
+  @classmethod
   def ensure_type_if_closing(cls, values):
     if not values.get('open') and values.get('issue_type_key') is None:
       raise ValueError('Issue must have type associated to be closed')
@@ -82,7 +83,7 @@ class IssueLink(BaseModel):
 
 
 class IssueWithLinks(Issue):
-  linked_to: List[IssueLink] = None # ids of entities connected
+  linked_to: list[IssueLink] = None # ids of entities connected
 
   # @validator('_from')
   # def check_from_issue(cls, value):
@@ -104,9 +105,9 @@ class Message(ArangoDocument):
   recipient: str = Field(..., alias="_to") # related issue or user
   content: str
   created: datetime = Field(default_factory=timestamp)
-  updated: datetime = None
-  deleted: datetime = None
+  updated: datetime | None = None
+  deleted: datetime | None = None
 
 class IssueFullData(IssueWithLinks):
-  messages: List[Message]
-  history: List[dict]
+  messages: list[Message]
+  history: list[dict]

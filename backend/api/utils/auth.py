@@ -61,10 +61,10 @@ def verify_password(plain_password, hashed_password):
 
 def verify_token(token_str: str = Depends(bearer_token)):
 
-  try: 
+  try:
     try:
       token_json = jwt.decode(token_str, TOKEN_SECRET, algorithms=[ALGORITHM])
-    
+
     except jwt.ExpiredSignatureError:
       print('Token expired')
       raise TokenExpiredError
@@ -72,11 +72,11 @@ def verify_token(token_str: str = Depends(bearer_token)):
     except jwt.InvalidSignatureError:
       print('TokenSignatureVerificationError')
       raise TokenSignatureVerificationError
-    
+
     except:
       raise Exception(traceback.format_exc())
-    
-    try:  
+
+    try:
       token_data = TokenData(**token_json)
     except:
       raise Exception(traceback.format_exc())
@@ -119,7 +119,7 @@ def revoke_token(token_key, db=db):
 def issue_token(
   consumer_key: str,
   seconds_until_expired: int,
-  scope: str = None,
+  scope: str | None = None,
   consumer_type: ConsumerType = ConsumerType.USER,
   context: TokenContext = TokenContext.USER_SESSION,
 ):
@@ -127,8 +127,8 @@ def issue_token(
   token_key = secrets.token_hex(6)
   access_token_data = TokenData(
     token_key = token_key,
-    consumer_key = consumer_key, 
-    consumer_type = consumer_type, 
+    consumer_key = consumer_key,
+    consumer_type = consumer_type,
     context = context,
     scope = scope,
     issued_at = now,
@@ -136,8 +136,8 @@ def issue_token(
   )
 
   access_token = jwt.encode(
-    access_token_data.dict(by_alias=True, exclude_none=True), 
-    TOKEN_SECRET, 
+    access_token_data.dict(by_alias=True, exclude_none=True),
+    TOKEN_SECRET,
     algorithm=ALGORITHM
   )
 

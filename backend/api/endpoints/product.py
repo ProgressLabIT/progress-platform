@@ -27,9 +27,9 @@ product_db = db.collection('Product')
 # =================================================
 @router.get("")
 async def get_product_list(
-  offset: int = None,
-  limit: int = None, # return a limited number of results
-  search: str = None, # filter by code
+  offset: int | None = None,
+  limit: int | None = None, # return a limited number of results
+  search: str | None = None, # filter by code
   details: bool = False
 ):
 
@@ -389,7 +389,7 @@ async def delete_product(product_key):
 # =================================================
 @router.patch("/{product_key}")
 async def udpate_product(
-  product_key: str = None,
+  product_key: str | None = None,
   updated_fields: dict = dict()
 ):
 

@@ -8,42 +8,42 @@ from utils.base_models import ArangoDocument
 
 
 class Site(ArangoDocument):
-  code: str = None
+  code: str | None = None
   name: str
-  description: str = None
-  address: str = None
-  iso_country_code: str = None
+  description: str | None = None
+  address: str | None = None
+  iso_country_code: str | None = None
 
 
 class Department(ArangoDocument):
   name: str
-  code: str = None
-  description: str = None
+  code: str | None = None
+  description: str | None = None
 
 
 class UserListItem(ArangoDocument):
   active: bool = True
-  name: str = None
-  surname: str = None
+  name: str | None = None
+  surname: str | None = None
   username: str
-  email: str = None
-  scope: str = None
+  email: str | None = None
+  scope: str | None = None
   logged_in: bool = False
-  hourly_cost: float = None
-  department: Department = None
+  hourly_cost: float | None = None
+  department: Department | None = None
   # roles: UserRoles = UserRoles()
-  created_at: datetime = None
-  last_login: datetime = None
+  created_at: datetime | None = None
+  last_login: datetime | None = None
 
 
 class UserNew(BaseModel):
-  name: str = None
-  surname: str = None
+  name: str | None = None
+  surname: str | None = None
   username: str
   site_key: str = '0'
-  department_key: str = None
-  hourly_cost: float = None
-  email: str = None
+  department_key: str | None = None
+  hourly_cost: float | None = None
+  email: str | None = None
   scope: str
 
 
@@ -56,23 +56,23 @@ class DisplayFont(str, Enum):
   RED_HAT_DISPLAY = 'red-hat-display'
 
 class UserPreferences(BaseModel):
-  theme: str = None
-  locale: str = None
+  theme: str | None = None
+  locale: str | None = None
   display_font: DisplayFont = DisplayFont.ORBITRON
-  home_page: str = None
+  home_page: str | None = None
   job_selection_layout: JobSelectionLayout = JobSelectionLayout.CARD
-  work_session_tabs_order: list[str] = None
+  work_session_tabs_order: list[str] | None = None
 
 class User(ArangoDocument, UserNew):
   created_at: datetime = datetime.now(tz.UTC)
   active: bool = True  # change to 'enabled'
-  email: str = None
+  email: str | None = None
   preferences: UserPreferences = UserPreferences()
 
-  psw_hash: str = None
+  psw_hash: str | None = None
   reset_password: bool = False
 
-  last_user_session: str = None
-  last_login: datetime = None
+  last_user_session: str | None = None
+  last_login: datetime | None = None
 
   trash: bool = False

@@ -412,14 +412,14 @@ async def delete_work_order(wo_key: str):
 
 @router.get('/work-order')
 async def search_work_orders(
-  search: str = None,
+  search: str | None = None,
   open: bool = False,
   closed: bool = True,
   limit: int = 100,
-  time_start_from: datetime = None,
-  time_start_to: datetime = None,
-  time_end_from: datetime = None,
-  time_end_to: datetime = None
+  time_start_from: datetime | None = None,
+  time_start_to: datetime | None = None,
+  time_end_from: datetime | None = None,
+  time_end_to: datetime | None = None
 ):
   """By default searches for closed orders only. Can change the behavior by setting the `open` and `closed` parameters."""
   query = """
@@ -567,7 +567,7 @@ async def get_job_list(
 
 
 @router.get('/job-assignment')
-async def get_assignment_list(user_key: str = None):
+async def get_assignment_list(user_key: str | None = None):
 
   try:
     result = db.aql.execute(Queries.GET_ASSIGNMENT_LIST, bind_vars=dict(user_key=user_key)).next()
