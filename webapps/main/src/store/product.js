@@ -1,5 +1,5 @@
 import { cloneDeep as _cloneDeep } from 'lodash';
-import { api, axios } from '@/boot/axios.js';
+import { api } from '@/boot/axios.js';
 import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js';
 
 const product = {
@@ -153,9 +153,18 @@ const product = {
     },
 
     async loadProductDetails({ commit }, product_key) {
-      const [{ data: product }, { data: print_templates }] = await Promise.all([
+      const [
+        { data: product },
+        { data: print_templates },
+        {
+          data: { detail: tags },
+        },
+      ] = await Promise.all([
         api.get(`product/${product_key}`),
         api.get('print-template', {
+          params: { context: 'product', context_key: product_key },
+        }),
+        api.get('tag', {
           params: { context: 'product', context_key: product_key },
         }),
       ]);
@@ -163,6 +172,7 @@ const product = {
       commit('LOAD_PRODUCT_DETAILS', {
         ...product,
         print_templates,
+        tags,
       });
     },
 
@@ -175,6 +185,7 @@ const product = {
         new_templates,
         deleted_templates,
         image,
+        tags,
       },
     ) {
       /**
@@ -187,12 +198,12 @@ const product = {
       const product_key = new_product_data._key;
 
       // Initialize requests queue
-      const api_calls = [];
+      const promises = [];
 
       // Queue api calls to delete product docs
       if (deleted_docs != null) {
         deleted_docs.forEach((d) => {
-          api_calls.push(api.delete(`product/${product_key}/doc/${d.name}`));
+          promises.push(api.delete(`product/${product_key}/doc/${d.name}`));
         });
       }
 
@@ -211,7 +222,7 @@ const product = {
             template_key: t._key,
           })),
         ];
-        api_calls.push(
+        promises.push(
           api.post('update-template-assignments', template_updates),
         );
       }
@@ -221,7 +232,7 @@ const product = {
         new_docs.forEach((d) => {
           const body = new FormData();
           body.append('new_doc', d.data);
-          api_calls.push(
+          promises.push(
             api.post(`product/${product_key}/doc`, body, {
               headers: {
                 'Content-type': 'multipart/form-data',
@@ -233,13 +244,13 @@ const product = {
 
       // Queue request to delete or update product image
       if (image.delete) {
-        api_calls.push(api.delete(`product/${product_key}/image`));
+        promises.push(api.delete(`product/${product_key}/image`));
       }
 
       if (image.new) {
         const body = new FormData();
         body.append('new_image', image.new);
-        api_calls.push(
+        promises.push(
           api.put(`product/${product_key}/image`, body, {
             headers: {
               'Content-type': 'multipart/form-data',
@@ -248,18 +259,29 @@ const product = {
         );
       }
 
-      // Queue request to update product metadata
-      api_calls.push(api.put(`product/${product_key}`, new_product_data));
+      if (tags.add.length > 0 || tags.remove.length > 0) {
+        promises.push(
+          api.post('tag/update-connections', [
+            ...tags.add.map((tag) => ({
+              type: 'add',
+              context: 'product',
+              context_key: product_key,
+              tag_key: tag._key,
+            })),
+            ...tags.remove.map((tag) => ({
+              type: 'remove',
+              context: 'product',
+              context_key: product_key,
+              tag_key: tag._key,
+            })),
+          ]),
+        );
+      }
 
-      // Execute requests returning a promise
-      return new Promise((resolve, reject) => {
-        axios
-          .all(api_calls)
-          .then(() => {
-            resolve();
-          })
-          .catch((err) => reject(err));
-      });
+      // Queue request to update product metadata
+      promises.push(api.put(`product/${product_key}`, new_product_data));
+
+      return Promise.all(promises);
     },
   },
 

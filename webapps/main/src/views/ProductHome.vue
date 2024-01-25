@@ -141,11 +141,16 @@
           {{ $t('tag', 2) }}
         </div>
 
-        <TagInput v-if="editMode" v-model="tagsModel" class="q-mt-md" />
+        <TagInput
+          v-if="editMode"
+          :model-value="product.tags"
+          class="q-mt-md"
+          @update:model-value="updateField('tags', $event)"
+        />
         <div v-else class="q-mt-xs">
-          <span v-if="tagsModel.length === 0" class="text-h3">-</span>
+          <span v-if="product.tags.length === 0" class="text-h3">-</span>
           <q-chip
-            v-for="tag in tagsModel"
+            v-for="tag in product.tags"
             :key="tag._key"
             :label="tag.name"
             :color="tag.color ?? 'theme-grey'"
@@ -378,12 +383,11 @@
 
 <script>
 import { generate } from '@pdfme/generator';
-import { ref } from 'vue';
 import { mapState, mapActions } from 'vuex';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
 import MediaViewer from '@/components/MediaViewer.vue';
-import TagInput from '../components/TagInput.vue';
+import TagInput from '@/components/TagInput.vue';
 
 export default {
   name: 'ProductHome',
@@ -396,15 +400,6 @@ export default {
   },
 
   emits: ['changesSaved', 'changesCanceled'],
-
-  setup() {
-    // TODO: Connect the tags to the product when saving
-    const tagsModel = ref([]);
-
-    return {
-      tagsModel,
-    };
-  },
 
   data() {
     return {
@@ -628,6 +623,18 @@ export default {
         image: {
           new: this.new_image,
           delete: this.new_image_url === 'deleted',
+        },
+        tags: {
+          add: this.product.tags.filter(
+            (tag) =>
+              !this.saved_product.tags.some(
+                (savedTag) => savedTag._key === tag._key,
+              ),
+          ),
+          remove: this.saved_product.tags.filter(
+            (savedTag) =>
+              !this.product.tags.some((tag) => tag._key === savedTag._key),
+          ),
         },
       };
 
