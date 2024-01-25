@@ -617,6 +617,14 @@ export default {
   step_sequence: 'sequenza passi',
   summary: 'Riepilogo',
   tag: 'tag | tag',
+  tagInput: {
+    noData:
+      'Nessun tag trovato. Inserisci almeno {minChars} caratteri per crearne uno nuovo.',
+    create: {
+      label: 'Crea nuovo tag "{name}"',
+      hint: 'Clicca o premi {key} per creare',
+    },
+  },
   time: {
     hour: 'Ora | Ore',
     minute: 'Minuto | Minuti',

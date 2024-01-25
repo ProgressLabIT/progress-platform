@@ -608,6 +608,14 @@ export default {
   step_sequence: 'step sequence',
   summary: 'summary',
   tag: 'tag | tags',
+  tagInput: {
+    noData:
+      'No tags found. Enter at least {minChars} characters to be able to create a new one.',
+    create: {
+      label: 'Create new tag "{name}"',
+      hint: 'Click or press {key} to create',
+    },
+  },
   time: {
     hour: 'Hour',
     minute: 'Minute',
