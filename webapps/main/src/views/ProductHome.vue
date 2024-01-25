@@ -135,6 +135,28 @@
         </q-input>
       </div>
 
+      <!-- PRODUCT TAGS -->
+      <div class="q-mt-lg col-auto">
+        <div class="text-h4 weight-bold text-uppercase">
+          {{ $t('tag', 2) }}
+        </div>
+
+        <TagInput v-if="editMode" v-model="tagsModel" class="q-mt-md" />
+        <div v-else class="q-mt-xs">
+          <span v-if="tagsModel.length === 0" class="text-h3">-</span>
+          <q-chip
+            v-for="tag in tagsModel"
+            :key="tag._key"
+            :label="tag.name"
+            :color="tag.color ?? 'theme-grey'"
+          >
+            <q-tooltip v-if="tag.description">
+              {{ tag.description }}
+            </q-tooltip>
+          </q-chip>
+        </div>
+      </div>
+
       <q-space />
 
       <!-- EDIT MODE ACTIONS -->
@@ -356,10 +378,12 @@
 
 <script>
 import { generate } from '@pdfme/generator';
+import { ref } from 'vue';
 import { mapState, mapActions } from 'vuex';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
 import MediaViewer from '@/components/MediaViewer.vue';
+import TagInput from '../components/TagInput.vue';
 
 export default {
   name: 'ProductHome',
@@ -368,9 +392,19 @@ export default {
     // BaseConfirmationDialog,
     MediaViewer,
     BaseAutocompleteTemplate,
+    TagInput,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
+
+  setup() {
+    // TODO: Connect the tags to the product when saving
+    const tagsModel = ref([]);
+
+    return {
+      tagsModel,
+    };
+  },
 
   data() {
     return {

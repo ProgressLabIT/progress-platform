@@ -607,6 +607,7 @@ export default {
   status: 'status',
   step_sequence: 'step sequence',
   summary: 'summary',
+  tag: 'tag | tags',
   time: {
     hour: 'Hour',
     minute: 'Minute',

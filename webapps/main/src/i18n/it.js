@@ -616,6 +616,7 @@ export default {
   status: 'stato',
   step_sequence: 'sequenza passi',
   summary: 'Riepilogo',
+  tag: 'tag | tag',
   time: {
     hour: 'Ora | Ore',
     minute: 'Minuto | Minuti',

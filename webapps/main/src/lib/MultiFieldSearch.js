@@ -4,7 +4,7 @@
  * @param {string} searchString
  * @param {T} testItem
  * @param {Extract<keyof T, string>[]} fieldList
- * @returns
+ * @returns {boolean}
  */
 export default function multiFieldSearch(searchString, testItem, fieldList) {
   // create the list of search terms removing duplicates

@@ -103,6 +103,8 @@ collections = [
   'Site',
   'Step',
   'StepExecutionData',
+  'Tag',
+  'tagged_by',
   'Token',
   'User',
   'UserSession',
