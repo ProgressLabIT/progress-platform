@@ -38,13 +38,7 @@
         class="px-0 pb-1"
         :class="{ nowrap: !overDesc }"
       >
-        <q-chip
-          v-for="tag in product.tags"
-          :key="tag._key"
-          :label="tag.name"
-          :color="tag.color ?? 'theme-grey'"
-          dense
-        />
+        <TagChips :tags="product.tags" dense />
       </div>
     </div>
     <ProductCardActions
@@ -82,12 +76,14 @@
 <script>
 import { mapActions } from 'vuex';
 import ProductCardActions from '@/components/ProductCardActions.vue';
+import TagChips from './TagChips.vue';
 
 export default {
   name: 'ProductCard',
 
   components: {
     ProductCardActions,
+    TagChips,
   },
 
   props: {

@@ -149,16 +149,7 @@
         />
         <div v-else class="q-mt-xs">
           <span v-if="product.tags.length === 0" class="text-h3">-</span>
-          <q-chip
-            v-for="tag in product.tags"
-            :key="tag._key"
-            :label="tag.name"
-            :color="tag.color ?? 'theme-grey'"
-          >
-            <q-tooltip v-if="tag.description">
-              {{ tag.description }}
-            </q-tooltip>
-          </q-chip>
+          <TagChips v-else :tags="product.tags" />
         </div>
       </div>
 
@@ -388,6 +379,7 @@ import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue'
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
 import MediaViewer from '@/components/MediaViewer.vue';
 import TagInput from '@/components/TagInput.vue';
+import TagChips from '../components/TagChips.vue';
 
 export default {
   name: 'ProductHome',
@@ -397,6 +389,7 @@ export default {
     MediaViewer,
     BaseAutocompleteTemplate,
     TagInput,
+    TagChips,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
