@@ -6,6 +6,7 @@ from typing import List, Optional
 from pydantic import ByteSize, Field
 
 from utils.base_models import FlexModel
+from models.tag import Tag
 
 
 
@@ -30,6 +31,7 @@ class ProductBaseData(FlexModel):
   description: str | None = None
   active: bool = True
   image: bool = False # to be replaced with Object Storage url in the future
+  tags: List[Tag] = []
 
 class ProductDetails(ProductBaseData):
   trash: bool = False

@@ -33,6 +33,19 @@
       >
         {{ product.description }}
       </div>
+      <div
+        v-show="showImage && product.image ? overDesc : true"
+        class="px-0 pb-1"
+        :class="{ nowrap: !overDesc }"
+      >
+        <q-chip
+          v-for="tag in product.tags"
+          :key="tag._key"
+          :label="tag.name"
+          :color="tag.color ?? 'theme-grey'"
+          dense
+        />
+      </div>
     </div>
     <ProductCardActions
       class="absolute-bottom"

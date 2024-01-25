@@ -3,7 +3,7 @@
  *
  * @param {string} searchString
  * @param {T} testItem
- * @param {Extract<keyof T, string>[]} fieldList
+ * @param {(Extract<keyof T, string> | [Extract<keyof T, string>, ...string])[]} fieldList
  * @returns {boolean}
  */
 export default function multiFieldSearch(searchString, testItem, fieldList) {
@@ -14,15 +14,24 @@ export default function multiFieldSearch(searchString, testItem, fieldList) {
     : [];
 
   // create the list of words to search in, removing duplicates
-  let matchString = '';
+  let matchString = new Set();
   fieldList.forEach((field) => {
     // handle both string and arrays of strings.
     // If field is array, consider each item as a term in itself
-    let field_content = testItem[field];
+    const [fieldKey, ...arrayItemKeys] = Array.isArray(field) ? field : [field];
+    let field_content = testItem[fieldKey];
 
     // Check both "nonnullity" via truthyness and type, since typeof null === 'object'
     if (field_content && typeof field_content === 'object') {
-      field_content = ''.concat(...field_content.map((i) => i + ' '));
+      field_content = ''.concat(
+        ...field_content.flatMap((item) => {
+          if (arrayItemKeys.length === 0) {
+            return item + ' ';
+          }
+
+          return arrayItemKeys.map((arrayItemKey) => item[arrayItemKey] + ' ');
+        }),
+      );
     }
     matchString += field_content + ' ';
   });
