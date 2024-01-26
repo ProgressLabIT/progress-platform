@@ -387,7 +387,7 @@ export default {
       }
     },
 
-    loadWorkOrder(wo) {
+    async loadWorkOrder(wo) {
       // Set work order data and initialize Phase options to select from
       this.links.work_order = wo;
       this.links.product = { _key: wo.product_key };
@@ -397,41 +397,44 @@ export default {
         params.append('phase_key', pk),
       );
 
-      this.$api
-        .get('phase', { params })
-        .then((resp) => (this.phase_data = resp.data));
+      const { data } = await this.$api.get('phase', { params });
+      this.phase_data = data;
     },
 
-    loadProduct(product_key) {
-      // To avoid loading in advance a lot of unnecessary product data, the product list contains limited information. Thus it is necessary to fetch the full product data first and then load the phases options.
-      this.$api.get(`product/${product_key}`).then((resp) => {
-        this.links.product = resp.data;
-        if (this.product.process_phases) {
-          let params = new URLSearchParams();
-          this.links.product.process_phases.forEach((p) =>
-            params.append('phase_key', p),
-          );
-          this.$api
-            .get('phase', { params })
-            .then((resp) => (this.phase_data = resp.data));
-        }
-      });
+    async loadProduct(product_key) {
+      // To avoid loading in advance a lot of unnecessary product data, the product list contains limited information.
+      // So, it is necessary to fetch the full product data first and then load the phases options.
+      const { data: product } = await this.$api.get(`product/${product_key}`);
+      this.links.product = product;
+
+      if (!product.process_phases) {
+        return;
+      }
+
+      const params = new URLSearchParams();
+      product.process_phases.forEach((phaseKey) =>
+        params.append('phase_key', phaseKey),
+      );
+      const { data: phase } = await this.$api.get('phase', { params });
+      this.phase_data = phase;
     },
 
-    loadPhase(phase_data) {
+    async loadPhase(phase_data) {
       this.links.phase = phase_data;
       this.links.operation = { _key: phase_data.operation_key };
+
       // Phase link exists for both order and product mode. Load jobs only in order mode
-      if (this.link_form == 'order') {
-        this.$api
-          .get('job', {
-            params: {
-              work_order_key: this.links.work_order._key,
-              phase_key: this.links.phase._key,
-            },
-          })
-          .then((resp) => (this.phase_jobs = resp.data.detail));
+      if (this.link_form !== 'order') {
+        return;
       }
+
+      const { data } = await this.$api.get('job', {
+        params: {
+          work_order_key: this.links.work_order._key,
+          phase_key: this.links.phase._key,
+        },
+      });
+      this.phase_jobs = data.detail;
     },
 
     cancel() {
