@@ -586,7 +586,7 @@ export default {
       label: 'Costo orario operatore',
       mustBePositive: 'Deve essere maggiore o uguale a 0',
     },
-    allowUnassignedJobs: 'Consenti lavori non assegnati',
+    allowUnassignedJobs: 'Mostra lavori non assegnati agli operatori',
   },
   session: {
     alerts: {
@@ -691,7 +691,7 @@ export default {
     PhasePrintTemplates: 'Stampe',
     adminPanel: 'impostazioni',
     companyDetails: 'dettagli azienda',
-    defaultOperationParameters: 'fase di default',
+    defaultOperationParameters: 'parametri di default operazione',
     flowLibrary: 'Flussi dati',
     formFieldLibrary: 'Campi moduli',
     generalSettings: 'generale',
