@@ -308,6 +308,10 @@ export default {
         this.initLinks();
       },
     },
+    phase_data() {
+      // The new list of phases will not contain the selected phase, so reset it
+      this.links.phase = null;
+    },
   },
 
   created() {
