@@ -240,6 +240,9 @@ const traceability = {
       const formData = cloneDeep(step.form_data);
 
       // TODO: Unify file handling logic with IssueForm
+      /**
+       * @type {{ type: string; form_fields: import('@/types/form').FormField[] }}
+       */
       const stepDefinition = state.working_job_data.step_sequence.find(
         ({ _key }) => _key === step._key,
       );

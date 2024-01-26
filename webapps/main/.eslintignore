@@ -3,3 +3,6 @@
 /src-cordova
 /.quasar
 /node_modules
+
+# We don't have linting for TS files yet
+/src/types/*.d.ts

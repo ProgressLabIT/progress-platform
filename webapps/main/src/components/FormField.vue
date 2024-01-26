@@ -234,7 +234,9 @@ import FilesList from '@/components/FilesList.vue';
 
 const props = defineProps({
   field: {
-    type: Object,
+    type:
+      /** @type {import('vue').PropType<import('@/types/form').FormField>} */
+      (Object),
     required: true,
   },
   rootPath: {

@@ -1,7 +1,13 @@
 import { api } from '@/boot/axios.js';
 
 /**
- * @type {import('vuex').Module}
+ * @typedef {{
+ * customFields: import('@/types/form').CustomField[]
+ * }} FormState
+ */
+
+/**
+ * @type {import('vuex').Module<FormState>}
  */
 export default {
   state: {

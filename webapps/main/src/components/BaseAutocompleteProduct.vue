@@ -13,7 +13,6 @@
     :option-value="keyOnly ? '_key' : null"
     :emit-value="keyOnly"
     :map-options="keyOnly"
-    popup-content-style="width: 0px"
     @filter="filter"
     @update:model-value="(selection) => $emit('select', selection)"
   >
