@@ -1,0 +1,34 @@
+export type CustomFieldType =
+  | 'text'
+  | 'number'
+  | 'boolean'
+  | 'ternary'
+  | 'choice'
+  | 'date'
+  | 'time'
+  | 'files';
+
+export interface CustomField {
+  _key: string;
+  type: CustomFieldType;
+  name: string;
+  default_label: string;
+  default_hint: string;
+}
+
+export interface FormField {
+  _key: string;
+  custom_field_key: string;
+  multiple: boolean;
+  label?: string;
+  hint?: string;
+  required: boolean;
+
+  /**
+   * Client-side only
+   */
+  value?: any;
+
+  // default?: string;
+  // hidden?: boolean;
+}

@@ -252,6 +252,7 @@ export default {
       saving: false,
       issue_type: null,
       form_step: 'data',
+      /** @type {import('@/types/form').FormField[]} */
       form_fields: [],
       confirmed: false,
       critical: false,
@@ -365,9 +366,7 @@ export default {
 
       this.form_fields = form_template.map((field) => ({
         ...field,
-        value: this.issue.data.find(
-          ({ _key }) => _key === field._key,
-        )?.value,
+        value: this.issue.data.find(({ _key }) => _key === field._key)?.value,
       }));
     },
 
@@ -445,9 +444,18 @@ export default {
       this.$emit('close');
     },
 
+    /**
+     * @param {import('@/types/form').FormField} field
+     * @returns {string | undefined}
+     */
+    getFieldType(field) {
+      return this.$store.getters.getCustomFieldByKey(field.custom_field_key)
+        ?.type;
+    },
+
     async saveFiles(issue_key) {
       const promises = this.form_fields
-        .filter(({ type }) => type === 'files')
+        .filter((field) => this.getFieldType(field) === 'files')
         .map(async (field) => {
           const to_delete = [];
           const to_add = [];
@@ -510,7 +518,7 @@ export default {
           form_field_key: field._key,
           custom_field_key: field.custom_field_key,
           value:
-            field.type === 'files'
+            this.getFieldType(field) === 'files'
               ? field.value
                   ?.filter((file) => !file.delete)
                   .map((file) => ({

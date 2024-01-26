@@ -42,9 +42,18 @@ import { useStore } from 'vuex';
 import FormField from '@/components/FormField.vue';
 import { usePrintDialog } from '@/lib/print';
 
+/**
+ * @typedef {{
+ * _key: string;
+ * title: string;
+ * description: string;
+ * form_fields: import('@/types/form').FormField[];
+ * }} Step
+ */
+
 const props = defineProps({
   step: {
-    type: Object,
+    type: /** @type {import('vue').PropType<Step>} */ (Object),
     required: true,
   },
 });
