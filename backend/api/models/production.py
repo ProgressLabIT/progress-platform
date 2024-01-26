@@ -124,7 +124,7 @@ class Job(FlexModel):
 
   step_sequence: List[StepWithMediaInfo] = []
 
-  assigned_to: Union[str, Operator] = None
+  assigned_to: str | Operator | None = None
 
   issues_total: int = None
   issues_open: int = None

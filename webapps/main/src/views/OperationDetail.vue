@@ -206,7 +206,7 @@ export default {
 
   computed: {
     products_using_operation() {
-      return this.operation.used_for;
+      return this.operation.used_for ?? [];
     },
   },
 

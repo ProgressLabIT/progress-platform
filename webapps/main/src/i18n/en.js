@@ -566,6 +566,19 @@ export default {
   select: 'select',
   select_all: 'select all',
   send: 'Send',
+  settings: {
+    section: 'Section',
+    companyName: 'Name',
+    companyLogo: {
+      label: 'Logo',
+      hint: 'Must be an image file with 1:1 aspect ratio and {size} size',
+    },
+    operatorCost: {
+      label: 'Default operator cost',
+      mustBePositive: 'Must be greater than or equal to 0',
+    },
+    allowUnassignedJobs: 'Show unassigned jobs to operators',
+  },
   session: {
     alerts: {
       close_session: 'do you really want to close this session?',
@@ -669,7 +682,7 @@ export default {
     PhasePrintTemplates: 'Prints',
     adminPanel: 'settings',
     companyDetails: 'company details',
-    defaultPhaseParams: 'default phase',
+    defaultOperationParameters: 'default operation parameters',
     formFieldLibrary: 'Form fields',
     flowLibrary: 'Data flows',
     generalSettings: 'General',
@@ -678,6 +691,7 @@ export default {
     jobList: 'jobs',
     libraryRoot: 'product library',
     operationLibrary: 'operations',
+    otherSettings: 'other',
     workSession: 'work session',
     productionRoot: 'production monitoring',
     printTemplateLibrary: 'Prints',

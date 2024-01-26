@@ -575,6 +575,19 @@ export default {
   select: 'seleziona',
   select_all: 'seleziona tutti',
   send: 'Invia',
+  settings: {
+    section: 'Sezione',
+    companyName: 'Nome',
+    companyLogo: {
+      label: 'Logo',
+      hint: 'Deve essere un file immagine con rapporto 1:1 e dimensione {size}',
+    },
+    operatorCost: {
+      label: 'Costo orario operatore',
+      mustBePositive: 'Deve essere maggiore o uguale a 0',
+    },
+    allowUnassignedJobs: 'Mostra lavori non assegnati agli operatori',
+  },
   session: {
     alerts: {
       close_session: 'vuoi davvero chiudere la sessione?',
@@ -678,7 +691,7 @@ export default {
     PhasePrintTemplates: 'Stampe',
     adminPanel: 'impostazioni',
     companyDetails: 'dettagli azienda',
-    defaultPhaseParams: 'fase di default',
+    defaultOperationParameters: 'parametri di default operazione',
     flowLibrary: 'Flussi dati',
     formFieldLibrary: 'Campi moduli',
     generalSettings: 'generale',
@@ -687,6 +700,7 @@ export default {
     issueTypeLibrary: 'tipi di segnalazione',
     issueOverview: 'Segnalazioni',
     operationLibrary: 'operazioni',
+    otherSettings: 'altro',
     workSession: 'sessione di lavoro',
     productionRoot: 'monitoraggio produzione',
     printTemplateLibrary: 'Stampe',

@@ -1,51 +1,53 @@
 <template>
-  <v-card class="fill">
-    <LoadingSignal v-if="!ready"></LoadingSignal>
+  <LoadingSignal v-if="isLoading" />
+  <div v-else class="row full-height">
+    <div class="col-3 full-height column">
+      <div
+        class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
+      >
+        <div class="col-6">
+          {{ $t('settings.section') }}
+        </div>
+      </div>
 
-    <v-row v-else class="fill-height">
-      <v-col cols="2" class="fill-height d-flex flex-column">
-        <v-tabs vertical background-color="transparent" color="white">
-          <v-tab
-            v-for="tab in sections"
-            :key="tab"
-            :to="{ name: tab }"
-            class="menu display mb-2"
-          >
-            {{ $t(`views.${tab}`) }}
-          </v-tab>
-        </v-tabs>
-      </v-col>
+      <q-separator />
 
-      <v-divider vertical></v-divider>
+      <!-- TODO: Use q-list ? -->
+      <div class="scroll col">
+        <div
+          v-for="(section, index) in sections"
+          :key="section"
+          class="pointer q-px-lg q-py-xs medium"
+          :class="{
+            'alternate-row': index % 2 === 0,
+            'bg-blue-backdrop': section === $route.name,
+          }"
+          style="white-space: nowrap"
+          @click="$router.push({ name: section })"
+        >
+          {{ $capitalizeAll($t(`views.${section}`)) }}
+        </div>
+      </div>
+    </div>
 
-      <v-col>
-        <router-view></router-view>
-      </v-col>
-    </v-row>
-  </v-card>
+    <q-separator vertical />
+
+    <div class="col full-height">
+      <router-view />
+    </div>
+  </div>
 </template>
 
-<script>
+<script setup>
+import { storeToRefs } from 'pinia';
 import LoadingSignal from '@/components/LoadingSignal.vue';
+import { useConfigStore } from '@/stores/config';
 
-export default {
-  name: 'GeneralSettings',
+const sections = [
+  'companyDetails',
+  'defaultOperationParameters',
+  'otherSettings',
+];
 
-  components: {
-    LoadingSignal,
-  },
-
-  data() {
-    return {
-      ready: true,
-      sections: ['companyDetails', 'defaultPhaseParams'],
-    };
-  },
-};
+const { isLoading } = storeToRefs(useConfigStore());
 </script>
-
-<style lang="css" scoped>
-.v-tab.menu {
-  justify-content: flex-start;
-}
-</style>

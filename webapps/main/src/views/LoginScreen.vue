@@ -2,7 +2,12 @@
   <div class="fullscreen background flex flex-center">
     <div class="row full-width items-center">
       <div class="row col-5 justify-end">
-        <q-img width="300px" height="300px" src="/progresslab.svg">
+        <q-img
+          width="300px"
+          height="300px"
+          :src="config.companyLogo"
+          fit="contain"
+        >
           <template #error>
             <q-avatar size="180" color="blue">
               <div class="column text-center highlight">
@@ -136,11 +141,20 @@
 import jwt_decode from 'jwt-decode';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import { api } from 'boot/axios.js';
+import { useConfigStore } from '../stores/config';
 
 export default {
   name: 'LoginScreen',
 
   components: { BaseUserAvatar },
+
+  setup() {
+    const { config } = useConfigStore();
+
+    return {
+      config,
+    };
+  },
 
   data() {
     return {

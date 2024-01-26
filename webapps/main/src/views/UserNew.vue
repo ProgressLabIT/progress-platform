@@ -129,10 +129,12 @@
 </template>
 
 <script>
+import { storeToRefs } from 'pinia';
 import BaseAutocompleteDepartment from '@/components/BaseAutocompleteDepartment.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import user_scopes from '@/lib/UserScopes.js';
+import { useConfigStore } from '../stores/config';
 // import generateTempPassword from '@/lib/TokenGenerator.js'
 
 export default {
@@ -142,6 +144,13 @@ export default {
     BaseAutocompleteDepartment,
     BaseDialog,
     LoadingSignal,
+  },
+
+  setup() {
+    const { config } = storeToRefs(useConfigStore());
+    return {
+      config,
+    };
   },
 
   data() {
@@ -164,7 +173,7 @@ export default {
         username: null,
         email: null,
         department_key: null,
-        hourly_cost: null,
+        hourly_cost: this.config.operatorCost ?? null,
         scopes: [], // permissions list
         scope: '',
       },

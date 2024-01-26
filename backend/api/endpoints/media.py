@@ -15,12 +15,10 @@ from models.process import Media
 router = APIRouter()
 media_root_path = get_config().media_path
 
-# TODO: If a created media is not connected to any entity in a reasonable amount of time, delete it (cron job?) (use created_at field as reference)
-@router.post('/media/create')
-def create_media(file: UploadFile):
+def make_media(file: UploadFile, key: str = None):
   try:
-    media = Media(
-      key=str(uuid4()),
+    return Media(
+      key=key or str(uuid4()),
       name=file.filename,
       size=file.size,
       content_type=file.content_type
@@ -31,18 +29,42 @@ def create_media(file: UploadFile):
       detail=str(ex)
     )
 
+def write_media_file(file: UploadFile, media_key: str):
   try:
-    filepath = path.join(media_root_path, media.key)
+    filepath = path.join(media_root_path, media_key)
     with open(filepath, 'wb') as buffer:
       copyfileobj(file.file, buffer)
   except:
     raise HTTPError(500, 'Could not write file to disk')
+
+# TODO: If a created media is not connected to any entity in a reasonable amount of time, delete it (cron job?) (use created_at field as reference)
+@router.post('/media/create')
+def create_media(file: UploadFile):
+  media = make_media(file)
+  write_media_file(file, media.key)
 
   media = db.collection('Media').insert(media.dict(by_alias=True), return_new=True)['new']
 
   return APIResponse(
     status_code=201,
     message='Media created successfully',
+    detail=media
+  )
+
+@router.patch('/media/{media_key}')
+def update_media(media_key: str, file: UploadFile):
+  media = db.collection('Media').get(media_key)
+  if not media:
+    raise HTTPError(404, 'Media not found')
+
+  media = make_media(file, media_key)
+  write_media_file(file, media.key)
+
+  media = db.collection('Media').update(media.dict(by_alias=True), return_new=True)['new']
+
+  return APIResponse(
+    status_code=200,
+    message='Media updated successfully',
     detail=media
   )
 

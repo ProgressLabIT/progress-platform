@@ -11,7 +11,7 @@
         indicator-color="primary"
       >
         <q-route-tab
-          v-for="(view, index) in admin_views"
+          v-for="(view, index) in adminViews"
           :key="index"
           :to="{ name: view }"
           class="display"
@@ -30,21 +30,14 @@
   </q-page-container>
 </template>
 
-<script>
-export default {
-  name: 'AdminSection',
-
-  data() {
-    return {
-      admin_views: [
-        'userLibrary',
-        'operationLibrary',
-        'issueTypeLibrary',
-        'formFieldLibrary',
-        'flowLibrary',
-        'printTemplateLibrary',
-      ],
-    };
-  },
-};
+<script setup>
+const adminViews = [
+  'generalSettings',
+  'userLibrary',
+  'operationLibrary',
+  'issueTypeLibrary',
+  'formFieldLibrary',
+  'flowLibrary',
+  'printTemplateLibrary',
+];
 </script>
