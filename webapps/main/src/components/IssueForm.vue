@@ -37,8 +37,7 @@
             :model-value="link_form"
             :label="$t('issue_new_link_type_label')"
             @update:model-value="updateLinkForm"
-          >
-          </q-select>
+          />
 
           <!-- WORK ORDER -->
           <BaseAutocompleteWorkOrder
@@ -46,8 +45,7 @@
             :value="links.work_order"
             :label="$capitalize($t('work_order.long'))"
             @select="(selection) => loadWorkOrder(selection)"
-          >
-          </BaseAutocompleteWorkOrder>
+          />
 
           <!-- PRODUCT -->
           <BaseAutocompleteProduct
@@ -61,8 +59,7 @@
             key-only
             :label="$capitalize($t('product.label'))"
             @select="(selection) => loadProduct(selection)"
-          >
-          </BaseAutocompleteProduct>
+          />
 
           <!-- PHASE -->
           <q-select
@@ -74,8 +71,7 @@
             :options="phase_data"
             option-label="alias"
             @update:model-value="(selection) => loadPhase(selection)"
-          >
-          </q-select>
+          />
 
           <!-- JOB -->
           <q-select

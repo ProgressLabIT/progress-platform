@@ -16,7 +16,6 @@
     input-debounce="500"
     :emit-value="keyOnly"
     :map-options="keyOnly"
-    popup-content-style="width: 0px"
     @filter="filter"
     @update:model-value="(selection) => $emit('select', selection)"
   >
