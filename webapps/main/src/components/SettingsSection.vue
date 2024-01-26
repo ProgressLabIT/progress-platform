@@ -1,7 +1,7 @@
 <template>
-  <div class="fit q-pa-lg scroll">
-    <div class="row item-center q-mb-md">
-      <div class="text-h2 display">{{ title }}</div>
+  <div class="fit q-pa-xl scroll">
+    <div class="row item-center q-mb-xl">
+      <div class="text-h2 display highlight">{{ title }}</div>
 
       <q-space />
 

@@ -577,7 +577,7 @@ export default {
       label: 'Default operator cost',
       mustBePositive: 'Must be greater than or equal to 0',
     },
-    allowUnassignedJobs: 'Allow working on unassigned jobs',
+    allowUnassignedJobs: 'Show unassigned jobs to operators',
   },
   session: {
     alerts: {

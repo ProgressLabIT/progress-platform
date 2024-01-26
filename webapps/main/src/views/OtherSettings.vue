@@ -6,6 +6,8 @@
     @save="save"
   >
     <q-input
+      filled
+      style="max-width: 400px;"
       v-model.number="configModel.operatorCost"
       type="number"
       :label="$t('settings.operatorCost.label')"
@@ -18,7 +20,7 @@
       v-model="configModel.allowUnassignedJobs"
       :label="$t('settings.allowUnassignedJobs')"
       :disable="!editMode"
-      class="q-mt-md"
+      class="q-mt-xl"
     />
   </SettingsSection>
 </template>

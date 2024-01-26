@@ -1,7 +1,7 @@
 <template>
   <SettingsSection
     v-slot="{ editMode }"
-    :title="$t('views.companyDetails')"
+    :title="$t('views.defaultOperationParameters')"
     @cancel="cancel"
     @save="save"
   >
