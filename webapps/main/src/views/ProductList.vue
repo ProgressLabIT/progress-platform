@@ -169,7 +169,7 @@ export default {
     },
 
     card_height() {
-      return this.show_images ? 240 : 140;
+      return this.show_images ? 240 : 150;
     },
   },
 

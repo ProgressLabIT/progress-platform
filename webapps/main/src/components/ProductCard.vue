@@ -35,10 +35,16 @@
       </div>
       <div
         v-show="showImage && product.image ? overDesc : true"
-        class="px-0 pb-1"
+        class="px-0 pb-1 row q-gutter-xs q-pt-sm"
         :class="{ nowrap: !overDesc }"
       >
-        <TagChips :tags="product.tags" dense />
+        <q-badge
+          v-for="tag in product.tags"
+          :key="tag._key"
+          color="theme-grey"
+        >
+          {{ tag.name }}
+        </q-badge>
       </div>
     </div>
     <ProductCardActions
@@ -76,14 +82,11 @@
 <script>
 import { mapActions } from 'vuex';
 import ProductCardActions from '@/components/ProductCardActions.vue';
-import TagChips from './TagChips.vue';
-
 export default {
   name: 'ProductCard',
 
   components: {
     ProductCardActions,
-    TagChips,
   },
 
   props: {

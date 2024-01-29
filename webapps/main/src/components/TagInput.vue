@@ -39,6 +39,18 @@
         </q-item-section>
       </q-item>
     </template>
+
+    <template #selected-item="scope">
+      <q-chip
+        removable
+        dense
+        @remove="scope.removeAtIndex(scope.index)"
+        :tabindex="scope.tabindex"
+        color="theme-grey"
+      >
+        {{ scope.opt.name }}
+      </q-chip>
+    </template>
   </q-select>
 </template>
 
