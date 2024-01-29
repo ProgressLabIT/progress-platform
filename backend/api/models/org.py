@@ -35,18 +35,6 @@ class UserListItem(ArangoDocument):
   created_at: datetime = None
   last_login: datetime = None
 
-
-class UserNew(BaseModel):
-  name: str = None
-  surname: str = None
-  username: str
-  site_key: str = '0'
-  department_key: str = None
-  hourly_cost: float = None
-  email: str = None
-  scope: str
-  preferences: UserPreferences = UserPreferences()
-
 class JobSelectionLayout(str, Enum):
   CARD = 'card'
   LIST = 'list'
@@ -83,6 +71,17 @@ class UserPreferences(BaseModel):
   home_page: HomePageOptions = None
   job_selection_layout: JobSelectionLayout = JobSelectionLayout.CARD
   work_session_tabs_order: list[WorkSessionTabs] = [WorkSessionTabs.PROCEDURE, WorkSessionTabs.DOCS, WorkSessionTabs.BOM, WorkSessionTabs.ISSUES, WorkSessionTabs.NOTES, WorkSessionTabs.MESSAGES, WorkSessionTabs.PROCESS]
+
+class UserNew(BaseModel):
+  name: str = None
+  surname: str = None
+  username: str
+  site_key: str = '0'
+  department_key: str = None
+  hourly_cost: float = None
+  email: str = None
+  scope: str
+  preferences: UserPreferences = UserPreferences()
 
 class User(ArangoDocument, UserNew):
   created_at: datetime = datetime.now(tz.UTC)
