@@ -12,7 +12,7 @@ class Tag(ArangoDocument):
 
 class TagConnection(ArangoEdge):
   """
-  collection: tagged_by
+  collection: has_tag
   from: * (any collection)
   to: Tag
   """

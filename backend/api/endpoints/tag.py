@@ -20,7 +20,7 @@ def get_tags(context: TagAssignmentContext | None = None, context_key: str | Non
     else:
       cursor = db.aql.execute(
         """
-        FOR edge IN tagged_by
+        FOR edge IN has_tag
           FILTER edge._from == @from_id
           RETURN DOCUMENT(Tag, edge._to)
         """,
@@ -56,7 +56,7 @@ def create_tag(tag: Tag):
 @router.post('/tag/update-connections', response_model=APIResponse[None])
 def connect_tags(connection_updates: list[TagConnectionUpdate]):
   try:
-    tx = db.begin_transaction(write=['tagged_by'])
+    tx = db.begin_transaction(write=['has_tag'])
 
     to_add = []
     to_remove = []
@@ -68,17 +68,17 @@ def connect_tags(connection_updates: list[TagConnectionUpdate]):
         to_remove.append(connection)
 
     if to_add:
-      tx.collection('tagged_by').insert_many(to_add)
+      tx.collection('has_tag').insert_many(to_add)
 
     if to_remove:
       tx.aql.execute(
         """
         FOR record_to_remove IN @to_remove
-          FOR record IN tagged_by
+          FOR record IN has_tag
           FILTER
             record._from == record_to_remove._from
             && record._to == record_to_remove._to
-          REMOVE record IN tagged_by
+          REMOVE record IN has_tag
         """,
         bind_vars=dict(to_remove=to_remove)
       )

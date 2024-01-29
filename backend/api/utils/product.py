@@ -12,7 +12,7 @@ class Queries:
       FILTER !p.trash && LIKE(search_context, search, true)
 
       LET tags = (
-        FOR edge IN tagged_by
+        FOR edge IN has_tag
           FILTER edge._from == p._id
           RETURN DOCUMENT(Tag, edge._to)
       )

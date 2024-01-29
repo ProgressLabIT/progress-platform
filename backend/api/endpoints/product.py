@@ -166,7 +166,7 @@ async def copy_product(
     )
 
   # 0.2 Setup transaction
-  tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires', 'can_use_print_template', 'tagged_by'], read=['Operation'])
+  tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires', 'can_use_print_template', 'has_tag'], read=['Operation'])
   product_db = tx.collection('Product')
 
   # 0.3 Fetch product data
@@ -330,7 +330,7 @@ async def copy_product(
     # 9. Copy tags
     tag_ids_cursor = tx.aql.execute(
       """
-      FOR edge IN tagged_by
+      FOR edge IN has_tag
         FILTER edge._from == @from_id
         RETURN edge._to
       """,
@@ -345,7 +345,7 @@ async def copy_product(
       ) for tag_id in tag_ids_cursor
     ]
     if tag_connections:
-      tx.collection('tagged_by').insert_many(tag_connections)
+      tx.collection('has_tag').insert_many(tag_connections)
 
     # 10. Commit transaction
     tx.commit_transaction()
