@@ -45,7 +45,7 @@ class UserNew(BaseModel):
   hourly_cost: float = None
   email: str = None
   scope: str
-
+  preferences: UserPreferences = UserPreferences()
 
 class JobSelectionLayout(str, Enum):
   CARD = 'card'
@@ -55,19 +55,39 @@ class DisplayFont(str, Enum):
   ORBITRON = 'orbitron'
   RED_HAT_DISPLAY = 'red-hat-display'
 
+class HomePageOptions(str, Enum):
+  ADMIN = 'adminPanel'
+  PRODUCTS = 'libraryRoot'
+  PRODUCTION = 'productionRoot'
+  OPERATOR = 'operatorRoot'
+  QUALITY = 'qualityRoot'
+  REPORTS = 'reportRoot'
+
+class WorkSessionTabs(str, Enum):
+  PROCEDURE = 'jobSteps'
+  DOCS = 'jobDocs'
+  BOM = 'jobBom'
+  ISSUES = 'jobIssues'
+  NOTES = 'jobNotes'
+  MESSAGES = 'jobMessages'
+  PROCESS = 'jobProcessView'
+
+class Theme(str, Enum):
+  DARK = 'dark'
+  LIGHT = 'light'
+
 class UserPreferences(BaseModel):
-  theme: str = None
+  theme: Theme = Theme.DARK
   locale: str = None
   display_font: DisplayFont = DisplayFont.ORBITRON
-  home_page: str = None
+  home_page: HomePageOptions = None
   job_selection_layout: JobSelectionLayout = JobSelectionLayout.CARD
-  work_session_tabs_order: list[str] = None
+  work_session_tabs_order: list[WorkSessionTabs] = [WorkSessionTabs.PROCEDURE, WorkSessionTabs.DOCS, WorkSessionTabs.BOM, WorkSessionTabs.ISSUES, WorkSessionTabs.NOTES, WorkSessionTabs.MESSAGES, WorkSessionTabs.PROCESS]
 
 class User(ArangoDocument, UserNew):
   created_at: datetime = datetime.now(tz.UTC)
   active: bool = True  # change to 'enabled'
   email: str = None
-  preferences: UserPreferences = UserPreferences()
 
   psw_hash: str = None
   reset_password: bool = False
