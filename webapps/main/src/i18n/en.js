@@ -151,6 +151,7 @@ export default {
   image: 'image',
   inactive: 'inactive',
   increase: 'increase',
+  independentOrder: 'Independent order',
   info: 'info',
   issue: 'issue',
   issue_button_close: 'Close issue',

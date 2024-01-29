@@ -152,6 +152,7 @@ export default {
   image: 'immagine | immagini',
   inactive: 'disattivato',
   increase: 'aumenta',
+  independentOrder: 'Ordine indipendente',
   info: 'info',
   issue: 'Segnalazione | Segnalazioni',
   issue_button_close: 'Chiudi segnalazione',

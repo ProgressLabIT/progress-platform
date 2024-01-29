@@ -203,6 +203,7 @@ class WorkOrderDetails(WorkOrderFull):
 class OperatorAssignments(FlexModel):
   operator: Operator
   assigned_jobs: list[Job] | None = None
+  independent: bool = False
 
 
 class AssignmentsResponse(FlexModel):
@@ -217,8 +218,9 @@ class QueueType(str, Enum):
 
 
 class Queue(ArangoDocument):
-  type: QueueType #What the queue refers to.
+  type: QueueType #What the queue refers to
   site_key: str | None = None
   subqueue_target_key: str | None = None # id of operator / equipment
-  work_orders: list[str] = None # the list of Wo keys ordered by priority.
+  work_orders: list[str] = None # the list of Wo keys ordered by priority
   jobs: list[str] = None # the list of job keys ordered by priority
+  independent: bool = False # if true, the queue's sequence is will be independent from the main work order sequence
