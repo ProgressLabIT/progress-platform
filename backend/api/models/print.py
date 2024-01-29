@@ -20,6 +20,7 @@ class VisualFieldType(str, Enum):
   QRCODE = 'qrcode'
   EAN13 = 'ean13'
   CODE39 = 'code39'
+  CODE128 = 'code128'
   DATAMATRIX = 'gs1datamatrix'
   JAPANPOST = 'japanpost'
   NW7 = 'nw7'
