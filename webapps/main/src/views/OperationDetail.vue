@@ -16,20 +16,25 @@
           <q-space />
 
           <BaseTooltipIcon
+            icon="mdi-content-copy"
+            :tooltip="$t('operation.copyToAll.title')"
+            :color="$theme.orange"
+            @icon-click="copyToAll"
+          />
+
+          <BaseTooltipIcon
             icon="mdi-pencil"
             :tooltip="$capitalize($t('edit'))"
             :color="$theme.blue"
             @icon-click="editMode = true"
-          >
-          </BaseTooltipIcon>
+          />
 
           <BaseTooltipIcon
             icon="mdi-delete"
             :tooltip="$capitalize($t('archive'))"
             :color="$theme.red"
             @icon-click="showDelete"
-          >
-          </BaseTooltipIcon>
+          />
         </template>
         <template v-else>
           <div class="column justify-between col-4">
@@ -147,8 +152,11 @@
 
 <script>
 import { cloneDeep } from 'lodash'; // TODO: replace with lodash-es
+import { Dialog, Notify } from 'quasar';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+import { api } from '@/boot/axios';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import ProcessParameters from '@/components/ProcessParameters.vue';
@@ -173,11 +181,40 @@ export default {
     },
   },
 
-  setup() {
-    const tab = ref('parameters');
+  setup(props) {
+    const tab = ref('steps');
+
+    const { t } = useI18n();
+
+    function copyToAll() {
+      Dialog.create({
+        title: t('operation.copyToAll.title'),
+        message: t('operation.copyToAll.confirm'),
+        cancel: true,
+      }).onOk(async () => {
+        try {
+          const { data } = await api.post(
+            `operation/${props.operation._key}/copy_to_all`,
+          );
+          Notify.create({
+            type: 'positive',
+            message: t('operation.copyToAll.success', {
+              count: data.detail.length,
+            }),
+          });
+        } catch (error) {
+          console.error(error);
+          Notify.create({
+            type: 'negative',
+            message: t('operation.copyToAll.error'),
+          });
+        }
+      });
+    }
 
     return {
       activeTab: tab,
+      copyToAll,
     };
   },
 

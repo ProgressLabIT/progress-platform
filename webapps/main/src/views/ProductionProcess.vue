@@ -374,7 +374,7 @@ export default {
         new_operation.default_phase_steps?.map(async (step) => ({
           ...step,
           media: await Promise.all(
-            step.media.map(async (media) => {
+            step.media?.map(async (media) => {
               const { data: blob } = await api.get(`/media/${media._key}`, {
                 responseType: 'blob',
               });
@@ -384,8 +384,13 @@ export default {
                 temp: true,
                 data: new File([blob], media.filename, { type: blob.type }),
               };
-            }),
+            }) ?? [],
           ),
+          print_templates:
+            step.print_templates?.map((template) => ({
+              ...template,
+              temp: true,
+            })) ?? [],
           // Copy the steps over with a different _key to "break the link"
           form_fields: step.form_fields.map((field) => ({
             ...field,

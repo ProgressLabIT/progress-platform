@@ -280,6 +280,12 @@ export default {
       op_name_missing: "indicare almeno un nome per l'operazione",
       op_name_used: 'nome operazione già in uso',
     },
+    copyToAll: {
+      title: 'Copia a tutte le fasi',
+      confirm: 'Vuoi davvero copiare questa operazione a tutte le fasi?',
+      success: 'Operazione copiata con successo in {count} fasi',
+      error: "Errore durante la copia dell'operazione",
+    },
     default_params_explainer:
       'Le nuove fasi associate a questa operazione verranno create con i parametri indicati qui. Potrai modificare i parametri specifici della fase dopo la creazione.',
     default_params_title: 'parametri di default',

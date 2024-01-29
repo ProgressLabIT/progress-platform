@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from pydantic import Field
 
@@ -46,7 +46,7 @@ class Step(FlexModel):
   description: str = None
   type: StepType = StepType.INSTRUCTION
   form_fields: List[FormFieldDefinition] = []
-  print_templates: List[PrintTemplateRecord] = []
+  print_templates: List[PrintTemplateRecord | str] = []
 
 
 # TODO: Add validation for size, content_type, etc.
@@ -58,7 +58,7 @@ class Media(ArangoDocument):
 
 
 class StepWithMediaInfo(Step):
-  media: List[Union[Media, str]] = None
+  media: List[Media | str] = None
 
 class Operation(ArangoDocument):
   name: str
@@ -66,15 +66,13 @@ class Operation(ArangoDocument):
   description: str = None
   default_phase_parameters: PhaseParameters = PhaseParameters()
   default_phase_notes: str = None
-  default_phase_steps: List[Step] = []
+  default_phase_steps: List[StepWithMediaInfo] = []
 
 
 class PhaseRecord(ArangoDocument):
   alias: str
-  description: str = None
   product_key: str
   operation_key: str
-  operation_name: str = None
   params: PhaseParameters = PhaseParameters()
   step_sequence: List[Optional[str]] = []
   production_notes: str = None

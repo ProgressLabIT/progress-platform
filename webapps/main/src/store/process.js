@@ -63,6 +63,13 @@ const process = {
               temp: false,
               trash: false,
             })) ?? [];
+
+          step.print_templates =
+            step.print_templates?.map((template) => ({
+              ...template,
+              temp: false,
+              trash: false,
+            })) ?? [];
         });
       });
 
@@ -108,6 +115,7 @@ const process = {
 
               ...(newMediaByStepIndex.get(stepIndex) ?? []),
             ],
+            print_templates: step.print_templates.map(({ _key }) => _key),
           }),
         ),
       });
