@@ -26,10 +26,12 @@ const job = {
         currentAssignment.independent = assignment.independent;
       }
       if (assignment.jobs !== undefined) {
-        currentAssignment.assigned_jobs = assignment.jobs;
+        currentAssignment.assigned_jobs.sort((a, b) => {
+          const aIndex = assignment.jobs.indexOf(a._key);
+          const bIndex = assignment.jobs.indexOf(b._key);
+          return aIndex - bIndex;
+        });
       }
-
-      console.log(currentAssignment);
     },
   },
 

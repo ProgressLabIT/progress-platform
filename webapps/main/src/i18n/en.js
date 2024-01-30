@@ -151,7 +151,13 @@ export default {
   image: 'image',
   inactive: 'inactive',
   increase: 'increase',
-  independentOrder: 'Independent order',
+  independentOrdering: {
+    switch: {
+      label: 'Independent order',
+      hint: 'Controls whether the jobs in the operator queue are ordered independently or according to the work order queue order',
+    },
+    reorder: 'Reorder',
+  },
   info: 'info',
   issue: 'issue',
   issue_button_close: 'Close issue',

@@ -152,7 +152,13 @@ export default {
   image: 'immagine | immagini',
   inactive: 'disattivato',
   increase: 'aumenta',
-  independentOrder: 'Ordine indipendente',
+  independentOrdering: {
+    switch: {
+      label: 'Ordinamento indipendente',
+      hint: "Controlla se i lavori nella coda operatori sono ordinati indipendentemente o secondo l'ordine della coda ordini di produzione",
+    },
+    reorder: 'Riordina',
+  },
   info: 'info',
   issue: 'Segnalazione | Segnalazioni',
   issue_button_close: 'Chiudi segnalazione',

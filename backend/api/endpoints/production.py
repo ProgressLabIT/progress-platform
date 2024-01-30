@@ -531,7 +531,7 @@ async def update_queue(queue_update: Queue):
   return APIResponse(detail="Queue updated")
 
 @router.put('/queue/operator/{operator_key}')
-async def update_operator_queue(operator_key: str, update: dict):
+async def update_operator_queue(operator_key: str, site_key: str | None, update: dict):
   try:
     updated_queue = db.aql.execute(
       """

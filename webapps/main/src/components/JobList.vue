@@ -23,15 +23,28 @@
 
         <q-space />
 
+        <q-btn
+          v-if="assignment.independent && assignment.assigned_jobs_count > 1"
+          size="sm"
+          color="theme-blue"
+          :label="$t('independentOrdering.reorder')"
+          class="q-mr-sm"
+          @click="openReorderDialog(assignment)"
+        />
+
         <q-checkbox
           v-if="assignment.operator._key !== 'unassigned'"
           :model-value="assignment.independent"
-          :label="$t('independentOrder')"
+          :label="$t('independentOrdering.switch.label')"
           class="q-mr-sm"
           color="theme-blue"
           size="sm"
           @update:model-value="updateAssignmentDependency(assignment)"
-        />
+        >
+          <q-tooltip>
+            {{ $t('independentOrdering.switch.hint') }}
+          </q-tooltip>
+        </q-checkbox>
 
         <q-chip
           :ripple="false"
@@ -118,7 +131,7 @@
                   class="row items-center justify-end q-gutter-xs"
                 >
                   <q-icon
-                    v-if="props.row.due_by < now"
+                    v-if="props.row.due_by < now.toISOString()"
                     color="theme-red"
                     name="mdi-alert-octagon"
                   />
@@ -274,6 +287,7 @@
 </template>
 
 <script>
+import { Dialog } from 'quasar';
 import { useStore } from 'vuex';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -281,6 +295,7 @@ import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
+import OperatorJobsReorderDialog from './OperatorJobsReorderDialog.vue';
 
 export default {
   name: 'JobList',
@@ -333,8 +348,34 @@ export default {
       });
     }
 
+    /*
+      We use a separate dialog instead of in-place reordering because:
+      - when data is re-fetched, the table gets re-rendered even if the data was not changed, and the order is lost
+      - when there are filters and sorting, the ordered items will only be a subset of the whole list, making the UX&logic confusing
+      - it's really hard/annoying to make grouped reordering work (jobs within same work order should stay together)
+      - UX is not ideal with grouped reordering with the potential solutions (they don't look like a group, only one item is draggable, etc.)
+    */
+    function openReorderDialog({ operator }) {
+      Dialog.create({
+        component: OperatorJobsReorderDialog,
+        componentProps: {
+          operator,
+        },
+      }).onOk(async (newJobsOrder) => {
+        await store.dispatch('updateJobAssignment', {
+          operator_key: operator._key,
+          jobs: newJobsOrder,
+        });
+
+        // Re-fetch data after submitting the new ordering
+        await store.dispatch('updateWorkOrderList');
+        await store.dispatch('loadJobAssignments');
+      });
+    }
+
     return {
       updateAssignmentDependency,
+      openReorderDialog,
     };
   },
 
