@@ -88,9 +88,15 @@ async def create_work_order(new_wo: WorkOrderNew):
       match['_key'] = new_wo.product_key
 
     product_data = ProductDetails(**product_coll.find(match).next())
-    new_wo.product_code = product_data.code
-    new_wo.product_key = product_data.key
-    new_wo.product_description = product_data.description
+
+    if not new_wo.product_key:
+      new_wo.product_key = product_data.key
+
+    if not new_wo.product_code:
+      new_wo.product_code = product_data.code
+
+    if not new_wo.product_description:
+      new_wo.product_description = product_data.description
 
     if len(product_data.process_phases):
       new_wo.phase_sequence = product_data.process_phases
