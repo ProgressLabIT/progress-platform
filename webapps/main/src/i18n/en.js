@@ -157,6 +157,8 @@ export default {
       hint: 'Controls whether the jobs in the operator queue are ordered independently or according to the work order queue order',
     },
     reorder: 'Reorder',
+    turnOffConfirm:
+      'You are turning off independent ordering. The jobs will be reordered according to the work order queue order. Do you confirm?',
   },
   info: 'info',
   issue: 'issue',

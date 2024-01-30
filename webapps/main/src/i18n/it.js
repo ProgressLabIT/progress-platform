@@ -158,6 +158,8 @@ export default {
       hint: "Controlla se i lavori nella coda operatori sono ordinati indipendentemente o secondo l'ordine della coda ordini di produzione",
     },
     reorder: 'Riordina',
+    turnOffConfirm:
+      "Stai disattivando l'ordinamento indipendente. I lavori verranno riordinati secondo l'ordine della coda ordini di produzione. Confermi?",
   },
   info: 'info',
   issue: 'Segnalazione | Segnalazioni',

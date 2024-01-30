@@ -211,6 +211,11 @@ class AssignmentsResponse(FlexModel):
   unassigned_jobs: list[Job] = []
 
 
+class OperatorQueueUpdateInput(FlexModel):
+  jobs: List[str] | None = None
+  independent: bool | None = None
+
+
 class QueueType(str, Enum):
   OPERATOR = 'o'
   EQUIPMENT = 'e'

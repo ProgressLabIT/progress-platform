@@ -288,6 +288,7 @@
 
 <script>
 import { Dialog } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -339,12 +340,32 @@ export default {
   emits: ['setSearch', 'itemDblClick'],
 
   setup() {
+    const { t } = useI18n();
     const store = useStore();
 
     async function updateAssignmentDependency({ operator, independent }) {
-      await store.dispatch('updateJobAssignment', {
-        operator_key: operator._key,
-        independent: !independent,
+      if (independent === false) {
+        await store.dispatch('updateJobAssignment', {
+          operator_key: operator._key,
+          independent: true,
+        });
+        return;
+      }
+
+      Dialog.create({
+        title: t('independentOrdering.switch.label'),
+        message: t('independentOrdering.turnOffConfirm'),
+        ok: t('yes'),
+        cancel: t('no'),
+      }).onOk(async () => {
+        await store.dispatch('updateJobAssignment', {
+          operator_key: operator._key,
+          independent: false,
+        });
+
+        // Re-fetch data after the triggered reordering
+        await store.dispatch('updateWorkOrderList');
+        await store.dispatch('loadJobAssignments');
       });
     }
 

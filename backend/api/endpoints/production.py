@@ -531,7 +531,11 @@ async def update_queue(queue_update: Queue):
   return APIResponse(detail="Queue updated")
 
 @router.put('/queue/operator/{operator_key}')
-async def update_operator_queue(operator_key: str, site_key: str | None, update: dict):
+async def update_operator_queue(
+  operator_key: str,
+  site_key: str | None = None,
+  update: OperatorQueueUpdateInput = Body(...)
+):
   try:
     updated_queue = db.aql.execute(
       """
@@ -542,9 +546,18 @@ async def update_operator_queue(operator_key: str, site_key: str | None, update:
       """,
       bind_vars=dict(
         operator_key = operator_key,
-        update = update
+        update = update.model_dump(exclude_none=True)
       )
     ).next()
+
+    if update.independent == False:
+      db.aql.execute(
+        Queries.REORDER_JOB_QUEUES,
+        bind_vars=dict(
+          site_key = site_key, # default of 0 is handled in the query
+          target_key = operator_key,
+        )
+      )
 
     return APIResponse(message="Queue updated", detail=updated_queue)
   except:
