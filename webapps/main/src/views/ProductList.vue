@@ -61,8 +61,7 @@
               :key="product._key"
               :product="product"
               :show-image="show_images"
-            >
-            </ProductCard>
+            />
           </div>
         </div>
         <div class="row q-my-lg justify-center">
@@ -170,7 +169,7 @@ export default {
     },
 
     card_height() {
-      return this.show_images ? 240 : 140;
+      return this.show_images ? 240 : 150;
     },
   },
 
@@ -206,7 +205,11 @@ export default {
     },
 
     match(product) {
-      return multiMatch(this.search_string, product, ['code', 'description']);
+      return multiMatch(this.search_string, product, [
+        'code',
+        'description',
+        ['tags', 'name'],
+      ]);
     },
 
     showMore() {

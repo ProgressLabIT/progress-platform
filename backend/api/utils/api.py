@@ -1,9 +1,11 @@
-from typing import Union, List
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
-class APIResponse(BaseModel):
+T = TypeVar("T")
+
+class APIResponse(BaseModel, Generic[T]):
   status: int = 200
-  message: str = None
-  # error: str = None
-  detail: Union[int, str, dict, list] = None
+  message: str | None = None
+  # error: str | None = None
+  detail: T = None

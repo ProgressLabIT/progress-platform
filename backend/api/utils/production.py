@@ -300,7 +300,7 @@ def create_job_record(
   wo_data: WorkOrderFull,
   phase_key: str,
   qt_planned: float,
-  assigned_to: str = None,
+  assigned_to: str | None = None,
   **kwargs
   ):
   if phase_key == 'default':

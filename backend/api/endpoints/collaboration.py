@@ -25,9 +25,9 @@ messages = db.collection('Message')
 
 @router.get('/issue-type')
 async def get_issue_type(
-  key: str = None,
-  code: str = None,
-  critical: bool = None,
+  key: str | None = None,
+  code: str | None = None,
+  critical: bool | None = None,
   active_only: bool = True
   ):
   # use query parameters to filter specific type
@@ -117,29 +117,29 @@ async def delete_issue_type(issue_type_key: str):
 @router.get('/issue')
 async def search_issues(
   issue_key: Union[List[str], None] = Query(default=None),
-  issue_key_search: str = None,
+  issue_key_search: str | None = None,
   issue_type_key: Union[List[str], None] = Query(default=None),
   product_key: Union[List[str], None] = Query(default=None),
-  product_code_search: str = None,
+  product_code_search: str | None = None,
   work_order_key: Union[List[str], None] = Query(default=None),
-  work_order_code_search: str = None,
-  project_search: str = None,
+  work_order_code_search: str | None = None,
+  project_search: str | None = None,
   job_key: Union[List[str], None] = Query(default=None),
   phase_key: Union[List[str], None] = Query(default=None),
-  phase_alias_search: str = None,
+  phase_alias_search: str | None = None,
   operation_key: Union[List[str], None] = Query(default=None),
   created_by: Union[List[str], None] = Query(default=None),
   closed_by: Union[List[str], None] = Query(default=None),
-  time_created_from: datetime = None,
-  time_created_to: datetime = None,
-  time_closed_from: datetime = None,
-  time_closed_to: datetime = None,
-  issue_open: bool = None,
-  issue_closed: bool = None,
-  issue_critical: bool = None,
-  issue_non_critical: bool = None,
+  time_created_from: datetime | None = None,
+  time_created_to: datetime | None = None,
+  time_closed_from: datetime | None = None,
+  time_closed_to: datetime | None = None,
+  issue_open: bool | None = None,
+  issue_closed: bool | None = None,
+  issue_critical: bool | None = None,
+  issue_non_critical: bool | None = None,
   advanced_filters: str = Query(default=None),
-  limit: int = None,
+  limit: int | None = None,
   with_links: bool = False
   ):
   # use query parameters to filter specific type

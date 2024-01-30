@@ -18,14 +18,14 @@ fake_users_db = {
   "johndoe": {
     "username": "johndoe",
     "full_name": "John Doe",
-    "email": "johndoe@example.com", 
+    "email": "johndoe@example.com",
     "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
     "disabled": False,
   },
   # "alice": {
   #   "username": "alice",
   #   "full_name": "Alice Wonderson",
-  #   "email": "alice@example.com", 
+  #   "email": "alice@example.com",
   #   "hashed_password": "fakedhashedsecret2",
   #   "disabled": True,
   # }
@@ -37,13 +37,13 @@ class Token(BaseModel):
   token_type: str
 
 class TokenData(BaseModel):
-  username: str = None
+  username: str | None = None
 
 class User(BaseModel):
   username: str
-  email: str = None
-  full_name: str = None
-  disabled: bool = None
+  email: str | None = None
+  full_name: str | None = None
+  disabled: bool | None = None
 
 class UserInDB(User):
   hashed_password: str
@@ -78,7 +78,7 @@ def authenticate_user(fake_db, username: str, password: str):
 
 
 
-def create_access_token(*, data: dict, expires_delta: timedelta = None):
+def create_access_token(*, data: dict, expires_delta: timedelta | None = None):
   to_encode = data.copy()
   if expires_delta:
     expire = datetime.utcnow() + expires_delta

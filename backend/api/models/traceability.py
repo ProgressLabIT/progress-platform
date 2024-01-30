@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import List
 
 from pydantic import Field
 
@@ -15,31 +14,31 @@ class StepStatus(str, Enum):
 
 
 class StepExecutionData(FlexModel):
-  key: str = Field(None, alias="_key")
-  job_key: str = None
-  user_key: str = None
-  work_session_key: str = None
-  batch_key: str = None
-  step_key: str = None
-  # start: datetime = None
-  completed: datetime = None
-  # duration: timedesslta = None
+  key: str | None = Field(None, alias="_key")
+  job_key: str | None = None
+  user_key: str | None = None
+  work_session_key: str | None = None
+  batch_key: str | None = None
+  step_key: str | None = None
+  # start: datetime | None = None
+  completed: datetime | None = None
+  # duration: timedelta | None = None
   status: StepStatus = StepStatus.TODO
   form_data: list[FormFieldValue] = []
 
-  modified: str = None
-  canceled: str = None
+  modified: str | None = None
+  canceled: str | None = None
 
 
 class Batch(FlexModel):
-  key: str = Field(None, alias="_key")
+  key: str | None = Field(None, alias="_key")
   job_key: str
   work_order_key: str
   phase_key: str
 
   start: datetime
-  end: datetime = None
-  # duration: timedelta = None
+  end: datetime | None = None
+  # duration: timedelta | None = None
   active: bool = True
   # serial_numbers: List[str] = None
 
@@ -50,43 +49,43 @@ class Batch(FlexModel):
   unit_material_cost: float = 0
   value: float = 0
 
-  # next_step: int = None
-  step_data: List[StepExecutionData] = None
+  # next_step: int | None = None
+  step_data: list[StepExecutionData] | None = None
 
   # Attributes for overrides
-  canceled: str = None # Event id
-  forced: str = None # Event id
+  canceled: str | None = None # Event id
+  forced: str | None = None # Event id
 
 
 class WorkSession(FlexModel):
-  key: str = Field(None, alias="_key")
-  user_session_key: str = None
+  key: str | None = Field(None, alias="_key")
+  user_session_key: str | None = None
   batch_key: str
   job_key: str
   phase_key: str
   work_order_key: str
   product_key: str
-  user_key: str = None
+  user_key: str | None = None
   # master_session: bool
-  start: datetime = None
-  end: datetime = None
-  duration: int = None # milliseconds
+  start: datetime | None = None
+  end: datetime | None = None
+  duration: int | None = None # milliseconds
   active: bool = False
-  hourly_cost: float = None
+  hourly_cost: float | None = None
 
   # Attributes for overrides
-  canceled: str = None
-  forced: str = None
+  canceled: str | None = None
+  forced: str | None = None
 
 # class Serial(ArangoDocument):
 #   wo_key: str
 #   counter: int
 #   product_key: str
-#   start: datetime = None
-#   end: datetime = None
+#   start: datetime | None = None
+#   end: datetime | None = None
 #   accept: bool = True
 #   batches: List[str]
-#   value: float = None
+#   value: float | None = None
 
 
 class WIP(ArangoEdge):
@@ -97,5 +96,5 @@ class WIP(ArangoEdge):
   value: float = 0
   quantity: float = 0
   active: bool = False # indicates if it's being worked on or just sitting around
-  # serial_numbers: List[str] = None
+  # serial_numbers: list[str] | None = None
 

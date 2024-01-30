@@ -7,10 +7,10 @@ from utils.base_models import FlexModel, ArangoDocument
 class BomLineRead(FlexModel):
   component_key: str
   bom_line_key: str
-  phase_key: str = None
+  phase_key: str | None = None
   component_code: str
   component_description: str
-  phase_name: str = None
+  phase_name: str | None = None
   qt: float
 
 

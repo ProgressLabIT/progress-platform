@@ -56,13 +56,13 @@ async def apply_production_event(data: EventModel):
 
 @router.get('/event')
 async def get_events(
-  issue_key: str = None,
-  job_key: str = None,
-  work_order_key: str = None,
-  time_from: datetime = None,
-  time_to: datetime = None,
-  type: EventType = None
-  ):
+  issue_key: str | None = None,
+  job_key: str | None = None,
+  work_order_key: str | None = None,
+  time_from: datetime | None = None,
+  time_to: datetime | None = None,
+  type: EventType | None = None
+):
   bind_vars = dict(
     issue_key = issue_key,
     job_key = job_key,
@@ -102,7 +102,7 @@ async def get_batch_execution_data(batch_key: str):
 
 
 @router.post('/job/{job_key}/heartbeat')
-async def job_heartbeat(job_key: str, work_session_key: str = None):
+async def job_heartbeat(job_key: str, work_session_key: str | None = None):
   """
   Updates the work session `last_online` attribute with current time
   """

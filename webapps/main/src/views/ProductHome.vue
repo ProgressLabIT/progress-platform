@@ -135,6 +135,24 @@
         </q-input>
       </div>
 
+      <!-- PRODUCT TAGS -->
+      <div class="q-mt-lg col-auto">
+        <div class="text-h4 weight-bold text-uppercase">
+          {{ $t('tag', 2) }}
+        </div>
+
+        <TagInput
+          v-if="editMode"
+          :model-value="product.tags"
+          class="q-mt-md"
+          @update:model-value="updateField('tags', $event)"
+        />
+        <div v-else class="q-mt-xs">
+          <span v-if="product.tags.length === 0" class="text-h3">-</span>
+          <TagChips v-else :tags="product.tags" />
+        </div>
+      </div>
+
       <q-space />
 
       <!-- EDIT MODE ACTIONS -->
@@ -360,6 +378,8 @@ import { mapState, mapActions } from 'vuex';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
 import MediaViewer from '@/components/MediaViewer.vue';
+import TagInput from '@/components/TagInput.vue';
+import TagChips from '../components/TagChips.vue';
 
 export default {
   name: 'ProductHome',
@@ -368,6 +388,8 @@ export default {
     // BaseConfirmationDialog,
     MediaViewer,
     BaseAutocompleteTemplate,
+    TagInput,
+    TagChips,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
@@ -594,6 +616,18 @@ export default {
         image: {
           new: this.new_image,
           delete: this.new_image_url === 'deleted',
+        },
+        tags: {
+          add: this.product.tags.filter(
+            (tag) =>
+              !this.saved_product.tags.some(
+                (savedTag) => savedTag._key === tag._key,
+              ),
+          ),
+          remove: this.saved_product.tags.filter(
+            (savedTag) =>
+              !this.product.tags.some((tag) => tag._key === savedTag._key),
+          ),
         },
       };
 

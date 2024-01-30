@@ -11,13 +11,19 @@ class Queries:
       LET search_context = LOWER(CONCAT(p.code, ' ', 'p.description'))
       FILTER !p.trash && LIKE(search_context, search, true)
 
+      LET tags = (
+        FOR edge IN has_tag
+          FILTER edge._from == p._id
+          RETURN DOCUMENT(Tag, edge._to)
+      )
+
       // keep only required attributes
       LET result = @details ? p : KEEP(p, ["_key", "code", "description", "active"])
 
       SORT result.code
       LIMIT @offset, @limit
 
-      RETURN p
+      RETURN MERGE(p, { tags })
   """
 
 

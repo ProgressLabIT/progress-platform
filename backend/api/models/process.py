@@ -41,12 +41,12 @@ class StepType(str, Enum):
 
 
 class Step(FlexModel):
-  key: str = Field(None, alias="_key")
-  title: str = None
-  description: str = None
+  key: str | None = Field(None, alias="_key")
+  title: str | None = None
+  description: str | None = None
   type: StepType = StepType.INSTRUCTION
   form_fields: List[FormFieldDefinition] = []
-  print_templates: List[PrintTemplateRecord | str] = []
+  print_templates: List[str | PrintTemplateRecord] = []
 
 
 # TODO: Add validation for size, content_type, etc.
@@ -58,14 +58,14 @@ class Media(ArangoDocument):
 
 
 class StepWithMediaInfo(Step):
-  media: List[Media | str] = None
+  media: list[str | Media] | None = None
 
 class Operation(ArangoDocument):
   name: str
-  code: str = None
-  description: str = None
+  code: str | None = None
+  description: str | None = None
   default_phase_parameters: PhaseParameters = PhaseParameters()
-  default_phase_notes: str = None
+  default_phase_notes: str | None = None
   default_phase_steps: List[StepWithMediaInfo] = []
 
 
@@ -75,7 +75,7 @@ class PhaseRecord(ArangoDocument):
   operation_key: str
   params: PhaseParameters = PhaseParameters()
   step_sequence: List[Optional[str]] = []
-  production_notes: str = None
+  production_notes: str | None = None
 
 class PhaseData(PhaseRecord):
   steps: List[Step] = []
@@ -85,8 +85,8 @@ class PhaseData(PhaseRecord):
 class ProcessUpdate(FlexModel):
   # this is the output model for the event logging (after DB update)
   product_key: str = Field(..., alias='_key')
-  process_phases: List[str] = None
-  new_phases: List[str] = None
+  process_phases: list[str] | None = None
+  new_phases: list[str] | None = None
   deleted_phases: List[str]
-  phase_data: List[PhaseRecord] = None
-  step_data: List[Step] = None
+  phase_data: list[PhaseRecord] | None = None
+  step_data: list[Step] | None = None

@@ -13,8 +13,8 @@ router = APIRouter()
 # Fetch Print Templates
 @router.get('/print-template')
 async def find_print_templates(
-  context: TemplateAssignmentContext = None,
-  context_key: str = None,
+  context: TemplateAssignmentContext | None = None,
+  context_key: str | None = None,
 ):
   """Fetch a specific template with full specs or a list of template without basePdf"""
   if context is None:

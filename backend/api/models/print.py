@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union
+from typing import Literal, Union
 
 from pydantic import BaseModel, Field
 
@@ -30,9 +30,9 @@ class VisualFieldType(str, Enum):
 
 
 class DynamicFontSize(BaseModel):
-  fit: str = None
-  max: float = None
-  min: float = None
+  fit: str | None = None
+  max: float | None = None
+  min: float | None = None
 
 class Position(BaseModel):
   x: float
@@ -42,38 +42,38 @@ class Position(BaseModel):
 # Due to javascript library specs, properties must be specified in camelCase
 
 class TextFieldSpec(BaseModel):
-  type: str = Field('text', const=True)
+  type: Literal['text'] = 'text'
   position: Position
   height: float
   width: float
 
-  alignment: Alignment = None
-  backgroundColor: str = None
-  characterSpacing: float = None
-  dynamicFontSize: DynamicFontSize = None
-  fontColor: str = None
-  fontName: str = None
-  fontSize: float = None
-  lineHeight: float = None
-  rotate: float = None
-  verticalAlignment: VerticalAlignment = None
+  alignment: Alignment | None = None
+  backgroundColor: str | None = None
+  characterSpacing: float | None = None
+  dynamicFontSize: DynamicFontSize | None = None
+  fontColor: str | None = None
+  fontName: str | None = None
+  fontSize: float | None = None
+  lineHeight: float | None = None
+  rotate: float | None = None
+  verticalAlignment: VerticalAlignment | None = None
 
 class VisualFieldSpec(BaseModel):
   """Image or linear/2D codes"""
   type: VisualFieldType
   position: Position
   height: float
-  rotate: float = None
+  rotate: float | None = None
   width: float
 
-FieldSpec = Union[TextFieldSpec, VisualFieldSpec]
+FieldSpec = TextFieldSpec | VisualFieldSpec
 PageSchema = dict[str, FieldSpec] # field name -> field details
 
 class PrintTemplate(BaseModel):
-  basePdf: str = None
+  basePdf: str | None = None
   columns: list[str] = []
   sampledata: list[dict[str, str]] = []
-  schemas: list[PageSchema] = Field(..., union_mode='left_to_right')
+  schemas: list[PageSchema]
 
 class PrintTemplateLinkType(str, Enum):
   PRESET = 'preset'
@@ -81,13 +81,13 @@ class PrintTemplateLinkType(str, Enum):
 
 class PrintTemplateLink(BaseModel):
   type: PrintTemplateLinkType
-  value: str = None
+  value: str | None = None
 
 class PrintTemplateRecord(ArangoDocument):
   name: str
-  description: str = None
+  description: str | None = None
   links: dict[str, PrintTemplateLink] = dict()
-  template: PrintTemplate = None
+  template: PrintTemplate | None = None
 
 
 class TemplateAssignment(ArangoEdge):
