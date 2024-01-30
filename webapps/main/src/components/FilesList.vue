@@ -1,14 +1,14 @@
 <template>
-  <div style="background: rgba(255, 255, 255, 0.07)">
+  <div :style="'background-color: ' + ($q.dark.isActive ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.05)')">
     <div class="row justify-between items-center q-pl-sm q-py-sm">
-      <div class="q-ml-xs" style="color: rgba(255, 255, 255, 0.7)">
+      <div class="q-ml-xs text-low">
         {{ label }}
       </div>
       <q-btn
         flat
         padding="xs sm"
         class="q-mr-xs"
-        style="color: rgba(255, 255, 255, 0.7)"
+        color="low"
         :disable="disable"
         size="md"
         @click="$refs.upload_files.click()"
