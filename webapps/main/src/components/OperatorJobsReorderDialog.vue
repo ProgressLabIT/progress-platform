@@ -16,6 +16,10 @@
         <q-markup-table class="draggable-table">
           <thead>
             <tr>
+              <th align="left">#</th>
+              <th align="left">
+                {{ $t('work_order.list_headers.sequence').toUpperCase() }}
+              </th>
               <th align="left">{{ $t('work_order.wo_code').toUpperCase() }}</th>
               <th align="left">{{ $t('project').toUpperCase() }}</th>
               <th align="left">{{ $t('product.label', 1).toUpperCase() }}</th>
@@ -43,21 +47,29 @@
             Furthermore, SortableJS may interfere with Vue's rendering and cause issues.
           -->
           <tbody
-            v-for="{ workOrderKey, jobs } in jobsByWorkOrder"
-            v-once
+            v-for="({ workOrderKey, jobs }, groupIndex) in jobsByWorkOrder"
             :key="workOrderKey"
             class="draggable"
           >
             <tr v-for="(job, index) in jobs" :key="job._key">
-              <td v-if="index === 0" :rowspan="jobs.length">
-                {{ job.wo_code }}
-              </td>
-              <td v-if="index === 0" :rowspan="jobs.length">
-                {{ job.project_code }}
-              </td>
-              <td v-if="index === 0" :rowspan="jobs.length">
-                {{ job.product_code }}
-              </td>
+              <template v-if="index === 0">
+                <td :rowspan="jobs.length">
+                  {{ groupIndex + 1 }}
+                </td>
+                <td :rowspan="jobs.length">
+                  {{ job.wo_sequence }}
+                </td>
+                <td :rowspan="jobs.length">
+                  {{ job.wo_code }}
+                </td>
+                <td :rowspan="jobs.length">
+                  {{ job.project_code }}
+                </td>
+                <td :rowspan="jobs.length">
+                  {{ job.product_code }}
+                </td>
+              </template>
+
               <td>{{ job.phase_alias }}</td>
               <td>{{ job.issues_open ?? 0 }}/{{ job.issues_total ?? 0 }}</td>
               <td>
@@ -140,7 +152,10 @@ operatorJobs.forEach((job) => {
     workOrder = { workOrderKey: job.wo_key, jobs: [] };
     jobsByWorkOrder.value.push(workOrder);
   }
-  workOrder.jobs.push(job);
+  workOrder.jobs.push({
+    ...job,
+    wo_sequence: store.state.workorder.wo_map[job.wo_key].sequence,
+  });
 });
 
 let sortable;
