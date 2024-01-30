@@ -212,7 +212,7 @@ class AssignmentsResponse(FlexModel):
 
 
 class OperatorQueueUpdateInput(FlexModel):
-  jobs: List[str] | None = None
+  jobs: list[str] | None = None
   independent: bool | None = None
 
 
