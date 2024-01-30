@@ -183,8 +183,14 @@ function jobIcon(job) {
   border-bottom-width: 1px;
 }
 
+.draggable-table :deep(td) {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .reorder-dialog-card {
-  width: 100%;
-  max-width: 800px;
+  min-width: 800px;
+  max-width: 1200px;
 }
 </style>
