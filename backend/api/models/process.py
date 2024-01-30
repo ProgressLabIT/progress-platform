@@ -66,15 +66,13 @@ class Operation(ArangoDocument):
   description: str | None = None
   default_phase_parameters: PhaseParameters = PhaseParameters()
   default_phase_notes: str | None = None
-  default_phase_steps: List[Step] = []
+  default_phase_steps: List[StepWithMediaInfo] = []
 
 
 class PhaseRecord(ArangoDocument):
   alias: str
-  description: str | None = None
   product_key: str
   operation_key: str
-  operation_name: str | None = None
   params: PhaseParameters = PhaseParameters()
   step_sequence: List[Optional[str]] = []
   production_notes: str | None = None
