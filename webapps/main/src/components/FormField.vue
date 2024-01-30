@@ -190,22 +190,6 @@
     </q-input>
 
     <!-- FILES -->
-    <!-- <q-file
-      v-if="field_type == 'files'"
-      multiple
-      append
-      :use-chips="!disable"
-      counter
-      clearable
-      filled
-      stack-label
-      :disable="disable"
-      v-model="field_data.value"
-      :label="field_data.label">
-      <template #append>
-        <q-icon name="mdi-folder-open-outline" />
-      </template>
-    </q-file> -->
     <div v-if="fieldType === 'files'">
       <FilesList
         :files="fieldValue"

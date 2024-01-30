@@ -4,6 +4,7 @@
     :key="tag._key"
     :label="tag.name"
     :color="tag.color ?? defaultColor"
+    text-color="white"
     :dense="dense"
   >
     <q-tooltip v-if="tag.description">

@@ -57,7 +57,7 @@ class ProductDetails(ProductBaseData):
 
 class ProductDoc(FlexModel):
   name: str
-  size: ByteSize = Field(..., exclude=True) # TODO: remove exclude=True after https://github.com/pydantic/pydantic/pull/8537 gets released
+  size: ByteSize
 
 class ProductFull(ProductDetails):
   docs: List[ProductDoc] = []
