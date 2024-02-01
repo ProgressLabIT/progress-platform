@@ -17,6 +17,7 @@ export const useConfigStore = defineStore('config', () => {
     },
     operatorCost: 0,
     allowUnassignedJobs: true,
+    allowIndependentReorderingOfJobQueues: false,
   };
 
   const isLoading = ref(true);
@@ -42,6 +43,12 @@ export const useConfigStore = defineStore('config', () => {
     }
     if (typeof appConfig.show_unassigned_jobs_to_operators === 'boolean') {
       config.allowUnassignedJobs = appConfig.show_unassigned_jobs_to_operators;
+    }
+    if (
+      typeof appConfig.allow_independent_reordering_of_job_queues === 'boolean'
+    ) {
+      config.allowIndependentReorderingOfJobQueues =
+        appConfig.allow_independent_reordering_of_job_queues;
     }
   }
   void (async () => {
@@ -73,6 +80,8 @@ export const useConfigStore = defineStore('config', () => {
       operation_parameters: configToUpdate.operationParameters,
       operator_cost: configToUpdate.operatorCost,
       show_unassigned_jobs_to_operators: configToUpdate.allowUnassignedJobs,
+      allow_independent_reordering_of_job_queues:
+        configToUpdate.allowIndependentReorderingOfJobQueues,
     });
 
     Object.assign(config, configToUpdate);

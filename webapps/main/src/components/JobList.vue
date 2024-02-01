@@ -23,28 +23,30 @@
 
         <q-space />
 
-        <q-btn
-          v-if="assignment.independent && assignment.assigned_jobs_count > 1"
-          size="sm"
-          color="theme-blue"
-          :label="$t('independentOrdering.reorder')"
-          class="q-mr-sm"
-          @click="openReorderDialog(assignment)"
-        />
+        <template v-if="config.allowIndependentReorderingOfJobQueues">
+          <q-btn
+            v-if="assignment.independent && assignment.assigned_jobs_count > 1"
+            size="sm"
+            color="theme-blue"
+            :label="$t('independentOrdering.reorder')"
+            class="q-mr-sm"
+            @click="openReorderDialog(assignment)"
+          />
 
-        <q-checkbox
-          v-if="assignment.operator._key !== 'unassigned'"
-          :model-value="assignment.independent"
-          :label="$t('independentOrdering.switch.label')"
-          class="q-mr-sm"
-          color="theme-blue"
-          size="sm"
-          @update:model-value="updateAssignmentDependency(assignment)"
-        >
-          <q-tooltip>
-            {{ $t('independentOrdering.switch.hint') }}
-          </q-tooltip>
-        </q-checkbox>
+          <q-checkbox
+            v-if="assignment.operator._key !== 'unassigned'"
+            :model-value="assignment.independent"
+            :label="$t('independentOrdering.switch.label')"
+            class="q-mr-sm"
+            color="theme-blue"
+            size="sm"
+            @update:model-value="updateAssignmentDependency(assignment)"
+          >
+            <q-tooltip>
+              {{ $t('independentOrdering.switch.hint') }}
+            </q-tooltip>
+          </q-checkbox>
+        </template>
 
         <q-chip
           :ripple="false"
@@ -287,6 +289,7 @@
 </template>
 
 <script>
+import { storeToRefs } from 'pinia';
 import { Dialog } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
@@ -296,6 +299,7 @@ import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
+import { useConfigStore } from '../stores/config';
 import OperatorJobsReorderDialog from './OperatorJobsReorderDialog.vue';
 
 export default {
@@ -341,6 +345,7 @@ export default {
 
   setup() {
     const { t } = useI18n();
+    const { config } = storeToRefs(useConfigStore());
     const store = useStore();
 
     async function updateAssignmentDependency({ operator, independent }) {
@@ -395,6 +400,7 @@ export default {
     }
 
     return {
+      config,
       updateAssignmentDependency,
       openReorderDialog,
     };

@@ -602,6 +602,8 @@ export default {
       mustBePositive: 'Deve essere maggiore o uguale a 0',
     },
     allowUnassignedJobs: 'Mostra lavori non assegnati agli operatori',
+    allowIndependentReorderingOfJobQueues:
+      'Consenti il riordinamento indipendente delle code di lavoro',
   },
   session: {
     alerts: {

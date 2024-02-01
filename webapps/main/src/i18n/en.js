@@ -593,6 +593,8 @@ export default {
       mustBePositive: 'Must be greater than or equal to 0',
     },
     allowUnassignedJobs: 'Show unassigned jobs to operators',
+    allowIndependentReorderingOfJobQueues:
+      'Allow independent reordering of job queues',
   },
   session: {
     alerts: {

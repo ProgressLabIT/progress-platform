@@ -5,23 +5,32 @@
     @cancel="cancel"
     @save="save"
   >
-    <q-input
-      filled
-      style="max-width: 400px;"
-      v-model.number="configModel.operatorCost"
-      type="number"
-      :label="$t('settings.operatorCost.label')"
-      :hint="$capitalize($t('user.hourly_cost'))"
-      :readonly="!editMode"
-      :rules="[(val) => val >= 0 || $t('settings.operatorCost.mustBePositive')]"
-    />
+    <div class="column q-gutter-y-lg">
+      <q-input
+        v-model.number="configModel.operatorCost"
+        type="number"
+        :label="$t('settings.operatorCost.label')"
+        :hint="$capitalize($t('user.hourly_cost'))"
+        :readonly="!editMode"
+        :rules="[
+          (val) => val >= 0 || $t('settings.operatorCost.mustBePositive'),
+        ]"
+        filled
+        style="max-width: 400px"
+      />
 
-    <q-toggle
-      v-model="configModel.allowUnassignedJobs"
-      :label="$t('settings.allowUnassignedJobs')"
-      :disable="!editMode"
-      class="q-mt-xl"
-    />
+      <q-toggle
+        v-model="configModel.allowUnassignedJobs"
+        :label="$t('settings.allowUnassignedJobs')"
+        :disable="!editMode"
+      />
+
+      <q-toggle
+        v-model="configModel.allowIndependentReorderingOfJobQueues"
+        :label="$t('settings.allowIndependentReorderingOfJobQueues')"
+        :disable="!editMode"
+      />
+    </div>
   </SettingsSection>
 </template>
 
@@ -41,6 +50,8 @@ async function save() {
   await updateAppConfig({
     operatorCost: configModel.value.operatorCost,
     allowUnassignedJobs: configModel.value.allowUnassignedJobs,
+    allowIndependentReorderingOfJobQueues:
+      configModel.value.allowIndependentReorderingOfJobQueues,
   });
 }
 </script>
