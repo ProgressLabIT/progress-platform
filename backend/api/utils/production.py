@@ -91,7 +91,7 @@ class Queries:
         q.type == "o"
         && q.independent != true
         && (q.site_key == @site_key || "0")
-        && (@target_key ? q.subqueue_target_key == @target_key : true)
+        && (@target_key ? (IS_ARRAY(@target_key) ? q.subqueue_target_key IN @target_key : q.subqueue_target_key == @target_key) : true)
         && LENGTH(q.jobs)
 
       LET new_queue = REMOVE_VALUE(
