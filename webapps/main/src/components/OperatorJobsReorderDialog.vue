@@ -193,15 +193,44 @@ function jobIcon(job) {
 </script>
 
 <style lang="scss" scoped>
-// We are using multiple tbody elements and still want the separators as usual
-.draggable-table :deep(tbody tr:last-child td) {
-  border-bottom-width: 1px;
-}
+.draggable-table {
+  // Specifying a height or max height is crucial for sticky headers and scrolling
+  max-height: 1100px;
 
-.draggable-table :deep(td) {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  // Limit cell content to prevent overflow
+  td {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // We are using multiple tbody elements and still want the separators as usual
+  tbody tr:last-child td {
+    border-bottom-width: 1px;
+  }
+
+  thead tr th {
+    position: sticky;
+    z-index: 1;
+  }
+  thead tr:first-child {
+    th {
+      top: 0;
+    }
+
+    @at-root body.body--dark & {
+      background-color: $grey-9;
+    }
+    @at-root body.body--light & {
+      background-color: $grey-2;
+    }
+  }
+
+  // Prevent scrolling behind sticky top row on focus
+  tbody {
+    // Height of all sticky header rows (only one at the moment)
+    scroll-margin-top: 48px;
+  }
 }
 
 .reorder-dialog-card {
