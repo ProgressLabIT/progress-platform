@@ -2,8 +2,8 @@
   <SettingsSection
     v-slot="{ editMode }"
     :title="$t('views.otherSettings')"
+    :save-fn="save"
     @cancel="cancel"
-    @save="save"
   >
     <div class="column q-gutter-y-lg">
       <q-input

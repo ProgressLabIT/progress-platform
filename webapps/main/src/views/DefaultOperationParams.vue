@@ -2,8 +2,8 @@
   <SettingsSection
     v-slot="{ editMode }"
     :title="$t('views.defaultOperationParameters')"
+    :save-fn="save"
     @cancel="cancel"
-    @save="save"
   >
     <ProcessParameters
       v-model="operationParameters"

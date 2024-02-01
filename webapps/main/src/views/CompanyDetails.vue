@@ -2,8 +2,8 @@
   <SettingsSection
     v-slot="{ editMode }"
     :title="$t('views.companyDetails')"
+    :save-fn="save"
     @cancel="cancel"
-    @save="save"
   >
     <q-input
       v-if="editMode"
