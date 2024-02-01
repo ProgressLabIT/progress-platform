@@ -9,23 +9,24 @@ const adminRoutes = [
       {
         path: 'general',
         name: 'generalSettings',
-        component: () => import('@/views/GeneralSettings.vue'),
+        component: () => import('@/views/settings/GeneralSettings.vue'),
         redirect: { name: 'companyDetails' },
         children: [
           {
             path: 'company',
             name: 'companyDetails',
-            component: () => import('@/views/CompanyDetails.vue'),
+            component: () => import('@/views/settings/CompanyDetails.vue'),
           },
           {
             path: 'default-phase',
             name: 'defaultOperationParameters',
-            component: () => import('@/views/DefaultOperationParams.vue'),
+            component: () =>
+              import('@/views/settings/DefaultOperationParams.vue'),
           },
           {
             path: 'other',
             name: 'otherSettings',
-            component: () => import('@/views/OtherSettings.vue'),
+            component: () => import('@/views/settings/OtherSettings.vue'),
           },
         ],
       },
