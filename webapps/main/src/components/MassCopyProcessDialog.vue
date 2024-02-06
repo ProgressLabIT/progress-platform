@@ -43,6 +43,7 @@
             "
             :label="$t('massCopyProcess.includesTags')"
             class="col"
+            clearable
           />
 
           <div>
@@ -66,6 +67,7 @@
             "
             :label="$t('massCopyProcess.excludesTags')"
             class="col"
+            clearable
           />
 
           <div>

@@ -1,7 +1,7 @@
 <template>
   <q-select
     ref="selectRef"
-    v-model="model"
+    :model-value="model"
     :options="options"
     option-label="name"
     option-value="_key"
@@ -12,6 +12,10 @@
     filled
     @filter="onFilter"
     @new-value="onNewTag"
+    @update:model-value="
+      // clearable emits null
+      model = $event === null ? [] : $event
+    "
   >
     <template #no-option="{ inputValue }">
       <q-item v-if="inputValue.length < MIN_CHARS">
@@ -42,11 +46,11 @@
 
     <template #selected-item="scope">
       <q-chip
-        removable
         dense
-        @remove="scope.removeAtIndex(scope.index)"
-        :tabindex="scope.tabindex"
+        removable
         color="theme-grey"
+        :tabindex="scope.tabindex"
+        @remove="scope.removeAtIndex(scope.index)"
       >
         {{ scope.opt.name }}
       </q-chip>
