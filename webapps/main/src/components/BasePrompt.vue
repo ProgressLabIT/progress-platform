@@ -5,6 +5,7 @@
         <div class="text-h4 display highlight text-uppercase">
           {{ prompt ?? $t('update') }}
         </div>
+
         <q-input
           v-model="value"
           autofocus
@@ -16,22 +17,25 @@
           :type="input_type"
           :max="max"
           :min="min"
-        >
-        </q-input>
+        />
       </q-card-section>
+
       <q-card-actions align="between">
-        <q-btn size="12px" flat color="theme-grey" @click="$emit('close')">
-          {{ $t('cancel') }}
-        </q-btn>
+        <q-btn
+          size="12px"
+          flat
+          color="theme-grey"
+          :label="$t('cancel')"
+          @click="$emit('close')"
+        />
         <q-btn
           v-if="/* eslint-disable-line vue/eqeqeq */ value != initial_value"
           size="12px"
           flat
           color="theme-blue"
+          :label="$t('save')"
           @click="update"
-        >
-          {{ $t('save') }}
-        </q-btn>
+        />
       </q-card-actions>
     </q-card>
   </BaseDialog>
@@ -64,7 +68,7 @@ export default {
       default: 'text',
     },
     initial_value: {
-      type: [String, Number],
+      type: [String, Number, null],
       required: true,
     },
     max: {

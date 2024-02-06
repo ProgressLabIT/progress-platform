@@ -38,11 +38,7 @@
         class="px-0 pb-1 row q-gutter-xs q-pt-sm"
         :class="{ nowrap: !overDesc }"
       >
-        <q-badge
-          v-for="tag in product.tags"
-          :key="tag._key"
-          color="theme-grey"
-        >
+        <q-badge v-for="tag in product.tags" :key="tag._key" color="theme-grey">
           {{ tag.name }}
         </q-badge>
       </div>
