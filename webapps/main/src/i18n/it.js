@@ -604,6 +604,11 @@ export default {
     allowUnassignedJobs: 'Mostra lavori non assegnati agli operatori',
     allowIndependentReorderingOfJobQueues:
       'Consenti il riordinamento indipendente delle code di lavoro',
+    turnOffIndependentReordering: {
+      title: 'Disattiva ordinamento indipendente',
+      message:
+        "Stai disattivando l'ordinamento indipendente. Tutte le code di lavoro che erano state rese indipendenti verranno reimpostate all'ordine della coda di lavoro. Confermi?",
+    },
   },
   session: {
     alerts: {

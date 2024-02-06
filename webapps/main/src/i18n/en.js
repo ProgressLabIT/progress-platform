@@ -595,6 +595,11 @@ export default {
     allowUnassignedJobs: 'Show unassigned jobs to operators',
     allowIndependentReorderingOfJobQueues:
       'Allow independent reordering of job queues',
+    turnOffIndependentReordering: {
+      title: 'Turn off independent reordering',
+      message:
+        'You are turning off independent reordering. All job queues which were made independent will be reset to the work order queue order. Do you confirm?',
+    },
   },
   session: {
     alerts: {

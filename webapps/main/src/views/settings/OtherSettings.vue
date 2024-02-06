@@ -26,9 +26,10 @@
       />
 
       <q-toggle
-        v-model="configModel.allowIndependentReorderingOfJobQueues"
+        :model-value="configModel.allowIndependentReorderingOfJobQueues"
         :label="$t('settings.allowIndependentReorderingOfJobQueues')"
         :disable="!editMode"
+        @update:model-value="updateIndependentReordering"
       />
     </div>
   </SettingsSection>
@@ -36,7 +37,9 @@
 
 <script setup>
 import { cloneDeep } from 'lodash';
+import { Dialog } from 'quasar';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import SettingsSection from '@/components/SettingsSection.vue';
 import { useConfigStore } from '@/stores/config';
 
@@ -52,6 +55,23 @@ async function save() {
     allowUnassignedJobs: configModel.value.allowUnassignedJobs,
     allowIndependentReorderingOfJobQueues:
       configModel.value.allowIndependentReorderingOfJobQueues,
+  });
+}
+
+const { t } = useI18n();
+function updateIndependentReordering(isTurningOn) {
+  if (isTurningOn) {
+    configModel.value.allowIndependentReorderingOfJobQueues = true;
+    return;
+  }
+
+  Dialog.create({
+    title: t('settings.turnOffIndependentReordering.title'),
+    message: t('settings.turnOffIndependentReordering.message'),
+    ok: t('yes'),
+    cancel: t('no'),
+  }).onOk(() => {
+    configModel.value.allowIndependentReorderingOfJobQueues = false;
   });
 }
 </script>
