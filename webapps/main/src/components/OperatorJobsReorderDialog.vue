@@ -195,7 +195,13 @@ function jobIcon(job) {
 <style lang="scss" scoped>
 .draggable-table {
   // Specifying a height or max height is crucial for sticky headers and scrolling
-  max-height: 1100px;
+  $header-height: 56.8px;
+  $footer-height: 52px;
+  $dialog-padding: 24px * 2;
+  $card-section-padding: 16px * 2;
+  $total-height-offset: $header-height + $footer-height + $dialog-padding +
+    $card-section-padding;
+  max-height: calc(100vh - #{$total-height-offset});
 
   // Limit cell content to prevent overflow
   td {
