@@ -1,25 +1,53 @@
 <template>
   <div id="job-list" class="full-height q-mx-xs q-px-sm q-py-lg scroll">
-    <NoDataAlert v-if="!jobs_view.length" />
-
-    <template v-for="(o, index) in jobs_view" v-else :key="index">
+    <NoDataAlert v-if="operator_assignments.length === 0" />
+    <template
+      v-for="(assignment, index) in operator_assignments"
+      v-else
+      :key="index"
+    >
       <div class="row items-center q-pl-sm">
         <BaseUserAvatar
-          :user="o.operator"
+          :user="assignment.operator"
           name_class="medium weight-medium"
           size="36px"
-        >
-        </BaseUserAvatar>
+        />
         <q-btn
-          v-if="o.operator._key === 'unassigned'"
+          v-if="assignment.operator._key === 'unassigned'"
           size="sm"
           color="theme-blue"
           :label="$t('assign')"
           class="q-ml-lg"
           @click="show_assignment_dialog = true"
-        >
-        </q-btn>
+        />
+
         <q-space />
+
+        <template v-if="config.allowIndependentReorderingOfJobQueues">
+          <q-btn
+            v-if="assignment.independent && assignment.assigned_jobs_count > 1"
+            size="sm"
+            color="theme-blue"
+            :label="$t('independentOrdering.reorder')"
+            class="q-mr-sm"
+            @click="openReorderDialog(assignment)"
+          />
+
+          <q-checkbox
+            v-if="assignment.operator._key !== 'unassigned'"
+            :model-value="assignment.independent"
+            :label="$t('independentOrdering.switch.label')"
+            class="q-mr-sm"
+            color="theme-blue"
+            size="sm"
+            @update:model-value="updateAssignmentDependency(assignment)"
+          >
+            <q-tooltip>
+              {{ $t('independentOrdering.switch.hint') }}
+            </q-tooltip>
+          </q-checkbox>
+        </template>
+
         <q-chip
           :ripple="false"
           class="col-auto text-body2"
@@ -27,20 +55,20 @@
           size="sm"
         >
           <strong>
-            {{ o.filtered_jobs.length }}
+            {{ assignment.filtered_jobs.length }}
           </strong>
           <span class="q-mx-xs">
             {{ $t('of') }}
           </span>
           <strong>
-            {{ o.assigned_jobs_count }}
+            {{ assignment.assigned_jobs_count }}
           </strong>
         </q-chip>
       </div>
 
       <q-table
         :columns="job_data"
-        :rows="o.filtered_jobs"
+        :rows="assignment.filtered_jobs"
         row-key="_key"
         hide-bottom
         virtual-scroll
@@ -105,7 +133,7 @@
                   class="row items-center justify-end q-gutter-xs"
                 >
                   <q-icon
-                    v-if="props.row.due_by < now"
+                    v-if="props.row.due_by < now.toISOString()"
                     color="theme-red"
                     name="mdi-alert-octagon"
                   />
@@ -130,7 +158,7 @@
       </q-table>
 
       <q-separator
-        v-if="index < jobs_view.length - 1"
+        v-if="index < operator_assignments.length - 1"
         class="q-my-lg q-mr-xs q-ml-sm"
       />
     </template>
@@ -148,6 +176,7 @@
         <div class="column fit">
           <div class="row justify-between">
             <div>
+              <!-- TODO: i18n -->
               <div class="display text-h3">ASSEGNA LAVORI IN BLOCCO</div>
               <div class="q-mt-sm">
                 {{
@@ -158,6 +187,7 @@
                 }}
               </div>
             </div>
+
             <q-input
               v-model="assign_search_string"
               filled
@@ -225,10 +255,11 @@
                 :placeholder="$t('operator_select_prompt')"
                 :value="batch_assign_to"
                 @select="(selection) => (batch_assign_to = selection)"
-              >
-              </BaseAutocompleteUser>
+              />
             </div>
+
             <q-space />
+
             <div class="col-auto">
               <q-btn
                 v-if="batch_assign_to && jobs_to_assign.length"
@@ -236,8 +267,7 @@
                 :label="$t('save')"
                 :loading="saving"
                 @click="assign_jobs"
-              >
-              </q-btn>
+              />
             </div>
             <div class="col-auto">
               <q-btn
@@ -249,8 +279,7 @@
                     batch_assign_to = null;
                   }
                 "
-              >
-              </q-btn>
+              />
             </div>
           </div>
         </div>
@@ -260,12 +289,19 @@
 </template>
 
 <script>
+import { storeToRefs } from 'pinia';
+import { Dialog } from 'quasar';
+import { useI18n } from 'vue-i18n';
+import { useStore } from 'vuex';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
+import { useConfigStore } from '../stores/config';
+import OperatorJobsReorderDialog from './OperatorJobsReorderDialog.vue';
+
 export default {
   name: 'JobList',
 
@@ -306,6 +342,69 @@ export default {
   },
 
   emits: ['setSearch', 'itemDblClick'],
+
+  setup() {
+    const { t } = useI18n();
+    const { config } = storeToRefs(useConfigStore());
+    const store = useStore();
+
+    async function updateAssignmentDependency({ operator, independent }) {
+      if (independent === false) {
+        await store.dispatch('updateJobAssignment', {
+          operator_key: operator._key,
+          independent: true,
+        });
+        return;
+      }
+
+      Dialog.create({
+        title: t('independentOrdering.switch.label'),
+        message: t('independentOrdering.turnOffConfirm'),
+        ok: t('yes'),
+        cancel: t('no'),
+      }).onOk(async () => {
+        await store.dispatch('updateJobAssignment', {
+          operator_key: operator._key,
+          independent: false,
+        });
+
+        // Re-fetch data after the triggered reordering
+        await store.dispatch('updateWorkOrderList');
+        await store.dispatch('loadJobAssignments');
+      });
+    }
+
+    /*
+      We use a separate dialog instead of in-place reordering because:
+      - when data is re-fetched, the table gets re-rendered even if the data was not changed, and the order is lost
+      - when there are filters and sorting, the ordered items will only be a subset of the whole list, making the UX&logic confusing
+      - it's really hard/annoying to make grouped reordering work (jobs within same work order should stay together)
+      - UX is not ideal with grouped reordering with the potential solutions (they don't look like a group, only one item is draggable, etc.)
+    */
+    function openReorderDialog({ operator }) {
+      Dialog.create({
+        component: OperatorJobsReorderDialog,
+        componentProps: {
+          operator,
+        },
+      }).onOk(async (newJobsOrder) => {
+        await store.dispatch('updateJobAssignment', {
+          operator_key: operator._key,
+          jobs: newJobsOrder,
+        });
+
+        // Re-fetch data after submitting the new ordering
+        await store.dispatch('updateWorkOrderList');
+        await store.dispatch('loadJobAssignments');
+      });
+    }
+
+    return {
+      config,
+      updateAssignmentDependency,
+      openReorderDialog,
+    };
+  },
 
   data() {
     return {
@@ -451,12 +550,12 @@ export default {
               j.active ? active_jobs.push(data) : queued_jobs.push(data);
             });
 
-            const operator_filtered_assignments = {
+            list.push({
               operator: assignment.operator,
               assigned_jobs_count: assignment.assigned_jobs.length,
               filtered_jobs: [...active_jobs, ...queued_jobs],
-            };
-            list.push(operator_filtered_assignments);
+              independent: assignment.independent,
+            });
           }
         }
       }
@@ -468,7 +567,7 @@ export default {
       return this.$store.state.job.unassigned_job_list;
     },
 
-    jobs_view() {
+    operator_assignments() {
       const result = this.filters.assigned
         ? [...this.filtered_assignments]
         : [];
@@ -476,14 +575,14 @@ export default {
       if (this.filters.unassigned && this.filters.operator_key === undefined) {
         const filtered_unassigned_jobs = this.unassigned_jobs
           .filter(this.matchJobToFilters)
-          .map((j) => {
+          .map((job) => {
             return {
-              ...j,
-              ready: this.isReleased(j) && j.next_batch_available,
-              wo_sequence: this.wo_map[j.wo_key].sequence,
+              ...job,
+              ready: this.isReleased(job) && job.next_batch_available,
+              wo_sequence: this.wo_map[job.wo_key].sequence,
             };
           });
-        if (filtered_unassigned_jobs.length) {
+        if (filtered_unassigned_jobs.length > 0) {
           result.push({
             operator: {
               _key: 'unassigned',

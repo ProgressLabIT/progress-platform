@@ -80,60 +80,64 @@ class Queries:
     )
 
     LET jobs = (
-        FOR j IN Job
-        FILTER j.stage != 'closed'
-        RETURN j
+      FOR j IN Job
+      FILTER j.stage != 'closed'
+      RETURN j
     )
 
     // Process Job queues
     FOR q IN Queue
-    FILTER
-      q.type == "o"
-      && (q.site_key == @site_key || "0")
-      && (@target_key ? q.subqueue_target_key == @target_key : true)
-      && LENGTH(q.jobs)
+      FILTER
+        q.type == "o"
+        && q.independent != true
+        && (q.site_key == @site_key || "0")
+        && (@target_key ? (IS_ARRAY(@target_key) ? q.subqueue_target_key IN @target_key : q.subqueue_target_key == @target_key) : true)
+        && LENGTH(q.jobs)
 
-    LET new_queue = REMOVE_VALUE(
-      FLATTEN(
-        FOR wo IN wo_queue
-          FOR phase IN wo.phase_sequence
-            FOR j IN jobs
-            FILTER
-              j.wo_key == wo._key
-              && j.phase_key == phase
-              && j.assigned_to == q.subqueue_target_key
-            RETURN j._key
-      ), null
-    )
+      LET new_queue = REMOVE_VALUE(
+        FLATTEN(
+          FOR wo IN wo_queue
+            FOR phase IN wo.phase_sequence
+              FOR j IN jobs
+              FILTER
+                j.wo_key == wo._key
+                && j.phase_key == phase
+                && j.assigned_to == q.subqueue_target_key
+              RETURN j._key
+        ),
+        null
+      )
 
-    UPDATE q WITH { jobs: new_queue } in Queue
+      UPDATE q WITH { jobs: new_queue } in Queue
   """
 
   GET_ASSIGNMENT_LIST = """
     LET assigned_jobs_by_operator = (
       LET user_key = @user_key ? : '%'
-      FOR o IN User
-      FILTER CONTAINS(o.scope, 'operator') && LIKE(o._key, user_key)
+      FOR operator IN User
+      FILTER CONTAINS(operator.scope, 'operator') && LIKE(operator._key, user_key)
 
-      LET assigned_jobs = FIRST(
-        FOR q in Queue
-        FILTER q.subqueue_target_key == o._key
-        LET jobs = (
-          FOR j IN q.jobs
-          LET job_data = DOCUMENT(Job, j)
-          FILTER job_data != null // Prevent bugs in case queue has inexistent keys
-          LET wo_data = DOCUMENT(WorkOrder, job_data.wo_key)
-          LET issues = (FOR v IN 1..1 INBOUND wo_data._id issue_rel RETURN v)
-          LET issues_open = LENGTH(issues[* FILTER CURRENT.open])
-          LET due_by = wo_data.due_by
-          RETURN MERGE(job_data, { issues_open, issues_total:  LENGTH(issues), due_by })
-        )
-        RETURN jobs
+      LET operator_queue = FIRST(
+        FOR q IN Queue
+        FILTER q.type == 'o' && q.subqueue_target_key == operator._key
+        RETURN q
+      )
+
+      LET assigned_jobs = (
+        FOR j IN (operator_queue.jobs || [])
+        LET job_data = DOCUMENT(Job, j)
+        FILTER job_data != null // Prevent bugs in case queue has inexistent keys
+        LET wo_data = DOCUMENT(WorkOrder, job_data.wo_key)
+        LET issues = (FOR v IN 1..1 INBOUND wo_data._id issue_rel RETURN v)
+        LET issues_open = LENGTH(issues[* FILTER CURRENT.open])
+        LET due_by = wo_data.due_by
+        RETURN MERGE(job_data, { issues_open, issues_total: LENGTH(issues), due_by })
       )
 
       RETURN {
-        operator: KEEP(o, '_key', 'name', 'surname', 'active', 'department_key'),
-        assigned_jobs: assigned_jobs
+        operator: KEEP(operator, '_key', 'name', 'surname', 'active', 'department_key'),
+        assigned_jobs: assigned_jobs,
+        independent: operator_queue.independent || false
       }
     )
 

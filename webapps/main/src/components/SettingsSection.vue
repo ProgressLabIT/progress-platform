@@ -38,23 +38,39 @@
 </template>
 
 <script setup>
+import { Notify } from 'quasar';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 
-defineProps({
+const props = defineProps({
   title: {
     type: String,
     required: true,
   },
+  // Using a function prop instead of event for full control over the save
+  saveFn: {
+    type: Function,
+    required: true,
+  },
 });
 
-const emit = defineEmits(['save', 'cancel']);
+const emit = defineEmits(['cancel']);
 
 const editMode = ref(false);
 
-function save() {
-  editMode.value = false;
-  emit('save');
+const { t } = useI18n();
+async function save() {
+  try {
+    await props.saveFn();
+    editMode.value = false;
+  } catch (error) {
+    console.error(error);
+    Notify.create({
+      message: t('errors.save_err'),
+      color: 'negative',
+    });
+  }
 }
 
 function cancel() {

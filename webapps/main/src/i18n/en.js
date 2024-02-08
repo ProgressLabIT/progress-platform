@@ -151,6 +151,15 @@ export default {
   image: 'image',
   inactive: 'inactive',
   increase: 'increase',
+  independentOrdering: {
+    switch: {
+      label: 'Independent order',
+      hint: 'Controls whether the jobs in the operator queue are ordered independently or according to the work order queue order',
+    },
+    reorder: 'Reorder',
+    turnOffConfirm:
+      'You are turning off independent ordering. The jobs will be reordered according to the work order queue order. Do you confirm?',
+  },
   info: 'info',
   issue: 'issue',
   issue_button_close: 'Close issue',
@@ -584,6 +593,13 @@ export default {
       mustBePositive: 'Must be greater than or equal to 0',
     },
     allowUnassignedJobs: 'Show unassigned jobs to operators',
+    allowIndependentReorderingOfJobQueues:
+      'Allow independent reordering of job queues',
+    turnOffIndependentReordering: {
+      title: 'Turn off independent reordering',
+      message:
+        'You are turning off independent reordering. All job queues which were made independent will be reset to the work order queue order. Do you confirm?',
+    },
   },
   session: {
     alerts: {

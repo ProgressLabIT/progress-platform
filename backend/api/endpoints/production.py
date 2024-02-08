@@ -508,7 +508,6 @@ async def get_site_queue(site_key: str):
 
 @router.put('/queue')
 async def update_queue(queue_update: Queue):
-
   try:
     match = dict(type=queue_update.type, site_key=queue_update.site_key)
 
@@ -536,6 +535,39 @@ async def update_queue(queue_update: Queue):
     raise HTTPException(status_code=status_code, detail=response)
 
   return APIResponse(detail="Queue updated")
+
+@router.put('/queue/operator/{operator_key}')
+async def update_operator_queue(
+  operator_key: str,
+  site_key: str | None = None,
+  update: OperatorQueueUpdateInput = Body(...)
+):
+  try:
+    updated_queue = db.aql.execute(
+      """
+      FOR q IN Queue
+        FILTER q.type == 'o' && q.subqueue_target_key == @operator_key
+        UPDATE q WITH @update IN Queue
+        RETURN NEW
+      """,
+      bind_vars=dict(
+        operator_key = operator_key,
+        update = update.model_dump(exclude_none=True)
+      )
+    ).next()
+
+    if update.independent == False:
+      db.aql.execute(
+        Queries.REORDER_JOB_QUEUES,
+        bind_vars=dict(
+          site_key = site_key, # default of 0 is handled in the query
+          target_key = operator_key,
+        )
+      )
+
+    return APIResponse(message="Queue updated", detail=updated_queue)
+  except:
+    raise HTTPError(500, "Could not update queue on the DB")
 
 # ----------------------------------------------------------------------
 
@@ -578,7 +610,6 @@ async def get_assignment_list(user_key: str | None = None):
   try:
     result = db.aql.execute(Queries.GET_ASSIGNMENT_LIST, bind_vars=dict(user_key=user_key)).next()
     return APIResponse(detail=AssignmentsResponse(**result))
-
   except:
     status_code=500
     response=dict(

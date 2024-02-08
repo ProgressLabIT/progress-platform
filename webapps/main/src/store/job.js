@@ -16,6 +16,23 @@ const job = {
       state.assigned_job_list = data.assigned_jobs_by_operator;
       state.unassigned_job_list = data.unassigned_jobs;
     },
+
+    UPDATE_ASSIGNMENT(state, { operator_key, assignment }) {
+      const currentAssignment = state.assigned_job_list.find(
+        ({ operator }) => operator._key === operator_key,
+      );
+
+      if (assignment.independent !== undefined) {
+        currentAssignment.independent = assignment.independent;
+      }
+      if (assignment.jobs !== undefined) {
+        currentAssignment.assigned_jobs.sort((a, b) => {
+          const aIndex = assignment.jobs.indexOf(a._key);
+          const bIndex = assignment.jobs.indexOf(b._key);
+          return aIndex - bIndex;
+        });
+      }
+    },
   },
 
   actions: {
@@ -31,17 +48,11 @@ const job = {
       });
     },
 
-    loadJobAssignments({ commit }, operator_key) {
-      return new Promise((resolve) => {
-        api
-          .get('job-assignment', {
-            params: { user_key: operator_key },
-          })
-          .then((resp) => {
-            commit('LOAD_ASSIGNMENTS', resp.data.detail);
-            resolve();
-          });
+    async loadJobAssignments({ commit }, operatorKey) {
+      const { data } = await api.get('job-assignment', {
+        params: { user_key: operatorKey },
       });
+      commit('LOAD_ASSIGNMENTS', data.detail);
     },
 
     updateJobs({ dispatch }, { job_updates, wo_key }) {
@@ -52,6 +63,27 @@ const job = {
             dispatch('loadWorkOrderData', wo_key).then(() => resolve());
           })
           .catch((err) => reject(err));
+      });
+    },
+
+    async updateJobAssignment({ commit }, { operator_key, independent, jobs }) {
+      const update = {};
+      if (independent !== undefined) {
+        update.independent = independent;
+      }
+      if (jobs !== undefined) {
+        update.jobs = jobs;
+      }
+      if (Object.keys(update).length === 0) {
+        return;
+      }
+
+      await api.put(`queue/operator/${operator_key}`, {
+        ...update,
+      });
+      commit('UPDATE_ASSIGNMENT', {
+        operator_key,
+        assignment: update,
       });
     },
   },

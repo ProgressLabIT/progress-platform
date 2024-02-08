@@ -152,6 +152,15 @@ export default {
   image: 'immagine | immagini',
   inactive: 'disattivato',
   increase: 'aumenta',
+  independentOrdering: {
+    switch: {
+      label: 'Ordinamento indipendente',
+      hint: "Controlla se i lavori nella coda operatori sono ordinati indipendentemente o secondo l'ordine della coda ordini di produzione",
+    },
+    reorder: 'Riordina',
+    turnOffConfirm:
+      "Stai disattivando l'ordinamento indipendente. I lavori verranno riordinati secondo l'ordine della coda ordini di produzione. Confermi?",
+  },
   info: 'info',
   issue: 'Segnalazione | Segnalazioni',
   issue_button_close: 'Chiudi segnalazione',
@@ -593,6 +602,13 @@ export default {
       mustBePositive: 'Deve essere maggiore o uguale a 0',
     },
     allowUnassignedJobs: 'Mostra lavori non assegnati agli operatori',
+    allowIndependentReorderingOfJobQueues:
+      'Consenti il riordinamento indipendente delle code di lavoro',
+    turnOffIndependentReordering: {
+      title: 'Disattiva ordinamento indipendente',
+      message:
+        "Stai disattivando l'ordinamento indipendente. Tutte le code di lavoro che erano state rese indipendenti verranno reimpostate all'ordine della coda di lavoro. Confermi?",
+    },
   },
   session: {
     alerts: {
