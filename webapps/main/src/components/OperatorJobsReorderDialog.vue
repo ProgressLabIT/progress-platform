@@ -7,13 +7,22 @@
     @show="onShow"
     @hide="onHide"
   >
-    <q-card class="reorder-dialog-card">
-      <q-card-section class="display q-px-lg q-pt-lg">
-        {{ operator.name }} {{ operator.surname }}
+    <q-card class="reorder-dialog-card surface1 q-pa-sm">
+      <q-card-section class="text-h3 q-px-lg q-pt-lg">
+        <BaseUserAvatar
+          :user="operator"
+          size="42px"
+          name_class="text-h3"
+        />
       </q-card-section>
 
       <q-card-section>
-        <q-markup-table class="draggable-table">
+        <q-markup-table
+          class="draggable-table surface2"
+          flat
+          bordered
+          square
+        >
           <thead>
             <tr>
               <th align="left">#</th>
@@ -121,6 +130,7 @@ import Sortable from 'sortablejs';
 import { ref } from 'vue';
 import { useStore } from 'vuex';
 import BaseDialog from '@/components/BaseDialog.vue';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 
 const props = defineProps({
   operator: {
@@ -193,15 +203,10 @@ function jobIcon(job) {
 </script>
 
 <style lang="scss" scoped>
+
 .draggable-table {
   // Specifying a height or max height is crucial for sticky headers and scrolling
-  $header-height: 56.8px;
-  $footer-height: 52px;
-  $dialog-padding: 24px * 2;
-  $card-section-padding: 16px * 2;
-  $total-height-offset: $header-height + $footer-height + $dialog-padding +
-    $card-section-padding;
-  max-height: calc(100vh - #{$total-height-offset});
+  max-height: 70vh;
 
   // Limit cell content to prevent overflow
   td {
@@ -222,13 +227,7 @@ function jobIcon(job) {
   thead tr:first-child {
     th {
       top: 0;
-    }
-
-    @at-root body.body--dark & {
-      background-color: $grey-9;
-    }
-    @at-root body.body--light & {
-      background-color: $grey-2;
+      background-color: var(--surface-2);
     }
   }
 
