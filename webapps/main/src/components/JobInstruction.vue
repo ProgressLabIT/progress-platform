@@ -49,7 +49,7 @@
         :style="step_media.length ? 'background-color: #111a' : ''"
       >
         <div class="text-h3 display">{{ step.title }}</div>
-        <div>{{ step.description }}</div>
+        <div style="white-space: pre-line;">{{ step.description }}</div>
       </div>
 
       <q-btn

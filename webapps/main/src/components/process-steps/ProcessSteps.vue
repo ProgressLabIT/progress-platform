@@ -123,7 +123,7 @@
           debounce="200"
           :placeholder="$t('description')"
         />
-        <div v-else class="q-mt-md">
+        <div v-else class="q-mt-md" style="white-space: pre-line;">
           {{ stepsModel[currentStepIndex].description }}
         </div>
 

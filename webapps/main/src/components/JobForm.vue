@@ -5,7 +5,7 @@
         <div class="text-h3 q-px-none q-pt-none nowrap">
           {{ step.title }}
         </div>
-        <div class="text-body2 text-low">
+        <div class="text-body2 text-low" style="white-space: pre-line;">
           {{ step.description }}
         </div>
       </div>
