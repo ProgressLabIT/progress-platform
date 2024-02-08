@@ -27,11 +27,10 @@ def get_products_using_operation(op_key):
 
 
 class Queries:
-  GET_PRODUCTION_PROCESS = """ 
+  GET_PRODUCTION_PROCESS = """
     LET phases = DOCUMENT(Product, @product_key).process_phases
 
     FOR phase_key in phases
-        
       LET phase = DOCUMENT(Phase, phase_key)
 
       LET steps = (
@@ -44,9 +43,9 @@ class Queries:
         RETURN KEEP(t, '_key', 'name', 'description')
       )
 
-      LET phase_data =  MERGE(
+      LET phase_data = MERGE(
         phase,
-        { 
+        {
           steps,
           print_templates
         }
@@ -55,7 +54,7 @@ class Queries:
   """
 
   TRASH_FLAG_PHASE_RELATIONSHIP = """
-    FOR r IN requires 
+    FOR r IN requires
     LET phase_id = CONCAT('Phase', @phase_key)
     FILTER r._to == phase_id || r._from == phase_id
     UPDATE r WITH { trashed: @timestamp } IN requires

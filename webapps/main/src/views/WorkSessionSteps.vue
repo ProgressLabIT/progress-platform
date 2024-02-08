@@ -15,13 +15,13 @@
             <div class="col-auto q-px-xs">
               <q-avatar
                 size="20px"
-                :style="stepStyle(index)"
+                :style="stepStyle(step._key)"
                 class="row flex-center items-stretch text-center smaller text-weight-medium"
-                @click="stepClick(index)"
+                @click="stepClick(step._key)"
               >
                 <span
                   :class="
-                    current_step_index === index
+                    current_step_key === step._key
                       ? 'solid-white weight-bold'
                       : ''
                   "
@@ -43,6 +43,7 @@
       <keep-alive>
         <component
           :is="current_step.type === 'form' ? 'JobForm' : 'JobInstruction'"
+          v-if="current_step"
           :key="current_step._key"
           :step="current_step"
         />
@@ -80,12 +81,12 @@ export default {
   },
 
   computed: {
-    current_step_index: {
+    current_step_key: {
       get() {
-        return this.$store.state.traceability.current_step_index ?? 0;
+        return this.$store.state.traceability.current_step_key;
       },
-      set(index) {
-        this.$store.state.traceability.current_step_index = index;
+      set(key) {
+        this.$store.dispatch('goToStep', key);
       },
     },
 
@@ -94,7 +95,7 @@ export default {
     },
 
     current_step() {
-      return this.steps?.[this.current_step_index] ?? {};
+      return this.steps.find(({ _key }) => _key === this.current_step_key);
     },
 
     batch_data() {
@@ -107,33 +108,29 @@ export default {
   },
 
   methods: {
-    stepStyle(index) {
-      const step_active = this.current_step_index === index;
-      let step_done = false;
-      let step_critical = false;
-      let bg_color = '';
-      const text_color = this.$theme.text_low;
-      const cursor = this.allowClick(index) ? 'pointer' : 'not-allowed';
+    stepStyle(stepKey) {
+      const isStepActive = this.current_step_key === stepKey;
+      const batchStep = this.batch_data?.find(({ _key }) => _key === stepKey);
+      const isStepDone = batchStep?.done ?? false;
+      const isStepCritical = batchStep?.critical ?? false;
 
-      if (this.batch_data) {
-        step_done = this.batch_data[index].done;
-        step_critical = this.batch_data[index].critical;
-      }
-
-      if (step_critical) {
-        bg_color = step_active ? this.$theme.red : this.$theme.red_bg;
-      } else if (step_done) {
-        bg_color = step_active ? this.$theme.green : this.$theme.green_bg;
-      } else if (step_active) {
-        bg_color = this.job.active ? this.$theme.blue : this.$theme.grey;
+      let backgroundColor = '';
+      if (isStepCritical) {
+        backgroundColor = isStepActive ? this.$theme.red : this.$theme.red_bg;
+      } else if (isStepDone) {
+        backgroundColor = isStepActive
+          ? this.$theme.green
+          : this.$theme.green_bg;
+      } else if (isStepActive) {
+        backgroundColor = this.job.active ? this.$theme.blue : this.$theme.grey;
       } else {
-        bg_color = 'transparent';
+        backgroundColor = 'transparent';
       }
 
       return {
-        backgroundColor: bg_color,
-        color: text_color,
-        cursor,
+        backgroundColor,
+        color: this.$theme.text_low,
+        cursor: this.allowClick(stepKey) ? 'pointer' : 'not-allowed',
       };
     },
 
@@ -158,7 +155,7 @@ export default {
 
     stepClick(index) {
       if (this.allowClick(index)) {
-        this.current_step_index = index;
+        this.current_step_key = index;
       }
     },
   },

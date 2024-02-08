@@ -50,14 +50,13 @@ class Queries:
   GET_BATCH_EXECUTION_DATA = """
     LET batch = FIRST( FOR b IN Batch FILTER b._key == @batch_key RETURN b )
     LET job = FIRST( FOR j IN Job FILTER j._key == batch.job_key RETURN j )
-    LET procedure = DOCUMENT(Phase, job.phase_key).step_sequence
 
     LET batch_step_data = (
-      FOR step_key IN procedure
-      LET step_data = KEEP(DOCUMENT(Step, step_key), '_key', 'type')
+      FOR step IN job.step_sequence
+      LET step_data = KEEP(step, '_key', 'type')
       LET execution_data = FIRST(
         FOR s IN StepExecutionData
-        FILTER s.batch_key == batch._key && s.step_key == step_key
+        FILTER s.batch_key == batch._key && s.step_key == step._key
         RETURN KEEP(s, 'status', 'form_data')
       )
       LET step_done = execution_data ? execution_data.status == 'done' : false

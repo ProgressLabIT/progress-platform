@@ -157,8 +157,8 @@ export default {
   },
 
   computed: {
-    current_step_index() {
-      return this.$store.state.traceability.current_step_index;
+    current_step_key() {
+      return this.$store.state.traceability.current_step_key;
     },
 
     step_media() {
@@ -192,7 +192,7 @@ export default {
   },
 
   watch: {
-    current_step_index() {
+    current_step_key() {
       this.step_media_index = 0;
     },
   },
