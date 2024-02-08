@@ -399,7 +399,7 @@ export default {
         return this.$store.state.traceability.current_step_key;
       },
       set(key) {
-        this.$store.state.traceability.current_step_key = key;
+        this.$store.dispatch('goToStep', key);
       },
     },
 
@@ -504,6 +504,7 @@ export default {
           if (data.current_batch_data.step_data) {
             const next_step_index =
               this.batch_data.findIndex((step) => !step.done) || 0;
+            // TODO: Utilize the query parameter or remove it
             this.$router.replace({ query: { step: next_step_index + 1 } });
           }
           // In case the job is already active, e.g. after accidentally closing and reopening the page, restart heartbeat

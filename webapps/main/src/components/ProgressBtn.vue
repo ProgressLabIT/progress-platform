@@ -115,7 +115,7 @@ export default {
         return this.$store.state.traceability.current_step_key;
       },
       set(key) {
-        this.$store.state.traceability.current_step_key = key;
+        this.$store.dispatch('goToStep', key);
       },
     },
   },

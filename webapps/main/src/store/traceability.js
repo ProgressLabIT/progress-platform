@@ -138,18 +138,30 @@ const traceability = {
         : clearInterval(state.heartbeat);
     },
 
-    UPDATE_STEP_FORM_DATA(state, { stepKey, index, data }) {
-      let batchStep = this.getters.getBatchStep(stepKey);
-      if (!batchStep) {
-        batchStep = {
-          _key: stepKey,
-          type: 'form',
-          done: false,
-          critical: false,
-          form_data: [],
-        };
-        state.current_batch_data.step_data.push(batchStep);
+    SET_CURRENT_STEP_KEY(state, stepKey) {
+      state.current_step_key = stepKey;
+    },
+
+    CREATE_BATCH_STEP(state, stepKey) {
+      const step = state.working_job_data.step_sequence.find(
+        ({ _key }) => _key === stepKey,
+      );
+      // If there is no active batch, do nothing
+      if (Object.keys(state.current_batch_data).length === 0) {
+        return;
       }
+
+      state.current_batch_data.step_data.push({
+        _key: stepKey,
+        type: step.type,
+        done: false,
+        critical: false,
+        form_data: [],
+      });
+    },
+
+    UPDATE_STEP_FORM_DATA(state, { stepKey, index, data }) {
+      const batchStep = this.getters.getBatchStep(stepKey);
 
       if (batchStep.form_data === undefined) {
         batchStep.form_data = [];
@@ -176,6 +188,14 @@ const traceability = {
   },
 
   actions: {
+    goToStep({ commit }, stepKey) {
+      const batchStep = this.getters.getBatchStep(stepKey);
+      if (batchStep === undefined) {
+        commit('CREATE_BATCH_STEP', stepKey);
+      }
+      commit('SET_CURRENT_STEP_KEY', stepKey);
+    },
+
     async loadWorkingJobData({ commit, dispatch }, job_key) {
       // Get job data
       const job_resp = await api.get(`job/${job_key}`);
@@ -246,18 +266,18 @@ const traceability = {
       { commit, state, rootState, rootGetters },
       { stepKey, batchQt },
     ) {
-      const step = state.current_batch_data.step_data.find(
+      const batchStep = state.current_batch_data.step_data.find(
         ({ _key }) => _key === stepKey,
       );
 
-      const formData = cloneDeep(step.form_data);
+      const formData = cloneDeep(batchStep.form_data);
 
       // TODO: Unify file handling logic with IssueForm
       /**
        * @type {{ type: string; form_fields: import('@/types/form').FormField[] } | undefined}
        */
       const stepDefinition = state.working_job_data.step_sequence.find(
-        ({ _key }) => _key === step._key,
+        ({ _key }) => _key === batchStep._key,
       );
       if (stepDefinition.type === 'form') {
         const fields = stepDefinition.form_fields.map((field) => ({
@@ -301,7 +321,7 @@ const traceability = {
             const target = {
               bucket: 'traceability',
               object_key: batch.work_order_key,
-              subfolder: `${batch._key}/${step._key}/${field.custom_field_key}/${field._key}`,
+              subfolder: `${batch._key}/${batchStep._key}/${field.custom_field_key}/${field._key}`,
             };
 
             // Upload new files
@@ -340,7 +360,7 @@ const traceability = {
       const now = DT.utc();
       const event = createEvent(state, rootState.session, {
         event_type: 'STEP_COMPLETED',
-        step_key: step._key,
+        step_key: batchStep._key,
         timestamp: now.toISO(),
         form_data: formData,
         completed_batch_qt: batchQt,
