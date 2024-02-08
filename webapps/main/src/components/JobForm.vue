@@ -27,7 +27,7 @@
       <div v-for="field in formFields" :key="field._key" class="q-py-xs">
         <FormField
           :field="field"
-          :disable="!isJobActive || batchStep.done"
+          :disable="!isJobActive || batchStep?.done"
           :root-path="`/media/step/${step._key}`"
           @update="(value) => updateField(field, value)"
         />

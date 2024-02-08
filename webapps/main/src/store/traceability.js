@@ -83,7 +83,7 @@ const traceability = {
     working_job_data: {},
     work_session_list: [],
     current_batch_data: {},
-    current_step_index: null,
+    current_step_key: undefined,
     current_step_media_index: null,
     heartbeat: null,
   },
@@ -139,7 +139,18 @@ const traceability = {
     },
 
     UPDATE_STEP_FORM_DATA(state, { stepKey, index, data }) {
-      const batchStep = this.getters.getBatchStep(stepKey);
+      let batchStep = this.getters.getBatchStep(stepKey);
+      if (!batchStep) {
+        batchStep = {
+          _key: stepKey,
+          type: 'form',
+          done: false,
+          critical: false,
+          form_data: [],
+        };
+        state.current_batch_data.step_data.push(batchStep);
+      }
+
       if (batchStep.form_data === undefined) {
         batchStep.form_data = [];
       }
@@ -233,15 +244,17 @@ const traceability = {
 
     async completeStep(
       { commit, state, rootState, rootGetters },
-      { step_index, batch_qt },
+      { stepKey, batchQt },
     ) {
-      const step = state.current_batch_data.step_data[step_index];
+      const step = state.current_batch_data.step_data.find(
+        ({ _key }) => _key === stepKey,
+      );
 
       const formData = cloneDeep(step.form_data);
 
       // TODO: Unify file handling logic with IssueForm
       /**
-       * @type {{ type: string; form_fields: import('@/types/form').FormField[] }}
+       * @type {{ type: string; form_fields: import('@/types/form').FormField[] } | undefined}
        */
       const stepDefinition = state.working_job_data.step_sequence.find(
         ({ _key }) => _key === step._key,
@@ -330,7 +343,7 @@ const traceability = {
         step_key: step._key,
         timestamp: now.toISO(),
         form_data: formData,
-        completed_batch_qt: batch_qt,
+        completed_batch_qt: batchQt,
       });
 
       const { data } = await api.post('event', event);

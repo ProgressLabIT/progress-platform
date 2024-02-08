@@ -36,17 +36,17 @@ export default {
 
   computed: {
     ...mapState({
-      j: (state) => state.traceability.working_job_data,
+      job: (state) => state.traceability.working_job_data,
       batch_data: (state) => state.traceability.current_batch_data.step_data,
     }),
 
     progress_button_active() {
-      return this.j.active && !this.current_step_done;
+      return this.job.active && !this.current_step_done;
     },
 
     progress_button_color() {
       return this.progress_button_active
-        ? (this.j.critical ? this.$theme.red : this.$theme.green) + 'aa'
+        ? (this.job.critical ? this.$theme.red : this.$theme.green) + 'aa'
         : this.$theme.surface2;
     },
 
@@ -61,25 +61,26 @@ export default {
       const declare_batch = {
         icon: 'mdi-plus',
         text:
-          this.j.parameters.production_batch_qt == 1
+          this.job.parameters.production_batch_qt == 1
             ? this.$t('job.complete_piece')
             : this.$t('job.complete_batch'),
         action: this.declareBatch,
         altAction: this.declareCustomBatch,
       };
 
-      if ('parameters' in this.j) {
-        return this.j.parameters.step_check ? complete_step : declare_batch;
+      if ('parameters' in this.job) {
+        return this.job.parameters.step_check ? complete_step : declare_batch;
       } else {
         return declare_batch;
       }
     },
 
     current_step_done() {
-      const current_step = this.batch_data
-        ? this.batch_data[this.current_step_index]
-        : null;
-      return current_step ? current_step.done : null;
+      const currentStep = this.batch_data?.find(
+        ({ _key }) => _key === this.current_step_key,
+      );
+
+      return currentStep?.done ?? false;
     },
 
     completed_steps_count() {
@@ -89,12 +90,12 @@ export default {
     },
 
     current_step_is_last() {
-      return this.completed_steps_count === this.j.step_sequence.length - 1;
+      return this.completed_steps_count === this.job.step_sequence.length - 1;
     },
 
     current_batch_is_last() {
-      const remaining_qt = this.j.qt_planned - this.j.qt_completed;
-      return this.j.active_batch_qt === remaining_qt;
+      const remaining_qt = this.job.qt_planned - this.job.qt_completed;
+      return this.job.active_batch_qt === remaining_qt;
     },
 
     confirm_batch_done_message() {
@@ -109,12 +110,12 @@ export default {
       return this.$t('job.alerts.next_batch_not_available');
     },
 
-    current_step_index: {
+    current_step_key: {
       get() {
-        return this.$store.state.traceability.current_step_index ?? 0;
+        return this.$store.state.traceability.current_step_key;
       },
-      set(index) {
-        this.$store.state.traceability.current_step_index = index;
+      set(key) {
+        this.$store.state.traceability.current_step_key = key;
       },
     },
   },
@@ -156,7 +157,7 @@ export default {
       if (current_step_was_last) {
         can_proceed = window.confirm(this.confirm_batch_done_message);
 
-        if (can_proceed && !this.j.next_batch_available) {
+        if (can_proceed && !this.job.next_batch_available) {
           if (current_batch_was_last) {
             can_proceed = window.confirm(this.confirm_job_done_message);
           } else {
@@ -167,15 +168,13 @@ export default {
 
       if (can_proceed) {
         await this.$store.dispatch('completeStep', {
-          step_index: this.current_step_index,
-          batch_qt: this.j.active_batch_qt,
+          stepKey: this.current_step_key,
+          batchQt: this.job.active_batch_qt,
         });
 
         if (current_step_was_last && current_batch_was_last) {
           this.$router.push({ name: 'userJobs' });
-        } else if (current_step_was_last) {
-          this.goToStep(0);
-        } else if (this.j.parameters.step_check) {
+        } else if (current_step_was_last || this.job.parameters.step_check) {
           // Go to first step that is not done.
           // This works with both force_order mode active or not
           this.goToNextUndoneStep();
@@ -189,17 +188,17 @@ export default {
 
       if (current_batch_was_last) {
         can_proceed = window.confirm(this.confirm_job_done_message);
-      } else if (!this.j.next_batch_available) {
+      } else if (!this.job.next_batch_available) {
         can_proceed = window.confirm(this.confirm_stop_session_message);
       }
 
       if (can_proceed) {
         await this.$store.dispatch('declareBatch', {
-          batch_qt: this.j.active_batch_qt,
+          batch_qt: this.job.active_batch_qt,
         });
         if (
           current_batch_was_last ||
-          (!this.j.next_batch_available && !this.j.active_batch_qt)
+          (!this.job.next_batch_available && !this.job.active_batch_qt)
         ) {
           this.$router.push({ name: 'userJobs' });
         }
@@ -224,19 +223,20 @@ export default {
       });
     },
     async declareCustomBatch() {
-      const remainingTotalQuantity = this.j.qt_planned - this.j.qt_completed;
+      const remainingTotalQuantity =
+        this.job.qt_planned - this.job.qt_completed;
 
       Loading.show();
       const { data } = await api.get('/wip', {
-        params: { job_key: this.j._key },
+        params: { job_key: this.job._key },
       });
       Loading.hide();
-      const maxDeclarableQuantity = this.j.first_phase
+      const maxDeclarableQuantity = this.job.first_phase
         ? remainingTotalQuantity
-        : data.free_wip_qt_upstream + this.j.active_batch_qt;
+        : data.free_wip_qt_upstream + this.job.active_batch_qt;
 
       const batchQuantity = await this.getCustomBatchInput({
-        initialValue: this.j.active_batch_qt,
+        initialValue: this.job.active_batch_qt,
         max: maxDeclarableQuantity,
       });
       if (batchQuantity === 0) {
@@ -251,7 +251,7 @@ export default {
         }
         willStopSession = true;
       } else if (
-        !this.j.next_batch_available ||
+        !this.job.next_batch_available ||
         batchQuantity === maxDeclarableQuantity
       ) {
         if (!window.confirm(this.confirm_stop_session_message)) {
@@ -268,22 +268,34 @@ export default {
       }
     },
 
-    goToStep(step_index) {
-      this.current_step_index = step_index;
+    goToStep(step_key) {
+      this.current_step_key = step_key;
     },
 
+    /**
+     * Go to the first step that is not done or that does not have a data entry.
+     */
     goToNextUndoneStep() {
-      if (this.batch_data?.length) {
-        const procedure_length = this.j.step_sequence.length;
-        for (let i = this.current_step_index; i < procedure_length; i++) {
-          if (!this.batch_data[i].done) {
-            this.goToStep(i);
-            return;
-          }
+      for (const step of this.job.step_sequence) {
+        const batchStep = this.batch_data?.find(
+          ({ _key }) => _key === step._key,
+        );
+
+        // If the step is not done or doesn't have a data entry, go to it
+        if (!batchStep?.done) {
+          this.goToStep(step._key);
+          return;
         }
-        const next_step_index = this.batch_data.findIndex((step) => !step.done);
-        this.goToStep(next_step_index);
       }
+
+      const firstStep = this.job.step_sequence[0];
+      if (firstStep) {
+        this.goToStep(firstStep._key);
+        return;
+      }
+
+      console.warning('No steps found, cannot go to any step');
+      this.goToStep(undefined);
     },
   },
 };

@@ -200,6 +200,7 @@
         </div>
       </div>
 
+      <!-- TODO: i18n -->
       <!-- Active session exit alert -->
       <q-dialog
         v-model="show_exit_alert"
@@ -244,8 +245,7 @@
         auto_link_mode="work_session"
         :auto_links="issue_links"
         @close="show_issue_form = false"
-      >
-      </IssueForm>
+      />
     </q-page>
   </q-page-container>
 </template>
@@ -394,20 +394,21 @@ export default {
       }
     },
 
-    current_step_index: {
+    current_step_key: {
       get() {
-        return this.$store.state.traceability.current_step_index ?? 0;
+        return this.$store.state.traceability.current_step_key;
       },
-      set(index) {
-        this.$store.state.traceability.current_step_index = index;
+      set(key) {
+        this.$store.state.traceability.current_step_key = key;
       },
     },
 
     current_step_done() {
-      let current_step = this.batch_data
-        ? this.batch_data[this.current_step_index]
-        : null;
-      return current_step ? current_step.done : null;
+      const currentStep = this.batch_data?.find(
+        ({ _key }) => _key === this.current_step_key,
+      );
+
+      return currentStep?.done ?? false;
     },
 
     allow_step_forward() {
@@ -485,7 +486,7 @@ export default {
   beforeUnmount() {
     window.removeEventListener('beforeunload', this.beforeUnloadAlert);
     clearInterval(this.polling_instance);
-    this.$store.state.traceability.current_step_index = 0;
+    this.$store.state.traceability.current_step_key = undefined;
   },
 
   methods: {
