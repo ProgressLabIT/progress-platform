@@ -270,8 +270,9 @@ class ProductionActivityEvent(BaseEvent):
 
 
   def current_step_was_last_to_do(self):
-    total_step_count = len(self.get_job_step_sequence())
+    total_step_count = self.get_job_steps_count()
     step_done_count = self.get_batch_step_done_count()
+
     return step_done_count == total_step_count
 
 
@@ -480,18 +481,26 @@ class ProductionActivityEvent(BaseEvent):
     self.info.active_batch_key = self.job.active_batch_key
 
 
-  def get_job_step_sequence(self):
-    return self.tx.collection('Phase').get(self.info.phase_key)['step_sequence']
+  def get_job_steps_count(self):
+    return self.tx.aql.execute(
+      """
+      FOR job IN Job
+        FILTER job._key == @job_key
+        RETURN LENGTH(job.step_sequence)
+      """,
+      bind_vars=dict(job_key=self.info.job_key)
+    ).next()
 
 
+  # TODO: Use TraceabilityQueries.UPDATE_JOB_PROGRESS instead (?)
   def update_job_step_progress(self):
     if not self.job:
       self.get_job_data()
 
     current_batch_total_value = self.job.active_batch_qt / self.job.qt_planned
 
-    procedure = self.get_job_step_sequence()
-    step_progress_value = current_batch_total_value / len(procedure)
+    steps_count = self.get_job_steps_count()
+    step_progress_value = current_batch_total_value / steps_count
     step_done_count = self.get_batch_step_done_count()
     completed_qt_progress = self.job.qt_completed / self.job.qt_planned
     total_progress = completed_qt_progress + (step_progress_value * step_done_count)
