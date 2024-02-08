@@ -47,20 +47,21 @@ class Queries:
       && (@issue_critical != null ? i.critical == @issue_critical : true)
       && (@issue_non_critical != null ? i.critical == !@issue_non_critical : true)
       && (@advanced_filters
-        ? LENGTH((
+        ? LENGTH(
             // This subquery returns match true/false for each filter
             FOR advanced_filter IN NOT_NULL(@advanced_filters.filters, [])
-            RETURN i.data
-              ? i.data[* FILTER CURRENT._key == advanced_filter._key
-                && (
-                  CURRENT.type == "text" ? CONTAINS(LOWER(CURRENT.value), LOWER(advanced_filter.value))
-                  : CURRENT.type == "choice" ? CURRENT.value.value == advanced_filter.value
-                  : CURRENT.type == "boolean" ? !!CURRENT.value
-                  : CURRENT.type == "files" ? !!LENGTH(CURRENT.value)
-                  : CURRENT.value == advanced_filter.value
-                )]
-              : []
-          )[**]) >= (@advanced_filters.operator == "OR" ? 1 : LENGTH(@advanced_filters.filters))
+            FOR d IN i.data
+            FILTER d.custom_field_key == advanced_filter._key
+            LET type = DOCUMENT(CustomField, d.custom_field_key).type
+            FILTER (
+              type == "text" ? CONTAINS(LOWER(d.value), LOWER(advanced_filter.value))
+              : type == "choice" ? d.value._key == advanced_filter.value._key
+              : type == "boolean" ? !!d.value
+              : type == "files" ? !!LENGTH(d.value)
+              : d.value == advanced_filter.value
+            )
+            RETURN 1
+          ) >= (@advanced_filters.operator == "OR" ? 1 : LENGTH(@advanced_filters.filters))
         : true
       )
 
