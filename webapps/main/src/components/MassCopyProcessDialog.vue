@@ -204,7 +204,10 @@ const textToExclude = ref('');
 
 const tagsToInclude = ref(props.sourceProduct.tags);
 const tagsToExclude = ref([]);
-const products = computed(() => store.getters.productCatalog(true));
+const allProducts = computed(() => store.getters.productCatalog(true));
+const products = computed(() =>
+  allProducts.value.filter(({ _key }) => _key !== props.sourceProduct._key),
+);
 const selectedProducts = ref([]);
 
 const hiddenSelectedCount = computed(() => {
