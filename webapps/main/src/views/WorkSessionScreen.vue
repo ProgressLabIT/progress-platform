@@ -477,11 +477,17 @@ export default {
           return;
         }
 
-        const moved = this.links_order.splice(oldIndex, 1)[0];
+        // Use the sorted links as a reference since it's the source of truth.
+        // Otherwise, the links_order might be missing some links, which would lead to an incorrect order or undefined values.
+        const sortedLinkNames = this.sorted_links.map(
+          ({ route_name }) => route_name,
+        );
+        const moved = sortedLinkNames.splice(oldIndex, 1)[0];
+
         this.links_order = [
-          ...this.links_order.slice(0, newIndex),
+          ...sortedLinkNames.slice(0, newIndex),
           moved,
-          ...this.links_order.slice(newIndex),
+          ...sortedLinkNames.slice(newIndex),
         ];
       },
     });
