@@ -40,12 +40,14 @@ class StepType(str, Enum):
   FORM = 'form'
 
 
+# TODO: Split into StepDefinition(to be used in operation default steps) and Step(to be used in process phases)
 class Step(FlexModel):
   key: str | None = Field(None, alias="_key")
   title: str | None = None
   description: str | None = None
   type: StepType = StepType.INSTRUCTION
   form_fields: List[FormFieldDefinition] = []
+  # TODO: Stop saving print_templates as part of Step (only valid for default step definitions)
   print_templates: List[str | PrintTemplateRecord] = []
 
 
@@ -54,10 +56,12 @@ class Media(ArangoDocument):
   name: str
   size: int
   content_type: str
+  # TODO: Address serialization warning (Expected `datetime` but got `str` - serialized value may not be as expected)
   created_at: datetime = Field(default_factory=timestamp)
 
 
 class StepWithMediaInfo(Step):
+  # TODO: Address serialization warning (Expected `Union[str, Media]` but got `Media` - serialized value may not be as expected)
   media: list[str | Media] | None = None
 
 class Operation(ArangoDocument):

@@ -266,6 +266,7 @@ export default {
       selected: 'Selezionati {count}',
       selectedHidden: '{count} non mostrati',
     },
+    success: 'Successfully copied the process to {count} products',
   },
   material_cost: 'costo materiali',
   material: 'materiale | materiali',

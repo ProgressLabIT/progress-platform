@@ -206,8 +206,9 @@
 </template>
 
 <script>
-import { Dialog, uid } from 'quasar';
+import { Dialog, Notify, uid } from 'quasar';
 import Sortable from 'sortablejs';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { mapActions, useStore } from 'vuex';
 import { api } from '@/boot/axios';
@@ -238,18 +239,27 @@ export default {
   emits: ['changesSaved', 'changesCanceled'],
 
   setup() {
+    const { t } = useI18n();
     const store = useStore();
     const route = useRoute();
 
     function openMassCopyDialog() {
+      const sourceProduct = store.getters.productData(route.params.product_key);
       Dialog.create({
         component: MassCopyProcessDialog,
         componentProps: {
-          sourceProduct: store.getters.productData(route.params.product_key),
+          sourceProduct,
         },
-      }).onOk((selectedProducts) => {
-        console.log('selectedProducts', selectedProducts);
-        // TODO: Implement mass copy
+      }).onOk(async (selectedProducts) => {
+        await api.post(`/product/${sourceProduct._key}/process/copy`, {
+          target_product_keys: selectedProducts.map(({ _key }) => _key),
+        });
+        Notify.create({
+          type: 'positive',
+          message: t('massCopyProcess.success', {
+            count: selectedProducts.length,
+          }),
+        });
       });
     }
 

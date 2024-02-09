@@ -1,9 +1,10 @@
 import traceback
-from typing import List
+from typing import Annotated, List
+import os
 from uuid import uuid4
 
 from arango import DocumentGetError
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Body, File, HTTPException, Query, UploadFile
 from fastapi.encoders import jsonable_encoder
 
 from models.process import *
@@ -240,6 +241,7 @@ async def delete_operation(op_key: str):
     return APIResponse(message="Operation successfully deleted", detail=removed_op)
 
 
+# TODO: Instead of copying it to all phases, selectively copy it to phases using a list of connected products
 @router.post('/operation/{operation_key}/copy_to_all')
 async def copy_operation_to_all_phases(operation_key: str):
   operation_data = db.collection('Operation').get(operation_key)
@@ -310,6 +312,8 @@ async def copy_operation_to_all_phases(operation_key: str):
         step_sequence=new_step_sequence
       ))
 
+      # TODO: Copy phase print templates (when implemented)
+
     updated_phase_results = tx.collection('Phase').update_many(phase_updates, return_new=True)
     updated_phases = [PhaseRecord(**result['new']) for result in updated_phase_results]
 
@@ -324,6 +328,136 @@ async def copy_operation_to_all_phases(operation_key: str):
     if isinstance(exception, HTTPError):
       raise exception
     raise HTTPError(500, "Could not update Operation in the db. Please contact the administrator.")
+
+
+# TODO: Re-use code between copy_operation_to_all_phases and product.py@copy_product
+@router.post('/product/{product_key}/process/copy')
+async def copy_process_to_products(
+  product_key: str,
+  target_product_keys: Annotated[list[str], Body(embed=True)],
+):
+  try:
+    tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'can_use_print_template', 'requires'])
+    current_time = dt.timestamp()
+
+    process_data = tx.aql.execute(
+      Queries.GET_PRODUCTION_PROCESS,
+      bind_vars=dict(product_key=product_key)
+    )
+    process = [PhaseData(**phase) for phase in process_data]
+
+    for target_product_key in target_product_keys:
+      # TODO: Ensure source product key is not in target product keys
+
+      phase_sequence = []
+      for phase in process:
+        step_sequence = []
+        for step in phase.steps:
+          step_data = step.model_dump(by_alias=True, exclude={'key', 'form_fields', 'media', 'print_templates'})
+
+          step_data['form_fields'] = [
+            dict(
+              field,
+              _key=str(uuid4())
+            )
+            for field in step.form_fields
+          ]
+
+          new_step = tx.collection('Step').insert(step_data, return_new=True)['new']
+
+          step_media = FileHandler.step_media(step.key)
+          if os.path.isdir(step_media.folder_path):
+            step_media.copy_media(new_step['_key'])
+
+          print_template_keys = tx.aql.execute(
+            """
+            FOR t IN 1..1 OUTBOUND @step_id can_use_print_template
+              RETURN t._key
+            """,
+            bind_vars=dict(step_id=new_step['_id'])
+          )
+          print_template_updates = []
+          for template_key in print_template_keys:
+            print_template_updates.append(dict(
+              _from=new_step['_id'],
+              _to=f'PrintTemplate/{template_key}'
+            ))
+          if print_template_updates:
+            tx.collection('can_use_print_template').insert_many(print_template_updates)
+
+          step_sequence.append(new_step['_key'])
+
+        new_phase = tx.collection('Phase').insert(
+          dict(
+            params=phase.params,
+            production_notes=phase.production_notes,
+            step_sequence=step_sequence
+          ),
+          return_new=True
+        )['new']
+
+        tx.collection('requires').insert(dict(
+          _from=f'Product/{target_product_key}',
+          _to=new_phase['_id'],
+          type='ProductPhase'
+        ))
+
+        tx.collection('requires').insert(dict(
+          _from=new_phase['_id'],
+          _to=f'Operation/{phase.operation_key}',
+          type='PhaseOperation'
+        ))
+
+        phase_bom_cursor = tx.collection('requires').find(
+          dict(
+            _from=f'Phase/{phase.key}',
+            type='BomLine'
+          )
+        )
+        phase_bom = [
+          dict(
+            jsonable_encoder(line, exclude={'_id', '_key', '_rev'}),
+            _from=new_phase['_id']
+          )
+          for line in phase_bom_cursor
+        ]
+        if phase_bom:
+          tx.collection('requires').insert_many(phase_bom, silent=True)
+
+        # TODO: Copy phase print templates (when implemented)
+
+        phase_sequence.append(new_phase['_key'])
+
+      product_update_result = tx.collection('Product').update(
+        dict(
+          _key=target_product_key,
+          process_phases=phase_sequence
+        ),
+        return_old=True
+      )
+
+      # The process has been completely replaced, so all the old phases need to be trashed
+      old_phase_sequence = product_update_result['old']['process_phases']
+      for phase_to_remove in old_phase_sequence:
+        # Flag phase document
+        tx.collection('Phase').update(dict(_key=phase_to_remove, trashed=current_time))
+
+        # Flag phase relationships
+        tx.aql.execute(
+          Queries.TRASH_FLAG_PHASE_RELATIONSHIP,
+          bind_vars=dict(phase_key=phase_to_remove, timestamp=current_time)
+        )
+
+    tx.commit_transaction()
+
+    return APIResponse(
+      message="Process successfully copied to all related products",
+    )
+  except Exception as exception:
+    tx.abort_transaction()
+    if isinstance(exception, HTTPError):
+      raise exception
+    raise HTTPError(500, "Could not copy process to products. Please contact the administrator.")
 
 
 @router.get("/step/{step_key}/media")
