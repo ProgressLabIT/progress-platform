@@ -70,18 +70,18 @@ def copy_process_to_product(
       if os.path.isdir(step_media.folder_path):
         step_media.copy_media(new_step['_key'])
 
-      print_template_keys = tx.aql.execute(
+      print_template_ids = tx.aql.execute(
         """
         FOR t IN 1..1 OUTBOUND @step_id can_use_print_template
-          RETURN t._key
+          RETURN t._id
         """,
-        bind_vars=dict(step_id=new_step['_id'])
+        bind_vars=dict(step_id=f'Step/{step.key}')
       )
       print_template_updates = []
-      for template_key in print_template_keys:
+      for template_id in print_template_ids:
         print_template_updates.append(dict(
           _from=new_step['_id'],
-          _to=f'PrintTemplate/{template_key}'
+          _to=template_id
         ))
       if print_template_updates:
         tx.collection('can_use_print_template').insert_many(print_template_updates)
