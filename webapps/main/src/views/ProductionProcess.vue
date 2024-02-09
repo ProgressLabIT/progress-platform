@@ -248,7 +248,13 @@ export default {
       Dialog.create({
         component: MassCopyProcessDialog,
         componentProps: {
-          sourceProduct,
+          title: t('massCopyProcess.title.product'),
+          products: store.getters
+            .productCatalog(true)
+            .filter(({ _key }) => _key !== sourceProduct._key),
+          defaultFilters: {
+            tagsToInclude: sourceProduct.tags,
+          },
         },
       }).onOk(async (selectedProducts) => {
         try {

@@ -3,9 +3,7 @@
   <BaseDialog :show="true" :get-dialog-ref="getDialogRef" @close="onDialogHide">
     <q-card class="surface1 column dialog-card">
       <q-card-section class="display text-h3">
-        {{
-          $t(`massCopyProcess.title.${sourceProduct ? 'product' : 'operation'}`)
-        }}
+        {{ title }}
       </q-card-section>
 
       <q-separator />
@@ -176,13 +174,20 @@
 <script setup>
 import { useDialogPluginComponent } from 'quasar';
 import { computed, ref } from 'vue';
-import { useStore } from 'vuex';
 import BaseDialog from '@/components/BaseDialog.vue';
 import multiMatch from '@/lib/MultiFieldSearch';
 import TagInput from './TagInput.vue';
 
 const props = defineProps({
-  sourceProduct: {
+  title: {
+    type: String,
+    required: true,
+  },
+  products: {
+    type: Array,
+    required: true,
+  },
+  defaultFilters: {
     type: Object,
     default: undefined,
   },
@@ -199,20 +204,12 @@ const getDialogRef = () => dialogRef;
 /** @type {import('vue').Ref<import('quasar').QTable>} */
 const tableRef = ref();
 
-const store = useStore();
+const textToInclude = ref(props.defaultFilters?.textToInclude ?? '');
+const textToExclude = ref(props.defaultFilters?.textToExclude ?? '');
 
-const textToInclude = ref('');
-const textToExclude = ref('');
+const tagsToInclude = ref(props.defaultFilters?.tagsToInclude ?? []);
+const tagsToExclude = ref(props.defaultFilters?.tagsToExclude ?? []);
 
-const tagsToInclude = ref(props.sourceProduct?.tags ?? []);
-const tagsToExclude = ref([]);
-const allProducts = computed(() => store.getters.productCatalog(true));
-const products = computed(() =>
-  props.sourceProduct
-    ? allProducts.value.filter(({ _key }) => _key !== props.sourceProduct._key)
-    : // TODO: Only show products that have phases that use the operation
-      allProducts.value,
-);
 const selectedProducts = ref([]);
 
 const hiddenSelectedCount = computed(() => {

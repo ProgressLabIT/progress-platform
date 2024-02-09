@@ -19,7 +19,6 @@ router = APIRouter()
 product_db = db.collection('Product')
 
 
-
 # ALL ROUTES BEGIN WITH 'product'
 
 # =================================================
@@ -29,28 +28,25 @@ product_db = db.collection('Product')
 async def get_product_list(
   offset: int | None = None,
   limit: int | None = None, # return a limited number of results
-  search: str | None = None, # filter by code
+  search: str | None = None, # filter by code or description
+  has_operation_key: str | None = None, # filter by operation key
   details: bool = False
 ):
-
   product_list =  db.aql.execute(
     Queries.GET_PRODUCT_LIST,
     bind_vars=dict(
-      search = search,
       limit = limit,
-      details = details,
-      offset = offset
+      offset = offset,
+      search = search,
+      has_operation_key = has_operation_key,
+      details = details
     )
   )
 
   def validate(data):
     return ProductDetails(**data) if details else ProductBaseData(**data)
 
-  results = [validate(p) for p in product_list]
-
-  return results
-
-
+  return [validate(product) for product in product_list]
 
 
 # =================================================
@@ -62,7 +58,6 @@ async def create_product(
   description: str = Form(''),
   image: UploadFile = File(None)
 ):
-
   # Map form data
   try:
     new_product = ProductDetails(

@@ -187,9 +187,18 @@ export default {
 
     const { t } = useI18n();
 
-    function copyToAll() {
+    async function copyToAll() {
+      const { data: products } = await api.get('product', {
+        params: {
+          has_operation_key: props.operation._key,
+        },
+      });
       Dialog.create({
         component: MassCopyProcessDialog,
+        componentProps: {
+          title: t('massCopyProcess.title.operation'),
+          products,
+        },
       }).onOk(async (selectedProducts) => {
         try {
           const { data } = await api.post(
