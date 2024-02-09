@@ -65,12 +65,12 @@ class Theme(str, Enum):
   LIGHT = 'light'
 
 class UserPreferences(BaseModel):
-  theme: Theme = Theme.DARK
+  theme: Theme | None = Theme.DARK
   locale: str | None = None
-  display_font: DisplayFont = DisplayFont.ORBITRON
+  display_font: DisplayFont | None = DisplayFont.ORBITRON
   home_page: HomePageOptions | None = None
-  job_selection_layout: JobSelectionLayout = JobSelectionLayout.CARD
-  work_session_tabs_order: list[WorkSessionTabs] = [WorkSessionTabs.PROCEDURE, WorkSessionTabs.DOCS, WorkSessionTabs.BOM, WorkSessionTabs.ISSUES, WorkSessionTabs.NOTES, WorkSessionTabs.MESSAGES, WorkSessionTabs.PROCESS]
+  job_selection_layout: JobSelectionLayout | None = JobSelectionLayout.CARD
+  work_session_tabs_order: list[WorkSessionTabs] | None = [WorkSessionTabs.PROCEDURE, WorkSessionTabs.DOCS, WorkSessionTabs.BOM, WorkSessionTabs.ISSUES, WorkSessionTabs.NOTES, WorkSessionTabs.MESSAGES, WorkSessionTabs.PROCESS]
 
 class UserNew(BaseModel):
   name: str | None = None
