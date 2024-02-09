@@ -473,6 +473,10 @@ export default {
     Sortable.create(container, {
       ...this.$store.state.drag_options,
       onEnd: ({ newIndex, oldIndex }) => {
+        if (newIndex === oldIndex) {
+          return;
+        }
+
         const moved = this.links_order.splice(oldIndex, 1)[0];
         this.links_order = [
           ...this.links_order.slice(0, newIndex),
