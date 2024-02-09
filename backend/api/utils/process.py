@@ -90,6 +90,7 @@ def copy_process_to_product(
 
     new_phase = tx.collection('Phase').insert(
       dict(
+        jsonable_encoder(phase, by_alias=True, exclude={'id', 'rev', 'key', 'steps', 'print_templates'}),
         params=phase.params,
         production_notes=phase.production_notes,
         step_sequence=step_sequence
