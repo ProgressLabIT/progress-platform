@@ -12,7 +12,7 @@ from utils.db import db
 from utils.dt import timestamp
 from utils.file import FileHandler
 from utils.product import *
-from utils.process import Queries as ProcessQueries
+from utils.process import Queries as ProcessQueries, copy_process_to_product, copy_process_to_product_writes
 
 router = APIRouter()
 
@@ -166,7 +166,7 @@ async def copy_product(
     )
 
   # 0.2 Setup transaction
-  tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires', 'can_use_print_template', 'has_tag'], read=['Operation'])
+  tx = db.begin_transaction(write={'Product', 'can_use_print_template', 'has_tag', *copy_process_to_product_writes}, read=['Operation'])
   product_db = tx.collection('Product')
 
   # 0.3 Fetch product data
@@ -227,91 +227,13 @@ async def copy_product(
     # 2 COPY PROCESS
     # See also update_process endpoint in endpoints/process.py
 
-    # 2.1 PROCESS: Get process data
     bind_vars = dict(product_key=original_product_key)
-    db_process = tx.aql.execute(ProcessQueries.GET_PRODUCTION_PROCESS, bind_vars=bind_vars)
-    process_data = [PhaseData(**phase) for phase in db_process]
+    process_cursor = tx.aql.execute(ProcessQueries.GET_PRODUCTION_PROCESS, bind_vars=bind_vars)
+    process = [PhaseData(**phase) for phase in process_cursor]
 
-    # 2.2 PROCESS: Initialize new phase sequence
-    new_process_phases = []
-
-    # COPY PHASES, STEPS & BOM
-    for phase in process_data:
-
-      # 3.1 PHASE: Update original phase data
-      phase.product_key = new_product_key
-
-      # 4.1 STEP: Initialize new step_sequence
-      new_step_sequence = []
-
-      # 4.2 STEP: Copy steps
-      for step in phase.steps:
-        # Exclude key field if not present so DB creates new record
-        prepped_step_data = jsonable_encoder(step, by_alias=True, exclude={'key'})
-        new_step_key = tx.insert_document('Step', prepped_step_data)['_key']
-
-        new_step_sequence.append(new_step_key)
-
-        # 4.3 STEP: Copy step media files
-        step_media = FileHandler.step_media(step.key)
-        if os.path.isdir(step_media.folder_path):
-          step_media.copy_media(new_step_key)
-
-        # 4.4. STEP: Copy print templates
-        copy_print_templates('Step', step.key, new_step_key)
-
-      # 3.2 PHASE: create new phase with existing operation key and parameters and new step sequence
-      phase.step_sequence = new_step_sequence
-      exclude_set = {'id', 'rev', 'steps', 'key'}
-      prepped_phase_data = jsonable_encoder(phase, by_alias=True, exclude=exclude_set)
-      new_phase_key = tx.insert_document('Phase', prepped_phase_data)['_key']
-
-      # 3.3 PHASE: Insert new ProductPhase relationship
-      product_phase_edge = dict(
-        _from=f'Product/{new_product_key}',
-        _to=f'Phase/{new_phase_key}',
-        type='ProductPhase'
-      )
-      tx.insert_document('requires', product_phase_edge)
-
-      # 3.4 PHASE: Insert new PhaseOperation relationship
-      phase_operation_edge = dict(
-        _from=f'Phase/{new_phase_key}',
-        _to=f'Operation/{phase.operation_key}',
-        type='PhaseOperation'
-      )
-      tx.insert_document('requires', phase_operation_edge)
-
-      # 3.5 PHASE: Copy print templates
-      copy_print_templates('Phase', phase.key, new_phase_key)
-
-      # 4.1 BOM: Get BoM for phase
-      match = dict(
-        _from=f'Phase/{phase.key}',
-        type='BomLine'
-      )
-      phase_bom_cursor = tx.collection('requires').find(match)
-
-      # 4.2 BOM: Update with new phase key and insert
-      if phase_bom_cursor.count():
-        new_phase_bom = []
-
-        for line in phase_bom_cursor:
-          line['_from'] = f'Phase/{new_phase_key}'
-          # Remove id fields to make db create new record
-          for prop in ['_id', '_key', '_rev']:
-            del line[prop]
-          new_phase_bom.append(line)
-
-        tx.collection('requires').insert_many(new_phase_bom, silent=True)
-
-      # 2.3 PROCESS: save phase key in new product process
-      new_process_phases.append(new_phase_key)
-
-    # 2.4 Update product with new phases
     product_db.update(dict(
       _key=new_product_key,
-      process_phases=new_process_phases
+      process_phases=copy_process_to_product(tx, process, new_product_key)
     ))
 
     # 7. Copy product media folder (if present) with new product key

@@ -75,7 +75,7 @@ class Operation(ArangoDocument):
 
 class PhaseRecord(ArangoDocument):
   alias: str
-  product_key: str
+  product_key: str # TODO: this is not used anywhere(?), consider removing. ProductPhase relationship in 'requires' is used instead.
   operation_key: str
   params: PhaseParameters = PhaseParameters()
   step_sequence: List[Optional[str]] = []
@@ -86,6 +86,7 @@ class PhaseData(PhaseRecord):
   print_templates: List[PrintTemplateRecord] = []
 
 
+# TODO: this is not used anywhere, consider removing
 class ProcessUpdate(FlexModel):
   # this is the output model for the event logging (after DB update)
   product_key: str = Field(..., alias='_key')
