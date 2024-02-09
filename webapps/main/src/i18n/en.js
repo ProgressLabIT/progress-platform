@@ -269,6 +269,7 @@ export default {
         'Successfully copied the operation to related phases of {count} products',
     },
     error: {
+      product: 'An error occurred while copying the process',
       operation: 'An error occurred while copying the operation',
     },
   },

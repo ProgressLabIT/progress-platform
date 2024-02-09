@@ -275,6 +275,7 @@ export default {
       operation: 'Operazione copiata con successo in {count} fasi',
     },
     error: {
+      product: 'Errore durante la copia del processo',
       operation: "Errore durante la copia dell'operazione",
     },
   },
