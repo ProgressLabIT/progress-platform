@@ -242,8 +242,11 @@ async def delete_operation(op_key: str):
 
 
 # TODO: Instead of copying it to all phases, selectively copy it to phases using a list of connected products
-@router.post('/operation/{operation_key}/copy_to_all')
-async def copy_operation_to_all_phases(operation_key: str):
+@router.post('/operation/{operation_key}/copy')
+async def copy_operation_to_phases(
+  operation_key: str,
+  target_product_keys: Annotated[list[str], Body(embed=True)]
+):
   operation_data = db.collection('Operation').get(operation_key)
   if not operation_data:
     raise HTTPError(404, "Could not find Operation in the DB")
@@ -251,7 +254,17 @@ async def copy_operation_to_all_phases(operation_key: str):
   try:
     tx = db.begin_transaction(write=['Phase', 'Step', 'can_use_print_template'])
 
-    phases_cursor = tx.collection('Phase').find(dict(operation_key=operation_key))
+    phases_cursor = tx.aql.execute(
+      """
+      FOR phase IN Phase
+        FILTER phase.operation_key == @operation_key AND phase.product_key IN @target_product_keys
+        RETURN phase
+      """,
+      bind_vars=dict(
+        operation_key=operation_key,
+        target_product_keys=target_product_keys
+      )
+    )
     phases = [PhaseRecord(**phase) for phase in phases_cursor]
     phase_updates = []
     for phase in phases:

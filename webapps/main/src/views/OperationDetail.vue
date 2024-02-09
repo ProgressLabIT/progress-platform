@@ -162,6 +162,7 @@ import NoDataAlert from '@/components/NoDataAlert.vue';
 import ProcessParameters from '@/components/ProcessParameters.vue';
 import ProductionNotes from '@/components/ProductionNotes.vue';
 import ProcessSteps from '@/components/process-steps/ProcessSteps.vue';
+import MassCopyProcessDialog from '../components/MassCopyProcessDialog.vue';
 
 export default {
   name: 'OperationDetail',
@@ -188,13 +189,14 @@ export default {
 
     function copyToAll() {
       Dialog.create({
-        title: t('operation.copyToAll.title'),
-        message: t('operation.copyToAll.confirm'),
-        cancel: true,
-      }).onOk(async () => {
+        component: MassCopyProcessDialog,
+      }).onOk(async (selectedProducts) => {
         try {
           const { data } = await api.post(
-            `operation/${props.operation._key}/copy_to_all`,
+            `operation/${props.operation._key}/copy`,
+            {
+              target_product_keys: selectedProducts.map(({ _key }) => _key),
+            },
           );
           Notify.create({
             type: 'positive',

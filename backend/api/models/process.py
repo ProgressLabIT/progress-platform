@@ -75,8 +75,8 @@ class Operation(ArangoDocument):
 
 class PhaseRecord(ArangoDocument):
   alias: str
-  product_key: str # TODO: this is not used anywhere effectively(?), consider removing. ProductPhase relationship in 'requires' is used instead.
-  operation_key: str
+  product_key: str # TODO: consider stopping storing this. The existing ProductPhase relationship in 'requires' can be used instead. Split the model to have the property only when needed.
+  operation_key: str # TODO: consider stopping storing this. The existing PhaseOperation relationship in 'requires' can be used instead. Split the model to have the property only when needed.
   params: PhaseParameters = PhaseParameters()
   step_sequence: List[Optional[str]] = []
   production_notes: str | None = None

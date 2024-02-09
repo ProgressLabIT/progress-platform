@@ -255,7 +255,10 @@ export default {
   },
   loading_text: 'recupero dati in corso...',
   massCopyProcess: {
-    title: 'Copia processo ad altri prodotti',
+    title: {
+      product: 'Copia processo ad altri prodotti',
+      operation: 'Copia operazione in fasi correlate di prodotti',
+    },
     conditions: 'Condizioni',
     includesText: 'Include testo',
     excludesText: 'Esclude testo',

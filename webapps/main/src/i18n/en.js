@@ -248,7 +248,10 @@ export default {
   list: 'List',
   loading_text: 'getting data...',
   massCopyProcess: {
-    title: 'Copy process to other products',
+    title: {
+      product: 'Copy process to other products',
+      operation: 'Copy operation to related phases of products',
+    },
     conditions: 'Conditions',
     includesText: 'Includes text',
     excludesText: 'Excludes text',

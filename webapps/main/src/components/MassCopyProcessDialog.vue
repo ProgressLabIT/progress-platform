@@ -3,7 +3,9 @@
   <BaseDialog :show="true" :get-dialog-ref="getDialogRef" @close="onDialogHide">
     <q-card class="surface1 column dialog-card">
       <q-card-section class="display text-h3">
-        {{ $t('massCopyProcess.title') }}
+        {{
+          $t(`massCopyProcess.title.${sourceProduct ? 'product' : 'operation'}`)
+        }}
       </q-card-section>
 
       <q-separator />
@@ -182,7 +184,7 @@ import TagInput from './TagInput.vue';
 const props = defineProps({
   sourceProduct: {
     type: Object,
-    required: true,
+    default: undefined,
   },
 });
 
@@ -202,11 +204,14 @@ const store = useStore();
 const textToInclude = ref('');
 const textToExclude = ref('');
 
-const tagsToInclude = ref(props.sourceProduct.tags);
+const tagsToInclude = ref(props.sourceProduct?.tags ?? []);
 const tagsToExclude = ref([]);
 const allProducts = computed(() => store.getters.productCatalog(true));
 const products = computed(() =>
-  allProducts.value.filter(({ _key }) => _key !== props.sourceProduct._key),
+  props.sourceProduct
+    ? allProducts.value.filter(({ _key }) => _key !== props.sourceProduct._key)
+    : // TODO: Only show products that have phases that use the operation
+      allProducts.value,
 );
 const selectedProducts = ref([]);
 
