@@ -144,9 +144,11 @@ export default {
       }
 
       // First step is always allowed, start from second
-      for (let i = 1; i < index; i++) {
-        if (this.batch_data[i].done === false) {
-          return false;
+      if (this.batch_data.length > 1) {
+        for (let i = 1; i < index; i++) {
+          if (this.batch_data[i].done === false) {
+            return false;
+          }
         }
       }
 
