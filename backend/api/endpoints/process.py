@@ -337,6 +337,9 @@ async def copy_process_to_products(
   target_product_keys: Annotated[list[str], Body(embed=True)],
 ):
   try:
+    if product_key in target_product_keys:
+      raise HTTPError(400, "The source product cannot be in the list of target products")
+    
     tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'can_use_print_template', 'requires'])
     current_time = dt.timestamp()
 
@@ -347,8 +350,6 @@ async def copy_process_to_products(
     process = [PhaseData(**phase) for phase in process_data]
 
     for target_product_key in target_product_keys:
-      # TODO: Ensure source product key is not in target product keys
-
       phase_sequence = []
       for phase in process:
         step_sequence = []
