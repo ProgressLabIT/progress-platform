@@ -251,12 +251,13 @@ export default {
           sourceProduct,
         },
       }).onOk(async (selectedProducts) => {
+        // TODO: Add error handling
         await api.post(`/product/${sourceProduct._key}/process/copy`, {
           target_product_keys: selectedProducts.map(({ _key }) => _key),
         });
         Notify.create({
           type: 'positive',
-          message: t('massCopyProcess.success', {
+          message: t('massCopyProcess.success.product', {
             count: selectedProducts.length,
           }),
         });

@@ -253,6 +253,7 @@ export default {
       operation: 'Copy operation to related phases of products',
     },
     conditions: 'Conditions',
+    copyToAll: 'Copy to all',
     includesText: 'Includes text',
     excludesText: 'Excludes text',
     includesTags: 'Has these tags',
@@ -262,7 +263,14 @@ export default {
       selected: 'Selected {count}',
       selectedHidden: '{count} not shown',
     },
-    success: 'Successfully copied the process to {count} products',
+    success: {
+      product: 'Successfully copied the process to {count} products',
+      operation:
+        'Successfully copied the operation to related phases of {count} products',
+    },
+    error: {
+      operation: 'An error occurred while copying the operation',
+    },
   },
   material: 'material | materials',
   material_cost: 'material cost',
@@ -298,12 +306,6 @@ export default {
         'The operation cannot be deleted because is included in the production process of the following products',
       op_name_missing: 'please indicate a name for the operation',
       op_name_used: 'name already used for another operation',
-    },
-    copyToAll: {
-      title: 'Copy to All',
-      confirm: 'Are you sure you want to copy this operation to all phases?',
-      success: 'Successfully copied the operation to {count} phases',
-      error: 'An error occurred while copying the operation',
     },
     default_params_explainer:
       'New phases associated with this operation will be created with the parameters indicated here. You will be able to set different phase-specific parameters after the creation',

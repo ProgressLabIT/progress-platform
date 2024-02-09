@@ -17,7 +17,7 @@
 
           <BaseTooltipIcon
             icon="mdi-content-copy"
-            :tooltip="$t('operation.copyToAll.title')"
+            :tooltip="$t('massCopyProcess.copyToAll')"
             :color="$theme.orange"
             @icon-click="copyToAll"
           />
@@ -200,7 +200,7 @@ export default {
           );
           Notify.create({
             type: 'positive',
-            message: t('operation.copyToAll.success', {
+            message: t('massCopyProcess.success.operation', {
               count: data.detail.length,
             }),
           });
@@ -208,7 +208,7 @@ export default {
           console.error(error);
           Notify.create({
             type: 'negative',
-            message: t('operation.copyToAll.error'),
+            message: t('massCopyProcess.error.operation'),
           });
         }
       });

@@ -260,6 +260,7 @@ export default {
       operation: 'Copia operazione in fasi correlate di prodotti',
     },
     conditions: 'Condizioni',
+    copyToAll: 'Copia a tutte le fasi',
     includesText: 'Include testo',
     excludesText: 'Esclude testo',
     includesTags: 'Ha questi tag',
@@ -269,7 +270,13 @@ export default {
       selected: 'Selezionati {count}',
       selectedHidden: '{count} non mostrati',
     },
-    success: 'Successfully copied the process to {count} products',
+    success: {
+      product: 'Processo copiato con successo in {count} prodotti',
+      operation: 'Operazione copiata con successo in {count} fasi',
+    },
+    error: {
+      operation: "Errore durante la copia dell'operazione",
+    },
   },
   material_cost: 'costo materiali',
   material: 'materiale | materiali',
@@ -305,12 +312,6 @@ export default {
         "L'operazione non può essere cancellata perché in uso nel processo dei seguenti prodotti",
       op_name_missing: "indicare almeno un nome per l'operazione",
       op_name_used: 'nome operazione già in uso',
-    },
-    copyToAll: {
-      title: 'Copia a tutte le fasi',
-      confirm: 'Vuoi davvero copiare questa operazione a tutte le fasi?',
-      success: 'Operazione copiata con successo in {count} fasi',
-      error: "Errore durante la copia dell'operazione",
     },
     default_params_explainer:
       'Le nuove fasi associate a questa operazione verranno create con i parametri indicati qui. Potrai modificare i parametri specifici della fase dopo la creazione.',
