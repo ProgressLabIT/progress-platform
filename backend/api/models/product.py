@@ -31,7 +31,7 @@ class ProductBaseData(FlexModel):
   description: str | None = None
   active: bool = True
   image: bool = False # to be replaced with Object Storage url in the future
-  tags: List[Tag] = []
+  tags: List[Tag] | None= []
 
 class ProductDetails(ProductBaseData):
   trash: bool = False

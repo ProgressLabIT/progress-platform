@@ -448,25 +448,17 @@ async def search_work_orders(
 
     LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == wo._id RETURN 1)
 
-    // See utils/production.py@GET_WORK_ORDER_DATA
     LET now = DATE_NOW()
-    LET jobs = (
-      FOR j IN Job
-      FILTER j.wo_key == wo._key && !j.trash
-      LET work_sessions = (
-        FOR ws IN WorkSession
-        FILTER ws.job_key == j._key && !ws.canceled
-        LET duration = ws.active ? DATE_DIFF(ws.start, now, 'f') : ws.duration
-        LET cost = ws.hourly_cost * duration / 3600000
-        RETURN MERGE({ duration, cost })
-      )
-      LET processing_time = SUM(work_sessions[*].duration)
-      LET processing_cost = SUM(work_sessions[*].cost)
-
-      RETURN { processing_time, processing_cost }
+    LET work_sessions = (
+      FOR ws IN WorkSession
+      FILTER ws.work_order_key == wo._key && !ws.canceled
+      LET duration = ws.active ? DATE_DIFF(ws.start, now, 'f') : ws.duration
+      LET cost = ws.hourly_cost * duration / 3600000
+      RETURN MERGE({ duration, cost })
     )
-    LET processing_time = SUM(jobs[*].processing_time)
-    LET processing_cost = SUM(jobs[*].processing_cost)
+    LET processing_time = SUM(work_sessions[*].duration)
+    LET processing_cost = SUM(work_sessions[*].cost)
+
     LET total_cost = processing_cost + wo.material_cost
 
     RETURN MERGE(wo, { issue_count, processing_time, processing_cost, total_cost })
