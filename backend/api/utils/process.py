@@ -56,6 +56,7 @@ def copy_process_to_product(
     for step in phase.steps:
       step_data = step.model_dump(by_alias=True, exclude={'key', 'form_fields', 'media', 'print_templates'})
 
+      # Recreate the form fields with new keys
       step_data['form_fields'] = [
         dict(
           field,
@@ -88,15 +89,17 @@ def copy_process_to_product(
 
       step_sequence.append(new_step['_key'])
 
+    # Create the new phase by overriding the original phase with the new step sequence and product key
     new_phase = tx.collection('Phase').insert(
       dict(
         jsonable_encoder(phase, by_alias=True, exclude={'id', 'rev', 'key', 'steps', 'print_templates'}),
-        params=phase.params,
-        production_notes=phase.production_notes,
-        step_sequence=step_sequence
+        step_sequence=step_sequence,
+        product_key=product_key
       ),
       return_new=True
     )['new']
+
+    # Create the new phase relationships
 
     tx.collection('requires').insert(dict(
       _from=f'Product/{product_key}',
