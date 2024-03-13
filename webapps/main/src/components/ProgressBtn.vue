@@ -233,7 +233,7 @@ export default {
       Loading.hide();
       const maxDeclarableQuantity = this.job.first_phase
         ? remainingTotalQuantity
-        : data.free_wip_qt_upstream + this.job.active_batch_qt;
+        : Math.min(data.free_wip_qt_upstream + this.job.active_batch_qt, remainingTotalQuantity);
 
       const batchQuantity = await this.getCustomBatchInput({
         initialValue: this.job.active_batch_qt,
