@@ -14,12 +14,12 @@
           {{ $t('phase.long', 2) }}
         </div>
       </div>
-      <q-separator inset></q-separator>
+
+      <q-separator inset />
 
       <div class="scroll col q-py-sm full-width">
         <q-list
           id="phases"
-          v-model="current_phase"
           dense
           class="transparent medium text-left q-pl-sm"
           align="left"
@@ -66,15 +66,13 @@
                   :tooltip="$t('rename')"
                   :color="$theme.blue"
                   @icon-click="update_alias_at_index = index"
-                >
-                </BaseTooltipIcon>
+                />
                 <BaseTooltipIcon
                   icon="mdi-delete"
                   :tooltip="$t('delete')"
                   :color="$theme.red"
                   @icon-click="confirming_delete = index"
-                >
-                </BaseTooltipIcon>
+                />
               </div>
             </q-item-section>
           </q-item>
@@ -90,33 +88,39 @@
             :prompt="$t('phase.rename')"
             @update="updatePhaseAlias"
             @close="update_alias_at_index = null"
-          >
-          </BasePrompt>
+          />
         </q-list>
       </div>
 
       <q-space />
-      <q-separator inset></q-separator>
+
+      <q-separator inset />
 
       <!-- ACTION BUTTONS -->
       <div class="column q-gutter-y-sm q-px-lg q-mt-sm q-pb-sm col-auto">
-        <q-btn
-          v-if="!editMode"
-          class="full-width"
-          color="theme-blue"
-          @click="toggleEdit"
-        >
-          {{ $t('edit') }}
-        </q-btn>
+        <template v-if="!editMode">
+          <q-btn
+            class="full-width"
+            color="theme-orange"
+            icon="mdi-content-copy"
+            :label="$t('copy')"
+            @click="openMassCopyDialog"
+          />
 
+          <q-btn
+            class="full-width"
+            color="theme-blue"
+            :label="$t('edit')"
+            @click="toggleEdit"
+          />
+        </template>
         <template v-else>
           <BaseAutocompleteOperation
             dense
             :label="$capitalize($t('phase.add'))"
             :clearable="false"
             @select="addPhase"
-          >
-          </BaseAutocompleteOperation>
+          />
           <q-btn
             class="full-width q-mt-md"
             color="theme-green"
@@ -202,13 +206,16 @@
 </template>
 
 <script>
-import { uid } from 'quasar';
+import { Dialog, Notify, uid } from 'quasar';
 import Sortable from 'sortablejs';
-import { mapActions } from 'vuex';
+import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
+import { mapActions, useStore } from 'vuex';
 import { api } from '@/boot/axios';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
 import BasePrompt from '@/components/BasePrompt.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
+import MassCopyProcessDialog from '@/components/MassCopyProcessDialog.vue';
 import PhasePrintTemplates from '@/components/PhasePrintTemplates.vue';
 import ProcessParameters from '@/components/ProcessParameters.vue';
 import ProductionNotes from '@/components/ProductionNotes.vue';
@@ -230,6 +237,50 @@ export default {
   },
 
   emits: ['changesSaved', 'changesCanceled'],
+
+  setup() {
+    const { t } = useI18n();
+    const store = useStore();
+    const route = useRoute();
+
+    function openMassCopyDialog() {
+      const sourceProduct = store.getters.productData(route.params.product_key);
+      Dialog.create({
+        component: MassCopyProcessDialog,
+        componentProps: {
+          title: t('massCopyProcess.title.product'),
+          products: store.getters
+            .productCatalog(true)
+            .filter(({ _key }) => _key !== sourceProduct._key),
+          defaultFilters: {
+            tagsToInclude: sourceProduct.tags,
+          },
+        },
+      }).onOk(async (selectedProducts) => {
+        try {
+          await api.post(`/product/${sourceProduct._key}/process/copy`, {
+            target_product_keys: selectedProducts.map(({ _key }) => _key),
+          });
+          Notify.create({
+            type: 'positive',
+            message: t('massCopyProcess.success.product', {
+              count: selectedProducts.length,
+            }),
+          });
+        } catch (error) {
+          console.error(error);
+          Notify.create({
+            type: 'negative',
+            message: t('massCopyProcess.error.product'),
+          });
+        }
+      });
+    }
+
+    return {
+      openMassCopyDialog,
+    };
+  },
 
   data() {
     return {

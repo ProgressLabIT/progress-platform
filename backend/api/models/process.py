@@ -40,12 +40,14 @@ class StepType(str, Enum):
   FORM = 'form'
 
 
+# TODO: Split into StepDefinition(to be used in operation default steps) and Step(to be used in process phases)
 class Step(FlexModel):
   key: str | None = Field(None, alias="_key")
   title: str | None = None
   description: str | None = None
   type: StepType = StepType.INSTRUCTION
   form_fields: List[FormFieldDefinition] = []
+  # TODO: Stop saving print_templates as part of Step (only valid for default step definitions)
   print_templates: List[str | PrintTemplateRecord] = []
 
 
@@ -54,10 +56,12 @@ class Media(ArangoDocument):
   name: str
   size: int
   content_type: str
+  # TODO: Address serialization warning (Expected `datetime` but got `str` - serialized value may not be as expected)
   created_at: datetime = Field(default_factory=timestamp)
 
 
 class StepWithMediaInfo(Step):
+  # TODO: Address serialization warning (Expected `Union[str, Media]` but got `Media` - serialized value may not be as expected)
   media: list[str | Media] | None = None
 
 class Operation(ArangoDocument):
@@ -71,8 +75,8 @@ class Operation(ArangoDocument):
 
 class PhaseRecord(ArangoDocument):
   alias: str
-  product_key: str
-  operation_key: str
+  product_key: str # TODO: consider stopping storing this. The existing ProductPhase relationship in 'requires' can be used instead. Split the model to have the property only when needed.
+  operation_key: str # TODO: consider stopping storing this. The existing PhaseOperation relationship in 'requires' can be used instead. Split the model to have the property only when needed.
   params: PhaseParameters = PhaseParameters()
   step_sequence: List[Optional[str]] = []
   production_notes: str | None = None
@@ -82,6 +86,7 @@ class PhaseData(PhaseRecord):
   print_templates: List[PrintTemplateRecord] = []
 
 
+# TODO: this is not used anywhere, consider removing
 class ProcessUpdate(FlexModel):
   # this is the output model for the event logging (after DB update)
   product_key: str = Field(..., alias='_key')

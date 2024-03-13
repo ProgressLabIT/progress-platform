@@ -17,7 +17,7 @@
 
           <BaseTooltipIcon
             icon="mdi-content-copy"
-            :tooltip="$t('operation.copyToAll.title')"
+            :tooltip="$t('massCopyProcess.copyToAll')"
             :color="$theme.orange"
             @icon-click="copyToAll"
           />
@@ -162,6 +162,7 @@ import NoDataAlert from '@/components/NoDataAlert.vue';
 import ProcessParameters from '@/components/ProcessParameters.vue';
 import ProductionNotes from '@/components/ProductionNotes.vue';
 import ProcessSteps from '@/components/process-steps/ProcessSteps.vue';
+import MassCopyProcessDialog from '../components/MassCopyProcessDialog.vue';
 
 export default {
   name: 'OperationDetail',
@@ -186,19 +187,29 @@ export default {
 
     const { t } = useI18n();
 
-    function copyToAll() {
+    async function copyToAll() {
+      const { data: products } = await api.get('product', {
+        params: {
+          has_operation_key: props.operation._key,
+        },
+      });
       Dialog.create({
-        title: t('operation.copyToAll.title'),
-        message: t('operation.copyToAll.confirm'),
-        cancel: true,
-      }).onOk(async () => {
+        component: MassCopyProcessDialog,
+        componentProps: {
+          title: t('massCopyProcess.title.operation'),
+          products,
+        },
+      }).onOk(async (selectedProducts) => {
         try {
           const { data } = await api.post(
-            `operation/${props.operation._key}/copy_to_all`,
+            `operation/${props.operation._key}/copy`,
+            {
+              target_product_keys: selectedProducts.map(({ _key }) => _key),
+            },
           );
           Notify.create({
             type: 'positive',
-            message: t('operation.copyToAll.success', {
+            message: t('massCopyProcess.success.operation', {
               count: data.detail.length,
             }),
           });
@@ -206,7 +217,7 @@ export default {
           console.error(error);
           Notify.create({
             type: 'negative',
-            message: t('operation.copyToAll.error'),
+            message: t('massCopyProcess.error.operation'),
           });
         }
       });

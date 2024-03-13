@@ -254,6 +254,31 @@ export default {
     default_title: 'caricamento dati...',
   },
   loading_text: 'recupero dati in corso...',
+  massCopyProcess: {
+    title: {
+      product: 'Copia processo ad altri prodotti',
+      operation: 'Copia operazione in fasi correlate di prodotti',
+    },
+    conditions: 'Condizioni',
+    copyToAll: 'Copia a tutte le fasi',
+    includesText: 'Include testo',
+    excludesText: 'Esclude testo',
+    includesTags: 'Ha questi tag',
+    excludesTags: 'Non ha questi tag',
+    countInfo: {
+      filtered: 'Filtrati {count} / {total} prodotti',
+      selected: 'Selezionati {count}',
+      selectedHidden: '{count} non mostrati',
+    },
+    success: {
+      product: 'Processo copiato con successo in {count} prodotti',
+      operation: 'Operazione copiata con successo in {count} fasi',
+    },
+    error: {
+      product: 'Errore durante la copia del processo',
+      operation: "Errore durante la copia dell'operazione",
+    },
+  },
   material_cost: 'costo materiali',
   material: 'materiale | materiali',
   max: 'max',
@@ -288,12 +313,6 @@ export default {
         "L'operazione non può essere cancellata perché in uso nel processo dei seguenti prodotti",
       op_name_missing: "indicare almeno un nome per l'operazione",
       op_name_used: 'nome operazione già in uso',
-    },
-    copyToAll: {
-      title: 'Copia a tutte le fasi',
-      confirm: 'Vuoi davvero copiare questa operazione a tutte le fasi?',
-      success: 'Operazione copiata con successo in {count} fasi',
-      error: "Errore durante la copia dell'operazione",
     },
     default_params_explainer:
       'Le nuove fasi associate a questa operazione verranno create con i parametri indicati qui. Potrai modificare i parametri specifici della fase dopo la creazione.',

@@ -87,6 +87,8 @@ class FileHandler:
       print(f"File saved in {self.folder_path}")
 
 
+  # TODO: Check and do nothing if folder_path does not exist
+  # TODO: Clean the contents of copy_path before copying
   def copy_media(self, copy_key):
     copy_path = os.path.join(media_root_path, self.bucket, copy_key)
     shutil.copytree(

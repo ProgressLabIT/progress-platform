@@ -1,9 +1,10 @@
 import traceback
-from typing import List
+from typing import Annotated, List
+import os
 from uuid import uuid4
 
 from arango import DocumentGetError
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Body, File, HTTPException, Query, UploadFile
 from fastapi.encoders import jsonable_encoder
 
 from models.process import *
@@ -240,8 +241,12 @@ async def delete_operation(op_key: str):
     return APIResponse(message="Operation successfully deleted", detail=removed_op)
 
 
-@router.post('/operation/{operation_key}/copy_to_all')
-async def copy_operation_to_all_phases(operation_key: str):
+# TODO: Instead of copying it to all phases, selectively copy it to phases using a list of connected products
+@router.post('/operation/{operation_key}/copy')
+async def copy_operation_to_phases(
+  operation_key: str,
+  target_product_keys: Annotated[list[str], Body(embed=True)]
+):
   operation_data = db.collection('Operation').get(operation_key)
   if not operation_data:
     raise HTTPError(404, "Could not find Operation in the DB")
@@ -249,7 +254,17 @@ async def copy_operation_to_all_phases(operation_key: str):
   try:
     tx = db.begin_transaction(write=['Phase', 'Step', 'can_use_print_template'])
 
-    phases_cursor = tx.collection('Phase').find(dict(operation_key=operation_key))
+    phases_cursor = tx.aql.execute(
+      """
+      FOR phase IN Phase
+        FILTER phase.operation_key == @operation_key AND phase.product_key IN @target_product_keys
+        RETURN phase
+      """,
+      bind_vars=dict(
+        operation_key=operation_key,
+        target_product_keys=target_product_keys
+      )
+    )
     phases = [PhaseRecord(**phase) for phase in phases_cursor]
     phase_updates = []
     for phase in phases:
@@ -310,6 +325,8 @@ async def copy_operation_to_all_phases(operation_key: str):
         step_sequence=new_step_sequence
       ))
 
+      # TODO: Copy phase print templates (when implemented)
+
     updated_phase_results = tx.collection('Phase').update_many(phase_updates, return_new=True)
     updated_phases = [PhaseRecord(**result['new']) for result in updated_phase_results]
 
@@ -324,6 +341,57 @@ async def copy_operation_to_all_phases(operation_key: str):
     if isinstance(exception, HTTPError):
       raise exception
     raise HTTPError(500, "Could not update Operation in the db. Please contact the administrator.")
+
+
+@router.post('/product/{product_key}/process/copy')
+async def copy_process_to_products(
+  product_key: str,
+  target_product_keys: Annotated[list[str], Body(embed=True)],
+):
+  try:
+    if product_key in target_product_keys:
+      raise HTTPError(400, "The source product cannot be in the list of target products")
+
+    tx = db.begin_transaction(write={'Product', *copy_process_to_product_writes})
+    current_time = dt.timestamp()
+
+    process_data = tx.aql.execute(
+      Queries.GET_PRODUCTION_PROCESS,
+      bind_vars=dict(product_key=product_key)
+    )
+    process = [PhaseData(**phase) for phase in process_data]
+
+    for target_product_key in target_product_keys:
+      product_update_result = tx.collection('Product').update(
+        dict(
+          _key=target_product_key,
+          process_phases=copy_process_to_product(tx, process, target_product_key)
+        ),
+        return_old=True
+      )
+
+      # The process has been completely replaced, so all the old phases need to be trashed
+      old_phase_sequence = product_update_result['old']['process_phases']
+      for phase_to_remove in old_phase_sequence:
+        # Flag phase document
+        tx.collection('Phase').update(dict(_key=phase_to_remove, trashed=current_time))
+
+        # Flag phase relationships
+        tx.aql.execute(
+          Queries.TRASH_FLAG_PHASE_RELATIONSHIP,
+          bind_vars=dict(phase_key=phase_to_remove, timestamp=current_time)
+        )
+
+    tx.commit_transaction()
+
+    return APIResponse(
+      message="Process successfully copied to all related products",
+    )
+  except Exception as exception:
+    tx.abort_transaction()
+    if isinstance(exception, HTTPError):
+      raise exception
+    raise HTTPError(500, "Could not copy process to products. Please contact the administrator.")
 
 
 @router.get("/step/{step_key}/media")
