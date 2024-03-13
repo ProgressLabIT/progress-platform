@@ -10,8 +10,18 @@
           {{ product_data.description }}
         </div>
 
-        <div class="text-h5 q-mt-lg q-mb-sm text-uppercase">
-          {{ $t('phase.long', 2) }}
+        <div class="row justify-between items-baseline">
+          <div class="text-h5 q-mt-lg q-mb-sm text-uppercase">
+            {{ $t('phase.long', 2) }}
+          </div>
+          <BaseTooltipIcon
+            v-if="!editMode"
+            icon="mdi-content-copy"
+            icon_size="xs"
+            :tooltip="$capitalize($t('copy'))"
+            :color="$theme.orange"
+            @icon-click="openMassCopyDialog"
+          />
         </div>
       </div>
 
@@ -99,14 +109,6 @@
       <!-- ACTION BUTTONS -->
       <div class="column q-gutter-y-sm q-px-lg q-mt-sm q-pb-sm col-auto">
         <template v-if="!editMode">
-          <q-btn
-            class="full-width"
-            color="theme-orange"
-            icon="mdi-content-copy"
-            :label="$t('copy')"
-            @click="openMassCopyDialog"
-          />
-
           <q-btn
             class="full-width"
             color="theme-blue"
@@ -266,12 +268,14 @@ export default {
             message: t('massCopyProcess.success.product', {
               count: selectedProducts.length,
             }),
+            color: 'theme-green'
           });
         } catch (error) {
           console.error(error);
           Notify.create({
             type: 'negative',
             message: t('massCopyProcess.error.product'),
+            color: 'theme-red'
           });
         }
       });

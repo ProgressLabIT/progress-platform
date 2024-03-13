@@ -65,6 +65,11 @@ export default {
     process: 'costo lavorazione',
     total: 'costo totale',
   },
+  countInfo: {
+    filtered: 'Filtrati: {count} di {total}',
+    selected: 'Selezionati: {count}',
+    selectedHidden: '{count} non mostrati',
+  },
   create: 'crea',
   create_order: 'crea ordine',
   creation_date: 'data creazione',
@@ -265,11 +270,6 @@ export default {
     excludesText: 'Esclude testo',
     includesTags: 'Ha questi tag',
     excludesTags: 'Non ha questi tag',
-    countInfo: {
-      filtered: 'Filtrati {count} / {total} prodotti',
-      selected: 'Selezionati {count}',
-      selectedHidden: '{count} non mostrati',
-    },
     success: {
       product: 'Processo copiato con successo in {count} prodotti',
       operation: 'Operazione copiata con successo in {count} fasi',
