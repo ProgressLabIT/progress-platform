@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from models.form import FormFieldValue
 from utils.base_models import FlexModel, ArangoEdge
@@ -76,6 +76,12 @@ class WorkSession(FlexModel):
   # Attributes for overrides
   canceled: str | None = None
   forced: str | None = None
+
+  @field_validator('duration', mode="before")
+  def truncate_duration(cls, v) -> int:
+    if type(v) != 'int'
+      return int(v)
+
 
 # class Serial(ArangoDocument):
 #   wo_key: str
