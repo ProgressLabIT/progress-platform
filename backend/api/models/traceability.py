@@ -79,7 +79,7 @@ class WorkSession(FlexModel):
 
   @field_validator('duration', mode="before")
   def truncate_duration(cls, v) -> int:
-    if type(v) != 'int'
+    if type(v) != int
       return int(v)
 
 
