@@ -37,6 +37,9 @@ class EventType(str, Enum):
   STEP_CANCELED = 'STEP_CANCELED'
   STEP_MODIFIED = 'STEP_MODIFIED'
 
+  # Serial Events
+  SERIAL_CREATED = 'SERIAL_CREATED'
+
 
 class EventModel(ArangoDocument):
   """fields marked with a comment are event attributes, the rest could be refactored into a generic "data" field, which can be defined with additional models specific for the event type."""

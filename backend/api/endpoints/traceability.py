@@ -1,10 +1,12 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Query
 
 from events import Event
 from models.traceability import *
 from models.event import EventModel, EventType
+from typing import Dict, List, Union
+
 
 from utils.exceptions import *
 from utils.api import APIResponse
@@ -14,6 +16,7 @@ from utils.traceability import Queries
 
 router = APIRouter()
 
+serials = db.collection('Serial')
 
 @router.post('/event')
 async def apply_production_event(data: EventModel):
@@ -142,3 +145,33 @@ async def get_wip_availability_for_job(job_key: str):
     free_wip_qt_downstream = free_wip_qt_downstream,
     free_wip_qt_upstream = free_wip_qt_upstream
   )
+
+
+# ---------------------------------------------
+# SERIALS
+# ---------------------------------------------
+
+
+@router.get('/serial')
+async def search_serials(
+  serial_key: Union[List[str], None] = Query(default=None),
+  limit: int | None = None,
+  with_links: bool = False
+  ):
+  # use query parameters to filter specific type
+  bind_vars = dict(
+    serial_key = serial_key,
+    limit = limit,
+    with_links = with_links
+  )
+  try:
+    cursor = db.aql.execute(Queries.FIND_SERIAL, bind_vars=bind_vars)
+    return [i for i in cursor]
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching serials from the db.",
+        error=traceback.format_exc()
+      )
+    )

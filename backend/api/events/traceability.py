@@ -16,7 +16,7 @@ class ProductionActivityEvent(BaseEvent):
     'Event',
     'Job',
     'Queue',
-    # 'Serial',
+    'Serial',
     'StepExecutionData',
     'wip',
     'WorkOrder',
@@ -67,6 +67,11 @@ class ProductionActivityEvent(BaseEvent):
     collections=production_collections,
     action='complete_batch',
     post_processing=production_post_processing
+  )
+
+  SERIAL_CREATED = EventMeta(
+    collections=production_collections,
+    action="create_serial"
   )
 
   ######################################################################
@@ -146,17 +151,22 @@ class ProductionActivityEvent(BaseEvent):
   # Serial
   # ===================================================================
 
-  # def create_serial(self, counter, batch_key):
-  #   new_serial = Serial(
-  #     start=self.info.timestamp,
-  #     wo_key=self.info.work_order_key,
-  #     counter=counter,
-  #     product_key=self.info.product_key,
-  #     batches=[batch_key]
-  #   )
-  #   new_serial_key = self.tx.collection('Serial').insert(new_serial)['_key']
+  def create_serial(self):
+     new_serial_record = Serial(
+       serial=self.info.serial,
+       wo_key=self.info.work_order_key,
+       product_key=self.info.product_key,
+       created=self.info.created,
+       released=self.info.released,
+       status=self.info.status,
+       locations=self.info.locations
+     )
+     new_serial_key = self.tx.collection('Serial').insert(new_serial_record)['_key']
 
-  #   return new_serial_key
+     self.response = dict(
+      message="Serial created correctly",
+      issue_key=new_serial_key
+    )
 
 
   # def create_batch_serial_records(self):
