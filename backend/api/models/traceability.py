@@ -4,7 +4,7 @@ from enum import Enum
 from pydantic import Field, field_validator
 
 from models.form import FormFieldValue
-from utils.base_models import FlexModel, ArangoEdge
+from utils.base_models import FlexModel, ArangoEdge, ArangoDocument
 
 
 class StepStatus(str, Enum):
@@ -83,15 +83,14 @@ class WorkSession(FlexModel):
       return int(v)
 
 
-# class Serial(ArangoDocument):
-#   wo_key: str
-#   counter: int
-#   product_key: str
-#   start: datetime | None = None
-#   end: datetime | None = None
-#   accept: bool = True
-#   batches: List[str]
-#   value: float | None = None
+class Serial(ArangoDocument):
+   serial: str
+   product_key: str
+   wo_key: str
+   created: datetime | None = None
+   released: datetime | None = None
+   locations: list[str]
+   status: str
 
 
 class WIP(ArangoEdge):
