@@ -113,40 +113,64 @@ collections = [
   'WorkSession'
 ]
 
-customer_admin = {
-  'collection': 'User',
-  'data': dict(
-    username = 'cadmin',
-    name = 'Utente',
-    surname = 'Amministratore',
-    active = True,
-    psw_hash = pwd_context.hash('resetme'),
-    scope = 'admin production library operator',
-    site_key = '0',
-    reset_password = True
-  )
-}
+base_records[
+  # Administrator User
+  {
+    'collection': 'User',
+    'data': dict(
+      username = 'cadmin',
+      name = 'Utente',
+      surname = 'Amministratore',
+      active = True,
+      psw_hash = pwd_context.hash('resetme'),
+      scope = 'admin production library operator',
+      site_key = '0',
+      reset_password = True
+    )
+  },
+  # Site Queue
+  {
+    'collection': 'Queue',
+    'data': dict (
+      type = 's',
+      site_key = '0',
+      work_orders = []
+    )
+  }
+]
 
-default_phase_parameters = {
-  'collection': 'Config',
-  'data': dict(
-    _key = 'default_phase_parameters',
+configs = [
+  dict(
+    _key = 'company_logo',
+    value = None
+  ),
+  dict(
+    _key = 'company_name',
+    value = 'PROGRESS PLATFORM'
+  )
+  dict(
+    _key = 'default_operation_parameters',
     parallel_job_allowed = True,
     step_check = False,
     step_check_force_order = False,
     production_batch_qt = 1,
     max_offline = 300 # 5 minutes
+  ),
+  dict(
+    _key = 'show_unassigned_jobs_to_operators',
+    value = True
+  ),
+  dict(
+    _key = 'allow_independent_reordering_of_job_queues',
+    value = False
+  ),
+  dict(
+    _key = 'operator_cost',
+    value = 1
   )
-}
+]
 
-site_queue = {
-  'collection': 'Queue',
-  'data': dict (
-    type = 's',
-    site_key = '0',
-    work_orders = []
-  )
-}
+
 
 
 db_handles = [client.db(database, **root_creds) for database in dbs]
@@ -157,8 +181,10 @@ for dbh in db_handles:
       # if collection name starts with a lowercase letter it's an edge collection
       batch.create_collection(name=c, edge=c[0].islower())
 
-    for record in [customer_admin, default_phase_parameters, site_queue]:
+    for record in base_records:
       batch.collection(record['collection']).insert(record['data'])
+
+    dbh.collection('Config').insert_many(configs)
 
     print('Created collections and data in db ', dbh.db_name)
 
