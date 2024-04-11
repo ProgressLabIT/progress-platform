@@ -52,7 +52,7 @@
               clearable
               mask="date"
               debounce="1000"
-              label="Start min"
+              :label="$capitalize($t('start_min'))"
               class="col"
             >
               <template #append>
@@ -85,7 +85,7 @@
               clearable
               mask="date"
               debounce="1000"
-              label="Start max"
+              :label="$capitalize($t('start_max'))"
               class="col"
             >
               <template #append>
@@ -118,7 +118,7 @@
               clearable
               mask="date"
               debounce="1000"
-              label="End min"
+              :label="$capitalize($t('end_min'))"
               class="col"
             >
               <template #append>
@@ -151,7 +151,7 @@
               clearable
               mask="date"
               debounce="1000"
-              label="End max"
+              :label="$capitalize($t('end_max'))"
               class="col"
             >
               <template #append>
