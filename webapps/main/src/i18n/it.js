@@ -645,6 +645,7 @@ export default {
     start_session: 'inizia sessione',
   },
   show_all: 'mostra tutti',
+  shown: "visualizzato | visualizzati",
   snackbars: {
     changes_canceled: 'modifiche annullate',
     process_updated: 'processo aggiornato',
@@ -802,5 +803,6 @@ export default {
   },
   work_order_autocomplete_hint:
     'Inserisci il testo da ricercare (min 3 caratteri) fra codice ordine, prodotto, commessa. Verranno mostrati i primi 100 risultati.',
+  workload_hours: 'Carico in ore',
   yes: 'Sì',
 };
