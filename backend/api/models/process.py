@@ -62,7 +62,7 @@ class Media(ArangoDocument):
 
 class StepWithMediaInfo(Step):
   # TODO: Address serialization warning (Expected `Union[str, Media]` but got `Media` - serialized value may not be as expected)
-  media: list[str | Media] | None = None
+  media: list[str | Media] = []
 
 class Operation(ArangoDocument):
   name: str

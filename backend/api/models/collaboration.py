@@ -83,7 +83,7 @@ class IssueLink(BaseModel):
 
 
 class IssueWithLinks(Issue):
-  linked_to: list[IssueLink] = None # ids of entities connected
+  linked_to: list[IssueLink] = [] # ids of entities connected
 
   # @validator('_from')
   # def check_from_issue(cls, value):

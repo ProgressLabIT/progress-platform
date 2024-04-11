@@ -40,7 +40,7 @@ class Batch(FlexModel):
   end: datetime | None = None
   # duration: timedelta | None = None
   active: bool = True
-  # serial_numbers: List[str] = None
+  # serial_numbers: List[str] = []
 
   qt_pass: float = 0
   qt_scrap: float = 0
