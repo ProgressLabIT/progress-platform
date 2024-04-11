@@ -51,9 +51,45 @@
         <q-chip
           :ripple="false"
           class="col-auto text-body2"
+          color="theme-blue"
+          size="sm"
+        >
+          <q-icon
+            name='mdi-timer-sand'
+            class="q-mr-sm"
+            size="14px"
+          />
+          <strong>
+            {{ calculateWorkloadHours(assignment.filtered_jobs) }}
+          </strong>
+          <span class="q-mx-xs">
+            {{ $t('of') }}
+          </span>
+          <strong>
+            {{ assignment.total_workload_hours }}
+          </strong>
+          <q-tooltip
+            delay="200"
+            anchor="top middle"
+            self="center middle"
+            transition-show="fade"
+            transition-hide="fade"
+            class="transparent text-low">
+            {{ $capitalize($t('workload_hours')) }}
+          </q-tooltip>
+        </q-chip>
+
+        <q-chip
+          :ripple="false"
+          class="col-auto text-body2"
           color="theme-grey"
           size="sm"
         >
+          <q-icon
+            name='mdi-eye-outline'
+            class="q-mr-sm"
+            size="14px"
+          />
           <strong>
             {{ assignment.filtered_jobs.length }}
           </strong>
@@ -63,6 +99,15 @@
           <strong>
             {{ assignment.assigned_jobs_count }}
           </strong>
+          <q-tooltip
+            delay="200"
+            anchor="top middle"
+            self="center middle"
+            transition-show="fade"
+            transition-hide="fade"
+            class="transparent text-low">
+            {{ $capitalize($t('shown', 2)) }}
+          </q-tooltip>
         </q-chip>
       </div>
 
@@ -526,14 +571,20 @@ export default {
       const list = [];
       for (let i = 0; i < this.assignments.length; i++) {
         const assignment = this.assignments[i];
+
+        const total_workload_hours = this.calculateWorkloadHours(assignment.assigned_jobs)
+
+        // Match department filter (filter = undefined means no filter)
         const department_match = [
           assignment.operator.department_key,
           undefined,
         ].includes(this.filters.department_key);
+
+        // Match operator filter (filter = undefined means no filter)
         const operator_match = [assignment.operator._key, undefined].includes(
           this.filters.operator_key,
         );
-        // Check if operator is in department selected or no department filter is set
+
         if (operator_match && department_match) {
           const filtered_jobs = assignment.assigned_jobs
             ? assignment.assigned_jobs.filter(this.matchJobToFilters)
@@ -553,6 +604,7 @@ export default {
             list.push({
               operator: assignment.operator,
               assigned_jobs_count: assignment.assigned_jobs.length,
+              total_workload_hours,
               filtered_jobs: [...active_jobs, ...queued_jobs],
               independent: assignment.independent,
             });
@@ -589,6 +641,7 @@ export default {
               name: this.$t('job.unassigned_jobs'),
               surname: '',
             },
+            total_workload_hours: this.calculateWorkloadHours(this.unassigned_jobs),
             assigned_jobs_count: this.unassigned_jobs.length,
             filtered_jobs: filtered_unassigned_jobs,
           });
@@ -823,6 +876,15 @@ export default {
         return a < b ? 1 : -1;
       }
     },
+
+    calculateWorkloadHours(job_list) {
+      const total_workload_seconds = job_list.reduce((sum, job) => {
+        // Prevent negative workload when completed qt is higher than planned due to work order qt updates
+        return sum += job.parameters.std_processing_time * Math.max(0, job.qt_planned - job.qt_completed)
+      }, 0)
+
+      return Math.ceil(total_workload_seconds / 360) / 10 // round up to first decimal
+    }
   },
 };
 </script>

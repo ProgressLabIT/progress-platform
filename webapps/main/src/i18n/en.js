@@ -637,6 +637,7 @@ export default {
     start_session: 'start session',
   },
   show_all: 'show all',
+  shown: "shown",
   snackbars: {
     changes_canceled: 'changes canceled',
     process_updated: 'process updated',
@@ -794,6 +795,7 @@ export default {
   },
   work_order_autocomplete_hint:
     'Input the text to search (min 3 characters) between order code, product and project. Will show first 100 results.',
+  workload_hours: 'Workload in hours',
   write: 'Write',
   yes: 'Yes',
 };
