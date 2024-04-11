@@ -115,12 +115,31 @@
 
               <template v-else>
                 <span
-                  class="table-data"
                   @click="setSearch(column.name, props.row[column.name])"
                 >
-                  {{ $capitalizeAll(props.row[column.name] || '') }}
+                  {{ props.row[column.name] }}
+                  <q-tooltip
+                    delay="500"
+                    anchor="top left"
+                    self="bottom left"
+                    :offset=[8,6]
+                    transition-show="fade"
+                    transition-hide="fade">
+                    <template v-if="column.name === 'product_code'">
+                      <div class="highlight">
+                        {{ props.row.product_code }}
+                      </div>
+                      <div>
+                        {{ props.row.product_description }}
+                      </div>
+                    </template>
+                    <template v-else>
+                      {{ $capitalizeAll(props.row[column.name] || '') }}
+                    </template>
+                  </q-tooltip>
                 </span>
               </template>
+
             </q-td>
           </template>
         </q-tr>
