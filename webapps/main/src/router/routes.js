@@ -4,6 +4,7 @@ import operator from './operatorRoutes.js';
 import production from './productionRoutes.js';
 import quality from './qualityRoutes.js';
 import report from './reportRoutes.js';
+import traceability from './traceabilityRoutes.js';
 
 const routes = [
   {
@@ -20,6 +21,7 @@ const routes = [
           ...production,
           ...operator,
           ...quality,
+          ...traceability,
           ...report,
         ],
       },
