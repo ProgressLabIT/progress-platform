@@ -660,6 +660,8 @@ export default {
   tagInput: {
     noData:
       'No tags found. Enter at least {minChars} characters to be able to create a new one.',
+    after_options:
+      'Enter at least {minChars} characters to be able to create a new tag.',
     create: {
       label: 'Create new tag "{name}"',
       hint: 'Click or press {key} to create',
