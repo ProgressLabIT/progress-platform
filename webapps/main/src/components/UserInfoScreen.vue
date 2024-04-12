@@ -39,7 +39,7 @@
           {{ $t('user.key') }}
         </div>
         <div class="q-mt-xs">
-          {{ user._key }}
+          {{ user_key }}
         </div>
 
         <div class="text-h5 uppercase q-mt-lg">
@@ -310,6 +310,15 @@ export default {
         : this.$options.filters.capitalize(this.$t('user.wrong_user_key'));
     },
 
+    user_key() {
+      if (this.user) {
+        this.setTempData();
+      }
+      return this.user
+        ? this.user._key
+        : this.$options.filters.capitalize(this.$t('user.wrong_user_key'));
+    },
+
     user_active_text() {
       const string = this.temp_data.active
         ? this.$t('user.enabled')
@@ -326,12 +335,6 @@ export default {
         this.temp_data.scope = value.join(' ');
       },
     },
-  },
-
-  created() {
-    if (this.user) {
-      this.setTempData();
-    }
   },
 
   methods: {
