@@ -21,6 +21,14 @@
       "justMyCode": true
     },
     {
+      "name": "Launch webapp",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/webapps/main",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["run", "dev"]
+    },
+    {
       "type": "chrome",
       "request": "launch",
       "name": "Launch Chrome",
