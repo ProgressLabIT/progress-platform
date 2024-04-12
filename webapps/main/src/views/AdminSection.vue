@@ -21,9 +21,7 @@
       </q-tabs>
       <q-card class="surface1 col" square>
         <router-view v-slot="{ Component }" class="">
-          <keep-alive>
-            <component :is="Component" class="full-height" />
-          </keep-alive>
+          <component :is="Component" class="full-height" />
         </router-view>
       </q-card>
     </q-page>
