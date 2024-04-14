@@ -165,7 +165,7 @@ async def search_serials(
     with_links = with_links
   )
   try:
-    cursor = db.aql.execute(Queries.FIND_SERIAL, bind_vars=bind_vars)
+    cursor = db.aql.execute(Queries.FIND_SERIALS, bind_vars=bind_vars)
     return [i for i in cursor]
   except Exception:
     raise HTTPException(
