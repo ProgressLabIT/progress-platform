@@ -66,7 +66,7 @@ const user = {
         axios
           .all(api_calls)
           .then(async () => {
-            await dispatch('loadUsers');
+            await dispatch('loadUsers', false);
             resolve();
           })
           .catch((err) => reject(err));
