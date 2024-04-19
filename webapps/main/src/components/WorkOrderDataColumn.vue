@@ -22,7 +22,9 @@
 
     <div class="row justify-between q-mt-xs">
       <div class="col-9">
-        <div class="text-truncate display text-h3">
+        <div
+          class="text-truncate display text-h3 hover-link"
+          @click="goToProductPage">
           {{ wo_data.product_code }}
         </div>
         <div class="medium q-mt-xs">
@@ -666,6 +668,19 @@ export default {
         this.delete_stage = 'success';
       });
     },
+
+    goToProductPage() {
+      this.$router.push({
+        name: 'productHome',
+        params: {
+          product_key: this.wo_data.product_key,
+        },
+        query: {
+          back_to: this.$route.name,
+          ...this.$route.query
+        }
+      });
+    }
   },
 };
 </script>

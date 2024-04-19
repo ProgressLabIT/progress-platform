@@ -41,6 +41,11 @@ $separator-dark-color: rgba(255, 255, 255, 0.12);
   }
 }
 
+.hover-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .my-sticky-header-table {
   .q-table__top,
   .q-table__bottom,
