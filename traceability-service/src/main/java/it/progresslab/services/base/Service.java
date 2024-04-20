@@ -80,7 +80,7 @@ public abstract class Service {
             formatter.printHelp("Order Details Service", opts);
             return;
         }
-        final Properties defaultConfig = Optional.ofNullable(cl.getOptionValue("config-file", null))
+        defaultConfig = Optional.ofNullable(cl.getOptionValue("config-file", null))
                 .map(path -> {
                     try {
                         return buildPropertiesFromConfigFile(path);
