@@ -1,14 +1,11 @@
 package it.progresslab.db;
 
 import com.arangodb.ArangoDB;
-
 import com.arangodb.ArangoDBException;
 import com.arangodb.entity.BaseDocument;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.Map;
 
 public class ArangoDBConnector {
   private static final Logger log = LogManager.getLogger(ArangoDBConnector.class);
@@ -17,7 +14,7 @@ public class ArangoDBConnector {
 
 
   public static synchronized ArangoDBConnector getInstance() {
-    if (instance!=null) {
+    if (instance != null) {
       return instance;
     }
     instance = new ArangoDBConnector();
@@ -56,7 +53,7 @@ public class ArangoDBConnector {
     try {
       arangoDB.db(dbName).collection(collectionName).insertDocument(document);
       log.info("DB {} collection {} document {} added", dbName, collectionName, document.toString());
-    } catch(ArangoDBException e) {
+    } catch (ArangoDBException e) {
       log.error("Exception while adding document on DB {} collection {} document {}: {}", dbName, collectionName, document.toString(), e.getMessage(), e);
     }
   }
@@ -64,7 +61,7 @@ public class ArangoDBConnector {
   public BaseDocument getDocument(String dbName, String collectionName, String key) {
     try {
       return arangoDB.db(dbName).collection(collectionName).getDocument(key, BaseDocument.class);
-    } catch(ArangoDBException e) {
+    } catch (ArangoDBException e) {
       log.error("Exception retrieving document on DB {} collection {} key {}: {}", dbName, collectionName, key, e.getMessage(), e);
       return null;
     }
@@ -73,7 +70,7 @@ public class ArangoDBConnector {
   public ObjectNode getDocumentAsJson(String dbName, String collectionName, String key) {
     try {
       return arangoDB.db(dbName).collection(collectionName).getDocument(key, ObjectNode.class);
-    } catch(ArangoDBException e) {
+    } catch (ArangoDBException e) {
       log.error("Exception retrieving document on DB {} collection {} key {}: {}", dbName, collectionName, key, e.getMessage(), e);
       return null;
     }
