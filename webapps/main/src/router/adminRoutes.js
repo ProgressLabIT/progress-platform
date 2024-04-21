@@ -111,8 +111,8 @@ const adminRoutes = [
         component: () => import('@/views/SerialFieldLibrary.vue'),
         children: [
           {
-            path: ':serial_field_key',
-            name: 'serialFieldLibrary',
+            path: ':field_key',
+            name: 'serialFieldDetail',
             component: () => import('@/views/SerialFieldDetail.vue'),
             props: true,
           },
