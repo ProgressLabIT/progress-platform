@@ -14,7 +14,7 @@ const traceabilityRoutes = [
           {
             path: 'serials/:serialKey',
             name: 'serialDetail',
-            component: () => import('@/components/SerialsDetail.vue'),
+            component: () => import('@/components/SerialDetail.vue'),
             props: true,
           },
         ],

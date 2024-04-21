@@ -27,23 +27,24 @@
 
           <q-space />
 
-          <!-- NEW ISSUE BUTTON -->
+          <!-- NEW SERIAL BUTTON -->
           <q-btn
             size="0.75rem"
             :label="$t('new')"
             color="theme-blue"
-            @click="show_issue_form = true"
+            @click="show_serial_form = true"
           >
           </q-btn>
 
-          <IssueForm
-            :show="show_issue_form"
+          <SerialForm
+            :show="show_serial_form"
             mode="new"
             with_links
-            @close="show_issue_form = false"
-            @issue-created="getIssues"
+            auto_link_mode="product"
+            @close="show_serial_form = false"
+            @serial-created="getSerials"
           >
-          </IssueForm>
+          </SerialForm>
 
           <q-btn
             v-if="!showFilterDrawer && $route.name !== 'workOrderArchive'"
@@ -80,37 +81,37 @@
     >
       <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
-          <q-checkbox v-model="issue_open" dense :label="$t('issue_open')" />
+          <q-checkbox v-model="serial_open" dense :label="$t('serial_open')" />
         </div>
 
         <div class="col-6">
           <q-checkbox
-            v-model="issue_closed"
+            v-model="serial_closed"
             dense
-            :label="$t('issue_closed')"
+            :label="$t('serial_closed')"
           />
         </div>
 
         <div class="col-6">
           <q-checkbox
-            v-model="issue_critical"
+            v-model="serial_critical"
             dense
-            :label="$t('issue_critical')"
+            :label="$t('serial_critical')"
           />
         </div>
 
         <div class="col-6">
           <q-checkbox
-            v-model="issue_non_critical"
+            v-model="serial_non_critical"
             dense
-            :label="$t('issue_non_critical')"
+            :label="$t('serial_non_critical')"
           />
         </div>
       </div>
 
-      <!-- ISSUE KEY -->
+      <!-- SERIAL KEY -->
       <q-input
-        v-model="issue_key_search"
+        v-model="serial_key_search"
         clearable
         filled
         dense
@@ -118,23 +119,13 @@
         autocomplete="off"
         name="search"
         debounce="1000"
-        :label="$t('issue_key')"
+        :label="$t('serial_key')"
         class="q-mb-md"
       >
         <template #append>
           <q-icon name="mdi-magnify" />
         </template>
       </q-input>
-
-      <!-- ISSUE TYPE -->
-      <BaseAutocompleteIssueType
-        dense
-        key-only
-        class="q-mb-md"
-        behavior="menu"
-        :value="issue_type_key"
-        @select="(selection) => (issue_type_key = selection)"
-      />
 
       <!-- OPENED DATE RANGE -->
       <div class="row q-col-gutter-sm">
@@ -430,22 +421,20 @@ import { Dialog, uid } from 'quasar';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import AddAdvancedFilterDialog from '@/components/AddAdvancedFilterDialog.vue';
-import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import FormField from '@/components/FormField.vue';
-import IssueForm from '@/components/IssueForm.vue';
+import SerialForm from '@/components/SerialForm.vue';
 import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js';
 
 export default {
   name: 'TraceabilityRoot',
 
   components: {
-    BaseAutocompleteIssueType,
     BaseAutocompleteOperation,
     BaseAutocompleteUser,
-    IssueForm,
+    SerialForm,
     FormField,
     FilterDrawer,
   },
@@ -514,34 +503,34 @@ export default {
 
   data() {
     return {
-      views: [{ component: 'IssueOverview', route_name: 'issueOverview' }],
+      views: [{ component: 'SerialOverview', route_name: 'serialOverview' }],
       filter_list: [
-        'issue_key_search',
+        'serial_key_search',
         'created_by',
         'time_created_from',
         'time_created_to',
         'closed_by',
         'time_closed_from',
         'time_closed_to',
-        'issue_type_key',
+        'serial_type_key',
         'operation_key',
         'work_order_code_search',
         'product_code_search',
         'phase_alias_search',
         'project_search',
-        'issue_critical',
-        'issue_non_critical',
-        'issue_open',
-        'issue_closed',
+        'serial_critical',
+        'serial_non_critical',
+        'serial_open',
+        'serial_closed',
       ],
       bool_filters: [
-        'issue_open',
-        'issue_closed',
-        'issue_critical',
-        'issue_non_critical',
+        'serial_open',
+        'serial_closed',
+        'serial_critical',
+        'serial_non_critical',
       ],
       loading: false,
-      show_issue_form: false,
+      show_serial_form: false,
     };
   },
 
@@ -555,12 +544,12 @@ export default {
       );
     },
 
-    issue_key_search: queryModel(String, 'issue_search', null),
-    issue_type_key: queryModel(String, 'issue_type', null),
-    issue_open: queryModel(Boolean, 'open', true),
-    issue_closed: queryModel(Boolean, 'closed', true),
-    issue_critical: queryModel(Boolean, 'critical', true),
-    issue_non_critical: queryModel(Boolean, 'non_critical', true),
+    serial_key_search: queryModel(String, 'serial_search', null),
+    serial_type_key: queryModel(String, 'serial_type', null),
+    serial_open: queryModel(Boolean, 'open', true),
+    serial_closed: queryModel(Boolean, 'closed', true),
+    serial_critical: queryModel(Boolean, 'critical', true),
+    serial_non_critical: queryModel(Boolean, 'non_critical', true),
     operation_key: queryModel(String, 'operation', null),
     product_code_search: queryModel(String, 'product_search', null),
     work_order_code_search: queryModel(String, 'work_order_search', null),
@@ -580,7 +569,7 @@ export default {
           if (f.startsWith('time')) {
             const date = new Date(this[f]);
 
-            // The api handles full timestamps, thus to include issues created/closed during the day indicated we need to set the filter at the end of the same
+            // The api handles full timestamps, thus to include serials created/closed during the day indicated we need to set the filter at the end of the same
             if (f.endsWith('_to')) {
               // Not using UTC time on purpose, to correctly represent the filter wanted by the user
               date.setHours(23, 59, 59, 999);
@@ -613,7 +602,7 @@ export default {
   },
 
   created() {
-    this.getIssues();
+    this.getSerials();
   },
 
   methods: {
@@ -622,7 +611,7 @@ export default {
       this.advancedFilters = [];
     },
 
-    getIssues() {
+    getSerials() {
       this.loading = true;
       this.$store
         .dispatch('getIssues', { with_links: true, ...this.filters })
