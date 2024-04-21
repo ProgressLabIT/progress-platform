@@ -8,6 +8,7 @@ const scopes = [
   // { name: 'prod:w', label: 'Produzione: modifica' },
   { name: 'production', label: 'Produzione' },
   { name: 'quality', label: 'Qualità' },
+  { name: 'traceability', label: 'Tracciabilità' },
   { name: 'reporting', label: 'Rapporti' },
 ];
 export default scopes;

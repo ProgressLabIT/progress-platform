@@ -34,6 +34,7 @@ const adminViews = [
   'userLibrary',
   'operationLibrary',
   'issueTypeLibrary',
+  'serialFieldLibrary',
   'formFieldLibrary',
   'flowLibrary',
   'printTemplateLibrary',

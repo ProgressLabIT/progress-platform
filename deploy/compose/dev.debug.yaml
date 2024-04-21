@@ -48,8 +48,9 @@ services:
       - |
         pip install debugpy -t /tmp \
         && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 \
-        -m uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
+        -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-level debug --use-colors
     ports:
+      - 8000:8000
       - 5678:5678
     labels:
       - "traefik.http.routers.api.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/api`)"

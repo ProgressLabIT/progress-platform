@@ -89,6 +89,7 @@ export default {
         'productionRoot',
         'userJobs',
         'qualityRoot',
+        'traceabilityRoot',
         'reportRoot',
       ],
       // locale_index: null,
