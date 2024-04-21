@@ -146,6 +146,8 @@ const session = {
           return 'adminPanel';
         case scopes.includes('quality'):
           return 'qualityRoot';
+        case scopes.includes('traceability'):
+          return 'traceabilityRoot';
         case scopes.includes('reporting'):
           return 'reportRoot';
         default:

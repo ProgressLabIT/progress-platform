@@ -204,6 +204,10 @@ const homePageOptions = computed(() => [
   { label: capitalizeAll(t('views.productionRoot')), value: 'productionRoot' },
   { label: capitalizeAll(t('views.userJobs')), value: 'operatorRoot' },
   { label: capitalizeAll(t('views.qualityRoot')), value: 'qualityRoot' },
+  {
+    label: capitalizeAll(t('views.traceabilityRoot')),
+    value: 'traceabilityRoot',
+  },
   { label: capitalizeAll(t('views.reportRoot')), value: 'reportRoot' },
 ]);
 const isUpdatingHomePage = ref(false);
