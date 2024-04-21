@@ -69,8 +69,8 @@
     </div>
 
     <BaseDialog :show="show_new_field_form" :no-backdrop-dismiss="false">
-      <FormFieldNew @close="show_new_field_form = false" @created="getFields">
-      </FormFieldNew>
+      <SerialFieldNew @close="show_new_field_form = false" @created="getFields">
+      </SerialFieldNew>
     </BaseDialog>
 
     <q-separator vertical />
@@ -84,8 +84,8 @@
 
 <script>
 import BaseDialog from '@/components/BaseDialog.vue';
-import FormFieldNew from '@/components/FormFieldNew.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
+import SerialFieldNew from '@/components/SerialFieldNew.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import form from '@/mixins/form.js';
 
@@ -94,7 +94,7 @@ export default {
 
   components: {
     BaseDialog,
-    FormFieldNew,
+    SerialFieldNew,
     LoadingSignal,
   },
 
@@ -135,12 +135,12 @@ export default {
   methods: {
     showFieldDetail(field_key) {
       this.$router.push({
-        name: 'formFieldDetail',
+        name: 'serialFieldDetail',
         params: { field_key },
       });
     },
     getFields() {
-      this.$api.get('field').then((resp) => {
+      this.$api.get('serial-field').then((resp) => {
         this.field_list = resp.data.sort();
         this.data_ready = true;
       });
