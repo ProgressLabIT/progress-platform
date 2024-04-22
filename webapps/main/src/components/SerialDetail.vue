@@ -9,7 +9,7 @@
       <!-- LEFT SECTION -->
       <div class="col-7 column full-height">
         <!-- HEADER -->
-        <IssueHeader :issue="issue" @type-change="refreshIssue" />
+        <SerialHeader :serial="serial" @type-change="refreshSerial" />
 
         <!-- FORM DATA -->
         <div class="row items-center q-pl-lg q-mt-sm">
@@ -22,15 +22,15 @@
         </div>
 
         <div class="row q-px-lg q-pt-md q-mb-md">
-          <template v-if="issue.data.length > 0">
+          <template v-if="serial.data.length > 0">
             <div
-              v-for="field in issue.data"
+              v-for="field in serial.data"
               :key="field._key"
               class="col-auto q-pr-md"
             >
               <FormField
                 :field="field"
-                :root-path="`/media/issue/${issueKey}`"
+                :root-path="`/media/serial/${serialKey}`"
                 dense
                 disable
               />
@@ -39,7 +39,7 @@
           <div v-else class="col-auto text-italic">No data</div>
         </div>
 
-        <!-- ISSUE EVENTS -->
+        <!-- SERIAL EVENTS -->
         <div class="row items-center q-pl-lg">
           <div class="col-auto text-h5 weight bold text-uppercase text-low">
             {{ $t('history') }}
@@ -89,70 +89,13 @@
 
         <!-- ACTIONS -->
         <div class="row q-pa-md q-gutter-lg">
-          <template v-if="issue.open">
-            <q-btn
-              color="theme-blue"
-              size="12px"
-              icon="mdi-check"
-              :label="$t('issue_button_close')"
-              @click="closeIssue"
-            >
-            </q-btn>
-            <q-btn
-              v-if="issue.critical"
-              size="12px"
-              icon="mdi-alert-circle-outline"
-              color="theme-blue"
-              :label="$t('issue_button_remove_critical')"
-              @click="toggleCritical"
-            >
-            </q-btn>
-            <q-btn
-              v-else
-              size="12px"
-              color="theme-red"
-              icon="mdi-alert-octagon"
-              :label="$t('issue_button_add_critical')"
-              @click="toggleCritical"
-            >
-            </q-btn>
-          </template>
-          <template v-else>
-            <q-btn
-              size="12px"
-              color="theme-blue"
-              icon="mdi-restore"
-              :label="$t('issue_button_reopen')"
-              @click="
-                () => {
-                  issue.critical = false;
-                  reopenIssue();
-                }
-              "
-            >
-            </q-btn>
-            <q-btn
-              color="theme-red"
-              size="12px"
-              icon="mdi-restore-alert"
-              :label="$t('issue_button_reopen_critical')"
-              @click="
-                () => {
-                  issue.critical = true;
-                  reopenIssue();
-                }
-              "
-            >
-            </q-btn>
-          </template>
-          <q-space />
           <q-btn
             v-if="user_can_delete"
             color="theme-red"
             size="12px"
             icon="mdi-delete"
             :label="$t('delete')"
-            @click="deleteIssue"
+            @click="deleteSerial"
           >
           </q-btn>
           <q-btn
@@ -171,8 +114,8 @@
       <!-- RIGHT SECTION -->
       <MessageThread
         :messages="messages"
-        context="issue"
-        :context_key="issue._key"
+        context="serial"
+        :context_key="serial._key"
       >
         <template #header>
           <div class="display low-text text-h5 col-auto q-pb-md">
@@ -189,27 +132,27 @@
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
-import IssueHeader from '@/components/IssueHeader.vue';
 import MessageThread from '@/components/MessageThread.vue';
+import SerialHeader from '@/components/SerialHeader.vue';
 import event from '@/mixins/event.js';
-import enrichIssue from '@/mixins/issues.js';
+import enrichSerial from '@/mixins/serials.js';
 
 export default {
   name: 'SerialDetail',
 
   components: {
-    IssueHeader,
+    SerialHeader,
     MessageThread,
     BaseUserAvatar,
     BaseDialog,
     FormField,
   },
 
-  mixins: [enrichIssue, event],
+  mixins: [enrichSerial, event],
 
   props: {
     // from router
-    issueKey: {
+    serialKey: {
       type: String,
       required: true,
     },
@@ -226,20 +169,16 @@ export default {
   },
 
   computed: {
-    issue() {
-      const issue_data = this.$store.getters.getIssueData(this.issueKey);
-      return this.enrichIssue(issue_data);
-    },
-
-    issue_type() {
-      return this.$store.getters.getIssueType(this.issue.issue_type_key);
+    serial() {
+      const serial_data = this.$store.getters.getSerialData(this.serialKey);
+      return this.enrichSerial(serial_data);
     },
 
     form_fields() {
-      const form_template = this.issue_type?.form_template ?? [];
+      const form_template = this.form_template ?? [];
       return form_template.map((field) => ({
         ...field,
-        value: this.issue.data.find(
+        value: this.serial.data.find(
           ({ form_field_key }) => form_field_key === field._key,
         )?.value,
       }));
@@ -258,7 +197,7 @@ export default {
   methods: {
     getHistory() {
       this.$api
-        .get('event', { params: { issue_key: this.issue._key } })
+        .get('event', { params: { serial_key: this.serial._key } })
         .then((resp) => (this.history = resp.data));
     },
 
@@ -301,83 +240,47 @@ export default {
       });
     },
 
-    refreshIssue() {
-      this.$store.dispatch('getIssues', { issue_key: this.issueKey });
+    refreshSerial() {
+      this.$store.dispatch('getSerials', { serial_key: this.serialKey });
       this.getHistory();
     },
 
-    closeIssue() {
+    closeSerial() {
       this.sendEvent({
-        event_type: 'ISSUE_CLOSED',
+        event_type: 'SERIAL_CLOSED',
         event_data: {
-          issue_data: {
-            _key: this.issue._key,
+          serial_data: {
+            _key: this.serial._key,
           },
         },
       }).then(() => {
-        this.refreshIssue();
-        this.notify({ message: this.$t('issue_update_success') });
+        this.refreshSerial();
+        this.notify({ message: this.$t('serial_update_success') });
       });
     },
 
-    toggleCritical() {
-      this.issue.critical = !this.issue.critical;
-      this.sendEvent({
-        event_type: 'ISSUE_UPDATED',
-        event_data: {
-          issue_data: {
-            _key: this.issue._key,
-            critical: this.issue.critical,
-          },
-        },
-      }).then(() => {
-        this.refreshIssue();
-        this.notify({
-          message: this.$t('issue_update_success'),
-          color: this.issue.critical ? 'theme-red' : 'theme-green',
-        });
-      });
-    },
-
-    reopenIssue() {
-      this.sendEvent({
-        event_type: 'ISSUE_REOPENED',
-        event_data: {
-          issue_data: {
-            _key: this.issue._key,
-            critical: this.issue.critical,
-          },
-        },
-      }).then(() => {
-        this.refreshIssue();
-        this.notify({
-          message: this.$t('issue_updated'),
-        });
-      });
-    },
-
-    deleteIssue() {
+    deleteSerial() {
       this.$q
         .dialog({
           cancel: true,
-          title: this.$t('issue_delete_confirm_title'),
-          message: this.$t('issue_delete_confirm_question'),
+          title: this.$t('serial_delete_confirm_title'),
+          message: this.$t('serial_delete_confirm_question'),
         })
         .onOk(() => {
           this.sendEvent({
-            event_type: 'ISSUE_DELETED',
+            event_type: 'SERIAL_DELETED',
             event_data: {
-              issue_data: {
-                _key: this.issueKey,
+              serial_data: {
+                _key: this.serialKey,
               },
             },
           }).then(async () => {
             const work_order_key =
               this.$store.state.traceability.working_job_data.wo_key;
-            await this.$store.dispatch('getIssues', { work_order_key });
+            await this.$store.dispatch('getSerials', { work_order_key });
             this.exit();
             this.notify({
-              message: this.$t('issue_delete_success'),
+              message: this.$t('serial_delete_success'),
             });
           });
         });
