@@ -22,7 +22,7 @@
 
         <!-- FORM BODY -->
 
-        <!-- SERIAL LINKS -->
+        <!-- ISSUE LINKS -->
         <q-card-section
           v-if="mode === 'new' && with_links && form_step === 'links'"
           class="column q-gutter-md"
@@ -36,7 +36,7 @@
             map-options
             visible="false"
             :model-value="link_form"
-            :label="$t('serial_new_link_type_label')"
+            :label="$t('issue_new_link_type_label')"
             @update:model-value="updateLinkForm"
           />
 
@@ -110,15 +110,15 @@
           </template>
         </q-card-section>
 
-        <!-- SERIAL DATA -->
-        <div v-else key="serial_data">
+        <!-- ISSUE DATA -->
+        <div v-else key="issue_data">
           <!-- FORM FIELDS -->
           <q-card-section>
             <FormField
               v-for="field in form_fields"
               :key="field._key"
               :field="field"
-              :root-path="`/media/serial/${serial?._key}`"
+              :root-path="`/media/issue/${issue?._key}`"
               @update="field.value = $event"
             />
           </q-card-section>
@@ -143,15 +143,28 @@
               >
               </q-btn>
               <q-btn
+                v-if="!critical_only"
                 color="theme-orange"
                 :label="$t('save')"
                 :loading="saving"
                 @click="
                   () => {
+                    critical = false;
                     save();
                   }
                 "
               >
+              </q-btn>
+              <q-btn
+                color="theme-red"
+                @click="
+                  () => {
+                    critical = true;
+                    save();
+                  }
+                "
+              >
+                {{ $t('save') }} {{ $t('critical') }}
               </q-btn>
             </template>
 
@@ -197,7 +210,7 @@ export default {
       type: String,
       default: 'new',
     },
-    serial: {
+    issue: {
       type: Object,
       default: undefined,
     },
@@ -216,15 +229,17 @@ export default {
     },
   },
 
-  emits: ['close', 'serialCreated'],
+  emits: ['close', 'issueCreated'],
 
   data() {
     return {
+      critical_only: false,
       saving: false,
       form_step: 'data',
       /** @type {import('@/types/form').FormField[]} */
       form_fields: [],
       confirmed: false,
+      critical: false,
       link_form: null,
       phase_data: null,
       phase_jobs: null,
@@ -321,12 +336,14 @@ export default {
     },
 
     initFormData() {
-      const form_template = this.form_template ?? [];
+      const form_template = this.issue_type?.form_template ?? [];
 
-      const use_clean_form = this.mode === 'new';
+      const use_clean_form =
+        this.mode === 'new' ||
+        this.issue_type?._key !== this.issue.issue_type_key;
       if (use_clean_form) {
-        // Use fields from serial type template adding empty value
-        // If no template, force null, otherwise `undefined` will not be included in the api body and the serial data will not be updated
+        // Use fields from issue type template adding empty value
+        // If no template, force null, otherwise `undefined` will not be included in the api body and the issue data will not be updated
         this.form_fields = form_template.map((field) => ({
           ...field,
           value: null,
@@ -336,7 +353,7 @@ export default {
 
       this.form_fields = form_template.map((field) => ({
         ...field,
-        value: this.serial.data.find(({ _key }) => _key === field._key)?.value,
+        value: this.issue.data.find(({ _key }) => _key === field._key)?.value,
       }));
     },
 
@@ -391,11 +408,12 @@ export default {
     },
 
     cancel() {
-      this.initSerialType();
+      this.initIssueType();
       this.initFormData();
       this.initLinks();
       this.form_step = 'links';
       this.link_form = null;
+      this.critical_only = false;
       this.$emit('close');
     },
 
@@ -408,7 +426,7 @@ export default {
         ?.type;
     },
 
-    async saveFiles(serial_key) {
+    async saveFiles(issue_key) {
       const promises = this.form_fields
         .filter((field) => this.getFieldType(field) === 'files')
         .map(async (field) => {
@@ -424,8 +442,8 @@ export default {
           });
 
           const target = {
-            bucket: 'serial',
-            object_key: serial_key,
+            bucket: 'issue',
+            object_key: issue_key,
             subfolder: field._key,
           };
 
@@ -466,7 +484,8 @@ export default {
     async save() {
       this.saving = true;
 
-      const serial_data = {
+      const issue_data = {
+        critical: this.critical,
         data: this.form_fields.map((field) => ({
           form_field_key: field._key,
           custom_field_key: field.custom_field_key,
@@ -486,7 +505,7 @@ export default {
 
       if (this.mode === 'new') {
         // if link is active send data in the form e.g. { type: product, key: whatever }
-        serial_data.created_by = `User/${user}`; // temporarily hardcoding DB id
+        issue_data.created_by = `User/${user}`; // temporarily hardcoding DB id
 
         // Map links to list of objects, including only populated properties
         const links = [];
@@ -495,39 +514,39 @@ export default {
             links.push({ type: key, key: value._key });
           }
         });
-        serial_data.linked_to = links;
+        issue_data.linked_to = links;
       } else {
-        serial_data._key = this.serial._key;
+        issue_data._key = this.issue._key;
       }
 
       const event = {
-        event_type: this.mode === 'new' ? 'SERIAL_CREATED' : 'SERIAL_UPDATED',
+        event_type: this.mode === 'new' ? 'ISSUE_CREATED' : 'ISSUE_UPDATED',
         user_key: user,
         user_session_key: this.session_data.session_key,
         timestamp: timestamp(),
-        serial_data,
+        issue_data,
       };
 
       const message =
-        this.mode === 'new' ? 'serial_new_success' : 'serial_update_success';
+        this.mode === 'new' ? 'issue_new_success' : 'issue_update_success';
       const { data } = await this.$api.post('event', event);
-      const serial_key =
-        this.mode === 'new' ? data.detail.serial_key : serial_data._key;
-      await this.saveFiles(serial_key);
+      const issue_key =
+        this.mode === 'new' ? data.detail.issue_key : issue_data._key;
+      await this.saveFiles(issue_key);
 
-      // If from work session, fetch serials directly, otherwise signal the parent component to do so
+      // If from work session, fetch issues directly, otherwise signal the parent component to do so
       if (!this.with_links) {
-        await this.$store.dispatch('getSerials', {
+        await this.$store.dispatch('getIssues', {
           work_order_key: this.job_data.wo_key,
         });
       } else {
-        this.$emit('serialCreated');
+        this.$emit('issueCreated');
       }
       this.cancel();
       this.saving = false;
       this.$q.notify({
         message: this.$t(message),
-        color: 'theme-orange',
+        color: this.critical ? 'theme-red' : 'theme-orange',
         timeout: 1500,
         position: 'top',
       });

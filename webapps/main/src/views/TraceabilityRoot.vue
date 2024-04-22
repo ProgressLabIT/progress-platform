@@ -91,6 +91,22 @@
             :label="$t('serial_closed')"
           />
         </div>
+
+        <div class="col-6">
+          <q-checkbox
+            v-model="serial_critical"
+            dense
+            :label="$t('serial_critical')"
+          />
+        </div>
+
+        <div class="col-6">
+          <q-checkbox
+            v-model="serial_non_critical"
+            dense
+            :label="$t('serial_non_critical')"
+          />
+        </div>
       </div>
 
       <!-- SERIAL KEY -->
@@ -496,15 +512,23 @@ export default {
         'closed_by',
         'time_closed_from',
         'time_closed_to',
+        'serial_type_key',
         'operation_key',
         'work_order_code_search',
         'product_code_search',
         'phase_alias_search',
         'project_search',
+        'serial_critical',
+        'serial_non_critical',
         'serial_open',
         'serial_closed',
       ],
-      bool_filters: ['serial_open', 'serial_closed'],
+      bool_filters: [
+        'serial_open',
+        'serial_closed',
+        'serial_critical',
+        'serial_non_critical',
+      ],
       loading: false,
       show_serial_form: false,
     };
@@ -521,8 +545,11 @@ export default {
     },
 
     serial_key_search: queryModel(String, 'serial_search', null),
+    serial_type_key: queryModel(String, 'serial_type', null),
     serial_open: queryModel(Boolean, 'open', true),
     serial_closed: queryModel(Boolean, 'closed', true),
+    serial_critical: queryModel(Boolean, 'critical', true),
+    serial_non_critical: queryModel(Boolean, 'non_critical', true),
     operation_key: queryModel(String, 'operation', null),
     product_code_search: queryModel(String, 'product_search', null),
     work_order_code_search: queryModel(String, 'work_order_search', null),
@@ -570,7 +597,7 @@ export default {
   watch: {
     filters: {
       deep: true,
-      handler: 'getSerials',
+      handler: 'getIssues',
     },
   },
 
@@ -587,7 +614,7 @@ export default {
     getSerials() {
       this.loading = true;
       this.$store
-        .dispatch('getSerials', { with_links: true, ...this.filters })
+        .dispatch('getIssues', { with_links: true, ...this.filters })
         .then(() =>
           setTimeout(() => {
             this.loading = false;
