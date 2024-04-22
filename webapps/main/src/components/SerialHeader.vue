@@ -1,25 +1,25 @@
 <template>
   <q-item class="q-py-md" :clickable="clickable">
     <q-item-section avatar>
-      <q-icon flat :name="serial.icon || 'mdi-help'" size="lg" />
+      <q-icon flat :name="issue.icon || 'mdi-help'" size="lg" />
     </q-item-section>
     <q-item-section>
       <q-item-label class="row items-center">
         <span class="weight-bold text-h4 q-mr-sm">
-          {{ serial.serial_type_name || $t('serial') }}
+          {{ issue.issue_type_name || $t('serial') }}
         </span>
         <span class="smaller text-body2 text-uppercase low-text q-ml-md">
           <span class="q-mr-sm">
-            {{ serial.phase_alias }}
+            {{ issue.phase_alias }}
           </span>
-          <span>#{{ serial._key }}</span>
+          <span>#{{ issue._key }}</span>
         </span>
         <div class="col q-ml-xl">
           <q-btn
             flat
             round
             icon="mdi-pencil"
-            @click.stop="show_serial_update = true"
+            @click.stop="show_issue_update = true"
           >
             <q-tooltip>{{ $capitalize($t('edit')) }}</q-tooltip>
           </q-btn>
@@ -38,17 +38,17 @@
       </q-item-label>
     </q-item-section>
     <q-item-section class="display col-auto weight-bold text-uppercase">
-      <q-chip :color="serial.badge.color">
-        {{ serial.badge.text }}
+      <q-chip :color="issue.badge.color">
+        {{ issue.badge.text }}
       </q-chip>
     </q-item-section>
 
     <!-- SERIAL EDIT DIALOG -->
     <SerialForm
-      :show="show_serial_update"
-      :serial="serial"
+      :show="show_issue_update"
+      :issue="issue"
       mode="edit"
-      @close="show_serial_update = false"
+      @close="show_issue_update = false"
     >
     </SerialForm>
   </q-item>
@@ -69,7 +69,7 @@ export default {
   mixins: [event],
 
   props: {
-    serial: {
+    issue: {
       type: Object,
       required: true,
     },
@@ -83,8 +83,8 @@ export default {
 
   setup(props) {
     const { open: openPrintDialog, isAvailable } = usePrintDialog({
-      context: 'serial_type',
-      contextData: props.serial,
+      context: 'issue_type',
+      contextData: props.issue,
     });
 
     return {
@@ -96,20 +96,20 @@ export default {
   data() {
     return {
       over_icon: false,
-      show_serial_update: false,
-      new_serial_type: null,
+      show_issue_update: false,
+      new_issue_type: null,
     };
   },
 
   computed: {
     icon() {
-      return this.over_icon ? 'mdi-pencil' : this.serial.icon || 'mdi-help';
+      return this.over_icon ? 'mdi-pencil' : this.issue.icon || 'mdi-help';
     },
 
     save_btn_color() {
-      return this.new_serial_type == null
+      return this.new_issue_type == null
         ? 'theme-blue'
-        : this.new_serial_type.critical
+        : this.new_issue_type.critical
           ? 'theme-red'
           : 'theme-blue';
     },
@@ -117,9 +117,9 @@ export default {
     save_btn_label() {
       const base = this.$t('save');
       const critical =
-        this.new_serial_type == null
+        this.new_issue_type == null
           ? ''
-          : this.new_serial_type.critical
+          : this.new_issue_type.critical
             ? ' ' + this.$t('critical')
             : '';
       return base + critical;
@@ -128,36 +128,34 @@ export default {
   watch: {
     show_type_picker() {
       if (this.show_type_picker == false) {
-        this.new_serial_type = null;
+        this.new_issue_type = null;
       }
     },
   },
 
   methods: {
-    changeSerialType() {
-      const set_as_critical = this.new_serial_type
-        ? this.new_serial_type.critical
+    changeIssueType() {
+      const set_as_critical = this.new_issue_type
+        ? this.new_issue_type.critical
         : false;
       const event = {
-        event_type: 'SERIAL_UPDATED',
+        event_type: 'ISSUE_UPDATED',
         event_data: {
-          serial_data: {
-            _key: this.serial._key,
-            serial_type: this.new_serial_type
-              ? this.new_serial_type._key
-              : null,
+          issue_data: {
+            _key: this.issue._key,
+            issue_type: this.new_issue_type ? this.new_issue_type._key : null,
           },
         },
       };
 
       if (set_as_critical) {
-        event.event_data.serial_data.critical = true;
+        event.event_data.issue_data.critical = true;
       }
 
       this.sendEvent(event).then(() => {
         this.$emit(
           'typeChange',
-          this.new_serial_type ? this.new_serial_type._key : null,
+          this.new_issue_type ? this.new_issue_type._key : null,
         );
         this.show_type_picker = false;
       });
