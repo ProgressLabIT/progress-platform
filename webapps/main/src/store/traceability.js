@@ -86,6 +86,7 @@ const traceability = {
     current_step_key: undefined,
     current_step_media_index: null,
     heartbeat: null,
+    serials: [],
   },
 
   getters: {
@@ -184,6 +185,10 @@ const traceability = {
 
     UPDATE_BATCH(state, batch_data) {
       state.current_batch_data = batch_data;
+    },
+
+    LOAD_SERIALS(state, serials) {
+      state.serials = serials;
     },
   },
 
@@ -400,6 +405,11 @@ const traceability = {
           resolve();
         });
       });
+    },
+
+    async getSerials({ commit }, search_params) {
+      const { data } = await api.get('serial', { params: search_params });
+      commit('LOAD_SERIALS', data);
     },
   },
 };
