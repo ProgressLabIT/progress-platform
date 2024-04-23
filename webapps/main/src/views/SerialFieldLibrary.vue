@@ -61,7 +61,7 @@
         <q-btn
           class="full-width q-mt-auto"
           color="theme-blue"
-          :label="$t('new')"
+          :label="$t('add_field')"
           @click="show_new_field_form = true"
         >
         </q-btn>
@@ -69,8 +69,8 @@
     </div>
 
     <BaseDialog :show="show_new_field_form" :no-backdrop-dismiss="false">
-      <SerialFieldNew @close="show_new_field_form = false" @created="getFields">
-      </SerialFieldNew>
+      <FormFieldSearch @close="show_new_field_form = false" @select="addField">
+      </FormFieldSearch>
     </BaseDialog>
 
     <q-separator vertical />
@@ -85,20 +85,22 @@
 <script>
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
-import SerialFieldNew from '@/components/SerialFieldNew.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import form from '@/mixins/form.js';
+import FormFieldSearch from '../components/FormFieldSearch.vue';
 
 export default {
   name: 'SerialFieldLibrary',
 
   components: {
     BaseDialog,
-    SerialFieldNew,
+    FormFieldSearch,
     LoadingSignal,
   },
 
   mixins: [form],
+
+  emits: ['reload'],
 
   data() {
     return {
@@ -144,6 +146,21 @@ export default {
         this.field_list = resp.data.sort();
         this.data_ready = true;
       });
+    },
+
+    addField(customField) {
+      this.show_new_field_form = false;
+      let field = customField;
+      customField.use_in_serial = true;
+      this.$api
+        .put(`field/${field._key}`, {
+          ...field,
+          ...customField,
+        })
+        .then(() => {
+          this.$emit('reload');
+          this.getFields();
+        });
     },
   },
 };

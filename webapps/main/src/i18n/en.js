@@ -128,6 +128,8 @@ export default {
   field_delete_success: 'Field deleted',
   field_delete_text:
     'The field will be deleted. It will not be shown anymore in forms that used it, but data already recorded will not be deleted.',
+  serial_field_delete_text:
+    'The field will be removed from serial creation dialogs, but data already recorded will not be deleted.',
   field_multiple: 'Multiple values',
   field_new: 'New field',
   field_none: 'No fields',
@@ -716,7 +718,7 @@ export default {
     name: 'Name',
     new: 'new',
     new_password: 'new password',
-    new_password_save_action: 'sve password and start session',
+    new_password_save_action: 'save password and start session',
     new_success:
       'user successfully created. Take note of the temporary password for the user. It will not be shown again. The user must change it with a private one during his next access.',
     password: 'password',

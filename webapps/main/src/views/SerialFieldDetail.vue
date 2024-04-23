@@ -227,7 +227,7 @@
         @save="deleteField"
         @cancel="show_delete = false"
       >
-        {{ $t('field_delete_text') }}
+        {{ $t('serial_field_delete_text') }}
       </BaseActionCard>
     </BaseDialog>
   </div>
@@ -266,6 +266,7 @@ export default {
         name: null,
         default_label: null,
         default_hint: null,
+        use_in_serial: true,
       },
       table_loading: false,
       saving: false,
@@ -386,14 +387,11 @@ export default {
     save() {
       this.saving = true;
       const calls = [
-        this.$api.put(`serial-field/${this.field._key}`, {
+        this.$api.put(`field/${this.field._key}`, {
           ...this.field,
           ...this.temp_data,
         }),
-        this.$api.post(
-          `serial-list/${this.field._key}`,
-          this.new_or_updated_items,
-        ),
+        this.$api.post(`list/${this.field._key}`, this.new_or_updated_items),
       ];
 
       if (this.deleted_items.length) {
@@ -402,9 +400,7 @@ export default {
         this.deleted_items.forEach((item) =>
           params.append('value_key', item._key),
         );
-        calls.push(
-          this.$api.delete(`serial-list/${this.field._key}`, { params }),
-        );
+        calls.push(this.$api.delete(`list/${this.field._key}`, { params }));
       }
 
       Promise.all(calls).then(() => {
@@ -417,6 +413,25 @@ export default {
       });
     },
 
+    deleteField() {
+      this.temp_data.use_in_serial = false;
+      this.$api
+        .put(`field/${this.field._key}`, {
+          ...this.field,
+          ...this.temp_data,
+        })
+        .then(() => {
+          this.$q.notify({
+            message: this.$t('field_delete_success'),
+            color: 'theme-green',
+            timeout: 1500,
+            position: 'top',
+          });
+          this.$emit('reload');
+          this.$router.push({ name: 'serialFieldLibrary' });
+        });
+    },
+
     cancel() {
       this.selected_items = [];
       this.initTempFieldData();
@@ -427,7 +442,7 @@ export default {
     loadListValues() {
       this.table_loading = true;
       this.$api
-        .get('serial-list', {
+        .get('list', {
           params: {
             field_key: this.field._key,
             search: this.list_search,
@@ -466,19 +481,6 @@ export default {
         index: null,
         field: null,
       };
-    },
-
-    deleteField() {
-      this.$api.delete(`serial-field/${this.field._key}`).then(() => {
-        this.$q.notify({
-          message: this.$t('field_delete_success'),
-          color: 'theme-green',
-          timeout: 1500,
-          position: 'top',
-        });
-        this.$emit('reload');
-        this.$router.push({ name: 'serialFieldLibrary' });
-      });
     },
   },
 };
