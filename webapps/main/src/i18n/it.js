@@ -129,6 +129,8 @@ export default {
   field_delete_success: 'Campo eliminato',
   field_delete_text:
     'Il campo verrà eliminato. Non sarà più visualizzato nei moduli che lo utilizzavano, ma i dati già registrati non verranno cancellati.',
+  serial_field_delete_text:
+    'Il campo verrà rimosso dalla creazione dei seriali, ma i dati già registrati non verranno cancellati.',
   field_multiple: 'Valori multipli',
   field_new: 'Nuovo campo',
   field_none: 'Nessun campo',

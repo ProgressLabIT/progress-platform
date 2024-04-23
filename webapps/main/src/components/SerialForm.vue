@@ -121,6 +121,13 @@
               :root-path="`/media/issue/${issue?._key}`"
               @update="field.value = $event"
             />
+            <FormField
+              v-for="field in base_fields"
+              :key="field._key"
+              :field="field"
+              :root-path="`/media/issue/${issue?._key}`"
+              @update="field.value = $event"
+            />
           </q-card-section>
         </div>
 
@@ -236,8 +243,8 @@ export default {
       critical_only: false,
       saving: false,
       form_step: 'data',
-      /** @type {import('@/types/form').FormField[]} */
       form_fields: [],
+      base_fields: [],
       confirmed: false,
       critical: false,
       link_form: null,
@@ -295,6 +302,7 @@ export default {
   },
 
   created() {
+    this.initBaseFields();
     this.initFormData();
     this.initLinks();
   },
@@ -336,7 +344,7 @@ export default {
     },
 
     initFormData() {
-      const form_template = this.issue_type?.form_template ?? [];
+      const form_template = this.issue_type?.form_template ?? this.base_fields;
 
       const use_clean_form =
         this.mode === 'new' ||
@@ -369,6 +377,11 @@ export default {
 
       const { data } = await this.$api.get('phase', { params });
       this.phase_data = data;
+    },
+
+    async initBaseFields() {
+      const { data: fields } = await this.$api.get('serial-field');
+      this.base_fields = fields;
     },
 
     async loadProduct(product_key) {
@@ -408,7 +421,6 @@ export default {
     },
 
     cancel() {
-      this.initIssueType();
       this.initFormData();
       this.initLinks();
       this.form_step = 'links';
