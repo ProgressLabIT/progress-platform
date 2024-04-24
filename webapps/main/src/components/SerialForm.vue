@@ -121,13 +121,6 @@
               :root-path="`/media/serial/${serial?._key}`"
               @update="field.value = $event"
             />
-            <FormField
-              v-for="field in base_fields"
-              :key="field._key"
-              :field="field"
-              :root-path="`/media/issue/${issue?._key}`"
-              @update="field.value = $event"
-            />
           </q-card-section>
         </div>
 
@@ -329,7 +322,7 @@ export default {
     },
 
     initFormData() {
-      const form_template = this.form_template ?? [];
+      const form_template = this.base_fields ?? [];
 
       const use_clean_form = this.mode === 'new';
       if (use_clean_form) {
@@ -416,8 +409,7 @@ export default {
      * @returns {string | undefined}
      */
     getFieldType(field) {
-      return this.$store.getters.getCustomFieldByKey(field.custom_field_key)
-        ?.type;
+      return this.$store.getters.getCustomFieldByKey(field._key)?.type;
     },
 
     async saveFiles(serial_key) {
