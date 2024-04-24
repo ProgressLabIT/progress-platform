@@ -1,9 +1,9 @@
 <template>
   <div ref="container" class="q-px-sm q-pt-sm full-height">
     <q-table
-      id="issue_list"
+      id="serial_list"
       :columns="columns"
-      :rows="issue_list"
+      :rows="serial_list"
       row-key="_key"
       :loading="loading"
       color="primary"
@@ -22,39 +22,16 @@
           :key="props.row._key"
           :props="props"
           :style="props.row.closed ? 'opacity: .5' : ''"
-          @dblclick="showIssueDetails(props.row._key)"
+          @dblclick="showSerialDetails(props.row._key)"
         >
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
-              <template v-if="column.name === 'issue_type'">
-                <q-icon :name="props.row.icon || 'mdi-help'" />
-              </template>
-
-              <template v-else-if="['created', 'closed'].includes(column.name)">
+              <template v-if="['created', 'closed'].includes(column.name)">
                 {{
                   props.row[column.name] === null
                     ? '-'
                     : $shortDateString(props.row[column.name], $i18n.locale)
                 }}
-              </template>
-
-              <template v-else-if="column.name === 'critical'">
-                <q-avatar
-                  v-if="props.row.critical"
-                  :color="props.row.closed ? 'theme-grey' : 'theme-red'"
-                  size="6px"
-                >
-                </q-avatar>
-              </template>
-
-              <template v-else-if="column.name === 'open'">
-                <q-icon
-                  v-if="!props.row.open"
-                  name="mdi-check-circle"
-                  size="14px"
-                  color="theme-grey"
-                >
-                </q-icon>
               </template>
 
               <template
@@ -76,18 +53,18 @@
       </template>
     </q-table>
 
-    <!-- ISSUE DETAIL -->
+    <!-- SERIAL DETAIL -->
     <router-view />
   </div>
 </template>
 
 <script>
-import enrichIssue from '@/mixins/issues.js';
+import enrichSerial from '@/mixins/serials.js';
 
 export default {
   name: 'SerialsOverview',
 
-  mixins: [enrichIssue],
+  mixins: [enrichSerial],
 
   props: {
     loading: {
@@ -103,19 +80,14 @@ export default {
   },
 
   computed: {
-    issue_list() {
-      return this.$store.state.quality.issues.map((i) => this.enrichIssue(i));
+    serial_list() {
+      return this.$store.state.traceability.serials.map((i) =>
+        this.enrichSerial(i),
+      );
     },
 
     columns() {
       return [
-        {
-          name: 'issue_type',
-          sortable: true,
-          label: this.$t('type').toUpperCase(),
-          align: 'left',
-          classes: 'q-pr-none',
-        },
         {
           name: '_key',
           field: '_key',
@@ -208,10 +180,10 @@ export default {
       }
     },
 
-    showIssueDetails(issueKey) {
+    showSerialDetails(serialKey) {
       const to_route = {
-        name: 'issueDetail',
-        params: { issueKey },
+        name: 'serialDetail',
+        params: { serialKey },
         query: {
           back_to: this.$route.name,
           ...this.$route.query,
@@ -224,7 +196,7 @@ export default {
 </script>
 
 <style lang="sass">
-#issue_list
+#serial_list
   & th
     font-weight: bold
     color: var(--text-low)
