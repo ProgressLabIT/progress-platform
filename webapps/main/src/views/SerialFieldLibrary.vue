@@ -28,7 +28,7 @@
 
       <q-separator />
 
-      <!-- ISSUE TYPE LIST -->
+      <!-- FIELD LIST -->
       <div class="scroll col">
         <div
           v-for="(field, index) in filtered_fields"
@@ -52,7 +52,7 @@
 
       <q-separator />
 
-      <!-- ISSUE TYPE LIST COUNT -->
+      <!-- FIELD LIST COUNT -->
       <div class="row flex-center smaller q-py-xs">
         {{ filtered_fields.length }} {{ $t('of') }} {{ field_list.length }}
       </div>

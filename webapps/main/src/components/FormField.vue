@@ -6,7 +6,7 @@
       v-model="fieldValue"
       :disable="disable"
       :dense="dense"
-      :label="field.label"
+      :label="field.label ?? field.default_label"
       filled
       stack-label
       autogrow
@@ -26,7 +26,7 @@
       type="number"
       :disable="disable"
       :dense="dense"
-      :label="field.label"
+      :label="field.label ?? field.default_label"
       filled
       stack-label
       hide-bottom-space
@@ -78,7 +78,9 @@
         </div>
 
         <div class="col items-center">
-          <p class="text-body1 q-ma-none">{{ field.label }}</p>
+          <p class="text-body1 q-ma-none">
+            {{ field.label ?? field.default_label }}
+          </p>
         </div>
 
         <q-space />
@@ -132,7 +134,7 @@
       option-label="value"
       :disable="disable"
       :dense="dense"
-      :label="field.label"
+      :label="field.label ?? field.default_label"
       :loading="loading"
       :debounce="300"
       use-input
@@ -148,7 +150,7 @@
       v-if="fieldType === 'date'"
       v-model="fieldValue"
       :disable="disable"
-      :label="field.label"
+      :label="field.label ?? field.default_label"
       filled
       stack-label
       :placeholder="$t('date_format')"
@@ -171,7 +173,7 @@
       v-if="fieldType === 'time'"
       v-model="fieldValue"
       :disable="disable"
-      :label="field.label"
+      :label="field.label ?? field.default_label"
       stack-label
       filled
       input-class="cursor-pointer"
@@ -194,7 +196,7 @@
       <FilesList
         :files="fieldValue"
         :root-path="`${rootPath}/${field._key}`"
-        :label="field.label"
+        :label="field.label ?? field.default_label"
         :disable="disable"
         @add-files="addFiles"
         @delete-file="deleteFile"
@@ -203,7 +205,7 @@
     </div>
 
     <div class="smaller q-px-sm q-mt-xs">
-      {{ field.hint }}
+      {{ field.hint ?? field.default_hint }}
     </div>
   </div>
 </template>
@@ -255,7 +257,7 @@ async function getOptions(searchTerm) {
   loading.value = true;
   const { data } = await api.get('list', {
     params: {
-      field_key: props.field.custom_field_key,
+      field_key: props.field.custom_field_key ?? props.field._key,
       search: searchTerm || undefined,
     },
   });
@@ -275,7 +277,10 @@ async function onFilter(value, update, abort) {
 }
 
 const fieldType = computed(
-  () => store.getters.getCustomFieldByKey(props.field.custom_field_key)?.type,
+  () =>
+    store.getters.getCustomFieldByKey(
+      props.field.custom_field_key ?? props.field._key,
+    )?.type,
 );
 if (fieldType.value === 'choice') {
   void getOptions().then((optionsToLoad) => {
