@@ -14,6 +14,7 @@ export interface CustomField {
   name: string;
   default_label: string;
   default_hint: string;
+  use_in_serial: boolean;
 }
 
 export interface FormField {
