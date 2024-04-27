@@ -22,47 +22,33 @@
 
         <!-- FORM BODY -->
 
-        <!-- SERIAL LINKS -->
+        <!-- form_step === 'select_product' -->
         <q-card-section
-          v-if="mode === 'new' && with_links && form_step === 'links'"
+          v-if="mode === 'new' && form_step === 'select_product'"
           class="column q-gutter-md"
         >
-          <!-- "Path" selection (Order, Product, General) -->
-          <q-select
-            v-if="link_form === null"
-            :options="link_form_options"
-            filled
-            emit-value
-            map-options
-            visible="false"
-            :model-value="link_form"
-            :label="$t('serial_new_link_type_label')"
-            @update:model-value="updateLinkForm"
-          />
-
-          <!-- WORK ORDER -->
-          <BaseAutocompleteWorkOrder
-            v-if="link_form === 'order'"
-            :value="links.work_order"
-            :label="$capitalize($t('work_order.long'))"
-            @select="(selection) => loadWorkOrder(selection)"
-          />
-
           <!-- PRODUCT -->
           <BaseAutocompleteProduct
-            v-if="link_form === 'product'"
             :value="links.product"
-            :hint="
-              (links.work_order || links.product) && !phase_data
-                ? $t('phase.no_phase')
-                : null
-            "
+            :hint="!phase_data ? $t('phase.no_phase') : null"
             key-only
             :label="$capitalize($t('product.label'))"
             @select="(selection) => loadProduct(selection)"
           />
 
+          <FormField
+            v-for="field in form_fields"
+            :key="field._key"
+            :field="field"
+            :root-path="`/media/serial/${serial?._key}`"
+            @update="field.value = $event"
+          />
           <!-- PHASE -->
+        </q-card-section>
+
+        <!-- SERIAL DATA -->
+        <div v-else key="serial_data">
+          <!-- FORM FIELDS -->
           <q-select
             v-if="phase_data"
             :model-value="links.phase"
@@ -73,76 +59,36 @@
             option-label="alias"
             @update:model-value="(selection) => loadPhase(selection)"
           />
-
-          <!-- JOB -->
-          <q-select
-            v-if="link_form === 'order' && links.phase"
-            v-model="links.job"
-            :label="$capitalize($t('job.label'))"
-            filled
-            clearable
-            :options="phase_jobs"
-          >
-            <template #option="scope">
-              <JobListItem
-                v-bind="scope.itemProps"
-                :job-data="scope.opt"
-                show-progress
-                show-assignee
-              />
-            </template>
-            <template #selected-item="scope">
-              <JobListItem :job-data="scope.opt" />
-            </template>
-          </q-select>
-
-          <template v-if="link_form === 'general'">
-            <BaseAutocompleteUser
-              v-model="links.user"
-              :label="$t('user.label')"
-            >
-            </BaseAutocompleteUser>
-            <BaseAutocompleteOperation
-              v-model="links.operation"
-              :label="$capitalize($t('operation.label'))"
-            >
-            </BaseAutocompleteOperation>
-          </template>
-        </q-card-section>
-
-        <!-- SERIAL DATA -->
-        <div v-else key="serial_data">
-          <!-- FORM FIELDS -->
-          <q-card-section>
-            <FormField
-              v-for="field in form_fields"
-              :key="field._key"
-              :field="field"
-              :root-path="`/media/serial/${serial?._key}`"
-              @update="field.value = $event"
-            />
-          </q-card-section>
         </div>
 
-        <!-- FORM ACTIONS -->
+        <!-- FORM ACTIONS    navigation -->
         <q-card-section>
           <div class="row q-gutter-md">
             <q-btn
-              v-if="mode === 'new' && with_links && form_step === 'links'"
+              v-if="mode === 'new' && form_step === 'select_product'"
               color="theme-blue"
               :label="$t('next')"
-              @click="form_step = 'data'"
+              :disable="!links.product"
+              @click="form_step = 'fill_steps_data'"
             >
             </q-btn>
             <template v-else>
               <q-btn
-                v-if="with_links"
                 icon="mdi-arrow-left-bold"
                 color="theme-blue"
-                @click="form_step = 'links'"
+                @click="form_step = 'select_product'"
               >
               </q-btn>
               <q-btn
+                v-if="phase_data"
+                icon="mdi-arrow-right-bold"
+                color="theme-blue"
+                @click="form_step = 'fill_steps_data'"
+              >
+              </q-btn>
+
+              <q-btn
+                v-else
                 color="theme-orange"
                 :label="$t('save')"
                 :loading="saving"
@@ -166,25 +112,17 @@
 </template>
 
 <script>
-import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
-import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
-import BaseAutocompleteWorkOrder from '@/components/BaseAutocompleteWorkOrder.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import FormField from '@/components/FormField.vue';
-import JobListItem from '@/components/JobListItem.vue';
 import { timestamp } from '@/lib/TimeHandling.js';
 
 export default {
   name: 'SerialForm',
 
   components: {
-    BaseAutocompleteOperation,
     BaseAutocompleteProduct,
-    BaseAutocompleteUser,
-    BaseAutocompleteWorkOrder,
     BaseDialog,
-    JobListItem,
     FormField,
   },
 
@@ -201,68 +139,29 @@ export default {
       type: Object,
       default: undefined,
     },
-    with_links: {
-      type: Boolean,
-      default: false,
-    },
-    auto_link_mode: {
-      type: String,
-      default: undefined,
-      validator: (value) => ['work_order', 'product'].includes(value),
-    },
-    auto_links: {
-      type: Object,
-      default: null,
-    },
   },
 
   emits: ['close', 'serialCreated'],
 
   data() {
     return {
+      phase_index: 0,
       saving: false,
-      form_step: 'data',
+      form_step: 'select_product',
       form_fields: [],
       base_fields: [],
       confirmed: false,
-      link_form: null,
       phase_data: null,
-      phase_jobs: null,
       links: {
         product: null,
-        operation: null,
-        phase: null,
-        work_order: null,
         user: null,
-        job: null,
       },
     };
   },
 
   computed: {
-    job_data() {
-      return this.$store.state.traceability.working_job_data;
-    },
-
     session_data() {
       return this.$store.state.session;
-    },
-
-    link_form_options() {
-      return [
-        {
-          value: 'order',
-          label: this.$t('work_order.long'),
-        },
-        {
-          value: 'product',
-          label: this.$t('product.label'),
-        },
-        {
-          value: 'general',
-          label: this.$t('general'),
-        },
-      ];
     },
   },
 
@@ -270,62 +169,23 @@ export default {
     show: {
       handler() {
         this.initFormData();
-        this.initLinks();
       },
-    },
-    phase_data() {
-      // The new list of phases will not contain the selected phase, so reset it
-      this.links.phase = null;
     },
   },
 
   created() {
     this.initBaseFields();
     this.initFormData();
-    this.initLinks();
   },
 
   methods: {
-    updateLinkForm(value) {
-      this.link_form = value;
-      this.initLinks();
-    },
-
-    initLinks() {
-      // Inser links step if required
-      if (this.mode == 'new' && this.with_links) {
-        this.form_step = 'links';
-      }
-
-      // Reset links
-      if (this.with_links) {
-        Object.keys(this.links).forEach((l) => (this.links[l] = null));
-        this.phase_data = null;
-        this.phase_jobs = null;
-      }
-
-      // Set auto links if required
-      if (this.auto_link_mode == 'work_order' && this.auto_links.work_order) {
-        this.link_form = 'order';
-        this.loadWorkOrder(this.auto_links.work_order);
-      }
-
-      if (this.auto_link_mode == 'product') {
-        this.link_form = 'product';
-      }
-
-      if (this.auto_link_mode == 'work_session' && this.auto_links) {
-        Object.entries(this.auto_links).forEach(([k, v]) => {
-          this.links[k] = { _key: v };
-        });
-      }
-    },
-
     initFormData() {
       const form_template = this.base_fields ?? [];
 
       const use_clean_form = this.mode === 'new';
       if (use_clean_form) {
+        this.links.product = null;
+        this.links.phase = null;
         // Use fields from serial type template adding empty value
         // If no template, force null, otherwise `undefined` will not be included in the api body and the serial data will not be updated
         this.form_fields = form_template.map((field) => ({
@@ -341,29 +201,20 @@ export default {
       }));
     },
 
-    async loadWorkOrder(wo) {
-      // Set work order data and initialize Phase options to select from
-      this.links.work_order = wo;
-      this.links.product = { _key: wo.product_key };
-
-      let params = new URLSearchParams();
-      this.links.work_order.phase_sequence.forEach((pk) =>
-        params.append('phase_key', pk),
-      );
-
-      const { data } = await this.$api.get('phase', { params });
-      this.phase_data = data;
-    },
-
     async initBaseFields() {
       const { data: fields } = await this.$api.get('serial-field');
       this.base_fields = fields;
     },
 
     async loadProduct(product_key) {
+      if (product_key === null) {
+        this.links.product = null;
+        return;
+      }
       // To avoid loading in advance a lot of unnecessary product data, the product list contains limited information.
       // So, it is necessary to fetch the full product data first and then load the phases options.
       const { data: product } = await this.$api.get(`product/${product_key}`);
+
       this.links.product = product;
 
       if (!product.process_phases) {
@@ -380,27 +231,11 @@ export default {
 
     async loadPhase(phase_data) {
       this.links.phase = phase_data;
-      this.links.operation = { _key: phase_data.operation_key };
-
-      // Phase link exists for both order and product mode. Load jobs only in order mode
-      if (this.link_form !== 'order') {
-        return;
-      }
-
-      const { data } = await this.$api.get('job', {
-        params: {
-          work_order_key: this.links.work_order._key,
-          phase_key: this.links.phase._key,
-        },
-      });
-      this.phase_jobs = data.detail;
     },
 
     cancel() {
       this.initFormData();
-      this.initLinks();
-      this.form_step = 'links';
-      this.link_form = null;
+      this.form_step = 'select_product';
       this.$emit('close');
     },
 
@@ -520,13 +355,13 @@ export default {
       await this.saveFiles(serial_key);
 
       // If from work session, fetch serials directly, otherwise signal the parent component to do so
-      if (!this.with_links) {
+      /*if (!this.with_links) {
         await this.$store.dispatch('getSerials', {
           work_order_key: this.job_data.wo_key,
         });
       } else {
         this.$emit('serialCreated');
-      }
+      }*/
       this.cancel();
       this.saving = false;
       this.$q.notify({
