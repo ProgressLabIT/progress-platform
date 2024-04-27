@@ -10,6 +10,7 @@ export default {
   add: 'aggiungi',
   add_equipment: 'aggiungi attrezzature',
   add_field: 'aggiungi campo',
+  remove_field: 'rimuovi campo',
   add_operator: 'aggiungi operatore | aggiungi operatori',
   advanced_filters: 'filtri avanzati',
   all: 'tutto | tutti',
