@@ -46,6 +46,7 @@ import { useConfigStore } from '@/stores/config';
 const sections = [
   'companyDetails',
   'defaultOperationParameters',
+  'serialFieldLibrary',
   'otherSettings',
 ];
 

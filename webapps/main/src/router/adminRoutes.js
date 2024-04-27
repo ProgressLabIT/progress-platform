@@ -24,6 +24,11 @@ const adminRoutes = [
               import('@/views/settings/DefaultOperationParams.vue'),
           },
           {
+            path: 'serial-field',
+            name: 'serialFieldLibrary',
+            component: () => import('@/views/SerialFieldLibrary.vue'),
+          },
+          {
             path: 'other',
             name: 'otherSettings',
             component: () => import('@/views/settings/OtherSettings.vue'),
@@ -101,19 +106,6 @@ const adminRoutes = [
             path: ':issueTypeKey/delete',
             name: 'issueTypeDelete',
             component: () => import('@/views/IssueTypeDelete.vue'),
-            props: true,
-          },
-        ],
-      },
-      {
-        path: 'serial-field',
-        name: 'serialFieldLibrary',
-        component: () => import('@/views/SerialFieldLibrary.vue'),
-        children: [
-          {
-            path: ':field_key',
-            name: 'serialFieldDetail',
-            component: () => import('@/views/SerialFieldDetail.vue'),
             props: true,
           },
         ],
