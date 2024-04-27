@@ -57,12 +57,22 @@
         {{ filtered_fields.length }} {{ $t('of') }} {{ field_list.length }}
       </div>
 
-      <div class="q-pa-md q-mt-auto">
+      <div class="row item-center q-mb-xl">
         <q-btn
-          class="full-width q-mt-auto"
           color="theme-blue"
+          class="q-ml-auto"
+          size="12px"
           :label="$t('add_field')"
           @click="show_new_field_form = true"
+        >
+        </q-btn>
+        <q-btn
+          color="theme-red"
+          class="q-ml-md"
+          size="12px"
+          :label="$t('remove_field')"
+          :disable="!selected_field_key"
+          @click="show_delete = true"
         >
         </q-btn>
       </div>
@@ -73,12 +83,25 @@
       </FormFieldSearch>
     </BaseDialog>
 
-    <q-separator vertical />
-
+    <BaseDialog :show="show_delete" :no-backdrop-dismiss="false">
+      <BaseActionCard
+        :title="$t('field_delete')"
+        :save-label="$t('confirm')"
+        save-color="theme-red"
+        @save="deleteField"
+        @cancel="show_delete = false"
+      >
+        {{ $t('serial_field_delete_text') }}
+      </BaseActionCard>
+    </BaseDialog>
     <!-- FIELD DATA -->
+
+    <!--q-separator vertical />
+
+
     <div v-if="data_ready" class="col full-height">
       <router-view :field="selected_field" @reload="getFields"> </router-view>
-    </div>
+    </div-->
   </div>
 </template>
 
@@ -87,6 +110,7 @@ import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import form from '@/mixins/form.js';
+import BaseActionCard from '../components/BaseActionCard.vue';
 import FormFieldSearch from '../components/FormFieldSearch.vue';
 
 export default {
@@ -95,6 +119,7 @@ export default {
   components: {
     BaseDialog,
     FormFieldSearch,
+    BaseActionCard,
     LoadingSignal,
   },
 
@@ -108,6 +133,7 @@ export default {
       search_text: undefined,
       field_list: [],
       show_new_field_form: false,
+      show_delete: false,
     };
   },
 
@@ -158,6 +184,27 @@ export default {
           ...customField,
         })
         .then(() => {
+          this.$emit('reload');
+          this.getFields();
+        });
+    },
+
+    deleteField() {
+      this.show_delete = false;
+      let temp_data = this.selected_field;
+      temp_data.use_in_serial = false;
+      this.$api
+        .put(`field/${temp_data._key}`, {
+          ...this.field,
+          ...temp_data,
+        })
+        .then(() => {
+          this.$q.notify({
+            message: this.$t('field_delete_success'),
+            color: 'theme-green',
+            timeout: 1500,
+            position: 'top',
+          });
           this.$emit('reload');
           this.getFields();
         });
