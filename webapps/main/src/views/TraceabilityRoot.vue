@@ -39,8 +39,6 @@
           <SerialForm
             :show="show_serial_form"
             mode="new"
-            with_links
-            auto_link_mode="product"
             @close="show_serial_form = false"
             @serial-created="getSerials"
           >
