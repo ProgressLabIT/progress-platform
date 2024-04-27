@@ -9,6 +9,7 @@ export default {
   add: 'add',
   add_equipment: 'add equipment',
   add_field: 'add field',
+  remove_field: 'remove field',
   add_operator: 'add operator | add operators',
   advanced_filters: 'advanced filters',
   all: 'all',
