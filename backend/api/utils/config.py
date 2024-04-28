@@ -10,6 +10,7 @@ class Settings(BaseSettings):
   db_name: str = "PROGRESS_TEST"
   api_db_username: str = "root" # use default when running standalone containers
   api_db_pwd: str = ""
+  kafka_bootstrap_server: str = "localhost:9000"
 
   model_config = SettingsConfigDict(
     env_prefix = "progress_",
