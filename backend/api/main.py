@@ -4,9 +4,12 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 
 from utils.config import get_config
+from utils.kafka_producer import KafkaProducer
 import endpoints
 
 config = get_config()
+
+kafkaProduce: KafkaProducer()
 
 app = FastAPI(
 	# openapi_url=f"{config.root_path}/openapi.json",

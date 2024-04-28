@@ -9,6 +9,8 @@ from utils.production import Queries as ProductionQueries, update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
 from utils.db import model_to_db_dict
 
+from utils.kafka_producer import KafkaProducer
+
 
 class ProductionActivityEvent(BaseEvent):
   production_collections = [
@@ -152,20 +154,21 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
 
   def create_serial(self):
-     new_serial_record = Serial(
-       serial=self.info.serial,
-       wo_key=self.info.work_order_key,
-       product_key=self.info.product_key,
-       created=self.info.created,
-       released=self.info.released,
-       status=self.info.status,
-       locations=self.info.locations
-     )
-     new_serial_key = self.tx.collection('Serial').insert(new_serial_record)['_key']
+     #new_serial_record = Serial(
+     #  serial=self.info.serial,
+     #  wo_key=self.info.work_order_key,
+     #  product_key=self.info.product_key,
+     #  created=self.info.created,
+     #  released=self.info.released,
+     #  status=self.info.status,
+     #  locations=self.info.locations
+     #)
+     #new_serial_key = self.tx.collection('Serial').insert(new_serial_record)['_key']
 
-     self.response = dict(
+    KafkaProducer.send_to_topic("serial", "sss", "sss")
+    self.response = dict(
       message="Serial created correctly",
-      issue_key=new_serial_key
+      #issue_key=new_serial_key
     )
 
 
