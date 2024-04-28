@@ -47,7 +47,7 @@
         </q-card-section>
 
         <!-- SERIAL DATA -->
-        <div v-else key="serial_data">
+        <q-card-section v-else key="serial_data">
           <!-- FORM FIELDS -->
           <q-select
             v-if="phase_data"
@@ -59,7 +59,7 @@
             option-label="alias"
             @update:model-value="(selection) => loadPhase(selection)"
           />
-        </div>
+        </q-card-section>
 
         <!-- FORM ACTIONS    navigation -->
         <q-card-section>
@@ -88,7 +88,6 @@
               </q-btn>
 
               <q-btn
-                v-else
                 color="theme-orange"
                 :label="$t('save')"
                 :loading="saving"
@@ -181,7 +180,7 @@ export default {
   methods: {
     initFormData() {
       const form_template = this.base_fields ?? [];
-
+      this.saving = false;
       const use_clean_form = this.mode === 'new';
       if (use_clean_form) {
         this.links.product = null;
@@ -347,12 +346,14 @@ export default {
         serial_data,
       };
 
+      await this.$api.post('event', event);
+      /*const { data } = await this.$api.post('event', event);
       const message =
         this.mode === 'new' ? 'serial_new_success' : 'serial_update_success';
-      const { data } = await this.$api.post('event', event);
+
       const serial_key =
         this.mode === 'new' ? data.detail.serial_key : serial_data._key;
-      await this.saveFiles(serial_key);
+      await this.saveFiles(serial_key);*/
 
       // If from work session, fetch serials directly, otherwise signal the parent component to do so
       /*if (!this.with_links) {
@@ -364,12 +365,12 @@ export default {
       }*/
       this.cancel();
       this.saving = false;
-      this.$q.notify({
+      /*this.$q.notify({
         message: this.$t(message),
         color: 'theme-orange',
         timeout: 1500,
         position: 'top',
-      });
+      });*/
     },
   },
 };
