@@ -11,7 +11,6 @@ from utils.db import model_to_db_dict
 
 from utils.kafka_producer import KafkaProducer
 
-
 class ProductionActivityEvent(BaseEvent):
   production_collections = [
     'Batch',
@@ -164,8 +163,7 @@ class ProductionActivityEvent(BaseEvent):
      #  locations=self.info.locations
      #)
      #new_serial_key = self.tx.collection('Serial').insert(new_serial_record)['_key']
-
-    KafkaProducer.send_to_topic("serial", "sss", "sss")
+    KafkaProducer.getInstance().produce_async("serial", "sss", "sss")
     self.response = dict(
       message="Serial created correctly",
       #issue_key=new_serial_key

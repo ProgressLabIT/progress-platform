@@ -5,11 +5,11 @@ from starlette.middleware.gzip import GZipMiddleware
 
 from utils.config import get_config
 from utils.kafka_producer import KafkaProducer
+from utils.kafka_consumer import KafkaConsumer
+from utils.executor_manager import ExecutorManager
 import endpoints
 
 config = get_config()
-
-kafkaProduce: KafkaProducer()
 
 app = FastAPI(
 	# openapi_url=f"{config.root_path}/openapi.json",
@@ -35,8 +35,18 @@ relative endpoint.py module, so it's easily available here
 
 @app.get("/hello")
 async def hello():
-	return 'Hi!'
+  return 'Hi!'
 
+@app.on_event("startup")
+async def startup_event():
+    KafkaProducer.getInstance()
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+   KafkaProducer.getInstance().close()
+   KafkaConsumer.getInstance().close()
+   ExecutorManager.getInstance().close()
 
 app.include_router(endpoints.admin, tags=['Administration'])
 app.include_router(endpoints.auth, tags=['Security'])
@@ -54,6 +64,7 @@ app.include_router(endpoints.production, tags=['Production'])
 app.include_router(endpoints.tag)
 app.include_router(endpoints.collaboration, tags=['Collaboration'])
 app.include_router(endpoints.traceability, tags=['Traceability'])
+app.include_router(endpoints.notification, tags=['Notification'])
 
 # app.include_router(global_router, prefix="/v1")
 
