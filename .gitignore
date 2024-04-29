@@ -63,3 +63,6 @@ artifacts/
 # Ansible Cache
 .facts.cache
 
+webapps/main/src__
+webapps/api/package-lock.json
+*.lock

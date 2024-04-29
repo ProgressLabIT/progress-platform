@@ -14,3 +14,4 @@ from .production import router as production
 from .tag import router as tag
 from .collaboration import router as collaboration
 from .traceability import router as traceability
+from .notification import router as notification
