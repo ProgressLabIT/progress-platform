@@ -131,7 +131,7 @@
           <q-tab-panel name="parameters">
             <ProcessParameters
               v-model="temp_params"
-              :process-has-steps="false"
+              :process-has-steps="temp_steps.length > 0"
               :edit-mode="editMode"
             />
           </q-tab-panel>
