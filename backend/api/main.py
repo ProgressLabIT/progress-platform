@@ -7,6 +7,7 @@ from utils.kafka_producer import KafkaProducer
 from utils.kafka_consumer import KafkaConsumer
 from utils.kafka_admin import KafkaAdmin
 from utils.executor_manager import ExecutorManager
+from utils.websocket_manager import WebsocketManager
 import endpoints
 
 config = get_config()
@@ -38,13 +39,16 @@ async def hello():
 @app.on_event("startup")
 async def startup_event():
     KafkaProducer.getInstance()
+    KafkaConsumer.getInstance()
     KafkaAdmin.getInstance()
+    WebsocketManager.getInstance()
 
 
 @app.on_event("shutdown")
 def shutdown_event():
    KafkaProducer.getInstance().close()
    KafkaConsumer.getInstance().close()
+   WebsocketManager.getInstance().close()
    ExecutorManager.getInstance().close()
 
 app.include_router(endpoints.admin, tags=['Administration'])
