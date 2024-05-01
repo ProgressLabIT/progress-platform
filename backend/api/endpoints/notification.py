@@ -2,7 +2,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi import APIRouter
 
-from utils.websocket_manager import WebsoketManager
+from utils.websocket_manager import WebsocketManager
 
 router = APIRouter()
 
@@ -51,12 +51,22 @@ async def get():
 #Retrieve websocket example
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: int):
-    websoketManager = WebsoketManager.getInstance()
-    await websoketManager.connect(websocket)
+    websocketManager = WebsocketManager.getInstance()
+    await websocketManager.connect(websocket)
     try:
         while True:
             data = await websocket.receive_text()
-            await websoketManager.broadcast(f"Client #{client_id} says: {data}")
+            await websocketManager.broadcast(f"Client #{client_id} says: {data}")
     except WebSocketDisconnect:
-        websoketManager.disconnect(websocket)
-        await websoketManager.broadcast(f"Client #{client_id} left the chat")
+        websocketManager.disconnect(websocket)
+        await websocketManager.broadcast(f"Client #{client_id} left the chat")
+
+def notify():
+    websocketManager = WebsocketManager.getInstance()
+
+
+@router.websocket("/subscribe")
+async def subscribe(websocket: WebSocket):
+    websocketManager = WebsocketManager.getInstance()
+    await websocketManager.connect(websocket)
+

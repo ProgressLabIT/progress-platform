@@ -1,6 +1,6 @@
 from fastapi import WebSocket
 
-class WebsoketManager:
+class WebsocketManager:
     __instance = None
 
     def __init__(self):
@@ -8,9 +8,9 @@ class WebsoketManager:
 
     @staticmethod
     def getInstance():
-      if WebsoketManager.__instance == None:
-        WebsoketManager.__instance = WebsoketManager()
-      return WebsoketManager.__instance
+      if WebsocketManager.__instance == None:
+        WebsocketManager.__instance = WebsocketManager()
+      return WebsocketManager.__instance
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
