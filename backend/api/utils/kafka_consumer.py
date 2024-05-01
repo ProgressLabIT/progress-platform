@@ -15,9 +15,8 @@ class KafkaConsumer:
       conf = config.get_config()
       self.kafka_conf = {'bootstrap.servers': conf.kafka_bootstrap_server,
         'group.id': conf.kafka_group_id,
-        'auto.offset.reset': 'smallest',
-        'enable_auto_commit': True,
-        'session_timeout_ms': conf.kafka_session_to_ms,}
+        'client.id': conf.kafka_client_id_consumer,
+        'auto.offset.reset': 'earliest'}
       self.loop = asyncio.get_event_loop()
       self.consumer = Consumer(self.kafka_conf)
       self.cancelled = False

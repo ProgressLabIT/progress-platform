@@ -27,9 +27,6 @@ class KafkaAdmin:
         KafkaAdmin.__instance = KafkaAdmin()
       return KafkaAdmin.__instance
 
-    def close(self):
-      self.admin_client.close()
-
     def create_topic(self, topics):
       new_topics = [NewTopic(topic, num_partitions=3, replication_factor=1) for topic in topics]
       fs = self.admin_client.create_topics(new_topics)
@@ -67,7 +64,7 @@ class KafkaAdmin:
       return message
 
     def describe_topic(self, topic):
-      topics = TopicCollection(topic)
+      topics = TopicCollection({topic})
       futureMap = self.admin_client.describe_topics(topics, request_timeout=10, include_authorized_operations=False)
       message = ""
       for topic_name, future in futureMap.items():

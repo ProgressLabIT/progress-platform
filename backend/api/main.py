@@ -45,7 +45,6 @@ async def startup_event():
 def shutdown_event():
    KafkaProducer.getInstance().close()
    KafkaConsumer.getInstance().close()
-   KafkaAdmin.getInstance().close()
    ExecutorManager.getInstance().close()
 
 app.include_router(endpoints.admin, tags=['Administration'])

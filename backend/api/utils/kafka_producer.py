@@ -14,7 +14,9 @@ class KafkaProducer:
     def __init__(self):
       conf = config.get_config()
       kafka_conf = {'bootstrap.servers': conf.kafka_bootstrap_server,
-                    'client.id': socket.gethostname()}
+                   # 'enable.idempotence': True,
+                    'acks': "all",
+                    'client.id': conf.kafka_client_id_producer}
       # Create Producer instance
       self.loop = asyncio.get_event_loop()
       self.producer = Producer(kafka_conf)
