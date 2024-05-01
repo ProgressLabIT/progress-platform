@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi import APIRouter
 
 from utils.websocket_manager import WebsocketManager
+from utils.kafka_producer import KafkaProducer
 
 router = APIRouter()
 
@@ -56,7 +57,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int):
     try:
         while True:
             data = await websocket.receive_text()
-            await websocketManager.broadcast(f"Client #{client_id} says: {data}")
+            KafkaProducer.getInstance().produce_async(topic="test_chat", key='123', value=data)
+            #await websocketManager.broadcast(f"Client #{client_id} says: {data}")
     except WebSocketDisconnect:
         websocketManager.disconnect(websocket)
         await websocketManager.broadcast(f"Client #{client_id} left the chat")

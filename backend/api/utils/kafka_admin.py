@@ -27,8 +27,8 @@ class KafkaAdmin:
         KafkaAdmin.__instance = KafkaAdmin()
       return KafkaAdmin.__instance
 
-    def create_topic(self, topics):
-      new_topics = [NewTopic(topic, num_partitions=3, replication_factor=1) for topic in topics]
+    def create_topic(self, topic):
+      new_topics = [NewTopic(topic, num_partitions=3, replication_factor=1)]
       fs = self.admin_client.create_topics(new_topics)
       for topic, f in fs.items():
           try:
