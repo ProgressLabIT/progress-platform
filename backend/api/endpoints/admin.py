@@ -4,6 +4,8 @@ from fastapi import APIRouter, HTTPException
 
 from utils.db import db
 from models.production import WorkStatus
+from utils.kafka_admin import KafkaAdmin
+from utils.api import APIResponse
 
 router = APIRouter()
 
@@ -126,5 +128,60 @@ async def force_delete_work_order_data(work_order_key: str):
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
+@router.put("/kafka/topic/{topic}")
+async def put_kafka_topic(topic: str):
+  try:
+    message = await KafkaAdmin.getInstance().createTopic(topic)
+    return APIResponse(message)
+  except:
+    status_code = 500
+    response = dict(
+      status=status_code,
+      message="There was an error while creating the topic",
+      error=traceback.format_exc(),
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+@router.delete("/kafka/topic/{topic}")
+async def delete_kafka_topic(topic: str):
+  try:
+    message = await KafkaAdmin.getInstance().deleteTopic(topic)
+    return APIResponse(message)
+  except:
+    status_code = 500
+    response = dict(
+      status=status_code,
+      message="There was an error while deleting the topic",
+      error=traceback.format_exc(),
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+@router.get("/kafka/topics")
+async def list_kafka_topic():
+  try:
+    message = await KafkaAdmin.getInstance().list_topics()
+    return APIResponse(message)
+  except:
+    status_code = 500
+    response = dict(
+      status=status_code,
+      message="There was an error while retreiving topic list",
+      error=traceback.format_exc(),
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+@router.get("/kafka/topic/{topic}")
+async def get_kafka_topic(topic: str):
+  try:
+    message = await KafkaAdmin.getInstance().describe_topic(topic)
+    return APIResponse(message)
+  except:
+    status_code = 500
+    response = dict(
+      status=status_code,
+      message="There was an error while retreiving the topic",
+      error=traceback.format_exc(),
+    )
+    raise HTTPException(status_code=status_code, detail=response)
 
 
