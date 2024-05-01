@@ -131,8 +131,8 @@ async def force_delete_work_order_data(work_order_key: str):
 @router.put("/kafka/topic/{topic}")
 async def put_kafka_topic(topic: str):
   try:
-    message = await KafkaAdmin.getInstance().createTopic(topic)
-    return APIResponse(message)
+    message = KafkaAdmin.getInstance().create_topic(topic)
+    return APIResponse(message = message)
   except:
     status_code = 500
     response = dict(
@@ -145,8 +145,8 @@ async def put_kafka_topic(topic: str):
 @router.delete("/kafka/topic/{topic}")
 async def delete_kafka_topic(topic: str):
   try:
-    message = await KafkaAdmin.getInstance().deleteTopic(topic)
-    return APIResponse(message)
+    message = KafkaAdmin.getInstance().delete_topic(topic)
+    return APIResponse(message = message)
   except:
     status_code = 500
     response = dict(
@@ -159,8 +159,8 @@ async def delete_kafka_topic(topic: str):
 @router.get("/kafka/topics")
 async def list_kafka_topic():
   try:
-    message = await KafkaAdmin.getInstance().list_topics()
-    return APIResponse(message)
+    message = KafkaAdmin.getInstance().list_topics()
+    return APIResponse(message = message)
   except:
     status_code = 500
     response = dict(
@@ -173,8 +173,8 @@ async def list_kafka_topic():
 @router.get("/kafka/topic/{topic}")
 async def get_kafka_topic(topic: str):
   try:
-    message = await KafkaAdmin.getInstance().describe_topic(topic)
-    return APIResponse(message)
+    message = KafkaAdmin.getInstance().describe_topic(topic)
+    return APIResponse(message = message)
   except:
     status_code = 500
     response = dict(
