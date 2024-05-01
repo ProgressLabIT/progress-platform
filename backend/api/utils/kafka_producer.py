@@ -45,7 +45,7 @@ class KafkaProducer:
         self.cancelled = True
         self.poll_thread.join()
 
-    def produce_async(self, topic, key, value, callback=delivery_callback):
+    def produce_async(self, topic=None, key=None, value=None, callback=delivery_callback):
         result = self.loop.create_future()
 
         def ack(err, msg):
@@ -58,7 +58,7 @@ class KafkaProducer:
             if callback:
                 self.loop.call_soon_threadsafe(
                     callback, err, msg)
-        self.producer.produce(topic, key, value, on_delivery=ack)
+        self.producer.produce(topic, value, key, on_delivery=ack)
         return result
 
     def produce_synch(self, topic, key, value, callback=delivery_callback):
