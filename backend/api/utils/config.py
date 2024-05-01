@@ -10,8 +10,10 @@ class Settings(BaseSettings):
   db_name: str = "PROGRESS_TEST"
   api_db_username: str = "root" # use default when running standalone containers
   api_db_pwd: str = ""
-  kafka_bootstrap_server: str = "localhost:9000"
-  kafka_group_id: str = "fooo"
+  kafka_bootstrap_server: str = "broker:19092"
+  kafka_group_id: str = "backend"
+  kafka_client_id_consumer: str = "backend-service-consumer"
+  kafka_client_id_producer: str = "backend-service-producer"
   kafka_session_to_ms: int = 10000
 
   model_config = SettingsConfigDict(
