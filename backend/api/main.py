@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from utils.config import get_config
 from utils.kafka_producer import KafkaProducer
 from utils.kafka_consumer import KafkaConsumer
+from utils.kafka_admin import KafkaAdmin
 from utils.executor_manager import ExecutorManager
 import endpoints
 
@@ -37,12 +38,14 @@ async def hello():
 @app.on_event("startup")
 async def startup_event():
     KafkaProducer.getInstance()
+    KafkaAdmin.getInstance()
 
 
 @app.on_event("shutdown")
 def shutdown_event():
    KafkaProducer.getInstance().close()
    KafkaConsumer.getInstance().close()
+   KafkaAdmin.getInstance().close()
    ExecutorManager.getInstance().close()
 
 app.include_router(endpoints.admin, tags=['Administration'])
