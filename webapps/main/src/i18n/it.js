@@ -761,6 +761,7 @@ export default {
     defaultOperationParameters: 'parametri di default operazione',
     flowLibrary: 'Flussi dati',
     formFieldLibrary: 'Campi moduli',
+    counterLibrary: 'Contatori',
     serialFieldLibrary: 'Campi seriali',
     generalSettings: 'generale',
     jobList: 'lavori',
