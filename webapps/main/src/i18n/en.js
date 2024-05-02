@@ -750,6 +750,7 @@ export default {
     companyDetails: 'company details',
     defaultOperationParameters: 'default operation parameters',
     formFieldLibrary: 'Form fields',
+    counterLibrary: 'Counters',
     serialFieldLibrary: 'Serial fields',
     flowLibrary: 'Data flows',
     generalSettings: 'General',
