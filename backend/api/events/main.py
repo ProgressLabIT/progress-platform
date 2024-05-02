@@ -2,7 +2,7 @@ from events import (
   CollaborationEvent,
   ProductionActivityEvent,
   ProductionAdminEvent,
-  SharedEventMethods
+  SharedEventMethods,
 )
 from models.event import EventModel
 from utils.db import db
