@@ -130,6 +130,20 @@ const adminRoutes = [
         ],
       },
       {
+        path: 'counter',
+        name: 'counterLibrary',
+        component: () => import('@/views/settings/counter/CounterLibrary.vue'),
+        children: [
+          {
+            path: ':counter_key',
+            name: 'counterDetail',
+            component: () =>
+              import('@/views/settings/counter/CounterDetail.vue'),
+            props: true,
+          },
+        ],
+      },
+      {
         path: 'flows',
         name: 'flowLibrary',
         component: () => import('@/views/FlowLibrary.vue'),

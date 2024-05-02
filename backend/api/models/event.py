@@ -76,3 +76,6 @@ class EventModel(ArangoDocument):
   new_job_qt_completed: float | None = None
   new_job_qt_released: float | None = None
   should_adjust_duration: bool | None = None
+
+  # Traceability fields
+  serial_data: Any | None = None
