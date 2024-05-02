@@ -1,4 +1,5 @@
 import requests
+import endpoints.counter
 from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
@@ -70,6 +71,7 @@ app.include_router(endpoints.production, tags=['Production'])
 app.include_router(endpoints.tag)
 app.include_router(endpoints.collaboration, tags=['Collaboration'])
 app.include_router(endpoints.traceability, tags=['Traceability'])
+app.include_router(endpoints.counter, tags=['Traceability'])
 app.include_router(endpoints.notification, tags=['Notification'])
 
 # app.include_router(global_router, prefix="/v1")

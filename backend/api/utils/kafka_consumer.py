@@ -49,7 +49,7 @@ class KafkaConsumer:
       print("%% %s [%d] at offset %d with key %s:\n" %(msg.topic(), msg.partition(), msg.offset(),str(msg.key())))
       WebsocketManager.getInstance().enqueue(msg.value().decode('utf-8'))
       #websocketManager = WebsocketManager.getInstance()
-      #await websocketManager.broadcast(msg)
+      #await websoc  ketManager.broadcast(msg)
 
     def consume_loop(self):
        try:

@@ -1,3 +1,7 @@
+import traceback
+import json
+
+from fastapi.encoders import jsonable_encoder
 from events.base import BaseEvent
 from events.shared import EventMeta
 
@@ -10,6 +14,10 @@ from utils.traceability import Queries as TraceabilityQueries
 from utils.db import model_to_db_dict
 
 from utils.kafka_producer import KafkaProducer
+
+from fastapi import HTTPException
+
+
 
 class ProductionActivityEvent(BaseEvent):
   production_collections = [
@@ -153,21 +161,22 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
 
   def create_serial(self):
-     #new_serial_record = Serial(
-     #  serial=self.info.serial,
-     #  wo_key=self.info.work_order_key,
-     #  product_key=self.info.product_key,
-     #  created=self.info.created,
-     #  released=self.info.released,
-     #  status=self.info.status,
-     #  locations=self.info.locations
-     #)
-     #new_serial_key = self.tx.collection('Serial').insert(new_serial_record)['_key']
-    KafkaProducer.getInstance().produce_async("serial", "sss", "sss")
-    self.response = dict(
-      message="Serial created correctly",
+    serial_data = jsonable_encoder(SerialWithLinks(**self.info.serial_data))
+
+    try:
+      KafkaProducer.getInstance().produce_async(topic="serials", key=serial_data.get('_key'), value=json.dumps(serial_data))
+      self.response = dict(
+        message="Serial created correctly",
       #issue_key=new_serial_key
-    )
+      )
+    except Exception:
+      raise HTTPException(
+        status_code=500,
+        detail=dict(
+          message="There was an error creating the serial.",
+          error=traceback.format_exc()
+        )
+      )
 
 
   # def create_batch_serial_records(self):

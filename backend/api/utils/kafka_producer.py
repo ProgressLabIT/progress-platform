@@ -34,8 +34,12 @@ class KafkaProducer:
       if err:
           print('ERROR: Message failed delivery: {}'.format(err))
       else:
-          print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
+          if (msg.key()!=None):
+            print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
               topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
+          else:
+             print("Produced event to topic {topic}: value = {value:12}".format(
+              topic=msg.topic(), value=msg.value().decode('utf-8')))
 
     def poll_loop(self):
         while not self.cancelled:
@@ -47,6 +51,8 @@ class KafkaProducer:
 
     def produce_async(self, topic=None, key=None, value=None, callback=delivery_callback):
         result = self.loop.create_future()
+        #if (key==None):
+        #    key='aaa'
 
         def ack(err, msg):
             if err:
