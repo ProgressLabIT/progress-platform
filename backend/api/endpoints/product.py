@@ -56,14 +56,17 @@ async def get_product_list(
 async def create_product(
   code: str = Form(...),
   description: str = Form(''),
-  image: UploadFile = File(None)
+  image: UploadFile = File(None),
+  counter_id: str = Form(''),
 ):
   # Map form data
   try:
+
     new_product = ProductDetails(
       code=code,
       description=description,
-      created=timestamp()
+      created=timestamp(),
+      counter_id=counter_id
     )
 
   except Exception as e:
@@ -469,6 +472,8 @@ async def get_product_data(product_key: str):
   try:
     product = ProductFull(**product_db.get(product_key))
     product.docs = get_product_docs(product_key)
+    if (product.counter_id):
+      product.counter = db.collection('Counter').get(product.counter_id)
     return product
 
   except:
