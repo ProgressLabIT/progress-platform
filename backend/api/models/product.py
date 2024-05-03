@@ -7,6 +7,7 @@ from pydantic import ByteSize, Field
 
 from utils.base_models import FlexModel
 from models.tag import Tag
+from models.counter import Counter
 
 
 
@@ -32,6 +33,7 @@ class ProductBaseData(FlexModel):
   active: bool = True
   image: bool = False # to be replaced with Object Storage url in the future
   tags: List[Tag] | None= []
+  counter_id: str | None = None
 
 class ProductDetails(ProductBaseData):
   trash: bool = False
@@ -62,3 +64,4 @@ class ProductDoc(FlexModel):
 class ProductFull(ProductDetails):
   docs: List[ProductDoc] = []
   img_name: str | None = None
+  counter: Counter | None = None
