@@ -192,6 +192,32 @@
 
     <!-- NOTES -->
     <div class="col-4 q-px-md full-height">
+      <!-- PRODUCT COUNTER -->
+      <q-card-section>
+        <div class="q-mt-lg col-auto">
+          <div class="text-h4 weight-bold text-uppercase">
+            {{ $t('counter') }}
+          </div>
+          <div
+            v-if="!editMode"
+            class="text-h3 q-mt-xs"
+            style="white-space: pre-line"
+          >
+            {{ counter_name }}
+          </div>
+          <q-input
+            v-else
+            :model-value="counter_name"
+            dense
+            :label="$capitalize($t('counter'))"
+            class="input-uppercase"
+            clearable
+            :readonly="!editMode"
+            @click="show_counter_form = true"
+          >
+          </q-input>
+        </div>
+      </q-card-section>
       <q-card
         square
         class="surface2 q-px-sm q-pt-sm q-pb-md column no-wrap"
@@ -368,6 +394,14 @@
         :media_src="show_template?.pdf"
         @close="show_template = null"
       />
+
+      <BaseDialog :show="show_counter_form" :no-backdrop-dismiss="false">
+        <CounterSearch
+          @close="show_counter_form = false"
+          @select="selectCounter"
+        >
+        </CounterSearch>
+      </BaseDialog>
     </div>
   </div>
 </template>
@@ -377,9 +411,11 @@ import { generate } from '@pdfme/generator';
 import { mapState, mapActions } from 'vuex';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
+import BaseDialog from '@/components/BaseDialog.vue';
 import MediaViewer from '@/components/MediaViewer.vue';
 import TagInput from '@/components/TagInput.vue';
 import TagChips from '../components/TagChips.vue';
+import CounterSearch from '../components/settings/counters/CounterSearch.vue';
 
 export default {
   name: 'ProductHome',
@@ -390,6 +426,8 @@ export default {
     BaseAutocompleteTemplate,
     TagInput,
     TagChips,
+    BaseDialog,
+    CounterSearch,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
@@ -408,6 +446,8 @@ export default {
       no_image: false,
       show_template: null,
       over_print: null,
+      show_counter_form: false,
+      new_product_counter: null,
     };
   },
 
@@ -420,6 +460,15 @@ export default {
       product: (state) => state.product.temp,
       saved_product: (state) => state.product.saved,
     }),
+
+    counter_name() {
+      if (this.new_product_counter) {
+        return this.new_product_counter.name;
+      } else if (this.$store.state.product.temp.counter) {
+        return this.$store.state.product.temp.counter.name;
+      }
+      return '';
+    },
 
     editMode: {
       get() {
@@ -543,6 +592,12 @@ export default {
         param: field,
         new_value: value,
       });
+    },
+
+    selectCounter(counter) {
+      this.new_product_counter = counter;
+      this.product.counter_id = counter._key;
+      this.show_counter_form = false;
     },
 
     addFiles(fileList) {

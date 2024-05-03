@@ -41,7 +41,23 @@
             <q-icon name="mdi-image" />
           </template>
         </q-file>
+        <q-input
+          v-model="new_product_counter_name"
+          dense
+          :label="$capitalize($t('counter'))"
+          class="input-uppercase"
+          clearable
+          @click="show_new_counter_form = true"
+        >
+        </q-input>
       </div>
+      <BaseDialog :show="show_new_counter_form" :no-backdrop-dismiss="false">
+        <CounterSearch
+          @close="show_new_counter_form = false"
+          @select="selectCounter"
+        >
+        </CounterSearch>
+      </BaseDialog>
     </template>
   </BaseModalForm>
 </template>
@@ -49,13 +65,17 @@
 <script>
 import { api } from '@/boot/axios.js';
 
+import BaseDialog from '@/components/BaseDialog.vue';
 import BaseModalForm from '@/components/BaseModalForm.vue';
+import CounterSearch from '../components/settings/counters/CounterSearch.vue';
 
 export default {
   name: 'ProductNew',
 
   components: {
     BaseModalForm,
+    CounterSearch,
+    BaseDialog,
   },
 
   data() {
@@ -63,10 +83,19 @@ export default {
       new_product_code: '',
       new_product_desc: '',
       new_product_pic: null,
+      new_product_counter: null,
+      new_product_counter_name: '',
+      show_new_counter_form: false,
     };
   },
 
   methods: {
+    selectCounter(counter) {
+      this.new_product_counter = counter;
+      this.new_product_counter_name = counter.name;
+      this.show_new_counter_form = false;
+    },
+
     postNewProduct() {
       let body = new FormData();
       const code = this.new_product_code.toUpperCase();
@@ -78,6 +107,10 @@ export default {
       if (this.new_product_pic) {
         const image = this.new_product_pic;
         body.append('image', image, image.name);
+      }
+
+      if (this.new_product_counter) {
+        body.append('counter_id', this.new_product_counter._key);
       }
 
       api

@@ -21,22 +21,18 @@
       <q-virtual-scroll
         v-slot="{ item }"
         style="max-height: 200px"
-        :items="filtered_fields"
+        :items="filtered_counters"
         class="surface2"
       >
         <q-item clickable @click="$emit('select', item)">
-          <q-item-section avatar>
-            <q-icon :name="getFieldIcon(item.type)" />
-          </q-item-section>
           <q-item-section>
             <q-item-label>
               <span class="highlight">
                 {{ item.name }}
               </span>
-              <span class="smaller q-ml-sm"> ({{ item.default_label }}) </span>
             </q-item-label>
-            <q-item-label v-if="item.default_hint" caption>
-              {{ item.default_hint }}
+            <q-item-label v-if="item.template" caption>
+              {{ template(item) }}
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -49,17 +45,17 @@
         :label="$t('new')"
         icon="mdi-plus"
         class="full-width q-"
-        @click="show_new_field = true"
+        @click="show_new_counter = true"
       >
       </q-btn>
     </q-card-section>
 
-    <BaseDialog :show="show_new_field" @close="show_new_field = false">
+    <BaseDialog :show="show_new_counter" @close="show_new_counter = false">
       <CounterNew
         @close="
           () => {
-            show_new_field = false;
-            fetchFields();
+            show_new_counter = false;
+            fetchCounters();
           }
         "
       />
@@ -71,7 +67,6 @@
 import BaseDialog from '@/components/BaseDialog.vue';
 import CounterNew from '@/components/settings/counters/CounterNew.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
-import form from '@/mixins/form.js';
 
 export default {
   name: 'CounterSearch',
@@ -80,8 +75,6 @@ export default {
     CounterNew,
     BaseDialog,
   },
-
-  mixins: [form],
 
   props: {
     excludeKeys: {
@@ -95,29 +88,36 @@ export default {
   data() {
     return {
       search_text: null,
-      field_list: [],
-      show_new_field: false,
-      search_fields: ['name', 'default_label', 'default_hint'],
+      counter_list: [],
+      show_new_counter: false,
+      search_counters: ['name'],
     };
   },
 
   computed: {
-    filtered_fields() {
-      return this.field_list
+    filtered_counters() {
+      return this.counter_list
         .filter((f) => !this.excludeKeys.includes(f._key))
-        .filter((f) => multiMatch(this.search_text, f, this.search_fields));
+        .filter((f) => multiMatch(this.search_text, f, this.search_counters));
     },
   },
 
   created() {
-    this.fetchFields();
+    this.fetchCounters();
   },
 
   methods: {
-    fetchFields() {
-      this.$api.get('field').then((resp) => {
-        this.field_list = resp.data;
+    fetchCounters() {
+      this.$api.get('counter').then((resp) => {
+        this.counter_list = resp.data;
       });
+    },
+
+    template(item) {
+      if (item.template) {
+        return item.template.join(' ');
+      }
+      return '';
     },
   },
 };
