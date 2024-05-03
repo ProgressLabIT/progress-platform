@@ -39,7 +39,7 @@ def fetch_counter(name: str | None = None, key: str | None = None):
 def replace_field_metadata(counter_key: str, counter_data: Counter):
   """Counter data must contain _key"""
   try:
-    db.collection('Counter').update(counter_key.dict(by_alias=True), check_rev=False)
+    db.collection('Counter').update(counter_data.dict(by_alias=True), check_rev=False)
     return APIResponse(message = "Counter updated successfully")
   except:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
