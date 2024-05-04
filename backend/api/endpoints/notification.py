@@ -2,8 +2,8 @@ from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi import APIRouter
 
-from utils.websocket_manager import WebsocketManager
-from utils.kafka_producer import KafkaProducer
+from commons.websockets.websocket_manager import WebsocketManager
+from commons.kafka_utils.kafka_producer import KafkaProducer
 
 router = APIRouter()
 

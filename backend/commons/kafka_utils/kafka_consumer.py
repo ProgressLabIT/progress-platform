@@ -1,7 +1,7 @@
 import asyncio
 
-from utils import config
-from utils.websocket_manager import WebsocketManager
+from commons.utils import config
+from commons.websockets.websocket_manager import WebsocketManager
 from threading import Thread
 
 from confluent_kafka import Consumer, KafkaException
