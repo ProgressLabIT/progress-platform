@@ -407,8 +407,8 @@ import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vu
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import FormField from '@/components/FormField.vue';
-import SerialForm from '@/components/SerialForm.vue';
 import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js';
+import SerialForm from 'app/src/components/traceability/SerialForm.vue';
 
 export default {
   name: 'TraceabilityRoot',

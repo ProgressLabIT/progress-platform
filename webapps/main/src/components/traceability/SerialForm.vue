@@ -30,7 +30,7 @@
           <!-- PRODUCT -->
           <BaseAutocompleteProduct
             :value="links.product"
-            :hint="!phase_data ? $t('phase.no_phase') : null"
+            :hint="!step_data ? $t('phase.no_phase') : null"
             key-only
             :label="$capitalize($t('product.label'))"
             @select="(selection) => loadProduct(selection)"
@@ -43,21 +43,48 @@
             :root-path="`/media/serial/${serial?._key}`"
             @update="field.value = $event"
           />
-          <!-- PHASE -->
         </q-card-section>
 
         <!-- SERIAL DATA -->
         <q-card-section v-else key="serial_data">
           <!-- FORM FIELDS -->
-          <q-select
-            v-if="phase_data"
-            :model-value="links.phase"
-            :label="$t('phase.short')"
+          <div class="text-h3"></div>
+
+          <q-field
             filled
-            clearable
-            :options="phase_data"
-            option-label="alias"
-            @update:model-value="(selection) => loadPhase(selection)"
+            :label="$t('phase.phase')"
+            stack-label
+            disable
+            class="q-mb-lg"
+          >
+            <template #control>
+              <div class="self-center full-width no-outline" tabindex="0">
+                {{ step_data[phase_index].alias }}
+              </div>
+            </template>
+          </q-field>
+
+          <q-field
+            filled
+            :label="$t('phase.step')"
+            stack-label
+            class="q-mb-lg"
+            disable
+          >
+            <template #control>
+              <div class="self-center full-width no-outline" tabindex="0">
+                {{ step_data[phase_index].steps[step_index].title }}
+              </div>
+            </template>
+          </q-field>
+
+          <FormField
+            v-for="field in step_data[phase_index].steps[step_index]
+              .form_fields"
+            :key="field._key"
+            :field="field"
+            :root-path="`/media/serial/${serial?._key}`"
+            @update="field.value = $event"
           />
         </q-card-section>
 
@@ -65,7 +92,7 @@
         <q-card-section>
           <div class="row q-gutter-md">
             <q-btn
-              v-if="mode === 'new' && form_step === 'select_product'"
+              v-if="form_step === 'select_product'"
               color="theme-blue"
               :label="$t('next')"
               :disable="!links.product"
@@ -76,18 +103,19 @@
               <q-btn
                 icon="mdi-arrow-left-bold"
                 color="theme-blue"
-                @click="form_step = 'select_product'"
+                @click="prevTile()"
               >
               </q-btn>
               <q-btn
-                v-if="phase_data"
+                v-if="!enableSave && form_step === 'fill_steps_data'"
                 icon="mdi-arrow-right-bold"
                 color="theme-blue"
-                @click="form_step = 'fill_steps_data'"
+                @click="nextTile()"
               >
               </q-btn>
 
               <q-btn
+                v-else
                 color="theme-orange"
                 :label="$t('save')"
                 :loading="saving"
@@ -145,12 +173,14 @@ export default {
   data() {
     return {
       phase_index: 0,
+      step_index: 0,
       saving: false,
+      enableSave: false,
       form_step: 'select_product',
       form_fields: [],
       base_fields: [],
       confirmed: false,
-      phase_data: null,
+      step_data: null,
       links: {
         product: null,
         user: null,
@@ -181,10 +211,12 @@ export default {
     initFormData() {
       const form_template = this.base_fields ?? [];
       this.saving = false;
+      this.enableSave = false;
+      this.phase_index = 0;
+      this.step_index = 0;
       const use_clean_form = this.mode === 'new';
       if (use_clean_form) {
         this.links.product = null;
-        this.links.phase = null;
         // Use fields from serial type template adding empty value
         // If no template, force null, otherwise `undefined` will not be included in the api body and the serial data will not be updated
         this.form_fields = form_template.map((field) => ({
@@ -205,13 +237,41 @@ export default {
       this.base_fields = fields;
     },
 
+    nextTile() {
+      if (this.step_index < this.step_data[this.phase_index].steps.length - 1) {
+        this.step_index++;
+      } else {
+        if (this.phase_index < this.step_data.length - 1) {
+          this.step_index = 0;
+          this.phase_index++;
+        }
+      }
+
+      this.enableSave =
+        this.step_index >= this.step_data[this.phase_index].steps.length - 1 &&
+        this.phase_index >= this.step_data.length - 1;
+    },
+
+    prevTile() {
+      this.enableSave = false;
+      if (this.step_index > 0) {
+        this.step_index--;
+      } else if (this.phase_index > 0) {
+        this.phase_index--;
+        this.step_index = this.step_data[this.phase_index].steps.length - 1;
+      } else {
+        this.form_step = 'select_product';
+        this.enableSave = !this.step_data;
+      }
+    },
+
     async loadProduct(product_key) {
       if (product_key === null) {
         this.links.product = null;
         return;
       }
       // To avoid loading in advance a lot of unnecessary product data, the product list contains limited information.
-      // So, it is necessary to fetch the full product data first and then load the phases options.
+      // So, it is necessary to fetch the full product data first and then load the stepss options.
       const { data: product } = await this.$api.get(`product/${product_key}`);
 
       this.links.product = product;
@@ -220,16 +280,12 @@ export default {
         return;
       }
 
-      const params = new URLSearchParams();
-      product.process_phases.forEach((phaseKey) =>
-        params.append('phase_key', phaseKey),
+      const { data: steps } = await this.$api.get(
+        `product-steps/${product_key}`,
       );
-      const { data: phase } = await this.$api.get('phase', { params });
-      this.phase_data = phase;
-    },
-
-    async loadPhase(phase_data) {
-      this.links.phase = phase_data;
+      this.step_data = steps;
+      this.phase_index = 0;
+      this.step_index = 0;
     },
 
     cancel() {
@@ -244,61 +300,6 @@ export default {
      */
     getFieldType(field) {
       return this.$store.getters.getCustomFieldByKey(field._key)?.type;
-    },
-
-    async saveFiles(serial_key) {
-      const promises = this.form_fields
-        .filter((field) => this.getFieldType(field) === 'files')
-        .map(async (field) => {
-          const to_delete = [];
-          const to_add = [];
-
-          field.value?.forEach((file) => {
-            if (file.temp) {
-              to_add.push(file.content);
-            } else if (file.delete) {
-              to_delete.push(file.name);
-            }
-          });
-
-          const target = {
-            bucket: 'serial',
-            object_key: serial_key,
-            subfolder: field._key,
-          };
-
-          // Upload new files
-          if (to_add.length) {
-            // Populate form data
-            const add_body = new FormData();
-            Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
-            to_add.forEach((file) => add_body.append('contents', file));
-            // Post files
-            try {
-              await this.$api.post('/files', add_body);
-            } catch (error) {
-              console.error(error);
-              window.alert(error);
-            }
-          }
-
-          // Delete files
-          if (to_delete.length) {
-            try {
-              await this.$api.delete('/files', {
-                data: {
-                  ...target,
-                  filenames: to_delete,
-                },
-              });
-            } catch (error) {
-              console.error(error);
-              window.alert(error);
-            }
-          }
-        });
-
-      return Promise.all(promises);
     },
 
     async save() {

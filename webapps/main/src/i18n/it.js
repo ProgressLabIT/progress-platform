@@ -360,6 +360,8 @@ export default {
   },
   personnel: 'personale',
   phase: {
+    phase: 'fase',
+    step: 'passo',
     add: 'aggiungi fase',
     add_field: 'aggiungi campo',
     add_media: 'aggiungi media',
