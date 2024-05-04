@@ -3,7 +3,7 @@ import json
 from arango import ArangoClient
 from fastapi.encoders import jsonable_encoder
 
-from utils import config
+from commons.utils import config
 
 
 def model_to_db_dict(pydantic_model):
