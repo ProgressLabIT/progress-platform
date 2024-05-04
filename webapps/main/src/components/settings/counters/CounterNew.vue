@@ -14,19 +14,7 @@
       class="q-mt-md"
     />
 
-    <q-select
-      v-model="template_model"
-      filled
-      :label="$t('template')"
-      use-input
-      use-chips
-      multiple
-      input-debounce="0"
-      :options="filterOptions"
-      class="q-mt-md"
-      @new-value="createValue"
-      @filter="filterFn"
-    />
+    <TemplateSelect v-model="template_model" />
 
     <q-input
       v-model="new_counter.frequency"
@@ -63,73 +51,23 @@
 import { date } from 'quasar';
 import { ref } from 'vue';
 import BaseActionFormCard from '@/components/BaseActionFormCard.vue';
-
-const templateOptions = ['%y', '%m', '%d', '/', '#2', '#3', '#4', '#5', '#6'];
+import TemplateSelect from '@/components/settings/counters/TemplateSelect.vue';
 
 export default {
   name: 'CounterNew',
 
   components: {
     BaseActionFormCard,
+    TemplateSelect,
   },
 
   emits: ['close', 'created'],
 
   setup() {
     const template_model = ref(null);
-    const filterOptions = ref(templateOptions);
 
     return {
       template_model,
-      filterOptions,
-
-      createValue(val, done) {
-        // Calling done(var) when new-value-mode is not set or is "add", or done(var, "add") adds "var" content to the model
-        // and it resets the input textbox to empty string
-        // ----
-        // Calling done(var) when new-value-mode is "add-unique", or done(var, "add-unique") adds "var" content to the model
-        // only if is not already set and it resets the input textbox to empty string
-        // ----
-        // Calling done(var) when new-value-mode is "toggle", or done(var, "toggle") toggles the model with "var" content
-        // (adds to model if not already in the model, removes from model if already has it)
-        // and it resets the input textbox to empty string
-        // ----
-        // If "var" content is undefined/null, then it doesn't tampers with the model
-        // and only resets the input textbox to empty string
-
-        if (val.length > 0) {
-          const modelValue = (template_model.value || []).slice();
-
-          val
-            .split(/[,;|]+/)
-            .map((v) => v.trim())
-            .filter((v) => v.length > 0)
-            .forEach((v) => {
-              if (templateOptions.includes(v) === false) {
-                templateOptions.push(v);
-              }
-              if (modelValue.includes(v) === false) {
-                modelValue.push(v);
-              }
-            });
-
-          done(null);
-          template_model.value = modelValue;
-        }
-      },
-
-      filterFn(val, update) {
-        update(() => {
-          if (val === '') {
-            filterOptions.value = templateOptions;
-          } else {
-            const needle = val.toLowerCase();
-            filterOptions.value = templateOptions.filter(
-              (v) => v.toLowerCase().indexOf(needle) > -1,
-            );
-          }
-        });
-      },
     };
   },
 
