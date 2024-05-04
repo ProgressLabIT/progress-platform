@@ -4,7 +4,7 @@ from .bom import router as bom
 from .config import router as config
 from .file import router as file
 from .form import router as form
-from .serialform import router as serialform
+from .serial import router as serial
 from .media import router as media
 from .org import router as org
 from .print import router as print
