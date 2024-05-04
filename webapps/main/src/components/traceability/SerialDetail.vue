@@ -133,9 +133,9 @@ import BaseDialog from '@/components/BaseDialog.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
 import MessageThread from '@/components/MessageThread.vue';
-import SerialHeader from '@/components/SerialHeader.vue';
 import event from '@/mixins/event.js';
 import enrichSerial from '@/mixins/serials.js';
+import SerialHeader from 'app/src/components/traceability/SerialHeader.vue';
 
 export default {
   name: 'SerialDetail',

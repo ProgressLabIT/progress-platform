@@ -355,6 +355,8 @@ export default {
   },
   personnel: 'personnel',
   phase: {
+    phase: 'Phase',
+    step: 'Step',
     add: 'add phase',
     add_field: 'add field',
     add_media: 'add media',

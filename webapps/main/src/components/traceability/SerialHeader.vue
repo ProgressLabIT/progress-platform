@@ -55,9 +55,9 @@
 </template>
 
 <script>
-import SerialForm from '@/components/SerialForm.vue';
 import { usePrintDialog } from '@/lib/print';
 import event from '@/mixins/event.js';
+import SerialForm from 'app/src/components/traceability/SerialForm.vue';
 
 export default {
   name: 'SerialHeader',
