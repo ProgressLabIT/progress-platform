@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from utils.db import db
 from models.production import WorkStatus
-from utils.kafka_admin import KafkaAdmin
+from commons.kafka_utils.kafka_admin import KafkaAdmin
 from utils.api import APIResponse
 
 router = APIRouter()

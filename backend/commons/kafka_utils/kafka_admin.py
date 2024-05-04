@@ -10,8 +10,8 @@ from confluent_kafka.admin import (AdminClient, NewTopic, NewPartitions, ConfigR
                                    UserScramCredentialUpsertion, UserScramCredentialDeletion,
                                    OffsetSpec)
 import threading
-from utils import config
-from utils.executor_manager import ExecutorManager
+from commons.utils import config
+from commons.executors.executor_manager import ExecutorManager
 
 class KafkaAdmin:
     __instance = None

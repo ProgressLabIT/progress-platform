@@ -4,7 +4,7 @@ from io import BufferedReader
 
 from fastapi import UploadFile
 
-from utils.config import get_config
+from commons.utils.config import get_config
 from models.form import FileBucket
 
 media_root_path = get_config().media_path
