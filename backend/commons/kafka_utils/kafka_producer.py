@@ -6,7 +6,7 @@ from confluent_kafka import KafkaException
 from confluent_kafka import Producer
 from threading import Thread
 import socket
-from utils import config
+from commons.utils import config
 
 class KafkaProducer:
     __instance = None

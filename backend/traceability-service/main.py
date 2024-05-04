@@ -9,8 +9,6 @@ from commons.kafka_utils.kafka_consumer import KafkaConsumer
 from commons.kafka_utils.kafka_admin import KafkaAdmin
 from commons.executors.executor_manager import ExecutorManager
 from commons.websockets.websocket_manager import WebsocketManager
-
-
 import endpoints
 
 config = get_config()

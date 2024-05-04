@@ -40,6 +40,7 @@ services:
       context: ./backend/api #root folder for build
     volumes:
       - ./backend/api:/api
+      - ./backend/commons:/api/commons
     environment:
       - PROGRESS_DB_NAME=PROGRESS_PROD
     command:
