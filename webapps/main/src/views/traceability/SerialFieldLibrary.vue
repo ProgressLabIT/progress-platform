@@ -106,12 +106,12 @@
 </template>
 
 <script>
+import BaseActionCard from '@/components/BaseActionCard.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
+import FormFieldSearch from '@/components/FormFieldSearch.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import form from '@/mixins/form.js';
-import BaseActionCard from '../components/BaseActionCard.vue';
-import FormFieldSearch from '../components/FormFieldSearch.vue';
 
 export default {
   name: 'SerialFieldLibrary',

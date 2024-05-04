@@ -26,7 +26,8 @@ const adminRoutes = [
           {
             path: 'serial-field',
             name: 'serialFieldLibrary',
-            component: () => import('@/views/SerialFieldLibrary.vue'),
+            component: () =>
+              import('app/src/views/traceability/SerialFieldLibrary.vue'),
             children: [
               {
                 path: ':field_key',
