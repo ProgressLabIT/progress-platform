@@ -37,6 +37,8 @@ docker compose -f deploy/compose/base.yaml -f deploy/compose/dev.yaml --project-
 ```bash
 docker compose -f deploy/compose/base.yaml -f deploy/compose/dev.debug.yaml --project-directory . --project-name progress_lab pull
 docker compose -f deploy/compose/base.yaml -f deploy/compose/dev.debug.yaml --project-directory . --project-name progress_lab up -d
+docker compose -f deploy/compose/kafka.dev.yaml --project-directory . --project-name kafka pull
+docker compose -f deploy/compose/kafka.dev.yaml --project-directory . --project-name kafka up -d
 
 ```
 
