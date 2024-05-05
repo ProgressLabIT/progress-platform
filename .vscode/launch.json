@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Remote Attach",
+      "name": "Python: API Remote Attach",
       "type": "python",
       "request": "attach",
       "connect": {
@@ -15,6 +15,22 @@
       "pathMappings": [
         {
           "localRoot": "${workspaceFolder}/backend/api",
+          "remoteRoot": "."
+        }
+      ],
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Traceability service Remote Attach",
+      "type": "python",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5778
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/backend/traceability-service",
           "remoteRoot": "."
         }
       ],

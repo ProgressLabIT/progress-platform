@@ -1,5 +1,4 @@
 import requests
-import endpoints.counter
 from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 

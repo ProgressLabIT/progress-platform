@@ -59,6 +59,31 @@ services:
       - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
       - "traefik.http.routers.api.middlewares=strip_api_prefix"
 
+  traceability-service:
+    restart: unless-stopped
+    build:
+      context: ./backend/traceability-service #root folder for build
+    volumes:
+      - ./backend/traceability-service:/traceability-service
+      - ./backend/commons:/traceability-service/commons
+    environment:
+      - PROGRESS_DB_NAME=PROGRESS_PROD
+    command:
+      - "sh"
+      - "-c"
+      - |
+        pip install debugpy -t /tmp \
+        && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5778 \
+        -m uvicorn main:app --host 0.0.0.0 --port 8100 --reload --log-level debug --use-colors
+    ports:
+      - 8100:8100
+      - 5778:5778
+    labels:
+      - "traefik.http.routers.api.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/traceability-service`)"
+      - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/traceability-service"
+      - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
+      - "traefik.http.routers.api.middlewares=strip_api_prefix"
+
   db:
     image: arangodb:3.11 # Use this for Intel Processors
     #image: arm64v8/arangodb:3.11 # This works for Apple Silicon M1-M3 processors
