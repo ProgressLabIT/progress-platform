@@ -37,7 +37,7 @@ async def hello():
 @app.on_event("startup")
 async def startup_event():
     KafkaProducer.getInstance()
-    KafkaConsumer.getInstance()
+    KafkaConsumer.getInstance().subscribe_topic("serial")
     WebsocketManager.getInstance()
 
 

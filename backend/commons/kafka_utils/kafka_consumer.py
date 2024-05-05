@@ -1,4 +1,5 @@
 import asyncio
+from abc import ABC, abstractmethod
 
 from commons.utils import config
 from commons.websockets.websocket_manager import WebsocketManager
@@ -6,8 +7,7 @@ from threading import Thread
 
 from confluent_kafka import Consumer, KafkaException
 
-class KafkaConsumer:
-    __instance = None
+class KafkaConsumer(ABC):
 
     def __init__(self):
       self.cancelled = False
@@ -19,15 +19,17 @@ class KafkaConsumer:
         'enable.auto.offset.store': False}
       self.loop = asyncio.get_event_loop()
       self.consumer = Consumer(kafka_conf)
-      self.subscribe_topic('test_chat')
+      self.subscribe_topic(self.getTopic())
       self.poll_thread = Thread(target=self.consume_loop)
       self.poll_thread.start()
 
-    @staticmethod
-    def getInstance():
-      if KafkaConsumer.__instance == None:
-        KafkaConsumer.__instance = KafkaConsumer()
-      return KafkaConsumer.__instance
+    @abstractmethod
+    def getTopic(self):
+        pass
+
+    @abstractmethod
+    def broadcast_message(self, msg):
+      pass
 
     def close(self):
        self.cancelled = True
@@ -43,13 +45,6 @@ class KafkaConsumer:
       else:
           print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
               topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
-
-    def broadcast_message(self, msg):
-      #callback(topic=msg.topic(), partiotion=ms.partition(), offset=msg.offset(), value=msg.value())
-      print("%% %s [%d] at offset %d with key %s:\n" %(msg.topic(), msg.partition(), msg.offset(),str(msg.key())))
-      WebsocketManager.getInstance().enqueue(msg.value().decode('utf-8'))
-      #websocketManager = WebsocketManager.getInstance()
-      #await websoc  ketManager.broadcast(msg)
 
     def consume_loop(self):
        try:

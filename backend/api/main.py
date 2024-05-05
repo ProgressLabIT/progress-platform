@@ -5,10 +5,11 @@ from starlette.middleware.gzip import GZipMiddleware
 
 from commons.utils.config import get_config
 from commons.kafka_utils.kafka_producer import KafkaProducer
-from commons.kafka_utils.kafka_consumer import KafkaConsumer
+from commons.kafka_utils.kafka_consumer_manager import KafkaConsumerManager
 from commons.kafka_utils.kafka_admin import KafkaAdmin
 from commons.executors.executor_manager import ExecutorManager
 from commons.websockets.websocket_manager import WebsocketManager
+from utils.chat_kafka_consumer import ChatKafkaConsumer
 
 
 import endpoints
@@ -44,15 +45,19 @@ async def hello():
 @app.on_event("startup")
 async def startup_event():
     KafkaProducer.getInstance()
-    KafkaConsumer.getInstance()
+    chatCounsumer = ChatKafkaConsumer()
+    KafkaConsumerManager.getInstance().registerConsumer(chatCounsumer)
     KafkaAdmin.getInstance()
     WebsocketManager.getInstance()
 
+def broadcast_message(self, msg):
+      print("%% %s [%d] at offset %d with key %s:\n" %(msg.topic(), msg.partition(), msg.offset(),str(msg.key())))
+      WebsocketManager.getInstance().enqueue(msg.value().decode('utf-8'))
 
 @app.on_event("shutdown")
 def shutdown_event():
    KafkaProducer.getInstance().close()
-   KafkaConsumer.getInstance().close()
+   KafkaConsumerManager.getInstance().closeAllConsumers()
    WebsocketManager.getInstance().close()
    ExecutorManager.getInstance().close()
 
