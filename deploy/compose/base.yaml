@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 volumes:
   media:
@@ -9,7 +9,6 @@ volumes:
     external: True
 
 services:
-
   router:
     image: traefik:v2.3
     depends_on:
@@ -32,11 +31,19 @@ services:
     volumes:
       - media:/media
 
+  traceability-service:
+    environment:
+      - PROGRESS_ARANGO_URL=http://db:8529
+      - PROGRESS_MEDIA_PATH=/media
+      - PROGRESS_API_ROOT_PATH=/traceability-service
+    ports:
+      - "8100"
+    volumes:
+      - media:/media
+
   db:
     volumes:
       - db_data:/var/lib/arangodb3
       - db_backup:/db_backup
     ports:
       - "8529"
-
-
