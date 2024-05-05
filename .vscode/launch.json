@@ -37,6 +37,22 @@
       "justMyCode": true
     },
     {
+      "name": "Python: Traceability service Remote Attach",
+      "type": "python",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5778
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/backend/traceability-service",
+          "remoteRoot": "."
+        }
+      ],
+      "justMyCode": true
+    },
+    {
       "name": "Launch webapp",
       "type": "node",
       "request": "launch",
