@@ -1,6 +1,6 @@
 from enum import Enum
 
-from utils.base_models import ArangoDocument, ArangoEdge, FlexModel
+from commons.models.base_models import ArangoDocument, ArangoEdge, FlexModel
 
 class Tag(ArangoDocument):
   """
