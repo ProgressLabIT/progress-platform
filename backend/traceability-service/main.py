@@ -4,9 +4,10 @@ from starlette.middleware.cors import CORSMiddleware
 
 from commons.utils.config import get_config
 from commons.kafka_utils.kafka_producer import KafkaProducer
-from commons.kafka_utils.kafka_consumer import KafkaConsumer
+from commons.kafka_utils.kafka_consumer_manager import KafkaConsumerManager
 from commons.executors.executor_manager import ExecutorManager
 from commons.websockets.websocket_manager import WebsocketManager
+from consumer.serials_kafka_consumer import SerialsKafkaConsumer
 
 config = get_config()
 
@@ -37,14 +38,15 @@ async def hello():
 @app.on_event("startup")
 async def startup_event():
     KafkaProducer.getInstance()
-    KafkaConsumer.getInstance().subscribe_topic("serial")
+    consumer = SerialsKafkaConsumer()
+    KafkaConsumerManager.getInstance().registerConsumer(consumer)
     WebsocketManager.getInstance()
 
 
 @app.on_event("shutdown")
 def shutdown_event():
    KafkaProducer.getInstance().close()
-   KafkaConsumer.getInstance().close()
+   KafkaConsumerManager.getInstance().closeAllConsumers()
    WebsocketManager.getInstance().close()
    ExecutorManager.getInstance().close()
 

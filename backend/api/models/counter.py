@@ -3,7 +3,7 @@ from typing import Any, Union
 
 from pydantic import BaseModel, Field, model_validator
 
-from utils.base_models import ArangoDocument
+from commons.models.base_models import ArangoDocument
 from utils.dt import timestamp
 
 class Counter(ArangoDocument):
