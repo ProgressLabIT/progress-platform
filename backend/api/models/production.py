@@ -7,7 +7,7 @@ from pydantic import model_validator, BaseModel, Field, PositiveFloat, field_val
 from models.bom import BomLineRead
 from models.process import PhaseParameters, StepWithMediaInfo
 from models.product import ProductDoc
-from utils.base_models import FlexModel, ArangoDocument
+from commons.models.base_models import FlexModel, ArangoDocument
 from utils.dt import timestamp
 
 

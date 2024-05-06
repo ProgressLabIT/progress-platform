@@ -28,7 +28,7 @@ class KafkaConsumer(ABC):
         pass
 
     @abstractmethod
-    def broadcast_message(self, msg):
+    def handle_message(self, msg):
       pass
 
     def close(self):
@@ -55,7 +55,7 @@ class KafkaConsumer(ABC):
              if msg.error():
                 raise KafkaException(msg.error())
              else:
-                self.broadcast_message(msg)
+                self.handle_message(msg)
                 self.consumer.store_offsets(msg)
        finally:
           self.consumer.close()

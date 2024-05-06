@@ -4,7 +4,7 @@ from enum import Enum
 
 from pydantic import BaseModel
 
-from utils.base_models import ArangoDocument
+from commons.models.base_models import ArangoDocument
 
 
 class Site(ArangoDocument):

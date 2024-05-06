@@ -5,7 +5,7 @@ from enum import Enum
 from fastapi import Form
 from pydantic import BaseModel, Field
 
-from utils.base_models import ArangoDocument, FlexModel
+from commons.models.base_models import ArangoDocument, FlexModel
 from models.org import UserPreferences
 
 
