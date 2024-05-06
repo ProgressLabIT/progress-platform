@@ -96,7 +96,7 @@
               color="theme-blue"
               :label="$t('next')"
               :disable="!links.product"
-              @click="form_step = 'fill_steps_data'"
+              @click="startSteps()"
             >
             </q-btn>
             <template v-else>
@@ -237,6 +237,24 @@ export default {
       this.base_fields = fields;
     },
 
+    hasCustomField() {
+      try {
+        return (
+          this.step_data[this.phase_index].steps[this.step_index].form_fields
+            .length > 0
+        );
+      } catch (error) {
+        return false;
+      }
+    },
+
+    startSteps() {
+      this.form_step = 'fill_steps_data';
+      this.step_index = 0;
+      this.phase_index = 0;
+      this.nextTile();
+    },
+
     nextTile() {
       if (this.step_index < this.step_data[this.phase_index].steps.length - 1) {
         this.step_index++;
@@ -250,6 +268,10 @@ export default {
       this.enableSave =
         this.step_index >= this.step_data[this.phase_index].steps.length - 1 &&
         this.phase_index >= this.step_data.length - 1;
+
+      if (!this.enableSave && !this.hasCustomField()) {
+        this.nextTile();
+      }
     },
 
     prevTile() {
@@ -262,6 +284,14 @@ export default {
       } else {
         this.form_step = 'select_product';
         this.enableSave = !this.step_data;
+      }
+
+      if (
+        this.phase_index > 0 &&
+        this.step_index > 0 &&
+        !this.hasCustomField()
+      ) {
+        this.prevTile();
       }
     },
 

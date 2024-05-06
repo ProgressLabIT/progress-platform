@@ -6,7 +6,7 @@ from pydantic import Field
 
 from models.collaboration import Message
 from models.form import FormFieldValue
-from utils.base_models import ArangoDocument
+from commons.models.base_models import ArangoDocument
 from utils.dt import timestamp
 
 class EventType(str, Enum):
