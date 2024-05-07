@@ -12,5 +12,5 @@ class SerialKafkaConsumer(KafkaConsumer):
         return 'serial'
 
     def broadcast_message(self, msg):
-      print("%% %s [%d] at offset %d with key %s:\n" %(msg.topic(), msg.partition(), msg.offset(),str(msg.key())))
+      print("received message from topic {topic}: value = {value:12}".format(topic=msg.topic(), value=msg.value().decode('utf-8')))
       WebsocketManager.getInstance().enqueue(msg.value().decode('utf-8'))
