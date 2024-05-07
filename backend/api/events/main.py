@@ -5,7 +5,7 @@ from events import (
   SharedEventMethods,
 )
 from models.event import EventModel
-from utils.db import db
+from commons.utils.db import db
 
 
 class Event(

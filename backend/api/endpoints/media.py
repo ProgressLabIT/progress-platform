@@ -6,7 +6,7 @@ from uuid import uuid4
 
 
 from utils.api import APIResponse
-from utils.db import db
+from commons.utils.db import db
 from commons.utils.config import get_config
 from utils.exceptions import HTTPError
 from utils.media import delete_media as _delete_media

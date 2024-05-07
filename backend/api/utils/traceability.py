@@ -257,11 +257,6 @@ class Queries:
   #   RETURN MAX(wo_serials) + 1
   # """
 
-  FIND_SERIALS = """
-
-    [...]
-  """
-
   GET_NEXT_PHASE_IN_WORK_ORDER = """
     FOR wo IN WorkOrder
     FILTER wo._key == @wo_key

@@ -8,6 +8,7 @@ from commons.kafka_utils.kafka_consumer_manager import KafkaConsumerManager
 from commons.executors.executor_manager import ExecutorManager
 from commons.websockets.websocket_manager import WebsocketManager
 from consumer.serials_kafka_consumer import SerialsKafkaConsumer
+from utils.serial_manager import SerialManager
 
 config = get_config()
 
@@ -38,17 +39,17 @@ async def hello():
 @app.on_event("startup")
 async def startup_event():
     KafkaProducer.getInstance()
+    SerialManager.getInstance()
     consumer = SerialsKafkaConsumer()
     KafkaConsumerManager.getInstance().registerConsumer(consumer)
-    WebsocketManager.getInstance()
 
 
 @app.on_event("shutdown")
 def shutdown_event():
    KafkaProducer.getInstance().close()
    KafkaConsumerManager.getInstance().closeAllConsumers()
-   WebsocketManager.getInstance().close()
    ExecutorManager.getInstance().close()
+   SerialManager.getInstance().close()
 
 
 

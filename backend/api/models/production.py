@@ -8,7 +8,7 @@ from models.bom import BomLineRead
 from models.process import PhaseParameters, StepWithMediaInfo
 from models.product import ProductDoc
 from commons.models.base_models import FlexModel, ArangoDocument
-from utils.dt import timestamp
+from commons.utils.dt import timestamp
 
 
 class TimeDeltaInfo(FlexModel):
