@@ -14,6 +14,7 @@ from utils.traceability import Queries as TraceabilityQueries
 from utils.db import model_to_db_dict
 
 from commons.kafka_utils.kafka_producer import KafkaProducer
+from commons.models.serial import SerialWithLinks
 
 from fastapi import HTTPException
 

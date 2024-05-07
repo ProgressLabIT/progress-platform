@@ -5,7 +5,7 @@ from typing import List, Optional
 from pydantic import Field
 
 from models.print import PrintTemplateRecord
-from models.form import FormFieldDefinition
+from commons.models.form import FormFieldDefinition
 from commons.models.base_models import FlexModel, ArangoDocument
 from utils.dt import timestamp
 
