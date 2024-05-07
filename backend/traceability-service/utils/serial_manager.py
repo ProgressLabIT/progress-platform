@@ -1,5 +1,6 @@
 import asyncio
 import threading
+import traceback
 
 from asyncio import AbstractEventLoop
 from typing import Dict
@@ -8,9 +9,11 @@ import json
 from starlette.concurrency import run_in_threadpool
 from fastapi.encoders import jsonable_encoder
 from commons.utils.db import db
-from commons.models.serial import SerialWithLinks, SerialLink, SerialLinkType
+from commons.models.serial import SerialWithLinks, SerialLink, SerialLinkType, Serial
 from commons.models.counter import Counter
-from commons.utils.counter import _generate_counter_wo_tx
+from commons.utils.counter import _generate_counter, _generate_counter_wo_tx
+
+from arango.database import TransactionDatabase
 
 
 class SerialManager:
@@ -35,7 +38,6 @@ class SerialManager:
 
     def close(self):
         self.cancelled = True
-        self.poll_thread.join()
         self.queue.join()
 
     async def poll_loop(self):
@@ -58,6 +60,30 @@ class SerialManager:
         print(serial)
 
         serial_data : SerialWithLinks = jsonable_encoder(SerialWithLinks(**serial))
+        self.create_serial(serial_data=serial_data)
+        #counter_id = None
+        #match = dict()
+        #for link in serial_data.get('linked_to'):
+        #    if link.get('type') == 'counter':
+        #          counter_id = link.get('key')
+        #match['_key'] = counter_id
+#
+        #serial_no = _generate_counter_wo_tx('Counter/'+counter_id)
+        #serial_data['serial'] = serial_no
+#
+        #db.collection('Serial').insert(serial_data)['_key']
+
+    @staticmethod
+    def _build_serial_link(_from: str, link_dict: SerialLink):
+      link_map = dict(
+        product="Product/",
+        user="User/",
+        counter="Counter/"
+      )
+      target = link_map[link_dict.get('type')] + link_dict.get('key')
+      return dict(_from=_from, _to=target)
+
+    def create_serial(self, serial_data):
 
         counter_id = None
         match = dict()
@@ -66,8 +92,30 @@ class SerialManager:
                   counter_id = link.get('key')
         match['_key'] = counter_id
 
-        serial_no = _generate_counter_wo_tx('Counter/'+counter_id)
-        serial_data['serial'] = serial_no
+        # Remove links and exclude document id fields
+        new_serial_record = Serial(
+          **serial_data
+        ).dict(by_alias=True)
 
-        db.collection('Serial').insert(serial_data)['_key']
+        tx = db.begin_transaction(write=['Serial', 'Counter', 'serial_rel'], read=[])
+        try:
+          serial_no = _generate_counter(tx, 'Counter/'+counter_id)
+          new_serial_record['serial'] = serial_no
+
+          new_serial_id = tx.collection('Serial').insert(new_serial_record, return_new=True)['_id']
+          #rels = [self._build_issue_link(_from=new_issue_id, link_dict=rel) for rel in self.info.issue_data.linked_to]
+          link = serial_data.get('linked_to')
+          rels = [self._build_serial_link(_from=new_serial_id, link_dict=rel) for rel in link]
+          tx.collection('serial_rel').insert_many(rels, silent=True)
+
+          serial_key=new_serial_id.split('/')[1]
+          serial_data['_key'] = serial_key
+          tx.commit_transaction()
+        except:
+          print(traceback.format_exc())
+          tx.abort_transaction()
+        #self.response = dict(
+        #  message="Issue created correctly",
+        #  serial_key=serial_key
+        #)
 
