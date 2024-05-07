@@ -1,4 +1,5 @@
 from datetime import datetime
+from commons.utils.db import db
 
 COUNTER_TICK = """
 // Get current counter value
@@ -16,11 +17,10 @@ update c with { reset_date, next_tick } in Counter
 RETURN c
 """
 
-def _generate_counter(tx, counter_name):
-  c = tx.aql.execute(COUNTER_TICK, bind_vars={ 'counter_name': counter_name }).next()
+def compute_counter(counter):
   counter_elements = []
   now = datetime.now()
-  for token in c['template']:
+  for token in counter['template']:
     if token.startswith('%'):
       # datetime element: e.g. '%y' === '23'
       counter_elements.append(now.strftime(token))
@@ -33,3 +33,9 @@ def _generate_counter(tx, counter_name):
       counter_elements.append(token)
 
   return ''.join(counter_elements)
+
+def _generate_counter(tx, counter_name):
+  return compute_counter(tx.aql.execute(COUNTER_TICK, bind_vars={ 'counter_name': counter_name }).next())
+
+def _generate_counter_wo_tx(counter_name):
+  return compute_counter(db.aql.execute(COUNTER_TICK, bind_vars={ 'counter_name': counter_name }).next())

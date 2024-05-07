@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, model_validator
 from commons.models.form import FormFieldDefinition, FormFieldValue
 from models.print import PrintTemplateRecord
 from commons.models.base_models import ArangoDocument
-from utils.dt import timestamp
+from commons.utils.dt import timestamp
 
 
 # ISSUE TYPE

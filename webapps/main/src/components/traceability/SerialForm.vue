@@ -203,8 +203,8 @@ export default {
     },
   },
 
-  created() {
-    this.initBaseFields();
+  async created() {
+    await this.initBaseFields();
     this.initFormData();
   },
 
@@ -366,7 +366,7 @@ export default {
 
       serial_data.phases = [];
       if (this.phase_data) {
-        serial_data.phases.push = this.phase_data.map((phase) => ({
+        serial_data.phases = this.phase_data.map((phase) => ({
           phase_hey: phase.phase_key,
           alias: phase.alias,
           steps: phase.steps.map((step) => ({

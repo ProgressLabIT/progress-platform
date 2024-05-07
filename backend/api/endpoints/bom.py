@@ -11,7 +11,8 @@ from models.bom import *
 from models.product import ProductFull
 from utils.api import APIResponse
 from utils.bom import *
-from utils.db import db
+from commons.utils.db import db
+from utils.api import APIResponse
 from utils.product import get_product_data_from_code
 
 
@@ -20,7 +21,7 @@ router = APIRouter()
 
 @router.get("/{product_key}/bom")
 async def get_product_bom(product_key: str):
-  try: 
+  try:
     bom = get_bom_from_db(db, product_key)
     return bom
 
@@ -30,7 +31,7 @@ async def get_product_bom(product_key: str):
     response=dict(
       status=status_code,
       message="There was a problem fetching the data from the db",
-      error=error_str 
+      error=error_str
     )
     raise HTTPException(
       status_code=status_code,
@@ -84,7 +85,7 @@ async def update_bom(
 
   # Begin transaction
   tx = db.begin_transaction(write="requires")
-  
+
   try:
 
     # Remove old bom
