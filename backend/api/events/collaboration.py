@@ -1,7 +1,7 @@
 from events.base import BaseEvent
 from events.shared import EventMeta
 from models.collaboration import Issue, IssueLink, IssueWithLinks
-from models.form import FileBucket
+from commons.models.form import FileBucket
 from utils.dt import timestamp
 from utils.collaboration import Queries
 from utils.file import FileHandler
