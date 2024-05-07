@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic import BaseModel, Field, field_validator
 
-from models.form import FormFieldValue
+from commons.models.form import FormFieldValue
 from commons.models.base_models import FlexModel, ArangoEdge, ArangoDocument
 
 
@@ -81,28 +81,6 @@ class WorkSession(FlexModel):
   def truncate_duration(cls, v) -> int:
     if type(v) == float:
       return int(v)
-
-
-class Serial(ArangoDocument):
-   serial: str | None = None
-   #product_key: str
-   #wo_key: str
-   created: datetime | None = None
-   released: datetime | None = None
-   #locations: list[str]
-   #status: str
-
-class SerialLinkType(str, Enum):
-  PRODUCT = 'product'
-  USER = 'user'
-  JOB = 'job'
-
-class SerialLink(BaseModel):
-  type: SerialLinkType
-  key: str
-
-class SerialWithLinks(Serial):
-  linked_to: list[SerialLink] = []
 
 class WIP(ArangoEdge):
   # _from & _to refer to process phases

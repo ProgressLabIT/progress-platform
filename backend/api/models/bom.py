@@ -1,7 +1,7 @@
 from enum import Enum
 from pydantic import Field
 
-from utils.base_models import FlexModel, ArangoDocument
+from commons.models.base_models import FlexModel, ArangoDocument
 
 
 class BomLineRead(FlexModel):

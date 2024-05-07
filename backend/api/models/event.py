@@ -5,7 +5,7 @@ from typing import Any, Union
 from pydantic import Field
 
 from models.collaboration import Message
-from models.form import FormFieldValue
+from commons.models.form import FormFieldValue
 from commons.models.base_models import ArangoDocument
 from utils.dt import timestamp
 
