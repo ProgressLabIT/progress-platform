@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from utils.api import APIResponse
-from utils.db import db
+from commons.utils.db import db
 from utils.exceptions import HTTPError
 from models.tag import Tag, TagConnectionUpdate, TagAssignmentContext
 

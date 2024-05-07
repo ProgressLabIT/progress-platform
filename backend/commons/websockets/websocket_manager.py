@@ -28,16 +28,8 @@ class WebsocketManager:
         self.messages: list[str] = []
         self.queue = asyncio.Queue(maxsize=100)
         self.loop = asyncio.get_event_loop()
-        #max_workers = 1
         self.cancelled = False
-        #executor = ThreadPoolExecutor(max_workers=max_workers)
-        #futures = self.loop.run_in_executor(executor, self.run, self.poll_loop, self)
-        #run_in_threadpool(self.poll_loop, self)
         self.loop.create_task(self.poll_loop())
-
-
-        #self.poll_thread = Thread(target=self.poll_loop)
-        #self.poll_thread.start()
 
 
     def close(self):

@@ -9,7 +9,7 @@ from fastapi.encoders import jsonable_encoder
 
 from models.bom import *
 from utils.bom import *
-from utils.db import db
+from commons.utils.db import db
 from utils.api import APIResponse
 
 
@@ -18,7 +18,7 @@ router = APIRouter()
 
 @router.get("/{product_key}/bom")
 async def get_product_bom(product_key: str):
-  try: 
+  try:
     bom = get_bom_from_db(db, product_key)
     return bom
 
@@ -28,7 +28,7 @@ async def get_product_bom(product_key: str):
     response=dict(
       status=status_code,
       message="There was a problem fetching the data from the db",
-      error=error_str 
+      error=error_str
     )
     raise HTTPException(
       status_code=status_code,
@@ -46,12 +46,12 @@ async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
 
   # Begin transaction
   tx = db.begin_transaction(write="requires")
-  
+
   try:
 
     # Remove old bom
     deleted_items = tx.aql.execute(
-      Queries.DELETE_PRODUCT_BOM, 
+      Queries.DELETE_PRODUCT_BOM,
       bind_vars=dict(product_key=product_key)
     )
 

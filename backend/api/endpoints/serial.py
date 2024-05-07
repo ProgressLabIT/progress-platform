@@ -4,8 +4,10 @@ from fastapi import APIRouter, HTTPException, Query
 
 from utils.api import APIResponse
 from commons.models.form import CustomField, CustomListValue, FieldType
-from utils.db import db, model_to_db_dict
+from commons.utils.db import db, model_to_db_dict
 from utils.serial import Queries
+from typing import Dict, List, Union
+
 
 router = APIRouter()
 
@@ -28,3 +30,36 @@ def get_product_steps(product_key: str):
     product_key = product_key
   )
   return [e for e in db.aql.execute(Queries.GET_PRODUCT_STEPS, bind_vars=bind_vars)]
+
+
+
+
+# ---------------------------------------------
+# SERIALS
+# ---------------------------------------------
+
+
+@router.get('/serial')
+async def search_serials(
+  serial_key: Union[List[str], None] = Query(default=None),
+  limit: int | None = None,
+  with_links: bool = False
+  ):
+  # use query parameters to filter specific type
+  bind_vars = dict(
+    serial_key = serial_key,
+    limit = limit,
+    with_links = with_links
+  )
+  try:
+    cursor = db.aql.execute(Queries.FIND_SERIALS, bind_vars=bind_vars)
+    return [i for i in cursor]
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching serials from the db.",
+        error=traceback.format_exc()
+      )
+    )
+

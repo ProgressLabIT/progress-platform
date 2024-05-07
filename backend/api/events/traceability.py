@@ -11,7 +11,7 @@ from models.production import Job, WorkStatus
 from utils.exceptions import JobIsStartedError, JobHasNoAssigneeError, WipNotAvailableError
 from utils.production import Queries as ProductionQueries, update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
-from utils.db import model_to_db_dict
+from commons.utils.db import model_to_db_dict
 
 from commons.kafka_utils.kafka_producer import KafkaProducer
 from commons.models.serial import SerialWithLinks
