@@ -34,7 +34,6 @@ class WebsocketManager:
 
     def close(self):
         self.cancelled = True
-        self.poll_thread.join()
         self.queue.join()
 
     @staticmethod
