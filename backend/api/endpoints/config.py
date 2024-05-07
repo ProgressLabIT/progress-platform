@@ -4,7 +4,7 @@ from os import path, remove, makedirs
 
 from utils.api import APIResponse
 from utils.media import media_root_path
-from utils.db import db
+from commons.utils.db import db
 from utils.exceptions import HTTPError
 from utils.production import Queries as ProductionQueries
 

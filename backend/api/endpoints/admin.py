@@ -2,7 +2,7 @@ import traceback
 
 from fastapi import APIRouter, HTTPException
 
-from utils.db import db
+from commons.utils.db import db
 from models.production import WorkStatus
 from commons.kafka_utils.kafka_admin import KafkaAdmin
 from utils.api import APIResponse

@@ -9,9 +9,9 @@ from models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
 from utils.bom import get_bom_from_db
-from utils.counter import _generate_counter
-from utils.db import db
-from utils.dt import timestamp
+from commons.utils.counter import _generate_counter
+from commons.utils.db import db
+from commons.utils.dt import timestamp
 from utils.exceptions import HTTPError
 from utils.product import get_product_docs
 from utils.production import (

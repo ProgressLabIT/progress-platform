@@ -4,7 +4,7 @@ import traceback
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, UploadFile
 
 from commons.models.form import FileBucket, FileTargetData
-from utils.db import db
+from commons.utils.db import db
 from utils.file import FileHandler
 
 
