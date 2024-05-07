@@ -54,7 +54,7 @@ class Queries:
 
     // PRODUCT
     LET product = FIRST(
-      FOR l IN 1..1 OUTBOUND i issue_rel
+      FOR l IN 1..1 OUTBOUND s serial_rel
       FILTER PARSE_IDENTIFIER(l._id).collection == 'Product'
       RETURN l
     )
@@ -68,12 +68,7 @@ class Queries:
     LIMIT @limit || null
 
     // RETURN RESULTS, WITH LINKS IF REQUESTED
-    LET base_result = MERGE(i, {
-      icon: type_data.icon,
-      issue_type_name: type_data.name,
-      data: issue_data,
-      phase_alias: phase.alias
-    })
+    LET base_result = MERGE(s)
 
     LET issue_links = { product }
 
