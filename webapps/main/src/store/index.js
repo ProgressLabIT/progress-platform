@@ -19,6 +19,7 @@ import org from './org';
 import process from './process';
 import product from './product';
 import quality from './quality';
+import serial from './serial';
 import session from './session';
 import traceability from './traceability';
 import user from './user';
@@ -104,6 +105,7 @@ const store = createStore({
     traceability,
     user,
     workorder,
+    serial,
   },
 });
 

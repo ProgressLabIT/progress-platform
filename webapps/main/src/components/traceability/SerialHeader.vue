@@ -5,12 +5,9 @@
     </q-item-section>
     <q-item-section>
       <q-item-label class="row items-center">
-        <span class="weight-bold text-h4 q-mr-sm">
-          {{ serial.serial_type_name || $t('serial') }}
-        </span>
         <span class="smaller text-body2 text-uppercase low-text q-ml-md">
           <span class="q-mr-sm">
-            {{ serial.phase_alias }}
+            {{ serial.serial }}
           </span>
           <span>#{{ serial._key }}</span>
         </span>
@@ -23,24 +20,8 @@
           >
             <q-tooltip>{{ $capitalize($t('edit')) }}</q-tooltip>
           </q-btn>
-
-          <q-btn
-            v-if="isAvailable"
-            flat
-            round
-            icon="mdi-printer"
-            class="q-ml-sm"
-            @click.stop="openPrintDialog"
-          >
-            <q-tooltip>{{ $capitalize($t('print')) }}</q-tooltip>
-          </q-btn>
         </div>
       </q-item-label>
-    </q-item-section>
-    <q-item-section class="display col-auto weight-bold text-uppercase">
-      <q-chip :color="serial.badge.color">
-        {{ serial.badge.text }}
-      </q-chip>
     </q-item-section>
 
     <!-- SERIAL EDIT DIALOG -->
@@ -55,8 +36,6 @@
 </template>
 
 <script>
-import { usePrintDialog } from '@/lib/print';
-import event from '@/mixins/event.js';
 import SerialForm from 'app/src/components/traceability/SerialForm.vue';
 
 export default {
@@ -66,102 +45,17 @@ export default {
     SerialForm,
   },
 
-  mixins: [event],
-
   props: {
     serial: {
       type: Object,
       required: true,
     },
-    clickable: {
-      type: Boolean,
-      default: false,
-    },
-  },
-
-  emits: ['typeChange'],
-
-  setup(props) {
-    const { open: openPrintDialog, isAvailable } = usePrintDialog({
-      context: 'serial_type',
-      contextData: props.serial,
-    });
-
-    return {
-      openPrintDialog,
-      isAvailable,
-    };
   },
 
   data() {
     return {
-      over_icon: false,
       show_serial_update: false,
-      new_serial_type: null,
     };
-  },
-
-  computed: {
-    icon() {
-      return this.over_icon ? 'mdi-pencil' : this.serial.icon || 'mdi-help';
-    },
-
-    save_btn_color() {
-      return this.new_serial_type == null
-        ? 'theme-blue'
-        : this.new_serial_type.critical
-          ? 'theme-red'
-          : 'theme-blue';
-    },
-
-    save_btn_label() {
-      const base = this.$t('save');
-      const critical =
-        this.new_serial_type == null
-          ? ''
-          : this.new_serial_type.critical
-            ? ' ' + this.$t('critical')
-            : '';
-      return base + critical;
-    },
-  },
-  watch: {
-    show_type_picker() {
-      if (this.show_type_picker == false) {
-        this.new_serial_type = null;
-      }
-    },
-  },
-
-  methods: {
-    changeSerialType() {
-      const set_as_critical = this.new_serial_type
-        ? this.new_serial_type.critical
-        : false;
-      const event = {
-        event_type: 'SERIAL_UPDATED',
-        event_data: {
-          serial_data: {
-            _key: this.serial._key,
-            serial_type: this.new_serial_type
-              ? this.new_serial_type._key
-              : null,
-          },
-        },
-      };
-
-      if (set_as_critical) {
-        event.event_data.serial_data.critical = true;
-      }
-
-      this.sendEvent(event).then(() => {
-        this.$emit(
-          'typeChange',
-          this.new_serial_type ? this.new_serial_type._key : null,
-        );
-        this.show_type_picker = false;
-      });
-    },
   },
 };
 </script>
