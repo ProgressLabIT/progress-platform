@@ -1,13 +1,16 @@
 import traceback
+import json
 
+from base64 import b64decode
 from fastapi import APIRouter, HTTPException, Query
-
 from utils.api import APIResponse
-from commons.models.form import CustomField, CustomListValue, FieldType
-from commons.utils.db import db, model_to_db_dict
-from utils.serial import Queries
+from datetime import datetime
 from typing import Dict, List, Union
 
+from commons.models.form import CustomField, CustomListValue, FieldType
+from commons.utils.db import db, model_to_db_dict
+
+from utils.serial import Queries
 
 router = APIRouter()
 
@@ -42,12 +45,26 @@ def get_product_steps(product_key: str):
 @router.get('/serial')
 async def search_serials(
   serial_key: Union[List[str], None] = Query(default=None),
+  serial_key_search: str | None = None,
+  time_created_from: datetime | None = None,
+  time_created_to: datetime | None = None,
+  created_by: Union[List[str], None] = Query(default=None),
+  advanced_filters: str = Query(default=None),
+  product_key: Union[List[str], None] = Query(default=None),
+  product_code_search: str | None = None,
   limit: int | None = None,
   with_links: bool = False
   ):
   # use query parameters to filter specific type
   bind_vars = dict(
     serial_key = serial_key,
+    serial_key_search = serial_key_search,
+    time_created_from = time_created_from,
+    time_created_to = time_created_to,
+    created_by = created_by,
+    product_key = product_key,
+    product_code_search = product_code_search,
+    advanced_filters = json.loads(b64decode(advanced_filters).decode('latin-1')) if advanced_filters else None,
     limit = limit,
     with_links = with_links
   )
