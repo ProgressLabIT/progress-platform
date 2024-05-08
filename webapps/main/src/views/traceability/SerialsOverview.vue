@@ -1,29 +1,11 @@
 <template>
   <div ref="container" class="q-px-sm q-pt-sm full-height">
-    <q-table
-      id="serial_list"
-      :columns="columns"
-      :rows="serial_list"
-      row-key="_key"
-      :loading="loading"
-      color="primary"
-      virtual-scroll
-      hide-bottom
-      class="full-height"
-      dense
-      separator="none"
-      table-class="text-high"
-      card-class="background no-shadow"
-      :rows-per-page-options="[0]"
-    >
+    <q-table id="serial_list" :columns="columns" :rows="serial_list" row-key="_key" :loading="loading" color="primary"
+      virtual-scroll hide-bottom class="full-height" dense separator="none" table-class="text-high"
+      card-class="background no-shadow" :rows-per-page-options="[0]">
       <template #body="props">
-        <q-tr
-          :id="props.row._key"
-          :key="props.row._key"
-          :props="props"
-          :style="props.row.closed ? 'opacity: .5' : ''"
-          @dblclick="showSerialDetails(props.row._key)"
-        >
+        <q-tr :id="props.row._key" :key="props.row._key" :props="props" :style="props.row.closed ? 'opacity: .5' : ''"
+          @dblclick="showSerialDetails(props.row._key)">
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
               <template v-if="['created', 'closed'].includes(column.name)">
@@ -34,14 +16,16 @@
                 }}
               </template>
 
-              <template
-                v-else-if="
-                  ['product_code', 'work_order_code', 'project_code'].includes(
-                    column.name,
-                  )
-                "
-              >
+              <template v-else-if="
+                ['product_code'].includes(
+                  column.name,
+                )
+              ">
                 {{ $capitalizeAll(column.field(props.row) || '-') }}
+              </template>
+
+              <template v-else-if="column.custom">
+                {{ $capitalizeAll(customFieldValue(props.row, column.field) || '-') }}
               </template>
 
               <template v-else>
@@ -59,12 +43,8 @@
 </template>
 
 <script>
-import enrichSerial from '@/mixins/serials.js';
-
 export default {
   name: 'SerialsOverview',
-
-  mixins: [enrichSerial],
 
   props: {
     loading: {
@@ -81,9 +61,7 @@ export default {
 
   computed: {
     serial_list() {
-      return this.$store.state.traceability.serials.map((i) =>
-        this.enrichSerial(i),
-      );
+      return this.$store.state.serial.serials;
     },
 
     columns() {
@@ -97,6 +75,14 @@ export default {
           style: 'max-width: 10vw',
         },
         {
+          name: 'serial',
+          field: 'serial',
+          sortable: true,
+          label: this.$t('serial').toUpperCase(),
+          align: 'left',
+          style: 'max-width: 10vw',
+        },
+        {
           name: 'product_code',
           field: (row) => row.links?.product?.code,
           sortable: true,
@@ -104,43 +90,6 @@ export default {
           label: this.$t('product.label').toUpperCase(),
           style: 'max-width: 10vw',
         },
-        {
-          name: 'work_order_code',
-          field: (row) => row.links?.work_order?.wo_code,
-          sortable: true,
-          label: this.$t('work_order.list_headers.wo_code').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'project_code',
-          field: (row) => row.links?.work_order?.project_code,
-          sortable: true,
-          label: this.$t('project').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'phase_alias',
-          field: 'phase_alias',
-          sortable: true,
-          label: this.$t('phase.short').toUpperCase(),
-          align: 'left',
-        },
-        {
-          name: 'critical',
-          field: 'critical',
-          sortable: true,
-          label: this.$t('issue_critical').toUpperCase(),
-          align: 'center',
-        },
-        // {
-        //   name: 'open',
-        //   field: 'open',
-        //   sortable: true,
-        //   label: this.$t('issue_closed').toUpperCase(),
-        //   align: 'center'
-        // },
         {
           name: 'created',
           field: 'created',
@@ -150,15 +99,9 @@ export default {
           sort: this.sortDate,
           style: 'max-width: 5vw',
         },
-        {
-          name: 'closed',
-          field: 'closed',
-          sortable: true,
-          align: 'right',
-          label: this.$t('closed_date').toUpperCase(),
-          sort: this.sortDate,
-        },
-      ];
+      ].concat(
+        this.getCustomCols()
+      );
     },
   },
 
@@ -178,6 +121,43 @@ export default {
       else {
         return a < b ? 1 : -1;
       }
+    },
+
+    customFieldValue(row, key) {
+      let returnVal = "---";
+      if (row && row['data']) {
+        row['data'].forEach((field) => {
+          if (field._key === key) {
+            returnVal = field.value;
+          }
+        });
+      }
+      return returnVal
+    },
+
+    getCustomCols() {
+      if (!this.$store.state.serial.serial_fields) {
+        return [];
+      }
+      return this.$store.state.serial.serial_fields.map((field) => ({
+        name: field.name,
+        field: field._key,
+        sortable: true,
+        align: 'right',
+        label: field.name.toUpperCase(),
+        sort: this.sortDate,
+        style: 'max-width: 5vw',
+        custom: true,
+      }));
+      /*return [{
+        name: 'created2',
+        field: 'created2',
+        sortable: true,
+        align: 'right',
+        label: this.$t('opened_date').toUpperCase(),
+        sort: this.sortDate,
+        style: 'max-width: 5vw',
+      }];*/
     },
 
     showSerialDetails(serialKey) {

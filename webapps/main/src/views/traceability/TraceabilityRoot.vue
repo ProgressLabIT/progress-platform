@@ -3,24 +3,12 @@
     <q-page class="row full-height">
       <!-- MAIN CONTENT -->
       <div class="column col full-height">
-        <div
-          class="row col-auto items-center justify-between q-pl-xs q-pr-md q-py-sm"
-        >
+        <div class="row col-auto items-center justify-between q-pl-xs q-pr-md q-py-sm">
           <!-- TAB LINKS -->
-          <q-tabs
-            class="transparent text-low"
-            active-class="text-high weight-bold"
-            align="left"
-            shrink
-            dense
-            indicator-color="theme-blue"
-          >
-            <q-route-tab
-              v-for="(view, index) in views"
-              :key="index"
-              :to="{ name: view.route_name, query: $route.query }"
-              class="display"
-            >
+          <q-tabs class="transparent text-low" active-class="text-high weight-bold" align="left" shrink dense
+            indicator-color="theme-blue">
+            <q-route-tab v-for="(view, index) in views" :key="index"
+              :to="{ name: view.route_name, query: $route.query }" class="display">
               {{ $t(`views.${view.route_name}`) }}
             </q-route-tab>
           </q-tabs>
@@ -28,106 +16,52 @@
           <q-space />
 
           <!-- NEW SERIAL BUTTON -->
-          <q-btn
-            size="0.75rem"
-            :label="$t('new')"
-            color="theme-blue"
-            @click="show_serial_form = true"
-          >
+          <q-btn size="0.75rem" :label="$t('new')" color="theme-blue" @click="show_serial_form = true">
           </q-btn>
 
-          <SerialForm
-            :show="show_serial_form"
-            mode="new"
-            @close="show_serial_form = false"
-            @serial-created="getSerials"
-          >
+          <SerialForm :show="show_serial_form" mode="new" @close="show_serial_form = false"
+            @serial-created="getSerials">
           </SerialForm>
 
-          <q-btn
-            v-if="!showFilterDrawer && $route.name !== 'workOrderArchive'"
-            class="q-ml-sm"
-            size="sm"
-            round
-            :color="filters_active ? 'theme-blue' : 'theme-grey'"
-            icon="mdi-filter"
-            @click="showFilterDrawer = true"
-          >
-            <q-badge
-              v-if="filters_active"
-              floating
-              rounded
-              color="theme-red"
-              :label="filters_active"
-              size="4px"
-              style="font-family: 'Red Hat Text'; font-size: 8px"
-            />
+          <q-btn v-if="!showFilterDrawer && $route.name !== 'workOrderArchive'" class="q-ml-sm" size="sm" round
+            :color="filters_active ? 'theme-blue' : 'theme-grey'" icon="mdi-filter" @click="showFilterDrawer = true">
+            <q-badge v-if="filters_active" floating rounded color="theme-red" :label="filters_active" size="4px"
+              style="font-family: 'Red Hat Text'; font-size: 8px" />
           </q-btn>
         </div>
 
-        <!-- MAIN CONTENT -->
+        <!-- MAIN CONTENT-->
         <div class="col relative-position">
-          <router-view :loading="loading" />
+          <router-view :loading="loading || loading_fields" />
         </div>
       </div>
     </q-page>
 
-    <FilterDrawer
-      v-model="showFilterDrawer"
-      :active-filters="filters_active"
-      @reset="resetFilters"
-    >
-      <div class="row q-col-gutter-md q-mb-md">
-        <div class="col-6">
-          <q-checkbox v-model="serial_open" dense :label="$t('serial_open')" />
-        </div>
-
-        <div class="col-6">
-          <q-checkbox
-            v-model="serial_closed"
-            dense
-            :label="$t('serial_closed')"
-          />
-        </div>
-      </div>
-
+    <FilterDrawer v-model="showFilterDrawer" :active-filters="filters_active" @reset="resetFilters">
       <!-- SERIAL KEY -->
-      <q-input
-        v-model="serial_key_search"
-        clearable
-        filled
-        dense
-        hide-bottom-space
-        autocomplete="off"
-        name="search"
-        debounce="1000"
-        :label="$t('serial_key')"
-        class="q-mb-md"
-      >
+      <q-input v-model="serial_key_search" clearable filled dense hide-bottom-space autocomplete="off" name="search"
+        debounce="1000" :label="$t('serial_key')" class="q-mb-md">
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
+      <!-- SERIAL NO -->
+      <q-input v-model="serial_search" clearable filled dense hide-bottom-space autocomplete="off" name="search"
+        debounce="1000" :label="$t('serial')" class="q-mb-md">
         <template #append>
           <q-icon name="mdi-magnify" />
         </template>
       </q-input>
 
       <!-- OPENED DATE RANGE -->
-      <div class="row q-col-gutter-sm">
+      <div class="row q-col-gutter-sm q-mt-sm q-mb-md">
         <div class="col">
-          <q-input
-            v-model="time_created_from"
-            filled
-            dense
-            clearable
-            debounce="1000"
-            mask="date"
-            :label="$t('opened_min')"
-          >
+          <q-input v-model="time_created_from" filled dense clearable debounce="1000" mask="date"
+            :label="$t('opened_min')">
             <template #append>
               <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
+                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                   <q-date v-model="time_created_from" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
@@ -139,22 +73,11 @@
           </q-input>
         </div>
         <div class="col">
-          <q-input
-            v-model="time_created_to"
-            filled
-            dense
-            clearable
-            mask="date"
-            debounce="1000"
-            :label="$t('opened_max')"
-          >
+          <q-input v-model="time_created_to" filled dense clearable mask="date" debounce="1000"
+            :label="$t('opened_max')">
             <template #append>
               <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
+                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                   <q-date v-model="time_created_to" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
@@ -167,170 +90,14 @@
         </div>
       </div>
 
-      <!-- CLOSED DATE RANGE -->
-      <div class="row q-col-gutter-sm q-mt-sm q-mb-md">
-        <div class="col">
-          <q-input
-            v-model="time_closed_from"
-            filled
-            dense
-            clearable
-            mask="date"
-            debounce="1000"
-            :label="$t('closed_min')"
-          >
-            <template #append>
-              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-date v-model="time_closed_from" minimal>
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
-        </div>
-        <div class="col">
-          <q-input
-            v-model="time_closed_to"
-            filled
-            dense
-            clearable
-            mask="date"
-            debounce="1000"
-            :label="$t('closed_max')"
-          >
-            <template #append>
-              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-date v-model="time_closed_to" minimal>
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
-        </div>
-      </div>
-
       <!-- OPENED BY -->
-      <BaseAutocompleteUser
-        :placeholder="$capitalize($t('opened_by'))"
-        dense
-        class="q-mb-md"
-        behavior="menu"
-        key-only
-        :label="$t('opened_by')"
-        :operator-only="false"
-        :value="created_by"
-        @select="(selection) => (created_by = selection)"
-      />
-
-      <!-- CLOSED BY -->
-      <BaseAutocompleteUser
-        :placeholder="$capitalize($t('closed_by'))"
-        dense
-        class="q-mb-md"
-        behavior="menu"
-        key-only
-        :label="$t('closed_by')"
-        :operator-only="false"
-        :value="closed_by"
-        @select="(selection) => (closed_by = selection)"
-      />
-
-      <!-- OPERATION -->
-      <BaseAutocompleteOperation
-        dense
-        filled
-        class="q-mb-md"
-        behavior="menu"
-        popup-content-class="z-max"
-        key-only
-        :label="$capitalize($t('operation.label'))"
-        :value="operation_key"
-        @select="(selection) => (operation_key = selection)"
-      />
+      <BaseAutocompleteUser :placeholder="$capitalize($t('opened_by'))" dense class="q-mb-md" behavior="menu" key-only
+        :label="$t('opened_by')" :operator-only="false" :value="created_by"
+        @select="(selection) => (created_by = selection)" />
 
       <!-- PRODUCT -->
-      <q-input
-        v-model="product_code_search"
-        clearable
-        dense
-        filled
-        hide-bottom-space
-        autocomplete="off"
-        name="work_order"
-        debounce="1000"
-        class="q-mb-md"
-        :label="$t('product.label')"
-      >
-        <template #append>
-          <q-icon name="mdi-magnify" />
-        </template>
-      </q-input>
-
-      <!-- PHASE -->
-      <q-input
-        v-model="phase_alias_search"
-        clearable
-        dense
-        filled
-        hide-bottom-space
-        autocomplete="off"
-        name="work_order"
-        debounce="1000"
-        :label="$t('phase.short')"
-        class="q-mb-md"
-      >
-        <template #append>
-          <q-icon name="mdi-magnify" />
-        </template>
-      </q-input>
-
-      <!-- WORK ORDER -->
-      <q-input
-        v-model="work_order_code_search"
-        clearable
-        filled
-        dense
-        hide-bottom-space
-        autocomplete="off"
-        name="work_order"
-        debounce="1000"
-        :label="$capitalize($t('work_order.long'))"
-        class="q-mb-md"
-      >
-        <template #append>
-          <q-icon name="mdi-magnify" />
-        </template>
-      </q-input>
-
-      <!-- PROJECT -->
-      <q-input
-        v-model="project_search"
-        clearable
-        filled
-        dense
-        hide-bottom-space
-        autocomplete="off"
-        name="work_order"
-        debounce="1000"
-        :label="$capitalize($t('project'))"
-        class="q-mb-md"
-      >
+      <q-input v-model="product_code_search" clearable dense filled hide-bottom-space autocomplete="off"
+        name="work_order" debounce="1000" class="q-mb-md" :label="$t('product.label')">
         <template #append>
           <q-icon name="mdi-magnify" />
         </template>
@@ -343,56 +110,26 @@
 
         <q-space />
 
-        <q-btn-toggle
-          v-model="advancedFilterOperator"
-          :options="[
-            { label: $t('all', 2), value: 'AND' },
-            { label: $t('any'), value: 'OR' },
-          ]"
-          size="xs"
-          class="q-mr-md"
-        />
+        <q-btn-toggle v-model="advancedFilterOperator" :options="[
+          { label: $t('all', 2), value: 'AND' },
+          { label: $t('any'), value: 'OR' },
+        ]" size="xs" class="q-mr-md" />
 
-        <q-btn
-          round
-          color="theme-blue"
-          icon="mdi-plus"
-          size="xs"
-          @click="addAdvancedFilter"
-        />
+        <q-btn round color="theme-blue" icon="mdi-plus" size="xs" @click="addAdvancedFilter" />
       </div>
 
-      <div
-        v-for="(filter, index) in advancedFilters"
-        :key="filter._key"
-        class="row items-center justify-between q-mt-sm"
-      >
+      <div v-for="(filter, index) in advancedFilters" :key="filter._key"
+        class="row items-center justify-between q-mt-sm">
         <div class="col">
-          <q-checkbox
-            v-if="filter.type === 'files'"
-            v-model="filter.value"
-            :label="$t('has_attachments')"
-          />
+          <q-checkbox v-if="filter.type === 'files'" v-model="filter.value" :label="$t('has_attachments')" />
           <!-- We override q-mb-lg of FormField with style -->
-          <FormField
-            v-else
-            :field="filter"
-            style="margin-bottom: 0"
-            dense
-            @update="
-              filter.value = filter.type === 'choice' ? $event?.value : $event
-            "
-          />
+          <FormField v-else :field="filter" style="margin-bottom: 0" dense @update="
+            filter.value = filter.type === 'choice' ? $event?.value : $event
+            " />
         </div>
 
-        <q-btn
-          class="q-ml-md"
-          round
-          color="theme-grey"
-          icon="mdi-minus"
-          size="xs"
-          @click="advancedFilters.splice(index, 1)"
-        />
+        <q-btn class="q-ml-md" round color="theme-grey" icon="mdi-minus" size="xs"
+          @click="advancedFilters.splice(index, 1)" />
       </div>
     </FilterDrawer>
   </q-page-container>
@@ -403,7 +140,6 @@ import { Dialog, uid } from 'quasar';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import AddAdvancedFilterDialog from '@/components/AddAdvancedFilterDialog.vue';
-import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import FormField from '@/components/FormField.vue';
@@ -414,7 +150,6 @@ export default {
   name: 'TraceabilityRoot',
 
   components: {
-    BaseAutocompleteOperation,
     BaseAutocompleteUser,
     SerialForm,
     FormField,
@@ -488,22 +223,14 @@ export default {
       views: [{ component: 'SerialOverview', route_name: 'serialOverview' }],
       filter_list: [
         'serial_key_search',
+        'serial_search',
         'created_by',
         'time_created_from',
         'time_created_to',
-        'closed_by',
-        'time_closed_from',
-        'time_closed_to',
-        'operation_key',
-        'work_order_code_search',
         'product_code_search',
-        'phase_alias_search',
-        'project_search',
-        'serial_open',
-        'serial_closed',
       ],
-      bool_filters: ['serial_open', 'serial_closed'],
       loading: false,
+      loading_fields: false,
       show_serial_form: false,
     };
   },
@@ -513,25 +240,17 @@ export default {
       return (
         this.advancedFilters.length +
         this.filter_list.filter((f) => {
-          return this.bool_filters.includes(f) ? this[f] === false : !!this[f];
+          return !!this[f];
         }).length
       );
     },
 
     serial_key_search: queryModel(String, 'serial_search', null),
-    serial_open: queryModel(Boolean, 'open', true),
-    serial_closed: queryModel(Boolean, 'closed', true),
-    operation_key: queryModel(String, 'operation', null),
+    serial_search: queryModel(String, 'serial', null),
     product_code_search: queryModel(String, 'product_search', null),
-    work_order_code_search: queryModel(String, 'work_order_search', null),
-    phase_alias_search: queryModel(String, 'phase_search', null),
-    project_search: queryModel(String, 'project_search', null),
     created_by: queryModel(String, 'opened_by', null),
     time_created_from: queryModel(String, 'opened_min', null),
     time_created_to: queryModel(String, 'opened_max', null),
-    closed_by: queryModel(String, 'closed_by', null),
-    time_closed_from: queryModel(String, 'closed_min', null),
-    time_closed_to: queryModel(String, 'closed_max', null),
 
     filters() {
       let filters_object = {};
@@ -547,10 +266,6 @@ export default {
             }
 
             filters_object[f] = date.toISOString();
-          } else if (this.bool_filters.includes(f)) {
-            if (this[f] == false) {
-              filters_object[f] = this[f];
-            }
           } else {
             filters_object[f] = this[f];
           }
@@ -573,6 +288,7 @@ export default {
   },
 
   created() {
+    this.getSerialFields();
     this.getSerials();
   },
 
@@ -580,6 +296,17 @@ export default {
     async resetFilters() {
       await this.$router.replace({ query: null });
       this.advancedFilters = [];
+    },
+
+    getSerialFields() {
+      this.loading_fields = true;
+      this.$store
+        .dispatch('getSerialFields', { with_links: true, ...this.filters })
+        .then(() =>
+          setTimeout(() => {
+            this.loading_fields = false;
+          }, 1000),
+        );
     },
 
     getSerials() {

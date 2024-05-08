@@ -27,7 +27,7 @@ def compute_counter(counter):
     elif token.startswith('#'):
       # counter number of digits: e.g. '#5' ---> 00013
       digits = int(token[1:])
-      counter_elements.append(str(c['next_tick']).zfill(digits))
+      counter_elements.append(str(counter['next_tick']).zfill(digits))
     else:
       # Fixed text: append token as is
       counter_elements.append(token)

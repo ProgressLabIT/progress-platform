@@ -18,18 +18,16 @@ class Queries:
 
   FIND_SERIALS = """
 
-    FOR s IN Serial
+     FOR s IN Serial
 
     // FILTER BY DOCUMENT PROPERTIES
     FILTER
       // When filtering by document key, parameters will be arrays
       (@serial_key ? POSITION(@serial_key, s._key) : true)
-      && (@issue_key_search ? CONTAINS(s._key, @issue_key_search) : true)
+      && (@serial_key_search ? CONTAINS(s._key, @serial_key_search) : true)
       && (@created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], s.created_by) : true)
       && (@time_created_from ? s.created >= @time_created_from : true)
       && (@time_created_to ? s.created <= @time_created_to : true)
-      && (@time_closed_from ? s.closed >= @time_closed_from : true)
-      && (@time_closed_to ? s.closed <= @time_closed_to : true)
       && (@advanced_filters
         ? LENGTH(
             // This subquery returns match true/false for each filter
@@ -48,6 +46,20 @@ class Queries:
           ) >= (@advanced_filters.operator == "OR" ? 1 : LENGTH(@advanced_filters.filters))
         : true
       )
+
+      let fields = (
+FOR field IN CustomField
+        FILTER field.use_in_serial == True
+        return merge (field)
+        )
+
+    LET serial_data = (
+      FOR field_value IN NOT_NULL(s.data, [])
+      for field IN fields
+      FILTER
+        field._key == field_value.form_field_key || field._key == field_value.custom_field_key
+      RETURN MERGE(field, { value: field_value.value })
+    )
 
 
     // FILTER BY LINKS
@@ -68,9 +80,12 @@ class Queries:
     LIMIT @limit || null
 
     // RETURN RESULTS, WITH LINKS IF REQUESTED
-    LET base_result = MERGE(s)
+    LET base_result = MERGE(s, {
+      ext_data: s.data,
+      data: serial_data
+    })
 
-    LET issue_links = { product }
+    LET serial_links = { product }
 
-    RETURN @with_links ? MERGE(base_result, { links: issue_links }) : base_result
+    RETURN @with_links ? MERGE(base_result, { links: serial_links }) : base_result
   """
