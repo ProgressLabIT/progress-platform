@@ -5,6 +5,7 @@ class Queries:
     FOR phase IN Phase
       FILTER phase.product_key == @product_key
       RETURN {
+        product_key: phase.product_key,
         alias: phase.alias,
         phase_key: phase._key,
         steps: (
@@ -71,6 +72,31 @@ FOR field IN CustomField
       RETURN l
     )
 
+    LET phases = (
+      FOR phase IN Phase
+      FILTER phase.product_key == product._key
+      RETURN {
+        product_key: phase.product_key,
+        alias: phase.alias,
+        phase_key: phase._key,
+        steps: (
+          FOR step IN Step
+            FILTER step._key in phase.step_sequence
+            RETURN {
+                _key: step._key,
+                title: step.title,
+                description: step.description,
+                form_fields: UNIQUE(
+                    FOR field_value IN NOT_NULL(s.data, [])
+                    FOR field IN step.form_fields
+                    FILTER step._key == field_value.step_key && phase._key == field_value.phase_key &&
+                      (field._key == field_value.form_field_key || field._key == field_value.custom_field_key)
+                    return MERGE(field, { value: field_value.value })
+                )
+            }
+        )}
+    )
+
     FILTER
       (@product_key ? product._key IN @product_key : true)
       && (@product_code_search ? CONTAINS(LOWER(product.code), LOWER(@product_code_search)) : true)
@@ -81,8 +107,8 @@ FOR field IN CustomField
 
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(s, {
-      ext_data: s.data,
-      data: serial_data
+      data: serial_data,
+      phases: phases
     })
 
     LET serial_links = { product }
