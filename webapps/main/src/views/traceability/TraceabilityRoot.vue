@@ -301,7 +301,7 @@ export default {
     getSerialFields() {
       this.loading_fields = true;
       this.$store
-        .dispatch('getSerialFields', { with_links: true, ...this.filters })
+        .dispatch('getSerialFields', {})
         .then(() =>
           setTimeout(() => {
             this.loading_fields = false;
