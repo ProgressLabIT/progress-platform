@@ -1,10 +1,37 @@
 <template>
   <BaseDialog :show="true" maximized @close="exit">
-    <q-card class="surface1 row" bordered square style="width: 95vw; height: 95vh">
+    <q-card
+      class="surface1 row"
+      bordered
+      square
+      style="width: 95vw; height: 95vh"
+    >
       <!-- LEFT SECTION -->
       <div class="col-7 column full-height">
         <!-- HEADER -->
-        <SerialHeader :serial="serial" @type-change="refreshSerial" />
+        <q-item class="q-py-md" :clickable="clickable">
+          <q-item-section>
+            <q-item-label class="row items-center">
+              <span class="smaller text-body2 text-uppercase low-text q-ml-md">
+                <span class="q-mr-sm">
+                  {{ serial.serial }}
+                </span>
+                <span>#{{ serial._key }}</span>
+              </span>
+              <div class="col q-ml-xl">
+                <q-btn
+                  flat
+                  round
+                  icon="mdi-pencil"
+                  :disable="editMode"
+                  @click.stop="editMode = true"
+                >
+                  <q-tooltip>{{ $capitalize($t('edit')) }}</q-tooltip>
+                </q-btn>
+              </div>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
 
         <!-- FORM DATA -->
         <div class="row items-center q-pl-lg q-mt-sm">
@@ -18,80 +45,136 @@
 
         <div class="row q-px-lg q-pt-md q-mb-md">
           <template v-if="serial.data.length > 0">
-            <div v-for="field in serial.data" :key="field._key" class="col-auto q-pr-md">
-              <FormField :field="field" :root-path="`/media/serial/${serialKey}`" dense disable />
-            </div>
+            <FormField
+              v-for="field in serial.data"
+              :key="field._key"
+              class="col-auto q-pr-md"
+              :field="field"
+              :root-path="`/media/serial/${serialKey}`"
+              :disable="!editMode"
+              dense
+              @update="field.value = $event"
+            />
           </template>
           <div v-else class="col-auto text-italic">No data</div>
         </div>
 
-        <!-- PHASES -->
+        <!-- PHASES & STEPS -->
         <div class="row items-center q-pl-lg">
-          <div class="col-auto text-h5 weight bold text-uppercase text-low">
-            {{ $t('phase.phase') }}
-          </div>
-          <div class="col">
-            <q-separator inset />
-          </div>
-        </div>
+          <div class="col-5 column full-height">
+            <div class="col-auto text-h5 weight bold text-uppercase text-low">
+              {{ $t('phase.phase') }}
+            </div>
 
-        <div class="col">
-          <div class="scroll col q-py-sm full-width">
-            <q-list id="phases" dense class="transparent medium text-left q-pl-sm" align="left">
-              <q-item v-for="(phase, index) in serial.phases" :key="phase.phase_key" v-ripple clickable :name="index"
-                :class="`full-width text-left ${editMode ? '' : 'undraggable'}`"
-                @mouseenter="dragging ? undefined : (over_phase = index)"
-                @mouseleave="dragging ? undefined : (over_phase = null)" @click="goToPhase(index)">
-                <q-item-section avatar class="col-auto">
-                  <q-avatar size="20px" :color="current_phase === index ? 'theme-blue' : 'theme-grey'
-                    " class="display smaller" :class="{ highlight: current_phase === index }">
-                    {{ index + 1 }}
-                  </q-avatar>
-                </q-item-section>
-
-                <q-item-section>
-                  <q-item-label class="display ellipsis" :class="current_phase === index
-                    ? 'highlight'
-                    : 'text-low weight-medium'
-                    ">
-                    {{ phase.alias }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
+            <div class="col">
+              <q-separator inset />
+            </div>
           </div>
-        </div>
 
-        <!-- STEPS -->
-        <div class="row items-center q-pl-lg">
           <div class="col-auto text-h5 weight bold text-uppercase text-low">
             {{ $t('phase.step') }}
           </div>
+
           <div class="col">
             <q-separator inset />
           </div>
         </div>
 
-        <div class="col">
-          <div class="scroll col q-py-sm full-width">
-            <q-list id="phases" dense class="transparent medium text-left q-pl-sm" align="left">
-              <q-item v-for="(phase, index) in serial.phases" :key="phase.phase_key" v-ripple clickable :name="index"
-                :class="`full-width text-left ${editMode ? '' : 'undraggable'}`"
+        <div class="row items-center q-pl-lg">
+          <div class="col-5 column full-height">
+            <div
+              class="col-auto text-h5 weight bold text-uppercase text-low scroll"
+            >
+              <q-list
+                id="phases"
+                dense
+                class="transparent medium text-left q-pl-sm"
+                align="left"
+              >
+                <q-item
+                  v-for="(phase, index) in serial.phases"
+                  :key="phase.phase_key"
+                  v-ripple
+                  clickable
+                  :name="index"
+                  class="full-width text-left undraggable"
+                  @mouseenter="dragging ? undefined : (over_phase = index)"
+                  @mouseleave="dragging ? undefined : (over_phase = null)"
+                  @click="goToPhase(index)"
+                >
+                  <q-item-section avatar class="col-auto">
+                    <q-avatar
+                      size="20px"
+                      :color="
+                        current_phase === index ? 'theme-blue' : 'theme-grey'
+                      "
+                      class="display smaller"
+                      :class="{ highlight: current_phase === index }"
+                    >
+                      {{ index + 1 }}
+                    </q-avatar>
+                  </q-item-section>
+
+                  <q-item-section>
+                    <q-item-label
+                      class="display ellipsis"
+                      :class="
+                        current_phase === index
+                          ? 'highlight'
+                          : 'text-low weight-medium'
+                      "
+                    >
+                      {{ phase.alias }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </div>
+          </div>
+
+          <div
+            class="col-auto text-h5 weight bold text-uppercase text-low scroll"
+          >
+            <q-list
+              id="steps"
+              dense
+              class="transparent medium text-left q-pl-sm"
+              align="left"
+            >
+              <q-item
+                v-for="(step, index) in serial.phases[current_phase].steps"
+                :key="step._key"
+                v-ripple
+                clickable
+                :name="index"
+                class="full-width text-left undraggable"
                 @mouseenter="dragging ? undefined : (over_phase = index)"
-                @mouseleave="dragging ? undefined : (over_phase = null)" @click="goToPhase(index)">
+                @mouseleave="dragging ? undefined : (over_phase = null)"
+                @click="goToStep(index)"
+              >
                 <q-item-section avatar class="col-auto">
-                  <q-avatar size="20px" :color="current_phase === index ? 'theme-blue' : 'theme-grey'
-                    " class="display smaller" :class="{ highlight: current_phase === index }">
+                  <q-avatar
+                    size="20px"
+                    :color="
+                      current_step === index ? 'theme-blue' : 'theme-grey'
+                    "
+                    class="display smaller"
+                    :class="{ highlight: current_step === index }"
+                  >
                     {{ index + 1 }}
                   </q-avatar>
                 </q-item-section>
 
                 <q-item-section>
-                  <q-item-label class="display ellipsis" :class="current_phase === index
-                    ? 'highlight'
-                    : 'text-low weight-medium'
-                    ">
-                    {{ phase.alias }}
+                  <q-item-label
+                    class="display ellipsis"
+                    :class="
+                      current_step === index
+                        ? 'highlight'
+                        : 'text-low weight-medium'
+                    "
+                  >
+                    {{ step.title }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -99,14 +182,59 @@
           </div>
         </div>
 
+        <!-- STEPS DATA -->
+        <div class="row items-center q-pl-lg q-mt-sm">
+          <div class="col-auto text-h5 weight bold text-uppercase text-low">
+            {{ $t('form_title') }}
+          </div>
+          <div class="col">
+            <q-separator inset />
+          </div>
+        </div>
+
+        <div class="row q-px-lg q-pt-md q-mb-md">
+          <template
+            v-if="
+              serial &&
+              serial.phases[current_phase] &&
+              serial.phases[current_phase].steps[current_step] &&
+              serial.phases[current_phase].steps[current_step].form_fields
+            "
+          >
+            <FormField
+              v-for="field in serial.phases[current_phase].steps[current_step]
+                .form_fields"
+              :key="field._key"
+              class="col-auto q-pr-md"
+              :field="field"
+              :root-path="`/media/serial/${serialKey}`"
+              :disable="!editMode"
+              dense
+              @update="field.value = $event"
+            />
+          </template>
+          <div v-else class="col-auto text-italic">No data</div>
+        </div>
         <q-space />
 
         <!-- ACTIONS -->
         <div class="row q-pa-md q-gutter-lg">
-          <q-btn v-if="user_can_delete" color="theme-red" size="12px" icon="mdi-delete" :label="$t('delete')"
-            @click="deleteSerial">
+          <q-btn
+            v-if="user_can_delete"
+            color="theme-red"
+            size="12px"
+            icon="mdi-delete"
+            :label="$t('delete')"
+            @click="deleteSerial"
+          >
           </q-btn>
-          <q-btn size="12px" icon="mdi-keyboard-return" color="theme-grey" :label="$t('back')" @click="exit">
+          <q-btn
+            size="12px"
+            icon="mdi-keyboard-return"
+            color="theme-grey"
+            :label="$t('back')"
+            @click="exit"
+          >
           </q-btn>
         </div>
       </div>
@@ -114,7 +242,11 @@
       <q-separator vertical spaced />
 
       <!-- RIGHT SECTION -->
-      <MessageThread :messages="messages" context="serial" :context_key="serial._key">
+      <MessageThread
+        :messages="messages"
+        context="serial"
+        :context_key="serial._key"
+      >
         <template #header>
           <div class="display low-text text-h5 col-auto q-pb-md">
             {{ $t('message', 2) }}
@@ -129,13 +261,11 @@
 <script>
 import BaseDialog from '@/components/BaseDialog.vue';
 import FormField from '@/components/FormField.vue';
-import SerialHeader from 'app/src/components/traceability/SerialHeader.vue';
 
 export default {
   name: 'SerialDetail',
 
   components: {
-    SerialHeader,
     BaseDialog,
     FormField,
   },
@@ -156,6 +286,8 @@ export default {
       recording: false,
       base_path: '/media/user/',
       current_phase: 0,
+      current_step: 0,
+      editMode: false,
     };
   },
 
@@ -180,12 +312,18 @@ export default {
   },
 
   created() {
+    this.editMode = false;
     this.$store.dispatch('loadUsers');
   },
 
   methods: {
     goToPhase(index) {
       this.current_phase = index;
+      this.current_step = 0;
+    },
+
+    goToStep(index) {
+      this.current_step = index;
     },
 
     notify({ message, color = 'theme-green' }) {
