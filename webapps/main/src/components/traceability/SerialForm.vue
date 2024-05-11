@@ -1,6 +1,10 @@
 <template>
   <BaseDialog :show="show">
-    <q-card square class="surface1 q-pa-md" style="min-width: 600px; max-width: 800px">
+    <q-card
+      square
+      class="surface1 q-pa-md"
+      style="min-width: 600px; max-width: 800px"
+    >
       <q-form ref="serial-form">
         <!-- FORM TITLE -->
         <q-card-section>
@@ -19,13 +23,26 @@
         <!-- FORM BODY -->
 
         <!-- form_step === 'select_product' -->
-        <q-card-section v-if="mode === 'new' && form_step === 'select_product'" class="column q-gutter-md">
+        <q-card-section
+          v-if="mode === 'new' && form_step === 'select_product'"
+          class="column q-gutter-md"
+        >
           <!-- PRODUCT -->
-          <BaseAutocompleteProduct :value="links.product" :hint="!phase_data ? $t('phase.no_phase') : null" key-only
-            :label="$capitalize($t('product.label'))" @select="(selection) => loadProduct(selection)" />
+          <BaseAutocompleteProduct
+            :value="links.product"
+            :hint="!phase_data ? $t('phase.no_phase') : null"
+            key-only
+            :label="$capitalize($t('product.label'))"
+            @select="(selection) => loadProduct(selection)"
+          />
 
-          <FormField v-for="field in form_fields" :key="field._key" :field="field"
-            :root-path="`/media/serial/${serial?._key}`" @update="field.value = $event" />
+          <FormField
+            v-for="field in form_fields"
+            :key="field._key"
+            :field="field"
+            :root-path="`/media/serial/${serial?._key}`"
+            @update="field.value = $event"
+          />
         </q-card-section>
 
         <!-- SERIAL DATA -->
@@ -33,7 +50,13 @@
           <!-- FORM FIELDS -->
           <div class="text-h3"></div>
 
-          <q-field filled :label="$t('phase.phase')" stack-label disable class="q-mb-lg">
+          <q-field
+            filled
+            :label="$t('phase.phase')"
+            stack-label
+            disable
+            class="q-mb-lg"
+          >
             <template #control>
               <div class="self-center full-width no-outline" tabindex="0">
                 {{ phase_data[phase_index].alias }}
@@ -41,7 +64,13 @@
             </template>
           </q-field>
 
-          <q-field filled :label="$t('phase.step')" stack-label class="q-mb-lg" disable>
+          <q-field
+            filled
+            :label="$t('phase.step')"
+            stack-label
+            class="q-mb-lg"
+            disable
+          >
             <template #control>
               <div class="self-center full-width no-outline" tabindex="0">
                 {{ phase_data[phase_index].steps[step_index].title }}
@@ -49,28 +78,53 @@
             </template>
           </q-field>
 
-          <FormField v-for="field in phase_data[phase_index].steps[step_index]
-            .form_fields" :key="field._key" :field="field" :root-path="`/media/serial/${serial?._key}`"
-            @update="field.value = $event" />
+          <FormField
+            v-for="field in phase_data[phase_index].steps[step_index]
+              .form_fields"
+            :key="field._key"
+            :field="field"
+            :root-path="`/media/serial/${serial?._key}`"
+            @update="field.value = $event"
+          />
         </q-card-section>
 
         <!-- FORM ACTIONS    navigation -->
         <q-card-section>
           <div class="row q-gutter-md">
-            <q-btn v-if="form_step === 'select_product'" color="theme-blue" :label="$t('next')"
-              :disable="!links.product" @click="startSteps()">
+            <q-btn
+              v-if="form_step === 'select_product'"
+              color="theme-blue"
+              :label="$t('next')"
+              :disable="!links.product"
+              @click="startSteps()"
+            >
             </q-btn>
             <template v-else>
-              <q-btn icon="mdi-arrow-left-bold" color="theme-blue" @click="prevTile()">
+              <q-btn
+                icon="mdi-arrow-left-bold"
+                color="theme-blue"
+                @click="prevTile()"
+              >
               </q-btn>
-              <q-btn v-if="!enableSave && form_step === 'fill_steps_data'" icon="mdi-arrow-right-bold"
-                color="theme-blue" @click="nextTile()">
+              <q-btn
+                v-if="!enableSave && form_step === 'fill_steps_data'"
+                icon="mdi-arrow-right-bold"
+                color="theme-blue"
+                @click="nextTile()"
+              >
               </q-btn>
 
-              <q-btn v-else color="theme-orange" :label="$t('save')" :loading="saving" @click="() => {
-                save();
-              }
-                ">
+              <q-btn
+                v-else
+                color="theme-orange"
+                :label="$t('save')"
+                :loading="saving"
+                @click="
+                  () => {
+                    save();
+                  }
+                "
+              >
               </q-btn>
             </template>
 
@@ -295,11 +349,11 @@ export default {
         value:
           this.getFieldType(field) === 'files'
             ? field.value
-              ?.filter((file) => !file.delete)
-              .map((file) => ({
-                size: file.size,
-                name: file.name,
-              }))
+                ?.filter((file) => !file.delete)
+                .map((file) => ({
+                  size: file.size,
+                  name: file.name,
+                }))
             : field.value,
       }));
     },
@@ -307,20 +361,25 @@ export default {
     async save() {
       this.saving = true;
 
-
-      let data = []
+      let data = [];
       if (this.phase_data) {
         this.phase_data.forEach((phase) => {
           if (phase.steps) {
             phase.steps.forEach((step) => {
-              data = data.concat(this.getFormFieldValue(phase.phase_key, step._key, step.form_fields))
+              data = data.concat(
+                this.getFormFieldValue(
+                  phase.phase_key,
+                  step._key,
+                  step.form_fields,
+                ),
+              );
             });
           }
         });
       }
 
       let serial_data = {
-        data: data
+        data: data,
       };
 
       const user = this.session_data.user._key;
