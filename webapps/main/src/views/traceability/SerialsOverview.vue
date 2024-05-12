@@ -1,11 +1,29 @@
 <template>
   <div ref="container" class="q-px-sm q-pt-sm full-height">
-    <q-table id="serial_list" :columns="columns" :rows="serial_list" row-key="_key" :loading="loading" color="primary"
-      virtual-scroll hide-bottom class="full-height" dense separator="none" table-class="text-high"
-      card-class="background no-shadow" :rows-per-page-options="[0]">
+    <q-table
+      id="serial_list"
+      :columns="columns"
+      :rows="serial_list"
+      row-key="_key"
+      :loading="loading"
+      color="primary"
+      virtual-scroll
+      hide-bottom
+      class="full-height"
+      dense
+      separator="none"
+      table-class="text-high"
+      card-class="background no-shadow"
+      :rows-per-page-options="[0]"
+    >
       <template #body="props">
-        <q-tr :id="props.row._key" :key="props.row._key" :props="props" :style="props.row.closed ? 'opacity: .5' : ''"
-          @dblclick="showSerialDetails(props.row._key)">
+        <q-tr
+          :id="props.row._key"
+          :key="props.row._key"
+          :props="props"
+          :style="props.row.closed ? 'opacity: .5' : ''"
+          @dblclick="showSerialDetails(props.row._key)"
+        >
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
               <template v-if="['created', 'closed'].includes(column.name)">
@@ -16,16 +34,16 @@
                 }}
               </template>
 
-              <template v-else-if="
-                ['product_code'].includes(
-                  column.name,
-                )
-              ">
+              <template v-else-if="['product_code'].includes(column.name)">
                 {{ $capitalizeAll(column.field(props.row) || '-') }}
               </template>
 
               <template v-else-if="column.custom">
-                {{ $capitalizeAll(customFieldValue(props.row, column.field) || '-') }}
+                {{
+                  $capitalizeAll(
+                    customFieldValue(props.row, column.field) || '-',
+                  )
+                }}
               </template>
 
               <template v-else>
@@ -95,13 +113,11 @@ export default {
           field: 'created',
           sortable: true,
           align: 'right',
-          label: this.$t('opened_date').toUpperCase(),
+          label: this.$t('created_date').toUpperCase(),
           sort: this.sortDate,
           style: 'max-width: 5vw',
         },
-      ].concat(
-        this.getCustomCols()
-      );
+      ].concat(this.getCustomCols());
     },
   },
 
@@ -124,7 +140,7 @@ export default {
     },
 
     customFieldValue(row, key) {
-      let returnVal = "---";
+      let returnVal = '---';
       if (row && row['data']) {
         row['data'].forEach((field) => {
           if (field._key === key) {
@@ -132,7 +148,7 @@ export default {
           }
         });
       }
-      return returnVal
+      return returnVal;
     },
 
     getCustomCols() {

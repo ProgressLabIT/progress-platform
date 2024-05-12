@@ -51,6 +51,6 @@ def delete_field(counter_key: str):
   """Delete custom counter"""
   try:
     db.collection('Counter').delete(counter_key, return_old=True)['old']
-    return APIResponse(message = "Counter successfully")
+    return APIResponse(message = "Counter successfully deleted")
   except:
     raise HTTPException(status_code=500, detail=traceback.format_exc())

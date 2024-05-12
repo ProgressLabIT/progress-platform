@@ -17,6 +17,7 @@ from commons.models.form import SerialFormFieldValue
 class Serial(ArangoDocument):
    serial: str | None = None
    created_by: str | None = None
+   operation: str | None = None
    #product_key: str
    #wo_key: str
    created: datetime | None = None
