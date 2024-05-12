@@ -39,6 +39,8 @@ class EventType(str, Enum):
 
   # Serial Events
   SERIAL_CREATED = 'SERIAL_CREATED'
+  SERIAL_UPDATED = 'SERIAL_UPDATED'
+  SERIAL_DELETED = 'SERIAL_DELETED'
 
 
 class EventModel(ArangoDocument):

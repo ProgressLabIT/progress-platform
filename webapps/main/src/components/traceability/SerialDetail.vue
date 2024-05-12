@@ -230,6 +230,15 @@
           </q-btn>
           <q-btn
             size="12px"
+            color="theme-orange"
+            :label="$t('save')"
+            :loading="saving"
+            :disable="!editMode"
+            @click="save"
+          >
+          </q-btn>
+          <q-btn
+            size="12px"
             icon="mdi-keyboard-return"
             color="theme-grey"
             :label="$t('back')"
@@ -261,6 +270,7 @@
 <script>
 import BaseDialog from '@/components/BaseDialog.vue';
 import FormField from '@/components/FormField.vue';
+import { timestamp } from '@/lib/TimeHandling.js';
 
 export default {
   name: 'SerialDetail',
@@ -283,6 +293,7 @@ export default {
       messages: [],
       history: [],
       loading: false,
+      saving: false,
       recording: false,
       base_path: '/media/user/',
       current_phase: 0,
@@ -309,10 +320,15 @@ export default {
     user_can_delete() {
       return this.$store.getters.hasPermission('production');
     },
+
+    session_data() {
+      return this.$store.state.session;
+    },
   },
 
   created() {
     this.editMode = false;
+    this.saving = false;
     this.$store.dispatch('loadUsers');
   },
 
@@ -340,6 +356,71 @@ export default {
       this.getHistory();
     },
 
+    getFormFieldValue(phase_key, step_key, fields) {
+      return fields.map((field) => ({
+        phase_key: phase_key,
+        step_key: step_key,
+        form_field_key: field._key,
+        custom_field_key: field.custom_field_key,
+        value:
+          this.getFieldType(field) === 'files'
+            ? field.value
+                ?.filter((file) => !file.delete)
+                .map((file) => ({
+                  size: file.size,
+                  name: file.name,
+                }))
+            : field.value,
+      }));
+    },
+
+    getFieldType(field) {
+      return this.$store.getters.getCustomFieldByKey(field._key)?.type;
+    },
+
+    async save() {
+      this.saving = true;
+
+      let phase_data = this.serial.phases;
+
+      let data = [];
+      if (phase_data) {
+        phase_data.forEach((phase) => {
+          if (phase.steps) {
+            phase.steps.forEach((step) => {
+              data = data.concat(
+                this.getFormFieldValue(
+                  phase.phase_key,
+                  step._key,
+                  step.form_fields,
+                ),
+              );
+            });
+          }
+        });
+      }
+
+      let serial_data = this.serial;
+      serial_data.data = data;
+
+      const user = this.session_data.user._key;
+
+      serial_data.updated_by = `User/${user}`; // temporarily hardcoding DB id
+
+      const event = {
+        event_type: 'SERIAL_UPDATED',
+        user_key: user,
+        user_session_key: this.session_data.session_key,
+        timestamp: timestamp(),
+        serial_data,
+      };
+
+      await this.$api.post('event', event);
+
+      this.saving = false;
+      this.exit();
+    },
+
     deleteSerial() {
       this.$q
         .dialog({
@@ -348,22 +429,20 @@ export default {
           message: this.$t('serial_delete_confirm_question'),
         })
         .onOk(() => {
-          this.sendEvent({
+          const user = this.session_data.user._key;
+
+          const event = {
             event_type: 'SERIAL_DELETED',
-            event_data: {
-              serial_data: {
-                _key: this.serialKey,
-              },
+            user_key: user,
+            user_session_key: this.session_data.session_key,
+            timestamp: timestamp(),
+            serial_data: {
+              _key: this.serial._key,
             },
-          }).then(async () => {
-            const work_order_key =
-              this.$store.state.traceability.working_job_data.wo_key;
-            await this.$store.dispatch('getSerials', { work_order_key });
-            this.exit();
-            this.notify({
-              message: this.$t('serial_delete_success'),
-            });
-          });
+          };
+
+          this.$api.post('event', event);
+          this.exit();
         });
     },
 

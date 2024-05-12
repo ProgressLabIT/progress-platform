@@ -84,6 +84,16 @@ class ProductionActivityEvent(BaseEvent):
     action="create_serial"
   )
 
+  SERIAL_UPDATED = EventMeta(
+    collections=production_collections,
+    action="update_serial"
+  )
+
+  SERIAL_DELETED = EventMeta(
+    collections=production_collections,
+    action="delete_serial"
+  )
+
   ######################################################################
   # HELPER METHODS (Updates to specific collections)
   ######################################################################
@@ -163,18 +173,54 @@ class ProductionActivityEvent(BaseEvent):
 
   def create_serial(self):
     serial_data = jsonable_encoder(SerialWithLinks(**self.info.serial_data))
+    serial_data['operation'] = 'CREATE'
 
     try:
       KafkaProducer.getInstance().produce_async(topic="serials", key=serial_data.get('_key'), value=json.dumps(serial_data))
       self.response = dict(
         message="Serial created correctly",
-      #issue_key=new_serial_key
       )
     except Exception:
       raise HTTPException(
         status_code=500,
         detail=dict(
           message="There was an error creating the serial.",
+          error=traceback.format_exc()
+        )
+      )
+
+  def update_serial(self):
+    serial_data = jsonable_encoder(SerialWithLinks(**self.info.serial_data))
+    serial_data['operation'] = 'UPDATE'
+
+    try:
+      KafkaProducer.getInstance().produce_async(topic="serials", key=serial_data.get('_key'), value=json.dumps(serial_data))
+      self.response = dict(
+        message="Serial updated correctly",
+      )
+    except Exception:
+      raise HTTPException(
+        status_code=500,
+        detail=dict(
+          message="There was an error updating the serial.",
+          error=traceback.format_exc()
+        )
+      )
+
+  def delete_serial(self):
+    serial_data = jsonable_encoder(SerialWithLinks(**self.info.serial_data))
+    serial_data['operation'] = 'DELETE'
+
+    try:
+      KafkaProducer.getInstance().produce_async(topic="serials", key=serial_data.get('_key'), value=json.dumps(serial_data))
+      self.response = dict(
+        message="Serial deleted correctly",
+      )
+    except Exception:
+      raise HTTPException(
+        status_code=500,
+        detail=dict(
+          message="There was an error updating the serial.",
           error=traceback.format_exc()
         )
       )
