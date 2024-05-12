@@ -6,14 +6,11 @@ from asyncio import AbstractEventLoop
 from typing import Dict
 import json
 
-from starlette.concurrency import run_in_threadpool
 from fastapi.encoders import jsonable_encoder
 from commons.utils.db import db
-from commons.models.serial import SerialWithLinks, SerialLink, SerialLinkType, Serial
-from commons.models.counter import Counter
-from commons.utils.counter import _generate_counter, _generate_counter_wo_tx
+from commons.models.serial import SerialWithLinks, SerialLink, Serial
+from commons.utils.counter import _generate_counter
 
-from arango.database import TransactionDatabase
 
 
 class SerialManager:
@@ -60,18 +57,16 @@ class SerialManager:
         print(serial)
 
         serial_data : SerialWithLinks = jsonable_encoder(SerialWithLinks(**serial))
-        self.create_serial(serial_data=serial_data)
-        #counter_id = None
-        #match = dict()
-        #for link in serial_data.get('linked_to'):
-        #    if link.get('type') == 'counter':
-        #          counter_id = link.get('key')
-        #match['_key'] = counter_id
-#
-        #serial_no = _generate_counter_wo_tx('Counter/'+counter_id)
-        #serial_data['serial'] = serial_no
-#
-        #db.collection('Serial').insert(serial_data)['_key']
+        match serial['operation']:
+           case 'CREATE':
+              self.create_serial(serial_data=serial_data)
+           case 'UPDATE':
+              self.update_serial(serial_data=serial_data)
+           case 'DELETE':
+              self.delete_serial(serial_data=serial_data)
+           case _:
+              print("Error")
+
 
     @staticmethod
     def _build_serial_link(_from: str, link_dict: SerialLink):
@@ -114,8 +109,18 @@ class SerialManager:
         except:
           print(traceback.format_exc())
           tx.abort_transaction()
-        #self.response = dict(
-        #  message="Issue created correctly",
-        #  serial_key=serial_key
-        #)
+
+    def update_serial(self, serial_data):
+       try:
+           db.collection('Serial').update(dict(**serial_data, by_alias=True), check_rev=False)
+       except:
+           print(traceback.format_exc())
+
+    def delete_serial(self, serial_data):
+        key = serial_data.get("_key")
+        try:
+           db.collection('Serial').delete(key, return_old=True)['old']
+        except:
+           print(traceback.format_exc())
+
 

@@ -10,12 +10,7 @@
         <q-card-section>
           <div class="row justify-between items-center">
             <div class="text-h2 display highlight text-center">
-              <template v-if="mode === 'new'">
-                {{ $t('serial_new_title') }}
-              </template>
-              <template v-else>
-                {{ $t('serial_update_title') }}
-              </template>
+              {{ $t('serial_new_title') }}
             </div>
           </div>
         </q-card-section>
@@ -24,7 +19,7 @@
 
         <!-- form_step === 'select_product' -->
         <q-card-section
-          v-if="mode === 'new' && form_step === 'select_product'"
+          v-if="form_step === 'select_product'"
           class="column q-gutter-md"
         >
           <!-- PRODUCT -->
@@ -158,10 +153,6 @@ export default {
       type: Boolean,
       default: true,
     },
-    mode: {
-      type: String,
-      default: 'new',
-    },
     serial: {
       type: Object,
       default: undefined,
@@ -209,33 +200,11 @@ export default {
 
   methods: {
     initFormData() {
-      //const form_template = this.base_fields ?? [];
       this.saving = false;
       this.enableSave = false;
       this.phase_index = 0;
       this.step_index = 0;
-      //const use_clean_form = this.mode === 'new';
-      /*if (use_clean_form) {
-        this.links.product = null;
-        // Use fields from serial type template adding empty value
-        // If no template, force null, otherwise `undefined` will not be included in the api body and the serial data will not be updated
-        this.form_fields = form_template.map((field) => ({
-          ...field,
-          value: null,
-        }));
-        return;
-      }
-
-      this.form_fields = form_template.map((field) => ({
-        ...field,
-        value: this.serial.data.find(({ _key }) => _key === field._key)?.value,
-      }));*/
     },
-
-    /*async initBaseFields() {
-      const { data: fields } = await this.$api.get('serial-field');
-      this.base_fields = fields;
-    },*/
 
     hasCustomField() {
       try {
@@ -384,27 +353,23 @@ export default {
 
       const user = this.session_data.user._key;
 
-      if (this.mode === 'new') {
-        // if link is active send data in the form e.g. { type: product, key: whatever }
-        serial_data.created_by = `User/${user}`; // temporarily hardcoding DB id
-        // Map links to list of objects, including only populated properties
-        const links = [];
-        Object.entries(this.links).forEach(([key, value]) => {
-          if (value) {
-            links.push({ type: key, key: value._key });
-          }
-        });
-        links.push({ type: 'user', key: user });
-        if (this.counter_key !== null) {
-          links.push({ type: 'counter', key: this.counter_key });
+      // if link is active send data in the form e.g. { type: product, key: whatever }
+      serial_data.created_by = `User/${user}`; // temporarily hardcoding DB id
+      // Map links to list of objects, including only populated properties
+      const links = [];
+      Object.entries(this.links).forEach(([key, value]) => {
+        if (value) {
+          links.push({ type: key, key: value._key });
         }
-        serial_data.linked_to = links;
-      } else {
-        serial_data._key = this.serial._key;
+      });
+      links.push({ type: 'user', key: user });
+      if (this.counter_key !== null) {
+        links.push({ type: 'counter', key: this.counter_key });
       }
+      serial_data.linked_to = links;
 
       const event = {
-        event_type: this.mode === 'new' ? 'SERIAL_CREATED' : 'SERIAL_UPDATED',
+        event_type: 'SERIAL_CREATED',
         user_key: user,
         user_session_key: this.session_data.session_key,
         timestamp: timestamp(),
@@ -412,30 +377,9 @@ export default {
       };
 
       await this.$api.post('event', event);
-      /*const { data } = await this.$api.post('event', event);
-      const message =
-        this.mode === 'new' ? 'serial_new_success' : 'serial_update_success';
 
-      const serial_key =
-        this.mode === 'new' ? data.detail.serial_key : serial_data._key;
-      await this.saveFiles(serial_key);*/
-
-      // If from work session, fetch serials directly, otherwise signal the parent component to do so
-      /*if (!this.with_links) {
-        await this.$store.dispatch('getSerials', {
-          work_order_key: this.job_data.wo_key,
-        });
-      } else {
-        this.$emit('serialCreated');
-      }*/
       this.cancel();
       this.saving = false;
-      /*this.$q.notify({
-        message: this.$t(message),
-        color: 'theme-orange',
-        timeout: 1500,
-        position: 'top',
-      });*/
     },
   },
 };
