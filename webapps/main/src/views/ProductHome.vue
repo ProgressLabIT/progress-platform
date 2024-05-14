@@ -565,8 +565,8 @@ export default {
           label: this.$t('traceability.options.none'),
         },
         {
-          value: 'enabled',
-          label: this.$t('traceability.options.enabled'),
+          value: 'form_only',
+          label: this.$t('traceability.options.form_only'),
         },
         {
           value: 'complete',
