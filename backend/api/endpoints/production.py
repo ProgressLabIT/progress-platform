@@ -325,8 +325,20 @@ async def update_work_order_quantities(
 @router.get('/work-order/{wo_key}')
 async def get_wo_data(wo_key: str):
 
-  wo_data = db.aql.execute(Queries.GET_WORK_ORDER_DATA, bind_vars=dict(wo_key=wo_key)).next()
-  return APIResponse(detail=wo_data)
+  try:
+    wo_data = db.aql.execute(Queries.GET_WORK_ORDER_DATA, bind_vars=dict(wo_key=wo_key)).next()
+    return APIResponse(detail=wo_data)
+  except Exception as e:
+    status_code=500
+    response = dict(
+      status=status_code,
+      message=f"There has been a problem while deleting the work order",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
 
 
 # ----------------------------------------------------------------------
