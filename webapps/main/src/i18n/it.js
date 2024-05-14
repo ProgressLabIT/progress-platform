@@ -831,4 +831,12 @@ export default {
     'Inserisci il testo da ricercare (min 3 caratteri) fra codice ordine, prodotto, commessa. Verranno mostrati i primi 100 risultati.',
   workload_hours: 'Carico in ore',
   yes: 'Sì',
+  traceability: {
+    enabled: 'abilita tracciabilità',
+    options: {
+      none: 'Nessuna',
+      enabled: 'Solo form',
+      complete: 'Completa',
+    },
+  },
 };

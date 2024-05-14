@@ -153,6 +153,24 @@
           >
           <TagChips v-else :tags="product.tags" />
         </div>
+
+        <!-- TRACEABILITY SETTING TAGS -->
+        <div class="q-mt-lg col-auto">
+          <div class="text-h4 weight-bold text-uppercase">
+            {{ $t('traceability', 2) }}
+          </div>
+
+          <q-select
+            :options="traceability_options"
+            filled
+            clearable
+            emit-value
+            map-options
+            :model-value="product.traceability_level"
+            :label="$t('traceability.enabled')"
+            @update:model-value="updateField('traceability_level', $event)"
+          />
+        </div>
       </div>
 
       <q-space />
@@ -538,6 +556,23 @@ export default {
       } else {
         return null;
       }
+    },
+
+    traceability_options() {
+      return [
+        {
+          value: 'none',
+          label: this.$t('traceability.options.none'),
+        },
+        {
+          value: 'enabled',
+          label: this.$t('traceability.options.enabled'),
+        },
+        {
+          value: 'complete',
+          label: this.$t('traceability.options.complete'),
+        },
+      ];
     },
   },
 
