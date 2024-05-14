@@ -14,7 +14,7 @@ from utils.traceability import Queries as TraceabilityQueries
 from commons.utils.db import model_to_db_dict
 
 from commons.kafka_utils.kafka_producer import KafkaProducer
-from commons.models.serial import SerialWithLinks
+from commons.models.serial import Serial
 
 from fastapi import HTTPException
 
@@ -172,7 +172,7 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
 
   def create_serial(self):
-    serial_data = jsonable_encoder(SerialWithLinks(**self.info.serial_data))
+    serial_data = jsonable_encoder(Serial(**self.info.serial_data))
     serial_data['operation'] = 'CREATE'
 
     try:
@@ -190,7 +190,7 @@ class ProductionActivityEvent(BaseEvent):
       )
 
   def update_serial(self):
-    serial_data = jsonable_encoder(SerialWithLinks(**self.info.serial_data))
+    serial_data = jsonable_encoder(Serial(**self.info.serial_data))
     serial_data['operation'] = 'UPDATE'
 
     try:
@@ -208,7 +208,7 @@ class ProductionActivityEvent(BaseEvent):
       )
 
   def delete_serial(self):
-    serial_data = jsonable_encoder(SerialWithLinks(**self.info.serial_data))
+    serial_data = jsonable_encoder(Serial(**self.info.serial_data))
     serial_data['operation'] = 'DELETE'
 
     try:

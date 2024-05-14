@@ -8,7 +8,7 @@ import json
 
 from fastapi.encoders import jsonable_encoder
 from commons.utils.db import db
-from commons.models.serial import SerialWithLinks, SerialLink, Serial
+from commons.models.serial import Serial
 from commons.utils.counter import _generate_counter
 
 
@@ -56,7 +56,7 @@ class SerialManager:
     def handleMessage(self, key, serial):
         print(serial)
 
-        serial_data : SerialWithLinks = jsonable_encoder(SerialWithLinks(**serial))
+        serial_data : Serial = jsonable_encoder(Serial(**serial))
         match serial['operation']:
            case 'CREATE':
               self.create_serial(serial_data=serial_data)
@@ -67,41 +67,18 @@ class SerialManager:
            case _:
               print("Error")
 
-
-    @staticmethod
-    def _build_serial_link(_from: str, link_dict: SerialLink):
-      link_map = dict(
-        product="Product/",
-        user="User/",
-        counter="Counter/"
-      )
-      target = link_map[link_dict.get('type')] + link_dict.get('key')
-      return dict(_from=_from, _to=target)
-
     def create_serial(self, serial_data):
 
-        counter_id = None
-        match = dict()
-        for link in serial_data.get('linked_to'):
-            if link.get('type') == 'counter':
-                  counter_id = link.get('key')
-        match['_key'] = counter_id
-
-        # Remove links and exclude document id fields
         new_serial_record = Serial(
           **serial_data
         ).dict(by_alias=True)
 
-        tx = db.begin_transaction(write=['Serial', 'Counter', 'serial_rel'], read=[])
+        tx = db.begin_transaction(write=['Serial', 'Counter'], read=[])
         try:
-          serial_no = _generate_counter(tx, 'Counter/'+counter_id)
+          serial_no = _generate_counter(tx, 'Counter/'+serial_data['counter_key'])
           new_serial_record['serial'] = serial_no
 
           new_serial_id = tx.collection('Serial').insert(new_serial_record, return_new=True)['_id']
-          #rels = [self._build_issue_link(_from=new_issue_id, link_dict=rel) for rel in self.info.issue_data.linked_to]
-          link = serial_data.get('linked_to')
-          rels = [self._build_serial_link(_from=new_serial_id, link_dict=rel) for rel in link]
-          tx.collection('serial_rel').insert_many(rels, silent=True)
 
           serial_key=new_serial_id.split('/')[1]
           serial_data['_key'] = serial_key
