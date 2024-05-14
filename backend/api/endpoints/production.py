@@ -104,6 +104,9 @@ async def create_work_order(new_wo: WorkOrderNew):
       new_wo.phase_sequence = ['default']
       # TODO: replace default alias with default operation (stored and cached in config)
 
+    if product_data.traceability_level:
+      new_wo.traceability_level = product_data.traceability_level
+
     new_wo_record = create_wo_record(new_wo, wo_coll)
 
   except StopIteration:

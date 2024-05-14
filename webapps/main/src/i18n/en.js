@@ -829,7 +829,7 @@ export default {
     enabled: 'Enable traceability',
     options: {
       none: 'None',
-      enabled: 'Form only',
+      form_only: 'Form only',
       complete: 'Complete',
     },
   },
