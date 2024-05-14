@@ -41,6 +41,8 @@ class ProductDetails(ProductBaseData):
   created: datetime | None = None
   updated: datetime | None = None
 
+  traceability_level: str | None = None
+
   cost: TargetAverageCost = TargetAverageCost()
   # sale_price: float = 0
   # margin: TargetAverageData = TargetAverageData()

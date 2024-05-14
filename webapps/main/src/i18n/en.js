@@ -824,4 +824,12 @@ export default {
   workload_hours: 'Workload in hours',
   write: 'Write',
   yes: 'Yes',
+  traceability: {
+    enabled: 'Enable traceability',
+    options: {
+      none: 'None',
+      enabled: 'Form only',
+      complete: 'Complete',
+    },
+  },
 };
