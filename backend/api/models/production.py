@@ -1,12 +1,13 @@
 from datetime import date, datetime, timedelta
 from enum import Enum
-from typing import Union
+from typing import Union, Optional
 
 from pydantic import model_validator, BaseModel, Field, PositiveFloat, field_validator, ValidationInfo
 
 from models.bom import BomLineRead
 from models.process import PhaseParameters, StepWithMediaInfo
 from models.product import ProductDoc
+from models.product import TraceabilityLevel
 from commons.models.base_models import FlexModel, ArangoDocument
 from commons.utils.dt import timestamp
 
@@ -51,6 +52,8 @@ class WorkOrderNew(BaseModel):
   start_from: datetime | date | None = None
   due_by: datetime | date | None = None
   notes: str | None = None
+
+  traceability_level: Optional[TraceabilityLevel] = TraceabilityLevel.NONE
 
   @model_validator(mode="before")
   @classmethod

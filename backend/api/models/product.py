@@ -25,6 +25,11 @@ class KPIWindowType(str, Enum):
   TIME = 'time'
   COUNT = 'count'
 
+class TraceabilityLevel(str, Enum):
+  NONE = 'none'
+  FORM_ONLY = 'form_only'
+  COMPLETE = 'complete'
+
 
 class ProductBaseData(FlexModel):
   key: str | None = Field(None, alias="_key")
@@ -41,7 +46,7 @@ class ProductDetails(ProductBaseData):
   created: datetime | None = None
   updated: datetime | None = None
 
-  traceability_level: str | None = None
+  traceability_level: Optional[TraceabilityLevel] = TraceabilityLevel.NONE
 
   cost: TargetAverageCost = TargetAverageCost()
   # sale_price: float = 0

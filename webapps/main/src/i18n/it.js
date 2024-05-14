@@ -835,7 +835,7 @@ export default {
     enabled: 'abilita tracciabilità',
     options: {
       none: 'Nessuna',
-      enabled: 'Solo form',
+      form_only: 'Solo form',
       complete: 'Completa',
     },
   },
