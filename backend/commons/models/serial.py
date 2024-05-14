@@ -18,20 +18,11 @@ class Serial(ArangoDocument):
    serial: str | None = None
    created_by: str | None = None
    operation: str | None = None
-   #product_key: str
-   #wo_key: str
+   product_key: str | None = None
+   wo_key: str | None = None
+   counter_key: str | None = None
+   user_key: str | None = None
    created: datetime | None = None
    released: datetime | None = None
    data: list[SerialFormFieldValue] | None = None
-
-class SerialLinkType(str, Enum):
-  PRODUCT = 'product'
-  USER = 'user'
-  COUNTER = 'counter'
-
-class SerialLink(BaseModel):
-  type: SerialLinkType
-  key: str
-
-class SerialWithLinks(Serial):
-  linked_to: list[SerialLink] = []
+   deleted: bool = False
