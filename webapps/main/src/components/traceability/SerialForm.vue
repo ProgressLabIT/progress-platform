@@ -353,20 +353,16 @@ export default {
 
       const user = this.session_data.user._key;
 
-      // if link is active send data in the form e.g. { type: product, key: whatever }
       serial_data.created_by = `User/${user}`; // temporarily hardcoding DB id
-      // Map links to list of objects, including only populated properties
-      const links = [];
-      Object.entries(this.links).forEach(([key, value]) => {
-        if (value) {
-          links.push({ type: key, key: value._key });
-        }
-      });
-      links.push({ type: 'user', key: user });
-      if (this.counter_key !== null) {
-        links.push({ type: 'counter', key: this.counter_key });
+
+      if (this.links.product) {
+        serial_data.product_key = this.links.product._key;
       }
-      serial_data.linked_to = links;
+
+      if (this.counter_key) {
+        serial_data.counter_key = this.counter_key;
+      }
+      serial_data.user_key = this.session_data.user._key;
 
       const event = {
         event_type: 'SERIAL_CREATED',
