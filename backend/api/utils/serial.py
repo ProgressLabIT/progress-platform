@@ -49,10 +49,10 @@ class Queries:
       )
 
       let fields = (
-FOR field IN CustomField
-        FILTER field.use_in_serial == True
-        return merge (field)
-        )
+        FOR field IN CustomField
+            FILTER field.use_in_serial == True
+            return merge (field)
+    )
 
     LET serial_data = (
       FOR field_value IN NOT_NULL(s.data, [])
@@ -66,10 +66,10 @@ FOR field IN CustomField
     // FILTER BY LINKS
 
     // PRODUCT
-    LET product = FIRST(
-      FOR l IN 1..1 OUTBOUND s serial_rel
-      FILTER PARSE_IDENTIFIER(l._id).collection == 'Product'
-      RETURN l
+    let product = FIRST(
+        FOR product IN Product
+            FILTER product._key == s.product_key
+            return product
     )
 
     LET phases = (
@@ -108,10 +108,13 @@ FOR field IN CustomField
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(s, {
       data: serial_data,
-      phases: phases
+      phases: phases,
+      product: product
     })
 
-    LET serial_links = { product }
+    return base_result
 
-    RETURN @with_links ? MERGE(base_result, { links: serial_links }) : base_result
+    //LET serial_links = { product }
+
+    //RETURN @with_links ? MERGE(base_result, { links: serial_links }) : base_result
   """
