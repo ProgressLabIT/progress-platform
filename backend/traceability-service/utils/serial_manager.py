@@ -94,9 +94,9 @@ class SerialManager:
            print(traceback.format_exc())
 
     def delete_serial(self, serial_data):
-        key = serial_data.get("_key")
+        serial_key = serial_data.get("_key")
         try:
-           db.collection('Serial').delete(key, return_old=True)['old']
+           db.collection('Serial').update(dict(_key=serial_key, deleted=True))
         except:
            print(traceback.format_exc())
 

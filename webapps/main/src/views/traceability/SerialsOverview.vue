@@ -102,7 +102,7 @@ export default {
         },
         {
           name: 'product_code',
-          field: (row) => row.links?.product?.code,
+          field: (row) => row?.product?.code,
           sortable: true,
           align: 'left',
           label: this.$t('product.label').toUpperCase(),

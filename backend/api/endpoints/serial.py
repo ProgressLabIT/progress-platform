@@ -52,7 +52,8 @@ async def search_serials(
   advanced_filters: str = Query(default=None),
   product_key: Union[List[str], None] = Query(default=None),
   product_code_search: str | None = None,
-  limit: int | None = None
+  limit: int | None = None,
+  deleted: bool = False
  # with_links: bool = False
   ):
   # use query parameters to filter specific type
@@ -65,7 +66,8 @@ async def search_serials(
     product_key = product_key,
     product_code_search = product_code_search,
     advanced_filters = json.loads(b64decode(advanced_filters).decode('latin-1')) if advanced_filters else None,
-    limit = limit
+    limit = limit,
+    deleted = deleted
     #with_links = with_links
   )
   try:
