@@ -20,6 +20,7 @@
               </span>
               <div class="col q-ml-xl">
                 <q-btn
+                  v-if="!serial.deleted"
                   flat
                   round
                   icon="mdi-pencil"
@@ -51,7 +52,7 @@
               class="col-auto q-pr-md"
               :field="field"
               :root-path="`/media/serial/${serialKey}`"
-              :disable="!editMode"
+              :disable="!can_edit"
               dense
               @update="field.value = $event"
             />
@@ -208,7 +209,7 @@
               class="col-auto q-pr-md"
               :field="field"
               :root-path="`/media/serial/${serialKey}`"
-              :disable="!editMode"
+              :disable="!can_edit"
               dense
               @update="field.value = $event"
             />
@@ -233,7 +234,7 @@
             color="theme-orange"
             :label="$t('save')"
             :loading="saving"
-            :disable="!editMode"
+            :disable="!can_edit"
             @click="save"
           >
           </q-btn>
@@ -318,11 +319,18 @@ export default {
     },
 
     user_can_delete() {
-      return this.$store.getters.hasPermission('production');
+      return (
+        this.$store.getters.hasPermission('tracability') &&
+        this.serial().deleted
+      );
     },
 
     session_data() {
       return this.$store.state.session;
+    },
+
+    can_edit() {
+      return this.editMode && !this.serial().deleted;
     },
   },
 
