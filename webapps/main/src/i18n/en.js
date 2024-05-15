@@ -827,6 +827,7 @@ export default {
   yes: 'Yes',
   traceability: {
     enabled: 'Enable traceability',
+    include_deleted: 'Include deleted',
     options: {
       none: 'None',
       form_only: 'Form only',
