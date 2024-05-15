@@ -29,6 +29,7 @@ class Queries:
       && (@created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], s.created_by) : true)
       && (@time_created_from ? s.created >= @time_created_from : true)
       && (@time_created_to ? s.created <= @time_created_to : true)
+      && (@deleted ? s.deleted == @deleted : s.deleted == false)
       && (@advanced_filters
         ? LENGTH(
             // This subquery returns match true/false for each filter
