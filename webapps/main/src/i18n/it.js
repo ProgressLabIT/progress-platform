@@ -833,6 +833,7 @@ export default {
   yes: 'Sì',
   traceability: {
     enabled: 'abilita tracciabilità',
+    include_deleted: 'includi cancellati',
     options: {
       none: 'Nessuna',
       form_only: 'Solo form',
