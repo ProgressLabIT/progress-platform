@@ -8,7 +8,7 @@ import json
 
 from fastapi.encoders import jsonable_encoder
 from commons.utils.db import db
-from commons.models.serial import Serial
+from commons.models.serial import Serial,SerialEvent
 from commons.utils.counter import _generate_counter
 
 
@@ -56,24 +56,24 @@ class SerialManager:
     def handleMessage(self, key, serial):
         print(serial)
 
-        serial_data : Serial = jsonable_encoder(Serial(**serial))
+        serial_data : SerialEvent = jsonable_encoder(SerialEvent(**serial))
         match serial['operation']:
            case 'CREATE':
-              self.create_serial(serial_data=serial_data)
+              self.create_serial(serial_data=serial_data['serial'], batch_key=serial_data['batch_key'])
            case 'UPDATE':
-              self.update_serial(serial_data=serial_data)
+              self.update_serial(serial_data=serial_data['serial'])
            case 'DELETE':
-              self.delete_serial(serial_data=serial_data)
+              self.delete_serial(serial_data=serial_data['serial'])
            case _:
               print("Error")
 
-    def create_serial(self, serial_data):
+    def create_serial(self, serial_data, batch_key):
 
         new_serial_record = Serial(
           **serial_data
         ).dict(by_alias=True)
 
-        tx = db.begin_transaction(write=['Serial', 'Counter'], read=[])
+        tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
         try:
           serial_no = _generate_counter(tx, 'Counter/'+serial_data['counter_key'])
           new_serial_record['serial'] = serial_no
@@ -82,6 +82,12 @@ class SerialManager:
 
           serial_key=new_serial_id.split('/')[1]
           serial_data['_key'] = serial_key
+
+          if batch_key:
+             tx.collection('batch_serial').insert(dict(
+                _from=f'Batch/{batch_key}',
+                _to=f'Serial/{serial_key}'))
+
           tx.commit_transaction()
         except:
           print(traceback.format_exc())

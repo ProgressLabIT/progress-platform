@@ -320,8 +320,8 @@ export default {
 
     user_can_delete() {
       return (
-        this.$store.getters.hasPermission('tracability') &&
-        this.serial().deleted
+        this.$store.getters.hasPermission('production') &&
+        !this.$store.getters.getSerialData(this.serialKey).deleted
       );
     },
 
@@ -330,7 +330,10 @@ export default {
     },
 
     can_edit() {
-      return this.editMode && !this.serial().deleted;
+      return (
+        this.editMode &&
+        !this.$store.getters.getSerialData(this.serialKey).deleted
+      );
     },
   },
 
