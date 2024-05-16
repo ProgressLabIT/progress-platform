@@ -78,7 +78,7 @@ class FormFieldValue(BaseModel):
   value: Any | None = None
 
 class SerialFormFieldValue(BaseModel):
-  form_field_key: str
+  form_field_key: str | None = None
   custom_field_key: str | None = None
   value: Any | None = None
   phase_key: str | None = None

@@ -14,7 +14,10 @@ from utils.traceability import Queries as TraceabilityQueries
 from commons.utils.db import model_to_db_dict
 
 from commons.kafka_utils.kafka_producer import KafkaProducer
-from commons.models.serial import Serial
+from commons.models.serial import Serial, SerialEvent
+from commons.models.form import SerialFormFieldValue
+
+from utils.serial import Queries
 
 from fastapi import HTTPException
 
@@ -171,85 +174,86 @@ class ProductionActivityEvent(BaseEvent):
   # Serial
   # ===================================================================
 
-  def create_serial(self):
-    serial_data = jsonable_encoder(Serial(**self.info.serial_data))
-    serial_data['operation'] = 'CREATE'
-
+  def send_to_consumer(self, serial_event):
     try:
-      KafkaProducer.getInstance().produce_async(topic="serials", key=serial_data.get('_key'), value=json.dumps(serial_data))
+      KafkaProducer.getInstance().produce_async(topic="serials", key=serial_event.get('_key'), value=json.dumps(serial_event))
       self.response = dict(
-        message="Serial created correctly",
+        message="Serial managed correctly",
       )
     except Exception:
       raise HTTPException(
         status_code=500,
         detail=dict(
-          message="There was an error creating the serial.",
+          message="There was an error managing the serial.",
           error=traceback.format_exc()
         )
       )
+
+  def create_serial(self):
+    serial_data = jsonable_encoder(Serial(**self.info.serial_data))
+    serial_event = SerialEvent()
+    setattr(serial_event, 'serial', serial_data)
+    setattr(serial_event, 'operation', 'CREATE')
+    self.send_to_consumer(serial_event.dict())
+
+
 
   def update_serial(self):
     serial_data = jsonable_encoder(Serial(**self.info.serial_data))
-    serial_data['operation'] = 'UPDATE'
+    serial_event = SerialEvent()
+    setattr(serial_event, 'serial', serial_data)
+    setattr(serial_event, 'operation', 'UPDATE')
+    self.send_to_consumer(serial_event.dict())
 
-    try:
-      KafkaProducer.getInstance().produce_async(topic="serials", key=serial_data.get('_key'), value=json.dumps(serial_data))
-      self.response = dict(
-        message="Serial updated correctly",
-      )
-    except Exception:
-      raise HTTPException(
-        status_code=500,
-        detail=dict(
-          message="There was an error updating the serial.",
-          error=traceback.format_exc()
-        )
-      )
 
   def delete_serial(self):
     serial_data = jsonable_encoder(Serial(**self.info.serial_data))
-    serial_data['operation'] = 'DELETE'
+    serial_event = SerialEvent()
+    setattr(serial_event, 'serial', serial_data)
+    setattr(serial_event, 'operation', 'DELETE')
+    self.send_to_consumer(serial_event.dict())
 
-    try:
-      KafkaProducer.getInstance().produce_async(topic="serials", key=serial_data.get('_key'), value=json.dumps(serial_data))
-      self.response = dict(
-        message="Serial deleted correctly",
-      )
-    except Exception:
-      raise HTTPException(
-        status_code=500,
-        detail=dict(
-          message="There was an error updating the serial.",
-          error=traceback.format_exc()
-        )
-      )
+  def create_batch_serial_records(self):
+    if not self.job:
+       self.job = self.get_job_data()
+
+    default_batch = self.job.parameters.production_batch_qt
+    remaining_qt = self.job.qt_planned - self.job.qt_completed
+    batch_qt = min([default_batch, remaining_qt])
+
+    serial_data = Serial()
+    setattr(serial_data, '_key', None)
+    setattr(serial_data, 'created_by', self.info.user_key)
+    setattr(serial_data, 'wo_key', self.info.work_order_key)
+
+    product = self.tx.collection('Product').get(self.info.product_key)
+    setattr(serial_data, 'counter_key', product['counter_id'])
+    setattr(serial_data, 'product_key', self.info.product_key)
+    bind_vars = dict(
+      product_key = self.info.product_key
+    )
+    phases_data = [e for e in self.tx.aql.execute(Queries.GET_PRODUCT_STEPS, bind_vars=bind_vars)]
+    data = []
+    for phase in phases_data:
+      for step in phase['steps']:
+        for field in step['form_fields']:
+          field_data = SerialFormFieldValue()
+          setattr(field_data, 'form_field_key', field['_key'])
+          setattr(field_data, 'custom_field_key', field['custom_field_key'])
+          setattr(field_data, 'phase_key', phase['phase_key'])
+          setattr(field_data, 'step_key', step['_key'])
+          data.append(field)
+
+    setattr(serial_data, 'data', data)
+
+    for i in range(int(remaining_qt)):
+      serial_event = SerialEvent()
+      setattr(serial_event, 'serial', serial_data.dict())
+      setattr(serial_event, 'operation', 'CREATE')
+      setattr(serial_event, 'batch_key', self.batch.key)
+      self.send_to_consumer(serial_event.dict())
 
 
-  # def create_batch_serial_records(self):
-  #   if not self.job:
-  #     self.job = self.get_job_data()
-
-  #   default_batch = self.job.parameters.production_batch_qt
-  #   remaining_qt = self.job.qt_planned - self.job.qt_completed
-  #   batch_qt = min([default_batch, remaining_qt])
-
-  #   next_serial = self.tx.aql.execute(
-  #     TraceabilityQueries.GET_NEXT_SERIAL_NUMBER_FOR_WORK_ORDER,
-  #     bind_vars=dict(wo_key=self.info.work_order_key)
-  #   ).next()
-
-  #   batch_serials = range(next_serial, next_serial + batch_qt)
-
-  #   serial_keys = [
-  #     self.create_serial(counter=i, batch_key=self.info.active_batch_key)
-  #     for i in batch_serials
-  #   ]
-
-  #   self.tx.collection('Batch').update(dict(
-  #     _key=self.info.active_batch_key,
-  #     serial_numbers=serial_keys
-  #   ))
 
 
 
@@ -630,9 +634,6 @@ class ProductionActivityEvent(BaseEvent):
     # Create new WorkSession and store _key in Event.info
     self.create_work_session()
 
-    # Create batch serials
-    # self.create_batch_serial_records()
-
     # Update WorkOrder status
     wo = self.get_work_order_data()
 
@@ -663,6 +664,9 @@ class ProductionActivityEvent(BaseEvent):
       action = 'add',
       tx = self.tx
     )
+
+    # Create batch serials
+    self.create_batch_serial_records()
 
     self.response = dict(
       message = f"Job {self.info.job_key} started",
