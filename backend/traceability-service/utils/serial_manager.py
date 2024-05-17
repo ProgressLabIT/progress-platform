@@ -8,9 +8,9 @@ import json
 
 from fastapi.encoders import jsonable_encoder
 from commons.utils.db import db
-from commons.models.serial import Serial,SerialEvent
+from commons.models.serial import Serial, SerialEvent, SerialEventType, SerialNotificationType
 from commons.utils.counter import _generate_counter
-
+from commons.kafka_utils.kafka_producer import KafkaProducer
 
 
 class SerialManager:
@@ -58,11 +58,11 @@ class SerialManager:
 
         serial_data : SerialEvent = jsonable_encoder(SerialEvent(**serial))
         match serial['operation']:
-           case 'CREATE':
+           case SerialEventType.CREATE:
               self.create_serial(serial_data=serial_data['serial'], batch_key=serial_data['batch_key'])
-           case 'UPDATE':
+           case SerialEventType.UPDATE:
               self.update_serial(serial_data=serial_data['serial'])
-           case 'DELETE':
+           case SerialEventType.DELETE:
               self.delete_serial(serial_data=serial_data['serial'])
            case _:
               print("Error")
@@ -89,20 +89,55 @@ class SerialManager:
                 _to=f'Serial/{serial_key}'))
 
           tx.commit_transaction()
+          self.notify_results(dict(
+              serial_key = serial_data.get("_key"),
+              serial = serial_data.get("serial"),
+              notification = SerialNotificationType.CREATED
+           ))
         except:
           print(traceback.format_exc())
           tx.abort_transaction()
+          self.notify_results(dict(
+              serial_key = serial_data.get("_key"),
+              notification = SerialNotificationType.ERROR,
+              error = traceback.format_exc()
+           ))
 
     def update_serial(self, serial_data):
        try:
            db.collection('Serial').update(dict(**serial_data, by_alias=True), check_rev=False)
+           self.notify_results(dict(
+              serial_key = serial_data.get("_key"),
+              serial = serial_data.get("serial"),
+              notification = SerialNotificationType.UPDATED
+           ))
        except:
            print(traceback.format_exc())
+           self.notify_results(dict(
+              serial_key = serial_data.get("_key"),
+              notification = SerialNotificationType.ERROR,
+              error = traceback.format_exc()
+           ))
 
     def delete_serial(self, serial_data):
         serial_key = serial_data.get("_key")
         try:
            db.collection('Serial').update(dict(_key=serial_key, deleted=True))
+           self.notify_results(dict(
+              serial_key = serial_key,
+              notification = SerialNotificationType.DELETED
+           ))
+        except:
+           print(traceback.format_exc())
+           self.notify_results(dict(
+              serial_key = serial_key,
+              notification = SerialNotificationType.ERROR,
+              error = traceback.format_exc()
+           ))
+
+    def notify_results(self, notification):
+        try:
+           KafkaProducer.getInstance().produce_async(topic="serial_notifications", key=notification.get('serial_key'), value=json.dumps(notification))
         except:
            print(traceback.format_exc())
 

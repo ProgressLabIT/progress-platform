@@ -8,7 +8,7 @@ from commons.kafka_utils.kafka_consumer_manager import KafkaConsumerManager
 from commons.kafka_utils.kafka_admin import KafkaAdmin
 from commons.executors.executor_manager import ExecutorManager
 from commons.websockets.websocket_manager import WebsocketManager
-from utils.chat_kafka_consumer import ChatKafkaConsumer
+from utils.serial_notification_kafka_consumer import SerialNotificationsKafkaConsumer
 
 
 import endpoints
@@ -42,8 +42,8 @@ async def hello():
 @app.on_event("startup")
 async def startup_event():
     KafkaProducer.getInstance()
-    chatCounsumer = ChatKafkaConsumer()
-    KafkaConsumerManager.getInstance().registerConsumer(chatCounsumer)
+    serialNotificationsConsumer = SerialNotificationsKafkaConsumer()
+    KafkaConsumerManager.getInstance().registerConsumer(serialNotificationsConsumer)
     KafkaAdmin.getInstance()
     WebsocketManager.getInstance()
 
