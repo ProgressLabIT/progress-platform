@@ -17,7 +17,23 @@ class Serial(ArangoDocument):
    data: list[SerialFormFieldValue] | None = None
    deleted: bool = False
 
+class SerialEventType(str, Enum):
+  CREATE = 'CREATE'
+  UPDATE = 'UPDATE'
+  DELETE = 'DELETE'
 class SerialEvent(Serial):
-   operation: str | None = None
+   operation: SerialEventType | None = None
    batch_key: str | None = None
    serial: Serial | None = None
+
+class SerialNotificationType(str, Enum):
+  CREATED = 'CREATED'
+  UPDATED = 'UPDATED'
+  DELETED = 'DELETED'
+  ERROR = 'ERROR'
+class SerialNotification(BaseModel):
+   serial: str | None = None
+   serial_key: str | None = None
+   notification: SerialNotificationType | None = None
+   error: str | None = None
+
