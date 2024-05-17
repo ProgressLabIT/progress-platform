@@ -6,7 +6,6 @@ from commons.utils.config import get_config
 from commons.kafka_utils.kafka_producer import KafkaProducer
 from commons.kafka_utils.kafka_consumer_manager import KafkaConsumerManager
 from commons.executors.executor_manager import ExecutorManager
-from commons.websockets.websocket_manager import WebsocketManager
 from consumer.serials_kafka_consumer import SerialsKafkaConsumer
 from utils.serial_manager import SerialManager
 
