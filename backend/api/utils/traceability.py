@@ -146,11 +146,21 @@ class Queries:
     LET processing_time = SUM(FOR ws IN work_sessions RETURN ws.duration)
     LET processing_cost = SUM(FOR ws IN work_sessions RETURN ws.cost)
 
-    // Check if any WO Job is still open
-    LET still_open = TO_BOOL(COUNT(FOR j IN jobs FILTER j.stage != 'closed' RETURN 1))
-    LET status = still_open ? 'started' : 'closed'
+    // Check if WO is open by checking if any job is not closed
+    LET open = TO_BOOL(COUNT(FOR j IN jobs FILTER j.stage != 'closed' RETURN 1))
 
-    LET end = still_open ? null : DATE_ISO8601(now)
+    // Check if WO is started by checking if any job is not in 'created' stage (is started or closed)
+    LET started = TO_BOOL(COUNT(FOR j IN jobs FILTER j.stage != 'created' RETURN 1))
+
+    // Define wo status
+    LET status = open ? (started ? 'started' : 'created') : 'closed'
+
+    // Update start and end if wo has been reset/started/closed
+    LET start = status == 'created' ? null : (
+      wo.start ? wo.start : DATE_ISO8601(now)
+    )
+
+    LET end = open ? null : DATE_ISO8601(now)
 
     // Apply changes and return updated record
     UPDATE wo WITH {
@@ -159,6 +169,7 @@ class Queries:
       active,
       qt_completed,
       status,
+      start,
       end,
       processing_time,
       processing_cost
