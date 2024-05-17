@@ -14,7 +14,7 @@ from utils.traceability import Queries as TraceabilityQueries
 from commons.utils.db import model_to_db_dict
 
 from commons.kafka_utils.kafka_producer import KafkaProducer
-from commons.models.serial import Serial, SerialEvent
+from commons.models.serial import Serial, SerialEvent, SerialEventType
 from commons.models.form import SerialFormFieldValue
 
 from utils.serial import Queries
@@ -193,7 +193,7 @@ class ProductionActivityEvent(BaseEvent):
     serial_data = jsonable_encoder(Serial(**self.info.serial_data))
     serial_event = SerialEvent()
     setattr(serial_event, 'serial', serial_data)
-    setattr(serial_event, 'operation', 'CREATE')
+    setattr(serial_event, 'operation', SerialEventType.CREATE)
     self.send_to_consumer(serial_event.dict())
 
 
@@ -202,7 +202,7 @@ class ProductionActivityEvent(BaseEvent):
     serial_data = jsonable_encoder(Serial(**self.info.serial_data))
     serial_event = SerialEvent()
     setattr(serial_event, 'serial', serial_data)
-    setattr(serial_event, 'operation', 'UPDATE')
+    setattr(serial_event, 'operation', SerialEventType.UPDATE)
     self.send_to_consumer(serial_event.dict())
 
 
@@ -210,7 +210,7 @@ class ProductionActivityEvent(BaseEvent):
     serial_data = jsonable_encoder(Serial(**self.info.serial_data))
     serial_event = SerialEvent()
     setattr(serial_event, 'serial', serial_data)
-    setattr(serial_event, 'operation', 'DELETE')
+    setattr(serial_event, 'operation', SerialEventType.DELETE)
     self.send_to_consumer(serial_event.dict())
 
   def create_batch_serial_records(self):
@@ -249,7 +249,7 @@ class ProductionActivityEvent(BaseEvent):
     for i in range(int(remaining_qt)):
       serial_event = SerialEvent()
       setattr(serial_event, 'serial', serial_data.dict())
-      setattr(serial_event, 'operation', 'CREATE')
+      setattr(serial_event, 'operation', SerialEventType.CREATE)
       setattr(serial_event, 'batch_key', self.batch.key)
       self.send_to_consumer(serial_event.dict())
 
@@ -615,8 +615,8 @@ class ProductionActivityEvent(BaseEvent):
   # EVENT ACTIONS
   ######################################################################
 
-  def start_job(self):
 
+  def start_job(self):
     # Check job hasn't been started already
     self.get_job_data()
     if self.job.stage != WorkStatus.CREATED:
