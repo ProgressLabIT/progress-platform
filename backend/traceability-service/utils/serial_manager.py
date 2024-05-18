@@ -91,7 +91,7 @@ class SerialManager:
           tx.commit_transaction()
           self.notify_results(dict(
               serial_key = serial_data.get("_key"),
-              serial = serial_data.get("serial"),
+              serial = serial_no,
               notification = SerialNotificationType.CREATED
            ))
         except:
