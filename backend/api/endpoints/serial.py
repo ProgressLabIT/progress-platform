@@ -10,7 +10,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from commons.models.form import CustomField, CustomListValue, FieldType
 from commons.utils.db import db, model_to_db_dict
-from commons.server_events.server_event_manager import ServerEventManager
+from utils.server_event_manager import ServerEventManager
 
 
 from utils.serial import Queries
@@ -87,17 +87,5 @@ async def search_serials(
 
 @router.get("/serial-notification")
 async def message_stream(request: Request):
-    async def event_generator():
-        while True:
-            if await request.is_disconnected():
-                break
-
-            # Checks for new messages and return them to client if any
-            event = await ServerEventManager.getInstance().getQueue('serial-notifications').get()
-            if event:
-                yield {
-                    "event": event,
-                }
-
-    return EventSourceResponse(event_generator())
+    return EventSourceResponse(ServerEventManager.getInstance().push_events(request, 'serial-notification'))
 

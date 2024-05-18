@@ -371,6 +371,7 @@ export default {
       loading: false,
       loading_fields: false,
       show_serial_form: false,
+      eventSource: null,
     };
   },
 
@@ -434,9 +435,36 @@ export default {
   created() {
     this.getSerialFields();
     this.getSerials();
+    this.eventSource = new EventSource(
+      'http://localhost:8000/api/serial-notification',
+    );
+    this.eventSource.addEventListener(
+      'serial-notification',
+      this.handleMessage,
+    );
+  },
+
+  beforeUnmount() {
+    if (this.eventSource) {
+      this.eventSource.close();
+    }
   },
 
   methods: {
+    handleMessage(message) {
+      this.$q.notify({
+        message: this.$t(message),
+        color: this.critical ? 'theme-red' : 'theme-orange',
+        timeout: 1500,
+        position: 'top',
+      });
+    },
+
+    refreshSerial() {
+      this.$store.dispatch('getSerials', { serial_key: this.serialKey });
+      this.getHistory();
+    },
+
     async resetFilters() {
       await this.$router.replace({ query: null });
       this.advancedFilters = [];
