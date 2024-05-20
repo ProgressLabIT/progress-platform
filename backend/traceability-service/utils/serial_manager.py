@@ -64,6 +64,8 @@ class SerialManager:
               self.update_serial(serial_data=serial_data['serial'])
            case SerialEventType.DELETE:
               self.delete_serial(serial_data=serial_data['serial'])
+           case SerialEventType.UPDATE_DATA:
+              self.update_serial_data(batch_key=serial_data['batch_key'], step_data=serial_data['step_data'])
            case _:
               print("Error")
 
@@ -140,5 +142,37 @@ class SerialManager:
            KafkaProducer.getInstance().produce_async(topic="serial_notifications", key=notification.get('serial_key'), value=json.dumps(notification))
         except:
            print(traceback.format_exc())
+
+    def update_serial_data(self, batch_key, step_data):
+        cursor = db.aql.execute(
+          """
+          FOR edge IN batch_serial
+            FILTER edge._from == @from_id
+            RETURN DOCUMENT(Serial, edge._to)
+          """,
+          bind_vars=dict(
+            from_id=f'Batch/{batch_key}',
+          )
+        )
+        result = [Serial(**t) for t in cursor]
+        for serial in result:
+           try:
+             for step in step_data:
+                for data in serial.get('data'):
+                   if step.get('form_field_key') == data.get('form_field_key'):
+                      step['value'] = data['value']
+             db.collection('Serial').update(serial, check_rev=False)
+             self.notify_results(dict(
+                serial_key = serial.get("_key"),
+                serial = serial.get("serial"),
+                notification = SerialNotificationType.UPDATED
+             ))
+           except:
+               print(traceback.format_exc())
+               self.notify_results(dict(
+                  serial_key = serial.get("_key"),
+                  notification = SerialNotificationType.ERROR,
+                  error = traceback.format_exc()
+               ))
 
 
