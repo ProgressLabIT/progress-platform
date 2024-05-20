@@ -1,9 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="traceability-service" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="it.progresslab.App" />
-    <module name="traceability-service" />
-    <method v="2">
-      <option name="Make" enabled="true" />
-    </method>
-  </configuration>
-</component>

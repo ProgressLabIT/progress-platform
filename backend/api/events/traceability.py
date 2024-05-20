@@ -7,6 +7,7 @@ from events.shared import EventMeta
 
 from models.traceability import *
 from models.production import Job, WorkStatus
+from models.product import TraceabilityLevel
 
 from utils.exceptions import JobIsStartedError, JobHasNoAssigneeError, WipNotAvailableError
 from utils.production import Queries as ProductionQueries, update_target_queue
@@ -217,6 +218,12 @@ class ProductionActivityEvent(BaseEvent):
     if not self.job:
        self.job = self.get_job_data()
 
+    product = self.tx.collection('Product').get(self.info.product_key)
+    if (product['traceability_level'] != TraceabilityLevel.COMPLETE):
+      return
+    if (product['counter_id'] == None):
+      return
+
     default_batch = self.job.parameters.production_batch_qt
     remaining_qt = self.job.qt_planned - self.job.qt_completed
     batch_qt = min([default_batch, remaining_qt])
@@ -226,7 +233,6 @@ class ProductionActivityEvent(BaseEvent):
     setattr(serial_data, 'created_by', self.info.user_key)
     setattr(serial_data, 'wo_key', self.info.work_order_key)
 
-    product = self.tx.collection('Product').get(self.info.product_key)
     setattr(serial_data, 'counter_key', product['counter_id'])
     setattr(serial_data, 'product_key', self.info.product_key)
     bind_vars = dict(
@@ -236,13 +242,14 @@ class ProductionActivityEvent(BaseEvent):
     data = []
     for phase in phases_data:
       for step in phase['steps']:
-        for field in step['form_fields']:
-          field_data = SerialFormFieldValue()
-          setattr(field_data, 'form_field_key', field['_key'])
-          setattr(field_data, 'custom_field_key', field['custom_field_key'])
-          setattr(field_data, 'phase_key', phase['phase_key'])
-          setattr(field_data, 'step_key', step['_key'])
-          data.append(field)
+        if 'form_fields' in step:
+          for field in step['form_fields']:
+            field_data = SerialFormFieldValue()
+            setattr(field_data, 'form_field_key', field['_key'])
+            setattr(field_data, 'custom_field_key', field['custom_field_key'])
+            setattr(field_data, 'phase_key', phase['phase_key'])
+            setattr(field_data, 'step_key', step['_key'])
+            data.append(field)
 
     setattr(serial_data, 'data', data)
 
@@ -251,6 +258,23 @@ class ProductionActivityEvent(BaseEvent):
       setattr(serial_event, 'serial', serial_data.dict())
       setattr(serial_event, 'operation', SerialEventType.CREATE)
       setattr(serial_event, 'batch_key', self.batch.key)
+      self.send_to_consumer(serial_event.dict())
+
+  def udpate_batch_serial_data(self, form_data):
+      step_data = []
+      for field in form_data:
+        field_data = SerialFormFieldValue()
+        setattr(field_data, 'form_field_key', field['_key'])
+        setattr(field_data, 'custom_field_key', field['custom_field_key'])
+        setattr(field_data, 'value', field['value'])
+        setattr(field_data, 'phase_key', self.info.phase_key)
+        setattr(field_data, 'step_key', self.info.step_key)
+        step_data.append(field)
+
+      serial_event = SerialEvent()
+      setattr(serial_event, 'step_data', step_data.dict())
+      setattr(serial_event, 'operation', SerialEventType.UPDATE_DATA)
+      setattr(serial_event, 'batch_key', self.info.active_batch_key)
       self.send_to_consumer(serial_event.dict())
 
 
@@ -763,6 +787,9 @@ class ProductionActivityEvent(BaseEvent):
         job_data = self.job,
         batch_data = self.get_batch_execution_data()
       )
+
+    if (step_data.form_data != None):
+      self.udpate_batch_serial_data(step_data.form_data)
 
 
   # ===================================================================

@@ -21,10 +21,13 @@ class SerialEventType(str, Enum):
   CREATE = 'CREATE'
   UPDATE = 'UPDATE'
   DELETE = 'DELETE'
+  UPDATE_DATA = 'UPDATE_DATA'
 class SerialEvent(Serial):
    operation: SerialEventType | None = None
    batch_key: str | None = None
    serial: Serial | None = None
+   serial_key: str | None = None
+   step_data: list[SerialFormFieldValue] | None = None
 
 class SerialNotificationType(str, Enum):
   CREATED = 'CREATED'
