@@ -1,4 +1,4 @@
-from models.product import ProductDoc
+from commons.models.product import ProductDoc
 from utils.file import FileHandler
 
 class Queries:
