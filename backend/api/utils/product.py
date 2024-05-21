@@ -1,4 +1,4 @@
-from models.product import ProductDoc, ProductFull
+from commons.models.product import ProductDoc, ProductFull
 from utils.db import db
 from utils.file import FileHandler
 

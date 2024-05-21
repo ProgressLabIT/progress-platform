@@ -5,7 +5,7 @@ from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body
 from fastapi.encoders import jsonable_encoder
 
 from utils.kpi import Queries as ProductStatQueries
-from models.product import *
+from commons.models.product import *
 from models.process import PhaseData
 from utils.api import APIResponse
 from commons.utils.db import db
