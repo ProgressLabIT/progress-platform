@@ -5,7 +5,7 @@ from typing import List
 from fastapi import APIRouter, Body, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 
-from models.product import ProductDetails
+from commons.models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
 from utils.bom import get_bom_from_db

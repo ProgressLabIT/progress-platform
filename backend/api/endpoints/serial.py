@@ -85,7 +85,7 @@ async def search_serials(
       )
     )
 
-@router.get("/serial-notification")
+@router.get("/notification")
 async def message_stream(request: Request):
     return EventSourceResponse(ServerEventManager.getInstance().push_events(request, 'serial-notification'))
 

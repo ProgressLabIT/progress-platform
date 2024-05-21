@@ -7,7 +7,7 @@ from events.shared import EventMeta
 
 from models.traceability import *
 from models.production import Job, WorkStatus
-from models.product import TraceabilityLevel
+from commons.models.product import TraceabilityLevel
 
 from utils.exceptions import JobIsStartedError, JobHasNoAssigneeError, WipNotAvailableError
 from utils.production import Queries as ProductionQueries, update_target_queue
@@ -194,7 +194,7 @@ class ProductionActivityEvent(BaseEvent):
     serial_data = jsonable_encoder(Serial(**self.info.serial_data))
     serial_event = SerialEvent()
     setattr(serial_event, 'serial', serial_data)
-    setattr(serial_event, 'operation', SerialEventType.CREATE)
+    setattr(serial_event, 'operation', SerialEventType.CREATE_AND_FINALIZE)
     self.send_to_consumer(serial_event.dict())
 
 
@@ -215,66 +215,55 @@ class ProductionActivityEvent(BaseEvent):
     self.send_to_consumer(serial_event.dict())
 
   def create_batch_serial_records(self):
-    if not self.job:
+     if not self.job:
        self.job = self.get_job_data()
 
-    product = self.tx.collection('Product').get(self.info.product_key)
-    if (product['traceability_level'] != TraceabilityLevel.COMPLETE):
-      return
-    if (product['counter_id'] == None):
-      return
+     serial_event = SerialEvent()
+     setattr(serial_event, 'created_by', self.info.user_key)
+     setattr(serial_event, 'wo_key', self.info.work_order_key)
+     setattr(serial_event, 'product_key', self.info.product_key)
+     setattr(serial_event, 'quantity', self.job.active_batch_qt)
+     setattr(serial_event, 'batch_key', self.batch.key)
+     setattr(serial_event, 'operation', SerialEventType.CREATE_FROM_BATCH)
+     self.send_to_consumer(serial_event.dict())
 
-    default_batch = self.job.parameters.production_batch_qt
-    remaining_qt = self.job.qt_planned - self.job.qt_completed
-    batch_qt = min([default_batch, remaining_qt])
+  def finalize_batch_serial(self, completed_batch_qt):
+     if not self.job:
+       self.job = self.get_job_data()
 
-    serial_data = Serial()
-    setattr(serial_data, '_key', None)
-    setattr(serial_data, 'created_by', self.info.user_key)
-    setattr(serial_data, 'wo_key', self.info.work_order_key)
-
-    setattr(serial_data, 'counter_key', product['counter_id'])
-    setattr(serial_data, 'product_key', self.info.product_key)
-    bind_vars = dict(
-      product_key = self.info.product_key
-    )
-    phases_data = [e for e in self.tx.aql.execute(Queries.GET_PRODUCT_STEPS, bind_vars=bind_vars)]
-    data = []
-    for phase in phases_data:
-      for step in phase['steps']:
-        if 'form_fields' in step:
-          for field in step['form_fields']:
-            field_data = SerialFormFieldValue()
-            setattr(field_data, 'form_field_key', field['_key'])
-            setattr(field_data, 'custom_field_key', field['custom_field_key'])
-            setattr(field_data, 'phase_key', phase['phase_key'])
-            setattr(field_data, 'step_key', step['_key'])
-            data.append(field)
-
-    setattr(serial_data, 'data', data)
-
-    for i in range(int(remaining_qt)):
-      serial_event = SerialEvent()
-      setattr(serial_event, 'serial', serial_data.dict())
-      setattr(serial_event, 'operation', SerialEventType.CREATE)
-      setattr(serial_event, 'batch_key', self.batch.key)
-      self.send_to_consumer(serial_event.dict())
+     serial_event = SerialEvent()
+     setattr(serial_event, 'created_by', self.info.user_key)
+     setattr(serial_event, 'wo_key', self.info.work_order_key)
+     setattr(serial_event, 'product_key', self.info.product_key)
+     setattr(serial_event, 'quantity', completed_batch_qt)
+     setattr(serial_event, 'batch_key', self.info.active_batch_key)
+     setattr(serial_event, 'operation', SerialEventType.FINALIZE)
+     self.send_to_consumer(serial_event.dict())
 
   def udpate_batch_serial_data(self, form_data):
+      if not self.job:
+       self.job = self.get_job_data()
+
       step_data = []
       for field in form_data:
         field_data = SerialFormFieldValue()
-        setattr(field_data, 'form_field_key', field['_key'])
-        setattr(field_data, 'custom_field_key', field['custom_field_key'])
-        setattr(field_data, 'value', field['value'])
+        setattr(field_data, 'form_field_key', field.form_field_key)
+        setattr(field_data, 'custom_field_key', field.custom_field_key)
+        setattr(field_data, 'value', field.value)
         setattr(field_data, 'phase_key', self.info.phase_key)
         setattr(field_data, 'step_key', self.info.step_key)
-        step_data.append(field)
+        step_data.append(field_data)
 
       serial_event = SerialEvent()
-      setattr(serial_event, 'step_data', step_data.dict())
-      setattr(serial_event, 'operation', SerialEventType.UPDATE_DATA)
+      setattr(serial_event, 'created_by', self.info.user_key)
+      setattr(serial_event, 'wo_key', self.info.work_order_key)
+      setattr(serial_event, 'product_key', self.info.product_key)
+      setattr(serial_event, 'quantity', self.job.active_batch_qt)
       setattr(serial_event, 'batch_key', self.info.active_batch_key)
+      setattr(serial_event, 'operation', SerialEventType.UPDATE_DATA_FROM_BATCH)
+
+      setattr(serial_event, 'step_data', step_data)
+
       self.send_to_consumer(serial_event.dict())
 
 
@@ -689,8 +678,10 @@ class ProductionActivityEvent(BaseEvent):
       tx = self.tx
     )
 
-    # Create batch serials
-    self.create_batch_serial_records()
+    product = self.tx.collection('Product').get(self.info.product_key)
+    if (product['traceability_level'] == TraceabilityLevel.COMPLETE):
+      # Create batch serials
+      self.create_batch_serial_records()
 
     self.response = dict(
       message = f"Job {self.info.job_key} started",
@@ -774,6 +765,11 @@ class ProductionActivityEvent(BaseEvent):
     step_data.status = StepStatus.DONE
     self.tx.collection('StepExecutionData').insert(step_data)
 
+    if (step_data.form_data != None):
+      product = self.tx.collection('Product').get(self.info.product_key)
+      if (product['traceability_level'] != TraceabilityLevel.NONE):
+        # update batch serials data
+        self.udpate_batch_serial_data(step_data.form_data)
 
     # if last step complete batch
     if (self.current_step_was_last_to_do()):
@@ -787,9 +783,6 @@ class ProductionActivityEvent(BaseEvent):
         job_data = self.job,
         batch_data = self.get_batch_execution_data()
       )
-
-    if (step_data.form_data != None):
-      self.udpate_batch_serial_data(step_data.form_data)
 
 
   # ===================================================================
@@ -846,6 +839,11 @@ class ProductionActivityEvent(BaseEvent):
         end=self.info.timestamp
       )
     )
+
+    product = self.tx.collection('Product').get(self.info.product_key)
+    if (product['traceability_level'] != TraceabilityLevel.NONE):
+        # update batch serials data
+        self.finalize_batch_serial(completed_batch_qt)
 
     # Update job completed quantity as reference for methods being called later (e.g. create_batch)
     self.job.qt_completed += self.info.completed_batch_qt
