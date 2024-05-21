@@ -18,21 +18,31 @@ class Serial(ArangoDocument):
    deleted: bool = False
 
 class SerialEventType(str, Enum):
-  CREATE = 'CREATE'
+  CREATE_FROM_BATCH = 'CREATE_FROM_BATCH'
+  UPDATE_DATA_FROM_BATCH = 'UPDATE_DATA_FROM_BATCH'
+  FINALIZE = 'FINALIZE'
+  CREATE_AND_FINALIZE = 'CREATE_AND_FINALIZE'
   UPDATE = 'UPDATE'
   DELETE = 'DELETE'
-  UPDATE_DATA = 'UPDATE_DATA'
+
+
 class SerialEvent(Serial):
    operation: SerialEventType | None = None
    batch_key: str | None = None
    serial: Serial | None = None
    serial_key: str | None = None
    step_data: list[SerialFormFieldValue] | None = None
+   created_by: str | None = None
+   quantity: int = 1
+   wo_key: str | None = None
+   product_key: str | None = None
+
 
 class SerialNotificationType(str, Enum):
   CREATED = 'CREATED'
   UPDATED = 'UPDATED'
   DELETED = 'DELETED'
+  FINALIZED = 'FINALIZED'
   ERROR = 'ERROR'
 class SerialNotification(BaseModel):
    serial: str | None = None

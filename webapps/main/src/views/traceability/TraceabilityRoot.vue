@@ -391,7 +391,7 @@ export default {
     created_by: queryModel(String, 'opened_by', null),
     time_created_from: queryModel(String, 'opened_min', null),
     time_created_to: queryModel(String, 'opened_max', null),
-    serial_deleted: queryModel(Boolean, 'deleted', true),
+    serial_deleted: queryModel(Boolean, 'deleted', false),
 
     filters() {
       let filters_object = {};
