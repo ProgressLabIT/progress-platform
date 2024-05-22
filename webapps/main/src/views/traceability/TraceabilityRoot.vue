@@ -371,7 +371,7 @@ export default {
       loading: false,
       loading_fields: false,
       show_serial_form: false,
-      eventSource: null,
+      events: NaN,
     };
   },
 
@@ -435,34 +435,37 @@ export default {
   created() {
     this.getSerialFields();
     this.getSerials();
-    this.eventSource = new EventSource(
-      'http://localhost:8000/api/serial-notification',
-    );
-    this.eventSource.addEventListener(
-      'serial-notification',
-      this.handleMessage,
-    );
+    let eventURL = this.$api.defaults.baseURL + '/notification';
+    this.events = new EventSource(eventURL, {
+      withCredentials: false,
+    });
+    this.events.addEventListener('serial-notification', (event) => {
+      this.handleMessage(event);
+    });
   },
 
-  beforeUnmount() {
-    if (this.eventSource) {
-      this.eventSource.close();
+  unmounted() {
+    if (this.events) {
+      this.events.close();
     }
   },
 
   methods: {
     handleMessage(message) {
-      this.$q.notify({
-        message: this.$t(message),
-        color: this.critical ? 'theme-red' : 'theme-orange',
-        timeout: 1500,
-        position: 'top',
-      });
+      this.refreshSerial();
+      let event = JSON.parse(message.data);
+      if (event.notification === 'ERROR') {
+        this.$q.notify({
+          message: this.$t(event.error),
+          color: 'theme-red',
+          timeout: 1500,
+          position: 'top',
+        });
+      }
     },
 
     refreshSerial() {
       this.$store.dispatch('getSerials', { serial_key: this.serialKey });
-      this.getHistory();
     },
 
     async resetFilters() {

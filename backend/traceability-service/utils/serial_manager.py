@@ -176,7 +176,7 @@ class SerialManager:
                setattr(field_data, 'custom_field_key', field['custom_field_key'])
                setattr(field_data, 'phase_key', phase['phase_key'])
                setattr(field_data, 'step_key', step['_key'])
-               data.append(field)
+               data.append(field_data)
 
        setattr(serial_data, 'data', data)
        setattr(serial_data, 'created_by', created_by)
@@ -224,8 +224,8 @@ class SerialManager:
         if len(serials) > quantity:
            self.delete_serial()
         elif len(serials) < quantity:
-           serial_event['quantity'] = len(serials) - quantity
-           self.create_serial()
+           serial_event['quantity'] = quantity - len(serials)
+           self.create_from_batch(serial_event=serial_event)
 
 
     def update_serial_data(self, serial_event, batch_key, step_data):
