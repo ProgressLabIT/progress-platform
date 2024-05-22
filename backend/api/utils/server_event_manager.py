@@ -46,5 +46,6 @@ class ServerEventManager:
             event = await ServerEventManager.getInstance().getQueue(topic, request).get()
             if event:
                 yield {
-                    "event": event,
+                    "event": topic,
+                    "data": event
                 }
