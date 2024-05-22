@@ -194,7 +194,6 @@ export default {
   },
 
   async created() {
-    await this.initBaseFields();
     this.initFormData();
   },
 

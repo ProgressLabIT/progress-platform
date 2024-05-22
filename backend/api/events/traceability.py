@@ -246,25 +246,26 @@ class ProductionActivityEvent(BaseEvent):
 
       step_data = []
       for field in form_data:
-        field_data = SerialFormFieldValue()
-        setattr(field_data, 'form_field_key', field.form_field_key)
-        setattr(field_data, 'custom_field_key', field.custom_field_key)
-        setattr(field_data, 'value', field.value)
-        setattr(field_data, 'phase_key', self.info.phase_key)
-        setattr(field_data, 'step_key', self.info.step_key)
-        step_data.append(field_data)
+        if field.value!=None:
+          field_data = SerialFormFieldValue()
+          setattr(field_data, 'form_field_key', field.form_field_key)
+          setattr(field_data, 'custom_field_key', field.custom_field_key)
+          setattr(field_data, 'value', field.value)
+          setattr(field_data, 'phase_key', self.info.phase_key)
+          setattr(field_data, 'step_key', self.info.step_key)
+          step_data.append(field_data)
 
-      serial_event = SerialEvent()
-      setattr(serial_event, 'created_by', self.info.user_key)
-      setattr(serial_event, 'wo_key', self.info.work_order_key)
-      setattr(serial_event, 'product_key', self.info.product_key)
-      setattr(serial_event, 'quantity', self.job.active_batch_qt)
-      setattr(serial_event, 'batch_key', self.info.active_batch_key)
-      setattr(serial_event, 'operation', SerialEventType.UPDATE_DATA_FROM_BATCH)
+      if len(step_data)>0:
+        serial_event = SerialEvent()
+        setattr(serial_event, 'created_by', self.info.user_key)
+        setattr(serial_event, 'wo_key', self.info.work_order_key)
+        setattr(serial_event, 'product_key', self.info.product_key)
+        setattr(serial_event, 'quantity', self.job.active_batch_qt)
+        setattr(serial_event, 'batch_key', self.info.active_batch_key)
+        setattr(serial_event, 'operation', SerialEventType.UPDATE_DATA_FROM_BATCH)
+        setattr(serial_event, 'step_data', step_data)
 
-      setattr(serial_event, 'step_data', step_data)
-
-      self.send_to_consumer(serial_event.dict())
+        self.send_to_consumer(serial_event.dict())
 
 
 
