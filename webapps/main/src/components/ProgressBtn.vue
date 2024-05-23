@@ -58,6 +58,13 @@ export default {
         altAction: undefined,
       };
 
+      const complete_step_custom_qty = {
+        icon: 'mdi-check',
+        text: this.$t('job.complete_step'),
+        action: this.completeStep,
+        altAction: this.completeStepCustomQty,
+      };
+
       const declare_batch = {
         icon: 'mdi-plus',
         text:
@@ -68,8 +75,11 @@ export default {
         altAction: this.declareCustomBatch,
       };
 
-      if ('parameters' in this.job) {
-        return this.job.parameters.step_check ? complete_step : declare_batch;
+      if ('parameters' in this.job && this.job.parameters.step_check) {
+        if (!this.current_step_is_last) {
+          return complete_step_custom_qty;
+        }
+        return complete_step;
       } else {
         return declare_batch;
       }
@@ -147,7 +157,13 @@ export default {
       this.clickTimer = null;
     },
 
-    async completeStep() {
+    async completeStepCustomQty() {
+      let customQty = await this.getCustomQuantity();
+
+      this.completeStep(customQty.batchQuantity);
+    },
+
+    async completeStep(batchQt = this.job.active_batch_qt) {
       let can_proceed = true;
 
       // Values will change after committing mutation save to use for navigation later on
@@ -169,7 +185,7 @@ export default {
       if (can_proceed) {
         await this.$store.dispatch('completeStep', {
           stepKey: this.current_step_key,
-          batchQt: this.job.active_batch_qt,
+          batchQt: batchQt,
         });
 
         if (current_step_was_last && current_batch_was_last) {
@@ -222,7 +238,8 @@ export default {
           });
       });
     },
-    async declareCustomBatch() {
+
+    async getCustomQuantity() {
       const remainingTotalQuantity =
         this.job.qt_planned - this.job.qt_completed;
 
@@ -233,18 +250,32 @@ export default {
       Loading.hide();
       const maxDeclarableQuantity = this.job.first_phase
         ? remainingTotalQuantity
-        : Math.min(data.free_wip_qt_upstream + this.job.active_batch_qt, remainingTotalQuantity);
+        : Math.min(
+            data.free_wip_qt_upstream + this.job.active_batch_qt,
+            remainingTotalQuantity,
+          );
 
-      const batchQuantity = await this.getCustomBatchInput({
+      let batchQuantity = await this.getCustomBatchInput({
         initialValue: this.job.active_batch_qt,
         max: maxDeclarableQuantity,
       });
-      if (batchQuantity === 0) {
+
+      return {
+        batchQuantity: batchQuantity,
+        remainingTotalQuantity: remainingTotalQuantity,
+        maxDeclarableQuantity: maxDeclarableQuantity,
+      };
+    },
+
+    async declareCustomBatch() {
+      let customQty = await this.getCustomQuantity();
+
+      if (customQty.batchQuantity === 0) {
         return;
       }
-
       let willStopSession = false;
-      const isCompletingJob = batchQuantity === remainingTotalQuantity;
+      const isCompletingJob =
+        customQty.batchQuantity === customQty.remainingTotalQuantity;
       if (isCompletingJob) {
         if (!window.confirm(this.confirm_job_done_message)) {
           return;
@@ -252,7 +283,7 @@ export default {
         willStopSession = true;
       } else if (
         !this.job.next_batch_available ||
-        batchQuantity === maxDeclarableQuantity
+        customQty.batchQuantity === customQty.maxDeclarableQuantity
       ) {
         if (!window.confirm(this.confirm_stop_session_message)) {
           return;
@@ -261,7 +292,7 @@ export default {
       }
 
       await this.$store.dispatch('declareBatch', {
-        batch_qt: batchQuantity,
+        batch_qt: customQty.batchQuantity,
       });
       if (willStopSession) {
         this.$router.push({ name: 'userJobs' });
