@@ -68,7 +68,7 @@ class SerialManager:
            case SerialEventType.UPDATE:
               self.update_serial(serial_data=serial_event['serial'])
            case SerialEventType.DELETE:
-              self.delete_serial(serial_data=serial_event['serial'])
+              self.delete_serial(serial_key=serial_event['serial'].get("_key"), soft=True)
            case SerialEventType.UPDATE_DATA_FROM_BATCH:
               self.update_serial_data(serial_event=serial_event, batch_key=serial_event['batch_key'], step_data=serial_event['step_data'])
            case _:
@@ -201,10 +201,12 @@ class SerialManager:
               error = traceback.format_exc()
            ))
 
-    def delete_serial(self, serial_data):
-        serial_key = serial_data.get("_key")
+    def delete_serial(self, serial_key, soft=True):
         try:
-           db.collection('Serial').update(dict(_key=serial_key, deleted=True))
+           if soft:
+              db.collection('Serial').update(dict(_key=serial_key, deleted=True))
+           else:
+              db.collection('Serial').delete(serial_key)
            self.notify_results(dict(
               serial_key = serial_key,
               notification = SerialNotificationType.DELETED
@@ -222,7 +224,9 @@ class SerialManager:
         batch_key = serial_event['batch_key']
         serials = self.retrieve_serial_in_batch(batch_key=batch_key)
         if len(serials) > quantity:
-           self.delete_serial()
+           for idx, serial in enumerate(serials):
+              if idx > len(serials) -quantity:
+                 self.delete_serial(serial.key, soft=False)
         elif len(serials) < quantity:
            serial_event['quantity'] = quantity - len(serials)
            self.create_from_batch(serial_event=serial_event)

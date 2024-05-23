@@ -842,7 +842,7 @@ class ProductionActivityEvent(BaseEvent):
     )
 
     product = self.tx.collection('Product').get(self.info.product_key)
-    if (product['traceability_level'] != TraceabilityLevel.NONE):
+    if (product['traceability_level'] != TraceabilityLevel.NONE and self.job.first_phase):
         # update batch serials data
         self.finalize_batch_serial(completed_batch_qt)
 
