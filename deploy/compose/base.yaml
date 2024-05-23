@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 volumes:
   media:
@@ -9,18 +9,29 @@ volumes:
     external: True
 
 services:
-
+  #https://doc.traefik.io/traefik/user-guides/docker-compose/acme-tls/
   router:
-    image: traefik:v2.3
+    image: traefik:v3.0
     depends_on:
       - db
     volumes:
       # So that Traefik can listen to the Docker events
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
     ports:
       - "80:80" # The HTTP port
       - "443:443" # The HTTPS post
       - "8080:8080" # The Web UI (enabled by --api.insecure=true)
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.email=bellelisi@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
 
   api:
     environment:
@@ -38,5 +49,3 @@ services:
       - db_backup:/db_backup
     ports:
       - "8529"
-
-
