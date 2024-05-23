@@ -2,36 +2,59 @@ version: "3.9"
 
 services:
   router:
-    restart: unless-stopped
+    image: "traefik:v3.0"
+    container_name: "router"
     command:
-      - --providers.docker
-      - --accesslog
-      - --api.dashboard
-      - --api.debug
-      - --api.insecure
-      - --log.level=INFO
-
-  app:
-    restart: unless-stopped
-    build:
-      context: ./webapps/main
-      dockerfile: webapp.dev.Dockerfile
-    labels:
-      - traefik.http.routers.app.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`)
-      - traefik.http.routers.hmr.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost:9000}`)
-    command: yarn quasar dev --host 0.0.0.0
-    volumes:
-      # This is use to keep HMR working
-      - "./webapps/main:/app"
-      - /app/node_modules/ # exclude local node_modules folder from being linked into the container
-      - "media:/app/public/media"
-    environment:
-      # the app will call the api server from outside the docker network, so the full Traefik host alias should be used
-      - VUE_APP_API_BASE_URL=${PROGRESS_ADDRESS:-progress.localhost}/api
-      - VUE_APP_I18N_LOCALE=it
-      - VUE_APP_I18N_FALLBACK_LOCALE=it
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--api.dashboard=true"
+      - "--api.debug=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesresolvers.le.acme.tlschallenge=true"
+      - "--certificatesresolvers.le.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.le.acme.email=postmaster@progress.localhost"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
     ports:
-      - "9000"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  whoami:
+    image: "traefik/whoami"
+    container_name: "simple-service"
+    ports:
+      - "80:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.progress.localhost`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=le"
+
+  #app:
+  #  restart: unless-stopped
+  #  build:
+  #    context: ./webapps/main
+  #    dockerfile: webapp.dev.Dockerfile
+  #  labels:
+  #    - traefik.http.routers.app.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost.it}`)
+  #    - traefik.http.routers.hmr.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost.it:9000}`)
+  #  command: yarn quasar dev --host 0.0.0.0
+  #  volumes:
+  #    # This is use to keep HMR working
+  #    - "./webapps/main:/app"
+  #    - /app/node_modules/ # exclude local node_modules folder from being linked into the container
+  #    - "media:/app/public/media"
+  #  environment:
+  #    # the app will call the api server from outside the docker network, so the full Traefik host alias should be used
+  #    - VUE_APP_API_BASE_URL=${PROGRESS_ADDRESS:-progress.localhost.it}/api
+  #    - VUE_APP_I18N_LOCALE=it
+  #    - VUE_APP_I18N_FALLBACK_LOCALE=it
+  #  ports:
+  #    - "9000"
 
   api:
     restart: unless-stopped
@@ -44,12 +67,13 @@ services:
     command: >
       uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.api.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/api`)"
       - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
       - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
       - "traefik.http.routers.api.middlewares=strip_api_prefix"
       - "traefik.http.routers.api.entrypoints=websecure"
-      - "traefik.http.routers.api.tls.certresolver=myresolver"
+      - "traefik.http.routers.api.tls.certresolver=le"
 
   db:
     image: arangodb:3.11 # Use this for Intel Processors
@@ -58,7 +82,10 @@ services:
     environment:
       - ARANGO_NO_AUTH=1
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.db.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/_db`)"
       - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
       - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
       - "traefik.http.routers.db.middlewares=db_root"
+      - "traefik.http.routers.db.entrypoints=websecure"
+      - "traefik.http.routers.db.tls.certresolver=le"

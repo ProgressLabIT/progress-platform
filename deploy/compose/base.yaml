@@ -7,31 +7,32 @@ volumes:
     external: True
   db_data:
     external: True
+  letsencrypt:
+    external: True
 
 services:
   #https://doc.traefik.io/traefik/user-guides/docker-compose/acme-tls/
-  router:
-    image: traefik:v3.0
-    depends_on:
-      - db
-    volumes:
-      # So that Traefik can listen to the Docker events
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./letsencrypt:/letsencrypt"
-    ports:
-      - "80:80" # The HTTP port
-      - "443:443" # The HTTPS post
-      - "8080:8080" # The Web UI (enabled by --api.insecure=true)
-    command:
-      #- "--log.level=DEBUG"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entryPoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
-      - "--certificatesresolvers.myresolver.acme.email=bellelisi@gmail.com"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+  #router:
+  #  image: "traefik:v3.0"
+  #  container_name: "router"
+  #  command:
+  #    - "--log.level=DEBUG"
+  #    - "--api.insecure=true"
+  #    - "--providers.docker=true"
+  #    - "--api.dashboard=true"
+  #    - "--api.debug=true"
+  #    - "--providers.docker.exposedbydefault=false"
+  #    - "--entryPoints.websecure.address=:443"
+  #    - "--certificatesresolvers.le.acme.tlschallenge=true"
+  #    - "--certificatesresolvers.le.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+  #    - "--certificatesresolvers.le.acme.email=postmaster@progress.localhost"
+  #    - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+  #  ports:
+  #    - "443:443"
+  #    - "8080:8080"
+  #  volumes:
+  #    - "./letsencrypt:/letsencrypt"
+  #    - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
   api:
     environment:
