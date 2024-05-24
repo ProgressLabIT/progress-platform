@@ -15,7 +15,11 @@ class Queries:
         )}
   """
 
-
+  GET_SERIALS_IN_BATCH = """
+    FOR edge IN batch_serial
+      FILTER edge._from == @from_id
+      RETURN DOCUMENT(Serial, edge._to)
+  """
 
   FIND_SERIALS = """
 
@@ -57,7 +61,7 @@ class Queries:
 
     LET serial_data = (
       FOR field_value IN NOT_NULL(s.data, [])
-      for field IN NOT_NULL(fields, [])
+      for field IN fields
       FILTER
         field._key == field_value.form_field_key || field._key == field_value.custom_field_key
       RETURN MERGE(field, { value: field_value.value })
@@ -89,7 +93,7 @@ class Queries:
                 description: step.description,
                 form_fields: UNIQUE(
                     FOR field_value IN NOT_NULL(s.data, [])
-                    FOR field IN NOT_NULL(step.form_fields, [])
+                    FOR field IN step.form_fields
                     FILTER step._key == field_value.step_key && phase._key == field_value.phase_key &&
                       (field._key == field_value.form_field_key || field._key == field_value.custom_field_key)
                     return MERGE(field, { value: field_value.value })

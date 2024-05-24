@@ -18,7 +18,7 @@ from commons.kafka_utils.kafka_producer import KafkaProducer
 from commons.models.serial import Serial, SerialEvent, SerialEventType
 from commons.models.form import SerialFormFieldValue
 
-from utils.serial import Queries
+from commons.utils.serial import Queries
 
 from fastapi import HTTPException
 

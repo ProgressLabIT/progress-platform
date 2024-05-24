@@ -12,6 +12,7 @@ from commons.models.serial import Serial, SerialEvent, SerialEventType, SerialNo
 from commons.utils.counter import _generate_counter
 from commons.kafka_utils.kafka_producer import KafkaProducer
 from commons.models.form import SerialFormFieldValue
+from commons.utils.serial import Queries
 
 
 class SerialManager:
@@ -76,11 +77,7 @@ class SerialManager:
 
     def retrieve_serial_in_batch(self, batch_key):
        cursor = db.aql.execute(
-          """
-          FOR edge IN batch_serial
-            FILTER edge._from == @from_id
-            RETURN DOCUMENT(Serial, edge._to)
-          """,
+          Queries.GET_SERIALS_IN_BATCH,
           bind_vars=dict(
             from_id=f'Batch/{batch_key}',
           )
@@ -88,19 +85,7 @@ class SerialManager:
        return [Serial(**t) for t in cursor]
 
     def retrieve_serial_phases_data(self, product_key):
-       cursor = db.aql.execute(
-          """FOR phase IN Phase
-              FILTER phase.product_key == @product_key
-              RETURN {
-                product_key: phase.product_key,
-                alias: phase.alias,
-                phase_key: phase._key,
-                steps: (
-                  FOR step IN Step
-                    FILTER step._key in phase.step_sequence
-                    return step
-                )}
-          """,
+       cursor = db.aql.execute(Queries.GET_PRODUCT_STEPS,
           bind_vars=dict(
             product_key = product_key,
           )
