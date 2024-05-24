@@ -252,6 +252,7 @@
 
 <script>
 import { until } from '@vueuse/core';
+import { Dialog } from 'quasar';
 import Sortable from 'sortablejs';
 import { mapState } from 'vuex';
 
@@ -259,6 +260,7 @@ import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import IssueForm from '@/components/IssueForm.vue';
 import ProgressBtn from '@/components/ProgressBtn.vue';
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
+import SerialBatchSelectionDialog from '../components/job/SerialBatchSelectionDialog.vue';
 
 export default {
   name: 'WorkSessionScreen',
@@ -521,6 +523,14 @@ export default {
           if (job_data.active) {
             this.$store.commit('SET_HEARTBEAT', true);
           }
+
+          const { data: batch_serials } = await this.$api.get(
+            `serial-batch/16003541`,
+          );
+          if (batch_serials) {
+            let selected_serials = await this.selectSerialBatch(batch_serials);
+            this.$api.post(`serial-batch/16003541`, selected_serials);
+          }
         }
       });
     },
@@ -555,6 +565,23 @@ export default {
         this.$store.dispatch('loadWorkOrderData', this.j.wo_key),
       ]).then(([jobResponse]) => {
         this.$store.commit('UPDATE_JOB', jobResponse.data.detail);
+      });
+    },
+
+    async selectSerialBatch(batch_serials) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          component: SerialBatchSelectionDialog,
+          componentProps: {
+            batch_serials,
+          },
+        })
+          .onOk((selected_serials) => {
+            resolve(selected_serials);
+          })
+          .onCancel(() => {
+            resolve(null);
+          });
       });
     },
   },

@@ -42,12 +42,25 @@ def get_serial_batch(batch_key: str):
   bind_vars = dict(
     from_id = f'Batch/{batch_key}'
   )
-  serials = []
+  batch_serials = []
   for serial in [e for e in db.aql.execute(Queries.GET_SERIALS_IN_BATCH, bind_vars=bind_vars)]:
     if serial['serial']:
-      serials.append(serial['serial'])
-  return serials
+      batch_serials.append(dict(
+          value= serial['key'],
+          label= serial['serial'],
+      ))
+  return batch_serials
 
+
+@router.post('/serial-batch/{batch_key}')
+def create_or_serial_batch(
+  batch_key: str,
+  serials: list[str]
+  ):
+  try:
+    return APIResponse(message = "OK")
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
 
