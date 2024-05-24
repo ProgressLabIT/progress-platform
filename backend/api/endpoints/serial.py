@@ -13,7 +13,7 @@ from commons.utils.db import db, model_to_db_dict
 from utils.server_event_manager import ServerEventManager
 
 
-from utils.serial import Queries
+from commons.utils.serial import Queries
 
 router = APIRouter()
 
@@ -36,6 +36,18 @@ def get_product_steps(product_key: str):
     product_key = product_key
   )
   return [e for e in db.aql.execute(Queries.GET_PRODUCT_STEPS, bind_vars=bind_vars)]
+
+@router.get('/serial-batch/{batch_key}')
+def get_serial_batch(batch_key: str):
+  bind_vars = dict(
+    from_id = f'Batch/{batch_key}'
+  )
+  serials = []
+  for serial in [e for e in db.aql.execute(Queries.GET_SERIALS_IN_BATCH, bind_vars=bind_vars)]:
+    if serial['serial']:
+      serials.append(serial['serial'])
+  return serials
+
 
 
 
