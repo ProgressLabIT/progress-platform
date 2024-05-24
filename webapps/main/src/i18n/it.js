@@ -22,6 +22,7 @@ export default {
   back: 'Indietro',
   batch: 'lotto',
   batch_completed_quantity_question: 'Quanti nuovi pezzi vuoi dichiarare?',
+  batch_serial_select: 'Seleziona seriali batch',
   bom: {
     add_line: 'aggiungi riga',
     alerts: {
