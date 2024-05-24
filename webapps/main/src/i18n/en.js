@@ -22,6 +22,7 @@ export default {
   batch: 'batch',
   batch_completed_quantity_question:
     'How many new pieces do you want to declare?',
+  batch_serial_select: 'Select batch serial',
   bom: {
     add_line: 'add line',
     alerts: {
