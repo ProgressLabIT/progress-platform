@@ -75,6 +75,28 @@ export class TemplateContext {
     return undefined;
   }
 
+  session_data() {
+    return this._store.state.session;
+  }
+
+  getUser(userKey) {
+    if (userKey) {
+      let user = this._store.getters.getUserByKey(userKey.replace('User/', ''));
+      if (user) {
+        return this.formatUsername(user.surname, user.name);
+      }
+    }
+    return '';
+  }
+
+  formatUsername(surname, name) {
+    let prefix = '';
+    if (surname) {
+      prefix = surname + ' ';
+    }
+    return prefix + name;
+  }
+
   getPresetValue(presetName) {
     switch (presetName) {
       case 'current_date':
@@ -82,7 +104,10 @@ export class TemplateContext {
       case 'current_time':
         return new Date().toLocaleTimeString();
       case 'current_user':
-        return this._store.state.auth.user.name;
+        return this.formatUsername(
+          this.session_data().user.surname,
+          this.session_data().user.name,
+        );
       default:
         return undefined;
     }
@@ -117,19 +142,19 @@ export class IssueTypeContext extends TemplateContext {
 
     switch (presetName) {
       case 'issue.open_date':
-        return extractDate(issue.open_date);
+        return extractDate(issue.created);
       case 'issue.open_time':
-        return extractTime(issue.open_date);
+        return extractTime(issue.created);
       case 'issue.open_user':
-        return issue.open_user;
+        return this.getUser(issue.created_by);
       case 'issue.close_date':
-        return extractDate(issue.close_date);
+        return extractDate(issue.closed);
       case 'issue.close_time':
-        return extractTime(issue.close_date);
+        return extractTime(issue.closed);
       case 'issue.close_user':
-        return issue.close_user;
+        return this.getUser(issue.closed_by);
       case 'issue.status':
-        return issue.status;
+        return issue.open ? 'Open' : 'Closed';
 
       case 'job.key':
         return job._key;
@@ -246,9 +271,9 @@ export class StepContext extends TemplateContext {
       case 'work_order.code':
         return job.wo_code;
       case 'work_order.qt_planned':
-        return batch.qt_planned;
+        return batch.qt_total;
       case 'work_order.qt_completed':
-        return batch.qt_completed;
+        return batch.qt_pass;
       case 'work_order.start_date':
         return extractDate(batch.start);
       case 'work_order.start_time':
