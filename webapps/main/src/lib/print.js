@@ -98,18 +98,22 @@ export class TemplateContext {
   }
 
   getPresetValue(presetName) {
-    switch (presetName) {
-      case 'current_date':
-        return new Date().toLocaleDateString();
-      case 'current_time':
-        return new Date().toLocaleTimeString();
-      case 'current_user':
-        return this.formatUsername(
-          this.session_data().user.surname,
-          this.session_data().user.name,
-        );
-      default:
-        return undefined;
+    try {
+      switch (presetName) {
+        case 'current_date':
+          return new Date().toLocaleDateString();
+        case 'current_time':
+          return new Date().toLocaleTimeString();
+        case 'current_user':
+          return this.formatUsername(
+            this.session_data().user.surname,
+            this.session_data().user.name,
+          );
+        default:
+          return undefined;
+      }
+    } catch (e) {
+      return '';
     }
   }
 
@@ -132,72 +136,76 @@ export class IssueTypeContext extends TemplateContext {
   }
 
   getPresetValue(presetName) {
-    const value = super.getPresetValue(presetName);
-    if (value !== undefined) {
-      return value;
-    }
+    try {
+      const value = super.getPresetValue(presetName);
+      if (value !== undefined) {
+        return value;
+      }
 
-    const { issue } = this;
-    const { product, job, work_order: workOrder } = issue.links;
+      const { issue } = this;
+      const { product, job, work_order: workOrder } = issue.links;
 
-    switch (presetName) {
-      case 'issue.open_date':
-        return extractDate(issue.created);
-      case 'issue.open_time':
-        return extractTime(issue.created);
-      case 'issue.open_user':
-        return this.getUser(issue.created_by);
-      case 'issue.close_date':
-        return extractDate(issue.closed);
-      case 'issue.close_time':
-        return extractTime(issue.closed);
-      case 'issue.close_user':
-        return this.getUser(issue.closed_by);
-      case 'issue.status':
-        return issue.open ? 'Open' : 'Closed';
+      switch (presetName) {
+        case 'issue.open_date':
+          return extractDate(issue.created);
+        case 'issue.open_time':
+          return extractTime(issue.created);
+        case 'issue.open_user':
+          return this.getUser(issue.created_by);
+        case 'issue.close_date':
+          return extractDate(issue.closed);
+        case 'issue.close_time':
+          return extractTime(issue.closed);
+        case 'issue.close_user':
+          return this.getUser(issue.closed_by);
+        case 'issue.status':
+          return issue.open ? 'Open' : 'Closed';
 
-      case 'job.key':
-        return job._key;
-      case 'job.qt_planned':
-        return job.qt_planned;
-      case 'job.qt_completed':
-        return job.qt_completed;
-      case 'job.phase_alias':
-        return job.phase_alias;
-      case 'job.start_date':
-        return extractDate(job.start);
-      case 'job.start_time':
-        return extractTime(job.start);
-      case 'job.end_date':
-        return extractDate(job.end);
-      case 'job.end_time':
-        return extractTime(job.end);
+        case 'job.key':
+          return job._key;
+        case 'job.qt_planned':
+          return job.qt_planned;
+        case 'job.qt_completed':
+          return job.qt_completed;
+        case 'job.phase_alias':
+          return job.phase_alias;
+        case 'job.start_date':
+          return extractDate(job.start);
+        case 'job.start_time':
+          return extractTime(job.start);
+        case 'job.end_date':
+          return extractDate(job.end);
+        case 'job.end_time':
+          return extractTime(job.end);
 
-      case 'project.code':
-        return job.project_code;
+        case 'project.code':
+          return job.project_code;
 
-      case 'work_order.code':
-        return job.wo_code;
-      case 'work_order.qt_planned':
-        return workOrder.qt_planned;
-      case 'work_order.qt_completed':
-        return workOrder.qt_completed;
-      case 'work_order.start_date':
-        return extractDate(workOrder.start);
-      case 'work_order.start_time':
-        return extractTime(workOrder.start);
-      case 'work_order.end_date':
-        return extractDate(workOrder.end);
-      case 'work_order.end_time':
-        return extractTime(workOrder.end);
+        case 'work_order.code':
+          return job.wo_code;
+        case 'work_order.qt_planned':
+          return workOrder.qt_planned;
+        case 'work_order.qt_completed':
+          return workOrder.qt_completed;
+        case 'work_order.start_date':
+          return extractDate(workOrder.start);
+        case 'work_order.start_time':
+          return extractTime(workOrder.start);
+        case 'work_order.end_date':
+          return extractDate(workOrder.end);
+        case 'work_order.end_time':
+          return extractTime(workOrder.end);
 
-      case 'product.code':
-        return product.code;
-      case 'product.description':
-        return product.description;
+        case 'product.code':
+          return product.code;
+        case 'product.description':
+          return product.description;
 
-      default:
-        return undefined;
+        default:
+          return undefined;
+      }
+    } catch (e) {
+      return '';
     }
   }
 
@@ -239,57 +247,61 @@ export class StepContext extends TemplateContext {
   }
 
   getPresetValue(presetName) {
-    const value = super.getPresetValue(presetName);
-    if (value !== undefined) {
-      return value;
-    }
+    try {
+      const value = super.getPresetValue(presetName);
+      if (value !== undefined) {
+        return value;
+      }
 
-    const job = this._store.state.traceability.working_job_data;
-    const batch = this._store.state.traceability.current_batch_data;
+      const job = this._store.state.traceability.working_job_data;
+      const batch = this._store.state.traceability.current_batch_data;
 
-    switch (presetName) {
-      case 'job.key':
-        return job._key;
-      case 'job.qt_planned':
-        return job.qt_planned;
-      case 'job.qt_completed':
-        return job.qt_completed;
-      case 'job.phase_alias':
-        return job.phase_alias;
-      case 'job.start_date':
-        return extractDate(job.start);
-      case 'job.start_time':
-        return extractTime(job.start);
-      case 'job.end_date':
-        return extractDate(job.end);
-      case 'job.end_time':
-        return extractTime(job.end);
+      switch (presetName) {
+        case 'job.key':
+          return job._key;
+        case 'job.qt_planned':
+          return job.qt_planned;
+        case 'job.qt_completed':
+          return job.qt_completed;
+        case 'job.phase_alias':
+          return job.phase_alias;
+        case 'job.start_date':
+          return extractDate(job.start);
+        case 'job.start_time':
+          return extractTime(job.start);
+        case 'job.end_date':
+          return extractDate(job.end);
+        case 'job.end_time':
+          return extractTime(job.end);
 
-      case 'project.code':
-        return job.project_code;
+        case 'project.code':
+          return job.project_code;
 
-      case 'work_order.code':
-        return job.wo_code;
-      case 'work_order.qt_planned':
-        return batch.qt_total;
-      case 'work_order.qt_completed':
-        return batch.qt_pass;
-      case 'work_order.start_date':
-        return extractDate(batch.start);
-      case 'work_order.start_time':
-        return extractTime(batch.start);
-      case 'work_order.end_date':
-        return extractDate(batch.end);
-      case 'work_order.end_time':
-        return extractTime(batch.end);
+        case 'work_order.code':
+          return job.wo_code;
+        case 'work_order.qt_planned':
+          return batch.qt_total;
+        case 'work_order.qt_completed':
+          return batch.qt_pass;
+        case 'work_order.start_date':
+          return extractDate(batch.start);
+        case 'work_order.start_time':
+          return extractTime(batch.start);
+        case 'work_order.end_date':
+          return extractDate(batch.end);
+        case 'work_order.end_time':
+          return extractTime(batch.end);
 
-      case 'product.code':
-        return job.product_code;
-      case 'product.description':
-        return job.product_description;
+        case 'product.code':
+          return job.product_code;
+        case 'product.description':
+          return job.product_description;
 
-      default:
-        return undefined;
+        default:
+          return undefined;
+      }
+    } catch (e) {
+      return '';
     }
   }
 
