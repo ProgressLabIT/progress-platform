@@ -13,6 +13,14 @@ const user = {
     user_data: (state) => (user_key) => {
       return state.user_list.filter((u) => u._key == user_key)[0];
     },
+    userByKey: (state) => {
+      const userByKey = {};
+      state.user_list.forEach((field) => {
+        userByKey[field._key] = field;
+      });
+      return userByKey;
+    },
+    getUserByKey: (_, getters) => (key) => getters.userByKey[key],
   },
 
   mutations: {
