@@ -91,6 +91,24 @@
           @click="zoomOut"
         >
         </q-btn>
+        <q-btn
+          round
+          flat
+          padding="sm sm"
+          :style="darkGlassStyle"
+          icon="mdi-rotate-left"
+          @click="rotateLeft"
+        >
+        </q-btn>
+        <q-btn
+          round
+          flat
+          padding="sm sm"
+          :style="darkGlassStyle"
+          icon="mdi-rotate-right"
+          @click="rotateRight"
+        >
+        </q-btn>
       </div>
     </div>
 
@@ -100,7 +118,13 @@
         class="q-mx-auto flex flex-center full-height"
         :style="`width: ${doc_width}px`"
       >
-        <q-img v-if="is_image" fit="contain" :src="media_src"> </q-img>
+        <q-img
+          v-if="is_image"
+          fit="contain"
+          :src="media_src"
+          :class="rotation_class"
+        >
+        </q-img>
         <div v-else class="q-py-xl">
           <vue-pdf-embed
             ref="pdf"
@@ -108,6 +132,7 @@
             disable-annotation-layer
             :source="media_src"
             :width="doc_width"
+            :class="rotation_class"
           >
           </vue-pdf-embed>
         </div>
@@ -195,6 +220,7 @@ export default {
     return {
       image_extensions: ['png', 'jpeg', 'jpg'],
       doc_width: 800,
+      rotation_class: '',
       info: 'icon',
       action_drawer: true,
     };
@@ -237,6 +263,44 @@ export default {
 
     zoomOut() {
       this.doc_width = this.doc_width / 1.2;
+    },
+
+    rotateLeft() {
+      switch (this.rotation_class) {
+        case '':
+          this.rotation_class = 'rotate-270';
+          break;
+        case 'rotate-270':
+          this.rotation_class = 'rotate-180';
+          break;
+        case 'rotate-180':
+          this.rotation_class = 'rotate-90';
+          break;
+        case 'rotate-90':
+          this.rotation_class = '';
+          break;
+        default:
+          this.rotation_class = '';
+      }
+    },
+
+    rotateRight() {
+      switch (this.rotation_class) {
+        case '':
+          this.rotation_class = 'rotate-90';
+          break;
+        case 'rotate-90':
+          this.rotation_class = 'rotate-180';
+          break;
+        case 'rotate-180':
+          this.rotation_class = 'rotate-270';
+          break;
+        case 'rotate-270':
+          this.rotation_class = '';
+          break;
+        default:
+          this.rotation_class = '';
+      }
     },
   },
 };
