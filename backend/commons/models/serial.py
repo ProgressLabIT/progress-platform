@@ -1,8 +1,9 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from commons.models.base_models import FlexModel, ArangoEdge, ArangoDocument
 from commons.models.form import SerialFormFieldValue
+from commons.utils.dt import timestamp
 
 class Serial(ArangoDocument):
    serial: str | None = None
@@ -12,7 +13,7 @@ class Serial(ArangoDocument):
    counter_key: str | None = None
    user_key: str | None = None
    quantity: int = 1
-   created: datetime | None = None
+   created: datetime | datetime = Field(default_factory=timestamp)
    released: datetime | None = None
    data: list[SerialFormFieldValue] | None = None
    deleted: bool = False
