@@ -17,6 +17,7 @@ class EventType(str, Enum):
   JOB_RESUMED = 'JOB_RESUMED'
   JOB_BACK_ONLINE = 'JOB_BACK_ONLINE'
   STEP_COMPLETED = 'STEP_COMPLETED'
+  STEP_QUANTITY_CHANGED = 'STEP_QUANTITY_CHANGED'
   BATCH_COMPLETED = 'BATCH_COMPLETED'
 
   # Issue Events
@@ -67,6 +68,7 @@ class EventModel(ArangoDocument):
   new_batch_key: str | None = None
   project_code: str | None = None
   message_key: str | None = None
+  step_changed_qt: float | None = None
   form_data: list[FormFieldValue] = []
 
   # Quality Fields

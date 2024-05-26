@@ -77,6 +77,12 @@ class ProductionActivityEvent(BaseEvent):
     post_processing=production_post_processing
   )
 
+  STEP_QUANTITY_CHANGED = EventMeta(
+    collections=production_collections,
+    action='step_quantity_changed',
+    post_processing=production_post_processing
+  )
+
   BATCH_COMPLETED = EventMeta(
     collections=production_collections,
     action='complete_batch',
@@ -785,6 +791,26 @@ class ProductionActivityEvent(BaseEvent):
         batch_data = self.get_batch_execution_data()
       )
 
+  def step_quantity_changed(self):
+    self.get_job_data()
+    self.get_active_batch()
+
+    # Save current work session and batch keys in Event.info
+    if not self.info.work_session_key:
+      self.work_session = self.get_current_work_session()
+      self.info.work_session_key = self.work_session.key
+
+    #completed_batch_qt
+    if (self.info.active_batch_qt > self.info.step_changed_qt):
+      self.unbook_wip(self.info.active_batch_qt-self.info.step_changed_qt)
+    elif (self.info.active_batch_qt < self.info.step_changed_qt):
+      self.book_wip(self.info.step_changed_qt-self.info.active_batch_qt)
+
+    self.response = dict(
+        message = f"Step quantity changed for batch {self.info.active_batch_key}",
+        job_data = self.job,
+        batch_data = self.get_batch_execution_data()
+      )
 
   # ===================================================================
 
