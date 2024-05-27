@@ -25,6 +25,7 @@ class SerialEventType(str, Enum):
   CREATE_AND_FINALIZE = 'CREATE_AND_FINALIZE'
   UPDATE = 'UPDATE'
   DELETE = 'DELETE'
+  LINK_BATCH = 'LINK_BATCH'
 
 
 class SerialEvent(Serial):
@@ -37,6 +38,7 @@ class SerialEvent(Serial):
    quantity: int = 1
    wo_key: str | None = None
    product_key: str | None = None
+   batch_serials: list[str] | None = None
 
 
 class SerialNotificationType(str, Enum):

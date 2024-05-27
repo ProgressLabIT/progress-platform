@@ -315,6 +315,14 @@ class ProductionActivityEvent(BaseEvent):
     self.batch = Batch(**new_batch_out)
     self.info.new_batch_key = self.batch.key
 
+    self.link_batch_serial()
+
+  def link_batch_serial(self):
+    serial_event = SerialEvent()
+    setattr(serial_event, 'batch_serials', self.info.batch_serials)
+    setattr(serial_event, 'batch_key', self.info.new_batch_key)
+    setattr(serial_event, 'operation', SerialEventType.LINK_BATCH)
+    self.send_to_consumer(serial_event.dict())
 
   def get_active_batch(self):
     match = dict(
@@ -686,7 +694,7 @@ class ProductionActivityEvent(BaseEvent):
     )
 
     product = self.tx.collection('Product').get(self.info.product_key)
-    if (product['traceability_level'] == TraceabilityLevel.COMPLETE):
+    if (self.job.first_phase and product['traceability_level'] == TraceabilityLevel.COMPLETE):
       # Create batch serials
       self.create_batch_serial_records()
 
