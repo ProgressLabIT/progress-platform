@@ -36,6 +36,7 @@ function createEvent(
 ) {
   const user_key = session_state.user._key;
   const job = state.working_job_data;
+  const batch_serials = state.batch_serials;
 
   const event = {
     event_type,
@@ -51,6 +52,7 @@ function createEvent(
     form_data,
     completed_batch_qt,
     timestamp, // ISO format
+    batch_serials: batch_serials,
   };
 
   return event;
@@ -86,6 +88,7 @@ const traceability = {
     current_step_key: undefined,
     current_step_media_index: null,
     heartbeat: null,
+    batch_serials: [],
   },
 
   getters: {
@@ -184,6 +187,10 @@ const traceability = {
 
     UPDATE_BATCH(state, batch_data) {
       state.current_batch_data = batch_data;
+    },
+
+    UPDATE_BATCH_SERIALS(state, batch_serials) {
+      state.batch_serials = batch_serials;
     },
   },
 

@@ -160,10 +160,15 @@ export default {
     async completeStepCustomQty() {
       let customQty = await this.getCustomQuantity();
 
-      this.completeStep(customQty.batchQuantity);
+      await this.$store.dispatch('changeStepQuantity', {
+        stepKey: this.current_step_key,
+        batchQt: customQty,
+      });
+
+      this.completeStep();
     },
 
-    async completeStep(batchQt = this.job.active_batch_qt) {
+    async completeStep() {
       let can_proceed = true;
 
       // Values will change after committing mutation save to use for navigation later on
@@ -185,7 +190,6 @@ export default {
       if (can_proceed) {
         await this.$store.dispatch('completeStep', {
           stepKey: this.current_step_key,
-          batchQt: batchQt,
         });
 
         if (current_step_was_last && current_batch_was_last) {

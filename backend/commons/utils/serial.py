@@ -21,6 +21,12 @@ class Queries:
       RETURN DOCUMENT(Serial, edge._to)
   """
 
+  GET_SERIALS_IN_WORK_ORDER = """
+    FOR s IN Serial
+      FILTER s.wo_key == @wo_key && s.serial != null && s.serial != ""
+      RETURN s
+  """
+
   FIND_SERIALS = """
 
      FOR s IN Serial
