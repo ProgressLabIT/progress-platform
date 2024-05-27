@@ -83,3 +83,4 @@ class EventModel(ArangoDocument):
 
   # Traceability fields
   serial_data: Any | None = None
+  batch_serials: list[str] | None = None

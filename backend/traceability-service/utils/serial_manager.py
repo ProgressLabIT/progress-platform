@@ -72,6 +72,8 @@ class SerialManager:
               self.delete_serial(serial_key=serial_event['serial'].get("_key"), soft=True)
            case SerialEventType.UPDATE_DATA_FROM_BATCH:
               self.update_serial_data(serial_event=serial_event, batch_key=serial_event['batch_key'], step_data=serial_event['step_data'])
+           case SerialEventType.LINK_BATCH:
+              self.link_batch_serial(batch_key=serial_event['batch_key'], batch_serials=serial_event['batch_serials'])
            case _:
               print("Error")
 
@@ -129,6 +131,24 @@ class SerialManager:
               notification = SerialNotificationType.ERROR,
               error = traceback.format_exc()
            ))
+
+    def link_batch_serial(self, batch_key, batch_serials):
+       for serial_key in batch_serials:
+          try:
+             db.collection('batch_serial').insert(dict(
+                _from=f'Batch/{batch_key}',
+                _to=f'Serial/{serial_key}'))
+             self.notify_results(dict(
+              serial_key = serial_key,
+              notification = SerialNotificationType.UPDATED
+           ))
+          except:
+             print(traceback.format_exc())
+             self.notify_results(dict(
+                serial_key = serial_key,
+                notification = SerialNotificationType.ERROR,
+                error = traceback.format_exc()
+             ))
 
     def create_from_batch(self, serial_event):
        batch_key = serial_event['batch_key']

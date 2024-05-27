@@ -63,6 +63,21 @@ def create_or_serial_batch(
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
+@router.get('/serial-wo/{wo_key}')
+def get_serial_batch(wo_key: str):
+  bind_vars = dict(
+    wo_key = wo_key
+  )
+  wo_serials = []
+  for serial in [e for e in db.aql.execute(Queries.GET_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)]:
+    if serial['serial']:
+      wo_serials.append(dict(
+          value= serial['key'],
+          label= serial['serial'],
+      ))
+  return wo_serials
+
+
 
 
 # ---------------------------------------------
