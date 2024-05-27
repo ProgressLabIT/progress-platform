@@ -307,6 +307,7 @@ export default {
       ws_list: (state) => state.traceability.work_session_list,
       batch_data: (state) => state.traceability.current_batch_data.step_data,
       wo_data: (state) => state.workorder.wo_data,
+      batch_serials: (state) => state.batch_serials,
     }),
 
     links() {
@@ -525,11 +526,11 @@ export default {
           }
 
           const { data: batch_serials } = await this.$api.get(
-            `serial-batch/16003541`,
+            `serial-wo/${this.j.wo_key}`,
           );
-          if (batch_serials) {
+          if (batch_serials && batch_serials.length > 0) {
             let selected_serials = await this.selectSerialBatch(batch_serials);
-            this.$api.post(`serial-batch/16003541`, selected_serials);
+            this.$store.commit('UPDATE_BATCH_SERIALS', selected_serials);
           }
         }
       });
