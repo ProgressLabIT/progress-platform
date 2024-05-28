@@ -52,17 +52,6 @@ def get_serial_batch(batch_key: str):
   return batch_serials
 
 
-@router.post('/serial-batch/{batch_key}')
-def create_or_serial_batch(
-  batch_key: str,
-  serials: list[str]
-  ):
-  try:
-    return APIResponse(message = "OK")
-  except:
-    raise HTTPException(status_code=500, detail=traceback.format_exc())
-
-
 @router.get('/serial-wo/{wo_key}')
 def get_serial_batch(wo_key: str):
   bind_vars = dict(
@@ -96,7 +85,7 @@ async def search_serials(
   product_key: Union[List[str], None] = Query(default=None),
   product_code_search: str | None = None,
   limit: int | None = None,
-  serial_deleted: bool = True
+  serial_deleted: bool = False
  # with_links: bool = False
   ):
   # use query parameters to filter specific type

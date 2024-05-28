@@ -500,6 +500,7 @@ export default {
     window.removeEventListener('beforeunload', this.beforeUnloadAlert);
     clearInterval(this.polling_instance);
     this.$store.state.traceability.current_step_key = undefined;
+    this.$store.commit('UPDATE_BATCH_SERIALS', []);
   },
 
   methods: {
@@ -523,14 +524,15 @@ export default {
           // In case the job is already active, e.g. after accidentally closing and reopening the page, restart heartbeat
           if (job_data.active) {
             this.$store.commit('SET_HEARTBEAT', true);
-          }
-
-          const { data: batch_serials } = await this.$api.get(
-            `serial-wo/${this.j.wo_key}`,
-          );
-          if (batch_serials && batch_serials.length > 0) {
-            let selected_serials = await this.selectSerialBatch(batch_serials);
-            this.$store.commit('UPDATE_BATCH_SERIALS', selected_serials);
+          } else if (this.j.stage !== 'started') {
+            const { data: batch_serials } = await this.$api.get(
+              `serial-wo/${this.j.wo_key}`,
+            );
+            if (batch_serials && batch_serials.length > 0) {
+              let selected_serials =
+                await this.selectSerialBatch(batch_serials);
+              this.$store.commit('UPDATE_BATCH_SERIALS', selected_serials);
+            }
           }
         }
       });
