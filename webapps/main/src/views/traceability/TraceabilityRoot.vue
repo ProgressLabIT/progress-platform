@@ -201,14 +201,14 @@
           <q-icon name="mdi-magnify" />
         </template>
       </q-input>
-
+      <!--
       <div class="col-6">
         <q-checkbox
           v-model="serial_deleted"
           dense
           :label="$t('traceability.include_deleted')"
         />
-      </div>
+      </div>-->
 
       <div class="row items-center justify-between">
         <div class="highlight text-uppercase text-h6">
@@ -377,12 +377,10 @@ export default {
 
   computed: {
     filters_active() {
-      return (
-        this.advancedFilters.length +
-        this.filter_list.filter((f) => {
+      return this.advancedFilters.length; /*+
+      this.filter_list.filter((f) => {
           return this.bool_filters.includes(f) ? this[f] === false : !!this[f];
-        }).length
-      );
+        }).length*/
     },
 
     serial_key_search: queryModel(String, 'serial_search', null),
@@ -391,7 +389,7 @@ export default {
     created_by: queryModel(String, 'opened_by', null),
     time_created_from: queryModel(String, 'opened_min', null),
     time_created_to: queryModel(String, 'opened_max', null),
-    serial_deleted: queryModel(Boolean, 'deleted', false),
+    //serial_deleted: queryModel(Boolean, 'deleted', false),
 
     filters() {
       let filters_object = {};

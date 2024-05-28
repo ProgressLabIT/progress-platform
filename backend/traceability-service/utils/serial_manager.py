@@ -84,7 +84,10 @@ class SerialManager:
             from_id=f'Batch/{batch_key}',
           )
         )
-       return [Serial(**t) for t in cursor]
+       try:
+          return [Serial(**t) for t in cursor]
+       except:
+          return []
 
     def retrieve_serial_phases_data(self, product_key):
        cursor = db.aql.execute(Queries.GET_PRODUCT_STEPS,

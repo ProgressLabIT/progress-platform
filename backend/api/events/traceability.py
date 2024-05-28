@@ -439,6 +439,12 @@ class ProductionActivityEvent(BaseEvent):
     if quantity > 0:
       raise WipNotAvailableError(f"Not enough booked wip to remove. Needed { quantity } more")
 
+  def book_serials(self):
+    return
+
+  def unbook_serials(self):
+    return
+
   def book_wip(self, quantity):
     if quantity == 0:
       return
@@ -694,7 +700,7 @@ class ProductionActivityEvent(BaseEvent):
     )
 
     product = self.tx.collection('Product').get(self.info.product_key)
-    if (self.job.first_phase and product['traceability_level'] == TraceabilityLevel.COMPLETE):
+    if (self.job.first_phase and product['traceability_level'] == TraceabilityLevel.COMPLETE and not self.job.first_phase):
       # Create batch serials
       self.create_batch_serial_records()
 
@@ -782,7 +788,7 @@ class ProductionActivityEvent(BaseEvent):
 
     if (step_data.form_data != None):
       product = self.tx.collection('Product').get(self.info.product_key)
-      if (product['traceability_level'] != TraceabilityLevel.NONE):
+      if (product['traceability_level'] != TraceabilityLevel.NONE and not self.job.first_phase):
         # update batch serials data
         self.udpate_batch_serial_data(step_data.form_data)
 
