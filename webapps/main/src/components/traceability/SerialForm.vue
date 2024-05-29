@@ -203,6 +203,8 @@ export default {
       this.enableSave = false;
       this.phase_index = 0;
       this.step_index = 0;
+
+      this.links.product = null;
     },
 
     hasCustomField() {
