@@ -168,6 +168,7 @@
             map-options
             :model-value="product.traceability_level"
             :label="$t('traceability.enabled')"
+            :disabled="editMode"
             @update:model-value="updateField('traceability_level', $event)"
           />
         </div>
