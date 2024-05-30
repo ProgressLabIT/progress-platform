@@ -3,7 +3,7 @@ import traceback
 from fastapi import APIRouter, HTTPException, Request, Query
 
 from events import Event
-from models.traceability import *
+from commons.models.traceability import *
 from models.event import EventModel, EventType
 from typing import Dict, List, Union
 

@@ -13,6 +13,7 @@ from commons.utils.counter import _generate_counter
 from commons.kafka_utils.kafka_producer import KafkaProducer
 from commons.models.form import SerialFormFieldValue
 from commons.utils.serial import Queries
+from commons.models.traceability import WIP
 
 
 class SerialManager:
@@ -64,8 +65,10 @@ class SerialManager:
               self.create_from_batch(serial_event=serial_event)
            case SerialEventType.CREATE_AND_FINALIZE:
               self.create_serial(serial_data=serial_event['serial'], batch_key=None, finalize=True)
-           case SerialEventType.FINALIZE:
-              self.finalize_serial(serial_event=serial_event, batch_key=serial_event['batch_key'])
+           case SerialEventType.FINALIZE_BATCH:
+              self.finalize_serial(serial_event=serial_event, batch_key=serial_event['batch_key'], ensure_qt=False)
+           case SerialEventType.FINALIZE_JOB:
+              self.finalize_serial(serial_event=serial_event, batch_key=serial_event['batch_key'], ensure_qt=True)
            case SerialEventType.UPDATE:
               self.update_serial(serial_data=serial_event['serial'])
            case SerialEventType.DELETE:
@@ -264,8 +267,9 @@ class SerialManager:
                   error = traceback.format_exc()
                ))
 
-    def finalize_serial(self, serial_event, batch_key):
-        self.ensure_quanty(serial_event)
+    def finalize_serial(self, serial_event, batch_key, ensure_qt):
+        if (ensure_qt):
+           self.ensure_quanty(serial_event)
         serials = self.retrieve_serial_in_batch(batch_key=batch_key)
         for serial in serials:
            tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])

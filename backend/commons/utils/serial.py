@@ -27,6 +27,17 @@ class Queries:
       RETURN s
   """
 
+  GET_AVAILABLE_SERIALS_IN_WORK_ORDER = """
+    FOR w IN wip
+      FILTER
+        w.wo_key == @wo_key
+        && w._from == @phase_key
+        && LIKE(w._to, "Serial%")
+        && !w.active
+      LET serial = DOCUMENT(Serial, w._to)
+      return serial
+  """
+
   FIND_SERIALS = """
 
      FOR s IN Serial

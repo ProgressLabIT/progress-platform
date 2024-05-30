@@ -32,6 +32,7 @@ function createEvent(
     step_key = null,
     form_data = [],
     completed_batch_qt = null,
+    step_changed_qt = null,
   },
 ) {
   const user_key = session_state.user._key;
@@ -53,6 +54,7 @@ function createEvent(
     completed_batch_qt,
     timestamp, // ISO format
     batch_serials: batch_serials,
+    step_changed_qt: step_changed_qt,
   };
 
   return event;
