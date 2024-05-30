@@ -1,5 +1,5 @@
 from models.production import Job
-from models.traceability import StepStatus
+from commons.models.traceability import StepStatus
 
 class Queries:
 
@@ -226,6 +226,22 @@ class Queries:
       end: @end,
       value: processing_cost + material_cost
     } in Batch
+  """
+
+  UPDATE_BATCH_QT = """
+    LET batch = DOCUMENT(Batch, @batch_key)
+
+    UPDATE batch WITH {
+      qt_total: @qt_total
+    } in Batch
+  """
+
+  UPDATE_JOB_QT = """
+    LET job = DOCUMENT(Job, @job_key)
+
+    UPDATE job WITH {
+      active_batch_qt: @active_qt
+    } in Job
   """
 
 

@@ -52,13 +52,17 @@ def get_serial_batch(batch_key: str):
   return batch_serials
 
 
-@router.get('/serial-wo/{wo_key}')
-def get_serial_batch(wo_key: str):
+@router.get('/serial-wo')
+def get_serial_batch(
+  wo_key: str | None = None,
+  phase_key: str | None = None,
+):
   bind_vars = dict(
-    wo_key = wo_key
+    wo_key = wo_key,
+    phase_key = f'Phase/{phase_key}'
   )
   wo_serials = []
-  for serial in [e for e in db.aql.execute(Queries.GET_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)]:
+  for serial in [e for e in db.aql.execute(Queries.GET_AVAILABLE_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)]:
     if serial['serial']:
       wo_serials.append(dict(
           value= serial['key'],
