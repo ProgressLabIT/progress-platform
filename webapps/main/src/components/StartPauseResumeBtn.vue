@@ -45,7 +45,7 @@ export default {
         return result;
       } else {
         // Check if progress has already been made or user has already started
-        if (this.j.stage == 'started') {
+        if (this.j.stage == 'started' || this.j.stage == 'serial_selected') {
           result.text = this.$t('job.resume').toUpperCase();
           result.action = () => this.$store.dispatch('resumeJob');
           return result;
