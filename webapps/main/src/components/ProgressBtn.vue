@@ -75,7 +75,11 @@ export default {
         altAction: this.declareCustomBatch,
       };
 
-      if ('parameters' in this.job && this.job.parameters.step_check) {
+      if (
+        'parameters' in this.job &&
+        this.job.parameters.step_check &&
+        !this.job.first_phase
+      ) {
         if (!this.current_step_is_last) {
           return complete_step_custom_qty;
         }
@@ -160,10 +164,12 @@ export default {
     async completeStepCustomQty() {
       let customQty = await this.getCustomQuantity();
 
-      await this.$store.dispatch('changeStepQuantity', {
-        stepKey: this.current_step_key,
-        batchQt: customQty,
-      });
+      if (customQty) {
+        await this.$store.dispatch('changeStepQuantity', {
+          stepKey: this.current_step_key,
+          batchQt: customQty.batchQuantity,
+        });
+      }
 
       this.completeStep();
     },

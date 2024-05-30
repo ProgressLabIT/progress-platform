@@ -525,9 +525,12 @@ export default {
           if (job_data.active) {
             this.$store.commit('SET_HEARTBEAT', true);
           } else if (this.j.stage !== 'started') {
-            const { data: batch_serials } = await this.$api.get(
-              `serial-wo/${this.j.wo_key}`,
-            );
+            const { data: batch_serials } = await this.$api.get('serial-wo', {
+              params: {
+                wo_key: this.j.wo_key,
+                phase_key: this.j.phase_key,
+              },
+            });
             if (batch_serials && batch_serials.length > 0) {
               let selected_serials =
                 await this.selectSerialBatch(batch_serials);
