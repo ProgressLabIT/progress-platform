@@ -5,7 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from events.base import BaseEvent
 from events.shared import EventMeta
 
-from models.traceability import *
+from commons.models.traceability import *
 from models.production import Job, WorkStatus
 from commons.models.product import TraceabilityLevel
 
@@ -243,7 +243,20 @@ class ProductionActivityEvent(BaseEvent):
      setattr(serial_event, 'product_key', self.info.product_key)
      setattr(serial_event, 'quantity', completed_batch_qt)
      setattr(serial_event, 'batch_key', self.info.active_batch_key)
-     setattr(serial_event, 'operation', SerialEventType.FINALIZE)
+     setattr(serial_event, 'operation', SerialEventType.FINALIZE_BATCH)
+     self.send_to_consumer(serial_event.dict())
+
+  def finalize_job_serial(self, completed_batch_qt):
+     if not self.job:
+       self.job = self.get_job_data()
+
+     serial_event = SerialEvent()
+     setattr(serial_event, 'created_by', self.info.user_key)
+     setattr(serial_event, 'wo_key', self.info.work_order_key)
+     setattr(serial_event, 'product_key', self.info.product_key)
+     setattr(serial_event, 'quantity', completed_batch_qt)
+     setattr(serial_event, 'batch_key', self.info.active_batch_key)
+     setattr(serial_event, 'operation', SerialEventType.FINALIZE_JOB)
      self.send_to_consumer(serial_event.dict())
 
   def udpate_batch_serial_data(self, form_data):
@@ -314,6 +327,10 @@ class ProductionActivityEvent(BaseEvent):
 
     self.batch = Batch(**new_batch_out)
     self.info.new_batch_key = self.batch.key
+
+    self.declare_wip_serial()
+
+    self.book_serials()
 
     self.link_batch_serial()
 
@@ -404,7 +421,6 @@ class ProductionActivityEvent(BaseEvent):
       bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.next_phase_key])
     )
 
-
   def remove_wip(self, quantity):
     """
     Remove upstream wip records related to the completed batch
@@ -439,11 +455,36 @@ class ProductionActivityEvent(BaseEvent):
     if quantity > 0:
       raise WipNotAvailableError(f"Not enough booked wip to remove. Needed { quantity } more")
 
-  def book_serials(self):
-    return
 
-  def unbook_serials(self):
-    return
+  def book_serials(self):
+    for serial in self.info.batch_serials:
+      serial_to_book_cursor = self.tx.collection('wip').find(dict(
+        _from=f'Phase/{self.info.phase_key}',
+        _to=f'Serial/{serial.key}'
+        ))
+      serial_to_book = [WIP(**wip) for wip in serial_to_book_cursor]
+      for wip in serial_to_book:
+        self.tx.collection('wip').update(dict(
+            _key=wip.key,
+            active=True
+          ))
+
+
+  def unbook_serials(self, delete):
+    for serial in self.info.batch_serials:
+      serial_to_unbook_cursor = self.tx.collection('wip').find(dict(
+        _from=f'Phase/{self.info.phase_key}',
+        _to=f'Serial/{serial.key}'
+        ))
+      serial_to_unbook = [WIP(**wip) for wip in serial_to_unbook_cursor]
+      for wip in serial_to_unbook:
+        if (delete):
+            self.tx.collection('wip').delete(wip.key)
+        else:
+          self.tx.collection('wip').update(dict(
+              _key=wip.key,
+              active=False
+            ))
 
   def book_wip(self, quantity):
     if quantity == 0:
@@ -502,6 +543,25 @@ class ProductionActivityEvent(BaseEvent):
       bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
     )
 
+
+  def declare_wip_serial(self):
+      bind_vars = dict(
+        wo_key = self.info.work_order_key
+      )
+      serial_to_declare_cursor = self.tx.aql.execute(Queries.GET_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)
+      serial_to_declare = [Serial(**serial) for serial in serial_to_declare_cursor]
+      for serial in serial_to_declare:
+        serial_wip = WIP(
+          _from=f'Phase/{self.info.phase_key}',
+          _to=f'Serial/{serial.key}',
+          batch_key=self.info.completed_batch_key,
+          wo_key=self.info.work_order_key,
+          product_key=self.info.product_key,
+          quantity=1,
+          active=False
+        )
+
+        self.tx.collection('wip').insert(serial_wip)
 
   def unbook_wip(self, quantity):
     if quantity == 0:
@@ -820,6 +880,25 @@ class ProductionActivityEvent(BaseEvent):
     elif (self.info.active_batch_qt < self.info.step_changed_qt):
       self.book_wip(self.info.step_changed_qt-self.info.active_batch_qt)
 
+    self.unbook_serials(delete = True)
+
+
+    # update batch qt
+    self.tx.aql.execute(
+      TraceabilityQueries.UPDATE_BATCH_QT, bind_vars=dict(
+        batch_key=self.info.active_batch_key,
+        qt_total=self.info.step_changed_qt
+      )
+    )
+
+    # update jon qt
+    self.tx.aql.execute(
+      TraceabilityQueries.UPDATE_JOB_QT, bind_vars=dict(
+        job_key=self.info.job_key,
+        active_qt=self.info.step_changed_qt
+      )
+    )
+
     self.response = dict(
         message = f"Step quantity changed for batch {self.info.active_batch_key}",
         job_data = self.job,
@@ -896,6 +975,10 @@ class ProductionActivityEvent(BaseEvent):
         message = f"Batch {self.info.active_batch_key} and Job {self.info.job_key} completed.",
         job_data = self.job
       )
+
+      if (product['traceability_level'] != TraceabilityLevel.NONE):
+        # update batch serials data
+        self.finalize_job_serial(completed_batch_qt)
 
     # JOB HAS REMAINING QUANTITY
     else:
