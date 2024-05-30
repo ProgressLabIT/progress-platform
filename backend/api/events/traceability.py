@@ -83,6 +83,12 @@ class ProductionActivityEvent(BaseEvent):
     post_processing=production_post_processing
   )
 
+  UPDATE_BATCH_SERIALS = EventMeta(
+    collections=production_collections,
+    action='link_batch_serial',
+    post_processing=production_post_processing
+  )
+
   BATCH_COMPLETED = EventMeta(
     collections=production_collections,
     action='complete_batch',
@@ -184,9 +190,6 @@ class ProductionActivityEvent(BaseEvent):
   def send_to_consumer(self, serial_event):
     try:
       KafkaProducer.getInstance().produce_async(topic="serials", key=serial_event.get('_key'), value=json.dumps(serial_event))
-      self.response = dict(
-        message="Serial managed correctly",
-      )
     except Exception:
       raise HTTPException(
         status_code=500,
@@ -246,7 +249,7 @@ class ProductionActivityEvent(BaseEvent):
      setattr(serial_event, 'operation', SerialEventType.FINALIZE_BATCH)
      self.send_to_consumer(serial_event.dict())
 
-  def finalize_job_serial(self, completed_batch_qt):
+  def finalize_wo_serial(self, completed_batch_qt):
      if not self.job:
        self.job = self.get_job_data()
 
@@ -256,7 +259,7 @@ class ProductionActivityEvent(BaseEvent):
      setattr(serial_event, 'product_key', self.info.product_key)
      setattr(serial_event, 'quantity', completed_batch_qt)
      setattr(serial_event, 'batch_key', self.info.active_batch_key)
-     setattr(serial_event, 'operation', SerialEventType.FINALIZE_JOB)
+     setattr(serial_event, 'operation', SerialEventType.FINALIZE_WO)
      self.send_to_consumer(serial_event.dict())
 
   def udpate_batch_serial_data(self, form_data):
@@ -330,14 +333,11 @@ class ProductionActivityEvent(BaseEvent):
 
     self.declare_wip_serial()
 
-    self.book_serials()
 
-    self.link_batch_serial()
-
-  def link_batch_serial(self):
+  def send_link_batch_serial_event(self):
     serial_event = SerialEvent()
     setattr(serial_event, 'batch_serials', self.info.batch_serials)
-    setattr(serial_event, 'batch_key', self.info.new_batch_key)
+    setattr(serial_event, 'batch_key', self.batch.key)
     setattr(serial_event, 'operation', SerialEventType.LINK_BATCH)
     self.send_to_consumer(serial_event.dict())
 
@@ -460,7 +460,7 @@ class ProductionActivityEvent(BaseEvent):
     for serial in self.info.batch_serials:
       serial_to_book_cursor = self.tx.collection('wip').find(dict(
         _from=f'Phase/{self.info.phase_key}',
-        _to=f'Serial/{serial.key}'
+        _to=f'Serial/{serial}'
         ))
       serial_to_book = [WIP(**wip) for wip in serial_to_book_cursor]
       for wip in serial_to_book:
@@ -554,8 +554,8 @@ class ProductionActivityEvent(BaseEvent):
         serial_wip = WIP(
           _from=f'Phase/{self.info.phase_key}',
           _to=f'Serial/{serial.key}',
-          batch_key=self.info.completed_batch_key,
           wo_key=self.info.work_order_key,
+          batch_key=self.batch.key,
           product_key=self.info.product_key,
           quantity=1,
           active=False
@@ -848,7 +848,7 @@ class ProductionActivityEvent(BaseEvent):
 
     if (step_data.form_data != None):
       product = self.tx.collection('Product').get(self.info.product_key)
-      if (product['traceability_level'] != TraceabilityLevel.NONE and not self.job.first_phase):
+      if (product['traceability_level'] != TraceabilityLevel.NONE):
         # update batch serials data
         self.udpate_batch_serial_data(step_data.form_data)
 
@@ -864,6 +864,31 @@ class ProductionActivityEvent(BaseEvent):
         job_data = self.job,
         batch_data = self.get_batch_execution_data()
       )
+
+  def link_batch_serial(self):
+    self.get_job_data()
+    self.get_active_batch()
+    self.book_serials()
+    self.send_link_batch_serial_event()
+
+    # Update WorkOrder status
+    wo = self.get_work_order_data()
+    wo.status = WorkStatus.SERIAL_SELECTED
+    wo_update = model_to_db_dict(wo)
+    self.tx.collection('WorkOrder').update(wo_update)
+
+    # Update job
+    job_update=dict(
+      _key = self.info.job_key,
+      stage = WorkStatus.SERIAL_SELECTED,
+    )
+    self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
+
+    self.response = dict(
+      message = f"Batch {self.info.job_key} linked",
+      batch_data = self.get_batch_execution_data(),
+      job_data = self.job
+    )
 
   def step_quantity_changed(self):
     self.get_job_data()
@@ -961,7 +986,7 @@ class ProductionActivityEvent(BaseEvent):
     )
 
     product = self.tx.collection('Product').get(self.info.product_key)
-    if (product['traceability_level'] != TraceabilityLevel.NONE and self.job.first_phase):
+    if (product['traceability_level'] != TraceabilityLevel.NONE):
         # update batch serials data
         self.finalize_batch_serial(completed_batch_qt)
 
@@ -975,10 +1000,6 @@ class ProductionActivityEvent(BaseEvent):
         message = f"Batch {self.info.active_batch_key} and Job {self.info.job_key} completed.",
         job_data = self.job
       )
-
-      if (product['traceability_level'] != TraceabilityLevel.NONE):
-        # update batch serials data
-        self.finalize_job_serial(completed_batch_qt)
 
     # JOB HAS REMAINING QUANTITY
     else:
@@ -1023,5 +1044,9 @@ class ProductionActivityEvent(BaseEvent):
     # is next_phase generate a WIP record and update job input availability state
     if not self.job.last_phase:
       self.declare_wip()
+    else:
+      if (product['traceability_level'] != TraceabilityLevel.NONE):
+        # update batch serials data
+        self.finalize_wo_serial(completed_batch_qt)
 
 # --------------------------------------------------------------------

@@ -38,6 +38,7 @@ class WorkStatus(str, Enum):
   PLANNED = 'planned'
   STARTED = 'started'
   CLOSED = 'closed'
+  SERIAL_SELECTED = 'serial_selected'
 
 
 class WorkOrderNew(BaseModel):

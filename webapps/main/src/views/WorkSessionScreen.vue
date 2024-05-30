@@ -252,7 +252,7 @@
 
 <script>
 import { until } from '@vueuse/core';
-import { Dialog } from 'quasar';
+
 import Sortable from 'sortablejs';
 import { mapState } from 'vuex';
 
@@ -260,7 +260,6 @@ import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import IssueForm from '@/components/IssueForm.vue';
 import ProgressBtn from '@/components/ProgressBtn.vue';
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
-import SerialBatchSelectionDialog from '../components/job/SerialBatchSelectionDialog.vue';
 
 export default {
   name: 'WorkSessionScreen',
@@ -430,6 +429,10 @@ export default {
       return this.j.stage == 'closed';
     },
 
+    serial_selected() {
+      return this.j.stage == 'serial_selected';
+    },
+
     can_work() {
       return this.has_material_to_proceed && !this.job_closed;
     },
@@ -524,18 +527,6 @@ export default {
           // In case the job is already active, e.g. after accidentally closing and reopening the page, restart heartbeat
           if (job_data.active) {
             this.$store.commit('SET_HEARTBEAT', true);
-          } else if (this.j.stage !== 'started') {
-            const { data: batch_serials } = await this.$api.get('serial-wo', {
-              params: {
-                wo_key: this.j.wo_key,
-                phase_key: this.j.phase_key,
-              },
-            });
-            if (batch_serials && batch_serials.length > 0) {
-              let selected_serials =
-                await this.selectSerialBatch(batch_serials);
-              this.$store.commit('UPDATE_BATCH_SERIALS', selected_serials);
-            }
           }
         }
       });
@@ -571,23 +562,6 @@ export default {
         this.$store.dispatch('loadWorkOrderData', this.j.wo_key),
       ]).then(([jobResponse]) => {
         this.$store.commit('UPDATE_JOB', jobResponse.data.detail);
-      });
-    },
-
-    async selectSerialBatch(batch_serials) {
-      return new Promise((resolve) => {
-        Dialog.create({
-          component: SerialBatchSelectionDialog,
-          componentProps: {
-            batch_serials,
-          },
-        })
-          .onOk((selected_serials) => {
-            resolve(selected_serials);
-          })
-          .onCancel(() => {
-            resolve(null);
-          });
       });
     },
   },
