@@ -23,6 +23,7 @@
 import { Dialog, Loading } from 'quasar';
 import { mapState } from 'vuex';
 import { api } from 'boot/axios';
+import SerialBatchSelectionDialog from '../components/job/SerialBatchSelectionDialog.vue';
 import QuantityPickerDialog from './QuantityPickerDialog.vue';
 
 export default {
@@ -51,6 +52,13 @@ export default {
     },
 
     progress_button() {
+      const link_serials = {
+        icon: 'mdi-check',
+        text: this.$t('job.link_serials'),
+        action: this.linkSerials,
+        altAction: undefined,
+      };
+
       const complete_step = {
         icon: 'mdi-check',
         text: this.$t('job.complete_step'),
@@ -75,12 +83,11 @@ export default {
         altAction: this.declareCustomBatch,
       };
 
-      if (
-        'parameters' in this.job &&
-        this.job.parameters.step_check &&
-        !this.job.first_phase
-      ) {
-        if (!this.current_step_is_last) {
+      if (this.job.stage === 'started') {
+        this.linkSerials();
+        return link_serials;
+      } else if ('parameters' in this.job && this.job.parameters.step_check) {
+        if (!this.current_step_is_last && !this.job.first_phase) {
           return complete_step_custom_qty;
         }
         return complete_step;
@@ -172,6 +179,40 @@ export default {
       }
 
       this.completeStep();
+    },
+
+    async linkSerials() {
+      const { data: batch_serials } = await this.$api.get('serial-wo', {
+        params: {
+          wo_key: this.job.wo_key,
+          phase_key: this.job.phase_key,
+        },
+      });
+      let selected_serials = [];
+      if (batch_serials && batch_serials.length > 0) {
+        selected_serials = await this.selectSerialBatch(batch_serials);
+        this.$store.commit('UPDATE_BATCH_SERIALS', selected_serials);
+      }
+      await this.$store.dispatch('linkBatchSerial', {
+        stepKey: this.current_step_key,
+      });
+    },
+
+    async selectSerialBatch(batch_serials) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          component: SerialBatchSelectionDialog,
+          componentProps: {
+            batch_serials,
+          },
+        })
+          .onOk((selected_serials) => {
+            resolve(selected_serials);
+          })
+          .onCancel(() => {
+            resolve(null);
+          });
+      });
     },
 
     async completeStep() {

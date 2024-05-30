@@ -27,6 +27,12 @@ class Queries:
       RETURN s
   """
 
+  GET_ALL_SERIALS_IN_WORK_ORDER = """
+    FOR s IN Serial
+      FILTER s.wo_key == @wo_key
+      RETURN s
+  """
+
   GET_AVAILABLE_SERIALS_IN_WORK_ORDER = """
     FOR w IN wip
       FILTER

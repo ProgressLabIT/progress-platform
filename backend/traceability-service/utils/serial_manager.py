@@ -67,7 +67,7 @@ class SerialManager:
               self.create_serial(serial_data=serial_event['serial'], batch_key=None, finalize=True)
            case SerialEventType.FINALIZE_BATCH:
               self.finalize_serial(serial_event=serial_event, batch_key=serial_event['batch_key'], ensure_qt=False)
-           case SerialEventType.FINALIZE_JOB:
+           case SerialEventType.FINALIZE_WO:
               self.finalize_serial(serial_event=serial_event, batch_key=serial_event['batch_key'], ensure_qt=True)
            case SerialEventType.UPDATE:
               self.update_serial(serial_data=serial_event['serial'])
@@ -85,6 +85,18 @@ class SerialManager:
           Queries.GET_SERIALS_IN_BATCH,
           bind_vars=dict(
             from_id=f'Batch/{batch_key}',
+          )
+        )
+       try:
+          return [Serial(**t) for t in cursor]
+       except:
+          return []
+
+    def retrieve_serial_in_wo(self, wo_key):
+       cursor = db.aql.execute(
+          Queries.GET_ALL_SERIALS_IN_WORK_ORDER,
+          bind_vars=dict(
+            wo_key=wo_key,
           )
         )
        try:
@@ -232,12 +244,13 @@ class SerialManager:
 
     def ensure_quanty(self, serial_event):
         quantity = serial_event['quantity']
-        batch_key = serial_event['batch_key']
-        serials = self.retrieve_serial_in_batch(batch_key=batch_key)
+        wo_key = serial_event['wo_key']
+        serials = self.retrieve_serial_in_wo(wo_key=wo_key)
         if len(serials) > quantity:
-           for idx, serial in enumerate(serials):
-              if idx > len(serials) -quantity:
-                 self.delete_serial(serial.key, soft=False)
+           return
+           #for idx, serial in enumerate(serials):
+           #   if idx > len(serials) -quantity:
+           #      self.delete_serial(serial.key, soft=False)
         elif len(serials) < quantity:
            serial_event['quantity'] = quantity - len(serials)
            self.create_from_batch(serial_event=serial_event)
@@ -272,26 +285,27 @@ class SerialManager:
            self.ensure_quanty(serial_event)
         serials = self.retrieve_serial_in_batch(batch_key=batch_key)
         for serial in serials:
-           tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
-           try:
-             serial_no = _generate_counter(tx, 'Counter/'+serial.counter_key)
-             serial.serial = serial_no
-             serial_key = serial.key
-             tx.collection('Serial').update(dict(serial.dict(), _key=serial_key), check_rev=False)
-             tx.commit_transaction()
-             self.notify_results(dict(
-                serial_key = serial_key,
-                serial = serial_no,
-                notification = SerialNotificationType.FINALIZED
-             ))
-           except:
-               print(traceback.format_exc())
-               tx.abort_transaction()
+           if (serial.serial == None):
+             tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
+             try:
+               serial_no = _generate_counter(tx, 'Counter/'+serial.counter_key)
+               serial.serial = serial_no
+               serial_key = serial.key
+               tx.collection('Serial').update(dict(serial.dict(), _key=serial_key), check_rev=False)
+               tx.commit_transaction()
                self.notify_results(dict(
-                  serial_key = serial.key,
-                  notification = SerialNotificationType.ERROR,
-                  error = traceback.format_exc()
+                  serial_key = serial_key,
+                  serial = serial_no,
+                  notification = SerialNotificationType.FINALIZED
                ))
+             except:
+                 print(traceback.format_exc())
+                 tx.abort_transaction()
+                 self.notify_results(dict(
+                    serial_key = serial.key,
+                    notification = SerialNotificationType.ERROR,
+                    error = traceback.format_exc()
+                 ))
 
     def notify_results(self, notification):
         try:
