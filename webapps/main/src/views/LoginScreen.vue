@@ -46,12 +46,14 @@
                 :label="$capitalize($t('user.username'))"
                 autocomplete="off"
                 class="q-mb-md"
+                for="username"
               >
               </q-input>
               <q-input
                 v-model="credentials.password"
                 type="password"
                 :label="$capitalize($t('user.password'))"
+                for="password"
               >
               </q-input>
             </q-card-section>

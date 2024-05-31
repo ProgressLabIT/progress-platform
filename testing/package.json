@@ -1,0 +1,14 @@
+{
+  "name": "progress-test",
+  "version": "0.0.1",
+  "description": "Automated testing project for progress platform",
+  "main": "index.js",
+  "scripts": {
+    "open-cypress": "npx cypress open"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cypress": "^13.10.0"
+  }
+}
