@@ -1,0 +1,6 @@
+{
+  "resetprodURL": "http://localhost:8000/api/reset/prod",
+  "progressURL": "http://localhost:9000/login",
+  "username": "simone",
+  "password": "simone"
+}

@@ -17,7 +17,7 @@
     @update:model-value="(selection) => $emit('select', selection)"
   >
     <template #option="scope">
-      <q-item v-bind="scope.itemProps">
+      <q-item v-bind="scope.itemProps" :id="scope.opt.code">
         <q-item-section>
           <q-item-label class="highlight">
             {{ scope.opt.code }}
