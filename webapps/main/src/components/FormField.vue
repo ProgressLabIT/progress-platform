@@ -15,7 +15,8 @@
       hide-bottom-space
       :rules="[
         (value) =>
-          (field.required ? !!value : true) || $t('field_required_alert'),
+          (field.required || props.field.mandatory ? !!value : true) ||
+          $t('field_required_alert'),
       ]"
     />
 
@@ -34,7 +35,8 @@
       lazy-rules
       :rules="[
         (value) =>
-          (field.required ? !!value : true) || $t('field_required_alert'),
+          (field.required || props.field.mandatory ? !!value : true) ||
+          $t('field_required_alert'),
       ]"
     />
 
@@ -47,7 +49,8 @@
       :label="field.label"
       :rules="[
         (value) =>
-          (field.required ? !!value : true) || $t('field_required_alert'),
+          (field.required || props.field.mandatory ? !!value : true) ||
+          $t('field_required_alert'),
       ]"
       @update:model-value="fieldValue = $event"
     />

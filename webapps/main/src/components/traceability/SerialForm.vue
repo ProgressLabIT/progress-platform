@@ -328,8 +328,38 @@ export default {
       }));
     },
 
+    missingMandatoryValues(form_data) {
+      let missing_mandatory_fields = false;
+      form_data.forEach((field) => {
+        if (field.mandatory && !field.value) {
+          missing_mandatory_fields = true;
+        }
+      });
+      return missing_mandatory_fields;
+    },
+
     async save() {
       this.saving = true;
+
+      let missing_mandatory_fields = false;
+
+      if (this.phase_data) {
+        this.phase_data.forEach((phase) => {
+          if (phase.steps) {
+            phase.steps.forEach((step) => {
+              missing_mandatory_fields =
+                missing_mandatory_fields ||
+                this.missingMandatoryValues(step.form_fields);
+            });
+          }
+        });
+      }
+
+      if (missing_mandatory_fields) {
+        window.alert(this.$t('fill_mandatory_fields'));
+        this.saving = false;
+        return;
+      }
 
       let data = [];
       if (this.phase_data) {

@@ -835,6 +835,7 @@ export default {
   workload_hours: 'Carico in ore',
   yes: 'Sì',
   mandatory: 'Obbligatorio',
+  fill_mandatory_fields: 'Compila tutti i campi obbligatori per continuare',
   traceability: {
     enabled: 'abilita tracciabilità',
     include_deleted: 'includi cancellati',
