@@ -826,6 +826,7 @@ export default {
   write: 'Write',
   yes: 'Yes',
   mandatory: 'Mandatory',
+  fill_mandatory_fields: 'Fill all mandatory fields before completing the step',
   traceability: {
     enabled: 'Enable traceability',
     include_deleted: 'Include deleted',

@@ -104,6 +104,14 @@ export default {
       return currentStep?.done ?? false;
     },
 
+    current_step_form_fields() {
+      const currentStep = this.job.step_sequence?.find(
+        ({ _key }) => _key === this.current_step_key,
+      );
+
+      return currentStep?.form_fields ?? [];
+    },
+
     completed_steps_count() {
       return this.batch_data
         ? this.batch_data.reduce((total, current) => total + current.done, 0)
@@ -112,6 +120,14 @@ export default {
 
     current_step_is_last() {
       return this.completed_steps_count === this.job.step_sequence.length - 1;
+    },
+
+    current_step_data() {
+      const currentStep = this.batch_data?.find(
+        ({ _key }) => _key === this.current_step_key,
+      );
+
+      return currentStep?.form_data ?? [];
     },
 
     current_batch_is_last() {
@@ -168,6 +184,14 @@ export default {
       this.clickTimer = null;
     },
 
+    field_value(field_key) {
+      const data = this.current_step_data?.find(
+        ({ form_field_key }) => form_field_key === field_key,
+      );
+
+      return data?.value ?? null;
+    },
+
     async completeStepCustomQty() {
       let customQty = await this.getCustomQuantity();
 
@@ -218,6 +242,20 @@ export default {
     async completeStep() {
       let can_proceed = true;
 
+      let missing_mandatory_fields = false;
+
+      this.current_step_form_fields.forEach((field) => {
+        let value = this.field_value(field._key);
+        if (field.mandatory && !value) {
+          missing_mandatory_fields = true;
+        }
+      });
+
+      if (missing_mandatory_fields) {
+        window.alert(this.$t('fill_mandatory_fields'));
+        return;
+      }
+
       // Values will change after committing mutation save to use for navigation later on
       const current_step_was_last = this.current_step_is_last;
       const current_batch_was_last = this.current_batch_is_last;
@@ -234,7 +272,7 @@ export default {
         }
       }
 
-      if (can_proceed) {
+      if (can_proceed && !missing_mandatory_fields) {
         await this.$store.dispatch('completeStep', {
           stepKey: this.current_step_key,
         });
