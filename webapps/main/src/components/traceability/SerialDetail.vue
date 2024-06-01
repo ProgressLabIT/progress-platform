@@ -12,12 +12,22 @@
         <q-item class="q-py-md" :clickable="clickable">
           <q-item-section>
             <q-item-label class="row items-center">
-              <span class="smaller text-body2 text-uppercase low-text q-ml-md">
-                <span class="q-mr-sm">
+              <div class="q-mt-lg col-auto">
+                <div class="text-h4 weight-bold text-uppercase">
+                  {{ serial._key }}
+                </div>
+                <div v-if="!can_edit" class="text-h1 display highlight">
                   {{ serial.serial }}
-                </span>
-                <span>#{{ serial._key }}</span>
-              </span>
+                </div>
+                <q-input
+                  v-else
+                  v-model="serial.serial"
+                  filled
+                  dense
+                  class="input-uppercase q-mt-md"
+                >
+                </q-input>
+              </div>
               <div class="col q-ml-xl">
                 <q-btn
                   v-if="!serial.deleted"

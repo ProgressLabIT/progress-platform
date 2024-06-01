@@ -8,7 +8,7 @@ import json
 
 from fastapi.encoders import jsonable_encoder
 from commons.utils.db import db
-from commons.models.serial import Serial, SerialEvent, SerialEventType, SerialNotificationType
+from commons.models.serial import Serial, SerialEvent, SerialEventType, SerialNotificationType, SerialNotificationErrorCode
 from commons.utils.counter import _generate_counter
 from commons.kafka_utils.kafka_producer import KafkaProducer
 from commons.models.form import SerialFormFieldValue
@@ -122,8 +122,15 @@ class SerialManager:
         try:
           serial_no = None
           if finalize:
-            serial_no = _generate_counter(tx, 'Counter/'+serial_data['counter_key'])
-            new_serial_record['serial'] = serial_no
+            if (serial_data['counter_key']):
+              serial_no = _generate_counter(tx, 'Counter/'+serial_data['counter_key'])
+              new_serial_record['serial'] = serial_no
+            else:
+              self.notify_results(dict(
+                 notification = SerialNotificationType.ERROR,
+                 error_code = SerialNotificationErrorCode.COUNTER_NOT_DEFINED,
+                 error = 'Counter not defined'
+                ))
 
           new_serial_id = tx.collection('Serial').insert(new_serial_record, return_new=True)['_id']
 
@@ -147,6 +154,7 @@ class SerialManager:
           self.notify_results(dict(
               serial_key = serial_data.get("_key"),
               notification = SerialNotificationType.ERROR,
+              error_code = SerialNotificationErrorCode.EXCEPTION,
               error = traceback.format_exc()
            ))
 
@@ -165,6 +173,7 @@ class SerialManager:
              self.notify_results(dict(
                 serial_key = serial_key,
                 notification = SerialNotificationType.ERROR,
+                error_code = SerialNotificationErrorCode.EXCEPTION,
                 error = traceback.format_exc()
              ))
 
@@ -176,13 +185,6 @@ class SerialManager:
        quantity = serial_event['quantity']
 
        product = db.collection('Product').get(product_key)
-
-       if (product['counter_id'] == None):
-         self.notify_results(dict(
-              notification = SerialNotificationType.ERROR,
-              error = 'Counter not defined'
-           ))
-         return
 
        serial_data = Serial()
        setattr(serial_data, 'counter_key', product['counter_id'])
@@ -208,7 +210,31 @@ class SerialManager:
        for i in range(int(quantity)):
           self.create_serial(serial_data=serial_data.dict(), batch_key=batch_key, finalize=False)
 
+    def verify_serial_counter(self, serial_key, serial):
+       cursor = db.aql.execute(
+          Queries.GET_SERIALS_FOR_SERIAL_NO,
+          bind_vars=dict(
+            serial_key=serial_key,
+            serial=serial
+          )
+        )
+       try:
+          return len([Serial(**t) for t in cursor])<=0
+       except:
+        return False
+
     def update_serial(self, serial_data):
+
+       if (serial_data.get('serial') != None and not self.verify_serial_counter(serial_key=serial_data.get("_key"), serial=serial_data.get('serial'))):
+          self.notify_results(dict(
+              serial = serial_data.get('serial'),
+              serial_key = serial_data.get("_key"),
+              notification = SerialNotificationType.ERROR,
+              error_code = SerialNotificationErrorCode.SERIAL_ALREADY_PRESENT,
+              error = 'Serial already present'
+           ))
+          return
+
        try:
            db.collection('Serial').update(dict(**serial_data, by_alias=True), check_rev=False)
            self.notify_results(dict(
@@ -221,6 +247,7 @@ class SerialManager:
            self.notify_results(dict(
               serial_key = serial_data.get("_key"),
               notification = SerialNotificationType.ERROR,
+              error_code = SerialNotificationErrorCode.EXCEPTION,
               error = traceback.format_exc()
            ))
 
@@ -239,6 +266,7 @@ class SerialManager:
            self.notify_results(dict(
               serial_key = serial_key,
               notification = SerialNotificationType.ERROR,
+              error_code = SerialNotificationErrorCode.EXCEPTION,
               error = traceback.format_exc()
            ))
 
@@ -277,6 +305,7 @@ class SerialManager:
                self.notify_results(dict(
                   serial_key = serial.get("_key"),
                   notification = SerialNotificationType.ERROR,
+                  error_code = SerialNotificationErrorCode.EXCEPTION,
                   error = traceback.format_exc()
                ))
 
@@ -288,7 +317,15 @@ class SerialManager:
            if (serial.serial == None):
              tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
              try:
-               serial_no = _generate_counter(tx, 'Counter/'+serial.counter_key)
+               serial_no = None
+               if (serial.counter_key!=None):
+                  serial_no = _generate_counter(tx, 'Counter/'+serial.counter_key)
+               else:
+                  self.notify_results(dict(
+                     notification = SerialNotificationType.ERROR,
+                     error_code = SerialNotificationErrorCode.COUNTER_NOT_DEFINED,
+                     error = 'Counter not defined'
+                  ))
                serial.serial = serial_no
                serial_key = serial.key
                tx.collection('Serial').update(dict(serial.dict(), _key=serial_key), check_rev=False)
@@ -304,6 +341,7 @@ class SerialManager:
                  self.notify_results(dict(
                     serial_key = serial.key,
                     notification = SerialNotificationType.ERROR,
+                    error_code = SerialNotificationErrorCode.EXCEPTION,
                     error = traceback.format_exc()
                  ))
 

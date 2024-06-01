@@ -437,29 +437,20 @@ export default {
     this.events = new EventSource(eventURL, {
       withCredentials: false,
     });
-    this.events.addEventListener('serial-notification', (event) => {
-      this.handleMessage(event);
+    this.events.addEventListener('serial-notification', () => {
+      this.handleMessage();
     });
   },
 
-  unmounted() {
+  beforeUnmount() {
     if (this.events) {
       this.events.close();
     }
   },
 
   methods: {
-    handleMessage(message) {
+    handleMessage() {
       this.refreshSerial();
-      let event = JSON.parse(message.data);
-      if (event.notification === 'ERROR') {
-        this.$q.notify({
-          message: this.$t(event.error),
-          color: 'theme-red',
-          timeout: 1500,
-          position: 'top',
-        });
-      }
     },
 
     refreshSerial() {
