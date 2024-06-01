@@ -18,7 +18,7 @@ class ServerEventManager:
         if (self.queue.get(topic) == None):
             self.queue[topic] = {}
         if (self.queue.get(topic).get(requestID) == None):
-            self.queue.get(topic)[requestID] = asyncio.Queue(maxsize=100)
+            self.queue.get(topic)[requestID] = asyncio.Queue()
         return self.queue.get(topic).get(requestID)
 
     def undergisterQueue(self, topic, requestID):

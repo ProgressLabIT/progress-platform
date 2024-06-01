@@ -61,6 +61,7 @@ class FormFieldDefinition(BaseModel):
   hint: str | None = None
   default: str | None = None # this value should be able to be parsed to get current data
   required: bool = False
+  mandatory: bool = False
   hidden: bool | None = None
 
   @model_validator(mode="before")
