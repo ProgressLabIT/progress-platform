@@ -21,6 +21,7 @@ export interface FormField {
   _key: string;
   custom_field_key: string;
   multiple: boolean;
+  mandatory?: boolean;
   label?: string;
   hint?: string;
   required: boolean;

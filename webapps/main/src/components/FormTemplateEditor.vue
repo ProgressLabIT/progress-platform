@@ -42,6 +42,13 @@
         />
       </div>
 
+      <div class="col-auto">
+        <q-toggle
+          v-model="field.mandatory"
+          :disable="!editMode"
+          :label="$t('mandatory')"
+        />
+      </div>
       <div class="col-auto"></div>
 
       <div class="col-auto">
@@ -148,6 +155,7 @@ function addField() {
       custom_field_key: customField._key,
       label: customField.default_label,
       hint: customField.default_hint,
+      mandatory: false,
     });
   });
 }
