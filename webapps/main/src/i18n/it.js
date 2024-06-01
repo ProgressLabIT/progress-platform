@@ -840,5 +840,12 @@ export default {
       form_only: 'Solo form',
       complete: 'Completa',
     },
+    errors: {
+      COUNTER_NOT_DEFINED:
+        'Contantore non definito, per favore inserire il seriale manualmente',
+      SERIAL_ALREADY_PRESENT:
+        'Seriale già presente, non è possibile aggiornare',
+      EXCEPTION: 'Errore nella scrittura del serialse',
+    },
   },
 };
