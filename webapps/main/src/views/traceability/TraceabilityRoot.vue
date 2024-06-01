@@ -437,8 +437,8 @@ export default {
     this.events = new EventSource(eventURL, {
       withCredentials: false,
     });
-    this.events.addEventListener('serial-notification', () => {
-      this.handleMessage();
+    this.events.addEventListener('serial-notification', (event) => {
+      this.handleMessage(event);
     });
   },
 
@@ -449,8 +449,25 @@ export default {
   },
 
   methods: {
-    handleMessage() {
+    getErrorMessage(error_code, default_message) {
+      let message = this.$t('traceability.errors.' + error_code);
+      if (message) {
+        return message;
+      }
+      return this.$t(default_message);
+    },
+
+    handleMessage(message) {
       this.refreshSerial();
+      let event = JSON.parse(message.data);
+      if (event.notification === 'ERROR') {
+        this.$q.notify({
+          message: this.getErrorMessage(event.error_code, event.error),
+          color: 'theme-red',
+          timeout: 1500,
+          position: 'top',
+        });
+      }
     },
 
     refreshSerial() {

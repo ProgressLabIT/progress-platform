@@ -25,7 +25,6 @@ export default {
   data() {
     return {
       now: 0,
-      events: NaN,
     };
   },
 
@@ -47,41 +46,6 @@ export default {
     setInterval(() => {
       this.now = DateTime.local();
     }, 1000);
-    let eventURL = this.$api.defaults.baseURL + '/notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
-    });
-    this.events.addEventListener('serial-notification', (event) => {
-      this.handleMessage(event);
-    });
-  },
-
-  beforeUnmount() {
-    if (this.events) {
-      this.events.close();
-    }
-  },
-
-  methods: {
-    getErrorMessage(error_code, default_message) {
-      let message = this.$t('traceability.errors.' + error_code);
-      if (message) {
-        return message;
-      }
-      return this.$t(default_message);
-    },
-
-    handleMessage(message) {
-      let event = JSON.parse(message.data);
-      if (event.notification === 'ERROR') {
-        this.$q.notify({
-          message: this.getErrorMessage(event.error_code, event.error),
-          color: 'theme-red',
-          timeout: 1500,
-          position: 'top',
-        });
-      }
-    },
   },
 };
 </script>

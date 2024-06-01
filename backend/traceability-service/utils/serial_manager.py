@@ -120,7 +120,7 @@ class SerialManager:
 
         tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
         try:
-          serial_no = None
+          serial_no = "MISSING-COUNTER"
           if finalize:
             if (serial_data['counter_key']):
               serial_no = _generate_counter(tx, 'Counter/'+serial_data['counter_key'])
@@ -237,11 +237,6 @@ class SerialManager:
 
        try:
            db.collection('Serial').update(dict(**serial_data, by_alias=True), check_rev=False)
-           self.notify_results(dict(
-              serial_key = serial_data.get("_key"),
-              serial = serial_data.get("serial"),
-              notification = SerialNotificationType.UPDATED
-           ))
        except:
            print(traceback.format_exc())
            self.notify_results(dict(
@@ -249,6 +244,11 @@ class SerialManager:
               notification = SerialNotificationType.ERROR,
               error_code = SerialNotificationErrorCode.EXCEPTION,
               error = traceback.format_exc()
+           ))
+       self.notify_results(dict(
+              serial_key = serial_data.get("_key"),
+              serial = serial_data.get("serial"),
+              notification = SerialNotificationType.UPDATED
            ))
 
     def delete_serial(self, serial_key, soft=True):
@@ -295,11 +295,6 @@ class SerialManager:
                       data.value = step['value']
              serial_key = serial.key
              db.collection('Serial').update(dict(serial.dict(), _key=serial_key), check_rev=False)
-             self.notify_results(dict(
-                serial_key = serial.key,
-                serial = serial.serial,
-                notification = SerialNotificationType.UPDATED
-             ))
            except:
                print(traceback.format_exc())
                self.notify_results(dict(
@@ -308,6 +303,10 @@ class SerialManager:
                   error_code = SerialNotificationErrorCode.EXCEPTION,
                   error = traceback.format_exc()
                ))
+        self.notify_results(dict(
+                serial = serial.serial,
+                notification = SerialNotificationType.UPDATED
+             ))
 
     def finalize_serial(self, serial_event, batch_key, ensure_qt):
         if (ensure_qt):
@@ -317,7 +316,7 @@ class SerialManager:
            if (serial.serial == None):
              tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
              try:
-               serial_no = None
+               serial_no = "MISSING-COUNTER"
                if (serial.counter_key!=None):
                   serial_no = _generate_counter(tx, 'Counter/'+serial.counter_key)
                else:
@@ -330,11 +329,6 @@ class SerialManager:
                serial_key = serial.key
                tx.collection('Serial').update(dict(serial.dict(), _key=serial_key), check_rev=False)
                tx.commit_transaction()
-               self.notify_results(dict(
-                  serial_key = serial_key,
-                  serial = serial_no,
-                  notification = SerialNotificationType.FINALIZED
-               ))
              except:
                  print(traceback.format_exc())
                  tx.abort_transaction()
@@ -344,6 +338,10 @@ class SerialManager:
                     error_code = SerialNotificationErrorCode.EXCEPTION,
                     error = traceback.format_exc()
                  ))
+        self.notify_results(dict(
+                  serial = serial_no,
+                  notification = SerialNotificationType.FINALIZED
+               ))
 
     def notify_results(self, notification):
         try:
