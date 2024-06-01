@@ -834,5 +834,10 @@ export default {
       form_only: 'Form only',
       complete: 'Complete',
     },
+    errors: {
+      COUNTER_NOT_DEFINED: 'Counter not defined, please insert serial manually',
+      SERIAL_ALREADY_PRESENT: 'Serial No already present, cannot update',
+      EXCEPTION: 'Error writing serial',
+    },
   },
 };

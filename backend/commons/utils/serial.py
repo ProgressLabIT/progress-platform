@@ -27,6 +27,12 @@ class Queries:
       RETURN s
   """
 
+  GET_SERIALS_FOR_SERIAL_NO = """
+    FOR s IN Serial
+      FILTER s._key != @serial_key && s.serial == @serial
+      RETURN s
+  """
+
   GET_ALL_SERIALS_IN_WORK_ORDER = """
     FOR s IN Serial
       FILTER s.wo_key == @wo_key

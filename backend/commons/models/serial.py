@@ -48,9 +48,17 @@ class SerialNotificationType(str, Enum):
   DELETED = 'DELETED'
   FINALIZED = 'FINALIZED'
   ERROR = 'ERROR'
+
+class SerialNotificationErrorCode(str, Enum):
+  SERIAL_ALREADY_PRESENT = 'SERIAL_ALREADY_PRESENT'
+  COUNTER_NOT_DEFINED = 'COUNTER_NOT_DEFINED'
+  EXCEPTION = 'EXCEPTION'
+
+
 class SerialNotification(BaseModel):
    serial: str | None = None
    serial_key: str | None = None
    notification: SerialNotificationType | None = None
+   error_code: SerialNotificationErrorCode | None = None
    error: str | None = None
 
