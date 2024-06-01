@@ -825,6 +825,7 @@ export default {
   workload_hours: 'Workload in hours',
   write: 'Write',
   yes: 'Yes',
+  mandatory: 'Mandatory',
   traceability: {
     enabled: 'Enable traceability',
     include_deleted: 'Include deleted',
