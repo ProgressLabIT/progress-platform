@@ -52,8 +52,8 @@ def get_serial_batch(batch_key: str):
   return batch_serials
 
 
-@router.get('/serial-wo')
-def get_serial_batch(
+@router.get('/serial-wo-phase')
+def get_serial_wo_phase(
   wo_key: str | None = None,
   phase_key: str | None = None,
 ):
@@ -70,7 +70,44 @@ def get_serial_batch(
       ))
   return wo_serials
 
+@router.get('/serial-work_order/{wo_key}')
+def get_serial_work_order(wo_key: str):
+  bind_vars = dict(
+    wo_key = wo_key
+  )
+  wo_serials = []
+  for serial in [e for e in db.aql.execute(Queries.GET_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)]:
+    if serial['serial']:
+      wo_serials.append(dict(
+          value= serial['key'],
+          label= serial['serial'],
+      ))
+  return wo_serials
 
+@router.get('/serial-product/{product_key}')
+def get_serial_product(product_key: str):
+  bind_vars = dict(
+    product_key = product_key
+  )
+  product_serials = []
+  for serial in [e for e in db.aql.execute(Queries.GET_SERIALS_IN_PRODUCT, bind_vars=bind_vars)]:
+    if serial['serial']:
+      product_serials.append(dict(
+          value= serial['key'],
+          label= serial['serial'],
+      ))
+  return product_serials
+
+@router.get('/all-serials')
+def get_serial_product():
+  all_serials = []
+  for serial in [e for e in db.aql.execute(Queries.GET_ALL_SERIALS)]:
+    if serial['serial']:
+      all_serials.append(dict(
+          value= serial['key'],
+          label= serial['serial'],
+      ))
+  return all_serials
 
 
 # ---------------------------------------------

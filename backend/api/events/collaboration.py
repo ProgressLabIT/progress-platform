@@ -65,7 +65,8 @@ class CollaborationEvent(BaseEvent):
       work_order="WorkOrder/",
       project="Project/",
       user="User/",
-      job="Job/"
+      job="Job/",
+      serial="Serial/"
     )
     target = link_map[link_dict.type.value] + link_dict.key
     return dict(_from=_from, _to=target)
