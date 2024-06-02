@@ -23,7 +23,18 @@ class Queries:
 
   GET_SERIALS_IN_WORK_ORDER = """
     FOR s IN Serial
-      FILTER s.wo_key == @wo_key && s.serial != null && s.serial != ""
+      FILTER s.wo_key == @wo_key
+      RETURN s
+  """
+
+  GET_ALL_SERIALS = """
+    FOR s IN Serial
+      RETURN s
+  """
+
+  GET_SERIALS_IN_PRODUCT = """
+    FOR s IN Serial
+      FILTER s.product_key == @product_key
       RETURN s
   """
 

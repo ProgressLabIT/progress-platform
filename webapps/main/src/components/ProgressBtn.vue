@@ -206,7 +206,7 @@ export default {
     },
 
     async linkSerials() {
-      const { data: batch_serials } = await this.$api.get('serial-wo', {
+      const { data: batch_serials } = await this.$api.get('serial-wo-phase', {
         params: {
           wo_key: this.job.wo_key,
           phase_key: this.job.phase_key,

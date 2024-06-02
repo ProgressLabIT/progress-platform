@@ -76,6 +76,7 @@ class IssueLinkType(str, Enum):
   PROJECT = 'project'
   USER = 'user'
   JOB = 'job'
+  SERIAL = 'serial'
 
 class IssueLink(BaseModel):
   type: IssueLinkType
