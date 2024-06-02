@@ -107,6 +107,15 @@
             >
             </BaseAutocompleteOperation>
           </template>
+
+          <BaseAutocompleteSerial
+            v-if="link_form"
+            v-model="links.serial"
+            :label="$capitalize($t('serial'))"
+            :work_order="links.work_order"
+            :product="links.product"
+          >
+          </BaseAutocompleteSerial>
         </q-card-section>
 
         <!-- ISSUE DATA -->
@@ -191,6 +200,7 @@
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
+import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import BaseAutocompleteWorkOrder from '@/components/BaseAutocompleteWorkOrder.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -207,6 +217,7 @@ export default {
     BaseAutocompleteProduct,
     BaseAutocompleteUser,
     BaseAutocompleteWorkOrder,
+    BaseAutocompleteSerial,
     BaseDialog,
     JobListItem,
     FormField,
@@ -262,6 +273,7 @@ export default {
         work_order: null,
         user: null,
         job: null,
+        serial: null,
       },
     };
   },
