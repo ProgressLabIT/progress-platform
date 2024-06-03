@@ -345,6 +345,24 @@
         </template>
       </q-input>
 
+      <!-- SERIAL -->
+      <q-input
+        v-model="serial_search"
+        clearable
+        filled
+        dense
+        hide-bottom-space
+        autocomplete="off"
+        name="serial"
+        debounce="1000"
+        :label="$capitalize($t('serial'))"
+        class="q-mb-md"
+      >
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
       <!-- PROJECT -->
       <q-input
         v-model="project_search"
@@ -526,6 +544,7 @@ export default {
         'issue_type_key',
         'operation_key',
         'work_order_code_search',
+        'serial_search',
         'product_code_search',
         'phase_alias_search',
         'project_search',
@@ -564,6 +583,7 @@ export default {
     operation_key: queryModel(String, 'operation', null),
     product_code_search: queryModel(String, 'product_search', null),
     work_order_code_search: queryModel(String, 'work_order_search', null),
+    serial_search: queryModel(String, 'serial_search', null),
     phase_alias_search: queryModel(String, 'phase_search', null),
     project_search: queryModel(String, 'project_search', null),
     created_by: queryModel(String, 'opened_by', null),

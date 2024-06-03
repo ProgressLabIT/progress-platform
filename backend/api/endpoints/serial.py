@@ -70,41 +70,24 @@ def get_serial_wo_phase(
       ))
   return wo_serials
 
-@router.get('/serial-work_order/{wo_key}')
-def get_serial_work_order(wo_key: str):
-  bind_vars = dict(
-    wo_key = wo_key
-  )
-  wo_serials = []
-  for serial in [e for e in db.aql.execute(Queries.GET_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)]:
-    if serial['serial']:
-      wo_serials.append(dict(
-          value= serial['key'],
-          label= serial['serial'],
-      ))
-  return wo_serials
-
-@router.get('/serial-product/{product_key}')
-def get_serial_product(product_key: str):
-  bind_vars = dict(
-    product_key = product_key
-  )
-  product_serials = []
-  for serial in [e for e in db.aql.execute(Queries.GET_SERIALS_IN_PRODUCT, bind_vars=bind_vars)]:
-    if serial['serial']:
-      product_serials.append(dict(
-          value= serial['key'],
-          label= serial['serial'],
-      ))
-  return product_serials
-
-@router.get('/all-serials')
-def get_serial_product():
+@router.get('/serial-selection')
+def get_serial_selection(
+  search: str | None = None,
+  wo_key: str | None = None,
+  product_key: str | None = None,
+  limit: int = 100
+):
   all_serials = []
-  for serial in [e for e in db.aql.execute(Queries.GET_ALL_SERIALS)]:
+  for serial in [e for e in db.aql.execute(Queries.GET_ALL_SERIALS, bind_vars=dict(
+      search = search,
+      wo_key = wo_key,
+      product_key = product_key,
+      limit = limit
+    ))]:
     if serial['serial']:
       all_serials.append(dict(
           value= serial['key'],
+          _key= serial['key'],
           label= serial['serial'],
       ))
   return all_serials

@@ -107,19 +107,20 @@
             >
             </BaseAutocompleteOperation>
           </template>
-
-          <BaseAutocompleteSerial
-            v-if="link_form"
-            v-model="links.serial"
-            :label="$capitalize($t('serial'))"
-            :work_order="links.work_order"
-            :product="links.product"
-          >
-          </BaseAutocompleteSerial>
         </q-card-section>
 
         <!-- ISSUE DATA -->
         <div v-else key="issue_data">
+          <!-- SERIAL -->
+          <q-card-section>
+            <BaseAutocompleteSerial
+              v-model="links.serial"
+              :label="$capitalize($t('serial'))"
+              :product="links.product"
+              :work_order="links.work_order"
+            >
+            </BaseAutocompleteSerial>
+          </q-card-section>
           <!-- ISSUE TYPE SELECTION -->
           <q-card-section>
             <BaseAutocompleteIssueType

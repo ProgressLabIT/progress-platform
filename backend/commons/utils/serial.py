@@ -29,7 +29,14 @@ class Queries:
 
   GET_ALL_SERIALS = """
     FOR s IN Serial
-      RETURN s
+    FILTER
+       (@wo_key? s.wo_key == @wo_key: true)
+       && (@product_key? s.product_key == @product_key: true)
+       && (@search ? (
+        CONTAINS(LOWER(s.serial), LOWER(@search))
+        ) : true)
+    LIMIT @limit
+    RETURN s
   """
 
   GET_SERIALS_IN_PRODUCT = """
