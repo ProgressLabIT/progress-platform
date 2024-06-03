@@ -850,4 +850,6 @@ export default {
       EXCEPTION: 'Errore nella scrittura del serialse',
     },
   },
+  serial_autocomplete_hint:
+    'Inserisci il testo da ricercare (min 3 caratteri) fra i seriali. Verranno mostrati i primi 100 risultati.',
 };

@@ -841,4 +841,6 @@ export default {
       EXCEPTION: 'Error writing serial',
     },
   },
+  serial_autocomplete_hint:
+    'Input the text to search (min 3 characters) between serials. Will show first 100 results.',
 };

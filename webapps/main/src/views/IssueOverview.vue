@@ -59,9 +59,12 @@
 
               <template
                 v-else-if="
-                  ['product_code', 'work_order_code', 'project_code'].includes(
-                    column.name,
-                  )
+                  [
+                    'product_code',
+                    'work_order_code',
+                    'project_code',
+                    'serial_code',
+                  ].includes(column.name)
                 "
               >
                 {{ $capitalizeAll(column.field(props.row) || '-') }}
@@ -137,6 +140,14 @@ export default {
           field: (row) => row.links?.work_order?.wo_code,
           sortable: true,
           label: this.$t('work_order.list_headers.wo_code').toUpperCase(),
+          align: 'left',
+          style: 'max-width: 10vw',
+        },
+        {
+          name: 'serial_code',
+          field: (row) => row.links?.serial?.serial,
+          sortable: true,
+          label: this.$t('serial').toUpperCase(),
           align: 'left',
           style: 'max-width: 10vw',
         },
