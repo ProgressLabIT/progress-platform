@@ -1,18 +1,21 @@
 <template>
   <q-select
-    use-input
-    :dense="dense"
-    :hint="hint"
     :work_order="work_order"
     :product="product"
+    use-input
     filled
-    clearable
+    :loading="loading"
+    :label-slot="!!label"
+    :stack-label="stackLabel"
+    :dense="dense"
+    :hint="$t('serial_autocomplete_hint')"
+    :placeholder="placeholder_computed"
+    :clearable="clearable"
     :options="options"
-    option-label="label"
+    :display-value="value?.serial"
+    :option-value="keyOnly ? '_key' : null"
     :model-value="value"
-    :label="label"
-    input-debounce="100"
-    :option-value="keyOnly ? 'value' : null"
+    input-debounce="500"
     :emit-value="keyOnly"
     :map-options="keyOnly"
     @filter="filter"
@@ -30,29 +33,30 @@
         </q-item-section>
       </q-item>
     </template>
+
+    <template v-if="!!label" #label>
+      {{ label }}
+    </template>
+
+    <template #no-option>
+      <div class="q-pa-md">No results</div>
+    </template>
   </q-select>
 </template>
 
 <script>
-import multiMatch from '@/lib/MultiFieldSearch.js';
-
 export default {
   name: 'BaseAutocompleteSerial',
 
   props: {
     value: {
-      type: [String, Object],
+      type: [Object, String],
       default: null,
     },
 
-    loadData: {
-      type: Boolean,
-      default: true,
-    },
-
-    dense: {
-      type: Boolean,
-      default: false,
+    label: {
+      type: String,
+      default: '',
     },
 
     keyOnly: {
@@ -60,13 +64,19 @@ export default {
       default: false,
     },
 
-    label: {
-      type: String,
-      default: undefined,
+    dense: {
+      type: Boolean,
+      default: false,
     },
-    hint: {
+
+    clearable: {
+      type: Boolean,
+      default: true,
+    },
+
+    placeholder: {
       type: String,
-      default: undefined,
+      default: null,
     },
 
     work_order: {
@@ -87,53 +97,36 @@ export default {
       loading: false,
       options: [],
       origin_list: [],
-      search_fields: ['label'],
     };
   },
 
-  created() {
-    if (this.loadData) {
-      this.loading = true;
-      /*if (this.props.work_order:false) {
-        this.$api
-          .get(`serial-work_order/${this.props.work_order._key}`)
-          .then(() => {
-            this.initOptions();
-            this.loading = false;
-          });
-      } else if (this.props.product) {
-        this.$api.get(`serial-product/${this.props.product._key}`).then(() => {
-          this.initOptions();
-          this.loading = false;
-        });
-      } else {*/
-      this.$api.get(`all-serials`).then((resp) => {
-        if (resp.data) {
-          this.origin_list = resp.data;
-        }
-        this.loading = false;
-      });
-      // }
-    }
+  computed: {
+    placeholder_computed() {
+      return this.value ? null : this.placeholder;
+    },
   },
 
   methods: {
-    initOptions() {
-      this.options = [...this.origin_list];
-    },
-
-    filter(value, update) {
-      if (value === '') {
-        update(() => {
-          this.initOptions();
-        });
+    filter(value, update, abort) {
+      if (value.length < 3) {
+        abort();
         return;
       }
       update(() => {
-        const needle = value.toLowerCase();
-        this.options = this.origin_list.filter((option) => {
-          return multiMatch(needle, option, this.search_fields);
-        });
+        this.loading = true;
+        // No need of multiFieldSearch here. The api already checks all the necessary fields with a single search term.
+        this.$api
+          .get('serial-selection', {
+            params: {
+              search: value,
+              wo_key: this.work_order?._key,
+              product_key: this.product?._key,
+            },
+          })
+          .then((resp) => {
+            this.options = resp.data;
+            this.loading = false;
+          });
       });
     },
   },
