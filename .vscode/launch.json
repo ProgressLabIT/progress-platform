@@ -54,6 +54,14 @@
         "webpack:///./src/*": "${webRoot}/*",
         "webpack:///src/*": "${webRoot}/*"
       }
+    },
+    {
+      "name": "Launch Cypress",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/testing",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "open-cypress"]
     }
   ]
 }

@@ -6,7 +6,6 @@
     filled
     :loading="loading"
     :label-slot="!!label"
-    :stack-label="stackLabel"
     :dense="dense"
     :hint="$t('serial_autocomplete_hint')"
     :placeholder="placeholder_computed"
@@ -18,6 +17,7 @@
     input-debounce="500"
     :emit-value="keyOnly"
     :map-options="keyOnly"
+    :work_order_key="work_order_key"
     @filter="filter"
     @update:model-value="(selection) => $emit('select', selection)"
   >
@@ -84,6 +84,11 @@ export default {
       default: undefined,
     },
 
+    work_order_key: {
+      type: String,
+      default: undefined,
+    },
+
     product: {
       type: Object,
       default: undefined,
@@ -119,7 +124,7 @@ export default {
           .get('serial-selection', {
             params: {
               search: value,
-              wo_key: this.work_order?._key,
+              wo_key: this.work_order?._key || this.work_order_key,
               product_key: this.product?._key,
             },
           })
