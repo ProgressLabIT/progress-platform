@@ -147,7 +147,9 @@ async def put_kafka_topic(topic: str):
 @router.delete("/kafka/topic/{topic}")
 async def delete_kafka_topic(topic: str):
   try:
-    message = KafkaAdmin.getInstance().delete_topic(topic)
+    topics = []
+    topics.append(topic)
+    message = KafkaAdmin.getInstance().delete_topic(topics)
     return APIResponse(message = message)
   except:
     status_code = 500
@@ -175,7 +177,9 @@ async def list_kafka_topic():
 @router.get("/kafka/topic/{topic}")
 async def get_kafka_topic(topic: str):
   try:
-    message = KafkaAdmin.getInstance().describe_topic(topic)
+    topics = []
+    topics.append(topic)
+    message = KafkaAdmin.getInstance().describe_topic(topics)
     return APIResponse(message = message)
   except:
     status_code = 500
