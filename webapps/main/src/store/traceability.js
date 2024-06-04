@@ -102,6 +102,10 @@ const traceability = {
 
       return batchSteps.find(({ _key }) => _key === stepKey);
     },
+
+    getBatchSerials: (state) => () => {
+      return state.batch_serials;
+    },
   },
 
   mutations: {
