@@ -63,9 +63,9 @@ class KafkaAdmin:
              message += "partition {} leader: {}, replicas: {}, isrs: {} errstr: {}".format(p.id, p.leader, p.replicas, p.isrs, errstr)
       return message
 
-    def describe_topic(self, topic):
-      topics = TopicCollection({topic})
-      futureMap = self.admin_client.describe_topics(topics, request_timeout=10, include_authorized_operations=False)
+    def describe_topic(self, topics):
+      topicsColl = TopicCollection(topics)
+      futureMap = self.admin_client.describe_topics(topicsColl, request_timeout=10, include_authorized_operations=False)
       message = ""
       for topic_name, future in futureMap.items():
         try:

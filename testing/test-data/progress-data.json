@@ -1,0 +1,8 @@
+{
+  "user": {
+    "username": "simone",
+    "password": "simone"
+  },
+  "kafka-topic": "test-topic",
+  "kafka-topic-not-present": "test-topic-not-present"
+}
