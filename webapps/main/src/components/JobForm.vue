@@ -5,7 +5,7 @@
         <div class="text-h3 q-px-none q-pt-none nowrap">
           {{ step.title }}
         </div>
-        <div class="text-body2 text-low" style="white-space: pre-line;">
+        <div class="text-body2 text-low" style="white-space: pre-line">
           {{ step.description }}
         </div>
       </div>
@@ -56,6 +56,10 @@ const props = defineProps({
     type: /** @type {import('vue').PropType<Step>} */ (Object),
     required: true,
   },
+  work_order_key: {
+    type: String,
+    default: null,
+  },
 });
 
 const store = useStore();
@@ -101,6 +105,9 @@ const isJobActive = computed(
 
 const { open: openPrintDialog, isAvailable } = usePrintDialog({
   context: 'step',
-  contextData: props.step,
+  contextData: {
+    ...props.step,
+    work_order_key: props.work_order_key,
+  },
 });
 </script>

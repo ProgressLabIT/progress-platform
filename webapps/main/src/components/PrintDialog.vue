@@ -69,6 +69,13 @@
       >
         <LoadingSignal v-if="isLoadingTemplate" />
         <template v-else>
+          <BaseAutocompleteSerial
+            v-if="context.type === 'step'"
+            v-model="serialModel"
+            :label="$capitalize($t('serial'))"
+            :work_order_key="context.step.work_order_key"
+          >
+          </BaseAutocompleteSerial>
           <template
             v-for="(pageSchema, index) in selectedTemplate.template.schemas"
             :key="index"
@@ -176,6 +183,7 @@ import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
+import BaseAutocompleteSerial from './BaseAutocompleteSerial.vue';
 
 const props = defineProps({
   context: {
@@ -201,6 +209,8 @@ const activeStep = ref(0);
 const selectedTemplate = ref();
 const isLoadingTemplate = ref(false);
 const formModel = ref();
+const serialModel = ref();
+
 async function selectTemplate(template) {
   activeStep.value = 1;
   selectedTemplate.value = undefined;
