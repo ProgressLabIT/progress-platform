@@ -74,6 +74,7 @@
             v-model="serialModel"
             :label="$capitalize($t('serial'))"
             :work_order_key="context.step.work_order_key"
+            @select="selectSerial"
           >
           </BaseAutocompleteSerial>
           <template
@@ -211,7 +212,20 @@ const isLoadingTemplate = ref(false);
 const formModel = ref();
 const serialModel = ref();
 
+const selectedTemplateBK = ref();
+
+async function selectSerial(serial) {
+  if (serial) {
+    const { data } = await api.get(`serial/${serial._key}`);
+    props.context.setSelectedSerial(data);
+  } else {
+    props.context.setSelectedSerial(null);
+  }
+  selectTemplate(selectedTemplateBK.value);
+}
+
 async function selectTemplate(template) {
+  selectedTemplateBK.value = template;
   activeStep.value = 1;
   selectedTemplate.value = undefined;
   await nextTick();

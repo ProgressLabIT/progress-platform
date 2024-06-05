@@ -97,6 +97,20 @@ def get_serial_selection(
 # SERIALS
 # ---------------------------------------------
 
+@router.get('/serial/{serial_key}')
+def get_serial_from_key(serial_key: str):
+  try:
+    return db.collection('Serial').get(serial_key)
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching serials from the db.",
+        error=traceback.format_exc()
+      )
+    )
+
+
 
 @router.get('/serial')
 async def search_serials(
