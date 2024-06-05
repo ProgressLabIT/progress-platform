@@ -6,7 +6,7 @@ const data = require("../test-data/progress-data.json");
 describe("Test Kafka topic ", () => {
   it("don't really care about the first delete, it is just to clean it up", (done) => {
     request(api.baseUrl)
-      .delete(`/api/kafka/topic/${data["kafka-topic"]}`)
+      .delete(`/api/kafka/topic/${data["kafka_topic"]}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .end(function (err, res) {
@@ -16,13 +16,13 @@ describe("Test Kafka topic ", () => {
 
   it("should successfully create the kafka topic", (done) => {
     request(api.baseUrl)
-      .put(`/api/kafka/topic/${data["kafka-topic"]}`)
+      .put(`/api/kafka/topic/${data["kafka_topic"]}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .end(function (err, res) {
         expect(res.statusCode).to.be.equal(200);
         expect(res.body.message).to.be.equal(
-          `Topic ${data["kafka-topic"]} created`
+          `Topic ${data["kafka_topic"]} created`
         );
         done();
       });
@@ -30,7 +30,7 @@ describe("Test Kafka topic ", () => {
 
   it("should be able to retrieve info on the just created topics", (done) => {
     request(api.baseUrl)
-      .get(`/api/kafka/topic/${data["kafka-topic"]}`)
+      .get(`/api/kafka/topic/${data["kafka_topic"]}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .end(function (err, res) {
@@ -42,7 +42,7 @@ describe("Test Kafka topic ", () => {
 
   it("should fail on not present topic", (done) => {
     request(api.baseUrl)
-      .get(`/api/kafka/topic/${data["kafka-topic-not-present"]}`)
+      .get(`/api/kafka/topic/${data["kakafka_topic_not_present"]}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .end(function (err, res) {
@@ -59,9 +59,9 @@ describe("Test Kafka topic ", () => {
       .set("Content-Type", "application/json")
       .end(function (err, res) {
         expect(res.statusCode).to.be.equal(200);
-        expect(res.body.message).to.contain(`${data["kafka-topic"]}`);
+        expect(res.body.message).to.contain(`${data["kafka_topic"]}`);
         expect(res.body.message).not.to.contain(
-          `${data["kafka-topic-not-present"]}`
+          `${data["kakafka_topic_not_present"]}`
         );
         done();
       });
@@ -69,13 +69,13 @@ describe("Test Kafka topic ", () => {
 
   it("should be able to delete the created topic", (done) => {
     request(api.baseUrl)
-      .delete(`/api/kafka/topic/${data["kafka-topic"]}`)
+      .delete(`/api/kafka/topic/${data["kafka_topic"]}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .end(function (err, res) {
         expect(res.statusCode).to.be.equal(200);
         expect(res.body.message).to.be.equal(
-          `Topic ${data["kafka-topic"]} deleted`
+          `Topic ${data["kafka_topic"]} deleted`
         );
         done();
       });
@@ -83,13 +83,13 @@ describe("Test Kafka topic ", () => {
 
   it("should fail deleting an not present topic", (done) => {
     request(api.baseUrl)
-      .delete(`/api/kafka/topic/${data["kafka-topic-not-present"]}`)
+      .delete(`/api/kafka/topic/${data["kakafka_topic_not_present"]}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .end(function (err, res) {
         expect(res.statusCode).to.be.equal(200);
         expect(res.body.message).to.contain(
-          `Failed to delete topic ${data["kafka-topic-not-present"]}`
+          `Failed to delete topic ${data["kakafka_topic_not_present"]}`
         );
         done();
       });

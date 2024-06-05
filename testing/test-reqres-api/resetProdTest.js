@@ -1,10 +1,10 @@
 const request = require("supertest");
 const expect = require("chai").expect;
-const reqres = require("../config/progress.config.json");
+const api = require("../config/progress.config.json");
 
 describe("Reset PROD API tests", () => {
   it("should successfully reset the prod envinronment", (done) => {
-    request(reqres.baseUrl)
+    request(api.baseUrl)
       .delete("/api/reset/prod")
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
