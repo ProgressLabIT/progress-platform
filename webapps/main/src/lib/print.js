@@ -63,6 +63,7 @@ class TemplateContextFactory {
 
 export class TemplateContext {
   type = 'NONE';
+  serial = null;
 
   /** @protected */
   _store;
@@ -109,6 +110,15 @@ export class TemplateContext {
             this.session_data().user.surname,
             this.session_data().user.name,
           );
+        case 'serial':
+          return this.serial?.serial;
+        case 'serial_qt':
+          return this.serial?.quantity;
+        case 'serial_create_date':
+          return extractDate(this.serial?.created);
+        case 'serial_create_time':
+          return extractTime(this.serial?.created);
+
         default:
           return undefined;
       }
@@ -119,6 +129,10 @@ export class TemplateContext {
 
   getCustomFieldValue(_customFieldKey) {
     return undefined;
+  }
+
+  setSelectedSerial(serial) {
+    this.serial = serial;
   }
 }
 
@@ -200,6 +214,13 @@ export class IssueTypeContext extends TemplateContext {
           return product.code;
         case 'product.description':
           return product.description;
+
+        case 'serial.serial_number':
+          if (this.serial) {
+            return this.serial.serial;
+          } else {
+            return '';
+          }
 
         default:
           return undefined;
@@ -323,6 +344,16 @@ export class StepContext extends TemplateContext {
     const data = batchStep.form_data.find(
       ({ form_field_key }) => form_field_key === formField._key,
     );
-    return data?.value;
+    if (data?.value) {
+      return data?.value;
+    }
+
+    if (this.serial) {
+      const serial_data = this.serial.data.find(
+        ({ form_field_key }) => form_field_key === formField._key,
+      );
+
+      return serial_data?.value;
+    }
   }
 }
