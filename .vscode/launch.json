@@ -45,6 +45,14 @@
       "runtimeArgs": ["run", "dev"]
     },
     {
+      "name": "Launch test",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/testing",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "test"]
+    },
+    {
       "name": "WSL Chrome",
       "type": "chrome",
       "request": "launch",
