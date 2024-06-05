@@ -180,6 +180,11 @@ const templateDataOptions = [
   'issue.close_time',
   'issue.close_user',
   'issue.status',
+
+  'serial',
+  'serial_qt',
+  'serial_create_date',
+  'serial_create_time',
 ];
 
 const { t, locale } = useI18n();
