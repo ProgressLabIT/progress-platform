@@ -178,7 +178,7 @@
 <script setup>
 import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent } from 'quasar';
-import { nextTick, ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -214,15 +214,27 @@ const serialModel = ref();
 
 const selectedTemplateBK = ref();
 
-async function selectSerial(serial) {
-  if (serial) {
-    const { data } = await api.get(`serial/${serial._key}`);
+async function loadSerial(serial_key) {
+  if (serial_key) {
+    const { data } = await api.get(`serial/${serial_key}`);
     props.context.setSelectedSerial(data);
   } else {
     props.context.setSelectedSerial(null);
   }
+}
+
+async function selectSerial(serial) {
+  let serial_key = serial?._key;
+  await loadSerial(serial_key);
   selectTemplate(selectedTemplateBK.value);
 }
+
+onMounted(() => {
+  //TODO: va verificato
+  if (props.context.type === 'issue' && props.context.links) {
+    loadSerial(props.context.link);
+  }
+});
 
 async function selectTemplate(template) {
   selectedTemplateBK.value = template;
