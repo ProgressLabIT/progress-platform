@@ -33,11 +33,12 @@ function createEvent(
     form_data = [],
     completed_batch_qt = null,
     step_changed_qt = null,
+    batch_serials = null,
   },
 ) {
   const user_key = session_state.user._key;
   const job = state.working_job_data;
-  const batch_serials = state.batch_serials;
+  const serials = batch_serials ? batch_serials : state.batch_serials;
 
   const event = {
     event_type,
@@ -53,7 +54,7 @@ function createEvent(
     form_data,
     completed_batch_qt,
     timestamp, // ISO format
-    batch_serials: batch_serials,
+    batch_serials: serials,
     step_changed_qt: step_changed_qt,
   };
 

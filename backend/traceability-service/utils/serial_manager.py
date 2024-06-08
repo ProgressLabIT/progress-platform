@@ -59,26 +59,34 @@ class SerialManager:
     def handleMessage(self, key, serial):
         print(serial)
 
-        serial_event : SerialEvent = jsonable_encoder(SerialEvent(**serial))
-        match serial['operation']:
-           case SerialEventType.CREATE_FROM_BATCH:
-              self.create_from_batch(serial_event=serial_event)
-           case SerialEventType.CREATE_AND_FINALIZE:
-              self.create_serial(serial_data=serial_event['serial'], batch_key=None, finalize=True)
-           case SerialEventType.FINALIZE_BATCH:
-              self.finalize_serial(serial_event=serial_event, batch_key=serial_event['batch_key'], ensure_qt=False)
-           case SerialEventType.FINALIZE_WO:
-              self.finalize_serial(serial_event=serial_event, batch_key=serial_event['batch_key'], ensure_qt=True)
-           case SerialEventType.UPDATE:
-              self.update_serial(serial_data=serial_event['serial'])
-           case SerialEventType.DELETE:
-              self.delete_serial(serial_key=serial_event['serial'].get("_key"), soft=True)
-           case SerialEventType.UPDATE_DATA_FROM_BATCH:
-              self.update_serial_data(serial_event=serial_event, batch_key=serial_event['batch_key'], step_data=serial_event['step_data'])
-           case SerialEventType.LINK_BATCH:
-              self.link_batch_serial(batch_key=serial_event['batch_key'], batch_serials=serial_event['batch_serials'])
-           case _:
-              print("Error")
+        try:
+          serial_event : SerialEvent = jsonable_encoder(SerialEvent(**serial))
+          match serial['operation']:
+             case SerialEventType.CREATE_FROM_BATCH:
+                self.create_from_batch(serial_event=serial_event)
+             case SerialEventType.CREATE_AND_FINALIZE:
+                self.create_serial(serial_data=serial_event['serial'], batch_key=None, finalize=True)
+             case SerialEventType.FINALIZE_BATCH:
+                self.finalize_serial(serial_event=serial_event, batch_key=serial_event['batch_key'], ensure_qt=False)
+             case SerialEventType.FINALIZE_WO:
+                self.finalize_serial(serial_event=serial_event, batch_key=serial_event['batch_key'], ensure_qt=True)
+             case SerialEventType.UPDATE:
+                self.update_serial(serial_data=serial_event['serial'])
+             case SerialEventType.DELETE:
+                self.delete_serial(serial_key=serial_event['serial'].get("_key"), soft=True)
+             case SerialEventType.UPDATE_DATA_FROM_BATCH:
+                self.update_serial_data(serial_event=serial_event, batch_key=serial_event['batch_key'], step_data=serial_event['step_data'])
+             case SerialEventType.LINK_BATCH:
+                self.link_batch_serial(batch_key=serial_event['batch_key'], batch_serials=serial_event['batch_serials'])
+             case _:
+                print("Error")
+        except:
+          print(traceback.format_exc())
+          self.notify_results(dict(
+              notification = SerialNotificationType.ERROR,
+              error_code = SerialNotificationErrorCode.EXCEPTION,
+              error = traceback.format_exc()
+           ))
 
     def retrieve_serial_in_batch(self, batch_key):
        cursor = db.aql.execute(
@@ -295,6 +303,10 @@ class SerialManager:
                       data.value = step['value']
              serial_key = serial.key
              db.collection('Serial').update(dict(serial.dict(), _key=serial_key), check_rev=False)
+             self.notify_results(dict(
+                 serial = serial.serial,
+                 notification = SerialNotificationType.UPDATED
+              ))
            except:
                print(traceback.format_exc())
                self.notify_results(dict(
@@ -303,10 +315,6 @@ class SerialManager:
                   error_code = SerialNotificationErrorCode.EXCEPTION,
                   error = traceback.format_exc()
                ))
-        self.notify_results(dict(
-                serial = serial.serial,
-                notification = SerialNotificationType.UPDATED
-             ))
 
     def finalize_serial(self, serial_event, batch_key, ensure_qt):
         if (ensure_qt):
