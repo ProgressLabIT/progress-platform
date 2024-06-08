@@ -731,8 +731,12 @@ class ProductionActivityEvent(BaseEvent):
     # Update WorkOrder status
     wo = self.get_work_order_data()
 
+    stage = WorkStatus.STARTED
+    if self.job.first_phase:
+      stage = WorkStatus.SERIAL_SELECTED
+
     if wo.status == WorkStatus.CREATED:
-      wo.status = WorkStatus.STARTED
+      wo.status = stage
       wo.start = self.info.timestamp
       wo_update = model_to_db_dict(wo)
       self.tx.collection('WorkOrder').update(wo_update)
@@ -741,7 +745,7 @@ class ProductionActivityEvent(BaseEvent):
     job_update=dict(
       _key = self.info.job_key,
       start = self.info.timestamp,
-      stage = WorkStatus.STARTED,
+      stage = stage,
       last_work_session_started = self.info.work_session_key,
       active_batch_key = self.batch.key,
       active_batch_qt = self.batch.qt_total,

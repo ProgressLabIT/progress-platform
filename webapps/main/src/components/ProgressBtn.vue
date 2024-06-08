@@ -259,7 +259,8 @@ export default {
       let missing_counter = false;
       batch_serials.forEach((serial) => {
         let counter = serial.counter_key;
-        if (!counter) {
+        let serialNo = serial.serial;
+        if (!counter && !serialNo) {
           missing_counter = true;
         }
       });
