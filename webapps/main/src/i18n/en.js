@@ -23,6 +23,7 @@ export default {
   batch_completed_quantity_question:
     'How many new pieces do you want to declare?',
   batch_serial_select: 'Select batch serial',
+  batch_declare_serial: 'Type batch serial number',
   bom: {
     add_line: 'add line',
     alerts: {
@@ -827,6 +828,8 @@ export default {
   yes: 'Yes',
   mandatory: 'Mandatory',
   fill_mandatory_fields: 'Fill all mandatory fields before completing the step',
+  declare_all_serials:
+    'Please declare all serials in the batch before completing the step',
   traceability: {
     enabled: 'Enable traceability',
     include_deleted: 'Include deleted',
