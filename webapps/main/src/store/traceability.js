@@ -296,7 +296,10 @@ const traceability = {
       commit('UPDATE_BATCH', batch_data);
     },
 
-    async linkBatchSerial({ commit, state, rootState }, { stepKey }) {
+    async linkBatchSerial(
+      { commit, state, rootState },
+      { stepKey, batch_serials },
+    ) {
       const batchStep = state.current_batch_data.step_data.find(
         ({ _key }) => _key === stepKey,
       );
@@ -305,6 +308,7 @@ const traceability = {
       const event = createEvent(state, rootState.session, {
         event_type: 'UPDATE_BATCH_SERIALS',
         step_key: batchStep._key,
+        batch_serials: batch_serials,
         timestamp: now.toISO(),
       });
 

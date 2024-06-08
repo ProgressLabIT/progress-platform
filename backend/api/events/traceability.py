@@ -868,8 +868,9 @@ class ProductionActivityEvent(BaseEvent):
   def link_batch_serial(self):
     self.get_job_data()
     self.get_active_batch()
-    self.book_serials()
-    self.send_link_batch_serial_event()
+    if not self.job.first_phase:
+      self.book_serials()
+      self.send_link_batch_serial_event()
 
     # Update WorkOrder status
     wo = self.get_work_order_data()
@@ -985,7 +986,7 @@ class ProductionActivityEvent(BaseEvent):
       )
     )
 
-    product = self.tx.collection('Product').get(self.info.product_key)
+    product = self.tx.collection('Product').get(self.job.product_key)
     if (product['traceability_level'] != TraceabilityLevel.NONE):
         # update batch serials data
         self.finalize_batch_serial(completed_batch_qt)
