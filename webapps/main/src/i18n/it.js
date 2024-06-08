@@ -23,6 +23,7 @@ export default {
   batch: 'lotto',
   batch_completed_quantity_question: 'Quanti nuovi pezzi vuoi dichiarare?',
   batch_serial_select: 'Seleziona seriali batch',
+  batch_declare_serial: 'Inserisci i seriali del batch',
   bom: {
     add_line: 'aggiungi riga',
     alerts: {
@@ -836,6 +837,7 @@ export default {
   yes: 'Sì',
   mandatory: 'Obbligatorio',
   fill_mandatory_fields: 'Compila tutti i campi obbligatori per continuare',
+  declare_all_serials: 'Inserisci tutti i seriali del batch per continuare',
   traceability: {
     enabled: 'abilita tracciabilità',
     include_deleted: 'includi cancellati',

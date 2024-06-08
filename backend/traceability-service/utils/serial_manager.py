@@ -338,7 +338,8 @@ class SerialManager:
                     error_code = SerialNotificationErrorCode.EXCEPTION,
                     error = traceback.format_exc()
                  ))
-        self.notify_results(dict(
+             self.notify_results(dict(
+                  serial_key = serial.key,
                   serial = serial_no,
                   notification = SerialNotificationType.FINALIZED
                ))
