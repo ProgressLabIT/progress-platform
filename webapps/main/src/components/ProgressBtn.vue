@@ -22,7 +22,9 @@
 <script>
 import { Dialog, Loading } from 'quasar';
 import { mapState } from 'vuex';
+import { timestamp } from '@/lib/TimeHandling.js';
 import { api } from 'boot/axios';
+import SerialBatchDeclareSerialNumber from '../components/job/SerialBatchDeclareSerialNumber.vue';
 import SerialBatchSelectionDialog from '../components/job/SerialBatchSelectionDialog.vue';
 import QuantityPickerDialog from './QuantityPickerDialog.vue';
 
@@ -84,7 +86,7 @@ export default {
       };
 
       if (this.job.stage === 'started') {
-        this.linkSerials();
+        //this.linkSerials();
         return link_serials;
       } else if ('parameters' in this.job && this.job.parameters.step_check) {
         if (!this.current_step_is_last && !this.job.first_phase) {
@@ -147,6 +149,10 @@ export default {
       return this.$t('job.alerts.next_batch_not_available');
     },
 
+    session_data() {
+      return this.$store.state.session;
+    },
+
     current_step_key: {
       get() {
         return this.$store.state.traceability.current_step_key;
@@ -206,20 +212,24 @@ export default {
     },
 
     async linkSerials() {
-      const { data: batch_serials } = await this.$api.get('serial-wo-phase', {
+      const { data: step_serials } = await this.$api.get('serial-wo-phase', {
         params: {
           wo_key: this.job.wo_key,
           phase_key: this.job.phase_key,
         },
       });
       let selected_serials = [];
-      if (batch_serials && batch_serials.length > 0) {
-        selected_serials = await this.selectSerialBatch(batch_serials);
-        this.$store.commit('UPDATE_BATCH_SERIALS', selected_serials);
+      if (step_serials && step_serials.length > 0) {
+        selected_serials = await this.selectSerialBatch(step_serials);
+        if (selected_serials.length <= 0) {
+          return;
+        }
+        await this.$store.dispatch('linkBatchSerial', {
+          stepKey: this.current_step_key,
+          batch_serials: selected_serials,
+        });
+        await this.$store.commit('UPDATE_step_serials', selected_serials);
       }
-      await this.$store.dispatch('linkBatchSerial', {
-        stepKey: this.current_step_key,
-      });
     },
 
     async selectSerialBatch(batch_serials) {
@@ -234,7 +244,79 @@ export default {
             resolve(selected_serials);
           })
           .onCancel(() => {
-            resolve(null);
+            resolve([]);
+          });
+      });
+    },
+
+    async ensureBatchSerialCounter() {
+      const { data: batch_serials } = await this.$api.get('serial-batch', {
+        params: {
+          batch_key: this.job.active_batch_key,
+        },
+      });
+
+      let missing_counter = false;
+      batch_serials.forEach((serial) => {
+        let counter = serial.counter_key;
+        if (!counter) {
+          missing_counter = true;
+        }
+      });
+
+      if (missing_counter) {
+        let updated_serials =
+          await this.decleareSerialNoForBatch(batch_serials);
+        let still_missing_counter = false;
+
+        if (updated_serials.length <= 0) {
+          return false;
+        }
+
+        const user = this.session_data.user._key;
+        updated_serials.forEach((serial) => {
+          this.postSerialUpdate(serial, user);
+        });
+
+        updated_serials.forEach((serial) => {
+          let counter = serial.counter_key;
+          let serialNo = serial.serial;
+          if (!counter && !serialNo) {
+            still_missing_counter = true;
+          }
+        });
+
+        return !still_missing_counter;
+      } else {
+        return true;
+      }
+    },
+
+    async postSerialUpdate(serial, user) {
+      serial.updated_by = `User/${user}`; // temporarily hardcoding DB id
+      const event = {
+        event_type: 'SERIAL_UPDATED',
+        user_key: user,
+        user_session_key: this.session_data.session_key,
+        timestamp: timestamp(),
+        serial_data: serial,
+      };
+      await this.$api.post('event', event);
+    },
+
+    async decleareSerialNoForBatch(batch_serials) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          component: SerialBatchDeclareSerialNumber,
+          componentProps: {
+            batch_serials,
+          },
+        })
+          .onOk((updated_serials) => {
+            resolve(updated_serials);
+          })
+          .onCancel(() => {
+            resolve([]);
           });
       });
     },
@@ -259,6 +341,13 @@ export default {
       // Values will change after committing mutation save to use for navigation later on
       const current_step_was_last = this.current_step_is_last;
       const current_batch_was_last = this.current_batch_is_last;
+
+      if (current_step_was_last) {
+        if (!(await this.ensureBatchSerialCounter())) {
+          window.alert(this.$t('declare_all_serials'));
+          return;
+        }
+      }
 
       if (current_step_was_last) {
         can_proceed = window.confirm(this.confirm_batch_done_message);

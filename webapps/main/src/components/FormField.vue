@@ -18,7 +18,11 @@
           (field.required || props.field.mandatory ? !!value : true) ||
           $t('field_required_alert'),
       ]"
-    />
+    >
+      <template v-if="props.field.mandatory" #before>
+        <q-icon :name="mandatory_icon"></q-icon>
+      </template>
+    </q-input>
 
     <!-- NUMBER -->
     <q-input
@@ -38,7 +42,11 @@
           (field.required || props.field.mandatory ? !!value : true) ||
           $t('field_required_alert'),
       ]"
-    />
+    >
+      <template v-if="props.field.mandatory" #before>
+        <q-icon :name="mandatory_icon"></q-icon>
+      </template>
+    </q-input>
 
     <!-- BOOLEAN -->
     <q-checkbox
@@ -53,7 +61,11 @@
           $t('field_required_alert'),
       ]"
       @update:model-value="fieldValue = $event"
-    />
+    >
+      <template v-if="props.field.mandatory" #before>
+        <q-icon :name="mandatory_icon"></q-icon>
+      </template>
+    </q-checkbox>
 
     <!-- TERNARY -->
     <!-- TODO: Implement required behavior (?) -->
@@ -127,6 +139,9 @@
           </q-btn>
         </div>
       </div>
+      <template v-if="props.field.mandatory" #before>
+        <q-icon :name="mandatory_icon"></q-icon>
+      </template>
     </q-card>
 
     <!-- CHOICE -->
@@ -146,7 +161,11 @@
       stack-label
       input-class="cursor-pointer"
       @filter="onFilter"
-    />
+    >
+      <template v-if="props.field.mandatory" #before>
+        <q-icon :name="mandatory_icon"></q-icon>
+      </template>
+    </q-select>
 
     <!-- DATE -->
     <q-input
@@ -169,6 +188,10 @@
           </div>
         </q-date>
       </q-popup-proxy>
+      >
+      <template v-if="props.field.mandatory" #before>
+        <q-icon :name="mandatory_icon"></q-icon>
+      </template>
     </q-input>
 
     <!-- TIME -->
@@ -192,6 +215,9 @@
           </div>
         </q-time>
       </q-popup-proxy>
+      <template v-if="props.field.mandatory" #before>
+        <q-icon :name="mandatory_icon"></q-icon>
+      </template>
     </q-input>
 
     <!-- FILES -->
@@ -204,7 +230,11 @@
         @add-files="addFiles"
         @delete-file="deleteFile"
         @restore-file="restoreFile"
-      />
+      >
+        <template v-if="props.field.mandatory" #before>
+          <q-icon :name="mandatory_icon"></q-icon>
+        </template>
+      </FilesList>
     </div>
 
     <div class="smaller q-px-sm q-mt-xs">
@@ -239,6 +269,10 @@ const props = defineProps({
   disable: {
     type: Boolean,
     default: false,
+  },
+  mandatory_icon: {
+    type: String,
+    default: 'mdi-asterisk-circle-outline',
   },
 });
 
