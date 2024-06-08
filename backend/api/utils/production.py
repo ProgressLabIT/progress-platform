@@ -88,6 +88,12 @@ class Queries:
         && (@target_key ? (IS_ARRAY(@target_key) ? q.subqueue_target_key IN @target_key : q.subqueue_target_key == @target_key) : true)
         && LENGTH(q.jobs)
 
+      LET queue_jobs = (
+        FOR j IN jobs
+        FILTER j.assigned_to == q.subqueue_target_key
+        RETURN j
+      )
+
       LET new_queue = REMOVE_VALUE(
         FLATTEN(
           FOR wo IN wo_queue
