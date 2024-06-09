@@ -99,7 +99,7 @@ export default {
             (this.user.name + this.user.surname).replace(/\s+/g, '') +
             '.jpg'
           ).toLowerCase()
-        : 'N/A';
+        : 'NA.jpg';
     },
 
     initials() {

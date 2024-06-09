@@ -20,7 +20,7 @@ from utils.production import (
   update_target_queue
 )
 from utils.traceability import _update_job_progress, Queries as TraceabilityQueries
-
+from utils.server_event_manager import ServerEventManager
 
 router = APIRouter()
 
@@ -171,6 +171,7 @@ async def create_work_order(new_wo: WorkOrderNew):
 
   # Commit transaction
   tx.commit_transaction()
+  ServerEventManager.getInstance().notifyProductionRefresh()
   return APIResponse(
     message="Work order and jobs created",
     detail=dict(work_order=new_wo_record, jobs=new_job_records)
@@ -215,7 +216,7 @@ async def update_work_order(
     updated_wo_data = tx.collection('WorkOrder').update(wo_update, return_new=True)['new']
 
     tx.commit_transaction()
-
+    ServerEventManager.getInstance().notifyProductionRefresh()
     return APIResponse(detail=updated_wo_data)
 
   except Exception:
@@ -312,7 +313,7 @@ async def update_work_order_quantities(
       )
 
     tx.commit_transaction()
-
+    ServerEventManager.getInstance().notifyProductionRefresh()
     return APIResponse(detail=updated_wo_data)
 
   except Exception:
@@ -410,7 +411,7 @@ async def delete_work_order(wo_key: str):
     tx.aql.execute(query, bind_vars=bind_vars)
 
     tx.commit_transaction()
-
+    ServerEventManager.getInstance().notifyProductionRefresh()
     return APIResponse(message='Work order deleted correctly')
 
   except Exception as e:
@@ -540,7 +541,7 @@ async def update_queue(queue_update: Queue):
       error_str=traceback.format_exc()
     )
     raise HTTPException(status_code=status_code, detail=response)
-
+  ServerEventManager.getInstance().notifyProductionRefresh()
   return APIResponse(detail="Queue updated")
 
 @router.put('/queue/operator/{operator_key}')
@@ -791,6 +792,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
     )
 
     tx.commit_transaction()
+    ServerEventManager.getInstance().notifyProductionRefresh()
     return APIResponse(detail=results, message="Jobs updated successfully")
 
   except:
@@ -805,5 +807,4 @@ async def update_jobs(job_updates:List[JobUpdate]):
     )
 
     raise HTTPException(status_code=status_code, detail=response)
-
 

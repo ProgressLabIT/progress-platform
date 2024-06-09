@@ -350,13 +350,9 @@
 <script>
 import { storeToRefs } from 'pinia';
 import { Dialog } from 'quasar';
+import { defineAsyncComponent } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
-import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
-import BaseDialog from '@/components/BaseDialog.vue';
-import BaseProgressBar from '@/components/BaseProgressBar.vue';
-import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
-import NoDataAlert from '@/components/NoDataAlert.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useConfigStore } from '../stores/config';
 import OperatorJobsReorderDialog from './OperatorJobsReorderDialog.vue';
@@ -365,11 +361,21 @@ export default {
   name: 'JobList',
 
   components: {
-    BaseAutocompleteUser,
-    BaseProgressBar,
-    BaseUserAvatar,
-    BaseDialog,
-    NoDataAlert,
+    BaseAutocompleteUser: defineAsyncComponent(
+      () => import('@/components/BaseAutocompleteUser.vue'),
+    ),
+    BaseProgressBar: defineAsyncComponent(
+      () => import('@/components/BaseProgressBar.vue'),
+    ),
+    BaseUserAvatar: defineAsyncComponent(
+      () => import('@/components/BaseUserAvatar.vue'),
+    ),
+    BaseDialog: defineAsyncComponent(
+      () => import('@/components/BaseDialog.vue'),
+    ),
+    NoDataAlert: defineAsyncComponent(
+      () => import('@/components/NoDataAlert.vue'),
+    ),
   },
 
   props: {
