@@ -156,7 +156,7 @@
         >
           <template #append>
             <q-icon name="mdi-information-outline" class="col-auto" size="sm">
-              <q-tooltip :delay="300" class="text-body2">
+              <q-tooltip :delay="Number(300)" class="text-body2">
                 <span>
                   {{ $capitalize($t('production.search_explainer')) }}:
                 </span>
