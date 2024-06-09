@@ -386,9 +386,9 @@ export default {
       department_search_text: undefined,
       editing: false,
       saving: false,
-      polling_instance: undefined,
+      //polling_instance: undefined,
       operator_search_text: undefined,
-
+      events: NaN,
       showFilterDrawer: false,
     };
   },
@@ -480,17 +480,37 @@ export default {
       this.$store.dispatch('loadJobAssignments'),
     ]).then((this.vuex_ready = true));
 
-    this.polling_instance = setInterval(() => {
-      this.$store.dispatch('updateWorkOrderList');
-      this.$store.dispatch('loadJobAssignments');
-    }, 60000);
+    //this.polling_instance = setInterval(() => {
+    //  this.$store.dispatch('updateWorkOrderList');
+    //  this.$store.dispatch('loadJobAssignments');
+    //}, 10000);
+    let eventURL =
+      this.$api.defaults.baseURL + '/notification/production-notification';
+    this.events = new EventSource(eventURL, {
+      withCredentials: false,
+    });
+    this.events.addEventListener('production-notification', (event) => {
+      this.handleMessage(event);
+    });
   },
 
   beforeUnmount() {
-    clearInterval(this.polling_instance);
+    //clearInterval(this.polling_instance);
+
+    if (this.events) {
+      this.events.close();
+    }
   },
 
   methods: {
+    handleMessage(message) {
+      let event = JSON.parse(message.data);
+      if (event.notification === 'REFRESH') {
+        this.$store.dispatch('updateWorkOrderList');
+        this.$store.dispatch('loadJobAssignments');
+      }
+    },
+
     updateHeight() {
       this.content_height =
         document.documentElement.clientHeight - header_plus_footer_height;

@@ -327,6 +327,7 @@
 <script>
 import { storeToRefs } from 'pinia';
 import { Dialog } from 'quasar';
+import { defineAsyncComponent } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
