@@ -8,7 +8,7 @@
     @click.stop="emit"
   >
     <q-tooltip
-      :delay="100"
+      :delay="Number(100)"
       :anchor="anchor"
       :self="self"
       :transition-show="transition_show"
