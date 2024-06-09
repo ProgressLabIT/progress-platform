@@ -2,7 +2,7 @@ import secrets
 import traceback
 from typing import List
 
-from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile, Request
 from starlette import status
 
 from models.org import *
@@ -12,6 +12,8 @@ from commons.utils.db import db
 from utils.file import FileHandler
 from utils.org import *
 
+from utils.server_event_manager import ServerEventManager
+from sse_starlette.sse import EventSourceResponse
 
 
 
@@ -172,4 +174,6 @@ async def archive_user(user_key: str):
     )
     raise HTTPException(status_code=status_code, detail=response)
 
-
+@router.get("/notification/{notification_key}")
+async def message_stream(request: Request, notification_key: str):
+    return EventSourceResponse(ServerEventManager.getInstance().push_events(request, notification_key))

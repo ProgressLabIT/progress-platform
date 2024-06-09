@@ -2,16 +2,12 @@ import traceback
 import json
 
 from base64 import b64decode
-from fastapi import APIRouter, HTTPException, Query, Request
-from utils.api import APIResponse
+from fastapi import APIRouter, HTTPException, Query
 from datetime import datetime
 from typing import Dict, List, Union
-from sse_starlette.sse import EventSourceResponse
 
-from commons.models.form import CustomField, CustomListValue, FieldType
-from commons.utils.db import db, model_to_db_dict
-from utils.server_event_manager import ServerEventManager
-
+from commons.models.form import CustomField
+from commons.utils.db import db
 
 from commons.utils.serial import Queries
 
@@ -104,7 +100,6 @@ def get_serial_from_key(serial_key: str):
     )
 
 
-
 @router.get('/serial')
 async def search_serials(
   serial_key: Union[List[str], None] = Query(default=None),
@@ -145,7 +140,4 @@ async def search_serials(
       )
     )
 
-@router.get("/notification")
-async def message_stream(request: Request):
-    return EventSourceResponse(ServerEventManager.getInstance().push_events(request, 'serial-notification'))
 
