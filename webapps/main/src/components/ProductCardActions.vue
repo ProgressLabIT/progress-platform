@@ -12,7 +12,7 @@
             {{ $capitalize(product.active ? $t('active') : $t('inactive')) }}
           </span>
           <q-tooltip
-            :delay="100"
+            :delay="Number(100)"
             anchor="top middle"
             self="bottom middle"
             transition-show="scale"

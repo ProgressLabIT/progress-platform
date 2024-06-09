@@ -54,11 +54,7 @@
           color="theme-blue"
           size="sm"
         >
-          <q-icon
-            name='mdi-timer-sand'
-            class="q-mr-sm"
-            size="14px"
-          />
+          <q-icon name="mdi-timer-sand" class="q-mr-sm" size="14px" />
           <strong>
             {{ calculateWorkloadHours(assignment.filtered_jobs) }}
           </strong>
@@ -69,12 +65,13 @@
             {{ assignment.total_workload_hours }}
           </strong>
           <q-tooltip
-            delay="200"
+            :delay="Number(200)"
             anchor="top middle"
             self="center middle"
             transition-show="fade"
             transition-hide="fade"
-            class="transparent text-low">
+            class="transparent text-low"
+          >
             {{ $capitalize($t('workload_hours')) }}
           </q-tooltip>
         </q-chip>
@@ -85,11 +82,7 @@
           color="theme-grey"
           size="sm"
         >
-          <q-icon
-            name='mdi-eye-outline'
-            class="q-mr-sm"
-            size="14px"
-          />
+          <q-icon name="mdi-eye-outline" class="q-mr-sm" size="14px" />
           <strong>
             {{ assignment.filtered_jobs.length }}
           </strong>
@@ -100,12 +93,13 @@
             {{ assignment.assigned_jobs_count }}
           </strong>
           <q-tooltip
-            delay="200"
+            :delay="Number(200)"
             anchor="top middle"
             self="center middle"
             transition-show="fade"
             transition-hide="fade"
-            class="transparent text-low">
+            class="transparent text-low"
+          >
             {{ $capitalize($t('shown', 2)) }}
           </q-tooltip>
         </q-chip>
@@ -195,12 +189,13 @@
                   <span @click="setSearch(field.name, props.row[field.name])">
                     {{ $capitalizeAll(props.row[field.name] || '') }}
                     <q-tooltip
-                      delay="500"
+                      :delay="Number(500)"
                       anchor="top left"
                       self="bottom left"
-                      :offset=[8,6]
+                      :offset="[8, 6]"
                       transition-show="fade"
-                      transition-hide="fade">
+                      transition-hide="fade"
+                    >
                       <template v-if="field.name === 'product_code'">
                         <div class="highlight">
                           {{ props.row.product_code }}
@@ -591,7 +586,9 @@ export default {
       for (let i = 0; i < this.assignments.length; i++) {
         const assignment = this.assignments[i];
 
-        const total_workload_hours = this.calculateWorkloadHours(assignment.assigned_jobs)
+        const total_workload_hours = this.calculateWorkloadHours(
+          assignment.assigned_jobs,
+        );
 
         // Match department filter (filter = undefined means no filter)
         const department_match = [
@@ -660,7 +657,9 @@ export default {
               name: this.$t('job.unassigned_jobs'),
               surname: '',
             },
-            total_workload_hours: this.calculateWorkloadHours(this.unassigned_jobs),
+            total_workload_hours: this.calculateWorkloadHours(
+              this.unassigned_jobs,
+            ),
             assigned_jobs_count: this.unassigned_jobs.length,
             filtered_jobs: filtered_unassigned_jobs,
           });
@@ -899,11 +898,13 @@ export default {
     calculateWorkloadHours(job_list) {
       const total_workload_seconds = job_list.reduce((sum, job) => {
         // Prevent negative workload when completed qt is higher than planned due to work order qt updates
-        return sum += job.parameters.std_processing_time * Math.max(0, job.qt_planned - job.qt_completed)
-      }, 0)
+        return (sum +=
+          job.parameters.std_processing_time *
+          Math.max(0, job.qt_planned - job.qt_completed));
+      }, 0);
 
-      return Math.ceil(total_workload_seconds / 360) / 10 // round up to first decimal
-    }
+      return Math.ceil(total_workload_seconds / 360) / 10; // round up to first decimal
+    },
   },
 };
 </script>

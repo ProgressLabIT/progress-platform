@@ -123,7 +123,7 @@
                 <div class="smaller">
                   {{ job._key }}
                   <q-tooltip
-                    delay="500"
+                    :delay="Number(500)"
                     anchor="bottom left"
                     self="top left"
                     :offset="[10, 0]"
