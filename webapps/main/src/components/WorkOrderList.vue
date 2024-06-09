@@ -114,17 +114,16 @@
               </template>
 
               <template v-else>
-                <span
-                  @click="setSearch(column.name, props.row[column.name])"
-                >
+                <span @click="setSearch(column.name, props.row[column.name])">
                   {{ props.row[column.name] }}
                   <q-tooltip
                     :delay="500"
                     anchor="top left"
                     self="bottom left"
-                    :offset=[8,6]
+                    :offset="[8, 6]"
                     transition-show="fade"
-                    transition-hide="fade">
+                    transition-hide="fade"
+                  >
                     <template v-if="column.name === 'product_code'">
                       <div class="highlight">
                         {{ props.row.product_code }}
@@ -139,7 +138,6 @@
                   </q-tooltip>
                 </span>
               </template>
-
             </q-td>
           </template>
         </q-tr>
@@ -168,7 +166,9 @@
         })
       "
       :show="change_sequence_for_wo !== null"
-      :initial_value="change_sequence_for_wo?.sequence"
+      :initial_value="
+        change_sequence_for_wo ? change_sequence_for_wo.sequence : ''
+      "
       input_type="number"
       :min="1"
       :max="wo_list.length"

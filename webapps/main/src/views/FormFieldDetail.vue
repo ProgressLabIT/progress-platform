@@ -162,7 +162,7 @@
 
             <q-tooltip
               v-if="search_disabled"
-              delay="200"
+              :delay="Number(200)"
               anchor="top middle"
               self="center middle"
             >
