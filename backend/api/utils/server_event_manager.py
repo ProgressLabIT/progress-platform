@@ -1,5 +1,6 @@
 import asyncio
 from fastapi import Request
+import json
 
 class ServerEventManager:
     _instance = None
@@ -13,6 +14,10 @@ class ServerEventManager:
       if ServerEventManager._instance == None:
         ServerEventManager._instance = ServerEventManager()
       return ServerEventManager._instance
+
+    def notifyProductionRefresh(self):
+
+      self.enqueue("production-notification", json.dumps({ "notification" : "REFRESH" }))
 
     def getQueue(self, topic, requestID):
         if (self.queue.get(topic) == None):
