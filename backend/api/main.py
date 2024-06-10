@@ -1,6 +1,7 @@
 import requests
 from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from commons.utils.config import get_config
 from commons.kafka_utils.kafka_producer import KafkaProducer
@@ -10,6 +11,7 @@ from commons.executors.executor_manager import ExecutorManager
 from commons.websockets.websocket_manager import WebsocketManager
 from utils.server_event_manager import ServerEventManager
 from utils.serial_notification_kafka_consumer import SerialNotificationsKafkaConsumer
+from utils.notification_middleware import NotificationMiddleware
 
 
 import endpoints
@@ -30,6 +32,11 @@ app.add_middleware(
   allow_methods=["*"],
   allow_headers=["*"],
 )
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+app.add_middleware(NotificationMiddleware)
+
 
 """
 Each package __init__ file imports the router object from the
