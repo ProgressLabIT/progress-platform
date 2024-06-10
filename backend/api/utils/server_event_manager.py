@@ -16,7 +16,6 @@ class ServerEventManager:
       return ServerEventManager._instance
 
     def notifyProductionRefresh(self):
-
       self.enqueue("production-notification", json.dumps({ "notification" : "REFRESH" }))
 
     def getQueue(self, topic, requestID):
