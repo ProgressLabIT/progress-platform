@@ -330,6 +330,9 @@ export default {
 
     missingMandatoryValues(form_data) {
       let missing_mandatory_fields = false;
+      if (!form_data) {
+        return missing_mandatory_fields;
+      }
       form_data.forEach((field) => {
         if (field.mandatory && !field.value) {
           missing_mandatory_fields = true;
@@ -370,7 +373,7 @@ export default {
                 this.getFormFieldValue(
                   phase.phase_key,
                   step._key,
-                  step.form_fields,
+                  step.form_fields ? step.form_fields : [],
                 ),
               );
             });

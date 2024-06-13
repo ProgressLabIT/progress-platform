@@ -20,7 +20,7 @@ docker run -d \
 
 
 # Restore in docker
-docker exec arango arangorestore --create-database true --server.database PROGRESS_TEST --input-directory "/backup" --server.authentication false
+docker exec arango arangorestore --create-database true --server.database PROGRESS_PROD --input-directory "/backup" --server.authentication false
 
 # Restore in docker-compose
-docker-compose exec arangodb arangorestore --create-database true --server.database PROGRESS_TEST --input-directory "/db_backup/PROGRESS_TEST" --server.authentication false
+docker-compose exec arangodb arangorestore --create-database true --server.database PROGRESS_PROD --input-directory "/db_backup/PROGRESS_PROD" --server.authentication false
