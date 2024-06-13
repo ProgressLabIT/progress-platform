@@ -1,4 +1,5 @@
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket, WebSocketDisconnect, Depends
+from utils import auth
 from fastapi.responses import HTMLResponse
 from fastapi import APIRouter
 
@@ -45,7 +46,8 @@ html = """
 """
 
 #Retrieve websocket example
-@router.get("/wsexample")
+@router.get("/wsexample",
+    dependencies=[Depends(auth.verify_token)])
 async def get():
     return HTMLResponse(html)
 
@@ -67,7 +69,8 @@ def notify():
     websocketManager = WebsocketManager.getInstance()
 
 
-@router.websocket("/subscribe")
+@router.websocket("/subscribe",
+    dependencies=[Depends(auth.verify_token)])
 async def subscribe(websocket: WebSocket):
     websocketManager = WebsocketManager.getInstance()
     await websocketManager.connect(websocket)

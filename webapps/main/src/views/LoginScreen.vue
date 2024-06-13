@@ -140,7 +140,6 @@
 </template>
 
 <script>
-import jwt_decode from 'jwt-decode';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import { api } from 'boot/axios.js';
 import { useConfigStore } from '../stores/config';
@@ -205,9 +204,7 @@ export default {
       api
         .post('auth', this.credentials)
         .then((resp) => {
-          const token = resp.data.detail.token;
-          this.$store.commit('UPDATE_AUTH_TOKEN', token);
-          this.user_key = jwt_decode(token).sub;
+          this.user_key = resp.data.detail.user_key;
 
           switch (resp.data.detail.action) {
             case 'start_session': {

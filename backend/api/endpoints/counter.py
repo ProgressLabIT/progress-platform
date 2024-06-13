@@ -1,15 +1,17 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 
 from utils.api import APIResponse
 from commons.models.counter import Counter
 from commons.utils.db import db
+from utils import auth
 
 router = APIRouter()
 
 
-@router.post('/counter')
+@router.post('/counter',
+    dependencies=[Depends(auth.verify_token)])
 def create_counter(counter_data: Counter):
   try:
     counter_key = db.collection('Counter').insert(counter_data)['_key']
@@ -21,7 +23,8 @@ def create_counter(counter_data: Counter):
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
-@router.get('/counter')
+@router.get('/counter',
+    dependencies=[Depends(auth.verify_token)])
 def fetch_counter(name: str | None = None, key: str | None = None):
   match = dict()
   if name:
@@ -35,7 +38,8 @@ def fetch_counter(name: str | None = None, key: str | None = None):
 
 
 
-@router.put('/counter/{counter_key}')
+@router.put('/counter/{counter_key}',
+    dependencies=[Depends(auth.verify_token)])
 def replace_field_metadata(counter_key: str, counter_data: Counter):
   """Counter data must contain _key"""
   try:
@@ -46,7 +50,8 @@ def replace_field_metadata(counter_key: str, counter_data: Counter):
 
 
 
-@router.delete('/counter/{counter_key}')
+@router.delete('/counter/{counter_key}',
+    dependencies=[Depends(auth.verify_token)])
 def delete_field(counter_key: str):
   """Delete custom counter"""
   try:

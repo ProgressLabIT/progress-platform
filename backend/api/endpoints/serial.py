@@ -2,7 +2,8 @@ import traceback
 import json
 
 from base64 import b64decode
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from utils import auth
 from datetime import datetime
 from typing import Dict, List, Union
 
@@ -13,7 +14,8 @@ from commons.utils.serial import Queries
 
 router = APIRouter()
 
-@router.get('/serial-field')
+@router.get('/serial-field',
+    dependencies=[Depends(auth.verify_token)])
 def fetch_field(name: str | None = None, key: str | None = None):
   match = dict()
   if name:
@@ -26,14 +28,16 @@ def fetch_field(name: str | None = None, key: str | None = None):
   return sorted(result, key=lambda x: x.name.lower())
 
 
-@router.get('/product-steps/{product_key}')
+@router.get('/product-steps/{product_key}',
+    dependencies=[Depends(auth.verify_token)])
 def get_product_steps(product_key: str):
   bind_vars = dict(
     product_key = product_key
   )
   return [e for e in db.aql.execute(Queries.GET_PRODUCT_STEPS, bind_vars=bind_vars)]
 
-@router.get('/serial-batch')
+@router.get('/serial-batch',
+    dependencies=[Depends(auth.verify_token)])
 def get_serial_batch(batch_key: str | None = None):
   bind_vars = dict(
     from_id = f'Batch/{batch_key}'
@@ -41,7 +45,8 @@ def get_serial_batch(batch_key: str | None = None):
   return [e for e in db.aql.execute(Queries.GET_SERIALS_IN_BATCH, bind_vars=bind_vars)]
 
 
-@router.get('/serial-wo-phase')
+@router.get('/serial-wo-phase',
+    dependencies=[Depends(auth.verify_token)])
 def get_serial_wo_phase(
   wo_key: str | None = None,
   phase_key: str | None = None,
@@ -59,7 +64,8 @@ def get_serial_wo_phase(
       ))
   return wo_serials
 
-@router.get('/serial-selection')
+@router.get('/serial-selection',
+    dependencies=[Depends(auth.verify_token)])
 def get_serial_selection(
   search: str | None = None,
   wo_key: str | None = None,
@@ -86,7 +92,8 @@ def get_serial_selection(
 # SERIALS
 # ---------------------------------------------
 
-@router.get('/serial/{serial_key}')
+@router.get('/serial/{serial_key}',
+    dependencies=[Depends(auth.verify_token)])
 def get_serial_from_key(serial_key: str):
   try:
     return db.collection('Serial').get(serial_key)
@@ -100,7 +107,8 @@ def get_serial_from_key(serial_key: str):
     )
 
 
-@router.get('/serial')
+@router.get('/serial',
+    dependencies=[Depends(auth.verify_token)])
 async def search_serials(
   serial_key: Union[List[str], None] = Query(default=None),
   serial_key_search: str | None = None,

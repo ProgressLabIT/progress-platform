@@ -135,7 +135,6 @@ import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import user_scopes from '@/lib/UserScopes.js';
 import { useConfigStore } from '../stores/config';
-// import generateTempPassword from '@/lib/TokenGenerator.js'
 
 export default {
   name: 'UserNew',
