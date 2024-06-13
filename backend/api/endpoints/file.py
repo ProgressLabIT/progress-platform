@@ -1,11 +1,12 @@
 import os
 import traceback
 
-from fastapi import APIRouter, Body, Depends, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, UploadFile, Depends
 
 from commons.models.form import FileBucket, FileTargetData
 from commons.utils.db import db
 from utils.file import FileHandler
+from utils import auth
 
 
 router = APIRouter()
@@ -78,7 +79,8 @@ def verify_target_data(
   return FileTargetData(bucket=bucket, object_key=object_key, subfolder=subfolder)
 
 
-@router.post('/files')
+@router.post('/files',
+    dependencies=[Depends(auth.verify_token)])
 async def upload_files(
   contents: list[UploadFile],
   bucket: FileBucket = Form(...),
@@ -111,7 +113,8 @@ async def upload_files(
       )
 
 
-@router.delete('/files')
+@router.delete('/files',
+    dependencies=[Depends(auth.verify_token)])
 async def delete_files(
   filenames: list[str],
   bucket: FileBucket = Body(...),

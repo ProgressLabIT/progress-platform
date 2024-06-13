@@ -1,5 +1,6 @@
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from utils.server_event_manager import ServerEventManager
 
 class NotificationMiddleware(BaseHTTPMiddleware):
     def __init__(
@@ -22,3 +23,5 @@ class NotificationMiddleware(BaseHTTPMiddleware):
     def notify_change(self, request: Request):
         if (request['method']=='GET'):
             return
+        ServerEventManager.getInstance().notifyProductionRefresh()
+
