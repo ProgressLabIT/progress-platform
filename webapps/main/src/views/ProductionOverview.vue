@@ -484,10 +484,9 @@ export default {
     //  this.$store.dispatch('updateWorkOrderList');
     //  this.$store.dispatch('loadJobAssignments');
     //}, 10000);
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/production-notification';
+    let eventURL = this.$api.defaults.baseURL + '/production-notification';
     this.events = new EventSource(eventURL, {
-      withCredentials: false,
+      withCredentials: true,
     });
     this.events.addEventListener('production-notification', (event) => {
       this.handleMessage(event);
