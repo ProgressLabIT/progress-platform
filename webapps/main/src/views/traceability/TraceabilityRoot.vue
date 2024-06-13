@@ -433,10 +433,9 @@ export default {
   created() {
     this.getSerialFields();
     this.getSerials();
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/serial-notification';
+    let eventURL = this.$api.defaults.baseURL + '/serial-notification';
     this.events = new EventSource(eventURL, {
-      withCredentials: false,
+      withCredentials: true,
     });
     this.events.addEventListener('serial-notification', (event) => {
       this.handleMessage(event);

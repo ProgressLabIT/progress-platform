@@ -183,7 +183,12 @@ async def archive_user(user_key: str):
     )
     raise HTTPException(status_code=status_code, detail=response)
 
-@router.get("/notification/{notification_key}",
+@router.get("/production-notification",
     dependencies=[Depends(auth.verify_token)])
-async def message_stream(request: Request, notification_key: str):
-    return EventSourceResponse(ServerEventManager.getInstance().push_events(request, notification_key))
+async def message_stream_product(request: Request):
+    return EventSourceResponse(ServerEventManager.getInstance().push_events(request, 'production-notification'))
+
+@router.get("/serial-notification",
+    dependencies=[Depends(auth.verify_token)])
+async def message_stream_serial(request: Request):
+    return EventSourceResponse(ServerEventManager.getInstance().push_events(request, 'serial-notification'))
