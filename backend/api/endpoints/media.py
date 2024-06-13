@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, HTTPException, UploadFile, Depends
+from utils import auth
 from fastapi.responses import FileResponse
 from shutil import copyfileobj
 from os import path
@@ -38,7 +39,8 @@ def write_media_file(file: UploadFile, media_key: str):
     raise HTTPError(500, 'Could not write file to disk')
 
 # TODO: If a created media is not connected to any entity in a reasonable amount of time, delete it (cron job?) (use created_at field as reference)
-@router.post('/media/create')
+@router.post('/media/create',
+    dependencies=[Depends(auth.verify_token)])
 def create_media(file: UploadFile):
   media = make_media(file)
   write_media_file(file, media.key)
@@ -51,7 +53,8 @@ def create_media(file: UploadFile):
     detail=media
   )
 
-@router.patch('/media/{media_key}')
+@router.patch('/media/{media_key}',
+    dependencies=[Depends(auth.verify_token)])
 def update_media(media_key: str, file: UploadFile):
   media = db.collection('Media').get(media_key)
   if not media:
@@ -68,7 +71,8 @@ def update_media(media_key: str, file: UploadFile):
     detail=media
   )
 
-@router.delete('/media/{media_key}')
+@router.delete('/media/{media_key}',
+    dependencies=[Depends(auth.verify_token)])
 def delete_media(media_key: str):
   media = db.collection('Media').has(media_key)
   if not media:
@@ -97,7 +101,8 @@ def delete_media(media_key: str):
     raise HTTPException(status_code=500, detail=str(ex))
 
 
-@router.get('/media/{media_key}')
+@router.get('/media/{media_key}',
+    dependencies=[Depends(auth.verify_token)])
 def get_media(media_key: str):
   media = db.collection('Media').get(media_key)
   if not media:

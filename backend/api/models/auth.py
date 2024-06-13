@@ -52,7 +52,8 @@ class TokenData(FlexModel):
 
 class AuthResponse(BaseModel):
   action: str
-  token: str
+  user_key: str
+  #token: str
 
 
 class UserSession(ArangoDocument):

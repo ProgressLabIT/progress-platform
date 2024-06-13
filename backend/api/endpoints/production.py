@@ -2,7 +2,8 @@ import traceback
 from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query, Depends
+from utils import auth
 from fastapi.encoders import jsonable_encoder
 
 from commons.models.product import ProductDetails
@@ -20,14 +21,15 @@ from utils.production import (
   update_target_queue
 )
 from utils.traceability import _update_job_progress, Queries as TraceabilityQueries
-from utils.server_event_manager import ServerEventManager
+
 
 router = APIRouter()
 
 # ----------------------------------------------------------------------
 
 
-@router.post('/work-order')
+@router.post('/work-order',
+    dependencies=[Depends(auth.verify_token)])
 async def create_work_order(new_wo: WorkOrderNew):
 
   # Initialize transaction
@@ -171,7 +173,6 @@ async def create_work_order(new_wo: WorkOrderNew):
 
   # Commit transaction
   tx.commit_transaction()
-  ServerEventManager.getInstance().notifyProductionRefresh()
   return APIResponse(
     message="Work order and jobs created",
     detail=dict(work_order=new_wo_record, jobs=new_job_records)
@@ -181,7 +182,8 @@ async def create_work_order(new_wo: WorkOrderNew):
 # ----------------------------------------------------------------------
 
 
-@router.patch('/work-order/{wo_key}')
+@router.patch('/work-order/{wo_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def update_work_order(
   wo_key: str,
   new_due_date: datetime | date | None = Body(None),
@@ -216,7 +218,6 @@ async def update_work_order(
     updated_wo_data = tx.collection('WorkOrder').update(wo_update, return_new=True)['new']
 
     tx.commit_transaction()
-    ServerEventManager.getInstance().notifyProductionRefresh()
     return APIResponse(detail=updated_wo_data)
 
   except Exception:
@@ -225,7 +226,8 @@ async def update_work_order(
 
 # ----------------------------------------------------------------------
 
-@router.patch('/work-order/{wo_key}/update-quantities')
+@router.patch('/work-order/{wo_key}/update-quantities',
+    dependencies=[Depends(auth.verify_token)])
 async def update_work_order_quantities(
   wo_key: str,
   new_quantity: float | None = Body(None),
@@ -313,7 +315,6 @@ async def update_work_order_quantities(
       )
 
     tx.commit_transaction()
-    ServerEventManager.getInstance().notifyProductionRefresh()
     return APIResponse(detail=updated_wo_data)
 
   except Exception:
@@ -323,7 +324,8 @@ async def update_work_order_quantities(
 
 # ----------------------------------------------------------------------
 
-@router.get('/work-order/{wo_key}')
+@router.get('/work-order/{wo_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def get_wo_data(wo_key: str):
 
   try:
@@ -344,7 +346,8 @@ async def get_wo_data(wo_key: str):
 
 # ----------------------------------------------------------------------
 
-@router.delete('/work-order/{wo_key}')
+@router.delete('/work-order/{wo_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def delete_work_order(wo_key: str):
   try:
     tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'issue_rel'])
@@ -411,7 +414,6 @@ async def delete_work_order(wo_key: str):
     tx.aql.execute(query, bind_vars=bind_vars)
 
     tx.commit_transaction()
-    ServerEventManager.getInstance().notifyProductionRefresh()
     return APIResponse(message='Work order deleted correctly')
 
   except Exception as e:
@@ -432,7 +434,8 @@ async def delete_work_order(wo_key: str):
 
 # ----------------------------------------------------------------------
 
-@router.get('/work-order')
+@router.get('/work-order',
+    dependencies=[Depends(auth.verify_token)])
 async def search_work_orders(
   search: str | None = None,
   open: bool = False,
@@ -500,7 +503,8 @@ async def search_work_orders(
 
 # ----------------------------------------------------------------------
 
-@router.get('/queue/site/{site_key}')
+@router.get('/queue/site/{site_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def get_site_queue(site_key: str):
 
   try:
@@ -514,7 +518,8 @@ async def get_site_queue(site_key: str):
 
 # ----------------------------------------------------------------------
 
-@router.put('/queue')
+@router.put('/queue',
+    dependencies=[Depends(auth.verify_token)])
 async def update_queue(queue_update: Queue):
   try:
     match = dict(type=queue_update.type, site_key=queue_update.site_key)
@@ -541,7 +546,6 @@ async def update_queue(queue_update: Queue):
       error_str=traceback.format_exc()
     )
     raise HTTPException(status_code=status_code, detail=response)
-  ServerEventManager.getInstance().notifyProductionRefresh()
   return APIResponse(detail="Queue updated")
 
 @router.put('/queue/operator/{operator_key}')
@@ -580,7 +584,8 @@ async def update_operator_queue(
 # ----------------------------------------------------------------------
 
 
-@router.get('/job')
+@router.get('/job',
+    dependencies=[Depends(auth.verify_token)])
 async def get_job_list(
   job_key: List[str] = Query(None),
   work_order_key: List[str] = Query(None),
@@ -612,7 +617,8 @@ async def get_job_list(
 # ----------------------------------------------------------------------
 
 
-@router.get('/job-assignment')
+@router.get('/job-assignment',
+    dependencies=[Depends(auth.verify_token)])
 async def get_assignment_list(user_key: str | None = None):
 
   try:
@@ -631,7 +637,8 @@ async def get_assignment_list(user_key: str | None = None):
 # ----------------------------------------------------------------------
 
 
-@router.get('/job/{job_key}')
+@router.get('/job/{job_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def get_job_data(job_key: str):
   query = """
     FOR j IN Job
@@ -669,7 +676,8 @@ async def get_job_data(job_key: str):
 # ----------------------------------------------------------------------
 
 
-@router.post('/job/update')
+@router.post('/job/update',
+    dependencies=[Depends(auth.verify_token)])
 async def update_jobs(job_updates:List[JobUpdate]):
 
   tx = db.begin_transaction(write=['Job', 'Queue'])
@@ -792,7 +800,6 @@ async def update_jobs(job_updates:List[JobUpdate]):
     )
 
     tx.commit_transaction()
-    ServerEventManager.getInstance().notifyProductionRefresh()
     return APIResponse(detail=results, message="Jobs updated successfully")
 
   except:

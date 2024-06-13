@@ -4,12 +4,13 @@ from typing import Dict, List, Union
 from base64 import b64decode
 import json
 
-from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from fastapi.encoders import jsonable_encoder
 
 from models.collaboration import *
 from models.event import EventModel, EventType
 from utils.api import APIResponse
+from utils import auth
 from commons.utils.db import db
 from utils.collaboration import Queries
 
@@ -23,7 +24,8 @@ messages = db.collection('Message')
 # ISSUE TYPES
 # ---------------------------------------------
 
-@router.get('/issue-type')
+@router.get('/issue-type',
+    dependencies=[Depends(auth.verify_token)])
 async def get_issue_type(
   key: str | None = None,
   code: str | None = None,
@@ -43,7 +45,8 @@ async def get_issue_type(
 
 # ----------------------------------------------------------------------
 
-@router.post('/issue-type' , status_code=201)
+@router.post('/issue-type' , status_code=201,
+    dependencies=[Depends(auth.verify_token)])
 async def create_issue_type(data: IssueType):
 
   # Check if code already exists
@@ -72,7 +75,8 @@ async def create_issue_type(data: IssueType):
 
 # ----------------------------------------------------------------------
 
-@router.patch('/issue-type/{issue_type_key}')
+@router.patch('/issue-type/{issue_type_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def update_issue_type(issue_type_key: str, data: IssueTypeUpdate):
 
   if not hasattr(data, 'key'):
@@ -96,7 +100,8 @@ async def update_issue_type(issue_type_key: str, data: IssueTypeUpdate):
 
 # ----------------------------------------------------------------------
 
-@router.delete('/issue-type/{issue_type_key}')
+@router.delete('/issue-type/{issue_type_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def delete_issue_type(issue_type_key: str):
   try:
     issue_types.delete(issue_type_key)
@@ -114,7 +119,8 @@ async def delete_issue_type(issue_type_key: str):
 # ISSUES
 # ---------------------------------------------
 
-@router.get('/issue')
+@router.get('/issue',
+    dependencies=[Depends(auth.verify_token)])
 async def search_issues(
   issue_key: Union[List[str], None] = Query(default=None),
   issue_key_search: str | None = None,
@@ -190,7 +196,8 @@ async def search_issues(
 # MESSAGES
 # ---------------------------------------------
 
-@router.get('/message')
+@router.get('/message',
+    dependencies=[Depends(auth.verify_token)])
 async def get_messages(recipient_id: str):
   try:
     cursor = db.collection('message').find(dict(_to=recipient_id))

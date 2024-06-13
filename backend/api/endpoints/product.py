@@ -1,7 +1,8 @@
 import os
 import traceback
 
-from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body
+from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body, Depends
+from utils import auth
 from fastapi.encoders import jsonable_encoder
 
 from utils.kpi import Queries as ProductStatQueries
@@ -24,7 +25,8 @@ product_db = db.collection('Product')
 # =================================================
 #  GET / : GET PRODUCT LIST
 # =================================================
-@router.get("")
+@router.get("",
+    dependencies=[Depends(auth.verify_token)])
 async def get_product_list(
   offset: int | None = None,
   limit: int | None = None, # return a limited number of results
@@ -52,7 +54,8 @@ async def get_product_list(
 # =================================================
 #  POST / : CREATE PRODUCT
 # =================================================
-@router.post("", status_code=201)
+@router.post("", status_code=201,
+    dependencies=[Depends(auth.verify_token)])
 async def create_product(
   code: str = Form(...),
   description: str = Form(''),
@@ -148,7 +151,8 @@ async def create_product(
 # =================================================
 #  POST /PRODUCT_KEY/COPY : COPY PRODUCT
 # =================================================
-@router.post("/copy", status_code=201)
+@router.post("/copy", status_code=201,
+    dependencies=[Depends(auth.verify_token)])
 async def copy_product(
   original_product: str = Body(), # Can be product key or code (key default)
   new_code: str = Body(),
@@ -296,7 +300,8 @@ async def copy_product(
 # =================================================
 #  DELETE /PRODUCT_KEY : DELETE PRODUCT
 # =================================================
-@router.delete("/{product_key}")
+@router.delete("/{product_key}",
+    dependencies=[Depends(auth.verify_token)])
 async def delete_product(product_key):
   product_to_trash = product_db.get(product_key)
 
@@ -327,7 +332,8 @@ async def delete_product(product_key):
 # =================================================
 #  PATCH /PRODUCT_KEY : UPDATE PRODUCT (SPECIFC PROPERTIES)
 # =================================================
-@router.patch("/{product_key}")
+@router.patch("/{product_key}",
+    dependencies=[Depends(auth.verify_token)])
 async def udpate_product(
   product_key: str | None = None,
   updated_fields: dict = dict()
@@ -365,7 +371,8 @@ async def udpate_product(
 # =================================================
 #  PUT /PRODUCT_KEY : REPLACE PRODUCT
 # =================================================
-@router.put("/{product_key}")
+@router.put("/{product_key}",
+    dependencies=[Depends(auth.verify_token)])
 async def replace_product(
   product_key: str,
   new_product_data: ProductDetails,
@@ -382,7 +389,8 @@ async def replace_product(
 # =================================================
 #  POST /PRODUCT_KEY/DOCS : SAVE DOC
 # =================================================
-@router.post("/{product_key}/doc")
+@router.post("/{product_key}/doc",
+    dependencies=[Depends(auth.verify_token)])
 async def save_doc(
   product_key: str,
   new_doc: UploadFile =  File(...)
@@ -414,7 +422,8 @@ async def save_doc(
 # =================================================
 #  DELETE (DOCS)
 # =================================================
-@router.delete("/{product_key}/doc/{doc_name}")
+@router.delete("/{product_key}/doc/{doc_name}",
+    dependencies=[Depends(auth.verify_token)])
 async def delete_doc(
   product_key: str,
   doc_name: str
@@ -432,7 +441,8 @@ async def delete_doc(
 # =================================================
 #  PUT (IMAGE)
 # =================================================
-@router.put("/{product_key}/image")
+@router.put("/{product_key}/image",
+    dependencies=[Depends(auth.verify_token)])
 async def replace_product_image(
   product_key: str,
   new_image: UploadFile = File(...)
@@ -453,7 +463,8 @@ async def replace_product_image(
 # =================================================
 #  DELETE (IMAGE)
 # =================================================
-@router.delete("/{product_key}/image")
+@router.delete("/{product_key}/image",
+    dependencies=[Depends(auth.verify_token)])
 async def replace_product_image(product_key: str):
   # extension = new_image.filename.split('.')[-1]
   img = FileHandler.product_media(object_key=product_key)
@@ -467,7 +478,8 @@ async def replace_product_image(product_key: str):
 # =================================================
 #  GET /PRODUCT_KEY : GET PRODUCT DATA
 # =================================================
-@router.get("/{product_key}", response_model=ProductFull)
+@router.get("/{product_key}", response_model=ProductFull,
+    dependencies=[Depends(auth.verify_token)])
 async def get_product_data(product_key: str):
   try:
     product = ProductFull(**product_db.get(product_key))
@@ -494,7 +506,8 @@ async def get_product_data(product_key: str):
 # =================================================
 #  PRODUCT STATS
 # =================================================
-@router.get('/{product_key}/stats')
+@router.get('/{product_key}/stats',
+    dependencies=[Depends(auth.verify_token)])
 async def get_product_stats(product_key: str):
   try:
     stats = db.aql.execute(ProductStatQueries.GET_PRODUCT_STATS, bind_vars=dict(product_key=product_key)).next()

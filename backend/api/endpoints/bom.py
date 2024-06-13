@@ -4,19 +4,21 @@ import requests
 import traceback
 from typing import List
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Depends
 from fastapi.encoders import jsonable_encoder
 
 from models.bom import *
 from utils.bom import *
 from commons.utils.db import db
 from utils.api import APIResponse
+from utils import auth
 
 
 
 router = APIRouter()
 
-@router.get("/{product_key}/bom")
+@router.get("/{product_key}/bom",
+    dependencies=[Depends(auth.verify_token)])
 async def get_product_bom(product_key: str):
   try:
     bom = get_bom_from_db(db, product_key)
@@ -37,7 +39,8 @@ async def get_product_bom(product_key: str):
 
 
 
-@router.put('/{product_key}/bom')
+@router.put('/{product_key}/bom',
+    dependencies=[Depends(auth.verify_token)])
 async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
   """
   First draft will blatantly delete existing bom and
