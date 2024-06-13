@@ -1,6 +1,7 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException, Request, Query
+from fastapi import APIRouter, HTTPException, Request, Query, Depends
+from utils import auth
 
 from events import Event
 from commons.models.traceability import *
@@ -18,7 +19,8 @@ router = APIRouter()
 
 serials = db.collection('Serial')
 
-@router.post('/event')
+@router.post('/event',
+    dependencies=[Depends(auth.verify_token)])
 async def apply_production_event(data: EventModel):
   try:
     event = Event(data)
@@ -57,7 +59,8 @@ async def apply_production_event(data: EventModel):
 
 
 
-@router.get('/event')
+@router.get('/event',
+    dependencies=[Depends(auth.verify_token)])
 async def get_events(
   issue_key: str | None = None,
   job_key: str | None = None,
@@ -78,7 +81,8 @@ async def get_events(
 
 
 
-@router.get('/batch/{batch_key}')
+@router.get('/batch/{batch_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def get_batch_execution_data(batch_key: str):
 
   try:
@@ -104,7 +108,8 @@ async def get_batch_execution_data(batch_key: str):
   return APIResponse(detail=batch_data)
 
 
-@router.post('/job/{job_key}/heartbeat')
+@router.post('/job/{job_key}/heartbeat',
+    dependencies=[Depends(auth.verify_token)])
 async def job_heartbeat(job_key: str, work_session_key: str | None = None):
   """
   Updates the work session `last_online` attribute with current time
@@ -128,7 +133,8 @@ async def job_heartbeat(job_key: str, work_session_key: str | None = None):
     tx.abort_transaction()
 
 
-@router.get('/wip')
+@router.get('/wip',
+    dependencies=[Depends(auth.verify_token)])
 async def get_wip_availability_for_job(job_key: str):
   tx = db.begin_transaction()
   job_data = tx.collection('Job').get(job_key)

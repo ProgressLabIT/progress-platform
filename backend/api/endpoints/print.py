@@ -1,6 +1,7 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from utils import auth
 
 from models.print import PrintTemplateRecord, TemplateAssignmentUpdate, TemplateAssignmentUpdateType, TemplateAssignmentContext
 from utils.api import APIResponse
@@ -11,7 +12,8 @@ router = APIRouter()
 
 
 # Fetch Print Templates
-@router.get('/print-template')
+@router.get('/print-template',
+    dependencies=[Depends(auth.verify_token)])
 async def find_print_templates(
   context: TemplateAssignmentContext | None = None,
   context_key: str | None = None,
@@ -51,14 +53,16 @@ async def find_print_templates(
   return result
 
 
-@router.get('/print-template/{template_key}')
+@router.get('/print-template/{template_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def get_print_template_details(template_key: str):
   template = db.collection('PrintTemplate').get(template_key)
   return preprocess_template(template)
 
 
 # Create PrintTemplate
-@router.post('/print-template')
+@router.post('/print-template',
+    dependencies=[Depends(auth.verify_token)])
 async def create_print_template(template_data: PrintTemplateRecord):
   try:
     resp = db.collection('PrintTemplate').insert(template_data)
@@ -81,7 +85,8 @@ async def create_print_template(template_data: PrintTemplateRecord):
     )
 
 # Update Print Template
-@router.put('/print-template')
+@router.put('/print-template',
+    dependencies=[Depends(auth.verify_token)])
 async def update_print_template(template_data: PrintTemplateRecord):
   try:
     update = template_data.dict(by_alias=True)
@@ -105,13 +110,15 @@ async def update_print_template(template_data: PrintTemplateRecord):
 
 
 # Delete Print Template
-@router.delete('/print-template/{template_key}')
+@router.delete('/print-template/{template_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def delete_print_template(template_key: str):
   ...
 
 
 
-@router.post('/update-template-assignments')
+@router.post('/update-template-assignments',
+    dependencies=[Depends(auth.verify_token)])
 async def update_template_assignments(updates: list[TemplateAssignmentUpdate]):
 
   try:

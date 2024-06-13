@@ -77,7 +77,8 @@ async def authenticate_user(
 
     response_data = AuthResponse(
       action='reset_password',
-      token=token
+      user_key=user.key
+      #token=token
     )
 
   else:
@@ -90,7 +91,8 @@ async def authenticate_user(
 
     response_data = AuthResponse(
       action='start_session',
-      token=token
+      user_key=user.key
+      #token=token
     )
 
   # Store token data
@@ -113,10 +115,20 @@ async def authenticate_user(
 
   response_content = APIResponse(detail=response_data)
 
-  return JSONResponse(
+  json_response = JSONResponse(
     content= jsonable_encoder(response_content),
     headers=response_headers
   )
+  json_response.set_cookie(
+        "Authorization",
+        value=f"Bearer {token}",
+        httponly=True,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        expires=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        samesite="Lax",
+        secure=False,
+    )
+  return json_response
 
 
 # ----------------------------------------------------------------------
@@ -138,6 +150,30 @@ async def verify_user_password(
 
 # ----------------------------------------------------------------------
 
+
+# ----------------------------------------------------------------------
+
+@router.get('/whoami')
+async def get_current_user(
+  token: TokenData = Depends(auth.verify_token)
+):
+  credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+  try:
+    user_key=token.consumer_key
+    if user_key is None:
+      raise credentials_exception
+  except:
+    raise credentials_exception
+
+  return APIResponse(detail=dict(user_key=user_key), message="cookie is valid")
+
+
+
+# ----------------------------------------------------------------------
 
 @router.post("/session")
 async def start_user_session(

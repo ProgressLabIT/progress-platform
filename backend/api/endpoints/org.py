@@ -2,7 +2,8 @@ import secrets
 import traceback
 from typing import List
 
-from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile, Request
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile, Request, Depends
+from utils import auth
 from starlette import status
 
 from models.org import *
@@ -23,7 +24,8 @@ router = APIRouter()
 # =================================
 #         DEPARTMENTS
 # =================================
-@router.get('/department')
+@router.get('/department',
+    dependencies=[Depends(auth.verify_token)])
 async def get_department_list():
   dep_list = [Department(**dep) for dep in db.collection('Department').all()]
   response = APIResponse(detail= dep_list)
@@ -34,7 +36,8 @@ async def get_department_list():
 # =================================
 #         USERS
 # =================================
-@router.get("/user")
+@router.get("/user",
+    dependencies=[Depends(auth.verify_token)])
 async def get_user_list(active_only: bool = True):
 
   db_cursor = db.aql.execute(Queries.GET_USER_LIST, bind_vars=dict(active_only=active_only))
@@ -44,7 +47,8 @@ async def get_user_list(active_only: bool = True):
 
 # ----------------------------------------------------
 
-@router.post("/user", status_code=201)
+@router.post("/user", status_code=201,
+    dependencies=[Depends(auth.verify_token)])
 async def create_user(new_user: UserNew):
   new_user_data = User(**new_user.dict())
   username_already_taken = db.collection('User').find(dict(username=new_user.username)).count()
@@ -62,7 +66,8 @@ async def create_user(new_user: UserNew):
 
 # ----------------------------------------------------
 
-@router.patch("/user/{user_key}")
+@router.patch("/user/{user_key}",
+    dependencies=[Depends(auth.verify_token)])
 async def update_user(user_key: str, update_data: dict):
 
   user_update = dict(_key=user_key)
@@ -93,7 +98,8 @@ async def update_user(user_key: str, update_data: dict):
 
 # ----------------------------------------------------
 
-@router.put("/user/{user_key}/image")
+@router.put("/user/{user_key}/image",
+    dependencies=[Depends(auth.verify_token)])
 async def update_user_image(
   user_key: str,
   new_image: UploadFile = File(...)
@@ -115,7 +121,8 @@ async def update_user_image(
 
 # ----------------------------------------------------
 
-@router.delete("/user/{user_key}/password")
+@router.delete("/user/{user_key}/password",
+    dependencies=[Depends(auth.verify_token)])
 async def delete_user_password(user_key: str):
   try:
     temp_psw = secrets.token_hex(4)
@@ -134,7 +141,8 @@ async def delete_user_password(user_key: str):
 
 # ----------------------------------------------------
 
-@router.put("/user/{user_key}/password")
+@router.put("/user/{user_key}/password",
+    dependencies=[Depends(auth.verify_token)])
 async def reset_user_password(
   user_key: str,
   token: str = Depends(auth.verify_token),
@@ -159,7 +167,8 @@ async def reset_user_password(
 
 # ----------------------------------------------------
 
-@router.delete("/user/{user_key}")
+@router.delete("/user/{user_key}",
+    dependencies=[Depends(auth.verify_token)])
 async def archive_user(user_key: str):
   try:
     db.collection('User').update(dict(_key=user_key, trash=True))
@@ -174,6 +183,7 @@ async def archive_user(user_key: str):
     )
     raise HTTPException(status_code=status_code, detail=response)
 
-@router.get("/notification/{notification_key}")
+@router.get("/notification/{notification_key}",
+    dependencies=[Depends(auth.verify_token)])
 async def message_stream(request: Request, notification_key: str):
     return EventSourceResponse(ServerEventManager.getInstance().push_events(request, notification_key))
