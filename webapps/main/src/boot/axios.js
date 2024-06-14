@@ -30,7 +30,7 @@ export default boot(({ app, store }) => {
       if (error) {
         if (
           error.response.status === 401 &&
-          error.config.url !== 'whoami/' &&
+          error.config.url !== 'whoami' &&
           !error.config.url.includes('session')
         ) {
           //originalRequest._retry = true;
