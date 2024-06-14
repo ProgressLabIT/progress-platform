@@ -113,7 +113,7 @@ const session = {
         return state.session_key !== 'UNRECOGNIZED';
       }
 
-      const { data } = await api.get(`whoami/`);
+      const { data } = await api.get(`whoami`);
       let user_key = data?.detail?.user_key;
       if (user_key) {
         const { data } = await api.post(`session`, { user_key: user_key });
