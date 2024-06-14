@@ -10,9 +10,9 @@ import { boot } from 'quasar/wrappers';
 
 const domain =
   window.location.hostname === 'localhost'
-    ? //? 'http://progress.localhost'
-      'http://localhost:8000'
-    : 'http://' + window.location.hostname;
+    ? 'http://progress.localhost'
+    : //  'http://localhost:8000'
+      'http://' + window.location.hostname;
 
 const api_base_path = '/api';
 
@@ -31,7 +31,7 @@ export default boot(({ app, store }) => {
       if (error) {
         if (
           error.response.status === 401 &&
-          error.config.url !== 'whoami/' &&
+          error.config.url !== 'whoami' &&
           !error.config.url.includes('session')
         ) {
           //originalRequest._retry = true;
