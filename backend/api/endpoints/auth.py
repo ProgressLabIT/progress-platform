@@ -125,8 +125,8 @@ async def authenticate_user(
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         expires=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="Lax",
-        secure=False,
+        samesite="None",
+        secure=True,
     )
   return json_response
 
