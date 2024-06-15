@@ -484,11 +484,12 @@ export default {
     //  this.$store.dispatch('updateWorkOrderList');
     //  this.$store.dispatch('loadJobAssignments');
     //}, 10000);
-    let eventURL = this.$api.defaults.baseURL + '/production-notification';
+    let eventURL =
+      this.$api.defaults.baseURL + '/notification/global-notification';
     this.events = new EventSource(eventURL, {
       withCredentials: true,
     });
-    this.events.addEventListener('production-notification', (event) => {
+    this.events.addEventListener('global-notification', (event) => {
       this.handleMessage(event);
     });
   },
