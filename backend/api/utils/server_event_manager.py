@@ -1,6 +1,9 @@
 import asyncio
 from fastapi import Request
 import json
+from delayedqueue.conflated_delayedqueue import ConflatedDelayedQueue
+from delayedqueue.delayed_queue_item import DelayedQueueItem
+from threading import Thread
 
 class ServerEventManager:
     _instance = None
@@ -8,6 +11,9 @@ class ServerEventManager:
     def __init__(self):
         self.queue = {}
         self.cancelled = False
+        self.delayed_queue = ConflatedDelayedQueue()
+        self.poll_thread = Thread(target=self.consume_delayed_loop)
+        self.poll_thread.start()
 
     @staticmethod
     def getInstance():
@@ -15,8 +21,16 @@ class ServerEventManager:
         ServerEventManager._instance = ServerEventManager()
       return ServerEventManager._instance
 
-    def notifyProductionRefresh(self):
-      self.enqueue("production-notification", json.dumps({ "notification" : "REFRESH" }))
+    def consume_delayed_loop(self):
+       try:
+          while not self.cancelled:
+             item = self.delayed_queue.get()
+             self.enqueue(item.key, item.item)
+       finally:
+          self.consumer.close()
+
+    def notifyGlobalRefresh(self):
+      self.delayed_enqueu("global-notification", json.dumps({ "notification" : "REFRESH" }), 10)
 
     def getQueue(self, topic, requestID):
         if (self.queue.get(topic) == None):
@@ -31,6 +45,9 @@ class ServerEventManager:
         if (self.queue.get(topic).get(requestID) == None):
             self.queue.get(topic).remove(requestID)
         return self.queue.get(topic).get(requestID)
+
+    def delayed_enqueu(self, topic, message: str, delay: int):
+        self.delayed_queue.put(topic, message, delay)
 
     def enqueue(self, topic, message: str):
         if (self.queue.get(topic) != None):
