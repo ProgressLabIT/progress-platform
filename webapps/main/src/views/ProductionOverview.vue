@@ -388,7 +388,7 @@ export default {
       saving: false,
       //polling_instance: undefined,
       operator_search_text: undefined,
-      events: NaN,
+      events: undefined,
       showFilterDrawer: false,
     };
   },
@@ -506,7 +506,7 @@ export default {
     handleMessage(message) {
       let event = JSON.parse(message.data);
       if (event.notification === 'REFRESH') {
-        this.$store.dispatch('updateWorkOrderList');
+        this.$store.dispatch('loadWorkOrders');
         this.$store.dispatch('loadJobAssignments');
       }
     },
