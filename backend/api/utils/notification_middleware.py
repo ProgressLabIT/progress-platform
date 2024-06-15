@@ -23,5 +23,5 @@ class NotificationMiddleware(BaseHTTPMiddleware):
     def notify_change(self, request: Request):
         if (request['method']=='GET'):
             return
-        ServerEventManager.getInstance().notifyProductionRefresh()
+        ServerEventManager.getInstance().notifyGlobalRefresh()
 
