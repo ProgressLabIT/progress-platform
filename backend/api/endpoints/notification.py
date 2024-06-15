@@ -1,77 +1,11 @@
-from fastapi import WebSocket, WebSocketDisconnect, Depends
-from utils import auth
-from fastapi.responses import HTMLResponse
-from fastapi import APIRouter
+from fastapi import Request, APIRouter
+from utils.server_event_manager import ServerEventManager
+from sse_starlette.sse import EventSourceResponse
+from starlette.middleware.cors import CORSMiddleware
 
-from commons.websockets.websocket_manager import WebsocketManager
-from commons.kafka_utils.kafka_producer import KafkaProducer
 
 router = APIRouter()
 
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Chat</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <h2>Your ID: <span id="ws-id"></span></h2>
-        <form action="" onsubmit="sendMessage(event)">
-            <input type="text" id="messageText" autocomplete="off"/>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var client_id = Date.now()
-            document.querySelector("#ws-id").textContent = client_id;
-            var ws = new WebSocket(`ws://localhost:8000/api/ws/${client_id}`);
-            ws.onmessage = function(event) {
-                var messages = document.getElementById('messages')
-                var message = document.createElement('li')
-                var content = document.createTextNode(event.data)
-                message.appendChild(content)
-                messages.appendChild(message)
-            };
-            function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
-                event.preventDefault()
-            }
-        </script>
-    </body>
-</html>
-"""
-
-#Retrieve websocket example
-@router.get("/wsexample",
-    dependencies=[Depends(auth.verify_token)])
-async def get():
-    return HTMLResponse(html)
-
-#Retrieve websocket example
-@router.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: int):
-    websocketManager = WebsocketManager.getInstance()
-    await websocketManager.connect(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            KafkaProducer.getInstance().produce_async(topic="test_chat", key='123', value=data)
-            #await websocketManager.broadcast(f"Client #{client_id} says: {data}")
-    except WebSocketDisconnect:
-        websocketManager.disconnect(websocket)
-        await websocketManager.broadcast(f"Client #{client_id} left the chat")
-
-def notify():
-    websocketManager = WebsocketManager.getInstance()
-
-
-@router.websocket("/subscribe",
-    dependencies=[Depends(auth.verify_token)])
-async def subscribe(websocket: WebSocket):
-    websocketManager = WebsocketManager.getInstance()
-    await websocketManager.connect(websocket)
-
+@router.get("/notification/{topic}")
+async def message_stream(request: Request, topic: str):
+    return EventSourceResponse(ServerEventManager.getInstance().push_events(request, topic))
