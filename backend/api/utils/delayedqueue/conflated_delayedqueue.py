@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import Callable as _Callable
 from heapq import heappush, heappop
 
-from delayedqueue.delayed_queue_item import DelayedQueueItem
+from utils.delayedqueue.delayed_queue_item import DelayedQueueItem
 
 
 class ConflatedDelayedQueue:

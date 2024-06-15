@@ -1,8 +1,8 @@
 import asyncio
 from fastapi import Request
 import json
-from delayedqueue.conflated_delayedqueue import ConflatedDelayedQueue
-from delayedqueue.delayed_queue_item import DelayedQueueItem
+from utils.delayedqueue.conflated_delayedqueue import ConflatedDelayedQueue
+from utils.delayedqueue.delayed_queue_item import DelayedQueueItem
 from threading import Thread
 
 class ServerEventManager:
