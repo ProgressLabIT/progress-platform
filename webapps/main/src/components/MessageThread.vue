@@ -73,7 +73,7 @@ export default {
       },
       messages: [],
       new_message: '',
-      polling_instance: null,
+      events: undefined,
     };
   },
 
@@ -94,13 +94,29 @@ export default {
 
   mounted() {
     this.getMessages();
-    this.polling_instance = setInterval(this.getMessages, 10000);
+    let eventURL =
+      this.$api.defaults.baseURL + '/notification/global-notification';
+    this.events = new EventSource(eventURL, {
+      withCredentials: true,
+    });
+    this.events.addEventListener('global-notification', (event) => {
+      this.handleMessage(event);
+    });
   },
   unmounted() {
-    clearInterval(this.polling_instance);
+    if (this.events) {
+      this.events.close();
+    }
   },
 
   methods: {
+    handleMessage(message) {
+      let event = JSON.parse(message.data);
+      if (event.notification === 'REFRESH') {
+        this.getMessages();
+      }
+    },
+
     getMessages() {
       this.$api
         .get('message', { params: { recipient_id: this.recipient_id } })

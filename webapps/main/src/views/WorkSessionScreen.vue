@@ -297,6 +297,7 @@ export default {
       show_issue_form: false,
       alert_timeout: 4000,
       can_leave: false,
+      events: undefined,
     };
   },
 
@@ -465,7 +466,14 @@ export default {
   created() {
     // Load job data
     this.loadJob();
-    this.polling_instance = setInterval(this.updateJobData, 10000);
+    let eventURL =
+      this.$api.defaults.baseURL + '/notification/global-notification';
+    this.events = new EventSource(eventURL, {
+      withCredentials: true,
+    });
+    this.events.addEventListener('global-notification', (event) => {
+      this.handleMessage(event);
+    });
   },
 
   async mounted() {
@@ -501,12 +509,20 @@ export default {
 
   beforeUnmount() {
     window.removeEventListener('beforeunload', this.beforeUnloadAlert);
-    clearInterval(this.polling_instance);
     this.$store.state.traceability.current_step_key = undefined;
     this.$store.commit('UPDATE_BATCH_SERIALS', []);
+    if (this.events) {
+      this.events.close();
+    }
   },
 
   methods: {
+    handleMessage(message) {
+      let event = JSON.parse(message.data);
+      if (event.notification === 'REFRESH') {
+        this.updateJobData();
+      }
+    },
     async loadJob() {
       this.$store.dispatch('loadWorkingJobData', this.jobKey).then(async () => {
         await this.$store.dispatch('loadWorkOrderData', this.j.wo_key);
