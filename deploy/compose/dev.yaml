@@ -43,6 +43,7 @@ services:
       - ./backend/commons:/api/commons
     environment:
       - PROGRESS_DB_NAME=PROGRESS_PROD
+      - PROGRESS_WEBAPP_URL=http://localhost:9000
     command: >
       uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
     labels:
@@ -80,7 +81,7 @@ services:
   broker:
     image: apache/kafka:latest
     hostname: broker
-    container_name: broker
+    #container_name: broker
     ports:
       - 9092:9092
       - 9101:9101
