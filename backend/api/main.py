@@ -11,12 +11,16 @@ from commons.executors.executor_manager import ExecutorManager
 from commons.websockets.websocket_manager import WebsocketManager
 from utils.server_event_manager import ServerEventManager
 from utils.serial_notification_kafka_consumer import SerialNotificationsKafkaConsumer
-from utils.notification_middleware import NotificationMiddleware
+from middlewares.notification_middleware import NotificationMiddleware
+from middlewares.gzipfilter_middleware import GZipFilterMiddleware
 
 
 import endpoints
 
 config = get_config()
+
+KafkaAdmin.getInstance().create_topic("serial_notifications")
+KafkaAdmin.getInstance().create_topic("serials")
 
 app = FastAPI(
 	# openapi_url=f"{config.root_path}/openapi.json",
@@ -25,7 +29,7 @@ app = FastAPI(
 # global_router = APIRouter()
 
 origins = [
-    "*",
+    config.webapp_url,
 ]
 
 app.add_middleware(
@@ -36,7 +40,7 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
-#app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(GZipFilterMiddleware, minimum_size=500, filtered_api="/notification")
 
 app.add_middleware(NotificationMiddleware)
 
@@ -55,7 +59,6 @@ async def startup_event():
     KafkaProducer.getInstance()
     serialNotificationsConsumer = SerialNotificationsKafkaConsumer()
     KafkaConsumerManager.getInstance().registerConsumer(serialNotificationsConsumer)
-    KafkaAdmin.getInstance()
     WebsocketManager.getInstance()
 
 def broadcast_message(self, msg):
