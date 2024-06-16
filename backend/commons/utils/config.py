@@ -8,6 +8,7 @@ class Settings(BaseSettings):
   api_root_path: str = "/api"
   media_path: str = "/media"
   db_name: str = "PROGRESS_TEST"
+  webapp_url: str = "http://localhost:9000"
   api_db_username: str = "root" # use default when running standalone containers
   api_db_pwd: str = ""
   kafka_bootstrap_server: str = "broker:19092"
