@@ -7,7 +7,7 @@ const data = require("../test-data/progress-data.json");
 const randomName = faker.person.fullName();
 const randomJob = faker.person.jobTitle();
 
-let token = "";
+let cookieObj = "";
 let session_key = "";
 let session_user_key = "";
 
@@ -22,8 +22,8 @@ describe("Authenticate user and get options", () => {
         expect(res.statusCode).to.be.equal(200);
         expect(res.body.status).to.be.equal(200);
         expect(res.body.detail.action).to.be.equal("start_session");
-        expect(res.body.detail.token).not.to.be.null;
-        token = res.body.detail.token;
+        expect(res.header["set-cookie"]).not.to.be.null;
+        cookieObj = res.header["set-cookie"];
         done();
       });
   });
@@ -36,7 +36,7 @@ describe("Authenticate user and get options", () => {
       })
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", cookieObj)
       .end(function (err, res) {
         expect(res.statusCode).to.be.equal(200);
         expect(res.body.status).to.be.equal(200);
@@ -54,7 +54,7 @@ describe("Authenticate user and get options", () => {
       .query({ user_key: session_user_key })
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
-      .set("authorization", `Bearer ${token}`)
+      .set("Cookie", cookieObj)
       .end(function (err, res) {
         expect(res.statusCode).to.be.equal(200);
         expect(res.body.status).to.be.equal(200);
@@ -68,7 +68,7 @@ describe("Authenticate user and get options", () => {
       .delete(`/api/session/${session_key}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
-      .set("authorization", `Bearer ${token}`)
+      .set("Cookie", cookieObj)
       .end(function (err, res) {
         expect(res.statusCode).to.be.equal(200);
         expect(res.body.detail).to.be.equal("Session closed successfully");
@@ -84,7 +84,7 @@ describe("Authenticate user and get options", () => {
       })
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
-      .set("authorization", `Bearer ${token}`)
+      .set("Cookie", cookieObj)
       .end(function (err, res) {
         expect(res.statusCode).to.be.equal(401);
         expect(res.body.detail.message).to.be.equal(
