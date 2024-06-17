@@ -1,5 +1,6 @@
 <template>
   <q-btn
+    v-if="vuex_ready"
     v-touch-hold.mouse="progress_button.altAction"
     square
     :style="`background-color: ${progress_button_color}`"
@@ -34,6 +35,8 @@ export default {
   data() {
     return {
       clickTimer: null,
+      vuex_ready: false,
+      step_serials: [],
     };
   },
 
@@ -85,7 +88,11 @@ export default {
         altAction: this.declareCustomBatch,
       };
 
-      if (this.job.stage === 'started') {
+      if (
+        this.job.stage === 'started' &&
+        this.step_serials &&
+        this.step_serials.length > 0
+      ) {
         //this.linkSerials();
         return link_serials;
       } else if ('parameters' in this.job && this.job.parameters.step_check) {
@@ -165,9 +172,23 @@ export default {
 
   mounted() {
     this.goToNextUndoneStep();
+    this.loadPhaseSerial();
   },
 
   methods: {
+    loadPhaseSerial() {
+      Promise.all([
+        this.$api.get('serial-wo-phase', {
+          params: {
+            wo_key: this.job.wo_key,
+            phase_key: this.job.phase_key,
+          },
+        }),
+      ]).then(([step_serials]) => {
+        this.step_serials = step_serials;
+        this.vuex_ready = true;
+      });
+    },
     // The single click handler gets triggered on double click as well, so we use a trick to differentiate them
     handleClick({ detail: clickCount }) {
       if (clickCount !== 1 || this.clickTimer !== null) {
@@ -212,15 +233,9 @@ export default {
     },
 
     async linkSerials() {
-      const { data: step_serials } = await this.$api.get('serial-wo-phase', {
-        params: {
-          wo_key: this.job.wo_key,
-          phase_key: this.job.phase_key,
-        },
-      });
       let selected_serials = [];
-      if (step_serials && step_serials.length > 0) {
-        selected_serials = await this.selectSerialBatch(step_serials);
+      if (this.step_serials && this.step_serials.length > 0) {
+        selected_serials = await this.selectSerialBatch(this.step_serials);
         if (selected_serials.length <= 0) {
           return;
         }

@@ -139,16 +139,25 @@ export default {
       }
     },
 
+    getValueFromField(fieldValue) {
+      if (!fieldValue) {
+        return '---';
+      } else if (fieldValue instanceof Object) {
+        return fieldValue.value;
+      }
+      return fieldValue;
+    },
+
     customFieldValue(row, key) {
-      let returnVal = '---';
-      if (row && row['data']) {
-        row['data'].forEach((field) => {
+      let returnValue = '---';
+      if (row && row['grid_data']) {
+        row['grid_data'].forEach((field) => {
           if (field._key === key) {
-            returnVal = field.value;
+            returnValue = this.getValueFromField(field.value);
           }
         });
       }
-      return returnVal;
+      return returnValue;
     },
 
     getCustomCols() {
