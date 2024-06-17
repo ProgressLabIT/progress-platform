@@ -111,7 +111,7 @@ def get_serial_from_key(serial_key: str):
     dependencies=[Depends(auth.verify_token)])
 async def search_serials(
   serial_key: Union[List[str], None] = Query(default=None),
-  serial_key_search: str | None = None,
+  serial_search: str | None = None,
   time_created_from: datetime | None = None,
   time_created_to: datetime | None = None,
   created_by: Union[List[str], None] = Query(default=None),
@@ -125,7 +125,7 @@ async def search_serials(
   # use query parameters to filter specific type
   bind_vars = dict(
     serial_key = serial_key,
-    serial_key_search = serial_key_search,
+    serial_search = serial_search,
     time_created_from = time_created_from,
     time_created_to = time_created_to,
     created_by = created_by,
