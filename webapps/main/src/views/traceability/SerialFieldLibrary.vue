@@ -146,14 +146,11 @@ export default {
       field_list: [],
       show_new_field_form: false,
       show_delete: false,
+      selected_field_key: null
     };
   },
 
   computed: {
-    selected_field_key() {
-      return this.$route.params.field_key;
-    },
-
     selected_field() {
       return this.field_list.find(
         (field) => field._key == this.selected_field_key,
@@ -174,11 +171,11 @@ export default {
 
   methods: {
     showFieldDetail(field_key) {
-      this.$router.push({
-        name: 'serialFieldDetail',
-        params: { field_key },
-      });
+      this.selected_field_key = this.selected_field_key == field_key
+        ? null
+        : field_key
     },
+
     getFields() {
       this.$api.get('serial-field').then((resp) => {
         this.field_list = resp.data.sort();
