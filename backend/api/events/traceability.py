@@ -764,7 +764,7 @@ class ProductionActivityEvent(BaseEvent):
     )
 
     product = self.tx.collection('Product').get(self.info.product_key)
-    if (self.job.first_phase and product['traceability_level'] == TraceabilityLevel.COMPLETE and not self.job.first_phase):
+    if (self.job.first_phase and getattr(product, 'traceability_level', TraceabilityLevel.NONE) == TraceabilityLevel.COMPLETE and not self.job.first_phase):
       # Create batch serials
       self.create_batch_serial_records()
 
@@ -852,7 +852,7 @@ class ProductionActivityEvent(BaseEvent):
 
     if (step_data.form_data != None):
       product = self.tx.collection('Product').get(self.info.product_key)
-      if (product['traceability_level'] != TraceabilityLevel.NONE):
+      if (getattr(product, 'traceability_level', TraceabilityLevel.NONE) != TraceabilityLevel.NONE):
         # update batch serials data
         self.udpate_batch_serial_data(step_data.form_data)
 
@@ -991,7 +991,7 @@ class ProductionActivityEvent(BaseEvent):
     )
 
     product = self.tx.collection('Product').get(self.job.product_key)
-    if (product['traceability_level'] != TraceabilityLevel.NONE):
+    if (getattr(product, 'traceability_level', TraceabilityLevel.NONE) != TraceabilityLevel.NONE):
         # update batch serials data
         self.finalize_batch_serial(completed_batch_qt)
 
@@ -1050,7 +1050,7 @@ class ProductionActivityEvent(BaseEvent):
     if not self.job.last_phase:
       self.declare_wip()
     else:
-      if (product['traceability_level'] != TraceabilityLevel.NONE):
+      if (getattr(product, 'traceability_level', TraceabilityLevel.NONE) != TraceabilityLevel.NONE):
         # update batch serials data
         self.finalize_wo_serial(completed_batch_qt)
 

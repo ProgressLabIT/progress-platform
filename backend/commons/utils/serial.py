@@ -109,11 +109,26 @@ class Queries:
         FOR step_field in step.form_fields
         LET value = FIRST(
             FOR serial_field in s.data
-            FILTER serial_field.form_field_key == step_field.form_field_key
+            FILTER serial_field.custom_field_key == step_field.custom_field_key
             RETURN serial_field.value
         )
         RETURN merge(step_field, { value })
     )
+
+    let fields = (
+        FOR field IN CustomField
+            FILTER field.use_in_serial == True
+            return merge (field)
+    )
+
+    LET grid_data = (
+      FOR field_value IN NOT_NULL(s.data, [])
+        FOR field IN fields
+        FILTER
+          field._key == field_value.form_field_key || field._key == field_value.custom_field_key
+        RETURN MERGE(field, { value: field_value.value })
+    )
+
 
     // FILTER BY LINKS
 
@@ -135,7 +150,8 @@ class Queries:
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(s, {
       data,
-      product
+      product,
+      grid_data
     })
 
     return base_result
