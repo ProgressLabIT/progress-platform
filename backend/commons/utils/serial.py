@@ -106,7 +106,7 @@ class Queries:
         FOR phase IN process_phases
         FOR step IN phase.step_sequence[* RETURN document(Step, CURRENT)]
         FILTER step.type == 'form'
-        FOR step_field in step.form_fields
+        FOR step_field in NOT_NULL(step.form_fields, [])
         LET value = FIRST(
             FOR serial_field in s.data
             FILTER serial_field.custom_field_key == step_field.custom_field_key
