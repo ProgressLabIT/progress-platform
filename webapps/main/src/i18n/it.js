@@ -216,7 +216,7 @@ export default {
   issue_type_update_success: 'Tipo di segnalazione aggiornata con successo',
   issue_update_success: 'Segnalazione aggiornata con successo',
   issue_update_title: 'Modifica segnalazione',
-  serial: 'Seriali',
+  serial_id: 'id matricola',
   serial_new_title: 'Nuovo serial',
   serial_update_title: 'Modifica seriale',
   item: 'articolo | articoli',
