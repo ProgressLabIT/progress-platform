@@ -18,7 +18,6 @@
       >
         <template #before>
           <div class="column q-pa-md fit">
-
             <!-- HEADER -->
             <div class="row justify-between items-center">
               <div v-if="!can_edit" class="text-h3 display highlight">
@@ -54,27 +53,30 @@
             <template v-if="serial.data.length > 0">
               <div class="column col scroll">
                 <div class="row full-width q-col-gutter-md">
-                <div class="col-4"
-                  v-for="field in serial.data"
-                  :key="field.form_field_key"
-                >
-                  <FormField
-                    :field="field"
-                    :root-path="`/media/serial/${serialKey}`"
-                    :disable="!can_edit"
-                    dense
-                    @update="field.value = $event"
-                  />
+                  <div
+                    v-for="field in serial.data"
+                    :key="field.form_field_key"
+                    class="col-4"
+                  >
+                    <FormField
+                      :field="field"
+                      :root-path="`/media/serial/${serialKey}`"
+                      :disable="!can_edit"
+                      dense
+                      @update="field.value = $event"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
             </template>
             <div v-else class="col-auto text-italic">No data</div>
 
-            <!-- PHASES & STEPS -->
+            <!-- PHASES & STEPS
             <div class="row items-center q-pl-lg">
               <div class="col-5 column full-height">
-                <div class="col-auto text-h5 weight bold text-uppercase text-low">
+                <div
+                  class="col-auto text-h5 weight bold text-uppercase text-low"
+                >
                   {{ $t('phase.phase') }}
                 </div>
 
@@ -90,10 +92,9 @@
               <div class="col">
                 <q-separator inset />
               </div>
-            </div>
+            </div>-->
 
-
-            <!-- STEPS DATA -->
+            <!-- STEPS DATA
             <div class="row items-center q-pl-lg q-mt-sm">
               <div class="col-auto text-h5 weight bold text-uppercase text-low">
                 {{ $t('form_title') }}
@@ -101,8 +102,7 @@
               <div class="col">
                 <q-separator inset />
               </div>
-            </div>
-
+            </div> -->
 
             <q-space />
 
@@ -153,10 +153,8 @@
             </template>
           </MessageThread>
         </template>
-
       </q-splitter>
     </template>
-
   </BaseModalScreen>
 </template>
 
@@ -194,7 +192,7 @@ export default {
       current_phase: 0,
       current_step: 0,
       editMode: false,
-      data_column_width: 65
+      data_column_width: 65,
     };
   },
 
@@ -236,7 +234,7 @@ export default {
     this.editMode = false;
     this.saving = false;
     this.$store.dispatch('loadUsers');
-    console.log(this.$store.state.serial)
+    console.log(this.$store.state.serial);
   },
 
   methods: {
@@ -254,7 +252,7 @@ export default {
       this.getHistory();
     },
 
-    getFormFieldValue(phase_key, step_key, fields) {
+    /*getFormFieldValue(phase_key, step_key, fields) {
       return fields.map((field) => ({
         phase_key: phase_key,
         step_key: step_key,
@@ -270,7 +268,7 @@ export default {
                 }))
             : field.value,
       }));
-    },
+    },*/
 
     getFieldType(field) {
       return this.$store.getters.getCustomFieldByKey(field._key)?.type;
@@ -279,7 +277,7 @@ export default {
     async save() {
       this.saving = true;
 
-      let phase_data = this.serial.phases;
+      /*let phase_data = this.serial.phases;
 
       let data = [];
       if (phase_data) {
@@ -296,10 +294,10 @@ export default {
             });
           }
         });
-      }
+      }*/
 
       let serial_data = this.serial;
-      serial_data.data = data;
+      // serial_data.data = data;
 
       const user = this.session_data.user._key;
 
