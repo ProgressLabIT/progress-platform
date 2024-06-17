@@ -74,6 +74,8 @@ export default {
   },
   create: 'create',
   create_order: 'create order',
+  created_max: 'Created (max)',
+  created_min: 'Created (min)',
   creation_date: 'creation date',
   critical: 'critical',
   date_format: 'YYYY/MM/DD',

@@ -78,7 +78,7 @@
       @reset="resetFilters"
     >
       <!-- SERIAL KEY -->
-      <q-input
+    <!--   <q-input
         v-model="serial_key_search"
         clearable
         filled
@@ -94,7 +94,7 @@
           <q-icon name="mdi-magnify" />
         </template>
       </q-input>
-
+ -->
       <!-- SERIAL NO -->
       <q-input
         v-model="serial_search"
@@ -113,8 +113,26 @@
         </template>
       </q-input>
 
+      <!-- PRODUCT -->
+      <q-input
+        v-model="product_code_search"
+        clearable
+        dense
+        filled
+        hide-bottom-space
+        autocomplete="off"
+        name="work_order"
+        debounce="1000"
+        class="q-mb-md"
+        :label="$t('product.label')"
+      >
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
       <!-- OPENED DATE RANGE -->
-      <div class="row q-col-gutter-sm q-mt-sm q-mb-md">
+      <div class="row q-col-gutter-sm q-mb-md">
         <div class="col">
           <q-input
             v-model="time_created_from"
@@ -123,7 +141,7 @@
             clearable
             debounce="1000"
             mask="date"
-            :label="$t('opened_min')"
+            :label="$t('created_min')"
           >
             <template #append>
               <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
@@ -150,7 +168,7 @@
             clearable
             mask="date"
             debounce="1000"
-            :label="$t('opened_max')"
+            :label="$t('created_max')"
           >
             <template #append>
               <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
@@ -184,23 +202,7 @@
         @select="(selection) => (created_by = selection)"
       />
 
-      <!-- PRODUCT -->
-      <q-input
-        v-model="product_code_search"
-        clearable
-        dense
-        filled
-        hide-bottom-space
-        autocomplete="off"
-        name="work_order"
-        debounce="1000"
-        class="q-mb-md"
-        :label="$t('product.label')"
-      >
-        <template #append>
-          <q-icon name="mdi-magnify" />
-        </template>
-      </q-input>
+
       <!--
       <div class="col-6">
         <q-checkbox
