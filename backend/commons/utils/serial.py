@@ -70,7 +70,7 @@ class Queries:
 
   FIND_SERIALS = """
 
-     FOR s IN Serial
+    FOR s IN Serial
 
     // FILTER BY DOCUMENT PROPERTIES
     FILTER
@@ -100,53 +100,28 @@ class Queries:
         : true
       )
 
-      let fields = (
-        FOR field IN CustomField
-            FILTER field.use_in_serial == True
-            return merge (field)
-    )
+    LET process_phases = document(Product, s.product_key).process_phases[* RETURN document(Phase, CURRENT)]
 
-    LET serial_data = (
-      FOR field_value IN NOT_NULL(s.data, [])
-      for field IN fields
-      FILTER
-        field._key == field_value.form_field_key || field._key == field_value.custom_field_key
-      RETURN MERGE(field, { value: field_value.value })
+    LET data = (
+        FOR phase IN process_phases
+        FOR step IN phase.step_sequence[* RETURN document(Step, CURRENT)]
+        FILTER step.type == 'form'
+        FOR step_field in step.form_fields
+        LET value = FIRST(
+            FOR serial_field in s.data
+            FILTER serial_field.form_field_key == step_field.form_field_key
+            RETURN serial_field.value
+        )
+        RETURN merge(step_field, { value })
     )
-
 
     // FILTER BY LINKS
 
     // PRODUCT
     let product = FIRST(
         FOR product IN Product
-            FILTER product._key == s.product_key
-            return product
-    )
-
-    LET phases = (
-      FOR phase IN Phase
-      FILTER phase.product_key == product._key
-      RETURN {
-        product_key: phase.product_key,
-        alias: phase.alias,
-        phase_key: phase._key,
-        steps: (
-          FOR step IN Step
-            FILTER step._key in phase.step_sequence
-            RETURN {
-                _key: step._key,
-                title: step.title,
-                description: step.description,
-                form_fields: UNIQUE(
-                    FOR field_value IN NOT_NULL(s.data, [])
-                    FOR field IN NOT_NULL(step.form_fields, [])
-                    FILTER step._key == field_value.step_key && phase._key == field_value.phase_key &&
-                      (field._key == field_value.form_field_key || field._key == field_value.custom_field_key)
-                    return MERGE(field, { value: field_value.value })
-                )
-            }
-        )}
+        FILTER product._key == s.product_key
+        RETURN product
     )
 
     FILTER
@@ -159,9 +134,8 @@ class Queries:
 
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(s, {
-      data: serial_data,
-      phases: phases,
-      product: product
+      data,
+      product
     })
 
     return base_result
