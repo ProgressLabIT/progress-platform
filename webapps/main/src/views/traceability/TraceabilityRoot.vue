@@ -78,7 +78,7 @@
       @reset="resetFilters"
     >
       <!-- SERIAL KEY -->
-    <!--   <q-input
+      <!--   <q-input
         v-model="serial_key_search"
         clearable
         filled
@@ -202,7 +202,6 @@
         @select="(selection) => (created_by = selection)"
       />
 
-
       <!--
       <div class="col-6">
         <q-checkbox
@@ -210,6 +209,30 @@
           dense
           :label="$t('traceability.include_deleted')"
         />
+      </div>
+
+      <div
+        v-for="filter in serial_field"
+        :key="filter._key"
+        class="row items-center justify-between q-mt-sm"
+      >
+        <div class="col">
+          <q-checkbox
+            v-if="filter.type === 'files'"
+            v-model="filter.value"
+            :label="$t('has_attachments')"
+          />
+
+          <FormField
+            v-else
+            :field="filter"
+            style="margin-bottom: 0"
+            dense
+            @update="
+              filter.value = filter.type === 'choice' ? $event?.value : $event
+            "
+          />
+        </div>
       </div>-->
 
       <div class="row items-center justify-between">
@@ -374,6 +397,7 @@ export default {
       loading_fields: false,
       show_serial_form: false,
       events: NaN,
+      serial_field: [],
     };
   },
 
@@ -484,11 +508,11 @@ export default {
 
     getSerialFields() {
       this.loading_fields = true;
-      this.$store.dispatch('getSerialFields', {}).then(() =>
-        setTimeout(() => {
-          this.loading_fields = false;
-        }, 1000),
-      );
+
+      Promise.all([this.$api.get('serial-field')]).then(([serial_fields]) => {
+        this.serial_fields = serial_fields?.data;
+        this.loading_fields = false;
+      });
     },
 
     getSerials() {

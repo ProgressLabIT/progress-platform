@@ -88,6 +88,8 @@ export default {
         altAction: this.declareCustomBatch,
       };
 
+      this.loadPhaseSerial();
+
       if (
         this.job.stage === 'started' &&
         this.step_serials &&
@@ -185,7 +187,7 @@ export default {
           },
         }),
       ]).then(([step_serials]) => {
-        this.step_serials = step_serials;
+        this.step_serials = step_serials?.data;
         this.vuex_ready = true;
       });
     },
