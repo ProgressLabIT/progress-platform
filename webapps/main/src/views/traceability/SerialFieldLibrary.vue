@@ -2,18 +2,38 @@
   <LoadingSignal v-if="!data_ready" />
 
   <div v-else class="row full-height">
-    <div class="full-height column col-3">
-      <q-input
-        v-model="search_text"
-        dense
-        filled
-        class="q-px-md q-pt-md"
-        :placeholder="$capitalize($t('search'))"
-      >
-        <template #append>
-          <q-icon name="mdi-magnify" />
-        </template>
-      </q-input>
+    <div class="full-height column col">
+      <div class="row justify-between q-pr-md">
+        <q-input
+          v-model="search_text"
+          dense
+          filled
+          class="q-px-md q-pt-md col-5"
+          :placeholder="$capitalize($t('search'))"
+        >
+          <template #append>
+            <q-icon name="mdi-magnify" />
+          </template>
+        </q-input>
+       <!--  <q-btn
+          v-if="!edit_mode"
+          icon='mdi-pencil'
+          round
+          padding="md md"
+          flat
+          @click="edit_mode = true"
+        />
+        <div class="col-auto" v-else>
+          <q-btn
+            color="theme-blue"
+            :label="$t('save')"
+          />
+          <q-btn
+            color="theme-grey"
+            :label="$t('cancel')"
+          />
+        </div> -->
+      </div>
 
       <div
         class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
@@ -57,10 +77,10 @@
         {{ filtered_fields.length }} {{ $t('of') }} {{ field_list.length }}
       </div>
 
-      <div class="row item-center q-mb-xl">
+      <div class="row q-pa-md justify-between">
         <q-btn
           color="theme-blue"
-          class="q-ml-auto"
+          class="col-auto"
           size="12px"
           :label="$t('add_field')"
           @click="show_new_field_form = true"
@@ -68,10 +88,10 @@
         </q-btn>
         <q-btn
           color="theme-red"
-          class="q-ml-md"
+          class="col-auto"
           size="12px"
           :label="$t('remove_field')"
-          :disable="!selected_field_key"
+          v-if="selected_field_key"
           @click="show_delete = true"
         >
         </q-btn>
@@ -94,14 +114,6 @@
         {{ $t('serial_field_delete_text') }}
       </BaseActionCard>
     </BaseDialog>
-    <!-- FIELD DATA -->
-
-    <!--q-separator vertical />
-
-
-    <div v-if="data_ready" class="col full-height">
-      <router-view :field="selected_field" @reload="getFields"> </router-view>
-    </div-->
   </div>
 </template>
 
