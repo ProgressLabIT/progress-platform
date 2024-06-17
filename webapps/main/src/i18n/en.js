@@ -258,6 +258,7 @@ export default {
     start: 'start',
     unassigned: 'unassigned',
     unassigned_jobs: 'unassigned jobs',
+    link_serials: 'select serials',
   },
   label: 'Label',
   language: 'language',
@@ -848,4 +849,6 @@ export default {
   },
   serial_autocomplete_hint:
     'Input the text to search (min 3 characters) between serials. Will show first 100 results.',
+  serial_delete_confirm_title: 'Delete serial',
+  serial_delete_confirm_question: 'Do you want to delete this serial?',
 };

@@ -262,6 +262,7 @@ export default {
     start: 'inizia',
     unassigned: 'non assegnato | non assegnati',
     unassigned_jobs: 'lavori non assegnati',
+    link_serials: 'seleziona seriali',
   },
   label: 'Etichetta',
   language: 'lingua',
@@ -856,4 +857,7 @@ export default {
   },
   serial_autocomplete_hint:
     'Inserisci il testo da ricercare (min 3 caratteri) fra i seriali. Verranno mostrati i primi 100 risultati.',
+  serial_delete_confirm_title: 'Cancella seriale',
+  serial_delete_confirm_question:
+    'Sei sicuro di voler cancellare questo seriale?',
 };
