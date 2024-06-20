@@ -70,6 +70,7 @@ export default {
       recipient_prefix_map: {
         issue: 'Issue/',
         work_order: 'WorkOrder/',
+        serial: 'Serial/',
       },
       messages: [],
       new_message: '',
