@@ -294,7 +294,7 @@ export default {
         return;
       }
 
-      console.warning('No steps found, cannot go to any step');
+      console.warn('No steps found, cannot go to any step');
       this.goToStep(undefined);
     },
   },
