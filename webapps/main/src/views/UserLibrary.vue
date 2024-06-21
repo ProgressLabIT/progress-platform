@@ -243,7 +243,7 @@ export default {
       this.$router.push({ name: 'newUser' });
     },
     getActiveIcon(active) {
-      return active ? 'mdi-account' : 'mdi-account-outline';
+      return active ? 'mdi-account' : 'mdi-account-cancel-outline';
     },
   },
 };

@@ -714,7 +714,7 @@ export default {
     },
     archive_action: 'archive user',
     archive_explainer:
-      'Data related to this user will not be deleted, but only archived: the user will not be shown in standard lists, but you will be able to restore them from the archive section and their data will be included in traceability analyses.',
+      'Data related to this user will not be deleted, but only archived: the user will not be shown in standard lists, but their data will be included in traceability analyses.',
     archive_success: 'user archived successfully',
     creation_date: 'creation date',
     department: 'department',
