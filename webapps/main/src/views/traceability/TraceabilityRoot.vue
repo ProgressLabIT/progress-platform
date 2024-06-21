@@ -209,10 +209,10 @@
           dense
           :label="$t('traceability.include_deleted')"
         />
-      </div>
+      </div>-->
 
       <div
-        v-for="filter in serial_field"
+        v-for="filter in serial_fields"
         :key="filter._key"
         class="row items-center justify-between q-mt-sm"
       >
@@ -233,7 +233,7 @@
             "
           />
         </div>
-      </div>-->
+      </div>
 
       <div class="row items-center justify-between">
         <div class="highlight text-uppercase text-h6">
@@ -397,7 +397,7 @@ export default {
       loading_fields: false,
       show_serial_form: false,
       events: NaN,
-      serial_field: [],
+      serial_fields: [],
     };
   },
 
@@ -506,13 +506,17 @@ export default {
       this.advancedFilters = [];
     },
 
-    getSerialFields() {
+    async getSerialFields() {
       this.loading_fields = true;
 
-      Promise.all([this.$api.get('serial-field')]).then(([serial_fields]) => {
-        this.serial_fields = serial_fields?.data;
-        this.loading_fields = false;
-      });
+      await this.$store.dispatch('getSerialFields', {}).then(() =>
+        setTimeout(() => {
+          this.loading_fields = false;
+        }, 1000),
+      );
+
+      //this.serial_fields = this.$store.state.serial.serial_fields;
+      this.serial_fields = [];
     },
 
     getSerials() {

@@ -51,7 +51,6 @@ class CustomField(ArangoDocument):
   name: str = Field(..., min_length=1) # To search when building the form
   default_label: str | None = None # To show to the user when filling up the forms
   default_hint: str | None = None # To show to the user when filling up the forms
-  use_in_serial: bool = False
 
 class FormFieldDefinition(BaseModel):
   key: str | None = Field(None, alias="_key")

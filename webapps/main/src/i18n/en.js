@@ -765,7 +765,7 @@ export default {
     defaultOperationParameters: 'default operation parameters',
     formFieldLibrary: 'Form fields',
     counterLibrary: 'Counters',
-    serialFieldLibrary: 'Serial fields',
+    serialFieldSettings: 'Serial fields',
     flowLibrary: 'Data flows',
     generalSettings: 'General',
     issueOverview: 'Issues',
