@@ -773,7 +773,7 @@ export default {
     flowLibrary: 'Flussi dati',
     formFieldLibrary: 'Campi moduli',
     counterLibrary: 'Contatori',
-    serialFieldLibrary: 'Campi seriali',
+    serialFieldSettings: 'Campi seriali',
     generalSettings: 'generale',
     jobList: 'lavori',
     libraryRoot: 'libreria prodotti',

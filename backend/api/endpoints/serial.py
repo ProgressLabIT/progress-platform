@@ -16,16 +16,12 @@ router = APIRouter()
 
 @router.get('/serial-field',
     dependencies=[Depends(auth.verify_token)])
-def fetch_field(name: str | None = None, key: str | None = None):
-  match = dict()
-  if name:
-    match['name'] = name
-  if key:
-    match['_key'] = key
-  match['use_in_serial'] = True
-  cursor = db.collection('CustomField').find(match)
-  result = [CustomField(**f) for f in cursor]
-  return sorted(result, key=lambda x: x.name.lower())
+def fetch_field():
+  serial_fields = db.collection('Config').get('serial_fields')
+  fields = []
+  if serial_fields is not None:
+    fields = serial_fields['value']
+  return fields
 
 
 @router.get('/product-steps/{product_key}',
@@ -122,6 +118,11 @@ async def search_serials(
   serial_deleted: bool = False
  # with_links: bool = False
   ):
+
+  serial_fields = db.collection('Config').get('serial_fields')
+  fields = []
+  if serial_fields is not None:
+    fields = serial_fields['value']
   # use query parameters to filter specific type
   bind_vars = dict(
     serial_key = serial_key,
@@ -133,7 +134,8 @@ async def search_serials(
     product_code_search = product_code_search,
     advanced_filters = json.loads(b64decode(advanced_filters).decode('latin-1')) if advanced_filters else None,
     limit = limit,
-    deleted = serial_deleted
+    deleted = serial_deleted,
+    fields = fields
     #with_links = with_links
   )
   try:
