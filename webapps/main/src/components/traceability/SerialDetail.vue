@@ -109,7 +109,7 @@
             <!-- ACTIONS -->
             <div class="row q-gutter-md">
               <q-btn
-                v-if="user_can_delete"
+                v-if="user_can_delete && !editMode"
                 color="theme-red"
                 size="12px"
                 icon="mdi-delete"
@@ -118,6 +118,7 @@
               >
               </q-btn>
               <q-btn
+                v-if="editMode"
                 size="12px"
                 color="theme-orange"
                 :label="$t('save')"
@@ -127,6 +128,16 @@
               >
               </q-btn>
               <q-btn
+                v-if="editMode"
+                size="12px"
+                color="theme-grey"
+                :label="$t('cancel')"
+                :loading="saving"
+                @click="onDialogCancel"
+              >
+              </q-btn>
+              <q-btn
+                v-if="!editMode"
                 size="12px"
                 icon="mdi-keyboard-return"
                 color="theme-grey"
@@ -249,7 +260,7 @@ export default {
 
     refreshSerial() {
       this.$store.dispatch('getSerials', { serial_key: this.serialKey });
-      this.getHistory();
+      //this.getHistory();
     },
 
     /*getFormFieldValue(phase_key, step_key, fields) {
@@ -272,6 +283,11 @@ export default {
 
     getFieldType(field) {
       return this.$store.getters.getCustomFieldByKey(field._key)?.type;
+    },
+
+    async onDialogCancel() {
+      this.refreshSerial();
+      this.editMode = false;
     },
 
     async save() {
@@ -313,8 +329,9 @@ export default {
 
       await this.$api.post('event', event);
 
+      this.editMode = false;
       this.saving = false;
-      this.exit();
+      //this.exit();
     },
 
     deleteSerial() {
