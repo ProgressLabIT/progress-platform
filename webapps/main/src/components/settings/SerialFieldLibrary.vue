@@ -4,9 +4,10 @@
   <div v-else class="row full-height">
     <div class="full-height column col">
       <div class="row justify-between q-pr-md">
-        <q-input
+        <!-- <q-input
           v-model="search_text"
-          dense
+          :dense="dense"
+          :readonly="!editMode"
           filled
           class="q-px-md q-pt-md col-5"
           :placeholder="$capitalize($t('search'))"
@@ -15,7 +16,7 @@
             <q-icon name="mdi-magnify" />
           </template>
         </q-input>
-       <!--  <q-btn
+          <q-btn
           v-if="!edit_mode"
           icon='mdi-pencil'
           round
@@ -53,6 +54,8 @@
         <div
           v-for="(field, index) in filtered_fields"
           :key="field._key"
+          :dense="dense"
+          :readonly="!editMode"
           class="row pointer q-px-lg q-py-xs medium full-width"
           :class="{
             'alternate-row': index % 2 === 0,
@@ -79,6 +82,7 @@
 
       <div class="row q-pa-md justify-between">
         <q-btn
+          v-if="editMode"
           color="theme-blue"
           class="col-auto"
           size="12px"
@@ -87,11 +91,12 @@
         >
         </q-btn>
         <q-btn
+          v-if="selected_field_key && editMode"
           color="theme-red"
           class="col-auto"
           size="12px"
           :label="$t('remove_field')"
-          v-if="selected_field_key"
+          :readonly="!editMode"
           @click="show_delete = true"
         >
         </q-btn>
@@ -137,16 +142,30 @@ export default {
 
   mixins: [form],
 
-  emits: ['reload'],
+  props: {
+    editMode: {
+      type: Boolean,
+      required: true,
+    },
+    dense: {
+      type: Boolean,
+      default: false,
+    },
+    field_list: {
+      type: Array,
+      default: () => [],
+    },
+  },
+
+  emits: ['reload', 'update:field_list'],
 
   data() {
     return {
-      data_ready: false,
+      data_ready: true,
       search_text: undefined,
-      field_list: [],
       show_new_field_form: false,
       show_delete: false,
-      selected_field_key: null
+      selected_field_key: '',
     };
   },
 
@@ -165,58 +184,28 @@ export default {
     },
   },
 
-  created() {
-    this.getFields();
-  },
-
   methods: {
     showFieldDetail(field_key) {
-      this.selected_field_key = this.selected_field_key == field_key
-        ? null
-        : field_key
-    },
-
-    getFields() {
-      this.$api.get('serial-field').then((resp) => {
-        this.field_list = resp.data.sort();
-        this.data_ready = true;
-      });
+      this.selected_field_key =
+        this.selected_field_key == field_key ? null : field_key;
     },
 
     addField(customField) {
       this.show_new_field_form = false;
       let field = customField;
-      customField.use_in_serial = true;
-      this.$api
-        .put(`field/${field._key}`, {
-          ...field,
-          ...customField,
-        })
-        .then(() => {
-          this.$emit('reload');
-          this.getFields();
-        });
+      let temp_values = this.field_list;
+      temp_values.push(field);
+      this.$emit('update:field_list', temp_values);
+      this.$emit('reload');
     },
 
     deleteField() {
       this.show_delete = false;
-      let temp_data = this.selected_field;
-      temp_data.use_in_serial = false;
-      this.$api
-        .put(`field/${temp_data._key}`, {
-          ...this.field,
-          ...temp_data,
-        })
-        .then(() => {
-          this.$q.notify({
-            message: this.$t('field_delete_success'),
-            color: 'theme-green',
-            timeout: 1500,
-            position: 'top',
-          });
-          this.$emit('reload');
-          this.getFields();
-        });
+      let field = this.selected_field;
+      let temp_values = this.field_list;
+      temp_values.pop(field);
+      this.$emit('update:field_list', temp_values);
+      this.$emit('reload');
     },
   },
 };

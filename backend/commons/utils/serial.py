@@ -115,15 +115,9 @@ class Queries:
         RETURN merge(step_field, { value })
     )
 
-    let fields = (
-        FOR field IN CustomField
-            FILTER field.use_in_serial == True
-            return merge (field)
-    )
-
     LET grid_data = (
       FOR field_value IN NOT_NULL(s.data, [])
-        FOR field IN fields
+        FOR field IN NOT_NULL(@fields, [])
         FILTER
           field._key == field_value.form_field_key || field._key == field_value.custom_field_key
         RETURN MERGE(field, { value: field_value.value })
