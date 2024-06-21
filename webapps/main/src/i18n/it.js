@@ -721,7 +721,7 @@ export default {
     },
     archive_action: 'archivia utente',
     archive_explainer:
-      "I dati dell'utente non verranno effettivamente eliminati ma solo archiviati: l'utente non verrà visualizzato negli elenchi, ma potrà essere ripristinato dalla sezione archivio e i suoi dati saranno inclusi nelle analisi di tracciabilità.",
+      "I dati dell'utente non verranno effettivamente eliminati ma solo archiviati: l'utente non verrà visualizzato negli elenchi, ma i suoi dati saranno inclusi nelle analisi di tracciabilità.",
     archive_success: 'Utente archiviato con successo.',
     creation_date: 'data creazione',
     department: 'reparto',
