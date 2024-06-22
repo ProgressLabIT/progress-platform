@@ -4,14 +4,10 @@ from time import time
 
 import jwt
 from arango.exceptions import DocumentGetError, DocumentUpdateError
-from fastapi import Depends, HTTPException, Request
-#from fastapi.security import OAuth2PasswordBearer
-from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
-from fastapi.security import OAuth2
-from fastapi.security.utils import get_authorization_scheme_param
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from starlette import status
-from typing import Optional
 
 from models.auth import *
 from models.org import User
@@ -34,37 +30,7 @@ scopes_description = {
 TOKEN_SECRET = "0ac33c11e3f6c4903f6f30c03edfda07e513288884a8d573690eb6d916fca034"
 ALGORITHM = "HS256"
 
-class OAuth2PasswordBearerCookie(OAuth2):
-    def __init__(
-        self,
-        token_url: str,
-        scheme_name: str = None,
-        scopes: dict = None,
-        auto_error: bool = True,
-    ):
-        if not scopes:
-            scopes = {}
-        flows = OAuthFlowsModel(password={"tokenUrl": token_url, "scopes": scopes})
-        super().__init__(flows=flows, scheme_name=scheme_name, auto_error=auto_error)
-
-    async def __call__(self, request: Request) -> Optional[str]:
-        authorization: str = request.cookies.get("Authorization")
-        scheme, param = get_authorization_scheme_param(authorization)
-
-        if not authorization or scheme.lower() != "bearer":
-            if self.auto_error:
-                raise HTTPException(
-                    status_code=401,
-                    detail="Not authenticated",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            else:
-                return None
-
-        return param
-
-#bearer_token = OAuth2PasswordBearer(tokenUrl="/auth", scopes=scopes_description)
-bearer_token = OAuth2PasswordBearerCookie(token_url="/auth", scopes=scopes_description)
+bearer_token = OAuth2PasswordBearer(tokenUrl="/auth", scopes=scopes_description)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

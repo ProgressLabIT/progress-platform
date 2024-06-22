@@ -15,13 +15,20 @@ const domain =
 
 const api_base_path = '/api';
 
-axios.defaults.withCredentials = true;
+//axios.defaults.withCredentials = true;
 
 const api = axios.create({
   baseURL: domain + api_base_path,
 });
 
 export default boot(({ app, store }) => {
+  api.interceptors.request.use((config) => {
+    config.headers.common = {
+      ...config.headers.commons,
+      Authorization: `Bearer ${store.getters.getToken}`,
+    };
+    return config;
+  });
   api.interceptors.response.use(
     (res) => {
       return res;
