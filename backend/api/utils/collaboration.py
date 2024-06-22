@@ -133,7 +133,7 @@ class Queries:
     )
 
     FILTER
-      (@serial_search ? CONTAINS(LOWER(serial.serial), LOWER(@serial_search)) : true)
+      (@serial_search ? CONTAINS(LOWER(serial.code), LOWER(@serial_search)) : true)
 
     // JOB
     LET job = FIRST(

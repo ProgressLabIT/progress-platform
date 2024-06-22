@@ -11,7 +11,7 @@
     :placeholder="placeholder_computed"
     :clearable="clearable"
     :options="options"
-    :display-value="value?.serial"
+    :display-value="value?.code"
     :option-value="keyOnly ? '_key' : null"
     :model-value="value"
     input-debounce="500"

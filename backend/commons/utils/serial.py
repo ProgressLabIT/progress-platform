@@ -33,7 +33,7 @@ class Queries:
        (@wo_key? s.wo_key == @wo_key: true)
        && (@product_key? s.product_key == @product_key: true)
        && (@search ? (
-        CONTAINS(LOWER(s.serial), LOWER(@search))
+        CONTAINS(LOWER(s.code), LOWER(@search))
         ) : true)
     LIMIT @limit
     RETURN s
@@ -47,7 +47,7 @@ class Queries:
 
   GET_SERIALS_FOR_SERIAL_NO = """
     FOR s IN Serial
-      FILTER s._key != @serial_key && s.serial == @serial
+      FILTER s._key != @serial_key && s.code == @serial
       RETURN s
   """
 
@@ -76,7 +76,7 @@ class Queries:
     FILTER
       // When filtering by document key, parameters will be arrays
       (@serial_key ? POSITION(@serial_key, s._key) : true)
-      && (@serial_search ? CONTAINS(s.serial, @serial_search) : true)
+      && (@serial_search ? CONTAINS(s.code, @serial_search) : true)
       && (@created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], s.created_by) : true)
       && (@time_created_from ? s.created >= @time_created_from : true)
       && (@time_created_to ? s.created <= @time_created_to : true)

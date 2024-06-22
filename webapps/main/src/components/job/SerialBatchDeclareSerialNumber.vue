@@ -17,7 +17,7 @@
             class="q-py-xs"
           >
             <q-input
-              v-model="serial.serial"
+              v-model="serial.code"
               dense
               filled
               stack-label
