@@ -1,3 +1,4 @@
+import VueCookies from 'vue-cookies';
 import { api } from '@/boot/axios.js';
 
 const session = {
@@ -9,6 +10,7 @@ const session = {
       preferences: {},
     },
     session_key: '',
+    auth_token: '',
     scope: '',
 
     max_idle_minutes: 15, // minutes
@@ -20,6 +22,9 @@ const session = {
   },
 
   mutations: {
+    UPDATE_AUTH_TOKEN(state, new_token) {
+      state.auth_token = new_token;
+    },
     START_USER_SESSION(state, data) {
       state.user = {
         _key: data.user_key,
@@ -29,6 +34,7 @@ const session = {
       };
       state.session_key = data.session_key;
       state.scope = data.scope;
+      //state.auth_token = null;
       // state.session_timeout = data.timeout
     },
 
@@ -40,6 +46,7 @@ const session = {
       // Make sure to cancel any residual locking mechanism after logout
       // clearTimeout(state.session_timer)
       state.session_locked = false;
+      state.auth_token = null;
     },
 
     TOGGLE_SESSION_LOCK(state, locked) {
@@ -90,6 +97,7 @@ const session = {
       }
       await commit('CLOSE_USER_SESSION');
       await this.$router.push({ name: 'login' });
+      VueCookies.delete('Authorization');
     },
 
     unlockSession({ commit }) {
@@ -109,6 +117,11 @@ const session = {
     },
 
     async recognizeMe({ commit, state }) {
+      const cookie = VueCookies.get('Authorization');
+      if (cookie) {
+        await commit('UPDATE_AUTH_TOKEN', cookie);
+      }
+
       if (state.session_key) {
         return state.session_key !== 'UNRECOGNIZED';
       }
@@ -134,6 +147,13 @@ const session = {
   },
 
   getters: {
+    getToken: (state) => {
+      if (!state.auth_token) {
+        return '';
+      }
+      return state.auth_token;
+    },
+
     isLoggedIn: (state) => {
       const session = state.session_key;
       const user = state.user._key;
