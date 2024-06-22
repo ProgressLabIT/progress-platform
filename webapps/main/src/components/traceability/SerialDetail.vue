@@ -21,11 +21,11 @@
             <!-- HEADER -->
             <div class="row justify-between items-center">
               <div v-if="!can_edit" class="text-h3 display highlight">
-                {{ serial.serial }}
+                {{ serial.code }}
               </div>
               <q-input
                 v-else
-                v-model="serial.serial"
+                v-model="serial.code"
                 filled
                 dense
                 size="70"

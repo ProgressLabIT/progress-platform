@@ -88,7 +88,12 @@ export default {
         altAction: this.declareCustomBatch,
       };
 
-      this.loadPhaseSerial();
+      if (
+        this.job.stage === 'started' &&
+        (!this.step_serials || this.step_serials.length <= 0)
+      ) {
+        this.loadPhaseSerial();
+      }
 
       if (
         this.job.stage === 'started' &&
@@ -276,7 +281,7 @@ export default {
       let missing_counter = false;
       batch_serials.forEach((serial) => {
         let counter = serial.counter_key;
-        let serialNo = serial.serial;
+        let serialNo = serial.code;
         if (!counter && !serialNo) {
           missing_counter = true;
         }
@@ -298,7 +303,7 @@ export default {
 
         updated_serials.forEach((serial) => {
           let counter = serial.counter_key;
-          let serialNo = serial.serial;
+          let serialNo = serial.code;
           if (!counter && !serialNo) {
             still_missing_counter = true;
           }

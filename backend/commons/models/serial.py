@@ -6,7 +6,7 @@ from commons.models.form import SerialFormFieldValue
 from commons.utils.dt import timestamp
 
 class Serial(ArangoDocument):
-   serial: str | None = None
+   code: str | None = None
    created_by: str | None = None
    product_key: str | None = None
    wo_key: str | None = None

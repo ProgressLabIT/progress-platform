@@ -111,7 +111,7 @@ export class TemplateContext {
             this.session_data().user.name,
           );
         case 'serial':
-          return this.serial?.serial;
+          return this.serial?.code;
         case 'serial_qt':
           return this.serial?.quantity;
         case 'serial_create_date':
@@ -217,7 +217,7 @@ export class IssueTypeContext extends TemplateContext {
 
         case 'serial.serial_number':
           if (this.serial) {
-            return this.serial.serial;
+            return this.serial.code;
           } else {
             return '';
           }
