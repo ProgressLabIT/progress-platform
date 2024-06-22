@@ -77,8 +77,8 @@ async def authenticate_user(
 
     response_data = AuthResponse(
       action='reset_password',
-      user_key=user.key
-      #token=token
+      user_key=user.key,
+      token=token
     )
 
   else:
@@ -91,8 +91,8 @@ async def authenticate_user(
 
     response_data = AuthResponse(
       action='start_session',
-      user_key=user.key
-      #token=token
+      user_key=user.key,
+      token=token
     )
 
   # Store token data
@@ -115,21 +115,10 @@ async def authenticate_user(
 
   response_content = APIResponse(detail=response_data)
 
-  json_response = JSONResponse(
+  return JSONResponse(
     content= jsonable_encoder(response_content),
     headers=response_headers
   )
-  json_response.set_cookie(
-        "Authorization",
-        value=f"Bearer {token}",
-        httponly=True,
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        expires=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="None",
-        secure=True,
-    )
-  return json_response
-
 
 # ----------------------------------------------------------------------
 

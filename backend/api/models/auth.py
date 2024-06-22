@@ -53,7 +53,7 @@ class TokenData(FlexModel):
 class AuthResponse(BaseModel):
   action: str
   user_key: str
-  #token: str
+  token: str
 
 
 class UserSession(ArangoDocument):
