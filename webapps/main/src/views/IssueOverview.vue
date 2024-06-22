@@ -145,7 +145,7 @@ export default {
         },
         {
           name: 'serial_code',
-          field: (row) => row.links?.serial?.serial,
+          field: (row) => row.links?.serial?.code,
           sortable: true,
           label: this.$t('serial').toUpperCase(),
           align: 'left',

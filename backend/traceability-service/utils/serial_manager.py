@@ -132,7 +132,7 @@ class SerialManager:
           if finalize:
             if (serial_data['counter_key']):
               serial_no = _generate_counter(tx, 'Counter/'+serial_data['counter_key'])
-              new_serial_record['serial'] = serial_no
+              new_serial_record['code'] = serial_no
             else:
               self.notify_results(dict(
                  notification = SerialNotificationType.ERROR,
@@ -233,9 +233,9 @@ class SerialManager:
 
     def update_serial(self, serial_data):
 
-       if (serial_data.get('serial') != None and not self.verify_serial_counter(serial_key=serial_data.get("_key"), serial=serial_data.get('serial'))):
+       if (serial_data.get('code') != None and not self.verify_serial_counter(serial_key=serial_data.get("_key"), serial=serial_data.get('code'))):
           self.notify_results(dict(
-              serial = serial_data.get('serial'),
+              serial = serial_data.get('code'),
               serial_key = serial_data.get("_key"),
               notification = SerialNotificationType.ERROR,
               error_code = SerialNotificationErrorCode.SERIAL_ALREADY_PRESENT,
@@ -255,7 +255,7 @@ class SerialManager:
            ))
        self.notify_results(dict(
               serial_key = serial_data.get("_key"),
-              serial = serial_data.get("serial"),
+              serial = serial_data.get("code"),
               notification = SerialNotificationType.UPDATED
            ))
 
@@ -304,7 +304,7 @@ class SerialManager:
              serial_key = serial.key
              db.collection('Serial').update(dict(serial.dict(), _key=serial_key), check_rev=False)
              self.notify_results(dict(
-                 serial = serial.serial,
+                 serial = serial.code,
                  notification = SerialNotificationType.UPDATED
               ))
            except:
@@ -321,7 +321,7 @@ class SerialManager:
            self.ensure_quanty(serial_event)
         serials = self.retrieve_serial_in_batch(batch_key=batch_key)
         for serial in serials:
-           if (serial.serial == None):
+           if (serial.code == None):
              tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
              try:
                serial_no = "MISSING-COUNTER"
@@ -333,7 +333,7 @@ class SerialManager:
                      error_code = SerialNotificationErrorCode.COUNTER_NOT_DEFINED,
                      error = 'Counter not defined'
                   ))
-               serial.serial = serial_no
+               serial.code = serial_no
                serial_key = serial.key
                tx.collection('Serial').update(dict(serial.dict(), _key=serial_key), check_rev=False)
                tx.commit_transaction()

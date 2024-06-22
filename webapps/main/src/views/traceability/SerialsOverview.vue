@@ -93,8 +93,8 @@ export default {
           style: 'max-width: 10vw',
         },
         {
-          name: 'serial',
-          field: 'serial',
+          name: 'code',
+          field: 'code',
           sortable: true,
           label: this.$t('serial').toUpperCase(),
           align: 'left',
