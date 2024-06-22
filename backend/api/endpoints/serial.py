@@ -53,10 +53,10 @@ def get_serial_wo_phase(
   )
   wo_serials = []
   for serial in [e for e in db.aql.execute(Queries.GET_AVAILABLE_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)]:
-    if serial['serial']:
+    if serial['code']:
       wo_serials.append(dict(
-          value= serial['key'],
-          label= serial['serial'],
+          value= serial['_key'],
+          label= serial['code'],
       ))
   return wo_serials
 
@@ -75,11 +75,11 @@ def get_serial_selection(
       product_key = product_key,
       limit = limit
     ))]:
-    if serial['serial']:
+    if serial['code']:
       all_serials.append(dict(
-          value= serial['key'],
-          _key= serial['key'],
-          label= serial['serial'],
+          value= serial['_key'],
+          _key= serial['_key'],
+          label= serial['code'],
       ))
   return all_serials
 
