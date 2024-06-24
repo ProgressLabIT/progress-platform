@@ -12,8 +12,8 @@ from commons.utils.dt import timestamp
 
 # ISSUE TYPE
 class IssueType(ArangoDocument):
-  code: str
   name: str
+  code: str | None = None
   active: bool = True
   description: str | None = None
   icon: str | None = None

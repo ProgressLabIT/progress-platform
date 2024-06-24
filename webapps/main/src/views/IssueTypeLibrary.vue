@@ -45,7 +45,7 @@
           @click="showIssueTypeDetail(issue_type._key)"
         >
           <div class="col-3">
-            {{ $capitalize(issue_type.code) }}
+            {{ $capitalize(issue_type.code || '') }}
           </div>
           <div class="col-8 ellipsis">
             {{ issue_type.name }}
