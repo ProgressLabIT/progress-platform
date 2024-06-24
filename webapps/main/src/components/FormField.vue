@@ -15,9 +15,7 @@
     >
       <template #label>
         {{ field.label ?? field.default_label }}
-        <span v-if="field.mandatory" class="text-theme-red">
-          *
-        </span>
+        <span v-if="field.mandatory" class="text-theme-red"> * </span>
       </template>
     </q-input>
 
@@ -36,9 +34,7 @@
     >
       <template #label>
         {{ field.label ?? field.default_label }}
-        <span v-if="field.mandatory" class="text-theme-red">
-          *
-        </span>
+        <span v-if="field.mandatory" class="text-theme-red"> * </span>
       </template>
     </q-input>
 
@@ -51,9 +47,7 @@
       @update:model-value="fieldValue = $event"
     >
       {{ field.label ?? field.default_label }}
-      <span v-if="field.mandatory" class="text-theme-red">
-        *
-      </span>
+      <span v-if="field.mandatory" class="text-theme-red"> * </span>
     </q-checkbox>
 
     <!-- TERNARY -->
@@ -85,9 +79,7 @@
           <p class="text-body1 q-ma-none">
             {{ field.label ?? field.default_label }}
           </p>
-          <span v-if="field.mandatory" class="text-theme-red q-ml-xs">
-            *
-          </span>
+          <span v-if="field.mandatory" class="text-theme-red q-ml-xs"> * </span>
         </div>
 
         <q-space />
@@ -153,9 +145,7 @@
     >
       <template #label>
         {{ field.label ?? field.default_label }}
-        <span v-if="field.mandatory" class="text-theme-red">
-          *
-        </span>
+        <span v-if="field.mandatory" class="text-theme-red"> * </span>
       </template>
     </q-select>
 
@@ -182,9 +172,7 @@
       </q-popup-proxy>
       <template #label>
         {{ field.label ?? field.default_label }}
-        <span v-if="field.mandatory" class="text-theme-red">
-          *
-        </span>
+        <span v-if="field.mandatory" class="text-theme-red"> * </span>
       </template>
     </q-input>
 
@@ -211,9 +199,7 @@
       </q-popup-proxy>
       <template #label>
         {{ field.label ?? field.default_label }}
-        <span v-if="field.mandatory" class="text-theme-red">
-          *
-        </span>
+        <span v-if="field.mandatory" class="text-theme-red"> * </span>
       </template>
     </q-input>
 
@@ -263,10 +249,6 @@ const props = defineProps({
   disable: {
     type: Boolean,
     default: false,
-  },
-  mandatory_icon: {
-    type: String,
-    default: 'mdi-asterisk-circle-outline',
   },
 });
 
