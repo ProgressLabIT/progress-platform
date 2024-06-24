@@ -88,7 +88,7 @@ export default {
 
   computed: {
     avatar_src() {
-      return this.user.name && this.user.surname
+      return this.user?.name && this.user?.surname
         ? (
             this.base_path +
             (this.user.name + this.user.surname).replace(/\s+/g, '') +
@@ -116,7 +116,9 @@ export default {
     },
 
     full_name() {
-      return this.$capitalizeAll(this.user ? this.user.name + ' ' + this.user.surname : 'NA');
+      return this.$capitalizeAll(
+        this.user ? this.user.name + ' ' + this.user.surname : 'NA',
+      );
     },
 
     computed_size() {
