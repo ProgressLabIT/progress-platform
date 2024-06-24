@@ -283,6 +283,11 @@ export default {
     this.setTempData();
   },
 
+  updated() {
+    // Ensure fields are updated when navigating to other issue types
+    this.setTempData();
+  },
+
   methods: {
     setTempData() {
       if (this.issueType) {
