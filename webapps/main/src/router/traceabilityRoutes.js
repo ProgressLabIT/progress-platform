@@ -13,7 +13,7 @@ const traceabilityRoutes = [
           import('app/src/views/traceability/SerialsOverview.vue'),
         children: [
           {
-            path: 'serials/:serialKey',
+            path: ':serialKey',
             name: 'serialDetail',
             component: () =>
               import('app/src/components/traceability/SerialDetail.vue'),
