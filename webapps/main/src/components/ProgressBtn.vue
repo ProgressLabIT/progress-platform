@@ -92,7 +92,7 @@ export default {
         this.job.stage === 'started' &&
         (!this.step_serials || this.step_serials.length <= 0)
       ) {
-        this.loadPhaseSerial();
+        // this.loadPhaseSerial();
       }
 
       if (
