@@ -80,6 +80,8 @@ def get_serial_selection(
           value= serial['_key'],
           _key= serial['_key'],
           label= serial['code'],
+          wo_key= serial['wo_key'],
+          product_key= serial['product_key'],
       ))
   return all_serials
 
