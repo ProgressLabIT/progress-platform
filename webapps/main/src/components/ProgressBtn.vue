@@ -345,12 +345,14 @@ export default {
     },
 
     async completeStep() {
-      let can_proceed = true;
 
       let missing_mandatory_fields = false;
 
       this.current_step_form_fields.forEach((field) => {
         let value = this.field_value(field._key);
+        if (field.mandatory && field.type == 'ternary' && value == null) {
+          missing_mandatory_fields = true;
+        }
         if (field.mandatory && !value) {
           missing_mandatory_fields = true;
         }
@@ -371,6 +373,8 @@ export default {
           return;
         }
       }
+
+      let can_proceed = true;
 
       if (current_step_was_last) {
         can_proceed = window.confirm(this.confirm_batch_done_message);
