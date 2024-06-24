@@ -113,15 +113,7 @@ export default {
     },
 
     full_name() {
-      return (
-        this.$capitalizeAll(
-          this.user
-            ? this.user.name
-            : '' + ' ' + this.user
-              ? this.user.surname
-              : '',
-        ) || ''
-      );
+      return this.$capitalizeAll(this.user ? this.user.name + ' ' + this.user.surname : 'NA');
     },
   },
 };
