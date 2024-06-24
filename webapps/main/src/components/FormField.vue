@@ -6,21 +6,18 @@
       v-model="fieldValue"
       :disable="disable"
       :dense="dense"
-      :label="field.label ?? field.default_label"
+      label-slot
       filled
       stack-label
       autogrow
-      lazy-rules
       input-debounce="100"
       hide-bottom-space
-      :rules="[
-        (value) =>
-          (field.required || props.field.mandatory ? !!value : true) ||
-          $t('field_required_alert'),
-      ]"
     >
-      <template v-if="props.field.mandatory" #before>
-        <q-icon :name="mandatory_icon"></q-icon>
+      <template #label>
+        {{ field.label ?? field.default_label }}
+        <span v-if="field.mandatory" class="text-theme-red">
+          *
+        </span>
       </template>
     </q-input>
 
@@ -31,20 +28,17 @@
       type="number"
       :disable="disable"
       :dense="dense"
-      :label="field.label ?? field.default_label"
+      label-slot
       filled
       stack-label
       hide-bottom-space
       input-debounce="100"
-      lazy-rules
-      :rules="[
-        (value) =>
-          (field.required || props.field.mandatory ? !!value : true) ||
-          $t('field_required_alert'),
-      ]"
     >
-      <template v-if="props.field.mandatory" #before>
-        <q-icon :name="mandatory_icon"></q-icon>
+      <template #label>
+        {{ field.label ?? field.default_label }}
+        <span v-if="field.mandatory" class="text-theme-red">
+          *
+        </span>
       </template>
     </q-input>
 
@@ -54,17 +48,12 @@
       :model-value="fieldValue ?? false"
       :disable="disable"
       :dense="dense"
-      :label="field.label"
-      :rules="[
-        (value) =>
-          (field.required || props.field.mandatory ? !!value : true) ||
-          $t('field_required_alert'),
-      ]"
       @update:model-value="fieldValue = $event"
     >
-      <template v-if="props.field.mandatory" #before>
-        <q-icon :name="mandatory_icon"></q-icon>
-      </template>
+      {{ field.label ?? field.default_label }}
+      <span v-if="field.mandatory" class="text-theme-red">
+        *
+      </span>
     </q-checkbox>
 
     <!-- TERNARY -->
@@ -92,10 +81,13 @@
           </q-avatar>
         </div>
 
-        <div class="col items-center">
+        <div class="col items-center row">
           <p class="text-body1 q-ma-none">
             {{ field.label ?? field.default_label }}
           </p>
+          <span v-if="field.mandatory" class="text-theme-red q-ml-xs">
+            *
+          </span>
         </div>
 
         <q-space />
@@ -139,9 +131,6 @@
           </q-btn>
         </div>
       </div>
-      <template v-if="props.field.mandatory" #before>
-        <q-icon :name="mandatory_icon"></q-icon>
-      </template>
     </q-card>
 
     <!-- CHOICE -->
@@ -152,7 +141,7 @@
       option-label="value"
       :disable="disable"
       :dense="dense"
-      :label="field.label ?? field.default_label"
+      label-slot
       :loading="loading"
       :debounce="300"
       use-input
@@ -162,8 +151,11 @@
       input-class="cursor-pointer"
       @filter="onFilter"
     >
-      <template v-if="props.field.mandatory" #before>
-        <q-icon :name="mandatory_icon"></q-icon>
+      <template #label>
+        {{ field.label ?? field.default_label }}
+        <span v-if="field.mandatory" class="text-theme-red">
+          *
+        </span>
       </template>
     </q-select>
 
@@ -172,7 +164,7 @@
       v-if="fieldType === 'date'"
       v-model="fieldValue"
       :disable="disable"
-      :label="field.label ?? field.default_label"
+      label-slot
       filled
       stack-label
       :placeholder="$t('date_format')"
@@ -188,9 +180,11 @@
           </div>
         </q-date>
       </q-popup-proxy>
-      >
-      <template v-if="props.field.mandatory" #before>
-        <q-icon :name="mandatory_icon"></q-icon>
+      <template #label>
+        {{ field.label ?? field.default_label }}
+        <span v-if="field.mandatory" class="text-theme-red">
+          *
+        </span>
       </template>
     </q-input>
 
@@ -199,7 +193,7 @@
       v-if="fieldType === 'time'"
       v-model="fieldValue"
       :disable="disable"
-      :label="field.label ?? field.default_label"
+      label-slot
       stack-label
       filled
       input-class="cursor-pointer"
@@ -215,8 +209,11 @@
           </div>
         </q-time>
       </q-popup-proxy>
-      <template v-if="props.field.mandatory" #before>
-        <q-icon :name="mandatory_icon"></q-icon>
+      <template #label>
+        {{ field.label ?? field.default_label }}
+        <span v-if="field.mandatory" class="text-theme-red">
+          *
+        </span>
       </template>
     </q-input>
 
@@ -227,14 +224,11 @@
         :root-path="`${rootPath}/${field._key}`"
         :label="field.label ?? field.default_label"
         :disable="disable"
+        :mandatory="field.mandatory"
         @add-files="addFiles"
         @delete-file="deleteFile"
         @restore-file="restoreFile"
-      >
-        <template v-if="props.field.mandatory" #before>
-          <q-icon :name="mandatory_icon"></q-icon>
-        </template>
-      </FilesList>
+      />
     </div>
 
     <div class="smaller q-px-sm q-mt-xs">
