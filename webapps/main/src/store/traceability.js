@@ -163,7 +163,7 @@ const traceability = {
 
       state.current_batch_data.step_data.push({
         _key: stepKey,
-        type: step.type,
+        type: step?.type,
         done: false,
         critical: false,
         form_data: [],
