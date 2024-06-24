@@ -574,7 +574,7 @@ export default {
 
     updateJobData() {
       Promise.all([
-        this.$api.get(`product-steps/${this.jobKey}`),
+        this.$api.get(`job/${this.jobKey}`),
         this.$store.dispatch('loadWorkOrderData', this.j.wo_key),
       ]).then(([jobResponse]) => {
         this.$store.commit('UPDATE_JOB', jobResponse.data.detail);
