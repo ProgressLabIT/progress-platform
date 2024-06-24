@@ -17,22 +17,30 @@
         separator-class="text-disabled"
       >
         <template #before>
-          <div class="column q-pa-md fit">
+          <div class="column q-px-md q-pb-sm fit">
             <!-- HEADER -->
-            <div class="row justify-between items-center">
-              <div v-if="!can_edit" class="text-h3 display highlight">
-                {{ serial.code }}
+            <div class="row items-center">
+              <div
+                class="text-h3 display highlight col-auto hover-underline q-mr-md"
+                @click="goToProductPage"
+              >
+                {{ serial.product.code }}
+              </div>
+              <div v-if="!can_edit" class="text-h4 col-auto">
+                {{ ' # ' + serial.code }}
               </div>
               <q-input
                 v-else
                 v-model="serial.code"
                 filled
                 dense
+                :label="$t('serial.code')"
                 size="70"
                 class="input-uppercase"
               >
               </q-input>
 
+              <q-space></q-space>
               <q-btn
                 v-if="!serial.deleted"
                 flat
@@ -45,64 +53,44 @@
               </q-btn>
             </div>
 
+            <div class="row q-mt-sm q-col-gutter-lg items-center text-h6">
+              <div class="col-auto text-h5 text-low text-uppercase">{{ $t('creation_date') }}</div>
+              <div class="col-auto">{{ serial_created_time_string }}</div>
+              <div class="col-auto row items-center">
+                <BaseUserAvatar
+                  :user="$store.getters.user_data(serial.created_by)"
+                  size="24px"
+                  class="q-ml-md"
+                />
+              </div>
+              <div
+                class="col-auto q-ml-md hover-underline"
+                @click="goToWorkOrderPage"
+              >
+                {{ $t('work_order.short').toUpperCase() + ' ' + serial.wo_code }}
+              </div>
+            </div>
+
             <!-- FORM DATA -->
             <div class="col-auto text-h5 text-uppercase text-low q-mt-lg">
-              {{ $t('form_title') }}
+              {{ $t('serial_data') }}
             </div>
 
             <template v-if="serial.data.length > 0">
-              <div class="column col scroll">
-                <div class="row full-width q-col-gutter-md">
-                  <div
-                    v-for="field in serial.data"
-                    :key="field.form_field_key"
-                    class="col-4"
-                  >
-                    <FormField
-                      :field="field"
-                      :root-path="`/media/serial/${serialKey}`"
-                      :disable="!can_edit"
-                      dense
-                      @update="field.value = $event"
-                    />
-                  </div>
-                </div>
+              <div class="column col scroll q-py-md q-mb-md">
+                <FormField
+                  v-for="field in serial.data"
+                  :key="field._key"
+                  :field="field"
+                  :root-path="`/media/serial/${serialKey}`"
+                  :disable="!can_edit"
+                  dense
+                  @update="field.value = $event"
+                />
               </div>
+
             </template>
             <div v-else class="col-auto text-italic">No data</div>
-
-            <!-- PHASES & STEPS
-            <div class="row items-center q-pl-lg">
-              <div class="col-5 column full-height">
-                <div
-                  class="col-auto text-h5 weight bold text-uppercase text-low"
-                >
-                  {{ $t('phase.phase') }}
-                </div>
-
-                <div class="col">
-                  <q-separator inset />
-                </div>
-              </div>
-
-              <div class="col-auto text-h5 weight bold text-uppercase text-low">
-                {{ $t('phase.step') }}
-              </div>
-
-              <div class="col">
-                <q-separator inset />
-              </div>
-            </div>-->
-
-            <!-- STEPS DATA
-            <div class="row items-center q-pl-lg q-mt-sm">
-              <div class="col-auto text-h5 weight bold text-uppercase text-low">
-                {{ $t('form_title') }}
-              </div>
-              <div class="col">
-                <q-separator inset />
-              </div>
-            </div> -->
 
             <q-space />
 
@@ -171,6 +159,7 @@
 
 <script>
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
 import MessageThread from '@/components/MessageThread.vue';
 import { timestamp } from '@/lib/TimeHandling.js';
@@ -180,6 +169,7 @@ export default {
 
   components: {
     BaseModalScreen,
+    BaseUserAvatar,
     MessageThread,
     FormField,
   },
@@ -212,6 +202,19 @@ export default {
       return this.$store.getters.getSerialData(this.serialKey);
     },
 
+    serial_created_time_string() {
+      const config = {
+        year: '2-digit',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      };
+      return this.$capitalize(
+        this.$formatDateTime(this.serial.created, this.$i18n.locale, config),
+      );
+    },
+
     form_fields() {
       const form_template = this.form_template ?? [];
       return form_template.map((field) => ({
@@ -220,6 +223,11 @@ export default {
           ({ form_field_key }) => form_field_key === field._key,
         )?.value,
       }));
+    },
+
+    created_by() {
+      const user_key = this.serial.created_by.split('/')[1]
+      return this.$store.getters.user_data(user_key)
     },
 
     user_can_delete() {
@@ -293,27 +301,7 @@ export default {
     async save() {
       this.saving = true;
 
-      /*let phase_data = this.serial.phases;
-
-      let data = [];
-      if (phase_data) {
-        phase_data.forEach((phase) => {
-          if (phase.steps) {
-            phase.steps.forEach((step) => {
-              data = data.concat(
-                this.getFormFieldValue(
-                  phase.phase_key,
-                  step._key,
-                  step.form_fields,
-                ),
-              );
-            });
-          }
-        });
-      }*/
-
       let serial_data = this.serial;
-      // serial_data.data = data;
 
       const user = this.session_data.user._key;
 
@@ -331,7 +319,6 @@ export default {
 
       this.editMode = false;
       this.saving = false;
-      //this.exit();
     },
 
     deleteSerial() {
@@ -357,6 +344,32 @@ export default {
           this.$api.post('event', event);
           this.exit();
         });
+    },
+
+    goToProductPage() {
+      this.$router.push({
+        name: 'productHome',
+        params: {
+          product_key: this.serial.product_key,
+        },
+        query: {
+          back_to: this.$route.name,
+          ...this.$route.query
+        }
+      });
+    },
+
+    goToWorkOrderPage() {
+      this.$router.push({
+        name: 'workOrderScreen',
+        params: {
+          wo_key: this.serial.wo_key,
+        },
+        query: {
+          back_to: this.$route.name,
+          ...this.$route.query
+        }
+      });
     },
 
     exit() {

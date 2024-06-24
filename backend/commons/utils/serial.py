@@ -137,7 +137,7 @@ class Queries:
       (@product_key ? product._key IN @product_key : true)
       && (@product_code_search ? CONTAINS(LOWER(product.code), LOWER(@product_code_search)) : true)
 
-    // LIMIT FILTERED ISSUE RECORDS
+    // LIMIT FILTERED RECORDS
     SORT s.created
     LIMIT @limit || null
 
@@ -145,7 +145,8 @@ class Queries:
     LET base_result = MERGE(s, {
       data,
       product,
-      grid_data
+      grid_data,
+      wo_code: DOCUMENT(WorkOrder, s.wo_key).wo_code
     })
 
     return base_result
