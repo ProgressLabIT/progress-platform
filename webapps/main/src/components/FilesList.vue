@@ -3,6 +3,9 @@
     <div class="row justify-between items-center q-pl-sm q-py-sm">
       <div class="q-ml-xs text-low">
         {{ label }}
+        <span v-if="mandatory" class="text-theme-red">
+          *
+        </span>
       </div>
       <q-btn
         flat
@@ -105,6 +108,10 @@ export default {
       type: String,
       required: true,
     },
+    mandatory: {
+      type: Boolean,
+      default: false
+    }
   },
 
   emits: ['addFiles', 'deleteFile', 'restoreFile'],
