@@ -39,6 +39,15 @@
             @update:model-value="updateLinkForm"
           />
 
+          <!-- SERIAL -->
+          <BaseAutocompleteSerial
+            v-if="link_form === 'serial'"
+            v-model="links.serial"
+            :label="$capitalize($t('serial'))"
+            @select="(selection) => loadSerial(selection)"
+          >
+          </BaseAutocompleteSerial>
+
           <!-- WORK ORDER -->
           <BaseAutocompleteWorkOrder
             v-if="link_form === 'order'"
@@ -111,16 +120,6 @@
 
         <!-- ISSUE DATA -->
         <div v-else key="issue_data">
-          <!-- SERIAL -->
-          <q-card-section>
-            <BaseAutocompleteSerial
-              v-model="links.serial"
-              :label="$capitalize($t('serial'))"
-              :product="links.product"
-              :work_order="links.work_order"
-            >
-            </BaseAutocompleteSerial>
-          </q-card-section>
           <!-- ISSUE TYPE SELECTION -->
           <q-card-section>
             <BaseAutocompleteIssueType
@@ -302,6 +301,10 @@ export default {
           value: 'general',
           label: this.$t('general'),
         },
+        {
+          value: 'serial',
+          label: this.$t('serial'),
+        },
       ];
     },
   },
@@ -397,6 +400,17 @@ export default {
         this.critical_only = true;
       } else {
         this.critical_only = false;
+      }
+    },
+
+    async loadSerial(serial) {
+      // Set work order data and initialize Phase options to select from
+      this.links.serial = serial;
+      if (serial?.wo_key) {
+        const { data: wo } = await this.$api.get(`work-order/${serial.wo_key}`);
+        this.loadWorkOrder(wo.detail);
+      } else {
+        this.loadProduct(serial.product_key);
       }
     },
 
