@@ -213,6 +213,7 @@ export default {
   issue_update_success: 'Issue updated successfully',
   issue_update_title: 'Update the issue',
   serial: 'serial',
+  serial_id: 'serial id',
   serial_data: 'Serial data',
   serial_new_title: 'New serial',
   serial_update_title: 'Update the serial',
