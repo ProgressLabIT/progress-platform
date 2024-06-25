@@ -59,7 +59,6 @@ class FormFieldDefinition(BaseModel):
   label: str | None = None
   hint: str | None = None
   default: str | None = None # this value should be able to be parsed to get current data
-  required: bool = False
   mandatory: bool = False
   hidden: bool | None = None
 

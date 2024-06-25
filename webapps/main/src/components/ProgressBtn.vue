@@ -345,15 +345,11 @@ export default {
     },
 
     async completeStep() {
-
       let missing_mandatory_fields = false;
 
       this.current_step_form_fields.forEach((field) => {
         let value = this.field_value(field._key);
-        if (field.mandatory && field.type == 'ternary' && value == null) {
-          missing_mandatory_fields = true;
-        }
-        if (field.mandatory && !value) {
+        if (field.mandatory && (!value || value === null || value === '')) {
           missing_mandatory_fields = true;
         }
       });

@@ -334,7 +334,10 @@ export default {
         return missing_mandatory_fields;
       }
       form_data.forEach((field) => {
-        if (field.mandatory && !field.value) {
+        if (
+          field.mandatory &&
+          (!field.value || field.value === null || field.value === '')
+        ) {
           missing_mandatory_fields = true;
         }
       });
