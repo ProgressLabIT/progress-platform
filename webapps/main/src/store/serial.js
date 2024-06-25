@@ -22,8 +22,20 @@ const serial = {
     LOAD_SERIALS(state, serials) {
       state.serials = serials;
     },
+    APPEND_SERIALS(state, serials) {
+      if (state.serials) {
+        for (const serial of serials) {
+          state.serials.push(serial);
+        }
+      } else {
+        state.serials = serials;
+      }
+    },
     LOAD_SERIAL_FIELDS(state, serial_fields) {
       state.serial_fields = serial_fields;
+    },
+    SET_ROUND(state, loading_round) {
+      state.loading_round = loading_round;
     },
   },
 
@@ -31,6 +43,10 @@ const serial = {
     async getSerials({ commit }, search_params) {
       const { data } = await api.get('serial', { params: search_params });
       commit('LOAD_SERIALS', data);
+    },
+    async appendSerials({ commit }, search_params) {
+      const { data } = await api.get('serial', { params: search_params });
+      commit('APPEND_SERIALS', data);
     },
     async getSerialFields({ commit }) {
       const { data } = await api.get('serial-field');
