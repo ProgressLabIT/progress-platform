@@ -149,6 +149,9 @@ class Queries:
       wo_code: DOCUMENT(WorkOrder, s.wo_key).wo_code
     })
 
+    FILTER
+      (@work_order_search ? CONTAINS(LOWER(base_result.wo_code), LOWER(@work_order_search)) : true)
+
     return base_result
 
     //LET serial_links = { product }

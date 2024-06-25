@@ -116,6 +116,7 @@ async def search_serials(
   advanced_filters: str = Query(default=None),
   product_key: Union[List[str], None] = Query(default=None),
   product_code_search: str | None = None,
+  work_order_search: str | None = None,
   limit: int | None = None,
   serial_deleted: bool = False
  # with_links: bool = False
@@ -134,6 +135,7 @@ async def search_serials(
     created_by = created_by,
     product_key = product_key,
     product_code_search = product_code_search,
+    work_order_search = work_order_search,
     advanced_filters = json.loads(b64decode(advanced_filters).decode('latin-1')) if advanced_filters else None,
     limit = limit,
     deleted = serial_deleted,

@@ -121,10 +121,28 @@
         filled
         hide-bottom-space
         autocomplete="off"
-        name="work_order"
+        name="product"
         debounce="1000"
         class="q-mb-md"
         :label="$t('product.label')"
+      >
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
+      <!-- WORK ORDER -->
+      <q-input
+        v-model="work_order_search"
+        clearable
+        dense
+        filled
+        hide-bottom-space
+        autocomplete="off"
+        name="product"
+        debounce="1000"
+        class="q-mb-md"
+        :label="$t('work_order.key')"
       >
         <template #append>
           <q-icon name="mdi-magnify" />
@@ -385,14 +403,17 @@ export default {
       views: [{ component: 'SerialOverview', route_name: 'serialOverview' }],
       filter_list: [
         'serial_key_search',
+        'work_order_search',
         'serial_search',
         'created_by',
         'time_created_from',
         'time_created_to',
         'product_code_search',
-        'serial_deleted',
+        //'serial_deleted',
       ],
-      bool_filters: ['serial_deleted'],
+      bool_filters: [
+        /*'serial_deleted'*/
+      ],
       loading: false,
       loading_fields: false,
       show_serial_form: false,
@@ -403,15 +424,18 @@ export default {
 
   computed: {
     filters_active() {
-      return this.advancedFilters.length; /*+
-      this.filter_list.filter((f) => {
+      return (
+        this.advancedFilters.length +
+        this.filter_list.filter((f) => {
           return this.bool_filters.includes(f) ? this[f] === false : !!this[f];
-        }).length*/
+        }).length
+      );
     },
 
     serial_key_search: queryModel(String, 'serial_search', null),
     serial_search: queryModel(String, 'serial', null),
-    product_code_search: queryModel(String, 'product_search', null),
+    product_code_search: queryModel(String, 'product_code_search', null),
+    work_order_search: queryModel(String, 'work_order_search', null),
     created_by: queryModel(String, 'opened_by', null),
     time_created_from: queryModel(String, 'opened_min', null),
     time_created_to: queryModel(String, 'opened_max', null),
