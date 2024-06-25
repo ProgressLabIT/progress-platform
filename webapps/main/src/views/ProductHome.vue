@@ -160,8 +160,7 @@
             {{ $t('traceability', 2) }}
           </div>
 
-          <q-select
-            :options="traceability_options"
+          <q-checkbox
             filled
             clearable
             emit-value
@@ -169,6 +168,8 @@
             :model-value="product.traceability_level"
             :label="$t('traceability.enabled')"
             :disable="!editMode"
+            true-value="form_only"
+            false-value="none"
             @update:model-value="updateField('traceability_level', $event)"
           />
         </div>
