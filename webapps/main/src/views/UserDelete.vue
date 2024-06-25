@@ -103,6 +103,12 @@ export default {
         // reload users from backend to make sure archived user is not present
         this.stage = 'success';
         this.$store.dispatch('loadUsers');
+        this.$q.notify({
+          message: this.$t('user.archive_success'),
+          color: 'theme-green',
+          timeout: 1500,
+          position: 'top',
+        });
       });
     },
   },
