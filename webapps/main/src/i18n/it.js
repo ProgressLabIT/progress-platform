@@ -217,8 +217,9 @@ export default {
   issue_update_success: 'Segnalazione aggiornata con successo',
   issue_update_title: 'Modifica segnalazione',
   serial_id: 'id matricola',
+  serial: 'matricola',
   serial_data: 'Dati matricola',
-  serial_new_title: 'Nuovo serial',
+  serial_new_title: 'Nuova matricola',
   serial_update_title: 'Modifica seriale',
   item: 'articolo | articoli',
   job: {

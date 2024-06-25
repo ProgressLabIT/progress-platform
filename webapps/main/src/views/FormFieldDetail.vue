@@ -300,7 +300,7 @@ export default {
     },
 
     is_choice() {
-      return this.field.type == 'choice';
+      return this.field?.type == 'choice';
     },
 
     shown_list_values() {
