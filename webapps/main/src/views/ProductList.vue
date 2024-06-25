@@ -71,7 +71,7 @@
             color="theme-blue"
             @click="showMore"
           >
-            CARICA ALTRI
+            {{ $t('load_more') }}
           </q-btn>
           <q-spinner v-if="loading" />
         </div>

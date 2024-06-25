@@ -69,6 +69,18 @@
         <div class="col relative-position">
           <router-view :loading="loading || loading_fields" />
         </div>
+
+        <div class="row q-my-lg justify-center">
+          <q-btn
+            v-if="!loading && hasMore"
+            flat
+            color="theme-blue"
+            @click="showMore"
+          >
+            {{ $t('load_more') }}
+          </q-btn>
+          <q-spinner v-if="loading" />
+        </div>
       </div>
     </q-page>
 
@@ -419,6 +431,8 @@ export default {
       show_serial_form: false,
       events: NaN,
       serial_fields: [],
+      limit: 10,
+      offset: 0,
     };
   },
 
@@ -440,6 +454,10 @@ export default {
     time_created_from: queryModel(String, 'opened_min', null),
     time_created_to: queryModel(String, 'opened_max', null),
     //serial_deleted: queryModel(Boolean, 'deleted', false),
+
+    max_shown() {
+      return this.load_quantity * this.loading_round;
+    },
 
     filters() {
       let filters_object = {};
@@ -466,6 +484,8 @@ export default {
       });
       return {
         ...filters_object,
+        limit: this.limit,
+        offset: this.offset,
         advanced_filters: this.advancedFilterQuery
           ? btoa(JSON.stringify(this.advancedFilterQuery))
           : null,
@@ -500,6 +520,14 @@ export default {
   },
 
   methods: {
+    resetOffset() {
+      this.offset = 0;
+    },
+
+    incremetOffset() {
+      this.offset++;
+    },
+
     getErrorMessage(error_code, default_message) {
       let message = this.$t('traceability.errors.' + error_code);
       if (message) {
@@ -509,7 +537,7 @@ export default {
     },
 
     handleMessage(message) {
-      this.refreshSerial();
+      //this.refreshSerial();
       let event = JSON.parse(message.data);
       if (event.notification === 'ERROR') {
         this.$q.notify({
@@ -545,6 +573,7 @@ export default {
 
     getSerials() {
       this.loading = true;
+      this.resetOffset();
       this.$store
         .dispatch('getSerials', { with_links: true, ...this.filters })
         .then(() =>
@@ -552,6 +581,22 @@ export default {
             this.loading = false;
           }, 1000),
         );
+    },
+
+    showMore() {
+      this.incremetOffset();
+      this.loading = true;
+      this.$store
+        .dispatch('appendSerials', { with_links: true, ...this.filters })
+        .then(() =>
+          setTimeout(() => {
+            this.loading = false;
+          }, 1000),
+        );
+    },
+
+    hasMore() {
+      return this.$store.getSerialCount() <= this.offset * this.limit;
     },
   },
 };

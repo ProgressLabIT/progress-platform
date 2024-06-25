@@ -862,4 +862,5 @@ export default {
   serial_delete_confirm_title: 'Cancella seriale',
   serial_delete_confirm_question:
     'Sei sicuro di voler cancellare questo seriale?',
+  load_more: 'Carica altri',
 };
