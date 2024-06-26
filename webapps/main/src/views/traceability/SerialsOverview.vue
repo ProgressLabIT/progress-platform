@@ -7,14 +7,18 @@
       row-key="_key"
       :loading="loading"
       color="primary"
-      virtual-scroll
       hide-bottom
       class="full-height"
       dense
       separator="none"
       table-class="text-high"
       card-class="background no-shadow"
+      virtual-scroll
+      :virtual-scroll-item-size="48"
+      :virtual-scroll-sticky-size-start="48"
+      :pagination="pagination"
       :rows-per-page-options="[0]"
+      @virtual-scroll="(details) => $emit('onScroll', details)"
     >
       <template #body="props">
         <q-tr
@@ -69,6 +73,14 @@ export default {
       type: Boolean,
       default: false,
     },
+  },
+
+  emits: ['onScroll'],
+
+  setup() {
+    return {
+      pagination: { rowsPerPage: 0 },
+    };
   },
 
   data() {
