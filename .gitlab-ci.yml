@@ -23,7 +23,7 @@ build:webapp:
     WEBAPP_DOCKERFILE: webapp.prod.Dockerfile
     WEBAPP_IMAGE: $CI_REGISTRY_IMAGE/app
   tags:
-    - docker
+    - gitlab-org-docker
   script:
     # Pull builder image if present, if not skip
     - docker pull $WEBAPP_IMAGE:global-deps-stage || true
@@ -96,7 +96,7 @@ build:api:
     API_DOCKERFILE: Dockerfile
     API_IMAGE: $CI_REGISTRY_IMAGE/api
   tags:
-    - docker
+    - gitlab-org-docker
   script:
     # Navigate to build context
     - cd $API_ROOT
@@ -129,7 +129,7 @@ build:workflow:
     WF_SYS_AGENT_DOCKERFILE: Dockerfile
     WF_SYS_AGENT_IMAGE: $CI_REGISTRY_IMAGE/wf-sys-agent
   tags:
-    - docker
+    - gitlab-org-docker
   script:
     # Navigate to build context
     - cd backend/workflow
