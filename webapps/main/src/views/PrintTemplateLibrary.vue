@@ -6,7 +6,9 @@
         <PrintTemplateCard
           :template="template"
           allow-edit
+          allow-delete
           @saved="getTemplates"
+          @delete="getTemplates"
         />
       </div>
     </div>
