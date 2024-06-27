@@ -5,6 +5,7 @@
       v-if="fieldType === 'text'"
       v-model="fieldValue"
       :disable="disable"
+      :readonly="readonly"
       :dense="dense"
       label-slot
       filled
@@ -42,6 +43,7 @@
     <q-checkbox
       v-if="fieldType === 'boolean'"
       :model-value="fieldValue ?? false"
+      :readonly="readonly"
       :disable="disable"
       :dense="dense"
       @update:model-value="fieldValue = $event"
@@ -57,13 +59,13 @@
       square
       style="background: rgba(255, 255, 255, 0.07)"
       class="no-shadow"
-      :class="dense ? 'q-px-md q-py-sm' : 'q-px-lg q-py-md'"
+      :class="dense ? 'q-px-md q-py-sm' : 'q-px-lg q-py-sm'"
     >
       <div class="row items-center">
-        <div class="col-1 items-center">
+        <div class="col-auto items-center">
           <q-avatar
             :color="fieldValue !== undefined ? 'theme-green' : 'transparent'"
-            size="24px"
+            :size="dense ? '14px' : '20px'"
             class="row flex-center text-center text-body2 font-weight-medium"
           >
             <q-icon
@@ -75,11 +77,22 @@
           </q-avatar>
         </div>
 
-        <div class="col items-center row">
-          <p class="text-body1 q-ma-none">
-            {{ field.label ?? field.default_label }}
-          </p>
-          <span v-if="field.mandatory" class="text-theme-red q-ml-xs"> * </span>
+        <div class="col q-ml-md">
+          <div>
+            <span
+              class="text-body2 q-ma-none"
+              :class="{ smaller: dense, 'text-low': readonly, 'text-disabled': disable }"
+            >
+              {{ field.label ?? field.default_label }}
+            </span>
+            <span v-if="field.mandatory" class="text-theme-red q-ml-xs"> * </span>
+          </div>
+          <div
+            class="smaller text-low"
+            :class="{ smaller: dense, 'text-disabled': readonly || disable }"
+          >
+            {{ field.hint ?? field.default_hint }}
+          </div>
         </div>
 
         <q-space />
@@ -90,7 +103,7 @@
             unelevated
             :flat="fieldValue !== false"
             :disable="disable"
-            :dense="dense"
+            :padding="dense ? 'sm md' : 'md lg'"
             color="theme-red"
             :style="{ width: dense ? '70px' : '100px' }"
             @click="fieldValue = fieldValue === false ? undefined : false"
@@ -108,9 +121,9 @@
             unelevated
             :flat="fieldValue !== true"
             :disable="disable"
-            :dense="dense"
             color="theme-green"
             :style="{ width: dense ? '70px' : '100px' }"
+            :padding="dense ? 'sm md' : 'md lg'"
             :class="dense ? 'q-ml-sm' : 'q-ml-lg'"
             @click="fieldValue = fieldValue === true ? undefined : true"
           >
@@ -132,6 +145,7 @@
       :options="options"
       option-label="value"
       :disable="disable"
+      :readonly="readonly"
       :dense="dense"
       label-slot
       :loading="loading"
@@ -154,6 +168,7 @@
       v-if="fieldType === 'date'"
       v-model="fieldValue"
       :disable="disable"
+      :readonly="readonly"
       label-slot
       filled
       stack-label
@@ -181,6 +196,7 @@
       v-if="fieldType === 'time'"
       v-model="fieldValue"
       :disable="disable"
+      :readonly="readonly"
       label-slot
       stack-label
       filled
@@ -209,7 +225,7 @@
         :files="fieldValue"
         :root-path="`${rootPath}/${field._key}`"
         :label="field.label ?? field.default_label"
-        :disable="disable"
+        :disable="disable || readonly"
         :mandatory="field.mandatory"
         @add-files="addFiles"
         @delete-file="deleteFile"
@@ -250,6 +266,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  readonly: {
+    type: Boolean,
+    default: false
+  }
 });
 
 const emit = defineEmits(['update']);
