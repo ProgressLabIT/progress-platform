@@ -33,7 +33,6 @@
                 v-else
                 v-model="serial.code"
                 filled
-                dense
                 :label="$t('serial.code')"
                 size="70"
                 class="input-uppercase"
@@ -84,7 +83,6 @@
                   :field="field"
                   :root-path="`/media/serial/${serialKey}`"
                   :disable="!can_edit"
-                  dense
                   @update="field.value = $event"
                 />
               </div>
