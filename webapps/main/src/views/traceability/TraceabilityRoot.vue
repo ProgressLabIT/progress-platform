@@ -145,7 +145,7 @@
         name="product"
         debounce="1000"
         class="q-mb-md"
-        :label="$t('work_order.key')"
+        :label="$t('work_order.long')"
       >
         <template #append>
           <q-icon name="mdi-magnify" />

@@ -125,7 +125,7 @@ export default {
           field: 'wo_code',
           sortable: true,
           align: 'left',
-          label: this.$t('work_order.key').toUpperCase(),
+          label: this.$t('work_order.long').toUpperCase(),
           style: 'max-width: 10vw',
         },
         {
