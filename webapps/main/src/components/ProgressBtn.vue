@@ -1,6 +1,5 @@
 <template>
   <q-btn
-    v-if="vuex_ready"
     v-touch-hold.mouse="progress_button.altAction"
     square
     :style="`background-color: ${progress_button_color}`"
@@ -35,8 +34,6 @@ export default {
   data() {
     return {
       clickTimer: null,
-      vuex_ready: false,
-      step_serials: [],
     };
   },
 
@@ -44,6 +41,7 @@ export default {
     ...mapState({
       job: (state) => state.traceability.working_job_data,
       batch_data: (state) => state.traceability.current_batch_data.step_data,
+      step_serials: (state) => state.traceability.current_step_serials,
     }),
 
     progress_button_active() {
@@ -87,13 +85,6 @@ export default {
         action: this.declareBatch,
         altAction: this.declareCustomBatch,
       };
-
-      if (
-        this.job.stage === 'started' &&
-        (!this.step_serials || this.step_serials.length <= 0)
-      ) {
-        // this.loadPhaseSerial();
-      }
 
       if (
         this.job.stage === 'started' &&
@@ -179,23 +170,9 @@ export default {
 
   mounted() {
     this.goToNextUndoneStep();
-    this.loadPhaseSerial();
   },
 
   methods: {
-    loadPhaseSerial() {
-      Promise.all([
-        this.$api.get('serial-wo-phase', {
-          params: {
-            wo_key: this.job.wo_key,
-            phase_key: this.job.phase_key,
-          },
-        }),
-      ]).then(([step_serials]) => {
-        this.step_serials = step_serials?.data;
-        this.vuex_ready = true;
-      });
-    },
     // The single click handler gets triggered on double click as well, so we use a trick to differentiate them
     handleClick({ detail: clickCount }) {
       if (clickCount !== 1 || this.clickTimer !== null) {
@@ -250,7 +227,7 @@ export default {
           stepKey: this.current_step_key,
           batch_serials: selected_serials,
         });
-        await this.$store.commit('UPDATE_step_serials', selected_serials);
+        //await this.$store.commit('UPDATE_step_serials', selected_serials);
       }
     },
 
