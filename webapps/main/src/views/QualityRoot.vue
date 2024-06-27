@@ -68,7 +68,7 @@
 
         <!-- MAIN CONTENT -->
         <div class="col relative-position">
-          <router-view :loading="loading" />
+          <router-view :loading="loading" @on-scroll="addIssues" />
         </div>
       </div>
     </q-page>
@@ -561,6 +561,8 @@ export default {
       ],
       loading: false,
       show_issue_form: false,
+      limit: 200,
+      offset: 0,
     };
   },
 
@@ -618,6 +620,7 @@ export default {
       });
       return {
         ...filters_object,
+        limit: this.limit,
         advanced_filters: this.advancedFilterQuery
           ? btoa(JSON.stringify(this.advancedFilterQuery))
           : null,
@@ -644,13 +647,42 @@ export default {
 
     getIssues() {
       this.loading = true;
+      this.offset = 0;
       this.$store
-        .dispatch('getIssues', { with_links: true, ...this.filters })
+        .dispatch('getIssues', {
+          with_links: true,
+          ...this.filters,
+          offset: this.offset,
+        })
         .then(() =>
           setTimeout(() => {
             this.loading = false;
           }, 1000),
         );
+    },
+
+    hasMore() {
+      return this.limit + this.offset <= this.$store.getters.getIssueCount();
+    },
+
+    addIssues(data) {
+      const lastIndex = this.$store.getters.getIssueCount() - 1;
+
+      if (this.loading !== true && data.to === lastIndex && this.hasMore()) {
+        this.offset += this.limit;
+        this.loading = true;
+        this.$store
+          .dispatch('appendIssues', {
+            with_links: true,
+            ...this.filters,
+            offset: this.offset,
+          })
+          .then(() =>
+            setTimeout(() => {
+              this.loading = false;
+            }, 1000),
+          );
+      }
     },
   },
 };
