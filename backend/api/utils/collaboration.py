@@ -146,7 +146,7 @@ class Queries:
 
     // LIMIT FILTERED ISSUE RECORDS
     SORT i.created
-    LIMIT @limit || null
+    LIMIT @offset, @limit || null
 
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(i, {

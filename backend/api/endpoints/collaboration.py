@@ -147,6 +147,7 @@ async def search_issues(
   issue_non_critical: bool | None = None,
   advanced_filters: str = Query(default=None),
   limit: int | None = None,
+  offset: int | None = None,
   with_links: bool = False
   ):
   # use query parameters to filter specific type
@@ -177,6 +178,7 @@ async def search_issues(
     # Browser API (btoa) encodes strings in latin-1 (ISO-8859-1)
     advanced_filters = json.loads(b64decode(advanced_filters).decode('latin-1')) if advanced_filters else None,
     limit = limit,
+    offset = offset,
     with_links = with_links
   )
   try:

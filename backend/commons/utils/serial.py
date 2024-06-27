@@ -155,8 +155,4 @@ class Queries:
     LIMIT @offset, @limit || null
     return base_result
 
-
-    //LET serial_links = { product }
-
-    //RETURN @with_links ? MERGE(base_result, { links: serial_links }) : base_result
   """
