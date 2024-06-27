@@ -120,7 +120,6 @@ async def search_serials(
   limit: int | None = None,
   serial_deleted: bool = False,
   offset: int | None = None,
- # with_links: bool = False
   ):
 
   serial_fields = db.collection('Config').get('serial_fields')
@@ -142,7 +141,6 @@ async def search_serials(
     offset = offset,
     deleted = serial_deleted,
     fields = fields
-    #with_links = with_links
   )
   try:
     cursor = db.aql.execute(Queries.FIND_SERIALS, bind_vars=bind_vars)

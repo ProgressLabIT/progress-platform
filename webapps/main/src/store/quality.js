@@ -26,6 +26,15 @@ const quality = {
     LOAD_ISSUES(state, issues) {
       state.issues = issues;
     },
+    APPEND_ISSUES(state, issues) {
+      if (state.issues) {
+        for (const issue of issues) {
+          state.issues.push(issue);
+        }
+      } else {
+        state.issues = issues;
+      }
+    },
   },
 
   actions: {
@@ -63,6 +72,10 @@ const quality = {
     async getIssues({ commit }, search_params) {
       const { data } = await api.get('issue', { params: search_params });
       commit('LOAD_ISSUES', data);
+    },
+    async appendIssues({ commit }, search_params) {
+      const { data } = await api.get('issue', { params: search_params });
+      commit('APPEND_ISSUES', data);
     },
   },
 };
