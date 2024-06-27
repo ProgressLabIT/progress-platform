@@ -423,6 +423,7 @@ export default {
       events: NaN,
       serial_fields: [],
       limit: 200,
+      offset: 0,
     };
   },
 
@@ -557,7 +558,6 @@ export default {
       this.offset = 0;
       this.$store
         .dispatch('getSerials', {
-          with_links: true,
           ...this.filters,
           offset: this.offset,
         })
@@ -580,7 +580,6 @@ export default {
         this.loading = true;
         this.$store
           .dispatch('appendSerials', {
-            with_links: true,
             ...this.filters,
             offset: this.offset,
           })
