@@ -92,6 +92,7 @@ const traceability = {
     current_step_media_index: null,
     heartbeat: null,
     batch_serials: [],
+    current_step_serials: {},
   },
 
   getters: {
@@ -122,15 +123,17 @@ const traceability = {
       state.user_session = session_data;
     },
 
-    LOAD_WORKING_JOB_DATA(state, { job_data, batch_data }) {
+    LOAD_WORKING_JOB_DATA(state, { job_data, batch_data, step_serials }) {
       state.working_job_data = job_data;
       state.current_batch_data = batch_data;
+      state.current_step_serials = step_serials;
     },
 
-    START_JOB(state, { batch_data, job_data }) {
+    START_JOB(state, { batch_data, job_data, step_serials }) {
       // get timestamp and state metadata
       state.current_batch_data = batch_data;
       state.working_job_data = job_data;
+      state.current_step_serials = step_serials;
     },
 
     CLOSE_WORK_SESSION(state, work_session) {
@@ -221,7 +224,15 @@ const traceability = {
         const batch_resp = await api.get(`batch/${job_data.active_batch_key}`);
         batch_data = batch_resp.data.detail;
       }
-      commit('LOAD_WORKING_JOB_DATA', { job_data, batch_data });
+
+      const step_serial_resp = await api.get('serial-wo-phase', {
+        params: {
+          wo_key: job_data.wo_key,
+          phase_key: job_data.phase_key,
+        },
+      });
+      let step_serials = step_serial_resp?.data;
+      commit('LOAD_WORKING_JOB_DATA', { job_data, batch_data, step_serials });
       await dispatch('getIssues', {
         work_order_key: job_data.wo_key,
         with_links: true,
@@ -241,8 +252,23 @@ const traceability = {
       api.post('event', event).then((resp) => {
         const { new_work_session_data, batch_data, job_data } =
           resp.data.detail;
-        commit('START_JOB', { new_work_session_data, batch_data, job_data });
-        commit('SET_HEARTBEAT', true);
+        api
+          .get('serial-wo-phase', {
+            params: {
+              wo_key: job_data.wo_key,
+              phase_key: job_data.phase_key,
+            },
+          })
+          .then((step_serials_data) => {
+            const step_serials = step_serials_data?.data;
+            commit('START_JOB', {
+              new_work_session_data,
+              batch_data,
+              job_data,
+              step_serials,
+            });
+            commit('SET_HEARTBEAT', true);
+          });
       });
     },
 
