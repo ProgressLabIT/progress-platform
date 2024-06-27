@@ -507,6 +507,8 @@ export default {
     downloadWillBegin: 'Your download will begin shortly!',
   },
   print_template: 'Template | Templates',
+  print_template_confirm_delete_question:
+    'Do you really want to delete this template? It is associated to {entities} entities',
   print_templates: 'Prints',
   print_template_new: 'New template',
   print_template_none: 'No templates',

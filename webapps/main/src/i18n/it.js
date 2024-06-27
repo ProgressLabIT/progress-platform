@@ -516,6 +516,8 @@ export default {
     downloadWillBegin: 'Il download inizierà a breve!',
   },
   print_template: 'Stampa | Stampe',
+  print_template_confirm_delete_question:
+    "Vuoi davvero cancellare questo template?  E' associato a {entities} entita",
   print_templates: 'Stampe',
   print_template_new: 'Nuovo template',
   print_template_none: 'Nessun template',
