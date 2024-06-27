@@ -422,7 +422,7 @@ export default {
       show_serial_form: false,
       events: NaN,
       serial_fields: [],
-      limit: 50,
+      limit: 200,
     };
   },
 
