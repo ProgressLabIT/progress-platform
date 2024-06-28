@@ -307,7 +307,8 @@ export default {
      * @returns {string | undefined}
      */
     getFieldType(field) {
-      return this.$store.getters.getCustomFieldByKey(field._key)?.type;
+      return this.$store.getters.getCustomFieldByKey(field.custom_field_key)
+        ?.type;
     },
 
     getFormFieldValue(phase_key, step_key, fields) {
@@ -334,7 +335,9 @@ export default {
         return missing_mandatory_fields;
       }
       form_data.forEach((field) => {
+        let type = this.getFieldType(field);
         if (
+          type !== 'ternary' &&
           field.mandatory &&
           (!field.value || field.value === null || field.value === '')
         ) {
