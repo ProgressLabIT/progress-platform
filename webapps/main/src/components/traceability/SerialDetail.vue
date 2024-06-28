@@ -53,7 +53,9 @@
             </div>
 
             <div class="row q-mt-sm q-col-gutter-lg items-center text-h6">
-              <div class="col-auto text-h5 text-low text-uppercase">{{ $t('creation_date') }}</div>
+              <div class="col-auto text-h5 text-low text-uppercase">
+                {{ $t('creation_date') }}
+              </div>
               <div class="col-auto">{{ serial_created_time_string }}</div>
               <div class="col-auto row items-center">
                 <BaseUserAvatar
@@ -66,7 +68,9 @@
                 class="col-auto q-ml-md hover-underline"
                 @click="goToWorkOrderPage"
               >
-                {{ $t('work_order.short').toUpperCase() + ' ' + serial.wo_code }}
+                {{
+                  $t('work_order.short').toUpperCase() + ' ' + serial.wo_code
+                }}
               </div>
             </div>
 
@@ -86,7 +90,6 @@
                   @update="field.value = $event"
                 />
               </div>
-
             </template>
             <div v-else class="col-auto text-italic">No data</div>
 
@@ -206,7 +209,7 @@ export default {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       };
       return this.$capitalize(
         this.$formatDateTime(this.serial.created, this.$i18n.locale, config),
@@ -224,8 +227,8 @@ export default {
     },
 
     created_by() {
-      const user_key = this.serial.created_by.split('/')[1]
-      return this.$store.getters.user_data(user_key)
+      const user_key = this.serial.created_by.split('/')[1];
+      return this.$store.getters.user_data(user_key);
     },
 
     user_can_delete() {
@@ -296,10 +299,32 @@ export default {
       this.editMode = false;
     },
 
+    missingMandatoryValues(form_data) {
+      let missing_mandatory_fields = false;
+      if (!form_data) {
+        return missing_mandatory_fields;
+      }
+      form_data.forEach((field) => {
+        if (
+          field.mandatory &&
+          (!field.value || field.value === null || field.value === '')
+        ) {
+          missing_mandatory_fields = true;
+        }
+      });
+      return missing_mandatory_fields;
+    },
+
     async save() {
       this.saving = true;
 
       let serial_data = this.serial;
+
+      if (this.missingMandatoryValues(this.serial.data)) {
+        window.alert(this.$t('fill_mandatory_fields'));
+        this.saving = false;
+        return;
+      }
 
       const user = this.session_data.user._key;
 
@@ -352,8 +377,8 @@ export default {
         },
         query: {
           back_to: this.$route.name,
-          ...this.$route.query
-        }
+          ...this.$route.query,
+        },
       });
     },
 
@@ -365,8 +390,8 @@ export default {
         },
         query: {
           back_to: this.$route.name,
-          ...this.$route.query
-        }
+          ...this.$route.query,
+        },
       });
     },
 
