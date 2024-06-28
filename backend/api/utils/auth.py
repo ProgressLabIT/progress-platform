@@ -30,7 +30,7 @@ scopes_description = {
 TOKEN_SECRET = "0ac33c11e3f6c4903f6f30c03edfda07e513288884a8d573690eb6d916fca034"
 ALGORITHM = "HS256"
 
-bearer_token = OAuth2PasswordBearer(tokenUrl="/auth", scopes=scopes_description)
+bearer_token = OAuth2PasswordBearer(tokenUrl="/api/auth", scopes=scopes_description)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
