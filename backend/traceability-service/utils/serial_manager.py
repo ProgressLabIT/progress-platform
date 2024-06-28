@@ -244,7 +244,11 @@ class SerialManager:
           return
 
        try:
-           db.collection('Serial').update(dict(**serial_data, by_alias=True), check_rev=False)
+           serial = db.collection('Serial').get(serial_data.get("_key"))
+           if (serial_data.get('code') != None):
+              serial['code'] = serial_data.get('code')
+           serial['data'] = serial_data.get('data')
+           db.update_document(serial)
        except:
            print(traceback.format_exc())
            self.notify_results(dict(
@@ -302,7 +306,9 @@ class SerialManager:
                    if step.get('form_field_key') == data.form_field_key or step.get('custom_field_key') == data.custom_field_key :
                       data.value = step['value']
              serial_key = serial.key
-             db.collection('Serial').update(dict(serial.dict(), _key=serial_key), check_rev=False)
+             db_serial = db.collection('Serial').get(serial_key)
+             db_serial['data'] = serial.data
+             db.update_document(db_serial)
              self.notify_results(dict(
                  serial = serial.code,
                  notification = SerialNotificationType.UPDATED
@@ -335,7 +341,9 @@ class SerialManager:
                   ))
                serial.code = serial_no
                serial_key = serial.key
-               tx.collection('Serial').update(dict(serial.dict(), _key=serial_key), check_rev=False)
+               db_serial = tx.collection('Serial').get(serial_key)
+               db_serial['code'] = serial_no
+               tx.update_document(db_serial)
                tx.commit_transaction()
              except:
                  print(traceback.format_exc())
