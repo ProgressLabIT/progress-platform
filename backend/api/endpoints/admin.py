@@ -1,11 +1,13 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
 from commons.utils.db import db
 from models.production import WorkStatus
 from commons.kafka_utils.kafka_admin import KafkaAdmin
 from utils.api import APIResponse
+from utils import auth
+
 
 router = APIRouter()
 
@@ -25,7 +27,8 @@ traceability_collections = [
     'batch_serial'
   ]
 
-@router.delete('/reset/prod')
+@router.delete('/reset/prod',
+    dependencies=[Depends(auth.verify_token)])
 async def reset_production_and_traceability_data():
 
   try:
@@ -60,7 +63,8 @@ async def get_work_order_jobs(work_order_key):
 
 
 
-@router.delete('/force-delete-work-order/{work_order_key}')
+@router.delete('/force-delete-work-order/{work_order_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def force_delete_work_order_data(work_order_key: str):
 
   # Check if the work order actually exists
@@ -130,7 +134,8 @@ async def force_delete_work_order_data(work_order_key: str):
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
-@router.put("/kafka/topic/{topic}")
+@router.put("/kafka/topic/{topic}",
+    dependencies=[Depends(auth.verify_token)])
 async def put_kafka_topic(topic: str):
   try:
     message = KafkaAdmin.getInstance().create_topic(topic)
@@ -144,7 +149,8 @@ async def put_kafka_topic(topic: str):
     )
     raise HTTPException(status_code=status_code, detail=response)
 
-@router.delete("/kafka/topic/{topic}")
+@router.delete("/kafka/topic/{topic}",
+    dependencies=[Depends(auth.verify_token)])
 async def delete_kafka_topic(topic: str):
   try:
     topics = []
@@ -160,7 +166,8 @@ async def delete_kafka_topic(topic: str):
     )
     raise HTTPException(status_code=status_code, detail=response)
 
-@router.get("/kafka/topics")
+@router.get("/kafka/topics",
+    dependencies=[Depends(auth.verify_token)])
 async def list_kafka_topic():
   try:
     message = KafkaAdmin.getInstance().list_topics()
@@ -174,7 +181,8 @@ async def list_kafka_topic():
     )
     raise HTTPException(status_code=status_code, detail=response)
 
-@router.get("/kafka/topic/{topic}")
+@router.get("/kafka/topic/{topic}",
+    dependencies=[Depends(auth.verify_token)])
 async def get_kafka_topic(topic: str):
   try:
     topics = []
