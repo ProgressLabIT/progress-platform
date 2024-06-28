@@ -548,7 +548,8 @@ async def update_queue(queue_update: Queue):
     raise HTTPException(status_code=status_code, detail=response)
   return APIResponse(detail="Queue updated")
 
-@router.put('/queue/operator/{operator_key}')
+@router.put('/queue/operator/{operator_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def update_operator_queue(
   operator_key: str,
   site_key: str | None = None,
