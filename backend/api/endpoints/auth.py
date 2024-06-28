@@ -4,7 +4,7 @@ import traceback
 from time import time
 from datetime import datetime, timedelta
 from dateutil import tz
-from typing import Optional
+from typing import Optional, Annotated
 
 import jwt
 from fastapi import APIRouter, Body, Depends, Form, HTTPException
@@ -16,7 +16,7 @@ from starlette.responses import JSONResponse
 
 from models.auth import *
 from models.org import User
-from utils.api import APIResponse
+from utils.api import APIResponse, AuthAPIResponse
 from utils import auth
 from commons.utils.db import db
 from utils.exceptions import *
@@ -36,12 +36,11 @@ USER_SESSION_TIMEOUT_MINUTES = 15
 
 @router.post("/auth")
 async def authenticate_user(
-  username: str = Body(...),
-  password: str = Body(...)
+  form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ):
 
   try:
-    user = auth.verify_user(username=username, password=password, db=db)
+    user = auth.verify_user(username=form_data.username, password=form_data.password, db=db)
 
   except (UserNotFoundError, UserDisabledError, UserPasswordMismatchError):
     raise auth.credentials_exception
@@ -77,8 +76,7 @@ async def authenticate_user(
 
     response_data = AuthResponse(
       action='reset_password',
-      user_key=user.key,
-      token=token
+      user_key=user.key
     )
 
   else:
@@ -91,8 +89,7 @@ async def authenticate_user(
 
     response_data = AuthResponse(
       action='start_session',
-      user_key=user.key,
-      token=token
+      user_key=user.key
     )
 
   # Store token data
@@ -113,7 +110,10 @@ async def authenticate_user(
     'Pragma': 'no-cache'
   }
 
-  response_content = APIResponse(detail=response_data)
+  response_content = AuthAPIResponse(detail=response_data)
+
+  response_content.access_token = token
+  response_content.token_type = "bearer"
 
   return JSONResponse(
     content= jsonable_encoder(response_content),

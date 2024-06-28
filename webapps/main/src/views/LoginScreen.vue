@@ -203,10 +203,14 @@ export default {
     login() {
       this.logging_in = true;
 
+      let formData = new FormData();
+      formData.append('username', this.credentials.username);
+      formData.append('password', this.credentials.password);
+
       api
-        .post('auth', this.credentials)
+        .post('auth', formData)
         .then((resp) => {
-          const token = resp.data.detail.token;
+          const token = resp.data.access_token;
           this.$store.commit('UPDATE_AUTH_TOKEN', token);
 
           this.user_key = jwt_decode(token).sub;
