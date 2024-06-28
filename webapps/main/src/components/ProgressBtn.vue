@@ -326,7 +326,16 @@ export default {
 
       this.current_step_form_fields.forEach((field) => {
         let value = this.field_value(field._key);
-        if (field.mandatory && (!value || value === null || value === '')) {
+
+        let type = this.$store.getters.getCustomFieldByKey(
+          field.custom_field_key,
+        )?.type;
+
+        if (
+          type !== 'ternary' &&
+          field.mandatory &&
+          (!value || value === null || value === '')
+        ) {
           missing_mandatory_fields = true;
         }
       });
