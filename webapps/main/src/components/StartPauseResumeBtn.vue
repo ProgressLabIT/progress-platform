@@ -17,6 +17,9 @@
 </template>
 
 <script>
+import { Dialog } from 'quasar';
+import { mapState } from 'vuex';
+import SerialBatchSelectionDialog from '../components/job/SerialBatchSelectionDialog.vue';
 export default {
   name: 'StartPauseResumeBtn',
 
@@ -30,6 +33,10 @@ export default {
         ? this.$theme.grey + 'aa'
         : (this.j.critical ? this.$theme.red : this.$theme.blue) + 'aa';
     },
+
+    ...mapState({
+      step_serials: (state) => state.traceability.current_step_serials,
+    }),
   },
 
   methods: {
@@ -49,12 +56,50 @@ export default {
           result.text = this.$t('job.resume').toUpperCase();
           result.action = () => this.$store.dispatch('resumeJob');
           return result;
+        } else if (this.step_serials && this.step_serials.length > 0) {
+          result.text = this.$t('job.link_serials');
+          result.action = this.linkSerials;
+          return result;
         } else {
           result.text = this.$t('job.start').toUpperCase();
-          result.action = () => this.$store.dispatch('startJob');
+          result.action = () =>
+            this.$store.dispatch('startJob', { batch_serials: [] });
           return result;
         }
       }
+    },
+
+    async linkSerials() {
+      let selected_serials = [];
+      if (this.step_serials && this.step_serials.length > 0) {
+        selected_serials = await this.selectSerialBatch(this.step_serials);
+        if (selected_serials.length <= 0) {
+          return;
+        }
+        this.$store.dispatch('startJob', { batch_serials: selected_serials });
+        //await this.$store.dispatch('linkBatchSerial', {
+        //  stepKey: this.current_step_key,
+        //  batch_serials: selected_serials,
+        //});
+        //await this.$store.commit('UPDATE_step_serials', selected_serials);
+      }
+    },
+
+    async selectSerialBatch(batch_serials) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          component: SerialBatchSelectionDialog,
+          componentProps: {
+            batch_serials,
+          },
+        })
+          .onOk((selected_serials) => {
+            resolve(selected_serials);
+          })
+          .onCancel(() => {
+            resolve([]);
+          });
+      });
     },
   },
 };

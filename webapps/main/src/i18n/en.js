@@ -261,7 +261,7 @@ export default {
     start: 'start',
     unassigned: 'unassigned',
     unassigned_jobs: 'unassigned jobs',
-    link_serials: 'select serials',
+    link_serials: 'select serials and start',
   },
   label: 'Label',
   language: 'language',

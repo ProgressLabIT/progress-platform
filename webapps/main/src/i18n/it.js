@@ -266,7 +266,7 @@ export default {
     start: 'inizia',
     unassigned: 'non assegnato | non assegnati',
     unassigned_jobs: 'lavori non assegnati',
-    link_serials: 'seleziona seriali',
+    link_serials: 'seleziona seriali e inizia',
   },
   label: 'Etichetta',
   language: 'lingua',

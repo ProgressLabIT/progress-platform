@@ -430,10 +430,6 @@ export default {
       return this.j.stage == 'closed';
     },
 
-    serial_selected() {
-      return this.j.stage == 'serial_selected';
-    },
-
     can_work() {
       return this.has_material_to_proceed && !this.job_closed;
     },
