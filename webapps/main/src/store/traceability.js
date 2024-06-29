@@ -239,12 +239,13 @@ const traceability = {
       });
     },
 
-    startJob({ commit, state, rootState }) {
+    startJob({ commit, state, rootState }, { batch_serials }) {
       const now = DT.utc();
 
       // Create Event
       const event = createEvent(state, rootState.session, {
         event_type: 'JOB_STARTED',
+        batch_serials: batch_serials,
         timestamp: now.toISO(),
       });
 
