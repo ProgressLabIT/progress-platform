@@ -732,8 +732,6 @@ class ProductionActivityEvent(BaseEvent):
     wo = self.get_work_order_data()
 
     stage = WorkStatus.STARTED
-    if self.job.first_phase:
-      stage = WorkStatus.SERIAL_SELECTED
 
     if wo.status == WorkStatus.CREATED:
       wo.status = stage
@@ -878,14 +876,14 @@ class ProductionActivityEvent(BaseEvent):
 
     # Update WorkOrder status
     wo = self.get_work_order_data()
-    wo.status = WorkStatus.SERIAL_SELECTED
+    wo.status = WorkStatus.STARTED
     wo_update = model_to_db_dict(wo)
     self.tx.collection('WorkOrder').update(wo_update)
 
     # Update job
     job_update=dict(
       _key = self.info.job_key,
-      stage = WorkStatus.SERIAL_SELECTED,
+      stage = WorkStatus.STARTED,
     )
     self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
 
