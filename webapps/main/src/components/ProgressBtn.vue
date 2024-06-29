@@ -25,7 +25,6 @@ import { mapState } from 'vuex';
 import { timestamp } from '@/lib/TimeHandling.js';
 import { api } from 'boot/axios';
 import SerialBatchDeclareSerialNumber from '../components/job/SerialBatchDeclareSerialNumber.vue';
-import SerialBatchSelectionDialog from '../components/job/SerialBatchSelectionDialog.vue';
 import QuantityPickerDialog from './QuantityPickerDialog.vue';
 
 export default {
@@ -41,7 +40,6 @@ export default {
     ...mapState({
       job: (state) => state.traceability.working_job_data,
       batch_data: (state) => state.traceability.current_batch_data.step_data,
-      step_serials: (state) => state.traceability.current_step_serials,
     }),
 
     progress_button_active() {
@@ -55,13 +53,6 @@ export default {
     },
 
     progress_button() {
-      const link_serials = {
-        icon: 'mdi-check',
-        text: this.$t('job.link_serials'),
-        action: this.linkSerials,
-        altAction: undefined,
-      };
-
       const complete_step = {
         icon: 'mdi-check',
         text: this.$t('job.complete_step'),
@@ -86,14 +77,7 @@ export default {
         altAction: this.declareCustomBatch,
       };
 
-      if (
-        this.job.stage === 'started' &&
-        this.step_serials &&
-        this.step_serials.length > 0
-      ) {
-        //this.linkSerials();
-        return link_serials;
-      } else if ('parameters' in this.job && this.job.parameters.step_check) {
+      if ('parameters' in this.job && this.job.parameters.step_check) {
         if (!this.current_step_is_last && !this.job.first_phase) {
           return complete_step_custom_qty;
         }
@@ -214,38 +198,6 @@ export default {
       }
 
       this.completeStep();
-    },
-
-    async linkSerials() {
-      let selected_serials = [];
-      if (this.step_serials && this.step_serials.length > 0) {
-        selected_serials = await this.selectSerialBatch(this.step_serials);
-        if (selected_serials.length <= 0) {
-          return;
-        }
-        await this.$store.dispatch('linkBatchSerial', {
-          stepKey: this.current_step_key,
-          batch_serials: selected_serials,
-        });
-        //await this.$store.commit('UPDATE_step_serials', selected_serials);
-      }
-    },
-
-    async selectSerialBatch(batch_serials) {
-      return new Promise((resolve) => {
-        Dialog.create({
-          component: SerialBatchSelectionDialog,
-          componentProps: {
-            batch_serials,
-          },
-        })
-          .onOk((selected_serials) => {
-            resolve(selected_serials);
-          })
-          .onCancel(() => {
-            resolve([]);
-          });
-      });
     },
 
     async ensureBatchSerialCounter() {
