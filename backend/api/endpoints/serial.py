@@ -34,9 +34,13 @@ def get_product_steps(product_key: str):
 
 @router.get('/serial-batch',
     dependencies=[Depends(auth.verify_token)])
-def get_serial_batch(batch_key: str | None = None):
+def get_serial_batch(
+  wo_key: str | None = None,
+  job_key: str | None = None,
+):
   bind_vars = dict(
-    from_id = f'Batch/{batch_key}'
+    wo_key = wo_key,
+    job_key = f'Job/{job_key}'
   )
   return [e for e in db.aql.execute(Queries.GET_SERIALS_IN_BATCH, bind_vars=bind_vars)]
 
@@ -48,15 +52,22 @@ def get_serial_wo_phase(
   phase_key: str | None = None,
 ):
   bind_vars = dict(
-    wo_key = wo_key
-    #phase_key = f'Phase/{phase_key}'
+    wo_key = wo_key,
+    phase_key = f'Phase/{phase_key}'
   )
   wo_serials = []
-  for serial in [e for e in db.aql.execute(Queries.GET_ALL_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)]:
+  for serial in [e for e in db.aql.execute(Queries.GET_AVAILABLE_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)]:
     if serial['code']:
       wo_serials.append(dict(
-          value= serial['_key'],
-          label= serial['code'],
+          serial_key= serial['_key'],
+          serial_code= serial['code'],
+          active= serial['active'],
+      ))
+    else:
+      wo_serials.append(dict(
+          serial_key= serial['_key'],
+          serial_code= serial['_key'],
+          active= serial['active'],
       ))
   return wo_serials
 

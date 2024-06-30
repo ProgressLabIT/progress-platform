@@ -69,14 +69,49 @@ export default {
       }
     },
 
+    serialsToOptions(serials) {
+      let options = [];
+
+      for (const serial of serials) {
+        options.push({
+          value: serial.serial_key,
+          label: serial.serial_code,
+        });
+      }
+
+      return options;
+    },
+
+    optionsToSerial(step_serials, options) {
+      let serials = [];
+
+      for (const serial of step_serials) {
+        serials.push({
+          serial_key: serial.serial_key,
+          serial_code: serial.serial_code,
+          active: options.includes(serial.serial_key),
+        });
+      }
+
+      return serials;
+    },
+
     async linkSerials() {
       let selected_serials = [];
       if (this.step_serials && this.step_serials.length > 0) {
-        selected_serials = await this.selectSerialBatch(this.step_serials);
+        selected_serials = await this.selectSerialBatch(
+          this.serialsToOptions(this.step_serials),
+        );
         if (selected_serials.length <= 0) {
           return;
         }
-        this.$store.dispatch('startJob', { batch_serials: selected_serials });
+
+        this.$store.dispatch('startJob', {
+          batch_serials: this.optionsToSerial(
+            this.step_serials,
+            selected_serials,
+          ),
+        });
         //await this.$store.dispatch('linkBatchSerial', {
         //  stepKey: this.current_step_key,
         //  batch_serials: selected_serials,
