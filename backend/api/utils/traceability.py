@@ -303,7 +303,8 @@ class Queries:
       FOR w IN wip
       FILTER
         w.wo_key == @wo_key
-        && w._to == j._id
+        // comment this because of serials left behind
+        //&& w._to == j._id
         && !w.active
       RETURN w.quantity
     )
