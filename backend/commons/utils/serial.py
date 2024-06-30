@@ -15,7 +15,13 @@ class Queries:
         )}
   """
 
-  GET_SERIALS_IN_BATCH = """
+  GET_ALL_SERIALS_IN_BATCH = """
+    FOR edge IN batch_serial
+      FILTER edge._from == @from_id
+      RETURN DOCUMENT(Serial, edge._to)
+  """
+
+  GET_AVAILABLE_SERIALS_IN_BATCH = """
     FOR w IN wip
       FILTER
         w.wo_key == @wo_key
