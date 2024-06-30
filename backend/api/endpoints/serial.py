@@ -42,7 +42,7 @@ def get_serial_batch(
     wo_key = wo_key,
     job_key = f'Job/{job_key}'
   )
-  return [e for e in db.aql.execute(Queries.GET_SERIALS_IN_BATCH, bind_vars=bind_vars)]
+  return [e for e in db.aql.execute(Queries.GET_AVAILABLE_SERIALS_IN_BATCH, bind_vars=bind_vars)]
 
 
 @router.get('/serial-wo-phase',
