@@ -90,7 +90,7 @@ class SerialManager:
 
     def retrieve_serial_in_batch(self, batch_key):
        cursor = db.aql.execute(
-          Queries.GET_SERIALS_IN_BATCH,
+          Queries.GET_ALL_SERIALS_IN_BATCH,
           bind_vars=dict(
             from_id=f'Batch/{batch_key}',
           )
