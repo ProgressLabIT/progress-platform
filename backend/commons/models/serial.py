@@ -28,6 +28,10 @@ class SerialEventType(str, Enum):
   DELETE = 'DELETE'
   LINK_BATCH = 'LINK_BATCH'
 
+class SerialSelection(BaseModel):
+   serial_key: str | None = None
+   serial_code: str | None = None
+   active: bool = False
 
 class SerialEvent(Serial):
    operation: SerialEventType | None = None
@@ -39,8 +43,7 @@ class SerialEvent(Serial):
    quantity: int = 1
    wo_key: str | None = None
    product_key: str | None = None
-   batch_serials: list[str] | None = None
-
+   batch_serials: list[SerialSelection] | None = None
 
 class SerialNotificationType(str, Enum):
   CREATED = 'CREATED'
