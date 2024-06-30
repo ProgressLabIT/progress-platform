@@ -200,12 +200,12 @@ export default {
       this.completeStep();
     },
 
-    async ensureBatchSerialCounter() {
-      const { data: batch_serials } = await this.$api.get('serial-batch', {
+    async ensureBatchSerialCounter(batch_serials) {
+      /*const { data: batch_serials } = await this.$api.get('serial-batch', {
         params: {
           batch_key: this.job.active_batch_key,
         },
-      });
+      });*/
 
       let missing_counter = false;
       batch_serials.forEach((serial) => {
@@ -273,6 +273,20 @@ export default {
       });
     },
 
+    serialToBatch(batch_serials) {
+      let serials = [];
+
+      for (const serial of batch_serials) {
+        serials.push({
+          serial_key: serial._key,
+          serial_code: serial.code,
+          active: false,
+        });
+      }
+
+      return serials;
+    },
+
     async completeStep() {
       let missing_mandatory_fields = false;
 
@@ -300,9 +314,15 @@ export default {
       // Values will change after committing mutation save to use for navigation later on
       const current_step_was_last = this.current_step_is_last;
       const current_batch_was_last = this.current_batch_is_last;
+      const { data: batch_serials } = await api.get('serial-batch', {
+        params: {
+          wo_key: this.job.wo_key,
+          job_key: this.job._key,
+        },
+      });
 
       if (current_step_was_last) {
-        if (!(await this.ensureBatchSerialCounter())) {
+        if (!(await this.ensureBatchSerialCounter(batch_serials))) {
           window.alert(this.$t('declare_all_serials'));
           return;
         }
@@ -325,6 +345,7 @@ export default {
       if (can_proceed && !missing_mandatory_fields) {
         await this.$store.dispatch('completeStep', {
           stepKey: this.current_step_key,
+          batch_serials: this.serialToBatch(batch_serials),
         });
 
         if (current_step_was_last && current_batch_was_last) {

@@ -87,6 +87,7 @@ class WIP(ArangoEdge):
   batch_key: str
   wo_key: str
   product_key: str
+  serial_key: str
   value: float = 0
   quantity: float = 0
   active: bool = False # indicates if it's being worked on or just sitting around

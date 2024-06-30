@@ -16,9 +16,13 @@ class Queries:
   """
 
   GET_SERIALS_IN_BATCH = """
-    FOR edge IN batch_serial
-      FILTER edge._from == @from_id
-      RETURN DOCUMENT(Serial, edge._to)
+    FOR w IN wip
+      FILTER
+        w.wo_key == @wo_key
+        && w.active == true
+        && w._to == @job_key
+      LET serial = DOCUMENT(Serial, w.serial_key)
+      return serial
   """
 
   GET_SERIALS_IN_WORK_ORDER = """
@@ -61,11 +65,9 @@ class Queries:
     FOR w IN wip
       FILTER
         w.wo_key == @wo_key
-        && w._from == @phase_key
-        && LIKE(w._to, "Serial%")
-        && !w.active
-      LET serial = DOCUMENT(Serial, w._to)
-      return serial
+        && w._to == @phase_key
+      LET serial = DOCUMENT(Serial, w.serial_key)
+      return MERGE(serial, { active: w.active })
   """
 
   FIND_SERIALS = """
