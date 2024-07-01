@@ -280,7 +280,7 @@ export default {
         serials.push({
           serial_key: serial._key,
           serial_code: serial.code,
-          active: false,
+          active: true,
         });
       }
 
