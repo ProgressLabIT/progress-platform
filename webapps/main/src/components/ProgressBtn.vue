@@ -25,6 +25,7 @@ import { mapState } from 'vuex';
 import { timestamp } from '@/lib/TimeHandling.js';
 import { api } from 'boot/axios';
 import SerialBatchDeclareSerialNumber from '../components/job/SerialBatchDeclareSerialNumber.vue';
+import SerialBatchSelectionDialog from '../components/job/SerialBatchSelectionDialog.vue';
 import QuantityPickerDialog from './QuantityPickerDialog.vue';
 
 export default {
@@ -187,17 +188,95 @@ export default {
       return data?.value ?? null;
     },
 
-    async completeStepCustomQty() {
-      let customQty = await this.getCustomQuantity();
+    serialsToOptions(serials) {
+      let options = [];
 
-      if (customQty) {
-        await this.$store.dispatch('changeStepQuantity', {
-          stepKey: this.current_step_key,
-          batchQt: customQty.batchQuantity,
+      for (const serial of serials) {
+        options.push({
+          value: serial.serial_key,
+          label: serial.serial_code,
         });
       }
 
-      this.completeStep();
+      return options;
+    },
+
+    serialsInitialSelection(serials) {
+      let options = [];
+
+      for (const serial of serials) {
+        if (serial.active) {
+          options.push(serial.serial_key);
+        }
+      }
+
+      return options;
+    },
+
+    optionsToSerial(step_serials, options) {
+      let serials = [];
+
+      for (const serial of step_serials) {
+        serials.push({
+          serial_key: serial.serial_key,
+          serial_code: serial.serial_code,
+          active: options.includes(serial.serial_key),
+        });
+      }
+
+      return serials;
+    },
+
+    async completeStepCustomQty() {
+      const { data: step_serials } = await this.$api.get('serial-from-wo', {
+        params: {
+          wo_key: this.job.wo_key,
+          job_key: this.job._key,
+          phase_key: this.job.phase_key,
+        },
+      });
+
+      if (step_serials && step_serials.length > 0) {
+        let selected_serials = [];
+        if (step_serials && step_serials.length > 0) {
+          selected_serials = await this.selectSerialBatch(
+            this.serialsToOptions(step_serials),
+            this.serialsInitialSelection(step_serials),
+          );
+          if (selected_serials.length <= 0) {
+            return;
+          }
+
+          await this.$store.dispatch('changeStepQuantity', {
+            stepKey: this.current_step_key,
+            batchQt: selected_serials.length,
+            batch_serials: this.optionsToSerial(step_serials, selected_serials),
+          });
+          this.completeStep();
+
+          /*this.$store.dispatch('startJob', {
+          batch_serials: this.optionsToSerial(
+            this.step_serials,
+            selected_serials,
+          ),
+        });*/
+          //await this.$store.dispatch('linkBatchSerial', {
+          //  stepKey: this.current_step_key,
+          //  batch_serials: selected_serials,
+          //});
+          //await this.$store.commit('UPDATE_step_serials', selected_serials);
+        }
+      } else {
+        let customQty = await this.getCustomQuantity();
+
+        if (customQty > 0) {
+          await this.$store.dispatch('changeStepQuantity', {
+            stepKey: this.current_step_key,
+            batchQt: customQty.batchQuantity,
+          });
+          this.completeStep();
+        }
+      }
     },
 
     async ensureBatchSerialCounter(batch_serials) {
@@ -395,6 +474,24 @@ export default {
           })
           .onCancel(() => {
             resolve(0);
+          });
+      });
+    },
+
+    async selectSerialBatch(batch_serials, selected_serials) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          component: SerialBatchSelectionDialog,
+          componentProps: {
+            batch_serials,
+            selected_serials,
+          },
+        })
+          .onOk((selected_serials) => {
+            resolve(selected_serials);
+          })
+          .onCancel(() => {
+            resolve([]);
           });
       });
     },
