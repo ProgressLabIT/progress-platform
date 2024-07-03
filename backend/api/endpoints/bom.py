@@ -8,9 +8,11 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.encoders import jsonable_encoder
 
 from models.bom import *
+from models.product import ProductFull
+from utils.api import APIResponse
 from utils.bom import *
 from utils.db import db
-from utils.api import APIResponse
+from utils.product import get_product_data_from_code
 
 
 
@@ -37,8 +39,44 @@ async def get_product_bom(product_key: str):
 
 
 
-@router.put('/{product_key}/bom')
-async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
+
+@router.put('/{product_key_or_code}/bom')
+async def update_bom(
+  product_key_or_code: str,
+  new_bom: List[BomLineWriteIn],
+  by_code: bool = False
+  ):
+
+  # Allow external tools to use item codes instead of db _keys
+  if by_code:
+    product = get_product_data_from_code(product_key_or_code)
+
+  else:
+    try:
+      product = ProductFull(**db.collection('Product').get(product_key_or_code))
+    except StopIteration:
+      raise HTTPException(
+        status_code=401,
+        detail=f"Could not find product with key {product_key_or_code}"
+      )
+
+  try:
+    last_phase = product.process_phases[-1]
+  except IndexError:
+    raise HTTPException(
+      status_code=422,
+      detail=f"Product must have a production process to have a BoM"
+    )
+  for bom_line in new_bom:
+    # Fetch component key if necessary
+    if by_code:
+      component_data = get_product_data_from_code(bom_line.component_code)
+      bom_line.component_key = component_data.key
+
+    # Assign line to last phase if none is indicated
+    if bom_line.phase_key == None:
+      bom_line.phase_key = last_phase
+
   """
   First draft will blatantly delete existing bom and
   replace it with the new one
@@ -52,7 +90,7 @@ async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
     # Remove old bom
     deleted_items = tx.aql.execute(
       Queries.DELETE_PRODUCT_BOM, 
-      bind_vars=dict(product_key=product_key)
+      bind_vars=dict(product_key=product.key)
     )
 
     bom_to_db = [define_bom_line_for_db(line) for line in new_bom]
@@ -76,7 +114,7 @@ async def update_bom(product_key: str, new_bom: List[BomLineWriteIn]):
     )
 
   # Check for loops in BoM relationships
-  bom_loops = find_bom_loops(db=tx, product_key=product_key)
+  bom_loops = find_bom_loops(db=tx, product_key=product.key)
 
   if not len(bom_loops):
     tx.commit_transaction()

@@ -402,7 +402,7 @@ export default {
       const is_duplicate = this.temp_bom.some((line) => {
         return (
           line.component_key == this.new_line_product._key &&
-          line.phase_key == this.new_line_phase._key
+          (line.phase_key == this.new_line_phase?._key ?? null)
         );
       });
 
@@ -417,9 +417,9 @@ export default {
           component_code: this.new_line_product.code,
           component_description: this.new_line_product.description,
           qt: this.new_line_qt,
-          phase_name: this.new_line_phase.alias,
-          phase_key: this.new_line_phase._key,
-          table_key: this.new_line_product._key + this.new_line_phase._key,
+          phase_name: this.new_line_phase?.alias ?? null,
+          phase_key: this.new_line_phase?._key ?? null,
+          table_key: this.new_line_product._key + this.new_line_phase?._key ?? null,
         };
 
         this.temp_bom = [...this.temp_bom, new_line];

@@ -15,9 +15,10 @@ class BomLineRead(FlexModel):
 
 
 class BomLineWriteIn(FlexModel):
-  component_key: str
+  component_key: str | None = None
+  component_code: str | None = None
   qt: float
-  phase_key: str
+  phase_key: str | None = None
   type: str = 'BomLine'
 
 class BomLineWriteOut(FlexModel):

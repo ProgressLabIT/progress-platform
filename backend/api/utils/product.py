@@ -1,4 +1,5 @@
-from models.product import ProductDoc
+from models.product import ProductDoc, ProductFull
+from utils.db import db
 from utils.file import FileHandler
 
 class Queries:
@@ -36,6 +37,16 @@ class Queries:
       RETURN MERGE(product, { tags })
   """
 
+
+def get_product_data_from_code(product_code: str) -> ProductFull:
+  cursor = db.collection('Product').find(dict(code=product_code, trash=False))
+  try:
+    return ProductFull(**cursor.next())
+  except StopIteration:
+    raise HTTPException(
+      status_code=404,
+      detail=f"No product found with the code provided: {product_code}"
+    )
 
 def get_product_docs(product_key):
   folder_obj = FileHandler.product_media(product_key)
