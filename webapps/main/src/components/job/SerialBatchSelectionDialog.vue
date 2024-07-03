@@ -47,10 +47,14 @@ const props = defineProps({
     type: [String, Object, null],
     required: true,
   },
+  selected_serials: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 let batch_serials = ref(props.batch_serials);
-let selected_serials = ref([]);
+let selected_serials = ref(props.selected_serials);
 
 defineEmits(useDialogPluginComponent.emitsObject);
 

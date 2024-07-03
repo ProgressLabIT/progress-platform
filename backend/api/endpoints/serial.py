@@ -71,6 +71,34 @@ def get_serial_wo_phase(
       ))
   return wo_serials
 
+@router.get('/serial-from-wo',
+    dependencies=[Depends(auth.verify_token)])
+def get_serial_wo_phase(
+  wo_key: str | None = None,
+  job_key: str | None = None,
+  phase_key: str | None = None,
+):
+  bind_vars = dict(
+    wo_key = wo_key,
+    phase_key = f'Phase/{phase_key}',
+    job_key = f'Job/{job_key}'
+  )
+  wo_serials = []
+  for serial in [e for e in db.aql.execute(Queries.GET_SERIALS_FROM_WORK_ORDER, bind_vars=bind_vars)]:
+    if serial['code']:
+      wo_serials.append(dict(
+          serial_key= serial['_key'],
+          serial_code= serial['code'],
+          active= serial['active'],
+      ))
+    else:
+      wo_serials.append(dict(
+          serial_key= serial['_key'],
+          serial_code= serial['_key'],
+          active= serial['active'],
+      ))
+  return wo_serials
+
 @router.get('/serial-selection',
     dependencies=[Depends(auth.verify_token)])
 def get_serial_selection(

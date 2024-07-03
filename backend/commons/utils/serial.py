@@ -76,6 +76,15 @@ class Queries:
       return MERGE(serial, { active: w.active })
   """
 
+  GET_SERIALS_FROM_WORK_ORDER = """
+    FOR w IN wip
+      FILTER
+        w.wo_key == @wo_key
+         && (w._to == @phase_key || w._to == @job_key)
+      LET serial = DOCUMENT(Serial, w.serial_key)
+      return MERGE(serial, { active: w.active })
+  """
+
   FIND_SERIALS = """
 
     FOR s IN Serial

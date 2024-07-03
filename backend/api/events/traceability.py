@@ -509,6 +509,13 @@ class ProductionActivityEvent(BaseEvent):
         active_serials.append(serial.serial_key)
     return active_serials
 
+  def get_inactive_serials(self, serials):
+    active_serials = []
+    for serial in serials:
+      if (not serial.active):
+        active_serials.append(serial.serial_key)
+    return active_serials
+
   def get_active_serials_qty(self, active_serials):
     quantity = 0
     for serial_key in active_serials:
@@ -551,6 +558,29 @@ class ProductionActivityEvent(BaseEvent):
     )
 
     return initial_qt
+
+  def unbook_wip_serials(self, serials):
+    inactive_serials = self.get_inactive_serials(serials=serials)
+
+    booked_wips_cursor = self.tx.collection('wip').find(dict(
+      _to=f'Job/{self.info.job_key}',
+    ))
+    booked_wips = [WIP(**wip) for wip in booked_wips_cursor]
+    booked_wips = sorted(booked_wips, key=lambda wip: wip.quantity)
+
+    for wip in booked_wips:
+      if (wip.serial_key in inactive_serials):
+        self.tx.collection('wip').update(dict(
+          _key = wip.key,
+          _to = f'Phase/{self.info.phase_key}',
+          active = False
+        ))
+
+    # Update input availability for jobs in this phase
+    self.tx.aql.execute(
+      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
+    )
 
 
   def book_wip(self, quantity):
@@ -956,7 +986,10 @@ class ProductionActivityEvent(BaseEvent):
       self.info.work_session_key = self.work_session.key
 
     #completed_batch_qt
-    if (self.info.active_batch_qt > self.info.step_changed_qt):
+    if self.info.batch_serials != None and len(self.info.batch_serials) > 0:
+        self.unbook_wip_serials(self.info.batch_serials)
+        self.book_wip_serials(self.info.batch_serials)
+    elif (self.info.active_batch_qt > self.info.step_changed_qt):
       self.unbook_wip(self.info.active_batch_qt-self.info.step_changed_qt)
     elif (self.info.active_batch_qt < self.info.step_changed_qt):
       self.book_wip(self.info.step_changed_qt-self.info.active_batch_qt)
