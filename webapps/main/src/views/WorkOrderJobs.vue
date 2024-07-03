@@ -709,6 +709,7 @@ export default {
     editJobTime(job_data) {
       const duration = Duration.fromMillis(job_data.processing_time)
         .rescale()
+        .shiftTo('hours', 'minutes', 'seconds')
         .toObject();
       this.jobs_temp_data = {
         _key: job_data._key,
