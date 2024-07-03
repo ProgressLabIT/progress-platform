@@ -222,11 +222,14 @@ function initDesigner() {
     options: { lang: locale.value },
   });
   designer.onChangeTemplate((template) => {
+    let original_col = workingTemplate.value.links;
     workingTemplate.value.template = cloneDeep(template);
     workingTemplate.value.links = {};
 
     for (const column of template.columns ?? []) {
-      if (!workingTemplate.value.links[column]) {
+      if (original_col[column]) {
+        workingTemplate.value.links[column] = original_col[column];
+      } else {
         workingTemplate.value.links[column] = {
           type: 'preset',
           value: null,
