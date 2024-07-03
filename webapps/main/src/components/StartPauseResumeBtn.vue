@@ -96,11 +96,22 @@ export default {
       return serials;
     },
 
+    serialsInitialSelection(serials) {
+      let options = [];
+
+      for (const serial of serials) {
+        options.push(serial.serial_key);
+      }
+
+      return options;
+    },
+
     async linkSerials() {
       let selected_serials = [];
       if (this.step_serials && this.step_serials.length > 0) {
         selected_serials = await this.selectSerialBatch(
           this.serialsToOptions(this.step_serials),
+          this.serialsInitialSelection(this.step_serials),
         );
         if (selected_serials.length <= 0) {
           return;
@@ -120,12 +131,13 @@ export default {
       }
     },
 
-    async selectSerialBatch(batch_serials) {
+    async selectSerialBatch(batch_serials, selected_serials) {
       return new Promise((resolve) => {
         Dialog.create({
           component: SerialBatchSelectionDialog,
           componentProps: {
             batch_serials,
+            selected_serials,
           },
         })
           .onOk((selected_serials) => {
