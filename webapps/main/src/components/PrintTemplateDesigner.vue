@@ -223,6 +223,7 @@ function initDesigner() {
   });
   designer.onChangeTemplate((template) => {
     workingTemplate.value.template = cloneDeep(template);
+    workingTemplate.value.links = {};
 
     for (const column of template.columns ?? []) {
       if (!workingTemplate.value.links[column]) {
