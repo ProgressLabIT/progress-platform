@@ -119,7 +119,7 @@
                 >
                   {{ props.row[column.name] }}
                   <q-tooltip
-                    delay="500"
+                    :delay="500"
                     anchor="top left"
                     self="bottom left"
                     :offset=[8,6]
