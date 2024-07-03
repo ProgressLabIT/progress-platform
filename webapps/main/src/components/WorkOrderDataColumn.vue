@@ -23,8 +23,9 @@
     <div class="row justify-between q-mt-xs">
       <div class="col-9">
         <div
-          class="text-truncate display text-h3 hover-link"
-          @click="goToProductPage">
+          class="text-truncate display text-h3"
+          :class="{ 'hover-link': user_can_access_library }"
+          @click="user_can_access_library ? goToProductPage() : null">
           {{ wo_data.product_code }}
         </div>
         <div class="medium q-mt-xs">
@@ -417,6 +418,10 @@ export default {
         //   text: this.$t('total_cost')
         // },
       ];
+    },
+
+    user_can_access_library() {
+      return this.$store.state.session.scope.includes('library')
     },
 
     assignments() {
