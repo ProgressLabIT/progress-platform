@@ -21,6 +21,19 @@
           </q-input>
         </div>
 
+        <div class="col-12 col-sm-5 col-md-3">
+          <!-- TAG -->
+          <BaseAutocompleteTag
+            dense
+            class="q-mb-md"
+            behavior="menu"
+            key-only
+            :label="$t('tag')"
+            :value="tag_search"
+            @select="(selection) => (tag_search = selection)"
+          />
+        </div>
+
         <!-- View controls -->
         <q-checkbox
           v-model="filter_inactive"
@@ -84,10 +97,11 @@
 
 <script>
 import { mapGetters } from 'vuex';
+import BaseAutocompleteTag from '@/components/BaseAutocompleteTag.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import ProductCard from '@/components/ProductCard.vue';
-
 import multiMatch from '@/lib/MultiFieldSearch.js';
+import queryModel from '@/lib/queryModelFactory.js';
 
 export default {
   name: 'ProductList',
@@ -95,6 +109,7 @@ export default {
   components: {
     NoDataAlert,
     ProductCard,
+    BaseAutocompleteTag,
   },
 
   data() {
@@ -111,7 +126,7 @@ export default {
     ...mapGetters(['productCatalog']),
 
     catalog() {
-      return this.productCatalog(this.filter_inactive);
+      return this.productCatalog(this.filter_inactive, this.tag_search);
     },
 
     filtered_products() {
@@ -167,6 +182,8 @@ export default {
         });
       },
     },
+
+    tag_search: queryModel(String, 'tag_search', null),
 
     card_height() {
       return this.show_images ? 240 : 150;

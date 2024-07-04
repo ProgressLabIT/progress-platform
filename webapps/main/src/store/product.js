@@ -12,6 +12,7 @@ const product = {
       process: false,
       bom: false,
     },
+    tags: [],
   },
 
   mutations: {
@@ -108,6 +109,10 @@ const product = {
 
     CANCEL_PRODUCT_CHANGES(state) {
       state.temp = _cloneDeep(state.saved);
+    },
+
+    LOAD_TAGS(state, tag_list) {
+      state.tags = tag_list;
     },
   },
 
@@ -283,19 +288,34 @@ const product = {
 
       return Promise.all(promises);
     },
+
+    loadTags({ commit }) {
+      return new Promise((resolve) => {
+        api.get('tag').then((resp) => {
+          commit('LOAD_TAGS', resp.data.detail);
+          resolve();
+        });
+      });
+    },
   },
 
   getters: {
-    productCatalog: (state) => (show_active_only) => {
+    productCatalog: (state) => (show_active_only, tag_search) => {
       return state.list.filter((p) => {
         const deleted = p.trash;
         const active_filter = !show_active_only || p.active;
-        return !deleted && active_filter;
+        const tag_filter =
+          !tag_search || p.tags.some((t) => t._key === tag_search);
+        return !deleted && active_filter && tag_filter;
       });
     },
 
     productData: (state) => (product_key) => {
       return state.list.find((p) => p._key == product_key);
+    },
+
+    tags: (state) => () => {
+      return state.tags;
     },
   },
 };
