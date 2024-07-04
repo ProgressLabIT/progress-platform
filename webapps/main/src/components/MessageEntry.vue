@@ -78,6 +78,7 @@
     <BasePrompt
       :show="show_update_prompt"
       :initial_value="message.content"
+      input_type="textarea"
       @update="updateMessage"
       @close="show_update_prompt = false"
     >
