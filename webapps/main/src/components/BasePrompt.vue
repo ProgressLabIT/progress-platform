@@ -94,8 +94,10 @@ export default {
   },
 
   methods: {
-    update() {
-      this.$emit('update', this.value);
+    update(event) {
+      if (event?.key !== 'Enter') {
+        this.$emit('update', this.value);
+      }
     },
   },
 };

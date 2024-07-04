@@ -105,6 +105,12 @@ export default {
 
   emits: ['onScroll'],
 
+  setup() {
+    return {
+      pagination: { rowsPerPage: 0 },
+    };
+  },
+
   data() {
     return {
       table_height: '80vh',
