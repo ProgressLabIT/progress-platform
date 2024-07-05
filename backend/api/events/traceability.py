@@ -845,8 +845,7 @@ class ProductionActivityEvent(BaseEvent):
       tx = self.tx
     )
 
-    product = self.tx.collection('Product').get(self.info.product_key)
-    if (self.job.first_phase and product.get('traceability_level', TraceabilityLevel.NONE) == TraceabilityLevel.COMPLETE and not self.job.first_phase):
+    if (self.job.first_phase and wo.traceability_level == TraceabilityLevel.COMPLETE and not self.job.first_phase):
       # Create batch serials
       self.create_batch_serial_records()
 
@@ -919,6 +918,8 @@ class ProductionActivityEvent(BaseEvent):
     self.get_job_data()
     self.get_active_batch()
 
+    wo = self.get_work_order_data()
+
     # Save current work session and batch keys in Event.info
     if not self.info.work_session_key:
       self.work_session = self.get_current_work_session()
@@ -933,8 +934,7 @@ class ProductionActivityEvent(BaseEvent):
     self.tx.collection('StepExecutionData').insert(step_data)
 
     if (step_data.form_data != None):
-      product = self.tx.collection('Product').get(self.info.product_key)
-      if (product.get('traceability_level', TraceabilityLevel.NONE) != TraceabilityLevel.NONE):
+      if (wo.traceability_level != None and wo.traceability_level != TraceabilityLevel.NONE):
         # update batch serials data
         self.udpate_batch_serial_data(step_data.form_data)
 
@@ -1073,8 +1073,9 @@ class ProductionActivityEvent(BaseEvent):
       )
     )
 
-    product = self.tx.collection('Product').get(self.job.product_key)
-    if (product.get('traceability_level', TraceabilityLevel.NONE) != TraceabilityLevel.NONE):
+    wo = self.get_work_order_data()
+
+    if (wo.traceability_level != None and wo.traceability_level != TraceabilityLevel.NONE):
         # update batch serials data
         self.finalize_batch_serial(completed_batch_qt)
 
@@ -1133,7 +1134,7 @@ class ProductionActivityEvent(BaseEvent):
     if not self.job.last_phase:
       self.declare_wip()
     else:
-      if (product.get('traceability_level', TraceabilityLevel.NONE) != TraceabilityLevel.NONE):
+      if (wo.traceability_level != None and wo.traceability_level != TraceabilityLevel.NONE):
         # update batch serials data
         self.finalize_wo_serial(completed_batch_qt)
 
