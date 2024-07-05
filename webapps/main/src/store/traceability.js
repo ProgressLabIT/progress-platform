@@ -125,7 +125,20 @@ const traceability = {
 
     LOAD_WORKING_JOB_DATA(state, { job_data, batch_data, step_serials }) {
       state.working_job_data = job_data;
+      let prev_data = state.current_batch_data?.step_data;
+      let prev_data_key = state.current_batch_data?._key;
       state.current_batch_data = batch_data;
+      if (
+        prev_data &&
+        prev_data_key &&
+        state.current_batch_data?._key === prev_data_key
+      ) {
+        for (const prev_obj of prev_data) {
+          state.current_batch_data.step_data.find((obj) => {
+            return obj._key === prev_obj._key;
+          }).form_data = prev_obj.form_data;
+        }
+      }
       state.current_step_serials = step_serials;
     },
 
