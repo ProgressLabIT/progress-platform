@@ -59,25 +59,29 @@
       square
       style="background: rgba(255, 255, 255, 0.07)"
       class="no-shadow"
-      :class="dense ? 'q-px-md q-py-sm' : 'q-px-lg q-py-sm'"
+      :class="dense ? 'q-py-sm' : 'q-px-md q-py-sm'"
     >
-      <div class="row items-center">
-        <div class="col-auto items-center">
+      <div class="row items-center q-col-gutter-md">
+        <!-- <div class="col-auto flex-center">
+          <q-icon
+            :size="dense ? '20px' : '26px'"
+            v-if="fieldValue === undefined"
+            name="mdi-progress-question"
+          />
           <q-avatar
+            v-else
+            :size="dense ? '20px' : '26px'"
             :color="fieldValue !== undefined ? 'theme-green' : 'transparent'"
-            :size="dense ? '14px' : '20px'"
             class="row flex-center text-center text-body2 font-weight-medium"
           >
             <q-icon
-              v-if="fieldValue === undefined"
-              size="sm"
-              name="mdi-progress-question"
+              class="solid-white"
+              name="mdi-check"
             />
-            <q-icon v-else class="solid-white" name="mdi-check" />
           </q-avatar>
         </div>
-
-        <div class="col q-ml-md">
+ -->
+        <div class="col">
           <div>
             <span
               class="text-body2 q-ma-none"
@@ -124,7 +128,7 @@
             color="theme-green"
             :style="{ width: dense ? '70px' : '100px' }"
             :padding="dense ? 'sm md' : 'md lg'"
-            :class="dense ? 'q-ml-sm' : 'q-ml-lg'"
+            :class="dense ? 'q-ml-xs' : 'q-ml-sm'"
             @click="fieldValue = fieldValue === true ? undefined : true"
           >
             <span
