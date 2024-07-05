@@ -45,8 +45,8 @@ export function usePrintDialog({ context: contextType, contextData }) {
   };
 }
 
-const extractDate = (datetime) => new Date(datetime).toLocaleDateString();
-const extractTime = (datetime) => new Date(datetime).toLocaleTimeString();
+const extractDate = (datetime) => datetime ? new Date(datetime).toLocaleDateString() : '-';
+const extractTime = (datetime) => datetime ? new Date(datetime).toLocaleTimeString() : '-';
 
 class TemplateContextFactory {
   static create(type, data, store = useStore()) {
@@ -91,11 +91,11 @@ export class TemplateContext {
   }
 
   formatUsername(surname, name) {
-    let prefix = '';
+    let fullName = name
     if (surname) {
-      prefix = surname + ' ';
+      fullName = fullName + ' ' + surname
     }
-    return prefix + name;
+    return fullName
   }
 
   getPresetValue(presetName) {
@@ -275,7 +275,8 @@ export class StepContext extends TemplateContext {
       }
 
       const job = this._store.state.traceability.working_job_data;
-      const batch = this._store.state.traceability.current_batch_data;
+      // const batch = this._store.state.traceability.current_batch_data;
+      const wo = this._store.state.workorder.wo_data;
 
       switch (presetName) {
         case 'job.key':
@@ -296,22 +297,22 @@ export class StepContext extends TemplateContext {
           return extractTime(job.end);
 
         case 'project.code':
-          return job.project_code;
+          return wo.project_code;
 
         case 'work_order.code':
-          return job.wo_code;
+          return wo.wo_code;
         case 'work_order.qt_planned':
-          return batch.qt_total;
+          return wo.qt_planned;
         case 'work_order.qt_completed':
-          return batch.qt_pass;
+          return wo.qt_completed;
         case 'work_order.start_date':
-          return extractDate(batch.start);
+          return extractDate(wo.start);
         case 'work_order.start_time':
-          return extractTime(batch.start);
+          return extractTime(wo.start);
         case 'work_order.end_date':
-          return extractDate(batch.end);
+          return extractDate(wo.end);
         case 'work_order.end_time':
-          return extractTime(batch.end);
+          return extractTime(wo.end);
 
         case 'product.code':
           return job.product_code;
