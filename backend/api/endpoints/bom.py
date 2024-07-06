@@ -8,7 +8,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Depends
 from fastapi.encoders import jsonable_encoder
 
 from models.bom import *
-from models.product import ProductFull
+from commons.models.product import ProductFull
 from utils.api import APIResponse
 from utils.bom import *
 from commons.utils.db import db
@@ -44,7 +44,7 @@ async def get_product_bom(product_key: str):
 
 
 @router.put('/{product_key_or_code}/bom',
-    dependencies=[Depends(auth.verify_token)]))
+    dependencies=[Depends(auth.verify_token)])
 async def update_bom(
   product_key_or_code: str,
   new_bom: List[BomLineWriteIn],
@@ -93,7 +93,7 @@ async def update_bom(
 
     # Remove old bom
     deleted_items = tx.aql.execute(
-      Queries.DELETE_PRODUCT_BOM, 
+      Queries.DELETE_PRODUCT_BOM,
       bind_vars=dict(product_key=product.key)
     )
 
