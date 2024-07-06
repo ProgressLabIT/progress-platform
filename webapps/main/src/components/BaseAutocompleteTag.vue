@@ -74,11 +74,6 @@ export default {
       type: Boolean,
       default: false,
     },
-
-    showAvatar: {
-      type: Boolean,
-      default: true,
-    },
   },
 
   emits: ['select'],
