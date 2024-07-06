@@ -28,6 +28,7 @@ export default {
     add_line: 'aggiungi riga',
     alerts: {
       line_exists: 'Articolo già presente in distinta per questa fase',
+      quantity_negative: 'La quantità per deve essere positiva',
     },
     delete_selected: 'elimina selezionati',
     edit: 'modifica distinta',
