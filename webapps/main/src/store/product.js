@@ -102,6 +102,16 @@ const product = {
       state.list = product_list;
     },
 
+    APPEND_PRODUCT_LIST(state, product_list) {
+      if (state.list) {
+        for (const product of product_list) {
+          state.list.push(product);
+        }
+      } else {
+        state.list = product_list;
+      }
+    },
+
     LOAD_PRODUCT_DETAILS(state, product_details) {
       state.saved = _cloneDeep(product_details);
       state.temp = _cloneDeep(product_details);
@@ -137,10 +147,13 @@ const product = {
       });
     },
 
-    loadProductList({ commit }) {
+    loadProductList({ commit }, search_params) {
+      if (!search_params) {
+        search_params = {};
+      }
       return new Promise((resolve, reject) => {
         api
-          .get('product')
+          .get('product', { params: search_params })
           .then((resp) => {
             const productList = resp.data;
             productList.forEach((p) => {
@@ -148,6 +161,29 @@ const product = {
               (p.last_phase = 0), (p.last_steps = [0]);
             });
             commit('LOAD_PRODUCT_LIST', productList);
+            resolve();
+          })
+          .catch((err) => {
+            window.alert(`Couldn't fetch data from db:\n ${err}`);
+            reject();
+          });
+      });
+    },
+
+    appendProductList({ commit }, search_params) {
+      if (!search_params) {
+        search_params = {};
+      }
+      return new Promise((resolve, reject) => {
+        api
+          .get('product', { params: search_params })
+          .then((resp) => {
+            const productList = resp.data;
+            productList.forEach((p) => {
+              p.last_page = 'home';
+              (p.last_phase = 0), (p.last_steps = [0]);
+            });
+            commit('APPEND_PRODUCT_LIST', productList);
             resolve();
           })
           .catch((err) => {

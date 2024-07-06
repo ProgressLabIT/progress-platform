@@ -32,7 +32,9 @@ async def get_product_list(
   limit: int | None = None, # return a limited number of results
   search: str | None = None, # filter by code or description
   has_operation_key: str | None = None, # filter by operation key
-  details: bool = False
+  details: bool = False,
+  filter_inactive: bool = False,
+  tag_search: str | None = None
 ):
   product_list =  db.aql.execute(
     Queries.GET_PRODUCT_LIST,
@@ -41,7 +43,9 @@ async def get_product_list(
       offset = offset,
       search = search,
       has_operation_key = has_operation_key,
-      details = details
+      details = details,
+      tag = tag_search,
+      active = filter_inactive
     )
   )
 
