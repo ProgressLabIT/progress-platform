@@ -125,37 +125,27 @@
             >
             </q-select>
 
-            <q-select
-              v-model="new_line_product"
-              class="col-6"
-              use-input
-              dense
-              :loading="catalog_loading"
-              :options="filtered_products"
+            <!-- PRODUCT -->
+            <BaseAutocompleteProduct
+              :model-value="new_line_product"
               :label="$capitalize($t('code') + ' / ' + $t('description'))"
-              option-label="code"
               input-class="text-capitalize"
-              @filter="filterProducts"
-            >
-              <template #option="scope">
-                <q-item v-bind="scope.itemProps">
-                  <q-item-section>
-                    <q-item-label class="display">
-                      {{ scope.opt.code }}
-                    </q-item-label>
-                    <q-item-label caption>
-                      {{ scope.opt.description }}
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
+              class="col-6"
+              :filled="false"
+              :loading="catalog_loading"
+              use-input
+              dense="true"
+              @select="(selection) => loadProduct(selection)"
+            />
 
             <q-input
               v-model="new_line_qt"
+              v-model.number="new_line_qt"
               dense
               class="col-2"
               type="number"
+              step="1"
+              min="1"
               :label="$t('quantity.short')"
             >
             </q-input>
@@ -187,11 +177,12 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex';
+import { mapState } from 'vuex';
 
 import { api } from '@/boot/axios.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
+import BaseAutocompleteProduct from 'components/BaseAutocompleteProduct.vue';
 // import { throttle as _throttle } from 'lodash';
 
 export default {
@@ -199,6 +190,7 @@ export default {
 
   components: {
     BaseDialog,
+    BaseAutocompleteProduct,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
@@ -320,8 +312,6 @@ export default {
   },
 
   methods: {
-    ...mapActions(['loadProductDetails']),
-
     toggleEdit() {
       if (this.editMode == false) {
         this.editMode = true;
@@ -367,20 +357,8 @@ export default {
       });
     },
 
-    filterProducts(value, update) {
-      if (value === '') {
-        update(() => {
-          this.filtered_products = [...this.product_catalog];
-        });
-        return;
-      }
-      update(() => {
-        const needle = value.toLowerCase();
-        this.filtered_products = this.product_catalog.filter((p) => {
-          const include = multiMatch(needle, p, ['code', 'description']);
-          return include;
-        });
-      });
+    loadProduct(selection) {
+      this.new_line_product = selection;
     },
 
     updateItemQt(table_key, qt) {
@@ -406,7 +384,9 @@ export default {
         );
       });
 
-      if (!is_duplicate) {
+      if (!this.new_line_qt || this.new_line_qt <= 0) {
+        window.alert(this.$capitalize(this.$t('bom.alerts.quantity_negative')));
+      } else if (!is_duplicate) {
         const new_line = {
           /**
            * Cannot simply add ...new_line because it would
@@ -419,7 +399,8 @@ export default {
           qt: this.new_line_qt,
           phase_name: this.new_line_phase?.alias ?? null,
           phase_key: this.new_line_phase?._key ?? null,
-          table_key: this.new_line_product._key + this.new_line_phase?._key ?? null,
+          table_key:
+            this.new_line_product._key + this.new_line_phase?._key ?? null,
         };
 
         this.temp_bom = [...this.temp_bom, new_line];

@@ -28,6 +28,7 @@ export default {
     add_line: 'add line',
     alerts: {
       line_exists: 'Item already used in this phase',
+      quantity_negative: 'Item quantity must be positive',
     },
     delete_selected: 'delete selected',
     edit: 'edit',
