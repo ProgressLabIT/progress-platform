@@ -10,6 +10,7 @@ class Queries:
       // find active products matching the search pattern provided
       LET search_context = LOWER(CONCAT(product.code, ' ', 'product.description'))
       FILTER !product.trash && LIKE(search_context, search, true)
+      && (@active? product.active == @active: true)
 
       FILTER !@has_operation_key || FIRST(
         LET operation = Document(Operation, @has_operation_key)
@@ -27,6 +28,8 @@ class Queries:
           FILTER edge._from == product._id
           RETURN DOCUMENT(Tag, edge._to)
       )
+
+      FILTER @tag ? true: true
 
       // keep only required attributes
       LET result = @details ? product : KEEP(product, ["_key", "code", "description", "active"])
