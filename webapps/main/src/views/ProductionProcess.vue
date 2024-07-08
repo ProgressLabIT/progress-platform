@@ -212,7 +212,7 @@ import { Dialog, Notify, uid } from 'quasar';
 import Sortable from 'sortablejs';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import { mapActions, useStore } from 'vuex';
+import { useStore } from 'vuex';
 import { api } from '@/boot/axios';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
 import BasePrompt from '@/components/BasePrompt.vue';
@@ -268,14 +268,14 @@ export default {
             message: t('massCopyProcess.success.product', {
               count: selectedProducts.length,
             }),
-            color: 'theme-green'
+            color: 'theme-green',
           });
         } catch (error) {
           console.error(error);
           Notify.create({
             type: 'negative',
             message: t('massCopyProcess.error.product'),
-            color: 'theme-red'
+            color: 'theme-red',
           });
         }
       });
@@ -391,8 +391,6 @@ export default {
   },
 
   methods: {
-    ...mapActions(['loadProductDetails']),
-
     toggleEdit() {
       this.editMode = true;
     },
