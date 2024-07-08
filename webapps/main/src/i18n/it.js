@@ -219,6 +219,7 @@ export default {
   issue_update_title: 'Modifica segnalazione',
   serial_id: 'id matricola',
   serial: 'matricola',
+  serials: 'matricole',
   serial_data: 'Dati matricola',
   serial_new_title: 'Nuova matricola',
   serial_update_title: 'Modifica seriale',
@@ -869,4 +870,13 @@ export default {
   serial_delete_confirm_question:
     'Sei sicuro di voler cancellare questo seriale?',
   load_more: 'Carica altri',
+  serialInput: {
+    noData: 'Nessuna matricola trovata',
+    after_options:
+      'Inserisci almeno {minChars} caratteri per crearne una nuova matricola.',
+    create: {
+      label: 'Crea nuova matricola "{name}"',
+      hint: 'Clicca o premi {key} per creare',
+    },
+  },
 };
