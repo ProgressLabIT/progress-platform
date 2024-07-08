@@ -848,6 +848,7 @@ export default {
   declare_all_serials: 'Inserisci tutti i seriali del batch per continuare',
   traceability: {
     enabled: 'abilita tracciabilità',
+    mandatory: 'tracciabilità obblicatoria',
     include_deleted: 'includi cancellati',
     options: {
       none: 'Nessuna',
