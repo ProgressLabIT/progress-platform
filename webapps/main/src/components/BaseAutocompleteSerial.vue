@@ -1,7 +1,9 @@
 <template>
   <q-select
+    ref="selectRef"
     :work_order="work_order"
     :product="product"
+    :product_key="product_key"
     use-input
     filled
     :loading="loading"
@@ -38,13 +40,41 @@
       {{ label }}
     </template>
 
-    <template #no-option>
-      <div class="q-pa-md">No results</div>
+    <template #no-option="{ inputValue }">
+      <q-item v-if="can_create !== 'true'">
+        <q-item-section class="text-low">
+          {{ $t('serialInput.noData') }}
+        </q-item-section>
+      </q-item>
+      <q-item v-else clickable @click="createAndAddNewSerial(inputValue)">
+        <q-item-section avatar>
+          <q-icon name="mdi-plus" />
+        </q-item-section>
+
+        <q-item-section>
+          <q-item-label>
+            {{ $t('serialInput.create.label', { name: inputValue }) }}
+          </q-item-label>
+
+          <q-item-label caption>
+            <i18n-t keypath="serialInput.create.hint">
+              <template #key>
+                <kbd>Enter</kbd>
+              </template>
+            </i18n-t>
+          </q-item-label>
+        </q-item-section>
+      </q-item>
     </template>
   </q-select>
 </template>
 
 <script>
+import { ref } from 'vue';
+import { timestamp } from '@/lib/TimeHandling.js';
+
+const selectRef = ref();
+
 export default {
   name: 'BaseAutocompleteSerial',
 
@@ -93,6 +123,16 @@ export default {
       type: Object,
       default: undefined,
     },
+
+    product_key: {
+      type: String,
+      default: undefined,
+    },
+
+    can_create: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   emits: ['select'],
@@ -108,6 +148,9 @@ export default {
   computed: {
     placeholder_computed() {
       return this.value ? null : this.placeholder;
+    },
+    session_data() {
+      return this.$store.state.session;
     },
   },
 
@@ -125,7 +168,7 @@ export default {
             params: {
               search: value,
               wo_key: this.work_order?._key || this.work_order_key,
-              product_key: this.product?._key,
+              product_key: this.product?._key || this.product_key,
             },
           })
           .then((resp) => {
@@ -133,6 +176,35 @@ export default {
             this.loading = false;
           });
       });
+    },
+
+    reload() {},
+
+    async createAndAddNewSerial(serial_code) {
+      await this.createNewSerial(serial_code);
+      selectRef.value.focus();
+    },
+
+    async createNewSerial(serial_code) {
+      let serial_data = {};
+
+      const user = this.session_data.user._key;
+
+      serial_data.created_by = `User/${user}`; // temporarily hardcoding DB id
+      serial_data.product_key = this.product_key;
+      serial_data.user_key = this.session_data.user._key;
+      serial_data.code = serial_code;
+      serial_data.data = [];
+
+      const event = {
+        event_type: 'SERIAL_CREATED',
+        user_key: user,
+        user_session_key: this.session_data.session_key,
+        timestamp: timestamp(),
+        serial_data,
+      };
+
+      await this.$api.post('event', event);
     },
   },
 };

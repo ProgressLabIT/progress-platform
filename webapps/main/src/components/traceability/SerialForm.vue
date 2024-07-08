@@ -157,6 +157,10 @@ export default {
       type: Object,
       default: undefined,
     },
+    auto_link_product: {
+      type: String,
+      default: null,
+    },
   },
 
   emits: ['close', 'serialCreated'],
@@ -205,6 +209,10 @@ export default {
       this.step_index = 0;
 
       this.links.product = null;
+
+      if (this.auto_link_product != null) {
+        this.loadProduct(this.auto_link_product);
+      }
     },
 
     hasCustomField() {

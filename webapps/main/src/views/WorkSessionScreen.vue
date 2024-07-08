@@ -304,10 +304,8 @@ export default {
   computed: {
     ...mapState({
       j: (state) => state.traceability.working_job_data,
-      ws_list: (state) => state.traceability.work_session_list,
       batch_data: (state) => state.traceability.current_batch_data.step_data,
       wo_data: (state) => state.workorder.wo_data,
-      batch_serials: (state) => state.batch_serials,
     }),
 
     links() {

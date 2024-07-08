@@ -18,6 +18,34 @@
         :virtual-scroll-sticky-size-start="48"
         hide-bottom
       >
+        <template #body-cell-serials="props">
+          <q-td :props="props">
+            <q-btn
+              v-if="
+                props.value !== null &&
+                props.row.traceability_level !== null &&
+                props.row.traceability_level !== 'none'
+              "
+              size="sm"
+              color="theme-blue"
+              @click="show_serial_form[props.row.component_key] = true"
+            >
+              {{ $t('serials') }}
+            </q-btn>
+
+            <SerialBomForm
+              :show="show_serial_form[props.row.component_key] === true"
+              :component_code="props.row.component_code"
+              :component_key="props.row.component_key"
+              :job_key="job._key"
+              :wo_key="job.wo_key"
+              mode="new"
+              @close="show_serial_form[props.row.component_key] = false"
+              @serial-created="getSerials"
+            >
+            </SerialBomForm>
+          </q-td>
+        </template>
       </q-table>
 
       <q-separator />
@@ -65,6 +93,7 @@
 <script>
 // import BaseModalForm from '@/components/BaseModalForm.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue';
+import SerialBomForm from '@/components/traceability/SerialBomForm.vue';
 
 export default {
   name: 'WorkSessionBom',
@@ -72,6 +101,7 @@ export default {
   components: {
     //  BaseModalForm,
     NoDataAlert,
+    SerialBomForm,
   },
 
   props: {
@@ -86,6 +116,7 @@ export default {
       quantity_type: 'job',
       qt_types: ['job', 'batch'],
       show_lot_input: false,
+      show_serial_form: [],
     };
   },
 
@@ -122,6 +153,11 @@ export default {
           field: 'qt',
           label: this.$t('quantity.short').toUpperCase(),
         },
+        {
+          name: 'serials',
+          field: 'serials',
+          label: this.$t('serials').toUpperCase(),
+        },
       ];
     },
 
@@ -141,6 +177,23 @@ export default {
             };
           })
         : [];
+    },
+  },
+
+  methods: {
+    getSerials() {
+      this.loading = true;
+      this.offset = 0;
+      this.$store
+        .dispatch('getSerials', {
+          ...this.filters,
+          offset: this.offset,
+        })
+        .then(() =>
+          setTimeout(() => {
+            this.loading = false;
+          }, 1000),
+        );
     },
   },
 };

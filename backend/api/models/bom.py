@@ -13,6 +13,7 @@ class BomLineRead(FlexModel):
   phase_name: str | None = None
   qt: float
   traceability_mandatory: bool | None = None
+  traceability_level: str | None = None
 
 
 class BomLineWriteIn(FlexModel):
@@ -22,10 +23,12 @@ class BomLineWriteIn(FlexModel):
   phase_key: str | None = None
   type: str = 'BomLine'
   traceability_mandatory: bool | None = None
+  traceability_level: str | None = None
 
 class BomLineWriteOut(FlexModel):
   component_id: str = Field(..., alias="_to")
   qt: float
   traceability_mandatory: bool | None = None
+  traceability_level: str | None = None
   phase_id: str = Field(..., alias="_from")
   type: str = 'BomLine'

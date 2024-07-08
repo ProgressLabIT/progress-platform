@@ -214,6 +214,7 @@ export default {
   issue_update_success: 'Issue updated successfully',
   issue_update_title: 'Update the issue',
   serial: 'serial',
+  serials: 'serials',
   serial_id: 'serial id',
   serial_data: 'Serial data',
   serial_new_title: 'New serial',
@@ -858,4 +859,13 @@ export default {
   serial_delete_confirm_title: 'Delete serial',
   serial_delete_confirm_question: 'Do you want to delete this serial?',
   load_more: 'load more',
+  serialInput: {
+    noData: 'No serial found.',
+    after_options:
+      'Enter at least {minChars} characters to be able to create a new serial.',
+    create: {
+      label: 'Create new serial "{name}"',
+      hint: 'Click or press {key} to create',
+    },
+  },
 };
