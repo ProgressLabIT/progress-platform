@@ -57,6 +57,16 @@
         :virtual-scroll-sticky-size-start="48"
         hide-bottom
       >
+        <template #body-cell-traceability_mandatory="props">
+          <q-td :props="props">
+            <q-toggle
+              v-if="props.value !== null"
+              v-model="props.value"
+              disabled="true"
+            />
+          </q-td>
+        </template>
+
         <template #body-cell-code="{ value }">
           <div class="nowrap">{{ value }}</div>
         </template>
@@ -149,6 +159,16 @@
               :label="$t('quantity.short')"
             >
             </q-input>
+
+            <q-toggle
+              v-if="
+                new_line_product?.traceability_level &&
+                new_line_product?.traceability_level !== 'none'
+              "
+              v-model="new_line_traceability_mandatory"
+              class="col-2"
+              :label="$t('traceability.mandatory')"
+            />
           </div>
         </q-card-section>
         <div class="row q-col-gutter-md q-pa-md">
@@ -206,6 +226,7 @@ export default {
       new_line_product: {},
       new_line_phase: {},
       new_line_qt: null,
+      new_line_traceability_mandatory: null,
       show_cancel_confirmation: false,
       show_save_confirmation: false,
       saving: false,
@@ -247,6 +268,11 @@ export default {
           name: 'qt',
           field: 'qt',
           label: this.$t('quantity.short').toUpperCase(),
+        },
+        {
+          name: 'traceability_mandatory',
+          field: 'traceability_mandatory',
+          label: this.$t('traceability').toUpperCase(),
         },
       ];
     },
@@ -297,6 +323,7 @@ export default {
       this.new_line_product = null;
       this.new_line_qt = null;
       this.new_line_phase = null;
+      this.new_line_traceability_mandatory = null;
     },
   },
 
@@ -359,6 +386,14 @@ export default {
 
     loadProduct(selection) {
       this.new_line_product = selection;
+      if (
+        this.new_line_product?.traceability_level &&
+        this.new_line_product?.traceability_level !== 'none'
+      ) {
+        this.new_line_traceability_mandatory = true;
+      } else {
+        this.new_line_traceability_mandatory = null;
+      }
     },
 
     updateItemQt(table_key, qt) {
@@ -396,6 +431,7 @@ export default {
           component_key: this.new_line_product._key,
           component_code: this.new_line_product.code,
           component_description: this.new_line_product.description,
+          traceability_mandatory: this.new_line_traceability_mandatory,
           qt: this.new_line_qt,
           phase_name: this.new_line_phase?.alias ?? null,
           phase_key: this.new_line_phase?._key ?? null,

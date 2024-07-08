@@ -840,6 +840,7 @@ export default {
     'Please declare all serials in the batch before completing the step',
   traceability: {
     enabled: 'Enable traceability',
+    mandatory: 'Mandatory traceability',
     include_deleted: 'Include deleted',
     options: {
       none: 'None',
