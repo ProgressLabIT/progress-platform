@@ -430,7 +430,7 @@
 
 <script>
 import { generate } from '@pdfme/generator';
-import { mapState, mapActions } from 'vuex';
+import { mapState } from 'vuex';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -592,8 +592,6 @@ export default {
   },
 
   methods: {
-    ...mapActions(['loadProductDetails']),
-
     // deltaPcString(p) {
     //   let pc_sign = p.delta_pc > 0 ? '+' : ''
     //   return '('.concat(pc_sign, p.delta_pc, '%)')
