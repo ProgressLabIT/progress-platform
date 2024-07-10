@@ -42,7 +42,12 @@ def get_serial_batch(
     wo_key = wo_key,
     job_key = f'Job/{job_key}'
   )
-  return [e for e in db.aql.execute(Queries.GET_AVAILABLE_SERIALS_IN_BATCH, bind_vars=bind_vars)]
+  batch_serials = []
+  for serial in [e for e in db.aql.execute(Queries.GET_AVAILABLE_SERIALS_IN_BATCH, bind_vars=bind_vars)]:
+    if serial['code']:
+      batch_serials.append(serial)
+  return batch_serials
+
 
 
 @router.get('/serial-wo-phase',
@@ -63,12 +68,12 @@ def get_serial_wo_phase(
           serial_code= serial['code'],
           active= serial['active'],
       ))
-    else:
-      wo_serials.append(dict(
-          serial_key= serial['_key'],
-          serial_code= serial['_key'],
-          active= serial['active'],
-      ))
+    #else:
+    #  wo_serials.append(dict(
+    #      serial_key= serial['_key'],
+    #      serial_code= serial['_key'],
+    #      active= serial['active'],
+    #  ))
   return wo_serials
 
 @router.get('/serial-from-wo',

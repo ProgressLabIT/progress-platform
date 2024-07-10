@@ -14,6 +14,7 @@ from commons.kafka_utils.kafka_producer import KafkaProducer
 from commons.models.form import SerialFormFieldValue
 from commons.utils.serial import Queries
 from commons.models.traceability import WIP
+from commons.models.product import TraceabilityLevel
 
 
 class SerialManager:
@@ -299,6 +300,8 @@ class SerialManager:
     def update_serial_data(self, serial_event, batch_key, step_data):
         self.ensure_quanty(serial_event)
         serials = self.retrieve_serial_in_batch(batch_key=batch_key)
+        if (len(serials)==0):
+           serials = self.retrieve_serial_in_wo(wo_key=serial_event['wo_key'])
         for serial in serials:
            try:
              for step in step_data:
@@ -326,8 +329,13 @@ class SerialManager:
         if (ensure_qt):
            self.ensure_quanty(serial_event)
         serials = self.retrieve_serial_in_batch(batch_key=batch_key)
+        if (len(serials)==0):
+           serials = self.retrieve_serial_in_wo(wo_key=serial_event['wo_key'])
+        traceability_level = serial_event['traceability_level']
+        last_phase = serial_event['last_phase']
         for serial in serials:
-           if (serial.code == None):
+           finalize = traceability_level == TraceabilityLevel.COMPLETE or next((data.value for data in serial.data if data.value != None), None) != None or last_phase
+           if (serial.code == None and finalize):
              tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
              try:
                serial_no = "MISSING-COUNTER"
