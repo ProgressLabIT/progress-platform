@@ -21,7 +21,7 @@
           v-model="serialModel"
           :label="$capitalize($t('serial'))"
           :product_key="component_key"
-          can_create="true"
+          :can_create="true"
         >
         </BaseAutocompleteSerial>
 

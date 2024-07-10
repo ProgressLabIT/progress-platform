@@ -41,7 +41,7 @@
     </template>
 
     <template #no-option="{ inputValue }">
-      <q-item v-if="can_create !== 'true'">
+      <q-item v-if="!can_create">
         <q-item-section class="text-low">
           {{ $t('serialInput.noData') }}
         </q-item-section>
@@ -70,10 +70,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
 import { timestamp } from '@/lib/TimeHandling.js';
-
-const selectRef = ref();
 
 export default {
   name: 'BaseAutocompleteSerial',
@@ -182,7 +179,7 @@ export default {
 
     async createAndAddNewSerial(serial_code) {
       await this.createNewSerial(serial_code);
-      selectRef.value.focus();
+      this.$refs.selectRef.value.focus();
     },
 
     async createNewSerial(serial_code) {
