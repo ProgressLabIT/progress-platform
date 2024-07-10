@@ -11,5 +11,5 @@ class Counter(ArangoDocument):
   next_tick: int = 0
   template: list[str] = []
   frequency: str | None = None
-  reset_date: datetime = Field(default_factory=timestamp)
+  reset_date: datetime | None = None
 
