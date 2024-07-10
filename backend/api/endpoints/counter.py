@@ -31,10 +31,12 @@ def fetch_counter(name: str | None = None, key: str | None = None):
     match['name'] = name
   if key:
     match['_key'] = key
-
-  cursor = db.collection('Counter').find(match)
-  result = [Counter(**f) for f in cursor]
-  return sorted(result, key=lambda x: x.name.lower())
+  try:
+    cursor = db.collection('Counter').find(match)
+    result = [Counter(**f) for f in cursor]
+    return sorted(result, key=lambda x: x.name.lower())
+  except:
+      raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
 
