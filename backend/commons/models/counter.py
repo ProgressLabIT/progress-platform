@@ -7,7 +7,7 @@ from commons.models.base_models import ArangoDocument
 from commons.utils.dt import timestamp
 
 class Counter(ArangoDocument):
-  name: str = Field(..., min_length=1)
+  name: str | None = ""
   next_tick: int = 0
   template: list[str] = []
   frequency: str | None = None
