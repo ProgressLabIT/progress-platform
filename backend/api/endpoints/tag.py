@@ -4,7 +4,7 @@ from utils import auth
 from utils.api import APIResponse
 from commons.utils.db import db
 from utils.exceptions import HTTPError
-from models.tag import Tag, TagConnectionUpdate, TagAssignmentContext
+from commons.models.tag import Tag, TagConnectionUpdate, TagAssignmentContext
 
 router = APIRouter()
 

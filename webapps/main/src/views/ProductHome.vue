@@ -168,7 +168,7 @@
             :model-value="product.traceability_level"
             :label="$t('traceability.enabled')"
             :disable="!editMode"
-            true-value="complete"
+            true-value="form_only"
             false-value="none"
             @update:model-value="updateField('traceability_level', $event)"
           />

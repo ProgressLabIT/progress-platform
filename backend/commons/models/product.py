@@ -6,7 +6,7 @@ from typing import List, Optional
 from pydantic import ByteSize, Field
 
 from commons.models.base_models import FlexModel
-from models.tag import Tag
+from commons.models.tag import Tag
 from commons.models.counter import Counter
 
 
