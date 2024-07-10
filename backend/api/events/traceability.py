@@ -845,7 +845,7 @@ class ProductionActivityEvent(BaseEvent):
       tx = self.tx
     )
 
-    if (self.job.first_phase and wo.traceability_level == TraceabilityLevel.COMPLETE and not self.job.first_phase):
+    if (self.job.first_phase and wo.traceability_level == TraceabilityLevel.COMPLETE):
       # Create batch serials
       self.create_batch_serial_records()
 
@@ -1113,6 +1113,9 @@ class ProductionActivityEvent(BaseEvent):
         self.create_work_session()
         job_update['last_work_session_started'] = self.info.work_session_key
         job_update['active'] = True
+
+        if (wo.traceability_level == TraceabilityLevel.COMPLETE):
+          self.create_batch_serial_records()
 
       # Update job qt_completed and progress
       self.job = Job(**self.tx.collection('Job').update(job_update, check_rev=False, return_new=True)['new'])
