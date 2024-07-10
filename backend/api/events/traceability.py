@@ -236,7 +236,7 @@ class ProductionActivityEvent(BaseEvent):
      setattr(serial_event, 'operation', SerialEventType.CREATE_FROM_BATCH)
      self.send_to_consumer(serial_event.dict())
 
-  def finalize_batch_serial(self, completed_batch_qt):
+  def finalize_batch_serial(self, wo, completed_batch_qt):
      if not self.job:
        self.job = self.get_job_data()
 
@@ -246,6 +246,9 @@ class ProductionActivityEvent(BaseEvent):
      setattr(serial_event, 'product_key', self.info.product_key)
      setattr(serial_event, 'quantity', completed_batch_qt)
      setattr(serial_event, 'batch_key', self.info.active_batch_key)
+     setattr(serial_event, 'traceability_level', wo.traceability_level)
+     setattr(serial_event, 'traceability_level', wo.traceability_level)
+     setattr(serial_event, 'last_phase', self.job.last_phase)
      setattr(serial_event, 'operation', SerialEventType.FINALIZE_BATCH)
      self.send_to_consumer(serial_event.dict())
 
@@ -845,7 +848,7 @@ class ProductionActivityEvent(BaseEvent):
       tx = self.tx
     )
 
-    if (self.job.first_phase and wo.traceability_level == TraceabilityLevel.COMPLETE):
+    if (self.job.first_phase and wo.traceability_level != None and wo.traceability_level != TraceabilityLevel.NONE):
       # Create batch serials
       self.create_batch_serial_records()
 
@@ -1077,7 +1080,7 @@ class ProductionActivityEvent(BaseEvent):
 
     if (wo.traceability_level != None and wo.traceability_level != TraceabilityLevel.NONE):
         # update batch serials data
-        self.finalize_batch_serial(completed_batch_qt)
+        self.finalize_batch_serial(wo, completed_batch_qt)
 
     # Update job completed quantity as reference for methods being called later (e.g. create_batch)
     self.job.qt_completed += self.info.completed_batch_qt
@@ -1114,7 +1117,7 @@ class ProductionActivityEvent(BaseEvent):
         job_update['last_work_session_started'] = self.info.work_session_key
         job_update['active'] = True
 
-        if (wo.traceability_level == TraceabilityLevel.COMPLETE):
+        if (wo.traceability_level != None and wo.traceability_level != TraceabilityLevel.NONE):
           self.create_batch_serial_records()
 
       # Update job qt_completed and progress
