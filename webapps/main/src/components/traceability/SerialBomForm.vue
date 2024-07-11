@@ -18,7 +18,9 @@
         <!-- FORM BODY -->
 
         <BaseAutocompleteSerial
-          v-model="serialModel"
+          v-for="n in batch_qt"
+          :key="n"
+          v-model="serialModel[n]"
           :label="$capitalize($t('serial'))"
           :product_key="component_key"
           :can_create="true"
@@ -77,11 +79,11 @@ export default {
       type: String,
       required: true,
     },
-    wo_key: {
-      type: String,
-      required: true,
+    batch_serials: {
+      type: Array,
+      default: () => [],
     },
-    job_key: {
+    batch_qt: {
       type: String,
       required: true,
     },
@@ -93,8 +95,7 @@ export default {
     return {
       saving: false,
       enableSave: false,
-      batch_serials: [],
-      serialModel: null,
+      serialModel: [],
     };
   },
 
@@ -120,13 +121,7 @@ export default {
     async initFormData() {
       this.saving = false;
       this.enableSave = false;
-      const { data: batch_serials } = await this.$api.get('serial-batch', {
-        params: {
-          wo_key: this.wo_key,
-          job_key: this.job_key,
-        },
-      });
-      this.batch_serials = batch_serials;
+      this.serialModel = [];
     },
 
     cancel() {

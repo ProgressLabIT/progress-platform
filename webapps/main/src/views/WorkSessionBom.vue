@@ -37,8 +37,8 @@
               :show="show_serial_form[props.row.component_key] === true"
               :component_code="props.row.component_code"
               :component_key="props.row.component_key"
-              :job_key="job._key"
-              :wo_key="job.wo_key"
+              :batch_serials="batch_serials"
+              :batch_qt="props.row.batch_qt"
               mode="new"
               @close="show_serial_form[props.row.component_key] = false"
               @serial-created="getSerials"
@@ -117,6 +117,7 @@ export default {
       qt_types: ['job', 'batch'],
       show_lot_input: false,
       show_serial_form: [],
+      batch_serials: null,
     };
   },
 
@@ -169,15 +170,22 @@ export default {
             const factor =
               this.quantity_type === 'job'
                 ? this.job.qt_planned
-                : this.job.parameters.production_batch_qt;
+                : this.jobparameters.production_batch_qt;
             quantity = i.qt * factor;
+            let batch_qt = i.qt * this.job.parameters.production_batch_qt;
             return {
               ...i,
               qt: quantity,
+              batch_qt: batch_qt,
+              batch_serials: this.batch_serials,
             };
           })
         : [];
     },
+  },
+
+  async created() {
+    this.batch_serials = this.getBatchSerials();
   },
 
   methods: {
@@ -194,6 +202,16 @@ export default {
             this.loading = false;
           }, 1000),
         );
+    },
+
+    async getBatchSerials() {
+      const { data: batch_serials } = await this.$api.get('serial-batch', {
+        params: {
+          batch_key: this.job.active_batch_key,
+        },
+      });
+
+      return batch_serials;
     },
   },
 };

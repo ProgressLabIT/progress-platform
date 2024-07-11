@@ -280,7 +280,7 @@ export default {
     },
 
     async ensureBatchSerialCounter(batch_serials) {
-      /*const { data: batch_serials } = await this.$api.get('serial-batch', {
+      /*const { data: batch_serials } = await this.$api.get('serial-wo-job', {
         params: {
           batch_key: this.job.active_batch_key,
         },
@@ -393,7 +393,7 @@ export default {
       // Values will change after committing mutation save to use for navigation later on
       const current_step_was_last = this.current_step_is_last;
       const current_batch_was_last = this.current_batch_is_last;
-      const { data: batch_serials } = await api.get('serial-batch', {
+      const { data: batch_serials } = await api.get('serial-wo-job', {
         params: {
           wo_key: this.job.wo_key,
           job_key: this.job._key,
