@@ -139,6 +139,7 @@ export default {
       loading: false,
       options: [],
       origin_list: [],
+      last_research: undefined,
     };
   },
 
@@ -151,35 +152,54 @@ export default {
     },
   },
 
+  created() {
+    if (this.work_order || this.product_key) {
+      this.loadSerials();
+      this.last_research = '';
+    }
+  },
+
   methods: {
-    filter(value, update, abort) {
-      if (value.length < 3) {
-        abort();
-        return;
+    loadSerials(search_value) {
+      this.loading = true;
+      let params = {
+        wo_key: this.work_order?._key || this.work_order_key,
+        product_key: this.product?._key || this.product_key,
+      };
+      if (search_value) {
+        params = {
+          ...params,
+          search: search_value,
+          limit: 50,
+        };
+        this.last_research = search_value;
       }
-      update(() => {
-        this.loading = true;
-        // No need of multiFieldSearch here. The api already checks all the necessary fields with a single search term.
-        this.$api
-          .get('serial-selection', {
-            params: {
-              search: value,
-              wo_key: this.work_order?._key || this.work_order_key,
-              product_key: this.product?._key || this.product_key,
-            },
-          })
-          .then((resp) => {
-            this.options = resp.data;
-            this.loading = false;
-          });
-      });
+      this.$api
+        .get('serial-selection', {
+          params: params,
+        })
+        .then((resp) => {
+          this.options = resp.data;
+          this.loading = false;
+        });
     },
 
-    reload() {},
+    filter(value, update, abort) {
+      if (this.last_research === value) {
+        update();
+      } else if (value.length < 3 && !this.product_key) {
+        abort();
+      } else {
+        update(() => {
+          this.loadSerials(value);
+          // No need of multiFieldSearch here. The api already checks all the necessary fields with a single search term.
+        });
+      }
+    },
 
     async createAndAddNewSerial(serial_code) {
       await this.createNewSerial(serial_code);
-      this.$refs.selectRef.value.focus();
+      this.$refs.selectRef.hidePopup();
     },
 
     async createNewSerial(serial_code) {

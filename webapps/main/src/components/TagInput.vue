@@ -94,7 +94,7 @@ import { ref } from 'vue';
 import { api } from '@/boot/axios';
 import multiMatch from '@/lib/MultiFieldSearch';
 
-const model = defineModel();
+const model = defineModel({ type: Array });
 
 const isLoading = ref(false);
 const tags = ref([]);

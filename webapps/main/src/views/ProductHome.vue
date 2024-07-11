@@ -151,7 +151,7 @@
           <span v-if="product.tags && product.tags.length === 0" class="text-h3"
             >-</span
           >
-          <TagChips v-else :tags="product.tags" />
+          <TagChips v-else :tags="product?.tags" />
         </div>
 
         <!-- TRACEABILITY SETTING TAGS -->
