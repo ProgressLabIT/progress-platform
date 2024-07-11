@@ -32,7 +32,7 @@ def get_product_steps(product_key: str):
   )
   return [e for e in db.aql.execute(Queries.GET_PRODUCT_STEPS, bind_vars=bind_vars)]
 
-@router.get('/serial-batch',
+@router.get('/serial-wo-job',
     dependencies=[Depends(auth.verify_token)])
 def get_serial_batch(
   wo_key: str | None = None,
@@ -48,6 +48,20 @@ def get_serial_batch(
       batch_serials.append(serial)
   return batch_serials
 
+@router.get('/serial-batch',
+    dependencies=[Depends(auth.verify_token)])
+def get_serial_batch(
+  batch_key: str | None = None,
+  filter_empty: bool = False
+):
+  bind_vars = dict(
+    from_id = f'Batch/{batch_key}'
+  )
+  batch_serials = []
+  for serial in [e for e in db.aql.execute(Queries.GET_ALL_SERIALS_IN_BATCH, bind_vars=bind_vars)]:
+    if serial['code'] or not filter_empty:
+      batch_serials.append(serial)
+  return batch_serials
 
 
 @router.get('/serial-wo-phase',
