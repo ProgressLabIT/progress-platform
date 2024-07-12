@@ -6,6 +6,9 @@
     :product_key="product_key"
     use-input
     filled
+    :multiple="selection_qt && selection_qt > 1"
+    :use-chips="selection_qt && selection_qt > 1"
+    :max-values="selection_qt || 1"
     :loading="loading"
     :label-slot="!!label"
     :dense="dense"
@@ -129,6 +132,11 @@ export default {
     can_create: {
       type: Boolean,
       default: false,
+    },
+
+    selection_qt: {
+      type: Number,
+      default: 1,
     },
   },
 

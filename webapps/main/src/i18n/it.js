@@ -126,6 +126,7 @@ export default {
     MESSAGE_UPDATED: 'Messaggio modificato',
     MESSAGE_DELETED: 'Messaggio cancellato',
     SERIAL_CREATED: 'Seriale creato',
+    SERIAL_LINKED: 'Seriale collegato',
   },
   export: 'Esporta',
   ext_key: 'Chiave esterna',
