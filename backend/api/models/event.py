@@ -8,7 +8,7 @@ from models.collaboration import Message
 from commons.models.form import FormFieldValue
 from commons.models.base_models import ArangoDocument
 from commons.utils.dt import timestamp
-from commons.models.serial import SerialSelection
+from commons.models.serial import SerialSelection, SerialLink
 
 class EventType(str, Enum):
   # Production Events
@@ -44,6 +44,8 @@ class EventType(str, Enum):
   SERIAL_CREATED = 'SERIAL_CREATED'
   SERIAL_UPDATED = 'SERIAL_UPDATED'
   SERIAL_DELETED = 'SERIAL_DELETED'
+
+  SERIAL_LINKED = 'SERIAL_LINKED'
 
 
 class EventModel(ArangoDocument):
@@ -86,3 +88,4 @@ class EventModel(ArangoDocument):
   # Traceability fields
   serial_data: Any | None = None
   batch_serials: list[SerialSelection] | None = None
+  serial_link_data: list[SerialLink] | None = None

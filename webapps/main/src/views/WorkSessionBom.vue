@@ -37,11 +37,11 @@
               :show="show_serial_form[props.row.component_key] === true"
               :component_code="props.row.component_code"
               :component_key="props.row.component_key"
-              :batch_serials="batch_serials"
               :batch_qt="props.row.batch_qt"
+              :batch_key="job.active_batch_key"
+              :wo_key="job.wo_key"
               mode="new"
               @close="show_serial_form[props.row.component_key] = false"
-              @serial-created="getSerials"
             >
             </SerialBomForm>
           </q-td>
@@ -117,7 +117,6 @@ export default {
       qt_types: ['job', 'batch'],
       show_lot_input: false,
       show_serial_form: [],
-      batch_serials: null,
     };
   },
 
@@ -170,48 +169,16 @@ export default {
             const factor =
               this.quantity_type === 'job'
                 ? this.job.qt_planned
-                : this.jobparameters.production_batch_qt;
+                : this.job.parameters.production_batch_qt;
             quantity = i.qt * factor;
             let batch_qt = i.qt * this.job.parameters.production_batch_qt;
             return {
               ...i,
               qt: quantity,
               batch_qt: batch_qt,
-              batch_serials: this.batch_serials,
             };
           })
         : [];
-    },
-  },
-
-  async created() {
-    this.batch_serials = this.getBatchSerials();
-  },
-
-  methods: {
-    getSerials() {
-      this.loading = true;
-      this.offset = 0;
-      this.$store
-        .dispatch('getSerials', {
-          ...this.filters,
-          offset: this.offset,
-        })
-        .then(() =>
-          setTimeout(() => {
-            this.loading = false;
-          }, 1000),
-        );
-    },
-
-    async getBatchSerials() {
-      const { data: batch_serials } = await this.$api.get('serial-batch', {
-        params: {
-          batch_key: this.job.active_batch_key,
-        },
-      });
-
-      return batch_serials;
     },
   },
 };

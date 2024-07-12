@@ -27,11 +27,17 @@ class SerialEventType(str, Enum):
   UPDATE = 'UPDATE'
   DELETE = 'DELETE'
   LINK_BATCH = 'LINK_BATCH'
+  LINK_SERIALS = 'LINK_SERIALS'
 
 class SerialSelection(BaseModel):
    serial_key: str | None = None
    serial_code: str | None = None
    active: bool = False
+
+class SerialLink(BaseModel):
+  from_serial: str
+  to_serial:str
+  replaced: bool = False
 
 class SerialEvent(Serial):
    operation: SerialEventType | None = None
@@ -44,6 +50,7 @@ class SerialEvent(Serial):
    wo_key: str | None = None
    product_key: str | None = None
    batch_serials: list[SerialSelection] | None = None
+   serial_link_data: list[SerialLink] | None = None
    last_phase: bool = False
    traceability_level: str | None = None
 

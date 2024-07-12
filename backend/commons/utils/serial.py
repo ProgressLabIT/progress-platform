@@ -18,7 +18,16 @@ class Queries:
   GET_ALL_SERIALS_IN_BATCH = """
     FOR edge IN batch_serial
       FILTER edge._from == @from_id
-      RETURN DOCUMENT(Serial, edge._to)
+      LET serial = DOCUMENT(Serial, edge._to)
+
+      LET childs = (
+          FOR linked_serial IN contains
+              FILTER linked_serial._from == serial._id
+              && linked_serial.replaced == false
+              RETURN DOCUMENT(Serial, linked_serial._to)
+          )
+
+      RETURN MERGE(serial, { childs: childs })
   """
 
   GET_AVAILABLE_SERIALS_IN_BATCH = """
@@ -28,7 +37,7 @@ class Queries:
         && w.active == true
         && w._to == @job_key
       LET serial = DOCUMENT(Serial, w.serial_key)
-      return serial
+      RETURN serial
   """
 
   GET_SERIALS_IN_WORK_ORDER = """

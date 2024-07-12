@@ -79,6 +79,8 @@ class SerialManager:
                 self.update_serial_data(serial_event=serial_event, batch_key=serial_event['batch_key'], step_data=serial_event['step_data'])
              case SerialEventType.LINK_BATCH:
                 self.link_batch_serial(batch_key=serial_event['batch_key'], batch_serials=serial_event['batch_serials'])
+             case SerialEventType.LINK_SERIALS:
+                self.link_serials(serial_link_data=serial_event['serial_link_data'])
              case _:
                 print("Error")
         except:
@@ -185,6 +187,38 @@ class SerialManager:
                 error_code = SerialNotificationErrorCode.EXCEPTION,
                 error = traceback.format_exc()
              ))
+
+    def link_serials(self, serial_link_data):
+
+        for serial_links in serial_link_data:
+          from_serial = serial_links['from_serial']
+          to_serial = serial_links['to_serial']
+          link_match = dict(_from=f'Serial/{from_serial}', _to=f'Serial/{to_serial}')
+          try:
+             link_cursor = db.collection('contains').find(link_match)
+             if link_cursor.count()>0:
+                db.collection('contains').update(dict(
+                   _key = link_cursor.next()['_key'],
+                   _from=f'Serial/{from_serial}',
+                   _to=f'Serial/{to_serial}',
+                   replaced=serial_links['replaced']
+                ))
+             else:
+                db.collection('contains').insert(dict(
+                   _from=f'Serial/{from_serial}',
+                   _to=f'Serial/{to_serial}',
+                   replaced=serial_links['replaced']
+                ))
+          except:
+             print(traceback.format_exc())
+             self.notify_results(dict(
+                notification = SerialNotificationType.ERROR,
+                error_code = SerialNotificationErrorCode.EXCEPTION,
+                error = traceback.format_exc()
+             ))
+        self.notify_results(dict(
+            notification = SerialNotificationType.UPDATED
+        ))
 
     def create_from_batch(self, serial_event):
        batch_key = serial_event['batch_key']

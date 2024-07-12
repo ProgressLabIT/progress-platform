@@ -15,22 +15,30 @@
           </div>
         </q-card-section>
 
-        <!-- FORM BODY -->
+        <NoDataAlert v-if="!batch_serials">
+          {{ $t('serialInput.noData') }}
+        </NoDataAlert>
 
-        <BaseAutocompleteSerial
-          v-for="n in batch_qt"
-          :key="n"
-          v-model="serialModel[n]"
-          :label="$capitalize($t('serial'))"
-          :product_key="component_key"
-          :can_create="true"
-        >
-        </BaseAutocompleteSerial>
+        <template v-else>
+          <!-- FORM BODY -->
+          <BaseAutocompleteSerial
+            v-for="serial in batch_serials"
+            :key="serial._id"
+            v-model="serialModel[serial._id]"
+            :label="$capitalize($t('serial') + (serial?.code | serial._key))"
+            :product_key="component_key"
+            :loading="loading"
+            :can_create="true"
+            :selection_qt="component_per_product"
+          >
+          </BaseAutocompleteSerial>
+        </template>
 
         <!-- FORM ACTIONS    navigation -->
         <q-card-section>
           <div class="row q-gutter-md">
             <q-btn
+              v-if="batch_serials"
               color="theme-orange"
               :label="$t('save')"
               :loading="saving"
@@ -56,6 +64,8 @@
 <script>
 import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
+import NoDataAlert from '@/components/NoDataAlert.vue';
+
 import { timestamp } from '@/lib/TimeHandling.js';
 
 export default {
@@ -64,6 +74,7 @@ export default {
   components: {
     BaseDialog,
     BaseAutocompleteSerial,
+    NoDataAlert,
   },
 
   props: {
@@ -79,23 +90,30 @@ export default {
       type: String,
       required: true,
     },
-    batch_serials: {
-      type: Array,
-      default: () => [],
-    },
-    batch_qt: {
+    batch_key: {
       type: String,
       required: true,
     },
+    wo_key: {
+      type: String,
+      required: true,
+    },
+    batch_qt: {
+      type: Number,
+      default: null,
+    },
   },
 
-  emits: ['close', 'serialCreated'],
+  emits: ['close'],
 
   data() {
     return {
       saving: false,
       enableSave: false,
       serialModel: [],
+      initialValues: [],
+      batch_serials: [],
+      loading: false,
     };
   },
 
@@ -103,25 +121,72 @@ export default {
     session_data() {
       return this.$store.state.session;
     },
+
+    component_per_product() {
+      if (this.batch_serials && this.batch_qt > 0) {
+        return Math.floor(this.batch_qt / this.batch_serials.length);
+      } else {
+        return this.batch_qt;
+      }
+    },
   },
 
   watch: {
     show: {
       handler() {
         this.initFormData();
+        if (this.show) {
+          this.getBatchSerials();
+        }
       },
     },
   },
 
-  async created() {
-    this.initFormData();
-  },
-
   methods: {
+    async getBatchSerials() {
+      this.loading = true;
+      const { data: batch_serials } = await this.$api.get('serial-batch', {
+        params: {
+          batch_key: this.batch_key,
+        },
+      });
+
+      this.batch_serials = batch_serials;
+      this.fillInitialData();
+
+      this.loading = false;
+    },
+
     async initFormData() {
       this.saving = false;
       this.enableSave = false;
+    },
+
+    fillInitialData() {
       this.serialModel = [];
+      this.initialValues = [];
+      for (const serial of this.batch_serials) {
+        if (!this.serialModel[serial._id]) {
+          this.serialModel[serial._id] = [];
+        }
+        for (const child of serial.childs) {
+          if (child.product_key === this.component_key) {
+            this.serialModel[serial._id].push({
+              _key: child._key,
+              label: child.code,
+              product_key: child.product_key,
+              wo_key: child.wo_key,
+              value: child._key,
+            });
+
+            this.initialValues.push({
+              from_serial: serial._key,
+              to_serial: child._key,
+              replaced: true,
+            });
+          }
+        }
+      }
     },
 
     cancel() {
@@ -132,16 +197,41 @@ export default {
     async save() {
       this.saving = true;
 
+      let link_data = [];
+      let initial_values = this.initialValues;
+      for (const serial_from of this.batch_serials) {
+        if (this.serialModel[serial_from._id]) {
+          for (const serial_to of this.serialModel[serial_from._id]) {
+            link_data.push({
+              from_serial: serial_from._key,
+              to_serial: serial_to._key,
+              replaced: false,
+            });
+
+            initial_values = initial_values.filter((value) => {
+              return value._to_serial !== serial_to._key;
+            });
+          }
+        }
+      }
+
+      for (const inital_data of initial_values) {
+        link_data.push(inital_data);
+      }
+
       const event = {
-        event_type: 'SERIAL_CREATED',
-        user_session_key: this.session_data.session_key,
+        event_type: 'SERIAL_LINKED',
+        user_key: this.session_data.session_key,
         timestamp: timestamp(),
+        wo_key: this.wo_key,
+        batch_key: this.batch_key,
+        serial_link_data: link_data,
       };
 
       await this.$api.post('event', event);
-
-      this.cancel();
       this.saving = false;
+
+      this.$emit('close');
     },
   },
 };

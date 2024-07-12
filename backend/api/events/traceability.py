@@ -110,6 +110,11 @@ class ProductionActivityEvent(BaseEvent):
     action="delete_serial"
   )
 
+  SERIAL_LINKED = EventMeta(
+    collections=production_collections,
+    action="link_serial"
+  )
+
   ######################################################################
   # HELPER METHODS (Updates to specific collections)
   ######################################################################
@@ -206,6 +211,11 @@ class ProductionActivityEvent(BaseEvent):
     setattr(serial_event, 'operation', SerialEventType.CREATE_AND_FINALIZE)
     self.send_to_consumer(serial_event.dict())
 
+  def link_serial(self):
+    serial_event = SerialEvent()
+    setattr(serial_event, 'serial_link_data', self.info.serial_link_data)
+    setattr(serial_event, 'operation', SerialEventType.LINK_SERIALS)
+    self.send_to_consumer(serial_event.dict())
 
 
   def update_serial(self):
