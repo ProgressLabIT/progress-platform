@@ -33,7 +33,7 @@
               {{ $t('serials') }}
             </q-btn>
 
-            <SerialBomForm
+            <BomComponentSerialForm
               :show="show_serial_form[props.row.component_key] === true"
               :component_code="props.row.component_code"
               :component_key="props.row.component_key"
@@ -43,7 +43,7 @@
               mode="new"
               @close="show_serial_form[props.row.component_key] = false"
             >
-            </SerialBomForm>
+            </BomComponentSerialForm>
           </q-td>
         </template>
       </q-table>
@@ -63,10 +63,27 @@
         >
         </q-radio>
         <q-space />
+        <q-btn
+          size="sm"
+          color="theme-blue"
+          @click="show_all_serial_form = true"
+        >
+          {{ $t('serial_field.bom_component') }}
+        </q-btn>
         <q-btn size="sm" color="theme-blue" @click="$refs.bom.scrollTo(0)">
           {{ $t('scroll.to_top') }}
         </q-btn>
       </div>
+
+      <SerialBomForm
+        :show="show_all_serial_form === true"
+        :batch_key="job.active_batch_key"
+        :wo_key="job.wo_key"
+        mode="new"
+        :bom_components="job.job_bom"
+        @close="show_all_serial_form = false"
+      >
+      </SerialBomForm>
 
       <!-- INSERT HERE DIALOG FOR COMPONENT LOT REGISTRATION -->
       <!-- <BaseModalForm :show="show_lot_input" @cancel="show_lot_input = false">
@@ -93,7 +110,8 @@
 <script>
 // import BaseModalForm from '@/components/BaseModalForm.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue';
-import SerialBomForm from '@/components/traceability/SerialBomForm.vue';
+import BomComponentSerialForm from 'app/src/components/traceability/BomComponentSerialForm.vue';
+import SerialBomForm from 'app/src/components/traceability/SerialBomForm.vue';
 
 export default {
   name: 'WorkSessionBom',
@@ -101,6 +119,7 @@ export default {
   components: {
     //  BaseModalForm,
     NoDataAlert,
+    BomComponentSerialForm,
     SerialBomForm,
   },
 
@@ -117,6 +136,7 @@ export default {
       qt_types: ['job', 'batch'],
       show_lot_input: false,
       show_serial_form: [],
+      show_all_serial_form: false,
     };
   },
 

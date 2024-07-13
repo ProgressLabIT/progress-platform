@@ -10,38 +10,28 @@
         <q-card-section>
           <div class="row justify-between items-center">
             <div class="text-h2 display highlight text-center">
-              {{ serial_labels[index] }}
+              {{ component_code }}
             </div>
           </div>
         </q-card-section>
 
-        <NoDataAlert v-if="!bom_components">
+        <NoDataAlert v-if="!batch_serials">
           {{ $t('serial_field.noData') }}
         </NoDataAlert>
 
         <template v-else>
-          <template
-            v-for="component in bom_components"
-            :key="component.component_key"
+          <!-- FORM BODY -->
+          <BaseAutocompleteSerial
+            v-for="serial in batch_serials"
+            :key="serial._id"
+            v-model="serialModel[serial._id]"
+            :label="$capitalize($t('serial') + (serial?.code | serial._key))"
+            :product_key="component_key"
+            :loading="loading"
+            :can_create="false"
+            :selection_qt="component_per_product"
           >
-            <BaseAutocompleteSerial
-              v-if="
-                component.traceability_level !== null &&
-                component.traceability_level !== 'none'
-              "
-              v-model="
-                serialModel[
-                  [serial_ids[index], component.component_key].join(' ')
-                ]
-              "
-              :label="$capitalize($t('serial') + serial_labels[index])"
-              :product_key="component.component_key"
-              :loading="loading"
-              :selection_qt="component_per_product"
-            >
-            </BaseAutocompleteSerial>
-            <!-- FORM BODY -->
-          </template>
+          </BaseAutocompleteSerial>
         </template>
 
         <!-- FORM ACTIONS    navigation -->
@@ -79,7 +69,7 @@ import NoDataAlert from '@/components/NoDataAlert.vue';
 import { timestamp } from '@/lib/TimeHandling.js';
 
 export default {
-  name: 'SerialBomForm',
+  name: 'BomComponentSerialForm',
 
   components: {
     BaseDialog,
@@ -92,6 +82,14 @@ export default {
       type: Boolean,
       default: true,
     },
+    component_code: {
+      type: String,
+      required: true,
+    },
+    component_key: {
+      type: String,
+      required: true,
+    },
     batch_key: {
       type: String,
       required: true,
@@ -100,8 +98,8 @@ export default {
       type: String,
       required: true,
     },
-    bom_components: {
-      type: Object,
+    batch_qt: {
+      type: Number,
       default: null,
     },
   },
@@ -114,11 +112,8 @@ export default {
       enableSave: false,
       serialModel: [],
       initialValues: [],
-      serial_ids: [],
-      serial_labels: [],
       batch_serials: [],
       loading: false,
-      index: 0,
     };
   },
 
@@ -128,12 +123,11 @@ export default {
     },
 
     component_per_product() {
-      /*if (this.batch_serials && this.batch_qt > 0) {
+      if (this.batch_serials && this.batch_qt > 0) {
         return Math.floor(this.batch_qt / this.batch_serials.length);
       } else {
         return this.batch_qt;
-      }*/
-      return 3;
+      }
     },
   },
 
@@ -149,10 +143,6 @@ export default {
   },
 
   methods: {
-    getComponentModel() {
-      return [];
-    },
-
     async getBatchSerials() {
       this.loading = true;
       const { data: batch_serials } = await this.$api.get('serial-batch', {
@@ -173,29 +163,28 @@ export default {
     },
 
     fillInitialData() {
-      this.serialModel = new Map();
+      this.serialModel = [];
       this.initialValues = [];
-      this.serial_ids = [];
       for (const serial of this.batch_serials) {
-        this.serial_ids.push(serial._id);
-        this.serial_labels.push(serial?.code | serial._key);
+        if (!this.serialModel[serial._id]) {
+          this.serialModel[serial._id] = [];
+        }
         for (const child of serial.childs) {
-          const key = [serial._id, child.product_key].join(' ');
-          if (!this.serialModel[key]) {
-            this.serialModel[key] = [];
+          if (child.product_key === this.component_key) {
+            this.serialModel[serial._id].push({
+              _key: child._key,
+              label: child.code,
+              product_key: child.product_key,
+              wo_key: child.wo_key,
+              value: child._key,
+            });
+
+            this.initialValues.push({
+              from_serial: serial._key,
+              to_serial: child._key,
+              replaced: true,
+            });
           }
-          this.serialModel[key].push({
-            _key: child._key,
-            label: child.code,
-            product_key: child.product_key,
-            wo_key: child.wo_key,
-            value: child._key,
-          });
-          this.initialValues.push({
-            from_serial: serial._key,
-            to_serial: child._key,
-            replaced: true,
-          });
         }
       }
     },

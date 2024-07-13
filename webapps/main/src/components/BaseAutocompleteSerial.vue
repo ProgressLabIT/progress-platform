@@ -46,7 +46,7 @@
     <template #no-option="{ inputValue }">
       <q-item v-if="!can_create">
         <q-item-section class="text-low">
-          {{ $t('serialInput.noData') }}
+          {{ $t('serial_field.noData') }}
         </q-item-section>
       </q-item>
       <q-item v-else clickable @click="createAndAddNewSerial(inputValue)">
@@ -56,11 +56,11 @@
 
         <q-item-section>
           <q-item-label>
-            {{ $t('serialInput.create.label', { name: inputValue }) }}
+            {{ $t('serial_field.create.label', { name: inputValue }) }}
           </q-item-label>
 
           <q-item-label caption>
-            <i18n-t keypath="serialInput.create.hint">
+            <i18n-t keypath="serial_field.create.hint">
               <template #key>
                 <kbd>Enter</kbd>
               </template>
@@ -170,10 +170,19 @@ export default {
   methods: {
     loadSerials(search_value) {
       this.loading = true;
-      let params = {
-        wo_key: this.work_order?._key || this.work_order_key,
-        product_key: this.product?._key || this.product_key,
-      };
+      let params = {};
+      if (this.work_order?._key || this.work_order_key) {
+        params = {
+          ...params,
+          wo_key: this.work_order?._key || this.work_order_key,
+        };
+      }
+      if (this.product?._key || this.product_key) {
+        params = {
+          ...params,
+          product_key: this.product?._key || this.product_key,
+        };
+      }
       if (search_value) {
         params = {
           ...params,

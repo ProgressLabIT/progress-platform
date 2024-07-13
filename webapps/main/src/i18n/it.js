@@ -869,8 +869,9 @@ export default {
   serial_delete_confirm_question:
     'Sei sicuro di voler cancellare questo seriale?',
   load_more: 'Carica altri',
-  serialInput: {
+  serial_field: {
     noData: 'Nessuna matricola trovata',
+    bom_component: 'Matricole BOM',
     after_options:
       'Inserisci almeno {minChars} caratteri per crearne una nuova matricola.',
     create: {
