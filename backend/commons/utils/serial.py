@@ -30,6 +30,36 @@ class Queries:
       RETURN MERGE(serial, { childs: childs })
   """
 
+
+  GET_SERIAL_PARENTS = """
+      LET start = @serial_id
+        FOR v, e IN 0..9999 INBOUND start contains OPTIONS { uniqueVertices: "path" }
+          LET product = DOCUMENT(Product, v.product_key)
+          RETURN merge({
+              serial_key: v._key,
+              replaced: e.replaced,
+              serial_code: v.code,
+              product_key: product._key,
+              product_code: product.code,
+              product_description: product.description
+      })
+
+  """
+
+  GET_SERIAL_CHILDREN = """
+      LET start = @serial_id
+        FOR v, e IN 1..1 OUTBOUND start contains
+            LET product = DOCUMENT(Product, v.product_key)
+            RETURN merge({
+                serial_key: v._key,
+                replaced: e.replaced,
+                serial_code: v.code,
+                product_key: product._key,
+                product_code: product.code,
+                product_description: product.description
+      })
+  """
+
   GET_AVAILABLE_SERIALS_IN_BATCH = """
     FOR w IN wip
       FILTER
@@ -149,7 +179,6 @@ class Queries:
         RETURN MERGE(field, { value: field_value.value })
     )
 
-
     // FILTER BY LINKS
 
     // PRODUCT
@@ -165,7 +194,6 @@ class Queries:
 
     // LIMIT FILTERED RECORDS
     SORT s.created
-
 
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(s, {
