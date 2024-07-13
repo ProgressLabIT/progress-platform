@@ -63,6 +63,46 @@ def get_serial_batch(
       batch_serials.append(serial)
   return batch_serials
 
+@router.get('/serial-parents',
+    dependencies=[Depends(auth.verify_token)])
+def get_serial_parents(
+  serial_key: str | None = None,
+):
+  try:
+    bind_vars = dict(
+      serial_id = f'Serial/{serial_key}'
+    )
+    cursor = db.aql.execute(Queries.GET_SERIAL_PARENTS, bind_vars=bind_vars)
+    parents = [i for i in cursor]
+    return parents[::-1]
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching serials hierarcy from the db.",
+        error=traceback.format_exc()
+      )
+    )
+
+@router.get('/serial-childs',
+    dependencies=[Depends(auth.verify_token)])
+def get_serial_childs(
+  serial_key: str | None = None,
+):
+  try:
+    bind_vars = dict(
+      serial_id = f'Serial/{serial_key}'
+    )
+    cursor = db.aql.execute(Queries.GET_SERIAL_CHILDREN, bind_vars=bind_vars)
+    return [i for i in cursor]
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching serials hierarcy from the db.",
+        error=traceback.format_exc()
+      )
+    )
 
 @router.get('/serial-wo-phase',
     dependencies=[Depends(auth.verify_token)])

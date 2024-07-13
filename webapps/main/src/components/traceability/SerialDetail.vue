@@ -1,6 +1,12 @@
 <template>
   <BaseModalScreen :show="true" @close="exit">
     <template #header>
+      <q-btn
+        dense
+        unelevated
+        icon="mdi-file-tree"
+        @click="mini_state = !mini_state"
+      />
       <span
         class="q-ml-md display medium highlight weight-medium text-uppercase"
       >
@@ -11,6 +17,7 @@
     </template>
 
     <template #content>
+      <SerialTree :mini_state="mini_state"></SerialTree>
       <q-splitter
         v-model="data_column_width"
         class="fit q-py-sm"
@@ -163,6 +170,7 @@ import BaseModalScreen from '@/components/BaseModalScreen.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
 import MessageThread from '@/components/MessageThread.vue';
+import SerialTree from '@/components/traceability/SerialTree.vue';
 import { timestamp } from '@/lib/TimeHandling.js';
 
 export default {
@@ -173,6 +181,7 @@ export default {
     BaseUserAvatar,
     MessageThread,
     FormField,
+    SerialTree,
   },
 
   props: {
@@ -195,6 +204,7 @@ export default {
       current_step: 0,
       editMode: false,
       data_column_width: 65,
+      mini_state: false,
     };
   },
 
