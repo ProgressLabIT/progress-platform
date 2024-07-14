@@ -81,6 +81,7 @@
         :wo_key="job.wo_key"
         mode="new"
         :bom_components="job.job_bom"
+        :prod_batch_qt="job.parameters.production_batch_qt"
         @close="show_all_serial_form = false"
       >
       </SerialBomForm>

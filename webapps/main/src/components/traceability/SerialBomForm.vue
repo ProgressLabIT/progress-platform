@@ -34,10 +34,14 @@
                   [serial_ids[index], component.component_key].join(' ')
                 ]
               "
-              :label="$capitalize($t('serial') + serial_labels[index])"
+              :label="
+                $capitalize(
+                  [$t('serial'), component.component_description].join(' '),
+                )
+              "
               :product_key="component.component_key"
               :loading="loading"
-              :selection_qt="component_per_product"
+              :selection_qt="component_qt[component.component_key]"
             >
             </BaseAutocompleteSerial>
             <!-- FORM BODY -->
@@ -47,6 +51,22 @@
         <!-- FORM ACTIONS    navigation -->
         <q-card-section>
           <div class="row q-gutter-md">
+            <template v-if="batch_serials.length > 1">
+              <q-btn
+                v-if="index > 0"
+                icon="mdi-arrow-left-bold"
+                color="theme-blue"
+                @click="index += 1"
+              >
+              </q-btn>
+              <q-btn
+                v-if="index < batch_serials.length - 1"
+                icon="mdi-arrow-right-bold"
+                color="theme-blue"
+                @click="index -= 1"
+              >
+              </q-btn>
+            </template>
             <q-btn
               v-if="batch_serials"
               color="theme-orange"
@@ -104,6 +124,10 @@ export default {
       type: Object,
       default: null,
     },
+    prod_batch_qt: {
+      type: Number,
+      required: true,
+    },
   },
 
   emits: ['close'],
@@ -113,6 +137,7 @@ export default {
       saving: false,
       enableSave: false,
       serialModel: [],
+      component_qt: [],
       initialValues: [],
       serial_ids: [],
       serial_labels: [],
@@ -125,15 +150,6 @@ export default {
   computed: {
     session_data() {
       return this.$store.state.session;
-    },
-
-    component_per_product() {
-      /*if (this.batch_serials && this.batch_qt > 0) {
-        return Math.floor(this.batch_qt / this.batch_serials.length);
-      } else {
-        return this.batch_qt;
-      }*/
-      return 3;
     },
   },
 
@@ -173,29 +189,48 @@ export default {
     },
 
     fillInitialData() {
-      this.serialModel = new Map();
+      this.serialModel = [];
       this.initialValues = [];
       this.serial_ids = [];
+      this.component_qt = [];
+
+      for (const component of this.bom_components) {
+        let batch_qt = component.qt * this.prod_batch_qt;
+
+        let comp_qt = 0;
+        if (this.batch_serials && batch_qt > 0) {
+          comp_qt = Math.floor(batch_qt / this.batch_serials.length);
+        } else {
+          comp_qt = batch_qt;
+        }
+
+        this.component_qt[component.component_key] = comp_qt;
+      }
+
       for (const serial of this.batch_serials) {
         this.serial_ids.push(serial._id);
         this.serial_labels.push(serial?.code | serial._key);
-        for (const child of serial.childs) {
-          const key = [serial._id, child.product_key].join(' ');
-          if (!this.serialModel[key]) {
-            this.serialModel[key] = [];
+        for (const component of this.bom_components) {
+          for (const child of serial.childs) {
+            if (child.product_key === component.component_key) {
+              const key = [serial._id, child.product_key].join(' ');
+              if (!this.serialModel[key]) {
+                this.serialModel[key] = [];
+              }
+              this.serialModel[key].push({
+                _key: child._key,
+                label: child.code,
+                product_key: child.product_key,
+                wo_key: child.wo_key,
+                value: child._key,
+              });
+              this.initialValues.push({
+                from_serial: serial._key,
+                to_serial: child._key,
+                replaced: true,
+              });
+            }
           }
-          this.serialModel[key].push({
-            _key: child._key,
-            label: child.code,
-            product_key: child.product_key,
-            wo_key: child.wo_key,
-            value: child._key,
-          });
-          this.initialValues.push({
-            from_serial: serial._key,
-            to_serial: child._key,
-            replaced: true,
-          });
         }
       }
     },
@@ -211,23 +246,29 @@ export default {
       let link_data = [];
       let initial_values = this.initialValues;
       for (const serial_from of this.batch_serials) {
-        if (this.serialModel[serial_from._id]) {
-          for (const serial_to of this.serialModel[serial_from._id]) {
-            link_data.push({
-              from_serial: serial_from._key,
-              to_serial: serial_to._key,
-              replaced: false,
-            });
-
-            initial_values = initial_values.filter((value) => {
-              return value._to_serial !== serial_to._key;
-            });
+        for (const component of this.bom_components) {
+          const key = [serial_from._id, component.component_key].join(' ');
+          if (this.serialModel[key]) {
+            for (const serial_to of this.serialModel[key]) {
+              link_data.push({
+                from_serial: serial_from._key,
+                to_serial: serial_to._key,
+                replaced: false,
+              });
+            }
           }
         }
       }
 
       for (const inital_data of initial_values) {
-        link_data.push(inital_data);
+        const found = link_data.some(
+          (el) =>
+            el.from_serial === inital_data.from_serial &&
+            el.to_serial === inital_data.to_serial,
+        );
+        if (!found) {
+          link_data.push(inital_data);
+        }
       }
 
       const event = {
