@@ -16,10 +16,11 @@
     <q-scroll-area class="fit">
       <div class="q-pa-md q-gutter-sm">
         <q-tree
-          :nodes="lazy"
+          :nodes="nodes"
           default-expand-all
           node-key="label"
-          @lazy-load="onLazyLoad"
+          :loading="loading"
+          @lazy-load="({ node, done }) => lazyLoad(node, done)"
         />
       </div>
     </q-scroll-area>
@@ -27,31 +28,6 @@
 </template>
 
 <script>
-import { ref } from 'vue';
-
-const nodes = [
-  {
-    label: 'Node 1',
-    children: [
-      { label: 'Node 1.1', lazy: true },
-      { label: 'Node 1.2', lazy: true },
-    ],
-  },
-  {
-    label: 'Node 2',
-    lazy: true,
-  },
-  {
-    label: 'Lazy load empty',
-    lazy: true,
-  },
-  {
-    label: 'Node is not expandable',
-    expandable: false,
-    children: [{ label: 'Some node' }],
-  },
-];
-
 export default {
   name: 'SerialTree',
 
@@ -60,43 +36,115 @@ export default {
       type: Boolean,
       default: false,
     },
-  },
-
-  setup() {
-    return {
-      lazy: ref(nodes),
-
-      onLazyLoad({ node, key, done }) {
-        // call fail() if any error occurs
-
-        setTimeout(() => {
-          // simulate loading and setting an empty node
-          if (key.indexOf('Lazy load empty') > -1) {
-            done([]);
-            return;
-          }
-
-          const label = node.label;
-          done([
-            { label: `${label}.1` },
-            { label: `${label}.2`, lazy: true },
-            {
-              label: `${label}.3`,
-              children: [
-                { label: `${label}.3.1`, lazy: true },
-                { label: `${label}.3.2`, lazy: true },
-              ],
-            },
-          ]);
-        }, 1000);
-      },
-    };
+    serial_key: {
+      type: String,
+      required: true,
+    },
   },
 
   data() {
     return {
       drawer: true,
+      loading: false,
+      nodes: [],
     };
+  },
+
+  created() {
+    this.initData();
+    this.getSerialHierarcy();
+  },
+
+  methods: {
+    async lazyLoad(node, done) {
+      let children = await this.getChildren(node.key);
+      setTimeout(() => {
+        done(children);
+      }, 1000);
+    },
+
+    async initData() {
+      this.saving = false;
+      this.enableSave = false;
+      this.nodes = [];
+    },
+
+    async getChildren(serial_key) {
+      const { data } = await this.$api.get('serial-childs', {
+        params: {
+          serial_key: serial_key,
+        },
+      });
+
+      let child_data = [];
+
+      for (const child_node of data) {
+        let label = child_node?.serial_code || child_node.serial_key;
+        child_data.push({
+          key: child_node.serial_key,
+          label: label,
+          lazy: true,
+          expandable: true,
+        });
+      }
+
+      return child_data;
+    },
+
+    async getSerialHierarcy() {
+      this.loading = true;
+
+      const { data } = await this.$api.get('serial-parents', {
+        params: {
+          serial_key: this.serial_key,
+        },
+      });
+
+      this.nodes = [];
+
+      /*this.nodes = [
+        {
+          label: this.serial_key,
+          children: [
+            { label: 'Node 1.1', lazy: true },
+            { label: 'Node 1.2', lazy: true },
+          ],
+        },
+        {
+          label: 'Node 2',
+          lazy: true,
+        },
+        {
+          label: 'Lazy load empty',
+          lazy: true,
+        },
+        {
+          label: 'Node is not expandable',
+          expandable: false,
+          children: [{ label: 'Some node' }],
+        },
+      ];*/
+
+      let children_data = await this.getChildren(this.serial_key);
+
+      for (const parent_node of data.reverse()) {
+        let node_data = [];
+        let label = parent_node?.serial_code || parent_node.serial_key;
+        node_data.push({
+          key: parent_node.serial_key,
+          label: label,
+          lazy: false,
+          expandable: true,
+          children: children_data,
+        });
+
+        children_data = node_data;
+      }
+
+      this.nodes = children_data;
+
+      this.loading = false;
+    },
   },
 };
 </script>

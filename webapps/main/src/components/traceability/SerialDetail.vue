@@ -17,7 +17,7 @@
     </template>
 
     <template #content>
-      <SerialTree :mini_state="mini_state"></SerialTree>
+      <SerialTree :mini_state="mini_state" :serial_key="serialKey"></SerialTree>
       <q-splitter
         v-model="data_column_width"
         class="fit q-py-sm"
