@@ -25,7 +25,9 @@
             v-for="serial in batch_serials"
             :key="serial._id"
             v-model="serialModel[serial._id]"
-            :label="$capitalize($t('serial') + (serial?.code | serial._key))"
+            :label="
+              $capitalize([$t('serial'), serial?.code | serial._key].join(' '))
+            "
             :product_key="component_key"
             :loading="loading"
             :can_create="false"
@@ -207,16 +209,19 @@ export default {
               to_serial: serial_to._key,
               replaced: false,
             });
-
-            initial_values = initial_values.filter((value) => {
-              return value._to_serial !== serial_to._key;
-            });
           }
         }
       }
 
       for (const inital_data of initial_values) {
-        link_data.push(inital_data);
+        const found = link_data.some(
+          (el) =>
+            el.from_serial === inital_data.from_serial &&
+            el.to_serial === inital_data.to_serial,
+        );
+        if (!found) {
+          link_data.push(inital_data);
+        }
       }
 
       const event = {
