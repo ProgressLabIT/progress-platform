@@ -38,6 +38,11 @@ services:
     restart: unless-stopped
     build:
       context: ./backend/api #root folder for build
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
     volumes:
       - ./backend/api:/api
       - ./backend/commons:/api/commons
