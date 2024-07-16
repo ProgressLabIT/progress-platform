@@ -5,7 +5,13 @@
         dense
         unelevated
         icon="mdi-file-tree"
-        @click="mini_state = !mini_state"
+        @click="
+          () => {
+            mini_state = !mini_state;
+            if (mini_state) serial_detail_splitted_width = 1;
+            else serial_detail_splitted_width = 30;
+          }
+        "
       />
       <span
         class="q-ml-md display medium highlight weight-medium text-uppercase"
@@ -17,132 +23,146 @@
     </template>
 
     <template #content>
-      <SerialTree :mini_state="mini_state" :serial_key="serialKey"></SerialTree>
       <q-splitter
         v-model="data_column_width"
         class="fit q-py-sm"
         separator-class="text-disabled"
       >
         <template #before>
-          <div class="column q-px-md q-pb-sm fit">
-            <!-- HEADER -->
-            <div class="row items-center">
-              <div
-                class="text-h3 display highlight col-auto hover-underline q-mr-md"
-                @click="goToProductPage"
-              >
-                {{ serial.product.code }}
-              </div>
-              <div v-if="!can_edit" class="text-h4 col-auto">
-                {{ ' # ' + serial.code }}
-              </div>
-              <q-input
-                v-else
-                v-model="serial.code"
-                filled
-                :label="$t('serial.code')"
-                size="70"
-                class="input-uppercase"
-              >
-              </q-input>
-
-              <q-space></q-space>
-              <q-btn
-                v-if="!serial.deleted"
-                flat
-                round
-                icon="mdi-pencil"
-                :disable="editMode"
-                @click.stop="editMode = true"
-              >
-                <q-tooltip>{{ $capitalize($t('edit')) }}</q-tooltip>
-              </q-btn>
-            </div>
-
-            <div class="row q-mt-sm q-col-gutter-lg items-center text-h6">
-              <div class="col-auto text-h5 text-low text-uppercase">
-                {{ $t('creation_date') }}
-              </div>
-              <div class="col-auto">{{ serial_created_time_string }}</div>
-              <div class="col-auto row items-center">
-                <BaseUserAvatar
-                  :user="$store.getters.user_data(serial.created_by)"
-                  size="24px"
-                  class="q-ml-md"
-                />
-              </div>
-              <div
-                class="col-auto q-ml-md hover-underline"
-                @click="goToWorkOrderPage"
-              >
-                {{
-                  $t('work_order.short').toUpperCase() + ' ' + serial.wo_code
-                }}
-              </div>
-            </div>
-
-            <!-- FORM DATA -->
-            <div class="col-auto text-h5 text-uppercase text-low q-mt-lg">
-              {{ $t('serial_data') }}
-            </div>
-
-            <template v-if="serial.data.length > 0">
-              <div class="column col scroll q-py-md q-mb-md">
-                <FormField
-                  v-for="field in serial.data"
-                  :key="field._key"
-                  :field="field"
-                  :root-path="`/media/serial/${serialKey}`"
-                  :disable="!can_edit"
-                  @update="field.value = $event"
-                />
+          <q-splitter v-model="serial_detail_splitted_width">
+            <template v-if="!mini_state" #before>
+              <div class="q-pa-md">
+                <SerialTree
+                  :serial_key="serialKey"
+                  :mini_state="mini_state"
+                ></SerialTree>
               </div>
             </template>
-            <div v-else class="col-auto text-italic">No data</div>
 
-            <q-space />
+            <template #after>
+              <div class="column q-px-md q-pb-sm fit">
+                <!-- HEADER -->
+                <div class="row items-center">
+                  <div
+                    class="text-h3 display highlight col-auto hover-underline q-mr-md"
+                    @click="goToProductPage"
+                  >
+                    {{ serial.product.code }}
+                  </div>
+                  <div v-if="!can_edit" class="text-h4 col-auto">
+                    {{ ' # ' + serial.code }}
+                  </div>
+                  <q-input
+                    v-else
+                    v-model="serial.code"
+                    filled
+                    :label="$t('serial.code')"
+                    size="70"
+                    class="input-uppercase"
+                  >
+                  </q-input>
 
-            <!-- ACTIONS -->
-            <div class="row q-gutter-md">
-              <q-btn
-                v-if="user_can_delete && !editMode"
-                color="theme-red"
-                size="12px"
-                icon="mdi-delete"
-                :label="$t('delete')"
-                @click="deleteSerial"
-              >
-              </q-btn>
-              <q-btn
-                v-if="editMode"
-                size="12px"
-                color="theme-orange"
-                :label="$t('save')"
-                :loading="saving"
-                :disable="!can_edit"
-                @click="save"
-              >
-              </q-btn>
-              <q-btn
-                v-if="editMode"
-                size="12px"
-                color="theme-grey"
-                :label="$t('cancel')"
-                :loading="saving"
-                @click="onDialogCancel"
-              >
-              </q-btn>
-              <q-btn
-                v-if="!editMode"
-                size="12px"
-                icon="mdi-keyboard-return"
-                color="theme-grey"
-                :label="$t('back')"
-                @click="exit"
-              >
-              </q-btn>
-            </div>
-          </div>
+                  <q-space></q-space>
+                  <q-btn
+                    v-if="!serial.deleted"
+                    flat
+                    round
+                    icon="mdi-pencil"
+                    :disable="editMode"
+                    @click.stop="editMode = true"
+                  >
+                    <q-tooltip>{{ $capitalize($t('edit')) }}</q-tooltip>
+                  </q-btn>
+                </div>
+
+                <div class="row q-mt-sm q-col-gutter-lg items-center text-h6">
+                  <div class="col-auto text-h5 text-low text-uppercase">
+                    {{ $t('creation_date') }}
+                  </div>
+                  <div class="col-auto">{{ serial_created_time_string }}</div>
+                  <div class="col-auto row items-center">
+                    <BaseUserAvatar
+                      :user="$store.getters.user_data(serial.created_by)"
+                      size="24px"
+                      class="q-ml-md"
+                    />
+                  </div>
+                  <div
+                    class="col-auto q-ml-md hover-underline"
+                    @click="goToWorkOrderPage"
+                  >
+                    {{
+                      $t('work_order.short').toUpperCase() +
+                      ' ' +
+                      serial.wo_code
+                    }}
+                  </div>
+                </div>
+
+                <!-- FORM DATA -->
+                <div class="col-auto text-h5 text-uppercase text-low q-mt-lg">
+                  {{ $t('serial_data') }}
+                </div>
+
+                <template v-if="serial.data.length > 0">
+                  <div class="column col scroll q-py-md q-mb-md">
+                    <FormField
+                      v-for="field in serial.data"
+                      :key="field._key"
+                      :field="field"
+                      :root-path="`/media/serial/${serialKey}`"
+                      :disable="!can_edit"
+                      @update="field.value = $event"
+                    />
+                  </div>
+                </template>
+                <div v-else class="col-auto text-italic">No data</div>
+
+                <q-space />
+
+                <!-- ACTIONS -->
+                <div class="row q-gutter-md">
+                  <q-btn
+                    v-if="user_can_delete && !editMode"
+                    color="theme-red"
+                    size="12px"
+                    icon="mdi-delete"
+                    :label="$t('delete')"
+                    @click="deleteSerial"
+                  >
+                  </q-btn>
+                  <q-btn
+                    v-if="editMode"
+                    size="12px"
+                    color="theme-orange"
+                    :label="$t('save')"
+                    :loading="saving"
+                    :disable="!can_edit"
+                    @click="save"
+                  >
+                  </q-btn>
+                  <q-btn
+                    v-if="editMode"
+                    size="12px"
+                    color="theme-grey"
+                    :label="$t('cancel')"
+                    :loading="saving"
+                    @click="onDialogCancel"
+                  >
+                  </q-btn>
+                  <q-btn
+                    v-if="!editMode"
+                    size="12px"
+                    icon="mdi-keyboard-return"
+                    color="theme-grey"
+                    :label="$t('back')"
+                    @click="exit"
+                  >
+                  </q-btn>
+                </div>
+              </div>
+            </template>
+          </q-splitter>
         </template>
 
         <!-- RIGHT SECTION -->
@@ -204,6 +224,7 @@ export default {
       current_step: 0,
       editMode: false,
       data_column_width: 65,
+      serial_detail_splitted_width: 30,
       mini_state: false,
     };
   },

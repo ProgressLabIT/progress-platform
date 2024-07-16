@@ -1,70 +1,43 @@
 <template>
-  <q-drawer
-    v-model="drawer"
-    show-if-above
-    :mini="!drawer || mini_state"
-    :width="500"
-    :breakpoint="500"
-    bordered
-    :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'"
-    @click.capture="drawerClick"
-  >
-    <template #mini>
-      <q-scroll-area class="fit mini-slot cursor-pointer"> </q-scroll-area>
-    </template>
+  <div v-if="!mini_state" class="q-pa-md q-gutter-sm">
+    <q-tree
+      :nodes="nodes"
+      default-expand-all
+      node-key="key"
+      :loading="loading"
+      @lazy-load="({ node, done }) => lazyLoad(node, done)"
+    >
+      <template #default-header="prop">
+        <div class="row items-center">
+          <div class="text-weight-bold text-primary">
+            {{ prop.node.product_code }}
+            <q-tooltip
+              v-if="prop.node.product_description"
+              anchor="bottom middle"
+              self="top middle"
+            >
+              {{ prop.node.product_description }}
+            </q-tooltip>
+          </div>
+        </div>
+      </template>
 
-    <q-scroll-area class="fit">
-      <div class="q-pa-md q-gutter-sm">
-        <q-tree
-          :nodes="nodes"
-          default-expand-all
-          node-key="key"
-          :loading="loading"
-          @lazy-load="({ node, done }) => lazyLoad(node, done)"
-        >
-          <template #default-header="prop">
-            <div class="row items-center">
-              <div class="text-weight-bold text-primary">
-                {{ prop.node.product_code }}
-                <q-tooltip
-                  v-if="prop.node.product_description"
-                  anchor="bottom middle"
-                  self="top middle"
-                >
-                  {{ prop.node.product_description }}
-                </q-tooltip>
-              </div>
-            </div>
-          </template>
-
-          <template #default-body="prop">
-            <div>
-              <span class="text-weight-bold"
-                ># {{ prop.node.label }}
-                <q-tooltip
-                  v-if="prop.node.product_description"
-                  anchor="bottom middle"
-                  self="top middle"
-                >
-                  {{ prop.node.product_description }}
-                </q-tooltip>
-              </span>
-            </div>
-          </template>
-        </q-tree>
-      </div>
-    </q-scroll-area>
-  </q-drawer>
-
-  <!--
-
-  [
-  {
-
-  }
-]
-
-  -->
+      <template #default-body="prop">
+        <div>
+          <span class="text-weight-bold"
+            ># {{ prop.node.label }}
+            <q-tooltip
+              v-if="prop.node.product_description"
+              anchor="bottom middle"
+              self="top middle"
+            >
+              {{ prop.node.product_description }}
+            </q-tooltip>
+          </span>
+        </div>
+      </template>
+    </q-tree>
+  </div>
 </template>
 
 <script>
@@ -101,6 +74,18 @@ export default {
       setTimeout(() => {
         done(children);
       }, 1000);
+    },
+
+    showSerialDetails(serialKey) {
+      const to_route = {
+        name: 'serialDetail',
+        params: { serialKey },
+        query: {
+          back_to: this.$route.name,
+          ...this.$route.query,
+        },
+      };
+      this.$router.push(to_route);
     },
 
     async initData() {
