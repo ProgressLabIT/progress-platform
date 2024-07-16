@@ -84,8 +84,19 @@ class Queries:
        && (@search ? (
         CONTAINS(LOWER(s.code), LOWER(@search))
         ) : true)
+
+        LET used = (
+          FOR linked_serial IN contains
+              FILTER linked_serial._to == s._id
+              && linked_serial.replaced == false
+              COLLECT WITH COUNT INTO length
+              RETURN length
+          )
+
+        FILTER @filter_used?used==[0]:true
+
     LIMIT @limit
-    RETURN s
+    RETURN merge( { used: used } , s)
   """
 
   GET_SERIALS_IN_PRODUCT = """

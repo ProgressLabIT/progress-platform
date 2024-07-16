@@ -138,6 +138,10 @@ export default {
       type: Number,
       default: 1,
     },
+    filter_used: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   emits: ['select'],
@@ -187,6 +191,7 @@ export default {
         params = {
           ...params,
           search: search_value,
+          filter_used: this.filter_used,
           limit: 50,
         };
         this.last_research = search_value;

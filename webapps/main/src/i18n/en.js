@@ -864,6 +864,7 @@ export default {
   serial_field: {
     noData: 'No serial found.',
     bom_component: 'BOM Serials',
+    missing_reason: 'Reason is mandatory',
     after_options:
       'Enter at least {minChars} characters to be able to create a new serial.',
     create: {
