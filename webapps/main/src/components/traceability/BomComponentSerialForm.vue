@@ -20,20 +20,40 @@
         </NoDataAlert>
 
         <template v-else>
-          <!-- FORM BODY -->
-          <BaseAutocompleteSerial
-            v-for="serial in batch_serials"
-            :key="serial._id"
-            v-model="serialModel[serial._id]"
-            :label="
-              $capitalize([$t('serial'), serial?.code | serial._key].join(' '))
-            "
-            :product_key="component_key"
-            :loading="loading"
-            :can_create="false"
-            :selection_qt="component_per_product"
-          >
-          </BaseAutocompleteSerial>
+          <template v-for="serial in batch_serials" :key="serial._id">
+            <!-- FORM BODY -->
+            <BaseAutocompleteSerial
+              v-model="serialModel[serial._id]"
+              :label="
+                $capitalize(
+                  [$t('serial'), serial?.code | serial._key].join(' '),
+                )
+              "
+              :product_key="component_key"
+              :loading="loading"
+              :can_create="false"
+              :selection_qt="component_per_product"
+              :filter_used="true"
+              :disable="
+                serialModel[serial._id].length >= component_per_product &&
+                !replace_serials[serial._id]
+              "
+            >
+            </BaseAutocompleteSerial>
+            <q-btn
+              v-if="!replace_serials[serial._id]"
+              flat
+              round
+              icon="mdi-pencil"
+              @click="replace_serials[serial._id] = true"
+            />
+            <q-input
+              v-if="replace_serials[serial._id]"
+              v-model="replace_serials_reason[serial._id]"
+              filled
+              dense
+            />
+          </template>
         </template>
 
         <!-- FORM ACTIONS    navigation -->
@@ -115,6 +135,8 @@ export default {
       serialModel: [],
       initialValues: [],
       batch_serials: [],
+      replace_serials: [],
+      replace_serials_reason: [],
       loading: false,
     };
   },
@@ -167,9 +189,12 @@ export default {
     fillInitialData() {
       this.serialModel = [];
       this.initialValues = [];
+      this.replace_serials = [];
       for (const serial of this.batch_serials) {
         if (!this.serialModel[serial._id]) {
           this.serialModel[serial._id] = [];
+          this.replace_serials[serial._id] = false;
+          this.replace_serials_reason[serial._id] = null;
         }
         for (const child of serial.childs) {
           if (child.product_key === this.component_key) {
@@ -185,6 +210,7 @@ export default {
               from_serial: serial._key,
               to_serial: child._key,
               replaced: true,
+              reason: null,
             });
           }
         }
@@ -220,7 +246,18 @@ export default {
             el.to_serial === inital_data.to_serial,
         );
         if (!found) {
-          link_data.push(inital_data);
+          let reason =
+            this.replace_serials_reason['Serial/' + inital_data.from_serial];
+          if (!reason) {
+            window.alert(this.$t('serial_field.missing_reason'));
+            this.saving = false;
+            return;
+          }
+
+          link_data.push({
+            ...inital_data,
+            reason: reason,
+          });
         }
       }
 

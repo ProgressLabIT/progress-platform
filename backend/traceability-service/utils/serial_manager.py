@@ -193,6 +193,7 @@ class SerialManager:
         for serial_links in serial_link_data:
           from_serial = serial_links['from_serial']
           to_serial = serial_links['to_serial']
+          reason = serial_links['reason']
           link_match = dict(_from=f'Serial/{from_serial}', _to=f'Serial/{to_serial}')
           try:
              link_cursor = db.collection('contains').find(link_match)
@@ -201,13 +202,15 @@ class SerialManager:
                    _key = link_cursor.next()['_key'],
                    _from=f'Serial/{from_serial}',
                    _to=f'Serial/{to_serial}',
-                   replaced=serial_links['replaced']
+                   replaced=serial_links['replaced'],
+                   reason=reason
                 ))
              else:
                 db.collection('contains').insert(dict(
                    _from=f'Serial/{from_serial}',
                    _to=f'Serial/{to_serial}',
-                   replaced=serial_links['replaced']
+                   replaced=serial_links['replaced'],
+                   reason=reason
                 ))
           except:
              print(traceback.format_exc())

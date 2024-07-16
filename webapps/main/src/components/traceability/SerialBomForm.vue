@@ -42,6 +42,7 @@
               :product_key="component.component_key"
               :loading="loading"
               :selection_qt="component_qt[component.component_key]"
+              :filter_used="true"
             >
             </BaseAutocompleteSerial>
             <!-- FORM BODY -->
@@ -227,6 +228,7 @@ export default {
               this.initialValues.push({
                 from_serial: serial._key,
                 to_serial: child._key,
+                reason: null,
                 replaced: true,
               });
             }
@@ -253,6 +255,7 @@ export default {
               link_data.push({
                 from_serial: serial_from._key,
                 to_serial: serial_to._key,
+                reason: null,
                 replaced: false,
               });
             }

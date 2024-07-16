@@ -38,6 +38,7 @@ class SerialLink(BaseModel):
   from_serial: str
   to_serial:str
   replaced: bool = False
+  reason: str | None = None
 
 class SerialEvent(Serial):
    operation: SerialEventType | None = None

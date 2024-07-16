@@ -872,6 +872,7 @@ export default {
   serial_field: {
     noData: 'Nessuna matricola trovata',
     bom_component: 'Matricole BOM',
+    missing_reason: 'Il motivo è obbligatorio',
     after_options:
       'Inserisci almeno {minChars} caratteri per crearne una nuova matricola.',
     create: {
