@@ -43,8 +43,47 @@
               :loading="loading"
               :selection_qt="component_qt[component.component_key]"
               :filter_used="true"
+              :disable="
+                serialModel[
+                  [serial_ids[index], component.component_key].join(' ')
+                ]?.length >= component_qt[component.component_key] &&
+                !replace_serials[
+                  [serial_ids[index], component.component_key].join(' ')
+                ]
+              "
             >
             </BaseAutocompleteSerial>
+            <q-btn
+              v-if="
+                component.traceability_level !== null &&
+                component.traceability_level !== 'none' &&
+                !replace_serials[
+                  [serial_ids[index], component.component_key].join(' ')
+                ]
+              "
+              flat
+              round
+              icon="mdi-pencil"
+              @click="
+                replace_serials[
+                  [serial_ids[index], component.component_key].join(' ')
+                ] = true
+              "
+            />
+            <q-input
+              v-if="
+                replace_serials[
+                  [serial_ids[index], component.component_key].join(' ')
+                ]
+              "
+              v-model="
+                replace_serials_reason[
+                  [serial_ids[index], component.component_key].join(' ')
+                ]
+              "
+              filled
+              dense
+            />
             <!-- FORM BODY -->
           </template>
         </template>
@@ -143,6 +182,8 @@ export default {
       serial_ids: [],
       serial_labels: [],
       batch_serials: [],
+      replace_serials: [],
+      replace_serials_reason: [],
       loading: false,
       index: 0,
     };
@@ -194,7 +235,7 @@ export default {
       this.initialValues = [];
       this.serial_ids = [];
       this.component_qt = [];
-
+      this.replace_serials = [];
       for (const component of this.bom_components) {
         let batch_qt = component.qt * this.prod_batch_qt;
 
@@ -217,6 +258,8 @@ export default {
               const key = [serial._id, child.product_key].join(' ');
               if (!this.serialModel[key]) {
                 this.serialModel[key] = [];
+                this.replace_serials[key] = false;
+                this.replace_serials_reason[key] = null;
               }
               this.serialModel[key].push({
                 _key: child._key,
@@ -230,6 +273,7 @@ export default {
                 to_serial: child._key,
                 reason: null,
                 replaced: true,
+                component_key: component.component_key,
               });
             }
           }
@@ -270,7 +314,23 @@ export default {
             el.to_serial === inital_data.to_serial,
         );
         if (!found) {
-          link_data.push(inital_data);
+          const serial_key = [
+            'Serial/' + inital_data.from_serial,
+            inital_data.component_key,
+          ].join(' ');
+          let reason = this.replace_serials_reason[serial_key];
+          if (!reason) {
+            window.alert(this.$t('serial_field.missing_reason'));
+            this.saving = false;
+            return;
+          }
+
+          link_data.push({
+            from_serial: inital_data.from_serial,
+            to_serial: inital_data.to_serial,
+            reason: reason,
+            replaced: true,
+          });
         }
       }
 
