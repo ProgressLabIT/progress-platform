@@ -18,13 +18,53 @@
         <q-tree
           :nodes="nodes"
           default-expand-all
-          node-key="label"
+          node-key="key"
           :loading="loading"
           @lazy-load="({ node, done }) => lazyLoad(node, done)"
-        />
+        >
+          <template #default-header="prop">
+            <div class="row items-center">
+              <div class="text-weight-bold text-primary">
+                {{ prop.node.product_code }}
+                <q-tooltip
+                  v-if="prop.node.product_description"
+                  anchor="bottom middle"
+                  self="top middle"
+                >
+                  {{ prop.node.product_description }}
+                </q-tooltip>
+              </div>
+            </div>
+          </template>
+
+          <template #default-body="prop">
+            <div>
+              <span class="text-weight-bold"
+                ># {{ prop.node.label }}
+                <q-tooltip
+                  v-if="prop.node.product_description"
+                  anchor="bottom middle"
+                  self="top middle"
+                >
+                  {{ prop.node.product_description }}
+                </q-tooltip>
+              </span>
+            </div>
+          </template>
+        </q-tree>
       </div>
     </q-scroll-area>
   </q-drawer>
+
+  <!--
+
+  [
+  {
+
+  }
+]
+
+  -->
 </template>
 
 <script>
@@ -78,6 +118,15 @@ export default {
 
       let child_data = [];
 
+      /*
+      "serial_key": "29255965",
+    "replaced": null,
+    "serial_code": null,
+    "product_key": "36136891",
+    "product_code": "000 TEST",
+    "product_description": ""
+      */
+
       for (const child_node of data) {
         let label = child_node?.serial_code || child_node.serial_key;
         child_data.push({
@@ -85,6 +134,10 @@ export default {
           label: label,
           lazy: true,
           expandable: true,
+          replaced: child_node.replaced,
+          product_key: child_node.product_key,
+          product_code: child_node.product_code,
+          product_description: child_node.product_description,
         });
       }
 
@@ -136,6 +189,10 @@ export default {
           lazy: false,
           expandable: true,
           children: children_data,
+          replaced: parent_node.replaced,
+          product_key: parent_node.product_key,
+          product_code: parent_node.product_code,
+          product_description: parent_node.product_description,
         });
 
         children_data = node_data;
