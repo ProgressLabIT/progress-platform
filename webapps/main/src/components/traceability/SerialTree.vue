@@ -1,30 +1,49 @@
 <template>
   <div v-if="!mini_state" class="q-pa-md q-gutter-sm">
     <q-tree
+      ref="serialNodes"
+      v-model:selected="selected"
       :nodes="nodes"
-      default-expand-all
       node-key="key"
       :loading="loading"
       @lazy-load="({ node, done }) => lazyLoad(node, done)"
     >
+      <!-- @update:model-value="(selection) => $emit('select', selection)" -->
       <template #default-header="prop">
         <div class="row items-center">
-          <div class="text-weight-bold text-primary">
-            {{ prop.node.product_code }}
-            <q-tooltip
-              v-if="prop.node.product_description"
-              anchor="bottom middle"
-              self="top middle"
-            >
-              {{ prop.node.product_description }}
-            </q-tooltip>
+          <div
+            v-if="prop.node.replaced"
+            :class="
+              prop.node.key === selected
+                ? 'text-weight-bold text-secondary'
+                : 'text-secondary'
+            "
+          >
+            {{ `(*) ${prop.node.product_code}` }}
           </div>
+          <div
+            v-else
+            :class="
+              prop.node.key === selected
+                ? 'text-weight-bold text-primary'
+                : 'text-primary'
+            "
+          >
+            {{ prop.node.product_code }}
+          </div>
+          <q-tooltip
+            v-if="prop.node.product_description"
+            anchor="bottom middle"
+            self="top middle"
+          >
+            {{ prop.node.product_description }}
+          </q-tooltip>
         </div>
       </template>
 
       <template #default-body="prop">
         <div>
-          <span class="text-weight-bold"
+          <span :class="prop.node.key === selected ? 'text-weight-bold' : ''"
             ># {{ prop.node.label }}
             <q-tooltip
               v-if="prop.node.product_description"
@@ -55,17 +74,31 @@ export default {
     },
   },
 
+  emits: ['select'],
+
   data() {
     return {
       drawer: true,
       loading: false,
+      selected: null,
       nodes: [],
     };
+  },
+
+  watch: {
+    selected: {
+      handler() {
+        this.$emit('select', this.selected);
+      },
+    },
   },
 
   created() {
     this.initData();
     this.getSerialHierarcy();
+    setTimeout(() => {
+      this.$refs.serialNodes.expandAll();
+    }, 500);
   },
 
   methods: {
@@ -119,6 +152,7 @@ export default {
           label: label,
           lazy: true,
           expandable: true,
+          selectable: true,
           replaced: child_node.replaced,
           product_key: child_node.product_key,
           product_code: child_node.product_code,
@@ -140,29 +174,7 @@ export default {
 
       this.nodes = [];
 
-      /*this.nodes = [
-        {
-          label: this.serial_key,
-          children: [
-            { label: 'Node 1.1', lazy: true },
-            { label: 'Node 1.2', lazy: true },
-          ],
-        },
-        {
-          label: 'Node 2',
-          lazy: true,
-        },
-        {
-          label: 'Lazy load empty',
-          lazy: true,
-        },
-        {
-          label: 'Node is not expandable',
-          expandable: false,
-          children: [{ label: 'Some node' }],
-        },
-      ];*/
-
+      this.selected = this.serial_key;
       let children_data = await this.getChildren(this.serial_key);
 
       for (const parent_node of data.reverse()) {
@@ -173,6 +185,7 @@ export default {
           label: label,
           lazy: false,
           expandable: true,
+          selectable: true,
           children: children_data,
           replaced: parent_node.replaced,
           product_key: parent_node.product_key,

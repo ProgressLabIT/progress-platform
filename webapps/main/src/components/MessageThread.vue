@@ -56,8 +56,9 @@ export default {
   props: {
     context: {
       type: String,
-      required: true,
-      validator: (value) => ['issue', 'work_order', 'job'].includes(value),
+      default: undefined,
+      validator: (value) =>
+        value || ['issue', 'work_order', 'job'].includes(value),
     },
     context_key: {
       type: String,
@@ -75,11 +76,15 @@ export default {
       messages: [],
       new_message: '',
       events: undefined,
+      loading: false,
     };
   },
 
   computed: {
     recipient_id() {
+      if (!this.context) {
+        return;
+      }
       if (this.context === 'job') {
         return (
           'WorkOrder/' + this.$store.state.traceability.working_job_data.wo_key
@@ -89,8 +94,18 @@ export default {
       }
     },
   },
+
+  watch: {
+    context_key: {
+      handler() {
+        this.getMessages();
+      },
+    },
+  },
   created() {
+    this.loading = true;
     this.$store.dispatch('loadUsers');
+    this.loading = false;
   },
 
   mounted() {
