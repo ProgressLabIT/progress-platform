@@ -51,7 +51,7 @@ export default {
 
     user: {
       type: Object,
-      required: true,
+      default: undefined,
     },
 
     size: {
@@ -96,7 +96,7 @@ export default {
       return this.user?.name && this.user?.surname
         ? (
             this.base_path +
-            (this.user.name + this.user.surname).replace(/\s+/g, '') +
+            (this.user?.name + this.user?.surname).replace(/\s+/g, '') +
             '.jpg'
           ).toLowerCase()
         : 'NA.jpg';
@@ -105,7 +105,7 @@ export default {
     initials() {
       try {
         return (
-          this.user.name[0].toUpperCase() + this.user.surname[0].toUpperCase()
+          this.user?.name[0].toUpperCase() + this.user?.surname[0].toUpperCase()
         );
       } catch {
         return 'N/A';
