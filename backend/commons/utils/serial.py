@@ -46,6 +46,23 @@ class Queries:
 
   """
 
+  GET_SERIAL_HIERARCHY = """
+      LET start = @serial_id
+        FOR v, e IN 0..9999 ANY start contains OPTIONS { uniqueVertices: "path" }
+          LET product = DOCUMENT(Product, v.product_key)
+
+          RETURN merge({
+              serial_key: v._key,
+              replaced: e.replaced,
+              serial_code: v.code,
+              product_key: product._key,
+              product_code: product.code,
+              product_description: product.description,
+              from: e._from,
+              to: e._to
+      })
+  """
+
   GET_SERIAL_CHILDREN = """
       LET start = @serial_id
         FOR v, e IN 1..1 OUTBOUND start contains
