@@ -104,6 +104,63 @@ def get_serial_childs(
       )
     )
 
+@router.get('/serial-hierarchy'
+#, dependencies=[Depends(auth.verify_token)]
+)
+def get_serial_hierarchy(
+  serial_key: str | None = None,
+):
+  try:
+    bind_vars = dict(
+      serial_id = f'Serial/{serial_key}'
+    )
+    serials = {}
+    starting_serials = set()
+    for serial in [e for e in db.aql.execute(Queries.GET_SERIAL_HIERARCHY, bind_vars=bind_vars)]:
+      serials[serial['serial_id']] = serial
+      if serial['from'] != None:
+        starting_serials.add(serial['from'])
+
+    for serial in serials:
+      if serials[serial]['to'] != None:
+        starting_serials.discard(serials[serial]['to'])
+
+    serial_hierarchy = []
+    for starting_serial in starting_serials:
+      serial_children = get_children(serial_key=starting_serial, serials=serials, level=0)
+      merged_serial = dict()
+      merged_serial.update(serials[starting_serial])
+      if (len(serial_children)>0):
+        merged_serial['children'] = serial_children
+      serial_hierarchy.append(merged_serial)
+
+    return serial_hierarchy
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching serials hierarcy from the db.",
+        error=traceback.format_exc()
+      )
+    )
+
+def get_children(serial_key, serials, level):
+  children = []
+  if level > 15:
+    return children
+  level += 1
+  for serial in serials:
+    if serials[serial]['from'] == serial_key:
+      child_key = serials[serial]['to']
+      merged_serial = dict()
+      merged_serial.update(serials[child_key])
+      serial_children = get_children(serial_key=child_key, serials=serials, level=level)
+      if (len(serial_children)>0):
+        merged_serial['children'] = serial_children
+      children.append(merged_serial)
+
+  return children
+
 @router.get('/serial-wo-phase',
     dependencies=[Depends(auth.verify_token)])
 def get_serial_wo_phase(
