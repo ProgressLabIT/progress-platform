@@ -52,6 +52,7 @@ class Queries:
           LET product = DOCUMENT(Product, v.product_key)
 
           RETURN merge({
+              serial_id: v._id,
               serial_key: v._key,
               replaced: e.replaced,
               serial_code: v.code,
