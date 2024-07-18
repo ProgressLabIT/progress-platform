@@ -201,8 +201,8 @@ export default {
       default: '',
     },
     media_src: {
-      type: String,
-      default: '',
+      type: Object,
+      default: undefined,
     },
     instruction_title: {
       type: String,
@@ -246,7 +246,9 @@ export default {
 
     is_image() {
       return this.media_name
-        ? this.image_extensions.some((e) => this.media_name.toLowerCase().endsWith(e))
+        ? this.image_extensions.some((e) =>
+            this.media_name.toLowerCase().endsWith(e),
+          )
         : null;
     },
   },
