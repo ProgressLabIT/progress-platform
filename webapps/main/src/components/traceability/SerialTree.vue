@@ -127,76 +127,55 @@ export default {
       this.nodes = [];
     },
 
-    async getChildren(serial_key) {
-      const { data } = await this.$api.get('serial-childs', {
-        params: {
-          serial_key: serial_key,
-        },
-      });
-
+    getChildren(node) {
       let child_data = [];
 
-      /*
-      "serial_key": "29255965",
-    "replaced": null,
-    "serial_code": null,
-    "product_key": "36136891",
-    "product_code": "000 TEST",
-    "product_description": ""
-      */
-
-      for (const child_node of data) {
-        let label = child_node?.serial_code || child_node.serial_key;
-        child_data.push({
-          key: child_node.serial_key,
-          label: label,
-          lazy: true,
-          expandable: true,
-          selectable: true,
-          replaced: child_node.replaced,
-          product_key: child_node.product_key,
-          product_code: child_node.product_code,
-          product_description: child_node.product_description,
-        });
+      for (const child_node of node) {
+        child_data.push(this.convertNode(child_node));
       }
 
       return child_data;
     },
 
+    convertNode(node) {
+      let label = node?.serial_code || node.serial_key;
+      let children_data = [];
+      let expandable = false;
+      if (node?.children) {
+        children_data = this.getChildren(node.children);
+        expandable = true;
+      }
+      return {
+        key: node.serial_key,
+        label: label,
+        //lazy: false,
+        expandable: expandable,
+        selectable: true,
+        children: children_data,
+        replaced: node.replaced,
+        product_key: node.product_key,
+        product_code: node.product_code,
+        product_description: node.product_description,
+      };
+    },
+
     async getSerialHierarcy() {
       this.loading = true;
 
-      const { data } = await this.$api.get('serial-parents', {
+      const { data } = await this.$api.get('serial-hierarchy', {
         params: {
           serial_key: this.serial_key,
         },
       });
 
-      this.nodes = [];
-
       this.selected = this.serial_key;
-      let children_data = await this.getChildren(this.serial_key);
 
-      for (const parent_node of data.reverse()) {
-        let node_data = [];
-        let label = parent_node?.serial_code || parent_node.serial_key;
-        node_data.push({
-          key: parent_node.serial_key,
-          label: label,
-          lazy: false,
-          expandable: true,
-          selectable: true,
-          children: children_data,
-          replaced: parent_node.replaced,
-          product_key: parent_node.product_key,
-          product_code: parent_node.product_code,
-          product_description: parent_node.product_description,
-        });
-
-        children_data = node_data;
+      let node_data = [];
+      for (const parent_node of data) {
+        node_data.push(this.convertNode(parent_node));
       }
 
-      this.nodes = children_data;
+      this.nodes = node_data;
 
       this.loading = false;
     },
