@@ -451,6 +451,7 @@ export default {
       }
 
       if (missing_serial) {
+        window.alert(this.$t('batch_declare__component_serials'));
         return;
       }
 
@@ -554,6 +555,7 @@ export default {
       }
 
       if (missing_serial) {
+        window.alert(this.$t('batch_declare__component_serials'));
         return;
       }
 
