@@ -441,6 +441,19 @@ export default {
       let can_proceed = true;
       const current_batch_was_last = this.current_batch_is_last;
 
+      let missing_serial = false;
+      for (const job_bom of this.job.job_bom) {
+        if (job_bom?.traceability_mandatory) {
+          let declared = job_bom?.serials_declared_qt | 0;
+          let required = (job_bom?.qt | 0) * this.job.active_batch_qt;
+          missing_serial |= declared < required;
+        }
+      }
+
+      if (missing_serial) {
+        return;
+      }
+
       if (current_batch_was_last) {
         can_proceed = window.confirm(this.confirm_job_done_message);
       } else if (!this.job.next_batch_available) {
@@ -530,6 +543,20 @@ export default {
       if (customQty.batchQuantity === 0) {
         return;
       }
+
+      let missing_serial = false;
+      for (const job_bom of this.job.job_bom) {
+        if (job_bom?.traceability_mandatory) {
+          let declared = job_bom?.serials_declared_qt | 0;
+          let required = (job_bom?.qt | 0) * customQty;
+          missing_serial |= declared < required;
+        }
+      }
+
+      if (missing_serial) {
+        return;
+      }
+
       let willStopSession = false;
       const isCompletingJob =
         customQty.batchQuantity === customQty.remainingTotalQuantity;

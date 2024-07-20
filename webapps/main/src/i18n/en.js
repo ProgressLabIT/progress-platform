@@ -860,6 +860,8 @@ export default {
   serial_delete_confirm_title: 'Delete serial',
   serial_delete_confirm_question: 'Do you want to delete this serial?',
   load_more: 'load more',
+  serials_declared: 'serials declared',
+  batch_declare__component_serials: 'Declare mandatory component serials',
   serial_field: {
     noData: 'No serial found.',
     bom_component: 'BOM Serials',

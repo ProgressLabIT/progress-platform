@@ -37,6 +37,9 @@ class SerialSelection(BaseModel):
 class SerialLink(BaseModel):
   from_serial: str
   to_serial:str
+  wo_key: str | None = None,
+  component_key: str | None = None,
+  batch_key: str | None = None,
   replaced: bool = False
   reason: str | None = None
 

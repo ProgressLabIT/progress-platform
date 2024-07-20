@@ -31,11 +31,11 @@
               "
               :product_key="component_key"
               :loading="loading"
-              :can_create="false"
+              :can_create="true"
               :selection_qt="component_per_product"
               :filter_used="true"
               :disable="
-                serialModel[serial._id].length >= component_per_product &&
+                serialModel[serial._id]?.length >= component_per_product &&
                 !replace_serials[serial._id]
               "
             >
@@ -209,6 +209,9 @@ export default {
             this.initialValues.push({
               from_serial: serial._key,
               to_serial: child._key,
+              wo_key: child.wo_key,
+              component_key: child.product_key,
+              batch_key: this.batch_key,
               replaced: true,
               reason: null,
             });
@@ -233,6 +236,9 @@ export default {
             link_data.push({
               from_serial: serial_from._key,
               to_serial: serial_to._key,
+              wo_key: this.wo_key,
+              component_key: this.component_key,
+              batch_key: this.batch_key,
               replaced: false,
             });
           }

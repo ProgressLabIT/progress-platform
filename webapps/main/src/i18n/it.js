@@ -868,6 +868,9 @@ export default {
   serial_delete_confirm_title: 'Cancella seriale',
   serial_delete_confirm_question:
     'Sei sicuro di voler cancellare questo seriale?',
+  serials_declared: 'matricole collegate',
+  batch_declare__component_serials:
+    'Dichiara le matricole dei componenti obbligatorie',
   load_more: 'Carica altri',
   serial_field: {
     noData: 'Nessuna matricola trovata',

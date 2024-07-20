@@ -132,7 +132,7 @@ class SerialManager:
         tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
         try:
           serial_no = "MISSING-COUNTER"
-          if finalize:
+          if finalize and new_serial_record['code'] == None:
             if (serial_data['counter_key']):
               serial_no = _generate_counter(tx, 'Counter/'+serial_data['counter_key'])
               new_serial_record['code'] = serial_no
@@ -194,6 +194,9 @@ class SerialManager:
           from_serial = serial_links['from_serial']
           to_serial = serial_links['to_serial']
           reason = serial_links['reason']
+          wo_key = serial_links['wo_key']
+          component_key = serial_links['component_key']
+          batch_key = serial_links['batch_key']
           link_match = dict(_from=f'Serial/{from_serial}', _to=f'Serial/{to_serial}')
           try:
              link_cursor = db.collection('contains').find(link_match)
@@ -210,6 +213,9 @@ class SerialManager:
                    _from=f'Serial/{from_serial}',
                    _to=f'Serial/{to_serial}',
                    replaced=serial_links['replaced'],
+                   wo_key = wo_key,
+                   component_key=component_key,
+                   batch_key=batch_key,
                    reason=reason
                 ))
           except:
