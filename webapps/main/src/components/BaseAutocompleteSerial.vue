@@ -49,7 +49,7 @@
           {{ $t('serial_field.noData') }}
         </q-item-section>
       </q-item>
-      <q-item v-else clickable @click="createAndAddNewSerial(inputValue)">
+      <q-item v-else clickable @click="create_serial_form = true">
         <q-item-section avatar>
           <q-icon name="mdi-plus" />
         </q-item-section>
@@ -68,15 +68,27 @@
           </q-item-label>
         </q-item-section>
       </q-item>
+      <SerialForm
+        :show="create_serial_form"
+        :auto_link_product="product_key"
+        mode="new"
+        :force_serial_code="inputValue"
+        @close="create_serial_form = false"
+      >
+      </SerialForm>
     </template>
   </q-select>
 </template>
 
 <script>
-import { timestamp } from '@/lib/TimeHandling.js';
+import SerialForm from 'app/src/components/traceability/SerialForm.vue';
 
 export default {
   name: 'BaseAutocompleteSerial',
+
+  components: {
+    SerialForm,
+  },
 
   props: {
     value: {
@@ -149,9 +161,11 @@ export default {
   data() {
     return {
       loading: false,
+      create_serial_form: false,
       options: [],
       origin_list: [],
       last_research: undefined,
+      events: NaN,
     };
   },
 
@@ -165,9 +179,24 @@ export default {
   },
 
   created() {
+    this.create_serial_form = false;
     if (this.work_order || this.product_key) {
       this.loadSerials();
       this.last_research = '';
+    }
+    let eventURL =
+      this.$api.defaults.baseURL + '/notification/serial-notification';
+    this.events = new EventSource(eventURL, {
+      withCredentials: false,
+    });
+    this.events.addEventListener('serial-notification', (event) => {
+      this.handleMessage(event);
+    });
+  },
+
+  beforeUnmount() {
+    if (this.events) {
+      this.events.close();
     }
   },
 
@@ -206,6 +235,28 @@ export default {
         });
     },
 
+    handleMessage(message) {
+      let event = JSON.parse(message.data);
+      if (event.notification === 'ERROR') {
+        this.$q.notify({
+          message: this.getErrorMessage(event.error_code, event.error),
+          color: 'theme-red',
+          timeout: 1500,
+          position: 'top',
+        });
+      } else {
+        this.loadSerials(this.last_research);
+      }
+    },
+
+    getErrorMessage(error_code, default_message) {
+      let message = this.$t('traceability.errors.' + error_code);
+      if (message) {
+        return message;
+      }
+      return this.$t(default_message);
+    },
+
     filter(value, update, abort) {
       if (this.last_research === value) {
         update();
@@ -217,33 +268,6 @@ export default {
           // No need of multiFieldSearch here. The api already checks all the necessary fields with a single search term.
         });
       }
-    },
-
-    async createAndAddNewSerial(serial_code) {
-      await this.createNewSerial(serial_code);
-      this.$refs.selectRef.hidePopup();
-    },
-
-    async createNewSerial(serial_code) {
-      let serial_data = {};
-
-      const user = this.session_data.user._key;
-
-      serial_data.created_by = `User/${user}`; // temporarily hardcoding DB id
-      serial_data.product_key = this.product_key;
-      serial_data.user_key = this.session_data.user._key;
-      serial_data.code = serial_code;
-      serial_data.data = [];
-
-      const event = {
-        event_type: 'SERIAL_CREATED',
-        user_key: user,
-        user_session_key: this.session_data.session_key,
-        timestamp: timestamp(),
-        serial_data,
-      };
-
-      await this.$api.post('event', event);
     },
   },
 };

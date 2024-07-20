@@ -41,6 +41,7 @@
               "
               :product_key="component.component_key"
               :loading="loading"
+              :can_create="true"
               :selection_qt="component_qt[component.component_key]"
               :filter_used="true"
               :disable="
@@ -271,9 +272,11 @@ export default {
               this.initialValues.push({
                 from_serial: serial._key,
                 to_serial: child._key,
+                wo_key: child.wo_key,
                 reason: null,
                 replaced: true,
-                component_key: component.component_key,
+                component_key: child.product_key,
+                batch_key: this.batch_key,
               });
             }
           }
@@ -297,6 +300,9 @@ export default {
           if (this.serialModel[key]) {
             for (const serial_to of this.serialModel[key]) {
               link_data.push({
+                wo_key: this.wo_key,
+                component_key: component.component_key,
+                batch_key: this.batch_key,
                 from_serial: serial_from._key,
                 to_serial: serial_to._key,
                 reason: null,
@@ -326,10 +332,8 @@ export default {
           }
 
           link_data.push({
-            from_serial: inital_data.from_serial,
-            to_serial: inital_data.to_serial,
+            ...inital_data,
             reason: reason,
-            replaced: true,
           });
         }
       }

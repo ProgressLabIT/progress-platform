@@ -31,6 +31,14 @@
             @select="(selection) => loadProduct(selection)"
           />
 
+          <q-field
+            v-if="force_serial_code"
+            :label="force_serial_code"
+            stack-label
+            class="q-mb-lg"
+          >
+          </q-field>
+
           <FormField
             v-for="field in form_fields"
             :key="field._key"
@@ -161,6 +169,10 @@ export default {
       type: String,
       default: null,
     },
+    force_serial_code: {
+      type: String,
+      default: null,
+    },
   },
 
   emits: ['close', 'serialCreated'],
@@ -172,7 +184,7 @@ export default {
       saving: false,
       enableSave: false,
       form_step: 'select_product',
-      base_fields: [],
+      form_fields: [],
       confirmed: false,
       phase_data: null,
       counter_key: null,
@@ -411,6 +423,10 @@ export default {
         serial_data.counter_key = this.counter_key;
       }
       serial_data.user_key = this.session_data.user._key;
+
+      if (this.force_serial_code) {
+        serial_data.code = this.force_serial_code;
+      }
 
       const event = {
         event_type: 'SERIAL_CREATED',
