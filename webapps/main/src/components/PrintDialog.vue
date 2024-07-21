@@ -72,6 +72,7 @@
           <BaseAutocompleteSerial
             v-if="context.type === 'step'"
             v-model="serialModel"
+            :initial_values="serialModel"
             :label="$capitalize($t('serial'))"
             :work_order_key="context.step.work_order_key"
             @select="selectSerial"

@@ -107,14 +107,13 @@ class Queries:
           FOR linked_serial IN contains
               FILTER linked_serial._to == s._id
               && linked_serial.replaced == false
-              COLLECT WITH COUNT INTO length
-              RETURN length
+              RETURN linked_serial
           )
 
-        FILTER @filter_used?used==[0]:true
+        FILTER @filter_used?(s.quantity == null ||  count(used) < s.quantity):true
 
     LIMIT @limit
-    RETURN merge( { used: used } , s)
+    RETURN merge( { used: count(used) } , s)
   """
 
   GET_SERIALS_IN_PRODUCT = """

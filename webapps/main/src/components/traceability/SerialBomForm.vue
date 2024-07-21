@@ -34,6 +34,11 @@
                   [serial_ids[index], component.component_key].join(' ')
                 ]
               "
+              :initial_values="
+                serialModel[
+                  [serial_ids[index], component.component_key].join(' ')
+                ]
+              "
               :label="
                 $capitalize(
                   [$t('serial'), component.component_description].join(' '),
@@ -349,7 +354,6 @@ export default {
 
       await this.$api.post('event', event);
       this.saving = false;
-
       this.$emit('close');
     },
   },

@@ -24,6 +24,7 @@
             <!-- FORM BODY -->
             <BaseAutocompleteSerial
               v-model="serialModel[serial._id]"
+              :initial_values="serialModel[serial._id]"
               :label="
                 $capitalize(
                   [$t('serial'), serial?.code | serial._key].join(' '),
@@ -278,7 +279,6 @@ export default {
 
       await this.$api.post('event', event);
       this.saving = false;
-
       this.$emit('close');
     },
   },

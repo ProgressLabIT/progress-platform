@@ -154,6 +154,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    initial_values: {
+      type: Object,
+      default: null,
+    },
   },
 
   emits: ['select'],
@@ -216,11 +220,16 @@ export default {
           product_key: this.product?._key || this.product_key,
         };
       }
+      if (this.filter_used) {
+        params = {
+          ...params,
+          filter_used: this.filter_used,
+        };
+      }
       if (search_value) {
         params = {
           ...params,
           search: search_value,
-          filter_used: this.filter_used,
           limit: 50,
         };
         this.last_research = search_value;
@@ -231,8 +240,17 @@ export default {
         })
         .then((resp) => {
           this.options = resp.data;
+          this.addInitialValues();
           this.loading = false;
         });
+    },
+
+    addInitialValues() {
+      if (this.initial_values) {
+        for (const serial of this.initial_values) {
+          this.options.push(serial);
+        }
+      }
     },
 
     handleMessage(message) {
