@@ -43,6 +43,7 @@
           <BaseAutocompleteSerial
             v-if="link_form === 'serial'"
             v-model="links.serial"
+            :initial_values="links.serial"
             :label="$capitalize($t('serial'))"
             @select="(selection) => loadSerial(selection)"
           >

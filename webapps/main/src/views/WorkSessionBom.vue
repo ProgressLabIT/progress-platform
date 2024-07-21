@@ -41,7 +41,12 @@
               :batch_key="job.active_batch_key"
               :wo_key="job.wo_key"
               mode="new"
-              @close="show_serial_form[props.row.component_key] = false"
+              @close="
+                () => {
+                  show_serial_form[props.row.component_key] = false;
+                  refreshBom();
+                }
+              "
             >
             </BomComponentSerialForm>
           </q-td>
@@ -82,7 +87,12 @@
         mode="new"
         :bom_components="job.job_bom"
         :prod_batch_qt="job.parameters.production_batch_qt"
-        @close="show_all_serial_form = false"
+        @close="
+          () => {
+            show_all_serial_form = false;
+            refreshBom();
+          }
+        "
       >
       </SerialBomForm>
 
@@ -206,6 +216,14 @@ export default {
             };
           })
         : [];
+    },
+  },
+
+  methods: {
+    refreshBom() {
+      setTimeout(() => {
+        this.$store.dispatch('loadWorkOrderData', this.job.wo_key);
+      }, 1000);
     },
   },
 };
