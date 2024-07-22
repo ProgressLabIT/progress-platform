@@ -483,7 +483,7 @@ export default {
     this.polling_instance = setInterval(() => {
       this.$store.dispatch('updateWorkOrderList');
       this.$store.dispatch('loadJobAssignments');
-    }, 10000);
+    }, 60000);
   },
 
   beforeUnmount() {

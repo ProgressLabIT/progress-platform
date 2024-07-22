@@ -1,6 +1,7 @@
 import requests
 from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 
 from utils.config import get_config
 import endpoints
@@ -21,6 +22,8 @@ app.add_middleware(
   allow_methods=["*"],
   allow_headers=["*"],
 )
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 """
 Each package __init__ file imports the router object from the
