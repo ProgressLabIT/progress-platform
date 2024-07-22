@@ -96,6 +96,7 @@ class Queries:
               FILTER
                 j.wo_key == wo._key
                 && j.phase_key == phase
+                && j.assigned_to == q.subqueue_target_key
               RETURN j._key
         ),
         null
