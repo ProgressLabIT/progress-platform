@@ -106,6 +106,8 @@ class Queries:
   """
 
   GET_ASSIGNMENT_LIST = """
+    LET job_properties = ['wo_key', 'product_code', 'project_code', 'wo_code', 'qt_planned', 'qt_completed', 'progress', 'parameters']
+
     LET assigned_jobs_by_operator = (
       LET user_key = @user_key ? : '%'
       FOR operator IN User
@@ -117,15 +119,17 @@ class Queries:
         RETURN q
       )
 
+
       LET assigned_jobs = (
         FOR j IN (operator_queue.jobs || [])
-        LET job_data = DOCUMENT(Job, j)
+        LET job_data = KEEP(DOCUMENT(Job, j), job_properties)
         FILTER job_data != null // Prevent bugs in case queue has inexistent keys
         LET wo_data = DOCUMENT(WorkOrder, job_data.wo_key)
         LET issues = (FOR v IN 1..1 INBOUND wo_data._id issue_rel RETURN v)
         LET issues_open = LENGTH(issues[* FILTER CURRENT.open])
         LET due_by = wo_data.due_by
-        RETURN MERGE(job_data, { issues_open, issues_total: LENGTH(issues), due_by })
+        LET parameters = KEEP(job_data.parameters, 'std_processing_time')
+        RETURN MERGE(job_data, { issues_open, issues_total: LENGTH(issues), due_by, parameters })
       )
 
       RETURN {
@@ -154,7 +158,15 @@ class Queries:
         LET job_phase_index = POSITION(wo_phase_sequence, j.phase_key, true)
         SORT wo_queue_index, job_phase_index
 
-        RETURN MERGE(j, { issues_open, issues_total: LENGTH(issues), due_by })
+        RETURN MERGE(
+          KEEP(j, job_properties),
+          {
+            parameters: KEEP(j.parameters, 'std_processing_time'),
+            issues_total: LENGTH(issues),
+            issues_open,
+            due_by
+          }
+        )
     )
 
     RETURN {
