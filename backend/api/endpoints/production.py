@@ -601,7 +601,7 @@ async def get_assignment_list(user_key: str | None = None):
 
   try:
     result = db.aql.execute(Queries.GET_ASSIGNMENT_LIST, bind_vars=dict(user_key=user_key)).next()
-    return APIResponse(detail=AssignmentsResponse(**result))
+    return APIResponse(detail=result)
   except:
     status_code=500
     response=dict(
