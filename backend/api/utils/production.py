@@ -97,6 +97,7 @@ class Queries:
                 j.wo_key == wo._key
                 && j.phase_key == phase
                 && j.assigned_to == q.subqueue_target_key
+                && j.stage != 'closed'
               RETURN j._key
         ),
         null
