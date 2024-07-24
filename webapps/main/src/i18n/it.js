@@ -40,6 +40,11 @@ export default {
       batch: 'lotto',
       radio_label: 'mostra quantità per:',
     },
+    bom_type: {
+      job_bom: 'fase',
+      wo_bom: 'lavoro',
+      radio_label: 'mostra materiali per:',
+    },
   },
   by: 'entro',
   cancel: 'annulla',

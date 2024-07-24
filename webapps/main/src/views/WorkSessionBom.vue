@@ -69,6 +69,19 @@
         >
         </q-radio>
         <q-space />
+        <span class="q-mr-3">
+          {{ $capitalize($t('bom.bom_type.radio_label')) }}
+        </span>
+        <q-radio
+          v-for="b_type in bom_types"
+          :key="b_type"
+          v-model="bom_type"
+          :val="b_type"
+          :label="$t('bom.bom_type.' + b_type).toUpperCase()"
+        >
+        </q-radio>
+
+        <q-space />
         <q-btn
           v-if="traceability_enabled"
           size="sm"
@@ -87,7 +100,7 @@
         :batch_key="job.active_batch_key"
         :wo_key="job.wo_key"
         mode="new"
-        :bom_components="job.job_bom"
+        :bom_components="bom"
         :prod_batch_qt="job.parameters.production_batch_qt"
         @close="
           () => {
@@ -147,6 +160,8 @@ export default {
     return {
       quantity_type: 'job',
       qt_types: ['job', 'batch'],
+      bom_type: 'job_bom',
+      bom_types: ['job_bom', 'wo_bom'],
       show_lot_input: false,
       show_serial_form: [],
       show_all_serial_form: false,
@@ -201,8 +216,8 @@ export default {
     },
 
     bom() {
-      return Object.hasOwn(this.job, 'job_bom')
-        ? this.job.job_bom.map((i) => {
+      return Object.hasOwn(this.job, this.bom_type)
+        ? this.job[this.bom_type].map((i) => {
             // multiply items by job quantity. Does not apply to tools and safety items
             let quantity = i.qt;
             const factor =
