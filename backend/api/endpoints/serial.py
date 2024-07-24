@@ -267,6 +267,8 @@ def get_serial_from_key(serial_key: str):
 async def search_serials(
   serial_key: Union[List[str], None] = Query(default=None),
   serial_search: str | None = None,
+  is_contained_in: str | None = None,
+  contains: str | None = None,
   time_created_from: datetime | None = None,
   time_created_to: datetime | None = None,
   created_by: Union[List[str], None] = Query(default=None),
@@ -292,6 +294,8 @@ async def search_serials(
     created_by = created_by,
     product_key = product_key,
     product_code_search = product_code_search,
+    is_contained_in = is_contained_in,
+    contains = contains,
     work_order_search = work_order_search,
     advanced_filters = json.loads(b64decode(advanced_filters).decode('latin-1')) if advanced_filters else None,
     limit = limit,

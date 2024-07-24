@@ -220,6 +220,22 @@ class Queries:
       (@product_key ? product._key IN @product_key : true)
       && (@product_code_search ? CONTAINS(LOWER(product.code), LOWER(@product_code_search)) : true)
 
+    // FILTER BY COMPONENTS
+    LET children=(
+        FOR v, e IN 1..999 OUTBOUND @serial_id contains
+            FILTER @contains ? (CONTAINS(LOWER(v.code), LOWER(@contains))) : true
+            RETURN v.code
+        )
+
+    LET parents=(
+        FOR v, e IN 1..999 INBOUND @serial_id contains
+            FILTER @is_contained_in ? (CONTAINS(LOWER(v.code), LOWER(@is_contained_in))) : true
+            RETURN v.code
+        )
+
+    FILTER @contains ? count(children)>0 : true
+    FILTER @is_contained_in ? count(parents)>0 : true
+
     // LIMIT FILTERED RECORDS
     SORT s.created
 

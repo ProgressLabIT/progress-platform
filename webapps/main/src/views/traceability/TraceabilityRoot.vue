@@ -116,6 +116,40 @@
         </template>
       </q-input>
 
+      <q-input
+        v-model="is_contained_in"
+        clearable
+        filled
+        dense
+        hide-bottom-space
+        autocomplete="off"
+        name="search"
+        debounce="1000"
+        :label="$t('serial.is_contained_in')"
+        class="q-mb-md"
+      >
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
+      <q-input
+        v-model="contains"
+        clearable
+        filled
+        dense
+        hide-bottom-space
+        autocomplete="off"
+        name="search"
+        debounce="1000"
+        :label="$t('serial.contains')"
+        class="q-mb-md"
+      >
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
       <!-- PRODUCT -->
       <q-input
         v-model="product_code_search"
@@ -408,6 +442,8 @@ export default {
         'serial_key_search',
         'work_order_search',
         'serial_search',
+        'is_contained_in',
+        'contains',
         'created_by',
         'time_created_from',
         'time_created_to',
@@ -439,6 +475,8 @@ export default {
 
     serial_key_search: queryModel(String, 'serial_search', null),
     serial_search: queryModel(String, 'serial', null),
+    is_contained_in: queryModel(String, 'is_contained_in', null),
+    contains: queryModel(String, 'contains', null),
     product_code_search: queryModel(String, 'product_code_search', null),
     work_order_search: queryModel(String, 'work_order_search', null),
     created_by: queryModel(String, 'opened_by', null),
