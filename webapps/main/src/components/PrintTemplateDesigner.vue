@@ -173,6 +173,7 @@ const templateDataOptions = [
   'product.code',
   'product.description',
 
+  'issue.id',
   'issue.open_date',
   'issue.open_time',
   'issue.open_user',

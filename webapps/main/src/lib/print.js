@@ -45,8 +45,10 @@ export function usePrintDialog({ context: contextType, contextData }) {
   };
 }
 
-const extractDate = (datetime) => datetime ? new Date(datetime).toLocaleDateString() : '-';
-const extractTime = (datetime) => datetime ? new Date(datetime).toLocaleTimeString() : '-';
+const extractDate = (datetime) =>
+  datetime ? new Date(datetime).toLocaleDateString() : '-';
+const extractTime = (datetime) =>
+  datetime ? new Date(datetime).toLocaleTimeString() : '-';
 
 class TemplateContextFactory {
   static create(type, data, store = useStore()) {
@@ -91,11 +93,11 @@ export class TemplateContext {
   }
 
   formatUsername(surname, name) {
-    let fullName = name
+    let fullName = name;
     if (surname) {
-      fullName = fullName + ' ' + surname
+      fullName = fullName + ' ' + surname;
     }
-    return fullName
+    return fullName;
   }
 
   getPresetValue(presetName) {
@@ -174,7 +176,8 @@ export class IssueTypeContext extends TemplateContext {
           return this.getUser(issue.closed_by);
         case 'issue.status':
           return issue.open ? 'Open' : 'Closed';
-
+        case 'issue.id':
+          return issue._key;
         case 'job.key':
           return job._key;
         case 'job.qt_planned':
