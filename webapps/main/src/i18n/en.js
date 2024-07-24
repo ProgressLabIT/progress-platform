@@ -40,6 +40,11 @@ export default {
       batch: 'batch',
       radio_label: 'show quantity for:',
     },
+    bom_type: {
+      job_bom: 'phase',
+      wo_bom: 'job',
+      radio_label: 'show materials for:',
+    },
   },
   by: 'by',
   cancel: 'cancel',
