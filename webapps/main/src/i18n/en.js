@@ -866,6 +866,8 @@ export default {
     noData: 'No serial found.',
     bom_component: 'BOM Serials',
     missing_reason: 'Reason is mandatory',
+    is_contained_in: 'Is contained',
+    contains: 'Contains',
     after_options:
       'Enter at least {minChars} characters to be able to create a new serial.',
     create: {

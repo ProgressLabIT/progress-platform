@@ -125,7 +125,7 @@
         autocomplete="off"
         name="search"
         debounce="1000"
-        :label="$t('serial.is_contained_in')"
+        :label="$t('serial_field.is_contained_in')"
         class="q-mb-md"
       >
         <template #append>
@@ -142,7 +142,7 @@
         autocomplete="off"
         name="search"
         debounce="1000"
-        :label="$t('serial.contains')"
+        :label="$t('serial_field.contains')"
         class="q-mb-md"
       >
         <template #append>
