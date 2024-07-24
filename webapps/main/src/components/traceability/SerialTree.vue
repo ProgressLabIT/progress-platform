@@ -74,7 +74,7 @@ export default {
     },
   },
 
-  emits: ['select'],
+  emits: ['select', 'noNodes'],
 
   data() {
     return {
@@ -97,7 +97,9 @@ export default {
     this.initData();
     this.getSerialHierarcy();
     setTimeout(() => {
-      this.$refs.serialNodes.expandAll();
+      if (this.$refs.serialNodes) {
+        this.$refs.serialNodes.expandAll();
+      }
     }, 500);
   },
 
@@ -176,6 +178,10 @@ export default {
       }
 
       this.nodes = node_data;
+
+      if (this.nodes.length <= 0) {
+        this.$emit('noNodes', this.selected);
+      }
 
       this.loading = false;
     },

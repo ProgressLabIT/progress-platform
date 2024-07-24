@@ -2,6 +2,7 @@
   <BaseModalScreen :show="true" @close="exit">
     <template #header>
       <q-btn
+        v-if="!no_hierarchy"
         dense
         unelevated
         icon="mdi-file-tree"
@@ -29,13 +30,17 @@
         separator-class="text-disabled"
       >
         <template #before>
-          <q-splitter v-if="!mini_state" v-model="serial_detail_splitted_width">
+          <q-splitter
+            v-if="!mini_state && !no_hierarchy"
+            v-model="serial_detail_splitted_width"
+          >
             <template #before>
               <div class="q-pa-md">
                 <SerialTree
                   :serial_key="selected_serial"
                   :mini_state="mini_state"
                   @select="(value) => (selected = value)"
+                  @no-nodes="no_hierarchy = true"
                 ></SerialTree>
               </div>
             </template>
@@ -104,6 +109,7 @@ export default {
       data_column_width: 65,
       serial_detail_splitted_width: 30,
       mini_state: false,
+      no_hierarchy: false,
       selected: null,
     };
   },
