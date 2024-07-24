@@ -24,7 +24,8 @@
               v-if="
                 props.value !== null &&
                 props.row.traceability_level !== null &&
-                props.row.traceability_level !== 'none'
+                props.row.traceability_level !== 'none' &&
+                traceability_enabled
               "
               size="sm"
               color="theme-blue"
@@ -69,6 +70,7 @@
         </q-radio>
         <q-space />
         <q-btn
+          v-if="traceability_enabled"
           size="sm"
           color="theme-blue"
           @click="show_all_serial_form = true"
@@ -216,6 +218,13 @@ export default {
             };
           })
         : [];
+    },
+
+    traceability_enabled() {
+      return (
+        this.$store.state.workorder?.wo_data?.traceability_level &&
+        this.$store.state.workorder.wo_data.traceability_level !== 'none'
+      );
     },
   },
 
