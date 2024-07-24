@@ -76,14 +76,14 @@
           >
             <template #control>
               <div class="self-center full-width no-outline" tabindex="0">
-                {{ phase_data[phase_index].steps[step_index].title }}
+                {{ phase_data[phase_index]?.steps[step_index]?.title }}
               </div>
             </template>
           </q-field>
 
           <FormField
-            v-for="field in phase_data[phase_index].steps[step_index]
-              .form_fields"
+            v-for="field in phase_data[phase_index]?.steps[step_index]
+              ?.form_fields"
             :key="field._key"
             :field="field"
             :root-path="`/media/serial/${serial?._key}`"

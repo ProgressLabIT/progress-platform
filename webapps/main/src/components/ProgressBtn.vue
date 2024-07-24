@@ -437,6 +437,13 @@ export default {
       }
     },
 
+    traceability_enabled() {
+      return (
+        this.$store.state.workorder?.wo_data?.traceability_level &&
+        this.$store.state.workorder.wo_data.traceability_level !== 'none'
+      );
+    },
+
     async declareBatch() {
       let can_proceed = true;
       const current_batch_was_last = this.current_batch_is_last;
@@ -450,8 +457,8 @@ export default {
         }
       }
 
-      if (missing_serial) {
-        window.alert(this.$t('batch_declare__component_serials'));
+      if (missing_serial && this.traceability_enabled()) {
+        window.alert(this.$t('batch_declare_component_serials'));
         return;
       }
 
@@ -554,8 +561,8 @@ export default {
         }
       }
 
-      if (missing_serial) {
-        window.alert(this.$t('batch_declare__component_serials'));
+      if (missing_serial && this.traceability_enabled()) {
+        window.alert(this.$t('batch_declare_component_serials'));
         return;
       }
 
