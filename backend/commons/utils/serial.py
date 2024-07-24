@@ -222,13 +222,13 @@ class Queries:
 
     // FILTER BY COMPONENTS
     LET children=(
-        FOR v, e IN 1..999 OUTBOUND @serial_id contains
+        FOR v, e IN 1..999 OUTBOUND s._id contains
             FILTER @contains ? (CONTAINS(LOWER(v.code), LOWER(@contains))) : true
             RETURN v.code
         )
 
     LET parents=(
-        FOR v, e IN 1..999 INBOUND @serial_id contains
+        FOR v, e IN 1..999 INBOUND s._id contains
             FILTER @is_contained_in ? (CONTAINS(LOWER(v.code), LOWER(@is_contained_in))) : true
             RETURN v.code
         )

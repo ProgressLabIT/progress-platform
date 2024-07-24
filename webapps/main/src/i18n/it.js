@@ -878,6 +878,8 @@ export default {
     noData: 'Nessuna matricola trovata',
     bom_component: 'Matricole BOM',
     missing_reason: 'Il motivo è obbligatorio',
+    is_contained_in: "E' contenuto",
+    contains: 'Contiene',
     after_options:
       'Inserisci almeno {minChars} caratteri per crearne una nuova matricola.',
     create: {
