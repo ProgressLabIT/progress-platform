@@ -240,15 +240,21 @@ export default {
         })
         .then((resp) => {
           this.options = resp.data;
-          this.addInitialValues();
+          this.addInitialValues(search_value);
           this.loading = false;
         });
     },
 
-    addInitialValues() {
+    addInitialValues(search_value) {
       if (this.initial_values) {
         for (const serial of this.initial_values) {
-          this.options.push(serial);
+          if (
+            (!search_value || serial.label.includes(search_value)) &&
+            this.options.filter((value) => value._key == serial._key).length ===
+              0
+          ) {
+            this.options.push(serial);
+          }
         }
       }
     },
