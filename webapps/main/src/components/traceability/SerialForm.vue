@@ -28,6 +28,7 @@
             :hint="!phase_data ? $t('phase.no_phase') : null"
             key-only
             :label="$capitalize($t('product.label'))"
+            :disable="force_serial_code !== null"
             @select="(selection) => loadProduct(selection)"
           />
 
@@ -35,7 +36,6 @@
             v-if="force_serial_code"
             :label="force_serial_code"
             stack-label
-            class="q-mb-lg"
           >
           </q-field>
 
@@ -95,11 +95,23 @@
         <q-card-section>
           <div class="row q-gutter-md">
             <q-btn
-              v-if="form_step === 'select_product'"
+              v-if="form_step === 'select_product' && has_fields"
               color="theme-blue"
               :label="$t('next')"
               :disable="!links.product"
               @click="startSteps()"
+            >
+            </q-btn>
+            <q-btn
+              v-if="form_step === 'select_product' && !has_fields"
+              color="theme-orange"
+              :label="$t('save')"
+              :loading="saving"
+              @click="
+                () => {
+                  save();
+                }
+              "
             >
             </q-btn>
             <template v-else>
@@ -180,6 +192,7 @@ export default {
   data() {
     return {
       phase_index: 0,
+      has_fields: false,
       step_index: 0,
       saving: false,
       enableSave: false,
@@ -312,6 +325,20 @@ export default {
         `product-steps/${product_key}`,
       );
       this.phase_data = steps;
+
+      let hasCustomField = false;
+
+      if (this.phase_data) {
+        this.phase_data.forEach((phase) => {
+          if (phase.steps) {
+            phase.steps.forEach((step) => {
+              hasCustomField = hasCustomField || step.form_fields;
+            });
+          }
+        });
+      }
+
+      this.has_fields = hasCustomField;
       this.phase_index = 0;
       this.step_index = 0;
     },

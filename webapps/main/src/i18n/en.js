@@ -870,6 +870,8 @@ export default {
   batch_declare_component_serials: 'Declare mandatory component serials',
   serial_field: {
     noData: 'No serial found.',
+    noData_min_char:
+      'No serial found. Enter at least {minChars} characters to be able to create a new one.',
     bom_component: 'BOM Serials',
     missing_reason: 'Reason is mandatory',
     is_contained_in: 'Is contained',

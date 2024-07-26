@@ -49,6 +49,11 @@
           {{ $t('serial_field.noData') }}
         </q-item-section>
       </q-item>
+      <q-item v-else-if="inputValue.length < 3">
+        <q-item-section class="text-low">
+          {{ $t('serial_field.noData_min_char', { minChars: 3 }) }}
+        </q-item-section>
+      </q-item>
       <q-item v-else clickable @click="create_serial_form = true">
         <q-item-section avatar>
           <q-icon name="mdi-plus" />

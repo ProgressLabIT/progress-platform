@@ -882,6 +882,8 @@ export default {
   load_more: 'Carica altri',
   serial_field: {
     noData: 'Nessuna matricola trovata',
+    noData_min_char:
+      'Nessuna matricola trovata. Inserisci almeno {minChars} caratteri per crearne una nuova.',
     bom_component: 'Matricole BOM',
     missing_reason: 'Il motivo è obbligatorio',
     is_contained_in: "E' contenuto",

@@ -570,7 +570,7 @@ export default {
     },
 
     refreshSerial() {
-      this.$store.dispatch('getSerials', { serial_key: this.serialKey });
+      this.getSerials();
     },
 
     async resetFilters() {
