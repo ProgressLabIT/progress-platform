@@ -224,12 +224,14 @@ class Queries:
     LET children=(
         FOR v, e IN 1..999 OUTBOUND s._id contains
             FILTER @contains ? (CONTAINS(LOWER(v.code), LOWER(@contains))) : true
+            FILTER e.replaced == false
             RETURN v.code
         )
 
     LET parents=(
         FOR v, e IN 1..999 INBOUND s._id contains
             FILTER @is_contained_in ? (CONTAINS(LOWER(v.code), LOWER(@is_contained_in))) : true
+            FILTER e.replaced == false
             RETURN v.code
         )
 

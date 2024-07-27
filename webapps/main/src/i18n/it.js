@@ -42,7 +42,7 @@ export default {
     },
     bom_type: {
       job_bom: 'fase',
-      wo_bom: 'lavoro',
+      wo_bom: 'Ordine Produzione',
       radio_label: 'mostra materiali per:',
     },
   },

@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 networks:
   progress:
@@ -13,7 +13,6 @@ secrets:
     external: true
 
 services:
-
   router:
     command:
       - --providers.docker.swarmMode
@@ -59,7 +58,18 @@ services:
       - PROGRESS_DB_NAME=PROGRESS_PROD
       - PROGRESS_API_DB_USERNAME=progress_api
     command:
-      ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--access-logfile", "-", "main:app"]
+      [
+        "gunicorn",
+        "-k",
+        "uvicorn.workers.UvicornWorker",
+        "-b",
+        "0.0.0.0:8000",
+        "--graceful-timeout",
+        "1",
+        "--access-logfile",
+        "-",
+        "main:app",
+      ]
     networks:
       - progress
     deploy:
@@ -89,4 +99,3 @@ services:
         - "traefik.http.routers.db.middlewares=db_root"
         - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
         - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
-

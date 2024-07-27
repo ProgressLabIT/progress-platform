@@ -254,7 +254,9 @@ export default {
       if (this.initial_values) {
         for (const serial of this.initial_values) {
           if (
-            (!search_value || serial.label.includes(search_value)) &&
+            (!search_value ||
+              search_value === '' ||
+              serial.label.includes(search_value)) &&
             this.options.filter((value) => value._key == serial._key).length ===
               0
           ) {

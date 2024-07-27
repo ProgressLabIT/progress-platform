@@ -11,6 +11,7 @@
         class="my-sticky-header-table col"
         card-class="surface1 shadow-0"
         virtual-scroll
+        :loading="loading"
         :rows="bom"
         :columns="columns"
         :pagination="{ rowsPerPage: 0 }"
@@ -34,6 +35,7 @@
               "
               size="sm"
               color="theme-blue"
+              :loading="loading"
               @click="show_serial_form[props.row.component_key] = true"
             >
               {{ $t('serials') }}
@@ -91,6 +93,7 @@
           v-if="traceability_enabled"
           size="sm"
           color="theme-blue"
+          :loading="loading"
           @click="show_all_serial_form = true"
         >
           {{ $t('serial_field.bom_component') }}
@@ -116,7 +119,7 @@
       >
       </SerialBomForm>
 
-      <!-- INSERT HERE DIALOG FOR COMPONENT LOT REGISTRATION -->
+      <!-- INSERT HEREoa DIALOG FOR COMPONENT LOT REGISTRATION -->
       <!-- <BaseModalForm :show="show_lot_input" @cancel="show_lot_input = false">
         <template v-slot:title>
           REGISTRAZIONE LOTTI MATERIALI
@@ -170,6 +173,7 @@ export default {
       show_lot_input: false,
       show_serial_form: [],
       show_all_serial_form: false,
+      loading: false,
     };
   },
 
@@ -247,9 +251,15 @@ export default {
 
   methods: {
     refreshBom() {
+      this.loading = true;
       setTimeout(() => {
-        this.$store.dispatch('loadWorkOrderData', this.job.wo_key);
-      }, 1000);
+        this.refreshWO();
+      }, 1500);
+    },
+
+    async refreshWO() {
+      await this.$store.dispatch('loadWorkingJobData', this.job._key);
+      this.loading = false;
     },
   },
 };

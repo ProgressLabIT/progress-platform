@@ -9,4 +9,4 @@ COPY . /traceability-service
 
 WORKDIR /traceability-service
 
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8100", "main:app"]
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8100", "--graceful-timeout", "1", "main:app"]

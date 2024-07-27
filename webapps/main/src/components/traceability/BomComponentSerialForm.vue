@@ -115,7 +115,7 @@ export default {
     },
     batch_key: {
       type: String,
-      required: true,
+      default: null,
     },
     wo_key: {
       type: String,
@@ -169,6 +169,9 @@ export default {
 
   methods: {
     async getBatchSerials() {
+      if (!this.batch_key) {
+        return;
+      }
       this.loading = true;
       const { data: batch_serials } = await this.$api.get('serial-batch', {
         params: {

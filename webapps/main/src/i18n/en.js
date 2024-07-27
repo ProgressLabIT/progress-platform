@@ -41,7 +41,7 @@ export default {
     },
     bom_type: {
       job_bom: 'phase',
-      wo_bom: 'job',
+      wo_bom: 'work order',
       radio_label: 'show materials for:',
     },
   },
