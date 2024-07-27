@@ -148,10 +148,10 @@ export default {
     },
 
     component_per_product() {
-      if (this.batch_serials && this.batch_qt > 0) {
-        return Math.floor(this.batch_qt / this.batch_serials.length);
-      } else {
+      if (this.batch_qt > 0) {
         return this.batch_qt;
+      } else {
+        return 0;
       }
     },
   },

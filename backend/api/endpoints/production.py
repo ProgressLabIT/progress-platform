@@ -652,7 +652,7 @@ async def get_job_data(job_key: str):
           FOR linked_serial IN contains
               FILTER linked_serial.replaced == false
               && linked_serial.component_key == bom_component.component_key
-              && linked_serial.batch_key == j.active_batch_key
+              && linked_serial.wo_key == j.wo_key
 
 
               return linked_serial
@@ -668,7 +668,7 @@ async def get_job_data(job_key: str):
           FOR linked_serial IN contains
               FILTER linked_serial.replaced == false
               && linked_serial.component_key == bom_component.component_key
-              && linked_serial.batch_key == j.active_batch_key
+              && linked_serial.wo_key == j.wo_key
 
 
               return linked_serial

@@ -6,8 +6,8 @@
     :product_key="product_key"
     use-input
     filled
-    :multiple="selection_qt && selection_qt > 1"
-    :use-chips="selection_qt && selection_qt > 1"
+    :multiple="multiple"
+    :use-chips="multiple"
     :max-values="selection_qt || 1"
     :loading="loading"
     :label-slot="!!label"
@@ -185,6 +185,9 @@ export default {
     session_data() {
       return this.$store.state.session;
     },
+    multiple() {
+      return this.selection_qt != null && this.selection_qt > 1;
+    },
   },
 
   created() {
@@ -193,14 +196,14 @@ export default {
       this.loadSerials();
       this.last_research = '';
     }
-    let eventURL =
+    /*let eventURL =
       this.$api.defaults.baseURL + '/notification/serial-notification';
     this.events = new EventSource(eventURL, {
       withCredentials: false,
     });
     this.events.addEventListener('serial-notification', (event) => {
       this.handleMessage(event);
-    });
+    });*/
   },
 
   beforeUnmount() {

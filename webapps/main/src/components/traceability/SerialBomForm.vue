@@ -102,14 +102,14 @@
                 v-if="index > 0"
                 icon="mdi-arrow-left-bold"
                 color="theme-blue"
-                @click="index += 1"
+                @click="index = index - 1"
               >
               </q-btn>
               <q-btn
                 v-if="index < batch_serials.length - 1"
                 icon="mdi-arrow-right-bold"
                 color="theme-blue"
-                @click="index -= 1"
+                @click="index = index + 1"
               >
               </q-btn>
             </template>
@@ -204,6 +204,7 @@ export default {
   watch: {
     show: {
       handler() {
+        this.index = 0;
         this.initFormData();
         if (this.show) {
           this.getBatchSerials();
