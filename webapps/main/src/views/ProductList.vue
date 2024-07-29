@@ -25,8 +25,6 @@
           <!-- TAG -->
           <BaseAutocompleteTag
             dense
-            class="q-mb-md"
-            behavior="menu"
             key-only
             :label="$t('tag')"
             :value="tag_search"

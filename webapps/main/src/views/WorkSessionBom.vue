@@ -18,6 +18,11 @@
         :virtual-scroll-sticky-size-start="48"
         hide-bottom
       >
+        <template #body-cell-description="props">
+          <q-td style="text-wrap: wrap;">
+            {{ props.value }}
+          </q-td>
+        </template>
         <template #body-cell-serials="props">
           <q-td :props="props">
             <q-btn
