@@ -60,9 +60,10 @@
         <template #body-cell-traceability_mandatory="props">
           <q-td :props="props">
             <q-toggle
-              v-if="props.value !== null"
-              v-model="props.value"
-              disabled="true"
+              v-if="props.row.traceability_level !== null"
+              :model-value="!!props.value"
+              @update:model-value="value => toggleMandatoryTraceability(props.rowIndex, value)"
+              :disable="!editMode"
             />
           </q-td>
         </template>
@@ -444,6 +445,12 @@ export default {
       } else {
         window.alert(this.$capitalize(this.$t('bom.alerts.line_exists')));
       }
+    },
+
+    toggleMandatoryTraceability(lineIndex, value) {
+      let temp_item = this.temp_bom[lineIndex]
+      temp_item.traceability_mandatory = value
+      this.temp_bom = this.temp_bom.toSpliced(lineIndex, 1, temp_item)
     },
 
     cancelChanges() {

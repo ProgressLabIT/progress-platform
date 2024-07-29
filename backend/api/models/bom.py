@@ -13,7 +13,7 @@ class BomLineRead(FlexModel):
   phase_name: str | None = None
   qt: float
   serials_declared_qt: float = 0
-  traceability_mandatory: bool | None = None
+  traceability_mandatory: bool | None = False
   traceability_level: str | None = None
 
 
