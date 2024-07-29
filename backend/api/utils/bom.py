@@ -7,15 +7,15 @@ class Queries:
   GET_PRODUCT_BOM = """
     FOR v,e IN 2..2 OUTBOUND DOCUMENT('Product', @product_key) requires
       FILTER e.type like 'BomLine'
-      LET phase = e._from
-
+      LET phase = DOCUMENT(e._from)
+      SORT v.code, phase.alias
       RETURN {
           component_key: v._key,
           bom_line_key: e._key,
           component_code: v.code,
           component_description: v.description,
-          phase_key: PARSE_IDENTIFIER(phase).key,
-          phase_name: DOCUMENT(phase).alias,
+          phase_key: phase._key,
+          phase_name: phase.alias,
           traceability_level: v.traceability_level,
           traceability_mandatory: e.traceability_mandatory,
           qt: e.qt
