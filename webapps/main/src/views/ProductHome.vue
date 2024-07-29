@@ -127,7 +127,8 @@
           v-else
           filled
           dense
-          type="textarea"
+          type="text"
+          autogrow
           :model-value="temp_desc"
           class="q-mt-md"
           @update:model-value="(value) => updateField('description', value)"
@@ -152,26 +153,6 @@
             >-</span
           >
           <TagChips v-else :tags="product?.tags" />
-        </div>
-
-        <!-- TRACEABILITY SETTING TAGS -->
-        <div class="q-mt-lg col-auto">
-          <div class="text-h4 weight-bold text-uppercase">
-            {{ $t('traceability', 2) }}
-          </div>
-
-          <q-checkbox
-            filled
-            clearable
-            emit-value
-            map-options
-            :model-value="product.traceability_level"
-            :label="$t('traceability.enabled')"
-            :disable="!editMode"
-            true-value="form_only"
-            false-value="none"
-            @update:model-value="updateField('traceability_level', $event)"
-          />
         </div>
       </div>
 
@@ -212,34 +193,63 @@
 
     <!-- RIGHT SECTION -->
 
-    <!-- NOTES -->
     <div class="col-4 q-px-md full-height">
-      <!-- PRODUCT COUNTER -->
-      <q-card-section>
-        <div class="q-mt-lg col-auto">
-          <div class="text-h4 weight-bold text-uppercase">
-            {{ $t('counter') }}
+
+      <!-- TRACEABILITY SETTING -->
+      <q-card
+        square
+        class="surface2 q-px-sm q-pt-sm q-pb-md column no-wrap">
+        <q-card-section>
+          <div class="text-h5 display weight-bold text-uppercase col-auto">
+            {{ $t('traceability') }}
           </div>
-          <div
-            v-if="!editMode"
-            class="text-h3 q-mt-xs"
-            style="white-space: pre-line"
-          >
-            {{ counter_name }}
-          </div>
-          <q-input
-            v-else
-            :model-value="counter_name"
-            dense
-            :label="$capitalize($t('counter'))"
-            class="input-uppercase"
+        </q-card-section>
+
+        <!-- TRACEABILITY SWITCH -->
+        <q-card-section>
+          <q-toggle
+            filled
             clearable
-            :readonly="!editMode"
-            @click="show_counter_form = true"
-          >
-          </q-input>
-        </div>
-      </q-card-section>
+            emit-value
+            map-options
+            :model-value="product.traceability_level"
+            :label="$t('traceability.enabled')"
+            :disable="!editMode"
+            true-value="form_only"
+            false-value="none"
+            @update:model-value="updateField('traceability_level', $event)"
+          />
+        </q-card-section>
+
+        <!-- PRODUCT COUNTER -->
+        <q-card-section>
+          <div class="q-mt-lg col-auto">
+            <div class="text-h5 weight-bold text-uppercase">
+              {{ $t('counter') }}
+            </div>
+            <div class="row q-gutter-md items-center q-mt-xs">
+              <div style="white-space: pre-line" class="text-body1">
+                {{ counter_name || 'NA'}}
+              </div>
+
+              <q-btn
+                v-if="editMode"
+                size="sm"
+                flat
+                round
+                icon="mdi-pencil"
+                @click="show_counter_form = true"
+              />
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-4 q-pl-md column full-height no-wrap">
+
+      <!-- PRODUCTION NOTES -->
       <q-card
         square
         class="surface2 q-px-sm q-pt-sm q-pb-md column no-wrap"
@@ -269,14 +279,11 @@
           </q-input>
         </q-card-section>
       </q-card>
-    </div>
 
-    <!-- RIGHT COLUMN -->
-    <div class="col-4 q-pl-md column full-height no-wrap">
       <!-- DOCS -->
       <q-card
         square
-        class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap"
+        class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap q-mt-lg"
       >
         <q-card-section class="text-h5 display highlight col-auto">
           {{ $capitalize($t('document.label', 2)) }}
@@ -417,12 +424,11 @@
         @close="show_template = null"
       />
 
-      <BaseDialog :show="show_counter_form" :no-backdrop-dismiss="false">
-        <CounterSearch
-          @close="show_counter_form = false"
-          @select="selectCounter"
-        >
-        </CounterSearch>
+      <BaseDialog
+        :show="show_counter_form"
+        :no-backdrop-dismiss="false"
+        @close="show_counter_form = false">
+        <CounterSearch @select="selectCounter" />
       </BaseDialog>
     </div>
   </div>
