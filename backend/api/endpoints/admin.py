@@ -13,6 +13,8 @@ router = APIRouter()
 
 traceability_collections = [
     'Batch',
+    'batch_serial',
+    'contains',
     'Event',
     'Job',
     'Queue',
@@ -23,8 +25,7 @@ traceability_collections = [
     'Issue',
     'issue_rel',
     'message',
-    'Serial',
-    'batch_serial'
+    'Serial'
   ]
 
 @router.delete('/reset/prod',
