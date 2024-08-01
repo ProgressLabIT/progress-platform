@@ -34,6 +34,7 @@ function createEvent(
     completed_batch_qt = null,
     step_changed_qt = null,
     batch_serials = null,
+    new_active_batch_qt = null
   },
 ) {
   const user_key = session_state.user._key;
@@ -56,6 +57,7 @@ function createEvent(
     timestamp, // ISO format
     batch_serials: serials,
     step_changed_qt: step_changed_qt,
+    new_active_batch_qt
   };
 
   return event;
@@ -336,6 +338,29 @@ const traceability = {
       const { job_data, batch_data } = data.detail;
       commit('UPDATE_JOB', job_data);
       commit('UPDATE_BATCH', batch_data);
+    },
+
+    async updateActiveBatchQuantity(
+      { commit, state, rootState },
+      { newBatchQuantity }
+    ) {
+      const now = DT.utc();
+      const event = createEvent(state, rootState.session, {
+        event_type: 'ACTIVE_BATCH_QUANTITY_CHANGED',
+        timestamp: now.toISO(),
+        new_active_batch_qt: newBatchQuantity,
+      });
+      console.log(event)
+
+      return new Promise((resolve) => {
+        api.post('event', event).then((resp) => {
+          console.log(event)
+          const { job_data, batch_data } = resp.data.detail;
+          commit('UPDATE_JOB', job_data);
+          commit('UPDATE_BATCH', batch_data);
+          resolve();
+        })
+      })
     },
 
     async linkBatchSerial(

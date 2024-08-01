@@ -17,6 +17,7 @@ class EventType(str, Enum):
   JOB_PAUSED_OFFLINE = 'JOB_PAUSED_OFFLINE'
   JOB_RESUMED = 'JOB_RESUMED'
   JOB_BACK_ONLINE = 'JOB_BACK_ONLINE'
+  ACTIVE_BATCH_QUANTITY_CHANGED = 'ACTIVE_BATCH_QUANTITY_CHANGED'
   STEP_COMPLETED = 'STEP_COMPLETED'
   STEP_QUANTITY_CHANGED = 'STEP_QUANTITY_CHANGED'
   BATCH_COMPLETED = 'BATCH_COMPLETED'
@@ -69,6 +70,7 @@ class EventModel(ArangoDocument):
   step_key: str | None = None
   completed_batch_key: str | None = None
   completed_batch_qt: float | None = None
+  new_active_batch_qt: float | None = None
   new_batch_key: str | None = None
   project_code: str | None = None
   message_key: str | None = None

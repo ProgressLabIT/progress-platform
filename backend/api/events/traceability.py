@@ -89,6 +89,12 @@ class ProductionActivityEvent(BaseEvent):
     post_processing=production_post_processing
   )
 
+  ACTIVE_BATCH_QUANTITY_CHANGED = EventMeta(
+    collections=production_collections,
+    action="update_active_batch_qt",
+    post_processing=["update_job_last_online"]
+  )
+
   BATCH_COMPLETED = EventMeta(
     collections=production_collections,
     action='complete_batch',
@@ -234,73 +240,73 @@ class ProductionActivityEvent(BaseEvent):
     self.send_to_consumer(serial_event.dict())
 
   def create_batch_serial_records(self):
-     if not self.job:
-       self.job = self.get_job_data()
+    if not self.job:
+      self.job = self.get_job_data()
 
-     serial_event = SerialEvent()
-     setattr(serial_event, 'created_by', self.info.user_key)
-     setattr(serial_event, 'wo_key', self.info.work_order_key)
-     setattr(serial_event, 'product_key', self.info.product_key)
-     setattr(serial_event, 'quantity', self.job.active_batch_qt)
-     setattr(serial_event, 'batch_key', self.batch.key)
-     setattr(serial_event, 'operation', SerialEventType.CREATE_FROM_BATCH)
-     self.send_to_consumer(serial_event.dict())
+    serial_event = SerialEvent()
+    setattr(serial_event, 'created_by', self.info.user_key)
+    setattr(serial_event, 'wo_key', self.info.work_order_key)
+    setattr(serial_event, 'product_key', self.info.product_key)
+    setattr(serial_event, 'quantity', self.job.active_batch_qt)
+    setattr(serial_event, 'batch_key', self.batch.key)
+    setattr(serial_event, 'operation', SerialEventType.CREATE_FROM_BATCH)
+    self.send_to_consumer(serial_event.dict())
 
   def finalize_batch_serial(self, wo, completed_batch_qt):
-     if not self.job:
-       self.job = self.get_job_data()
+    if not self.job:
+      self.job = self.get_job_data()
 
-     serial_event = SerialEvent()
-     setattr(serial_event, 'created_by', self.info.user_key)
-     setattr(serial_event, 'wo_key', self.info.work_order_key)
-     setattr(serial_event, 'product_key', self.info.product_key)
-     setattr(serial_event, 'quantity', completed_batch_qt)
-     setattr(serial_event, 'batch_key', self.info.active_batch_key)
-     setattr(serial_event, 'traceability_level', wo.traceability_level)
-     setattr(serial_event, 'traceability_level', wo.traceability_level)
-     setattr(serial_event, 'last_phase', self.job.last_phase)
-     setattr(serial_event, 'operation', SerialEventType.FINALIZE_BATCH)
-     self.send_to_consumer(serial_event.dict())
+    serial_event = SerialEvent()
+    setattr(serial_event, 'created_by', self.info.user_key)
+    setattr(serial_event, 'wo_key', self.info.work_order_key)
+    setattr(serial_event, 'product_key', self.info.product_key)
+    setattr(serial_event, 'quantity', completed_batch_qt)
+    setattr(serial_event, 'batch_key', self.info.active_batch_key)
+    setattr(serial_event, 'traceability_level', wo.traceability_level)
+    setattr(serial_event, 'traceability_level', wo.traceability_level)
+    setattr(serial_event, 'last_phase', self.job.last_phase)
+    setattr(serial_event, 'operation', SerialEventType.FINALIZE_BATCH)
+    self.send_to_consumer(serial_event.dict())
 
   def finalize_wo_serial(self, completed_batch_qt):
-     if not self.job:
-       self.job = self.get_job_data()
+    if not self.job:
+      self.job = self.get_job_data()
 
-     serial_event = SerialEvent()
-     setattr(serial_event, 'created_by', self.info.user_key)
-     setattr(serial_event, 'wo_key', self.info.work_order_key)
-     setattr(serial_event, 'product_key', self.info.product_key)
-     setattr(serial_event, 'quantity', completed_batch_qt)
-     setattr(serial_event, 'batch_key', self.info.active_batch_key)
-     setattr(serial_event, 'operation', SerialEventType.FINALIZE_WO)
-     self.send_to_consumer(serial_event.dict())
+    serial_event = SerialEvent()
+    setattr(serial_event, 'created_by', self.info.user_key)
+    setattr(serial_event, 'wo_key', self.info.work_order_key)
+    setattr(serial_event, 'product_key', self.info.product_key)
+    setattr(serial_event, 'quantity', completed_batch_qt)
+    setattr(serial_event, 'batch_key', self.info.active_batch_key)
+    setattr(serial_event, 'operation', SerialEventType.FINALIZE_WO)
+    self.send_to_consumer(serial_event.dict())
 
   def udpate_batch_serial_data(self, form_data):
-      if not self.job:
-       self.job = self.get_job_data()
+    if not self.job:
+      self.job = self.get_job_data()
 
-      step_data = []
-      for field in form_data:
-        if field.value!=None:
-          field_data = SerialFormFieldValue()
-          setattr(field_data, 'form_field_key', field.form_field_key)
-          setattr(field_data, 'custom_field_key', field.custom_field_key)
-          setattr(field_data, 'value', field.value)
-          setattr(field_data, 'phase_key', self.info.phase_key)
-          setattr(field_data, 'step_key', self.info.step_key)
-          step_data.append(field_data)
+    step_data = []
+    for field in form_data:
+      if field.value!=None:
+        field_data = SerialFormFieldValue()
+        setattr(field_data, 'form_field_key', field.form_field_key)
+        setattr(field_data, 'custom_field_key', field.custom_field_key)
+        setattr(field_data, 'value', field.value)
+        setattr(field_data, 'phase_key', self.info.phase_key)
+        setattr(field_data, 'step_key', self.info.step_key)
+        step_data.append(field_data)
 
-      if len(step_data)>0:
-        serial_event = SerialEvent()
-        setattr(serial_event, 'created_by', self.info.user_key)
-        setattr(serial_event, 'wo_key', self.info.work_order_key)
-        setattr(serial_event, 'product_key', self.info.product_key)
-        setattr(serial_event, 'quantity', self.job.active_batch_qt)
-        setattr(serial_event, 'batch_key', self.info.active_batch_key)
-        setattr(serial_event, 'operation', SerialEventType.UPDATE_DATA_FROM_BATCH)
-        setattr(serial_event, 'step_data', step_data)
+    if len(step_data)>0:
+      serial_event = SerialEvent()
+      setattr(serial_event, 'created_by', self.info.user_key)
+      setattr(serial_event, 'wo_key', self.info.work_order_key)
+      setattr(serial_event, 'product_key', self.info.product_key)
+      setattr(serial_event, 'quantity', self.job.active_batch_qt)
+      setattr(serial_event, 'batch_key', self.info.active_batch_key)
+      setattr(serial_event, 'operation', SerialEventType.UPDATE_DATA_FROM_BATCH)
+      setattr(serial_event, 'step_data', step_data)
 
-        self.send_to_consumer(serial_event.dict())
+      self.send_to_consumer(serial_event.dict())
 
 
 
@@ -963,6 +969,51 @@ class ProductionActivityEvent(BaseEvent):
         job_data = self.job,
         batch_data = self.get_batch_execution_data()
       )
+
+  def update_active_batch_qt(self):
+    print('Starting batch update action...')
+    self.get_job_data()
+    self.get_active_batch()
+
+    if not self.info.work_session_key:
+      self.work_session = self.get_current_work_session()
+      self.info.work_session_key = self.work_session.key
+
+    active_batch_qt_delta = self.info.new_active_batch_qt - self.job.active_batch_qt
+    print(f'Batch delta: {active_batch_qt_delta}')
+
+
+    if active_batch_qt_delta == 0:
+      raise ValueError("Active batch quantity already matches the quantity requested")
+
+    else:
+      if not self.job.first_phase:
+        if active_batch_qt_delta > 0:
+          self.book_wip(active_batch_qt_delta)
+
+        else: # active_batch_qt_delta < 0:
+          self.unbook_wip(abs(active_batch_qt_delta))
+
+    # Update Batch
+    self.batch = self.tx.collection('Batch').update(dict(
+      _key=self.batch.key,
+      qt_total=self.info.new_active_batch_qt
+    ), return_new=True)['new']
+
+    # Update Job
+    self.job = self.tx.collection('Job').update(dict(
+      _key=self.job.key,
+      active_batch_qt=self.info.new_active_batch_qt
+    ), return_new=True)['new']
+
+    # Set response
+    self.response = dict(
+      message=f"Active batch { self.info.active_batch_key } has been correctly updated with quantity { self.info.new_active_batch_qt }",
+      job_data=self.job,
+      batch_data=self.batch
+    )
+
+
 
   def link_batch_serial(self):
     self.get_job_data()
