@@ -132,7 +132,7 @@
                 <div class="col-7 row q-gutter-md items-center">
                   <div>{{ $capitalizeAll(j[field.name]) }}</div>
                   <q-btn
-                    v-if="field.name === 'active_batch_qt'"
+                    v-if="field.name === 'active_batch_qt' && j.active"
                     icon="mdi-pencil"
                     size="xs"
                     flat
