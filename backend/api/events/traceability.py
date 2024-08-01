@@ -822,8 +822,17 @@ class ProductionActivityEvent(BaseEvent):
     # Check config for unassigned jobs
     show_unassigned_jobs_to_operators = self.tx.collection('Config').get('show_unassigned_jobs_to_operators')
     can_self_assign = show_unassigned_jobs_to_operators.get('value', True) if show_unassigned_jobs_to_operators is not None else True
-    if self.job.assigned_to is None and not show_unassigned_jobs_to_operators.get('value', True):
-      raise JobHasNoAssigneeError('Unassigned jobs cannot be worked on as config "show_unassigned_jobs_to_operators" is false')
+    if self.job.assigned_to is None:
+      if not can_self_assign:
+        raise JobHasNoAssigneeError('Unassigned jobs cannot be worked on as config "show_unassigned_jobs_to_operators" is false')
+      else:
+        # Update queue
+        update_target_queue(
+          job_key = self.info.job_key,
+          target_key = self.info.user_key,
+          action = 'add',
+          tx = self.tx
+        )
 
     # Create new batch and store _key in Event.info
     self.create_batch()
@@ -855,14 +864,6 @@ class ProductionActivityEvent(BaseEvent):
       last_online = self.info.timestamp
     )
     self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
-
-    # Update queue
-    update_target_queue(
-      job_key = self.info.job_key,
-      target_key = self.info.user_key,
-      action = 'add',
-      tx = self.tx
-    )
 
     if (self.job.first_phase and wo.traceability_level != None and wo.traceability_level != TraceabilityLevel.NONE):
       # Create batch serials
