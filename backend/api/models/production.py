@@ -135,7 +135,7 @@ class Job(FlexModel):
 
   progress: int = Field(0, ge=0)
   active_batch_key: str | None = None # batch _key
-  active_batch_qt: int = 0
+  active_batch_qt: float = 0
   next_batch_available: bool | None = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders
 
   # current_step: int | None = None

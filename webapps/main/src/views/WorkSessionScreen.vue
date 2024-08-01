@@ -129,8 +129,16 @@
                 <div class="col-5 text-h5 text-uppercase font-weight-medium">
                   {{ field.text }}
                 </div>
-                <div class="col-7">
-                  <span>{{ $capitalizeAll(j[field.name]) }}</span>
+                <div class="col-7 row q-gutter-md items-center">
+                  <div>{{ $capitalizeAll(j[field.name]) }}</div>
+                  <q-btn
+                    v-if="field.name === 'active_batch_qt'"
+                    icon="mdi-pencil"
+                    size="xs"
+                    flat
+                    round
+                    @click="editBatchQuantity"
+                  />
                 </div>
               </div>
             </template>
@@ -252,13 +260,15 @@
 
 <script>
 import { until } from '@vueuse/core';
+import { Dialog, Loading } from 'quasar'
+import { mapState } from 'vuex';
 
 import Sortable from 'sortablejs';
-import { mapState } from 'vuex';
 
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import IssueForm from '@/components/IssueForm.vue';
 import ProgressBtn from '@/components/ProgressBtn.vue';
+import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
 
 export default {
@@ -268,7 +278,7 @@ export default {
     BaseProgressBar,
     IssueForm,
     ProgressBtn,
-    StartPauseResumeBtn,
+    StartPauseResumeBtn
   },
 
   beforeRouteLeave(to, _from, next) {
@@ -548,6 +558,53 @@ export default {
           ? 'theme-red'
           : 'theme-blue'
         : 'theme-grey';
+    },
+
+    async getCustomBatchInput({ initialValue, max }) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          component: QuantityPickerDialog,
+          componentProps: {
+            initialValue,
+            max,
+          },
+        })
+          .onOk((quantity) => {
+            resolve(quantity);
+          })
+      });
+    },
+
+    async editBatchQuantity() {
+      const remainingTotalQuantity = this.j.qt_planned - this.j.qt_completed;
+
+      Loading.show();
+      const { data } = await this.$api.get('/wip', {
+        params: { job_key: this.j._key },
+      });
+      Loading.hide();
+
+      const maxDeclarableQuantity = this.j.first_phase
+        ? remainingTotalQuantity
+        : Math.min(
+            data.free_wip_qt_upstream + this.j.active_batch_qt,
+            remainingTotalQuantity,
+          );
+
+      let newBatchQuantity = await this.getCustomBatchInput({
+        initialValue: this.j.active_batch_qt,
+        max: maxDeclarableQuantity
+      });
+
+      // Call new endpoint to update active batch quantity
+      this.$store.dispatch('updateActiveBatchQuantity', { newBatchQuantity }).then(() => {
+        this.$q.notify({
+          message: this.$capitalize("Quantità modificata correttamente"),
+          color: 'theme-green',
+          timeout: 1500,
+          position: 'top',
+        });
+      })
     },
 
     exitJob(stop_session) {
