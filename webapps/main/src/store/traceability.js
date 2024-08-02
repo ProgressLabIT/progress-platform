@@ -365,7 +365,7 @@ const traceability = {
 
     async completeStep(
       { commit, state, rootState, rootGetters },
-      { stepKey, batchQt, batch_serials },
+      { stepKey, batchQt },
     ) {
       const batchStep = state.current_batch_data.step_data.find(
         ({ _key }) => _key === stepKey,
@@ -464,8 +464,7 @@ const traceability = {
         step_key: batchStep._key,
         timestamp: now.toISO(),
         form_data: formData,
-        completed_batch_qt: batchQt,
-        batch_serials: batch_serials,
+        completed_batch_qt: batchQt
       });
 
       const { data } = await api.post('event', event);

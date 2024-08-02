@@ -412,7 +412,6 @@ export default {
       if (can_proceed && !missing_mandatory_fields) {
         await this.$store.dispatch('completeStep', {
           stepKey: this.current_step_key,
-          batch_serials: this.serialToBatch(batch_serials),
         });
 
         if (current_step_was_last && current_batch_was_last) {
