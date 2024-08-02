@@ -213,10 +213,10 @@ export default {
       return options;
     },
 
-    optionsToSerial(step_serials, options) {
+    optionsToSerial(batch_serials, options) {
       let serials = [];
 
-      for (const serial of step_serials) {
+      for (const serial of batch_serials) {
         serials.push({
           serial_key: serial.serial_key,
           serial_code: serial.serial_code,
