@@ -24,9 +24,9 @@ import { Dialog, Loading } from 'quasar';
 import { mapState } from 'vuex';
 import { timestamp } from '@/lib/TimeHandling.js';
 import { api } from 'boot/axios';
-import SerialBatchDeclareSerialNumber from '../components/job/SerialBatchDeclareSerialNumber.vue';
-import SerialBatchSelectionDialog from '../components/job/SerialBatchSelectionDialog.vue';
-import QuantityPickerDialog from './QuantityPickerDialog.vue';
+import SerialBatchDeclareSerialNumber from '@/components/job/SerialBatchDeclareSerialNumber.vue';
+import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue';
+import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 
 export default {
   name: 'ProgressBtn',
