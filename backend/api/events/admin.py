@@ -95,7 +95,7 @@ class ProductionAdminEvent(BaseEvent):
       except ZeroDivisionError:
         batch_quota = 1
 
-      batch_duration = new_job_duration * batch_quota
+      batch_duration = int(new_job_duration * batch_quota) # it's milliseconds, no need for decimals here
 
       batch_update = dict(
         _key = b.key,
