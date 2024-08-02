@@ -129,14 +129,14 @@
                 <div class="col-5 text-h5 text-uppercase font-weight-medium">
                   {{ field.text }}
                 </div>
-                <div class="col-7 row q-gutter-md items-center">
+                <div class="col-7 row q-gutter-md items-center justify-between">
                   <div>{{ $capitalizeAll(j[field.name]) }}</div>
                   <q-btn
                     v-if="field.name === 'active_batch_qt' && j.active"
-                    icon="mdi-pencil"
+                    icon-right="mdi-pencil"
+                    color="theme-blue"
                     size="xs"
-                    flat
-                    round
+                    :label="$t('quantity.update')"
                     @click="editBatchQuantity"
                   />
                 </div>
@@ -481,6 +481,9 @@ export default {
   },
 
   async mounted() {
+    // Go to first tab according to user preference
+    this.$router.push({ name: this.links_order[0] })
+
     // Make sure an alert is raised if user tries to close the page
     window.addEventListener('beforeunload', this.beforeUnloadAlert);
 
