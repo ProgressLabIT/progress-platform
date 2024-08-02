@@ -83,12 +83,6 @@ class ProductionActivityEvent(BaseEvent):
     post_processing=production_post_processing
   )
 
-  UPDATE_BATCH_SERIALS = EventMeta(
-    collections=production_collections,
-    action='link_batch_serial',
-    post_processing=production_post_processing
-  )
-
   ACTIVE_BATCH_QUANTITY_CHANGED = EventMeta(
     collections=production_collections,
     action="update_active_batch_qt",
@@ -1014,32 +1008,6 @@ class ProductionActivityEvent(BaseEvent):
       batch_data=self.batch
     )
 
-
-
-  def link_batch_serial(self):
-    self.get_job_data()
-    self.get_active_batch()
-    if not self.job.first_phase:
-      self.send_link_batch_serial_event()
-
-    # Update WorkOrder status
-    wo = self.get_work_order_data()
-    wo.status = WorkStatus.STARTED
-    wo_update = model_to_db_dict(wo)
-    self.tx.collection('WorkOrder').update(wo_update)
-
-    # Update job
-    job_update=dict(
-      _key = self.info.job_key,
-      stage = WorkStatus.STARTED,
-    )
-    self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
-
-    self.response = dict(
-      message = f"Batch {self.info.job_key} linked",
-      batch_data = self.get_batch_execution_data(),
-      job_data = self.job
-    )
 
   def step_quantity_changed(self):
     self.get_job_data()
