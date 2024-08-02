@@ -253,18 +253,6 @@ export default {
             batch_serials: this.optionsToSerial(step_serials, selected_serials),
           });
           this.completeStep();
-
-          /*this.$store.dispatch('startJob', {
-          batch_serials: this.optionsToSerial(
-            this.step_serials,
-            selected_serials,
-          ),
-        });*/
-          //await this.$store.dispatch('linkBatchSerial', {
-          //  stepKey: this.current_step_key,
-          //  batch_serials: selected_serials,
-          //});
-          //await this.$store.commit('UPDATE_step_serials', selected_serials);
         }
       } else {
         let customQty = await this.getCustomQuantity();
