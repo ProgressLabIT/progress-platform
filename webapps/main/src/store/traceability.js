@@ -363,28 +363,6 @@ const traceability = {
       })
     },
 
-    async linkBatchSerial(
-      { commit, state, rootState },
-      { stepKey, batch_serials },
-    ) {
-      const batchStep = state.current_batch_data.step_data.find(
-        ({ _key }) => _key === stepKey,
-      );
-
-      const now = DT.utc();
-      const event = createEvent(state, rootState.session, {
-        event_type: 'UPDATE_BATCH_SERIALS',
-        step_key: batchStep._key,
-        batch_serials: batch_serials,
-        timestamp: now.toISO(),
-      });
-
-      const { data } = await api.post('event', event);
-      const { job_data, batch_data } = data.detail;
-      commit('UPDATE_JOB', job_data);
-      commit('UPDATE_BATCH', batch_data);
-    },
-
     async completeStep(
       { commit, state, rootState, rootGetters },
       { stepKey, batchQt, batch_serials },
