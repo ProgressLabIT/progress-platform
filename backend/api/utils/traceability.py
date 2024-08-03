@@ -297,18 +297,6 @@ class Queries:
       RETURN w.quantity
     )
 
-    // Get additional input available from that already booked for the job
-    // that is not already in the active batch
-    LET input_for_job = SUM(
-      FOR w IN wip
-      FILTER
-        w.wo_key == @wo_key
-        // comment this because of serials left behind
-        //&& w._to == j._id
-        && !w.active
-      RETURN w.quantity
-    )
-
     LET qt_remaining = j.qt_planned - j.qt_completed
     LET default_batch = j.parameters.production_batch_qt
     LET qt_next_batch = default_batch == 0 ? qt_remaining : MIN([default_batch, qt_remaining])
