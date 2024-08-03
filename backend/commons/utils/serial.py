@@ -143,7 +143,7 @@ class Queries:
       return MERGE(serial, { active: w.active })
   """
 
-  GET_SERIALS_FROM_WORK_ORDER = """
+  GET_AVAILABLE_WIP_SERIALS_FOR_JOB = """
     FOR w IN wip
       FILTER
         w.wo_key == @wo_key
