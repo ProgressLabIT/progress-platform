@@ -200,7 +200,7 @@ def get_serial_wo_phase(
     job_key = f'Job/{job_key}'
   )
   wo_serials = []
-  for serial in [e for e in db.aql.execute(Queries.GET_SERIALS_FROM_WORK_ORDER, bind_vars=bind_vars)]:
+  for serial in [e for e in db.aql.execute(Queries.GET_AVAILABLE_WIP_SERIALS_FOR_JOB, bind_vars=bind_vars)]:
     if serial['code']:
       wo_serials.append(dict(
           serial_key= serial['_key'],
