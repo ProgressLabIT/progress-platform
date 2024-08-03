@@ -149,7 +149,8 @@ class Queries:
         w.wo_key == @wo_key
          && (w._to == @phase_key || w._to == @job_key)
       LET serial = DOCUMENT(Serial, w.serial_key)
-      return MERGE(serial, { active: w.active })
+      LET active = PARSE_IDENTIFIER(w._to).collection == 'Job'
+      RETURN MERGE(serial, { active })
   """
 
   FIND_SERIALS = """
