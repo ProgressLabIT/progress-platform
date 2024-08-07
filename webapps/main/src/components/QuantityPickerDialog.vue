@@ -44,7 +44,7 @@
         <q-card-section class="q-mt-sm">
           <q-slider
             v-model.number="quantity"
-            min="1"
+            :min="1"
             :max="max"
             color="primary"
             :marker-labels="{
