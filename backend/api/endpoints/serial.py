@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 from commons.models.form import CustomField
+from commons.models.serial import SerialSelection
 from commons.utils.db import db
 
 from commons.utils.serial import Queries
@@ -161,59 +162,20 @@ def get_children(serial_key, serials, level):
 
   return children
 
-@router.get('/serial-wo-phase',
+@router.get('/wip-serial',
     dependencies=[Depends(auth.verify_token)])
-def get_serial_wo_phase(
-  wo_key: str | None = None,
-  phase_key: str | None = None,
-):
-  bind_vars = dict(
-    wo_key = wo_key,
-    phase_key = f'Phase/{phase_key}'
-  )
-  wo_serials = []
-  for serial in [e for e in db.aql.execute(Queries.GET_AVAILABLE_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)]:
-    if serial['code']:
-      wo_serials.append(dict(
-          serial_key= serial['_key'],
-          serial_code= serial['code'],
-          active= serial['active'],
-      ))
-    #else:
-    #  wo_serials.append(dict(
-    #      serial_key= serial['_key'],
-    #      serial_code= serial['_key'],
-    #      active= serial['active'],
-    #  ))
-  return wo_serials
-
-@router.get('/serial-from-wo',
-    dependencies=[Depends(auth.verify_token)])
-def get_serial_wo_phase(
+def get_serial_wip(
   wo_key: str | None = None,
   job_key: str | None = None,
   phase_key: str | None = None,
 ):
   bind_vars = dict(
     wo_key = wo_key,
-    phase_key = f'Phase/{phase_key}',
-    job_key = f'Job/{job_key}'
+    phase_key = phase_key,
+    job_key = job_key
   )
-  wo_serials = []
-  for serial in [e for e in db.aql.execute(Queries.GET_AVAILABLE_WIP_SERIALS_FOR_JOB, bind_vars=bind_vars)]:
-    if serial['code']:
-      wo_serials.append(dict(
-          serial_key= serial['_key'],
-          serial_code= serial['code'],
-          active= serial['active'],
-      ))
-    else:
-      wo_serials.append(dict(
-          serial_key= serial['_key'],
-          serial_code= serial['_key'],
-          active= serial['active'],
-      ))
-  return wo_serials
+  cursor = db.aql.execute(Queries.GET_AVAILABLE_WIP_SERIALS, bind_vars=bind_vars)
+  return [SerialSelection(**s) for s in cursor]
 
 @router.get('/serial-selection',
     dependencies=[Depends(auth.verify_token)])
