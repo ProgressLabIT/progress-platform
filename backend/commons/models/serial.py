@@ -30,8 +30,8 @@ class SerialEventType(str, Enum):
   LINK_SERIALS = 'LINK_SERIALS'
 
 class SerialSelection(BaseModel):
-   serial_key: str | None = None
-   serial_code: str | None = None
+   serial_key: str | None = Field(None, validation_alias='_key')
+   serial_code: str | None = Field(None, validation_alias='code')
    active: bool = False
 
 class SerialLink(BaseModel):

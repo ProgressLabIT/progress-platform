@@ -134,23 +134,17 @@ class Queries:
       RETURN s
   """
 
-  GET_AVAILABLE_SERIALS_IN_WORK_ORDER = """
+  GET_AVAILABLE_WIP_SERIALS = """
     FOR w IN wip
       FILTER
         w.wo_key == @wo_key
-        && w._to == @phase_key
-      LET serial = DOCUMENT(Serial, w.serial_key)
-      return MERGE(serial, { active: w.active })
-  """
-
-  GET_AVAILABLE_WIP_SERIALS_FOR_JOB = """
-    FOR w IN wip
-      FILTER
-        w.wo_key == @wo_key
-         && (w._to == @phase_key || w._to == @job_key)
+        && (
+          w._to == CONCAT('Phase/', @phase_key )
+          || ( @job_key ? w._to == CONCAT('Job/', @job_key) : false ) // add wip allocated to job if job_key is provided
+        )
       LET serial = DOCUMENT(Serial, w.serial_key)
       LET active = PARSE_IDENTIFIER(w._to).collection == 'Job'
-      RETURN MERGE(serial, { active })
+      RETURN MERGE(KEEP(serial, '_key', 'code'), { active })
   """
 
   FIND_SERIALS = """
