@@ -247,5 +247,12 @@ class Queries:
 
     LIMIT @offset, @limit || null
     return base_result
+  """
+
+
+  BOOK_SERIAL_WIP = """
+    FOR w IN wip
+    FILTER w.serial_key IN @serial_keys
+    UPDATE w WITH { _to: CONCAT('Job/', @job_key), active: true } IN wip
 
   """
