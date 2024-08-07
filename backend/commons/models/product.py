@@ -38,7 +38,7 @@ class ProductBaseData(FlexModel):
   active: bool = True
   image: bool = False # to be replaced with Object Storage url in the future
   tags: List[Tag] | None= []
-  counter_id: str | None = None
+  counter_key: str | None = None
   traceability_level: Optional[TraceabilityLevel] = TraceabilityLevel.NONE
 
 class ProductDetails(ProductBaseData):

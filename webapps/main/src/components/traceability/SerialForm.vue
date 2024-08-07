@@ -302,7 +302,7 @@ export default {
       const { data: product } = await this.$api.get(`product/${product_key}`);
 
       this.links.product = product;
-      this.counter_key = product.counter_id;
+      this.counter_key = product.counter_key;
 
       if (!product.process_phases) {
         return;

@@ -110,7 +110,7 @@ export default {
       }
 
       if (this.new_product_counter) {
-        body.append('counter_id', this.new_product_counter._key);
+        body.append('counter_key', this.new_product_counter._key);
       }
 
       api

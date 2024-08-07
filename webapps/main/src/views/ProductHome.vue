@@ -639,7 +639,7 @@ export default {
 
     selectCounter(counter) {
       this.new_product_counter = counter;
-      this.product.counter_id = counter._key;
+      this.product.counter_key = counter._key;
       this.show_counter_form = false;
     },
 
