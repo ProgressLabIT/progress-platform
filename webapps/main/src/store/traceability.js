@@ -317,44 +317,20 @@ const traceability = {
       commit('SET_HEARTBEAT', true);
     },
 
-    async changeStepQuantity(
+    async updateActiveBatch(
       { commit, state, rootState },
-      { stepKey, batchQt, batch_serials },
-    ) {
-      const batchStep = state.current_batch_data.step_data.find(
-        ({ _key }) => _key === stepKey,
-      );
-
-      const now = DT.utc();
-      const event = createEvent(state, rootState.session, {
-        event_type: 'STEP_QUANTITY_CHANGED',
-        step_key: batchStep._key,
-        timestamp: now.toISO(),
-        step_changed_qt: batchQt,
-        batch_serials: batch_serials,
-      });
-
-      const { data } = await api.post('event', event);
-      const { job_data, batch_data } = data.detail;
-      commit('UPDATE_JOB', job_data);
-      commit('UPDATE_BATCH', batch_data);
-    },
-
-    async updateActiveBatchQuantity(
-      { commit, state, rootState },
-      { newBatchQuantity }
+      { newBatchQuantity, batchSerials }
     ) {
       const now = DT.utc();
       const event = createEvent(state, rootState.session, {
-        event_type: 'ACTIVE_BATCH_QUANTITY_CHANGED',
+        event_type: 'ACTIVE_BATCH_CHANGED',
         timestamp: now.toISO(),
         new_active_batch_qt: newBatchQuantity,
+        batch_serials: batchSerials
       });
-      console.log(event)
 
       return new Promise((resolve) => {
         api.post('event', event).then((resp) => {
-          console.log(event)
           const { job_data, batch_data } = resp.data.detail;
           commit('UPDATE_JOB', job_data);
           commit('UPDATE_BATCH', batch_data);

@@ -21,7 +21,7 @@ export default {
   assignment_success: 'Lavori assegnati con successo',
   back: 'Indietro',
   batch: 'lotto',
-  batch_completed_quantity_question: 'Quanti nuovi pezzi vuoi dichiarare?',
+  batch_completed_quantity_question: 'Quanti pezzi stai lavorando?',
   batch_serial_select: 'Seleziona seriali batch',
   batch_declare_serial: 'Inserisci i seriali del batch',
   bom: {

@@ -137,7 +137,7 @@
                     color="theme-blue"
                     size="xs"
                     :label="$t('quantity.update')"
-                    @click="editBatchQuantity"
+                    @click="editBatchQuantityOrSerials"
                   />
                 </div>
               </div>
@@ -261,15 +261,16 @@
 <script>
 import { until } from '@vueuse/core';
 import { Dialog, Loading } from 'quasar'
+import Sortable from 'sortablejs';
 import { mapState } from 'vuex';
 
-import Sortable from 'sortablejs';
 
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import IssueForm from '@/components/IssueForm.vue';
 import ProgressBtn from '@/components/ProgressBtn.vue';
 import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
+import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue'
 
 export default {
   name: 'WorkSessionScreen',
@@ -563,51 +564,91 @@ export default {
         : 'theme-grey';
     },
 
-    async getCustomBatchInput({ initialValue, max }) {
-      return new Promise((resolve) => {
-        Dialog.create({
-          component: QuantityPickerDialog,
-          componentProps: {
-            initialValue,
-            max,
-          },
-        })
-          .onOk((quantity) => {
-            resolve(quantity);
-          })
+    async editBatchSerials() {
+      Loading.show()
+      const remainingTotalQuantity = this.j.qt_planned - this.j.qt_completed;
+      const { data: available_serials } = await this.$api.get('/wip-serial', {
+        params: {
+          job_key: this.j._key,
+          phase_key: this.j.phase_key,
+          wo_key: this.j.wo_key
+        }
       });
+      const initial_selection = available_serials.filter(s => s.active).map(s => s.serial_key)
+      Loading.hide();
+
+      const selected_serials = await new Promise((resolve) => {
+        Dialog.create({
+          component: SerialBatchSelectionDialog,
+          componentProps: {
+            available_serials: available_serials.map(s => ({ label: s.serial_code, value: s.serial_key })),
+            selected_serials: initial_selection,
+            max_quantity: remainingTotalQuantity
+          }
+        })
+        .onOk((selected_serials) => resolve(selected_serials))
+        .onCancel(() => resolve(false));
+      });
+
+      if (selected_serials.length && selected_serials != initial_selection) {
+        return {
+          payload: { batchSerials: selected_serials, newBatchQuantity: selected_serials.length },
+          message: this.$capitalize("Seriali modificati correttamente")
+        }
+      };
     },
 
     async editBatchQuantity() {
+      Loading.show()
       const remainingTotalQuantity = this.j.qt_planned - this.j.qt_completed;
-
-      Loading.show();
       const { data } = await this.$api.get('/wip', {
         params: { job_key: this.j._key },
-      });
-      Loading.hide();
-
+      })
       const maxDeclarableQuantity = this.j.first_phase
         ? remainingTotalQuantity
         : Math.min(
             data.free_wip_qt_upstream + this.j.active_batch_qt,
             remainingTotalQuantity,
           );
+      Loading.hide()
 
-      let newBatchQuantity = await this.getCustomBatchInput({
-        initialValue: this.j.active_batch_qt,
-        max: maxDeclarableQuantity
+      let newBatchQuantity = await new Promise((resolve) => {
+        Dialog.create({
+          component: QuantityPickerDialog,
+          componentProps: {
+            initialValue: this.j.active_batch_qt,
+            max: maxDeclarableQuantity
+          },
+        })
+        .onOk((quantity) => resolve(quantity))
+        .onCancel(() => resolve(false));
       });
 
-      // Call new endpoint to update active batch quantity
-      this.$store.dispatch('updateActiveBatchQuantity', { newBatchQuantity }).then(() => {
-        this.$q.notify({
+      if (newBatchQuantity) {
+        return {
           message: this.$capitalize("Quantità modificata correttamente"),
-          color: 'theme-green',
-          timeout: 1500,
-          position: 'top',
-        });
-      })
+          payload: { newBatchQuantity }
+        }
+      }
+    },
+
+    async editBatchQuantityOrSerials() {
+      const data = await (this.wo_data.traceability_level && !this.j.first_phase
+        ? this.editBatchSerials() // Traceability enabled - show serial selection dialog
+        : this.editBatchQuantity() // no serial management: update wip quantity only
+      )
+
+      if (data) {
+        // Call new endpoint to update active batch quantity
+        this.$store.dispatch('updateActiveBatch', data.payload).then(() => {
+          this.$q.notify({
+            message: data.message,
+            color: 'theme-green',
+            timeout: 1500,
+            position: 'top',
+          });
+        })
+      }
     },
 
     exitJob(stop_session) {
