@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import { Dialog } from 'quasar';
+import { Dialog, Loading } from 'quasar';
 import { mapState } from 'vuex';
 import SerialBatchSelectionDialog from '../components/job/SerialBatchSelectionDialog.vue';
 export default {
@@ -35,7 +35,7 @@ export default {
     },
 
     ...mapState({
-      step_serials: (state) => state.traceability.current_step_serials,
+      j: (state) => state.traceability.working_job_data,
     }),
   },
 
@@ -52,13 +52,13 @@ export default {
         return result;
       } else {
         // Check if progress has already been made or user has already started
-        if (this.j.stage == 'started' || this.j.stage == 'serial_selected') {
+        if (this.j.stage == 'started') {
           result.text = this.$t('job.resume').toUpperCase();
           result.action = () => this.$store.dispatch('resumeJob');
           return result;
-        } else if (this.step_serials && this.step_serials.length > 0) {
+        } else if (this.j.traceability_level && !this.j.first_phase) {
           result.text = this.$t('job.link_serials');
-          result.action = this.linkSerials;
+          result.action = this.selectSerialWipAndStartJob;
           return result;
         } else {
           result.text = this.$t('job.start').toUpperCase();
@@ -106,47 +106,32 @@ export default {
       return options;
     },
 
-    async linkSerials() {
-      let selected_serials = [];
-      if (this.step_serials && this.step_serials.length > 0) {
-        selected_serials = await this.selectSerialBatch(
-          this.serialsToOptions(this.step_serials),
-          this.serialsInitialSelection(this.step_serials),
-        );
-        if (selected_serials.length <= 0) {
-          return;
-        }
-
-        this.$store.dispatch('startJob', {
-          batch_serials: this.optionsToSerial(
-            this.step_serials,
-            selected_serials,
-          ),
-        });
-        //await this.$store.dispatch('linkBatchSerial', {
-        //  stepKey: this.current_step_key,
-        //  batch_serials: selected_serials,
-        //});
-        //await this.$store.commit('UPDATE_step_serials', selected_serials);
+    async selectSerialWipAndStartJob() {
+      Loading.show()
+      const params = {
+        wo_key: this.j.wo_key,
+        phase_key: this.j.phase_key
       }
-    },
-
-    async selectSerialBatch(batch_serials, selected_serials) {
-      return new Promise((resolve) => {
+      const { data: available_serials } = await this.$api.get('wip-serial', { params })
+      Loading.hide()
+      let selected_serials = await new Promise((resolve) => {
         Dialog.create({
           component: SerialBatchSelectionDialog,
           componentProps: {
-            batch_serials,
-            selected_serials,
+            available_serials: available_serials.map(s => ({ label: s.serial_code, value: s.serial_key })),
+            selected_serials: [],
+            max_quantity: this.j.qt_planned - this.j.qt_completed
           },
         })
-          .onOk((selected_serials) => {
-            resolve(selected_serials);
-          })
-          .onCancel(() => {
-            resolve([]);
-          });
+        .onOk((selected_serials) => resolve(selected_serials))
+        .onCancel(() => resolve(false));
       });
+      if (selected_serials) {
+        console.log(selected_serials)
+        this.$store.dispatch('startJob', {
+          batch_serials: selected_serials,
+        });
+      }
     },
   },
 };

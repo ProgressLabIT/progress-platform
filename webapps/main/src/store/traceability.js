@@ -94,7 +94,7 @@ const traceability = {
     current_step_media_index: null,
     heartbeat: null,
     batch_serials: [],
-    current_step_serials: {},
+    current_batch_serials: {},
   },
 
   getters: {
@@ -125,7 +125,7 @@ const traceability = {
       state.user_session = session_data;
     },
 
-    LOAD_WORKING_JOB_DATA(state, { job_data, batch_data, step_serials }) {
+    LOAD_WORKING_JOB_DATA(state, { job_data, batch_data }) {
       state.working_job_data = job_data;
       let prev_data = state.current_batch_data?.step_data;
       let prev_data_key = state.current_batch_data?._key;
@@ -141,14 +141,13 @@ const traceability = {
           }).form_data = prev_obj.form_data;
         }
       }
-      state.current_step_serials = step_serials;
     },
 
-    START_JOB(state, { batch_data, job_data, step_serials }) {
+    START_JOB(state, { batch_data, job_data, batch_serials }) {
       // get timestamp and state metadata
       state.current_batch_data = batch_data;
       state.working_job_data = job_data;
-      state.current_step_serials = step_serials;
+      state.current_batch_serials = batch_serials;
     },
 
     CLOSE_WORK_SESSION(state, work_session) {
@@ -240,21 +239,14 @@ const traceability = {
         batch_data = batch_resp.data.detail;
       }
 
-      const step_serial_resp = await api.get('serial-wo-phase', {
-        params: {
-          wo_key: job_data.wo_key,
-          phase_key: job_data.phase_key,
-        },
-      });
-      let step_serials = step_serial_resp?.data;
-      commit('LOAD_WORKING_JOB_DATA', { job_data, batch_data, step_serials });
+      commit('LOAD_WORKING_JOB_DATA', { job_data, batch_data });
       await dispatch('getIssues', {
         work_order_key: job_data.wo_key,
         with_links: true,
       });
     },
 
-    startJob({ commit, state, rootState }, { batch_serials }) {
+    async startJob({ commit, state, rootState }, { batch_serials }) {
       const now = DT.utc();
 
       // Create Event
@@ -266,25 +258,19 @@ const traceability = {
 
       // Post event and save new data
       api.post('event', event).then((resp) => {
-        const { new_work_session_data, batch_data, job_data } =
-          resp.data.detail;
-        api
-          .get('serial-wo-phase', {
-            params: {
-              wo_key: job_data.wo_key,
-              phase_key: job_data.phase_key,
-            },
-          })
-          .then((step_serials_data) => {
-            const step_serials = step_serials_data?.data;
-            commit('START_JOB', {
-              new_work_session_data,
-              batch_data,
-              job_data,
-              step_serials,
-            });
-            commit('SET_HEARTBEAT', true);
-          });
+        const {
+          new_work_session_data,
+          batch_data,
+          job_data
+        } = resp.data.detail;
+
+        commit('START_JOB', {
+          new_work_session_data,
+          batch_data,
+          job_data,
+          batch_serials,
+        });
+        commit('SET_HEARTBEAT', true);
       });
     },
 
