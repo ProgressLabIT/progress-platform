@@ -3,7 +3,7 @@ from commons.utils.db import db
 
 COUNTER_TICK = """
 // Get current counter value
-let c = DOCUMENT(Counter, @counter_name)
+let c = DOCUMENT(Counter, @counter_key)
 
 // Reset counter if needed (Beginning of year)
 let reset_counter = DATE_NOW() > DATE_TIMESTAMP(c.reset_date)
@@ -34,8 +34,5 @@ def compute_counter(counter):
 
   return ''.join(counter_elements)
 
-def _generate_counter(tx, counter_name):
-  return compute_counter(tx.aql.execute(COUNTER_TICK, bind_vars={ 'counter_name': counter_name }).next())
-
-def _generate_counter_wo_tx(counter_name):
-  return compute_counter(db.aql.execute(COUNTER_TICK, bind_vars={ 'counter_name': counter_name }).next())
+def _generate_counter(tx, counter_key):
+  return compute_counter(tx.aql.execute(COUNTER_TICK, bind_vars={ 'counter_key': counter_key }).next())
