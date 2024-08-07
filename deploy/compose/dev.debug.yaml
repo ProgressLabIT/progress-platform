@@ -131,3 +131,14 @@ services:
       KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
+
+  broker-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8081:8080
+    depends_on:
+      - broker
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_NAME: progress-broker
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:19092

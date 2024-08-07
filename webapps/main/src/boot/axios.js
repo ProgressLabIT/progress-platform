@@ -10,7 +10,8 @@ import { boot } from 'quasar/wrappers';
 
 const domain =
   window.location.hostname === 'localhost'
-    ? 'http://progress.localhost'
+    ? 'http://progress.localhost/api'
+    // ? 'http://0.0.0.0:8000'
     : //'http://localhost:8000'
       'http://' + window.location.hostname;
 

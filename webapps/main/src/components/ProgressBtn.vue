@@ -497,6 +497,7 @@ export default {
       }
 
       if (missing_serial && this.traceability_enabled()) {
+        // TODO: Make sure alert is only if traceability is mandatory
         window.alert(this.$t('batch_declare_component_serials'));
         return;
       }

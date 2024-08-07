@@ -254,5 +254,17 @@ class Queries:
     FOR w IN wip
     FILTER w.serial_key IN @serial_keys
     UPDATE w WITH { _to: CONCAT('Job/', @job_key), active: true } IN wip
+  """
 
+  DELETE_BATCH_SERIALS = """
+    FOR s IN 1..1 INBOUND CONCAT('Batch/', @batch_key) batch_serial
+    SORT s.created DESC
+    LIMIT @quantity
+    REMOVE s IN Serial
+  """
+
+  CLEANUP_SERIAL_BATCH_LINKS = """
+    FOR bs IN batch_serial
+    FILTER !DOCUMENT(bs._from) || !DOCUMENT(bs._to)
+    REMOVE bs IN batch_serial
   """
