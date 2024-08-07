@@ -18,7 +18,7 @@ from commons.kafka_utils.kafka_producer import KafkaProducer
 from commons.models.serial import Serial, SerialEvent, SerialEventType
 from commons.models.form import SerialFormFieldValue
 
-from commons.utils.serial import Queries
+from commons.utils.serial import Queries as SerialQueries
 
 from fastapi import HTTPException
 
@@ -27,6 +27,7 @@ from fastapi import HTTPException
 class ProductionActivityEvent(BaseEvent):
   production_collections = [
     'Batch',
+    'batch_serial',
     'Event',
     'Job',
     'Queue',
@@ -83,9 +84,9 @@ class ProductionActivityEvent(BaseEvent):
     post_processing=production_post_processing
   )
 
-  ACTIVE_BATCH_QUANTITY_CHANGED = EventMeta(
+  ACTIVE_BATCH_CHANGED = EventMeta(
     collections=production_collections,
-    action="update_active_batch_qt",
+    action="update_active_batch",
     post_processing=["update_job_last_online"]
   )
 
@@ -246,7 +247,7 @@ class ProductionActivityEvent(BaseEvent):
     setattr(serial_event, 'operation', SerialEventType.CREATE_FROM_BATCH)
     self.send_to_consumer(serial_event.dict())
 
-  def finalize_batch_serial(self, wo, completed_batch_qt):
+  def finalize_batch_serial(self, wo, completed_batch_qt = None):
     if not self.job:
       self.job = self.get_job_data()
 
@@ -254,7 +255,7 @@ class ProductionActivityEvent(BaseEvent):
     setattr(serial_event, 'created_by', self.info.user_key)
     setattr(serial_event, 'wo_key', self.info.work_order_key)
     setattr(serial_event, 'product_key', self.info.product_key)
-    setattr(serial_event, 'quantity', completed_batch_qt)
+    setattr(serial_event, 'quantity', completed_batch_qt or self.info.active_batch_qt)
     setattr(serial_event, 'batch_key', self.info.active_batch_key)
     setattr(serial_event, 'traceability_level', self.job.traceability_level)
     setattr(serial_event, 'last_phase', self.job.last_phase)
@@ -313,21 +314,23 @@ class ProductionActivityEvent(BaseEvent):
     if not hasattr(self, 'job'):
       self.get_job_data()
 
-    default_batch_qt = self.job.parameters.production_batch_qt
+    use_serials = getattr(self.job, 'traceability_level', None)
 
-    # qt_completed must include any update from the current event being recorded
-    remaining_qt = self.job.qt_planned - self.job.qt_completed
-
-    # if production_batch_qt is zero, use total remaining quantity
-    if default_batch_qt == 0:
-      batch_qt = remaining_qt
-    # Do not consider production batch if remaining quantity is lower
+    if use_serials and not self.job.first_phase:
+      if len(self.info.batch_serials):
+        batch_qt = len(self.info.batch_serials)
+      else:
+        ValueError("You must provide serials to be linked to this new batch")
     else:
-      batch_qt = min([default_batch_qt, remaining_qt])
-
-    # Book wip from buffer
-    if not self.job.first_phase:
-        batch_qt = self.book_wip(batch_qt)
+      default_batch_qt = self.job.parameters.production_batch_qt
+      # qt_completed must include any update from the current event being recorded
+      remaining_qt = self.job.qt_planned - self.job.qt_completed
+      # if production_batch_qt is zero, use total remaining quantity
+      if default_batch_qt == 0:
+        batch_qt = remaining_qt
+      # Do not consider production batch if remaining quantity is lower
+      else:
+        batch_qt = min([default_batch_qt, remaining_qt])
 
     if batch_qt == 0:
       raise ValueError("Quantity cannot be zero or negative")
@@ -345,6 +348,14 @@ class ProductionActivityEvent(BaseEvent):
 
     self.batch = Batch(**new_batch_out)
     self.info.new_batch_key = self.batch.key
+
+    # Book wip from buffer
+    if not self.job.first_phase:
+      self.book_wip(batch_qt)
+    elif use_serials:
+      self.create_batch_serial_records()
+
+
 
 
   def send_link_batch_serial_event(self):
@@ -421,7 +432,7 @@ class ProductionActivityEvent(BaseEvent):
     bind_vars = dict(
       wo_key = self.info.work_order_key
     )
-    serial_to_declare_cursor = self.tx.aql.execute(Queries.GET_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)
+    serial_to_declare_cursor = self.tx.aql.execute(SerialQueries.GET_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)
     serial_to_declare = [Serial(**serial) for serial in serial_to_declare_cursor]
 
     if (self.info.batch_serials != None and len(self.info.batch_serials) > 0):
@@ -763,6 +774,9 @@ class ProductionActivityEvent(BaseEvent):
   # EVENT ACTIONS
   ######################################################################
 
+  # ===================================================================
+  #                 START JOB
+  # ===================================================================
 
   def start_job(self):
     # Check job hasn't been started already
@@ -816,10 +830,6 @@ class ProductionActivityEvent(BaseEvent):
     )
     self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
 
-    if (self.job.first_phase and wo.traceability_level != None and wo.traceability_level != TraceabilityLevel.NONE):
-      # Create batch serials
-      self.create_batch_serial_records()
-
     self.response = dict(
       message = f"Job {self.info.job_key} started",
       batch_data = self.get_batch_execution_data(),
@@ -827,11 +837,15 @@ class ProductionActivityEvent(BaseEvent):
     )
 
   # ===================================================================
+  #               PAUSE JOB
+  # ===================================================================
 
   def pause_job(self):
     self.close_work_session(self.info.work_session_end)
     self.set_job_active_state(False)
 
+  # ===================================================================
+  #               RESUME JOB
   # ===================================================================
 
   def resume_job(self):
@@ -866,6 +880,8 @@ class ProductionActivityEvent(BaseEvent):
     )
 
   # ===================================================================
+  #                 RESTORE WORK SESSION
+  # ===================================================================
 
   def restore_work_session(self):
     updated_work_session = dict(
@@ -884,12 +900,11 @@ class ProductionActivityEvent(BaseEvent):
     self.response = self.job
 
   # ===================================================================
-
+  #                      COMPLETE STEP
+  # ===================================================================
   def complete_step(self):
     self.get_job_data()
     self.get_active_batch()
-
-    wo = self.get_work_order_data()
 
     # Save current work session and batch keys in Event.info
     if not self.info.work_session_key:
@@ -905,7 +920,7 @@ class ProductionActivityEvent(BaseEvent):
     self.tx.collection('StepExecutionData').insert(step_data)
 
     if (step_data.form_data != None):
-      if (wo.traceability_level != None and wo.traceability_level != TraceabilityLevel.NONE):
+      if (self.job.traceability_level != None and self.job.traceability_level != TraceabilityLevel.NONE):
         # update batch serials data
         self.udpate_batch_serial_data(step_data.form_data)
 
@@ -922,8 +937,11 @@ class ProductionActivityEvent(BaseEvent):
         batch_data = self.get_batch_execution_data()
       )
 
-  def update_active_batch_qt(self):
-    print('Starting batch update action...')
+  # ===================================================================
+  #             UPDATE ACTIVE BATCH
+  # ===================================================================
+
+  def update_active_batch(self):
     self.get_job_data()
     self.get_active_batch()
 
@@ -932,81 +950,67 @@ class ProductionActivityEvent(BaseEvent):
       self.info.work_session_key = self.work_session.key
 
     active_batch_qt_delta = self.info.new_active_batch_qt - self.job.active_batch_qt
-    print(f'Batch delta: {active_batch_qt_delta}')
 
-
-    if active_batch_qt_delta == 0:
+    if active_batch_qt_delta == 0 and not len(self.info.batch_serials):
       raise ValueError("Active batch quantity already matches the quantity requested")
 
     else:
-      if not self.job.first_phase:
-        if active_batch_qt_delta > 0:
-          self.book_wip(active_batch_qt_delta)
-
-        else: # active_batch_qt_delta < 0:
-          self.unbook_wip(abs(active_batch_qt_delta))
+      if self.job.traceability_level:
+        if self.job.first_phase:
+          # Create or delete batch_serial records if necessary
+          # TODO: Refactor to use serial service
+          if active_batch_qt_delta > 0:
+            self.create_batch_serial_records(quantity=active_batch_qt_delta)
+          else:
+            cursor = self.tx.aql.execute(
+              SerialQueries.DELETE_BATCH_SERIALS,
+              bind_vars = dict(
+                batch_key = self.batch.key,
+                quantity = abs(active_batch_qt_delta)
+              )
+            )
+            deleted_serial_keys = [sk for sk in cursor]
+            # TODO: Use named graph with auto deletion of edges to avoid the following
+            self.tx.aql.execute(SerialQueries.CLEANUP_SERIAL_BATCH_LINKS)
+        
+        # Has serials but not first phase
+        else:
+          if self.info.batch_serials is not None and len(self.info.batch_serials):
+            self.book_wip_serials()
+          else:
+            raise ValueError("You must provide a list of serials to update the batch with")
+      # No serial, only update batch quantity
+      else:
+        if not self.job.first_phase:
+          if active_batch_qt_delta > 0:
+            self.book_wip(active_batch_qt_delta)
+          else: # active_batch_qt_delta < 0:
+            self.unbook_wip(abs(active_batch_qt_delta))
+        # no else here, if first phase and no serial no need to manage other collections
+        # just proceed with batch/job updates
 
     # Update Batch
-    self.batch = self.tx.collection('Batch').update(dict(
+    self.batch = Batch(**self.tx.collection('Batch').update(dict(
       _key=self.batch.key,
       qt_total=self.info.new_active_batch_qt
-    ), return_new=True)['new']
+    ), return_new=True)['new'])
 
     # Update Job
-    self.job = self.tx.collection('Job').update(dict(
+    self.job = Job(**self.tx.collection('Job').update(dict(
       _key=self.job.key,
       active_batch_qt=self.info.new_active_batch_qt
-    ), return_new=True)['new']
+    ), return_new=True)['new'])
 
     # Set response
     self.response = dict(
       message=f"Active batch { self.info.active_batch_key } has been correctly updated with quantity { self.info.new_active_batch_qt }",
       job_data=self.job,
-      batch_data=self.batch
+      batch_data=self.get_batch_execution_data()
     )
 
 
-  def step_quantity_changed(self):
-    self.get_job_data()
-    self.get_active_batch()
-
-    # Save current work session and batch keys in Event.info
-    if not self.info.work_session_key:
-      self.work_session = self.get_current_work_session()
-      self.info.work_session_key = self.work_session.key
-
-    #completed_batch_qt
-    if self.info.batch_serials != None and len(self.info.batch_serials) > 0:
-        self.unbook_wip_serials(self.info.batch_serials)
-        self.book_wip_serials(self.info.batch_serials)
-    elif (self.info.active_batch_qt > self.info.step_changed_qt):
-      self.unbook_wip(self.info.active_batch_qt-self.info.step_changed_qt)
-    elif (self.info.active_batch_qt < self.info.step_changed_qt):
-      self.book_wip(self.info.step_changed_qt-self.info.active_batch_qt)
-
-
-    # update batch qt
-    self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_BATCH_QT, bind_vars=dict(
-        batch_key=self.info.active_batch_key,
-        qt_total=self.info.step_changed_qt
-      )
-    )
-
-    # update jon qt
-    self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_JOB_QT, bind_vars=dict(
-        job_key=self.info.job_key,
-        active_qt=self.info.step_changed_qt
-      )
-    )
-
-    self.response = dict(
-        message = f"Step quantity changed for batch {self.info.active_batch_key}",
-        job_data = self.job,
-        batch_data = self.get_batch_execution_data()
-      )
-
+  # ===================================================================
+  #                   COMPLETE BATCH
   # ===================================================================
 
   def complete_batch(self):
@@ -1026,6 +1030,8 @@ class ProductionActivityEvent(BaseEvent):
     is_next_batch_available = self.job.next_batch_available
 
     if not self.job.first_phase:
+      # TODO: the book_wip method already raises an error if there's not enough available wip upstream.
+      # Consider removing the check here if redundant
       wip = self.tx.aql.execute(
         TraceabilityQueries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB,
         bind_vars=dict(job_key=self.info.job_key)
@@ -1033,6 +1039,7 @@ class ProductionActivityEvent(BaseEvent):
 
       free_wip_qt_upstream = sum(w['quantity'] for w in wip['upstream_free_wip'])
       max_declarable_qt = free_wip_qt_upstream + self.job.active_batch_qt
+
       if completed_batch_qt > max_declarable_qt:
         raise WipNotAvailableError("The previous phase has not made enough progress to make this change")
       if completed_batch_qt == max_declarable_qt:
@@ -1126,4 +1133,7 @@ class ProductionActivityEvent(BaseEvent):
         # update batch serials data
         self.finalize_wo_serial(completed_batch_qt)
 
-# --------------------------------------------------------------------
+# ===================================================================
+#             END
+# ===================================================================
+

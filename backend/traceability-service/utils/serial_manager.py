@@ -37,9 +37,9 @@ class SerialManager:
         self.loop.create_task(self.poll_loop())
         self.queue = asyncio.Queue(maxsize=100)
 
-    def close(self):
+    async def close(self):
         self.cancelled = True
-        self.queue.join()
+        await self.queue.join()
 
     async def poll_loop(self):
         while not self.cancelled:
@@ -125,68 +125,67 @@ class SerialManager:
 
     def create_serial(self, serial_data, batch_key, finalize):
 
-        new_serial_record = Serial(
-          **serial_data
-        ).dict(by_alias=True)
+      new_serial_record = Serial(
+         **serial_data
+      ).dict(by_alias=True)
 
-        tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
-        try:
-          serial_no = "MISSING-COUNTER"
-          if finalize and new_serial_record['code'] == None:
+      tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
+      try:
+         serial_no = "MISSING-COUNTER"
+         if finalize and new_serial_record['code'] == None:
             if (serial_data['counter_key']):
-              serial_no = _generate_counter(tx, 'Counter/'+serial_data['counter_key'])
-              new_serial_record['code'] = serial_no
+               serial_no = _generate_counter(tx, serial_data['counter_key'])
+               new_serial_record['code'] = serial_no
             else:
-              self.notify_results(dict(
-                 notification = SerialNotificationType.ERROR,
-                 error_code = SerialNotificationErrorCode.COUNTER_NOT_DEFINED,
-                 error = 'Counter not defined'
-                ))
+               self.notify_results(dict(
+                  notification = SerialNotificationType.ERROR,
+                  error_code = SerialNotificationErrorCode.COUNTER_NOT_DEFINED,
+                  error = 'Counter not defined'
+                  ))
 
-          new_serial_id = tx.collection('Serial').insert(new_serial_record, return_new=True)['_id']
+         serial_key = tx.collection('Serial').insert(new_serial_record, return_new=True)['_key']
 
-          serial_key=new_serial_id.split('/')[1]
-          serial_data['_key'] = serial_key
+         serial_data['_key'] = serial_key
 
-          if batch_key:
-             tx.collection('batch_serial').insert(dict(
-                _from=f'Batch/{batch_key}',
-                _to=f'Serial/{serial_key}'))
+         if batch_key:
+            tx.collection('batch_serial').insert(dict(
+               _from=f'Batch/{batch_key}',
+               _to=f'Serial/{serial_key}'))
 
-          tx.commit_transaction()
-          self.notify_results(dict(
-              serial_key = serial_data.get("_key"),
-              serial = serial_no,
-              notification = SerialNotificationType.CREATED
-           ))
-        except:
-          print(traceback.format_exc())
-          tx.abort_transaction()
-          self.notify_results(dict(
-              serial_key = serial_data.get("_key"),
-              notification = SerialNotificationType.ERROR,
-              error_code = SerialNotificationErrorCode.EXCEPTION,
-              error = traceback.format_exc()
-           ))
+         tx.commit_transaction()
+         self.notify_results(dict(
+            serial_key = serial_data.get("_key"),
+            serial = serial_no,
+            notification = SerialNotificationType.CREATED
+         ))
+      except:
+         print(traceback.format_exc())
+         tx.abort_transaction()
+         self.notify_results(dict(
+            serial_key = serial_data.get("_key"),
+            notification = SerialNotificationType.ERROR,
+            error_code = SerialNotificationErrorCode.EXCEPTION,
+            error = traceback.format_exc()
+         ))
 
     def link_batch_serial(self, batch_key, batch_serials):
-       for serial_key in batch_serials:
-          try:
-             db.collection('batch_serial').insert(dict(
-                _from=f'Batch/{batch_key}',
-                _to=f'Serial/{serial_key}'))
-             self.notify_results(dict(
-              serial_key = serial_key,
-              notification = SerialNotificationType.UPDATED
-           ))
-          except:
-             print(traceback.format_exc())
-             self.notify_results(dict(
-                serial_key = serial_key,
-                notification = SerialNotificationType.ERROR,
-                error_code = SerialNotificationErrorCode.EXCEPTION,
-                error = traceback.format_exc()
-             ))
+      for serial_key in batch_serials:
+         try:
+            db.collection('batch_serial').insert(dict(
+               _from=f'Batch/{batch_key}',
+               _to=f'Serial/{serial_key}'))
+            self.notify_results(dict(
+            serial_key = serial_key,
+            notification = SerialNotificationType.UPDATED
+         ))
+         except:
+            print(traceback.format_exc())
+            self.notify_results(dict(
+               serial_key = serial_key,
+               notification = SerialNotificationType.ERROR,
+               error_code = SerialNotificationErrorCode.EXCEPTION,
+               error = traceback.format_exc()
+            ))
 
     def link_serials(self, serial_link_data):
 
@@ -239,7 +238,7 @@ class SerialManager:
        product = db.collection('Product').get(product_key)
 
        serial_data = Serial()
-       setattr(serial_data, 'counter_key', product['counter_id'])
+       setattr(serial_data, 'counter_key', product['counter_key'])
        setattr(serial_data, 'product_key', product_key)
 
        phases_data = self.retrieve_serial_phases_data(product_key)

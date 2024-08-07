@@ -3,6 +3,7 @@ import traceback
 from fastapi import APIRouter, HTTPException, Depends
 
 from commons.utils.db import db
+from commons.utils.serial import Queries as SerialQueries
 from models.production import WorkStatus
 from commons.kafka_utils.kafka_admin import KafkaAdmin
 from utils.api import APIResponse
@@ -85,7 +86,10 @@ async def force_delete_work_order_data(work_order_key: str):
     tx.collection('WorkSession').delete_match(match)
     tx.collection('WorkOrder').delete(work_order_key)
 
-    # 2. Delete jobs and get job list
+    # Delete batch_serial records
+    tx.aql.execute(SerialQueries.CLEANUP_SERIAL_BATCH_LINKS)
+
+    # Delete jobs and get job list
     job_delete_query = """
       FOR j IN Job
       FILTER j.wo_key == @work_order_key
@@ -96,7 +100,7 @@ async def force_delete_work_order_data(work_order_key: str):
     cursor = tx.aql.execute(job_delete_query, bind_vars=match)
     jobs_to_delete = [j for j in cursor]
 
-    # 3. Delete StepExecutionData based on deleted job_key
+    # Delete StepExecutionData based on deleted job_key
     step_data_delete_query = """
       FOR s IN StepExecutionData
       FILTER POSITION(@jobs_to_delete, s.job_key)
@@ -104,7 +108,7 @@ async def force_delete_work_order_data(work_order_key: str):
     """
     tx.aql.execute(step_data_delete_query, bind_vars=dict(jobs_to_delete=jobs_to_delete))
 
-    # 3. Delete Work Order and Jobs from Queue
+    # Delete Work Order and Jobs from Queue
     queue_update_query = """
       FOR q IN Queue
       LET jobs = MINUS(q.jobs, @jobs_to_delete)

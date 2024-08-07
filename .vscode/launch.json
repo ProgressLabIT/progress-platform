@@ -38,16 +38,16 @@
     },
     {
       "name": "Python: Traceability service Remote Attach",
-      "type": "python",
+      "type": "debugpy",
       "request": "attach",
       "connect": {
-        "host": "localhost",
+        "host": "0.0.0.0",
         "port": 5778
       },
       "pathMappings": [
         {
           "localRoot": "${workspaceFolder}/backend/traceability-service",
-          "remoteRoot": "."
+          "remoteRoot": "/traceability-service"
         }
       ],
       "justMyCode": true

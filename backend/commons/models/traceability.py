@@ -83,7 +83,7 @@ class WorkSession(FlexModel):
       return int(v)
 
 class WIP(ArangoEdge):
-  # _from & _to refer to process phases
+  # _from & _to refer to process phases or specific jobs
   batch_key: str
   wo_key: str
   product_key: str
@@ -91,5 +91,4 @@ class WIP(ArangoEdge):
   value: float = 0
   quantity: float = 0
   active: bool = False # indicates if it's being worked on or just sitting around
-  # serial_numbers: list[str] | None = None
 

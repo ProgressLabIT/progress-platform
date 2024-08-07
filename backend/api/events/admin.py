@@ -337,7 +337,7 @@ class ProductionAdminEvent(BaseEvent):
             work_order_key = self.job.wo_key,
             product_key = self.job.product_key,
             hourly_cost = average_hourly_cost,
-            duration = total_duration * quantity_ratio,
+            duration = int(total_duration * quantity_ratio),
             forced = self.info.id
           )
           new_work_sessions.append(
@@ -585,7 +585,7 @@ class ProductionAdminEvent(BaseEvent):
   # ========================================================================
 
   BATCH_CANCELED = EventMeta(
-    collections = ['Job', 'Batch', 'wip', 'WorkOrder', 'WorkSession'],
+    collections = ['Batch', 'batch_serial', 'Job', 'Serial', 'wip', 'WorkOrder', 'WorkSession'],
     action='cancel_batch',
     post_processing=['update_work_order', 'flag_job_as_forced'],
     event_first = True
@@ -627,6 +627,18 @@ class ProductionAdminEvent(BaseEvent):
           phase_keys = [self.job.phase_key]
         )
       )
+    elif self.job.traceability_level:
+      # Remove incomplete serials and the relative link. 
+      # TODO: use a named graph to avoid deleting links explicitly
+      self.tx.aql.execute("""
+        FOR serial, e IN 1..1 INBOUND CONCAT('Batch/', @batch_key) batch_serial
+        REMOVE serial IN Serial
+      """, bind_vars=dict(batch_key=batch_key))
+      self.tx.aql.execute("""
+        FOR bs IN batch_serial
+        FILTER bs._from == CONCAT('Batch/', @batch_key)
+        REMOVE bs IN batch_serial                 
+      """, bind_vars=dict(batch_key=batch_key))
 
     # 3. Update Job, removing progress from steps, if any, of former active batch
     job_update = dict(
