@@ -61,11 +61,6 @@ export default {
         altAction: undefined,
       };
 
-      const complete_step_custom_qty = {
-        icon: 'mdi-check',
-        text: this.$t('job.complete_step'),
-        action: this.completeStep,
-        altAction: this.completeStepCustomQty,
       };
 
       const declare_batch = {
@@ -78,14 +73,9 @@ export default {
         altAction: this.declareCustomBatch,
       };
 
-      if ('parameters' in this.job && this.job.parameters.step_check) {
-        if (!this.current_step_is_last && !this.job.first_phase) {
-          return complete_step_custom_qty;
-        }
-        return complete_step;
-      } else {
-        return declare_batch;
-      }
+      return ('parameters' in this.job && this.job.parameters.step_check)
+        ? complete_step
+        : declare_batch;
     },
 
     current_step_done() {
@@ -225,46 +215,6 @@ export default {
       }
 
       return serials;
-    },
-
-    async completeStepCustomQty() {
-      const { data: step_serials } = await this.$api.get('serial-from-wo', {
-        params: {
-          wo_key: this.job.wo_key,
-          job_key: this.job._key,
-          phase_key: this.job.phase_key,
-        },
-      });
-
-      if (step_serials && step_serials.length > 0) {
-        let selected_serials = [];
-        if (step_serials && step_serials.length > 0) {
-          selected_serials = await this.selectSerialBatch(
-            this.serialsToOptions(step_serials),
-            this.serialsInitialSelection(step_serials),
-          );
-          if (selected_serials.length <= 0) {
-            return;
-          }
-
-          await this.$store.dispatch('changeStepQuantity', {
-            stepKey: this.current_step_key,
-            batchQt: selected_serials.length,
-            batch_serials: this.optionsToSerial(step_serials, selected_serials),
-          });
-          this.completeStep();
-        }
-      } else {
-        let customQty = await this.getCustomQuantity();
-
-        if (customQty > 0) {
-          await this.$store.dispatch('changeStepQuantity', {
-            stepKey: this.current_step_key,
-            batchQt: customQty.batchQuantity,
-          });
-          this.completeStep();
-        }
-      }
     },
 
     async ensureBatchSerialCounter(batch_serials) {
