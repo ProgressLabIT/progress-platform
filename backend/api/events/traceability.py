@@ -514,79 +514,40 @@ class ProductionActivityEvent(BaseEvent):
     if quantity > 0:
       raise WipNotAvailableError(f"Not enough booked wip to remove. Needed { quantity } more")
 
-  def get_active_serials(self, serials):
-    active_serials = []
-    for serial in serials:
-      if (serial.active):
-        active_serials.append(serial.serial_key)
-    return active_serials
+  def book_wip_serials(self):
+    # Reset job/batch links in wip and batch_serial so that it works
+    # when serials are changed or the quantity reduced
+    reset_wip_match = dict(_to=f'Job/{self.info.job_key}')
+    reset_wip_update = dict(_to=f'Phase/{self.info.phase_key}', active=False)
+    self.tx.collection('wip').update_match(reset_wip_match, reset_wip_update)
 
-  def get_inactive_serials(self, serials):
-    active_serials = []
-    for serial in serials:
-      if (not serial.active):
-        active_serials.append(serial.serial_key)
-    return active_serials
+    reset_batch_serial_match = dict(_from=f'Batch/{self.info.active_batch_key}')
+    self.tx.collection('batch_serial').delete_match(reset_batch_serial_match)
 
-  def get_active_serials_qty(self, active_serials):
-    quantity = 0
-    for serial_key in active_serials:
-      try:
-        quantity += self.tx.collection('Serial').get(serial_key)['quantity']
-      except:
-        quantity += 0
-    return quantity
-
-  def book_wip_serials(self, serials):
-    active_serials = self.get_active_serials(serials=serials)
-    quantity = self.get_active_serials_qty(active_serials=active_serials)
-    initial_qt = quantity
-    if quantity == 0:
-      return initial_qt
-
-    free_wips_cursor = self.tx.aql.execute(
+    # Book and link to batch new serials, checking they are all available
+    free_wip_cursor = self.tx.aql.execute(
       TraceabilityQueries.RETRIEVE_AVAILABLE_WIP,
       bind_vars=dict(phase_key=self.info.phase_key, wo_key=self.info.work_order_key)
     )
-    free_wips = [WIP(**wip) for wip in free_wips_cursor]
-    free_wips = sorted(free_wips, key=lambda wip: wip.quantity)
+    free_wip_serials = [WIP(**wip).serial_key for wip in free_wip_cursor]
 
-    for wip in free_wips:
-      if (wip.serial_key in active_serials):
-        self.tx.collection('wip').update(dict(
-          _key = wip.key,
-          _to = f'Job/{self.info.job_key}',
-          active = True
-        ))
-        quantity -= wip.quantity
+    serials_to_update = []
+    unavailable_serials = []
+    for serial_key in self.info.batch_serials:
+      target = serials_to_update if serial_key in free_wip_serials else unavailable_serials
+      target.append(serial_key)
 
-    #if quantity > 0:
-    #  raise WipNotAvailableError(f"Not enough free wip available to book. Needed { quantity } more")
-
-    # Update input availability for jobs in this phase
-    self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
-    )
-
-    return initial_qt
-
-  def unbook_wip_serials(self, serials):
-    inactive_serials = self.get_inactive_serials(serials=serials)
-
-    booked_wips_cursor = self.tx.collection('wip').find(dict(
-      _to=f'Job/{self.info.job_key}',
-    ))
-    booked_wips = [WIP(**wip) for wip in booked_wips_cursor]
-    booked_wips = sorted(booked_wips, key=lambda wip: wip.quantity)
-
-    for wip in booked_wips:
-      if (wip.serial_key in inactive_serials):
-        self.tx.collection('wip').update(dict(
-          _key = wip.key,
-          _to = f'Phase/{self.info.phase_key}',
-          active = False
-        ))
+    if len(unavailable_serials):
+      raise WipNotAvailableError(f'Serials {unavailable_serials} are not available')
+    else:
+      self.tx.aql.execute(
+        SerialQueries.BOOK_SERIAL_WIP,
+        bind_vars=dict(
+          serial_keys=serials_to_update,
+          job_key=self.info.job_key
+        )
+      )
+      self.send_link_batch_serial_event()
 
     # Update input availability for jobs in this phase
     self.tx.aql.execute(
@@ -595,10 +556,9 @@ class ProductionActivityEvent(BaseEvent):
     )
 
 
-  def book_wip(self, quantity):
-    initial_qt = quantity
+  def book_wip(self, quantity) -> None:
     if quantity == 0:
-      return initial_qt
+      raise ValueError("Cannot book a quantity of zero")
 
     if getattr(self.job, 'traceability_level', None) and self.info.batch_serials != None and len(self.info.batch_serials) > 0:
       self.book_wip_serials()
@@ -655,9 +615,7 @@ class ProductionActivityEvent(BaseEvent):
       TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
       bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
     )
-
-    return initial_qt
-
+    
 
   def unbook_wip(self, quantity):
     if quantity == 0:
