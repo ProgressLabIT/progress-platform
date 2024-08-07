@@ -58,9 +58,7 @@ export default {
         icon: 'mdi-check',
         text: this.$t('job.complete_step'),
         action: this.completeStep,
-        altAction: undefined,
-      };
-
+        altAction: this.completeStep,
       };
 
       const declare_batch = {
