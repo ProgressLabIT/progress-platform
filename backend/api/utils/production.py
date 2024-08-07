@@ -330,7 +330,8 @@ def create_job_record(
     job_docs = wo_data.wo_docs,
     job_bom = [x for x in wo_data.wo_bom if x.phase_key == phase_key],
     assigned_to = assigned_to,
-    notes = kwargs.get('notes', None)
+    notes = kwargs.get('notes', None),
+    traceability_level = wo_data.traceability_level
   )
 
   prepped = jsonable_encoder(new_job_data, by_alias=True)
