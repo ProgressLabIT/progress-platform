@@ -17,9 +17,8 @@ class EventType(str, Enum):
   JOB_PAUSED_OFFLINE = 'JOB_PAUSED_OFFLINE'
   JOB_RESUMED = 'JOB_RESUMED'
   JOB_BACK_ONLINE = 'JOB_BACK_ONLINE'
-  ACTIVE_BATCH_QUANTITY_CHANGED = 'ACTIVE_BATCH_QUANTITY_CHANGED'
+  ACTIVE_BATCH_CHANGED = 'ACTIVE_BATCH_CHANGED'
   STEP_COMPLETED = 'STEP_COMPLETED'
-  STEP_QUANTITY_CHANGED = 'STEP_QUANTITY_CHANGED'
   BATCH_COMPLETED = 'BATCH_COMPLETED'
 
   # Issue Events
@@ -88,5 +87,5 @@ class EventModel(ArangoDocument):
 
   # Traceability fields
   serial_data: Any | None = None
-  batch_serials: list[SerialSelection] | None = None
+  batch_serials: list[str] | None = None
   serial_link_data: list[SerialLink] | None = None

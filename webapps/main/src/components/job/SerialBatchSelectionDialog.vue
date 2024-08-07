@@ -12,9 +12,10 @@
       <q-form id="serial-form" @submit="onDialogOK(selected_serials)">
         <q-card-section class="row items-center justify-between">
           <q-option-group
-            v-model="selected_serials"
-            :options="batch_serials"
             type="toggle"
+            :options="available_serials"
+            :model-value="selected_serials"
+            @update:model-value="ensureMaxQuantity"
           />
         </q-card-section>
         <q-card-actions align="between" class="q-mt-md">
@@ -39,11 +40,11 @@
 </template>
 
 <script setup>
-import { useDialogPluginComponent } from 'quasar';
+import { useDialogPluginComponent, useQuasar } from 'quasar';
 import { ref } from 'vue';
 
 const props = defineProps({
-  batch_serials: {
+  available_serials: {
     type: [String, Object, null],
     required: true,
   },
@@ -51,12 +52,34 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  max_quantity: {
+    type: Number,
+    required: true
+  }
 });
 
-let batch_serials = ref(props.batch_serials);
+const $q = useQuasar()
+// TODO: Add control to avoid selecting more than the remaining quantity for the job
+
+let available_serials = ref(props.available_serials);
 let selected_serials = ref(props.selected_serials);
 
 defineEmits(useDialogPluginComponent.emitsObject);
+
+function ensureMaxQuantity(value) {
+  if (value.length > props.max_quantity) {
+    $q.notify({
+      // TODO: message translation
+      message: "Max quantity reached",
+      color: 'theme-yellow',
+      timeout: 1500,
+      position: 'top',
+    });
+  }
+  else {
+    selected_serials.value = value
+  }
+}
 
 const { dialogRef, onDialogHide, onDialogCancel, onDialogOK } =
   useDialogPluginComponent();
