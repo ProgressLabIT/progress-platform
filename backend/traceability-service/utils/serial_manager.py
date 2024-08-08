@@ -100,7 +100,7 @@ class SerialManager:
         )
        try:
           return [Serial(**t) for t in cursor]
-       except:
+       except StopIteration:
           return []
 
     def retrieve_serial_in_wo(self, wo_key):
