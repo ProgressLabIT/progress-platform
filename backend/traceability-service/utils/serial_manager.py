@@ -378,26 +378,24 @@ class SerialManager:
         for serial in serials:
            finalize = traceability_level == TraceabilityLevel.COMPLETE or next((data.value for data in serial.data if data.value != None), None) != None or last_phase
            if (serial.code == None and finalize):
-             tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
              try:
                serial_no = "MISSING-COUNTER"
                if (serial.counter_key!=None):
                   serial_no = _generate_counter(tx, 'Counter/'+serial.counter_key)
                else:
+                  # Come gestire la notifica di errore?
                   self.notify_results(dict(
                      notification = SerialNotificationType.ERROR,
                      error_code = SerialNotificationErrorCode.COUNTER_NOT_DEFINED,
                      error = 'Counter not defined'
                   ))
-               serial.code = serial_no
-               serial_key = serial.key
-               db_serial = tx.collection('Serial').get(serial_key)
-               db_serial['code'] = serial_no
-               tx.update_document(db_serial)
-               tx.commit_transaction()
+               serial_update = dict(
+                  code = serial_no,
+                  _key = serial.key
+               )
+               db.collection('Serial').update(serial_update)
              except:
                  print(traceback.format_exc())
-                 tx.abort_transaction()
                  self.notify_results(dict(
                     serial_key = serial.key,
                     notification = SerialNotificationType.ERROR,
