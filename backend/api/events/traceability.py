@@ -429,62 +429,34 @@ class ProductionActivityEvent(BaseEvent):
       bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
     ).next()
 
-    bind_vars = dict(
-      wo_key = self.info.work_order_key
-    )
-    serial_to_declare_cursor = self.tx.aql.execute(SerialQueries.GET_SERIALS_IN_WORK_ORDER, bind_vars=bind_vars)
-    serial_to_declare = [Serial(**serial) for serial in serial_to_declare_cursor]
+    # Prepare new wip data and make a single call to the database with insert_many
+    # Insert many requires passing dicts (does not use default db serializer)
+    if gettatr(self.job, 'traceability_level', None):
+      bind_vars = dict(batch_key = self.info.completed_batch_key)
+      serial_to_declare_cursor = self.tx.aql.execute(SerialQueries.GET_BATCH_SERIALS, bind_vars=bind_vars)
+      serial_to_declare = [Serial(**serial) for serial in serial_to_declare_cursor]
+      
+      new_wip_data = [dict(
+        _from = f'Phase/{self.info.phase_key}',
+        _to = f'Phase/{self.info.next_phase_key}',
+        batch_key = self.info.completed_batch_key,
+        wo_key = self.info.work_order_key,
+        product_key = self.info.product_key,
+        quantity = 1,
+        serial_key = s.key
+      ) for s in serial_to_declare]
 
-    if (self.info.batch_serials != None and len(self.info.batch_serials) > 0):
-      auto_created_batch = self.job.parameters.auto_new_batch and  self.job.next_batch_available
-      if not auto_created_batch:
-        for serial in self.info.batch_serials:
-          serial_wip = WIP(
-            _from=f'Phase/{self.info.phase_key}',
-            _to=f'Phase/{self.info.next_phase_key}',
-            batch_key=self.info.completed_batch_key,
-            wo_key=self.info.work_order_key,
-            product_key=self.info.product_key,
-            quantity=1,
-            serial_key=serial.serial_key
-          )
-          self.tx.collection('wip').insert(serial_wip)
-      else:
-        for serial in self.info.batch_serials:
-          serial_wip = WIP(
-            _from=f'Phase/{self.info.phase_key}',
-            _to=f'Job/{self.info.job_key}',
-            batch_key=self.info.completed_batch_key,
-            wo_key=self.info.work_order_key,
-            product_key=self.info.product_key,
-            quantity=1,
-            serial_key=serial.serial_key,
-            active = True
-          )
-          self.tx.collection('wip').insert(serial_wip)
-    elif (len(serial_to_declare) > 0):
-      for serial in serial_to_declare:
-        serial_wip = WIP(
-          _from=f'Phase/{self.info.phase_key}',
-          _to=f'Phase/{self.info.next_phase_key}',
-          batch_key=self.info.completed_batch_key,
-          wo_key=self.info.work_order_key,
-          product_key=self.info.product_key,
-          quantity=1,
-          serial_key=serial.key
-        )
-        self.tx.collection('wip').insert(serial_wip)
     else:
-      new_wip = WIP(
+      new_wip_data = [dict(
         _from=f'Phase/{self.info.phase_key}',
         _to=f'Phase/{self.info.next_phase_key}',
         batch_key=self.info.completed_batch_key,
         wo_key=self.info.work_order_key,
         product_key=self.info.product_key,
         quantity=self.info.completed_batch_qt
-      )
+      )]
 
-      self.tx.collection('wip').insert(new_wip)
+    self.tx.collection('wip').insert_many(new_wip_data)
 
     self.tx.aql.execute(
       TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
