@@ -431,7 +431,7 @@ class ProductionActivityEvent(BaseEvent):
 
     # Prepare new wip data and make a single call to the database with insert_many
     # Insert many requires passing dicts (does not use default db serializer)
-    if gettatr(self.job, 'traceability_level', None):
+    if getattr(self.job, 'traceability_level', None):
       bind_vars = dict(batch_key = self.info.completed_batch_key)
       serial_to_declare_cursor = self.tx.aql.execute(SerialQueries.GET_BATCH_SERIALS, bind_vars=bind_vars)
       serial_to_declare = [Serial(**serial) for serial in serial_to_declare_cursor]
