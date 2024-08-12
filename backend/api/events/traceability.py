@@ -234,7 +234,7 @@ class ProductionActivityEvent(BaseEvent):
     setattr(serial_event, 'operation', SerialEventType.DELETE)
     self.send_to_consumer(serial_event.dict())
 
-  def create_batch_serial_records(self):
+  def create_batch_serial_records(self, quantity):
     if not self.job:
       self.job = self.get_job_data()
 
@@ -242,7 +242,7 @@ class ProductionActivityEvent(BaseEvent):
     setattr(serial_event, 'created_by', self.info.user_key)
     setattr(serial_event, 'wo_key', self.info.work_order_key)
     setattr(serial_event, 'product_key', self.info.product_key)
-    setattr(serial_event, 'quantity', self.job.active_batch_qt)
+    setattr(serial_event, 'quantity', quantity)
     setattr(serial_event, 'batch_key', self.batch.key)
     setattr(serial_event, 'operation', SerialEventType.CREATE_FROM_BATCH)
     self.send_to_consumer(serial_event.dict())
@@ -353,7 +353,7 @@ class ProductionActivityEvent(BaseEvent):
     if not self.job.first_phase:
       self.book_wip(batch_qt)
     elif use_serials:
-      self.create_batch_serial_records()
+      self.create_batch_serial_records(quantity=batch_qt)
 
 
 
