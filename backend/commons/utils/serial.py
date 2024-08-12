@@ -15,6 +15,11 @@ class Queries:
         )}
   """
 
+  GET_BATCH_SERIALS = """
+    FOR s IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
+    RETURN s
+  """
+
   GET_ALL_SERIALS_IN_BATCH = """
     FOR edge IN batch_serial
       FILTER edge._from == @from_id
