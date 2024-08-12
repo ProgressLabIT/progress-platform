@@ -50,7 +50,7 @@ class SerialEvent(Serial):
    serial_key: str | None = None
    step_data: list[SerialFormFieldValue] | None = None
    created_by: str | None = None
-   quantity: int = 1
+   quantity: int | float | None = 1
    wo_key: str | None = None
    product_key: str | None = None
    batch_serials: list[SerialSelection] | None = None
