@@ -532,12 +532,6 @@ class ProductionActivityEvent(BaseEvent):
       )
       self.send_link_batch_serial_event()
 
-    # Update input availability for jobs in this phase
-    self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
-    )
-
 
   def book_wip(self, quantity) -> None:
     if quantity == 0:
@@ -545,55 +539,57 @@ class ProductionActivityEvent(BaseEvent):
 
     if getattr(self.job, 'traceability_level', None) and self.info.batch_serials != None and len(self.info.batch_serials) > 0:
       self.book_wip_serials()
+      
+    else:
+      free_wips_cursor = self.tx.aql.execute(
+        TraceabilityQueries.RETRIEVE_AVAILABLE_WIP,
+        bind_vars=dict(phase_key=self.info.phase_key, wo_key=self.info.work_order_key)
+      )
+      free_wips = [WIP(**wip) for wip in free_wips_cursor]
+      free_wips = sorted(free_wips, key=lambda wip: wip.quantity)
 
-    free_wips_cursor = self.tx.aql.execute(
-      TraceabilityQueries.RETRIEVE_AVAILABLE_WIP,
-      bind_vars=dict(phase_key=self.info.phase_key, wo_key=self.info.work_order_key)
-    )
-    free_wips = [WIP(**wip) for wip in free_wips_cursor]
-    free_wips = sorted(free_wips, key=lambda wip: wip.quantity)
+      # TODO: change using while loop like in events/admin.py@override_progress
+      for wip in free_wips:
+        if quantity >= wip.quantity:
+          # Book entire batch for job
+          self.tx.collection('wip').update(dict(
+            _key = wip.key,
+            _to = f'Job/{self.info.job_key}',
+            active = True
+          ))
+          quantity -= wip.quantity
+          if quantity == 0:
+            break
 
-    # TODO: change using while loop like in events/admin.py@override_progress
-    for wip in free_wips:
-      if quantity >= wip.quantity:
-        # Book entire batch for job
-        self.tx.collection('wip').update(dict(
-          _key = wip.key,
-          _to = f'Job/{self.info.job_key}',
-          active = True
-        ))
-        quantity -= wip.quantity
-        if quantity == 0:
+        else:
+          # Partially book batch for job
+          booking_percentage = quantity / wip.quantity
+          self.tx.collection('wip').update(dict(
+            _key=wip.key,
+            quantity=wip.quantity - quantity,
+            value=wip.value * (1 - booking_percentage)
+          ))
+
+          # Add wip record with partially booked batch
+          new_wip = WIP(
+            from_doc=wip.from_doc,
+            to_doc=f'Job/{self.info.job_key}',
+            wo_key=wip.wo_key,
+            batch_key=wip.batch_key,
+            product_key=wip.product_key,
+            quantity=quantity,
+            value=wip.quantity * booking_percentage,
+            active=True
+          )
+          self.tx.collection('wip').insert(new_wip)
+          quantity = 0
           break
 
-      else:
-        # Partially book batch for job
-        booking_percentage = quantity / wip.quantity
-        self.tx.collection('wip').update(dict(
-          _key=wip.key,
-          quantity=wip.quantity - quantity,
-          value=wip.value * (1 - booking_percentage)
-        ))
-
-        # Add wip record with partially booked batch
-        new_wip = WIP(
-          from_doc=wip.from_doc,
-          to_doc=f'Job/{self.info.job_key}',
-          wo_key=wip.wo_key,
-          batch_key=wip.batch_key,
-          product_key=wip.product_key,
-          quantity=quantity,
-          value=wip.quantity * booking_percentage,
-          active=True
-        )
-        self.tx.collection('wip').insert(new_wip)
-        quantity = 0
-        break
-
-    if quantity > 0:
-      raise WipNotAvailableError(f"Not enough free wip available to book. Needed { quantity } more")
+      if quantity > 0:
+        raise WipNotAvailableError(f"Not enough free wip available to book. Needed { quantity } more")
 
     # Update input availability for jobs in this phase
+    # Execute both with and without traceability
     self.tx.aql.execute(
       TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
       bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
