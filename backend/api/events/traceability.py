@@ -931,17 +931,28 @@ class ProductionActivityEvent(BaseEvent):
         if self.job.first_phase:
           # Create or delete batch_serial records if necessary
           # TODO: Refactor to use serial service
-          if active_batch_qt_delta > 0:
-            self.create_batch_serial_records(quantity=active_batch_qt_delta)
+          #
+          # JUST IN CASE the batch serials do not match the active quantity
+          # ensure we're removing the right number of serials to get to the derised quantity
+          batch_serials_qt = self.tx.aql.execute(
+            SerialQueries.GET_BATCH_SERIALS,
+            bind_vars = dict(batch_key = self.batch.key), 
+            count = True
+          ).count()
+
+          serials_delta = self.info.new_active_batch_qt - batch_serials_qt
+
+          if serials_delta > 0:
+            self.create_batch_serial_records(quantity=serials_delta)
           else:
+            bind_vars = dict(
+              batch_key = self.batch.key,
+              to_delete = abs(serials_delta)
+            )
             cursor = self.tx.aql.execute(
               SerialQueries.DELETE_BATCH_SERIALS,
-              bind_vars = dict(
-                batch_key = self.batch.key,
-                quantity = abs(active_batch_qt_delta)
-              )
+              bind_vars=bind_vars
             )
-            deleted_serial_keys = [sk for sk in cursor]
             # TODO: Use named graph with auto deletion of edges to avoid the following
             self.tx.aql.execute(SerialQueries.CLEANUP_SERIAL_BATCH_LINKS)
         
