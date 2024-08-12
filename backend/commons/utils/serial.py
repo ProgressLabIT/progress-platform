@@ -262,16 +262,9 @@ class Queries:
   """
 
   DELETE_BATCH_SERIALS = """
-    // Instead of deleting a specific number of records, ensure the right quantity remains
-    LET batch_serials = (
-      FOR s IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
-      SORT s.created DESC
-      RETURN s
-    )
-    LET total = LENGTH(batch_serials)
-    LET to_delete = total - @final_qt
-    FOR s IN batch_serials
-    LIMIT to_delete
+    FOR s IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
+    SORT s.created DESC
+    LIMIT @to_delete
     REMOVE s IN Serial
   """
 
