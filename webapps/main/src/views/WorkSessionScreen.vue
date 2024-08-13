@@ -633,9 +633,9 @@ export default {
     },
 
     async editBatchQuantityOrSerials() {
-      const data = await (this.wo_data.traceability_level && !this.j.first_phase
-        ? this.editBatchSerials() // Traceability enabled - show serial selection dialog
-        : this.editBatchQuantity() // no serial management: update wip quantity only
+      const data = await (this.j.traceability_level && !this.j.first_phase
+        ? this.editBatchSerials() // Show serial selection dialog
+        : this.editBatchQuantity() // Update quantity only (unconfirmed serials are handled in the backend if needed)
       )
 
       if (data) {
