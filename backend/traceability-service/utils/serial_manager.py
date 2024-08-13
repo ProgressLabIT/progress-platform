@@ -340,32 +340,33 @@ class SerialManager:
 
 
     def update_serial_data(self, serial_event, batch_key, step_data):
-        self.ensure_quanty(serial_event)
-        serials = self.retrieve_serial_in_batch(batch_key=batch_key)
-        if (len(serials)==0):
-           serials = self.retrieve_serial_in_wo(wo_key=serial_event['wo_key'])
-        for serial in serials:
-           try:
-             for step in step_data:
-                for data in serial.data:
-                   if step.get('form_field_key') == data.form_field_key or step.get('custom_field_key') == data.custom_field_key :
-                      data.value = step['value']
-             serial_key = serial.key
-             db_serial = db.collection('Serial').get(serial_key)
-             db_serial['data'] = serial.data
-             db.update_document(db_serial)
-             self.notify_results(dict(
-                 serial = serial.code,
-                 notification = SerialNotificationType.UPDATED
-              ))
-           except:
-               print(traceback.format_exc())
-               self.notify_results(dict(
-                  serial_key = serial.get("_key"),
-                  notification = SerialNotificationType.ERROR,
-                  error_code = SerialNotificationErrorCode.EXCEPTION,
-                  error = traceback.format_exc()
-               ))
+      self.ensure_quanty(serial_event)
+      serials = self.retrieve_serial_in_batch(batch_key=batch_key)
+      if (len(serials)==0):
+         raise ValueError(f"No serials to update for batch {batch_key}")
+
+      updates = []
+      for serial in serials:
+         for step in step_data:
+            for data in serial.data:
+               if step.get('form_field_key') == data.form_field_key:
+                  data.value = step['value']
+         updates.append(dict(_key=serial.key, data=serial.data))
+
+      try:
+         db.collection('Serial').update_many(updates)
+         self.notify_results(dict(
+            serials = [serial['_key'] for serial in updates],
+            notification = SerialNotificationType.UPDATED
+         ))
+      except:
+         print(traceback.format_exc())
+         self.notify_results(dict(
+            serial_key = serial.get("_key"),
+            notification = SerialNotificationType.ERROR,
+            error_code = SerialNotificationErrorCode.EXCEPTION,
+            error = traceback.format_exc()
+         ))
 
     def confirm_serials(self, serial_event):
       tx = db.begin_transaction(write=['Serial', 'Counter'], read=['batch_serial'])
