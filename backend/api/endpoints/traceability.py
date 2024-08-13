@@ -11,8 +11,10 @@ from typing import Dict, List, Union
 
 from utils.exceptions import *
 from utils.api import APIResponse
+from commons.models.serial import SerialSelection
 from commons.utils.db import db
 from commons.utils.dt import timestamp
+from commons.utils.serial import Queries as SerialQueries
 from utils.traceability import Queries
 
 router = APIRouter()
@@ -106,6 +108,35 @@ async def get_batch_execution_data(batch_key: str):
     )
 
   return APIResponse(detail=batch_data)
+
+@router.get('/batch/{batch_key}/serials',
+    dependencies=[Depends(auth.verify_token)])
+async def get_batch_serials(batch_key: str):
+
+  try:
+    batch_serials_cursor = db.aql.execute(
+      SerialQueries.GET_BATCH_SERIALS,
+      bind_vars = dict(batch_key=batch_key)
+    )
+
+    batch_serials = [SerialSelection(**s) for s in batch_serials_cursor]
+
+    for s in batch_serials:
+      s.active = True
+
+    return batch_serials
+  
+  except StopIteration:
+    return HTTPException(
+      status_code=404,
+      detail=f"No serials found associated with batch {batch_key}"
+    )
+  
+  except Exception as e:
+    return HTTPException(
+      status_code=500,
+      detail=f"There was an error on our end: {traceback.format_exc()}"
+    )
 
 
 @router.post('/job/{job_key}/heartbeat',
