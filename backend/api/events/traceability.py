@@ -764,13 +764,7 @@ class ProductionActivityEvent(BaseEvent):
       if not can_self_assign:
         raise JobHasNoAssigneeError('Unassigned jobs cannot be worked on as config "show_unassigned_jobs_to_operators" is false')
       else:
-        # Update queue
-        update_target_queue(
-          job_key = self.info.job_key,
-          target_key = self.info.user_key,
-          action = 'add',
-          tx = self.tx
-        )
+        add_to_queue = True 
 
     # Create new batch and store _key in Event.info
     self.create_batch()
@@ -802,6 +796,15 @@ class ProductionActivityEvent(BaseEvent):
       last_online = self.info.timestamp
     )
     self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
+
+    if add_to_queue:
+      update_target_queue(
+        job_key = self.info.job_key,
+        target_key = self.info.user_key,
+        action = 'add',
+        tx = self.tx
+      )
+
 
     self.response = dict(
       message = f"Job {self.info.job_key} started",
