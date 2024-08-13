@@ -1,13 +1,15 @@
 import asyncio
+import json
 import threading
 import traceback
 
 from asyncio import AbstractEventLoop
+from datetime import datetime as dt
 from typing import Dict
-import json
 
 from fastapi.encoders import jsonable_encoder
-from commons.utils.db import db
+from commons.utils.db import db, model_to_db_dict
+from commons.utils.dt import timestamp
 from commons.models.serial import Serial, SerialEvent, SerialEventType, SerialNotificationType, SerialNotificationErrorCode
 from commons.utils.counter import _generate_counter
 from commons.kafka_utils.kafka_producer import KafkaProducer
@@ -68,9 +70,9 @@ class SerialManager:
              case SerialEventType.CREATE_AND_FINALIZE:
                 self.create_serial(serial_data=serial_event['serial'], batch_key=None, finalize=True)
              case SerialEventType.FINALIZE_BATCH:
-                self.finalize_serial(serial_event=serial_event, batch_key=serial_event['batch_key'], ensure_qt=False)
+                self.confirm_serials(serial_event=serial_event)
              case SerialEventType.FINALIZE_WO:
-                self.finalize_serial(serial_event=serial_event, batch_key=serial_event['batch_key'], ensure_qt=True)
+                self.release_serials(serial_event=serial_event)
              case SerialEventType.UPDATE:
                 self.update_serial(serial_data=serial_event['serial'])
              case SerialEventType.DELETE:
@@ -367,46 +369,66 @@ class SerialManager:
                   error = traceback.format_exc()
                ))
 
-    def finalize_serial(self, serial_event, batch_key, ensure_qt):
-        if (ensure_qt):
-           self.ensure_quanty(serial_event)
-        serials = self.retrieve_serial_in_batch(batch_key=batch_key)
-        if (len(serials)==0):
-           serials = self.retrieve_serial_in_wo(wo_key=serial_event['wo_key'])
-        traceability_level = serial_event['traceability_level']
-        last_phase = serial_event['last_phase']
-        for serial in serials:
-           finalize = traceability_level == TraceabilityLevel.COMPLETE or next((data.value for data in serial.data if data.value != None), None) != None or last_phase
-           if (serial.code == None and finalize):
-             try:
-               serial_no = "MISSING-COUNTER"
-               if (serial.counter_key!=None):
-                  serial_no = _generate_counter(tx, 'Counter/'+serial.counter_key)
-               else:
-                  # Come gestire la notifica di errore?
-                  self.notify_results(dict(
-                     notification = SerialNotificationType.ERROR,
-                     error_code = SerialNotificationErrorCode.COUNTER_NOT_DEFINED,
-                     error = 'Counter not defined'
-                  ))
-               serial_update = dict(
-                  code = serial_no,
-                  _key = serial.key
-               )
-               db.collection('Serial').update(serial_update)
-             except:
-                 print(traceback.format_exc())
-                 self.notify_results(dict(
-                    serial_key = serial.key,
-                    notification = SerialNotificationType.ERROR,
-                    error_code = SerialNotificationErrorCode.EXCEPTION,
-                    error = traceback.format_exc()
-                 ))
-             self.notify_results(dict(
-                  serial_key = serial.key,
-                  serial = serial_no,
-                  notification = SerialNotificationType.FINALIZED
-               ))
+    def confirm_serials(self, serial_event):
+      tx = db.begin_transaction(write=['Serial', 'Counter'], read=['batch_serial'])
+
+      cursor = tx.aql.execute(
+         Queries.GET_BATCH_SERIALS,
+         bind_vars=dict(batch_key=serial_event['batch_key']
+      ))
+      # JUST IN CASE: Consider only serials to be confirmed to avoid reassigning a new code
+      batch_serials = [Serial(**s) for s in cursor if s['code'] is None]      
+      # Counter key is the same for all serials in the batch
+      counter_key = batch_serials[0].counter_key
+      if (counter_key!=None):
+         last_phase = serial_event['last_phase']
+         now = timestamp()
+         
+         for serial in batch_serials:            
+            serial.code = _generate_counter(tx, 'Counter/' + counter_key)
+            serial.released = now if last_phase else None
+
+         new = tx.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials], return_new=True)
+         tx.commit_transaction()
+
+         for serial in batch_serials:
+            self.notify_results(dict(
+               serial_key = serial.key,
+               serial = serial.code,
+               notification = SerialNotificationType.FINALIZED
+            ))
+      else:
+         # Come gestire la notifica di errore?
+         self.notify_results(dict(
+            notification = SerialNotificationType.ERROR,
+            error_code = SerialNotificationErrorCode.COUNTER_NOT_DEFINED,
+            error = 'Counter not defined'
+         ))
+
+
+    def release_serials(self, serial_event):
+
+      cursor = db.aql.execute(
+         Queries.GET_BATCH_SERIALS,
+         bind_vars=dict(batch_key=serial_event['batch_key']
+      ))
+      # JUST IN CASE: Consider only serials to be released to avoid reassigning a new release date
+      batch_serials = [Serial(**s) for s in cursor if s['released'] is None]      
+   
+      now = timestamp()
+         
+      for serial in batch_serials:            
+         serial.released = now
+
+      db.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials])
+         
+      for serial in batch_serials:
+         self.notify_results(dict(
+            serial_key = serial.key,
+            serial = serial.code,
+            notification = SerialNotificationType.FINALIZED
+         ))
+
 
     def notify_results(self, notification):
         try:
