@@ -504,7 +504,7 @@ class ProductionActivityEvent(BaseEvent):
     reset_wip_update = dict(_to=f'Phase/{self.info.phase_key}', active=False)
     self.tx.collection('wip').update_match(reset_wip_match, reset_wip_update)
 
-    reset_batch_serial_match = dict(_from=f'Batch/{self.info.active_batch_key}')
+    reset_batch_serial_match = dict(_from=f'Batch/{self.batch.key}')
     self.tx.collection('batch_serial').delete_match(reset_batch_serial_match)
 
     # Book and link to batch new serials, checking they are all available
