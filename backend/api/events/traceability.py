@@ -320,7 +320,7 @@ class ProductionActivityEvent(BaseEvent):
       if len(self.info.batch_serials):
         batch_qt = len(self.info.batch_serials)
       else:
-        ValueError("You must provide serials to be linked to this new batch")
+        raise ValueError("You must provide serials to be linked to this new batch")
     else:
       default_batch_qt = self.job.parameters.production_batch_qt
       # qt_completed must include any update from the current event being recorded
@@ -537,9 +537,14 @@ class ProductionActivityEvent(BaseEvent):
     if quantity == 0:
       raise ValueError("Cannot book a quantity of zero")
 
-    if getattr(self.job, 'traceability_level', None) and self.info.batch_serials != None and len(self.info.batch_serials) > 0:
-      self.book_wip_serials()
-      
+    # Traceability Enabled -> Book specific serials in case of phases following the first
+    if getattr(self.job, 'traceability_level', None) and self.info.batch_serials != None and not self.job.first_phase:
+      if len(self.info.batch_serials) == quantity:
+        self.book_wip_serials()
+      else:
+        raise ValueError("The number of serials provided does not match the requested quantity")
+    
+    # Traceability 
     else:
       free_wips_cursor = self.tx.aql.execute(
         TraceabilityQueries.RETRIEVE_AVAILABLE_WIP,
