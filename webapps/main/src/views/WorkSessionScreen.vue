@@ -136,7 +136,7 @@
                     icon-right="mdi-pencil"
                     color="theme-blue"
                     size="xs"
-                    :label="$t('quantity.update')"
+                    :label="$t('update')"
                     @click="editBatchQuantityOrSerials"
                   />
                 </div>
