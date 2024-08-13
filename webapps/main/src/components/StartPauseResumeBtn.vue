@@ -52,13 +52,13 @@ export default {
         return result;
       } else {
         // Check if progress has already been made or user has already started
-        if (this.j.stage == 'started') {
-          result.text = this.$t('job.resume').toUpperCase();
-          result.action = () => this.$store.dispatch('resumeJob');
-          return result;
-        } else if (this.j.traceability_level && !this.j.first_phase) {
+        if (this.j.traceability_level && !this.j.first_phase) {
           result.text = this.$t('job.link_serials');
-          result.action = this.selectSerialWipAndStartJob;
+          result.action = this.selectSerialWipAndStartSession;
+          return result;
+        } else if (this.j.stage == 'started') {
+          result.text = this.$t('job.resume').toUpperCase();
+          result.action = () => this.$store.dispatch('resumeJob', { batch_serials: null });
           return result;
         } else {
           result.text = this.$t('job.start').toUpperCase();
@@ -69,44 +69,7 @@ export default {
       }
     },
 
-    serialsToOptions(serials) {
-      let options = [];
-
-      for (const serial of serials) {
-        options.push({
-          value: serial.serial_key,
-          label: serial.serial_code,
-        });
-      }
-
-      return options;
-    },
-
-    optionsToSerial(step_serials, options) {
-      let serials = [];
-
-      for (const serial of step_serials) {
-        serials.push({
-          serial_key: serial.serial_key,
-          serial_code: serial.serial_code,
-          active: options.includes(serial.serial_key),
-        });
-      }
-
-      return serials;
-    },
-
-    serialsInitialSelection(serials) {
-      let options = [];
-
-      for (const serial of serials) {
-        options.push(serial.serial_key);
-      }
-
-      return options;
-    },
-
-    async selectSerialWipAndStartJob() {
+    async selectSerialWipAndStartSession() {
       Loading.show()
       const params = {
         wo_key: this.j.wo_key,
@@ -128,7 +91,8 @@ export default {
       });
       if (selected_serials) {
         console.log(selected_serials)
-        this.$store.dispatch('startJob', {
+        const action = this.j.stage == 'created' ? 'startJob' : 'resumeJob'
+        this.$store.dispatch(action, {
           batch_serials: selected_serials,
         });
       }

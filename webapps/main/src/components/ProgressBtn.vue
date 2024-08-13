@@ -22,11 +22,13 @@
 <script>
 import { Dialog, Loading } from 'quasar';
 import { mapState } from 'vuex';
-import { timestamp } from '@/lib/TimeHandling.js';
-import { api } from 'boot/axios';
+
+import { api } from '@/boot/axios';
+import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 import SerialBatchDeclareSerialNumber from '@/components/job/SerialBatchDeclareSerialNumber.vue';
 import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue';
-import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
+import { timestamp } from '@/lib/TimeHandling.js';
+
 
 export default {
   name: 'ProgressBtn',
@@ -180,45 +182,6 @@ export default {
       return data?.value ?? null;
     },
 
-    serialsToOptions(serials) {
-      let options = [];
-
-      for (const serial of serials) {
-        options.push({
-          value: serial.serial_key,
-          label: serial.serial_code,
-        });
-      }
-
-      return options;
-    },
-
-    serialsInitialSelection(serials) {
-      let options = [];
-
-      for (const serial of serials) {
-        if (serial.active) {
-          options.push(serial.serial_key);
-        }
-      }
-
-      return options;
-    },
-
-    optionsToSerial(batch_serials, options) {
-      let serials = [];
-
-      for (const serial of batch_serials) {
-        serials.push({
-          serial_key: serial.serial_key,
-          serial_code: serial.serial_code,
-          active: options.includes(serial.serial_key),
-        });
-      }
-
-      return serials;
-    },
-
     async ensureBatchSerialCounter(batch_serials) {
       /*const { data: batch_serials } = await this.$api.get('serial-wo-job', {
         params: {
@@ -333,6 +296,7 @@ export default {
       // Values will change after committing mutation save to use for navigation later on
       const current_step_was_last = this.current_step_is_last;
       const current_batch_was_last = this.current_batch_is_last;
+
       const { data: batch_serials } = await api.get('serial-wo-job', {
         params: {
           wo_key: this.job.wo_key,
@@ -351,27 +315,33 @@ export default {
 
       if (current_step_was_last) {
         can_proceed = window.confirm(this.confirm_batch_done_message);
-
-        if (can_proceed && !this.job.next_batch_available) {
-          if (current_batch_was_last) {
-            can_proceed = window.confirm(this.confirm_job_done_message);
-          } else {
-            can_proceed = window.confirm(this.confirm_stop_session_message);
-          }
+        if (can_proceed && current_batch_was_last) {
+          can_proceed = window.confirm(this.confirm_job_done_message);
+        } else if (can_proceed && !this.job.next_batch_available) {
+          can_proceed = window.confirm(this.confirm_stop_session_message);
         }
       }
-
-      if (can_proceed && !missing_mandatory_fields) {
+      
+      // Missing mandatory fields has already been ensured
+      if (can_proceed) {
         await this.$store.dispatch('completeStep', {
           stepKey: this.current_step_key,
         });
 
-        if (current_step_was_last && current_batch_was_last) {
-          this.$router.push({ name: 'userJobs' });
-        } else if (current_step_was_last || this.job.parameters.step_check) {
-          // Go to first step that is not done.
-          // This works with both force_order mode active or not
-          this.goToNextUndoneStep();
+        if (current_step_was_last) {
+          if (current_batch_was_last || !this.job.next_batch_available) {
+            this.$router.push({ name: 'userJobs' });
+            return
+          } else {
+            if (this.traceability_enabled && !this.job.first_phase) {
+              // Select new serials and start new batch
+              const selected_serials = await this.selectSerialBatch()
+              await this.$store.dispatch('resumeJob', { batch_serials: selected_serials })
+            } 
+            // Go to first step that is not done.
+            // This works with both force_order mode active or not
+            this.goToNextUndoneStep();
+          }        
         }
       }
     },
@@ -389,7 +359,7 @@ export default {
         }
       }
 
-      if (missing_serial && this.traceability_enabled()) {
+      if (missing_serial && this.traceability_enabled) {
         window.alert(this.$t('batch_declare_component_serials'));
         return;
       }
@@ -401,9 +371,14 @@ export default {
       }
 
       if (can_proceed) {
-        await this.$store.dispatch('declareBatch', {
-          batch_qt: this.job.active_batch_qt,
-        });
+        await this.$store.dispatch('declareBatch', { batch_qt: this.job.active_batch_qt });
+
+        if (this.traceability_enabled && !this.job.first_phase) {
+          // Select new serials and start new batch
+          const selected_serials = await this.selectSerialBatch()
+          await this.$store.dispatch('resumeJob', { batch_serials: selected_serials })
+        }
+
         if (
           current_batch_was_last ||
           (!this.job.next_batch_available && !this.job.active_batch_qt)
@@ -431,21 +406,27 @@ export default {
       });
     },
 
-    async selectSerialBatch(batch_serials, selected_serials) {
-      return new Promise((resolve) => {
+    async selectSerialBatch() {
+      const remainingTotalQuantity = this.job.qt_planned - this.job.qt_completed
+
+      const { data: available_serials } = await this.$api.get('/wip-serial', {
+        params: {
+          phase_key: this.job.phase_key,
+          wo_key: this.job.wo_key
+        }
+      });
+
+      return await new Promise((resolve) => {
         Dialog.create({
           component: SerialBatchSelectionDialog,
           componentProps: {
-            batch_serials,
-            selected_serials,
-          },
+            available_serials: available_serials.map(s => ({ label: s.serial_code, value: s.serial_key })),
+            selected_serials: [],
+            max_quantity: remainingTotalQuantity
+          }
         })
-          .onOk((selected_serials) => {
-            resolve(selected_serials);
-          })
-          .onCancel(() => {
-            resolve([]);
-          });
+        .onOk((selected_serials) => resolve(selected_serials))
+        .onCancel(() => resolve(false));
       });
     },
 
@@ -493,7 +474,7 @@ export default {
         }
       }
 
-      if (missing_serial && this.traceability_enabled()) {
+      if (missing_serial && this.traceability_enabled) {
         // TODO: Make sure alert is only if traceability is mandatory
         window.alert(this.$t('batch_declare_component_serials'));
         return;
