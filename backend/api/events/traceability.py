@@ -1078,7 +1078,13 @@ class ProductionActivityEvent(BaseEvent):
         active = False
       )
 
-      create_new_batch = self.job.parameters.auto_new_batch and is_next_batch_available
+      # Auto new batch ignored if serials must be selected for new batch. Clients must select new serials to start the new one
+      # The batch_serials event property could be confused with the ones of the batch being declared.
+      create_new_batch = (
+        self.job.parameters.auto_new_batch 
+        and is_next_batch_available 
+        and not (self.job.traceability_level and not self.job.first_phase)
+      )
 
       if create_new_batch:
         self.create_batch()
