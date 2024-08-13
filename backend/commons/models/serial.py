@@ -53,7 +53,7 @@ class SerialEvent(Serial):
    quantity: int | float | None = 1
    wo_key: str | None = None
    product_key: str | None = None
-   batch_serials: list[SerialSelection] | None = None
+   batch_serials: list[SerialSelection] | list[str] | None = None
    serial_link_data: list[SerialLink] | None = None
    last_phase: bool = False
    traceability_level: str | None = None
