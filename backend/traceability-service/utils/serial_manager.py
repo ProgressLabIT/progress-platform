@@ -169,23 +169,25 @@ class SerialManager:
          ))
 
     def link_batch_serial(self, batch_key, batch_serials):
-      for serial_key in batch_serials:
-         try:
-            db.collection('batch_serial').insert(dict(
-               _from=f'Batch/{batch_key}',
-               _to=f'Serial/{serial_key}'))
-            self.notify_results(dict(
-            serial_key = serial_key,
-            notification = SerialNotificationType.UPDATED
-         ))
-         except:
-            print(traceback.format_exc())
+      new_batch_serial_records = [dict(
+         _from=f'Batch/{batch_key}',
+         _to=f'Serial/{serial_key}'
+      ) for serial_key in batch_serials]
+
+      try:
+         db.collection('batch_serial').insert_many(new_batch_serial_records)
+         for serial_key in batch_serials:
             self.notify_results(dict(
                serial_key = serial_key,
-               notification = SerialNotificationType.ERROR,
-               error_code = SerialNotificationErrorCode.EXCEPTION,
-               error = traceback.format_exc()
+               notification = SerialNotificationType.UPDATED
             ))
+      except:
+         print(traceback.format_exc())
+         self.notify_results(dict(
+            notification = SerialNotificationType.ERROR,
+            error_code = SerialNotificationErrorCode.EXCEPTION,
+            error = traceback.format_exc()
+         ))
 
     def link_serials(self, serial_link_data):
 
