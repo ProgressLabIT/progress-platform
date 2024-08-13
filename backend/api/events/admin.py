@@ -631,14 +631,16 @@ class ProductionAdminEvent(BaseEvent):
       # Remove incomplete serials and the relative link. 
       # TODO: use a named graph to avoid deleting links explicitly
       self.tx.aql.execute("""
-        FOR serial, e IN 1..1 INBOUND CONCAT('Batch/', @batch_key) batch_serial
+        FOR serial IN 1..1 INBOUND CONCAT('Batch/', @batch_key) batch_serial
         REMOVE serial IN Serial
       """, bind_vars=dict(batch_key=batch_key))
-      self.tx.aql.execute("""
-        FOR bs IN batch_serial
-        FILTER bs._from == CONCAT('Batch/', @batch_key)
-        REMOVE bs IN batch_serial                 
-      """, bind_vars=dict(batch_key=batch_key))
+
+    # Remove obsolete batch_serial records
+    self.tx.aql.execute("""
+      FOR bs IN batch_serial
+      FILTER bs._from == CONCAT('Batch/', @batch_key)
+      REMOVE bs IN batch_serial                 
+    """, bind_vars=dict(batch_key=batch_key))
 
     # 3. Update Job, removing progress from steps, if any, of former active batch
     job_update = dict(
