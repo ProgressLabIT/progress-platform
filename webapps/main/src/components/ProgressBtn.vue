@@ -131,6 +131,10 @@ export default {
       return this.$store.state.session;
     },
 
+    traceability_enabled() {
+      return this.$store.state.traceability.working_job_data?.traceability_level;
+    },
+
     current_step_key: {
       get() {
         return this.$store.state.traceability.current_step_key;
@@ -370,13 +374,6 @@ export default {
           this.goToNextUndoneStep();
         }
       }
-    },
-
-    traceability_enabled() {
-      return (
-        this.$store.state.workorder?.wo_data?.traceability_level &&
-        this.$store.state.workorder.wo_data.traceability_level !== 'none'
-      );
     },
 
     async declareBatch() {

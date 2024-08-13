@@ -241,10 +241,7 @@ export default {
     },
 
     traceability_enabled() {
-      return (
-        this.$store.state.workorder?.wo_data?.traceability_level &&
-        this.$store.state.workorder.wo_data.traceability_level !== 'none'
-      );
+      return this.$store.state.traceability.working_job_data.traceability_level !== 'none';
     },
   },
 
