@@ -77,12 +77,6 @@ class ProductionActivityEvent(BaseEvent):
     post_processing=production_post_processing
   )
 
-  STEP_QUANTITY_CHANGED = EventMeta(
-    collections=production_collections,
-    action='step_quantity_changed',
-    post_processing=production_post_processing
-  )
-
   ACTIVE_BATCH_CHANGED = EventMeta(
     collections=production_collections,
     action="update_active_batch",
