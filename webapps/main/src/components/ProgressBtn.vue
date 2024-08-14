@@ -338,11 +338,11 @@ export default {
               const selected_serials = await this.selectSerialBatch()
               await this.$store.dispatch('resumeJob', { batch_serials: selected_serials })
             } 
-            // Go to first step that is not done.
-            // This works with both force_order mode active or not
-            this.goToNextUndoneStep();
           }        
         }
+        // Go to first step that is not done.
+        // This works with both force_order mode active or not
+        this.goToNextUndoneStep();
       }
     },
 
