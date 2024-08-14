@@ -39,76 +39,6 @@ class ProductionActivityEvent(BaseEvent):
 
   production_post_processing = ['update_job_last_online', 'update_work_order']
 
-
-  # EVENTS DEFINITION ========================
-  JOB_STARTED = EventMeta(
-    collections=production_collections,
-    action='start_job',
-    post_processing=production_post_processing
-  )
-
-  JOB_PAUSED = EventMeta(
-    collections=production_collections,
-    action='pause_job',
-    post_processing=production_post_processing
-  )
-
-  JOB_PAUSED_OFFLINE = EventMeta(
-    collections=production_collections,
-    action='pause_job',
-    post_processing=production_post_processing
-  )
-
-  JOB_RESUMED = EventMeta(
-    collections=production_collections,
-    action='resume_job',
-    post_processing=production_post_processing
-  )
-
-  JOB_BACK_ONLINE = EventMeta(
-    collections=production_collections,
-    action='restore_work_session',
-    post_processing=production_post_processing
-  )
-
-  STEP_COMPLETED = EventMeta(
-    collections=production_collections,
-    action='complete_step',
-    post_processing=production_post_processing
-  )
-
-  ACTIVE_BATCH_CHANGED = EventMeta(
-    collections=production_collections,
-    action="update_active_batch",
-    post_processing=["update_job_last_online"]
-  )
-
-  BATCH_COMPLETED = EventMeta(
-    collections=production_collections,
-    action='complete_batch',
-    post_processing=production_post_processing
-  )
-
-  SERIAL_CREATED = EventMeta(
-    collections=production_collections,
-    action="create_serial"
-  )
-
-  SERIAL_UPDATED = EventMeta(
-    collections=production_collections,
-    action="update_serial"
-  )
-
-  SERIAL_DELETED = EventMeta(
-    collections=production_collections,
-    action="delete_serial"
-  )
-
-  SERIAL_LINKED = EventMeta(
-    collections=production_collections,
-    action="link_serial"
-  )
-
   ######################################################################
   # HELPER METHODS (Updates to specific collections)
   ######################################################################
@@ -166,6 +96,12 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
   #                 START JOB
   # ===================================================================
+
+  JOB_STARTED = EventMeta(
+    collections=production_collections,
+    action='start_job',
+    post_processing=production_post_processing
+  )
 
   def start_job(self):
     # Check job hasn't been started already
@@ -232,6 +168,18 @@ class ProductionActivityEvent(BaseEvent):
   #               PAUSE JOB
   # ===================================================================
 
+  JOB_PAUSED = EventMeta(
+    collections=production_collections,
+    action='pause_job',
+    post_processing=production_post_processing
+  )
+
+  JOB_PAUSED_OFFLINE = EventMeta(
+    collections=production_collections,
+    action='pause_job',
+    post_processing=production_post_processing
+  )
+
   def pause_job(self):
     self.close_work_session(self.info.work_session_end)
     self.set_job_active_state(False)
@@ -239,6 +187,12 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
   #               RESUME JOB
   # ===================================================================
+
+  JOB_RESUMED = EventMeta(
+    collections=production_collections,
+    action='resume_job',
+    post_processing=production_post_processing
+  )
 
   def resume_job(self):
     self.get_job_data()
@@ -275,6 +229,12 @@ class ProductionActivityEvent(BaseEvent):
   #                 RESTORE WORK SESSION
   # ===================================================================
 
+  JOB_BACK_ONLINE = EventMeta(
+    collections=production_collections,
+    action='restore_work_session',
+    post_processing=production_post_processing
+  )
+
   def restore_work_session(self):
     updated_work_session = dict(
       _key=self.info.work_session_key,
@@ -294,6 +254,13 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
   #                      COMPLETE STEP
   # ===================================================================
+  
+  STEP_COMPLETED = EventMeta(
+    collections=production_collections,
+    action='complete_step',
+    post_processing=production_post_processing
+  )
+  
   def complete_step(self):
     self.get_job_data()
     self.get_active_batch()
@@ -332,6 +299,12 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
   #             UPDATE ACTIVE BATCH
   # ===================================================================
+
+  ACTIVE_BATCH_CHANGED = EventMeta(
+    collections=production_collections,
+    action="update_active_batch",
+    post_processing=["update_job_last_online"]
+  )
 
   def update_active_batch(self):
     self.get_job_data()
@@ -415,6 +388,13 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
   #                   COMPLETE BATCH
   # ===================================================================
+
+
+  BATCH_COMPLETED = EventMeta(
+    collections=production_collections,
+    action='complete_batch',
+    post_processing=production_post_processing
+  )
 
   def complete_batch(self):
     if not hasattr(self, 'job'):
