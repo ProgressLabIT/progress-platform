@@ -134,12 +134,12 @@ class ProductionActivityEvent(BaseEvent):
     create_batch_serial_records,
     finalize_batch_serial,
     finalize_wo_serial,
+    send_link_batch_serial_event,
     udpate_batch_serial_data
   )
 
   from .batch import(
     create_batch,
-    send_link_batch_serial_event,
     get_active_batch,
     get_batch_step_done_count,
     get_batch_execution_data,
