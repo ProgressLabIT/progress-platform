@@ -22,7 +22,7 @@ class Event(
   Each inherited class includes a property named after each event type of its "category".
   Each event type (class property) is itself an EventMeta class instance which defines:
   - the list of collections to use in the transaction
-  - the actions to be carried out specific to the event type
+  - the actions (class method) to be carried out specific to the event type
   """
   ######################################################################
   # INIT & SAVE

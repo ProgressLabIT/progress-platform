@@ -24,6 +24,11 @@ def send_to_consumer(self, serial_event):
       )
     )
 
+SERIAL_CREATED = EventMeta(
+  collections=production_collections,
+  action="create_serial"
+)
+
 def create_serial(self):
   serial_data = jsonable_encoder(Serial(**self.info.serial_data))
   serial_event = SerialEvent()
@@ -31,12 +36,23 @@ def create_serial(self):
   setattr(serial_event, 'operation', SerialEventType.CREATE_AND_FINALIZE)
   self.send_to_consumer(serial_event.dict())
 
+
+SERIAL_LINKED = EventMeta(
+  collections=production_collections,
+  action="link_serial"
+)
+
 def link_serial(self):
   serial_event = SerialEvent()
   setattr(serial_event, 'serial_link_data', self.info.serial_link_data)
   setattr(serial_event, 'operation', SerialEventType.LINK_SERIALS)
   self.send_to_consumer(serial_event.dict())
 
+
+SERIAL_UPDATED = EventMeta(
+  collections=production_collections,
+  action="update_serial"
+)
 
 def update_serial(self):
   serial_data = jsonable_encoder(Serial(**self.info.serial_data))
@@ -46,12 +62,19 @@ def update_serial(self):
   self.send_to_consumer(serial_event.dict())
 
 
+SERIAL_DELETED = EventMeta(
+  collections=production_collections,
+  action="delete_serial"
+)
+
 def delete_serial(self):
   serial_data = jsonable_encoder(Serial(**self.info.serial_data))
   serial_event = SerialEvent()
   setattr(serial_event, 'serial', serial_data)
   setattr(serial_event, 'operation', SerialEventType.DELETE)
   self.send_to_consumer(serial_event.dict())
+
+
 
 def create_batch_serial_records(self, quantity):
   if not self.job:
