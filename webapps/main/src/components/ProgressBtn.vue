@@ -70,7 +70,7 @@ export default {
             ? this.$t('job.complete_piece')
             : this.$t('job.complete_batch'),
         action: this.declareBatch,
-        altAction: this.declareCustomBatch,
+        altAction: this.declareBatch,
       };
 
       return ('parameters' in this.job && this.job.parameters.step_check)
