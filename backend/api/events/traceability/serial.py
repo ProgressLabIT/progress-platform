@@ -121,3 +121,9 @@ def udpate_batch_serial_data(self, form_data):
 
     self.send_to_consumer(serial_event.dict())
 
+def send_link_batch_serial_event(self):
+  serial_event = SerialEvent()
+  setattr(serial_event, 'batch_serials', self.info.batch_serials)
+  setattr(serial_event, 'batch_key', self.batch.key)
+  setattr(serial_event, 'operation', SerialEventType.LINK_BATCH)
+  self.send_to_consumer(serial_event.dict())

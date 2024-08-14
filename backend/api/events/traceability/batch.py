@@ -1,4 +1,3 @@
-from commons.models.serial import SerialEvent, SerialEventType
 from commons.models.traceability import Batch, StepStatus
 
 
@@ -52,14 +51,6 @@ def create_batch(self):
     self.book_wip(batch_qt)
   elif use_serials:
     self.create_batch_serial_records(quantity=batch_qt)
-
-
-def send_link_batch_serial_event(self):
-  serial_event = SerialEvent()
-  setattr(serial_event, 'batch_serials', self.info.batch_serials)
-  setattr(serial_event, 'batch_key', self.batch.key)
-  setattr(serial_event, 'operation', SerialEventType.LINK_BATCH)
-  self.send_to_consumer(serial_event.dict())
 
 def get_active_batch(self):
   match = dict(
