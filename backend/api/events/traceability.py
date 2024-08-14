@@ -458,10 +458,7 @@ class ProductionActivityEvent(BaseEvent):
 
     self.tx.collection('wip').insert_many(new_wip_data)
 
-    self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.next_phase_key])
-    )
+    self.update_wip_availability_for_phases(phase_keys=[self.info.next_phase_key])
 
   def remove_wip(self, quantity):
     """
@@ -531,6 +528,8 @@ class ProductionActivityEvent(BaseEvent):
         )
       )
       self.send_link_batch_serial_event()
+    
+    self.update_wip_availability_for_phases(phase_keys=[self.info.phase_key])
 
 
   def book_wip(self, quantity) -> None:
@@ -595,10 +594,7 @@ class ProductionActivityEvent(BaseEvent):
 
     # Update input availability for jobs in this phase
     # Execute both with and without traceability
-    self.tx.aql.execute(
-      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
-    )
+    self.update_wip_availability_for_phases(phase_keys=[self.info.phase_key])
     
 
   def unbook_wip(self, quantity):
@@ -649,9 +645,13 @@ class ProductionActivityEvent(BaseEvent):
       raise WipNotAvailableError(f"Not enough booked wip available to unbook. Needed { quantity } more")
 
     # Update input availability for jobs in this phase
+    self.update_wip_availability_for_phases(phase_keys=[self.info.phase_key])
+
+
+  def update_wip_availability_for_phases(self, phase_keys: list[str]):
     self.tx.aql.execute(
       TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=[self.info.phase_key])
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=phase_keys)
     )
 
   # ===================================================================
