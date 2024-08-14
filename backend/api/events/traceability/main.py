@@ -163,32 +163,6 @@ class ProductionActivityEvent(BaseEvent):
     self.info.work_session_key = self.work_session.key
 
 
-  def get_current_work_session(self):
-    match=dict(
-      job_key=self.info.job_key,
-      active=True
-    )
-    data_from_db = self.tx.collection('WorkSession').find(match).next()
-    work_session = WorkSession(**data_from_db)
-    return work_session
-
-
-  def close_work_session(self, end=None):
-    if end == None:
-      end = self.info.timestamp
-
-    updated_work_session = WorkSession(**self.tx.aql.execute(
-      TraceabilityQueries.CLOSE_WORK_SESSION, bind_vars = dict(
-        job_key = self.info.job_key,
-        end = end,
-    )).next())
-
-    self.work_session = updated_work_session
-    self.info.work_session_key = updated_work_session.key
-
-    return updated_work_session
-
-
   # ===================================================================
   # Serial
   # ===================================================================
