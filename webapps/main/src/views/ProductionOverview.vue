@@ -26,16 +26,28 @@
 
           <!-- CREATE NEW WORK ORDER -->
           <template v-if="$route.name === 'workOrderList'">
-            <div v-if="!editing" class="col-auto">
-              <q-btn
-                size="0.75rem"
-                color="theme-blue"
-                :label="$t('new')"
-                @click="$router.push({ name: 'newWorkOrder' })"
-              >
-              </q-btn>
-            </div>
-
+            <template v-if="!editing">
+              <div class="col-auto">
+                <q-btn
+                  size="0.75rem"
+                  color="theme-blue"
+                  class="q-ml-sm"
+                  :label="$t('new')"
+                  @click="$router.push({ name: 'newWorkOrder' })"
+                >
+                </q-btn>
+              </div>
+              <div class="col-auto">
+                <q-btn
+                  size="0.75rem"
+                  color="theme-blue"
+                  class="q-ml-sm"
+                  @click="sortTableByStartDateDueDate"
+                >
+                  {{ $t('production.sort_by_date') }}
+                </q-btn>
+              </div>
+            </template>
             <template v-else>
               <!-- REORDER WORK ORDER QUEUE -->
               <div class="col-auto">
@@ -536,6 +548,11 @@ export default {
         },
       };
       this.$router.push(to_route);
+    },
+
+    async sortTableByStartDateDueDate() {
+      this.editing = true;
+      this.$store.commit('SORT_TEMP_QUEUE_BY_START_DATE_DUE_DATE');
     },
 
     async updateQueue() {

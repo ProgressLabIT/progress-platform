@@ -20,8 +20,7 @@ export default {
   assignment_success: 'Jobs assigned successfully',
   back: 'back',
   batch: 'batch',
-  batch_completed_quantity_question:
-    'How many new pieces are you working on?',
+  batch_completed_quantity_question: 'How many new pieces are you working on?',
   batch_serial_select: 'Select batch serial',
   batch_declare_serial: 'Type batch serial number',
   bom: {
@@ -586,6 +585,7 @@ export default {
       unassigned: 'Unassigned',
     },
     save_new_sequence: 'save new sequence',
+    sort_by_date: 'sort by date',
     search_explainer: 'search terms in one or more of the following fields',
   },
   progress: 'progress',
