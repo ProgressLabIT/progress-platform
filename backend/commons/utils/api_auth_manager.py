@@ -1,0 +1,42 @@
+import httpx
+
+class APIAuthManager:
+    __instance = None
+
+    def __init__(self):
+       self.base_url = None
+       self.token = None
+
+    @staticmethod
+    def getInstance():
+      if APIAuthManager.__instance == None:
+        APIAuthManager.__instance = APIAuthManager()
+      return APIAuthManager.__instance
+
+    def getAuthHeader(self):
+        if (self.token!=None):
+            headers = {
+                'Authorization': 'Bearer '+self.token
+                }
+            return headers
+        raise ValueError("token not found: make sure to login first")
+
+    def authenticate(self, base_url, username = '', pwd = '', grant_type = '', scope = '', client_id = '', client_secret = ''):
+        self.base_url = base_url
+        auth_data = {'grant_type': grant_type,
+        'username': username,
+        'password': pwd,
+        'scope': scope,
+        'client_id': client_id,
+        'client_secret': client_secret
+        }
+
+        response = httpx.post(self.base_url+'/api/auth', data=auth_data)
+        response_json = response.json()
+
+        if response_json != None and 'status' in response_json and response_json['status'] == 200:
+            self.token = response_json['access_token']
+        else:
+          raise SystemError("Cannot perform login: "+str(response_json['detail']))
+
+
