@@ -39,6 +39,25 @@ class ProductionActivityEvent(BaseEvent):
 
   production_post_processing = ['update_job_last_online', 'update_work_order']
 
+  SERIAL_CREATED = EventMeta(
+    collections=production_collections,
+    action="create_serial"
+  )
+
+  SERIAL_UPDATED = EventMeta(
+    collections=production_collections,
+    action="update_serial"
+  )
+
+  SERIAL_DELETED = EventMeta(
+    collections=production_collections,
+    action="delete_serial"
+  )
+
+  SERIAL_LINKED = EventMeta(
+    collections=production_collections,
+    action="link_serial"
+  )
   ######################################################################
   # HELPER METHODS (Updates to specific collections)
   ######################################################################
