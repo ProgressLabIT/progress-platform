@@ -593,6 +593,7 @@ export default {
       unassigned: 'Non assegnato',
     },
     save_new_sequence: 'salva nuova sequenza',
+    sort_by_date: 'ordina per data',
     search_explainer: 'ricerca termini in uno o più dei seguenti campi',
   },
   progress: 'avanzamento',
