@@ -865,10 +865,10 @@ export default {
     },
     errors: {
       COUNTER_NOT_DEFINED:
-        'Contantore non definito, per favore inserire il seriale manualmente',
+        'Contantore non definito, per favore inserire la matricola manualmente',
       SERIAL_ALREADY_PRESENT:
         'Seriale già presente, non è possibile aggiornare',
-      EXCEPTION: 'Errore nella scrittura del serialse',
+      EXCEPTION: 'Errore nella scrittura della matricola',
     },
   },
   serial_autocomplete_hint:

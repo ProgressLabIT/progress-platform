@@ -18,7 +18,7 @@ class Serial(ArangoDocument):
    data: list[SerialFormFieldValue] | None = None
    deleted: bool = False
 
-class SerialEventType(str, Enum):
+class SerialCommandType(str, Enum):
   CREATE_FROM_BATCH = 'CREATE_FROM_BATCH'
   UPDATE_DATA_FROM_BATCH = 'UPDATE_DATA_FROM_BATCH'
   FINALIZE_BATCH = 'FINALIZE_BATCH'
@@ -44,7 +44,7 @@ class SerialLink(BaseModel):
   reason: str | None = None
 
 class SerialEvent(Serial):
-   operation: SerialEventType | None = None
+   operation: SerialCommandType | None = None
    batch_key: str | None = None
    serial: Serial | None = None
    serial_key: str | None = None

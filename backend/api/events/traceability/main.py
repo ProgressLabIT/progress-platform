@@ -14,7 +14,7 @@ from utils.production import Queries as ProductionQueries, update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
 from commons.utils.db import model_to_db_dict
 
-from commons.models.serial import Serial, SerialEvent, SerialEventType
+from commons.models.serial import Serial, SerialEvent, SerialCommandType
 from commons.models.form import SerialFormFieldValue
 
 from commons.utils.serial import Queries as SerialQueries
@@ -34,7 +34,8 @@ class ProductionActivityEvent(BaseEvent):
     'StepExecutionData',
     'wip',
     'WorkOrder',
-    'WorkSession'
+    'WorkSession',
+    'contains'
   ]
 
   production_post_processing = ['update_job_last_online', 'update_work_order']
@@ -88,7 +89,7 @@ class ProductionActivityEvent(BaseEvent):
     get_batch_execution_data,
     current_step_was_last_to_do
   )
- 
+
   from .wip import(
     declare_wip,
     remove_wip,
@@ -135,7 +136,7 @@ class ProductionActivityEvent(BaseEvent):
       if not can_self_assign:
         raise JobHasNoAssigneeError('Unassigned jobs cannot be worked on as config "show_unassigned_jobs_to_operators" is false')
       else:
-        add_to_queue = True 
+        add_to_queue = True
 
     # Create new batch and store _key in Event.info
     self.create_batch()
@@ -273,13 +274,13 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
   #                      COMPLETE STEP
   # ===================================================================
-  
+
   STEP_COMPLETED = EventMeta(
     collections=production_collections,
     action='complete_step',
     post_processing=production_post_processing
   )
-  
+
   def complete_step(self):
     self.get_job_data()
     self.get_active_batch()
@@ -348,7 +349,7 @@ class ProductionActivityEvent(BaseEvent):
           # ensure we're removing the right number of serials to get to the derised quantity
           batch_serials_qt = self.tx.aql.execute(
             SerialQueries.GET_BATCH_SERIALS,
-            bind_vars = dict(batch_key = self.batch.key), 
+            bind_vars = dict(batch_key = self.batch.key),
             count = True
           ).count()
 
@@ -367,7 +368,7 @@ class ProductionActivityEvent(BaseEvent):
             )
             # TODO: Use named graph with auto deletion of edges to avoid the following
             self.tx.aql.execute(SerialQueries.CLEANUP_SERIAL_BATCH_LINKS)
-        
+
         # Has serials but not first phase
         else:
           if self.info.batch_serials is not None and len(self.info.batch_serials):
@@ -504,8 +505,8 @@ class ProductionActivityEvent(BaseEvent):
       # Auto new batch ignored if serials must be selected for new batch. Clients must select new serials to start the new one
       # The batch_serials event property could be confused with the ones of the batch being declared.
       create_new_batch = (
-        self.job.parameters.auto_new_batch 
-        and is_next_batch_available 
+        self.job.parameters.auto_new_batch
+        and is_next_batch_available
         and not (self.job.traceability_level and not self.job.first_phase)
       )
 

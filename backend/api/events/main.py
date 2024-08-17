@@ -6,6 +6,7 @@ from events import (
 )
 from models.event import EventModel
 from commons.utils.db import db
+import uuid
 
 
 class Event(
@@ -41,6 +42,9 @@ class Event(
     # Initialize transaction
     self.meta.collections.append('Event')
     self.tx = self.db.begin_transaction(write=self.meta.collections)
+
+    # Define event UUID
+    self.event_group = str(uuid.uuid4())
 
     try:
       # Save event, storing its key for later use

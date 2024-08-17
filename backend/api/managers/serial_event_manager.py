@@ -1,100 +1,81 @@
-import asyncio
 import json
-import threading
 import traceback
 
-from asyncio import AbstractEventLoop
 from datetime import datetime as dt
 from typing import Dict
+from commons.kafka_utils.kafka_producer import KafkaProducer
 
 from fastapi.encoders import jsonable_encoder
 from commons.utils.db import db, model_to_db_dict
 from commons.utils.dt import timestamp
 from commons.models.serial import Serial, SerialEvent, SerialCommandType, SerialNotificationType, SerialNotificationErrorCode
 from commons.utils.counter import _generate_counter
-from commons.kafka_utils.kafka_producer import KafkaProducer
 from commons.models.form import SerialFormFieldValue
 from commons.utils.serial import Queries
 from commons.models.traceability import WIP
 from commons.models.product import TraceabilityLevel
 
+from utils.exceptions import (
+  SerialNotDeletedError,
+  SerialNotUpdatedError,
+  SerialNotLinkedError,
+  SerialNotCreatedError
+)
 
-class SerialManager:
+
+class SerialEventManager:
     __instance = None
 
-    def run(corofn, *args):
-        event_loops_for_each_thread: Dict[int, AbstractEventLoop] = {}
-        curr_thread_id = threading.current_thread().ident
-
-        if curr_thread_id not in event_loops_for_each_thread:
-            event_loops_for_each_thread[curr_thread_id] = asyncio.new_event_loop()
-
-        thread_loop = event_loops_for_each_thread[curr_thread_id]
-        coro = corofn(*args)
-        return thread_loop.create_task(coro)
-
-    def __init__(self):
-        self.loop = asyncio.get_event_loop()
-        self.cancelled = False
-        self.loop.create_task(self.poll_loop())
-        self.queue = asyncio.Queue(maxsize=100)
-
-    async def close(self):
-        self.cancelled = True
-        await self.queue.join()
-
-    async def poll_loop(self):
-        while not self.cancelled:
-            message = await self.queue.get()
-            print(f'> websocket_manager got {message}')
-            self.handleMessage(str(message.key()), json.loads(message.value().decode('utf-8')))
-        return "DONE!"
-
-    def enqueue(self, message: str):
-       self.queue.put_nowait(message)
+    def __init__(self) -> None:
+       self.event = None
+       self.serial_data = None
+       self.tx = None
 
     @staticmethod
     def getInstance():
-      if SerialManager.__instance == None:
-        SerialManager.__instance = SerialManager()
-      return SerialManager.__instance
+      if SerialEventManager.__instance == None:
+        SerialEventManager.__instance = SerialEventManager()
+      return SerialEventManager.__instance
 
-    def handleMessage(self, key, serial):
-        print(serial)
-
-        try:
-          serial_event : SerialEvent = jsonable_encoder(SerialEvent(**serial))
-          match serial['operation']:
-             case SerialCommandType.CREATE_FROM_BATCH:
-                self.create_from_batch(serial_event=serial_event)
-             case SerialCommandType.CREATE_AND_FINALIZE:
-                self.create_serial(serial_data=serial_event['serial'], batch_key=None, finalize=True)
-             case SerialCommandType.FINALIZE_BATCH:
-                self.confirm_serials(serial_event=serial_event)
-             case SerialCommandType.FINALIZE_WO:
-                self.release_serials(serial_event=serial_event)
-             case SerialCommandType.UPDATE:
-                self.update_serial(serial_data=serial_event['serial'])
-             case SerialCommandType.DELETE:
-                self.delete_serial(serial_key=serial_event['serial'].get("_key"), soft=True)
-             case SerialCommandType.UPDATE_DATA_FROM_BATCH:
-                self.update_serial_data(serial_event=serial_event, batch_key=serial_event['batch_key'], step_data=serial_event['step_data'])
-             case SerialCommandType.LINK_BATCH:
-                self.link_batch_serial(batch_key=serial_event['batch_key'], batch_serials=serial_event['batch_serials'])
-             case SerialCommandType.LINK_SERIALS:
-                self.link_serials(serial_link_data=serial_event['serial_link_data'])
-             case _:
-                print("Error")
-        except:
-          print(traceback.format_exc())
-          self.notify_results(dict(
-              notification = SerialNotificationType.ERROR,
-              error_code = SerialNotificationErrorCode.EXCEPTION,
-              error = traceback.format_exc()
-           ))
+    def handle_event(self, event, event_command, **event_parameters):
+      try:
+        self.event = event
+        self.tx = event.tx
+        if (event.info.serial_data != None):
+           self.serial_data = jsonable_encoder(Serial(**event.info.serial_data))
+        else:
+           self.serial_data = None
+        match event_command:
+          case SerialCommandType.CREATE_FROM_BATCH:
+             self.create_from_batch(quantity=event_parameters['quantity'])
+          case SerialCommandType.CREATE_AND_FINALIZE:
+             self.create_serial(serial_data=self.serial_data, batch_key=None, finalize=True)
+          case SerialCommandType.FINALIZE_BATCH:
+             self.confirm_serials(quantity=event_parameters['quantity'])
+          case SerialCommandType.FINALIZE_WO:
+             self.release_serials(quantity=event_parameters['quantity'])
+          case SerialCommandType.UPDATE:
+             self.update_serial()
+          case SerialCommandType.DELETE:
+             self.delete_serial(soft=True)
+          case SerialCommandType.UPDATE_DATA_FROM_BATCH:
+             self.update_serial_data(step_data=event_parameters['step_data'])
+          case SerialCommandType.LINK_BATCH:
+             self.link_batch_serial(batch_serials=event_parameters['batch_serials'])
+          case SerialCommandType.LINK_SERIALS:
+             self.link_serials()
+          case _:
+             print("Error")
+      except:
+        print(traceback.format_exc())
+        self.notify_results(dict(
+            notification = SerialNotificationType.ERROR,
+            error_code = SerialNotificationErrorCode.EXCEPTION,
+            error = traceback.format_exc()
+         ))
 
     def retrieve_serial_in_batch(self, batch_key):
-       cursor = db.aql.execute(
+       cursor = self.tx.aql.execute(
           Queries.GET_BATCH_SERIALS,
           bind_vars=dict(batch_key=batch_key)
         )
@@ -104,7 +85,7 @@ class SerialManager:
           return []
 
     def retrieve_serial_in_wo(self, wo_key):
-       cursor = db.aql.execute(
+       cursor = self.tx.aql.execute(
           Queries.GET_ALL_SERIALS_IN_WORK_ORDER,
           bind_vars=dict(
             wo_key=wo_key,
@@ -116,7 +97,7 @@ class SerialManager:
           return []
 
     def retrieve_serial_phases_data(self, product_key):
-       cursor = db.aql.execute(Queries.GET_PRODUCT_STEPS,
+       cursor = self.tx.aql.execute(Queries.GET_PRODUCT_STEPS,
           bind_vars=dict(
             product_key = product_key,
           )
@@ -129,12 +110,12 @@ class SerialManager:
          **serial_data
       ).dict(by_alias=True)
 
-      tx = db.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
+      #tx = self.tx.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
       try:
          serial_no = "MISSING-COUNTER"
          if finalize and new_serial_record['code'] == None:
             if (serial_data['counter_key']):
-               serial_no = _generate_counter(tx, serial_data['counter_key'])
+               serial_no = _generate_counter(self.tx, serial_data['counter_key'])
                new_serial_record['code'] = serial_no
             else:
                self.notify_results(dict(
@@ -143,16 +124,16 @@ class SerialManager:
                   error = 'Counter not defined'
                   ))
 
-         serial_key = tx.collection('Serial').insert(new_serial_record, return_new=True)['_key']
+         serial_key = self.tx.collection('Serial').insert(new_serial_record, return_new=True)['_key']
 
          serial_data['_key'] = serial_key
 
          if batch_key:
-            tx.collection('batch_serial').insert(dict(
+            self.tx.collection('batch_serial').insert(dict(
                _from=f'Batch/{batch_key}',
                _to=f'Serial/{serial_key}'))
 
-         tx.commit_transaction()
+         #tx.commit_transaction()
          self.notify_results(dict(
             serial_key = serial_data.get("_key"),
             serial = serial_no,
@@ -160,13 +141,13 @@ class SerialManager:
          ))
       except:
          print(traceback.format_exc())
-         tx.abort_transaction()
          self.notify_results(dict(
             serial_key = serial_data.get("_key"),
             notification = SerialNotificationType.ERROR,
             error_code = SerialNotificationErrorCode.EXCEPTION,
             error = traceback.format_exc()
          ))
+         raise SerialNotCreatedError(f'Cannot create serial')
 
     def link_batch_serial(self, batch_key, batch_serials):
       new_batch_serial_records = [dict(
@@ -175,7 +156,7 @@ class SerialManager:
       ) for serial_key in batch_serials]
 
       try:
-         db.collection('batch_serial').insert_many(new_batch_serial_records)
+         self.tx.collection('batch_serial').insert_many(new_batch_serial_records)
          for serial_key in batch_serials:
             self.notify_results(dict(
                serial_key = serial_key,
@@ -188,32 +169,35 @@ class SerialManager:
             error_code = SerialNotificationErrorCode.EXCEPTION,
             error = traceback.format_exc()
          ))
+         raise SerialNotLinkedError(f'Cannot link serials')
 
-    def link_serials(self, serial_link_data):
+    def link_serials(self):
+
+        serial_link_data = self.event.info.serial_link_data
 
         for serial_links in serial_link_data:
-          from_serial = serial_links['from_serial']
-          to_serial = serial_links['to_serial']
-          reason = serial_links['reason']
-          wo_key = serial_links['wo_key']
-          component_key = serial_links['component_key']
-          batch_key = serial_links['batch_key']
+          from_serial = serial_links.from_serial
+          to_serial = serial_links.to_serial
+          reason = serial_links.reason
+          wo_key = serial_links.wo_key
+          component_key = serial_links.component_key
+          batch_key = serial_links.batch_key
           link_match = dict(_from=f'Serial/{from_serial}', _to=f'Serial/{to_serial}')
           try:
-             link_cursor = db.collection('contains').find(link_match)
+             link_cursor = self.tx.collection('contains').find(link_match)
              if link_cursor.count()>0:
-                db.collection('contains').update(dict(
+                self.tx.collection('contains').update(dict(
                    _key = link_cursor.next()['_key'],
                    _from=f'Serial/{from_serial}',
                    _to=f'Serial/{to_serial}',
-                   replaced=serial_links['replaced'],
+                   replaced=serial_links.replaced,
                    reason=reason
                 ))
              else:
-                db.collection('contains').insert(dict(
+                self.tx.collection('contains').insert(dict(
                    _from=f'Serial/{from_serial}',
                    _to=f'Serial/{to_serial}',
-                   replaced=serial_links['replaced'],
+                   replaced=serial_links.replaced,
                    wo_key = wo_key,
                    component_key=component_key,
                    batch_key=batch_key,
@@ -226,18 +210,17 @@ class SerialManager:
                 error_code = SerialNotificationErrorCode.EXCEPTION,
                 error = traceback.format_exc()
              ))
+             raise SerialNotLinkedError(f'Cannot link serials')
         self.notify_results(dict(
             notification = SerialNotificationType.UPDATED
         ))
 
-    def create_from_batch(self, serial_event):
-       batch_key = serial_event['batch_key']
-       created_by = serial_event['created_by']
-       wo_key = serial_event['wo_key']
-       product_key = serial_event['product_key']
-       quantity = serial_event['quantity']
-
-       product = db.collection('Product').get(product_key)
+    def create_from_batch(self, quantity):
+       batch_key = self.event.batch.key
+       created_by = self.event.info.user_key
+       wo_key = self.event.info.work_order_key
+       product_key = self.event.info.product_key
+       product = self.tx.collection('Product').get(product_key)
 
        serial_data = Serial()
        setattr(serial_data, 'counter_key', product['counter_key'])
@@ -264,7 +247,7 @@ class SerialManager:
           self.create_serial(serial_data=serial_data.dict(), batch_key=batch_key, finalize=False)
 
     def verify_serial_counter(self, serial_key, serial):
-       cursor = db.aql.execute(
+       cursor = self.tx.aql.execute(
           Queries.GET_SERIALS_FOR_SERIAL_NO,
           bind_vars=dict(
             serial_key=serial_key,
@@ -276,12 +259,12 @@ class SerialManager:
        except:
         return False
 
-    def update_serial(self, serial_data):
+    def update_serial(self):
 
-       if (serial_data.get('code') != None and not self.verify_serial_counter(serial_key=serial_data.get("_key"), serial=serial_data.get('code'))):
+       if (self.serial_data.get('code') != None and not self.verify_serial_counter(serial_key=self.serial_data.get("_key"), serial=self.serial_data.get('code'))):
           self.notify_results(dict(
-              serial = serial_data.get('code'),
-              serial_key = serial_data.get("_key"),
+              serial = self.serial_data.get('code'),
+              serial_key = self.serial_data.get("_key"),
               notification = SerialNotificationType.ERROR,
               error_code = SerialNotificationErrorCode.SERIAL_ALREADY_PRESENT,
               error = 'Serial already present'
@@ -289,31 +272,33 @@ class SerialManager:
           return
 
        try:
-           serial = db.collection('Serial').get(serial_data.get("_key"))
-           if (serial_data.get('code') != None):
-              serial['code'] = serial_data.get('code')
-           serial['data'] = serial_data.get('data')
-           db.update_document(serial)
+           serial = self.tx.collection('Serial').get(self.serial_data.get("_key"))
+           if (self.serial_data.get('code') != None):
+              serial['code'] = self.serial_data.get('code')
+           serial['data'] = self.serial_data.get('data')
+           self.tx.update_document(serial)
        except:
            print(traceback.format_exc())
            self.notify_results(dict(
-              serial_key = serial_data.get("_key"),
+              serial_key = self.serial_data.get("_key"),
               notification = SerialNotificationType.ERROR,
               error_code = SerialNotificationErrorCode.EXCEPTION,
               error = traceback.format_exc()
            ))
+           raise SerialNotUpdatedError(f'Cannot update serial {self.serial_data.get("_key")}')
        self.notify_results(dict(
-              serial_key = serial_data.get("_key"),
-              serial = serial_data.get("code"),
+              serial_key = self.serial_data.get("_key"),
+              serial = self.serial_data.get("code"),
               notification = SerialNotificationType.UPDATED
            ))
 
-    def delete_serial(self, serial_key, soft=True):
+    def delete_serial(self, soft=True):
+        serial_key = self.serial_data.get("_key")
         try:
            if soft:
-              db.collection('Serial').update(dict(_key=serial_key, deleted=True))
+              self.tx.collection('Serial').update(dict(_key=serial_key, deleted=True))
            else:
-              db.collection('Serial').delete(serial_key)
+              self.tx.collection('Serial').delete(serial_key)
            self.notify_results(dict(
               serial_key = serial_key,
               notification = SerialNotificationType.DELETED
@@ -326,23 +311,23 @@ class SerialManager:
               error_code = SerialNotificationErrorCode.EXCEPTION,
               error = traceback.format_exc()
            ))
+           raise SerialNotDeletedError(f'Serial {serial_key} got exception while deleting')
 
-    def ensure_quanty(self, serial_event):
-        quantity = serial_event['quantity']
-        wo_key = serial_event['wo_key']
+
+    def ensure_quanty(self):
+        quantity = self.event.job.active_batch_qt
+        wo_key = self.event.info.work_order_key
         serials = self.retrieve_serial_in_wo(wo_key=wo_key)
         if len(serials) > quantity:
            return
-           #for idx, serial in enumerate(serials):
-           #   if idx > len(serials) -quantity:
-           #      self.delete_serial(serial.key, soft=False)
         elif len(serials) < quantity:
-           serial_event['quantity'] = quantity - len(serials)
-           self.create_from_batch(serial_event=serial_event)
+           quantity = quantity - len(serials)
+           self.create_from_batch(quantity)
 
 
-    def update_serial_data(self, serial_event, batch_key, step_data):
-      self.ensure_quanty(serial_event)
+    def update_serial_data(self, step_data):
+      batch_key = self.event.info.active_batch_key
+      self.ensure_quanty()
       serials = self.retrieve_serial_in_batch(batch_key=batch_key)
       if (len(serials)==0):
          raise ValueError(f"No serials to update for batch {batch_key}")
@@ -351,12 +336,12 @@ class SerialManager:
       for serial in serials:
          for step in step_data:
             for data in serial.data:
-               if step.get('form_field_key') == data.form_field_key:
-                  data.value = step['value']
+               if step.form_field_key == data.form_field_key:
+                  data.value = step.value
          updates.append(dict(_key=serial.key, data=serial.data))
 
       try:
-         db.collection('Serial').update_many(updates)
+         self.tx.collection('Serial').update_many(updates)
          self.notify_results(dict(
             serials = [serial['_key'] for serial in updates],
             notification = SerialNotificationType.UPDATED
@@ -370,27 +355,27 @@ class SerialManager:
             error = traceback.format_exc()
          ))
 
-    def confirm_serials(self, serial_event):
-      tx = db.begin_transaction(write=['Serial', 'Counter'], read=['batch_serial'])
+    def confirm_serials(self):
+      #tx = self.tx.begin_transaction(write=['Serial', 'Counter'], read=['batch_serial'])
 
-      cursor = tx.aql.execute(
+      cursor = self.tx.aql.execute(
          Queries.GET_BATCH_SERIALS,
-         bind_vars=dict(batch_key=serial_event['batch_key']
+         bind_vars=dict(batch_key=self.event.info.active_batch_key
       ))
       # JUST IN CASE: Consider only serials to be confirmed to avoid reassigning a new code
       batch_serials = [Serial(**s) for s in cursor if s['code'] is None]
       # Counter key is the same for all serials in the batch
       counter_key = batch_serials[0].counter_key
       if (counter_key!=None):
-         last_phase = serial_event['last_phase']
+         last_phase = self.event.job.last_phase
          now = timestamp()
 
          for serial in batch_serials:
-            serial.code = _generate_counter(tx, 'Counter/' + counter_key)
+            serial.code = _generate_counter(self.tx, 'Counter/' + counter_key)
             serial.released = now if last_phase else None
 
-         new = tx.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials], return_new=True)
-         tx.commit_transaction()
+         new = self.tx.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials], return_new=True)
+         #self.tx.commit_transaction()
 
          for serial in batch_serials:
             self.notify_results(dict(
@@ -407,11 +392,11 @@ class SerialManager:
          ))
 
 
-    def release_serials(self, serial_event):
+    def release_serials(self):
 
-      cursor = db.aql.execute(
+      cursor = self.tx.aql.execute(
          Queries.GET_BATCH_SERIALS,
-         bind_vars=dict(batch_key=serial_event['batch_key']
+         bind_vars=dict(batch_key=self.event.info.active_batch_key
       ))
       # JUST IN CASE: Consider only serials to be released to avoid reassigning a new release date
       batch_serials = [Serial(**s) for s in cursor if s['released'] is None]
@@ -421,7 +406,7 @@ class SerialManager:
       for serial in batch_serials:
          serial.released = now
 
-      db.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials])
+      self.tx.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials])
 
       for serial in batch_serials:
          self.notify_results(dict(
