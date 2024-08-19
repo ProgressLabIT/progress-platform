@@ -51,6 +51,7 @@ class EventModel(ArangoDocument):
   """fields marked with a comment are event attributes, the rest could be refactored into a generic "data" field, which can be defined with additional models specific for the event type."""
   event_type: EventType #
   user_key: str #
+  event_group: str | None = None #
   user_session_key: str | None = None #
   timestamp: datetime = Field(default_factory=timestamp) #
   description: str | None = None # optional descriptive field for auditing reasons

@@ -1,5 +1,6 @@
 import json
 import traceback
+import copy
 
 from fastapi.encoders import jsonable_encoder
 from commons.utils.db import db, model_to_db_dict
@@ -9,6 +10,7 @@ from commons.utils.counter import _generate_counter
 from commons.models.form import SerialFormFieldValue
 from commons.utils.serial import Queries
 from managers.notification_manager import NotificationManager
+from models.event import EventModel
 
 from utils.exceptions import (
   SerialNotDeletedError,
@@ -413,5 +415,11 @@ class SerialEventManager:
 
     def notify_results(self, notification):
       notification['subtopic'] = "serial-notification"
+      serial_event = copy.deepcopy(self.event.info)
+      if 'error' in notification:
+        serial_event.event_type = "SERIAL_"+notification['notification']+" ("+notification['error']+")"
+      else:
+        serial_event.event_type = "SERIAL_"+notification['notification']
+      self.tx.collection('Event').insert(serial_event.dict())
       NotificationManager.getInstance().notify(key=notification.get('serial_key'), notification=json.dumps(notification))
 

@@ -44,7 +44,7 @@ class Event(
     self.tx = self.db.begin_transaction(write=self.meta.collections)
 
     # Define event UUID
-    self.event_group = str(uuid.uuid4())
+    self.info.event_group = str(uuid.uuid4())
 
     try:
       # Save event, storing its key for later use
