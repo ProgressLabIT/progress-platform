@@ -714,6 +714,11 @@ export default {
   template: 'Modello',
   frequency: 'Frequenza',
   reset_date: 'Data reset',
+  reset_job: 'Annulla progresso',
+  reset_job_confirm: "Vuoi annullare l'intero progresso del lavoro?",
+  reset_job_disabled:
+    'Disponibile in assenza di quantità attiva e con progresso > 0',
+  reset_job_success: 'Lavoro resettato correttamente',
   counter: 'Contatore',
   counter_new: 'Nuovo contatore',
   unassigned: 'non assegnato | non assegnati',

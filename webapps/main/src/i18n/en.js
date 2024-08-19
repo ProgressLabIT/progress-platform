@@ -706,6 +706,11 @@ export default {
   template: 'Template',
   frequency: 'Frequency',
   reset_date: 'Reset Date',
+  reset_job: 'Reset job',
+  reset_job_confirm: 'Do you want to reset this job?',
+  reset_job_disabled:
+    'Available with no active quantity present and with progress > 0',
+  reset_job_success: 'Job reset successfully',
   unassigned: 'unassigned',
   undo: 'undo',
   unsaved: 'unsaved',
