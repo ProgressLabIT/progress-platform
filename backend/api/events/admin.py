@@ -4,6 +4,8 @@ from events.base import BaseEvent
 from events.shared import EventMeta
 from models.production import Job, WorkStatus
 from commons.models.traceability import Batch, WIP, WorkSession
+from commons.utils.serial import Queries as SerialQueries
+
 from utils.exceptions import (
   JobHasActiveBatchError,
   JobHasNoActiveBatchError,
@@ -12,8 +14,8 @@ from utils.exceptions import (
   JobIsActiveError,
   WipNotAvailableError
 )
-from utils.traceability import Queries as TraceabilityQueries
 from utils.production import Queries as ProductionQueries
+from utils.traceability import Queries as TraceabilityQueries
 
 
 class Queries:
@@ -33,6 +35,14 @@ class Queries:
     """
 
 class ProductionAdminEvent(BaseEvent):
+
+  # =====================================================================================
+  # UTILITIES
+  # =====================================================================================
+  
+  def flag_job_as_forced(self):
+    job_update = dict(_key=self.info.job_key, forced=self.info.id)
+    self.tx.collection('Job').update(job_update)
 
   # =====================================================================================
   # TIME OVERRIDE
@@ -226,6 +236,10 @@ class ProductionAdminEvent(BaseEvent):
   # -----------------------------------------------------
 
   def override_progress(self):
+    # TODO: handle StepExecutionData
+    # shouldn't be able to increase the quantity if required fields are present in the process
+    # decreasing the quantity should cancel StepExecutionData of the canceled batches
+
     self.job = Job(**self.tx.collection('Job').get(self.info.job_key))
 
     if self.job.assigned_to == None:
@@ -385,7 +399,6 @@ class ProductionAdminEvent(BaseEvent):
 
       # Reset job to created status if necessary
       if self.info.new_job_qt_completed == 0:
-        self.job_reset = True # used to reset work order too if necessary
         job_update['stage'] = WorkStatus.CREATED
 
       # 2. Flag last N batches with `canceled: true`
@@ -585,7 +598,7 @@ class ProductionAdminEvent(BaseEvent):
   # ========================================================================
 
   BATCH_CANCELED = EventMeta(
-    collections = ['Batch', 'batch_serial', 'Job', 'Serial', 'wip', 'WorkOrder', 'WorkSession'],
+    collections = ['Batch', 'batch_serial', 'Job', 'Serial', 'StepExecutionData', 'wip', 'WorkOrder', 'WorkSession'],
     action='cancel_batch',
     post_processing=['update_work_order', 'flag_job_as_forced'],
     event_first = True
@@ -600,7 +613,7 @@ class ProductionAdminEvent(BaseEvent):
     if self.job.active_batch_qt == 0:
       raise JobHasNoActiveBatchError("The job has no active batch to cancel")
 
-    # 1. Cancel batch
+    # Cancel batch
     batch_key = self.job.active_batch_key
     batch_update = dict(
       _key = batch_key,
@@ -610,12 +623,13 @@ class ProductionAdminEvent(BaseEvent):
     )
     self.tx.collection('Batch').update(batch_update)
 
-    # 2. Cancel work sessions
-    ws_match = dict(batch_key=batch_key)
-    ws_update = dict(canceled=self.info.id)
-    self.tx.collection('WorkSession').update_match(ws_match, ws_update)
+    # Cancel StepExecutionData & WorkSession records
+    match = dict(batch_key = batch_key)
+    update = dict(canceled = self.info.id)
+    self.tx.collection('StepExecutionData').update_match(match, update)
+    self.tx.collection('WorkSession').update_match(match, update)
 
-    # 3. Free booked wip
+    # Free booked wip
     if not self.job.first_phase:
       wip_match = dict(_to=f'Job/{self.job.key}', active=True)
       wip_update = dict(_to=f'Phase/{self.job.phase_key}', active=False)
@@ -627,22 +641,36 @@ class ProductionAdminEvent(BaseEvent):
           phase_keys = [self.job.phase_key]
         )
       )
-    elif self.job.traceability_level:
+    elif self.job.traceability_level: 
+      # self.job.first_phase = True
       # Remove incomplete serials and the relative link. 
       # TODO: use a named graph to avoid deleting links explicitly
       self.tx.aql.execute("""
-        FOR serial IN 1..1 INBOUND CONCAT('Batch/', @batch_key) batch_serial
+        FOR serial IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
         REMOVE serial IN Serial
       """, bind_vars=dict(batch_key=batch_key))
 
-    # Remove obsolete batch_serial records
-    self.tx.aql.execute("""
-      FOR bs IN batch_serial
-      FILTER bs._from == CONCAT('Batch/', @batch_key)
-      REMOVE bs IN batch_serial                 
-    """, bind_vars=dict(batch_key=batch_key))
+    if self.job.traceability_level: # both first and following phases
+      # Remove obsolete batch_serial records and reset phase serial data
+      # Remember that serials documents have already been removed
+      serials_cursor = self.tx.aql.execute("""
+        FOR s, bs IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
+        REMOVE bs IN batch_serial                 
+        LET removed = OLD
+        RETURN PARSE_IDENTIFIER(OLD._to).key
+      """, bind_vars=dict(batch_key=batch_key))
 
-    # 3. Update Job, removing progress from steps, if any, of former active batch
+      batch_serial_keys = [serial_key for serial_key in serials_cursor]
+      
+      self.tx.aql.execute(
+        SerialQueries.REMOVE_PHASE_DATA_FROM_SERIALS,
+        bind_vars = dict(
+          serial_keys = batch_serial_keys,
+          phase_keys = [self.job.phase_key]
+        )
+      )
+
+    # Update Job, removing progress from steps, if any, of former active batch
     job_update = dict(
       _key = self.job.key,
       active_batch_key = None,
@@ -652,7 +680,6 @@ class ProductionAdminEvent(BaseEvent):
 
     # Reset as created if batch is first
     if self.job.qt_completed == 0:
-      self.job_reset = True # used to reset work order too if necessary
       job_update['stage'] = 'created'
       job_update['start'] = None
 
@@ -662,10 +689,6 @@ class ProductionAdminEvent(BaseEvent):
 
   # ========================================================================
 
-  def flag_job_as_forced(self):
-    job_update = dict(_key=self.info.job_key, forced=self.info.id)
-    self.tx.collection('Job').update(job_update)
 
-  # REMEMBER TO WIRE IN WORK ORDER UPDATE!!!
 
 

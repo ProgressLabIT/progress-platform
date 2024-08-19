@@ -275,3 +275,15 @@ class Queries:
     FILTER !DOCUMENT(bs._from) || !DOCUMENT(bs._to)
     REMOVE bs IN batch_serial
   """
+
+  REMOVE_PHASE_DATA_FROM_SERIALS = """
+    FOR s IN Serial
+    FILTER s._key IN @serial_keys
+    LET new_serial_data = (
+      FOR form_field IN s.data
+      RETURN form_field.phase_key IN @phase_keys
+        ? MERGE(form_field, { value: null })
+        : form_field
+    )
+    UPDATE s WITH { data: new_serial_data } IN Serial 
+  """
