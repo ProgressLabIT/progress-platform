@@ -32,7 +32,8 @@ class ServerEventManager:
             self.queue.get(topic).remove(requestID)
         return self.queue.get(topic).get(requestID)
 
-    def enqueue(self, topic, message: str):
+    def enqueue(self, message: str):
+        topic = json.loads(message)['subtopic']
         if (self.queue.get(topic) != None):
             for session in self.queue.get(topic):
               self.queue.get(topic).get(session).put_nowait(message)

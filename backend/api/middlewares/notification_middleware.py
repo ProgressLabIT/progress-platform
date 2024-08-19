@@ -17,7 +17,7 @@ class NotificationMiddleware(BaseHTTPMiddleware):
         return response
 
     def notify_change(self, request: Request):
-        if (request['method']=='GET'):
+        if (request['method']=='GET') or "heartbeat" in str(request.url):
             return
         NotificationManager.getInstance().notifyGlobalRefresh()
 

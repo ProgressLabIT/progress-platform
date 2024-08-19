@@ -412,5 +412,6 @@ class SerialEventManager:
 
 
     def notify_results(self, notification):
-      NotificationManager.getInstance().notify(topic="serial_notifications", key=notification.get('serial_key'), notification=json.dumps(notification))
+      notification['subtopic'] = "serial-notification"
+      NotificationManager.getInstance().notify(key=notification.get('serial_key'), notification=json.dumps(notification))
 

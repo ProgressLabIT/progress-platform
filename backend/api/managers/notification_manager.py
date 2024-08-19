@@ -25,19 +25,19 @@ class NotificationManager:
   def close(self):
     self.cancelled = True
 
-  def notify(self, topic, key, notification):
+  def notify(self, key, notification):
     try:
-       KafkaProducer.getInstance().produce_async(topic=topic, key=key, value=notification)
+       KafkaProducer.getInstance().produce_async(topic="notifications", key=key, value=notification)
     except:
        print(traceback.format_exc())
 
   def consume_delayed_loop(self):
     while not self.cancelled:
       item = self.delayed_queue.get()
-      self.notify(topic=item.key, key=str(uuid.uuid4()), notification=item.item)
+      self.notify(key=str(uuid.uuid4()), notification=item.item)
 
-  def delayed_enqueu(self, topic, message: str, delay: int):
-    self.delayed_queue.put(topic, message, delay)
+  def delayed_enqueue(self, subtopic, message: str, delay: int):
+    self.delayed_queue.put(subtopic, message, delay)
 
   def notifyGlobalRefresh(self):
-      self.delayed_enqueu("global-notification", json.dumps({ "notification" : "REFRESH" }), 5)
+      self.delayed_enqueue("global-notification", json.dumps({ "subtopic": "global-notification", "notification" : "REFRESH" }), 5)
