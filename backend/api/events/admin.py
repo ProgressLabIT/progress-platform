@@ -12,6 +12,7 @@ from utils.exceptions import (
   JobHasNoAssigneeError,
   JobIsNotStartedError,
   JobIsActiveError,
+  QuantityOverrideForSerialsNotAllowed,
   WipNotAvailableError
 )
 from utils.production import Queries as ProductionQueries
@@ -250,6 +251,9 @@ class ProductionAdminEvent(BaseEvent):
 
     if self.job.active_batch_qt:
       raise JobHasActiveBatchError("You can't override progress if the job has an active batch. Cancel the current batch first.")
+    
+    if self.job.traceability_level:
+      raise QuantityOverrideForSerialsNotAllowed("You can't override progress with traceability enabled, you can reset the job instead.")
 
     # Initialize job update.
     # Will save at the end after enrichment based on override type
