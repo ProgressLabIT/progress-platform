@@ -1,19 +1,14 @@
 import json
 import traceback
 
-from datetime import datetime as dt
-from typing import Dict
-from commons.kafka_utils.kafka_producer import KafkaProducer
-
 from fastapi.encoders import jsonable_encoder
 from commons.utils.db import db, model_to_db_dict
 from commons.utils.dt import timestamp
-from commons.models.serial import Serial, SerialEvent, SerialCommandType, SerialNotificationType, SerialNotificationErrorCode
+from commons.models.serial import Serial, SerialCommandType, SerialNotificationType, SerialNotificationErrorCode
 from commons.utils.counter import _generate_counter
 from commons.models.form import SerialFormFieldValue
 from commons.utils.serial import Queries
-from commons.models.traceability import WIP
-from commons.models.product import TraceabilityLevel
+from managers.notification_manager import NotificationManager
 
 from utils.exceptions import (
   SerialNotDeletedError,
@@ -417,9 +412,5 @@ class SerialEventManager:
 
 
     def notify_results(self, notification):
-        try:
-           KafkaProducer.getInstance().produce_async(topic="serial_notifications", key=notification.get('serial_key'), value=json.dumps(notification))
-        except:
-           print(traceback.format_exc())
-
+      NotificationManager.getInstance().notify(topic="serial_notifications", key=notification.get('serial_key'), notification=json.dumps(notification))
 

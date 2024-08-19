@@ -13,7 +13,7 @@ from commons.utils.db import db
 from utils.file import FileHandler
 from utils.org import *
 
-from utils.server_event_manager import ServerEventManager
+from managers.server_event_manager import ServerEventManager
 from sse_starlette.sse import EventSourceResponse
 
 

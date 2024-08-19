@@ -9,7 +9,8 @@ from commons.kafka_utils.kafka_consumer_manager import KafkaConsumerManager
 from commons.kafka_utils.kafka_admin import KafkaAdmin
 from commons.executors.executor_manager import ExecutorManager
 from commons.websockets.websocket_manager import WebsocketManager
-from utils.server_event_manager import ServerEventManager
+from managers.server_event_manager import ServerEventManager
+from managers.notification_manager import NotificationManager
 from utils.serial_notification_kafka_consumer import SerialNotificationsKafkaConsumer
 from middlewares.notification_middleware import NotificationMiddleware
 from middlewares.gzipfilter_middleware import GZipFilterMiddleware
@@ -72,6 +73,7 @@ def shutdown_event():
    WebsocketManager.getInstance().close()
    ExecutorManager.getInstance().close()
    ServerEventManager.getInstance().close()
+   NotificationManager.getInstance().close()
 
 app.include_router(endpoints.admin, tags=['Administration'])
 app.include_router(endpoints.auth, tags=['Security'])

@@ -2,7 +2,7 @@ import asyncio
 from abc import ABC, abstractmethod
 
 from commons.utils import config
-from utils.server_event_manager import ServerEventManager
+from managers.server_event_manager import ServerEventManager
 from commons.kafka_utils.kafka_consumer import KafkaConsumer
 from threading import Thread
 

@@ -1,5 +1,5 @@
 from fastapi import Request, APIRouter
-from utils.server_event_manager import ServerEventManager
+from managers.server_event_manager import ServerEventManager
 from sse_starlette.sse import EventSourceResponse
 from starlette.middleware.cors import CORSMiddleware
 

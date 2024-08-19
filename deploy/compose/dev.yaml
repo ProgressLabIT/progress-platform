@@ -57,17 +57,17 @@ services:
       - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
       - "traefik.http.routers.api.middlewares=strip_api_prefix"
 
-  traceability-service:
-    restart: unless-stopped
-    build:
-      context: ./backend/traceability-service #root folder for build
-    volumes:
-      - ./backend/traceability-service:/traceability-service
-      - ./backend/commons:/traceability-service/commons
-    environment:
-      - PROGRESS_DB_NAME=PROGRESS_PROD
-    command: >
-      uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors  --timeout-graceful-shutdown 1
+  #traceability-service:
+  #  restart: unless-stopped
+  #  build:
+  #    context: ./backend/traceability-service #root folder for build
+  #  volumes:
+  #    - ./backend/traceability-service:/traceability-service
+  #    - ./backend/commons:/traceability-service/commons
+  #  environment:
+  #    - PROGRESS_DB_NAME=PROGRESS_PROD
+  #  command: >
+  #    uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors  --timeout-graceful-shutdown 1
 
   db:
     image: arangodb:3.11 # Use this for Intel Processors

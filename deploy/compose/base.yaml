@@ -31,15 +31,15 @@ services:
     volumes:
       - media:/media
 
-  traceability-service:
-    environment:
-      - PROGRESS_ARANGO_URL=http://db:8529
-      - PROGRESS_MEDIA_PATH=/media
-      - PROGRESS_API_ROOT_PATH=/traceability-service
-    ports:
-      - "8100"
-    volumes:
-      - media:/media
+  #traceability-service:
+  #  environment:
+  #    - PROGRESS_ARANGO_URL=http://db:8529
+  #    - PROGRESS_MEDIA_PATH=/media
+  #    - PROGRESS_API_ROOT_PATH=/traceability-service
+  #  ports:
+  #    - "8100"
+  #  volumes:
+  #    - media:/media
 
   db:
     volumes:
