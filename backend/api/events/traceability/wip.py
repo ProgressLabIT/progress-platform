@@ -130,7 +130,7 @@ def book_wip(self, quantity) -> None:
     if len(self.info.batch_serials) == quantity:
       self.book_wip_serials()
     else:
-      raise ValueError("The number of serials provided does not match the requested quantity")
+      raise ValueError("The number of serials provided does not match the requested quantity. Provided quantity: {quantity}. Provided serials: {self.info.batch_serials}")
   
   # Traceability 
   else:

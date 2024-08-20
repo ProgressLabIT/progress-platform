@@ -308,6 +308,7 @@ export default {
   material_cost: 'costo materiali',
   material: 'materiale | materiali',
   max: 'max',
+  max_quantity_reached: 'Quantità massima raggiunta',
   message: 'Messaggio | Messaggi',
   message_prompt: 'Scrivi...',
   min: 'min',
@@ -633,6 +634,7 @@ export default {
   resume: 'riprendi',
   save: 'salva',
   save_or_cancel_before_change: 'Salva o annulla le modifiche prima',
+  scan_serial: 'Scannerizza o scrivi il seriale e premi invio per selezionarlo',
   scroll: {
     to_top: 'torna su',
   },

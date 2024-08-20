@@ -300,6 +300,7 @@ export default {
   material: 'material | materials',
   material_cost: 'material cost',
   max: 'max',
+  max_quantity_reached: 'Max quantity reached',
   message: 'Message',
   message_prompt: 'Write...',
   min: 'min',
@@ -623,6 +624,7 @@ export default {
   resume: 'resume',
   save: 'save',
   save_or_cancel_before_change: 'Save or cancel changes before',
+  scan_serial: 'Write and press enter or scan the serial code to select it',
   scroll: {
     to_top: 'back to top',
   },

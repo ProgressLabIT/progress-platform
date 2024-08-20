@@ -9,6 +9,15 @@
           {{ $t('batch_serial_select') }}
         </div>
       </q-card-section>
+      <q-card-section>
+        <q-input
+          filled
+          :label="$t('scan_serial')"
+          v-model="serial_search_text"
+          @keyup.enter="selectSerial"
+        >
+        </q-input>
+      </q-card-section>
       <q-form id="serial-form" @submit="onDialogOK(selected_serials)">
         <q-card-section class="row items-center justify-between">
           <q-option-group
@@ -42,6 +51,9 @@
 <script setup>
 import { useDialogPluginComponent, useQuasar } from 'quasar';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t: $t } = useI18n({ useScope: 'global' });
 
 const props = defineProps({
   available_serials: {
@@ -54,30 +66,43 @@ const props = defineProps({
   },
   max_quantity: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 });
 
-const $q = useQuasar()
-// TODO: Add control to avoid selecting more than the remaining quantity for the job
+const $q = useQuasar();
 
 let available_serials = ref(props.available_serials);
 let selected_serials = ref(props.selected_serials);
+let serial_search_text = ref('');
 
 defineEmits(useDialogPluginComponent.emitsObject);
 
 function ensureMaxQuantity(value) {
+  // Prevent selecting more serials than the remaining quantity for the job
   if (value.length > props.max_quantity) {
     $q.notify({
       // TODO: message translation
-      message: "Max quantity reached",
-      color: 'theme-yellow',
+      message: $t('max_quantity_reached'),
+      color: 'theme-orange',
       timeout: 1500,
       position: 'top',
     });
+  } else {
+    selected_serials.value = value;
   }
-  else {
-    selected_serials.value = value
+}
+
+function selectSerial() {
+  let match = available_serials.value
+    .map((serial) => serial.label)
+    .indexOf(serial_search_text.value);
+  if (match !== -1) {
+    const serial_key = available_serials.value[match].value;
+    if (!selected_serials.value.includes(serial_key)) {
+      selected_serials.value.push(serial_key);
+      serial_search_text.value = '';
+    }
   }
 }
 

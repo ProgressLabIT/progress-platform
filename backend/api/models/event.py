@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Union
+from typing import Any, Set
 
 from pydantic import Field
 
@@ -89,5 +89,5 @@ class EventModel(ArangoDocument):
 
   # Traceability fields
   serial_data: Any | None = None
-  batch_serials: list[str] | None = None
+  batch_serials: Set[str] | None = None # prevent duplicated entries from client
   serial_link_data: list[SerialLink] | None = None

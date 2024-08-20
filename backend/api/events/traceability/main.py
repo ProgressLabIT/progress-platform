@@ -371,10 +371,10 @@ class ProductionActivityEvent(BaseEvent):
 
         # Has serials but not first phase
         else:
-          if self.info.batch_serials is not None and len(self.info.batch_serials):
+          if self.info.batch_serials is not None and len(self.info.batch_serials) == self.info.new_active_batch_qt:
             self.book_wip_serials()
           else:
-            raise ValueError("You must provide a list of serials to update the batch with")
+            raise ValueError(f"The serials provided do not match the update requested. New qt: {self.info.new_active_batch_qt}. Serials provided: {self.info.batch_serials}")
       # No serial, only update batch quantity
       else:
         if not self.job.first_phase:
