@@ -458,6 +458,10 @@ class ProductionActivityEvent(BaseEvent):
         elif free_wip_delta < 0:
           self.unbook_wip(abs(free_wip_delta))
 
+    elif (self.job.traceability_level != None and self.job.traceability_level != TraceabilityLevel.NONE):
+      # update batch serials data
+      self.finalize_batch_serial(completed_batch_qt)
+
     self.info.completed_batch_key = self.job.active_batch_key
     self.info.completed_batch_qt = completed_batch_qt
     self.info.work_session_key = self.job.last_work_session_started
@@ -472,10 +476,6 @@ class ProductionActivityEvent(BaseEvent):
         end=self.info.timestamp
       )
     )
-
-    if (self.job.traceability_level != None and self.job.traceability_level != TraceabilityLevel.NONE):
-      # update batch serials data
-      self.finalize_batch_serial(completed_batch_qt)
 
     # Update job completed quantity as reference for methods being called later (e.g. create_batch)
     self.job.qt_completed += self.info.completed_batch_qt
