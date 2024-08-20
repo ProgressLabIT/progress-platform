@@ -276,7 +276,7 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
 
   STEP_COMPLETED = EventMeta(
-    collections=production_collections,
+    collections=production_collections + ['Counter'],
     action='complete_step',
     post_processing=production_post_processing
   )
@@ -411,7 +411,7 @@ class ProductionActivityEvent(BaseEvent):
 
 
   BATCH_COMPLETED = EventMeta(
-    collections=production_collections,
+    collections=production_collections + ['Counter'],
     action='complete_batch',
     post_processing=production_post_processing
   )
