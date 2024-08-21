@@ -60,9 +60,11 @@
         <template #body-cell-traceability_mandatory="props">
           <q-td :props="props">
             <q-toggle
-              v-if="props.row.traceability_level !== null"
+              v-if="props.row.traceability_level"
               :model-value="!!props.value"
-              @update:model-value="value => toggleMandatoryTraceability(props.rowIndex, value)"
+              @update:model-value="
+                (value) => toggleMandatoryTraceability(props.rowIndex, value)
+              "
               :disable="!editMode"
             />
           </q-td>
@@ -145,7 +147,7 @@
               :filled="false"
               :loading="catalog_loading"
               use-input
-              dense="true"
+              :dense="true"
               @select="(selection) => loadProduct(selection)"
             />
 
@@ -162,10 +164,7 @@
             </q-input>
 
             <q-toggle
-              v-if="
-                new_line_product?.traceability_level &&
-                new_line_product?.traceability_level !== 'none'
-              "
+              v-if="new_line_product?.traceability_level"
               v-model="new_line_traceability_mandatory"
               class="col-2"
               :label="$t('traceability.mandatory')"
@@ -448,9 +447,9 @@ export default {
     },
 
     toggleMandatoryTraceability(lineIndex, value) {
-      let temp_item = this.temp_bom[lineIndex]
-      temp_item.traceability_mandatory = value
-      this.temp_bom = this.temp_bom.toSpliced(lineIndex, 1, temp_item)
+      let temp_item = this.temp_bom[lineIndex];
+      temp_item.traceability_mandatory = value;
+      this.temp_bom = this.temp_bom.toSpliced(lineIndex, 1, temp_item);
     },
 
     cancelChanges() {
