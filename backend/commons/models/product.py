@@ -26,7 +26,6 @@ class KPIWindowType(str, Enum):
   COUNT = 'count'
 
 class TraceabilityLevel(str, Enum):
-  NONE = 'none'
   FORM_ONLY = 'form_only'
   COMPLETE = 'complete'
 
@@ -39,15 +38,13 @@ class ProductBaseData(FlexModel):
   image: bool = False # to be replaced with Object Storage url in the future
   tags: List[Tag] | None= []
   counter_key: str | None = None
-  traceability_level: Optional[TraceabilityLevel] = TraceabilityLevel.NONE
+  traceability_level: TraceabilityLevel | None = None
 
 class ProductDetails(ProductBaseData):
   trash: bool = False
 
   created: datetime | None = None
   updated: datetime | None = None
-
-  traceability_level: Optional[TraceabilityLevel] = TraceabilityLevel.NONE
 
   cost: TargetAverageCost = TargetAverageCost()
   # sale_price: float = 0

@@ -53,7 +53,7 @@ class WorkOrderNew(BaseModel):
   due_by: datetime | date | None = None
   notes: str | None = None
 
-  traceability_level: Optional[TraceabilityLevel] = TraceabilityLevel.NONE
+  traceability_level: TraceabilityLevel | None = None
 
   @model_validator(mode="before")
   @classmethod

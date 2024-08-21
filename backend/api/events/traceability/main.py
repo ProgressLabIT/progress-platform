@@ -299,7 +299,7 @@ class ProductionActivityEvent(BaseEvent):
     self.tx.collection('StepExecutionData').insert(step_data)
 
     if (step_data.form_data != None):
-      if (self.job.traceability_level != None and self.job.traceability_level != TraceabilityLevel.NONE):
+      if (self.job.traceability_level is not None):
         # update batch serials data
         self.udpate_batch_serial_data(step_data.form_data)
 
@@ -458,7 +458,7 @@ class ProductionActivityEvent(BaseEvent):
         elif free_wip_delta < 0:
           self.unbook_wip(abs(free_wip_delta))
 
-    elif (self.job.traceability_level != None and self.job.traceability_level != TraceabilityLevel.NONE):
+    elif (self.job.traceability_level is not None):
       # update batch serials data
       self.finalize_batch_serial(completed_batch_qt)
 
