@@ -194,11 +194,8 @@
     <!-- RIGHT SECTION -->
 
     <div class="col-4 q-px-md full-height">
-
       <!-- TRACEABILITY SETTING -->
-      <q-card
-        square
-        class="surface2 q-px-sm q-pt-sm q-pb-md column no-wrap">
+      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md column no-wrap">
         <q-card-section>
           <div class="text-h5 display weight-bold text-uppercase col-auto">
             {{ $t('traceability') }}
@@ -229,7 +226,7 @@
             </div>
             <div class="row q-gutter-md items-center q-mt-xs">
               <div style="white-space: pre-line" class="text-body1">
-                {{ counter_name || 'NA'}}
+                {{ counter_name || 'NA' }}
               </div>
 
               <q-btn
@@ -248,7 +245,6 @@
 
     <!-- RIGHT COLUMN -->
     <div class="col-4 q-pl-md column full-height no-wrap">
-
       <!-- PRODUCTION NOTES -->
       <q-card
         square
@@ -427,7 +423,8 @@
       <BaseDialog
         :show="show_counter_form"
         :no-backdrop-dismiss="false"
-        @close="show_counter_form = false">
+        @close="show_counter_form = false"
+      >
         <CounterSearch @select="selectCounter" />
       </BaseDialog>
     </div>
@@ -569,7 +566,7 @@ export default {
     traceability_options() {
       return [
         {
-          value: 'none',
+          value: null,
           label: this.$t('traceability.options.none'),
         },
         {
