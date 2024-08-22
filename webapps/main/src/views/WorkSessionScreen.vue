@@ -260,17 +260,16 @@
 
 <script>
 import { until } from '@vueuse/core';
-import { Dialog, Loading } from 'quasar'
+import { Dialog, Loading } from 'quasar';
 import Sortable from 'sortablejs';
 import { mapState } from 'vuex';
-
 
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import IssueForm from '@/components/IssueForm.vue';
 import ProgressBtn from '@/components/ProgressBtn.vue';
 import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
-import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue'
+import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue';
 
 export default {
   name: 'WorkSessionScreen',
@@ -279,7 +278,7 @@ export default {
     BaseProgressBar,
     IssueForm,
     ProgressBtn,
-    StartPauseResumeBtn
+    StartPauseResumeBtn,
   },
 
   beforeRouteLeave(to, _from, next) {
@@ -482,8 +481,10 @@ export default {
   },
 
   async mounted() {
-    // Go to first tab according to user preference
-    this.$router.push({ name: this.links_order[0] })
+    // Go to first tab according to user preference if path doesn't specify one
+    if (this.$route.name === 'workSession') {
+      this.$router.push({ name: this.links_order[0] });
+    }
 
     // Make sure an alert is raised if user tries to close the page
     window.addEventListener('beforeunload', this.beforeUnloadAlert);
@@ -565,78 +566,85 @@ export default {
     },
 
     async editBatchSerials() {
-      Loading.show()
+      Loading.show();
       const remainingTotalQuantity = this.j.qt_planned - this.j.qt_completed;
       const { data: available_serials } = await this.$api.get('/wip-serial', {
         params: {
           job_key: this.j._key,
           phase_key: this.j.phase_key,
-          wo_key: this.j.wo_key
-        }
+          wo_key: this.j.wo_key,
+        },
       });
-      const initial_selection = available_serials.filter(s => s.active).map(s => s.serial_key)
+      const initial_selection = available_serials
+        .filter((s) => s.active)
+        .map((s) => s.serial_key);
       Loading.hide();
 
       const selected_serials = await new Promise((resolve) => {
         Dialog.create({
           component: SerialBatchSelectionDialog,
           componentProps: {
-            available_serials: available_serials.map(s => ({ label: s.serial_code, value: s.serial_key })),
+            available_serials: available_serials.map((s) => ({
+              label: s.serial_code,
+              value: s.serial_key,
+            })),
             selected_serials: initial_selection,
-            max_quantity: remainingTotalQuantity
-          }
+            max_quantity: remainingTotalQuantity,
+          },
         })
-        .onOk((selected_serials) => resolve(selected_serials))
-        .onCancel(() => resolve(false));
+          .onOk((selected_serials) => resolve(selected_serials))
+          .onCancel(() => resolve(false));
       });
 
       if (selected_serials.length && selected_serials != initial_selection) {
         return {
-          payload: { batchSerials: selected_serials, newBatchQuantity: selected_serials.length },
-          message: this.$capitalize("Seriali modificati correttamente")
-        }
-      };
+          payload: {
+            batchSerials: selected_serials,
+            newBatchQuantity: selected_serials.length,
+          },
+          message: this.$capitalize('Seriali modificati correttamente'),
+        };
+      }
     },
 
     async editBatchQuantity() {
-      Loading.show()
+      Loading.show();
       const remainingTotalQuantity = this.j.qt_planned - this.j.qt_completed;
       const { data } = await this.$api.get('/wip', {
         params: { job_key: this.j._key },
-      })
+      });
       const maxDeclarableQuantity = this.j.first_phase
         ? remainingTotalQuantity
         : Math.min(
             data.free_wip_qt_upstream + this.j.active_batch_qt,
             remainingTotalQuantity,
           );
-      Loading.hide()
+      Loading.hide();
 
       let newBatchQuantity = await new Promise((resolve) => {
         Dialog.create({
           component: QuantityPickerDialog,
           componentProps: {
             initialValue: this.j.active_batch_qt,
-            max: maxDeclarableQuantity
+            max: maxDeclarableQuantity,
           },
         })
-        .onOk((quantity) => resolve(quantity))
-        .onCancel(() => resolve(false));
+          .onOk((quantity) => resolve(quantity))
+          .onCancel(() => resolve(false));
       });
 
       if (newBatchQuantity) {
         return {
-          message: this.$capitalize("Quantità modificata correttamente"),
-          payload: { newBatchQuantity }
-        }
+          message: this.$capitalize('Quantità modificata correttamente'),
+          payload: { newBatchQuantity },
+        };
       }
     },
 
     async editBatchQuantityOrSerials() {
       const data = await (this.j.traceability_level && !this.j.first_phase
         ? this.editBatchSerials() // Show serial selection dialog
-        : this.editBatchQuantity() // Update quantity only (unconfirmed serials are handled in the backend if needed)
-      )
+        : this.editBatchQuantity()); // Update quantity only (unconfirmed serials are handled in the backend if needed)
 
       if (data) {
         // Call new endpoint to update active batch quantity
@@ -647,7 +655,7 @@ export default {
             timeout: 1500,
             position: 'top',
           });
-        })
+        });
       }
     },
 
