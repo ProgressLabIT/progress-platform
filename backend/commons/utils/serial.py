@@ -121,7 +121,7 @@ class Queries:
       RETURN s
   """
 
-  GET_SERIALS_FOR_SERIAL_NO = """
+  GET_SERIALS_FOR_SERIAL_CODE = """
     FOR s IN Serial
       FILTER (@serial_key ? s._key != @serial_key : true) && s.code == @serial
       RETURN s
@@ -145,6 +145,12 @@ class Queries:
       LET active = PARSE_IDENTIFIER(w._to).collection == 'Job'
       SORT serial.code
       RETURN MERGE(KEEP(serial, '_key', 'code'), { active })
+  """
+
+  GET_SERIALS_FOR_CODE = """
+    FOR s IN Serial
+      FILTER (@serial_code ? s.code == @serial_code : false)
+      RETURN s
   """
 
   FIND_SERIALS = """

@@ -256,32 +256,37 @@ export default {
         this.serial_ids.push(serial._id);
         this.serial_labels.push(serial?.code | serial._key);
         for (const component of this.bom_components) {
-          for (const child of serial.childs) {
-            if (child.product_key === component.component_key) {
-              const key = [serial._id, child.product_key].join(' ');
-              if (!this.serialModel[key]) {
-                this.serialModel[key] = [];
-                this.replace_serials[key] = false;
-                this.replace_serials_reason[key] = null;
-              }
-              this.serialModel[key].push({
-                _key: child._key,
-                label: child.code,
-                product_key: child.product_key,
-                wo_key: child.wo_key,
-                value: child._key,
-              });
-              this.initialValues.push({
-                from_serial: serial._key,
-                to_serial: child._key,
-                wo_key: child.wo_key,
-                reason: null,
-                replaced: true,
-                component_key: child.product_key,
-                batch_key: this.batch_key,
-              });
-            }
+          const key = [serial._id, component.component_key].join(' ');
+          if (!this.serialModel[key]) {
+            this.serialModel[key] = [];
+            this.replace_serials[key] = false;
+            this.replace_serials_reason[key] = null;
           }
+        }
+
+        for (const child of serial.childs) {
+          const key = [serial._id, child.product_key].join(' ');
+          if (!this.serialModel[key]) {
+            this.serialModel[key] = [];
+            this.replace_serials[key] = false;
+            this.replace_serials_reason[key] = null;
+          }
+          this.serialModel[key].push({
+            _key: child._key,
+            label: child.code,
+            product_key: child.product_key,
+            wo_key: child.wo_key,
+            value: child._key,
+          });
+          this.initialValues.push({
+            from_serial: serial._key,
+            to_serial: child._key,
+            wo_key: child.wo_key,
+            reason: null,
+            replaced: true,
+            component_key: child.product_key,
+            batch_key: this.batch_key,
+          });
         }
       }
     },

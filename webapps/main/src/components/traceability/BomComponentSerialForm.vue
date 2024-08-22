@@ -233,10 +233,17 @@ export default {
       this.saving = true;
 
       let link_data = [];
+      let serial_consumed = [];
       let initial_values = this.initialValues;
       for (const serial_from of this.batch_serials) {
         if (this.serialModel[serial_from._id]) {
           for (const serial_to of this.serialModel[serial_from._id]) {
+            if (serial_consumed.find((str) => str === serial_to._key)) {
+              window.alert(this.$t('serial_field.component_reused'));
+              this.saving = false;
+              return;
+            }
+            serial_consumed.push(serial_to._key);
             link_data.push({
               from_serial: serial_from._key,
               to_serial: serial_to._key,

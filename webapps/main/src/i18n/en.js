@@ -865,6 +865,8 @@ export default {
     errors: {
       COUNTER_NOT_DEFINED: 'Counter not defined, please insert serial manually',
       SERIAL_ALREADY_PRESENT: 'Serial No already present, cannot update',
+      SERIAL_NEW_ALREADY_PRESENT: 'Serial No already present, cannot create',
+      SERIAL_NEW_ERROR: 'Cannot create serial',
       EXCEPTION: 'Error writing serial',
     },
   },
@@ -881,6 +883,8 @@ export default {
       'No serial found. Enter at least {minChars} characters to be able to create a new one.',
     bom_component: 'BOM Serials',
     missing_reason: 'Reason is mandatory',
+    component_reused:
+      'Reusing the same component in multiple product is forbidden',
     is_contained_in: 'Is contained',
     contains: 'Contains',
     after_options:
@@ -888,6 +892,7 @@ export default {
     create: {
       label: 'Create new serial "{name}"',
       hint: 'Click or press {key} to create',
+      code_already_used: 'Serial "{name}" already in use',
     },
   },
 };

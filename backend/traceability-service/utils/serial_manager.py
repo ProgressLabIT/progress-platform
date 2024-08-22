@@ -265,7 +265,7 @@ class SerialManager:
 
     def verify_serial_counter(self, serial_key, serial):
        cursor = db.aql.execute(
-          Queries.GET_SERIALS_FOR_SERIAL_NO,
+          Queries.GET_SERIALS_FOR_SERIAL_CODE,
           bind_vars=dict(
             serial_key=serial_key,
             serial=serial

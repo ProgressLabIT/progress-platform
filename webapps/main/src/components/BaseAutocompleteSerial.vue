@@ -54,7 +54,11 @@
           {{ $t('serial_field.noData_min_char', { minChars: 3 }) }}
         </q-item-section>
       </q-item>
-      <q-item v-else clickable @click="create_serial_form = true">
+      <q-item
+        v-else-if="code_free"
+        clickable
+        @click="create_serial_form = true"
+      >
         <q-item-section avatar>
           <q-icon name="mdi-plus" />
         </q-item-section>
@@ -71,6 +75,13 @@
               </template>
             </i18n-t>
           </q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-item v-else>
+        <q-item-section class="text-low">
+          {{
+            $t('serial_field.create.code_already_used', { name: inputValue })
+          }}
         </q-item-section>
       </q-item>
       <SerialForm
@@ -175,6 +186,7 @@ export default {
       origin_list: [],
       last_research: undefined,
       events: NaN,
+      code_free: false,
     };
   },
 
@@ -207,6 +219,7 @@ export default {
   methods: {
     loadSerials(search_value) {
       this.loading = true;
+      this.code_free = false;
       let params = {};
       if (this.work_order?._key || this.work_order_key) {
         params = {
@@ -234,15 +247,20 @@ export default {
         };
         this.last_research = search_value;
       }
-      this.$api
-        .get('serial-selection', {
-          params: params,
-        })
-        .then((resp) => {
-          this.options = resp.data;
-          this.addInitialValues(search_value);
-          this.loading = false;
-        });
+      this.$api.get(`/serial-code/${search_value}`).then((resp) => {
+        if (resp.data?.length <= 0) {
+          this.code_free = true;
+        }
+        this.$api
+          .get('serial-selection', {
+            params: params,
+          })
+          .then((resp) => {
+            this.options = resp.data;
+            this.addInitialValues(search_value);
+            this.loading = false;
+          });
+      });
     },
 
     closeCreateForm() {

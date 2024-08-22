@@ -233,7 +233,7 @@ export default {
                 ? this.job.qt_planned
                 : this.job.parameters.production_batch_qt;
             quantity = i.qt * factor;
-            let batch_qt = i.qt * this.job.parameters.production_batch_qt;
+            let batch_qt = i.qt;
             return {
               ...i,
               qt: quantity,

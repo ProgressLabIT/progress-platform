@@ -896,6 +896,8 @@ export default {
       'Nessuna matricola trovata. Inserisci almeno {minChars} caratteri per crearne una nuova.',
     bom_component: 'Matricole BOM',
     missing_reason: 'Il motivo è obbligatorio',
+    component_reused:
+      'Non è possibile usare lo stesso componente per prodotti diversi',
     is_contained_in: "E' contenuto",
     contains: 'Contiene',
     after_options:
@@ -903,6 +905,7 @@ export default {
     create: {
       label: 'Crea nuova matricola "{name}"',
       hint: 'Clicca o premi {key} per creare',
+      code_already_used: 'La matricola "{name}" è già usata',
     },
   },
 };

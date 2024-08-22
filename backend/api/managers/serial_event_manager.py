@@ -252,7 +252,7 @@ class SerialEventManager:
 
     def verify_serial_code_free(self, serial_key, serial):
        cursor = self.tx.aql.execute(
-          Queries.GET_SERIALS_FOR_SERIAL_NO,
+          Queries.GET_SERIALS_FOR_SERIAL_CODE,
           bind_vars=dict(
             serial_key=serial_key,
             serial=serial

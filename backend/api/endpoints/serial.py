@@ -223,6 +223,23 @@ def get_serial_from_key(serial_key: str):
       )
     )
 
+@router.get('/serial-code/{serial_code}',
+    dependencies=[Depends(auth.verify_token)])
+def get_serial_from_code(serial_code: str):
+  bind_vars = dict(
+    serial_code = serial_code
+  )
+  try:
+    cursor = db.aql.execute(Queries.GET_SERIALS_FOR_CODE, bind_vars=bind_vars)
+    return [i for i in cursor]
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching serials from the db.",
+        error=traceback.format_exc()
+      )
+    )
 
 @router.get('/serial',
     dependencies=[Depends(auth.verify_token)])
