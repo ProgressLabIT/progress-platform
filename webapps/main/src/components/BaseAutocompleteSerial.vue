@@ -78,7 +78,7 @@
         :auto_link_product="product_key"
         mode="new"
         :force_serial_code="inputValue"
-        @close="create_serial_form = false"
+        @close="closeCreateForm"
       >
       </SerialForm>
     </template>
@@ -196,14 +196,6 @@ export default {
       this.loadSerials();
       this.last_research = '';
     }
-    /*let eventURL =
-      this.$api.defaults.baseURL + '/notification/serial-notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
-    });
-    this.events.addEventListener('serial-notification', (event) => {
-      this.handleMessage(event);
-    });*/
   },
 
   beforeUnmount() {
@@ -253,6 +245,11 @@ export default {
         });
     },
 
+    closeCreateForm() {
+      this.create_serial_form = false;
+      this.loadSerials(this.last_research);
+    },
+
     addInitialValues(search_value) {
       if (this.initial_values) {
         for (const serial of this.initial_values) {
@@ -267,28 +264,6 @@ export default {
           }
         }
       }
-    },
-
-    handleMessage(message) {
-      let event = JSON.parse(message.data);
-      if (event.notification === 'ERROR') {
-        this.$q.notify({
-          message: this.getErrorMessage(event.error_code, event.error),
-          color: 'theme-red',
-          timeout: 1500,
-          position: 'top',
-        });
-      } else {
-        this.loadSerials(this.last_research);
-      }
-    },
-
-    getErrorMessage(error_code, default_message) {
-      let message = this.$t('traceability.errors.' + error_code);
-      if (message) {
-        return message;
-      }
-      return this.$t(default_message);
     },
 
     filter(value, update, abort) {

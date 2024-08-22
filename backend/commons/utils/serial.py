@@ -123,7 +123,7 @@ class Queries:
 
   GET_SERIALS_FOR_SERIAL_NO = """
     FOR s IN Serial
-      FILTER s._key != @serial_key && s.code == @serial
+      FILTER (@serial_key ? s._key != @serial_key : true) && s.code == @serial
       RETURN s
   """
 
@@ -280,5 +280,5 @@ class Queries:
         ? MERGE(form_field, { value: null })
         : form_field
     )
-    UPDATE s WITH { data: new_serial_data } IN Serial 
+    UPDATE s WITH { data: new_serial_data } IN Serial
   """

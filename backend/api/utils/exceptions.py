@@ -39,3 +39,4 @@ class SerialNotDeletedError(Exception): pass
 class SerialNotUpdatedError(Exception): pass
 class SerialNotLinkedError(Exception): pass
 class SerialNotCreatedError(Exception): pass
+class SerialCodeAlreadyPresent(Exception): pass

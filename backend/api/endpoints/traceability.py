@@ -35,7 +35,12 @@ async def apply_production_event(data: EventModel):
     JobHasNoAssigneeError,
     JobHasNoActiveBatchError,
     ValueError,
-    WipNotAvailableError
+    WipNotAvailableError,
+    SerialNotDeletedError,
+    SerialNotUpdatedError,
+    SerialNotLinkedError,
+    SerialNotCreatedError,
+    SerialCodeAlreadyPresent
   ) as e:
     raise HTTPException(
       status_code=422,
@@ -125,13 +130,13 @@ async def get_batch_serials(batch_key: str):
       s.active = True
 
     return batch_serials
-  
+
   except StopIteration:
     return HTTPException(
       status_code=404,
       detail=f"No serials found associated with batch {batch_key}"
     )
-  
+
   except Exception as e:
     return HTTPException(
       status_code=500,

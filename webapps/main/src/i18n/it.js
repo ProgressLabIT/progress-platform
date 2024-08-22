@@ -875,6 +875,9 @@ export default {
         'Contantore non definito, per favore inserire la matricola manualmente',
       SERIAL_ALREADY_PRESENT:
         'Seriale già presente, non è possibile aggiornare',
+      SERIAL_NEW_ALREADY_PRESENT:
+        'Seriale già presente, non è possibile crearne uno nuovo',
+      SERIAL_NEW_ERROR: 'Errore nella creazione della matricola',
       EXCEPTION: 'Errore nella scrittura della matricola',
     },
   },

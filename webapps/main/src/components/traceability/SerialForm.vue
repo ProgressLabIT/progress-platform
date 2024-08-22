@@ -463,10 +463,32 @@ export default {
         serial_data,
       };
 
-      await this.$api.post('event', event);
+      this.$api.post('event', event).then((resp) => {
+        if (resp.status === 200) {
+          this.$emit('serialCreated');
+        } else if (resp.response?.status === 422) {
+          let error_message = 'traceability.errors.EXCEPTION';
+          switch (resp.response?.data?.detail?.error_type) {
+            case 'SerialNotCreatedError':
+              error_message = 'traceability.errors.SERIAL_NEW_ERROR';
+              break;
+            case 'SerialCodeAlreadyPresent':
+              error_message = 'traceability.errors.SERIAL_NEW_ALREADY_PRESENT';
+              break;
+            default:
+              break;
+          }
 
-      this.cancel();
-      this.saving = false;
+          this.$q.notify({
+            message: this.$t(error_message),
+            color: 'theme-red',
+            timeout: 1500,
+            position: 'top',
+          });
+        }
+        this.cancel();
+        this.saving = false;
+      });
     },
   },
 };

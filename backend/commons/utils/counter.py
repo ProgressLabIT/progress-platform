@@ -36,3 +36,4 @@ def compute_counter(counter):
 
 def _generate_counter(tx, counter_key):
   return compute_counter(tx.aql.execute(COUNTER_TICK, bind_vars={ 'counter_key': counter_key }).next())
+
