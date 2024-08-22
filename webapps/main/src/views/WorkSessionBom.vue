@@ -44,7 +44,7 @@
               :show="show_serial_form[props.row.component_key] === true"
               :component_code="props.row.component_code"
               :component_key="props.row.component_key"
-              :batch_qt="props.row.batch_qt"
+              :component_qt="props.row.component_qt"
               :batch_key="job.active_batch_key"
               :wo_key="job.wo_key"
               mode="new"
@@ -108,7 +108,6 @@
         :wo_key="job.wo_key"
         mode="new"
         :bom_components="bom"
-        :prod_batch_qt="job.parameters.production_batch_qt"
         @close="
           () => {
             show_all_serial_form = false;
@@ -231,13 +230,13 @@ export default {
             const factor =
               this.quantity_type === 'job'
                 ? this.job.qt_planned
-                : this.job.parameters.production_batch_qt;
+                : this.job.active_batch_qt;
             quantity = i.qt * factor;
-            let batch_qt = i.qt;
+            let component_qt = i.qt;
             return {
               ...i,
               qt: quantity,
-              batch_qt: batch_qt,
+              component_qt: component_qt,
             };
           })
         : [];

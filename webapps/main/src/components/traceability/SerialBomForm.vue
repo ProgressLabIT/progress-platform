@@ -166,10 +166,6 @@ export default {
       type: Object,
       default: null,
     },
-    prod_batch_qt: {
-      type: Number,
-      required: true,
-    },
   },
 
   emits: ['close'],
@@ -240,18 +236,8 @@ export default {
       this.component_qt = [];
       this.replace_serials = [];
       for (const component of this.bom_components) {
-        let batch_qt = component.qt * this.prod_batch_qt;
-
-        let comp_qt = 0;
-        if (this.batch_serials && batch_qt > 0) {
-          comp_qt = Math.floor(batch_qt / this.batch_serials.length);
-        } else {
-          comp_qt = batch_qt;
-        }
-
-        this.component_qt[component.component_key] = comp_qt;
+        this.component_qt[component.component_key] = component.component_qt;
       }
-
       for (const serial of this.batch_serials) {
         this.serial_ids.push(serial._id);
         this.serial_labels.push(serial?.code | serial._key);
@@ -301,11 +287,18 @@ export default {
 
       let link_data = [];
       let initial_values = this.initialValues;
+      let serial_consumed = [];
       for (const serial_from of this.batch_serials) {
         for (const component of this.bom_components) {
           const key = [serial_from._id, component.component_key].join(' ');
           if (this.serialModel[key]) {
             for (const serial_to of this.serialModel[key]) {
+              if (serial_consumed.find((str) => str === serial_to._key)) {
+                window.alert(this.$t('serial_field.component_reused'));
+                this.saving = false;
+                return;
+              }
+              serial_consumed.push(serial_to._key);
               link_data.push({
                 wo_key: this.wo_key,
                 component_key: component.component_key,

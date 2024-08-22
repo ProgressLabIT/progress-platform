@@ -121,7 +121,7 @@ export default {
       type: String,
       required: true,
     },
-    batch_qt: {
+    component_qt: {
       type: Number,
       default: null,
     },
@@ -148,8 +148,8 @@ export default {
     },
 
     component_per_product() {
-      if (this.batch_qt > 0) {
-        return this.batch_qt;
+      if (this.component_qt > 0) {
+        return this.component_qt;
       } else {
         return 0;
       }
