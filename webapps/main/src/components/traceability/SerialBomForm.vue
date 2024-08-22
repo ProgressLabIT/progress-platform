@@ -25,10 +25,7 @@
             :key="component.component_key"
           >
             <BaseAutocompleteSerial
-              v-if="
-                component.traceability_level !== null &&
-                component.traceability_level !== 'none'
-              "
+              v-if="component.traceability_level !== null"
               v-model="
                 serialModel[
                   [serial_ids[index], component.component_key].join(' ')
@@ -62,7 +59,6 @@
             <q-btn
               v-if="
                 component.traceability_level !== null &&
-                component.traceability_level !== 'none' &&
                 !replace_serials[
                   [serial_ids[index], component.component_key].join(' ')
                 ]

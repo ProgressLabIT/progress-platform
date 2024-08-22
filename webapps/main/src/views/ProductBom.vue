@@ -386,10 +386,7 @@ export default {
 
     loadProduct(selection) {
       this.new_line_product = selection;
-      if (
-        this.new_line_product?.traceability_level &&
-        this.new_line_product?.traceability_level !== 'none'
-      ) {
+      if (this.new_line_product?.traceability_level) {
         this.new_line_traceability_mandatory = true;
       } else {
         this.new_line_traceability_mandatory = null;

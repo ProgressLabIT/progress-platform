@@ -20,7 +20,7 @@
         hide-bottom
       >
         <template #body-cell-description="props">
-          <q-td style="text-wrap: wrap;">
+          <q-td style="text-wrap: wrap">
             {{ props.value }}
           </q-td>
         </template>
@@ -30,7 +30,6 @@
               v-if="
                 props.value !== null &&
                 props.row.traceability_level !== null &&
-                props.row.traceability_level !== 'none' &&
                 traceability_enabled
               "
               size="sm"
@@ -245,7 +244,8 @@ export default {
     },
 
     traceability_enabled() {
-      return this.$store.state.traceability.working_job_data.traceability_level !== 'none';
+      return !!this.$store.state.traceability.working_job_data
+        .traceability_level;
     },
   },
 
