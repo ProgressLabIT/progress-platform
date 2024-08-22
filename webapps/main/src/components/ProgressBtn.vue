@@ -29,7 +29,6 @@ import SerialBatchDeclareSerialNumber from '@/components/job/SerialBatchDeclareS
 import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue';
 import { timestamp } from '@/lib/TimeHandling.js';
 
-
 export default {
   name: 'ProgressBtn',
 
@@ -73,7 +72,7 @@ export default {
         altAction: this.declareBatch,
       };
 
-      return ('parameters' in this.job && this.job.parameters.step_check)
+      return 'parameters' in this.job && this.job.parameters.step_check
         ? complete_step
         : declare_batch;
     },
@@ -134,7 +133,8 @@ export default {
     },
 
     traceability_enabled() {
-      return this.$store.state.traceability.working_job_data?.traceability_level;
+      return this.$store.state.traceability.working_job_data
+        ?.traceability_level;
     },
 
     current_step_key: {
@@ -319,7 +319,7 @@ export default {
           }
         }
 
-        if (missing_serial && this.traceability_enabled()) {
+        if (missing_serial && this.traceability_enabled) {
           window.alert(this.$t('batch_declare_component_serials'));
           return;
         }
@@ -335,7 +335,7 @@ export default {
           can_proceed = window.confirm(this.confirm_stop_session_message);
         }
       }
-      
+
       // Missing mandatory fields has already been ensured
       if (can_proceed) {
         await this.$store.dispatch('completeStep', {
@@ -345,14 +345,16 @@ export default {
         if (current_step_was_last) {
           if (current_batch_was_last || !this.job.next_batch_available) {
             this.$router.push({ name: 'userJobs' });
-            return
+            return;
           } else {
             if (this.traceability_enabled && !this.job.first_phase) {
               // Select new serials and start new batch
-              const selected_serials = await this.selectSerialBatch()
-              await this.$store.dispatch('resumeJob', { batch_serials: selected_serials })
-            } 
-          }        
+              const selected_serials = await this.selectSerialBatch();
+              await this.$store.dispatch('resumeJob', {
+                batch_serials: selected_serials,
+              });
+            }
+          }
         }
         // Go to first step that is not done.
         // This works with both force_order mode active or not
@@ -385,12 +387,16 @@ export default {
       }
 
       if (can_proceed) {
-        await this.$store.dispatch('declareBatch', { batch_qt: this.job.active_batch_qt });
+        await this.$store.dispatch('declareBatch', {
+          batch_qt: this.job.active_batch_qt,
+        });
 
         if (this.traceability_enabled && !this.job.first_phase) {
           // Select new serials and start new batch
-          const selected_serials = await this.selectSerialBatch()
-          await this.$store.dispatch('resumeJob', { batch_serials: selected_serials })
+          const selected_serials = await this.selectSerialBatch();
+          await this.$store.dispatch('resumeJob', {
+            batch_serials: selected_serials,
+          });
         }
 
         if (
@@ -421,26 +427,30 @@ export default {
     },
 
     async selectSerialBatch() {
-      const remainingTotalQuantity = this.job.qt_planned - this.job.qt_completed
+      const remainingTotalQuantity =
+        this.job.qt_planned - this.job.qt_completed;
 
       const { data: available_serials } = await this.$api.get('/wip-serial', {
         params: {
           phase_key: this.job.phase_key,
-          wo_key: this.job.wo_key
-        }
+          wo_key: this.job.wo_key,
+        },
       });
 
       return await new Promise((resolve) => {
         Dialog.create({
           component: SerialBatchSelectionDialog,
           componentProps: {
-            available_serials: available_serials.map(s => ({ label: s.serial_code, value: s.serial_key })),
+            available_serials: available_serials.map((s) => ({
+              label: s.serial_code,
+              value: s.serial_key,
+            })),
             selected_serials: [],
-            max_quantity: remainingTotalQuantity
-          }
+            max_quantity: remainingTotalQuantity,
+          },
         })
-        .onOk((selected_serials) => resolve(selected_serials))
-        .onCancel(() => resolve(false));
+          .onOk((selected_serials) => resolve(selected_serials))
+          .onCancel(() => resolve(false));
       });
     },
 

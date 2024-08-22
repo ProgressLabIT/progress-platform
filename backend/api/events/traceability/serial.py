@@ -146,4 +146,4 @@ def send_link_batch_serial_event(self):
   setattr(serial_event, 'batch_key', self.batch.key)
   setattr(serial_event, 'operation', SerialCommandType.LINK_BATCH)
   self.send_to_consumer(serial_event.dict())'''
-  SerialEventManager.getInstance().handle_event(self, SerialCommandType.LINK_BATCH)
+  SerialEventManager.getInstance().handle_event(self, SerialCommandType.LINK_BATCH, batch_serials=self.info.batch_serials)

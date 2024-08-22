@@ -48,9 +48,9 @@ class SerialEventManager:
         case SerialCommandType.CREATE_AND_FINALIZE:
            self.create_serial(serial_data=self.serial_data, batch_key=None, finalize=True)
         case SerialCommandType.FINALIZE_BATCH:
-           self.confirm_serials(quantity=event_parameters['quantity'])
+           self.confirm_serials()
         case SerialCommandType.FINALIZE_WO:
-           self.release_serials(quantity=event_parameters['quantity'])
+           self.release_serials()
         case SerialCommandType.UPDATE:
            self.update_serial()
         case SerialCommandType.DELETE:
@@ -58,7 +58,7 @@ class SerialEventManager:
         case SerialCommandType.UPDATE_DATA_FROM_BATCH:
            self.update_serial_data(step_data=event_parameters['step_data'])
         case SerialCommandType.LINK_BATCH:
-           self.link_batch_serial(batch_serials=event_parameters['batch_serials'])
+           self.link_batch_serial()
         case SerialCommandType.LINK_SERIALS:
            self.link_serials()
         case _:
@@ -153,7 +153,9 @@ class SerialEventManager:
          ))
          raise SerialNotCreatedError(f'Cannot create serial')
 
-    def link_batch_serial(self, batch_key, batch_serials):
+    def link_batch_serial(self):
+      batch_key = self.event.batch.key
+      batch_serials = self.event.info.batch_serials
       new_batch_serial_records = [dict(
          _from=f'Batch/{batch_key}',
          _to=f'Serial/{serial_key}'
