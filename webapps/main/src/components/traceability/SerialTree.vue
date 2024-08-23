@@ -10,7 +10,11 @@
     >
       <!-- @update:model-value="(selection) => $emit('select', selection)" -->
       <template #default-header="prop">
-        <div class="row items-center">
+        <div
+          class="row items-center"
+          @mouseenter="dragging ? undefined : (over_key = prop.node.key)"
+          @mouseleave="dragging ? undefined : (over_key = prop.node.key)"
+        >
           <div
             v-if="prop.node.replaced"
             :class="
@@ -31,6 +35,13 @@
           >
             {{ prop.node.product_code }}
           </div>
+          <q-btn
+            v-if="over_key === prop.node.key && edit_mode"
+            flat
+            round
+            icon="mdi-pencil"
+            @click.stop="loading = false"
+          />
           <q-tooltip
             v-if="prop.node.product_description"
             anchor="bottom middle"
@@ -68,6 +79,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    edit_mode: {
+      type: Boolean,
+      default: false,
+    },
     serial_key: {
       type: String,
       required: true,
@@ -81,6 +96,7 @@ export default {
       drawer: true,
       loading: false,
       selected: null,
+      over_key: null,
       nodes: [],
     };
   },
@@ -88,7 +104,9 @@ export default {
   watch: {
     selected: {
       handler() {
-        this.$emit('select', this.selected);
+        if (!this.edit_mode) {
+          this.$emit('select', this.selected);
+        }
       },
     },
   },
@@ -129,26 +147,27 @@ export default {
       this.nodes = [];
     },
 
-    getChildren(node) {
+    getChildren(node, parent_key) {
       let child_data = [];
 
       for (const child_node of node) {
-        child_data.push(this.convertNode(child_node));
+        child_data.push(this.convertNode(child_node, parent_key));
       }
 
       return child_data;
     },
 
-    convertNode(node) {
+    convertNode(node, parent_key) {
       let label = node?.serial_code || node.serial_key;
       let children_data = [];
       let expandable = false;
       if (node?.children) {
-        children_data = this.getChildren(node.children);
+        children_data = this.getChildren(node.children, node.serial_key);
         expandable = true;
       }
       return {
         key: node.serial_key,
+        parent_key: parent_key,
         label: label,
         //lazy: false,
         expandable: expandable,
@@ -174,7 +193,7 @@ export default {
 
       let node_data = [];
       for (const parent_node of data) {
-        node_data.push(this.convertNode(parent_node));
+        node_data.push(this.convertNode(parent_node, undefined));
       }
 
       this.nodes = node_data;

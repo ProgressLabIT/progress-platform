@@ -42,7 +42,7 @@ def link_serial(self):
 
 
 def update_serial(self):
-  '''serial_data = jsonable_encoder(Serial(**self.info.serial_data))
+  '''
   serial_event = SerialEvent()
   setattr(serial_event, 'serial', serial_data)
   setattr(serial_event, 'operation', SerialCommandType.UPDATE)

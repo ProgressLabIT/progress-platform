@@ -22,6 +22,17 @@ const serial = {
     LOAD_SERIALS(state, serials) {
       state.serials = serials;
     },
+    UPDATE_SERIALS(state, serials) {
+      let temp_serials = state.serials;
+      if (serials) {
+        for (const serial of serials) {
+          temp_serials = temp_serials.map((item) =>
+            item._key !== serial._key ? item : serial,
+          );
+        }
+      }
+      state.serials = temp_serials;
+    },
     APPEND_SERIALS(state, serials) {
       if (state.serials) {
         for (const serial of serials) {
@@ -43,6 +54,10 @@ const serial = {
     async getSerials({ commit }, search_params) {
       const { data } = await api.get('serial', { params: search_params });
       commit('LOAD_SERIALS', data);
+    },
+    async updateSerials({ commit }, search_params) {
+      const { data } = await api.get('serial', { params: search_params });
+      commit('UPDATE_SERIALS', data);
     },
     async appendSerials({ commit }, search_params) {
       const { data } = await api.get('serial', { params: search_params });
