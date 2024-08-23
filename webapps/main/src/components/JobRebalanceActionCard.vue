@@ -325,9 +325,10 @@ export default {
     notReassignable(index) {
       const j = this.temp_jobs[index];
       const has_assignee = j.assigned_to;
-      const started = ['started', 'completed'].includes(j.stage);
+      const active = j.active;
+      const completed = j.stage === 'completed';
       const to_be_closed = j.close;
-      return (has_assignee && started) || to_be_closed;
+      return (has_assignee && completed) || to_be_closed || active;
     },
 
     deletable(index) {
