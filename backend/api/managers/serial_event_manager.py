@@ -181,6 +181,12 @@ class SerialEventManager:
 
         serial_link_data = self.event.info.serial_link_data
 
+        booked_serial = []
+        for serial_links in serial_link_data:
+           if serial_links.to_serial in booked_serial:
+              raise SerialNotLinkedError(f'Cannot link serials: multiple usage of the same component')
+           booked_serial.append(serial_links.to_serial)
+
         for serial_links in serial_link_data:
           from_serial = serial_links.from_serial
           to_serial = serial_links.to_serial
