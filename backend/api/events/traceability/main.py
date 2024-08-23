@@ -41,7 +41,7 @@ class ProductionActivityEvent(BaseEvent):
   production_post_processing = ['update_job_last_online', 'update_work_order']
 
   SERIAL_CREATED = EventMeta(
-    collections=production_collections,
+    collections=['Counter', 'Serial'],
     action="create_serial"
   )
 
