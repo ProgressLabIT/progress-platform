@@ -35,10 +35,12 @@
               :can_create="true"
               :selection_qt="component_per_product"
               :filter_used="true"
+              :filtered_values="booked_serials"
               :disable="
                 serialModel[serial._id]?.length >= component_per_product &&
                 !replace_serials[serial._id]
               "
+              @select="(selection) => onSerialSelection(selection, serial._id)"
             >
             </BaseAutocompleteSerial>
             <q-btn
@@ -139,6 +141,7 @@ export default {
       replace_serials: [],
       replace_serials_reason: [],
       loading: false,
+      booked_serials: [],
     };
   },
 
@@ -194,6 +197,7 @@ export default {
       this.serialModel = [];
       this.initialValues = [];
       this.replace_serials = [];
+      this.booked_serials = [];
       for (const serial of this.batch_serials) {
         if (!this.serialModel[serial._id]) {
           this.serialModel[serial._id] = [];
@@ -209,7 +213,7 @@ export default {
               wo_key: child.wo_key,
               value: child._key,
             });
-
+            this.booked_serials.push(child.code);
             this.initialValues.push({
               from_serial: serial._key,
               to_serial: child._key,
@@ -222,6 +226,25 @@ export default {
           }
         }
       }
+    },
+
+    onSerialSelection(selectedSerials, selected_key) {
+      let temp_booked_serials = [];
+
+      for (const serial of selectedSerials) {
+        temp_booked_serials.push(serial.label);
+      }
+
+      for (const serial of this.batch_serials) {
+        if (this.serialModel[serial._id] && selected_key !== serial._id) {
+          for (const serial_to of this.serialModel[serial._id]) {
+            temp_booked_serials.push(serial_to.label);
+          }
+        }
+      }
+
+      this.booked_serials = temp_booked_serials;
+      console.log(this.booked_serials);
     },
 
     cancel() {

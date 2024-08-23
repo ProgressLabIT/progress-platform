@@ -27,7 +27,11 @@
     @update:model-value="(selection) => $emit('select', selection)"
   >
     <template #option="scope">
-      <q-item v-bind="scope.itemProps" :id="scope.opt.label">
+      <q-item
+        v-bind="scope.itemProps"
+        :id="scope.opt.label"
+        :disable="filtered_values.includes(scope.opt.label)"
+      >
         <q-item-section>
           <q-item-label class="highlight">
             {{ scope.opt.label }}
@@ -174,6 +178,10 @@ export default {
       type: Object,
       default: null,
     },
+    filtered_values: {
+      type: Object,
+      default: null,
+    },
   },
 
   emits: ['select'],
@@ -247,10 +255,22 @@ export default {
         };
         this.last_research = search_value;
       }
-      this.$api.get(`/serial-code/${search_value}`).then((resp) => {
-        if (resp.data?.length <= 0) {
-          this.code_free = true;
-        }
+      if (search_value) {
+        this.$api.get(`/serial-code/${search_value}`).then((resp) => {
+          if (resp.data?.length <= 0) {
+            this.code_free = true;
+          }
+          this.$api
+            .get('serial-selection', {
+              params: params,
+            })
+            .then((resp) => {
+              this.options = resp.data;
+              this.addInitialValues(search_value);
+              this.loading = false;
+            });
+        });
+      } else {
         this.$api
           .get('serial-selection', {
             params: params,
@@ -260,7 +280,7 @@ export default {
             this.addInitialValues(search_value);
             this.loading = false;
           });
-      });
+      }
     },
 
     closeCreateForm() {

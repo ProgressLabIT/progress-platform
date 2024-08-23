@@ -128,7 +128,6 @@ export default {
     this.saving = false;
     this.selected = null;
     this.$store.dispatch('loadUsers');
-    console.log(this.$store.state.serial);
   },
 
   methods: {

@@ -46,6 +46,7 @@
               :can_create="true"
               :selection_qt="component_qt[component.component_key]"
               :filter_used="true"
+              :filtered_values="booked_serials"
               :disable="
                 serialModel[
                   [serial_ids[index], component.component_key].join(' ')
@@ -53,6 +54,13 @@
                 !replace_serials[
                   [serial_ids[index], component.component_key].join(' ')
                 ]
+              "
+              @select="
+                (selection) =>
+                  onSerialSelection(
+                    selection,
+                    [serial_ids[index], component.component_key].join(' '),
+                  )
               "
             >
             </BaseAutocompleteSerial>
@@ -181,6 +189,7 @@ export default {
       serial_labels: [],
       batch_serials: [],
       replace_serials: [],
+      booked_serials: [],
       replace_serials_reason: [],
       loading: false,
       index: 0,
@@ -235,6 +244,7 @@ export default {
       this.serial_ids = [];
       this.component_qt = [];
       this.replace_serials = [];
+      this.booked_serials = [];
       for (const component of this.bom_components) {
         this.component_qt[component.component_key] = component.component_qt;
       }
@@ -273,8 +283,30 @@ export default {
             component_key: child.product_key,
             batch_key: this.batch_key,
           });
+          this.booked_serials.push(child.code);
         }
       }
+    },
+
+    onSerialSelection(selectedSerials, selected_key) {
+      let temp_booked_serials = [];
+
+      for (const serial of selectedSerials) {
+        temp_booked_serials.push(serial.label);
+      }
+
+      for (const serial_from of this.batch_serials) {
+        for (const component of this.bom_components) {
+          const key = [serial_from._id, component.component_key].join(' ');
+          if (this.serialModel[key] && selected_key !== key) {
+            for (const serial_to of this.serialModel[key]) {
+              temp_booked_serials.push(serial_to.label);
+            }
+          }
+        }
+      }
+
+      this.booked_serials = temp_booked_serials;
     },
 
     cancel() {

@@ -208,7 +208,6 @@ export default {
     this.editMode = false;
     this.saving = false;
     this.$store.dispatch('loadUsers');
-    console.log(this.$store.state.serial);
   },
 
   methods: {

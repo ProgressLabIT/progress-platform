@@ -100,7 +100,6 @@ export default {
           .onCancel(() => resolve(false));
       });
       if (selected_serials) {
-        console.log(selected_serials);
         const action = this.j.stage == 'created' ? 'startJob' : 'resumeJob';
         this.$store.dispatch(action, {
           batch_serials: selected_serials,
