@@ -30,7 +30,7 @@
       <q-item
         v-bind="scope.itemProps"
         :id="scope.opt.label"
-        :disable="filtered_values.includes(scope.opt.label)"
+        :disable="filtered_values && filtered_values.includes(scope.opt.label)"
       >
         <q-item-section>
           <q-item-label class="highlight">

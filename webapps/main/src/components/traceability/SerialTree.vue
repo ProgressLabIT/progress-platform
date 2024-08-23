@@ -40,7 +40,7 @@
             flat
             round
             icon="mdi-pencil"
-            @click.stop="loading = false"
+            @click.stop="editComponentLink(prop.node)"
           />
           <q-tooltip
             v-if="prop.node.product_description"
@@ -71,6 +71,9 @@
 </template>
 
 <script>
+import { Dialog } from 'quasar';
+import SerialComponentLinkEditDialog from '@/components/traceability/SerialComponentLinkEditDialog.vue';
+
 export default {
   name: 'SerialTree',
 
@@ -203,6 +206,36 @@ export default {
       }
 
       this.loading = false;
+    },
+
+    async editComponentLink(node) {
+      console.log(node);
+
+      let serial = this.$store.getters.getSerialData(node.key);
+
+      let serialModel = {
+        _key: serial._key,
+        label: serial.code,
+        product_key: serial.product_key,
+        wo_key: serial.wo_key,
+        value: serial._key,
+      };
+
+      let initial_values = [];
+      initial_values.push(serialModel);
+
+      return await new Promise((resolve) => {
+        Dialog.create({
+          component: SerialComponentLinkEditDialog,
+          componentProps: {
+            node: node,
+            serial: serialModel,
+            initial_values: initial_values,
+          },
+        })
+          .onOk(() => resolve(true))
+          .onCancel(() => resolve(false));
+      });
     },
   },
 };
