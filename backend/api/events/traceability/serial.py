@@ -96,7 +96,7 @@ def finalize_batch_serial(self, wo, completed_batch_qt = None):
 
   SerialEventManager.getInstance().handle_event(self, SerialCommandType.FINALIZE_BATCH, quantity=completed_batch_qt or self.info.active_batch_qt)
 
-def finalize_wo_serial(self, completed_batch_qt):
+def finalize_wo_serial(self):
   '''if not self.job:
     self.job = self.get_job_data()
 

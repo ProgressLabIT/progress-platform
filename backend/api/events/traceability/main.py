@@ -540,7 +540,7 @@ class ProductionActivityEvent(BaseEvent):
     else:
       if getattr(self.job, 'traceability_level', None) is not None:
         # update batch serials data
-        self.finalize_wo_serial(completed_batch_qt)
+        self.finalize_wo_serial()
 
 # ===================================================================
 #             END
