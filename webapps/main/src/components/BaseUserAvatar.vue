@@ -3,7 +3,7 @@
     <q-avatar
       v-if="initials && showAvatar"
       color="theme-grey"
-      :size="size"
+      :size="computed_size"
       class="weight-bold"
       font-size=".4em"
     >
@@ -12,7 +12,7 @@
           <div v-if="initials" class="absolute-center bg-theme-grey">
             {{ initials }}
           </div>
-          <q-icon v-else name="mdi-account-circle" :size="size" />
+          <q-icon v-else name="mdi-account-circle" :size="computed_size" />
         </template>
       </q-img>
     </q-avatar>
@@ -83,11 +83,6 @@ export default {
   data() {
     return {
       base_path: '/media/user/',
-      avatar_style: {
-        height: this.size,
-        width: this.size,
-        borderRadius: '100%',
-      },
     };
   },
 
@@ -100,6 +95,14 @@ export default {
             '.jpg'
           ).toLowerCase()
         : 'N/A';
+    },
+
+    avatar_style() {
+      return {
+        height: this.computed_size,
+        width: this.computed_size,
+        borderRadius: '100%',
+      };
     },
 
     initials() {
@@ -116,6 +119,10 @@ export default {
       return (
         this.$capitalizeAll(this.user.name + ' ' + this.user.surname) || ''
       );
+    },
+
+    computed_size() {
+      return this.dense ? '26px' : this.size;
     },
   },
 };
