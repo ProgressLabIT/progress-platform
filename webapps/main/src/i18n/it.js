@@ -246,6 +246,8 @@ export default {
       spread: 'distribuisci qt',
     },
     resume: 'riprendi',
+    selected_count:
+      '0 lavori selezionati | 1 lavoro selezionato | {count} lavori selezionati',
     selected_job_message: 'il lavoro selezionato è il seguente',
     shown_jobs_message: '{shown} lavori visualizzati su {total} disponibili',
     start: 'inizia',
@@ -647,7 +649,7 @@ export default {
     start_session: 'inizia sessione',
   },
   show_all: 'mostra tutti',
-  shown: "visualizzato | visualizzati",
+  shown: 'visualizzato | visualizzati',
   snackbars: {
     changes_canceled: 'modifiche annullate',
     process_updated: 'processo aggiornato',

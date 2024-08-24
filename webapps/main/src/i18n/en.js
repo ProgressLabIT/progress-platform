@@ -242,6 +242,7 @@ export default {
       spread: 'distribute quantities',
     },
     resume: 'resume',
+    selected_count: '0 jobs selected | 1 job selected | {count} jobs selected',
     selected_job_message: 'you selected the following job',
     shown_jobs_message: '{shown} jobs shown of {total} available',
     start: 'start',
@@ -639,7 +640,7 @@ export default {
     start_session: 'start session',
   },
   show_all: 'show all',
-  shown: "shown",
+  shown: 'shown',
   snackbars: {
     changes_canceled: 'changes canceled',
     process_updated: 'process updated',

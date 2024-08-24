@@ -1,354 +1,326 @@
 <template>
   <div id="job-list" class="full-height q-mx-xs q-px-sm q-py-lg scroll">
     <NoDataAlert v-if="operator_assignments.length === 0" />
-    <template
-      v-for="(assignment, index) in operator_assignments"
-      v-else
-      :key="index"
-    >
-      <div class="row items-center q-pl-sm">
-        <BaseUserAvatar
-          :user="assignment.operator"
-          name_class="medium weight-medium"
-          size="36px"
-        />
-        <q-btn
-          v-if="assignment.operator._key === 'unassigned'"
-          size="sm"
-          color="theme-blue"
-          :label="$t('assign')"
-          class="q-ml-lg"
-          @click="show_assignment_dialog = true"
-        />
 
-        <q-space />
-
-        <template v-if="config.allowIndependentReorderingOfJobQueues">
-          <q-btn
-            v-if="assignment.independent && assignment.assigned_jobs_count > 1"
-            size="sm"
-            color="theme-blue"
-            :label="$t('independentOrdering.reorder')"
-            class="q-mr-sm"
-            @click="openReorderDialog(assignment)"
-          />
-
-          <q-checkbox
-            v-if="assignment.operator._key !== 'unassigned'"
-            :model-value="assignment.independent"
-            :label="$t('independentOrdering.switch.label')"
-            class="q-mr-sm"
-            color="theme-blue"
-            size="sm"
-            @update:model-value="updateAssignmentDependency(assignment)"
-          >
-            <q-tooltip>
-              {{ $t('independentOrdering.switch.hint') }}
-            </q-tooltip>
-          </q-checkbox>
-        </template>
-
-        <q-chip
-          :ripple="false"
-          class="col-auto text-body2"
-          color="theme-blue"
-          size="sm"
-        >
-          <q-icon
-            name='mdi-timer-sand'
-            class="q-mr-sm"
-            size="14px"
-          />
-          <strong>
-            {{ calculateWorkloadHours(assignment.filtered_jobs) }}
-          </strong>
-          <span class="q-mx-xs">
-            {{ $t('of') }}
-          </span>
-          <strong>
-            {{ assignment.total_workload_hours }}
-          </strong>
-          <q-tooltip
-            delay="200"
-            anchor="top middle"
-            self="center middle"
-            transition-show="fade"
-            transition-hide="fade"
-            class="transparent text-low">
-            {{ $capitalize($t('workload_hours')) }}
-          </q-tooltip>
-        </q-chip>
-
-        <q-chip
-          :ripple="false"
-          class="col-auto text-body2"
-          color="theme-grey"
-          size="sm"
-        >
-          <q-icon
-            name='mdi-eye-outline'
-            class="q-mr-sm"
-            size="14px"
-          />
-          <strong>
-            {{ assignment.filtered_jobs.length }}
-          </strong>
-          <span class="q-mx-xs">
-            {{ $t('of') }}
-          </span>
-          <strong>
-            {{ assignment.assigned_jobs_count }}
-          </strong>
-          <q-tooltip
-            delay="200"
-            anchor="top middle"
-            self="center middle"
-            transition-show="fade"
-            transition-hide="fade"
-            class="transparent text-low">
-            {{ $capitalize($t('shown', 2)) }}
-          </q-tooltip>
-        </q-chip>
-      </div>
-
-      <q-table
-        :columns="job_data"
-        :rows="assignment.filtered_jobs"
-        row-key="_key"
-        hide-bottom
-        virtual-scroll
-        dense
-        separator="none"
-        table-class="text-high assignment-list"
-        card-class="background no-shadow q-mt-md"
-        :rows-per-page-options="[0]"
-      >
-        <template #header-cell-issue_count="props">
-          <q-th :props="props">
-            <q-icon name="mdi-flag" size="14px" />
-          </q-th>
-        </template>
-
-        <template #body="props">
-          <q-tr
-            :props="props"
-            @dblclick="showWorkOrderScreen(props.row.wo_key)"
-          >
-            <template v-for="field in job_data" :key="field.name">
-              <q-td
-                :props="props"
-                :class="{ 'filter-field': search_fields.includes(field.name) }"
-              >
-                <!-- PROGRESS -->
-                <template v-if="field.name === 'progress'">
-                  <div class="row items-center q-col-gutter-sm">
-                    <div class="col">
-                      <BaseProgressBar :data="props.row" />
-                    </div>
-                    <span class="col-2 text-right"
-                      >{{ props.row[field.name] }} %</span
-                    >
-                  </div>
-                </template>
-
-                <template v-else-if="field.name.includes('qt')">
-                  {{ props.row[field.name] }}
-                </template>
-
-                <template v-else-if="field.name === 'issue_count'">
-                  {{
-                    (props.row.issues_open ?? 0) +
-                    '/' +
-                    (props.row.issues_total ?? 0)
-                  }}
-                </template>
-
-                <template v-else-if="field.name === 'ready'">
-                  <q-icon
-                    :name="jobIcon(props.row).name"
-                    :color="jobIcon(props.row).color"
-                    size="xs"
-                  >
-                    <!-- calendar-clock check-circle cube-off/toybrick-remove-->
-                  </q-icon>
-                </template>
-
-                <div
-                  v-else-if="field.name === 'due_by'"
-                  class="row items-center justify-end q-gutter-xs"
-                >
-                  <q-icon
-                    v-if="props.row.due_by < now.toISOString()"
-                    color="theme-red"
-                    name="mdi-alert-octagon"
-                  />
-                  <div>
-                    {{
-                      props.row.due_by === null
-                        ? '-'
-                        : $shortDateString(props.row.due_by, $i18n.locale)
-                    }}
-                  </div>
-                </div>
-
-                <template v-else>
-                  <span @click="setSearch(field.name, props.row[field.name])">
-                    {{ $capitalizeAll(props.row[field.name] || '') }}
-                    <q-tooltip
-                      delay="500"
-                      anchor="top left"
-                      self="bottom left"
-                      :offset=[8,6]
-                      transition-show="fade"
-                      transition-hide="fade">
-                      <template v-if="field.name === 'product_code'">
-                        <div class="highlight">
-                          {{ props.row.product_code }}
-                        </div>
-                        <div>
-                          {{ props.row.product_description }}
-                        </div>
-                      </template>
-                      <template v-else>
-                        {{ $capitalizeAll(props.row[field.name] || '') }}
-                      </template>
-                    </q-tooltip>
-                  </span>
-                </template>
-              </q-td>
-            </template>
-          </q-tr>
-        </template>
-      </q-table>
-
-      <q-separator
-        v-if="index < operator_assignments.length - 1"
-        class="q-my-lg q-mr-xs q-ml-sm"
+    <template v-else>
+      <!-- EDIT BUTTON -->
+      <q-btn
+        v-if="!edit_mode"
+        round
+        color="theme-blue"
+        icon="mdi-pencil"
+        class="absolute-bottom-right q-mb-md q-mr-md"
+        @click="edit_mode = true"
+        style="z-index: 999"
       />
+
+      <!-- MAIN CONTENT -->
+      <template
+        v-for="(assignment, index) in operator_assignments"
+        :key="index"
+      >
+        <!-- ############### -->
+        <!-- OPERATOR HEADER -->
+        <!-- ############### -->
+        <div class="row items-center q-pl-sm">
+          <BaseUserAvatar
+            :user="assignment.operator"
+            name_class="medium weight-medium"
+            size="36px"
+          />
+
+          <q-space />
+
+          <template v-if="config.allowIndependentReorderingOfJobQueues">
+            <q-btn
+              v-if="
+                assignment.independent && assignment.assigned_jobs_count > 1
+              "
+              size="sm"
+              color="theme-blue"
+              :label="$t('independentOrdering.reorder')"
+              class="q-mr-sm"
+              @click="openReorderDialog(assignment)"
+            />
+
+            <q-checkbox
+              v-if="assignment.operator._key !== 'unassigned'"
+              :model-value="assignment.independent"
+              :label="$t('independentOrdering.switch.label')"
+              class="q-mr-sm"
+              color="theme-blue"
+              size="sm"
+              @update:model-value="updateAssignmentDependency(assignment)"
+            >
+              <q-tooltip>
+                {{ $t('independentOrdering.switch.hint') }}
+              </q-tooltip>
+            </q-checkbox>
+          </template>
+
+          <q-chip
+            :ripple="false"
+            class="col-auto text-body2"
+            color="theme-blue"
+            size="sm"
+          >
+            <q-icon name="mdi-timer-sand" class="q-mr-sm" size="14px" />
+            <strong>
+              {{ calculateWorkloadHours(assignment.filtered_jobs) }}
+            </strong>
+            <span class="q-mx-xs">
+              {{ $t('of') }}
+            </span>
+            <strong>
+              {{ assignment.total_workload_hours }}
+            </strong>
+            <q-tooltip
+              :delay="200"
+              anchor="top middle"
+              self="center middle"
+              transition-show="fade"
+              transition-hide="fade"
+              class="transparent text-low"
+            >
+              {{ $capitalize($t('workload_hours')) }}
+            </q-tooltip>
+          </q-chip>
+
+          <q-chip
+            :ripple="false"
+            class="col-auto text-body2"
+            color="theme-grey"
+            size="sm"
+          >
+            <q-icon name="mdi-eye-outline" class="q-mr-sm" size="14px" />
+            <strong>
+              {{ assignment.filtered_jobs.length }}
+            </strong>
+            <span class="q-mx-xs">
+              {{ $t('of') }}
+            </span>
+            <strong>
+              {{ assignment.assigned_jobs_count }}
+            </strong>
+            <q-tooltip
+              :delay="200"
+              anchor="top middle"
+              self="center middle"
+              transition-show="fade"
+              transition-hide="fade"
+              class="transparent text-low"
+            >
+              {{ $capitalize($t('shown', 2)) }}
+            </q-tooltip>
+          </q-chip>
+        </div>
+
+        <!-- ############### -->
+        <!-- OPERATOR JOBS -->
+        <!-- ############### -->
+        <q-table
+          :columns="job_data"
+          :rows="assignment.filtered_jobs"
+          row-key="_key"
+          hide-bottom
+          virtual-scroll
+          dense
+          separator="none"
+          table-class="text-high assignment-list"
+          card-class="background no-shadow q-mt-md"
+          :rows-per-page-options="[0]"
+          :selection="edit_mode ? 'multiple' : false"
+        >
+          <template #header-selection v-if="edit_mode">
+            <q-checkbox
+              dense
+              :model-value="userJobsModel(assignment.filtered_jobs)"
+              @update:model-value="
+                (value) =>
+                  toggleJobs({
+                    added: value,
+                    keys: assignment.filtered_jobs
+                      .filter((j) => !j.active)
+                      .map((j) => j._key),
+                  })
+              "
+            />
+          </template>
+
+          <template #header-cell-issue_count="props">
+            <q-th :props="props">
+              <q-icon name="mdi-flag" size="14px" />
+            </q-th>
+          </template>
+
+          <template #body="props">
+            <q-tr
+              :props="props"
+              @click="
+                toggleJobs({
+                  added: !selected_jobs.has(props.row._key),
+                  keys: [props.row._key],
+                })
+              "
+              @dblclick="showWorkOrderScreen(props.row.wo_key)"
+            >
+              <q-td v-if="edit_mode">
+                <q-checkbox
+                  v-show="!props.row.active"
+                  dense
+                  :model-value="selected_jobs.has(props.row._key)"
+                  @update:model-value="
+                    (value) =>
+                      toggleJobs({
+                        added: value,
+                        keys: [props.row._key],
+                      })
+                  "
+                />
+              </q-td>
+              <template v-for="field in job_data" :key="field.name">
+                <q-td
+                  :props="props"
+                  :class="{
+                    'filter-field': search_fields.includes(field.name),
+                  }"
+                >
+                  <!-- PROGRESS -->
+                  <template v-if="field.name === 'progress'">
+                    <div class="row items-center q-col-gutter-sm">
+                      <div class="col">
+                        <BaseProgressBar :data="props.row" />
+                      </div>
+                      <span class="col-2 text-right"
+                        >{{ props.row[field.name] }} %</span
+                      >
+                    </div>
+                  </template>
+
+                  <template v-else-if="field.name.includes('qt')">
+                    {{ props.row[field.name] }}
+                  </template>
+
+                  <template v-else-if="field.name === 'issue_count'">
+                    {{
+                      (props.row.issues_open ?? 0) +
+                      '/' +
+                      (props.row.issues_total ?? 0)
+                    }}
+                  </template>
+
+                  <template v-else-if="field.name === 'ready'">
+                    <q-icon
+                      :name="jobIcon(props.row).name"
+                      :color="jobIcon(props.row).color"
+                      size="xs"
+                    >
+                      <!-- calendar-clock check-circle cube-off/toybrick-remove-->
+                    </q-icon>
+                  </template>
+
+                  <div
+                    v-else-if="field.name === 'due_by'"
+                    class="row items-center justify-end q-gutter-xs"
+                  >
+                    <q-icon
+                      v-if="props.row.due_by < now.toISOString()"
+                      color="theme-red"
+                      name="mdi-alert-octagon"
+                    />
+                    <div>
+                      {{
+                        props.row.due_by === null
+                          ? '-'
+                          : $shortDateString(props.row.due_by, $i18n.locale)
+                      }}
+                    </div>
+                  </div>
+
+                  <template v-else>
+                    <span
+                      @click.stop="setSearch(field.name, props.row[field.name])"
+                    >
+                      {{ $capitalizeAll(props.row[field.name] || '') }}
+                      <q-tooltip
+                        :delay="500"
+                        anchor="top left"
+                        self="bottom left"
+                        :offset="[8, 6]"
+                        transition-show="fade"
+                        transition-hide="fade"
+                      >
+                        <template v-if="field.name === 'product_code'">
+                          <div class="highlight">
+                            {{ props.row.product_code }}
+                          </div>
+                          <div>
+                            {{ props.row.product_description }}
+                          </div>
+                        </template>
+                        <template v-else>
+                          {{ $capitalizeAll(props.row[field.name] || '') }}
+                        </template>
+                      </q-tooltip>
+                    </span>
+                  </template>
+                </q-td>
+              </template>
+            </q-tr>
+          </template>
+        </q-table>
+
+        <q-separator
+          v-if="index < operator_assignments.length - 1"
+          class="q-my-lg q-mr-xs q-ml-sm"
+        />
+      </template>
+
+      <!-- Extra space to account for bottom toolbar -->
+      <div v-if="edit_mode" class="q-my-xl" />
     </template>
 
-    <BaseDialog
-      :show="show_assignment_dialog"
-      maximized
-      background="#0004"
-      @close="show_assignment_dialog = false"
+    <!-- ############### -->
+    <!--     ACTIONS     -->
+    <!-- ############### -->
+    <div
+      v-if="edit_mode"
+      class="row full-width bg-theme-blue justify-between q-py-sm q-px-md items-center absolute-bottom"
     >
-      <q-card
-        style="width: 60vw; height: 90vh"
-        class="q-pa-lg q-px-md background"
-      >
-        <div class="column fit">
-          <div class="row justify-between">
-            <div>
-              <!-- TODO: i18n -->
-              <div class="display text-h3">ASSEGNA LAVORI IN BLOCCO</div>
-              <div class="q-mt-sm">
-                {{
-                  $t('job.shown_jobs_message', {
-                    shown: batch_assignment_view.length,
-                    total: unassigned_jobs.length,
-                  })
-                }}
-              </div>
-            </div>
-
-            <q-input
-              v-model="assign_search_string"
-              filled
-              clearable
-              :placeholder="$t('search').toUpperCase()"
-              dense
-            >
-              <template #append>
-                <q-icon name="mdi-magnify" size="xs" />
-              </template>
-            </q-input>
-          </div>
-
-          <q-table
-            v-model:selected="jobs_to_assign"
-            square
-            :columns="batch_assignment_cols"
-            :rows="batch_assignment_view"
-            row-key="_key"
-            hide-bottom
-            color="theme-blue"
-            dense
-            flat
-            bordered
-            class="my-sticky-header-table col q-my-lg"
-            separator="none"
-            card-class="text-high full-height background"
-            table-class="q-px-none"
-            table-header-class="surface1"
-            :pagination="{ rowsPerPage: 0 }"
-            :rows-per-page-options="[0]"
-            selection="multiple"
-          >
-            <template #body-cell="props">
-              <q-td
-                v-if="search_fields.includes(props.col.name)"
-                :props="props"
-                class="filter-field"
-                @click="assign_search_string = props.value"
-              >
-                {{ props.value }}
-              </q-td>
-              <q-td v-else :props="props">
-                {{ props.value }}
-              </q-td>
-            </template>
-          </q-table>
-
-          <div
-            v-show="jobs_to_assign.length"
-            class="row text-h5 text-uppercase q-mb-sm"
-          >
-            {{
-              $t('assign') +
-              ' ' +
-              jobs_to_assign.length +
-              ' ' +
-              $t('job.label', 2)
-            }}
-          </div>
-          <div class="row q-gutter-md items-center">
-            <div class="col-6">
-              <BaseAutocompleteUser
-                v-show="jobs_to_assign.length"
-                :placeholder="$t('operator_select_prompt')"
-                :value="batch_assign_to"
-                @select="(selection) => (batch_assign_to = selection)"
-              />
-            </div>
-
-            <q-space />
-
-            <div class="col-auto">
-              <q-btn
-                v-if="batch_assign_to && jobs_to_assign.length"
-                color="theme-blue"
-                :label="$t('save')"
-                :loading="saving"
-                @click="assign_jobs"
-              />
-            </div>
-            <div class="col-auto">
-              <q-btn
-                color="theme-grey"
-                :label="$t('close')"
-                @click="
-                  () => {
-                    show_assignment_dialog = false;
-                    batch_assign_to = null;
-                  }
-                "
-              />
-            </div>
-          </div>
+      <div class="col-auto">
+        {{ $t('job.selected_count', selected_jobs.size) }}
+      </div>
+      <div class="col-auto row items-center" v-if="selected_jobs.size">
+        <div class="q-mr-md text-uppercase">
+          {{ $t('job.assign_to') }}
         </div>
-      </q-card>
-    </BaseDialog>
+        <BaseAutocompleteUser
+          dense
+          :placeholder="$t('operator_select_prompt')"
+          :value="batch_assign_to"
+          @select="(selection) => (batch_assign_to = selection)"
+        />
+      </div>
+      <div class="col-auto row">
+        <q-btn
+          v-if="batch_assign_to && selected_jobs.size"
+          size="sm"
+          color="theme-blue"
+          class="q-mr-md"
+          unelevated
+          :label="$t('save')"
+          :loading="saving"
+          @click="assignJobs"
+        />
+        <q-btn
+          size="sm"
+          color="theme-grey"
+          unelevated
+          :label="$t('cancel')"
+          @click="exitEditMode"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -358,7 +330,6 @@ import { Dialog } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
-import BaseDialog from '@/components/BaseDialog.vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
@@ -373,7 +344,6 @@ export default {
     BaseAutocompleteUser,
     BaseProgressBar,
     BaseUserAvatar,
-    BaseDialog,
     NoDataAlert,
   },
 
@@ -482,9 +452,11 @@ export default {
       assign_search_string: null,
       show_assignment_dialog: false,
       batch_assign_to: null,
+      selected_jobs: new Set(),
       jobs_to_assign: [],
       now: new Date(),
       saving: false,
+      edit_mode: false,
     };
   },
 
@@ -591,7 +563,9 @@ export default {
       for (let i = 0; i < this.assignments.length; i++) {
         const assignment = this.assignments[i];
 
-        const total_workload_hours = this.calculateWorkloadHours(assignment.assigned_jobs)
+        const total_workload_hours = this.calculateWorkloadHours(
+          assignment.assigned_jobs,
+        );
 
         // Match department filter (filter = undefined means no filter)
         const department_match = [
@@ -660,7 +634,9 @@ export default {
               name: this.$t('job.unassigned_jobs'),
               surname: '',
             },
-            total_workload_hours: this.calculateWorkloadHours(this.unassigned_jobs),
+            total_workload_hours: this.calculateWorkloadHours(
+              this.unassigned_jobs,
+            ),
             assigned_jobs_count: this.unassigned_jobs.length,
             filtered_jobs: filtered_unassigned_jobs,
           });
@@ -711,6 +687,26 @@ export default {
         : job.next_batch_available
           ? { name: 'mdi-check-circle', color: 'theme-blue' }
           : { name: 'mdi-cube-off', color: 'orange-backdrop' };
+    },
+
+    userJobsModel(filtered_jobs) {
+      const user_selected_jobs = filtered_jobs.filter((j) =>
+        this.selected_jobs.has(j._key),
+      );
+      if (user_selected_jobs.length) {
+        return user_selected_jobs.length ===
+          filtered_jobs.filter((j) => !j.active).length
+          ? true
+          : undefined;
+      } else {
+        return false;
+      }
+    },
+
+    toggleJobs({ added, keys }) {
+      added
+        ? keys.map((k) => this.selected_jobs.add(k))
+        : keys.map((k) => this.selected_jobs.delete(k));
     },
 
     matchJobToFilters(job) {
@@ -858,17 +854,23 @@ export default {
       this.$emit('itemDblClick', data_to_emit);
     },
 
-    async assign_jobs() {
-      const job_updates = this.jobs_to_assign.map((job) => ({
+    exitEditMode() {
+      this.selected_jobs = new Set();
+      this.batch_assign_to = null;
+      this.edit_mode = false;
+    },
+
+    async assignJobs() {
+      const job_updates = Array.from(this.selected_jobs).map((_key) => ({
         action: 'update',
-        data: { _key: job._key, assigned_to: this.batch_assign_to._key },
+        data: { _key, assigned_to: this.batch_assign_to._key },
       }));
       this.saving = true;
       await this.$api.post('job/update', job_updates);
       setTimeout(() => {
         this.$store.dispatch('loadJobAssignments');
         this.saving = false;
-        this.jobs_to_assign = [];
+        this.selected_jobs = new Set();
         this.batch_assign_to = null;
         this.$q.notify({
           message: this.$t('assignment_success'),
@@ -899,11 +901,13 @@ export default {
     calculateWorkloadHours(job_list) {
       const total_workload_seconds = job_list.reduce((sum, job) => {
         // Prevent negative workload when completed qt is higher than planned due to work order qt updates
-        return sum += job.parameters.std_processing_time * Math.max(0, job.qt_planned - job.qt_completed)
-      }, 0)
+        return (sum +=
+          job.parameters.std_processing_time *
+          Math.max(0, job.qt_planned - job.qt_completed));
+      }, 0);
 
-      return Math.ceil(total_workload_seconds / 360) / 10 // round up to first decimal
-    }
+      return Math.ceil(total_workload_seconds / 360) / 10; // round up to first decimal
+    },
   },
 };
 </script>
