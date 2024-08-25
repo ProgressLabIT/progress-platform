@@ -36,7 +36,7 @@
             {{ prop.node.product_code }}
           </div>
           <q-btn
-            v-if="over_key === prop.node.key && edit_mode"
+            v-if="over_key === prop.node.key && !edit_mode"
             flat
             round
             icon="mdi-pencil"
@@ -73,6 +73,7 @@
 <script>
 import { Dialog } from 'quasar';
 import SerialComponentLinkEditDialog from '@/components/traceability/SerialComponentLinkEditDialog.vue';
+import { timestamp } from '@/lib/TimeHandling.js';
 
 export default {
   name: 'SerialTree',
@@ -102,6 +103,12 @@ export default {
       over_key: null,
       nodes: [],
     };
+  },
+
+  computed: {
+    session_data() {
+      return this.$store.state.session;
+    },
   },
 
   watch: {
@@ -145,8 +152,6 @@ export default {
     },
 
     async initData() {
-      this.saving = false;
-      this.enableSave = false;
       this.nodes = [];
     },
 
@@ -209,22 +214,22 @@ export default {
     },
 
     async editComponentLink(node) {
-      console.log(node);
-
+      let parent_serial = this.$store.getters.getSerialData(node.parent_key);
       let serial = this.$store.getters.getSerialData(node.key);
 
       let serialModel = {
         _key: serial._key,
         label: serial.code,
         product_key: serial.product_key,
-        wo_key: serial.wo_key,
+        wo_key: parent_serial.wo_key,
         value: serial._key,
+        reason: '',
       };
 
       let initial_values = [];
       initial_values.push(serialModel);
 
-      return await new Promise((resolve) => {
+      let new_values = await new Promise((resolve) => {
         Dialog.create({
           component: SerialComponentLinkEditDialog,
           componentProps: {
@@ -233,9 +238,55 @@ export default {
             initial_values: initial_values,
           },
         })
-          .onOk(() => resolve(true))
-          .onCancel(() => resolve(false));
+          .onOk((new_values) => resolve(new_values))
+          .onCancel(() => resolve(NaN));
       });
+
+      if (new_values) {
+        if (!new_values.reason) {
+          window.alert(this.$t('serial_field.missing_reason'));
+          this.saving = false;
+          return;
+        }
+
+        let link_data = [];
+        link_data.push({
+          wo_key: parent_serial.wo_key,
+          component_key: serial.product_key,
+          from_serial: node.parent_key,
+          to_serial: serial._key,
+          reason: new_values.reason,
+          replaced: true,
+        });
+
+        link_data.push({
+          wo_key: parent_serial.wo_key,
+          component_key: serial.product_key,
+          batch_key: this.batch_key,
+          from_serial: node.parent_key,
+          to_serial: new_values._key,
+          reason: null,
+          replaced: false,
+        });
+
+        const event = {
+          event_type: 'SERIAL_LINKED',
+          user_key: this.session_data.session_key,
+          timestamp: timestamp(),
+          wo_key: serial.wo_key,
+          serial_link_data: link_data,
+        };
+
+        await this.$api.post('event', event);
+        this.nodes = [];
+        this.getSerialHierarcy();
+        setTimeout(() => {
+          if (this.$refs.serialNodes) {
+            this.$refs.serialNodes.expandAll();
+          }
+        }, 500);
+        //this.$emit('close');
+      }
     },
   },
 };

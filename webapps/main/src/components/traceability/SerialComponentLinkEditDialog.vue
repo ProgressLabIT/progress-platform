@@ -19,7 +19,6 @@
           "
           :initial_values="initial_values"
           :product_key="start_node.product_key"
-          :loading="loading"
           :can_create="true"
           :selection_qt="1"
           :filter_used="true"
@@ -27,9 +26,9 @@
         </BaseAutocompleteSerial>
       </q-card-section>
       <q-card-section>
-        <q-input v-model="reason" />
+        <q-input v-model="serial_model.reason" />
       </q-card-section>
-      <q-form id="serial-form" @submit="onDialogOK()">
+      <q-form id="serial-form" @submit="onDialogOK(serial_model)">
         <q-card-actions align="between" class="q-mt-md">
           <q-btn
             color="theme-grey"
@@ -77,7 +76,6 @@ const props = defineProps({
 let start_node = ref(props.node);
 let serial_model = ref(props.serial);
 let initial_values = ref(props.initial_values);
-let reason = '';
 
 defineEmits(useDialogPluginComponent.emitsObject);
 
