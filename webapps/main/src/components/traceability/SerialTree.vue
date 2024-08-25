@@ -36,7 +36,12 @@
             {{ prop.node.product_code }}
           </div>
           <q-btn
-            v-if="over_key === prop.node.key && !edit_mode"
+            v-if="
+              prop.node.parent_key &&
+              !prop.node.replaced &&
+              over_key === prop.node.key &&
+              !edit_mode
+            "
             flat
             round
             icon="mdi-pencil"
