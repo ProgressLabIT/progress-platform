@@ -206,13 +206,18 @@ export default {
         }
         for (const child of serial.childs) {
           if (child.product_key === this.component_key) {
-            this.serialModel[serial._id].push({
+            let serial_link = {
               _key: child._key,
               label: child.code,
               product_key: child.product_key,
               wo_key: child.wo_key,
               value: child._key,
-            });
+            };
+            if (this.component_per_product > 1) {
+              this.serialModel[serial._id].push(serial_link);
+            } else {
+              this.serialModel[serial._id] = serial_link;
+            }
             this.booked_serials.push(child.code);
             this.initialValues.push({
               from_serial: serial._key,

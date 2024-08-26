@@ -267,13 +267,19 @@ export default {
             this.replace_serials[key] = false;
             this.replace_serials_reason[key] = null;
           }
-          this.serialModel[key].push({
+          let serial_link = {
             _key: child._key,
             label: child.code,
             product_key: child.product_key,
             wo_key: child.wo_key,
             value: child._key,
-          });
+          };
+          if (this.component_qt[child.product_key] > 1) {
+            this.serialModel[key].push(serial_link);
+          } else {
+            this.serialModel[key] = serial_link;
+          }
+
           this.initialValues.push({
             from_serial: serial._key,
             to_serial: child._key,
