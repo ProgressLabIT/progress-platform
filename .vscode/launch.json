@@ -1,0 +1,75 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: API Remote Attach",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "0.0.0.0",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/backend/api",
+          "remoteRoot": "/api"
+        }
+      ],
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Traceability service Remote Attach",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "0.0.0.0",
+        "port": 5778
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/backend/traceability-service",
+          "remoteRoot": "/traceability-service"
+        }
+      ],
+      "justMyCode": true
+    },
+    {
+      "name": "Launch webapp",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/webapps/main",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["run", "dev"]
+    },
+    {
+      "name": "Launch test",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/testing",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "test"]
+    },
+    {
+      "name": "WSL Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:9000",
+      "webRoot": "${workspaceFolder}/webapps/main",
+      "sourceMapPathOverrides": {
+        "webpack:///./src/*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "Launch Cypress",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/testing",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "open-cypress"]
+    }
+  ]
+}
