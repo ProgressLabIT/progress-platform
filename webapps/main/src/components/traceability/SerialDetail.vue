@@ -241,6 +241,11 @@ export default {
       this.saving = true;
 
       let serial_data = this.serial;
+      if (this.serial?.data) {
+        for (const field_data of this.serial.data) {
+          field_data.form_field_key = field_data._key;
+        }
+      }
 
       if (this.missingMandatoryValues(this.serial.data)) {
         window.alert(this.$t('fill_mandatory_fields'));
