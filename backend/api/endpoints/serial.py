@@ -128,12 +128,13 @@ def get_serial_hierarchy(
 
     serial_hierarchy = []
     for starting_serial in starting_serials:
-      serial_children = get_children(serial_key=starting_serial, serials=serials, level=0)
-      merged_serial = dict()
-      merged_serial.update(serials[starting_serial])
-      if (len(serial_children)>0):
-        merged_serial['children'] = serial_children
-      serial_hierarchy.append(merged_serial)
+      if (starting_serial in serials):
+         serial_children = get_children(serial_key=starting_serial, serials=serials, level=0)
+         merged_serial = dict()
+         merged_serial.update(serials[starting_serial])
+         if (len(serial_children)>0):
+           merged_serial['children'] = serial_children
+         serial_hierarchy.append(merged_serial)
 
     return serial_hierarchy
   except Exception:

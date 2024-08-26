@@ -55,6 +55,7 @@ class Queries:
       LET start = @serial_id
         FOR v, e IN 0..9999 ANY start contains OPTIONS { uniqueVertices: "path" }
           LET product = DOCUMENT(Product, v.product_key)
+          FILTER v.deleted == false
 
           RETURN merge({
               serial_id: v._id,
