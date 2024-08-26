@@ -107,7 +107,7 @@ class SerialEventManager:
       ).dict(by_alias=True)
 
       #tx = self.tx.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
-      if new_serial_record['code'] != None and not self.verify_serial_code_free(None, new_serial_record['code']):
+      if new_serial_record['code'] != None and not self.verify_serial_code_free(None, new_serial_record['product_key'], new_serial_record['code']):
          self.notify_results(dict(
             serial = new_serial_record['code'],
             notification = SerialNotificationType.ERROR,
@@ -258,12 +258,13 @@ class SerialEventManager:
        for i in range(int(quantity)):
           self.create_serial(serial_data=serial_data.dict(), batch_key=batch_key, finalize=False)
 
-    def verify_serial_code_free(self, serial_key, serial):
+    def verify_serial_code_free(self, serial_key, product_key, serial):
        cursor = self.tx.aql.execute(
           Queries.GET_SERIALS_FOR_SERIAL_CODE,
           bind_vars=dict(
             serial_key=serial_key,
-            serial=serial
+            serial=serial,
+            product_key=product_key
           )
         )
        try:
@@ -273,7 +274,7 @@ class SerialEventManager:
 
     def update_serial(self):
 
-       if (self.serial_data.get('code') != None and not self.verify_serial_code_free(serial_key=self.serial_data.get("_key"), serial=self.serial_data.get('code'))):
+       if (self.serial_data.get('code') != None and not self.verify_serial_code_free(serial_key=self.serial_data.get("_key"), product_key=self.serial_data.get("product_key"), serial=self.serial_data.get('code'))):
           self.notify_results(dict(
               serial = self.serial_data.get('code'),
               serial_key = self.serial_data.get("_key"),

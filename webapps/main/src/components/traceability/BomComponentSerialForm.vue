@@ -240,7 +240,7 @@ export default {
         for (const serial of selectedSerials) {
           temp_booked_serials.push(serial.label);
         }
-      } else {
+      } else if (selectedSerials) {
         temp_booked_serials.push(selectedSerials.label);
       }
 

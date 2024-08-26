@@ -260,20 +260,27 @@ export default {
         this.last_research = search_value;
       }
       if (search_value) {
-        this.$api.get(`/serial-code/${search_value}`).then((resp) => {
-          if (resp.data?.length <= 0) {
-            this.code_free = true;
-          }
-          this.$api
-            .get('serial-selection', {
-              params: params,
-            })
-            .then((resp) => {
-              this.options = resp.data;
-              this.addInitialValues(search_value);
-              this.loading = false;
-            });
-        });
+        this.$api
+          .get('serial-code', {
+            params: {
+              serial_code: search_value,
+              product_key: this.product?._key || this.product_key,
+            },
+          })
+          .then((resp) => {
+            if (resp.data?.length <= 0) {
+              this.code_free = true;
+            }
+            this.$api
+              .get('serial-selection', {
+                params: params,
+              })
+              .then((resp) => {
+                this.options = resp.data;
+                this.addInitialValues(search_value);
+                this.loading = false;
+              });
+          });
       } else {
         this.$api
           .get('serial-selection', {

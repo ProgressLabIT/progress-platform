@@ -124,6 +124,7 @@ class Queries:
   GET_SERIALS_FOR_SERIAL_CODE = """
     FOR s IN Serial
       FILTER (@serial_key ? s._key != @serial_key : true) && s.code == @serial
+      && s.product_key == @product_key
       RETURN s
   """
 
@@ -149,7 +150,7 @@ class Queries:
 
   GET_SERIALS_FOR_CODE = """
     FOR s IN Serial
-      FILTER (@serial_code ? s.code == @serial_code : false)
+      FILTER (s.code == @serial_code && s.product_key == @product_key)
       RETURN s
   """
 
