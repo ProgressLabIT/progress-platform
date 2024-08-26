@@ -18,10 +18,9 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
-
-# Sublime files
 *.sublime-project
 *.sublime-workspace
+*.code-workspace
 
 
 # Media
