@@ -3,17 +3,20 @@ from collections import deque
 from events.base import BaseEvent
 from events.shared import EventMeta
 from models.production import Job, WorkStatus
-from models.traceability import Batch, WIP, WorkSession
+from commons.models.traceability import Batch, WIP, WorkSession
+from commons.utils.serial import Queries as SerialQueries
+
 from utils.exceptions import (
   JobHasActiveBatchError,
   JobHasNoActiveBatchError,
   JobHasNoAssigneeError,
   JobIsNotStartedError,
   JobIsActiveError,
+  QuantityOverrideForSerialsNotAllowed,
   WipNotAvailableError
 )
-from utils.traceability import Queries as TraceabilityQueries
 from utils.production import Queries as ProductionQueries
+from utils.traceability import Queries as TraceabilityQueries
 
 
 class Queries:
@@ -33,6 +36,14 @@ class Queries:
     """
 
 class ProductionAdminEvent(BaseEvent):
+
+  # =====================================================================================
+  # UTILITIES
+  # =====================================================================================
+  
+  def flag_job_as_forced(self):
+    job_update = dict(_key=self.info.job_key, forced=self.info.id)
+    self.tx.collection('Job').update(job_update)
 
   # =====================================================================================
   # TIME OVERRIDE
@@ -95,7 +106,7 @@ class ProductionAdminEvent(BaseEvent):
       except ZeroDivisionError:
         batch_quota = 1
 
-      batch_duration = new_job_duration * batch_quota
+      batch_duration = int(new_job_duration * batch_quota) # it's milliseconds, no need for decimals here
 
       batch_update = dict(
         _key = b.key,
@@ -226,6 +237,10 @@ class ProductionAdminEvent(BaseEvent):
   # -----------------------------------------------------
 
   def override_progress(self):
+    # TODO: handle StepExecutionData
+    # shouldn't be able to increase the quantity if required fields are present in the process
+    # decreasing the quantity should cancel StepExecutionData of the canceled batches
+
     self.job = Job(**self.tx.collection('Job').get(self.info.job_key))
 
     if self.job.assigned_to == None:
@@ -236,6 +251,9 @@ class ProductionAdminEvent(BaseEvent):
 
     if self.job.active_batch_qt:
       raise JobHasActiveBatchError("You can't override progress if the job has an active batch. Cancel the current batch first.")
+    
+    if self.job.traceability_level:
+      raise QuantityOverrideForSerialsNotAllowed("You can't override progress with traceability enabled, you can reset the job instead.")
 
     # Initialize job update.
     # Will save at the end after enrichment based on override type
@@ -337,7 +355,7 @@ class ProductionAdminEvent(BaseEvent):
             work_order_key = self.job.wo_key,
             product_key = self.job.product_key,
             hourly_cost = average_hourly_cost,
-            duration = total_duration * quantity_ratio,
+            duration = int(total_duration * quantity_ratio),
             forced = self.info.id
           )
           new_work_sessions.append(
@@ -385,7 +403,6 @@ class ProductionAdminEvent(BaseEvent):
 
       # Reset job to created status if necessary
       if self.info.new_job_qt_completed == 0:
-        self.job_reset = True # used to reset work order too if necessary
         job_update['stage'] = WorkStatus.CREATED
 
       # 2. Flag last N batches with `canceled: true`
@@ -585,7 +602,7 @@ class ProductionAdminEvent(BaseEvent):
   # ========================================================================
 
   BATCH_CANCELED = EventMeta(
-    collections = ['Job', 'Batch', 'wip', 'WorkOrder', 'WorkSession'],
+    collections = ['Batch', 'batch_serial', 'Job', 'Serial', 'StepExecutionData', 'wip', 'WorkOrder', 'WorkSession'],
     action='cancel_batch',
     post_processing=['update_work_order', 'flag_job_as_forced'],
     event_first = True
@@ -600,7 +617,7 @@ class ProductionAdminEvent(BaseEvent):
     if self.job.active_batch_qt == 0:
       raise JobHasNoActiveBatchError("The job has no active batch to cancel")
 
-    # 1. Cancel batch
+    # Cancel batch
     batch_key = self.job.active_batch_key
     batch_update = dict(
       _key = batch_key,
@@ -610,12 +627,13 @@ class ProductionAdminEvent(BaseEvent):
     )
     self.tx.collection('Batch').update(batch_update)
 
-    # 2. Cancel work sessions
-    ws_match = dict(batch_key=batch_key)
-    ws_update = dict(canceled=self.info.id)
-    self.tx.collection('WorkSession').update_match(ws_match, ws_update)
+    # Cancel StepExecutionData & WorkSession records
+    match = dict(batch_key = batch_key)
+    update = dict(canceled = self.info.id)
+    self.tx.collection('StepExecutionData').update_match(match, update)
+    self.tx.collection('WorkSession').update_match(match, update)
 
-    # 3. Free booked wip
+    # Free booked wip
     if not self.job.first_phase:
       wip_match = dict(_to=f'Job/{self.job.key}', active=True)
       wip_update = dict(_to=f'Phase/{self.job.phase_key}', active=False)
@@ -627,8 +645,36 @@ class ProductionAdminEvent(BaseEvent):
           phase_keys = [self.job.phase_key]
         )
       )
+    elif self.job.traceability_level: 
+      # self.job.first_phase = True
+      # Remove incomplete serials and the relative link. 
+      # TODO: use a named graph to avoid deleting links explicitly
+      self.tx.aql.execute("""
+        FOR serial IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
+        REMOVE serial IN Serial
+      """, bind_vars=dict(batch_key=batch_key))
 
-    # 3. Update Job, removing progress from steps, if any, of former active batch
+    if self.job.traceability_level: # both first and following phases
+      # Remove obsolete batch_serial records and reset phase serial data
+      # Remember that serials documents have already been removed
+      serials_cursor = self.tx.aql.execute("""
+        FOR s, bs IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
+        REMOVE bs IN batch_serial                 
+        LET removed = OLD
+        RETURN PARSE_IDENTIFIER(OLD._to).key
+      """, bind_vars=dict(batch_key=batch_key))
+
+      batch_serial_keys = [serial_key for serial_key in serials_cursor]
+      
+      self.tx.aql.execute(
+        SerialQueries.REMOVE_PHASE_DATA_FROM_SERIALS,
+        bind_vars = dict(
+          serial_keys = batch_serial_keys,
+          phase_keys = [self.job.phase_key]
+        )
+      )
+
+    # Update Job, removing progress from steps, if any, of former active batch
     job_update = dict(
       _key = self.job.key,
       active_batch_key = None,
@@ -638,7 +684,6 @@ class ProductionAdminEvent(BaseEvent):
 
     # Reset as created if batch is first
     if self.job.qt_completed == 0:
-      self.job_reset = True # used to reset work order too if necessary
       job_update['stage'] = 'created'
       job_update['start'] = None
 
@@ -648,10 +693,135 @@ class ProductionAdminEvent(BaseEvent):
 
   # ========================================================================
 
-  def flag_job_as_forced(self):
-    job_update = dict(_key=self.info.job_key, forced=self.info.id)
+  JOB_RESET = EventMeta(
+    collections = ['Batch', 'batch_serial', 'Job', 'Serial', 'StepExecutionData', 'wip', 'WorkOrder', 'WorkSession'],
+    action='reset_job',
+    post_processing=['update_work_order', 'flag_job_as_forced'],
+    event_first = True
+  )
+
+
+  def reset_job(self):
+    self.get_job_data()
+
+    # Cancel Batches
+    job_batches_cursor = self.tx.aql.execute("""
+      FOR b IN Batch
+      FILTER b.job_key == @job_key
+      UPDATE b WITH { canceled: @event_key } IN Batch
+      LET updated = NEW
+      RETURN updated._key                                             
+    """, bind_vars = dict(
+      job_key = self.job.key, 
+      event_key = self.info.id
+    ))
+    job_batch_keys = [b for b in job_batches_cursor]
+
+    # Check there's enough free available downstream wip of job.last_phase before resetting the job
+    available_wip = self.tx.aql.execute(
+      TraceabilityQueries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB,
+      bind_vars = dict(job_key=self.job.key)
+    ).next()
+
+    free_wip_qt_downstream = sum(w['quantity'] for w in available_wip['downstream_free_wip'])
+
+    if self.job.traceability_level:
+      # Updates will be rolled back if the availability check will fail.
+
+      # Delete Serial Links
+      cursor = self.tx.aql.execute("""
+        FOR b IN @batch_keys
+        FOR s, e IN 1..1 OUTBOUND CONCAT('Batch/', b) batch_serial
+        LET serial_key = s._key
+        REMOVE e IN batch_serial
+        RETURN serial_key
+      """, bind_vars=dict(batch_keys=job_batch_keys))
+      job_serial_keys = [s for s in cursor]
+
+      # Check all serials are available in the phase buffer downstream
+      wip_serials_count = self.tx.aql.execute("""
+        FOR w IN wip
+        FILTER 
+          w.serial_key IN @job_serial_keys
+          AND w._from == CONCAT('Phase/', @phase_key)
+        RETURN 1
+        """,
+        bind_vars = dict(
+          job_serial_keys = job_serial_keys,
+          phase_key = self.job.phase_key
+        ),
+        count=True
+      ).count()
+
+      # Cancel Serials (if first phase)
+      if self.job.first_phase:
+        serial_updates = [dict(_key=s, deleted=True) for s in job_serial_keys]
+        self.tx.collection('Serial').update_many(serial_updates)
+
+      else:
+        # Delete data from serials
+        self.tx.aql.execute(
+          SerialQueries.REMOVE_PHASE_DATA_FROM_SERIALS,
+          bind_vars = dict(
+            serial_keys = job_serial_keys,
+            phase_keys = [self.job.phase_key]
+          )
+        )
+
+        # Make serials available as wip from previous phase
+        new_wip_records = [dict(
+          _from = f"Phase/{available_wip['previous_phase_key']}",
+          _to = f"Phase/{self.job.phase_key}",
+          batch_key = None,
+          wo_key = self.job.wo_key,
+          product_key = self.job.product_key,
+          quantity = 1,
+          serial_key = s,
+          forced = self.info.id
+        ) for s in job_serial_keys]
+
+        self.tx.collection('wip').insert_many(new_wip_records)
+
+    else: # No traceability - updates will be rolled back if there's no availability
+      # Add upstream wip
+      self.tx.collection('wip').insert(dict(
+        _from = f"Phase/{available_wip['previous_phase_key']}",
+        _to = f"Phase/{self.job.phase_key}",
+        batch_key = None,
+        wo_key = self.job.wo_key,
+        product_key = self.job.product_key,
+        quantity = self.job.qt_released,
+        forced = self.info.id
+      ))
+
+    availability_check_ref = wip_serials_count if self.job.traceability_level else free_wip_qt_downstream
+
+    if not self.job.last_phase and availability_check_ref < self.job.qt_released:
+      raise WipNotAvailableError("You can't reset the job because its output is being worked on in following phases. Reset those jobs first.")
+
+    # Cancel StepExecutionData and WorkSession records
+    match = dict(job_key = self.info.job_key)
+    update = dict(canceled = self.info.id)
+    self.tx.collection('StepExecutionData').update_match(match, update)
+    self.tx.collection('WorkSession').update_match(match, update)
+
+    # Delete downstream wip
+    if not self.job.last_phase:
+      self.tx.aql.execute("""
+        FOR w IN wip
+        FILTER w.batch_key in @batch_keys
+        REMOVE w IN wip
+      """, bind_vars=dict(batch_keys=job_batch_keys))
+
+    # Update job as created
+    job_update = dict(
+      _key = self.info.job_key,
+      qt_completed = 0,
+      qt_released = 0,
+      stage = 'created',
+      start = None,
+      end = None,
+      progress = 0
+    )
     self.tx.collection('Job').update(job_update)
-
-  # REMEMBER TO WIRE IN WORK ORDER UPDATE!!!
-
 

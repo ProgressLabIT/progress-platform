@@ -1,8 +1,8 @@
 from events.base import BaseEvent
 from events.shared import EventMeta
 from models.collaboration import Issue, IssueLink, IssueWithLinks
-from models.form import FileBucket
-from utils.dt import timestamp
+from commons.models.form import FileBucket
+from commons.utils.dt import timestamp
 from utils.collaboration import Queries
 from utils.file import FileHandler
 
@@ -65,7 +65,8 @@ class CollaborationEvent(BaseEvent):
       work_order="WorkOrder/",
       project="Project/",
       user="User/",
-      job="Job/"
+      job="Job/",
+      serial="Serial/"
     )
     target = link_map[link_dict.type.value] + link_dict.key
     return dict(_from=_from, _to=target)

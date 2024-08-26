@@ -1,3 +1,4 @@
+import VueCookies from 'vue-cookies';
 import { api } from '@/boot/axios.js';
 
 const session = {
@@ -24,7 +25,6 @@ const session = {
     UPDATE_AUTH_TOKEN(state, new_token) {
       state.auth_token = new_token;
     },
-
     START_USER_SESSION(state, data) {
       state.user = {
         _key: data.user_key,
@@ -34,6 +34,7 @@ const session = {
       };
       state.session_key = data.session_key;
       state.scope = data.scope;
+      //state.auth_token = null;
       // state.session_timeout = data.timeout
     },
 
@@ -41,11 +42,11 @@ const session = {
       state.user = { name: null, surname: null, _key: null, preferences: {} };
       state.session_key = null;
       state.scope = null;
-      state.auth_token = null;
 
       // Make sure to cancel any residual locking mechanism after logout
       // clearTimeout(state.session_timer)
       state.session_locked = false;
+      state.auth_token = null;
     },
 
     TOGGLE_SESSION_LOCK(state, locked) {
@@ -68,6 +69,10 @@ const session = {
     UPDATE_PREFERENCES(state, preferences) {
       state.user.preferences = preferences;
     },
+
+    UPDATE_USER_KEY(state, key) {
+      state.user_key = key;
+    },
   },
 
   actions: {
@@ -85,9 +90,14 @@ const session = {
           */
         }
       }
-      await api.delete(`session/${state.session_key}`);
+      try {
+        await api.delete(`session/${state.session_key}`);
+      } catch {
+        /*force deleting session even if not present*/
+      }
+      await commit('CLOSE_USER_SESSION');
       await this.$router.push({ name: 'login' });
-      commit('CLOSE_USER_SESSION');
+      VueCookies.delete('Authorization');
     },
 
     unlockSession({ commit }) {
@@ -105,19 +115,50 @@ const session = {
       });
       commit('UPDATE_PREFERENCES', updatedPreferences);
     },
+
+    async recognizeMe({ commit, state }) {
+      const cookie = VueCookies.get('Authorization');
+      if (cookie) {
+        await commit('UPDATE_AUTH_TOKEN', cookie);
+      }
+
+      if (state.session_key) {
+        return state.session_key !== 'UNRECOGNIZED';
+      }
+
+      const { data } = await api.get(`whoami`);
+      let user_key = data?.detail?.user_key;
+      if (user_key) {
+        const { data } = await api.post(`session`, { user_key: user_key });
+        if (data.detail) {
+          await commit('START_USER_SESSION', data.detail);
+          await commit('SET_SESSION_TIMEOUT');
+        } else {
+          user_key = 'UNRECOGNIZED';
+          commit('UPDATE_USER_KEY', user_key);
+        }
+      } else {
+        user_key = 'UNRECOGNIZED';
+        commit('UPDATE_USER_KEY', user_key);
+      }
+
+      return user_key !== 'UNRECOGNIZED';
+    },
   },
 
   getters: {
     getToken: (state) => {
+      if (!state.auth_token) {
+        return '';
+      }
       return state.auth_token;
     },
 
     isLoggedIn: (state) => {
-      const token = state.auth_token;
       const session = state.session_key;
       const user = state.user._key;
 
-      return token && user && session;
+      return user && session;
     },
 
     hasPermission: (state) => (route_scope) => {
@@ -146,6 +187,8 @@ const session = {
           return 'adminPanel';
         case scopes.includes('quality'):
           return 'qualityRoot';
+        case scopes.includes('traceability'):
+          return 'traceabilityRoot';
         case scopes.includes('reporting'):
           return 'reportRoot';
         default:

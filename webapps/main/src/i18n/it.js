@@ -10,6 +10,7 @@ export default {
   add: 'aggiungi',
   add_equipment: 'aggiungi attrezzature',
   add_field: 'aggiungi campo',
+  remove_field: 'rimuovi campo',
   add_operator: 'aggiungi operatore | aggiungi operatori',
   advanced_filters: 'filtri avanzati',
   all: 'tutto | tutti',
@@ -20,11 +21,14 @@ export default {
   assignment_success: 'Lavori assegnati con successo',
   back: 'Indietro',
   batch: 'lotto',
-  batch_completed_quantity_question: 'Quanti nuovi pezzi vuoi dichiarare?',
+  batch_completed_quantity_question: 'Quanti pezzi stai lavorando?',
+  batch_serial_select: 'Seleziona seriali batch',
+  batch_declare_serial: 'Inserisci i seriali del batch',
   bom: {
     add_line: 'aggiungi riga',
     alerts: {
       line_exists: 'Articolo già presente in distinta per questa fase',
+      quantity_negative: 'La quantità per deve essere positiva',
     },
     delete_selected: 'elimina selezionati',
     edit: 'modifica distinta',
@@ -32,9 +36,15 @@ export default {
     label: 'distinta',
     missing: 'nessuna distinta',
     quantity_type: {
+      item: 'pezzo',
       job: 'lavoro',
       batch: 'lotto',
       radio_label: 'mostra quantità per:',
+    },
+    bom_type: {
+      job_bom: 'fase',
+      wo_bom: 'Ordine Produzione',
+      radio_label: 'mostra materiali per:',
     },
   },
   by: 'entro',
@@ -72,6 +82,8 @@ export default {
   },
   create: 'crea',
   create_order: 'crea ordine',
+  created_max: 'Creato (max)',
+  created_min: 'Creato (min)',
   creation_date: 'data creazione',
   critical: 'critico',
   date_format: 'AAAA/MM/GG',
@@ -119,6 +131,8 @@ export default {
     MESSAGE_POSTED: 'Messaggio pubblicato',
     MESSAGE_UPDATED: 'Messaggio modificato',
     MESSAGE_DELETED: 'Messaggio cancellato',
+    SERIAL_CREATED: 'Seriale creato',
+    SERIAL_LINKED: 'Seriale collegato',
   },
   export: 'Esporta',
   ext_key: 'Chiave esterna',
@@ -128,6 +142,8 @@ export default {
   field_delete_success: 'Campo eliminato',
   field_delete_text:
     'Il campo verrà eliminato. Non sarà più visualizzato nei moduli che lo utilizzavano, ma i dati già registrati non verranno cancellati.',
+  serial_field_delete_text:
+    'Il campo verrà rimosso dalla creazione dei seriali, ma i dati già registrati non verranno cancellati.',
   field_multiple: 'Valori multipli',
   field_new: 'Nuovo campo',
   field_none: 'Nessun campo',
@@ -208,6 +224,12 @@ export default {
   issue_type_update_success: 'Tipo di segnalazione aggiornata con successo',
   issue_update_success: 'Segnalazione aggiornata con successo',
   issue_update_title: 'Modifica segnalazione',
+  serial_id: 'id matricola',
+  serial: 'matricola',
+  serials: 'matricole',
+  serial_data: 'Dati matricola',
+  serial_new_title: 'Nuova matricola',
+  serial_update_title: 'Modifica seriale',
   item: 'articolo | articoli',
   job: {
     add: 'aggiungi lavoro',
@@ -253,6 +275,7 @@ export default {
     start: 'inizia',
     unassigned: 'non assegnato | non assegnati',
     unassigned_jobs: 'lavori non assegnati',
+    link_serials: 'seleziona seriali e inizia',
   },
   label: 'Etichetta',
   language: 'lingua',
@@ -286,6 +309,7 @@ export default {
   material_cost: 'costo materiali',
   material: 'materiale | materiali',
   max: 'max',
+  max_quantity_reached: 'Quantità massima raggiunta',
   message: 'Messaggio | Messaggi',
   message_prompt: 'Scrivi...',
   min: 'min',
@@ -355,6 +379,8 @@ export default {
   },
   personnel: 'personale',
   phase: {
+    phase: 'fase',
+    step: 'passo',
     add: 'aggiungi fase',
     add_field: 'aggiungi campo',
     add_media: 'aggiungi media',
@@ -500,6 +526,8 @@ export default {
     downloadWillBegin: 'Il download inizierà a breve!',
   },
   print_template: 'Stampa | Stampe',
+  print_template_confirm_delete_question:
+    "Vuoi davvero cancellare questo template?  E' associato a {entities} entita",
   print_templates: 'Stampe',
   print_template_new: 'Nuovo template',
   print_template_none: 'Nessun template',
@@ -569,6 +597,7 @@ export default {
       unassigned: 'Non assegnato',
     },
     save_new_sequence: 'salva nuova sequenza',
+    sort_by_date: 'ordina per data',
     search_explainer: 'ricerca termini in uno o più dei seguenti campi',
   },
   progress: 'avanzamento',
@@ -606,6 +635,7 @@ export default {
   resume: 'riprendi',
   save: 'salva',
   save_or_cancel_before_change: 'Salva o annulla le modifiche prima',
+  scan_serial: 'Scannerizza o scrivi il seriale e premi invio per selezionarlo',
   scroll: {
     to_top: 'torna su',
   },
@@ -668,6 +698,8 @@ export default {
   tagInput: {
     noData:
       'Nessun tag trovato. Inserisci almeno {minChars} caratteri per crearne uno nuovo.',
+    after_options:
+      'Inserisci almeno {minChars} caratteri per crearne un nuovo tag.',
     create: {
       label: 'Crea nuovo tag "{name}"',
       hint: 'Clicca o premi {key} per creare',
@@ -681,6 +713,22 @@ export default {
   title: 'titolo',
   total_cost: 'costo totale',
   type: 'Tipo',
+  next_tick: 'Contatore',
+  template: 'Modello',
+  frequency: 'Frequenza',
+  reset_date: 'Data reset',
+  reset_job: 'Annulla progresso',
+  reset_job_confirm: "Vuoi annullare l'intero progresso del lavoro?",
+  reset_job_disabled:
+    'Disponibile in assenza di quantità attiva e con progresso > 0',
+  reset_job_success: 'Lavoro resettato correttamente',
+  counter: 'Contatore',
+  counter_add: 'Aggiungi contatore',
+
+  counter_delete: 'Elimina contatore',
+  counter_delete_success: 'Contatore eliminato',
+  counter_delete_text:
+    'Il contatore verrà eliminato, ma i seriali già registrati non verranno cancellati.',
   unassigned: 'non assegnato | non assegnati',
   unsaved: 'non salvato',
   undo: 'ripristina',
@@ -701,7 +749,7 @@ export default {
     },
     archive_action: 'archivia utente',
     archive_explainer:
-      "I dati dell'utente non verranno effettivamente eliminati ma solo archiviati: l'utente non verrà visualizzato negli elenchi, ma potrà essere ripristinato dalla sezione archivio e i suoi dati saranno inclusi nelle analisi di tracciabilità.",
+      "I dati dell'utente non verranno effettivamente eliminati ma solo archiviati: l'utente non verrà visualizzato negli elenchi, ma i suoi dati saranno inclusi nelle analisi di tracciabilità.",
     archive_success: 'Utente archiviato con successo.',
     creation_date: 'data creazione',
     department: 'reparto',
@@ -729,6 +777,7 @@ export default {
       operator: 'operatore',
       production: 'area produzione',
       quality: 'Area qualità',
+      traceability: 'Area tracciabilitità',
       reporting: 'Area rapporti',
       title: 'permessi',
     },
@@ -751,17 +800,21 @@ export default {
     defaultOperationParameters: 'parametri di default operazione',
     flowLibrary: 'Flussi dati',
     formFieldLibrary: 'Campi moduli',
+    counterLibrary: 'Contatori',
+    serialFieldSettings: 'Campi seriali',
     generalSettings: 'generale',
     jobList: 'lavori',
     libraryRoot: 'libreria prodotti',
     issueTypeLibrary: 'tipi di segnalazione',
     issueOverview: 'Segnalazioni',
+    serialOverview: 'Seriali',
     operationLibrary: 'operazioni',
     otherSettings: 'altro',
     workSession: 'sessione di lavoro',
     productionRoot: 'monitoraggio produzione',
     printTemplateLibrary: 'Stampe',
     qualityRoot: 'Qualità',
+    traceabilityRoot: 'Tracciabiltità',
     reportRoot: 'Rapporti',
     userLibrary: 'utenti',
     userJobs: 'selezione lavoro',
@@ -811,4 +864,55 @@ export default {
     'Inserisci il testo da ricercare (min 3 caratteri) fra codice ordine, prodotto, commessa. Verranno mostrati i primi 100 risultati.',
   workload_hours: 'Carico in ore',
   yes: 'Sì',
+  mandatory: 'Obbligatorio',
+  fill_mandatory_fields: 'Compila tutti i campi obbligatori per continuare',
+  declare_all_serials: 'Inserisci tutti i seriali del batch per continuare',
+  traceability: {
+    enabled: 'abilita tracciabilità',
+    mandatory: 'tracciabilità obbligatoria',
+    include_deleted: 'includi cancellati',
+    options: {
+      none: 'Nessuna',
+      form_only: 'Solo form',
+      complete: 'Completa',
+    },
+    errors: {
+      COUNTER_NOT_DEFINED:
+        'Contantore non definito, per favore inserire la matricola manualmente',
+      SERIAL_ALREADY_PRESENT:
+        'Seriale già presente, non è possibile aggiornare',
+      SERIAL_NEW_ALREADY_PRESENT:
+        'Seriale già presente, non è possibile crearne uno nuovo',
+      SERIAL_NEW_ERROR: 'Errore nella creazione della matricola',
+      EXCEPTION: 'Errore nella scrittura della matricola',
+    },
+  },
+  serial_autocomplete_hint:
+    'Inserisci il testo da ricercare (min 3 caratteri) fra i seriali. Verranno mostrati i primi 100 risultati.',
+  serial_delete_confirm_title: 'Cancella seriale',
+  serial_delete_confirm_question:
+    'Sei sicuro di voler cancellare questo seriale?',
+  serials_declared: 'matricole collegate',
+  serial_edit_reason: 'Motivo della modifica',
+  batch_declare_component_serials:
+    'Dichiara le matricole dei componenti obbligatorie',
+  load_more: 'Carica altri',
+  serial_field: {
+    noData: 'Nessuna matricola trovata',
+    noData_min_char:
+      'Nessuna matricola trovata. Inserisci almeno {minChars} caratteri per crearne una nuova.',
+    bom_component: 'Matricole BOM',
+    missing_reason: 'Il motivo è obbligatorio',
+    component_reused:
+      'Non è possibile usare lo stesso componente per prodotti diversi',
+    is_contained_in: "E' contenuto",
+    contains: 'Contiene',
+    after_options:
+      'Inserisci almeno {minChars} caratteri per crearne una nuova matricola.',
+    create: {
+      label: 'Crea nuova matricola "{name}"',
+      hint: 'Clicca o premi {key} per creare',
+      code_already_used: 'La matricola "{name}" è già usata',
+    },
+  },
 };

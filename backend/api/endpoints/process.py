@@ -4,13 +4,14 @@ import os
 from uuid import uuid4
 
 from arango import DocumentGetError
-from fastapi import APIRouter, Body, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Body, File, HTTPException, Query, UploadFile, Depends
+from utils import auth
 from fastapi.encoders import jsonable_encoder
 
 from models.process import *
-from utils import dt
+from commons.utils import dt
 from utils.api import APIResponse
-from utils.db import db
+from commons.utils.db import db
 from utils.file import FileHandler
 from utils.process import *
 from utils.exceptions import HTTPError
@@ -21,7 +22,8 @@ router = APIRouter()
 
 
 # TODO: optimize queries
-@router.get('/operation')
+@router.get('/operation',
+    dependencies=[Depends(auth.verify_token)])
 async def get_operation_list():
   def enrich_with_media(op_data):
     operation_media_cursor = db.aql.execute(
@@ -78,7 +80,8 @@ async def get_operation_list():
   return sorted(db_list, key=lambda o: o.name.lower())
 
 
-@router.post('/operation')
+@router.post('/operation',
+    dependencies=[Depends(auth.verify_token)])
 async def create_operation(new_op_data: Operation):
   try:
     config = db.collection('Config').get('default_operation_parameters')
@@ -101,7 +104,8 @@ async def create_operation(new_op_data: Operation):
     raise HTTPException(status_code=status_code, detail=response)
 
 
-@router.patch('/operation/{operation_key}')
+@router.patch('/operation/{operation_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def update_operation(operation_key: str, operation_update: dict):
   try:
     operation_data = db.collection('Operation').get(operation_key)
@@ -211,7 +215,8 @@ async def update_operation(operation_key: str, operation_update: dict):
     raise HTTPException(status_code=status_code, detail=response)
 
 
-@router.delete('/operation/{op_key}')
+@router.delete('/operation/{op_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def delete_operation(op_key: str):
 
   try:
@@ -242,7 +247,8 @@ async def delete_operation(op_key: str):
 
 
 # TODO: Instead of copying it to all phases, selectively copy it to phases using a list of connected products
-@router.post('/operation/{operation_key}/copy')
+@router.post('/operation/{operation_key}/copy',
+    dependencies=[Depends(auth.verify_token)])
 async def copy_operation_to_phases(
   operation_key: str,
   target_product_keys: Annotated[list[str], Body(embed=True)]
@@ -343,7 +349,8 @@ async def copy_operation_to_phases(
     raise HTTPError(500, "Could not update Operation in the db. Please contact the administrator.")
 
 
-@router.post('/product/{product_key}/process/copy')
+@router.post('/product/{product_key}/process/copy',
+    dependencies=[Depends(auth.verify_token)])
 async def copy_process_to_products(
   product_key: str,
   target_product_keys: Annotated[list[str], Body(embed=True)],
@@ -394,13 +401,15 @@ async def copy_process_to_products(
     raise HTTPError(500, "Could not copy process to products. Please contact the administrator.")
 
 
-@router.get("/step/{step_key}/media")
+@router.get("/step/{step_key}/media",
+    dependencies=[Depends(auth.verify_token)])
 async def get_step_media(step_key: str):
   return search_step_media(step_key)
 
 
 
-@router.get("/product/{product_key}/process")
+@router.get("/product/{product_key}/process",
+    dependencies=[Depends(auth.verify_token)])
 async def get_production_process(product_key):
 
   try:
@@ -444,7 +453,8 @@ async def get_production_process(product_key):
 
 
 
-@router.get("/phase")
+@router.get("/phase",
+    dependencies=[Depends(auth.verify_token)])
 async def get_phase_data(phase_key: List[str] = Query(...)):
   try:
     phase_db_data = db.collection('Phase').get_many(phase_key)
@@ -461,7 +471,8 @@ async def get_phase_data(phase_key: List[str] = Query(...)):
 @router.put(
   "/product/{product_key}/process",
   response_model = List[PhaseData],
-  response_model_exclude = {'step_sequence'}
+  response_model_exclude = {'step_sequence'},
+    dependencies=[Depends(auth.verify_token)]
 )
 async def update_process(product_key, process: List[PhaseData]):
   tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'])
@@ -576,7 +587,8 @@ async def update_process(product_key, process: List[PhaseData]):
     )
 
 
-@router.get('/procedure/{phase_key}')
+@router.get('/procedure/{phase_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def get_phase_procedure(phase_key: str):
 
   db_steps = db.aql.execute(
@@ -591,7 +603,8 @@ async def get_phase_procedure(phase_key: str):
   return [await get_full_step_data(step) for step in db_steps]
 
 
-@router.post("/step/{step_key}/media")
+@router.post("/step/{step_key}/media",
+    dependencies=[Depends(auth.verify_token)])
 async def save_step_media(
   step_key: str,
   media_file: UploadFile = File(...)
@@ -623,7 +636,8 @@ async def save_step_media(
 
 
 
-@router.delete("/step/{step_key}/media/{filename}")
+@router.delete("/step/{step_key}/media/{filename}",
+    dependencies=[Depends(auth.verify_token)])
 async def delete_step_media(
   step_key: str,
   filename: str

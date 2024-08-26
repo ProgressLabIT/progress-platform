@@ -24,6 +24,18 @@ const adminRoutes = [
               import('@/views/settings/DefaultOperationParams.vue'),
           },
           {
+            path: 'serial-field',
+            name: 'serialFieldSettings',
+            component: () =>
+              import('app/src/views/settings/SerialFieldSettings.vue'),
+            children: [
+              {
+                path: ':field_key',
+                name: 'serialFieldDetail',
+              },
+            ],
+          },
+          {
             path: 'other',
             name: 'otherSettings',
             component: () => import('@/views/settings/OtherSettings.vue'),
@@ -114,6 +126,20 @@ const adminRoutes = [
             path: ':field_key',
             name: 'formFieldDetail',
             component: () => import('@/views/FormFieldDetail.vue'),
+            props: true,
+          },
+        ],
+      },
+      {
+        path: 'counter',
+        name: 'counterLibrary',
+        component: () => import('@/views/settings/counter/CounterLibrary.vue'),
+        children: [
+          {
+            path: ':counter_key',
+            name: 'counterDetail',
+            component: () =>
+              import('@/views/settings/counter/CounterDetail.vue'),
             props: true,
           },
         ],

@@ -1,15 +1,17 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from utils import auth
 
 from utils.api import APIResponse
-from models.form import CustomField, CustomListValue, FieldType
-from utils.db import db, model_to_db_dict
+from commons.models.form import CustomField, CustomListValue, FieldType
+from commons.utils.db import db, model_to_db_dict
 
 router = APIRouter()
 
 
-@router.post('/field')
+@router.post('/field',
+    dependencies=[Depends(auth.verify_token)])
 def create_field(field_data: CustomField):
   try:
     field_key = db.collection('CustomField').insert(field_data)['_key']
@@ -21,7 +23,8 @@ def create_field(field_data: CustomField):
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
-@router.get('/field')
+@router.get('/field',
+    dependencies=[Depends(auth.verify_token)])
 def fetch_field(name: str | None = None, key: str | None = None):
   match = dict()
   if name:
@@ -35,7 +38,8 @@ def fetch_field(name: str | None = None, key: str | None = None):
 
 
 
-@router.put('/field/{field_key}')
+@router.put('/field/{field_key}',
+    dependencies=[Depends(auth.verify_token)])
 def replace_field_metadata(field_key: str, field_data: CustomField):
   """Field data must contain _key"""
   try:
@@ -46,7 +50,8 @@ def replace_field_metadata(field_key: str, field_data: CustomField):
 
 
 
-@router.delete('/field/{field_key}')
+@router.delete('/field/{field_key}',
+    dependencies=[Depends(auth.verify_token)])
 def delete_field(field_key: str):
   """Delete custom field and linked list values"""
   try:
@@ -65,7 +70,8 @@ def delete_field(field_key: str):
 
 
 
-@router.get('/list')
+@router.get('/list',
+    dependencies=[Depends(auth.verify_token)])
 def fetch_custom_list_values(
   field_key: str,
   limit: int = 100,
@@ -92,7 +98,8 @@ def fetch_custom_list_values(
   return results
 
 
-@router.post('/list/{field_key}')
+@router.post('/list/{field_key}',
+    dependencies=[Depends(auth.verify_token)])
 def create_or_update_custom_list_values(
   field_key: str,
   new_values: list[CustomListValue],
@@ -112,7 +119,8 @@ def create_or_update_custom_list_values(
   except:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
-@router.delete('/list/{field_key}')
+@router.delete('/list/{field_key}',
+    dependencies=[Depends(auth.verify_token)])
 def delete_custom_list_value(
   field_key: str,
   value_key: list[str] = Query(...)

@@ -46,6 +46,7 @@
           v-if="current_step"
           :key="current_step._key"
           :step="current_step"
+          :work_order_key="work_order_key"
         />
       </keep-alive>
     </template>
@@ -99,7 +100,11 @@ export default {
     },
 
     batch_data() {
-      return this.$store.state.traceability.current_batch_data.step_data;
+      return this.$store.state.traceability.current_batch_data?.step_data;
+    },
+
+    work_order_key() {
+      return this.$store.state.traceability.current_batch_data?.work_order_key;
     },
 
     force_order() {

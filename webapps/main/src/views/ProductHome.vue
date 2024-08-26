@@ -127,7 +127,8 @@
           v-else
           filled
           dense
-          type="textarea"
+          type="text"
+          autogrow
           :model-value="temp_desc"
           class="q-mt-md"
           @update:model-value="(value) => updateField('description', value)"
@@ -148,8 +149,10 @@
           @update:model-value="updateField('tags', $event)"
         />
         <div v-else class="q-mt-xs">
-          <span v-if="product.tags.length === 0" class="text-h3">-</span>
-          <TagChips v-else :tags="product.tags" />
+          <span v-if="product.tags && product.tags.length === 0" class="text-h3"
+            >-</span
+          >
+          <TagChips v-else :tags="product?.tags" />
         </div>
       </div>
 
@@ -190,8 +193,59 @@
 
     <!-- RIGHT SECTION -->
 
-    <!-- NOTES -->
     <div class="col-4 q-px-md full-height">
+      <!-- TRACEABILITY SETTING -->
+      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md column no-wrap">
+        <q-card-section>
+          <div class="text-h5 display weight-bold text-uppercase col-auto">
+            {{ $t('traceability') }}
+          </div>
+        </q-card-section>
+
+        <!-- TRACEABILITY SWITCH -->
+        <q-card-section>
+          <q-toggle
+            filled
+            clearable
+            emit-value
+            map-options
+            :model-value="product.traceability_level"
+            :label="$t('traceability.enabled')"
+            :disable="!editMode"
+            true-value="form_only"
+            false-value="none"
+            @update:model-value="updateField('traceability_level', $event)"
+          />
+        </q-card-section>
+
+        <!-- PRODUCT COUNTER -->
+        <q-card-section>
+          <div class="q-mt-lg col-auto">
+            <div class="text-h5 weight-bold text-uppercase">
+              {{ $t('counter') }}
+            </div>
+            <div class="row q-gutter-md items-center q-mt-xs">
+              <div style="white-space: pre-line" class="text-body1">
+                {{ counter_name || 'NA' }}
+              </div>
+
+              <q-btn
+                v-if="editMode"
+                size="sm"
+                flat
+                round
+                icon="mdi-pencil"
+                @click="show_counter_form = true"
+              />
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-4 q-pl-md column full-height no-wrap">
+      <!-- PRODUCTION NOTES -->
       <q-card
         square
         class="surface2 q-px-sm q-pt-sm q-pb-md column no-wrap"
@@ -221,14 +275,11 @@
           </q-input>
         </q-card-section>
       </q-card>
-    </div>
 
-    <!-- RIGHT COLUMN -->
-    <div class="col-4 q-pl-md column full-height no-wrap">
       <!-- DOCS -->
       <q-card
         square
-        class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap"
+        class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap q-mt-lg"
       >
         <q-card-section class="text-h5 display highlight col-auto">
           {{ $capitalize($t('document.label', 2)) }}
@@ -368,18 +419,28 @@
         :media_src="show_template?.pdf"
         @close="show_template = null"
       />
+
+      <BaseDialog
+        :show="show_counter_form"
+        :no-backdrop-dismiss="false"
+        @close="show_counter_form = false"
+      >
+        <CounterSearch @select="selectCounter" />
+      </BaseDialog>
     </div>
   </div>
 </template>
 
 <script>
 import { generate } from '@pdfme/generator';
-import { mapState, mapActions } from 'vuex';
+import { mapState } from 'vuex';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
+import BaseDialog from '@/components/BaseDialog.vue';
 import MediaViewer from '@/components/MediaViewer.vue';
 import TagInput from '@/components/TagInput.vue';
 import TagChips from '../components/TagChips.vue';
+import CounterSearch from '../components/settings/counters/CounterSearch.vue';
 
 export default {
   name: 'ProductHome',
@@ -390,6 +451,8 @@ export default {
     BaseAutocompleteTemplate,
     TagInput,
     TagChips,
+    BaseDialog,
+    CounterSearch,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
@@ -408,6 +471,8 @@ export default {
       no_image: false,
       show_template: null,
       over_print: null,
+      show_counter_form: false,
+      new_product_counter: null,
     };
   },
 
@@ -420,6 +485,15 @@ export default {
       product: (state) => state.product.temp,
       saved_product: (state) => state.product.saved,
     }),
+
+    counter_name() {
+      if (this.new_product_counter) {
+        return this.new_product_counter.name;
+      } else if (this.$store.state.product.temp.counter) {
+        return this.$store.state.product.temp.counter.name;
+      }
+      return '';
+    },
 
     editMode: {
       get() {
@@ -488,6 +562,23 @@ export default {
         return null;
       }
     },
+
+    traceability_options() {
+      return [
+        {
+          value: null,
+          label: this.$t('traceability.options.none'),
+        },
+        {
+          value: 'form_only',
+          label: this.$t('traceability.options.form_only'),
+        },
+        {
+          value: 'complete',
+          label: this.$t('traceability.options.complete'),
+        },
+      ];
+    },
   },
 
   watch: {
@@ -504,8 +595,6 @@ export default {
   },
 
   methods: {
-    ...mapActions(['loadProductDetails']),
-
     // deltaPcString(p) {
     //   let pc_sign = p.delta_pc > 0 ? '+' : ''
     //   return '('.concat(pc_sign, p.delta_pc, '%)')
@@ -543,6 +632,12 @@ export default {
         param: field,
         new_value: value,
       });
+    },
+
+    selectCounter(counter) {
+      this.new_product_counter = counter;
+      this.product.counter_key = counter._key;
+      this.show_counter_form = false;
     },
 
     addFiles(fileList) {

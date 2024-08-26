@@ -1,14 +1,21 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
-from utils.db import db
+from commons.utils.db import db
+from commons.utils.serial import Queries as SerialQueries
 from models.production import WorkStatus
+from commons.kafka_utils.kafka_admin import KafkaAdmin
+from utils.api import APIResponse
+from utils import auth
+
 
 router = APIRouter()
 
 traceability_collections = [
     'Batch',
+    'batch_serial',
+    'contains',
     'Event',
     'Job',
     'Queue',
@@ -18,10 +25,12 @@ traceability_collections = [
     'WorkSession',
     'Issue',
     'issue_rel',
-    'message'
+    'message',
+    'Serial'
   ]
 
-@router.delete('/reset/prod')
+@router.delete('/reset/prod',
+    dependencies=[Depends(auth.verify_token)])
 async def reset_production_and_traceability_data():
 
   try:
@@ -56,7 +65,8 @@ async def get_work_order_jobs(work_order_key):
 
 
 
-@router.delete('/force-delete-work-order/{work_order_key}')
+@router.delete('/force-delete-work-order/{work_order_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def force_delete_work_order_data(work_order_key: str):
 
   # Check if the work order actually exists
@@ -76,7 +86,10 @@ async def force_delete_work_order_data(work_order_key: str):
     tx.collection('WorkSession').delete_match(match)
     tx.collection('WorkOrder').delete(work_order_key)
 
-    # 2. Delete jobs and get job list
+    # Delete batch_serial records
+    tx.aql.execute(SerialQueries.CLEANUP_SERIAL_BATCH_LINKS)
+
+    # Delete jobs and get job list
     job_delete_query = """
       FOR j IN Job
       FILTER j.wo_key == @work_order_key
@@ -87,7 +100,7 @@ async def force_delete_work_order_data(work_order_key: str):
     cursor = tx.aql.execute(job_delete_query, bind_vars=match)
     jobs_to_delete = [j for j in cursor]
 
-    # 3. Delete StepExecutionData based on deleted job_key
+    # Delete StepExecutionData based on deleted job_key
     step_data_delete_query = """
       FOR s IN StepExecutionData
       FILTER POSITION(@jobs_to_delete, s.job_key)
@@ -95,7 +108,7 @@ async def force_delete_work_order_data(work_order_key: str):
     """
     tx.aql.execute(step_data_delete_query, bind_vars=dict(jobs_to_delete=jobs_to_delete))
 
-    # 3. Delete Work Order and Jobs from Queue
+    # Delete Work Order and Jobs from Queue
     queue_update_query = """
       FOR q IN Queue
       LET jobs = MINUS(q.jobs, @jobs_to_delete)
@@ -126,5 +139,68 @@ async def force_delete_work_order_data(work_order_key: str):
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
+@router.put("/kafka/topic/{topic}",
+    dependencies=[Depends(auth.verify_token)])
+async def put_kafka_topic(topic: str):
+  try:
+    message = KafkaAdmin.getInstance().create_topic(topic)
+    return APIResponse(message = message)
+  except:
+    status_code = 500
+    response = dict(
+      status=status_code,
+      message="There was an error while creating the topic",
+      error=traceback.format_exc(),
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+@router.delete("/kafka/topic/{topic}",
+    dependencies=[Depends(auth.verify_token)])
+async def delete_kafka_topic(topic: str):
+  try:
+    topics = []
+    topics.append(topic)
+    message = KafkaAdmin.getInstance().delete_topic(topics)
+    return APIResponse(message = message)
+  except:
+    status_code = 500
+    response = dict(
+      status=status_code,
+      message="There was an error while deleting the topic",
+      error=traceback.format_exc(),
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+@router.get("/kafka/topics",
+    dependencies=[Depends(auth.verify_token)])
+async def list_kafka_topic():
+  try:
+    message = KafkaAdmin.getInstance().list_topics()
+    return APIResponse(message = message)
+  except:
+    status_code = 500
+    response = dict(
+      status=status_code,
+      message="There was an error while retreiving topic list",
+      error=traceback.format_exc(),
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+@router.get("/kafka/topic/{topic}",
+    dependencies=[Depends(auth.verify_token)])
+async def get_kafka_topic(topic: str):
+  try:
+    topics = []
+    topics.append(topic)
+    message = KafkaAdmin.getInstance().describe_topic(topics)
+    return APIResponse(message = message)
+  except:
+    status_code = 500
+    response = dict(
+      status=status_code,
+      message="There was an error while retreiving the topic",
+      error=traceback.format_exc(),
+    )
+    raise HTTPException(status_code=status_code, detail=response)
 
 

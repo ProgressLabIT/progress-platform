@@ -55,6 +55,37 @@
         {{ scope.opt.name }}
       </q-chip>
     </template>
+
+    <template #after-options>
+      <q-item v-if="search_text.length < MIN_CHARS">
+        <q-item-section class="text-low">
+          {{ $t('tagInput.after_options', { minChars: MIN_CHARS }) }}
+        </q-item-section>
+      </q-item>
+      <q-item
+        v-else-if="!exact_match"
+        clickable
+        @click="createAndAddNewTag(search_text)"
+      >
+        <q-item-section avatar>
+          <q-icon name="mdi-plus" />
+        </q-item-section>
+
+        <q-item-section>
+          <q-item-label>
+            {{ $t('tagInput.create.label', { name: search_text }) }}
+          </q-item-label>
+
+          <q-item-label caption>
+            <i18n-t keypath="tagInput.create.hint">
+              <template #key>
+                <kbd>Enter</kbd>
+              </template>
+            </i18n-t>
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
   </q-select>
 </template>
 
@@ -63,7 +94,7 @@ import { ref } from 'vue';
 import { api } from '@/boot/axios';
 import multiMatch from '@/lib/MultiFieldSearch';
 
-const model = defineModel();
+const model = defineModel({ type: Array });
 
 const isLoading = ref(false);
 const tags = ref([]);
@@ -109,7 +140,11 @@ async function createNewTag(tagName) {
   return detail;
 }
 
+let search_text = '';
+let exact_match = false;
 function onFilter(searchTerm, update) {
+  search_text = searchTerm;
+  exact_match = false;
   if (searchTerm === '') {
     update(() => {
       options.value = tags.value;
@@ -121,6 +156,10 @@ function onFilter(searchTerm, update) {
     options.value = tags.value.filter((tag) =>
       multiMatch(searchTerm, tag, ['name']),
     );
+  });
+
+  options.value.forEach((val) => {
+    exact_match |= searchTerm.toUpperCase() === val['name'].toUpperCase();
   });
 }
 </script>

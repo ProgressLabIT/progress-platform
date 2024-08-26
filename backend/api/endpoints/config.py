@@ -1,12 +1,14 @@
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, Depends
 from shutil import copyfileobj
 from os import path, remove, makedirs
 
 from utils.api import APIResponse
 from utils.media import media_root_path
-from utils.db import db
+from commons.utils.db import db
 from utils.exceptions import HTTPError
 from utils.production import Queries as ProductionQueries
+from utils import auth
+
 
 router = APIRouter()
 
@@ -27,7 +29,8 @@ def get_config():
   except:
     raise HTTPError(500, "Failed to retrieve config")
 
-@router.patch('/config')
+@router.patch('/config',
+    dependencies=[Depends(auth.verify_token)])
 def update_config(config: dict):
   try:
     tx = db.begin_transaction(write=['Config', 'Queue'])
@@ -82,7 +85,8 @@ def update_config(config: dict):
     tx.abort_transaction()
     raise HTTPError(500, "Failed to update config")
 
-@router.put('/config/{key}/file')
+@router.put('/config/{key}/file',
+    dependencies=[Depends(auth.verify_token)])
 def update_config_file(key: str, file: UploadFile | None = None):
   try:
     config = db.collection('Config').get(key)

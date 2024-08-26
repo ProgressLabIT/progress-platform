@@ -37,11 +37,23 @@ export default route(function ({ store }) {
     return store.getters.hasPermission(route.meta.scope);
   }
 
-  Router.beforeEach((to, from, next) => {
+  Router.beforeEach(async (to, from, next) => {
     // Make sure user is authenticated
-    const ignore_route = ['root', 'login'].includes(to.name);
+    const login_route = ['root', 'login'].includes(to.name);
 
-    if (!ignore_route && !store.getters.isLoggedIn) {
+    if (
+      login_route &&
+      (store.getters.isLoggedIn || (await store.dispatch('recognizeMe')))
+    ) {
+      let nextPage = to.query.redirect_to
+        ? to.query.redirect_to
+        : store.getters.userHomepage;
+      next({ name: nextPage });
+    } else if (
+      !login_route &&
+      !store.getters.isLoggedIn &&
+      !(await store.dispatch('recognizeMe'))
+    ) {
       window.alert(
         "Per visualizzare questa pagina è necessario fare prima l'accesso",
       );
@@ -57,7 +69,7 @@ export default route(function ({ store }) {
         next(false);
       } else {
         // Consider the navigation as an interaction > Reset session timeout
-        if (!ignore_route) {
+        if (!login_route) {
           store.commit('SET_SESSION_TIMEOUT');
         }
         next();

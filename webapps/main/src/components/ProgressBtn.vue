@@ -22,8 +22,12 @@
 <script>
 import { Dialog, Loading } from 'quasar';
 import { mapState } from 'vuex';
-import { api } from 'boot/axios';
-import QuantityPickerDialog from './QuantityPickerDialog.vue';
+
+import { api } from '@/boot/axios';
+import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
+import SerialBatchDeclareSerialNumber from '@/components/job/SerialBatchDeclareSerialNumber.vue';
+import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue';
+import { timestamp } from '@/lib/TimeHandling.js';
 
 export default {
   name: 'ProgressBtn',
@@ -37,7 +41,7 @@ export default {
   computed: {
     ...mapState({
       job: (state) => state.traceability.working_job_data,
-      batch_data: (state) => state.traceability.current_batch_data.step_data,
+      batch_data: (state) => state.traceability.current_batch_data?.step_data,
     }),
 
     progress_button_active() {
@@ -55,7 +59,7 @@ export default {
         icon: 'mdi-check',
         text: this.$t('job.complete_step'),
         action: this.completeStep,
-        altAction: undefined,
+        altAction: this.completeStep,
       };
 
       const declare_batch = {
@@ -65,14 +69,12 @@ export default {
             ? this.$t('job.complete_piece')
             : this.$t('job.complete_batch'),
         action: this.declareBatch,
-        altAction: this.declareCustomBatch,
+        altAction: this.declareBatch,
       };
 
-      if ('parameters' in this.job) {
-        return this.job.parameters.step_check ? complete_step : declare_batch;
-      } else {
-        return declare_batch;
-      }
+      return 'parameters' in this.job && this.job.parameters.step_check
+        ? complete_step
+        : declare_batch;
     },
 
     current_step_done() {
@@ -83,6 +85,14 @@ export default {
       return currentStep?.done ?? false;
     },
 
+    current_step_form_fields() {
+      const currentStep = this.job.step_sequence?.find(
+        ({ _key }) => _key === this.current_step_key,
+      );
+
+      return currentStep?.form_fields ?? [];
+    },
+
     completed_steps_count() {
       return this.batch_data
         ? this.batch_data.reduce((total, current) => total + current.done, 0)
@@ -91,6 +101,14 @@ export default {
 
     current_step_is_last() {
       return this.completed_steps_count === this.job.step_sequence.length - 1;
+    },
+
+    current_step_data() {
+      const currentStep = this.batch_data?.find(
+        ({ _key }) => _key === this.current_step_key,
+      );
+
+      return currentStep?.form_data ?? [];
     },
 
     current_batch_is_last() {
@@ -108,6 +126,15 @@ export default {
 
     confirm_stop_session_message() {
       return this.$t('job.alerts.next_batch_not_available');
+    },
+
+    session_data() {
+      return this.$store.state.session;
+    },
+
+    traceability_enabled() {
+      return this.$store.state.traceability.working_job_data
+        ?.traceability_level;
     },
 
     current_step_key: {
@@ -147,44 +174,209 @@ export default {
       this.clickTimer = null;
     },
 
+    field_value(field_key) {
+      const data = this.current_step_data?.find(
+        ({ form_field_key }) => form_field_key === field_key,
+      );
+
+      return data?.value ?? null;
+    },
+
+    async ensureBatchSerialCounter(batch_serials) {
+      /*const { data: batch_serials } = await this.$api.get('serial-wo-job', {
+        params: {
+          batch_key: this.job.active_batch_key,
+        },
+      });*/
+
+      let missing_counter = false;
+      batch_serials.forEach((serial) => {
+        let counter = serial.counter_key;
+        let serialNo = serial.code;
+        if (!counter && !serialNo) {
+          missing_counter = true;
+        }
+      });
+
+      if (missing_counter) {
+        let updated_serials =
+          await this.decleareSerialNoForBatch(batch_serials);
+        let still_missing_counter = false;
+
+        if (updated_serials.length <= 0) {
+          return false;
+        }
+
+        const user = this.session_data.user._key;
+        updated_serials.forEach((serial) => {
+          this.postSerialUpdate(serial, user);
+        });
+
+        updated_serials.forEach((serial) => {
+          let counter = serial.counter_key;
+          let serialNo = serial.code;
+          if (!counter && !serialNo) {
+            still_missing_counter = true;
+          }
+        });
+
+        return !still_missing_counter;
+      } else {
+        return true;
+      }
+    },
+
+    async postSerialUpdate(serial, user) {
+      serial.updated_by = `User/${user}`; // temporarily hardcoding DB id
+      const event = {
+        event_type: 'SERIAL_UPDATED',
+        user_key: user,
+        user_session_key: this.session_data.session_key,
+        timestamp: timestamp(),
+        serial_data: serial,
+      };
+      await this.$api.post('event', event);
+    },
+
+    async decleareSerialNoForBatch(batch_serials) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          component: SerialBatchDeclareSerialNumber,
+          componentProps: {
+            batch_serials,
+          },
+        })
+          .onOk((updated_serials) => {
+            resolve(updated_serials);
+          })
+          .onCancel(() => {
+            resolve([]);
+          });
+      });
+    },
+
+    serialToBatch(batch_serials) {
+      let serials = [];
+
+      for (const serial of batch_serials) {
+        serials.push({
+          serial_key: serial._key,
+          serial_code: serial.code,
+          active: true,
+        });
+      }
+
+      return serials;
+    },
+
+    checkMissingSerials() {
+      let missing_serial = false;
+      for (const wo_bom of this.job.wo_bom) {
+        if (
+          wo_bom?.traceability_mandatory &&
+          this.job.phase_key === wo_bom.phase_key
+        ) {
+          let declared = wo_bom?.declared_serials?.length | 0;
+          let required = (wo_bom?.qt | 0) * this.job.active_batch_qt;
+          missing_serial |= declared < required;
+        }
+      }
+
+      return missing_serial;
+    },
+
     async completeStep() {
-      let can_proceed = true;
+      let missing_mandatory_fields = false;
+
+      this.current_step_form_fields.forEach((field) => {
+        let value = this.field_value(field._key);
+
+        let type = this.$store.getters.getCustomFieldByKey(
+          field.custom_field_key,
+        )?.type;
+
+        if (
+          type !== 'ternary' &&
+          field.mandatory &&
+          (!value || value === null || value === '')
+        ) {
+          missing_mandatory_fields = true;
+        }
+      });
+
+      if (missing_mandatory_fields) {
+        window.alert(this.$t('fill_mandatory_fields'));
+        return;
+      }
 
       // Values will change after committing mutation save to use for navigation later on
       const current_step_was_last = this.current_step_is_last;
       const current_batch_was_last = this.current_batch_is_last;
 
-      if (current_step_was_last) {
-        can_proceed = window.confirm(this.confirm_batch_done_message);
+      const { data: batch_serials } = await api.get('serial-wo-job', {
+        params: {
+          wo_key: this.job.wo_key,
+          job_key: this.job._key,
+        },
+      });
 
-        if (can_proceed && !this.job.next_batch_available) {
-          if (current_batch_was_last) {
-            can_proceed = window.confirm(this.confirm_job_done_message);
-          } else {
-            can_proceed = window.confirm(this.confirm_stop_session_message);
-          }
+      if (current_step_was_last) {
+        if (!(await this.ensureBatchSerialCounter(batch_serials))) {
+          window.alert(this.$t('declare_all_serials'));
+          return;
+        }
+
+        if (this.checkMissingSerials() && this.traceability_enabled) {
+          window.alert(this.$t('batch_declare_component_serials'));
+          return;
         }
       }
 
+      let can_proceed = true;
+
+      if (current_step_was_last) {
+        can_proceed = window.confirm(this.confirm_batch_done_message);
+        if (can_proceed && current_batch_was_last) {
+          can_proceed = window.confirm(this.confirm_job_done_message);
+        } else if (can_proceed && !this.job.next_batch_available) {
+          can_proceed = window.confirm(this.confirm_stop_session_message);
+        }
+      }
+
+      // Missing mandatory fields has already been ensured
       if (can_proceed) {
         await this.$store.dispatch('completeStep', {
           stepKey: this.current_step_key,
-          batchQt: this.job.active_batch_qt,
         });
 
-        if (current_step_was_last && current_batch_was_last) {
-          this.$router.push({ name: 'userJobs' });
-        } else if (current_step_was_last || this.job.parameters.step_check) {
-          // Go to first step that is not done.
-          // This works with both force_order mode active or not
-          this.goToNextUndoneStep();
+        if (current_step_was_last) {
+          if (current_batch_was_last || !this.job.next_batch_available) {
+            this.$router.push({ name: 'userJobs' });
+            return;
+          } else {
+            if (this.traceability_enabled && !this.job.first_phase) {
+              // Select new serials and start new batch
+              const selected_serials = await this.selectSerialBatch();
+              await this.$store.dispatch('resumeJob', {
+                batch_serials: selected_serials,
+              });
+            }
+          }
         }
+        // Go to first step that is not done.
+        // This works with both force_order mode active or not
+        this.goToNextUndoneStep();
       }
     },
 
     async declareBatch() {
       let can_proceed = true;
       const current_batch_was_last = this.current_batch_is_last;
+
+      if (this.checkMissingSerials() && this.traceability_enabled) {
+        window.alert(this.$t('batch_declare_component_serials'));
+        return;
+      }
 
       if (current_batch_was_last) {
         can_proceed = window.confirm(this.confirm_job_done_message);
@@ -196,6 +388,15 @@ export default {
         await this.$store.dispatch('declareBatch', {
           batch_qt: this.job.active_batch_qt,
         });
+
+        if (this.traceability_enabled && !this.job.first_phase) {
+          // Select new serials and start new batch
+          const selected_serials = await this.selectSerialBatch();
+          await this.$store.dispatch('resumeJob', {
+            batch_serials: selected_serials,
+          });
+        }
+
         if (
           current_batch_was_last ||
           (!this.job.next_batch_available && !this.job.active_batch_qt)
@@ -222,7 +423,36 @@ export default {
           });
       });
     },
-    async declareCustomBatch() {
+
+    async selectSerialBatch() {
+      const remainingTotalQuantity =
+        this.job.qt_planned - this.job.qt_completed;
+
+      const { data: available_serials } = await this.$api.get('/wip-serial', {
+        params: {
+          phase_key: this.job.phase_key,
+          wo_key: this.job.wo_key,
+        },
+      });
+
+      return await new Promise((resolve) => {
+        Dialog.create({
+          component: SerialBatchSelectionDialog,
+          componentProps: {
+            available_serials: available_serials.map((s) => ({
+              label: s.serial_code,
+              value: s.serial_key,
+            })),
+            selected_serials: [],
+            max_quantity: remainingTotalQuantity,
+          },
+        })
+          .onOk((selected_serials) => resolve(selected_serials))
+          .onCancel(() => resolve(false));
+      });
+    },
+
+    async getCustomQuantity() {
       const remainingTotalQuantity =
         this.job.qt_planned - this.job.qt_completed;
 
@@ -233,39 +463,21 @@ export default {
       Loading.hide();
       const maxDeclarableQuantity = this.job.first_phase
         ? remainingTotalQuantity
-        : Math.min(data.free_wip_qt_upstream + this.job.active_batch_qt, remainingTotalQuantity);
+        : Math.min(
+            data.free_wip_qt_upstream + this.job.active_batch_qt,
+            remainingTotalQuantity,
+          );
 
-      const batchQuantity = await this.getCustomBatchInput({
+      let batchQuantity = await this.getCustomBatchInput({
         initialValue: this.job.active_batch_qt,
         max: maxDeclarableQuantity,
       });
-      if (batchQuantity === 0) {
-        return;
-      }
 
-      let willStopSession = false;
-      const isCompletingJob = batchQuantity === remainingTotalQuantity;
-      if (isCompletingJob) {
-        if (!window.confirm(this.confirm_job_done_message)) {
-          return;
-        }
-        willStopSession = true;
-      } else if (
-        !this.job.next_batch_available ||
-        batchQuantity === maxDeclarableQuantity
-      ) {
-        if (!window.confirm(this.confirm_stop_session_message)) {
-          return;
-        }
-        willStopSession = true;
-      }
-
-      await this.$store.dispatch('declareBatch', {
-        batch_qt: batchQuantity,
-      });
-      if (willStopSession) {
-        this.$router.push({ name: 'userJobs' });
-      }
+      return {
+        batchQuantity: batchQuantity,
+        remainingTotalQuantity: remainingTotalQuantity,
+        maxDeclarableQuantity: maxDeclarableQuantity,
+      };
     },
 
     goToStep(step_key) {

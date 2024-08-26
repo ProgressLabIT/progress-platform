@@ -4,7 +4,7 @@ import traceback
 from time import time
 from datetime import datetime, timedelta
 from dateutil import tz
-from typing import Optional
+from typing import Optional, Annotated
 
 import jwt
 from fastapi import APIRouter, Body, Depends, Form, HTTPException
@@ -16,9 +16,9 @@ from starlette.responses import JSONResponse
 
 from models.auth import *
 from models.org import User
-from utils.api import APIResponse
+from utils.api import APIResponse, AuthAPIResponse
 from utils import auth
-from utils.db import db
+from commons.utils.db import db
 from utils.exceptions import *
 
 
@@ -36,12 +36,11 @@ USER_SESSION_TIMEOUT_MINUTES = 15
 
 @router.post("/auth")
 async def authenticate_user(
-  username: str = Body(...),
-  password: str = Body(...)
+  form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ):
 
   try:
-    user = auth.verify_user(username=username, password=password, db=db)
+    user = auth.verify_user(username=form_data.username, password=form_data.password, db=db)
 
   except (UserNotFoundError, UserDisabledError, UserPasswordMismatchError):
     raise auth.credentials_exception
@@ -77,7 +76,7 @@ async def authenticate_user(
 
     response_data = AuthResponse(
       action='reset_password',
-      token=token
+      user_key=user.key
     )
 
   else:
@@ -90,7 +89,7 @@ async def authenticate_user(
 
     response_data = AuthResponse(
       action='start_session',
-      token=token
+      user_key=user.key
     )
 
   # Store token data
@@ -111,13 +110,15 @@ async def authenticate_user(
     'Pragma': 'no-cache'
   }
 
-  response_content = APIResponse(detail=response_data)
+  response_content = AuthAPIResponse(detail=response_data)
+
+  response_content.access_token = token
+  response_content.token_type = "bearer"
 
   return JSONResponse(
     content= jsonable_encoder(response_content),
     headers=response_headers
   )
-
 
 # ----------------------------------------------------------------------
 
@@ -138,6 +139,30 @@ async def verify_user_password(
 
 # ----------------------------------------------------------------------
 
+
+# ----------------------------------------------------------------------
+
+@router.get('/whoami')
+async def get_current_user(
+  token: TokenData = Depends(auth.verify_token)
+):
+  credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+  try:
+    user_key=token.consumer_key
+    if user_key is None:
+      raise credentials_exception
+  except:
+    raise credentials_exception
+
+  return APIResponse(detail=dict(user_key=user_key), message="cookie is valid")
+
+
+
+# ----------------------------------------------------------------------
 
 @router.post("/session")
 async def start_user_session(

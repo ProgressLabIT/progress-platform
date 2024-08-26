@@ -12,6 +12,7 @@ const product = {
       process: false,
       bom: false,
     },
+    tags: [],
   },
 
   mutations: {
@@ -101,6 +102,16 @@ const product = {
       state.list = product_list;
     },
 
+    APPEND_PRODUCT_LIST(state, product_list) {
+      if (state.list) {
+        for (const product of product_list) {
+          state.list.push(product);
+        }
+      } else {
+        state.list = product_list;
+      }
+    },
+
     LOAD_PRODUCT_DETAILS(state, product_details) {
       state.saved = _cloneDeep(product_details);
       state.temp = _cloneDeep(product_details);
@@ -108,6 +119,10 @@ const product = {
 
     CANCEL_PRODUCT_CHANGES(state) {
       state.temp = _cloneDeep(state.saved);
+    },
+
+    LOAD_TAGS(state, tag_list) {
+      state.tags = tag_list;
     },
   },
 
@@ -132,10 +147,13 @@ const product = {
       });
     },
 
-    loadProductList({ commit }) {
+    loadProductList({ commit }, search_params) {
+      if (!search_params) {
+        search_params = {};
+      }
       return new Promise((resolve, reject) => {
         api
-          .get('product')
+          .get('product', { params: search_params })
           .then((resp) => {
             const productList = resp.data;
             productList.forEach((p) => {
@@ -143,6 +161,29 @@ const product = {
               (p.last_phase = 0), (p.last_steps = [0]);
             });
             commit('LOAD_PRODUCT_LIST', productList);
+            resolve();
+          })
+          .catch((err) => {
+            window.alert(`Couldn't fetch data from db:\n ${err}`);
+            reject();
+          });
+      });
+    },
+
+    appendProductList({ commit }, search_params) {
+      if (!search_params) {
+        search_params = {};
+      }
+      return new Promise((resolve, reject) => {
+        api
+          .get('product', { params: search_params })
+          .then((resp) => {
+            const productList = resp.data;
+            productList.forEach((p) => {
+              p.last_page = 'home';
+              (p.last_phase = 0), (p.last_steps = [0]);
+            });
+            commit('APPEND_PRODUCT_LIST', productList);
             resolve();
           })
           .catch((err) => {
@@ -283,19 +324,34 @@ const product = {
 
       return Promise.all(promises);
     },
+
+    loadTags({ commit }) {
+      return new Promise((resolve) => {
+        api.get('tag').then((resp) => {
+          commit('LOAD_TAGS', resp.data.detail);
+          resolve();
+        });
+      });
+    },
   },
 
   getters: {
-    productCatalog: (state) => (show_active_only) => {
+    productCatalog: (state) => (show_active_only, tag_search) => {
       return state.list.filter((p) => {
         const deleted = p.trash;
         const active_filter = !show_active_only || p.active;
-        return !deleted && active_filter;
+        const tag_filter =
+          !tag_search || p.tags.some((t) => t._key === tag_search);
+        return !deleted && active_filter && tag_filter;
       });
     },
 
     productData: (state) => (product_key) => {
       return state.list.find((p) => p._key == product_key);
+    },
+
+    tags: (state) => () => {
+      return state.tags;
     },
   },
 };

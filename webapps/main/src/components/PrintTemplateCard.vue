@@ -42,16 +42,43 @@
         flat
         round
         size="sm"
-        :icon="template.trash ? 'mdi-restore' : 'mdi-delete'"
-        @click="template.trash ? $emit('restore') : $emit('delete')"
+        icon="mdi-delete"
+        @click="showDelete = true"
       >
         <q-tooltip>
-          {{ $capitalize(template.trash ? $t('restore') : $t('delete')) }}
+          {{ $capitalize($t('delete')) }}
         </q-tooltip>
       </q-btn>
 
       <slot name="extra-actions" />
     </q-card-section>
+
+    <!-- DELETE CONFIRMATION -->
+    <div
+      v-if="showDelete"
+      class="absolute-full surface1 column"
+      :class="showImage ? 'q-pa-md' : 'q-pa-sm'"
+    >
+      <div class="display weight-medium q-mt-sm">
+        {{ template.name }}
+      </div>
+      <div>
+        {{
+          $t('print_template_confirm_delete_question', {
+            entities: template.entities ? template.entities : 0,
+          })
+        }}
+      </div>
+      <q-space />
+      <div class="row justify-between">
+        <q-btn color="theme-red" size="12px" @click.stop="deleteTemplate">
+          {{ $t('confirm') }}
+        </q-btn>
+        <q-btn color="theme-grey" size="12px" @click.stop="showDelete = false">
+          {{ $t('cancel') }}
+        </q-btn>
+      </div>
+    </div>
 
     <PrintTemplateDesigner
       :show="templateToEdit !== null"
@@ -105,6 +132,7 @@ export default {
   data() {
     return {
       showPreview: false,
+      showDelete: false,
       templateToEdit: null,
     };
   },
@@ -126,6 +154,15 @@ export default {
         `print-template/${this.template._key}`,
       );
       this.templateToEdit = data;
+    },
+
+    async deleteTemplate() {
+      await this.$api
+        .delete(`print-template/${this.template._key}`)
+        .then(() => {
+          this.showDelete = false;
+          this.$emit('delete');
+        });
     },
 
     resetDesigner() {

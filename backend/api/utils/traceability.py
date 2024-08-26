@@ -1,5 +1,5 @@
 from models.production import Job
-from models.traceability import StepStatus
+from commons.models.traceability import StepStatus
 
 class Queries:
 
@@ -228,6 +228,22 @@ class Queries:
     } in Batch
   """
 
+  UPDATE_BATCH_QT = """
+    LET batch = DOCUMENT(Batch, @batch_key)
+
+    UPDATE batch WITH {
+      qt_total: @qt_total
+    } in Batch
+  """
+
+  UPDATE_JOB_QT = """
+    LET job = DOCUMENT(Job, @job_key)
+
+    UPDATE job WITH {
+      active_batch_qt: @active_qt
+    } in Job
+  """
+
 
   CLOSE_WORK_SESSION = """
     LET ws_key = FIRST(
@@ -281,23 +297,11 @@ class Queries:
       RETURN w.quantity
     )
 
-    // Get additional input available from that already booked for the job
-    // that is not already in the active batch
-    LET input_for_job = SUM(
-      FOR w IN wip
-      FILTER
-        w.wo_key == @wo_key
-        && w._to == j._id
-        && !w.active
-      RETURN w.quantity
-    )
-
     LET qt_remaining = j.qt_planned - j.qt_completed
     LET default_batch = j.parameters.production_batch_qt
     LET qt_next_batch = default_batch == 0 ? qt_remaining : MIN([default_batch, qt_remaining])
 
-    LET total_input_available = input_for_phase + input_for_job
-    LET next_batch_available = j.first_phase || qt_next_batch <= total_input_available
+    LET next_batch_available = j.first_phase || qt_next_batch <= input_for_phase
     UPDATE j WITH { next_batch_available } IN Job
   """
 

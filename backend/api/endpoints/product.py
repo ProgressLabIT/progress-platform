@@ -1,15 +1,16 @@
 import os
 import traceback
 
-from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body
+from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body, Depends
+from utils import auth
 from fastapi.encoders import jsonable_encoder
 
 from utils.kpi import Queries as ProductStatQueries
-from models.product import *
+from commons.models.product import *
 from models.process import PhaseData
 from utils.api import APIResponse
-from utils.db import db
-from utils.dt import timestamp
+from commons.utils.db import db
+from commons.utils.dt import timestamp
 from utils.file import FileHandler
 from utils.product import *
 from utils.process import Queries as ProcessQueries, copy_process_to_product, copy_process_to_product_writes
@@ -24,13 +25,16 @@ product_db = db.collection('Product')
 # =================================================
 #  GET / : GET PRODUCT LIST
 # =================================================
-@router.get("")
+@router.get("",
+    dependencies=[Depends(auth.verify_token)])
 async def get_product_list(
   offset: int | None = None,
   limit: int | None = None, # return a limited number of results
   search: str | None = None, # filter by code or description
   has_operation_key: str | None = None, # filter by operation key
-  details: bool = False
+  details: bool = False,
+  filter_inactive: bool = False,
+  tag_search: str | None = None
 ):
   product_list =  db.aql.execute(
     Queries.GET_PRODUCT_LIST,
@@ -39,7 +43,9 @@ async def get_product_list(
       offset = offset,
       search = search,
       has_operation_key = has_operation_key,
-      details = details
+      details = details,
+      tag = tag_search,
+      active = filter_inactive
     )
   )
 
@@ -52,18 +58,22 @@ async def get_product_list(
 # =================================================
 #  POST / : CREATE PRODUCT
 # =================================================
-@router.post("", status_code=201)
+@router.post("", status_code=201,
+    dependencies=[Depends(auth.verify_token)])
 async def create_product(
   code: str = Form(...),
   description: str = Form(''),
-  image: UploadFile = File(None)
+  image: UploadFile = File(None),
+  counter_key: str = Form(''),
 ):
   # Map form data
   try:
+
     new_product = ProductDetails(
       code=code,
       description=description,
-      created=timestamp()
+      created=timestamp(),
+      counter_key=counter_key
     )
 
   except Exception as e:
@@ -145,7 +155,8 @@ async def create_product(
 # =================================================
 #  POST /PRODUCT_KEY/COPY : COPY PRODUCT
 # =================================================
-@router.post("/copy", status_code=201)
+@router.post("/copy", status_code=201,
+    dependencies=[Depends(auth.verify_token)])
 async def copy_product(
   original_product: str = Body(), # Can be product key or code (key default)
   new_code: str = Body(),
@@ -293,7 +304,8 @@ async def copy_product(
 # =================================================
 #  DELETE /PRODUCT_KEY : DELETE PRODUCT
 # =================================================
-@router.delete("/{product_key}")
+@router.delete("/{product_key}",
+    dependencies=[Depends(auth.verify_token)])
 async def delete_product(product_key):
   product_to_trash = product_db.get(product_key)
 
@@ -324,7 +336,8 @@ async def delete_product(product_key):
 # =================================================
 #  PATCH /PRODUCT_KEY : UPDATE PRODUCT (SPECIFC PROPERTIES)
 # =================================================
-@router.patch("/{product_key}")
+@router.patch("/{product_key}",
+    dependencies=[Depends(auth.verify_token)])
 async def udpate_product(
   product_key: str | None = None,
   updated_fields: dict = dict()
@@ -362,7 +375,8 @@ async def udpate_product(
 # =================================================
 #  PUT /PRODUCT_KEY : REPLACE PRODUCT
 # =================================================
-@router.put("/{product_key}")
+@router.put("/{product_key}",
+    dependencies=[Depends(auth.verify_token)])
 async def replace_product(
   product_key: str,
   new_product_data: ProductDetails,
@@ -379,7 +393,8 @@ async def replace_product(
 # =================================================
 #  POST /PRODUCT_KEY/DOCS : SAVE DOC
 # =================================================
-@router.post("/{product_key}/doc")
+@router.post("/{product_key}/doc",
+    dependencies=[Depends(auth.verify_token)])
 async def save_doc(
   product_key: str,
   new_doc: UploadFile =  File(...)
@@ -411,7 +426,8 @@ async def save_doc(
 # =================================================
 #  DELETE (DOCS)
 # =================================================
-@router.delete("/{product_key}/doc/{doc_name}")
+@router.delete("/{product_key}/doc/{doc_name}",
+    dependencies=[Depends(auth.verify_token)])
 async def delete_doc(
   product_key: str,
   doc_name: str
@@ -429,7 +445,8 @@ async def delete_doc(
 # =================================================
 #  PUT (IMAGE)
 # =================================================
-@router.put("/{product_key}/image")
+@router.put("/{product_key}/image",
+    dependencies=[Depends(auth.verify_token)])
 async def replace_product_image(
   product_key: str,
   new_image: UploadFile = File(...)
@@ -450,7 +467,8 @@ async def replace_product_image(
 # =================================================
 #  DELETE (IMAGE)
 # =================================================
-@router.delete("/{product_key}/image")
+@router.delete("/{product_key}/image",
+    dependencies=[Depends(auth.verify_token)])
 async def replace_product_image(product_key: str):
   # extension = new_image.filename.split('.')[-1]
   img = FileHandler.product_media(object_key=product_key)
@@ -464,11 +482,14 @@ async def replace_product_image(product_key: str):
 # =================================================
 #  GET /PRODUCT_KEY : GET PRODUCT DATA
 # =================================================
-@router.get("/{product_key}", response_model=ProductFull)
+@router.get("/{product_key}", response_model=ProductFull,
+    dependencies=[Depends(auth.verify_token)])
 async def get_product_data(product_key: str):
   try:
     product = ProductFull(**product_db.get(product_key))
     product.docs = get_product_docs(product_key)
+    if (product.counter_key):
+      product.counter = db.collection('Counter').get(product.counter_key)
     return product
 
   except:
@@ -489,7 +510,8 @@ async def get_product_data(product_key: str):
 # =================================================
 #  PRODUCT STATS
 # =================================================
-@router.get('/{product_key}/stats')
+@router.get('/{product_key}/stats',
+    dependencies=[Depends(auth.verify_token)])
 async def get_product_stats(product_key: str):
   try:
     stats = db.aql.execute(ProductStatQueries.GET_PRODUCT_STATS, bind_vars=dict(product_key=product_key)).next()

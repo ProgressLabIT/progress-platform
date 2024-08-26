@@ -16,7 +16,7 @@
             flat
             icon="mdi-minus"
             size="2.5em"
-            :disable="quantity === min"
+            :disable="quantity === 1"
             @click="decrement"
           />
 
@@ -27,7 +27,7 @@
             filled
             stack-label
             hide-bottom-space
-            :min="min"
+            min="1"
             :max="max"
           />
 
@@ -44,11 +44,11 @@
         <q-card-section class="q-mt-sm">
           <q-slider
             v-model.number="quantity"
-            :min="min"
+            :min="1"
             :max="max"
             color="primary"
             :marker-labels="{
-              [min]: min,
+              1: 1,
               [max]: max,
             }"
             marker-labels-class="text-h3 q-mt-xs"
@@ -111,8 +111,8 @@ const quantity = ref(props.initialValue);
 function decrement() {
   if (quantity.value > props.max) {
     quantity.value = props.max;
-  } else if (quantity.value < props.min) {
-    quantity.value = props.min;
+  } else if (quantity.value == 1) {
+    quantity.value = 1;
   } else {
     quantity.value--;
   }
@@ -120,8 +120,8 @@ function decrement() {
 
 // Mimics the behavior of the native number input
 function increment() {
-  if (quantity.value < props.min) {
-    quantity.value = props.min;
+  if (quantity.value < 1) {
+    quantity.value = 1;
   } else if (quantity.value > props.max) {
     quantity.value = props.max;
   } else {

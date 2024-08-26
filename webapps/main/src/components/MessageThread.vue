@@ -56,8 +56,9 @@ export default {
   props: {
     context: {
       type: String,
-      required: true,
-      validator: (value) => ['issue', 'work_order', 'job'].includes(value),
+      default: undefined,
+      validator: (value) =>
+        value || ['issue', 'work_order', 'job'].includes(value),
     },
     context_key: {
       type: String,
@@ -70,15 +71,20 @@ export default {
       recipient_prefix_map: {
         issue: 'Issue/',
         work_order: 'WorkOrder/',
+        serial: 'Serial/',
       },
       messages: [],
       new_message: '',
-      polling_instance: null,
+      events: undefined,
+      loading: false,
     };
   },
 
   computed: {
     recipient_id() {
+      if (!this.context) {
+        return;
+      }
       if (this.context === 'job') {
         return (
           'WorkOrder/' + this.$store.state.traceability.working_job_data.wo_key
@@ -88,19 +94,45 @@ export default {
       }
     },
   },
+
+  watch: {
+    context_key: {
+      handler() {
+        this.getMessages();
+      },
+    },
+  },
   created() {
+    this.loading = true;
     this.$store.dispatch('loadUsers');
+    this.loading = false;
   },
 
   mounted() {
     this.getMessages();
-    this.polling_instance = setInterval(this.getMessages, 10000);
+    let eventURL =
+      this.$api.defaults.baseURL + '/notification/global-notification';
+    this.events = new EventSource(eventURL, {
+      withCredentials: false,
+    });
+    this.events.addEventListener('global-notification', (event) => {
+      this.handleMessage(event);
+    });
   },
   unmounted() {
-    clearInterval(this.polling_instance);
+    if (this.events) {
+      this.events.close();
+    }
   },
 
   methods: {
+    handleMessage(message) {
+      let event = JSON.parse(message.data);
+      if (event.notification === 'REFRESH') {
+        this.getMessages();
+      }
+    },
+
     getMessages() {
       this.$api
         .get('message', { params: { recipient_id: this.recipient_id } })

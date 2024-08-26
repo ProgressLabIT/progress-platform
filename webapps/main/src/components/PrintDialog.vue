@@ -69,6 +69,15 @@
       >
         <LoadingSignal v-if="isLoadingTemplate" />
         <template v-else>
+          <BaseAutocompleteSerial
+            v-if="context.type === 'step'"
+            v-model="serialModel"
+            :initial_values="serialModel"
+            :label="$capitalize($t('serial'))"
+            :work_order_key="context.step.work_order_key"
+            @select="selectSerial"
+          >
+          </BaseAutocompleteSerial>
           <template
             v-for="(pageSchema, index) in selectedTemplate.template.schemas"
             :key="index"
@@ -170,12 +179,13 @@
 <script setup>
 import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent } from 'quasar';
-import { nextTick, ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
+import BaseAutocompleteSerial from './BaseAutocompleteSerial.vue';
 
 const props = defineProps({
   context: {
@@ -201,7 +211,34 @@ const activeStep = ref(0);
 const selectedTemplate = ref();
 const isLoadingTemplate = ref(false);
 const formModel = ref();
+const serialModel = ref();
+
+const selectedTemplateBK = ref();
+
+async function loadSerial(serial_key) {
+  if (serial_key) {
+    const { data } = await api.get(`serial/${serial_key}`);
+    props.context.setSelectedSerial(data);
+  } else {
+    props.context.setSelectedSerial(null);
+  }
+}
+
+async function selectSerial(serial) {
+  let serial_key = serial?._key;
+  await loadSerial(serial_key);
+  selectTemplate(selectedTemplateBK.value);
+}
+
+onMounted(() => {
+  //TODO: va verificato
+  if (props.context.type === 'issue' && props.context.links) {
+    loadSerial(props.context.link);
+  }
+});
+
 async function selectTemplate(template) {
+  selectedTemplateBK.value = template;
   activeStep.value = 1;
   selectedTemplate.value = undefined;
   await nextTick();

@@ -7,14 +7,18 @@
       row-key="_key"
       :loading="loading"
       color="primary"
-      virtual-scroll
       hide-bottom
       class="full-height"
       dense
       separator="none"
       table-class="text-high"
       card-class="background no-shadow"
+      virtual-scroll
+      :virtual-scroll-item-size="48"
+      :virtual-scroll-sticky-size-start="48"
+      :pagination="pagination"
       :rows-per-page-options="[0]"
+      @virtual-scroll="(details) => $emit('onScroll', details)"
     >
       <template #body="props">
         <q-tr
@@ -59,9 +63,12 @@
 
               <template
                 v-else-if="
-                  ['product_code', 'work_order_code', 'project_code'].includes(
-                    column.name,
-                  )
+                  [
+                    'product_code',
+                    'work_order_code',
+                    'project_code',
+                    'serial_code',
+                  ].includes(column.name)
                 "
               >
                 {{ $capitalizeAll(column.field(props.row) || '-') }}
@@ -94,6 +101,14 @@ export default {
       type: Boolean,
       default: false,
     },
+  },
+
+  emits: ['onScroll'],
+
+  setup() {
+    return {
+      pagination: { rowsPerPage: 0 },
+    };
   },
 
   data() {
@@ -137,6 +152,14 @@ export default {
           field: (row) => row.links?.work_order?.wo_code,
           sortable: true,
           label: this.$t('work_order.list_headers.wo_code').toUpperCase(),
+          align: 'left',
+          style: 'max-width: 10vw',
+        },
+        {
+          name: 'serial_code',
+          field: (row) => row.links?.serial?.code,
+          sortable: true,
+          label: this.$t('serial').toUpperCase(),
           align: 'left',
           style: 'max-width: 10vw',
         },

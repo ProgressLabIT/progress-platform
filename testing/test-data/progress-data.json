@@ -1,0 +1,13 @@
+{
+  "user": {
+    "username": "simone",
+    "password": "simone"
+  },
+  "user_wrong": {
+    "username": "test",
+    "password": "test"
+  },
+  "user_key": "13479892",
+  "kafka_topic": "test-topic",
+  "kafka_topic_not_present": "test-topic-not-present"
+}

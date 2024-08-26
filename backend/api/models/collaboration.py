@@ -4,16 +4,16 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from models.form import FormFieldDefinition, FormFieldValue
+from commons.models.form import FormFieldDefinition, FormFieldValue
 from models.print import PrintTemplateRecord
-from utils.base_models import ArangoDocument
-from utils.dt import timestamp
+from commons.models.base_models import ArangoDocument
+from commons.utils.dt import timestamp
 
 
 # ISSUE TYPE
 class IssueType(ArangoDocument):
-  code: str
   name: str
+  code: str | None = None
   active: bool = True
   description: str | None = None
   icon: str | None = None
@@ -76,6 +76,7 @@ class IssueLinkType(str, Enum):
   PROJECT = 'project'
   USER = 'user'
   JOB = 'job'
+  SERIAL = 'serial'
 
 class IssueLink(BaseModel):
   type: IssueLinkType

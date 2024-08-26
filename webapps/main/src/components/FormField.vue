@@ -5,19 +5,20 @@
       v-if="fieldType === 'text'"
       v-model="fieldValue"
       :disable="disable"
+      :readonly="readonly"
       :dense="dense"
-      :label="field.label"
+      label-slot
       filled
       stack-label
       autogrow
-      lazy-rules
       input-debounce="100"
       hide-bottom-space
-      :rules="[
-        (value) =>
-          (field.required ? !!value : true) || $t('field_required_alert'),
-      ]"
-    />
+    >
+      <template #label>
+        {{ field.label ?? field.default_label }}
+        <span v-if="field.mandatory" class="text-theme-red"> * </span>
+      </template>
+    </q-input>
 
     <!-- NUMBER -->
     <q-input
@@ -26,31 +27,30 @@
       type="number"
       :disable="disable"
       :dense="dense"
-      :label="field.label"
+      label-slot
       filled
       stack-label
       hide-bottom-space
       input-debounce="100"
-      lazy-rules
-      :rules="[
-        (value) =>
-          (field.required ? !!value : true) || $t('field_required_alert'),
-      ]"
-    />
+    >
+      <template #label>
+        {{ field.label ?? field.default_label }}
+        <span v-if="field.mandatory" class="text-theme-red"> * </span>
+      </template>
+    </q-input>
 
     <!-- BOOLEAN -->
     <q-checkbox
       v-if="fieldType === 'boolean'"
       :model-value="fieldValue ?? false"
+      :readonly="readonly"
       :disable="disable"
       :dense="dense"
-      :label="field.label"
-      :rules="[
-        (value) =>
-          (field.required ? !!value : true) || $t('field_required_alert'),
-      ]"
       @update:model-value="fieldValue = $event"
-    />
+    >
+      {{ field.label ?? field.default_label }}
+      <span v-if="field.mandatory" class="text-theme-red"> * </span>
+    </q-checkbox>
 
     <!-- TERNARY -->
     <!-- TODO: Implement required behavior (?) -->
@@ -59,26 +59,44 @@
       square
       style="background: rgba(255, 255, 255, 0.07)"
       class="no-shadow"
-      :class="dense ? 'q-px-md q-py-sm' : 'q-px-lg q-py-md'"
+      :class="dense ? 'q-py-sm' : 'q-px-md q-py-sm'"
     >
-      <div class="row items-center">
-        <div class="col-1 items-center">
+      <div class="row items-center q-col-gutter-md">
+        <!-- <div class="col-auto flex-center">
+          <q-icon
+            :size="dense ? '20px' : '26px'"
+            v-if="fieldValue === undefined"
+            name="mdi-progress-question"
+          />
           <q-avatar
+            v-else
+            :size="dense ? '20px' : '26px'"
             :color="fieldValue !== undefined ? 'theme-green' : 'transparent'"
-            size="24px"
             class="row flex-center text-center text-body2 font-weight-medium"
           >
             <q-icon
-              v-if="fieldValue === undefined"
-              size="sm"
-              name="mdi-progress-question"
+              class="solid-white"
+              name="mdi-check"
             />
-            <q-icon v-else class="solid-white" name="mdi-check" />
           </q-avatar>
         </div>
-
-        <div class="col items-center">
-          <p class="text-body1 q-ma-none">{{ field.label }}</p>
+ -->
+        <div class="col">
+          <div>
+            <span
+              class="text-body2 q-ma-none"
+              :class="{ smaller: dense, 'text-low': readonly, 'text-disabled': disable }"
+            >
+              {{ field.label ?? field.default_label }}
+            </span>
+            <span v-if="field.mandatory" class="text-theme-red q-ml-xs"> * </span>
+          </div>
+          <div
+            class="smaller text-low"
+            :class="{ smaller: dense, 'text-disabled': readonly || disable }"
+          >
+            {{ field.hint ?? field.default_hint }}
+          </div>
         </div>
 
         <q-space />
@@ -89,7 +107,7 @@
             unelevated
             :flat="fieldValue !== false"
             :disable="disable"
-            :dense="dense"
+            :padding="dense ? 'sm md' : 'md lg'"
             color="theme-red"
             :style="{ width: dense ? '70px' : '100px' }"
             @click="fieldValue = fieldValue === false ? undefined : false"
@@ -107,10 +125,10 @@
             unelevated
             :flat="fieldValue !== true"
             :disable="disable"
-            :dense="dense"
             color="theme-green"
             :style="{ width: dense ? '70px' : '100px' }"
-            :class="dense ? 'q-ml-sm' : 'q-ml-lg'"
+            :padding="dense ? 'sm md' : 'md lg'"
+            :class="dense ? 'q-ml-xs' : 'q-ml-sm'"
             @click="fieldValue = fieldValue === true ? undefined : true"
           >
             <span
@@ -131,8 +149,9 @@
       :options="options"
       option-label="value"
       :disable="disable"
+      :readonly="readonly"
       :dense="dense"
-      :label="field.label"
+      label-slot
       :loading="loading"
       :debounce="300"
       use-input
@@ -141,14 +160,20 @@
       stack-label
       input-class="cursor-pointer"
       @filter="onFilter"
-    />
+    >
+      <template #label>
+        {{ field.label ?? field.default_label }}
+        <span v-if="field.mandatory" class="text-theme-red"> * </span>
+      </template>
+    </q-select>
 
     <!-- DATE -->
     <q-input
       v-if="fieldType === 'date'"
       v-model="fieldValue"
       :disable="disable"
-      :label="field.label"
+      :readonly="readonly"
+      label-slot
       filled
       stack-label
       :placeholder="$t('date_format')"
@@ -164,6 +189,10 @@
           </div>
         </q-date>
       </q-popup-proxy>
+      <template #label>
+        {{ field.label ?? field.default_label }}
+        <span v-if="field.mandatory" class="text-theme-red"> * </span>
+      </template>
     </q-input>
 
     <!-- TIME -->
@@ -171,7 +200,8 @@
       v-if="fieldType === 'time'"
       v-model="fieldValue"
       :disable="disable"
-      :label="field.label"
+      :readonly="readonly"
+      label-slot
       stack-label
       filled
       input-class="cursor-pointer"
@@ -187,6 +217,10 @@
           </div>
         </q-time>
       </q-popup-proxy>
+      <template #label>
+        {{ field.label ?? field.default_label }}
+        <span v-if="field.mandatory" class="text-theme-red"> * </span>
+      </template>
     </q-input>
 
     <!-- FILES -->
@@ -194,8 +228,9 @@
       <FilesList
         :files="fieldValue"
         :root-path="`${rootPath}/${field._key}`"
-        :label="field.label"
-        :disable="disable"
+        :label="field.label ?? field.default_label"
+        :disable="disable || readonly"
+        :mandatory="field.mandatory"
         @add-files="addFiles"
         @delete-file="deleteFile"
         @restore-file="restoreFile"
@@ -203,7 +238,7 @@
     </div>
 
     <div class="smaller q-px-sm q-mt-xs">
-      {{ field.hint }}
+      {{ field.hint ?? field.default_hint }}
     </div>
   </div>
 </template>
@@ -235,6 +270,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  readonly: {
+    type: Boolean,
+    default: false
+  }
 });
 
 const emit = defineEmits(['update']);
@@ -255,7 +294,7 @@ async function getOptions(searchTerm) {
   loading.value = true;
   const { data } = await api.get('list', {
     params: {
-      field_key: props.field.custom_field_key,
+      field_key: props.field.custom_field_key ?? props.field._key,
       search: searchTerm || undefined,
     },
   });
@@ -275,7 +314,10 @@ async function onFilter(value, update, abort) {
 }
 
 const fieldType = computed(
-  () => store.getters.getCustomFieldByKey(props.field.custom_field_key)?.type,
+  () =>
+    store.getters.getCustomFieldByKey(
+      props.field.custom_field_key ?? props.field._key,
+    )?.type,
 );
 if (fieldType.value === 'choice') {
   void getOptions().then((optionsToLoad) => {

@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="show">
+  <BaseDialog :show="show" @close="cancel">
     <q-card
       square
       class="surface1 q-pa-md"
@@ -38,6 +38,16 @@
             :label="$t('issue_new_link_type_label')"
             @update:model-value="updateLinkForm"
           />
+
+          <!-- SERIAL -->
+          <BaseAutocompleteSerial
+            v-if="link_form === 'serial'"
+            v-model="links.serial"
+            :initial_values="links.serial"
+            :label="$capitalize($t('serial'))"
+            @select="(selection) => loadSerial(selection)"
+          >
+          </BaseAutocompleteSerial>
 
           <!-- WORK ORDER -->
           <BaseAutocompleteWorkOrder
@@ -191,6 +201,7 @@
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
+import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import BaseAutocompleteWorkOrder from '@/components/BaseAutocompleteWorkOrder.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -207,6 +218,7 @@ export default {
     BaseAutocompleteProduct,
     BaseAutocompleteUser,
     BaseAutocompleteWorkOrder,
+    BaseAutocompleteSerial,
     BaseDialog,
     JobListItem,
     FormField,
@@ -262,6 +274,7 @@ export default {
         work_order: null,
         user: null,
         job: null,
+        serial: null,
       },
     };
   },
@@ -288,6 +301,10 @@ export default {
         {
           value: 'general',
           label: this.$t('general'),
+        },
+        {
+          value: 'serial',
+          label: this.$t('serial'),
         },
       ];
     },
@@ -384,6 +401,17 @@ export default {
         this.critical_only = true;
       } else {
         this.critical_only = false;
+      }
+    },
+
+    async loadSerial(serial) {
+      // Set work order data and initialize Phase options to select from
+      this.links.serial = serial;
+      if (serial?.wo_key) {
+        const { data: wo } = await this.$api.get(`work-order/${serial.wo_key}`);
+        this.loadWorkOrder(wo.detail);
+      } else {
+        this.loadProduct(serial.product_key);
       }
     },
 

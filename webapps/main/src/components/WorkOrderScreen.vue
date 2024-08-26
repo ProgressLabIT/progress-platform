@@ -86,8 +86,8 @@ export default {
       ],
       vuex_ready: false,
       column_height: '80vh',
+      events: undefined,
       data_column_width: 25,
-      polling_instance: undefined,
     };
   },
 
@@ -99,14 +99,29 @@ export default {
 
   created() {
     this.get_wo_data();
-    this.polling_instance = setInterval(this.get_wo_data, 10000);
+    let eventURL =
+      this.$api.defaults.baseURL + '/notification/global-notification';
+    this.events = new EventSource(eventURL, {
+      withCredentials: false,
+    });
+    this.events.addEventListener('global-notification', (event) => {
+      this.handleMessage(event);
+    });
   },
 
   beforeUnmount() {
-    clearInterval(this.polling_instance);
+    if (this.events) {
+      this.events.close();
+    }
   },
 
   methods: {
+    handleMessage(message) {
+      let event = JSON.parse(message.data);
+      if (event.notification === 'REFRESH') {
+        this.get_wo_data();
+      }
+    },
     exit() {
       let query = { ...this.$route.query };
 

@@ -1,7 +1,6 @@
-version: '3.9'
+version: "3.9"
 
 services:
-
   router:
     restart: unless-stopped
     command:
@@ -39,26 +38,77 @@ services:
     restart: unless-stopped
     build:
       context: ./backend/api #root folder for build
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
     volumes:
       - ./backend/api:/api
+      - ./backend/commons:/api/commons
     environment:
-      - PROGRESS_DB_NAME=PROGRESS_TEST
+      - PROGRESS_DB_NAME=PROGRESS_PROD
+      - PROGRESS_WEBAPP_URL=http://localhost:9000
     command: >
-      uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors
+      uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors  --timeout-graceful-shutdown 1
     labels:
       - "traefik.http.routers.api.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/api`)"
       - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
       - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
       - "traefik.http.routers.api.middlewares=strip_api_prefix"
 
+  #traceability-service:
+  #  restart: unless-stopped
+  #  build:
+  #    context: ./backend/traceability-service #root folder for build
+  #  volumes:
+  #    - ./backend/traceability-service:/traceability-service
+  #    - ./backend/commons:/traceability-service/commons
+  #  environment:
+  #    - PROGRESS_DB_NAME=PROGRESS_PROD
+  #  command: >
+  #    uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors  --timeout-graceful-shutdown 1
+
   db:
-    # image: arangodb:3.11 # Use this for Intel Processors
-    image: arm64v8/arangodb:3.11 # This works for Apple Silicon M1-M3 processors
+    image: arangodb:3.11 # Use this for Intel Processors
+    #image: arm64v8/arangodb:3.11 # This works for Apple Silicon M1-M3 processors
     restart: unless-stopped
     environment:
       - ARANGO_NO_AUTH=1
+    ports:
+      - "8529:8529"
     labels:
       - "traefik.http.routers.db.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/_db`)"
       - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
       - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
       - "traefik.http.routers.db.middlewares=db_root"
+
+  broker:
+    image: apache/kafka:latest
+    hostname: broker
+    restart: unless-stopped
+    #container_name: broker
+    ports:
+      - 9092:9092
+      - 9101:9101
+      - 19092:19092
+      - 29093:29093
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT_HOST://localhost:9092,PLAINTEXT://broker:19092"
+      KAFKA_LISTENERS: "CONTROLLER://:29093,PLAINTEXT_HOST://localhost:9092,PLAINTEXT://:19092"
+      #KAFKA_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      #KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:19092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@broker:29093"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      CLUSTER_ID: "4L6g3nShT-eMCtK--X86sw"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost

@@ -113,7 +113,8 @@
 </template>
 
 <script setup>
-import { Designer, BLANK_PDF } from '@pdfme/ui';
+import { Designer } from '@pdfme/ui';
+import { BLANK_PDF } from '@pdfme/common';
 import { cloneDeep } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -173,6 +174,7 @@ const templateDataOptions = [
   'product.code',
   'product.description',
 
+  'issue.id',
   'issue.open_date',
   'issue.open_time',
   'issue.open_user',
@@ -180,6 +182,11 @@ const templateDataOptions = [
   'issue.close_time',
   'issue.close_user',
   'issue.status',
+
+  'serial',
+  'serial_qt',
+  'serial_create_date',
+  'serial_create_time',
 ];
 
 const { t, locale } = useI18n();
@@ -217,10 +224,14 @@ function initDesigner() {
     options: { lang: locale.value },
   });
   designer.onChangeTemplate((template) => {
+    let original_col = workingTemplate.value.links;
     workingTemplate.value.template = cloneDeep(template);
+    workingTemplate.value.links = {};
 
     for (const column of template.columns ?? []) {
-      if (!workingTemplate.value.links[column]) {
+      if (original_col[column]) {
+        workingTemplate.value.links[column] = original_col[column];
+      } else {
         workingTemplate.value.links[column] = {
           type: 'preset',
           value: null,

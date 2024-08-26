@@ -2,15 +2,19 @@ import secrets
 import traceback
 from typing import List
 
-from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile, Request, Depends
+from utils import auth
 from starlette import status
 
 from models.org import *
 from utils import auth
 from utils.api import APIResponse
-from utils.db import db
+from commons.utils.db import db
 from utils.file import FileHandler
 from utils.org import *
+
+from managers.server_event_manager import ServerEventManager
+from sse_starlette.sse import EventSourceResponse
 
 
 
@@ -20,7 +24,8 @@ router = APIRouter()
 # =================================
 #         DEPARTMENTS
 # =================================
-@router.get('/department')
+@router.get('/department',
+    dependencies=[Depends(auth.verify_token)])
 async def get_department_list():
   dep_list = [Department(**dep) for dep in db.collection('Department').all()]
   response = APIResponse(detail= dep_list)
@@ -31,19 +36,21 @@ async def get_department_list():
 # =================================
 #         USERS
 # =================================
-@router.get("/user")
+@router.get("/user",
+    dependencies=[Depends(auth.verify_token)])
 async def get_user_list(active_only: bool = True):
 
   db_cursor = db.aql.execute(Queries.GET_USER_LIST, bind_vars=dict(active_only=active_only))
   user_list = [UserListItem(**u) for u in db_cursor]
-  
+
   return APIResponse(detail=user_list)
 
 # ----------------------------------------------------
 
-@router.post("/user", status_code=201)
+@router.post("/user", status_code=201,
+    dependencies=[Depends(auth.verify_token)])
 async def create_user(new_user: UserNew):
-  new_user_data = User(**new_user.dict()) 
+  new_user_data = User(**new_user.dict())
   username_already_taken = db.collection('User').find(dict(username=new_user.username)).count()
 
   if username_already_taken:
@@ -56,10 +63,11 @@ async def create_user(new_user: UserNew):
   new_user_record = db.collection('User').insert(new_user_data, return_new=True)['new']
   response_data = dict(temp_psw=temp_psw)
   return APIResponse(status_code=201, message='User created', detail=response_data)
-    
+
 # ----------------------------------------------------
 
-@router.patch("/user/{user_key}")
+@router.patch("/user/{user_key}",
+    dependencies=[Depends(auth.verify_token)])
 async def update_user(user_key: str, update_data: dict):
 
   user_update = dict(_key=user_key)
@@ -90,9 +98,10 @@ async def update_user(user_key: str, update_data: dict):
 
 # ----------------------------------------------------
 
-@router.put("/user/{user_key}/image")
+@router.put("/user/{user_key}/image",
+    dependencies=[Depends(auth.verify_token)])
 async def update_user_image(
-  user_key: str, 
+  user_key: str,
   new_image: UploadFile = File(...)
 ):
   try:
@@ -112,7 +121,8 @@ async def update_user_image(
 
 # ----------------------------------------------------
 
-@router.delete("/user/{user_key}/password")
+@router.delete("/user/{user_key}/password",
+    dependencies=[Depends(auth.verify_token)])
 async def delete_user_password(user_key: str):
   try:
     temp_psw = secrets.token_hex(4)
@@ -120,7 +130,7 @@ async def delete_user_password(user_key: str):
     db.collection('User').update(dict(_key=user_key, psw_hash=new_hash, reset_password=True))
     return APIResponse(message="Password updated correctly", detail=dict(temp_psw=temp_psw))
 
-  except: 
+  except:
     status_code = 500
     response = dict(
       status=status_code,
@@ -131,9 +141,10 @@ async def delete_user_password(user_key: str):
 
 # ----------------------------------------------------
 
-@router.put("/user/{user_key}/password")
+@router.put("/user/{user_key}/password",
+    dependencies=[Depends(auth.verify_token)])
 async def reset_user_password(
-  user_key: str, 
+  user_key: str,
   token: str = Depends(auth.verify_token),
   new_password: str = Body(..., embed=True)
 ):
@@ -145,7 +156,7 @@ async def reset_user_password(
     db.collection('User').update(dict(_key=user_key, psw_hash=new_hash, reset_password=False))
     return APIResponse(message="Password updated correctly")
 
-  except: 
+  except:
     status_code = 500
     response = dict(
       status=status_code,
@@ -156,12 +167,13 @@ async def reset_user_password(
 
 # ----------------------------------------------------
 
-@router.delete("/user/{user_key}")
+@router.delete("/user/{user_key}",
+    dependencies=[Depends(auth.verify_token)])
 async def archive_user(user_key: str):
   try:
     db.collection('User').update(dict(_key=user_key, trash=True))
     return APIResponse(message="User archived successfully", detail=dict(user_key=user_key))
-    
+
   except:
     status_code = 500
     response = dict(
@@ -171,4 +183,6 @@ async def archive_user(user_key: str):
     )
     raise HTTPException(status_code=status_code, detail=response)
 
-
+@router.get("/notification/{topic}")
+async def message_stream(request: Request, topic: str):
+    return EventSourceResponse(ServerEventManager.getInstance().push_events(request, topic))

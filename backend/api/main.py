@@ -1,12 +1,27 @@
 import requests
 from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
-from starlette.middleware.gzip import GZipMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
-from utils.config import get_config
+from commons.utils.config import get_config
+from commons.kafka_utils.kafka_producer import KafkaProducer
+from commons.kafka_utils.kafka_consumer_manager import KafkaConsumerManager
+from commons.kafka_utils.kafka_admin import KafkaAdmin
+from commons.executors.executor_manager import ExecutorManager
+from commons.websockets.websocket_manager import WebsocketManager
+from managers.server_event_manager import ServerEventManager
+from managers.notification_manager import NotificationManager
+from utils.notification_kafka_consumer import NotificationsKafkaConsumer
+from middlewares.notification_middleware import NotificationMiddleware
+from middlewares.gzipfilter_middleware import GZipFilterMiddleware
+
+
 import endpoints
 
 config = get_config()
+
+KafkaAdmin.getInstance().create_topic("notifications")
+#KafkaAdmin.getInstance().create_topic("serials")
 
 app = FastAPI(
 	# openapi_url=f"{config.root_path}/openapi.json",
@@ -14,6 +29,9 @@ app = FastAPI(
 )
 # global_router = APIRouter()
 
+origins = [
+    config.webapp_url,
+]
 
 app.add_middleware(
   CORSMiddleware,
@@ -23,7 +41,10 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
-app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(GZipFilterMiddleware, minimum_size=500, filtered_api="/notification")
+
+app.add_middleware(NotificationMiddleware)
+
 
 """
 Each package __init__ file imports the router object from the
@@ -32,15 +53,35 @@ relative endpoint.py module, so it's easily available here
 
 @app.get("/hello")
 async def hello():
-	return 'Hi!'
+  return 'Hi!'
 
+@app.on_event("startup")
+async def startup_event():
+    KafkaProducer.getInstance()
+    notificationsConsumer = NotificationsKafkaConsumer()
+    KafkaConsumerManager.getInstance().registerConsumer(notificationsConsumer)
+    WebsocketManager.getInstance()
+
+def broadcast_message(self, msg):
+      print("%% %s [%d] at offset %d with key %s:\n" %(msg.topic(), msg.partition(), msg.offset(),str(msg.key())))
+      WebsocketManager.getInstance().enqueue(msg.value().decode('utf-8'))
+
+@app.on_event("shutdown")
+def shutdown_event():
+   KafkaProducer.getInstance().close()
+   KafkaConsumerManager.getInstance().closeAllConsumers()
+   WebsocketManager.getInstance().close()
+   ExecutorManager.getInstance().close()
+   ServerEventManager.getInstance().close()
+   NotificationManager.getInstance().close()
 
 app.include_router(endpoints.admin, tags=['Administration'])
 app.include_router(endpoints.auth, tags=['Security'])
 app.include_router(endpoints.bom, prefix="/product", tags=['Product'])
 app.include_router(endpoints.config, tags=['Administration'])
 app.include_router(endpoints.file, tags=['Attachments'])
-app.include_router(endpoints.form, tags=['Quality', 'Traceability'])
+app.include_router(endpoints.form, tags=['Quality'])
+app.include_router(endpoints.serial, tags=['Serial'])
 app.include_router(endpoints.media, tags=['Attachments'])
 app.include_router(endpoints.org, tags=['Organization'])
 app.include_router(endpoints.print, tags=['Quality', 'Traceability'])
@@ -50,6 +91,8 @@ app.include_router(endpoints.production, tags=['Production'])
 app.include_router(endpoints.tag)
 app.include_router(endpoints.collaboration, tags=['Collaboration'])
 app.include_router(endpoints.traceability, tags=['Traceability'])
+app.include_router(endpoints.counter, tags=['Traceability'])
+app.include_router(endpoints.notification, tags=['Notification'])
 
 # app.include_router(global_router, prefix="/v1")
 

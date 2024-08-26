@@ -1,14 +1,15 @@
 from datetime import date, datetime, timedelta
 from enum import Enum
-from typing import Union
+from typing import Union, Optional
 
 from pydantic import model_validator, BaseModel, Field, PositiveFloat, field_validator, ValidationInfo
 
 from models.bom import BomLineRead
 from models.process import PhaseParameters, StepWithMediaInfo
-from models.product import ProductDoc
-from utils.base_models import FlexModel, ArangoDocument
-from utils.dt import timestamp
+from commons.models.product import ProductDoc
+from commons.models.product import TraceabilityLevel
+from commons.models.base_models import FlexModel, ArangoDocument
+from commons.utils.dt import timestamp
 
 
 class TimeDeltaInfo(FlexModel):
@@ -51,6 +52,8 @@ class WorkOrderNew(BaseModel):
   start_from: datetime | date | None = None
   due_by: datetime | date | None = None
   notes: str | None = None
+
+  traceability_level: TraceabilityLevel | None = None
 
   @model_validator(mode="before")
   @classmethod
@@ -132,9 +135,10 @@ class Job(FlexModel):
 
   progress: int = Field(0, ge=0)
   active_batch_key: str | None = None # batch _key
-  active_batch_qt: int = 0
+  active_batch_qt: float = 0
   next_batch_available: bool | None = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders
 
+  traceability_level: str | None = None
   # current_step: int | None = None
 
   on_time: bool = True

@@ -12,6 +12,7 @@
     :style="{ ...CSSVars, '--backdrop-color': background }"
     @escape-key="$emit('close')"
     @hide="$emit('close')"
+    @keydown.esc="$emit('close')"
   >
     <template v-if="maximized">
       <div

@@ -26,16 +26,28 @@
 
           <!-- CREATE NEW WORK ORDER -->
           <template v-if="$route.name === 'workOrderList'">
-            <div v-if="!editing" class="col-auto">
-              <q-btn
-                size="0.75rem"
-                color="theme-blue"
-                :label="$t('new')"
-                @click="$router.push({ name: 'newWorkOrder' })"
-              >
-              </q-btn>
-            </div>
-
+            <template v-if="!editing">
+              <div class="col-auto">
+                <q-btn
+                  size="0.75rem"
+                  color="theme-blue"
+                  class="q-ml-sm"
+                  :label="$t('new')"
+                  @click="$router.push({ name: 'newWorkOrder' })"
+                >
+                </q-btn>
+              </div>
+              <div class="col-auto">
+                <q-btn
+                  size="0.75rem"
+                  color="theme-blue"
+                  class="q-ml-sm"
+                  @click="sortTableByStartDateDueDate"
+                >
+                  {{ $t('production.sort_by_date') }}
+                </q-btn>
+              </div>
+            </template>
             <template v-else>
               <!-- REORDER WORK ORDER QUEUE -->
               <div class="col-auto">
@@ -156,7 +168,7 @@
         >
           <template #append>
             <q-icon name="mdi-information-outline" class="col-auto" size="sm">
-              <q-tooltip :delay="300" class="text-body2">
+              <q-tooltip :delay="Number(300)" class="text-body2">
                 <span>
                   {{ $capitalize($t('production.search_explainer')) }}:
                 </span>
@@ -386,9 +398,9 @@ export default {
       department_search_text: undefined,
       editing: false,
       saving: false,
-      polling_instance: undefined,
+      //polling_instance: undefined,
       operator_search_text: undefined,
-
+      events: undefined,
       showFilterDrawer: false,
     };
   },
@@ -480,17 +492,37 @@ export default {
       this.$store.dispatch('loadJobAssignments'),
     ]).then((this.vuex_ready = true));
 
-    this.polling_instance = setInterval(() => {
-      this.$store.dispatch('updateWorkOrderList');
-      this.$store.dispatch('loadJobAssignments');
-    }, 60000);
+    //this.polling_instance = setInterval(() => {
+    //  this.$store.dispatch('updateWorkOrderList');
+    //  this.$store.dispatch('loadJobAssignments');
+    //}, 10000);
+    let eventURL =
+      this.$api.defaults.baseURL + '/notification/global-notification';
+    this.events = new EventSource(eventURL, {
+      withCredentials: false,
+    });
+    this.events.addEventListener('global-notification', (event) => {
+      this.handleMessage(event);
+    });
   },
 
   beforeUnmount() {
-    clearInterval(this.polling_instance);
+    //clearInterval(this.polling_instance);
+
+    if (this.events) {
+      this.events.close();
+    }
   },
 
   methods: {
+    handleMessage(message) {
+      let event = JSON.parse(message.data);
+      if (event.notification === 'REFRESH') {
+        this.$store.dispatch('loadWorkOrders');
+        this.$store.dispatch('loadJobAssignments');
+      }
+    },
+
     updateHeight() {
       this.content_height =
         document.documentElement.clientHeight - header_plus_footer_height;
@@ -516,6 +548,11 @@ export default {
         },
       };
       this.$router.push(to_route);
+    },
+
+    async sortTableByStartDateDueDate() {
+      this.editing = true;
+      this.$store.commit('SORT_TEMP_QUEUE_BY_START_DATE_DUE_DATE');
     },
 
     async updateQueue() {

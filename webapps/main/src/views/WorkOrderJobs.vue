@@ -123,7 +123,7 @@
                 <div class="smaller">
                   {{ job._key }}
                   <q-tooltip
-                    delay="500"
+                    :delay="Number(500)"
                     anchor="bottom left"
                     self="top left"
                     :offset="[10, 0]"
@@ -171,6 +171,29 @@
                       <q-item
                         v-ripple
                         v-close-popup
+                        :disable="job.active_batch_qt === 0"
+                        :clickable="job.active_batch_qt > 0"
+                        @click="confirm_cancel_batch = job._key"
+                      >
+                        <q-item-section avatar>
+                          <q-icon name="mdi-cube-off-outline" />
+                        </q-item-section>
+                        <q-item-section>
+                          <q-item-label>
+                            {{ $t('cancel_active_batch') }}
+                          </q-item-label>
+                          <q-item-label
+                            v-if="job.active_batch_qt === 0"
+                            caption
+                          >
+                            {{ $t('cancel_active_batch_disabled') }}
+                          </q-item-label>
+                        </q-item-section>
+                      </q-item>
+                      <q-item
+                        v-if="!job.traceability_level"
+                        v-ripple
+                        v-close-popup
                         :disable="job.active_batch_qt > 0"
                         :clickable="job.active_batch_qt === 0"
                         @click="editJobProgress(job)"
@@ -190,22 +213,28 @@
                       <q-item
                         v-ripple
                         v-close-popup
-                        :disable="job.active_batch_qt === 0"
-                        :clickable="job.active_batch_qt > 0"
-                        @click="confirm_cancel_batch = job._key"
+                        :disable="
+                          job.stage === 'created' || job.active_batch_qt > 0
+                        "
+                        :clickable="
+                          job.stage !== 'created' && job.active_batch_qt === 0
+                        "
+                        @click="confirm_reset_job = job._key"
                       >
                         <q-item-section avatar>
-                          <q-icon name="mdi-cube-off-outline" />
+                          <q-icon name="mdi-backup-restore" />
                         </q-item-section>
                         <q-item-section>
                           <q-item-label>
-                            {{ $t('cancel_active_batch') }}
+                            {{ $t('reset_job') }}
                           </q-item-label>
                           <q-item-label
-                            v-if="job.active_batch_qt === 0"
+                            v-if="
+                              job.stage === 'created' || job.active_batch_qt > 0
+                            "
                             caption
                           >
-                            {{ $t('cancel_active_batch_disabled') }}
+                            {{ $t('reset_job_disabled') }}
                           </q-item-label>
                         </q-item-section>
                       </q-item>
@@ -345,6 +374,30 @@
                           color="theme-orange"
                           :label="$t('confirm')"
                           @click="cancelBatch"
+                        >
+                        </q-btn>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </BaseDialog>
+
+                <BaseDialog :show="confirm_reset_job === job._key">
+                  <q-card square class="surface1 q-pa-md">
+                    <q-card-section class="text-h3 highlight">
+                      {{ $t('reset_job_confirm') }}
+                    </q-card-section>
+                    <q-card-section>
+                      <div class="row justify-between">
+                        <q-btn
+                          color="theme-grey"
+                          :label="$t('cancel')"
+                          @click="resetEditing"
+                        >
+                        </q-btn>
+                        <q-btn
+                          color="theme-orange"
+                          :label="$t('confirm')"
+                          @click="resetJob"
                         >
                         </q-btn>
                       </div>
@@ -499,6 +552,7 @@ export default {
       edit_job_time: null,
       edit_job_progress: null,
       confirm_cancel_batch: null,
+      confirm_reset_job: null,
     };
   },
 
@@ -754,6 +808,7 @@ export default {
       this.edit_job_progress = null;
       this.confirm_cancel_batch = null;
       this.jobs_temp_data = {};
+      this.confirm_reset_job = null;
     },
 
     forceProcessingTime() {
@@ -836,6 +891,28 @@ export default {
           await this.$store.dispatch('loadWorkOrderData', this.wo_data._key);
           this.$q.notify({
             message: this.$t('cancel_active_batch_success'),
+            color: 'theme-green',
+            timeout: 1500,
+            position: 'top',
+          });
+        })
+        .catch((err) => {
+          window.alert(err);
+        });
+    },
+
+    resetJob() {
+      this.sendEvent({
+        event_type: 'JOB_RESET',
+        event_data: {
+          job_key: this.confirm_reset_job,
+        },
+      })
+        .then(async () => {
+          await this.$store.dispatch('loadWorkOrderData', this.wo_data._key);
+          this.resetEditing();
+          this.$q.notify({
+            message: this.$t('reset_job_success'),
             color: 'theme-green',
             timeout: 1500,
             position: 'top',

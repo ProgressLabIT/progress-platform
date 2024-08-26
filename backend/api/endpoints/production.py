@@ -2,16 +2,17 @@ import traceback
 from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query, Depends
+from utils import auth
 from fastapi.encoders import jsonable_encoder
 
-from models.product import ProductDetails
+from commons.models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
 from utils.bom import get_bom_from_db
-from utils.counter import _generate_counter
-from utils.db import db
-from utils.dt import timestamp
+from commons.utils.counter import _generate_counter
+from commons.utils.db import db
+from commons.utils.dt import timestamp
 from utils.exceptions import HTTPError
 from utils.product import get_product_docs
 from utils.production import (
@@ -27,7 +28,8 @@ router = APIRouter()
 # ----------------------------------------------------------------------
 
 
-@router.post('/work-order')
+@router.post('/work-order',
+    dependencies=[Depends(auth.verify_token)])
 async def create_work_order(new_wo: WorkOrderNew):
 
   # Initialize transaction
@@ -104,6 +106,9 @@ async def create_work_order(new_wo: WorkOrderNew):
       new_wo.phase_sequence = ['default']
       # TODO: replace default alias with default operation (stored and cached in config)
 
+    if product_data.traceability_level:
+      new_wo.traceability_level = product_data.traceability_level
+
     new_wo_record = create_wo_record(new_wo, wo_coll)
 
   except StopIteration:
@@ -177,7 +182,8 @@ async def create_work_order(new_wo: WorkOrderNew):
 # ----------------------------------------------------------------------
 
 
-@router.patch('/work-order/{wo_key}')
+@router.patch('/work-order/{wo_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def update_work_order(
   wo_key: str,
   new_due_date: datetime | date | None = Body(None),
@@ -212,7 +218,6 @@ async def update_work_order(
     updated_wo_data = tx.collection('WorkOrder').update(wo_update, return_new=True)['new']
 
     tx.commit_transaction()
-
     return APIResponse(detail=updated_wo_data)
 
   except Exception:
@@ -221,7 +226,8 @@ async def update_work_order(
 
 # ----------------------------------------------------------------------
 
-@router.patch('/work-order/{wo_key}/update-quantities')
+@router.patch('/work-order/{wo_key}/update-quantities',
+    dependencies=[Depends(auth.verify_token)])
 async def update_work_order_quantities(
   wo_key: str,
   new_quantity: float | None = Body(None),
@@ -309,7 +315,6 @@ async def update_work_order_quantities(
       )
 
     tx.commit_transaction()
-
     return APIResponse(detail=updated_wo_data)
 
   except Exception:
@@ -319,16 +324,30 @@ async def update_work_order_quantities(
 
 # ----------------------------------------------------------------------
 
-@router.get('/work-order/{wo_key}')
+@router.get('/work-order/{wo_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def get_wo_data(wo_key: str):
 
-  wo_data = db.aql.execute(Queries.GET_WORK_ORDER_DATA, bind_vars=dict(wo_key=wo_key)).next()
-  return APIResponse(detail=wo_data)
+  try:
+    wo_data = db.aql.execute(Queries.GET_WORK_ORDER_DATA, bind_vars=dict(wo_key=wo_key)).next()
+    return APIResponse(detail=wo_data)
+  except Exception as e:
+    status_code=500
+    response = dict(
+      status=status_code,
+      message=f"There has been a problem while deleting the work order",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
 
 
 # ----------------------------------------------------------------------
 
-@router.delete('/work-order/{wo_key}')
+@router.delete('/work-order/{wo_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def delete_work_order(wo_key: str):
   try:
     tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'issue_rel'])
@@ -395,7 +414,6 @@ async def delete_work_order(wo_key: str):
     tx.aql.execute(query, bind_vars=bind_vars)
 
     tx.commit_transaction()
-
     return APIResponse(message='Work order deleted correctly')
 
   except Exception as e:
@@ -416,7 +434,8 @@ async def delete_work_order(wo_key: str):
 
 # ----------------------------------------------------------------------
 
-@router.get('/work-order')
+@router.get('/work-order',
+    dependencies=[Depends(auth.verify_token)])
 async def search_work_orders(
   search: str | None = None,
   open: bool = False,
@@ -484,7 +503,8 @@ async def search_work_orders(
 
 # ----------------------------------------------------------------------
 
-@router.get('/queue/site/{site_key}')
+@router.get('/queue/site/{site_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def get_site_queue(site_key: str):
 
   try:
@@ -498,7 +518,8 @@ async def get_site_queue(site_key: str):
 
 # ----------------------------------------------------------------------
 
-@router.put('/queue')
+@router.put('/queue',
+    dependencies=[Depends(auth.verify_token)])
 async def update_queue(queue_update: Queue):
   try:
     match = dict(type=queue_update.type, site_key=queue_update.site_key)
@@ -525,10 +546,10 @@ async def update_queue(queue_update: Queue):
       error_str=traceback.format_exc()
     )
     raise HTTPException(status_code=status_code, detail=response)
-
   return APIResponse(detail="Queue updated")
 
-@router.put('/queue/operator/{operator_key}')
+@router.put('/queue/operator/{operator_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def update_operator_queue(
   operator_key: str,
   site_key: str | None = None,
@@ -564,7 +585,8 @@ async def update_operator_queue(
 # ----------------------------------------------------------------------
 
 
-@router.get('/job')
+@router.get('/job',
+    dependencies=[Depends(auth.verify_token)])
 async def get_job_list(
   job_key: List[str] = Query(None),
   work_order_key: List[str] = Query(None),
@@ -596,7 +618,8 @@ async def get_job_list(
 # ----------------------------------------------------------------------
 
 
-@router.get('/job-assignment')
+@router.get('/job-assignment',
+    dependencies=[Depends(auth.verify_token)])
 async def get_assignment_list(user_key: str | None = None):
 
   try:
@@ -615,22 +638,14 @@ async def get_assignment_list(user_key: str | None = None):
 # ----------------------------------------------------------------------
 
 
-@router.get('/job/{job_key}')
+@router.get('/job/{job_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def get_job_data(job_key: str):
-  query = """
-    FOR j IN Job
-    FILTER j._key == @job_key
-    LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == j._id RETURN 1)
-    LET product_notes = DOCUMENT(Product, j.product_key).production_notes
-    LET phase_notes = DOCUMENT(Phase, j.phase_key).notes
-    LET order_notes = DOCUMENT(WorkOrder, j.wo_key).notes
-    LET message_count = COUNT(FOR m IN message FILTER m._to == CONCAT('WorkOrder/', j.wo_key) RETURN 1)
-    RETURN MERGE(j, { issue_count, product_notes, phase_notes, order_notes, message_count })
-  """
+
   bind_vars = dict(job_key = job_key)
 
   try:
-    job_data = db.aql.execute(query, bind_vars=bind_vars).next()
+    job_data = db.aql.execute(Queries.GET_WORKING_JOB_DATA, bind_vars=bind_vars).next()
 
   except:
     status_code=500
@@ -653,7 +668,8 @@ async def get_job_data(job_key: str):
 # ----------------------------------------------------------------------
 
 
-@router.post('/job/update')
+@router.post('/job/update',
+    dependencies=[Depends(auth.verify_token)])
 async def update_jobs(job_updates:List[JobUpdate]):
 
   tx = db.begin_transaction(write=['Job', 'Queue'])
@@ -790,5 +806,4 @@ async def update_jobs(job_updates:List[JobUpdate]):
     )
 
     raise HTTPException(status_code=status_code, detail=response)
-
 

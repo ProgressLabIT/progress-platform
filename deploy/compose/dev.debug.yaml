@@ -1,0 +1,166 @@
+version: "3.9"
+
+services:
+  router:
+    restart: unless-stopped
+    command:
+      - --providers.docker
+      - --accesslog
+      - --api.dashboard
+      - --api.debug
+      - --api.insecure
+      - --log.level=INFO
+
+  # app:
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./webapps/quasar
+  #     dockerfile: webapp.dev.Dockerfile
+  #   restart: unless-stopped
+  #   labels:
+  #     - traefik.http.routers.app.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`)
+  #     - traefik.http.routers.hmr.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost:9000}`)
+  #   command: yarn quasar dev --host 0.0.0.0
+  #   volumes:
+  #     # This is use to keep HMR working
+  #     - "./webapps/quasar:/app"
+  #     - /app/node_modules/ # exclude local node_modules folder from being linked into the container
+  #     - "media:/app/public/media"
+  #   environment:
+  #     # the app will call the api server from outside the docker network, so the full Traefik host alias should be used
+  #     - VUE_APP_API_BASE_URL=${PROGRESS_ADDRESS:-progress.localhost}/api
+  #     - VUE_APP_I18N_LOCALE=it
+  #     - VUE_APP_I18N_FALLBACK_LOCALE=it
+  #   ports:
+  #     - "9000"
+
+  api:
+    restart: unless-stopped
+    build:
+      context: ./backend/api #root folder for build
+    volumes:
+      - ./backend/api:/api
+      - ./backend/commons:/api/commons
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+    environment:
+      - PROGRESS_DB_NAME=PROGRESS_PROD
+      - PROGRESS_WEBAPP_URL=http://localhost:9000
+    command:
+      - "sh"
+      - "-c"
+      - |
+        pip install debugpy -t /tmp \
+        && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 \
+        -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-level debug --use-colors --timeout-graceful-shutdown 1
+    ports:
+      - 8000:8000
+      - 5678:5678
+    labels:
+      - "traefik.http.routers.api.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/api`)"
+      - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
+      - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
+      - "traefik.http.routers.api.middlewares=strip_api_prefix"
+
+  #traceability-service:
+  #  restart: unless-stopped
+  #  build:
+  #    context: ./backend/traceability-service #root folder for build
+  #  volumes:
+  #    - ./backend/traceability-service:/traceability-service
+  #    - ./backend/commons:/traceability-service/commons
+  #  environment:
+  #    - PROGRESS_DB_NAME=PROGRESS_PROD
+  #  command:
+  #    - "sh"
+  #    - "-c"
+  #    - |
+  #      pip install debugpy -t /tmp \
+  #      && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5778 \
+  #      -m uvicorn main:app --host 0.0.0.0 --port 8100 --reload --log-level debug --use-colors  --timeout-graceful-shutdown 1
+  #  ports:
+  #    - 8100:8100
+  #    - 5778:5778
+  #  labels:
+  #    - "traefik.http.routers.api.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/traceability-service`)"
+  #    - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/traceability-service"
+  #    - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
+  #    - "traefik.http.routers.api.middlewares=strip_api_prefix"
+
+  db:
+    image: arangodb:3.11 # Use this for Intel Processors
+    #image: arm64v8/arangodb:3.11 # This works for Apple Silicon M1-M3 processors
+    restart: unless-stopped
+    environment:
+      - ARANGO_NO_AUTH=1
+    labels:
+      - "traefik.http.routers.db.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/_db`)"
+      - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
+      - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
+      - "traefik.http.routers.db.middlewares=db_root"
+
+  broker:
+    image: apache/kafka:latest
+    hostname: broker
+    restart: unless-stopped
+    #container_name: broker
+    ports:
+      - 9092:9092
+      - 9101:9101
+      - 19092:19092
+      - 29093:29093
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT_HOST://localhost:9092,PLAINTEXT://broker:19092"
+      KAFKA_LISTENERS: "CONTROLLER://:29093,PLAINTEXT_HOST://localhost:9092,PLAINTEXT://:19092"
+      #KAFKA_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      #KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:19092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@broker:29093"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      CLUSTER_ID: "4L6g3nShT-eMCtK--X86sw"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+
+  broker-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8081:8080
+    depends_on:
+      - broker
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: progress-broker
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:19092
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/config:/etc/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    restart: always
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: always
+  web_server:
+    image: httpd:2.4
+    ports:
+      - "8082:8082"
+    restart: always

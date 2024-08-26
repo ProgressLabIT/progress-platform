@@ -1,6 +1,6 @@
 <template>
   <div class="row full-height q-py-md">
-    <div class="column col-3 justify-between q-px-lg q-pb-sm">
+    <div class="column full-height col-3 justify-between q-px-lg q-pb-sm">
       <div>
         <div class="text-h1 display highlight q-mb-xs">
           {{ product_metadata.code }}
@@ -37,9 +37,9 @@
       </div>
     </div>
 
-    <div class="col-9 column">
+    <div class="col-9 column full-height">
       <q-table
-        id="bom"
+        id="product-bom"
         ref="bom"
         v-model:selected="delete_lines"
         square
@@ -55,49 +55,58 @@
         :pagination="{ rowsPerPage: 0 }"
         :rows-per-page-options="[0]"
         :virtual-scroll-sticky-size-start="48"
-        hide-bottom
       >
+        <template #body-cell-traceability_mandatory="props">
+          <q-td :props="props">
+            <q-toggle
+              v-if="props.row.traceability_level"
+              :model-value="!!props.value"
+              @update:model-value="
+                (value) => toggleMandatoryTraceability(props.rowIndex, value)
+              "
+              :disable="!editMode"
+            />
+          </q-td>
+        </template>
+
         <template #body-cell-code="{ value }">
           <div class="nowrap">{{ value }}</div>
         </template>
 
-        <template #bottom-row>
-          <div class="absolute-bottom">
-            <q-separator></q-separator>
-            <div
-              class="row full-width items-center justify-between q-px-md"
-              style="height: 48px"
-            >
-              <div class="col-4">
-                <q-btn
-                  v-show="editMode"
-                  size="sm"
-                  padding="xs lg"
-                  color="theme-red"
-                  icon="mdi-delete"
-                  :label="$t('bom.delete_selected')"
-                  @click="removeBomLines"
-                >
-                </q-btn>
-              </div>
+        <template #bottom>
+          <div
+            class="row full-width items-center justify-between q-px-md"
+            style="height: 48px"
+          >
+            <div class="col-4">
+              <q-btn
+                v-show="editMode"
+                size="sm"
+                padding="xs lg"
+                color="theme-red"
+                icon="mdi-delete"
+                :label="$t('bom.delete_selected')"
+                @click="removeBomLines"
+              >
+              </q-btn>
+            </div>
 
-              <div class="smaller col-4 text-center">
-                {{ filtered_bom.length }} {{ $t('of') }} {{ temp_bom.length }}
-                {{ $t('element', 2).toUpperCase() }}
-              </div>
+            <div class="smaller col-4 text-center">
+              {{ filtered_bom.length }} {{ $t('of') }} {{ temp_bom.length }}
+              {{ $t('element', 2).toUpperCase() }}
+            </div>
 
-              <div class="col-4 row justify-end">
-                <q-btn
-                  v-show="editMode"
-                  size="sm"
-                  padding="xm lg"
-                  color="theme-blue"
-                  icon="mdi-plus"
-                  :label="$t('bom.add_line')"
-                  @click="openItemSearch"
-                >
-                </q-btn>
-              </div>
+            <div class="col-4 row justify-end">
+              <q-btn
+                v-show="editMode"
+                size="sm"
+                padding="xm lg"
+                color="theme-blue"
+                icon="mdi-plus"
+                :label="$t('bom.add_line')"
+                @click="openItemSearch"
+              >
+              </q-btn>
             </div>
           </div>
         </template>
@@ -125,40 +134,37 @@
             >
             </q-select>
 
-            <q-select
-              v-model="new_line_product"
-              class="col-6"
-              use-input
-              dense
-              :loading="catalog_loading"
-              :options="filtered_products"
+            <!-- PRODUCT -->
+            <BaseAutocompleteProduct
+              :model-value="new_line_product"
               :label="$capitalize($t('code') + ' / ' + $t('description'))"
-              option-label="code"
               input-class="text-capitalize"
-              @filter="filterProducts"
-            >
-              <template #option="scope">
-                <q-item v-bind="scope.itemProps">
-                  <q-item-section>
-                    <q-item-label class="display">
-                      {{ scope.opt.code }}
-                    </q-item-label>
-                    <q-item-label caption>
-                      {{ scope.opt.description }}
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
+              class="col-6"
+              :filled="false"
+              :loading="catalog_loading"
+              use-input
+              :dense="true"
+              @select="(selection) => loadProduct(selection)"
+            />
 
             <q-input
               v-model="new_line_qt"
+              v-model.number="new_line_qt"
               dense
               class="col-2"
               type="number"
+              step="1"
+              min="1"
               :label="$t('quantity.short')"
             >
             </q-input>
+
+            <q-toggle
+              v-if="new_line_product?.traceability_level"
+              v-model="new_line_traceability_mandatory"
+              class="col-2"
+              :label="$t('traceability.mandatory')"
+            />
           </div>
         </q-card-section>
         <div class="row q-col-gutter-md q-pa-md">
@@ -187,18 +193,20 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex';
+import { mapState } from 'vuex';
 
 import { api } from '@/boot/axios.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
+import BaseAutocompleteProduct from 'components/BaseAutocompleteProduct.vue';
 // import { throttle as _throttle } from 'lodash';
 
 export default {
-  name: 'BillOfMaterials',
+  name: 'ProductBoM',
 
   components: {
     BaseDialog,
+    BaseAutocompleteProduct,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
@@ -214,6 +222,7 @@ export default {
       new_line_product: {},
       new_line_phase: {},
       new_line_qt: null,
+      new_line_traceability_mandatory: null,
       show_cancel_confirmation: false,
       show_save_confirmation: false,
       saving: false,
@@ -255,6 +264,11 @@ export default {
           name: 'qt',
           field: 'qt',
           label: this.$t('quantity.short').toUpperCase(),
+        },
+        {
+          name: 'traceability_mandatory',
+          field: 'traceability_mandatory',
+          label: this.$t('traceability').toUpperCase(),
         },
       ];
     },
@@ -305,6 +319,7 @@ export default {
       this.new_line_product = null;
       this.new_line_qt = null;
       this.new_line_phase = null;
+      this.new_line_traceability_mandatory = null;
     },
   },
 
@@ -320,8 +335,6 @@ export default {
   },
 
   methods: {
-    ...mapActions(['loadProductDetails']),
-
     toggleEdit() {
       if (this.editMode == false) {
         this.editMode = true;
@@ -367,20 +380,13 @@ export default {
       });
     },
 
-    filterProducts(value, update) {
-      if (value === '') {
-        update(() => {
-          this.filtered_products = [...this.product_catalog];
-        });
-        return;
+    loadProduct(selection) {
+      this.new_line_product = selection;
+      if (this.new_line_product?.traceability_level) {
+        this.new_line_traceability_mandatory = true;
+      } else {
+        this.new_line_traceability_mandatory = null;
       }
-      update(() => {
-        const needle = value.toLowerCase();
-        this.filtered_products = this.product_catalog.filter((p) => {
-          const include = multiMatch(needle, p, ['code', 'description']);
-          return include;
-        });
-      });
     },
 
     updateItemQt(table_key, qt) {
@@ -406,7 +412,9 @@ export default {
         );
       });
 
-      if (!is_duplicate) {
+      if (!this.new_line_qt || this.new_line_qt <= 0) {
+        window.alert(this.$capitalize(this.$t('bom.alerts.quantity_negative')));
+      } else if (!is_duplicate) {
         const new_line = {
           /**
            * Cannot simply add ...new_line because it would
@@ -416,10 +424,12 @@ export default {
           component_key: this.new_line_product._key,
           component_code: this.new_line_product.code,
           component_description: this.new_line_product.description,
+          traceability_mandatory: this.new_line_traceability_mandatory,
           qt: this.new_line_qt,
           phase_name: this.new_line_phase?.alias ?? null,
           phase_key: this.new_line_phase?._key ?? null,
-          table_key: this.new_line_product._key + this.new_line_phase?._key ?? null,
+          table_key:
+            this.new_line_product._key + this.new_line_phase?._key ?? null,
         };
 
         this.temp_bom = [...this.temp_bom, new_line];
@@ -427,6 +437,12 @@ export default {
       } else {
         window.alert(this.$capitalize(this.$t('bom.alerts.line_exists')));
       }
+    },
+
+    toggleMandatoryTraceability(lineIndex, value) {
+      let temp_item = this.temp_bom[lineIndex];
+      temp_item.traceability_mandatory = value;
+      this.temp_bom = this.temp_bom.toSpliced(lineIndex, 1, temp_item);
     },
 
     cancelChanges() {
@@ -468,9 +484,13 @@ export default {
 </script>
 
 <style lang="sass">
-#bom
+#product-bom
   .q-table__top,
   .q-table__bottom,
   thead tr:first-child th /* bg color is important for th; just specify one */
     background-color: var(--surface-2)
+
+  tbody:last-child .absolute-bottom
+    background-color: var(--surface-2)
+    z-index: 999
 </style>

@@ -15,6 +15,7 @@ export const useConfigStore = defineStore('config', () => {
       auto_new_batch: true,
       unsupervised_work_allowed: false,
     },
+    serialFields: [],
     operatorCost: 0,
     allowUnassignedJobs: true,
     allowIndependentReorderingOfJobQueues: false,
@@ -37,6 +38,9 @@ export const useConfigStore = defineStore('config', () => {
     }
     if (appConfig.default_operation_parameters) {
       config.operationParameters = appConfig.default_operation_parameters;
+    }
+    if (appConfig.serial_fields) {
+      config.serialFields = appConfig.serial_fields;
     }
     if (typeof appConfig.operator_cost === 'number') {
       config.operatorCost = appConfig.operator_cost;
@@ -78,6 +82,7 @@ export const useConfigStore = defineStore('config', () => {
     await api.patch('config', {
       company_name: configToUpdate.companyName,
       operation_parameters: configToUpdate.operationParameters,
+      serial_fields: configToUpdate.serialFields,
       operator_cost: configToUpdate.operatorCost,
       show_unassigned_jobs_to_operators: configToUpdate.allowUnassignedJobs,
       allow_independent_reordering_of_job_queues:

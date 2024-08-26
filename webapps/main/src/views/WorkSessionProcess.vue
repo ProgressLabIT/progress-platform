@@ -87,7 +87,6 @@ export default {
   data() {
     return {
       vuex_ready: false,
-      polling_instance: null,
     };
   },
 

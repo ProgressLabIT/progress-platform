@@ -2,7 +2,7 @@
   <q-footer class="footer footer-text">
     <div class="row q-pa-sm display smaller">
       <div class="col">{{ config.companyName }}</div>
-      <div style="width: 70px">{{ time }}</div>
+      <div style="width: 80px">{{ time }}</div>
       <div class="col text-right">{{ date }}</div>
     </div>
   </q-footer>

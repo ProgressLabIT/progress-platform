@@ -1,13 +1,14 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Union
+from typing import Any, Set
 
 from pydantic import Field
 
 from models.collaboration import Message
-from models.form import FormFieldValue
-from utils.base_models import ArangoDocument
-from utils.dt import timestamp
+from commons.models.form import FormFieldValue
+from commons.models.base_models import ArangoDocument
+from commons.utils.dt import timestamp
+from commons.models.serial import SerialSelection, SerialLink
 
 class EventType(str, Enum):
   # Production Events
@@ -16,8 +17,10 @@ class EventType(str, Enum):
   JOB_PAUSED_OFFLINE = 'JOB_PAUSED_OFFLINE'
   JOB_RESUMED = 'JOB_RESUMED'
   JOB_BACK_ONLINE = 'JOB_BACK_ONLINE'
+  ACTIVE_BATCH_CHANGED = 'ACTIVE_BATCH_CHANGED'
   STEP_COMPLETED = 'STEP_COMPLETED'
   BATCH_COMPLETED = 'BATCH_COMPLETED'
+  JOB_RESET = 'JOB_RESET'
 
   # Issue Events
   ISSUE_CREATED = 'ISSUE_CREATED'
@@ -37,11 +40,19 @@ class EventType(str, Enum):
   STEP_CANCELED = 'STEP_CANCELED'
   STEP_MODIFIED = 'STEP_MODIFIED'
 
+  # Serial Events
+  SERIAL_CREATED = 'SERIAL_CREATED'
+  SERIAL_UPDATED = 'SERIAL_UPDATED'
+  SERIAL_DELETED = 'SERIAL_DELETED'
+
+  SERIAL_LINKED = 'SERIAL_LINKED'
+
 
 class EventModel(ArangoDocument):
   """fields marked with a comment are event attributes, the rest could be refactored into a generic "data" field, which can be defined with additional models specific for the event type."""
   event_type: EventType #
   user_key: str #
+  event_group: str | None = None #
   user_session_key: str | None = None #
   timestamp: datetime = Field(default_factory=timestamp) #
   description: str | None = None # optional descriptive field for auditing reasons
@@ -59,9 +70,11 @@ class EventModel(ArangoDocument):
   step_key: str | None = None
   completed_batch_key: str | None = None
   completed_batch_qt: float | None = None
+  new_active_batch_qt: float | None = None
   new_batch_key: str | None = None
   project_code: str | None = None
   message_key: str | None = None
+  step_changed_qt: float | None = None
   form_data: list[FormFieldValue] = []
 
   # Quality Fields
@@ -73,3 +86,8 @@ class EventModel(ArangoDocument):
   new_job_qt_completed: float | None = None
   new_job_qt_released: float | None = None
   should_adjust_duration: bool | None = None
+
+  # Traceability fields
+  serial_data: Any | None = None
+  batch_serials: Set[str] | None = None # prevent duplicated entries from client
+  serial_link_data: list[SerialLink] | None = None

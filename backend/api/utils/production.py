@@ -66,6 +66,32 @@ class Queries:
   """
 
 
+  GET_WORKING_JOB_DATA = """
+    FOR j IN Job
+    FILTER j._key == @job_key
+
+    LET wo_bom = (
+      FOR bom_component IN DOCUMENT(WorkOrder, j.wo_key).wo_bom
+
+      LET declared_serials = (
+        FOR linked_serial IN contains
+          FILTER linked_serial.replaced == false
+          && linked_serial.component_key == bom_component.component_key
+          && linked_serial.wo_key == j.wo_key
+          return linked_serial
+      )
+      RETURN MERGE(bom_component, { declared_serials })
+    )
+
+    LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == j._id RETURN 1)
+    LET product_notes = DOCUMENT(Product, j.product_key).production_notes
+    LET phase_notes = DOCUMENT(Phase, j.phase_key).notes
+    LET order_notes = DOCUMENT(WorkOrder, j.wo_key).notes
+    LET message_count = COUNT(FOR m IN message FILTER m._to == CONCAT('WorkOrder/', j.wo_key) RETURN 1)
+    RETURN MERGE(j, { wo_bom, issue_count, product_notes, phase_notes, order_notes, message_count })
+  """
+
+
   REORDER_JOB_QUEUES = """
     LET wo_queue = (
       FOR q1 IN Queue
@@ -330,7 +356,8 @@ def create_job_record(
     job_docs = wo_data.wo_docs,
     job_bom = [x for x in wo_data.wo_bom if x.phase_key == phase_key],
     assigned_to = assigned_to,
-    notes = kwargs.get('notes', None)
+    notes = kwargs.get('notes', None),
+    traceability_level = wo_data.traceability_level
   )
 
   prepped = jsonable_encoder(new_job_data, by_alias=True)

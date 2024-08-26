@@ -3,7 +3,8 @@
     use-input
     :dense="dense"
     :hint="hint"
-    filled
+    :loading="loading"
+    :filled="filled"
     clearable
     :options="options"
     option-label="code"
@@ -17,7 +18,7 @@
     @update:model-value="(selection) => $emit('select', selection)"
   >
     <template #option="scope">
-      <q-item v-bind="scope.itemProps">
+      <q-item v-bind="scope.itemProps" :id="scope.opt.code">
         <q-item-section>
           <q-item-label class="highlight">
             {{ scope.opt.code }}
@@ -32,8 +33,6 @@
 </template>
 
 <script>
-import multiMatch from '@/lib/MultiFieldSearch.js';
-
 export default {
   name: 'BaseAutocompleteProduct',
 
@@ -44,6 +43,11 @@ export default {
     },
 
     loadData: {
+      type: Boolean,
+      default: true,
+    },
+
+    filled: {
       type: Boolean,
       default: true,
     },
@@ -107,10 +111,22 @@ export default {
         return;
       }
       update(() => {
-        const needle = value.toLowerCase();
+        this.loading = true;
+        /*const needle = value.toLowerCase();
         this.options = this.origin_list.filter((option) => {
+          this.loading = false;
           return multiMatch(needle, option, this.search_fields);
-        });
+        });*/
+        this.$api
+          .get('product', {
+            params: {
+              search: value,
+            },
+          })
+          .then((resp) => {
+            this.options = resp.data;
+            this.loading = false;
+          });
       });
     },
   },

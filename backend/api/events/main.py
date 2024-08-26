@@ -2,10 +2,11 @@ from events import (
   CollaborationEvent,
   ProductionActivityEvent,
   ProductionAdminEvent,
-  SharedEventMethods
+  SharedEventMethods,
 )
 from models.event import EventModel
-from utils.db import db
+from commons.utils.db import db
+import uuid
 
 
 class Event(
@@ -22,7 +23,7 @@ class Event(
   Each inherited class includes a property named after each event type of its "category".
   Each event type (class property) is itself an EventMeta class instance which defines:
   - the list of collections to use in the transaction
-  - the actions to be carried out specific to the event type
+  - the actions (class method) to be carried out specific to the event type
   """
   ######################################################################
   # INIT & SAVE
@@ -41,6 +42,9 @@ class Event(
     # Initialize transaction
     self.meta.collections.append('Event')
     self.tx = self.db.begin_transaction(write=self.meta.collections)
+
+    # Define event UUID
+    self.info.event_group = str(uuid.uuid4())
 
     try:
       # Save event, storing its key for later use

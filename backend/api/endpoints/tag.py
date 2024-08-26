@@ -1,9 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from utils import auth
 
 from utils.api import APIResponse
-from utils.db import db
+from commons.utils.db import db
 from utils.exceptions import HTTPError
-from models.tag import Tag, TagConnectionUpdate, TagAssignmentContext
+from commons.models.tag import Tag, TagConnectionUpdate, TagAssignmentContext
 
 router = APIRouter()
 
@@ -12,7 +13,8 @@ context_map = {
 }
 
 
-@router.get('/tag', response_model=APIResponse[list[Tag]])
+@router.get('/tag', response_model=APIResponse[list[Tag]],
+    dependencies=[Depends(auth.verify_token)])
 def get_tags(context: TagAssignmentContext | None = None, context_key: str | None = None):
   try:
     if not context:
@@ -39,7 +41,8 @@ def get_tags(context: TagAssignmentContext | None = None, context_key: str | Non
     raise HTTPError(500, 'There was a problem retrieving the tags')
 
 
-@router.post('/tag', response_model=APIResponse[Tag])
+@router.post('/tag', response_model=APIResponse[Tag],
+    dependencies=[Depends(auth.verify_token)])
 def create_tag(tag: Tag):
   try:
     tag = db.collection('Tag').insert(tag, return_new=True)['new']
@@ -53,7 +56,8 @@ def create_tag(tag: Tag):
     raise HTTPError(500, 'There was a problem creating the tag')
 
 
-@router.post('/tag/update-connections', response_model=APIResponse[None])
+@router.post('/tag/update-connections', response_model=APIResponse[None],
+    dependencies=[Depends(auth.verify_token)])
 def connect_tags(connection_updates: list[TagConnectionUpdate]):
   try:
     tx = db.begin_transaction(write=['has_tag'])

@@ -1,21 +1,28 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Query, Depends
+from utils import auth
 
 from events import Event
-from models.traceability import *
+from commons.models.traceability import *
 from models.event import EventModel, EventType
+from typing import Dict, List, Union
+
 
 from utils.exceptions import *
 from utils.api import APIResponse
-from utils.db import db
-from utils.dt import timestamp
+from commons.models.serial import SerialSelection
+from commons.utils.db import db
+from commons.utils.dt import timestamp
+from commons.utils.serial import Queries as SerialQueries
 from utils.traceability import Queries
 
 router = APIRouter()
 
+serials = db.collection('Serial')
 
-@router.post('/event')
+@router.post('/event',
+    dependencies=[Depends(auth.verify_token)])
 async def apply_production_event(data: EventModel):
   try:
     event = Event(data)
@@ -28,7 +35,12 @@ async def apply_production_event(data: EventModel):
     JobHasNoAssigneeError,
     JobHasNoActiveBatchError,
     ValueError,
-    WipNotAvailableError
+    WipNotAvailableError,
+    SerialNotDeletedError,
+    SerialNotUpdatedError,
+    SerialNotLinkedError,
+    SerialNotCreatedError,
+    SerialCodeAlreadyPresent
   ) as e:
     raise HTTPException(
       status_code=422,
@@ -54,7 +66,8 @@ async def apply_production_event(data: EventModel):
 
 
 
-@router.get('/event')
+@router.get('/event',
+    dependencies=[Depends(auth.verify_token)])
 async def get_events(
   issue_key: str | None = None,
   job_key: str | None = None,
@@ -75,7 +88,8 @@ async def get_events(
 
 
 
-@router.get('/batch/{batch_key}')
+@router.get('/batch/{batch_key}',
+    dependencies=[Depends(auth.verify_token)])
 async def get_batch_execution_data(batch_key: str):
 
   try:
@@ -100,8 +114,38 @@ async def get_batch_execution_data(batch_key: str):
 
   return APIResponse(detail=batch_data)
 
+@router.get('/batch/{batch_key}/serials',
+    dependencies=[Depends(auth.verify_token)])
+async def get_batch_serials(batch_key: str):
 
-@router.post('/job/{job_key}/heartbeat')
+  try:
+    batch_serials_cursor = db.aql.execute(
+      SerialQueries.GET_BATCH_SERIALS,
+      bind_vars = dict(batch_key=batch_key)
+    )
+
+    batch_serials = [SerialSelection(**s) for s in batch_serials_cursor]
+
+    for s in batch_serials:
+      s.active = True
+
+    return batch_serials
+
+  except StopIteration:
+    return HTTPException(
+      status_code=404,
+      detail=f"No serials found associated with batch {batch_key}"
+    )
+
+  except Exception as e:
+    return HTTPException(
+      status_code=500,
+      detail=f"There was an error on our end: {traceback.format_exc()}"
+    )
+
+
+@router.post('/job/{job_key}/heartbeat',
+    dependencies=[Depends(auth.verify_token)])
 async def job_heartbeat(job_key: str, work_session_key: str | None = None):
   """
   Updates the work session `last_online` attribute with current time
@@ -125,7 +169,8 @@ async def job_heartbeat(job_key: str, work_session_key: str | None = None):
     tx.abort_transaction()
 
 
-@router.get('/wip')
+@router.get('/wip',
+    dependencies=[Depends(auth.verify_token)])
 async def get_wip_availability_for_job(job_key: str):
   tx = db.begin_transaction()
   job_data = tx.collection('Job').get(job_key)

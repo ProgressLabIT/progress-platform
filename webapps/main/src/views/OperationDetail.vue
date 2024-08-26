@@ -131,7 +131,7 @@
           <q-tab-panel name="parameters">
             <ProcessParameters
               v-model="temp_params"
-              :process-has-steps="temp_steps.length > 0"
+              :process-has-steps="{ process_has_steps }"
               :edit-mode="editMode"
             />
           </q-tab-panel>
@@ -255,6 +255,10 @@ export default {
   computed: {
     products_using_operation() {
       return this.operation.used_for ?? [];
+    },
+
+    process_has_steps() {
+      return this.temp_steps.length > 0;
     },
   },
 

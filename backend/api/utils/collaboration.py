@@ -125,6 +125,16 @@ class Queries:
       && (@work_order_code_search ? CONTAINS(LOWER(work_order.wo_code), LOWER(@work_order_code_search)) : true)
       && (@project_search ? CONTAINS(LOWER(work_order.project_code), LOWER(@project_search)) : true)
 
+    // SERIAL
+    LET serial = FIRST(
+      FOR l IN 1..1 OUTBOUND i issue_rel
+      FILTER PARSE_IDENTIFIER(l._id).collection == 'Serial'
+      RETURN l
+    )
+
+    FILTER
+      (@serial_search ? CONTAINS(LOWER(serial.code), LOWER(@serial_search)) : true)
+
     // JOB
     LET job = FIRST(
       FOR l IN 1..1 OUTBOUND i issue_rel
@@ -136,7 +146,7 @@ class Queries:
 
     // LIMIT FILTERED ISSUE RECORDS
     SORT i.created
-    LIMIT @limit || null
+    LIMIT @offset, @limit || null
 
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(i, {
@@ -146,7 +156,7 @@ class Queries:
       phase_alias: phase.alias
     })
 
-    LET issue_links = { job, product, operation, phase, work_order }
+    LET issue_links = { job, product, operation, phase, work_order, serial }
 
     RETURN @with_links ? MERGE(base_result, { links: issue_links }) : base_result
   """

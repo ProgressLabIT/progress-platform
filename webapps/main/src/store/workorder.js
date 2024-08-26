@@ -32,6 +32,37 @@ const workorder = {
       });
     },
 
+    SORT_TEMP_QUEUE_BY_START_DATE_DUE_DATE(state) {
+      let temp_wo_list = [];
+      state.temp_queue.forEach((key) => {
+        temp_wo_list.push(state.wo_map[key]);
+      });
+      temp_wo_list.sort((a, b) => {
+        var start_fromA = new Date(a.start_from),
+          start_fromB = new Date(b.start_from);
+        if (start_fromA < start_fromB) {
+          return -1;
+        }
+        if (start_fromA > start_fromB) {
+          return 1;
+        }
+        var due_byA = new Date(a.due_by),
+          due_byB = new Date(b.due_by);
+        if (due_byA < due_byB) {
+          return -1;
+        }
+        if (due_byA > due_byB) {
+          return 1;
+        }
+        return 0;
+      });
+      let new_queue = [];
+      temp_wo_list.forEach((wo) => {
+        new_queue.push(wo._key);
+      });
+      state.temp_queue = [...new_queue];
+    },
+
     UPDATE_TEMP_QUEUE(state, { new_queue_index, old_queue_index }) {
       const selected_wo = state.temp_queue.splice(old_queue_index, 1)[0];
       state.temp_queue.splice(new_queue_index, 0, selected_wo);

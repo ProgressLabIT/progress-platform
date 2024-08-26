@@ -3,7 +3,7 @@ from typing import Literal, Union
 
 from pydantic import BaseModel, Field
 
-from utils.base_models import ArangoDocument, ArangoEdge
+from commons.models.base_models import ArangoDocument, ArangoEdge
 
 class Alignment(str, Enum):
   CENTER = 'center'
@@ -88,6 +88,7 @@ class PrintTemplateRecord(ArangoDocument):
   description: str | None = None
   links: dict[str, PrintTemplateLink] = dict()
   template: PrintTemplate | None = None
+  entities: int | None = 0
 
 
 class TemplateAssignment(ArangoEdge):

@@ -55,6 +55,7 @@
               v-for="link in sorted_links"
               :key="link.route_name"
               :to="{ name: link.route_name }"
+              :class="{ 'q-px-sm': link.item_count }"
             >
               <div class="row items-center justify-start display">
                 <div
@@ -70,7 +71,7 @@
                     v-if="link.route_name === 'jobIssues'"
                     size="9px"
                     :color="getItemCountColor(link)"
-                    class="q-ml-sm weight-bold text-body2"
+                    class="q-ml-xs weight-bold text-body2"
                   >
                     {{ link.item_count }}
                   </q-chip>
@@ -78,7 +79,7 @@
                     v-else
                     size="xs"
                     :color="getItemCountColor(link)"
-                    class="q-ml-sm weight-bold text-body2"
+                    class="q-ml-xs weight-bold text-body2"
                   >
                     {{ link.item_count }}
                   </q-avatar>
@@ -129,8 +130,16 @@
                 <div class="col-5 text-h5 text-uppercase font-weight-medium">
                   {{ field.text }}
                 </div>
-                <div class="col-7">
-                  <span>{{ $capitalizeAll(j[field.name]) }}</span>
+                <div class="col-7 row q-gutter-md items-center justify-between">
+                  <div>{{ $capitalizeAll(j[field.name]) }}</div>
+                  <q-btn
+                    v-if="field.name === 'active_batch_qt' && j.active"
+                    icon-right="mdi-pencil"
+                    color="theme-blue"
+                    size="xs"
+                    :label="$t('update')"
+                    @click="editBatchQuantityOrSerials"
+                  />
                 </div>
               </div>
             </template>
@@ -252,13 +261,16 @@
 
 <script>
 import { until } from '@vueuse/core';
+import { Dialog, Loading } from 'quasar';
 import Sortable from 'sortablejs';
 import { mapState } from 'vuex';
 
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import IssueForm from '@/components/IssueForm.vue';
 import ProgressBtn from '@/components/ProgressBtn.vue';
+import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
+import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue';
 
 export default {
   name: 'WorkSessionScreen',
@@ -296,13 +308,13 @@ export default {
       show_issue_form: false,
       alert_timeout: 4000,
       can_leave: false,
+      events: undefined,
     };
   },
 
   computed: {
     ...mapState({
       j: (state) => state.traceability.working_job_data,
-      ws_list: (state) => state.traceability.work_session_list,
       batch_data: (state) => state.traceability.current_batch_data.step_data,
       wo_data: (state) => state.workorder.wo_data,
     }),
@@ -456,13 +468,33 @@ export default {
     },
   },
 
+  watch: {
+    jobKey: {
+      handler() {
+        this.loadJob();
+      },
+    },
+  },
+
   created() {
     // Load job data
     this.loadJob();
-    this.polling_instance = setInterval(this.updateJobData, 10000);
+    let eventURL =
+      this.$api.defaults.baseURL + '/notification/global-notification';
+    this.events = new EventSource(eventURL, {
+      withCredentials: false,
+    });
+    this.events.addEventListener('global-notification', (event) => {
+      this.handleMessage(event);
+    });
   },
 
   async mounted() {
+    // Go to first tab according to user preference if path doesn't specify one
+    if (this.$route.name === 'workSession') {
+      this.$router.push({ name: this.links_order[0] });
+    }
+
     // Make sure an alert is raised if user tries to close the page
     window.addEventListener('beforeunload', this.beforeUnloadAlert);
 
@@ -495,11 +527,20 @@ export default {
 
   beforeUnmount() {
     window.removeEventListener('beforeunload', this.beforeUnloadAlert);
-    clearInterval(this.polling_instance);
     this.$store.state.traceability.current_step_key = undefined;
+    this.$store.commit('UPDATE_BATCH_SERIALS', []);
+    if (this.events) {
+      this.events.close();
+    }
   },
 
   methods: {
+    handleMessage(message) {
+      let event = JSON.parse(message.data);
+      if (event.notification === 'REFRESH') {
+        this.updateJobData();
+      }
+    },
     async loadJob() {
       this.$store.dispatch('loadWorkingJobData', this.jobKey).then(async () => {
         await this.$store.dispatch('loadWorkOrderData', this.j.wo_key);
@@ -531,6 +572,100 @@ export default {
           ? 'theme-red'
           : 'theme-blue'
         : 'theme-grey';
+    },
+
+    async editBatchSerials() {
+      Loading.show();
+      const remainingTotalQuantity = this.j.qt_planned - this.j.qt_completed;
+      const { data: available_serials } = await this.$api.get('/wip-serial', {
+        params: {
+          job_key: this.j._key,
+          phase_key: this.j.phase_key,
+          wo_key: this.j.wo_key,
+        },
+      });
+      const initial_selection = available_serials
+        .filter((s) => s.active)
+        .map((s) => s.serial_key);
+      Loading.hide();
+
+      const selected_serials = await new Promise((resolve) => {
+        Dialog.create({
+          component: SerialBatchSelectionDialog,
+          componentProps: {
+            available_serials: available_serials.map((s) => ({
+              label: s.serial_code,
+              value: s.serial_key,
+            })),
+            selected_serials: initial_selection,
+            max_quantity: remainingTotalQuantity,
+          },
+        })
+          .onOk((selected_serials) => resolve(selected_serials))
+          .onCancel(() => resolve(false));
+      });
+
+      if (selected_serials.length && selected_serials != initial_selection) {
+        return {
+          payload: {
+            batchSerials: selected_serials,
+            newBatchQuantity: selected_serials.length,
+          },
+          message: this.$capitalize('Seriali modificati correttamente'),
+        };
+      }
+    },
+
+    async editBatchQuantity() {
+      Loading.show();
+      const remainingTotalQuantity = this.j.qt_planned - this.j.qt_completed;
+      const { data } = await this.$api.get('/wip', {
+        params: { job_key: this.j._key },
+      });
+      const maxDeclarableQuantity = this.j.first_phase
+        ? remainingTotalQuantity
+        : Math.min(
+            data.free_wip_qt_upstream + this.j.active_batch_qt,
+            remainingTotalQuantity,
+          );
+      Loading.hide();
+
+      let newBatchQuantity = await new Promise((resolve) => {
+        Dialog.create({
+          component: QuantityPickerDialog,
+          componentProps: {
+            initialValue: this.j.active_batch_qt,
+            max: maxDeclarableQuantity,
+          },
+        })
+          .onOk((quantity) => resolve(quantity))
+          .onCancel(() => resolve(false));
+      });
+
+      if (newBatchQuantity) {
+        return {
+          message: this.$capitalize('Quantità modificata correttamente'),
+          payload: { newBatchQuantity },
+        };
+      }
+    },
+
+    async editBatchQuantityOrSerials() {
+      const data = await (this.j.traceability_level && !this.j.first_phase
+        ? this.editBatchSerials() // Show serial selection dialog
+        : this.editBatchQuantity()); // Update quantity only (unconfirmed serials are handled in the backend if needed)
+
+      if (data) {
+        // Call new endpoint to update active batch quantity
+        this.$store.dispatch('updateActiveBatch', data.payload).then(() => {
+          this.$q.notify({
+            message: data.message,
+            color: 'theme-green',
+            timeout: 1500,
+            position: 'top',
+          });
+        });
+      }
     },
 
     exitJob(stop_session) {

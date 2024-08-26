@@ -13,36 +13,30 @@ class HTTPError(HTTPException):
     )
 
 class UserNotFoundError(Exception): pass
-
 class UserDisabledError(Exception): pass
-
 class UserPasswordMismatchError(Exception): pass
-
 class UserAlreadyLoggedInError(Exception): pass
 
 class TokenSignatureMismatchError(Exception): pass
-
 class TokenRevokedError(Exception): pass
-
 class TokenExpiredError(Exception): pass
-
 class TokenSignatureVerificationError(Exception): pass
-
 class TokenNotFoundError(Exception): pass
 
 class JobIsActiveError(Exception): pass
-
 class JobIsStartedError(Exception): pass
-
 class JobIsNotStartedError(Exception): pass
-
 class JobHasActiveBatchError(Exception): pass
-
 class JobHasNoAssigneeError(Exception): pass
-
 class JobHasNoActiveBatchError(Exception): pass
-
 class JobHasNoAssigneeError(Exception): pass
 
 class WipNotAvailableError(Exception): pass
 
+class QuantityOverrideForSerialsNotAllowed(Exception): pass
+
+class SerialNotDeletedError(Exception): pass
+class SerialNotUpdatedError(Exception): pass
+class SerialNotLinkedError(Exception): pass
+class SerialNotCreatedError(Exception): pass
+class SerialCodeAlreadyPresent(Exception): pass

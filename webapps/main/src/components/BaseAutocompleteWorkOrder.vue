@@ -4,7 +4,6 @@
     filled
     :loading="loading"
     :label-slot="!!label"
-    :stack-label="stackLabel"
     :dense="dense"
     :hint="$t('work_order_autocomplete_hint')"
     :placeholder="placeholder_computed"
@@ -23,7 +22,6 @@
       <q-item
         v-bind="scope.itemProps"
         :class="{ 'text-low': scope.opt.status === 'closed' }"
-        @click.stop="print"
       >
         <q-item-section class="text-h4 highlight col-auto q-pr-md">
           {{ scope.opt.wo_code }}

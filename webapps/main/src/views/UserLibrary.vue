@@ -40,10 +40,11 @@
         <div
           class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
         >
-          <div class="col-6">
+          <div class="col-1"></div>
+          <div class="col-5">
             {{ $t('name') }}
           </div>
-          <div class="col-6">
+          <div class="col-5">
             {{ $t('user.surname') }}
           </div>
         </div>
@@ -63,10 +64,13 @@
             style="white-space: nowrap"
             @click="showUser(user)"
           >
-            <div class="col-6">
+            <div class="col-1">
+              <q-icon :name="getActiveIcon(user.active)" />
+            </div>
+            <div class="col-5">
               {{ user.name }}
             </div>
-            <div class="col-6">
+            <div class="col-5">
               {{ user.surname }}
             </div>
           </div>
@@ -95,19 +99,16 @@
       <!-- USER DATA -->
       <div class="col">
         <router-view v-slot="{ Component, route }">
-          <!--
-            When changing routes, due to an unknown problem, views from other trees get placed here.
-            So, we need to check if the route is in the userLibrary tree.
-          -->
-          <transition
-            v-if="route.matched.some(({ name }) => name === 'userLibrary')"
-            name="slide-fade"
-            mode="out-in"
-          >
-            <div :key="route.fullPath">
-              <component :is="Component" :user="selected_user" />
-            </div>
-          </transition>
+          <component
+            :is="Component"
+            v-if="route.name === 'userLibrary' || route.name === 'newUser'"
+          />
+          <component
+            :is="Component"
+            v-else-if="selected_user"
+            :operation="selected_user"
+            :user="selected_user"
+          />
         </router-view>
       </div>
     </div>
@@ -240,6 +241,9 @@ export default {
 
     openUserNew() {
       this.$router.push({ name: 'newUser' });
+    },
+    getActiveIcon(active) {
+      return active ? 'mdi-account' : 'mdi-account-cancel-outline';
     },
   },
 };

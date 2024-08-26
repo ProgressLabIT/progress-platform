@@ -1,8 +1,8 @@
 import os
 from os import path
 
-from utils.db import db
-from utils.config import get_config
+from commons.utils.db import db
+from commons.utils.config import get_config
 
 media_root_path = get_config().media_path
 

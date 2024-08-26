@@ -162,7 +162,7 @@
 
             <q-tooltip
               v-if="search_disabled"
-              delay="200"
+              :delay="Number(200)"
               anchor="top middle"
               self="center middle"
             >
@@ -219,7 +219,7 @@
       </template>
     </q-form>
 
-    <BaseDialog :show="show_delete">
+    <BaseDialog :show="show_delete" @close="show_delete = false">
       <BaseActionCard
         :title="$t('field_delete')"
         :save-label="$t('confirm')"
@@ -300,7 +300,7 @@ export default {
     },
 
     is_choice() {
-      return this.field.type == 'choice';
+      return this.field?.type == 'choice';
     },
 
     shown_list_values() {

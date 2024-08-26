@@ -1,7 +1,7 @@
 from enum import Enum
 from pydantic import Field
 
-from utils.base_models import FlexModel, ArangoDocument
+from commons.models.base_models import FlexModel, ArangoDocument
 
 
 class BomLineRead(FlexModel):
@@ -12,6 +12,8 @@ class BomLineRead(FlexModel):
   component_description: str
   phase_name: str | None = None
   qt: float
+  traceability_mandatory: bool | None = False
+  traceability_level: str | None = None
 
 
 class BomLineWriteIn(FlexModel):
@@ -20,9 +22,13 @@ class BomLineWriteIn(FlexModel):
   qt: float
   phase_key: str | None = None
   type: str = 'BomLine'
+  traceability_mandatory: bool | None = None
+  traceability_level: str | None = None
 
 class BomLineWriteOut(FlexModel):
   component_id: str = Field(..., alias="_to")
   qt: float
+  traceability_mandatory: bool | None = None
+  traceability_level: str | None = None
   phase_id: str = Field(..., alias="_from")
   type: str = 'BomLine'

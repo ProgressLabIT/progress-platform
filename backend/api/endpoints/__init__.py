@@ -4,6 +4,7 @@ from .bom import router as bom
 from .config import router as config
 from .file import router as file
 from .form import router as form
+from .serial import router as serial
 from .media import router as media
 from .org import router as org
 from .print import router as print
@@ -13,3 +14,5 @@ from .production import router as production
 from .tag import router as tag
 from .collaboration import router as collaboration
 from .traceability import router as traceability
+from .notification import router as notification
+from .counter import router as counter

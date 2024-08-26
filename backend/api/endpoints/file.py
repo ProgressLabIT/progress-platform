@@ -1,11 +1,12 @@
 import os
 import traceback
 
-from fastapi import APIRouter, Body, Depends, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, UploadFile, Depends
 
-from models.form import FileBucket, FileTargetData
-from utils.db import db
+from commons.models.form import FileBucket, FileTargetData
+from commons.utils.db import db
 from utils.file import FileHandler
+from utils import auth
 
 
 router = APIRouter()
@@ -14,7 +15,8 @@ collection_map = {
   FileBucket.ISSUE: 'Issue',
   FileBucket.PRODUCT: 'Product',
   FileBucket.TRACEABILITY: 'WorkOrder',
-  FileBucket.USER: 'User'
+  FileBucket.USER: 'User',
+  FileBucket.SERIALS: 'Serial'
 }
 
 
@@ -35,6 +37,17 @@ def verify_target_data(
   if subfolder:
     invalid = True
     if bucket == FileBucket.ISSUE:
+      for data in object['data']:
+        if data['form_field_key'] == subfolder:
+          invalid = False
+          break
+    if bucket == FileBucket.SERIALS:
+      serial = db.collection('Serial').get(object_key)
+      if not serial:
+        raise HTTPException(
+          status_code = 404,
+          detail = f'No Serial with key {object_key} exists on the database'
+        )
       for data in object['data']:
         if data['form_field_key'] == subfolder:
           invalid = False
@@ -78,7 +91,8 @@ def verify_target_data(
   return FileTargetData(bucket=bucket, object_key=object_key, subfolder=subfolder)
 
 
-@router.post('/files')
+@router.post('/files',
+    dependencies=[Depends(auth.verify_token)])
 async def upload_files(
   contents: list[UploadFile],
   bucket: FileBucket = Form(...),
@@ -111,7 +125,8 @@ async def upload_files(
       )
 
 
-@router.delete('/files')
+@router.delete('/files',
+    dependencies=[Depends(auth.verify_token)])
 async def delete_files(
   filenames: list[str],
   bucket: FileBucket = Body(...),

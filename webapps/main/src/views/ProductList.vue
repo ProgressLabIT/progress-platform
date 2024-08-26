@@ -21,6 +21,17 @@
           </q-input>
         </div>
 
+        <div class="col-12 col-sm-5 col-md-3">
+          <!-- TAG -->
+          <BaseAutocompleteTag
+            dense
+            key-only
+            :label="$t('tag')"
+            :value="tag_search"
+            @select="(selection) => (tag_search = selection)"
+          />
+        </div>
+
         <!-- View controls -->
         <q-checkbox
           v-model="filter_inactive"
@@ -50,9 +61,9 @@
       <!-- PRODUCT LIST -->
       <div id="product-list" class="col scroll flex-center">
         <div v-if="vuex_ready" class="row q-col-gutter-lg q-mb-md">
-          <NoDataAlert v-if="!productCatalog(filter_inactive).length" />
+          <NoDataAlert v-if="!productCatalog().length" />
           <div
-            v-for="(product, index) in product_list"
+            v-for="(product, index) in productCatalog()"
             :key="index"
             class="col-12 col-sm-6 col-md-3 col-xl-2"
             :style="`height: ${card_height}px`"
@@ -66,12 +77,12 @@
         </div>
         <div class="row q-my-lg justify-center">
           <q-btn
-            v-if="!loading && max_shown < filtered_products.length"
+            v-if="load_quantity + offset <= productCatalog().length"
             flat
             color="theme-blue"
             @click="showMore"
           >
-            CARICA ALTRI
+            {{ $t('load_more') }}
           </q-btn>
           <q-spinner v-if="loading" />
         </div>
@@ -84,10 +95,11 @@
 
 <script>
 import { mapGetters } from 'vuex';
+import BaseAutocompleteTag from '@/components/BaseAutocompleteTag.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import ProductCard from '@/components/ProductCard.vue';
-
 import multiMatch from '@/lib/MultiFieldSearch.js';
+import queryModel from '@/lib/queryModelFactory.js';
 
 export default {
   name: 'ProductList',
@@ -95,6 +107,7 @@ export default {
   components: {
     NoDataAlert,
     ProductCard,
+    BaseAutocompleteTag,
   },
 
   data() {
@@ -103,27 +116,15 @@ export default {
       loading: false,
       vuex_ready: false,
       load_quantity: 100,
-      loading_round: 1,
+      offset: 0,
     };
   },
 
   computed: {
     ...mapGetters(['productCatalog']),
 
-    catalog() {
-      return this.productCatalog(this.filter_inactive);
-    },
-
-    filtered_products() {
-      return this.catalog.filter(this.match);
-    },
-
-    product_list() {
-      return this.filtered_products.slice(0, this.max_shown);
-    },
-
     max_shown() {
-      return this.load_quantity * this.loading_round;
+      return this.load_quantity + this.offset;
     },
 
     search_string: {
@@ -168,6 +169,29 @@ export default {
       },
     },
 
+    tag_search: queryModel(String, 'tag_search', null),
+
+    filters() {
+      let filter = {
+        limit: this.load_quantity,
+        offset: this.offset,
+      };
+
+      if (this.search_string) {
+        filter.search = this.search_string;
+      }
+
+      if (this.filter_inactive) {
+        filter.filter_inactive = this.filter_inactive;
+      }
+
+      if (this.tag_search) {
+        filter.tag_search = this.tag_search;
+      }
+
+      return filter;
+    },
+
     card_height() {
       return this.show_images ? 240 : 150;
     },
@@ -176,14 +200,17 @@ export default {
   watch: {
     search_string: {
       immediate: true,
-      handler() {
-        this.loading = true;
-        this.loading_round = 0;
-        setTimeout(() => {
-          this.loading = false;
-          this.loading_round = 1;
-        }, 700);
-      },
+      handler: 'fetchProducts',
+    },
+
+    filter_inactive: {
+      immediate: true,
+      handler: 'fetchProducts',
+    },
+
+    tag_search: {
+      immediate: true,
+      handler: 'fetchProducts',
     },
   },
 
@@ -197,7 +224,8 @@ export default {
     fetchProducts() {
       return new Promise((resolve) => {
         this.loading = true;
-        this.$store.dispatch('loadProductList').then(() => {
+        this.offset = 0;
+        this.$store.dispatch('loadProductList', this.filters).then(() => {
           setTimeout(() => (this.loading = false), 2000);
           resolve();
         });
@@ -214,10 +242,11 @@ export default {
 
     showMore() {
       this.loading = true;
-      setTimeout(() => {
-        this.loading_round++;
-        this.loading = false;
-      }, 700);
+      this.offset += this.load_quantity;
+      this.$store.dispatch('appendProductList', this.filters).then(() => {
+        setTimeout(() => (this.loading = false), 700);
+        this.vuex_ready = true;
+      });
     },
   },
 };
