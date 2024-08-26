@@ -226,66 +226,119 @@
     <!-- RIGHT COLUMN -->
     <div class="col-4 q-pl-md column full-height no-wrap">
       <!-- DOCS -->
-      <q-card
-        square
-        class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap"
-      >
-        <q-card-section class="text-h5 display highlight col-auto">
-          {{ $capitalize($t('document.label', 2)) }}
-        </q-card-section>
-        <q-list class="col-shrink scroll" dense>
-          <q-item
-            v-for="(doc, index) in docs"
-            :key="index"
-            clickable
-            @click="showMedia(index)"
+      <div class="col-auto">
+        <q-card
+          square
+          class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap"
+        >
+          <q-card-section class="text-h5 display highlight col-auto">
+            {{ $capitalize($t('document.label', 2)) }}
+          </q-card-section>
+          <q-list class="col-shrink scroll" dense>
+            <q-item
+              v-for="(doc, index) in docs"
+              :key="index"
+              clickable
+              @click="showMedia(index)"
+            >
+              <q-item-section class="col" :class="{ 'text-italic': doc.temp }">
+                <q-item-label>
+                  {{ doc.name }}
+                  {{ doc.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section class="col-1">
+                <div>
+                  <q-btn
+                    v-if="editMode"
+                    flat
+                    round
+                    size="10px"
+                    icon="mdi-close"
+                    class="hover-red"
+                    @click.stop="deleteDoc(index)"
+                  >
+                  </q-btn>
+                </div>
+              </q-item-section>
+              <q-item-section class="col-auto text-right">
+                {{ $bytes(doc.size) }}
+              </q-item-section>
+            </q-item>
+          </q-list>
+
+          <input
+            ref="upload_doc"
+            type="file"
+            multiple
+            style="display: none"
+            accept="application/pdf, image/*"
+            @change="addFiles($event.target.files)"
+          />
+          <q-btn
+            v-if="editMode"
+            flat
+            class="full-width q-mt-md"
+            color="theme-blue"
+            @click="$refs.upload_doc.click()"
           >
-            <q-item-section class="col" :class="{ 'text-italic': doc.temp }">
-              <q-item-label>
-                {{ doc.name }}
-                {{ doc.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}
-              </q-item-label>
-            </q-item-section>
-            <q-item-section class="col-1">
-              <div>
+            <span>{{ $t('document.add', 2) }}</span>
+            <q-space />
+            <q-icon name="mdi-paperclip" />
+          </q-btn>
+        </q-card>
+      </div>
+
+      <div class="col-auto q-mt-md">
+        <q-card
+          square
+          class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap"
+        >
+          <q-card-section class="text-h5 display highlight col-auto">
+            {{ $capitalize($t('metadata')) }}
+          </q-card-section>
+          <q-card-section>
+            <div
+              v-for="(field, index) in product.metadata"
+              :key="field.custom_field_key"
+              class="row items-top"
+            >
+              <FormField
+                :field="field"
+                dense
+                :disable="!editMode"
+                class="col"
+                @update="
+                  (value) => updateMetadataField(field.custom_field_key, value)
+                "
+              />
+              <div class="col-auto flex-center">
                 <q-btn
                   v-if="editMode"
                   flat
                   round
                   size="10px"
                   icon="mdi-close"
-                  class="hover-red"
-                  @click.stop="deleteDoc(index)"
-                >
-                </q-btn>
+                  class="hover-red q-mt-sm q-ml-sm"
+                  @click="metadata.splice(index, 1)"
+                />
               </div>
-            </q-item-section>
-            <q-item-section class="col-auto text-right">
-              {{ $bytes(doc.size) }}
-            </q-item-section>
-          </q-item>
-        </q-list>
-
-        <input
-          ref="upload_doc"
-          type="file"
-          multiple
-          style="display: none"
-          accept="application/pdf, image/*"
-          @change="addFiles($event.target.files)"
-        />
-        <q-btn
-          v-if="editMode"
-          flat
-          class="full-width q-mt-md"
-          color="theme-blue"
-          @click="$refs.upload_doc.click()"
-        >
-          <span>{{ $t('document.add', 2) }}</span>
-          <q-space />
-          <q-icon name="mdi-paperclip" />
-        </q-btn>
-      </q-card>
+            </div>
+          </q-card-section>
+          <q-btn
+            v-if="editMode"
+            flat
+            class="full-width q-mt-md"
+            color="theme-blue"
+            :disable="!editMode"
+            @click="addField"
+          >
+            <span>{{ $t('field_add') }}</span>
+            <q-space />
+            <q-icon name="mdi-plus" />
+          </q-btn>
+        </q-card>
+      </div>
 
       <!-- TODO: Enable after templates are being utilized somewhere -->
       <!-- PRINT TEMPLATES -->
@@ -374,18 +427,22 @@
 
 <script>
 import { generate } from '@pdfme/generator';
+import { Dialog } from 'quasar';
 import { mapState, mapActions } from 'vuex';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
+import FormField from '@/components/FormField.vue';
 import MediaViewer from '@/components/MediaViewer.vue';
 import TagInput from '@/components/TagInput.vue';
-import TagChips from '../components/TagChips.vue';
+import TagChips from '@/components/TagChips.vue';
+import AddCustomFieldDialog from '@/components/process-steps/AddCustomFieldDialog.vue';
 
 export default {
   name: 'ProductHome',
 
   components: {
     // BaseConfirmationDialog,
+    FormField,
     MediaViewer,
     BaseAutocompleteTemplate,
     TagInput,
@@ -488,6 +545,15 @@ export default {
         return null;
       }
     },
+
+    metadata: {
+      get() {
+        return this.product?.metadata || [];
+      },
+      set(value) {
+        this.updateField('metadata', value);
+      },
+    },
   },
 
   watch: {
@@ -586,6 +652,33 @@ export default {
       this.show_media = value;
     },
 
+    addField() {
+      console.log(this.metadata.map((f) => f.custom_field_key));
+      Dialog.create({
+        component: AddCustomFieldDialog,
+        componentProps: {
+          excludeKeys: this.metadata.map((f) => f.custom_field_key),
+        },
+      }).onOk((customField) => {
+        this.metadata = [
+          ...this.metadata,
+          {
+            custom_field_key: customField._key,
+            label: customField.default_label,
+            hint: customField.default_hint,
+          },
+        ];
+      });
+    },
+
+    updateMetadataField(custom_field_key, value) {
+      this.metadata = this.metadata.map((field) => {
+        return field.custom_field_key === custom_field_key
+          ? { ...field, value }
+          : field;
+      });
+    },
+
     async showTemplatePreview(t) {
       const {
         data: { template },
@@ -630,10 +723,6 @@ export default {
           ),
         },
       };
-
-      if (new_doc_list) {
-        product_update.new_docs = new_doc_list.filter((d) => 'temp' in d);
-      }
 
       if (new_doc_list) {
         product_update.new_docs = new_doc_list.filter((d) => 'temp' in d);

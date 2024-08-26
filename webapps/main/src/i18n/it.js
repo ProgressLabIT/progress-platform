@@ -288,6 +288,7 @@ export default {
   max: 'max',
   message: 'Messaggio | Messaggi',
   message_prompt: 'Scrivi...',
+  metadata: 'metadati',
   min: 'min',
   name: 'Nome',
   new: 'nuovo',

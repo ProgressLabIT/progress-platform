@@ -1,9 +1,9 @@
 from datetime import datetime
 from enum import Enum
 from random import randrange, uniform
-from typing import List, Optional
+from typing import Any, List, Optional
 
-from pydantic import ByteSize, Field
+from pydantic import BaseModel, ByteSize, Field
 
 from utils.base_models import FlexModel
 from models.tag import Tag
@@ -33,6 +33,13 @@ class ProductBaseData(FlexModel):
   image: bool = False # to be replaced with Object Storage url in the future
   tags: List[Tag] | None= []
 
+
+class ProductMetadataField(BaseModel):
+  custom_field_key: str # reference to CustomField record
+  value: Any = None
+  label: str | None = None
+  hint: str | None = None
+
 class ProductDetails(ProductBaseData):
   trash: bool = False
 
@@ -54,6 +61,8 @@ class ProductDetails(ProductBaseData):
 
   kpi_window_size: int | None = None # if time, expressed in days, in 'count' in number of work orders
   kpi_window_type: Optional[KPIWindowType] = KPIWindowType.COUNT
+
+  metadata: List[ProductMetadataField] | None = None
 
 class ProductDoc(FlexModel):
   name: str
