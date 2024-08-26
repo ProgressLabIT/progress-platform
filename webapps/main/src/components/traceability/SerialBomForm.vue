@@ -291,16 +291,24 @@ export default {
     onSerialSelection(selectedSerials, selected_key) {
       let temp_booked_serials = [];
 
-      for (const serial of selectedSerials) {
-        temp_booked_serials.push(serial.label);
+      if (Array.isArray(selectedSerials)) {
+        for (const serial of selectedSerials) {
+          temp_booked_serials.push(serial.label);
+        }
+      } else {
+        temp_booked_serials.push(selectedSerials.label);
       }
 
       for (const serial_from of this.batch_serials) {
         for (const component of this.bom_components) {
           const key = [serial_from._id, component.component_key].join(' ');
           if (this.serialModel[key] && selected_key !== key) {
-            for (const serial_to of this.serialModel[key]) {
-              temp_booked_serials.push(serial_to.label);
+            if (Array.isArray(this.serialModel[key])) {
+              for (const serial_to of this.serialModel[key]) {
+                temp_booked_serials.push(serial_to.label);
+              }
+            } else {
+              temp_booked_serials.push(this.serialModel[key].label);
             }
           }
         }
@@ -314,6 +322,29 @@ export default {
       this.$emit('close');
     },
 
+    ensureAndSave(
+      link_data,
+      serial_consumed,
+      component_key,
+      serial_from,
+      serial_to,
+    ) {
+      if (serial_consumed.find((str) => str === serial_to._key)) {
+        return false;
+      }
+      serial_consumed.push(serial_to._key);
+      link_data.push({
+        wo_key: this.wo_key,
+        component_key: component_key,
+        batch_key: this.batch_key,
+        from_serial: serial_from._key,
+        to_serial: serial_to._key,
+        reason: null,
+        replaced: false,
+      });
+      return true;
+    },
+
     async save() {
       this.saving = true;
 
@@ -324,22 +355,36 @@ export default {
         for (const component of this.bom_components) {
           const key = [serial_from._id, component.component_key].join(' ');
           if (this.serialModel[key]) {
-            for (const serial_to of this.serialModel[key]) {
-              if (serial_consumed.find((str) => str === serial_to._key)) {
+            if (Array.isArray(this.serialModel[key])) {
+              for (const serial_to of this.serialModel[key]) {
+                if (
+                  !this.ensureAndSave(
+                    link_data,
+                    serial_consumed,
+                    component.component_key,
+                    serial_from,
+                    serial_to,
+                  )
+                ) {
+                  window.alert(this.$t('serial_field.component_reused'));
+                  this.saving = false;
+                  return;
+                }
+              }
+            } else {
+              if (
+                !this.ensureAndSave(
+                  link_data,
+                  serial_consumed,
+                  component.component_key,
+                  serial_from,
+                  this.serialModel[key],
+                )
+              ) {
                 window.alert(this.$t('serial_field.component_reused'));
                 this.saving = false;
                 return;
               }
-              serial_consumed.push(serial_to._key);
-              link_data.push({
-                wo_key: this.wo_key,
-                component_key: component.component_key,
-                batch_key: this.batch_key,
-                from_serial: serial_from._key,
-                to_serial: serial_to._key,
-                reason: null,
-                replaced: false,
-              });
             }
           }
         }

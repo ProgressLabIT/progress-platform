@@ -24,7 +24,11 @@
     :map-options="keyOnly"
     :work_order_key="work_order_key"
     @filter="filter"
-    @update:model-value="(selection) => $emit('select', selection)"
+    @update:model-value="
+      (selection) => {
+        $emit('select', selection);
+      }
+    "
   >
     <template #option="scope">
       <q-item
@@ -290,17 +294,24 @@ export default {
 
     addInitialValues(search_value) {
       if (this.initial_values) {
-        for (const serial of this.initial_values) {
-          if (
-            (!search_value ||
-              search_value === '' ||
-              serial.label.includes(search_value)) &&
-            this.options.filter((value) => value._key == serial._key).length ===
-              0
-          ) {
-            this.options.push(serial);
+        if (Array.isArray(this.initial_values)) {
+          for (const serial of this.initial_values) {
+            this.addValue(search_value, serial);
           }
+        } else {
+          this.addValue(search_value, this.initial_values);
         }
+      }
+    },
+
+    addValue(search_value, serial) {
+      if (
+        (!search_value ||
+          search_value === '' ||
+          serial.label.includes(search_value)) &&
+        this.options.filter((value) => value._key == serial._key).length === 0
+      ) {
+        this.options.push(serial);
       }
     },
 

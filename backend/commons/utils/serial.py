@@ -194,7 +194,7 @@ class Queries:
         FOR step_field in NOT_NULL(step.form_fields, [])
         LET value = FIRST(
             FOR serial_field in s.data
-            FILTER serial_field.custom_field_key == step_field.custom_field_key
+            FILTER serial_field.form_field_key == step_field._key
             RETURN serial_field.value
         )
         RETURN merge(step_field, { value })

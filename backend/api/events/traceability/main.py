@@ -78,8 +78,7 @@ class ProductionActivityEvent(BaseEvent):
     create_batch_serial_records,
     finalize_batch_serial,
     finalize_wo_serial,
-    send_link_batch_serial_event,
-    udpate_batch_serial_data
+    send_link_batch_serial_event
   )
 
   from .batch import(
@@ -298,10 +297,10 @@ class ProductionActivityEvent(BaseEvent):
     step_data.status = StepStatus.DONE
     self.tx.collection('StepExecutionData').insert(step_data)
 
-    if (step_data.form_data != None):
-      if (self.job.traceability_level is not None):
-        # update batch serials data
-        self.udpate_batch_serial_data(step_data.form_data)
+    #if (step_data.form_data != None):
+    #  if (self.job.traceability_level is not None):
+    #    # update batch serials data
+    #    self.udpate_batch_serial_data(step_data.form_data)
 
     # if last step complete batch
     if (self.current_step_was_last_to_do()):
@@ -423,6 +422,8 @@ class ProductionActivityEvent(BaseEvent):
     if self.job.stage == 'closed':
       raise ValueError("Job is already closed")
 
+    batch_execution_data = self.get_batch_execution_data()
+
     # save into a variable since self.job gets updated in the process
     active_batch_qt = self.job.active_batch_qt
     completed_batch_qt = self.info.completed_batch_qt or active_batch_qt
@@ -460,7 +461,7 @@ class ProductionActivityEvent(BaseEvent):
 
     elif (self.job.traceability_level is not None):
       # update batch serials data
-      self.finalize_batch_serial(completed_batch_qt)
+      self.finalize_batch_serial(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
 
     self.info.completed_batch_key = self.job.active_batch_key
     self.info.completed_batch_qt = completed_batch_qt
@@ -529,7 +530,7 @@ class ProductionActivityEvent(BaseEvent):
       )
 
       if create_new_batch:
-        self.response['batch_data'] = self.get_batch_execution_data()
+        self.response['batch_data'] = batch_execution_data
 
     if not self.job.first_phase:
       self.remove_wip(completed_batch_qt)
@@ -540,7 +541,7 @@ class ProductionActivityEvent(BaseEvent):
     else:
       if getattr(self.job, 'traceability_level', None) is not None:
         # update batch serials data
-        self.finalize_wo_serial()
+        self.finalize_wo_serial(batch_execution_data=batch_execution_data)
 
 # ===================================================================
 #             END

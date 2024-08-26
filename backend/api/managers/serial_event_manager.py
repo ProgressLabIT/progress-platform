@@ -48,9 +48,9 @@ class SerialEventManager:
         case SerialCommandType.CREATE_AND_FINALIZE:
            self.create_serial(serial_data=self.serial_data, batch_key=None, finalize=True)
         case SerialCommandType.FINALIZE_BATCH:
-           self.confirm_serials()
+           self.confirm_serials(quantity=event_parameters['quantity'], batch_execution_data=event_parameters['batch_execution_data'])
         case SerialCommandType.FINALIZE_WO:
-           self.release_serials()
+           self.release_serials(batch_execution_data=event_parameters['batch_execution_data'])
         case SerialCommandType.UPDATE:
            self.update_serial()
         case SerialCommandType.DELETE:
@@ -367,13 +367,15 @@ class SerialEventManager:
             error = traceback.format_exc()
          ))
 
-    def confirm_serials(self):
+    def confirm_serials(self, quantity, batch_execution_data):
       #tx = self.tx.begin_transaction(write=['Serial', 'Counter'], read=['batch_serial'])
 
       cursor = self.tx.aql.execute(
          Queries.GET_BATCH_SERIALS,
          bind_vars=dict(batch_key=self.event.info.active_batch_key
       ))
+
+
       # JUST IN CASE: Consider only serials to be confirmed to avoid reassigning a new code
       batch_serials = [Serial(**s) for s in cursor if s['code'] is None]
       # Counter key is the same for all serials in the batch
@@ -385,6 +387,10 @@ class SerialEventManager:
          for serial in batch_serials:
             serial.code = _generate_counter(self.tx, 'Counter/' + counter_key)
             serial.released = now if last_phase else None
+            for step in batch_execution_data:
+              for data in serial.data:
+                 if step.form_field_key == data.form_field_key:
+                    data.value = step.value
 
          new = self.tx.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials], return_new=True)
          #self.tx.commit_transaction()
@@ -404,7 +410,7 @@ class SerialEventManager:
          ))
 
 
-    def release_serials(self):
+    def release_serials(self, batch_execution_data):
 
       cursor = self.tx.aql.execute(
          Queries.GET_BATCH_SERIALS,
@@ -417,6 +423,10 @@ class SerialEventManager:
 
       for serial in batch_serials:
          serial.released = now
+         for step in batch_execution_data:
+              for data in serial.data:
+                 if step.form_field_key == data.form_field_key:
+                    data.value = step.value
 
       self.tx.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials])
 

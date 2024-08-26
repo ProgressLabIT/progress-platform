@@ -229,16 +229,24 @@ export default {
     },
 
     onSerialSelection(selectedSerials, selected_key) {
-      let temp_booked_serials = [];
+      let temp_booked_serials = new Array();
 
-      for (const serial of selectedSerials) {
-        temp_booked_serials.push(serial.label);
+      if (Array.isArray(selectedSerials)) {
+        for (const serial of selectedSerials) {
+          temp_booked_serials.push(serial.label);
+        }
+      } else {
+        temp_booked_serials.push(selectedSerials.label);
       }
 
       for (const serial of this.batch_serials) {
         if (this.serialModel[serial._id] && selected_key !== serial._id) {
-          for (const serial_to of this.serialModel[serial._id]) {
-            temp_booked_serials.push(serial_to.label);
+          if (Array.isArray(this.serialModel[serial._id])) {
+            for (const serial_to of this.serialModel[serial._id]) {
+              temp_booked_serials.push(serial_to.label);
+            }
+          } else {
+            temp_booked_serials.push(this.serialModel[serial._id].label);
           }
         }
       }
@@ -252,6 +260,22 @@ export default {
       this.$emit('close');
     },
 
+    ensureAndSave(link_data, serial_consumed, serial_from, serial_to) {
+      if (serial_consumed.find((str) => str === serial_to._key)) {
+        return false;
+      }
+      serial_consumed.push(serial_to._key);
+      link_data.push({
+        from_serial: serial_from._key,
+        to_serial: serial_to._key,
+        wo_key: this.wo_key,
+        component_key: this.component_key,
+        batch_key: this.batch_key,
+        replaced: false,
+      });
+      return true;
+    },
+
     async save() {
       this.saving = true;
 
@@ -260,21 +284,34 @@ export default {
       let initial_values = this.initialValues;
       for (const serial_from of this.batch_serials) {
         if (this.serialModel[serial_from._id]) {
-          for (const serial_to of this.serialModel[serial_from._id]) {
-            if (serial_consumed.find((str) => str === serial_to._key)) {
+          if (Array.isArray(this.serialModel[serial_from._id])) {
+            for (const serial_to of this.serialModel[serial_from._id]) {
+              if (
+                !this.ensureAndSave(
+                  link_data,
+                  serial_consumed,
+                  serial_from,
+                  serial_to,
+                )
+              ) {
+                window.alert(this.$t('serial_field.component_reused'));
+                this.saving = false;
+                return;
+              }
+            }
+          } else {
+            if (
+              !this.ensureAndSave(
+                link_data,
+                serial_consumed,
+                serial_from,
+                this.serialModel[serial_from._id],
+              )
+            ) {
               window.alert(this.$t('serial_field.component_reused'));
               this.saving = false;
               return;
             }
-            serial_consumed.push(serial_to._key);
-            link_data.push({
-              from_serial: serial_from._key,
-              to_serial: serial_to._key,
-              wo_key: this.wo_key,
-              component_key: this.component_key,
-              batch_key: this.batch_key,
-              replaced: false,
-            });
           }
         }
       }
