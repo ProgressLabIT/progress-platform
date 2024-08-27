@@ -89,7 +89,7 @@ def get_batch_execution_data(self):
   batch_execution_data = self.tx.aql.execute(
     TraceabilityQueries.GET_BATCH_EXECUTION_DATA,
     # in self info can be under new_batch_key or active_batch_key, taking it from self.batch makes it more consistent.
-    bind_vars=dict(batch_key=self.batch.key)
+    bind_vars=dict(batch_key=self.batch.key if hasattr(self, 'batch') else self.info.active_batch_key)
   ).next()
 
   return batch_execution_data
