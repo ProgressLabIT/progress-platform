@@ -35,6 +35,7 @@
               size="sm"
               color="theme-blue"
               :loading="loading"
+              :disable="!job.active_batch_key"
               @click="show_serial_form[props.row.component_key] = true"
             >
               {{ $t('serials') }}
@@ -93,6 +94,7 @@
           size="sm"
           color="theme-blue"
           :loading="loading"
+          :disable="!job.active_batch_key"
           @click="show_all_serial_form = true"
         >
           {{ $t('serial_field.bom_component') }}
