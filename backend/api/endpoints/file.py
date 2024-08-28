@@ -15,7 +15,8 @@ collection_map = {
   FileBucket.ISSUE: 'Issue',
   FileBucket.PRODUCT: 'Product',
   FileBucket.TRACEABILITY: 'WorkOrder',
-  FileBucket.USER: 'User'
+  FileBucket.USER: 'User',
+  FileBucket.SERIALS: 'Serial'
 }
 
 

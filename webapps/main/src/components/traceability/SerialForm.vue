@@ -38,14 +38,6 @@
             stack-label
           >
           </q-field>
-
-          <FormField
-            v-for="field in form_fields"
-            :key="field._key"
-            :field="field"
-            :root-path="`/media/serial/${serial?._key}`"
-            @update="field.value = $event"
-          />
         </q-card-section>
 
         <!-- SERIAL DATA -->
@@ -192,12 +184,11 @@ export default {
   data() {
     return {
       phase_index: 0,
-      has_fields: false,
+      has_fields: true,
       step_index: 0,
       saving: false,
       enableSave: false,
       form_step: 'select_product',
-      form_fields: [],
       confirmed: false,
       phase_data: null,
       counter_key: null,
@@ -332,7 +323,9 @@ export default {
         this.phase_data.forEach((phase) => {
           if (phase.steps) {
             phase.steps.forEach((step) => {
-              hasCustomField = hasCustomField || step.form_fields;
+              if (!hasCustomField) {
+                hasCustomField = step.form_fields?.length > 0;
+              }
             });
           }
         });
@@ -392,6 +385,72 @@ export default {
         }
       });
       return missing_mandatory_fields;
+    },
+
+    async saveFiles(serial_key) {
+      let form_fields = [];
+      if (this.phase_data) {
+        this.phase_data.forEach((phase) => {
+          if (phase.steps) {
+            phase.steps.forEach((step) => {
+              form_fields.push(...step.form_fields);
+            });
+          }
+        });
+      }
+
+      const promises = form_fields
+        .filter((field) => this.getFieldType(field) === 'files')
+        .map(async (field) => {
+          const to_delete = [];
+          const to_add = [];
+
+          field.value?.forEach((file) => {
+            if (file.temp) {
+              to_add.push(file.content);
+            } else if (file.delete) {
+              to_delete.push(file.name);
+            }
+          });
+
+          const target = {
+            bucket: 'serial',
+            object_key: serial_key,
+            subfolder: field._key,
+          };
+
+          // Upload new files
+          if (to_add.length) {
+            // Populate form data
+            const add_body = new FormData();
+            Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
+            to_add.forEach((file) => add_body.append('contents', file));
+            // Post files
+            try {
+              await this.$api.post('/files', add_body);
+            } catch (error) {
+              console.error(error);
+              window.alert(error);
+            }
+          }
+
+          // Delete files
+          if (to_delete.length) {
+            try {
+              await this.$api.delete('/files', {
+                data: {
+                  ...target,
+                  filenames: to_delete,
+                },
+              });
+            } catch (error) {
+              console.error(error);
+              window.alert(error);
+            }
+          }
+        });
+
+      return Promise.all(promises);
     },
 
     async save() {
@@ -463,9 +522,12 @@ export default {
         serial_data,
       };
 
+      let serial_key = 1234;
+
       this.$api.post('event', event).then((resp) => {
         if (resp.status === 200) {
           this.$emit('serialCreated');
+          this.saveFiles(serial_key);
         } else if (resp.response?.status === 422) {
           let error_message = 'traceability.errors.EXCEPTION';
           switch (resp.response?.data?.detail?.error_type) {
