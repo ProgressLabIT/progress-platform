@@ -108,6 +108,7 @@
             </q-btn>
             <template v-else>
               <q-btn
+                v-if="form_step === 'fill_steps_data'"
                 icon="mdi-arrow-left-bold"
                 color="theme-blue"
                 @click="prevTile()"
@@ -122,7 +123,7 @@
               </q-btn>
 
               <q-btn
-                v-else
+                v-else-if="enableSave"
                 color="theme-orange"
                 :label="$t('save')"
                 :loading="saving"
@@ -522,12 +523,13 @@ export default {
         serial_data,
       };
 
-      let serial_key = 1234;
-
       this.$api.post('event', event).then((resp) => {
         if (resp.status === 200) {
           this.$emit('serialCreated');
-          this.saveFiles(serial_key);
+          this.saveFiles(resp?.data?.detail?.serial_key).then(() => {
+            this.cancel();
+            this.saving = false;
+          });
         } else if (resp.response?.status === 422) {
           let error_message = 'traceability.errors.EXCEPTION';
           switch (resp.response?.data?.detail?.error_type) {
@@ -547,9 +549,9 @@ export default {
             timeout: 1500,
             position: 'top',
           });
+          this.cancel();
+          this.saving = false;
         }
-        this.cancel();
-        this.saving = false;
       });
     },
   },

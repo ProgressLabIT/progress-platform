@@ -41,6 +41,17 @@ def verify_target_data(
         if data['form_field_key'] == subfolder:
           invalid = False
           break
+    if bucket == FileBucket.SERIALS:
+      serial = db.collection('Serial').get(object_key)
+      if not serial:
+        raise HTTPException(
+          status_code = 404,
+          detail = f'No Serial with key {object_key} exists on the database'
+        )
+      for data in object['data']:
+        if data['form_field_key'] == subfolder:
+          invalid = False
+          break
     elif bucket == FileBucket.TRACEABILITY:
       batch_key, step_key, custom_field_key, form_field_key = subfolder.split('/')
       batch = db.collection('Batch').get(batch_key)

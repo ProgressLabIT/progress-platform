@@ -237,6 +237,63 @@ export default {
       return missing_mandatory_fields;
     },
 
+    async saveFiles(serial_key) {
+      let form_fields = this.serial.data;
+
+      const promises = form_fields
+        .filter((field) => this.getFieldType(field) === 'files')
+        .map(async (field) => {
+          const to_delete = [];
+          const to_add = [];
+
+          field.value?.forEach((file) => {
+            if (file.temp) {
+              to_add.push(file.content);
+            } else if (file.delete) {
+              to_delete.push(file.name);
+            }
+          });
+
+          const target = {
+            bucket: 'serial',
+            object_key: serial_key,
+            subfolder: field._key,
+          };
+
+          // Upload new files
+          if (to_add.length) {
+            // Populate form data
+            const add_body = new FormData();
+            Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
+            to_add.forEach((file) => add_body.append('contents', file));
+            // Post files
+            try {
+              await this.$api.post('/files', add_body);
+            } catch (error) {
+              console.error(error);
+              window.alert(error);
+            }
+          }
+
+          // Delete files
+          if (to_delete.length) {
+            try {
+              await this.$api.delete('/files', {
+                data: {
+                  ...target,
+                  filenames: to_delete,
+                },
+              });
+            } catch (error) {
+              console.error(error);
+              window.alert(error);
+            }
+          }
+        });
+
+      return Promise.all(promises);
+    },
+
     async save() {
       this.saving = true;
 
@@ -266,6 +323,7 @@ export default {
       };
 
       await this.$api.post('event', event);
+      await this.saveFiles(serial_data._key);
 
       this.editMode = false;
       this.saving = false;
