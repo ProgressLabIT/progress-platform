@@ -27,7 +27,7 @@ class Queries:
 
       LET childs = (
           FOR linked_serial IN contains
-              FILTER linked_serial.batch_key == serial.batch_key
+              FILTER linked_serial.wo_key == serial.wo_key
               && (linked_serial._from == serial.id || linked_serial.from_serial == serial._key)
               && linked_serial.replaced == false
               RETURN DOCUMENT(Serial, linked_serial._to)

@@ -199,12 +199,26 @@ class SerialEventManager:
           wo_key = serial_links.wo_key
           component_key = serial_links.component_key
           batch_key = serial_links.batch_key
-          link_match = dict(_from=f'Batch/{batch_key}', _to=f'Serial/{to_serial}')
+          batch_link_match = dict(_from=f'Batch/{batch_key}', _to=f'Serial/{to_serial}')
+          serial_link_match = dict(_from=f'Serial/{from_serial}', _to=f'Serial/{to_serial}')
           try:
-             link_cursor = self.tx.collection('contains').find(link_match)
-             if link_cursor.count()>0:
+             batch_link_cursor = self.tx.collection('contains').find(batch_link_match)
+             serial_link_cursor = self.tx.collection('contains').find(serial_link_match)
+             if batch_link_cursor.count()>0:
                 self.tx.collection('contains').update(dict(
-                   _key = link_cursor.next()['_key'],
+                   _key = batch_link_cursor.next()['_key'],
+                   _from=f'Batch/{batch_key}',
+                   _to=f'Serial/{to_serial}',
+                   replaced=serial_links.replaced,
+                   wo_key = wo_key,
+                   component_key=component_key,
+                   from_serial=from_serial,
+                   batch_key=batch_key,
+                   reason=reason
+                ))
+             elif serial_link_cursor.count()>0:
+                self.tx.collection('contains').update(dict(
+                   _key = serial_link_cursor.next()['_key'],
                    _from=f'Batch/{batch_key}',
                    _to=f'Serial/{to_serial}',
                    replaced=serial_links.replaced,
