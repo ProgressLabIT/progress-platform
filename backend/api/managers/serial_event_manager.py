@@ -143,6 +143,11 @@ class SerialEventManager:
             serial = serial_no,
             notification = SerialNotificationType.CREATED
          ))
+
+         self.event.response = dict(
+           message="Serial created correctly",
+           serial_key=serial_key
+         )
       except:
          print(traceback.format_exc())
          self.notify_results(dict(
