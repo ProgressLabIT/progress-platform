@@ -199,26 +199,31 @@ class SerialEventManager:
           wo_key = serial_links.wo_key
           component_key = serial_links.component_key
           batch_key = serial_links.batch_key
-          link_match = dict(_from=f'Serial/{from_serial}', _to=f'Serial/{to_serial}')
+          link_match = dict(_from=f'Batch/{batch_key}', _to=f'Serial/{to_serial}')
           try:
              link_cursor = self.tx.collection('contains').find(link_match)
              if link_cursor.count()>0:
                 self.tx.collection('contains').update(dict(
                    _key = link_cursor.next()['_key'],
-                   _from=f'Serial/{from_serial}',
-                   _to=f'Serial/{to_serial}',
-                   replaced=serial_links.replaced,
-                   reason=reason
-                ))
-             else:
-                self.tx.collection('contains').insert(dict(
-                   _from=f'Serial/{from_serial}',
+                   _from=f'Batch/{batch_key}',
                    _to=f'Serial/{to_serial}',
                    replaced=serial_links.replaced,
                    wo_key = wo_key,
                    component_key=component_key,
+                   from_serial=from_serial,
                    batch_key=batch_key,
                    reason=reason
+                ))
+             else:
+                self.tx.collection('contains').insert(dict(
+                   _from=f'Batch/{batch_key}',
+                   _to=f'Serial/{to_serial}',
+                   replaced=False,
+                   wo_key = wo_key,
+                   component_key=component_key,
+                   from_serial=from_serial,
+                   batch_key=batch_key,
+                   reason=''
                 ))
           except:
              print(traceback.format_exc())
@@ -397,6 +402,12 @@ class SerialEventManager:
               for data in serial.data:
                  if step.form_field_key == data.form_field_key:
                     data.value = step.value
+            confirm_serial_match = dict(_from=f'Batch/{self.event.info.active_batch_key}', from_serial=serial.key)
+            confirm_serial_update = dict(_from=serial.id)
+            self.tx.collection('contains').update_match(confirm_serial_match, confirm_serial_update)
+
+         clean_serial_match = dict(_from=f'Batch/{self.event.info.active_batch_key}')
+         self.tx.collection('contains').delete_match(clean_serial_match)
 
          new = self.tx.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials], return_new=True)
          #self.tx.commit_transaction()
@@ -433,6 +444,12 @@ class SerialEventManager:
               for data in serial.data:
                  if step.form_field_key == data.form_field_key:
                     data.value = step.value
+         confirm_serial_match = dict(_from=f'Batch/{self.event.info.active_batch_key}', from_serial=serial.key)
+         confirm_serial_update = dict(_from=serial.id)
+         self.tx.collection('contains').update_match(confirm_serial_match, confirm_serial_update)
+
+      clean_serial_match = dict(_from=f'Batch/{self.event.info.active_batch_key}')
+      self.tx.collection('contains').delete_match(clean_serial_match)
 
       self.tx.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials])
 
