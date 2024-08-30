@@ -39,23 +39,21 @@
               :disable="!job.active_batch_key"
               @click="show_serial_form = props.row"
             >
-              {{ $t('add') }}
+              {{ $t('edit') }}
             </q-btn>
           </q-td>
         </template>
       </q-table>
 
       <BomComponentSerialForm
-        :show="show_serial_form !== null"
-        :component_code="show_serial_form?.component_code"
-        :component_key="show_serial_form?.component_key"
-        :batch_qt="show_serial_form?.batch_qt"
+        :show="!!show_serial_form"
+        :bom_line="show_serial_form"
         :batch_key="job.active_batch_key"
         :wo_key="job.wo_key"
         mode="new"
         @close="
           () => {
-            show_serial_form = null;
+            show_serial_form = false;
             refreshBom();
           }
         "
@@ -172,7 +170,7 @@ export default {
       bom_type: 'job_bom',
       bom_types: ['job_bom', 'wo_bom'],
       show_lot_input: false,
-      show_serial_form: [],
+      show_serial_form: false,
       show_all_serial_form: false,
       loading: false,
     };
