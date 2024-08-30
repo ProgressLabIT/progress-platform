@@ -176,7 +176,7 @@ const product = {
       });
     },
 
-    saveProductChanges(
+    async saveProductChanges(
       context,
       {
         new_product_data,
@@ -199,6 +199,62 @@ const product = {
 
       // Initialize requests queue
       const promises = [];
+
+      // For each field, add / delete files
+      for (const field of new_product_data.metadata) {
+        // Check for file fields and return only those that have updates
+        const isFileType =
+          context.getters.getCustomFieldByKey(field.custom_field_key).type ==
+          'files';
+        if (isFileType) {
+          let to_add = [];
+          let to_delete = [];
+
+          field.value?.forEach((file, index, fileslist) => {
+            if (file.delete) {
+              to_delete.push(file.name);
+            } else if (file.temp) {
+              to_add.push(file.content);
+              // Leave only name and size properties to be saved in the db
+              fileslist[index] = { name: file.name, size: file.size };
+            }
+          });
+
+          const target = {
+            bucket: 'product',
+            object_key: product_key,
+            subfolder: `meta/${field.custom_field_key}`,
+          };
+
+          if (to_delete.length) {
+            try {
+              await api.delete('files', {
+                filenames: to_delete,
+                ...target,
+              });
+            } catch (error) {
+              console.log(error);
+              window.alert(error);
+            }
+          }
+
+          if (to_add.length) {
+            const add_body = new FormData();
+            Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
+            to_add.forEach((file) => add_body.append('contents', file));
+            try {
+              await api.post('/files', add_body, {
+                headers: {
+                  'Content-type': 'multipart/form-data',
+                },
+              });
+            } catch (error) {
+              console.log(error);
+              window.alert(error);
+            }
+          }
+        }
+      }
 
       // Queue api calls to delete product docs
       if (deleted_docs != null) {
