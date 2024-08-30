@@ -10,7 +10,13 @@
         <q-card-section>
           <div class="row justify-between items-center">
             <div class="text-h2 display highlight text-center">
-              {{ serial_labels[index] }}
+              {{ $t('serial') + ' #' + serial_labels[index] }}
+            </div>
+            <div
+              class="text-italic text-body2 q-ml-md text-low"
+              v-if="!batch_serials[index]?.code ?? false"
+            >
+              (TEMP ID)
             </div>
           </div>
         </q-card-section>
@@ -37,9 +43,7 @@
                 ]
               "
               :label="
-                $capitalize(
-                  [$t('serial'), component.component_description].join(' '),
-                )
+                $capitalize([$t('serial'), component.component_code].join(' '))
               "
               :product_key="component.component_key"
               :loading="loading"

@@ -107,12 +107,8 @@ export default {
       type: Boolean,
       default: true,
     },
-    component_code: {
-      type: String,
-      required: true,
-    },
-    component_key: {
-      type: String,
+    bom_line: {
+      type: Object,
       required: true,
     },
     batch_key: {
@@ -122,10 +118,6 @@ export default {
     wo_key: {
       type: String,
       required: true,
-    },
-    component_qt: {
-      type: Number,
-      default: null,
     },
   },
 
@@ -149,13 +141,14 @@ export default {
     session_data() {
       return this.$store.state.session;
     },
-
+    component_code() {
+      return this.bom_line.component_code;
+    },
+    component_key() {
+      return this.bom_line.component_key;
+    },
     component_per_product() {
-      if (this.component_qt > 0) {
-        return this.component_qt;
-      } else {
-        return 0;
-      }
+      return this.bom_line.batch_qt;
     },
   },
 
