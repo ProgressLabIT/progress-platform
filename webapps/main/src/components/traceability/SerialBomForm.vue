@@ -1,5 +1,13 @@
 <template>
-  <BaseDialog :show="show">
+  <BaseDialog
+    :show="show"
+    @keydown.esc="
+      {
+        saving = false;
+        $emit('close');
+      }
+    "
+  >
     <q-card
       square
       class="surface1 q-pa-md"

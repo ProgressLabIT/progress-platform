@@ -1,5 +1,13 @@
 <template>
-  <BaseDialog :show="show">
+  <BaseDialog
+    :show="show"
+    @keydown.esc="
+      {
+        saving = false;
+        $emit('close');
+      }
+    "
+  >
     <q-card
       square
       class="surface1 q-pa-md"
@@ -36,10 +44,7 @@
               :selection_qt="component_per_product"
               :filter_used="true"
               :filtered_values="booked_serials"
-              :disable="
-                serialModel[serial._id]?.length >= component_per_product &&
-                !replace_serials[serial._id]
-              "
+              :disable="disabledComponent(serial._id)"
               @select="(selection) => onSerialSelection(selection, serial._id)"
             >
             </BaseAutocompleteSerial>
@@ -226,6 +231,11 @@ export default {
       }
     },
 
+    disabledComponent(serial_id) {
+      this.serialModel[serial_id]?.length >= this.component_per_product &&
+        !this.replace_serials[serial_id];
+    },
+
     onSerialSelection(selectedSerials, selected_key) {
       let temp_booked_serials = new Array();
 
@@ -250,7 +260,6 @@ export default {
       }
 
       this.booked_serials = temp_booked_serials;
-      console.log(this.booked_serials);
     },
 
     cancel() {

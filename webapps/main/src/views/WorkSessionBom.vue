@@ -89,7 +89,7 @@
           >
           </q-radio>
         </div>
-        <div class="col-auto" v-if="traceability_enabled">
+        <div v-if="traceability_enabled" class="col-auto">
           <q-btn
             size="md"
             padding="lg xl"
@@ -225,6 +225,7 @@ export default {
                 ...i,
                 batch_qt: i.qt * this.job.active_batch_qt,
                 job_qt: i.qt * this.job.qt_planned,
+                component_qt: i.qt,
               };
             })
         : [];
