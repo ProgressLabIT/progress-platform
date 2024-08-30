@@ -305,6 +305,7 @@
             >
               <FormField
                 :field="field"
+                :root-path="`/media/product/${product_key}/meta/${field.custom_field_key}`"
                 dense
                 :disable="!editMode"
                 class="col"
