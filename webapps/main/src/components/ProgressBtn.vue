@@ -482,54 +482,6 @@ export default {
       };
     },
 
-    async declareCustomBatch() {
-      let customQty = await this.getCustomQuantity();
-
-      if (customQty.batchQuantity === 0) {
-        return;
-      }
-
-      let missing_serial = false;
-      for (const job_bom of this.job.job_bom) {
-        if (job_bom?.traceability_mandatory) {
-          let declared = job_bom?.serials_declared_qt | 0;
-          let required = (job_bom?.qt | 0) * customQty;
-          missing_serial |= declared < required;
-        }
-      }
-
-      if (missing_serial && this.traceability_enabled) {
-        // TODO: Make sure alert is only if traceability is mandatory
-        window.alert(this.$t('batch_declare_component_serials'));
-        return;
-      }
-
-      let willStopSession = false;
-      const isCompletingJob =
-        customQty.batchQuantity === customQty.remainingTotalQuantity;
-      if (isCompletingJob) {
-        if (!window.confirm(this.confirm_job_done_message)) {
-          return;
-        }
-        willStopSession = true;
-      } else if (
-        !this.job.next_batch_available ||
-        customQty.batchQuantity === customQty.maxDeclarableQuantity
-      ) {
-        if (!window.confirm(this.confirm_stop_session_message)) {
-          return;
-        }
-        willStopSession = true;
-      }
-
-      await this.$store.dispatch('declareBatch', {
-        batch_qt: customQty.batchQuantity,
-      });
-      if (willStopSession) {
-        this.$router.push({ name: 'userJobs' });
-      }
-    },
-
     goToStep(step_key) {
       this.current_step_key = step_key;
     },
