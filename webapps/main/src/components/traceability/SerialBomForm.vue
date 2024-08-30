@@ -60,9 +60,13 @@
               :filter_used="true"
               :filtered_values="booked_serials"
               :disable="
-                serialModel[
+                (serialModel[
                   [serial_ids[index], component.component_key].join(' ')
-                ]?.length >= component_qt[component.component_key] &&
+                ]?.length >= component_qt[component.component_key] ||
+                  (component_qt[component.component_key] === 1 &&
+                    serialModel[
+                      [serial_ids[index], component.component_key].join(' ')
+                    ])) &&
                 !replace_serials[
                   [serial_ids[index], component.component_key].join(' ')
                 ]
