@@ -55,6 +55,7 @@
               v-for="link in sorted_links"
               :key="link.route_name"
               :to="{ name: link.route_name }"
+              :class="{ 'q-px-sm': link.item_count }"
             >
               <div class="row items-center justify-start display">
                 <div
@@ -70,7 +71,7 @@
                     v-if="link.route_name === 'jobIssues'"
                     size="9px"
                     :color="getItemCountColor(link)"
-                    class="q-ml-sm weight-bold text-body2"
+                    class="q-ml-xs weight-bold text-body2"
                   >
                     {{ link.item_count }}
                   </q-chip>
@@ -78,7 +79,7 @@
                     v-else
                     size="xs"
                     :color="getItemCountColor(link)"
-                    class="q-ml-sm weight-bold text-body2"
+                    class="q-ml-xs weight-bold text-body2"
                   >
                     {{ link.item_count }}
                   </q-avatar>
