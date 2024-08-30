@@ -113,7 +113,8 @@
 </template>
 
 <script setup>
-import { Designer, BLANK_PDF } from '@pdfme/ui';
+import { Designer } from '@pdfme/ui';
+import { BLANK_PDF } from '@pdfme/common';
 import { cloneDeep } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
