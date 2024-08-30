@@ -35,6 +35,7 @@ export default {
     label: 'bom',
     missing: 'no bill of materials',
     quantity_type: {
+      item: 'item',
       job: 'job',
       batch: 'batch',
       radio_label: 'show quantity for:',

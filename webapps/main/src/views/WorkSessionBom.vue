@@ -6,10 +6,11 @@
 
     <template v-else>
       <q-table
-        id="bom"
+        id="job-bom"
         ref="bom"
         class="my-sticky-header-table col"
         card-class="surface1 shadow-0"
+        row-key="_key"
         virtual-scroll
         :loading="loading"
         :rows="bom"
@@ -38,14 +39,14 @@
               :disable="!job.active_batch_key"
               @click="show_serial_form[props.row.component_key] = true"
             >
-              {{ $t('serials') }}
+              {{ $t('add') }}
             </q-btn>
 
             <BomComponentSerialForm
               :show="show_serial_form[props.row.component_key] === true"
               :component_code="props.row.component_code"
               :component_key="props.row.component_key"
-              :component_qt="props.row.component_qt"
+              :batch_qt="props.row.batch_qt"
               :batch_key="job.active_batch_key"
               :wo_key="job.wo_key"
               mode="new"
@@ -63,45 +64,46 @@
 
       <q-separator />
 
-      <div class="row items-center col-auto q-px-md text-body2">
-        <span class="q-mr-3">
-          {{ $capitalize($t('bom.quantity_type.radio_label')) }}
-        </span>
-        <q-radio
-          v-for="qt_type in qt_types"
-          :key="qt_type"
-          v-model="quantity_type"
-          :val="qt_type"
-          :label="$t('bom.quantity_type.' + qt_type).toUpperCase()"
-        >
-        </q-radio>
-        <q-space />
-        <span class="q-mr-3">
-          {{ $capitalize($t('bom.bom_type.radio_label')) }}
-        </span>
-        <q-radio
-          v-for="b_type in bom_types"
-          :key="b_type"
-          v-model="bom_type"
-          :val="b_type"
-          :label="$t('bom.bom_type.' + b_type).toUpperCase()"
-        >
-        </q-radio>
-
-        <q-space />
-        <q-btn
-          v-if="traceability_enabled"
-          size="sm"
-          color="theme-blue"
-          :loading="loading"
-          :disable="!job.active_batch_key"
-          @click="show_all_serial_form = true"
-        >
-          {{ $t('serial_field.bom_component') }}
-        </q-btn>
-        <q-btn size="sm" color="theme-blue" @click="$refs.bom.scrollTo(0)">
-          {{ $t('scroll.to_top') }}
-        </q-btn>
+      <div
+        class="row items-center col-auto q-px-md text-body2 q-col-qutter-md q-pa-md"
+      >
+        <div class="col">
+          <span class="q-mr-3">
+            {{ $capitalize($t('bom.quantity_type.radio_label')) }}
+          </span>
+          <q-radio
+            v-for="qt_type in qt_types"
+            :key="qt_type"
+            v-model="quantity_type"
+            :val="qt_type"
+            :label="$t('bom.quantity_type.' + qt_type).toUpperCase()"
+          >
+          </q-radio>
+          <q-space />
+          <span class="q-mr-3">
+            {{ $capitalize($t('bom.bom_type.radio_label')) }}
+          </span>
+          <q-radio
+            v-for="b_type in bom_types"
+            :key="b_type"
+            v-model="bom_type"
+            :val="b_type"
+            :label="$t('bom.bom_type.' + b_type).toUpperCase()"
+          >
+          </q-radio>
+        </div>
+        <div class="col-auto" v-if="traceability_enabled">
+          <q-btn
+            size="md"
+            padding="lg xl"
+            color="theme-blue"
+            :loading="loading"
+            :disable="!job.active_batch_key"
+            @click="show_all_serial_form = true"
+          >
+            {{ $t('serial_field.bom_component') }}
+          </q-btn>
+        </div>
       </div>
 
       <SerialBomForm
@@ -166,8 +168,8 @@ export default {
 
   data() {
     return {
-      quantity_type: 'job',
-      qt_types: ['job', 'batch'],
+      quantity_type: 'batch',
+      qt_types: ['item', 'batch', 'job'],
       bom_type: 'job_bom',
       bom_types: ['job_bom', 'wo_bom'],
       show_lot_input: false,
@@ -201,7 +203,7 @@ export default {
         },
         {
           name: 'qt',
-          field: 'qt',
+          field: this.display_qt,
           label: this.$t('quantity.short').toUpperCase(),
         },
         {
@@ -220,22 +222,29 @@ export default {
 
     bom() {
       return Object.hasOwn(this.job, this.bom_type)
-        ? this.job[this.bom_type].map((i) => {
-            // multiply items by job quantity. Does not apply to tools and safety items
-            let quantity = i.qt;
-            const factor =
-              this.quantity_type === 'job'
-                ? this.job.qt_planned
-                : this.job.active_batch_qt;
-            quantity = i.qt * factor;
-            let component_qt = i.qt;
-            return {
-              ...i,
-              qt: quantity,
-              component_qt: component_qt,
-            };
-          })
+        ? this.job.wo_bom
+            .filter((i) => {
+              return this.bom_type === 'wo_bom'
+                ? true
+                : i.phase_key === this.job.phase_key;
+            })
+            .map((i) => {
+              // line quantity is per item
+              return {
+                ...i,
+                batch_qt: i.qt * this.job.active_batch_qt,
+                job_qt: i.qt * this.job.qt_planned,
+              };
+            })
         : [];
+    },
+
+    display_qt() {
+      return {
+        item: 'qt',
+        batch: 'batch_qt',
+        job: 'job_qt',
+      }[this.quantity_type];
     },
 
     traceability_enabled() {
@@ -258,10 +267,8 @@ export default {
 };
 </script>
 
-<style lang="sass" scoped>
-.my-sticky-header-table
-  height: 400px
-
+<style lang="sass">
+#job-bom
   .q-table__top,
   .q-table__bottom,
   thead tr:first-child th /* bg color is important for th; just specify one */

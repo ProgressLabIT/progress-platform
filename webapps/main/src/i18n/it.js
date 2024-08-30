@@ -36,6 +36,7 @@ export default {
     label: 'distinta',
     missing: 'nessuna distinta',
     quantity_type: {
+      item: 'pezzo',
       job: 'lavoro',
       batch: 'lotto',
       radio_label: 'mostra quantità per:',
@@ -863,7 +864,7 @@ export default {
   declare_all_serials: 'Inserisci tutti i seriali del batch per continuare',
   traceability: {
     enabled: 'abilita tracciabilità',
-    mandatory: 'tracciabilità obblicatoria',
+    mandatory: 'tracciabilità obbligatoria',
     include_deleted: 'includi cancellati',
     options: {
       none: 'Nessuna',

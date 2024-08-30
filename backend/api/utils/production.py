@@ -70,22 +70,6 @@ class Queries:
     FOR j IN Job
     FILTER j._key == @job_key
 
-    LET job_bom = (
-      FOR bom_component IN j.job_bom
-
-      LET declared_serials = (
-          FOR linked_serial IN contains
-              FILTER linked_serial.replaced == false
-              && linked_serial.component_key == bom_component.component_key
-              && linked_serial.wo_key == j.wo_key
-
-
-              return linked_serial
-      )
-
-      return MERGE(bom_component, { serials_declared_qt: COUNT(declared_serials) })
-    )
-
     LET wo_bom = (
       FOR bom_component IN DOCUMENT(WorkOrder, j.wo_key).wo_bom
 
@@ -94,8 +78,6 @@ class Queries:
               FILTER linked_serial.replaced == false
               && linked_serial.component_key == bom_component.component_key
               && linked_serial.wo_key == j.wo_key
-
-
               return linked_serial
       )
 
@@ -107,7 +89,7 @@ class Queries:
     LET phase_notes = DOCUMENT(Phase, j.phase_key).notes
     LET order_notes = DOCUMENT(WorkOrder, j.wo_key).notes
     LET message_count = COUNT(FOR m IN message FILTER m._to == CONCAT('WorkOrder/', j.wo_key) RETURN 1)
-    RETURN MERGE(j, { wo_bom, job_bom, issue_count, product_notes, phase_notes, order_notes, message_count })
+    RETURN MERGE(j, { wo_bom, issue_count, product_notes, phase_notes, order_notes, message_count })
   """
 
 
