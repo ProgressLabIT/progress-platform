@@ -194,12 +194,6 @@ export default {
           align: 'left',
         },
         {
-          name: 'item_type',
-          field: 'item_type',
-          label: this.$t('type').toUpperCase(),
-          align: 'left',
-        },
-        {
           name: 'phase_name',
           field: 'phase_name',
           label: this.$t('phase.short', 1).toUpperCase(),
