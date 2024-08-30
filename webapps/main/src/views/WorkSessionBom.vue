@@ -204,12 +204,6 @@ export default {
           label: this.$t('quantity.short').toUpperCase(),
         },
         {
-          name: 'serials_declared_qt',
-          field: 'serials_declared_qt',
-          label: this.$t('serials_declared').toUpperCase(),
-        },
-
-        {
           name: 'serials',
           field: 'serials',
           label: this.$t('serials').toUpperCase(),
