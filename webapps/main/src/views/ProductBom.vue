@@ -1,6 +1,6 @@
 <template>
   <div class="row full-height q-py-md">
-    <div class="column col-3 justify-between q-px-lg q-pb-sm">
+    <div class="column full-height col-3 justify-between q-px-lg q-pb-sm">
       <div>
         <div class="text-h1 display highlight q-mb-xs">
           {{ product_metadata.code }}
@@ -37,9 +37,9 @@
       </div>
     </div>
 
-    <div class="col-9 column">
+    <div class="col-9 column full-height">
       <q-table
-        id="bom"
+        id="product-bom"
         ref="bom"
         v-model:selected="delete_lines"
         square
@@ -55,7 +55,6 @@
         :pagination="{ rowsPerPage: 0 }"
         :rows-per-page-options="[0]"
         :virtual-scroll-sticky-size-start="48"
-        hide-bottom
       >
         <template #body-cell-traceability_mandatory="props">
           <q-td :props="props">
@@ -74,43 +73,40 @@
           <div class="nowrap">{{ value }}</div>
         </template>
 
-        <template #bottom-row>
-          <div class="absolute-bottom">
-            <q-separator></q-separator>
-            <div
-              class="row full-width items-center justify-between q-px-md"
-              style="height: 48px"
-            >
-              <div class="col-4">
-                <q-btn
-                  v-show="editMode"
-                  size="sm"
-                  padding="xs lg"
-                  color="theme-red"
-                  icon="mdi-delete"
-                  :label="$t('bom.delete_selected')"
-                  @click="removeBomLines"
-                >
-                </q-btn>
-              </div>
+        <template #bottom>
+          <div
+            class="row full-width items-center justify-between q-px-md"
+            style="height: 48px"
+          >
+            <div class="col-4">
+              <q-btn
+                v-show="editMode"
+                size="sm"
+                padding="xs lg"
+                color="theme-red"
+                icon="mdi-delete"
+                :label="$t('bom.delete_selected')"
+                @click="removeBomLines"
+              >
+              </q-btn>
+            </div>
 
-              <div class="smaller col-4 text-center">
-                {{ filtered_bom.length }} {{ $t('of') }} {{ temp_bom.length }}
-                {{ $t('element', 2).toUpperCase() }}
-              </div>
+            <div class="smaller col-4 text-center">
+              {{ filtered_bom.length }} {{ $t('of') }} {{ temp_bom.length }}
+              {{ $t('element', 2).toUpperCase() }}
+            </div>
 
-              <div class="col-4 row justify-end">
-                <q-btn
-                  v-show="editMode"
-                  size="sm"
-                  padding="xm lg"
-                  color="theme-blue"
-                  icon="mdi-plus"
-                  :label="$t('bom.add_line')"
-                  @click="openItemSearch"
-                >
-                </q-btn>
-              </div>
+            <div class="col-4 row justify-end">
+              <q-btn
+                v-show="editMode"
+                size="sm"
+                padding="xm lg"
+                color="theme-blue"
+                icon="mdi-plus"
+                :label="$t('bom.add_line')"
+                @click="openItemSearch"
+              >
+              </q-btn>
             </div>
           </div>
         </template>
@@ -206,7 +202,7 @@ import BaseAutocompleteProduct from 'components/BaseAutocompleteProduct.vue';
 // import { throttle as _throttle } from 'lodash';
 
 export default {
-  name: 'BillOfMaterials',
+  name: 'ProductBoM',
 
   components: {
     BaseDialog,
@@ -488,9 +484,13 @@ export default {
 </script>
 
 <style lang="sass">
-#bom
+#product-bom
   .q-table__top,
   .q-table__bottom,
   thead tr:first-child th /* bg color is important for th; just specify one */
     background-color: var(--surface-2)
+
+  tbody:last-child .absolute-bottom
+    background-color: var(--surface-2)
+    z-index: 999
 </style>
