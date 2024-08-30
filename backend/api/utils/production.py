@@ -74,14 +74,13 @@ class Queries:
       FOR bom_component IN DOCUMENT(WorkOrder, j.wo_key).wo_bom
 
       LET declared_serials = (
-          FOR linked_serial IN contains
-              FILTER linked_serial.replaced == false
-              && linked_serial.component_key == bom_component.component_key
-              && linked_serial.wo_key == j.wo_key
-              return linked_serial
+        FOR linked_serial IN contains
+          FILTER linked_serial.replaced == false
+          && linked_serial.component_key == bom_component.component_key
+          && linked_serial.wo_key == j.wo_key
+          return linked_serial
       )
-
-      return MERGE(bom_component, { serials_declared_qt: COUNT(declared_serials) })
+      RETURN MERGE(bom_component, { declared_serials })
     )
 
     LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == j._id RETURN 1)
