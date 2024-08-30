@@ -21,8 +21,8 @@
               {{ $t('serial') + ' #' + serial_labels[index] }}
             </div>
             <div
-              class="text-italic text-body2 q-ml-md text-low"
               v-if="!batch_serials[index]?.code ?? false"
+              class="text-italic text-body2 q-ml-md text-low"
             >
               (TEMP ID)
             </div>

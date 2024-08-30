@@ -44,7 +44,11 @@
               :selection_qt="component_per_product"
               :filter_used="true"
               :filtered_values="booked_serials"
-              :disable="disabledComponent(serial._id)"
+              :disable="
+                (serialModel[serial._id].length >= component_per_product ||
+                  (component_per_product === 1 && serialModel[serial._id])) &&
+                !replace_serials[serial._id]
+              "
               @select="(selection) => onSerialSelection(selection, serial._id)"
             >
             </BaseAutocompleteSerial>
@@ -114,7 +118,7 @@ export default {
     },
     bom_line: {
       type: Object,
-      required: true,
+      default: null,
     },
     batch_key: {
       type: String,
@@ -153,7 +157,7 @@ export default {
       return this.bom_line.component_key;
     },
     component_per_product() {
-      return this.bom_line.batch_qt;
+      return this.bom_line.component_qt;
     },
   },
 
@@ -229,11 +233,6 @@ export default {
           }
         }
       }
-    },
-
-    disabledComponent(serial_id) {
-      this.serialModel[serial_id]?.length >= this.component_per_product &&
-        !this.replace_serials[serial_id];
     },
 
     onSerialSelection(selectedSerials, selected_key) {

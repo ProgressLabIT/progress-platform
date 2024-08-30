@@ -37,7 +37,7 @@
               color="theme-blue"
               :loading="loading"
               :disable="!job.active_batch_key"
-              @click="show_serial_form = props.row"
+              @click="serial_form_bom_line = props.row"
             >
               {{ $t('edit') }}
             </q-btn>
@@ -46,14 +46,14 @@
       </q-table>
 
       <BomComponentSerialForm
-        :show="!!show_serial_form"
-        :bom_line="show_serial_form"
+        :show="!!serial_form_bom_line"
+        :bom_line="serial_form_bom_line"
         :batch_key="job.active_batch_key"
         :wo_key="job.wo_key"
         mode="new"
         @close="
           () => {
-            show_serial_form = false;
+            serial_form_bom_line = null;
             refreshBom();
           }
         "
@@ -170,7 +170,7 @@ export default {
       bom_type: 'job_bom',
       bom_types: ['job_bom', 'wo_bom'],
       show_lot_input: false,
-      show_serial_form: false,
+      serial_form_bom_line: null,
       show_all_serial_form: false,
       loading: false,
     };
