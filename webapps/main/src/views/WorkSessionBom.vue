@@ -247,9 +247,7 @@ export default {
   methods: {
     refreshBom() {
       this.loading = true;
-      setTimeout(() => {
-        this.refreshWO();
-      }, 1500);
+      this.refreshWO();
     },
 
     async refreshWO() {
