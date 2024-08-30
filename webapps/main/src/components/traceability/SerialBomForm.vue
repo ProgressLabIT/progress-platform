@@ -215,10 +215,6 @@ export default {
   },
 
   methods: {
-    getComponentModel() {
-      return [];
-    },
-
     async getBatchSerials() {
       this.loading = true;
       const { data: batch_serials } = await this.$api.get('serial-batch', {
