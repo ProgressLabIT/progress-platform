@@ -37,30 +37,29 @@
               color="theme-blue"
               :loading="loading"
               :disable="!job.active_batch_key"
-              @click="show_serial_form[props.row.component_key] = true"
+              @click="show_serial_form = props.row"
             >
               {{ $t('add') }}
             </q-btn>
-
-            <BomComponentSerialForm
-              :show="show_serial_form[props.row.component_key] === true"
-              :component_code="props.row.component_code"
-              :component_key="props.row.component_key"
-              :batch_qt="props.row.batch_qt"
-              :batch_key="job.active_batch_key"
-              :wo_key="job.wo_key"
-              mode="new"
-              @close="
-                () => {
-                  show_serial_form[props.row.component_key] = false;
-                  refreshBom();
-                }
-              "
-            >
-            </BomComponentSerialForm>
           </q-td>
         </template>
       </q-table>
+
+      <BomComponentSerialForm
+        :show="show_serial_form !== null"
+        :component_code="show_serial_form?.component_code"
+        :component_key="show_serial_form?.component_key"
+        :batch_qt="show_serial_form?.batch_qt"
+        :batch_key="job.active_batch_key"
+        :wo_key="job.wo_key"
+        mode="new"
+        @close="
+          () => {
+            show_serial_form = null;
+            refreshBom();
+          }
+        "
+      />
 
       <q-separator />
 
