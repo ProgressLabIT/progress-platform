@@ -723,7 +723,12 @@ export default {
     'Disponibile in assenza di quantità attiva e con progresso > 0',
   reset_job_success: 'Lavoro resettato correttamente',
   counter: 'Contatore',
-  counter_new: 'Nuovo contatore',
+  counter_add: 'Aggiungi contatore',
+
+  counter_delete: 'Elimina contatore',
+  counter_delete_success: 'Contatore eliminato',
+  counter_delete_text:
+    'Il contatore verrà eliminato, ma i seriali già registrati non verranno cancellati.',
   unassigned: 'non assegnato | non assegnati',
   unsaved: 'non salvato',
   undo: 'ripristina',

@@ -7,7 +7,7 @@
           <div class="col-4">
             <q-input
               v-model="temp_data.name"
-              :rules="[(value) => !!value || $t('counter_required_alert')]"
+              :rules="[(value) => !!value || $t('field_required_alert')]"
               filled
               :disable="!editMode"
               :label="$t('name')"

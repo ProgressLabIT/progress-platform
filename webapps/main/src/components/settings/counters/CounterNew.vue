@@ -1,12 +1,12 @@
 <template>
   <BaseActionFormCard
-    :title="$t('counter_new')"
+    :title="$t('counter_add')"
     @submit="addCounter"
     @cancel="$emit('close')"
   >
     <q-input
       v-model="new_counter.name"
-      :rules="[(value) => !!value || $t('counter_required_alert')]"
+      :rules="[(value) => !!value || $t('field_required_alert')]"
       hide-bottom-space
       autogrow
       :label="$t('name')"

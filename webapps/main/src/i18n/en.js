@@ -704,7 +704,11 @@ export default {
   total_cost: 'total cost',
   type: 'Type',
   counter: 'Counter',
-  counter_new: 'New counter',
+  counter_add: 'Add counter',
+  counter_delete: 'Delete counter',
+  counter_delete_success: 'Counter deleted',
+  counter_delete_text:
+    'The counter will be deleted, but serials already recorded will not be deleted.',
   next_tick: 'Tick',
   template: 'Template',
   frequency: 'Frequency',
