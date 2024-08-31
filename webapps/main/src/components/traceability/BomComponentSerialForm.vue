@@ -46,7 +46,9 @@
               :filtered_values="booked_serials"
               :disable="
                 (serialModel[serial._id].length >= component_per_product ||
-                  (component_per_product === 1 && serialModel[serial._id])) &&
+                  (component_per_product === 1 &&
+                    serialModel[serial._id] &&
+                    serialModel[serial._id]?._key)) &&
                 !replace_serials[serial._id]
               "
               @select="(selection) => onSerialSelection(selection, serial._id)"

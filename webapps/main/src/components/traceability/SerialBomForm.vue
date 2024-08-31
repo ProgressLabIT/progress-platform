@@ -58,7 +58,7 @@
               :can_create="true"
               :selection_qt="component_qt[component.component_key]"
               :filter_used="true"
-              :filtered_values="booked_serials"
+              :filtered_values="booked_serials[component.component_key]"
               :disable="
                 (serialModel[
                   [serial_ids[index], component.component_key].join(' ')
@@ -66,7 +66,7 @@
                   (component_qt[component.component_key] === 1 &&
                     serialModel[
                       [serial_ids[index], component.component_key].join(' ')
-                    ])) &&
+                    ]?._key)) &&
                 !replace_serials[
                   [serial_ids[index], component.component_key].join(' ')
                 ]
@@ -75,6 +75,7 @@
                 (selection) =>
                   onSerialSelection(
                     selection,
+                    component.component_key,
                     [serial_ids[index], component.component_key].join(' '),
                   )
               "
@@ -301,12 +302,15 @@ export default {
             component_key: child.product_key,
             batch_key: this.batch_key,
           });
-          this.booked_serials.push(child.code);
+          if (!this.booked_serials[child.product_key]) {
+            this.booked_serials[child.product_key] = [];
+          }
+          this.booked_serials[child.product_key].push(child.code);
         }
       }
     },
 
-    onSerialSelection(selectedSerials, selected_key) {
+    onSerialSelection(selectedSerials, component_key, selected_key) {
       let temp_booked_serials = [];
 
       if (Array.isArray(selectedSerials)) {
@@ -319,20 +323,21 @@ export default {
 
       for (const serial_from of this.batch_serials) {
         for (const component of this.bom_components) {
-          const key = [serial_from._id, component.component_key].join(' ');
-          if (this.serialModel[key] && selected_key !== key) {
-            if (Array.isArray(this.serialModel[key])) {
-              for (const serial_to of this.serialModel[key]) {
-                temp_booked_serials.push(serial_to.label);
+          if (component?.component_key === component_key) {
+            const key = [serial_from._id, component.component_key].join(' ');
+            if (this.serialModel[key] && selected_key !== key) {
+              if (Array.isArray(this.serialModel[key])) {
+                for (const serial_to of this.serialModel[key]) {
+                  temp_booked_serials.push(serial_to.label);
+                }
+              } else {
+                temp_booked_serials.push(this.serialModel[key].label);
               }
-            } else {
-              temp_booked_serials.push(this.serialModel[key].label);
             }
           }
         }
       }
-
-      this.booked_serials = temp_booked_serials;
+      this.booked_serials[component_key] = temp_booked_serials;
     },
 
     cancel() {
