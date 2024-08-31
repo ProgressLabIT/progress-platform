@@ -269,6 +269,22 @@ export default {
       return serials;
     },
 
+    checkMissingSerials() {
+      let missing_serial = false;
+      for (const wo_bom of this.job.wo_bom) {
+        if (
+          wo_bom?.traceability_mandatory &&
+          this.job.phase_key === wo_bom.phase_key
+        ) {
+          let declared = wo_bom?.declared_serials?.length | 0;
+          let required = (wo_bom?.qt | 0) * this.job.active_batch_qt;
+          missing_serial |= declared < required;
+        }
+      }
+
+      return missing_serial;
+    },
+
     async completeStep() {
       let missing_mandatory_fields = false;
 
@@ -310,16 +326,7 @@ export default {
           return;
         }
 
-        let missing_serial = false;
-        for (const job_bom of this.job.job_bom) {
-          if (job_bom?.traceability_mandatory) {
-            let declared = job_bom?.serials_declared_qt | 0;
-            let required = (job_bom?.qt | 0) * this.job.active_batch_qt;
-            missing_serial |= declared < required;
-          }
-        }
-
-        if (missing_serial && this.traceability_enabled) {
+        if (this.checkMissingSerials() && this.traceability_enabled) {
           window.alert(this.$t('batch_declare_component_serials'));
           return;
         }
@@ -366,16 +373,7 @@ export default {
       let can_proceed = true;
       const current_batch_was_last = this.current_batch_is_last;
 
-      let missing_serial = false;
-      for (const job_bom of this.job.job_bom) {
-        if (job_bom?.traceability_mandatory) {
-          let declared = job_bom?.serials_declared_qt | 0;
-          let required = (job_bom?.qt | 0) * this.job.active_batch_qt;
-          missing_serial |= declared < required;
-        }
-      }
-
-      if (missing_serial && this.traceability_enabled) {
+      if (this.checkMissingSerials() && this.traceability_enabled) {
         window.alert(this.$t('batch_declare_component_serials'));
         return;
       }
