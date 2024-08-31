@@ -259,7 +259,10 @@ class SerialEventManager:
        product = self.tx.collection('Product').get(product_key)
 
        serial_data = Serial()
-       setattr(serial_data, 'counter_key', product['counter_key'])
+       if 'counter_key' in product:
+          setattr(serial_data, 'counter_key', product['counter_key'])
+       else:
+          setattr(serial_data, 'counter_key', None)
        setattr(serial_data, 'product_key', product_key)
 
        phases_data = self.retrieve_serial_phases_data(product_key)

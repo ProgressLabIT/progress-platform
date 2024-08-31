@@ -34,7 +34,7 @@ function createEvent(
     completed_batch_qt = null,
     step_changed_qt = null,
     batch_serials = null,
-    new_active_batch_qt = null
+    new_active_batch_qt = null,
   },
 ) {
   const user_key = session_state.user._key;
@@ -57,7 +57,7 @@ function createEvent(
     timestamp, // ISO format
     batch_serials: serials,
     step_changed_qt: step_changed_qt,
-    new_active_batch_qt
+    new_active_batch_qt,
   };
 
   return event;
@@ -137,9 +137,14 @@ const traceability = {
         state.current_batch_data?._key === prev_data_key
       ) {
         for (const prev_obj of prev_data) {
-          state.current_batch_data.step_data.find((obj) => {
-            return obj._key === prev_obj._key;
-          }).form_data = prev_obj.form_data;
+          let prev_job_state = state.current_batch_data.step_data.find(
+            (obj) => {
+              return obj._key === prev_obj._key;
+            },
+          );
+          if (prev_job_state && prev_job_state.form_data) {
+            prev_job_state.form_data = prev_obj.form_data;
+          }
         }
       }
     },
@@ -239,8 +244,10 @@ const traceability = {
         const batch_resp = await api.get(`batch/${job_data.active_batch_key}`);
         batch_data = batch_resp.data.detail;
       }
-      
-      const { data: batch_serials } = await api.get(`batch/${job_data.active_batch_key}/serials`)
+
+      const { data: batch_serials } = await api.get(
+        `batch/${job_data.active_batch_key}/serials`,
+      );
 
       commit('LOAD_WORKING_JOB_DATA', { job_data, batch_data, batch_serials });
       await dispatch('getIssues', {
@@ -261,11 +268,8 @@ const traceability = {
 
       // Post event and save new data
       api.post('event', event).then((resp) => {
-        const {
-          new_work_session_data,
-          batch_data,
-          job_data
-        } = resp.data.detail;
+        const { new_work_session_data, batch_data, job_data } =
+          resp.data.detail;
 
         commit('START_JOB', {
           new_work_session_data,
@@ -298,25 +302,27 @@ const traceability = {
       const event = createEvent(state, rootState.session, {
         event_type: 'JOB_RESUMED',
         timestamp: now.toISO(),
-        batch_serials
+        batch_serials,
       });
 
       const { data } = await api.post('event', event);
-      const { /* new_work_session_data, */ job_data } = data.detail;
-      commit('UPDATE_JOB', job_data);
+      if (data?.detail) {
+        const { /* new_work_session_data, */ job_data } = data.detail;
+        commit('UPDATE_JOB', job_data);
+      }
       commit('SET_HEARTBEAT', true);
     },
 
     async updateActiveBatch(
       { commit, state, rootState },
-      { newBatchQuantity, batchSerials }
+      { newBatchQuantity, batchSerials },
     ) {
       const now = DT.utc();
       const event = createEvent(state, rootState.session, {
         event_type: 'ACTIVE_BATCH_CHANGED',
         timestamp: now.toISO(),
         new_active_batch_qt: newBatchQuantity,
-        batch_serials: batchSerials
+        batch_serials: batchSerials,
       });
 
       return new Promise((resolve) => {
@@ -326,8 +332,8 @@ const traceability = {
           commit('UPDATE_BATCH', batch_data);
           commit('UPDATE_BATCH_SERIALS', batch_serials);
           resolve();
-        })
-      })
+        });
+      });
     },
 
     async completeStep(
@@ -431,7 +437,7 @@ const traceability = {
         step_key: batchStep._key,
         timestamp: now.toISO(),
         form_data: formData,
-        completed_batch_qt: batchQt
+        completed_batch_qt: batchQt,
       });
 
       const { data } = await api.post('event', event);
@@ -450,7 +456,7 @@ const traceability = {
         const event = createEvent(state, rootState.session, {
           event_type: 'BATCH_COMPLETED',
           timestamp: now.toISO(),
-          completed_batch_qt: batch_qt
+          completed_batch_qt: batch_qt,
         });
 
         api.post('event', event).then((resp) => {
