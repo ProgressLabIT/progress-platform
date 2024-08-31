@@ -46,7 +46,7 @@
                 ]
               "
               :initial_values="
-                serialModel[
+                initalModel[
                   [serial_ids[index], component.component_key].join(' ')
                 ]
               "
@@ -200,6 +200,7 @@ export default {
       saving: false,
       enableSave: false,
       serialModel: [],
+      initalModel: [],
       component_qt: [],
       initialValues: [],
       serial_ids: [],
@@ -253,6 +254,7 @@ export default {
 
     fillInitialData() {
       this.serialModel = [];
+      this.initalModel = [];
       this.initialValues = [];
       this.serial_ids = [];
       this.component_qt = [];
@@ -268,6 +270,7 @@ export default {
           const key = [serial._id, component.component_key].join(' ');
           if (!this.serialModel[key]) {
             this.serialModel[key] = [];
+            this.initalModel[key] = [];
             this.replace_serials[key] = false;
             this.replace_serials_reason[key] = null;
           }
@@ -277,6 +280,7 @@ export default {
           const key = [serial._id, child.product_key].join(' ');
           if (!this.serialModel[key]) {
             this.serialModel[key] = [];
+            this.initalModel[key] = [];
             this.replace_serials[key] = false;
             this.replace_serials_reason[key] = null;
           }
@@ -289,8 +293,10 @@ export default {
           };
           if (this.component_qt[child.product_key] > 1) {
             this.serialModel[key].push(serial_link);
+            this.initalModel[key].push(serial_link);
           } else {
             this.serialModel[key] = serial_link;
+            this.initalModel[key] = serial_link;
           }
 
           this.initialValues.push({

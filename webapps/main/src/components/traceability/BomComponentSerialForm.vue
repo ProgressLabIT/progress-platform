@@ -32,7 +32,7 @@
             <!-- FORM BODY -->
             <BaseAutocompleteSerial
               v-model="serialModel[serial._id]"
-              :initial_values="serialModel[serial._id]"
+              :initial_values="initialModel[serial._id]"
               :label="
                 $capitalize(
                   [$t('serial'), serial?.code | serial._key].join(' '),
@@ -45,7 +45,7 @@
               :filter_used="true"
               :filtered_values="booked_serials"
               :disable="
-                (serialModel[serial._id].length >= component_per_product ||
+                (serialModel[serial._id]?.length >= component_per_product ||
                   (component_per_product === 1 &&
                     serialModel[serial._id] &&
                     serialModel[serial._id]?._key)) &&
@@ -139,6 +139,7 @@ export default {
       saving: false,
       enableSave: false,
       serialModel: [],
+      initialModel: [],
       initialValues: [],
       batch_serials: [],
       replace_serials: [],
@@ -199,12 +200,14 @@ export default {
 
     fillInitialData() {
       this.serialModel = [];
+      this.initialModel = [];
       this.initialValues = [];
       this.replace_serials = [];
       this.booked_serials = [];
       for (const serial of this.batch_serials) {
         if (!this.serialModel[serial._id]) {
           this.serialModel[serial._id] = [];
+          this.initialModel[serial._id] = [];
           this.replace_serials[serial._id] = false;
           this.replace_serials_reason[serial._id] = null;
         }
@@ -219,8 +222,10 @@ export default {
             };
             if (this.component_per_product > 1) {
               this.serialModel[serial._id].push(serial_link);
+              this.initialModel[serial._id].push(serial_link);
             } else {
               this.serialModel[serial._id] = serial_link;
+              this.initialModel[serial._id] = serial_link;
             }
             this.booked_serials.push(child.code);
             this.initialValues.push({
