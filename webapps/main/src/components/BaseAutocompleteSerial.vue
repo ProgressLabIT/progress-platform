@@ -214,12 +214,16 @@ export default {
     },
   },
 
+  watch: {
+    initial_values: {
+      handler() {
+        this.initialize();
+      },
+    },
+  },
+
   created() {
-    this.create_serial_form = false;
-    if (this.work_order || this.product_key) {
-      this.loadSerials();
-      this.last_research = '';
-    }
+    this.initialize();
   },
 
   beforeUnmount() {
@@ -229,6 +233,14 @@ export default {
   },
 
   methods: {
+    initialize() {
+      this.create_serial_form = false;
+      if (this.work_order || this.product_key) {
+        this.loadSerials();
+        this.last_research = '';
+      }
+    },
+
     loadSerials(search_value) {
       this.loading = true;
       this.code_free = false;

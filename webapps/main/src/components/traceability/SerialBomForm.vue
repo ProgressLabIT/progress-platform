@@ -41,14 +41,10 @@
             <BaseAutocompleteSerial
               v-if="component.traceability_level !== null"
               v-model="
-                serialModel[
-                  [serial_ids[index], component.component_key].join(' ')
-                ]
+                serialModel[getComponentLineKey(component.component_key)]
               "
               :initial_values="
-                initalModel[
-                  [serial_ids[index], component.component_key].join(' ')
-                ]
+                initalModel[getComponentLineKey(component.component_key)]
               "
               :label="
                 $capitalize([$t('serial'), component.component_code].join(' '))
@@ -60,23 +56,19 @@
               :filter_used="true"
               :filtered_values="booked_serials[component.component_key]"
               :disable="
-                (serialModel[
-                  [serial_ids[index], component.component_key].join(' ')
-                ]?.length >= component_qt[component.component_key] ||
+                (serialModel[getComponentLineKey(component.component_key)]
+                  ?.length >= component_qt[component.component_key] ||
                   (component_qt[component.component_key] === 1 &&
-                    serialModel[
-                      [serial_ids[index], component.component_key].join(' ')
-                    ]?._key)) &&
-                !replace_serials[
-                  [serial_ids[index], component.component_key].join(' ')
-                ]
+                    serialModel[getComponentLineKey(component.component_key)]
+                      ?._key)) &&
+                !replace_serials[getComponentLineKey(component.component_key)]
               "
               @select="
                 (selection) =>
                   onSerialSelection(
                     selection,
                     component.component_key,
-                    [serial_ids[index], component.component_key].join(' '),
+                    getComponentLineKey(component.component_key),
                   )
               "
             >
@@ -84,28 +76,23 @@
             <q-btn
               v-if="
                 component.traceability_level !== null &&
-                !replace_serials[
-                  [serial_ids[index], component.component_key].join(' ')
-                ]
+                !replace_serials[getComponentLineKey(component.component_key)]
               "
               flat
               round
               icon="mdi-pencil"
               @click="
-                replace_serials[
-                  [serial_ids[index], component.component_key].join(' ')
-                ] = true
+                replace_serials[getComponentLineKey(component.component_key)] =
+                  true
               "
             />
             <q-input
               v-if="
-                replace_serials[
-                  [serial_ids[index], component.component_key].join(' ')
-                ]
+                replace_serials[getComponentLineKey(component.component_key)]
               "
               v-model="
                 replace_serials_reason[
-                  [serial_ids[index], component.component_key].join(' ')
+                  getComponentLineKey(component.component_key)
                 ]
               "
               filled
@@ -233,6 +220,10 @@ export default {
   },
 
   methods: {
+    getComponentLineKey(component_key) {
+      return [this.serial_ids[this.index], component_key].join(' ');
+    },
+
     async getBatchSerials() {
       this.loading = true;
       const { data: batch_serials } = await this.$api.get('serial-batch', {
