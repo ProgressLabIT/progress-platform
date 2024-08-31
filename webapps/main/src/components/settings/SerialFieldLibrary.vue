@@ -103,12 +103,20 @@
       </div>
     </div>
 
-    <BaseDialog :show="show_new_field_form" :no-backdrop-dismiss="false">
+    <BaseDialog
+      :show="show_new_field_form"
+      :no-backdrop-dismiss="false"
+      @close="show_new_field_form = false"
+    >
       <FormFieldSearch @close="show_new_field_form = false" @select="addField">
       </FormFieldSearch>
     </BaseDialog>
 
-    <BaseDialog :show="show_delete" :no-backdrop-dismiss="false">
+    <BaseDialog
+      :show="show_delete"
+      :no-backdrop-dismiss="false"
+      @close="show_delete = false"
+    >
       <BaseActionCard
         :title="$t('field_delete')"
         :save-label="$t('confirm')"

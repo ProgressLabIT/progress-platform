@@ -68,7 +68,11 @@
       </div>
     </div>
 
-    <BaseDialog :show="show_new_field_form" :no-backdrop-dismiss="false">
+    <BaseDialog
+      :show="show_new_field_form"
+      :no-backdrop-dismiss="false"
+      @close="show_new_field_form = false"
+    >
       <FormFieldNew @close="show_new_field_form = false" @created="getFields">
       </FormFieldNew>
     </BaseDialog>

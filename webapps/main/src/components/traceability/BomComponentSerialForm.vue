@@ -1,7 +1,7 @@
 <template>
   <BaseDialog
     :show="show"
-    @keydown.esc="
+    @close="
       {
         saving = false;
         $emit('close');

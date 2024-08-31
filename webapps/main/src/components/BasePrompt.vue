@@ -1,5 +1,10 @@
 <template>
-  <BaseDialog :show="show" :no-backdrop-dismiss="false" @keyup.enter="update">
+  <BaseDialog
+    :show="show"
+    :no-backdrop-dismiss="false"
+    @keyup.enter="update"
+    @close="$emit('close')"
+  >
     <q-card class="surface2 q-pa-md" :style="`width: ${width}`">
       <q-card-section>
         <div class="text-h4 display highlight text-uppercase">

@@ -219,7 +219,7 @@
       </template>
     </q-form>
 
-    <BaseDialog :show="show_delete">
+    <BaseDialog :show="show_delete" @close="show_delete = false">
       <BaseActionCard
         :title="$t('field_delete')"
         :save-label="$t('confirm')"

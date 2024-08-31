@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="show">
+  <BaseDialog :show="show" @close="cancel">
     <q-card
       square
       class="surface1 q-pa-md"

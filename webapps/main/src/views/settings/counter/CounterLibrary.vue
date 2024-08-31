@@ -66,7 +66,11 @@
       </div>
     </div>
 
-    <BaseDialog :show="show_new_counter_form" :no-backdrop-dismiss="false">
+    <BaseDialog
+      :show="show_new_counter_form"
+      :no-backdrop-dismiss="false"
+      @close="show_new_counter_form = false"
+    >
       <CounterNew @close="show_new_counter_form = false" @created="getCounters">
       </CounterNew>
     </BaseDialog>
