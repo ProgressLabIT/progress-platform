@@ -145,6 +145,25 @@ export default {
     },
   },
 
+  watch: {
+    serial_key: {
+      async handler() {
+        if (!this.serial) {
+          this.loading = true;
+          this.$store
+            .dispatch('appendSerial', {
+              serial_key: this.serial_key,
+            })
+            .then(() =>
+              setTimeout(() => {
+                this.loading = false;
+              }, 1000),
+            );
+        }
+      },
+    },
+  },
+
   created() {
     this.$store.dispatch('loadUsers');
   },

@@ -67,6 +67,10 @@ const serial = {
       const { data } = await api.get('serial-field');
       commit('LOAD_SERIAL_FIELDS', data);
     },
+    async appendSerial({ commit }, search_params) {
+      const { data } = await api.get('serial', { params: search_params });
+      commit('APPEND_SERIALS', data);
+    },
   },
 };
 

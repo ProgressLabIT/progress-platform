@@ -218,9 +218,20 @@ export default {
       this.loading = false;
     },
 
+    async ensureSerial(serial_key) {
+      let serial = this.$store.getters.getSerialData(serial_key);
+      if (!serial) {
+        await this.$store.dispatch('appendSerial', {
+          serial_key: this.serial_key,
+        });
+        serial = this.$store.getters.getSerialData(serial_key);
+      }
+      return serial;
+    },
+
     async editComponentLink(node) {
-      let parent_serial = this.$store.getters.getSerialData(node.parent_key);
-      let serial = this.$store.getters.getSerialData(node.key);
+      let parent_serial = this.ensureSerial(node.parent_key);
+      let serial = this.ensureSerial(node.key);
 
       let serialModel = {
         _key: serial._key,
