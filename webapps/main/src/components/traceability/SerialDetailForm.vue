@@ -31,13 +31,13 @@
       <div class="col-auto">{{ serial_created_time_string }}</div>
       <div class="col-auto row items-center">
         <BaseUserAvatar
-          :user="$store.getters.user_data(serial.created_by)"
+          :user="$store.getters.user_data(serial?.created_by)"
           size="24px"
           class="q-ml-md"
         />
       </div>
       <div class="col-auto q-ml-md hover-underline" @click="goToWorkOrderPage">
-        {{ $t('work_order.short').toUpperCase() + ' ' + serial.wo_code }}
+        {{ $t('work_order.short').toUpperCase() + ' ' + serial?.wo_code }}
       </div>
     </div>
 
@@ -117,7 +117,7 @@ export default {
         minute: '2-digit',
       };
       return this.$capitalize(
-        this.$formatDateTime(this.serial.created, this.$i18n.locale, config),
+        this.$formatDateTime(this.serial?.created, this.$i18n.locale, config),
       );
     },
 
@@ -142,25 +142,6 @@ export default {
 
     can_edit() {
       return !this.$store.getters.getSerialData(this.serial_key).deleted;
-    },
-  },
-
-  watch: {
-    serial_key: {
-      async handler() {
-        if (!this.serial) {
-          this.loading = true;
-          this.$store
-            .dispatch('appendSerial', {
-              serial_key: this.serial_key,
-            })
-            .then(() =>
-              setTimeout(() => {
-                this.loading = false;
-              }, 1000),
-            );
-        }
-      },
     },
   },
 

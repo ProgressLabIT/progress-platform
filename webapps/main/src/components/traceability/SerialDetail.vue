@@ -88,7 +88,7 @@
                   :serial_key="selected_serial"
                   :mini_state="mini_state"
                   :edit_mode="editMode"
-                  @select="(value) => (selected = value)"
+                  @select="(selected_key) => onSerialSelection(selected_key)"
                   @no-nodes="no_hierarchy = true"
                 ></SerialTree>
               </div>
@@ -336,6 +336,18 @@ export default {
     async onDialogCancel() {
       this.refreshSerial();
       this.editMode = false;
+    },
+
+    async onSerialSelection(selected_key) {
+      if (!this.$store.getters.getSerialData(selected_key)) {
+        this.$store
+          .dispatch('appendSerial', {
+            serial_key: selected_key,
+          })
+          .then(() => (this.selected = selected_key));
+      } else {
+        this.selected = selected_key;
+      }
     },
 
     deleteSerial() {

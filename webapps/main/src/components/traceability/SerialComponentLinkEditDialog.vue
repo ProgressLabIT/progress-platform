@@ -26,7 +26,7 @@
         </BaseAutocompleteSerial>
       </q-card-section>
       <q-card-section>
-        <q-input v-model="serial_model.reason" />
+        <q-input v-model="reason_model" />
       </q-card-section>
       <q-form id="serial-form" @submit="onDialogOK(serial_model)">
         <q-card-actions align="between" class="q-mt-md">
@@ -75,6 +75,7 @@ const props = defineProps({
 
 let start_node = ref(props.node);
 let serial_model = ref(props.serial);
+let reason_model = ref(props.serial.reason);
 let initial_values = ref(props.initial_values);
 
 defineEmits(useDialogPluginComponent.emitsObject);
