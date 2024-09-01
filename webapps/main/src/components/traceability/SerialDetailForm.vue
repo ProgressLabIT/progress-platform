@@ -6,10 +6,10 @@
         class="text-h3 display highlight col-auto hover-underline q-mr-md"
         @click="goToProductPage"
       >
-        {{ serial.product?.code }}
+        {{ serial?.product?.code }}
       </div>
       <div v-if="!(edit_mode && can_edit)" class="text-h4 col-auto">
-        {{ ' # ' + serial.code }}
+        {{ ' # ' + serial?.code }}
       </div>
       <q-input
         v-else

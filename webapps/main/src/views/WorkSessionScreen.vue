@@ -468,6 +468,14 @@ export default {
     },
   },
 
+  watch: {
+    jobKey: {
+      handler() {
+        this.loadJob();
+      },
+    },
+  },
+
   created() {
     // Load job data
     this.loadJob();

@@ -105,7 +105,7 @@
 
       <SerialBomForm
         :show="show_all_serial_form === true"
-        :batch_key="job.active_batch_key"
+        :batch_key="job.active_batch_key ? job.active_batch_key : null"
         :wo_key="job.wo_key"
         mode="new"
         :bom_components="bom"
@@ -212,7 +212,10 @@ export default {
     },
 
     bom() {
-      return Object.hasOwn(this.job, this.bom_type)
+      if (!this.job?.wo_bom) {
+        this.refreshBom();
+      }
+      return Object.hasOwn(this.job, this.bom_type) && this.job?.wo_bom
         ? this.job.wo_bom
             .filter((i) => {
               return this.bom_type === 'wo_bom'
@@ -225,7 +228,6 @@ export default {
                 ...i,
                 batch_qt: i.qt * this.job.active_batch_qt,
                 job_qt: i.qt * this.job.qt_planned,
-                component_qt: i.qt,
               };
             })
         : [];

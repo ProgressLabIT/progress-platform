@@ -52,13 +52,13 @@
               :product_key="component.component_key"
               :loading="loading"
               :can_create="true"
-              :selection_qt="component_qt[component.component_key]"
+              :selection_qt="qt[component.component_key]"
               :filter_used="true"
               :filtered_values="booked_serials[component.component_key]"
               :disable="
                 (serialModel[getComponentLineKey(component.component_key)]
-                  ?.length >= component_qt[component.component_key] ||
-                  (component_qt[component.component_key] === 1 &&
+                  ?.length >= qt[component.component_key] ||
+                  (qt[component.component_key] === 1 &&
                     serialModel[getComponentLineKey(component.component_key)]
                       ?._key)) &&
                 !replace_serials[getComponentLineKey(component.component_key)]
@@ -188,7 +188,7 @@ export default {
       enableSave: false,
       serialModel: [],
       initalModel: [],
-      component_qt: [],
+      qt: [],
       initialValues: [],
       serial_ids: [],
       serial_labels: [],
@@ -248,11 +248,11 @@ export default {
       this.initalModel = [];
       this.initialValues = [];
       this.serial_ids = [];
-      this.component_qt = [];
+      this.qt = [];
       this.replace_serials = [];
       this.booked_serials = [];
       for (const component of this.bom_components) {
-        this.component_qt[component.component_key] = component.component_qt;
+        this.qt[component.component_key] = component.qt;
       }
       for (const serial of this.batch_serials) {
         this.serial_ids.push(serial._id);
@@ -282,7 +282,7 @@ export default {
             wo_key: child.wo_key,
             value: child._key,
           };
-          if (this.component_qt[child.product_key] > 1) {
+          if (this.qt[child.product_key] > 1) {
             this.serialModel[key].push(serial_link);
             this.initalModel[key].push(serial_link);
           } else {

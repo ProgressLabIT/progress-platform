@@ -41,7 +41,7 @@ export default {
   computed: {
     ...mapState({
       job: (state) => state.traceability.working_job_data,
-      batch_data: (state) => state.traceability.current_batch_data.step_data,
+      batch_data: (state) => state.traceability.current_batch_data?.step_data,
     }),
 
     progress_button_active() {

@@ -160,7 +160,7 @@ export default {
       return this.bom_line.component_key;
     },
     component_per_product() {
-      return this.bom_line.component_qt;
+      return this.bom_line.qt;
     },
   },
 
