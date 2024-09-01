@@ -70,6 +70,7 @@ const serial = {
     async appendSerial({ commit }, search_params) {
       const { data } = await api.get('serial', { params: search_params });
       commit('APPEND_SERIALS', data);
+      return data[0];
     },
   },
 };

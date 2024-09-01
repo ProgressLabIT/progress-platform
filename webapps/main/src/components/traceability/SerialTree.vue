@@ -218,21 +218,24 @@ export default {
       this.loading = false;
     },
 
-    async ensureSerial(serial_key) {
-      let serial = this.$store.getters.getSerialData(serial_key);
-      if (!serial) {
-        await this.$store.dispatch('appendSerial', {
-          serial_key: this.serial_key,
-        });
-        serial = this.$store.getters.getSerialData(serial_key);
-      }
-      return serial;
+    editComponentLink(node) {
+      Promise.all([
+        this.$store.dispatch('appendSerial', {
+          serial_key: node.parent_key,
+        }),
+
+        this.$store.dispatch('appendSerial', {
+          serial_key: node.key,
+        }),
+      ]).then((values) => {
+        console.log(values);
+        this.showEditComponentLink(node, values[0], values[1]);
+      });
     },
 
-    async editComponentLink(node) {
-      let parent_serial = this.ensureSerial(node.parent_key);
-      let serial = this.ensureSerial(node.key);
-
+    showEditComponentLink(node, parent_serial, serial) {
+      console.log(parent_serial);
+      console.log(serial);
       let serialModel = {
         _key: serial._key,
         label: serial.code,
@@ -245,19 +248,19 @@ export default {
       let initial_values = [];
       initial_values.push(serialModel);
 
-      let new_values = await new Promise((resolve) => {
-        Dialog.create({
-          component: SerialComponentLinkEditDialog,
-          componentProps: {
-            node: node,
-            serial: serialModel,
-            initial_values: initial_values,
-          },
-        })
-          .onOk((new_values) => resolve(new_values))
-          .onCancel(() => resolve(NaN));
+      Dialog.create({
+        component: SerialComponentLinkEditDialog,
+        componentProps: {
+          node: node,
+          serial: serialModel,
+          initial_values: initial_values,
+        },
+      }).onOk((new_values) => {
+        this.saveNewComponentLink(node, parent_serial, serial, new_values);
       });
+    },
 
+    async saveNewComponentLink(node, parent_serial, serial, new_values) {
       if (new_values) {
         if (!new_values.reason) {
           window.alert(this.$t('serial_field.missing_reason'));
@@ -273,6 +276,7 @@ export default {
           to_serial: serial._key,
           reason: new_values.reason,
           replaced: true,
+          link_serial_directly: true,
         });
 
         link_data.push({
@@ -283,6 +287,7 @@ export default {
           to_serial: new_values._key,
           reason: null,
           replaced: false,
+          link_serial_directly: true,
         });
 
         const event = {
@@ -293,14 +298,15 @@ export default {
           serial_link_data: link_data,
         };
 
-        await this.$api.post('event', event);
-        this.nodes = [];
-        this.getSerialHierarcy();
-        setTimeout(() => {
-          if (this.$refs.serialNodes) {
-            this.$refs.serialNodes.expandAll();
-          }
-        }, 500);
+        await this.$api.post('event', event).then(() => {
+          this.nodes = [];
+          this.getSerialHierarcy();
+          setTimeout(() => {
+            if (this.$refs.serialNodes) {
+              this.$refs.serialNodes.expandAll();
+            }
+          }, 500);
+        });
         //this.$emit('close');
       }
     },

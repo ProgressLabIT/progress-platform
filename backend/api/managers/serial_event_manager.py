@@ -219,7 +219,7 @@ class SerialEventManager:
              elif serial_link_cursor.count()>0:
                 self.tx.collection('contains').update(dict(
                    _key = serial_link_cursor.next()['_key'],
-                   _from=f'Batch/{batch_key}',
+                   _from=f'Serial/{from_serial}',
                    _to=f'Serial/{to_serial}',
                    replaced=serial_links.replaced,
                    wo_key = wo_key,
@@ -227,6 +227,17 @@ class SerialEventManager:
                    from_serial=from_serial,
                    batch_key=batch_key,
                    reason=reason
+                ))
+             elif serial_links.link_serial_directly:
+                self.tx.collection('contains').insert(dict(
+                   _from=f'Serial/{from_serial}',
+                   _to=f'Serial/{to_serial}',
+                   replaced=False,
+                   wo_key = wo_key,
+                   component_key=component_key,
+                   from_serial=from_serial,
+                   batch_key=batch_key,
+                   reason=''
                 ))
              else:
                 self.tx.collection('contains').insert(dict(

@@ -28,7 +28,15 @@
       <q-card-section>
         <q-input v-model="reason_model" />
       </q-card-section>
-      <q-form id="serial-form" @submit="onDialogOK(serial_model)">
+      <q-form
+        id="serial-form"
+        @submit="
+          onDialogOK({
+            ...serial_model,
+            reason: reason_model,
+          })
+        "
+      >
         <q-card-actions align="between" class="q-mt-md">
           <q-btn
             color="theme-grey"

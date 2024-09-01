@@ -42,6 +42,7 @@ class SerialLink(BaseModel):
   batch_key: str | None = None,
   replaced: bool = False
   reason: str | None = None
+  link_serial_directly: bool = False
 
 class SerialEvent(Serial):
    operation: SerialCommandType | None = None
