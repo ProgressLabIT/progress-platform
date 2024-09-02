@@ -11,9 +11,9 @@
       <!-- @update:model-value="(selection) => $emit('select', selection)" -->
       <template #default-header="prop">
         <div
-          class="row items-center"
-          @mouseenter="dragging ? undefined : (over_key = prop.node.key)"
-          @mouseleave="dragging ? undefined : (over_key = prop.node.key)"
+          class="row items-center full-width justify-between"
+          @mouseenter="over_key = prop.node.key"
+          @mouseleave="over_key = null"
         >
           <div
             v-if="prop.node.replaced"
@@ -44,9 +44,12 @@
             "
             flat
             round
-            icon="mdi-pencil"
+            size="xs"
+            class="absolute-right"
             @click.stop="editComponentLink(prop.node)"
-          />
+          >
+            <q-icon name="mdi-pencil" size="xs" />
+          </q-btn>
           <q-tooltip
             v-if="prop.node.product_description"
             anchor="bottom middle"
