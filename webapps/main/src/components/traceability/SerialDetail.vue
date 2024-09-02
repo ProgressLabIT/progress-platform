@@ -19,56 +19,7 @@
       >
         {{ $t('serial_id') }}: {{ selected_serial }}
       </span>
-
       <q-space></q-space>
-
-      <div class="row q-gutter-md">
-        <q-btn
-          v-if="!editMode && can_edit"
-          color="theme-orange"
-          :label="$t('edit')"
-          @click="editMode = true"
-        >
-        </q-btn>
-
-        <q-btn
-          v-if="user_can_delete && !editMode"
-          color="theme-red"
-          size="12px"
-          icon="mdi-delete"
-          :label="$t('delete')"
-          @click="deleteSerial"
-        >
-        </q-btn>
-        <q-btn
-          v-if="editMode"
-          size="12px"
-          color="theme-orange"
-          :label="$t('save')"
-          :loading="saving"
-          :disable="!can_edit"
-          @click="save"
-        >
-        </q-btn>
-        <q-btn
-          v-if="editMode"
-          size="12px"
-          color="theme-grey"
-          :label="$t('cancel')"
-          :loading="saving"
-          @click="onDialogCancel"
-        >
-        </q-btn>
-        <q-btn
-          v-if="!editMode"
-          size="12px"
-          icon="mdi-keyboard-return"
-          color="theme-grey"
-          :label="$t('back')"
-          @click="exit"
-        >
-        </q-btn>
-      </div>
     </template>
 
     <template #content>
@@ -78,12 +29,9 @@
         separator-class="text-disabled"
       >
         <template #before>
-          <q-splitter
-            v-if="!mini_state && !no_hierarchy"
-            v-model="serial_detail_splitted_width"
-          >
-            <template #before>
-              <div class="q-pa-md">
+          <div class="row full-height">
+            <template v-if="!mini_state">
+              <div class="col-auto full-height">
                 <SerialTree
                   :serial_key="selected_serial"
                   :mini_state="mini_state"
@@ -92,20 +40,64 @@
                   @no-nodes="no_hierarchy = true"
                 ></SerialTree>
               </div>
+              <q-separator vertical></q-separator>
             </template>
+            <div class="col column q-py-md">
+              <div class="col">
+                <SerialDetailForm
+                  :serial_key="selected_serial"
+                  :edit_mode="editMode"
+                />
+              </div>
+              <div class="col-auto row q-gutter-md q-px-md justify-end">
+                <q-btn
+                  v-if="!editMode && can_edit"
+                  color="theme-orange"
+                  :label="$t('edit')"
+                  @click="editMode = true"
+                >
+                </q-btn>
 
-            <template #after>
-              <SerialDetailForm
-                :serial_key="selected_serial"
-                :edit_mode="editMode"
-              ></SerialDetailForm>
-            </template>
-          </q-splitter>
-          <SerialDetailForm
-            v-else
-            :serial_key="selected_serial"
-            :edit_mode="editMode"
-          ></SerialDetailForm>
+                <q-btn
+                  v-if="user_can_delete && !editMode"
+                  color="theme-red"
+                  size="12px"
+                  icon="mdi-delete"
+                  :label="$t('delete')"
+                  @click="deleteSerial"
+                >
+                </q-btn>
+                <q-btn
+                  v-if="editMode"
+                  size="12px"
+                  color="theme-orange"
+                  :label="$t('save')"
+                  :loading="saving"
+                  :disable="!can_edit"
+                  @click="save"
+                >
+                </q-btn>
+                <q-btn
+                  v-if="editMode"
+                  size="12px"
+                  color="theme-grey"
+                  :label="$t('cancel')"
+                  :loading="saving"
+                  @click="onDialogCancel"
+                >
+                </q-btn>
+                <q-btn
+                  v-if="!editMode"
+                  size="12px"
+                  icon="mdi-keyboard-return"
+                  color="theme-grey"
+                  :label="$t('back')"
+                  @click="exit"
+                >
+                </q-btn>
+              </div>
+            </div>
+          </div>
         </template>
 
         <!-- RIGHT SECTION -->

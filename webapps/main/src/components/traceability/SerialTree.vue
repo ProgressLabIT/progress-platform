@@ -11,7 +11,7 @@
       <!-- @update:model-value="(selection) => $emit('select', selection)" -->
       <template #default-header="prop">
         <div
-          class="row items-center full-width justify-between"
+          class="row items-center full-width justify-between q-pr-xl"
           @mouseenter="over_key = prop.node.key"
           @mouseleave="over_key = null"
         >
