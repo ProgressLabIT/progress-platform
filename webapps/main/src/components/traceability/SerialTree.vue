@@ -36,12 +36,8 @@
             {{ prop.node.product_code }}
           </div>
           <q-btn
-            v-if="
-              prop.node.parent_key &&
-              !prop.node.replaced &&
-              over_key === prop.node.key &&
-              !edit_mode
-            "
+            v-if="prop.node.parent_key && !prop.node.replaced && !edit_mode"
+            v-show="over_key === prop.node.key"
             flat
             round
             size="xs"
