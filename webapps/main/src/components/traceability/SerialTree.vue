@@ -109,13 +109,17 @@ export default {
       loading: false,
       selected: null,
       over_key: null,
-      nodes: [],
+      nodes_data: [],
     };
   },
 
   computed: {
     session_data() {
       return this.$store.state.session;
+    },
+
+    nodes() {
+      return this.nodes_data.map((n) => this.convertNode(n, undefined));
     },
   },
 
@@ -130,7 +134,6 @@ export default {
   },
 
   created() {
-    this.initData();
     this.getSerialHierarcy();
     setTimeout(() => {
       if (this.$refs.serialNodes) {
@@ -159,10 +162,6 @@ export default {
       this.$router.push(to_route);
     },
 
-    async initData() {
-      this.nodes = [];
-    },
-
     getChildren(node, parent_key) {
       let child_data = [];
 
@@ -187,7 +186,7 @@ export default {
         label: label,
         //lazy: false,
         expandable: expandable,
-        selectable: true,
+        selectable: this.edit_mode ? false : true,
         children: children_data,
         replaced: node.replaced,
         product_key: node.product_key,
@@ -207,14 +206,11 @@ export default {
 
       this.selected = this.serial_key;
 
-      let node_data = [];
-      for (const parent_node of data) {
-        node_data.push(this.convertNode(parent_node, undefined));
-      }
+      this.selected = this.serial_key;
 
-      this.nodes = node_data;
+      this.nodes_data = data;
 
-      if (this.nodes.length <= 0) {
+      if (!this.nodes_data.length) {
         this.$emit('noNodes', this.selected);
       }
 
