@@ -17,7 +17,7 @@
       <span
         class="q-ml-md display medium highlight weight-medium text-uppercase"
       >
-        {{ $t('serial_id') }}: {{ selected_serial }}
+        {{ $t('serial_id') }}: {{ serialKey }}
       </span>
       <q-space></q-space>
     </template>
@@ -33,19 +33,19 @@
             <template v-if="!mini_state">
               <div class="col-auto full-height">
                 <SerialTree
-                  :serial_key="selected_serial"
+                  :serial_key="serialKey"
                   :mini_state="mini_state"
                   :edit_mode="editMode"
                   @select="(selected_key) => onSerialSelection(selected_key)"
                   @no-nodes="no_hierarchy = true"
-                ></SerialTree>
+                />
               </div>
               <q-separator vertical></q-separator>
             </template>
             <div class="col column q-py-md">
               <div class="col">
                 <SerialDetailForm
-                  :serial_key="selected_serial"
+                  :serial_key="serialKey"
                   :edit_mode="editMode"
                 />
               </div>
@@ -86,15 +86,6 @@
                   @click="onDialogCancel"
                 >
                 </q-btn>
-                <q-btn
-                  v-if="!editMode"
-                  size="12px"
-                  icon="mdi-keyboard-return"
-                  color="theme-grey"
-                  :label="$t('back')"
-                  @click="exit"
-                >
-                </q-btn>
               </div>
             </div>
           </div>
@@ -105,7 +96,7 @@
           <MessageThread
             :messages="messages"
             context="serial"
-            :context_key="selected_serial"
+            :context_key="serialKey"
           >
             <template #header>
               <div class="display low-text text-h5 col-auto q-pb-md">
@@ -159,17 +150,6 @@ export default {
   },
 
   computed: {
-    selected_serial() {
-      if (this.selected) {
-        return this.selected;
-      }
-      return this.serialKey;
-    },
-
-    main_selected() {
-      return this.selected === null || this.selected === this.serialKey;
-    },
-
     serial() {
       return this.$store.getters.getSerialData(this.serialKey);
     },
@@ -199,7 +179,7 @@ export default {
 
   methods: {
     exit() {
-      this.$router.back();
+      this.$router.back({ name: this.$route.query.back_to });
     },
 
     getFieldType(field) {
@@ -326,15 +306,28 @@ export default {
       this.editMode = false;
     },
 
+    goToSerial(serialKey) {
+      const to_route = {
+        name: 'serialDetail',
+        params: { serialKey },
+        query: {
+          back_to: this.$route.name,
+          ...this.$route.query,
+        },
+      };
+      this.$router.push(to_route);
+    },
+
     async onSerialSelection(selected_key) {
+      // Fetch data from server is serial data is not present
       if (!this.$store.getters.getSerialData(selected_key)) {
         this.$store
           .dispatch('appendSerial', {
             serial_key: selected_key,
           })
-          .then(() => (this.selected = selected_key));
+          .then(this.goToSerial(selected_key));
       } else {
-        this.selected = selected_key;
+        this.goToSerial(selected_key);
       }
     },
 
