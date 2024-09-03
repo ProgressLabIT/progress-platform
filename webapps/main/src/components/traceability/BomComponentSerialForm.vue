@@ -44,13 +44,7 @@
               :selection_qt="component_per_product"
               :filter_used="true"
               :filtered_values="booked_serials"
-              :disable="
-                (serialModel[serial._id]?.length >= component_per_product ||
-                  (component_per_product === 1 &&
-                    serialModel[serial._id] &&
-                    serialModel[serial._id]?._key)) &&
-                !replace_serials[serial._id]
-              "
+              :disable="disableSerialField(serial)"
               @select="(selection) => onSerialSelection(selection, serial._id)"
             >
             </BaseAutocompleteSerial>
@@ -66,6 +60,7 @@
               v-model="replace_serials_reason[serial._id]"
               filled
               dense
+              class="q-mt-sm q-mb-md"
             />
           </template>
         </template>
@@ -240,6 +235,15 @@ export default {
           }
         }
       }
+    },
+
+    disableSerialField(serial) {
+      const full_quantity_recorded =
+        this.component_per_product === 1
+          ? this.serialModel[serial._id] && this.serialModel[serial._id]?._key
+          : this.serialModel[serial._id]?.length >= this.component_per_product;
+      const not_replaced = !this.replace_serials[serial._id];
+      return full_quantity_recorded && not_replaced;
     },
 
     onSerialSelection(selectedSerials, selected_key) {
