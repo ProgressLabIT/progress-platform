@@ -1,4 +1,4 @@
-from commons.kafka_utils.kafka_consumer import KafkaConsumer
+from utils.kafka.kafka_consumer import KafkaConsumer
 
 class KafkaConsumerManager:
     __instance = None

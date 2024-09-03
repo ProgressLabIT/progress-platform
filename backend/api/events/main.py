@@ -5,7 +5,7 @@ from events import (
   SharedEventMethods,
 )
 from models.event import EventModel
-from commons.utils.db import db
+from utils.db import db
 import uuid
 
 

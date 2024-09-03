@@ -1,5 +1,5 @@
 from models.production import Job
-from commons.models.traceability import StepStatus
+from models.traceability import StepStatus
 
 class Queries:
 

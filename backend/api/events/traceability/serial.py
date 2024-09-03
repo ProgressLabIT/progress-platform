@@ -3,9 +3,9 @@ import traceback
 
 from fastapi import HTTPException
 
-from commons.kafka_utils.kafka_producer import KafkaProducer
-from commons.models.serial import Serial, SerialEvent, SerialCommandType
-from commons.models.form import SerialFormFieldValue
+from utils.kafka.kafka_producer import KafkaProducer
+from models.serial import Serial, SerialEvent, SerialCommandType
+from models.form import SerialFormFieldValue
 from managers.serial_event_manager import SerialEventManager
 
 

@@ -5,19 +5,19 @@ from fastapi.encoders import jsonable_encoder
 from events.base import BaseEvent
 from events.shared import EventMeta
 
-from commons.models.traceability import *
+from models.traceability import *
 from models.production import Job, WorkStatus
-from commons.models.product import TraceabilityLevel
+from models.product import TraceabilityLevel
 
 from utils.exceptions import JobIsStartedError, JobHasNoAssigneeError, WipNotAvailableError
 from utils.production import Queries as ProductionQueries, update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
-from commons.utils.db import model_to_db_dict
+from utils.db import model_to_db_dict
 
-from commons.models.serial import Serial, SerialEvent, SerialCommandType
-from commons.models.form import SerialFormFieldValue
+from models.serial import Serial, SerialEvent, SerialCommandType
+from models.form import SerialFormFieldValue
 
-from commons.utils.serial import Queries as SerialQueries
+from utils.serial import Queries as SerialQueries
 
 from fastapi import HTTPException
 

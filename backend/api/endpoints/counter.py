@@ -3,8 +3,8 @@ import traceback
 from fastapi import APIRouter, HTTPException, Query, Depends
 
 from utils.api import APIResponse
-from commons.models.counter import Counter
-from commons.utils.db import db
+from models.counter import Counter
+from utils.db import db
 from utils import auth
 
 router = APIRouter()

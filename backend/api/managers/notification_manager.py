@@ -2,7 +2,7 @@ import traceback
 import json
 import uuid
 
-from commons.kafka_utils.kafka_producer import KafkaProducer
+from utils.kafka.kafka_producer import KafkaProducer
 from utils.delayedqueue.conflated_delayedqueue import ConflatedDelayedQueue
 from threading import Thread
 

@@ -2,10 +2,10 @@ import requests
 from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 
-from commons.utils.config import get_config
-from commons.kafka_utils.kafka_producer import KafkaProducer
-from commons.kafka_utils.kafka_consumer_manager import KafkaConsumerManager
-from commons.executors.executor_manager import ExecutorManager
+from utils.config import get_config
+from utils.kafka.kafka_producer import KafkaProducer
+from managers.kafka_consumer_manager import KafkaConsumerManager
+from managers.executor_manager import ExecutorManager
 from consumer.serials_kafka_consumer import SerialsKafkaConsumer
 from utils.serial_manager import SerialManager
 

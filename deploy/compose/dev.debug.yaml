@@ -131,36 +131,3 @@ services:
       KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
-
-  broker-ui:
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - 8081:8080
-    depends_on:
-      - broker
-    environment:
-      DYNAMIC_CONFIG_ENABLED: "true"
-      KAFKA_CLUSTERS_0_NAME: progress-broker
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:19092
-
-  prometheus:
-    image: prom/prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./deploy/config:/etc/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-    restart: always
-  grafana:
-    image: grafana/grafana
-    ports:
-      - "3000:3000"
-    depends_on:
-      - prometheus
-    restart: always
-  web_server:
-    image: httpd:2.4
-    ports:
-      - "8082:8082"
-    restart: always

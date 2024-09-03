@@ -4,7 +4,7 @@ from uuid import uuid4
 from arango.database import TransactionDatabase
 from fastapi.encoders import jsonable_encoder
 
-from commons.utils.db import db
+from utils.db import db
 from utils.file import FileHandler
 from models.process import PhaseData
 

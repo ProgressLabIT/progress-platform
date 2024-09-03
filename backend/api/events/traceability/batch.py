@@ -1,4 +1,4 @@
-from commons.models.traceability import Batch, StepStatus
+from models.traceability import Batch, StepStatus
 
 
 from utils.traceability import Queries as TraceabilityQueries

@@ -9,7 +9,7 @@ from starlette import status
 from models.org import *
 from utils import auth
 from utils.api import APIResponse
-from commons.utils.db import db
+from utils.db import db
 from utils.file import FileHandler
 from utils.org import *
 

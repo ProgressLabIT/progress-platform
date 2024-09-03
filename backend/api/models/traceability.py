@@ -3,8 +3,8 @@ from enum import Enum
 
 from pydantic import BaseModel, Field, field_validator
 
-from commons.models.form import FormFieldValue
-from commons.models.base_models import FlexModel, ArangoEdge, ArangoDocument
+from models.form import FormFieldValue
+from models.base_models import FlexModel, ArangoEdge, ArangoDocument
 
 
 class StepStatus(str, Enum):

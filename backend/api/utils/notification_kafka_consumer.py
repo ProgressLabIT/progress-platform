@@ -1,9 +1,9 @@
 import asyncio
 from abc import ABC, abstractmethod
 
-from commons.utils import config
+from utils import config
 from managers.server_event_manager import ServerEventManager
-from commons.kafka_utils.kafka_consumer import KafkaConsumer
+from utils.kafka.kafka_consumer import KafkaConsumer
 from threading import Thread
 
 class NotificationsKafkaConsumer(KafkaConsumer):

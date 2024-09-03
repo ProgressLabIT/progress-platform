@@ -1,5 +1,5 @@
 from datetime import datetime
-from commons.utils.db import db
+from utils.db import db
 
 COUNTER_TICK = """
 // Get current counter value

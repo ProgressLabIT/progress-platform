@@ -8,15 +8,15 @@ from datetime import datetime as dt
 from typing import Dict
 
 from fastapi.encoders import jsonable_encoder
-from commons.utils.db import db, model_to_db_dict
-from commons.utils.dt import timestamp
-from commons.models.serial import Serial, SerialEvent, SerialCommandType, SerialNotificationType, SerialNotificationErrorCode
-from commons.utils.counter import _generate_counter
-from commons.kafka_utils.kafka_producer import KafkaProducer
-from commons.models.form import SerialFormFieldValue
-from commons.utils.serial import Queries
-from commons.models.traceability import WIP
-from commons.models.product import TraceabilityLevel
+from utils.db import db, model_to_db_dict
+from utils.dt import timestamp
+from models.serial import Serial, SerialEvent, SerialCommandType, SerialNotificationType, SerialNotificationErrorCode
+from utils.counter import _generate_counter
+from utils.kafka.kafka_producer import KafkaProducer
+from models.form import SerialFormFieldValue
+from utils.serial import Queries
+from models.traceability import WIP
+from models.product import TraceabilityLevel
 
 
 class SerialManager:

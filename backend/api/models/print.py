@@ -3,7 +3,7 @@ from typing import Literal, Union
 
 from pydantic import BaseModel, Field
 
-from commons.models.base_models import ArangoDocument, ArangoEdge
+from models.base_models import ArangoDocument, ArangoEdge
 
 class Alignment(str, Enum):
   CENTER = 'center'

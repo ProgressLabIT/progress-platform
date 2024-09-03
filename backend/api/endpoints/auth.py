@@ -18,7 +18,7 @@ from models.auth import *
 from models.org import User
 from utils.api import APIResponse, AuthAPIResponse
 from utils import auth
-from commons.utils.db import db
+from utils.db import db
 from utils.exceptions import *
 
 

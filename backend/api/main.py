@@ -3,12 +3,12 @@ from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from commons.utils.config import get_config
-from commons.kafka_utils.kafka_producer import KafkaProducer
-from commons.kafka_utils.kafka_consumer_manager import KafkaConsumerManager
-from commons.kafka_utils.kafka_admin import KafkaAdmin
-from commons.executors.executor_manager import ExecutorManager
-from commons.websockets.websocket_manager import WebsocketManager
+from utils.config import get_config
+from utils.kafka.kafka_producer import KafkaProducer
+from managers.kafka_consumer_manager import KafkaConsumerManager
+from utils.kafka.kafka_admin import KafkaAdmin
+from managers.executor_manager import ExecutorManager
+from managers.websocket_manager import WebsocketManager
 from managers.server_event_manager import ServerEventManager
 from managers.notification_manager import NotificationManager
 from utils.notification_kafka_consumer import NotificationsKafkaConsumer

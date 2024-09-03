@@ -1,8 +1,8 @@
 import asyncio
 from abc import ABC, abstractmethod
 
-from commons.utils import config
-from commons.kafka_utils.kafka_consumer import KafkaConsumer
+from utils import config
+from utils.kafka.kafka_consumer import KafkaConsumer
 from threading import Thread
 from utils.serial_manager import SerialManager
 

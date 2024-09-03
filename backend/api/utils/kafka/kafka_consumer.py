@@ -1,8 +1,8 @@
 import asyncio
 from abc import ABC, abstractmethod
 
-from commons.utils import config
-from commons.websockets.websocket_manager import WebsocketManager
+from utils import config
+from managers.websocket_manager import WebsocketManager
 from threading import Thread
 
 from confluent_kafka import Consumer, KafkaException

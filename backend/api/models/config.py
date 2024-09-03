@@ -1,4 +1,4 @@
-from commons.models.base_models import ArangoDocument
+from models.base_models import ArangoDocument
 
 class Config(ArangoDocument):
   # _key is the name of the config (e.g. company_name, default_phase_parameters)

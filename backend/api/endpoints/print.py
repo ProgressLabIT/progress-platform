@@ -5,7 +5,7 @@ from utils import auth
 
 from models.print import PrintTemplateRecord, TemplateAssignmentUpdate, TemplateAssignmentUpdateType, TemplateAssignmentContext
 from utils.api import APIResponse
-from commons.utils.db import db
+from utils.db import db
 from utils.print import preprocess_template, build_template_assignment_record
 
 router = APIRouter()

@@ -3,8 +3,8 @@ from collections import deque
 from events.base import BaseEvent
 from events.shared import EventMeta
 from models.production import Job, WorkStatus
-from commons.models.traceability import Batch, WIP, WorkSession
-from commons.utils.serial import Queries as SerialQueries
+from models.traceability import Batch, WIP, WorkSession
+from utils.serial import Queries as SerialQueries
 
 from utils.exceptions import (
   JobHasActiveBatchError,

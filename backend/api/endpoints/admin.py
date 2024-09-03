@@ -2,10 +2,10 @@ import traceback
 
 from fastapi import APIRouter, HTTPException, Depends
 
-from commons.utils.db import db
-from commons.utils.serial import Queries as SerialQueries
+from utils.db import db
+from utils.serial import Queries as SerialQueries
 from models.production import WorkStatus
-from commons.kafka_utils.kafka_admin import KafkaAdmin
+from utils.kafka.kafka_admin import KafkaAdmin
 from utils.api import APIResponse
 from utils import auth
 

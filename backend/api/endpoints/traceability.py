@@ -4,17 +4,17 @@ from fastapi import APIRouter, HTTPException, Request, Query, Depends
 from utils import auth
 
 from events import Event
-from commons.models.traceability import *
+from models.traceability import *
 from models.event import EventModel, EventType
 from typing import Dict, List, Union
 
 
 from utils.exceptions import *
 from utils.api import APIResponse
-from commons.models.serial import SerialSelection
-from commons.utils.db import db
-from commons.utils.dt import timestamp
-from commons.utils.serial import Queries as SerialQueries
+from models.serial import SerialSelection
+from utils.db import db
+from utils.dt import timestamp
+from utils.serial import Queries as SerialQueries
 from utils.traceability import Queries
 
 router = APIRouter()

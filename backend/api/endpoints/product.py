@@ -6,11 +6,11 @@ from utils import auth
 from fastapi.encoders import jsonable_encoder
 
 from utils.kpi import Queries as ProductStatQueries
-from commons.models.product import *
+from models.product import *
 from models.process import PhaseData
 from utils.api import APIResponse
-from commons.utils.db import db
-from commons.utils.dt import timestamp
+from utils.db import db
+from utils.dt import timestamp
 from utils.file import FileHandler
 from utils.product import *
 from utils.process import Queries as ProcessQueries, copy_process_to_product, copy_process_to_product_writes

@@ -1,6 +1,6 @@
-from commons.models.serial import Serial
-from commons.models.traceability import WIP
-from commons.utils.serial import Queries as SerialQueries
+from models.serial import Serial
+from models.traceability import WIP
+from utils.serial import Queries as SerialQueries
 from utils.exceptions import WipNotAvailableError
 from utils.traceability import Queries as TraceabilityQueries
 

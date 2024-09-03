@@ -8,10 +8,10 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Depends
 from fastapi.encoders import jsonable_encoder
 
 from models.bom import *
-from commons.models.product import ProductFull
+from models.product import ProductFull
 from utils.api import APIResponse
 from utils.bom import *
-from commons.utils.db import db
+from utils.db import db
 from utils.api import APIResponse
 from utils.product import get_product_data_from_code
 from utils import auth

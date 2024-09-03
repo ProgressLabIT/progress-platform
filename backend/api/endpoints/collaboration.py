@@ -11,7 +11,7 @@ from models.collaboration import *
 from models.event import EventModel, EventType
 from utils.api import APIResponse
 from utils import auth
-from commons.utils.db import db
+from utils.db import db
 from utils.collaboration import Queries
 
 router = APIRouter()

@@ -1,4 +1,4 @@
-from commons.models.traceability import WorkSession
+from models.traceability import WorkSession
 from utils.traceability import Queries as TraceabilityQueries
 
 # ===================================================================

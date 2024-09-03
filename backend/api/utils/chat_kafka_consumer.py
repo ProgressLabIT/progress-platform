@@ -1,9 +1,9 @@
 import asyncio
 from abc import ABC, abstractmethod
 
-from commons.utils import config
-from commons.websockets.websocket_manager import WebsocketManager
-from commons.kafka_utils.kafka_consumer import KafkaConsumer
+from utils import config
+from managers.websocket_manager import WebsocketManager
+from utils.kafka.kafka_consumer import KafkaConsumer
 from threading import Thread
 
 class ChatKafkaConsumer(KafkaConsumer):
