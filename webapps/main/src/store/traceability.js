@@ -307,8 +307,11 @@ const traceability = {
 
       const { data } = await api.post('event', event);
       if (data?.detail) {
-        const { /* new_work_session_data, */ job_data } = data.detail;
+        const { job_data, batch_data } = data.detail;
         commit('UPDATE_JOB', job_data);
+        if (batch_data) {
+          commit('UPDATE_BATCH', batch_data);
+        }
       }
       commit('SET_HEARTBEAT', true);
     },
