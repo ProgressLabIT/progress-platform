@@ -893,6 +893,7 @@ export default {
   serial_delete_confirm_question:
     'Sei sicuro di voler cancellare questo seriale?',
   serials_declared: 'matricole collegate',
+  serial_edit_reason: 'Motivo della modifica',
   batch_declare_component_serials:
     'Dichiara le matricole dei componenti obbligatorie',
   load_more: 'Carica altri',

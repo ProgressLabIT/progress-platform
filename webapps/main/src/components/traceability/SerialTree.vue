@@ -246,12 +246,6 @@ export default {
 
     async saveNewComponentLink(node, parent_serial, serial, new_values) {
       if (new_values) {
-        if (!new_values.reason) {
-          window.alert(this.$t('serial_field.missing_reason'));
-          this.saving = false;
-          return;
-        }
-
         let link_data = [];
         link_data.push({
           wo_key: parent_serial.wo_key,

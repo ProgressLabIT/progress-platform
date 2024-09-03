@@ -26,17 +26,13 @@
         </BaseAutocompleteSerial>
       </q-card-section>
       <q-card-section>
-        <q-input v-model="reason_model" />
+        <q-input
+          filled
+          v-model="reason_model"
+          :label="$t('serial_edit_reason')"
+        />
       </q-card-section>
-      <q-form
-        id="serial-form"
-        @submit="
-          onDialogOK({
-            ...serial_model,
-            reason: reason_model,
-          })
-        "
-      >
+      <q-form id="serial-form" @submit="save">
         <q-card-actions align="between" class="q-mt-md">
           <q-btn
             color="theme-grey"
@@ -90,6 +86,20 @@ defineEmits(useDialogPluginComponent.emitsObject);
 
 const { dialogRef, onDialogHide, onDialogCancel, onDialogOK } =
   useDialogPluginComponent();
+
+function save() {
+  const something_has_changed = serial_model.value?._key != props.serial.value;
+  if (something_has_changed) {
+    if (!reason_model.value) {
+      window.alert($t('serial_field.missing_reason'));
+      return;
+    }
+    onDialogOK({
+      ...serial_model.value,
+      reason: reason_model.value,
+    });
+  }
+}
 </script>
 
 <style lang="scss" scoped>
