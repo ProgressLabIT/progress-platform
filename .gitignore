@@ -64,7 +64,5 @@ artifacts/
 
 webapps/main/src__
 webapps/api/package-lock.json
-*.lock
 testing/cypress/e2e/1-getting-started
 testing/cypress/e2e/2-advanced-examples
-webapps/main/yarn.lock
