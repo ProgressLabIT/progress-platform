@@ -181,16 +181,12 @@ export default {
     user_can_delete() {
       return (
         this.$store.getters.hasPermission('production') &&
-        !this.$store.getters.getSerialData(this.serialKey).deleted &&
-        this.main_selected
+        !this.$store.getters.getSerialData(this.serialKey).deleted
       );
     },
 
     can_edit() {
-      return (
-        !this.$store.getters.getSerialData(this.serialKey).deleted &&
-        this.main_selected
-      );
+      return !this.$store.getters.getSerialData(this.serialKey)?.deleted;
     },
   },
 
