@@ -2,6 +2,7 @@
   <div v-if="!mini_state" class="q-pa-md q-gutter-sm">
     <q-tree
       ref="serialNodes"
+      id="serial-tree"
       v-model:selected="selected"
       :nodes="nodes"
       node-key="key"
@@ -16,24 +17,18 @@
           @mouseleave="over_key = null"
         >
           <div
-            v-if="prop.node.replaced"
-            :class="
-              prop.node.key === selected
-                ? 'text-weight-bold text-secondary'
-                : 'text-secondary'
-            "
-          >
-            {{ `(*) ${prop.node.product_code}` }}
-          </div>
-          <div
-            v-else
-            :class="
-              prop.node.key === selected
-                ? 'text-weight-bold text-primary'
-                : 'text-primary'
-            "
+            :class="{
+              'text-disabled': prop.node.replaced && prop.node.key !== selected,
+              'text-weight-bold text-high': prop.node.key === selected,
+              'text-primary': !prop.node.replaced && prop.node.key !== selected,
+            }"
           >
             {{ prop.node.product_code }}
+          </div>
+          <div class="absolute-right q-py-xs">
+            <q-badge v-if="prop.node.replaced" color="theme-grey" outline>
+              <q-icon name="mdi-link-off" size="12px" />
+            </q-badge>
           </div>
           <q-btn
             v-if="prop.node.parent_key && !prop.node.replaced && !edit_mode"
@@ -57,17 +52,13 @@
       </template>
 
       <template #default-body="prop">
-        <div>
-          <span :class="prop.node.key === selected ? 'text-weight-bold' : ''"
-            ># {{ prop.node.label }}
-            <q-tooltip
-              v-if="prop.node.product_description"
-              anchor="bottom middle"
-              self="top middle"
-            >
-              {{ prop.node.product_description }}
-            </q-tooltip>
-          </span>
+        <div
+          :class="{
+            'text-weight-bold': prop.node.key === selected,
+            'text-disabled': prop.node.replaced,
+          }"
+        >
+          # {{ prop.node.label }}
         </div>
       </template>
     </q-tree>
@@ -121,10 +112,11 @@ export default {
 
   watch: {
     selected: {
-      handler() {
-        if (!this.edit_mode) {
-          this.$emit('select', this.selected);
+      handler(serial_key) {
+        if (!serial_key) {
+          this.selected = this.nodes[0].key;
         }
+        this.$emit('select', this.selected);
       },
     },
   },
@@ -223,14 +215,11 @@ export default {
           serial_key: node.key,
         }),
       ]).then((values) => {
-        console.log(values);
         this.showEditComponentLink(node, values[0], values[1]);
       });
     },
 
     showEditComponentLink(node, parent_serial, serial) {
-      console.log(parent_serial);
-      console.log(serial);
       let serialModel = {
         _key: serial._key,
         label: serial.code,
@@ -308,3 +297,7 @@ export default {
   },
 };
 </script>
+<style lang="sass">
+#serial-tree .q-tree__node-body
+  padding-top: 0px !important
+</style>
