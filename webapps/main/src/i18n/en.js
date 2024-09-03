@@ -304,6 +304,7 @@ export default {
   max_quantity_reached: 'Max quantity reached',
   message: 'Message',
   message_prompt: 'Write...',
+  metadata: 'metadata',
   min: 'min',
   name: 'Name',
   new: 'new',

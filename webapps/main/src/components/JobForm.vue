@@ -28,7 +28,7 @@
         <FormField
           :field="field"
           :disable="!isJobActive || batchStep?.done"
-          :root-path="`/media/step/${step._key}`"
+          :root-path="`/media/step/${step._key}/${field._key}`"
           @update="(value) => updateField(field, value)"
         />
       </div>

@@ -6,7 +6,7 @@
     :no-backdrop-dismiss="false"
     @close="onDialogHide"
   >
-    <FormFieldSearch @select="onDialogOK" />
+    <FormFieldSearch @select="onDialogOK" :excludeKeys="excludeKeys" />
   </BaseDialog>
 </template>
 
@@ -16,7 +16,7 @@ import BaseDialog from '@/components/BaseDialog.vue';
 import FormFieldSearch from '@/components/FormFieldSearch.vue';
 
 defineEmits(useDialogPluginComponent.emitsObject);
-
+defineProps({ excludeKeys: { type: Array, default: () => [] } });
 const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent();
 // This can't be inside the template due to unwrapping
 // See: https://github.com/vuejs/composition-api/issues/317#issuecomment-1069145915

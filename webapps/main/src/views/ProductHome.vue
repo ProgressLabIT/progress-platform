@@ -127,8 +127,7 @@
           v-else
           filled
           dense
-          type="text"
-          autogrow
+          type="textarea"
           :model-value="temp_desc"
           class="q-mt-md"
           @update:model-value="(value) => updateField('description', value)"
@@ -149,10 +148,8 @@
           @update:model-value="updateField('tags', $event)"
         />
         <div v-else class="q-mt-xs">
-          <span v-if="product.tags && product.tags.length === 0" class="text-h3"
-            >-</span
-          >
-          <TagChips v-else :tags="product?.tags" />
+          <span v-if="product.tags.length === 0" class="text-h3">-</span>
+          <TagChips v-else :tags="product.tags" />
         </div>
       </div>
 
@@ -193,59 +190,8 @@
 
     <!-- RIGHT SECTION -->
 
+    <!-- NOTES -->
     <div class="col-4 q-px-md full-height">
-      <!-- TRACEABILITY SETTING -->
-      <q-card square class="surface2 q-px-sm q-pt-sm q-pb-md column no-wrap">
-        <q-card-section>
-          <div class="text-h5 display weight-bold text-uppercase col-auto">
-            {{ $t('traceability') }}
-          </div>
-        </q-card-section>
-
-        <!-- TRACEABILITY SWITCH -->
-        <q-card-section>
-          <q-toggle
-            filled
-            clearable
-            emit-value
-            map-options
-            :model-value="product.traceability_level"
-            :label="$t('traceability.enabled')"
-            :disable="!editMode"
-            true-value="form_only"
-            false-value="none"
-            @update:model-value="updateField('traceability_level', $event)"
-          />
-        </q-card-section>
-
-        <!-- PRODUCT COUNTER -->
-        <q-card-section>
-          <div class="q-mt-lg col-auto">
-            <div class="text-h5 weight-bold text-uppercase">
-              {{ $t('counter') }}
-            </div>
-            <div class="row q-gutter-md items-center q-mt-xs">
-              <div style="white-space: pre-line" class="text-body1">
-                {{ counter_name || 'NA' }}
-              </div>
-
-              <q-btn
-                v-if="editMode"
-                size="sm"
-                flat
-                round
-                icon="mdi-pencil"
-                @click="show_counter_form = true"
-              />
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-    </div>
-
-    <!-- RIGHT COLUMN -->
-    <div class="col-4 q-pl-md column full-height no-wrap">
-      <!-- PRODUCTION NOTES -->
       <q-card
         square
         class="surface2 q-px-sm q-pt-sm q-pb-md column no-wrap"
@@ -275,68 +221,125 @@
           </q-input>
         </q-card-section>
       </q-card>
+    </div>
 
+    <!-- RIGHT COLUMN -->
+    <div class="col-4 q-pl-md column full-height no-wrap">
       <!-- DOCS -->
-      <q-card
-        square
-        class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap q-mt-lg"
-      >
-        <q-card-section class="text-h5 display highlight col-auto">
-          {{ $capitalize($t('document.label', 2)) }}
-        </q-card-section>
-        <q-list class="col-shrink scroll" dense>
-          <q-item
-            v-for="(doc, index) in docs"
-            :key="index"
-            clickable
-            @click="showMedia(index)"
+      <div class="col-auto">
+        <q-card
+          square
+          class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap"
+        >
+          <q-card-section class="text-h5 display highlight col-auto">
+            {{ $capitalize($t('document.label', 2)) }}
+          </q-card-section>
+          <q-list class="col-shrink scroll" dense>
+            <q-item
+              v-for="(doc, index) in docs"
+              :key="index"
+              clickable
+              @click="showMedia(index)"
+            >
+              <q-item-section class="col" :class="{ 'text-italic': doc.temp }">
+                <q-item-label>
+                  {{ doc.name }}
+                  {{ doc.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section class="col-1">
+                <div>
+                  <q-btn
+                    v-if="editMode"
+                    flat
+                    round
+                    size="10px"
+                    icon="mdi-close"
+                    class="hover-red"
+                    @click.stop="deleteDoc(index)"
+                  >
+                  </q-btn>
+                </div>
+              </q-item-section>
+              <q-item-section class="col-auto text-right">
+                {{ $bytes(doc.size) }}
+              </q-item-section>
+            </q-item>
+          </q-list>
+
+          <input
+            ref="upload_doc"
+            type="file"
+            multiple
+            style="display: none"
+            accept="application/pdf, image/*"
+            @change="addFiles($event.target.files)"
+          />
+          <q-btn
+            v-if="editMode"
+            flat
+            class="full-width q-mt-md"
+            color="theme-blue"
+            @click="$refs.upload_doc.click()"
           >
-            <q-item-section class="col" :class="{ 'text-italic': doc.temp }">
-              <q-item-label>
-                {{ doc.name }}
-                {{ doc.temp ? '(' + $capitalize($t('unsaved')) + ')' : '' }}
-              </q-item-label>
-            </q-item-section>
-            <q-item-section class="col-1">
-              <div>
+            <span>{{ $t('document.add', 2) }}</span>
+            <q-space />
+            <q-icon name="mdi-paperclip" />
+          </q-btn>
+        </q-card>
+      </div>
+
+      <div class="col-auto q-mt-md">
+        <q-card
+          square
+          class="surface2 q-px-sm q-pt-sm q-pb-md col-shrink column no-wrap"
+        >
+          <q-card-section class="text-h5 display highlight col-auto">
+            {{ $capitalize($t('metadata')) }}
+          </q-card-section>
+          <q-card-section>
+            <div
+              v-for="(field, index) in product.metadata"
+              :key="field.custom_field_key"
+              class="row items-top"
+            >
+              <FormField
+                :field="field"
+                :root-path="`/media/product/${product_key}/meta/${field.custom_field_key}`"
+                dense
+                :disable="!editMode"
+                class="col"
+                @update="
+                  (value) => updateMetadataField(field.custom_field_key, value)
+                "
+              />
+              <div class="col-auto flex-center">
                 <q-btn
                   v-if="editMode"
                   flat
                   round
                   size="10px"
                   icon="mdi-close"
-                  class="hover-red"
-                  @click.stop="deleteDoc(index)"
-                >
-                </q-btn>
+                  class="hover-red q-mt-sm q-ml-sm"
+                  @click="metadata.splice(index, 1)"
+                />
               </div>
-            </q-item-section>
-            <q-item-section class="col-auto text-right">
-              {{ $bytes(doc.size) }}
-            </q-item-section>
-          </q-item>
-        </q-list>
-
-        <input
-          ref="upload_doc"
-          type="file"
-          multiple
-          style="display: none"
-          accept="application/pdf, image/*"
-          @change="addFiles($event.target.files)"
-        />
-        <q-btn
-          v-if="editMode"
-          flat
-          class="full-width q-mt-md"
-          color="theme-blue"
-          @click="$refs.upload_doc.click()"
-        >
-          <span>{{ $t('document.add', 2) }}</span>
-          <q-space />
-          <q-icon name="mdi-paperclip" />
-        </q-btn>
-      </q-card>
+            </div>
+          </q-card-section>
+          <q-btn
+            v-if="editMode"
+            flat
+            class="full-width q-mt-md"
+            color="theme-blue"
+            :disable="!editMode"
+            @click="addField"
+          >
+            <span>{{ $t('field_add') }}</span>
+            <q-space />
+            <q-icon name="mdi-plus" />
+          </q-btn>
+        </q-card>
+      </div>
 
       <!-- TODO: Enable after templates are being utilized somewhere -->
       <!-- PRINT TEMPLATES -->
@@ -419,40 +422,32 @@
         :media_src="show_template?.pdf"
         @close="show_template = null"
       />
-
-      <BaseDialog
-        :show="show_counter_form"
-        :no-backdrop-dismiss="false"
-        @close="show_counter_form = false"
-      >
-        <CounterSearch @select="selectCounter" />
-      </BaseDialog>
     </div>
   </div>
 </template>
 
 <script>
 import { generate } from '@pdfme/generator';
-import { mapState } from 'vuex';
+import { Dialog } from 'quasar';
+import { mapState, mapActions } from 'vuex';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
-import BaseDialog from '@/components/BaseDialog.vue';
+import FormField from '@/components/FormField.vue';
 import MediaViewer from '@/components/MediaViewer.vue';
 import TagInput from '@/components/TagInput.vue';
-import TagChips from '../components/TagChips.vue';
-import CounterSearch from '../components/settings/counters/CounterSearch.vue';
+import TagChips from '@/components/TagChips.vue';
+import AddCustomFieldDialog from '@/components/process-steps/AddCustomFieldDialog.vue';
 
 export default {
   name: 'ProductHome',
 
   components: {
     // BaseConfirmationDialog,
+    FormField,
     MediaViewer,
     BaseAutocompleteTemplate,
     TagInput,
     TagChips,
-    BaseDialog,
-    CounterSearch,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
@@ -471,8 +466,6 @@ export default {
       no_image: false,
       show_template: null,
       over_print: null,
-      show_counter_form: false,
-      new_product_counter: null,
     };
   },
 
@@ -485,15 +478,6 @@ export default {
       product: (state) => state.product.temp,
       saved_product: (state) => state.product.saved,
     }),
-
-    counter_name() {
-      if (this.new_product_counter) {
-        return this.new_product_counter.name;
-      } else if (this.$store.state.product.temp.counter) {
-        return this.$store.state.product.temp.counter.name;
-      }
-      return '';
-    },
 
     editMode: {
       get() {
@@ -563,21 +547,13 @@ export default {
       }
     },
 
-    traceability_options() {
-      return [
-        {
-          value: null,
-          label: this.$t('traceability.options.none'),
-        },
-        {
-          value: 'form_only',
-          label: this.$t('traceability.options.form_only'),
-        },
-        {
-          value: 'complete',
-          label: this.$t('traceability.options.complete'),
-        },
-      ];
+    metadata: {
+      get() {
+        return this.product?.metadata || [];
+      },
+      set(value) {
+        this.updateField('metadata', value);
+      },
     },
   },
 
@@ -595,6 +571,8 @@ export default {
   },
 
   methods: {
+    ...mapActions(['loadProductDetails']),
+
     // deltaPcString(p) {
     //   let pc_sign = p.delta_pc > 0 ? '+' : ''
     //   return '('.concat(pc_sign, p.delta_pc, '%)')
@@ -632,12 +610,6 @@ export default {
         param: field,
         new_value: value,
       });
-    },
-
-    selectCounter(counter) {
-      this.new_product_counter = counter;
-      this.product.counter_key = counter._key;
-      this.show_counter_form = false;
     },
 
     addFiles(fileList) {
@@ -679,6 +651,33 @@ export default {
 
     showMedia(value) {
       this.show_media = value;
+    },
+
+    addField() {
+      console.log(this.metadata.map((f) => f.custom_field_key));
+      Dialog.create({
+        component: AddCustomFieldDialog,
+        componentProps: {
+          excludeKeys: this.metadata.map((f) => f.custom_field_key),
+        },
+      }).onOk((customField) => {
+        this.metadata = [
+          ...this.metadata,
+          {
+            custom_field_key: customField._key,
+            label: customField.default_label,
+            hint: customField.default_hint,
+          },
+        ];
+      });
+    },
+
+    updateMetadataField(custom_field_key, value) {
+      this.metadata = this.metadata.map((field) => {
+        return field.custom_field_key === custom_field_key
+          ? { ...field, value }
+          : field;
+      });
     },
 
     async showTemplatePreview(t) {
@@ -725,10 +724,6 @@ export default {
           ),
         },
       };
-
-      if (new_doc_list) {
-        product_update.new_docs = new_doc_list.filter((d) => 'temp' in d);
-      }
 
       if (new_doc_list) {
         product_update.new_docs = new_doc_list.filter((d) => 'temp' in d);

@@ -136,7 +136,7 @@
                 v-for="field in form_fields"
                 :key="field._key"
                 :field="field"
-                :root-path="`/media/issue/${issue?._key}`"
+                :root-path="`/media/issue/${issue?._key}/${field._key}`"
                 @update="field.value = $event"
               />
             </template>
@@ -592,6 +592,8 @@ export default {
       const { data } = await this.$api.post('event', event);
       const issue_key =
         this.mode === 'new' ? data.detail.issue_key : issue_data._key;
+
+      // TODO: Find a way to revert issue creation if file saving doesn't work, or save everything at once via form
       await this.saveFiles(issue_key);
 
       // If from work session, fetch issues directly, otherwise signal the parent component to do so

@@ -85,11 +85,17 @@
           <div>
             <span
               class="text-body2 q-ma-none"
-              :class="{ smaller: dense, 'text-low': readonly, 'text-disabled': disable }"
+              :class="{
+                smaller: dense,
+                'text-low': readonly,
+                'text-disabled': disable,
+              }"
             >
               {{ field.label ?? field.default_label }}
             </span>
-            <span v-if="field.mandatory" class="text-theme-red q-ml-xs"> * </span>
+            <span v-if="field.mandatory" class="text-theme-red q-ml-xs">
+              *
+            </span>
           </div>
           <div
             class="smaller text-low"
@@ -227,7 +233,7 @@
     <div v-if="fieldType === 'files'">
       <FilesList
         :files="fieldValue"
-        :root-path="`${rootPath}/${field._key}`"
+        :root-path="rootPath"
         :label="field.label ?? field.default_label"
         :disable="disable || readonly"
         :mandatory="field.mandatory"
@@ -272,8 +278,8 @@ const props = defineProps({
   },
   readonly: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 const emit = defineEmits(['update']);
@@ -340,7 +346,7 @@ function addFiles(fileList) {
       if (!shouldReplace) {
         return;
       }
-
+      // Delete existing file before replacing it
       existingFiles.splice(existingIndex, 1);
     }
 

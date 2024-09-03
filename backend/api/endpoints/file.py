@@ -1,12 +1,11 @@
 import os
 import traceback
 
-from fastapi import APIRouter, Body, Depends, Form, HTTPException, UploadFile, Depends
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, UploadFile
 
-from commons.models.form import FileBucket, FileTargetData
-from commons.utils.db import db
+from models.form import FileBucket, FileTargetData
+from utils.db import db
 from utils.file import FileHandler
-from utils import auth
 
 
 router = APIRouter()
@@ -15,8 +14,7 @@ collection_map = {
   FileBucket.ISSUE: 'Issue',
   FileBucket.PRODUCT: 'Product',
   FileBucket.TRACEABILITY: 'WorkOrder',
-  FileBucket.USER: 'User',
-  FileBucket.SERIALS: 'Serial'
+  FileBucket.USER: 'User'
 }
 
 
@@ -25,9 +23,9 @@ def verify_target_data(
   object_key: str,
   subfolder: str | None = None
 ):
-  object = db.collection(collection_map[bucket]).get(object_key)
+  target = db.collection(collection_map[bucket]).get(object_key)
   # Check whether an entity with the key provided exists
-  if not object:
+  if not target:
     raise HTTPException(
       status_code = 404,
       detail = f'No {collection_map[bucket]} with key {object_key} exists on the database'
@@ -35,23 +33,14 @@ def verify_target_data(
 
   # Check whether the field key corresponds to an actual field (does not check whether the field is used in a specific form)
   if subfolder:
-    invalid = True
     if bucket == FileBucket.ISSUE:
-      for data in object['data']:
-        if data['form_field_key'] == subfolder:
-          invalid = False
-          break
-    if bucket == FileBucket.SERIALS:
-      serial = db.collection('Serial').get(object_key)
-      if not serial:
+      form_field_keys = [f['form_field_key'] for f in target['data']]
+      if subfolder not in form_field_keys:
         raise HTTPException(
           status_code = 404,
-          detail = f'No Serial with key {object_key} exists on the database'
+          detail = f'No form field with with key {subfolder} exists for this type of issue'
         )
-      for data in object['data']:
-        if data['form_field_key'] == subfolder:
-          invalid = False
-          break
+
     elif bucket == FileBucket.TRACEABILITY:
       batch_key, step_key, custom_field_key, form_field_key = subfolder.split('/')
       batch = db.collection('Batch').get(batch_key)
@@ -79,20 +68,27 @@ def verify_target_data(
               status_code = 404,
               detail = f'FormField with key {form_field_key} does not correspond to CustomField with key {custom_field_key}'
             )
-          invalid = False
-          break
-
-    if invalid:
-      raise HTTPException(
-        status_code = 404,
-        detail = f'No field with with key {subfolder} exists on the database'
-      )
+        
+    elif bucket == FileBucket.PRODUCT:
+      doc_type, *rest = subfolder.split('/')
+      if doc_type == 'meta':
+        field_key = rest[0]
+        custom_field = db.collection('CustomField').get(field_key)
+        if not custom_field:
+          raise HTTPException(
+            status_code = 404,
+            detail = f'No field with key {field_key} exists on the database'
+          )
+        if not custom_field.get('type', None) == 'files':
+          raise HTTPException(
+            status_code = 422,
+            detail = f'Field {field_key} is not of file type'
+          )      
 
   return FileTargetData(bucket=bucket, object_key=object_key, subfolder=subfolder)
 
 
-@router.post('/files',
-    dependencies=[Depends(auth.verify_token)])
+@router.post('/files')
 async def upload_files(
   contents: list[UploadFile],
   bucket: FileBucket = Form(...),
@@ -125,8 +121,7 @@ async def upload_files(
       )
 
 
-@router.delete('/files',
-    dependencies=[Depends(auth.verify_token)])
+@router.delete('/files')
 async def delete_files(
   filenames: list[str],
   bucket: FileBucket = Body(...),

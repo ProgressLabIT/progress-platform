@@ -30,7 +30,7 @@
             >
               <FormField
                 :field="field"
-                :root-path="`/media/issue/${issueKey}`"
+                :root-path="`${root_path}/${field._key}`"
                 dense
                 disable
               />
@@ -243,6 +243,10 @@ export default {
           ({ form_field_key }) => form_field_key === field._key,
         )?.value,
       }));
+    },
+
+    root_path() {
+      return '/media/issue/' + this.issueKey;
     },
 
     user_can_delete() {

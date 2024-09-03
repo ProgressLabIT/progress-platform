@@ -312,6 +312,7 @@ export default {
   max_quantity_reached: 'Quantità massima raggiunta',
   message: 'Messaggio | Messaggi',
   message_prompt: 'Scrivi...',
+  metadata: 'metadati',
   min: 'min',
   name: 'Nome',
   new: 'nuovo',
