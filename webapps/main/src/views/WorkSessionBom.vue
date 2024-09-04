@@ -39,7 +39,9 @@
               :disable="!job.active_batch_key"
               @click="serial_form_bom_line = props.row"
             >
-              {{ $t('edit') }}
+              {{
+                props.row.phase_key === job.phase_key ? $t('edit') : $t('view')
+              }}
             </q-btn>
           </q-td>
         </template>
@@ -50,6 +52,7 @@
         :bom_line="serial_form_bom_line"
         :batch_key="job.active_batch_key"
         :wo_key="job.wo_key"
+        :phase_key="job.phase_key"
         mode="new"
         @close="
           () => {
@@ -107,6 +110,7 @@
         :show="show_all_serial_form === true"
         :batch_key="job.active_batch_key ? job.active_batch_key : null"
         :wo_key="job.wo_key"
+        :phase_key="job.phase_key"
         mode="new"
         :bom_components="bom"
         @close="

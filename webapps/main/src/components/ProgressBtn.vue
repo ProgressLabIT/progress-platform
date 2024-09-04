@@ -276,11 +276,15 @@ export default {
         const traceability_mandatory =
           !!bom_line.traceability_level && bom_line.traceability_mandatory;
 
+        const same_phase = bom_line?.phase_key == this.job?.phase_key;
+
         const serials_declared = bom_line.declared_serials?.length;
         const serials_required = (bom_line?.qt ?? 0) * this.job.active_batch_qt;
 
         const bom_line_pass =
-          !traceability_mandatory || serials_declared === serials_required;
+          !traceability_mandatory ||
+          serials_declared === serials_required ||
+          !same_phase;
         return bom_line_pass;
       });
 

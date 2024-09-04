@@ -31,6 +31,7 @@ export default {
     },
     delete_selected: 'delete selected',
     edit: 'edit',
+    view: 'view',
     updated: 'bill of materials updated',
     label: 'bom',
     missing: 'no bill of materials',

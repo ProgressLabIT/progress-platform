@@ -49,10 +49,14 @@
             >
             </BaseAutocompleteSerial>
             <q-btn
-              v-if="!replace_serials[serial._id]"
+              v-if="
+                !replace_serials[serial._id] &&
+                phase_key === bom_line?.phase_key
+              "
               flat
               round
               icon="mdi-pencil"
+              :disable="phase_key !== bom_line?.phase_key"
               @click="replace_serials[serial._id] = true"
             />
             <q-input
@@ -120,6 +124,10 @@ export default {
     batch_key: {
       type: String,
       default: null,
+    },
+    phase_key: {
+      type: String,
+      required: true,
     },
     wo_key: {
       type: String,
@@ -243,7 +251,8 @@ export default {
           ? this.serialModel[serial._id] && this.serialModel[serial._id]?._key
           : this.serialModel[serial._id]?.length >= this.component_per_product;
       const not_replaced = !this.replace_serials[serial._id];
-      return full_quantity_recorded && not_replaced;
+      const different_phase = this.phase_key !== this.bom_line?.phase_key;
+      return (full_quantity_recorded && not_replaced) || different_phase;
     },
 
     onSerialSelection(selectedSerials, selected_key) {

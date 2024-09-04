@@ -106,6 +106,7 @@ export default {
   },
   due_by: 'scadenza',
   edit: 'modifica',
+  view: 'visualizza',
   element: 'elemento | elementi',
   end: 'Fine',
   end_date: 'data chiusura',

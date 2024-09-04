@@ -56,12 +56,15 @@
               :filter_used="true"
               :filtered_values="booked_serials[component.component_key]"
               :disable="
-                (serialModel[getComponentLineKey(component.component_key)]
+                ((serialModel[getComponentLineKey(component.component_key)]
                   ?.length >= qt[component.component_key] ||
                   (qt[component.component_key] === 1 &&
                     serialModel[getComponentLineKey(component.component_key)]
                       ?._key)) &&
-                !replace_serials[getComponentLineKey(component.component_key)]
+                  !replace_serials[
+                    getComponentLineKey(component.component_key)
+                  ]) ||
+                phase_key !== component.phase_key
               "
               @select="
                 (selection) =>
@@ -81,6 +84,7 @@
               flat
               round
               icon="mdi-pencil"
+              :disable="phase_key !== component.phase_key"
               @click="
                 replace_serials[getComponentLineKey(component.component_key)] =
                   true
@@ -88,7 +92,8 @@
             />
             <q-input
               v-if="
-                replace_serials[getComponentLineKey(component.component_key)]
+                replace_serials[getComponentLineKey(component.component_key)] &&
+                phase_key === component.phase_key
               "
               v-model="
                 replace_serials_reason[
@@ -174,6 +179,11 @@ export default {
       type: String,
       required: true,
     },
+    phase_key: {
+      type: String,
+      required: true,
+    },
+
     bom_components: {
       type: Object,
       default: null,
