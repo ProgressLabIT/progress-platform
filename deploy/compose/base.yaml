@@ -31,19 +31,39 @@ services:
     volumes:
       - media:/media
 
-  #traceability-service:
-  #  environment:
-  #    - PROGRESS_ARANGO_URL=http://db:8529
-  #    - PROGRESS_MEDIA_PATH=/media
-  #    - PROGRESS_API_ROOT_PATH=/traceability-service
-  #  ports:
-  #    - "8100"
-  #  volumes:
-  #    - media:/media
-
   db:
     volumes:
       - db_data:/var/lib/arangodb3
       - db_backup:/db_backup
     ports:
       - "8529"
+
+  broker:
+    image: apache/kafka:latest
+    hostname: broker
+    restart: unless-stopped
+    #container_name: broker
+    ports:
+      - 9092:9092
+      - 9101:9101
+      - 19092:19092
+      - 29093:29093
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT_HOST://localhost:9092,PLAINTEXT://broker:19092"
+      KAFKA_LISTENERS: "CONTROLLER://:29093,PLAINTEXT_HOST://localhost:9092,PLAINTEXT://:19092"
+      #KAFKA_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      #KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:19092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@broker:29093"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      CLUSTER_ID: "4L6g3nShT-eMCtK--X86sw"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
