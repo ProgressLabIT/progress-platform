@@ -129,14 +129,24 @@ def get_serial_hierarchy(
     serial_hierarchy = []
     for starting_serial in starting_serials:
       if (starting_serial in serials):
-         serial_children = get_children(serial_key=starting_serial, serials=serials, level=0)
+         serial_children = []
+         if (not serials[starting_serial]['replaced'] == True):
+           serial_children = get_children(serial_key=starting_serial, serials=serials, level=0)
          merged_serial = dict()
          merged_serial.update(serials[starting_serial])
          if (len(serial_children)>0):
            merged_serial['children'] = serial_children
          serial_hierarchy.append(merged_serial)
 
-    return serial_hierarchy
+    filtered_hierarchy = []
+    for hierarchy in serial_hierarchy:
+      if (hierarchy['serial_key'] == serial_key):
+        filtered_hierarchy.append(hierarchy)
+      elif ('children' in hierarchy and search_children(serial_key, hierarchy['children'])):
+          filtered_hierarchy.append(hierarchy)
+
+    return filtered_hierarchy
+
   except Exception:
     raise HTTPException(
       status_code=500,
@@ -156,12 +166,23 @@ def get_children(serial_key, serials, level):
       child_key = serials[serial]['to']
       merged_serial = dict()
       merged_serial.update(serials[child_key])
-      serial_children = get_children(serial_key=child_key, serials=serials, level=level)
+      serial_children = []
+      if (not serials[serial]['replaced'] == True):
+        serial_children = get_children(serial_key=child_key, serials=serials, level=level)
       if (len(serial_children)>0):
         merged_serial['children'] = serial_children
       children.append(merged_serial)
 
   return children
+
+def search_children(serial_key, children):
+  found = False
+  for child in children:
+    if (child['serial_key'] == serial_key):
+      found = True
+    elif 'children' in child:
+      found = found or search_children(serial_key, child['children'])
+  return found
 
 @router.get('/wip-serial',
     dependencies=[Depends(auth.verify_token)])
