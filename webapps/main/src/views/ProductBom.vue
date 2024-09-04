@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <div class="col-9 column full-height">
+    <div class="col-9 column full-height q-pr-md">
       <q-table
         id="product-bom"
         ref="bom"
@@ -48,6 +48,8 @@
         card-class="surface2"
         wrap-cells
         virtual-scroll
+        hide-no-data
+        hide-bottom
         :selection="editMode ? 'multiple' : 'none'"
         table-header-class="low-text"
         :rows="filtered_bom"
@@ -72,45 +74,47 @@
         <template #body-cell-code="{ value }">
           <div class="nowrap">{{ value }}</div>
         </template>
-
-        <template #bottom>
-          <div
-            class="row full-width items-center justify-between q-px-md"
-            style="height: 48px"
-          >
-            <div class="col-4">
-              <q-btn
-                v-show="editMode"
-                size="sm"
-                padding="xs lg"
-                color="theme-red"
-                icon="mdi-delete"
-                :label="$t('bom.delete_selected')"
-                @click="removeBomLines"
-              >
-              </q-btn>
-            </div>
-
-            <div class="smaller col-4 text-center">
-              {{ filtered_bom.length }} {{ $t('of') }} {{ temp_bom.length }}
-              {{ $t('element', 2).toUpperCase() }}
-            </div>
-
-            <div class="col-4 row justify-end">
-              <q-btn
-                v-show="editMode"
-                size="sm"
-                padding="xm lg"
-                color="theme-blue"
-                icon="mdi-plus"
-                :label="$t('bom.add_line')"
-                @click="openItemSearch"
-              >
-              </q-btn>
-            </div>
-          </div>
-        </template>
       </q-table>
+
+      <!-- BOTTOM ROW -->
+      <q-card class="col-auto surface2">
+        <q-separator />
+        <div
+          class="row full-width items-center justify-between q-px-md"
+          style="height: 48px"
+        >
+          <div class="col-4">
+            <q-btn
+              v-show="editMode"
+              size="sm"
+              padding="xs lg"
+              color="theme-red"
+              icon="mdi-delete"
+              :label="$t('bom.delete_selected')"
+              @click="removeBomLines"
+            >
+            </q-btn>
+          </div>
+
+          <div class="smaller col-4 text-center">
+            {{ filtered_bom.length }} {{ $t('of') }} {{ temp_bom.length }}
+            {{ $t('element', 2).toUpperCase() }}
+          </div>
+
+          <div class="col-4 row justify-end">
+            <q-btn
+              v-show="editMode"
+              size="sm"
+              padding="xm lg"
+              color="theme-blue"
+              icon="mdi-plus"
+              :label="$t('bom.add_line')"
+              @click="openItemSearch"
+            >
+            </q-btn>
+          </div>
+        </div>
+      </q-card>
     </div>
 
     <BaseDialog :show="show_product_catalog">
