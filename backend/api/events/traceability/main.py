@@ -309,6 +309,10 @@ class ProductionActivityEvent(BaseEvent):
     # else update job step progress
     else:
       self.update_job_step_progress()
+      new_job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.info.job_key)).next()
+      if ('wo_bom' in new_job_data):
+        setattr(self.job, 'wo_bom', new_job_data['wo_bom'])
+
       self.response = dict(
         message = f"Step completed for batch {self.info.active_batch_key}",
         job_data = self.job,
@@ -531,6 +535,9 @@ class ProductionActivityEvent(BaseEvent):
 
       if create_new_batch:
         self.response['batch_data'] = batch_execution_data
+        new_job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.info.job_key)).next()
+        if ('wo_bom' in new_job_data):
+          setattr(self.job, 'wo_bom', new_job_data['wo_bom'])
 
     if not self.job.first_phase:
       self.remove_wip(completed_batch_qt)

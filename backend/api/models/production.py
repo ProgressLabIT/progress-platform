@@ -150,6 +150,7 @@ class Job(FlexModel):
 
   job_docs: list[ProductDoc] = []
   job_bom: list[BomLineRead] = []
+  wo_bom: list[BomLineRead] = []
 
   forced: str | None = None
 
