@@ -270,41 +270,43 @@ export default {
     },
 
     checkMissingSerials() {
-      let missing_serial = false;
-      for (const wo_bom of this.job.wo_bom) {
-        if (
-          wo_bom?.traceability_mandatory &&
-          this.job.phase_key === wo_bom.phase_key
-        ) {
-          let declared = wo_bom?.declared_serials?.length | 0;
-          let required = (wo_bom?.qt | 0) * this.job.active_batch_qt;
-          missing_serial |= declared < required;
-        }
-      }
+      const has_bom = !!this.job?.wo_bom?.length;
 
-      return missing_serial;
+      const all_serials_filled_in = this.job.wo_bom.every((bom_line) => {
+        const traceability_mandatory =
+          !!bom_line.traceability_level && bom_line.traceability_mandatory;
+
+        const serials_declared = bom_line.declared_serials?.length;
+        const serials_required = (bom_line?.qt ?? 0) * this.job.active_batch_qt;
+
+        const bom_line_pass =
+          !traceability_mandatory || serials_declared === serials_required;
+        return bom_line_pass;
+      });
+
+      return has_bom && !all_serials_filled_in;
     },
 
     async completeStep() {
-      let missing_mandatory_fields = false;
+      // Check all fields are either not mandatory or if it is, the value is existing
+      const all_mandatory_fields_filled = this.current_step_form_fields.every(
+        (field) => {
+          const value = this.field_value(field._key);
+          const type = this.$store.getters.getCustomFieldByKey(
+            field.custom_field_key,
+          )?.type;
+          const field_not_mandatory = !field.mandatory;
+          const field_filled_in =
+            type === 'ternary'
+              ? // ternary field can be true or false, but must be filled in
+                [true, false].includes(value)
+              : // All other values must not be false, null/undefined or empty string.
+                !!value;
+          return field_not_mandatory || field_filled_in;
+        },
+      );
 
-      this.current_step_form_fields.forEach((field) => {
-        let value = this.field_value(field._key);
-
-        let type = this.$store.getters.getCustomFieldByKey(
-          field.custom_field_key,
-        )?.type;
-
-        if (
-          type !== 'ternary' &&
-          field.mandatory &&
-          (!value || value === null || value === '')
-        ) {
-          missing_mandatory_fields = true;
-        }
-      });
-
-      if (missing_mandatory_fields) {
+      if (!all_mandatory_fields_filled) {
         window.alert(this.$t('fill_mandatory_fields'));
         return;
       }
@@ -326,7 +328,8 @@ export default {
           return;
         }
 
-        if (this.checkMissingSerials() && this.traceability_enabled) {
+        const missing_serials = this.checkMissingSerials();
+        if (missing_serials && this.traceability_enabled) {
           window.alert(this.$t('batch_declare_component_serials'));
           return;
         }
