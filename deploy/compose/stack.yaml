@@ -99,3 +99,7 @@ services:
         - "traefik.http.routers.db.middlewares=db_root"
         - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
         - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
+
+  broker:
+    networks:
+      - progress
