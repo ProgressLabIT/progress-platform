@@ -534,7 +534,7 @@ class ProductionActivityEvent(BaseEvent):
       )
 
       if create_new_batch:
-        self.response['batch_data'] = batch_execution_data
+        self.response['batch_data'] = self.get_batch_execution_data()
         new_job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.info.job_key)).next()
         if ('wo_bom' in new_job_data):
           setattr(self.job, 'wo_bom', new_job_data['wo_bom'])
