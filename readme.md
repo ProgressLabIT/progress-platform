@@ -21,6 +21,8 @@
 docker volume create --driver local -o o=bind -o type=none -o device="c:\docker\logs" logs
 docker volume create --driver local -o o=bind -o type=none -o device="c:\docker\media" media
 docker volume create --driver local -o o=bind -o type=none -o device="c:\docker\db_data" db_data
+docker volume create --driver local -o o=bind -o type=none -o device="c:\docker\grafana_data" grafana_data
+docker volume create --driver local -o o=bind -o type=none -o device="c:\docker\prometheus_data" prometheus_data
 docker volume create --driver local -o o=bind -o type=none -o device="c:\docker\db_backup" db_backup
 
 ```

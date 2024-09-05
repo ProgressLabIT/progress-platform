@@ -7,6 +7,10 @@ volumes:
     external: True
   db_data:
     external: True
+  prometheus_data:
+    external: True
+  grafana_data:
+    external: True
 
 services:
   router:

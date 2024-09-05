@@ -108,6 +108,7 @@ services:
     user: root
     volumes:
       - ./deploy/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     ports:
@@ -119,6 +120,9 @@ services:
     ports:
       - 3000:3000
     restart: unless-stopped
+    volumes:
+      - ./deploy/config/grafana/:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=grafana
