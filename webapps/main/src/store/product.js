@@ -242,7 +242,7 @@ const product = {
       const promises = [];
 
       // For each field, add / delete files
-      for (const field of new_product_data.metadata) {
+      for (const field of new_product_data?.metadata ?? []) {
         // Check for file fields and return only those that have updates
         const isFileType =
           context.getters.getCustomFieldByKey(field.custom_field_key).type ==
