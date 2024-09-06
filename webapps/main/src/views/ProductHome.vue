@@ -206,12 +206,12 @@
             clearable
             emit-value
             map-options
-            :model-value="product.traceability_level"
+            :model-value="!!product.traceability_level"
             :label="$t('traceability.enabled')"
             :disable="!editMode"
-            true-value="form_only"
-            false-value="none"
-            @update:model-value="updateField('traceability_level', $event)"
+            @update:model-value="
+              updateField('traceability_level', $event ? 'form_only' : null)
+            "
           />
         </q-card-section>
 
