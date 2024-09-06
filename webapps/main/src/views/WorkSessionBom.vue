@@ -27,6 +27,18 @@
         </template>
         <template #body-cell-serials="props">
           <q-td :props="props">
+            <span v-if="props.row.traceability_mandatory" class="q-mr-sm">
+              <q-icon
+                v-if="props.row.batch_qt === props.row.declared_serials.length"
+                name="mdi-check-circle"
+                color="theme-green"
+              />
+              <q-icon
+                v-else
+                name="mdi-asterisk-circle-outline"
+                color="theme-red"
+              />
+            </span>
             <q-btn
               v-if="
                 props.value !== null &&
