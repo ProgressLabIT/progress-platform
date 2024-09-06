@@ -470,6 +470,13 @@
         :media_src="show_template?.pdf"
         @close="show_template = null"
       />
+      <BaseDialog
+        :show="show_counter_form"
+        :no-backdrop-dismiss="false"
+        @close="show_counter_form = false"
+      >
+        <CounterSearch @select="selectCounter" />
+      </BaseDialog>
     </div>
   </div>
 </template>
@@ -479,10 +486,12 @@ import { generate } from '@pdfme/generator';
 import { Dialog } from 'quasar';
 import { mapState, mapActions } from 'vuex';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
+import BaseDialog from '@/components/BaseDialog.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
 import FormField from '@/components/FormField.vue';
 import MediaViewer from '@/components/MediaViewer.vue';
 import TagInput from '@/components/TagInput.vue';
+import CounterSearch from '../components/settings/counters/CounterSearch.vue';
 import TagChips from '@/components/TagChips.vue';
 import AddCustomFieldDialog from '@/components/process-steps/AddCustomFieldDialog.vue';
 
@@ -493,9 +502,11 @@ export default {
     // BaseConfirmationDialog,
     FormField,
     MediaViewer,
+    BaseDialog,
     BaseAutocompleteTemplate,
     TagInput,
     TagChips,
+    CounterSearch,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
@@ -514,6 +525,8 @@ export default {
       no_image: false,
       show_template: null,
       over_print: null,
+      show_counter_form: false,
+      new_product_counter: null,
     };
   },
 
@@ -526,6 +539,15 @@ export default {
       product: (state) => state.product.temp,
       saved_product: (state) => state.product.saved,
     }),
+
+    counter_name() {
+      if (this.new_product_counter) {
+        return this.new_product_counter.name;
+      } else if (this.$store.state.product.temp.counter) {
+        return this.$store.state.product.temp.counter.name;
+      }
+      return '';
+    },
 
     editMode: {
       get() {
@@ -658,6 +680,12 @@ export default {
         param: field,
         new_value: value,
       });
+    },
+
+    selectCounter(counter) {
+      this.new_product_counter = counter;
+      this.product.counter_key = counter._key;
+      this.show_counter_form = false;
     },
 
     addFiles(fileList) {
