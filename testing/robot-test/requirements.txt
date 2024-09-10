@@ -1,4 +1,11 @@
 robotframework
 robotframework-tidy
 robotframework-browser
+robotframework-requests
+robotframework-datadriver
 python-arango==7.*
+httpx
+fastapi==0.*
+pycparser==2.20
+pydantic==2.*
+pydantic-settings==2.*

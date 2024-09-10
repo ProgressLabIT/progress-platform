@@ -23,12 +23,9 @@ class APIAuthManager:
 
     def authenticate(self, base_url, username = '', pwd = '', grant_type = '', scope = '', client_id = '', client_secret = ''):
         self.base_url = base_url
-        auth_data = {'grant_type': grant_type,
+        auth_data = {
         'username': username,
-        'password': pwd,
-        'scope': scope,
-        'client_id': client_id,
-        'client_secret': client_secret
+        'password': pwd
         }
 
         response = httpx.post(self.base_url+'/api/auth', data=auth_data)

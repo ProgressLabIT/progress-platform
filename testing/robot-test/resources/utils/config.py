@@ -17,6 +17,8 @@ class Settings(BaseSettings):
   kafka_client_id_producer: str = "backend-service-producer"
   kafka_session_to_ms: int = 10000
 
+  api_url: str = "http://api:8000"
+
   model_config = SettingsConfigDict(
     env_prefix = "progress_",
     secrets_dir = "/run/secrets"

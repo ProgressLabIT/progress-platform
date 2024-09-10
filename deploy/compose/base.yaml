@@ -7,6 +7,8 @@ volumes:
     external: True
   db_data:
     external: True
+  robot_reports:
+    external: True
 
 services:
   router:
@@ -67,3 +69,9 @@ services:
       KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
+
+  robot:
+    environment:
+      - PROGRESS_ARANGO_URL=http://db:8529
+    volumes:
+      - robot_reports:/robot-framework/reports

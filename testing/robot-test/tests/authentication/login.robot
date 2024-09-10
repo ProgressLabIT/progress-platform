@@ -3,7 +3,7 @@ Library     ../../resources/ApiAuthenticator.py
 
 
 *** Test Cases ***
-No one is quthenticated at startup
+No one is authenticated at startup
     ${logged_user}=    Get Logged User Key
     Log To Console    ${logged_user}
 
