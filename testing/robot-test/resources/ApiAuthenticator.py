@@ -1,6 +1,7 @@
 import httpx
 from robot.api.deco import keyword
 from utils.api_auth_manager import APIAuthManager
+from utils.db import db
 
 class ApiAuthenticator:
     def __init__(self) -> None:
@@ -19,10 +20,14 @@ class ApiAuthenticator:
       except ValueError:
          return "no token defined"
 
-    def get_loggeg_user_from_key(self, user_key):
+    def get_logged_username_from_key(self, user_key):
        try:
-          user = User(**db.collection('User').get(user_key))
-          return user
+          user = db.collection('User').get(user_key)
+          return user['username']
        except:
          return "user not found"
+
+    if __name__ == "__main__":
+      user = db.collection('User').get('29212414')
+      print(user['username'])
 
