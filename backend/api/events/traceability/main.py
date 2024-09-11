@@ -131,6 +131,8 @@ class ProductionActivityEvent(BaseEvent):
     # Check config for unassigned jobs
     show_unassigned_jobs_to_operators = self.tx.collection('Config').get('show_unassigned_jobs_to_operators')
     can_self_assign = show_unassigned_jobs_to_operators.get('value', True) if show_unassigned_jobs_to_operators is not None else True
+    add_to_queue = False
+    
     if self.job.assigned_to is None:
       if not can_self_assign:
         raise JobHasNoAssigneeError('Unassigned jobs cannot be worked on as config "show_unassigned_jobs_to_operators" is false')
