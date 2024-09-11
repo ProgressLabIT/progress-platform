@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     env_prefix = "progress_",
     secrets_dir = "/run/secrets"
   )
+
   """
   Provided as docker secrets:
   - progress_api_db_pwd

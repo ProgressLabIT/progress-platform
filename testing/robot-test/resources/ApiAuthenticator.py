@@ -22,6 +22,20 @@ class ApiAuthenticator:
       except ValueError:
          return "no token defined"
 
+    def start_session(self, session_key):
+      try:
+        session_data = {
+          'user_key': APIAuthManager.getInstance().getUserKey()
+        }
+        response = self.client.post(self.conf.api_url+'/api/session', headers=APIAuthManager.getInstance().getAuthHeader(), json=session_data)
+        if (response.status_code == 401):
+           return response.json()['detail']
+        if (response.json()['status'] == 200):
+           return response.json()['detail']['session_key']
+        return "unrecognized"
+      except ValueError:
+         return "no token defined"
+
     def get_logged_username_from_key(self, user_key):
        try:
           user = db.collection('User').get(user_key)
@@ -29,7 +43,14 @@ class ApiAuthenticator:
        except:
          return "user not found"
 
+    #TEST
     if __name__ == "__main__":
-      user = db.collection('User').get('29212414')
-      print(user['username'])
+      APIAuthManager.getInstance().authenticate('http://localhost:8000', username='simone', pwd='simone')
+      session_data = {
+          'user_key': APIAuthManager.getInstance().getUserKey()
+        }
+      client = httpx.Client()
+      response = client.post('http://localhost:8000/api/session', headers=APIAuthManager.getInstance().getAuthHeader(), json=session_data)
+      response.status_code
+      print(response)
 
