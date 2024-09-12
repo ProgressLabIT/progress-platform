@@ -170,6 +170,11 @@ export default {
       default: false,
     },
 
+    can_search: {
+      type: Boolean,
+      default: true,
+    },
+
     selection_qt: {
       type: Number,
       default: 1,
@@ -337,12 +342,15 @@ export default {
     filter(value, update, abort) {
       if (this.last_research === value) {
         update();
+      } else if (!this.can_search && this.initial_values) {
+        update(() => {
+          this.addInitialValues(value);
+        });
       } else if (value.length < 3 && !this.product_key) {
         abort();
       } else {
         update(() => {
           this.loadSerials(value);
-          // No need of multiFieldSearch here. The api already checks all the necessary fields with a single search term.
         });
       }
     },

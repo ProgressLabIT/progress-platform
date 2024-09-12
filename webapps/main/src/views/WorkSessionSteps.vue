@@ -47,6 +47,7 @@
           :key="current_step._key"
           :step="current_step"
           :work_order_key="work_order_key"
+          :batch_key="batch_key"
         />
       </keep-alive>
     </template>
@@ -105,6 +106,10 @@ export default {
 
     work_order_key() {
       return this.$store.state.traceability.current_batch_data?.work_order_key;
+    },
+
+    batch_key() {
+      return this.$store.state.traceability.current_batch_data?._key;
     },
 
     force_order() {

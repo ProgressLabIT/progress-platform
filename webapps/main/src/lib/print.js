@@ -218,12 +218,8 @@ export class IssueTypeContext extends TemplateContext {
         case 'product.description':
           return product.description;
 
-        case 'serial.serial_number':
-          if (this.serial) {
-            return this.serial.code;
-          } else {
-            return '';
-          }
+        case 'serial':
+          return this.serial?.code;
 
         default:
           return undefined;

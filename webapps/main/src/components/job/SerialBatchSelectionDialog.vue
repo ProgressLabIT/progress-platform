@@ -11,9 +11,9 @@
       </q-card-section>
       <q-card-section>
         <q-input
+          v-model="serial_search_text"
           filled
           :label="$t('scan_serial')"
-          v-model="serial_search_text"
           @keyup.enter="selectSerial"
         >
         </q-input>
@@ -26,6 +26,16 @@
             :model-value="selected_serials"
             @update:model-value="ensureMaxQuantity"
           />
+        </q-card-section>
+        <q-card-section>
+          <q-checkbox
+            v-model="selectAll"
+            :label="$t('select_all')"
+          ></q-checkbox>
+          <q-checkbox
+            v-model="selectNone"
+            :label="$t('deselect_all')"
+          ></q-checkbox>
         </q-card-section>
         <q-card-actions align="between" class="q-mt-md">
           <q-btn
@@ -50,7 +60,7 @@
 
 <script setup>
 import { useDialogPluginComponent, useQuasar } from 'quasar';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t: $t } = useI18n({ useScope: 'global' });
@@ -75,6 +85,26 @@ const $q = useQuasar();
 let available_serials = ref(props.available_serials);
 let selected_serials = ref(props.selected_serials);
 let serial_search_text = ref('');
+const selectAll = ref(false);
+const selectNone = ref(false);
+
+watch(selectAll, () => {
+  if (selectAll.value) {
+    for (const serial of available_serials.value) {
+      if (!selected_serials.value.includes(serial.value)) {
+        selected_serials.value.push(serial.value);
+      }
+    }
+    selectNone.value = false;
+  }
+});
+
+watch(selectNone, () => {
+  if (selectNone.value) {
+    selected_serials.value.length = 0;
+    selectAll.value = false;
+  }
+});
 
 defineEmits(useDialogPluginComponent.emitsObject);
 

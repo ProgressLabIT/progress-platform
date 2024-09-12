@@ -70,10 +70,12 @@
         <LoadingSignal v-if="isLoadingTemplate" />
         <template v-else>
           <BaseAutocompleteSerial
-            v-if="context.type === 'step'"
+            v-if="context.type === 'step' && hasSerialLink"
             v-model="serialModel"
-            :initial_values="serialModel"
+            :initial_values="serialModelInitalValue"
+            :can_search="serialModelInitalValue.length <= 0"
             :label="$capitalize($t('serial'))"
+            :disable="serialModelInitalValue.length === 1"
             :work_order_key="context.step.work_order_key"
             @select="selectSerial"
           >
@@ -212,8 +214,17 @@ const selectedTemplate = ref();
 const isLoadingTemplate = ref(false);
 const formModel = ref();
 const serialModel = ref();
+const serialModelInitalValue = ref([]);
+const hasSerialLink = ref(false);
 
 const selectedTemplateBK = ref();
+
+const serialTemplateLinks = [
+  'serial',
+  'serial_qt',
+  'serial_create_date',
+  'serial_create_time',
+];
 
 async function loadSerial(serial_key) {
   if (serial_key) {
@@ -221,6 +232,27 @@ async function loadSerial(serial_key) {
     props.context.setSelectedSerial(data);
   } else {
     props.context.setSelectedSerial(null);
+  }
+}
+
+async function loadBatchSerial(batch_key) {
+  const { data: batch_serials } = await api.get('serial-batch', {
+    params: {
+      batch_key: batch_key,
+    },
+  });
+  for (const serial of batch_serials) {
+    serialModelInitalValue.value.push({
+      value: serial._key,
+      _key: serial._key,
+      label: serial.code,
+      wo_key: serial.wo_key,
+      product_key: serial.product_key,
+    });
+  }
+  if (serialModelInitalValue.value.length === 1) {
+    serialModel.value = serialModelInitalValue.value[0];
+    await loadSerial(serialModelInitalValue.value[0]._key);
   }
 }
 
@@ -235,9 +267,14 @@ onMounted(() => {
   if (props.context.type === 'issue' && props.context.links) {
     loadSerial(props.context.link);
   }
+
+  if (props.context.step.batch_key) {
+    loadBatchSerial(props.context.step.batch_key);
+  }
 });
 
 async function selectTemplate(template) {
+  hasSerialLink.value = false;
   selectedTemplateBK.value = template;
   activeStep.value = 1;
   selectedTemplate.value = undefined;
@@ -252,6 +289,10 @@ async function selectTemplate(template) {
         const link = data.links[fieldName];
         if (!link) {
           return [fieldName, ''];
+        }
+
+        if (serialTemplateLinks.includes(link.value)) {
+          hasSerialLink.value = true;
         }
 
         if (link.type === 'preset') {
