@@ -49,6 +49,8 @@ class SerialEventManager:
            self.create_serial(serial_data=self.serial_data, batch_key=None, finalize=True)
         case SerialCommandType.FINALIZE_BATCH:
            self.confirm_serials(quantity=event_parameters['quantity'], batch_execution_data=event_parameters['batch_execution_data'])
+        case SerialCommandType.STORE_BATCH_DATA:
+           self.store_data(quantity=event_parameters['quantity'], batch_execution_data=event_parameters['batch_execution_data'])
         case SerialCommandType.FINALIZE_WO:
            self.release_serials(batch_execution_data=event_parameters['batch_execution_data'])
         case SerialCommandType.UPDATE:
@@ -454,6 +456,39 @@ class SerialEventManager:
             error = 'Counter not defined'
          ))
 
+    def store_data(self, quantity, batch_execution_data):
+      #tx = self.tx.begin_transaction(write=['Serial', 'Counter'], read=['batch_serial'])
+
+      cursor = self.tx.aql.execute(
+         Queries.GET_BATCH_SERIALS,
+         bind_vars=dict(batch_key=self.event.info.active_batch_key
+      ))
+
+
+      # JUST IN CASE: Consider only serials to be confirmed to avoid reassigning a new code
+      batch_serials = [Serial(**s) for s in cursor]
+
+      for serial in batch_serials:
+         for step in batch_execution_data:
+           for data in serial.data:
+              if step.form_field_key == data.form_field_key:
+                 data.value = step.value
+         confirm_serial_match = dict(_from=f'Batch/{self.event.info.active_batch_key}', from_serial=serial.key)
+         confirm_serial_update = dict(_from=serial.id)
+         self.tx.collection('contains').update_match(confirm_serial_match, confirm_serial_update)
+
+      clean_serial_match = dict(_from=f'Batch/{self.event.info.active_batch_key}')
+      self.tx.collection('contains').delete_match(clean_serial_match)
+
+      new = self.tx.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials], return_new=True)
+      #self.tx.commit_transaction()
+
+      for serial in batch_serials:
+         self.notify_results(dict(
+            serial_key = serial.key,
+            serial = serial.code,
+            notification = SerialNotificationType.FINALIZED
+         ))
 
     def release_serials(self, batch_execution_data):
 

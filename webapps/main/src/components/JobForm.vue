@@ -64,6 +64,10 @@ const props = defineProps({
     type: String,
     default: null,
   },
+  product_key: {
+    type: String,
+    default: null,
+  },
 });
 
 const store = useStore();
@@ -113,6 +117,7 @@ const { open: openPrintDialog, isAvailable } = usePrintDialog({
     ...props.step,
     work_order_key: props.work_order_key,
     batch_key: props.batch_key,
+    product_key: props.product_key,
   },
 });
 </script>

@@ -235,6 +235,15 @@ async function loadSerial(serial_key) {
   }
 }
 
+async function loadProduct(product_key) {
+  if (product_key) {
+    const { data } = await api.get(`product/${product_key}`);
+    props.context.setSelectedProduct(data);
+  } else {
+    props.context.setSelectedProduct(null);
+  }
+}
+
 async function loadBatchSerial(batch_key) {
   const { data: batch_serials } = await api.get('serial-batch', {
     params: {
@@ -270,6 +279,10 @@ onMounted(() => {
 
   if (props.context.step.batch_key) {
     loadBatchSerial(props.context.step.batch_key);
+  }
+
+  if (props.context.step.product_key) {
+    loadProduct(props.context.step.product_key);
   }
 });
 

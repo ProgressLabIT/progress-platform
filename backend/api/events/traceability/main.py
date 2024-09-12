@@ -77,6 +77,7 @@ class ProductionActivityEvent(BaseEvent):
     delete_serial,
     create_batch_serial_records,
     finalize_batch_serial,
+    store_batch_data,
     finalize_wo_serial,
     send_link_batch_serial_event
   )
@@ -132,7 +133,7 @@ class ProductionActivityEvent(BaseEvent):
     show_unassigned_jobs_to_operators = self.tx.collection('Config').get('show_unassigned_jobs_to_operators')
     can_self_assign = show_unassigned_jobs_to_operators.get('value', True) if show_unassigned_jobs_to_operators is not None else True
     add_to_queue = False
-    
+
     if self.job.assigned_to is None:
       if not can_self_assign:
         raise JobHasNoAssigneeError('Unassigned jobs cannot be worked on as config "show_unassigned_jobs_to_operators" is false')
@@ -464,6 +465,8 @@ class ProductionActivityEvent(BaseEvent):
           self.book_wip(free_wip_delta)
         elif free_wip_delta < 0:
           self.unbook_wip(abs(free_wip_delta))
+
+      self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
 
     elif (self.job.traceability_level is not None):
       # update batch serials data

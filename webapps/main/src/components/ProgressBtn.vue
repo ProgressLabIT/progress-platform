@@ -396,13 +396,13 @@ export default {
           batch_qt: this.job.active_batch_qt,
         });
 
-        if (this.traceability_enabled && !this.job.first_phase) {
-          // Select new serials and start new batch
-          const selected_serials = await this.selectSerialBatch();
-          await this.$store.dispatch('resumeJob', {
-            batch_serials: selected_serials,
-          });
-        }
+        //if (this.traceability_enabled && !this.job.first_phase) {
+        //  // Select new serials and start new batch
+        //  const selected_serials = await this.selectSerialBatch();
+        //  await this.$store.dispatch('resumeJob', {
+        //    batch_serials: selected_serials,
+        //  });
+        //}
 
         if (
           current_batch_was_last ||

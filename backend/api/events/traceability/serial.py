@@ -94,6 +94,9 @@ def convert_batch_data(self, batch_execution_data):
             batch_data.append(field_data)
   return batch_data
 
+def store_batch_data(self, completed_batch_qt = None, batch_execution_data = None):
+  SerialEventManager.getInstance().handle_event(self, SerialCommandType.STORE_BATCH_DATA, quantity=completed_batch_qt or self.info.active_batch_qt, batch_execution_data=convert_batch_data(self, batch_execution_data))
+
 def finalize_batch_serial(self, completed_batch_qt = None, batch_execution_data = None):
   '''if not self.job:
     self.job = self.get_job_data()
