@@ -16,10 +16,9 @@
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
-    "@pdfme/common": "^4.3.2",
-    "@pdfme/generator": "^4.3.2",
-    "@pdfme/schemas": "^4.3.2",
-    "@pdfme/ui": "^4.3.2",
+    "@pdfme/common": "^2.2.1",
+    "@pdfme/generator": "^2.2.1",
+    "@pdfme/ui": "^2.2.1",
     "@quasar/extras": "^1.16.8",
     "@vueuse/core": "^10.7.1",
     "axios": "^0.21.1",
@@ -33,7 +32,7 @@
     "vue": "^3.3.8",
     "vue-cookies": "^1.8.4",
     "vue-i18n": "^9.0.0",
-    "vue-pdf-embed": "^2.1.0",
+    "vue-pdf-embed": "1.1.5",
     "vue-router": "^4.0.0",
     "vue-sse": "^2.5.2",
     "vuex": "^4.0.1"

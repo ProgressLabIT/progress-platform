@@ -133,6 +133,8 @@
             :source="media_src"
             :width="doc_width"
             :class="rotation_class"
+            @loading-failed="(error) => console.log(error)"
+            @rendering-failed="(error) => console.log(error)"
           >
           </vue-pdf-embed>
         </div>
