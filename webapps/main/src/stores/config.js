@@ -19,6 +19,7 @@ export const useConfigStore = defineStore('config', () => {
     operatorCost: 0,
     allowUnassignedJobs: true,
     allowIndependentReorderingOfJobQueues: false,
+    allowSerialDelete: true,
   };
 
   const isLoading = ref(true);
@@ -54,6 +55,9 @@ export const useConfigStore = defineStore('config', () => {
       config.allowIndependentReorderingOfJobQueues =
         appConfig.allow_independent_reordering_of_job_queues;
     }
+    if (typeof appConfig.allow_serial_delete === 'boolean') {
+      config.allowSerialDelete = appConfig.allow_serial_delete;
+    }
   }
   void (async () => {
     try {
@@ -87,6 +91,7 @@ export const useConfigStore = defineStore('config', () => {
       show_unassigned_jobs_to_operators: configToUpdate.allowUnassignedJobs,
       allow_independent_reordering_of_job_queues:
         configToUpdate.allowIndependentReorderingOfJobQueues,
+      allow_serial_delete: configToUpdate.allowSerialDelete,
     });
 
     Object.assign(config, configToUpdate);

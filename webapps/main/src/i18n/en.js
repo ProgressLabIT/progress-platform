@@ -649,6 +649,7 @@ export default {
     allowUnassignedJobs: 'Show unassigned jobs to operators',
     allowIndependentReorderingOfJobQueues:
       'Allow independent reordering of job queues',
+    allowSerialDelete: 'Allow serial delete',
     turnOffIndependentReordering: {
       title: 'Turn off independent reordering',
       message:

@@ -31,6 +31,12 @@
         :disable="!editMode"
         @update:model-value="updateIndependentReordering"
       />
+
+      <q-toggle
+        v-model="configModel.allowSerialDelete"
+        :label="$t('settings.allowSerialDelete')"
+        :disable="!editMode"
+      />
     </div>
   </SettingsSection>
 </template>
@@ -55,6 +61,7 @@ async function save() {
     allowUnassignedJobs: configModel.value.allowUnassignedJobs,
     allowIndependentReorderingOfJobQueues:
       configModel.value.allowIndependentReorderingOfJobQueues,
+    allowSerialDelete: configModel.value.allowSerialDelete,
   });
 }
 

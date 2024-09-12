@@ -117,6 +117,7 @@ import MessageThread from '@/components/MessageThread.vue';
 import SerialDetailForm from '@/components/traceability/SerialDetailForm.vue';
 import SerialTree from '@/components/traceability/SerialTree.vue';
 import { timestamp } from '@/lib/TimeHandling.js';
+import { useConfigStore } from '../../stores/config';
 
 export default {
   name: 'SerialDetail',
@@ -134,6 +135,14 @@ export default {
       type: String,
       required: true,
     },
+  },
+
+  setup() {
+    const { config } = useConfigStore();
+
+    return {
+      config,
+    };
   },
 
   data() {
@@ -161,7 +170,8 @@ export default {
     user_can_delete() {
       return (
         this.$store.getters.hasPermission('production') &&
-        !this.$store.getters.getSerialData(this.serialKey).deleted
+        !this.$store.getters.getSerialData(this.serialKey).deleted &&
+        this.config.allowSerialDelete
       );
     },
 

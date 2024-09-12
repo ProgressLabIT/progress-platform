@@ -659,6 +659,7 @@ export default {
     allowUnassignedJobs: 'Mostra lavori non assegnati agli operatori',
     allowIndependentReorderingOfJobQueues:
       'Consenti il riordinamento indipendente delle code di lavoro',
+    allowSerialDelete: 'Consenti la cancellazione dei seriali',
     turnOffIndependentReordering: {
       title: 'Disattiva ordinamento indipendente',
       message:
@@ -816,7 +817,7 @@ export default {
     productionRoot: 'monitoraggio produzione',
     printTemplateLibrary: 'Stampe',
     qualityRoot: 'Qualità',
-    traceabilityRoot: 'Tracciabiltità',
+    traceabilityRoot: 'Tracciabilità',
     reportRoot: 'Rapporti',
     userLibrary: 'utenti',
     userJobs: 'selezione lavoro',

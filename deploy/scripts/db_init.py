@@ -166,6 +166,10 @@ configs = [
     value = False
   ),
   dict(
+    _key = 'allow_serial_delete',
+    value = True
+  ),
+  dict(
     _key = 'operator_cost',
     value = 1
   )
