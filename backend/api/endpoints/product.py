@@ -1,9 +1,10 @@
 import os
 import traceback
 
-from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body, Depends
+from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body, Query, Depends
 from utils import auth
 from fastapi.encoders import jsonable_encoder
+from typing import List, Union
 
 from utils.kpi import Queries as ProductStatQueries
 from models.product import *
@@ -54,6 +55,45 @@ async def get_product_list(
 
   return [validate(product) for product in product_list]
 
+
+@router.get('/search',
+dependencies=[Depends(auth.verify_token)])
+async def search_product(
+  text_to_include: str | None = None,
+  text_to_exclude: str | None = None,
+  tags_to_include: Union[List[str], None] = Query(default=None),
+  tags_to_exclude: Union[List[str], None] = Query(default=None),
+  global_operator: str | None = None,
+  include_tags_operator: str | None = None,
+  exclude_tags_operator: str | None = None
+  ):
+
+  globalOperator = "&&"
+  if (global_operator == "Any"):
+    globalOperator = "||"
+
+  includeTagsOperator = "&&"
+  if (include_tags_operator == "Any"):
+    includeTagsOperator = "||"
+
+  excludeTagsOperator = "&&"
+  if (exclude_tags_operator == "Any"):
+    excludeTagsOperator = "||"
+
+  product_list =  db.aql.execute(
+    Queries.SEARCH_PRODUCT.replace("<g_o>", globalOperator).replace("<it_o>", include_tags_operator).replace("<et_o>", excludeTagsOperator),
+    bind_vars=dict(
+      textToInclude = text_to_include,
+      textToExclude = text_to_exclude,
+      tagsToInclude = tags_to_include,
+      tagsToExclude = tags_to_exclude,
+    )
+  )
+
+  def validate(data):
+    return ProductDetails(**data)
+
+  return [validate(product) for product in product_list]
 
 # =================================================
 #  POST / : CREATE PRODUCT
@@ -478,6 +518,7 @@ async def replace_product_image(product_key: str):
     updated=timestamp(),
     image=False
   ))
+
 
 # =================================================
 #  GET /PRODUCT_KEY : GET PRODUCT DATA

@@ -300,6 +300,7 @@ async def search_serials(
   limit: int | None = None,
   serial_deleted: bool = False,
   offset: int | None = None,
+  filter_unreleased: bool = False,
   ):
 
   serial_fields = db.collection('Config').get('serial_fields')
@@ -318,6 +319,7 @@ async def search_serials(
     is_contained_in = is_contained_in,
     contains = contains,
     work_order_search = work_order_search,
+    filter_unreleased = filter_unreleased,
     advanced_filters = json.loads(b64decode(advanced_filters).decode('latin-1')) if advanced_filters else None,
     limit = limit,
     offset = offset,

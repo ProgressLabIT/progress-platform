@@ -597,6 +597,7 @@ export default {
       this.$store
         .dispatch('getSerials', {
           ...this.filters,
+          filter_unreleased: true,
           offset: this.offset,
         })
         .then(() =>
@@ -619,6 +620,7 @@ export default {
         this.$store
           .dispatch('appendSerials', {
             ...this.filters,
+            filter_unreleased: true,
             offset: this.offset,
           })
           .then(() =>
