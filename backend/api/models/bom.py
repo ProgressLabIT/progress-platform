@@ -1,19 +1,22 @@
-from enum import Enum
+from typing import Any
+
 from pydantic import Field
 
-from models.base_models import FlexModel, ArangoDocument
+from models.base_models import FlexModel
 
 
 class BomLineRead(FlexModel):
   component_key: str
   bom_line_key: str
-  phase_key: str | None = None
   component_code: str
   component_description: str
-  phase_name: str | None = None
   qt: float
+  ext_key: Any = None
+  phase_key: str | None = None
+  phase_name: str | None = None
   traceability_mandatory: bool | None = False
   traceability_level: str | None = None
+
 
 
 class BomLineWriteIn(FlexModel):
@@ -24,6 +27,7 @@ class BomLineWriteIn(FlexModel):
   type: str = 'BomLine'
   traceability_mandatory: bool | None = None
   traceability_level: str | None = None
+  ext_key: Any = None
 
 class BomLineWriteOut(FlexModel):
   component_id: str = Field(..., alias="_to")
@@ -32,3 +36,4 @@ class BomLineWriteOut(FlexModel):
   traceability_level: str | None = None
   phase_id: str = Field(..., alias="_from")
   type: str = 'BomLine'
+  ext_key: Any = None
