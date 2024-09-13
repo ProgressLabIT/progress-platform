@@ -78,6 +78,7 @@ export default {
   countInfo: {
     filtered: 'Filtrati: {count} di {total}',
     selected: 'Selezionati: {count}',
+    selectedTotal: 'Selezionati {count} di {total}',
     selectedHidden: '{count} non mostrati',
   },
   create: 'crea',
