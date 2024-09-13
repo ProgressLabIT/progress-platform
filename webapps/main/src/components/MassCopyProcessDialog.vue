@@ -266,18 +266,7 @@ function toggleProduct(product_key) {
     selectedProducts.value.push(product_key);
   }
 }
-
-// const hiddenSelectedCount = computed(() => {
-//   if (!tableRef.value) {
-//     return 0;
-//   }
-
-//   const displayedRows = tableRef.value.computedRows;
-//   return selectedProducts.value.filter(
-//     ({ _key }) => !displayedRows.some((row) => row._key === _key),
-//   ).length;
-// });
-
+let filtered_products = [];
 /**
  * @type {NonNullable<import('quasar').QTableProps['filterMethod']>}
  */
@@ -288,7 +277,7 @@ const filteredProducts = computed(() => {
     !textToInclude.value &&
     !textToExclude.value
   ) {
-    return props.products;
+    filtered_products = props.products;
   }
 
   //const condition = (isEmpty, value) =>
@@ -304,49 +293,30 @@ const filteredProducts = computed(() => {
 
   filterProducts();
 
-  return props.products;
-  //
-  //return props.products.filter((product) => {
-  //    const tags = product.tags.map(({ _key }) => _key);
-  //
-  //  return combineConditions(
-  //    condition(
-  //      textToInclude.value === '',
-  //      multiMatch(textToInclude.value, product, ['code', 'description']),
-  //    ),
-  //    condition(
-  //      textToExclude.value === '',
-  //      !multiMatch(textToExclude.value, product, ['code', 'description']),
-  //    ),
-  //    condition(
-  //      tagsToInclude.value.length === 0,
-  //      tagsToInclude.value[includeTagsMethod](({ _key }) =>
-  //        tags.includes(_key),
-  //      ),
-  //    ),
-  //    condition(
-  //      tagsToExclude.value.length === 0,
-  //      tagsToExclude.value[excludeTagsMethod](
-  //        ({ _key }) => !tags.includes(_key),
-  //      ),
-  //    ),
-  //  );
-  //});
+  return filtered_products;
 });
 
 async function filterProducts() {
+  let tags_to_include = [];
+  let tags_to_exclude = [];
+  for (const tag of tagsToInclude.value) {
+    tags_to_include.push(tag._key);
+  }
+  for (const tag of tagsToExclude.value) {
+    tags_to_exclude.push(tag._key);
+  }
   const { data } = await api.get('/product/search', {
     params: {
       text_to_include: textToInclude.value,
       text_to_exclude: textToExclude.value,
-      tags_to_include: tagsToInclude.value,
-      tags_to_exclude: tagsToExclude.value,
+      tags_to_include: tags_to_include,
+      tags_to_exclude: tags_to_exclude,
       global_operator: globalOperator.value,
       include_tags_operator: includeTagsOperator.value,
       exclude_tags_operator: excludeTagsOperator.value,
     },
   });
-  return data;
+  filtered_products = data;
 }
 
 const globalOperator = ref('AND');

@@ -69,19 +69,19 @@ async def search_product(
   ):
 
   globalOperator = "&&"
-  if (global_operator == "Any"):
+  if (global_operator == "OR"):
     globalOperator = "||"
 
-  includeTagsOperator = "&&"
-  if (include_tags_operator == "Any"):
-    includeTagsOperator = "||"
+  includeTagsOperator = "ALL IN"
+  if (include_tags_operator == "OR"):
+    includeTagsOperator = "AT LEAST (1) IN"
 
-  excludeTagsOperator = "&&"
-  if (exclude_tags_operator == "Any"):
-    excludeTagsOperator = "||"
+  excludeTagsOperator = "NONE IN"
+  if (exclude_tags_operator == "OR"):
+    excludeTagsOperator = "AT LEAST (1) NOT IN"
 
   product_list =  db.aql.execute(
-    Queries.SEARCH_PRODUCT.replace("<g_o>", globalOperator).replace("<it_o>", include_tags_operator).replace("<et_o>", excludeTagsOperator),
+    Queries.SEARCH_PRODUCT.replace("<g_o>", globalOperator).replace("<it_o>", includeTagsOperator).replace("<et_o>", excludeTagsOperator),
     bind_vars=dict(
       textToInclude = text_to_include,
       textToExclude = text_to_exclude,
@@ -90,10 +90,7 @@ async def search_product(
     )
   )
 
-  def validate(data):
-    return ProductDetails(**data)
-
-  return [validate(product) for product in product_list]
+  return [ProductDetails(**product) for product in product_list]
 
 # =================================================
 #  POST / : CREATE PRODUCT

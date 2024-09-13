@@ -49,34 +49,11 @@ class Queries:
   """
 
   SEARCH_PRODUCT = """
-    LET search = CONCAT('%', LOWER(@search), '%')
+    LET search_include = CONCAT('%', LOWER(@textToInclude), '%')
+    LET search_exclude = CONCAT('%', LOWER(@textToExclude), '%')
 
     FOR product IN Product
-      // find active products matching the search pattern provided
       LET search_context = LOWER(CONCAT(product.code, ' ', 'product.description'))
-      FILTER !product.trash && LIKE(search_context, search, true)
-      && (@active? product.active == @active: true)
-      && (@tag
-        ? LENGTH(
-            // This subquery returns match true/false for each filter
-            FOR edge IN has_tag
-                FILTER edge._from == product._id
-                FILTER edge._to == CONCAT('Tag/', @tag)
-            RETURN 1
-          ) >= 1
-        : true
-      )
-
-      FILTER !@has_operation_key || FIRST(
-        LET operation = Document(Operation, @has_operation_key)
-        FOR phase, phase_edge IN 1..1 INBOUND operation requires
-          FILTER phase_edge.type == 'PhaseOperation'
-          FOR product_vertex, product_edge IN 1..1 INBOUND phase requires
-            FILTER product_edge.type == 'ProductPhase'
-              && product_vertex._id == product._id
-            LIMIT 1
-            RETURN true
-      )
 
       LET tags = (
         FOR edge IN has_tag
@@ -84,12 +61,20 @@ class Queries:
           RETURN DOCUMENT(Tag, edge._to)
       )
 
-      // keep only required attributes
-      LET result = @details ? product : KEEP(product, ["_key", "code", "description", "active", "traceability_level"])
+      LET search_tags = (
+        FOR tag IN tags
+          RETURN tag._key
+      )
 
-      SORT result.code
-      LIMIT @offset, @limit
+      FILTER !product.trash
 
+      FILTER
+        (@textToInclude?LIKE(search_context, search_include, true):true) <g_o>
+        (@textToExclude?!LIKE(search_context, search_exclude, true):true) <g_o>
+        (@tagsToInclude?@tagsToInclude <it_o>  search_tags:true) <g_o>
+        (@tagsToExclude?@tagsToExclude <et_o>  search_tags:true)
+
+      SORT product.code
       RETURN MERGE(product, { tags })
   """
 
