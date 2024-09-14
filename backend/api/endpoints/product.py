@@ -61,8 +61,8 @@ dependencies=[Depends(auth.verify_token)])
 async def search_product(
   text_to_include: str | None = None,
   text_to_exclude: str | None = None,
-  tags_to_include: Union[List[str], None] = Query(default=None),
-  tags_to_exclude: Union[List[str], None] = Query(default=None),
+  tags_to_include: str | None = None,
+  tags_to_exclude: str | None = None,
   global_operator: str | None = None,
   include_tags_operator: str | None = None,
   exclude_tags_operator: str | None = None
@@ -79,6 +79,18 @@ async def search_product(
   excludeTagsOperator = "NONE IN"
   if (exclude_tags_operator == "OR"):
     excludeTagsOperator = "AT LEAST (1) NOT IN"
+
+  if not text_to_include or not text_to_include.strip():
+    text_to_include = None
+
+  if not text_to_exclude or not text_to_exclude.strip():
+    text_to_exclude = None
+
+  if not tags_to_include or not tags_to_include.strip():
+    tags_to_include = None
+
+  if not tags_to_exclude or not tags_to_exclude.strip():
+    tags_to_exclude = None
 
   product_list =  db.aql.execute(
     Queries.SEARCH_PRODUCT.replace("<g_o>", globalOperator).replace("<it_o>", includeTagsOperator).replace("<et_o>", excludeTagsOperator),

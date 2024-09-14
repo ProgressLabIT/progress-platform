@@ -71,8 +71,8 @@ class Queries:
       FILTER
         (@textToInclude?LIKE(search_context, search_include, true):true) <g_o>
         (@textToExclude?!LIKE(search_context, search_exclude, true):true) <g_o>
-        (@tagsToInclude?@tagsToInclude <it_o>  search_tags:true) <g_o>
-        (@tagsToExclude?@tagsToExclude <et_o>  search_tags:true)
+        (@tagsToInclude?TOKENS(@tagsToInclude, "text_en") <it_o>  search_tags:true) <g_o>
+        (@tagsToExclude?TOKENS(@tagsToExclude, "text_en") <et_o>  search_tags:true)
 
       SORT product.code
       RETURN MERGE(product, { tags })

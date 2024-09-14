@@ -30,11 +30,13 @@
           <q-input
             v-model="textToInclude"
             filled
+            debounce="200"
             :label="$t('massCopyProcess.includesText')"
           />
           <q-input
             v-model="textToExclude"
             filled
+            debounce="200"
             :label="$t('massCopyProcess.excludesText')"
           />
         </div>
@@ -297,13 +299,13 @@ const filteredProducts = computed(() => {
 });
 
 async function filterProducts() {
-  let tags_to_include = [];
-  let tags_to_exclude = [];
+  let tags_to_include = '';
+  let tags_to_exclude = '';
   for (const tag of tagsToInclude.value) {
-    tags_to_include.push(tag._key);
+    tags_to_include += tag._key + ' ';
   }
   for (const tag of tagsToExclude.value) {
-    tags_to_exclude.push(tag._key);
+    tags_to_exclude += tag._key + ' ';
   }
   const { data } = await api.get('/product/search', {
     params: {
