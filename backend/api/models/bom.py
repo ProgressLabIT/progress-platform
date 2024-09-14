@@ -27,7 +27,7 @@ class BomLineWriteIn(FlexModel):
   type: str = 'BomLine'
   traceability_mandatory: bool | None = None
   traceability_level: str | None = None
-  ext_key: Any = None
+  extra: Any = None
 
 class BomLineWriteOut(FlexModel):
   component_id: str = Field(..., alias="_to")
@@ -36,4 +36,4 @@ class BomLineWriteOut(FlexModel):
   traceability_level: str | None = None
   phase_id: str = Field(..., alias="_from")
   type: str = 'BomLine'
-  ext_key: Any = None
+  extra: Any = None

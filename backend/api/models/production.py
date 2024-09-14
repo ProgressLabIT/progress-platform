@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 from enum import Enum
-from typing import Union, Optional
+from typing import Any
 
 from pydantic import model_validator, BaseModel, Field, PositiveFloat, field_validator, ValidationInfo
 
@@ -54,6 +54,8 @@ class WorkOrderNew(BaseModel):
   notes: str | None = None
 
   traceability_level: TraceabilityLevel | None = None
+
+  extra: Any = None
 
   @model_validator(mode="before")
   @classmethod
@@ -155,6 +157,9 @@ class Job(FlexModel):
   forced: str | None = None
 
   notes: str | None = None
+
+  extra: Any = None
+
   # @validator('progress')
   # def between_0_and_100_percent(cls, v):
   #   if v < 0 or v > 1:
