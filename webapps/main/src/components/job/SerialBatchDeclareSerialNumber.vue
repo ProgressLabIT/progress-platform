@@ -14,11 +14,10 @@
           <div
             v-for="serial in batch_serials"
             :key="serial._key"
-            class="q-py-xs"
+            class="q-py-xs full-width"
           >
             <q-input
               v-model="serial.code"
-              dense
               filled
               stack-label
               autogrow

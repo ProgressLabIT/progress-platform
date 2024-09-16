@@ -42,6 +42,8 @@ export default {
     ...mapState({
       job: (state) => state.traceability.working_job_data,
       batch_data: (state) => state.traceability.current_batch_data?.step_data,
+      current_batch_serials: (state) =>
+        state.traceability.current_batch_serials,
     }),
 
     progress_button_active() {
@@ -182,15 +184,9 @@ export default {
       return data?.value ?? null;
     },
 
-    async ensureBatchSerialCounter(batch_serials) {
-      /*const { data: batch_serials } = await this.$api.get('serial-wo-job', {
-        params: {
-          batch_key: this.job.active_batch_key,
-        },
-      });*/
-
+    async ensureBatchSerialCounter() {
       let missing_counter = false;
-      batch_serials.forEach((serial) => {
+      this.current_batch_serials.forEach((serial) => {
         let counter = serial.counter_key;
         let serialNo = serial.code;
         if (!counter && !serialNo) {
@@ -199,8 +195,7 @@ export default {
       });
 
       if (missing_counter) {
-        let updated_serials =
-          await this.decleareSerialNoForBatch(batch_serials);
+        let updated_serials = await this.decleareSerialNoForBatch();
         let still_missing_counter = false;
 
         if (updated_serials.length <= 0) {
@@ -238,12 +233,12 @@ export default {
       await this.$api.post('event', event);
     },
 
-    async decleareSerialNoForBatch(batch_serials) {
+    async decleareSerialNoForBatch() {
       return new Promise((resolve) => {
         Dialog.create({
           component: SerialBatchDeclareSerialNumber,
           componentProps: {
-            batch_serials,
+            batch_serials: this.current_batch_serials,
           },
         })
           .onOk((updated_serials) => {
@@ -253,20 +248,6 @@ export default {
             resolve([]);
           });
       });
-    },
-
-    serialToBatch(batch_serials) {
-      let serials = [];
-
-      for (const serial of batch_serials) {
-        serials.push({
-          serial_key: serial._key,
-          serial_code: serial.code,
-          active: true,
-        });
-      }
-
-      return serials;
     },
 
     checkMissingSerials() {
@@ -319,22 +300,15 @@ export default {
       const current_step_was_last = this.current_step_is_last;
       const current_batch_was_last = this.current_batch_is_last;
 
-      const { data: batch_serials } = await api.get('serial-wo-job', {
-        params: {
-          wo_key: this.job.wo_key,
-          job_key: this.job._key,
-        },
-      });
-
       if (current_step_was_last) {
-        if (!(await this.ensureBatchSerialCounter(batch_serials))) {
-          window.alert(this.$t('declare_all_serials'));
-          return;
-        }
-
         const missing_serials = this.checkMissingSerials();
         if (missing_serials && this.traceability_enabled) {
           window.alert(this.$t('batch_declare_component_serials'));
+          return;
+        }
+
+        if (!(await this.ensureBatchSerialCounter())) {
+          window.alert(this.$t('declare_all_serials'));
           return;
         }
       }
