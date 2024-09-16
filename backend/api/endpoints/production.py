@@ -41,7 +41,7 @@ async def create_work_order(new_wo: WorkOrderNew):
   # Define WO record creation procedure
   def create_wo_record(wo: WorkOrderNew, collection):
     new_wo_record = WorkOrderFull(
-      **wo.dict(),
+      **wo.model_dump(),
       wo_docs = get_product_docs(wo.product_key),
       wo_bom = get_bom_from_db(tx, wo.product_key)
     )

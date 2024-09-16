@@ -261,7 +261,7 @@ class SerialManager:
        setattr(serial_data, 'wo_key', wo_key)
 
        for i in range(int(quantity)):
-          self.create_serial(serial_data=serial_data.dict(), batch_key=batch_key, finalize=False)
+          self.create_serial(serial_data=serial_data.model_dump(), batch_key=batch_key, finalize=False)
 
     def verify_serial_counter(self, serial_key, serial):
        cursor = db.aql.execute(

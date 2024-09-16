@@ -50,7 +50,7 @@ async def get_user_list(active_only: bool = True):
 @router.post("/user", status_code=201,
     dependencies=[Depends(auth.verify_token)])
 async def create_user(new_user: UserNew):
-  new_user_data = User(**new_user.dict())
+  new_user_data = User(**new_user.model_dump())
   username_already_taken = db.collection('User').find(dict(username=new_user.username)).count()
 
   if username_already_taken:

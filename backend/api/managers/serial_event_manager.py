@@ -296,7 +296,7 @@ class SerialEventManager:
        setattr(serial_data, 'wo_key', wo_key)
 
        for i in range(int(quantity)):
-          self.create_serial(serial_data=serial_data.dict(), batch_key=batch_key, finalize=False)
+          self.create_serial(serial_data=serial_data.model_dump(), batch_key=batch_key, finalize=False)
 
     def verify_serial_code_free(self, serial_key, product_key, serial):
        cursor = self.tx.aql.execute(
@@ -531,6 +531,6 @@ class SerialEventManager:
         serial_event.event_type = "SERIAL_"+notification['notification']+" ("+notification['error']+")"
       else:
         serial_event.event_type = "SERIAL_"+notification['notification']
-      self.tx.collection('Event').insert(serial_event.dict())
+      self.tx.collection('Event').insert(serial_event.model_dump())
       NotificationManager.getInstance().notify(key=notification.get('serial_key'), notification=json.dumps(notification))
 

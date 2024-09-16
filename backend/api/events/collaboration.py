@@ -89,7 +89,7 @@ class CollaborationEvent(BaseEvent):
     self.info.issue_data = IssueWithLinks(**self.info.issue_data)
     # Remove links and exclude document id fields
     new_issue_record = Issue(
-      **self.info.issue_data.dict()
+      **self.info.issue_data.model_dump()
     ).dict(by_alias=True)
     new_issue_id = self.tx.collection('Issue').insert(new_issue_record, return_new=True)['_id']
 
