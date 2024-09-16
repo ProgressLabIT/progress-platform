@@ -33,6 +33,7 @@ class SerialCommandType(str, Enum):
 class SerialSelection(BaseModel):
    serial_key: str | None = Field(None, validation_alias='_key')
    serial_code: str | None = Field(None, validation_alias='code')
+   counter_key: str | None = Field(None, validation_alias='counter_key')
    active: bool = False
 
 class SerialLink(BaseModel):

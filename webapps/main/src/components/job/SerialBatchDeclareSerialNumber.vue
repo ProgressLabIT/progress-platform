@@ -13,11 +13,11 @@
         <q-card-section class="row items-center justify-between">
           <div
             v-for="serial in batch_serials"
-            :key="serial._key"
+            :key="serial.serial_key"
             class="q-py-xs full-width"
           >
             <q-input
-              v-model="serial.code"
+              v-model="serial.serial_code"
               filled
               stack-label
               autogrow
@@ -38,11 +38,11 @@
           />
 
           <q-btn
-            type="submit"
             form="serial-declare"
             color="primary"
             padding="md xl"
             :label="$t('confirm')"
+            @click="verifySerialCode"
           />
         </q-card-actions>
       </q-form>
@@ -51,19 +51,57 @@
 </template>
 
 <script setup>
-import { useDialogPluginComponent } from 'quasar';
+import { useDialogPluginComponent, useQuasar } from 'quasar';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { api } from '@/boot/axios';
 
 const props = defineProps({
   batch_serials: {
     type: [String, Object, []],
     required: true,
   },
+
+  product_key: {
+    type: String,
+    required: true,
+  },
 });
+const $q = useQuasar();
+const { t: $t } = useI18n({ useScope: 'global' });
 
 let batch_serials = ref(props.batch_serials);
+let product_key = ref(props.product_key);
 
 defineEmits(useDialogPluginComponent.emitsObject);
+
+async function verifySerialCode() {
+  let serials_free = true;
+  for (const serial of batch_serials.value) {
+    const { data } = await api.get('/serial-code/verify-free', {
+      params: {
+        serial_code: serial.serial_code,
+        product_key: product_key.value,
+        serial_key: serial.serial_key,
+      },
+    });
+    serials_free = serials_free && data;
+    if (!data) {
+      $q.notify({
+        // TODO: message translation
+        message: $t('serial_field.create.code_already_used', {
+          name: serial.serial_code,
+        }),
+        color: 'theme-orange',
+        timeout: 1500,
+        position: 'top',
+      });
+    }
+  }
+  if (serials_free) {
+    onDialogOK(batch_serials.value);
+  }
+}
 
 const { dialogRef, onDialogHide, onDialogCancel, onDialogOK } =
   useDialogPluginComponent();

@@ -117,6 +117,14 @@ export default {
       return this.job.active_batch_qt === remaining_qt;
     },
 
+    active_batch_key() {
+      return this.job.active_batch_key;
+    },
+
+    product_key() {
+      return this.job.product_key;
+    },
+
     confirm_batch_done_message() {
       return this.$t('job.alerts.batch_confirm');
     },
@@ -183,11 +191,23 @@ export default {
       return data?.value ?? null;
     },
 
+    batchSerialToSerial(batch_serials) {
+      return {
+        _key: batch_serials.serial_key,
+        code: batch_serials.serial_code,
+      };
+    },
+
     async ensureBatchSerialCounter() {
       let missing_counter = false;
+
+      await this.$store.dispatch('reloadBatchSerials', {
+        active_batch_key: this.active_batch_key,
+      });
+
       this.current_batch_serials.forEach((serial) => {
         let counter = serial.counter_key;
-        let serialNo = serial.code;
+        let serialNo = serial.serial_code;
         if (!counter && !serialNo) {
           missing_counter = true;
         }
@@ -202,13 +222,22 @@ export default {
         }
 
         const user = this.session_data.user._key;
-        updated_serials.forEach((serial) => {
-          this.postSerialUpdate(serial, user);
+        let promises = [];
+        updated_serials.forEach(async (serial) => {
+          promises.push(
+            this.postSerialUpdate(this.batchSerialToSerial(serial), user),
+          );
         });
 
-        updated_serials.forEach((serial) => {
+        await Promise.all(promises);
+
+        await this.$store.dispatch('reloadBatchSerials', {
+          active_batch_key: this.active_batch_key,
+        });
+
+        this.current_batch_serials.forEach((serial) => {
           let counter = serial.counter_key;
-          let serialNo = serial.code;
+          let serialNo = serial.serial_code;
           if (!counter && !serialNo) {
             still_missing_counter = true;
           }
@@ -238,6 +267,7 @@ export default {
           component: SerialBatchDeclareSerialNumber,
           componentProps: {
             batch_serials: this.current_batch_serials,
+            product_key: this.product_key,
           },
         })
           .onOk((updated_serials) => {
@@ -306,7 +336,10 @@ export default {
           return;
         }
 
-        if (!(await this.ensureBatchSerialCounter())) {
+        if (
+          this.traceability_enabled &&
+          !(await this.ensureBatchSerialCounter())
+        ) {
           window.alert(this.$t('declare_all_serials'));
           return;
         }
@@ -355,6 +388,14 @@ export default {
 
       if (this.checkMissingSerials() && this.traceability_enabled) {
         window.alert(this.$t('batch_declare_component_serials'));
+        return;
+      }
+
+      if (
+        this.traceability_enabled &&
+        !(await this.ensureBatchSerialCounter())
+      ) {
+        window.alert(this.$t('declare_all_serials'));
         return;
       }
 

@@ -470,6 +470,7 @@ class ProductionActivityEvent(BaseEvent):
 
     elif (self.job.traceability_level is not None):
       # update batch serials data
+      self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
       self.finalize_batch_serial(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
 
     self.info.completed_batch_key = self.job.active_batch_key

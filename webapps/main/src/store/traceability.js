@@ -339,6 +339,16 @@ const traceability = {
       });
     },
 
+    async reloadBatchSerials({ commit }, { active_batch_key }) {
+      const { data: batch_serials } = await api.get(
+        `batch/${active_batch_key}/serials`,
+      );
+
+      if (batch_serials) {
+        commit('UPDATE_BATCH_SERIALS', batch_serials);
+      }
+    },
+
     async completeStep(
       { commit, state, rootState, rootGetters },
       { stepKey, batchQt },

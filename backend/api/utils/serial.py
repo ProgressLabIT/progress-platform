@@ -147,7 +147,7 @@ class Queries:
       LET serial = DOCUMENT(Serial, w.serial_key)
       LET active = PARSE_IDENTIFIER(w._to).collection == 'Job'
       SORT serial.code
-      RETURN MERGE(KEEP(serial, '_key', 'code'), { active })
+      RETURN MERGE(KEEP(serial, '_key', 'code', 'counter_key'), { active })
   """
 
   GET_SERIALS_FOR_CODE = """

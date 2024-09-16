@@ -314,21 +314,21 @@ class SerialEventManager:
 
     def update_serial(self):
 
-       if (self.serial_data.get('code') != None and not self.verify_serial_code_free(serial_key=self.serial_data.get("_key"), product_key=self.serial_data.get("product_key"), serial=self.serial_data.get('code'))):
-          self.notify_results(dict(
-              serial = self.serial_data.get('code'),
-              serial_key = self.serial_data.get("_key"),
-              notification = SerialNotificationType.ERROR,
-              error_code = SerialNotificationErrorCode.SERIAL_ALREADY_PRESENT,
-              error = 'Serial already present'
-           ))
-          return
-
        try:
            serial = self.tx.collection('Serial').get(self.serial_data.get("_key"))
            if (self.serial_data.get('code') != None):
+              if (self.serial_data.get('code') != None and not self.verify_serial_code_free(serial_key=serial.get("_key"), product_key=serial.get("product_key"), serial=self.serial_data.get('code'))):
+                 self.notify_results(dict(
+                    serial = self.serial_data.get('code'),
+                    serial_key = self.serial_data.get("_key"),
+                    notification = SerialNotificationType.ERROR,
+                    error_code = SerialNotificationErrorCode.SERIAL_ALREADY_PRESENT,
+                    error = 'Serial already present'
+                    ))
+                 return
               serial['code'] = self.serial_data.get('code')
-           serial['data'] = self.serial_data.get('data')
+           if (self.serial_data.get('data') != None):
+              serial['data'] = self.serial_data.get('data')
            self.tx.update_document(serial)
        except:
            print(traceback.format_exc())
@@ -420,7 +420,12 @@ class SerialEventManager:
       # JUST IN CASE: Consider only serials to be confirmed to avoid reassigning a new code
       batch_serials = [Serial(**s) for s in cursor if s['code'] is None]
       # Counter key is the same for all serials in the batch
-      counter_key = batch_serials[0].counter_key
+      counter_key = None
+      if (batch_serials):
+         counter_key = batch_serials[0].counter_key
+      else:
+         return
+
       if (counter_key!=None):
          last_phase = self.event.job.last_phase
          now = timestamp()
@@ -455,6 +460,7 @@ class SerialEventManager:
             error_code = SerialNotificationErrorCode.COUNTER_NOT_DEFINED,
             error = 'Counter not defined'
          ))
+         raise ValueError(f"Counter not defined for batch {self.event.info.active_batch_key}")
 
     def store_data(self, quantity, batch_execution_data):
       #tx = self.tx.begin_transaction(write=['Serial', 'Counter'], read=['batch_serial'])

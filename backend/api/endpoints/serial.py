@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 from models.form import CustomField
-from models.serial import SerialSelection
+from models.serial import SerialSelection, Serial
 from utils.db import db
 
 from utils.serial import Queries
@@ -264,6 +264,24 @@ def get_serial_from_code(serial_code: str | None = None,
         error=traceback.format_exc()
       )
     )
+
+@router.get('/serial-code/verify-free',
+    dependencies=[Depends(auth.verify_token)])
+def verify_serial_code_free(serial_code: str | None = None,
+                         product_key: str | None = None,
+                         serial_key: str | None = None):
+   cursor = db.aql.execute(
+     Queries.GET_SERIALS_FOR_SERIAL_CODE,
+          bind_vars=dict(
+            serial_key=serial_key,
+            serial=serial_code,
+            product_key=product_key
+          )
+        )
+   try:
+    return len([Serial(**t) for t in cursor])<=0
+   except:
+     return False
 
 @router.get('/serial',
     dependencies=[Depends(auth.verify_token)])
