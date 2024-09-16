@@ -55,11 +55,12 @@ def get_bom_from_db(db, product_key):
 
 def define_bom_line_for_db(bom_line_in: BomLineWriteIn):
   bom_line_out = BomLineWriteOut(
-    component_id=f"Product/{bom_line_in.component_key}",
-    phase_id=f"Phase/{bom_line_in.phase_key}",
-    qt=bom_line_in.qt,
-    traceability_mandatory=bom_line_in.traceability_mandatory,
-    traceability_level= bom_line_in.traceability_level
+    component_id = f"Product/{bom_line_in.component_key}",
+    phase_id = f"Phase/{bom_line_in.phase_key}",
+    qt = bom_line_in.qt,
+    traceability_mandatory = bom_line_in.traceability_mandatory,
+    traceability_level = bom_line_in.traceability_level,
+    extra = bom_line_in.extra
   )
 
   return jsonable_encoder(bom_line_out, by_alias=True, exclude_none=True)
