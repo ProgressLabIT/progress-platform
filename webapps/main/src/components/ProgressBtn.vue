@@ -20,10 +20,9 @@
 </template>
 
 <script>
-import { Dialog, Loading } from 'quasar';
+import { Dialog } from 'quasar';
 import { mapState } from 'vuex';
 
-import { api } from '@/boot/axios';
 import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 import SerialBatchDeclareSerialNumber from '@/components/job/SerialBatchDeclareSerialNumber.vue';
 import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue';
@@ -432,39 +431,6 @@ export default {
           .onCancel(() => resolve(false));
       });
     },
-
-    async getCustomQuantity() {
-      const remainingTotalQuantity =
-        this.job.qt_planned - this.job.qt_completed;
-
-      Loading.show();
-      const { data } = await api.get('/wip', {
-        params: { job_key: this.job._key },
-      });
-      Loading.hide();
-      const maxDeclarableQuantity = this.job.first_phase
-        ? remainingTotalQuantity
-        : Math.min(
-            data.free_wip_qt_upstream + this.job.active_batch_qt,
-            remainingTotalQuantity,
-          );
-
-      let batchQuantity = await this.getCustomBatchInput({
-        initialValue: this.job.active_batch_qt,
-        max: maxDeclarableQuantity,
-      });
-
-      return {
-        batchQuantity: batchQuantity,
-        remainingTotalQuantity: remainingTotalQuantity,
-        maxDeclarableQuantity: maxDeclarableQuantity,
-      };
-    },
-
-    goToStep(step_key) {
-      this.current_step_key = step_key;
-    },
-
     /**
      * Go to the first step that is not done or that does not have a data entry.
      */
@@ -476,19 +442,19 @@ export default {
 
         // If the step is not done or doesn't have a data entry, go to it
         if (!batchStep?.done) {
-          this.goToStep(step._key);
+          this.$store.dispatch('goToStep', step._key);
           return;
         }
       }
 
       const firstStep = this.job.step_sequence[0];
       if (firstStep) {
-        this.goToStep(firstStep._key);
+        this.$store.dispatch('goToStep', firstStep._key);
         return;
       }
 
       console.warn('No steps found, cannot go to any step');
-      this.goToStep(undefined);
+      this.$store.dispatch('goToStep', undefined);
     },
   },
 };
