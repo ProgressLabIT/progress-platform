@@ -69,8 +69,10 @@ async def search_product(
   ):
 
   globalOperator = "&&"
+  defaultValue = 'true'
   if (global_operator == "OR"):
     globalOperator = "||"
+    defaultValue = 'false'
 
   includeTagsOperator = "ALL IN"
   if (include_tags_operator == "OR"):
@@ -93,7 +95,7 @@ async def search_product(
     tags_to_exclude = None
 
   product_list =  db.aql.execute(
-    Queries.SEARCH_PRODUCT.replace("<g_o>", globalOperator).replace("<it_o>", includeTagsOperator).replace("<et_o>", excludeTagsOperator),
+    Queries.SEARCH_PRODUCT.replace("<g_o>", globalOperator).replace("<def>", defaultValue).replace("<it_o>", includeTagsOperator).replace("<et_o>", excludeTagsOperator),
     bind_vars=dict(
       textToInclude = text_to_include,
       textToExclude = text_to_exclude,

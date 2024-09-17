@@ -218,7 +218,7 @@
 
 <script setup>
 import { useDialogPluginComponent } from 'quasar';
-import { computed, ref } from 'vue';
+import { ref, watch } from 'vue';
 import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
 //import multiMatch from '@/lib/MultiFieldSearch';
@@ -257,6 +257,11 @@ const tagsToInclude = ref(props.defaultFilters?.tagsToInclude ?? []);
 const tagsToExclude = ref(props.defaultFilters?.tagsToExclude ?? []);
 
 const selectedProducts = ref([]);
+const filteredProducts = ref([]);
+
+const globalOperator = ref('AND');
+const includeTagsOperator = ref('AND');
+const excludeTagsOperator = ref('AND');
 
 function toggleProduct(product_key) {
   if (selectedProducts.value.includes(product_key)) {
@@ -268,11 +273,27 @@ function toggleProduct(product_key) {
     selectedProducts.value.push(product_key);
   }
 }
-let filtered_products = [];
+
+watch(
+  [
+    textToInclude,
+    textToExclude,
+    tagsToInclude,
+    tagsToExclude,
+    includeTagsOperator,
+    excludeTagsOperator,
+    globalOperator,
+  ],
+  () => {
+    filterProducts();
+  },
+  { deep: true },
+);
+//let filtered_products = [];
 /**
  * @type {NonNullable<import('quasar').QTableProps['filterMethod']>}
  */
-const filteredProducts = computed(() => {
+/**const filteredProducts = computed(() => {
   if (
     tagsToInclude.value.length === 0 &&
     tagsToExclude.value.length === 0 &&
@@ -296,9 +317,18 @@ const filteredProducts = computed(() => {
   filterProducts();
 
   return filtered_products;
-});
+});*/
 
 async function filterProducts() {
+  if (
+    tagsToInclude.value.length === 0 &&
+    tagsToExclude.value.length === 0 &&
+    !textToInclude.value &&
+    !textToExclude.value
+  ) {
+    filteredProducts.value = props.products;
+  }
+
   let tags_to_include = '';
   let tags_to_exclude = '';
   for (const tag of tagsToInclude.value) {
@@ -318,12 +348,8 @@ async function filterProducts() {
       exclude_tags_operator: excludeTagsOperator.value,
     },
   });
-  filtered_products = data;
+  filteredProducts.value = data;
 }
-
-const globalOperator = ref('AND');
-const includeTagsOperator = ref('AND');
-const excludeTagsOperator = ref('AND');
 </script>
 
 <style scoped lang="scss">

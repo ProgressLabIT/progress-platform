@@ -69,10 +69,10 @@ class Queries:
       FILTER !product.trash
 
       FILTER
-        (@textToInclude?LIKE(search_context, search_include, true):true) <g_o>
-        (@textToExclude?!LIKE(search_context, search_exclude, true):true) <g_o>
-        (@tagsToInclude?TOKENS(@tagsToInclude, "text_en") <it_o>  search_tags:true) <g_o>
-        (@tagsToExclude?TOKENS(@tagsToExclude, "text_en") <et_o>  search_tags:true)
+        (@textToInclude?LIKE(search_context, search_include, true):<def>) <g_o>
+        (@textToExclude?!LIKE(search_context, search_exclude, true):<def>) <g_o>
+        (@tagsToInclude?TOKENS(@tagsToInclude, "text_en") <it_o>  search_tags:<def>) <g_o>
+        (@tagsToExclude?TOKENS(@tagsToExclude, "text_en") <et_o>  search_tags:<def>)
 
       SORT product.code
       RETURN MERGE(product, { tags })
