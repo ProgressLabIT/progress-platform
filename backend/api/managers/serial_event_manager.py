@@ -347,6 +347,15 @@ class SerialEventManager:
 
     def delete_serial(self, soft=True):
         serial_key = self.serial_data.get("_key")
+        allow_serial_delete = db.collection('Config').get('allow_serial_delete')
+        if (allow_serial_delete == None or allow_serial_delete['value'] == False):
+           self.notify_results(dict(
+              serial_key = serial_key,
+              notification = SerialNotificationType.ERROR,
+              error_code = SerialNotificationErrorCode.EXCEPTION,
+              error = 'Cannot delete serial because it is not allowed by configuration'
+           ))
+           raise SerialNotDeletedError(f'Serial {serial_key} cannot be deleted because it is not allowed by configuration')
         try:
            if soft:
               self.tx.collection('Serial').update(dict(_key=serial_key, deleted=True))
