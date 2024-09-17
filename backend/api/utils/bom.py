@@ -19,7 +19,7 @@ class Queries:
           traceability_level: v.traceability_level,
           traceability_mandatory: e.traceability_mandatory,
           qt: e.qt,
-          ext_key: e.ext_key
+          extra: e.extra
       }
   """
 

@@ -11,12 +11,11 @@ class BomLineRead(FlexModel):
   component_code: str
   component_description: str
   qt: float
-  ext_key: Any = None
   phase_key: str | None = None
   phase_name: str | None = None
   traceability_mandatory: bool | None = False
   traceability_level: str | None = None
-
+  extra: Any = None
 
 
 class BomLineWriteIn(FlexModel):
