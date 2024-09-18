@@ -169,6 +169,7 @@ class Queries:
       && (@time_created_from ? s.created >= @time_created_from : true)
       && (@time_created_to ? s.created <= @time_created_to : true)
       && (@deleted ? true : s.deleted == false)
+      && (@filter_unreleased ? s.released != null : true)
       && (@advanced_filters
         ? LENGTH(
             // This subquery returns match true/false for each filter

@@ -20,6 +20,7 @@ class TokenContext(str, Enum):
   JOB = "job"
   USER_SESSION = "session"
   PASSWORD_RESET = 'pwd_reset'
+  API = "api"
 
 
 class TokenRecord(ArangoDocument):

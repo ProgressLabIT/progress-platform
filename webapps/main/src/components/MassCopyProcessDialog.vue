@@ -23,19 +23,20 @@
       </q-card-section>
 
       <q-card-section class="q-col-gutter-md row col-auto q-pt-none">
-
         <div class="col-5 q-gutter-sm">
           <div class="text-h5 uppercase">
-            {{ $t('product.code') }}/{{ $t('description')}}
+            {{ $t('product.code') }}/{{ $t('description') }}
           </div>
           <q-input
             v-model="textToInclude"
             filled
+            debounce="200"
             :label="$t('massCopyProcess.includesText')"
           />
           <q-input
             v-model="textToExclude"
             filled
+            debounce="200"
             :label="$t('massCopyProcess.excludesText')"
           />
         </div>
@@ -52,7 +53,8 @@
             <TagInput
               v-model="tagsToInclude"
               :option-disable="
-                ({ _key }) => tagsToExclude.some(({ _key: key }) => key === _key)
+                ({ _key }) =>
+                  tagsToExclude.some(({ _key: key }) => key === _key)
               "
               :label="$t('massCopyProcess.includesTags')"
               class="col"
@@ -75,7 +77,8 @@
             <TagInput
               v-model="tagsToExclude"
               :option-disable="
-                ({ _key }) => tagsToInclude.some(({ _key: key }) => key === _key)
+                ({ _key }) =>
+                  tagsToInclude.some(({ _key: key }) => key === _key)
               "
               :label="$t('massCopyProcess.excludesTags')"
               class="col"
@@ -95,56 +98,68 @@
             </div>
           </div>
         </div>
-
       </q-card-section>
 
       <q-separator inset />
 
       <q-card-section class="q-pt-sm row col q-col-gutter-md">
-        <!-- TODO: change design (?) -->
+        <!-- FILTERED ITEMS -->
         <div class="col-6 column full-height">
-
           <div class="row col-auto items-center q-my-sm">
             <div class="text-h5 uppercase">
-              {{ $t('countInfo.filtered', { count: filteredProducts.length, total: products.length }) }}
+              {{
+                $t('countInfo.filtered', {
+                  count: filteredProducts.length,
+                  total: products.length,
+                })
+              }}
             </div>
             <q-btn
               size="xs"
               icon="mdi-checkbox-marked-outline"
               padding="xs sm"
-              label="seleziona tutti"
+              :label="$t('select_all')"
               color="theme-grey"
               class="q-ml-md"
-              @click="selectedProducts = [...filteredProducts]">
+              @click="selectedProducts = [...filteredProducts]"
+            >
             </q-btn>
           </div>
-          <q-list class="col scroll fit">
+
+          <q-virtual-scroll
+            v-slot="{ item }"
+            style="max-height: 100%"
+            class="col fit"
+            :items="filteredProducts"
+          >
             <q-item
-              v-for="p in filteredProducts"
-              :key="p._key"
+              key="_key"
               clickable
               style="min-height: none"
-              @click="toggleProduct(p)">
+              @click="toggleProduct(item)"
+            >
               <q-item-section side>
                 <q-checkbox
                   size="sm"
                   dense
                   class="passive-checkbox"
-                  :model-value="selectedProducts.includes(p)"
-                  @click="toggleProduct(p)"
+                  :model-value="selectedProducts.includes(item)"
+                  @click="toggleProduct(item)"
                 />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="highlight">
-                  {{ p.code }}
+                  {{ item.code }}
                 </q-item-label>
                 <q-item-label caption class="ellipsis">
-                  {{ p.description }}
+                  {{ item.description }}
                 </q-item-label>
               </q-item-section>
             </q-item>
-          </q-list>
+          </q-virtual-scroll>
         </div>
+
+        <!-- SELECTED ITEMS -->
 
         <div class="col column full-height">
           <div class="col-auto row items-center q-my-sm">
@@ -155,39 +170,40 @@
               size="xs"
               padding="xs sm"
               icon="mdi-checkbox-blank-off-outline"
-              label="deseleziona tutti"
+              :label="$t('deselect_all')"
               color="theme-grey"
               class="q-ml-md"
-              @click="selectedProducts = []">
+              @click="selectedProducts = []"
+            >
             </q-btn>
           </div>
-          <q-list class="col scroll fit">
-            <q-item
-              v-for="p in selectedProducts.toSorted((a, b) => a.code - b.code)"
-              :key="p._key"
-              style="min-height: none">
+          <q-virtual-scroll
+            v-slot="{ item }"
+            class="col fit"
+            style="max-height: 100%"
+            :items="selectedProducts.toSorted((a, b) => a.code - b.code)"
+          >
+            <q-item key="_key" style="min-height: none">
               <q-item-section side>
                 <q-btn
                   flat
                   round
                   icon="mdi-close"
                   size="sm"
-                  @click="toggleProduct(p)"
+                  @click="toggleProduct(item)"
                 />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="highlight">
-                  {{ p.code }}
+                  {{ item.code }}
                 </q-item-label>
                 <q-item-label caption class="ellipsis">
-                  {{ p.description }}
+                  {{ item.description }}
                 </q-item-label>
               </q-item-section>
             </q-item>
-          </q-list>
+          </q-virtual-scroll>
         </div>
-
-
       </q-card-section>
 
       <q-separator />
@@ -210,9 +226,10 @@
 
 <script setup>
 import { useDialogPluginComponent } from 'quasar';
-import { computed, ref } from 'vue';
+import { ref, watch } from 'vue';
+import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
-import multiMatch from '@/lib/MultiFieldSearch';
+//import multiMatch from '@/lib/MultiFieldSearch';
 import TagInput from './TagInput.vue';
 
 const props = defineProps({
@@ -248,78 +265,101 @@ const tagsToInclude = ref(props.defaultFilters?.tagsToInclude ?? []);
 const tagsToExclude = ref(props.defaultFilters?.tagsToExclude ?? []);
 
 const selectedProducts = ref([]);
+const filteredProducts = ref([]);
+
+const globalOperator = ref('AND');
+const includeTagsOperator = ref('AND');
+const excludeTagsOperator = ref('AND');
 
 function toggleProduct(product_key) {
   if (selectedProducts.value.includes(product_key)) {
-    selectedProducts.value.splice(selectedProducts.value.indexOf(product_key), 1)
-  }
-  else {
-    selectedProducts.value.push(product_key)
+    selectedProducts.value.splice(
+      selectedProducts.value.indexOf(product_key),
+      1,
+    );
+  } else {
+    selectedProducts.value.push(product_key);
   }
 }
 
-// const hiddenSelectedCount = computed(() => {
-//   if (!tableRef.value) {
-//     return 0;
-//   }
-
-//   const displayedRows = tableRef.value.computedRows;
-//   return selectedProducts.value.filter(
-//     ({ _key }) => !displayedRows.some((row) => row._key === _key),
-//   ).length;
-// });
-
+watch(
+  [
+    textToInclude,
+    textToExclude,
+    tagsToInclude,
+    tagsToExclude,
+    includeTagsOperator,
+    excludeTagsOperator,
+    globalOperator,
+  ],
+  () => {
+    filterProducts();
+  },
+  { deep: true },
+);
+//let filtered_products = [];
 /**
  * @type {NonNullable<import('quasar').QTableProps['filterMethod']>}
  */
-const filteredProducts = computed(() => {
+/**const filteredProducts = computed(() => {
   if (
     tagsToInclude.value.length === 0 &&
     tagsToExclude.value.length === 0 &&
     !textToInclude.value &&
     !textToExclude.value
   ) {
-    return props.products;
+    filtered_products = props.products;
   }
 
-  const condition = (isEmpty, value) =>
-    globalOperator.value === 'AND' ? isEmpty || value : !isEmpty && value;
-  const combineConditions = (...conditions) =>
-    conditions[globalOperator.value === 'AND' ? 'every' : 'some'](
-      (condition) => condition,
-    );
-  const includeTagsMethod =
-    includeTagsOperator.value === 'AND' ? 'every' : 'some';
-  const excludeTagsMethod =
-    excludeTagsOperator.value === 'AND' ? 'every' : 'some';
+  //const condition = (isEmpty, value) =>
+  //  globalOperator.value === 'AND' ? isEmpty || value : !isEmpty && value;
+  //const combineConditions = (...conditions) =>
+  //  conditions[globalOperator.value === 'AND' ? 'every' : 'some'](
+  //    (condition) => condition,
+  //  );
+  //const includeTagsMethod =
+  //  includeTagsOperator.value === 'AND' ? 'every' : 'some';
+  //const excludeTagsMethod =
+  //  excludeTagsOperator.value === 'AND' ? 'every' : 'some';
 
-  return props.products.filter((product) => {
-    const tags = product.tags.map(({ _key }) => _key);
+  filterProducts();
 
-    return combineConditions(
-      condition(
-        textToInclude.value === '',
-        multiMatch(textToInclude.value, product, ['code', 'description']),
-      ),
-      condition(
-        textToExclude.value === '',
-        !multiMatch(textToExclude.value, product, ['code', 'description']),
-      ),
-      condition(
-        tagsToInclude.value.length === 0,
-        tagsToInclude.value[includeTagsMethod](({ _key }) => tags.includes(_key)),
-      ),
-      condition(
-        tagsToExclude.value.length === 0,
-        tagsToExclude.value[excludeTagsMethod](({ _key }) => !tags.includes(_key)),
-      ),
-    );
+  return filtered_products;
+});*/
+
+async function filterProducts() {
+  if (
+    tagsToInclude.value.length === 0 &&
+    tagsToExclude.value.length === 0 &&
+    !textToInclude.value &&
+    !textToExclude.value
+  ) {
+    filteredProducts.value = props.products;
+  }
+
+  let tags_to_include = '';
+  let tags_to_exclude = '';
+  for (const tag of tagsToInclude.value) {
+    tags_to_include += tag._key + ' ';
+  }
+  for (const tag of tagsToExclude.value) {
+    tags_to_exclude += tag._key + ' ';
+  }
+  const { data } = await api.get('/product/search', {
+    params: {
+      text_to_include: textToInclude.value,
+      text_to_exclude: textToExclude.value,
+      tags_to_include: tags_to_include,
+      tags_to_exclude: tags_to_exclude,
+      global_operator: globalOperator.value,
+      include_tags_operator: includeTagsOperator.value,
+      exclude_tags_operator: excludeTagsOperator.value,
+    },
   });
-});
+  filteredProducts.value = data;
+}
 
-const globalOperator = ref('AND');
-const includeTagsOperator = ref('AND');
-const excludeTagsOperator = ref('AND');
+filterProducts();
 </script>
 
 <style scoped lang="scss">

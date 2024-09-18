@@ -1,9 +1,10 @@
 import os
 import traceback
 
-from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body, Depends
+from fastapi import APIRouter, Form, File, HTTPException, UploadFile, Body, Query, Depends
 from utils import auth
 from fastapi.encoders import jsonable_encoder
+from typing import List, Union
 
 from utils.kpi import Queries as ProductStatQueries
 from models.product import *
@@ -54,6 +55,56 @@ async def get_product_list(
 
   return [validate(product) for product in product_list]
 
+
+@router.get('/search',
+dependencies=[Depends(auth.verify_token)])
+async def search_product(
+  text_to_include: str | None = None,
+  text_to_exclude: str | None = None,
+  tags_to_include: str | None = None,
+  tags_to_exclude: str | None = None,
+  global_operator: str | None = None,
+  include_tags_operator: str | None = None,
+  exclude_tags_operator: str | None = None
+  ):
+
+  globalOperator = "&&"
+  defaultValue = 'true'
+  if (global_operator == "OR"):
+    globalOperator = "||"
+    defaultValue = 'false'
+
+  includeTagsOperator = "ALL IN"
+  if (include_tags_operator == "OR"):
+    includeTagsOperator = "AT LEAST (1) IN"
+
+  excludeTagsOperator = "NONE IN"
+  if (exclude_tags_operator == "OR"):
+    excludeTagsOperator = "AT LEAST (1) NOT IN"
+
+  if not text_to_include or not text_to_include.strip():
+    text_to_include = None
+
+  if not text_to_exclude or not text_to_exclude.strip():
+    text_to_exclude = None
+
+  if not tags_to_include or not tags_to_include.strip():
+    tags_to_include = None
+
+  if not tags_to_exclude or not tags_to_exclude.strip():
+    tags_to_exclude = None
+
+  product_list =  db.aql.execute(
+    Queries.SEARCH_PRODUCT.replace("<g_o>", globalOperator).replace("<def>", defaultValue).replace("<it_o>", includeTagsOperator).replace("<et_o>", excludeTagsOperator),
+    bind_vars=dict(
+      textToInclude = text_to_include,
+      textToExclude = text_to_exclude,
+      tagsToInclude = tags_to_include,
+      tagsToExclude = tags_to_exclude,
+    )
+  )
+
+  return [ProductDetails(**product) for product in product_list]
 
 # =================================================
 #  POST / : CREATE PRODUCT
@@ -478,6 +529,7 @@ async def replace_product_image(product_key: str):
     updated=timestamp(),
     image=False
   ))
+
 
 # =================================================
 #  GET /PRODUCT_KEY : GET PRODUCT DATA

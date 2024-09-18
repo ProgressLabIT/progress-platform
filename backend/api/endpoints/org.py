@@ -8,10 +8,15 @@ from starlette import status
 
 from models.org import *
 from utils import auth
-from utils.api import APIResponse
+from utils.api import APIResponse, AuthAPIResponse
 from utils.db import db
 from utils.file import FileHandler
 from utils.org import *
+from models.auth import TokenData, TokenRecord, AuthResponse, TokenContext
+from starlette.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+
+
 
 from managers.server_event_manager import ServerEventManager
 from sse_starlette.sse import EventSourceResponse
@@ -31,6 +36,66 @@ async def get_department_list():
   response = APIResponse(detail= dep_list)
   return response
 
+
+# =================================
+#         API TOKEN
+# =================================
+@router.get("/api-token")
+async def get_api_token(user_token: TokenData = Depends(auth.verify_token)):
+  credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+  try:
+    user_key=user_token.consumer_key
+    if user_key is None:
+      raise credentials_exception
+
+    token, token_data = auth.issue_token(
+      consumer_key = user_token.consumer_key,
+      scope = user_token.scope,
+      seconds_until_expired = ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+
+    response_data = AuthResponse(
+      action='start_session',
+      user_key=user_token.key
+    )
+
+    # Store token data
+    _, _, token_signature = token.split('.')
+
+    token_record = TokenRecord(
+      key=token_data.token_key,
+      issued_to=user_token.consumer_key,
+      issued_at=token_data.issued_at,
+      context=TokenContext.API,
+      signature=token_signature
+    )
+    db.collection('Token').insert(token_record)
+
+
+    response_headers = {
+      'Cache-Control': 'no-store',
+      'Pragma': 'no-cache'
+    }
+
+    response_content = AuthAPIResponse(detail=response_data)
+
+    response_content.access_token = token
+    response_content.token_type = "bearer"
+    return JSONResponse(
+      content= jsonable_encoder(response_content),
+      headers=response_headers
+    )
+  except:
+    raise credentials_exception
+
+@router.delete("/api-token/{token}",
+    dependencies=[Depends(auth.verify_token)])
+async def revoke_token(token: str):
+    auth.revoke_token(token)
 
 
 # =================================
@@ -186,3 +251,5 @@ async def archive_user(user_key: str):
 @router.get("/notification/{topic}")
 async def message_stream(request: Request, topic: str):
     return EventSourceResponse(ServerEventManager.getInstance().push_events(request, topic))
+
+

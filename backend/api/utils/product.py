@@ -48,6 +48,36 @@ class Queries:
       RETURN MERGE(product, { tags })
   """
 
+  SEARCH_PRODUCT = """
+    LET search_include = CONCAT('%', LOWER(@textToInclude), '%')
+    LET search_exclude = CONCAT('%', LOWER(@textToExclude), '%')
+
+    FOR product IN Product
+      LET search_context = LOWER(CONCAT(product.code, ' ', 'product.description'))
+
+      LET tags = (
+        FOR edge IN has_tag
+          FILTER edge._from == product._id
+          RETURN DOCUMENT(Tag, edge._to)
+      )
+
+      LET search_tags = (
+        FOR tag IN tags
+          RETURN tag._key
+      )
+
+      FILTER !product.trash
+
+      FILTER
+        (@textToInclude?LIKE(search_context, search_include, true):<def>) <g_o>
+        (@textToExclude?!LIKE(search_context, search_exclude, true):<def>) <g_o>
+        (@tagsToInclude?TOKENS(@tagsToInclude, "text_en") <it_o>  search_tags:<def>) <g_o>
+        (@tagsToExclude?TOKENS(@tagsToExclude, "text_en") <et_o>  search_tags:<def>)
+
+      SORT product.code
+      RETURN MERGE(product, { tags })
+  """
+
 
 def get_product_data_from_code(product_code: str) -> ProductFull:
   cursor = db.collection('Product').find(dict(code=product_code, trash=False))
