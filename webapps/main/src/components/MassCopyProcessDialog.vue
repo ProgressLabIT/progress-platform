@@ -103,7 +103,7 @@
       <q-separator inset />
 
       <q-card-section class="q-pt-sm row col q-col-gutter-md">
-        <!-- TODO: change design (?) -->
+        <!-- FILTERED ITEMS -->
         <div class="col-6 column full-height">
           <div class="row col-auto items-center q-my-sm">
             <div class="text-h5 uppercase">
@@ -125,34 +125,41 @@
             >
             </q-btn>
           </div>
-          <q-list class="col scroll fit">
+
+          <q-virtual-scroll
+            v-slot="{ item }"
+            style="max-height: 100%"
+            class="col fit"
+            :items="filteredProducts"
+          >
             <q-item
-              v-for="p in filteredProducts"
-              :key="p._key"
+              key="_key"
               clickable
               style="min-height: none"
-              @click="toggleProduct(p)"
+              @click="toggleProduct(item)"
             >
               <q-item-section side>
                 <q-checkbox
                   size="sm"
                   dense
                   class="passive-checkbox"
-                  :model-value="selectedProducts.includes(p)"
-                  @click="toggleProduct(p)"
+                  :model-value="selectedProducts.includes(item)"
+                  @click="toggleProduct(item)"
                 />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="highlight">
-                  {{ p.code }}
+                  {{ item.code }}
                 </q-item-label>
                 <q-item-label caption class="ellipsis">
-                  {{ p.description }}
+                  {{ item.description }}
                 </q-item-label>
               </q-item-section>
             </q-item>
-          </q-list>
+          </q-virtual-scroll>
         </div>
+
+        <!-- SELECTED ITEMS -->
 
         <div class="col column full-height">
           <div class="col-auto row items-center q-my-sm">
@@ -170,31 +177,32 @@
             >
             </q-btn>
           </div>
-          <q-list class="col scroll fit">
-            <q-item
-              v-for="p in selectedProducts.toSorted((a, b) => a.code - b.code)"
-              :key="p._key"
-              style="min-height: none"
-            >
+          <q-virtual-scroll
+            v-slot="{ item }"
+            class="col fit"
+            style="max-height: 100%"
+            :items="selectedProducts.toSorted((a, b) => a.code - b.code)"
+          >
+            <q-item key="_key" style="min-height: none">
               <q-item-section side>
                 <q-btn
                   flat
                   round
                   icon="mdi-close"
                   size="sm"
-                  @click="toggleProduct(p)"
+                  @click="toggleProduct(item)"
                 />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="highlight">
-                  {{ p.code }}
+                  {{ item.code }}
                 </q-item-label>
                 <q-item-label caption class="ellipsis">
-                  {{ p.description }}
+                  {{ item.description }}
                 </q-item-label>
               </q-item-section>
             </q-item>
-          </q-list>
+          </q-virtual-scroll>
         </div>
       </q-card-section>
 
@@ -350,6 +358,8 @@ async function filterProducts() {
   });
   filteredProducts.value = data;
 }
+
+filterProducts();
 </script>
 
 <style scoped lang="scss">
