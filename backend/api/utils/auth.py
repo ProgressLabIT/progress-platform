@@ -117,7 +117,7 @@ def revoke_token(token_key, db=db):
 
 def issue_token(
   consumer_key: str,
-  seconds_until_expired: int,
+  seconds_until_expired: int | None = None,
   scope: str | None = None,
   consumer_type: ConsumerType = ConsumerType.USER,
   context: TokenContext = TokenContext.USER_SESSION,
@@ -131,7 +131,7 @@ def issue_token(
     context = context,
     scope = scope,
     issued_at = now,
-    expires_at = now + timedelta(seconds=seconds_until_expired)
+    expires_at = now + timedelta(seconds=seconds_until_expired) if seconds_until_expired != None else None
   )
 
   access_token = jwt.encode(
