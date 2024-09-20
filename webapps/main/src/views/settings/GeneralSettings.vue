@@ -47,6 +47,7 @@ const sections = [
   'companyDetails',
   'defaultOperationParameters',
   'serialFieldSettings',
+  'apiTokenSettings',
   'otherSettings',
 ];
 

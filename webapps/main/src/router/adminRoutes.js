@@ -26,14 +26,18 @@ const adminRoutes = [
           {
             path: 'serial-field',
             name: 'serialFieldSettings',
-            component: () =>
-              import('app/src/views/settings/SerialFieldSettings.vue'),
+            component: () => import('@/views/settings/SerialFieldSettings.vue'),
             children: [
               {
                 path: ':field_key',
                 name: 'serialFieldDetail',
               },
             ],
+          },
+          {
+            path: 'api-token',
+            name: 'apiTokenSettings',
+            component: () => import('@/views/settings/APITokenSettings.vue'),
           },
           {
             path: 'other',

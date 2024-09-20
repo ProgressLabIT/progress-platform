@@ -229,7 +229,6 @@ import { useDialogPluginComponent } from 'quasar';
 import { ref, watch } from 'vue';
 import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
-//import multiMatch from '@/lib/MultiFieldSearch';
 import TagInput from './TagInput.vue';
 
 const props = defineProps({
@@ -297,35 +296,9 @@ watch(
   },
   { deep: true },
 );
-//let filtered_products = [];
 /**
  * @type {NonNullable<import('quasar').QTableProps['filterMethod']>}
  */
-/**const filteredProducts = computed(() => {
-  if (
-    tagsToInclude.value.length === 0 &&
-    tagsToExclude.value.length === 0 &&
-    !textToInclude.value &&
-    !textToExclude.value
-  ) {
-    filtered_products = props.products;
-  }
-
-  //const condition = (isEmpty, value) =>
-  //  globalOperator.value === 'AND' ? isEmpty || value : !isEmpty && value;
-  //const combineConditions = (...conditions) =>
-  //  conditions[globalOperator.value === 'AND' ? 'every' : 'some'](
-  //    (condition) => condition,
-  //  );
-  //const includeTagsMethod =
-  //  includeTagsOperator.value === 'AND' ? 'every' : 'some';
-  //const excludeTagsMethod =
-  //  excludeTagsOperator.value === 'AND' ? 'every' : 'some';
-
-  filterProducts();
-
-  return filtered_products;
-});*/
 
 async function filterProducts() {
   if (

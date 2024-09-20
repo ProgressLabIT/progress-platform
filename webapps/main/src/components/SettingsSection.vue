@@ -7,6 +7,7 @@
 
       <template v-if="editMode">
         <q-btn
+          v-if="!hideSave"
           type="submit"
           form="settings-form"
           size="12px"
@@ -52,6 +53,10 @@ const props = defineProps({
   saveFn: {
     type: Function,
     required: true,
+  },
+  hideSave: {
+    type: Boolean,
+    default: false,
   },
 });
 

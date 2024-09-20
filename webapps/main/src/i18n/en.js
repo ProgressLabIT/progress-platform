@@ -66,6 +66,7 @@ export default {
   code: 'code',
   component: 'component',
   confirm: 'confirm',
+  copy_to_clipboard: 'copy',
   confirm_question: 'confirm?',
   copy: 'copy',
   cost: {
@@ -136,6 +137,12 @@ export default {
   },
   export: 'Export',
   ext_key: 'External key',
+  api_token_add: 'Add API Token',
+  api_token_add_text:
+    'The token will be created. Write it down because it cannot be displayed anymore after the creation.',
+  api_token_delete: 'Delete API Token',
+  api_token_delete_text:
+    'The token will be deleted. It will not be possible to use it for integrations anymore',
   field: 'field | fields',
   field_add: 'Add field',
   field_delete: 'Delete field',
@@ -794,6 +801,7 @@ export default {
     formFieldLibrary: 'Form fields',
     counterLibrary: 'Counters',
     serialFieldSettings: 'Serial fields',
+    apiTokenSettings: 'API Tokens',
     flowLibrary: 'Data flows',
     generalSettings: 'General',
     issueOverview: 'Issues',

@@ -244,7 +244,7 @@ async def reset_user_password(
 
 @router.get("/user/api-tokens",
     dependencies=[Depends(auth.verify_token)])
-async def reset_user_password(
+async def get_user_api_tokens(
   token: str = Depends(auth.verify_token),
 ):
   user_key=token.consumer_key
