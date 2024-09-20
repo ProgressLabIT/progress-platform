@@ -184,6 +184,7 @@ export default {
       this.$api.get('api-token').then((data) => {
         this.token = data?.data?.access_token;
         this.$emit('reload');
+        this.selected_token_key = null;
         this.show_new_api_token = true;
       });
     },
@@ -201,6 +202,7 @@ export default {
 
       this.$api.delete(`api-token/${this.selected_token_key}`).then(() => {
         this.$emit('reload');
+        this.selected_token_key = null;
       });
     },
   },

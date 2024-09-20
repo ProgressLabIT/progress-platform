@@ -67,7 +67,7 @@ export default {
   code: 'codice',
   component: 'componente | componenti',
   confirm: 'conferma',
-  copy_to_clipboard: 'copia',
+  copy_to_clipboard: 'copia nella clipboard',
   confirm_question: 'confermi?',
   copy: 'copia',
   cost: {

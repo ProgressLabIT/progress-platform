@@ -66,7 +66,7 @@ export default {
   code: 'code',
   component: 'component',
   confirm: 'confirm',
-  copy_to_clipboard: 'copy',
+  copy_to_clipboard: 'copy to clipboard',
   confirm_question: 'confirm?',
   copy: 'copy',
   cost: {
