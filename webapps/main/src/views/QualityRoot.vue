@@ -68,7 +68,11 @@
 
         <!-- MAIN CONTENT -->
         <div class="col relative-position">
-          <router-view :loading="loading" @on-scroll="addIssues" />
+          <router-view
+            :loading="loading"
+            @on-scroll="addIssues"
+            @on-request="reloadIssues"
+          />
         </div>
       </div>
     </q-page>
@@ -683,6 +687,12 @@ export default {
             }, 1000),
           );
       }
+    },
+
+    reloadIssues(data) {
+      console.log(data);
+      this.offset = 0;
+      this.getIssues();
     },
   },
 };

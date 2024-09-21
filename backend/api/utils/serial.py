@@ -243,8 +243,7 @@ class Queries:
     FILTER @contains ? count(children)>0 : true
     FILTER @is_contained_in ? count(parents)>0 : true
 
-    // LIMIT FILTERED RECORDS
-    SORT s.created
+
 
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(s, {
@@ -256,6 +255,9 @@ class Queries:
 
     FILTER
       (@work_order_search ? CONTAINS(LOWER(base_result.wo_code), LOWER(@work_order_search)) : true)
+
+     // LIMIT FILTERED RECORDS
+    SORT base_result.@sort_by @sorting_order
 
     LIMIT @offset, @limit || null
     return base_result

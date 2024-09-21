@@ -19,6 +19,7 @@
       :pagination="pagination"
       :rows-per-page-options="[0]"
       @virtual-scroll="(details) => $emit('onScroll', details)"
+      @request="(props) => $emit('onRequest', props)"
     >
       <template #body="props">
         <q-tr
@@ -103,7 +104,7 @@ export default {
     },
   },
 
-  emits: ['onScroll'],
+  emits: ['onScroll', 'onRequest'],
 
   setup() {
     return {

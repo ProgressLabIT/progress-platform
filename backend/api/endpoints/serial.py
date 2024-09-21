@@ -301,6 +301,8 @@ async def search_serials(
   serial_deleted: bool = False,
   offset: int | None = None,
   filter_unreleased: bool = False,
+  sort_by: str | None = 'created',
+  sorting_order: str | None = 'desc',
   ):
 
   serial_fields = db.collection('Config').get('serial_fields')
@@ -324,7 +326,9 @@ async def search_serials(
     limit = limit,
     offset = offset,
     deleted = serial_deleted,
-    fields = fields
+    fields = fields,
+    sort_by = sort_by,
+    sorting_order = sorting_order
   )
   try:
     cursor = db.aql.execute(Queries.FIND_SERIALS, bind_vars=bind_vars)
