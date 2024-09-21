@@ -461,7 +461,8 @@ export default {
       serial_fields: [],
       limit: 200,
       offset: 0,
-      descending: false,
+      sort_by: 'created',
+      sorting_order: 'desc',
     };
   },
 
@@ -618,12 +619,23 @@ export default {
     reloadSerials(data) {
       const { sortBy, descending } = data.pagination ?? {};
 
-      console.log(data);
       this.sort_by = sortBy;
       this.sorting_order = descending ? 'desc' : 'asc';
-      this.offset = 0;
-      this.getSerials();
-      this.descending = descending;
+      this.loading = true;
+      this.$store
+        .dispatch('getSerials', {
+          ...this.filters,
+          limit: this.offset + this.limit,
+          filter_unreleased: true,
+          offset: 0,
+          sort_by: this.sort_by,
+          sorting_order: this.sorting_order,
+        })
+        .then(() =>
+          setTimeout(() => {
+            this.loading = false;
+          }, 1000),
+        );
     },
 
     addSerials(data) {

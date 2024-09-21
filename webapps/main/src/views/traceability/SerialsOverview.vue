@@ -89,7 +89,7 @@ export default {
       sortBy: 'created',
       descending: false,
       page: 1,
-      rowsNumber: 10,
+      rowsNumber: 1000,
     };
 
     function onRequest(props) {

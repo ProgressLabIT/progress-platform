@@ -567,6 +567,8 @@ export default {
       show_issue_form: false,
       limit: 200,
       offset: 0,
+      sort_by: 'created',
+      sorting_order: 'desc',
     };
   },
 
@@ -657,6 +659,8 @@ export default {
           with_links: true,
           ...this.filters,
           offset: this.offset,
+          sort_by: this.sort_by,
+          sorting_order: this.sorting_order,
         })
         .then(() =>
           setTimeout(() => {
@@ -680,6 +684,8 @@ export default {
             with_links: true,
             ...this.filters,
             offset: this.offset,
+            sort_by: this.sort_by,
+            sorting_order: this.sorting_order,
           })
           .then(() =>
             setTimeout(() => {
@@ -689,10 +695,42 @@ export default {
       }
     },
 
+    convertSortBy(sort_by) {
+      switch (sort_by) {
+        case 'product_code':
+          return 'links.product.code';
+        case 'work_order_code':
+          return 'links.work_order.wo_code';
+        case 'project_code':
+          return 'links.job.project_code';
+        case 'serial_code':
+          return 'serial';
+
+        default:
+          return sort_by;
+      }
+    },
+
     reloadIssues(data) {
-      console.log(data);
-      this.offset = 0;
-      this.getIssues();
+      const { sortBy, descending } = data.pagination ?? {};
+
+      this.sort_by = this.convertSortBy(sortBy);
+      this.sorting_order = descending ? 'desc' : 'asc';
+      this.loading = true;
+      this.$store
+        .dispatch('getIssues', {
+          with_links: true,
+          ...this.filters,
+          limit: this.offset + this.limit,
+          offset: 0,
+          sort_by: this.sort_by,
+          sorting_order: this.sorting_order,
+        })
+        .then(() =>
+          setTimeout(() => {
+            this.loading = false;
+          }, 1000),
+        );
     },
   },
 };

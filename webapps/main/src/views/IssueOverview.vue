@@ -19,7 +19,12 @@
       :pagination="pagination"
       :rows-per-page-options="[0]"
       @virtual-scroll="(details) => $emit('onScroll', details)"
-      @request="(props) => $emit('onRequest', props)"
+      @request="
+        (props) => {
+          onRequest(props);
+          $emit('onRequest', props);
+        }
+      "
     >
       <template #body="props">
         <q-tr
@@ -107,8 +112,25 @@ export default {
   emits: ['onScroll', 'onRequest'],
 
   setup() {
+    const pagination = {
+      rowsPerPage: 0,
+      sortBy: 'created',
+      descending: false,
+      page: 1,
+      rowsNumber: 1000,
+    };
+
+    function onRequest(props) {
+      const { page, rowsPerPage, sortBy, descending } = props.pagination;
+      pagination.sortBy = sortBy;
+      pagination.descending = descending;
+      pagination.page = page;
+      pagination.rowsPerPage = rowsPerPage;
+    }
+
     return {
-      pagination: { rowsPerPage: 0 },
+      pagination,
+      onRequest,
     };
   },
 
@@ -199,7 +221,6 @@ export default {
           sortable: true,
           align: 'right',
           label: this.$t('opened_date').toUpperCase(),
-          sort: this.sortDate,
           style: 'max-width: 5vw',
         },
         {
@@ -208,30 +229,12 @@ export default {
           sortable: true,
           align: 'right',
           label: this.$t('closed_date').toUpperCase(),
-          sort: this.sortDate,
         },
       ];
     },
   },
 
   methods: {
-    sortDate(a, b) {
-      // equal items sort equally
-      if (a === b) {
-        return 0;
-      }
-      // nulls sort after anything else
-      else if (a === null) {
-        return 1;
-      } else if (b === null) {
-        return -1;
-      }
-      // standard sorting
-      else {
-        return a < b ? 1 : -1;
-      }
-    },
-
     showIssueDetails(issueKey) {
       const to_route = {
         name: 'issueDetail',
