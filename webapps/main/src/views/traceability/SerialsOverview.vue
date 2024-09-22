@@ -15,6 +15,7 @@
       table-class="text-high"
       card-class="background no-shadow"
       virtual-scroll
+      binary-state-sort
       :virtual-scroll-item-size="48"
       :virtual-scroll-sticky-size-start="48"
       :rows-per-page-options="[0]"
@@ -71,6 +72,8 @@
 </template>
 
 <script>
+import { ref } from 'vue';
+
 export default {
   name: 'SerialsOverview',
 
@@ -84,20 +87,20 @@ export default {
   emits: ['onScroll', 'onRequest'],
 
   setup() {
-    const pagination = {
+    const pagination = ref({
       rowsPerPage: 0,
       sortBy: 'created',
       descending: false,
       page: 1,
       rowsNumber: 1000,
-    };
+    });
 
     function onRequest(props) {
       const { page, rowsPerPage, sortBy, descending } = props.pagination;
-      pagination.sortBy = sortBy;
-      pagination.descending = descending;
-      pagination.page = page;
-      pagination.rowsPerPage = rowsPerPage;
+      pagination.value.descending = descending;
+      pagination.value.sortBy = sortBy;
+      pagination.value.page = page;
+      pagination.value.rowsPerPage = rowsPerPage;
     }
 
     return {

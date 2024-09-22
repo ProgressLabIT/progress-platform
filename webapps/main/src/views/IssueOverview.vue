@@ -2,6 +2,7 @@
   <div ref="container" class="q-px-sm q-pt-sm full-height">
     <q-table
       id="issue_list"
+      v-model:pagination="pagination"
       :columns="columns"
       :rows="issue_list"
       row-key="_key"
@@ -16,7 +17,6 @@
       virtual-scroll
       :virtual-scroll-item-size="48"
       :virtual-scroll-sticky-size-start="48"
-      :pagination="pagination"
       :rows-per-page-options="[0]"
       @virtual-scroll="(details) => $emit('onScroll', details)"
       @request="
@@ -95,6 +95,7 @@
 </template>
 
 <script>
+import { ref } from 'vue';
 import enrichIssue from '@/mixins/issues.js';
 
 export default {
@@ -112,20 +113,20 @@ export default {
   emits: ['onScroll', 'onRequest'],
 
   setup() {
-    const pagination = {
+    const pagination = ref({
       rowsPerPage: 0,
       sortBy: 'created',
       descending: false,
       page: 1,
       rowsNumber: 1000,
-    };
+    });
 
     function onRequest(props) {
       const { page, rowsPerPage, sortBy, descending } = props.pagination;
-      pagination.sortBy = sortBy;
-      pagination.descending = descending;
-      pagination.page = page;
-      pagination.rowsPerPage = rowsPerPage;
+      pagination.value.sortBy = sortBy;
+      pagination.value.descending = descending;
+      pagination.value.page = page;
+      pagination.value.rowsPerPage = rowsPerPage;
     }
 
     return {
