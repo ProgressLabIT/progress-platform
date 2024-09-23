@@ -339,7 +339,7 @@ export default {
       this.initLinks();
     },
 
-    initLinks() {
+    async initLinks() {
       // Inser links step if required
       if (this.mode == 'new' && this.with_links) {
         this.form_step = 'links';
@@ -355,13 +355,24 @@ export default {
       // Set auto links if required
       if (this.auto_link_mode == 'work_order' && this.auto_links.work_order) {
         this.link_form = 'order';
-        this.loadWorkOrder(this.auto_links.work_order);
+        await this.loadWorkOrder(this.auto_links.work_order);
       }
 
       if (this.auto_link_mode == 'work_session' && this.auto_links) {
-        Object.entries(this.auto_links).forEach(([k, v]) => {
-          this.links[k] = { _key: v };
-        });
+        this.link_form = 'order';
+        await this.loadWorkOrder(this.auto_links.work_order_data);
+        if (this.phase_data) {
+          let phase = this.phase_data.find(
+            (ph) => ph._key === this.auto_links?.phase,
+          );
+          await this.loadPhase(phase);
+        }
+        if (this.phase_jobs) {
+          let job = this.phase_jobs.find(
+            (j) => j._key === this.auto_links?.job,
+          );
+          this.links.job = job;
+        }
       }
     },
 

@@ -251,6 +251,7 @@
       <IssueForm
         :show="show_issue_form"
         mode="new"
+        with_links
         auto_link_mode="work_session"
         :auto_links="issue_links"
         @close="show_issue_form = false"
@@ -449,6 +450,7 @@ export default {
         operation: this.j.operation_key,
         phase: this.j.phase_key,
         work_order: this.j.wo_key,
+        work_order_data: this.wo_data,
         job: this.j._key,
       };
     },
