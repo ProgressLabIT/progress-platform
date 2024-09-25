@@ -138,8 +138,22 @@
           >
           </vue-pdf-embed>
         </div>
+        <div v-else-if="video_mimetype">
+          <video-player
+            :options="{
+              autoplay: true,
+              controls: true,
+              sources: [
+                {
+                  src: media_src,
+                  type: video_mimetype,
+                },
+              ],
+            }"
+          />
+        </div>
         <div v-else>
-          <video-player :options="videoOptions" />
+          <a :href="media_src" :download="media_src">{{ media_src }}</a>
         </div>
       </div>
     </div>
@@ -225,22 +239,31 @@ export default {
 
   data() {
     return {
-      image_extensions: ['png', 'jpeg', 'jpg'],
+      image_extensions: ['png', 'jpeg', 'jpg', 'gif'],
       pdf_extensions: ['pdf'],
+      mimetypes_kinds: {
+        opus: 'video/ogg',
+        ogv: 'video/ogg',
+        mp4: 'video/mp4',
+        mov: 'video/mp4',
+        m4v: 'video/mp4',
+        mkv: 'video/x-matroska',
+        m4a: 'audio/mp4',
+        mp3: 'audio/mpeg',
+        aac: 'audio/aac',
+        caf: 'audio/x-caf',
+        flac: 'audio/flac',
+        oga: 'audio/ogg',
+        wav: 'audio/wav',
+        m3u8: 'application/x-mpegURL',
+        mpd: 'application/dash+xml',
+        svg: 'image/svg+xml',
+        webp: 'image/webp',
+      },
       doc_width: 800,
       rotation_class: '',
       info: 'icon',
       action_drawer: true,
-      videoOptions: {
-        autoplay: true,
-        controls: true,
-        sources: [
-          {
-            src: this.media_src,
-            type: 'video/mp4',
-          },
-        ],
-      },
     };
   },
 
@@ -276,6 +299,21 @@ export default {
             this.media_name.toLowerCase().endsWith(e),
           )
         : null;
+    },
+
+    video_mimetype() {
+      if (!this.media_src) {
+        return undefined;
+      }
+
+      const ext = this.media_src
+        .split('.')
+        .filter(Boolean) // removes empty extensions (e.g. `filename...txt`)
+        .slice(1)
+        .join('.');
+      const mimetype = this.mimetypes_kinds[ext.toLowerCase()];
+
+      return mimetype || undefined;
     },
   },
 

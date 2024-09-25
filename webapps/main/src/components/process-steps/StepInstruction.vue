@@ -112,7 +112,7 @@
           type="file"
           multiple
           style="display: none"
-          accept="image/*, application/pdf"
+          accept="audio/*, video/*, image/*, application/pdf"
           @change="addMedia($event.target.files)"
         />
         <q-icon size="md" name="mdi-camera-plus" />
