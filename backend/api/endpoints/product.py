@@ -115,6 +115,7 @@ async def create_product(
   code: str = Form(...),
   description: str = Form(''),
   image: UploadFile = File(None),
+  traceability_level: str = Form(''),
   counter_key: str = Form(''),
 ):
   # Map form data
@@ -124,6 +125,7 @@ async def create_product(
       code=code,
       description=description,
       created=timestamp(),
+      traceability_level='form_only' if len(traceability_level) else None,
       counter_key=counter_key
     )
 

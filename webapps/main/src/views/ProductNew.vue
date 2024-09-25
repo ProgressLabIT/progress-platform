@@ -41,7 +41,14 @@
             <q-icon name="mdi-image" />
           </template>
         </q-file>
+
+        <q-toggle
+          v-model="new_product_traceability_enabled"
+          :label="$t('traceability.enabled')"
+        />
+
         <q-input
+          v-if="new_product_traceability_enabled"
           v-model="new_product_counter_name"
           dense
           :label="$capitalize($t('counter'))"
@@ -83,6 +90,7 @@ export default {
       new_product_code: '',
       new_product_desc: '',
       new_product_pic: null,
+      new_product_traceability_enabled: false,
       new_product_counter: null,
       new_product_counter_name: '',
       show_new_counter_form: false,
@@ -98,11 +106,13 @@ export default {
 
     postNewProduct() {
       let body = new FormData();
-      const code = this.new_product_code.toUpperCase();
-      const desc = this.new_product_desc;
 
-      body.append('code', code);
-      body.append('description', desc);
+      body.append('code', this.new_product_code.toUpperCase());
+      body.append('description', this.new_product_desc);
+      body.append(
+        'traceability_level',
+        this.new_product_traceability_enabled ? 'form_only' : '',
+      );
 
       if (this.new_product_pic) {
         const image = this.new_product_pic;
