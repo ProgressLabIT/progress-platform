@@ -266,7 +266,7 @@ export default {
       }
       for (const serial of this.batch_serials) {
         this.serial_ids.push(serial._id);
-        this.serial_labels.push(serial?.code | serial._key);
+        this.serial_labels.push(serial?.code || serial._key);
         for (const component of this.bom_components) {
           const key = [serial._id, component.component_key].join(' ');
           if (!this.serialModel[key]) {

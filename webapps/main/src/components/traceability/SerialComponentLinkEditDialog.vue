@@ -14,7 +14,7 @@
           v-model="serial_model"
           :label="
             $capitalize(
-              [$t('serial'), start_node?.code | start_node._key].join(' '),
+              [$t('serial'), start_node?.code || start_node._key].join(' '),
             )
           "
           :initial_values="initial_values"
@@ -27,8 +27,8 @@
       </q-card-section>
       <q-card-section>
         <q-input
-          filled
           v-model="reason_model"
+          filled
           :label="$t('serial_edit_reason')"
         />
       </q-card-section>

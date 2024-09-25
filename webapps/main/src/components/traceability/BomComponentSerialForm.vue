@@ -35,7 +35,7 @@
               :initial_values="initialModel[serial._id]"
               :label="
                 $capitalize(
-                  [$t('serial'), serial?.code | serial._key].join(' '),
+                  [$t('serial'), serial?.code || serial._key].join(' '),
                 )
               "
               :product_key="component_key"
