@@ -144,10 +144,6 @@ class Queries:
 
     FILTER @job_key ? job._key IN @job_key : true
 
-    // LIMIT FILTERED ISSUE RECORDS
-    SORT i.created
-    LIMIT @offset, @limit || null
-
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(i, {
       icon: type_data.icon,
@@ -158,7 +154,13 @@ class Queries:
 
     LET issue_links = { job, product, operation, phase, work_order, serial }
 
-    RETURN @with_links ? MERGE(base_result, { links: issue_links }) : base_result
+    LET result = @with_links ? MERGE(base_result, { links: issue_links }) : base_result
+
+    // LIMIT FILTERED ISSUE RECORDS
+    SORT result.<sort_by> @sorting_order
+    LIMIT @offset, @limit || null
+
+    return result
   """
 
   CHECK_PRODUCTION_CRITICAL_STATUS = """

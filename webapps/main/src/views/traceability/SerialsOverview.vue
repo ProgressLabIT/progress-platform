@@ -2,6 +2,7 @@
   <div ref="container" class="q-px-sm q-pt-sm full-height">
     <q-table
       id="serial_list"
+      v-model:pagination="pagination"
       :columns="columns"
       :rows="serial_list"
       row-key="_key"
@@ -14,11 +15,17 @@
       table-class="text-high"
       card-class="background no-shadow"
       virtual-scroll
+      binary-state-sort
       :virtual-scroll-item-size="48"
       :virtual-scroll-sticky-size-start="48"
-      :pagination="pagination"
       :rows-per-page-options="[0]"
       @virtual-scroll="(details) => $emit('onScroll', details)"
+      @request="
+        (props) => {
+          onRequest(props);
+          $emit('onRequest', props);
+        }
+      "
     >
       <template #body="props">
         <q-tr
@@ -65,6 +72,8 @@
 </template>
 
 <script>
+import { ref } from 'vue';
+
 export default {
   name: 'SerialsOverview',
 
@@ -75,11 +84,28 @@ export default {
     },
   },
 
-  emits: ['onScroll'],
+  emits: ['onScroll', 'onRequest'],
 
   setup() {
+    const pagination = ref({
+      rowsPerPage: 0,
+      sortBy: 'created',
+      descending: false,
+      page: 1,
+      rowsNumber: 1000,
+    });
+
+    function onRequest(props) {
+      const { page, rowsPerPage, sortBy, descending } = props.pagination;
+      pagination.value.descending = descending;
+      pagination.value.sortBy = sortBy;
+      pagination.value.page = page;
+      pagination.value.rowsPerPage = rowsPerPage;
+    }
+
     return {
-      pagination: { rowsPerPage: 0 },
+      pagination,
+      onRequest,
     };
   },
 
@@ -134,7 +160,6 @@ export default {
           sortable: true,
           align: 'right',
           label: this.$t('creation_date').toUpperCase(),
-          sort: this.sortDate,
           style: 'max-width: 5vw',
         },
       ].concat(this.getCustomCols());
@@ -142,23 +167,6 @@ export default {
   },
 
   methods: {
-    sortDate(a, b) {
-      // equal items sort equally
-      if (a === b) {
-        return 0;
-      }
-      // nulls sort after anything else
-      else if (a === null) {
-        return 1;
-      } else if (b === null) {
-        return -1;
-      }
-      // standard sorting
-      else {
-        return a < b ? 1 : -1;
-      }
-    },
-
     getValueFromField(fieldValue) {
       if (!fieldValue) {
         return '---';
@@ -187,22 +195,12 @@ export default {
       return this.$store.state.serial.serial_fields.map((field) => ({
         name: field.name,
         field: field._key,
-        sortable: true,
+        sortable: false,
         align: 'right',
         label: field.name.toUpperCase(),
-        sort: this.sortDate,
         style: 'max-width: 5vw',
         custom: true,
       }));
-      /*return [{
-        name: 'created2',
-        field: 'created2',
-        sortable: true,
-        align: 'right',
-        label: this.$t('opened_date').toUpperCase(),
-        sort: this.sortDate,
-        style: 'max-width: 5vw',
-      }];*/
     },
 
     showSerialDetails(serialKey) {

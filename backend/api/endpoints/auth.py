@@ -100,6 +100,7 @@ async def authenticate_user(
     issued_to=user.id,
     issued_at=token_data.issued_at,
     expires_at=token_data.expires_at,
+    context=TokenContext.USER_SESSION,
     signature=token_signature
   )
   db.collection('Token').insert(token_record)

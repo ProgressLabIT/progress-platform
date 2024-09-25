@@ -29,6 +29,7 @@ class TokenRecord(ArangoDocument):
   issued_to: str
   issued_at: datetime
   expires_at: datetime
+  context: str | None = None
 
 
 class Scope(str, Enum):
@@ -45,7 +46,7 @@ class TokenData(FlexModel):
   consumer_key: str = Field(..., alias="sub")
   consumer_type: ConsumerType = Field(ConsumerType.USER, alias="ctyp")
   issued_at: datetime = Field(..., alias="iat")
-  expires_at: datetime = Field(..., alias="exp")
+  expires_at: datetime | None = Field(..., alias="exp")
   context: TokenContext = Field(..., alias="ctx")
   # audience: str | None = Field(None, alias="aud") # identify third party apps
   # issuer: str | None = Field(None, alias="iss") # url of server

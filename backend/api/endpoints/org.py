@@ -21,6 +21,8 @@ from fastapi.encoders import jsonable_encoder
 from managers.server_event_manager import ServerEventManager
 from sse_starlette.sse import EventSourceResponse
 
+ACCESS_TOKEN_EXPIRE_MINUTES = 52596000 # 100 years
+
 
 
 router = APIRouter()
@@ -52,15 +54,17 @@ async def get_api_token(user_token: TokenData = Depends(auth.verify_token)):
     if user_key is None:
       raise credentials_exception
 
+    user = User( **db.collection('User').get(user_key) )
+
     token, token_data = auth.issue_token(
       consumer_key = user_token.consumer_key,
-      scope = user_token.scope,
       seconds_until_expired = ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+      scope = user.scope,
     )
 
     response_data = AuthResponse(
-      action='start_session',
-      user_key=user_token.key
+      action='api_token',
+      user_key=user_key
     )
 
     # Store token data
@@ -68,8 +72,9 @@ async def get_api_token(user_token: TokenData = Depends(auth.verify_token)):
 
     token_record = TokenRecord(
       key=token_data.token_key,
-      issued_to=user_token.consumer_key,
+      issued_to=user.id,
       issued_at=token_data.issued_at,
+      expires_at=token_data.expires_at,
       context=TokenContext.API,
       signature=token_signature
     )
@@ -92,10 +97,15 @@ async def get_api_token(user_token: TokenData = Depends(auth.verify_token)):
   except:
     raise credentials_exception
 
+
 @router.delete("/api-token/{token}",
     dependencies=[Depends(auth.verify_token)])
 async def revoke_token(token: str):
-    auth.revoke_token(token)
+    try:
+      auth.revoke_token(token)
+      return APIResponse(message="token deleted correctly")
+    except:
+      raise HTTPException(status_code=500, detail="Cannot delete token")
 
 
 # =================================
@@ -226,6 +236,35 @@ async def reset_user_password(
     response = dict(
       status=status_code,
       message="There was an error updating the password, please contact the administrator.",
+      error=traceback.format_exc(),
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+# ----------------------------------------------------
+
+@router.get("/user/api-tokens",
+    dependencies=[Depends(auth.verify_token)])
+async def get_user_api_tokens(
+  token: str = Depends(auth.verify_token),
+):
+  user_key=token.consumer_key
+  if not user_key == token.consumer_key:
+    raise auth.credentials_exception
+
+  try:
+    user = User( **db.collection('User').get(user_key) )
+    cursor = db.collection('Token').find(dict(
+        issued_to=user.id,
+        revoked=False,
+        context=TokenContext.API
+      ))
+    return [TokenRecord(**t) for t in cursor]
+
+  except:
+    status_code = 500
+    response = dict(
+      status=status_code,
+      message="There was an error retreiving the api tokens.",
       error=traceback.format_exc(),
     )
     raise HTTPException(status_code=status_code, detail=response)

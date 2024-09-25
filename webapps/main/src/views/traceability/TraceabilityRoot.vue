@@ -70,6 +70,7 @@
           <router-view
             :loading="loading || loading_fields"
             @on-scroll="addSerials"
+            @on-request="reloadSerials"
           />
         </div>
       </div>
@@ -460,6 +461,8 @@ export default {
       serial_fields: [],
       limit: 200,
       offset: 0,
+      sort_by: 'created',
+      sorting_order: 'desc',
     };
   },
 
@@ -599,6 +602,8 @@ export default {
           ...this.filters,
           filter_unreleased: true,
           offset: this.offset,
+          sort_by: this.sort_by,
+          sorting_order: this.sorting_order,
         })
         .then(() =>
           setTimeout(() => {
@@ -609,6 +614,28 @@ export default {
 
     hasMore() {
       return this.limit + this.offset <= this.$store.getters.getSerialCount();
+    },
+
+    reloadSerials(data) {
+      const { sortBy, descending } = data.pagination ?? {};
+
+      this.sort_by = sortBy;
+      this.sorting_order = descending ? 'desc' : 'asc';
+      this.loading = true;
+      this.$store
+        .dispatch('getSerials', {
+          ...this.filters,
+          limit: this.offset + this.limit,
+          filter_unreleased: true,
+          offset: 0,
+          sort_by: this.sort_by,
+          sorting_order: this.sorting_order,
+        })
+        .then(() =>
+          setTimeout(() => {
+            this.loading = false;
+          }, 1000),
+        );
     },
 
     addSerials(data) {
@@ -622,6 +649,8 @@ export default {
             ...this.filters,
             filter_unreleased: true,
             offset: this.offset,
+            sort_by: this.sort_by,
+            sorting_order: this.sorting_order,
           })
           .then(() =>
             setTimeout(() => {

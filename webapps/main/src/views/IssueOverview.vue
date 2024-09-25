@@ -2,6 +2,7 @@
   <div ref="container" class="q-px-sm q-pt-sm full-height">
     <q-table
       id="issue_list"
+      v-model:pagination="pagination"
       :columns="columns"
       :rows="issue_list"
       row-key="_key"
@@ -16,9 +17,14 @@
       virtual-scroll
       :virtual-scroll-item-size="48"
       :virtual-scroll-sticky-size-start="48"
-      :pagination="pagination"
       :rows-per-page-options="[0]"
       @virtual-scroll="(details) => $emit('onScroll', details)"
+      @request="
+        (props) => {
+          onRequest(props);
+          $emit('onRequest', props);
+        }
+      "
     >
       <template #body="props">
         <q-tr
@@ -89,6 +95,7 @@
 </template>
 
 <script>
+import { ref } from 'vue';
 import enrichIssue from '@/mixins/issues.js';
 
 export default {
@@ -103,11 +110,28 @@ export default {
     },
   },
 
-  emits: ['onScroll'],
+  emits: ['onScroll', 'onRequest'],
 
   setup() {
+    const pagination = ref({
+      rowsPerPage: 0,
+      sortBy: 'created',
+      descending: false,
+      page: 1,
+      rowsNumber: 1000,
+    });
+
+    function onRequest(props) {
+      const { page, rowsPerPage, sortBy, descending } = props.pagination;
+      pagination.value.sortBy = sortBy;
+      pagination.value.descending = descending;
+      pagination.value.page = page;
+      pagination.value.rowsPerPage = rowsPerPage;
+    }
+
     return {
-      pagination: { rowsPerPage: 0 },
+      pagination,
+      onRequest,
     };
   },
 
@@ -198,7 +222,6 @@ export default {
           sortable: true,
           align: 'right',
           label: this.$t('opened_date').toUpperCase(),
-          sort: this.sortDate,
           style: 'max-width: 5vw',
         },
         {
@@ -207,30 +230,12 @@ export default {
           sortable: true,
           align: 'right',
           label: this.$t('closed_date').toUpperCase(),
-          sort: this.sortDate,
         },
       ];
     },
   },
 
   methods: {
-    sortDate(a, b) {
-      // equal items sort equally
-      if (a === b) {
-        return 0;
-      }
-      // nulls sort after anything else
-      else if (a === null) {
-        return 1;
-      } else if (b === null) {
-        return -1;
-      }
-      // standard sorting
-      else {
-        return a < b ? 1 : -1;
-      }
-    },
-
     showIssueDetails(issueKey) {
       const to_route = {
         name: 'issueDetail',

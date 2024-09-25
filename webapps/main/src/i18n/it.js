@@ -67,6 +67,7 @@ export default {
   code: 'codice',
   component: 'componente | componenti',
   confirm: 'conferma',
+  copy_to_clipboard: 'copia nella clipboard',
   confirm_question: 'confermi?',
   copy: 'copia',
   cost: {
@@ -138,6 +139,12 @@ export default {
   },
   export: 'Esporta',
   ext_key: 'Chiave esterna',
+  api_token_add: 'Aggiungi Token per API',
+  api_token_delete: 'Rimuovi Token per API',
+  api_token_add_text:
+    'Il token verrà creato. Prendere note del token, perchè non sarà più possibile visualizzarlo dopo la creazione',
+  api_token_delete_text:
+    'Il token verrà eliminato. Non sarà più possibile utilizzarlo nelle integrazioni.',
   field: 'campo | campi',
   field_add: 'Aggiungi campo',
   field_delete: 'Elimina campo',
@@ -806,6 +813,7 @@ export default {
     formFieldLibrary: 'Campi moduli',
     counterLibrary: 'Contatori',
     serialFieldSettings: 'Campi seriali',
+    apiTokenSettings: 'API Tokens',
     generalSettings: 'generale',
     jobList: 'lavori',
     libraryRoot: 'libreria prodotti',

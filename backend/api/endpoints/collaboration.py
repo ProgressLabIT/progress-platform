@@ -148,7 +148,9 @@ async def search_issues(
   advanced_filters: str = Query(default=None),
   limit: int | None = None,
   offset: int | None = None,
-  with_links: bool = False
+  with_links: bool = False,
+  sort_by: str | None = 'created',
+  sorting_order: str | None = 'desc',
   ):
   # use query parameters to filter specific type
   bind_vars = dict(
@@ -179,10 +181,12 @@ async def search_issues(
     advanced_filters = json.loads(b64decode(advanced_filters).decode('latin-1')) if advanced_filters else None,
     limit = limit,
     offset = offset,
-    with_links = with_links
+    with_links = with_links,
+    #sort_by = sort_by,
+    sorting_order = sorting_order
   )
   try:
-    cursor = db.aql.execute(Queries.FIND_ISSUES, bind_vars=bind_vars)
+    cursor = db.aql.execute(Queries.FIND_ISSUES.replace("<sort_by>", sort_by), bind_vars=bind_vars)
     return [i for i in cursor]
   except Exception:
     raise HTTPException(
