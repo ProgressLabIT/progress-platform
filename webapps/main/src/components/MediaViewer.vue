@@ -125,7 +125,7 @@
           :class="rotation_class"
         >
         </q-img>
-        <div v-else class="q-py-xl">
+        <div v-else-if="is_pdf" class="q-py-xl">
           <vue-pdf-embed
             ref="pdf"
             disable-text-layer
@@ -137,6 +137,9 @@
             @rendering-failed="(error) => console.log(error)"
           >
           </vue-pdf-embed>
+        </div>
+        <div v-else>
+          <video-player :options="videoOptions" />
         </div>
       </div>
     </div>
@@ -181,6 +184,7 @@ import BaseDialog from '@/components/BaseDialog.vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import ProgressBtn from '@/components/ProgressBtn.vue';
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
+import VideoPlayer from '@/components/VideoPlayer.vue';
 
 export default {
   name: 'MediaViewer',
@@ -191,6 +195,7 @@ export default {
     StartPauseResumeBtn,
     ProgressBtn,
     BaseProgressBar,
+    VideoPlayer,
   },
 
   props: {
@@ -221,10 +226,21 @@ export default {
   data() {
     return {
       image_extensions: ['png', 'jpeg', 'jpg'],
+      pdf_extensions: ['pdf'],
       doc_width: 800,
       rotation_class: '',
       info: 'icon',
       action_drawer: true,
+      videoOptions: {
+        autoplay: true,
+        controls: true,
+        sources: [
+          {
+            src: '/media/test/20240624_153508.mp4',
+            type: 'video/mp4',
+          },
+        ],
+      },
     };
   },
 
@@ -249,6 +265,14 @@ export default {
     is_image() {
       return this.media_name
         ? this.image_extensions.some((e) =>
+            this.media_name.toLowerCase().endsWith(e),
+          )
+        : null;
+    },
+
+    is_pdf() {
+      return this.media_name
+        ? this.pdf_extensions.some((e) =>
             this.media_name.toLowerCase().endsWith(e),
           )
         : null;
