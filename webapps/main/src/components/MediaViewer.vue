@@ -236,7 +236,7 @@ export default {
         controls: true,
         sources: [
           {
-            src: '/media/test/20240624_153508.mp4',
+            src: this.media_src,
             type: 'video/mp4',
           },
         ],
