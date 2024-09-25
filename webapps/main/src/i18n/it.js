@@ -798,6 +798,10 @@ export default {
     status_title: 'stato',
     surname: 'cognome',
     temp_password: 'password temporanea',
+    unauthenticated:
+      "Per visualizzare questa pagina è necessario fare prima l'accesso",
+    unauthorized:
+      "L'utente non ha le autorizzazioni necessarie per accedere a questa pagina",
     username: 'nome utente',
   },
   value: 'Valore | Valori',

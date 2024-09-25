@@ -787,6 +787,8 @@ export default {
     status_title: 'status',
     surname: 'surname',
     temp_password: 'temporary password',
+    unauthenticated: 'You must be logged in to access this page',
+    unauthorized: 'You are not authorized to access this page',
     username: 'username',
   },
   value: 'Value | Values',
