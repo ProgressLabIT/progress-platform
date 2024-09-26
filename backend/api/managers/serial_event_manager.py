@@ -548,7 +548,6 @@ class SerialEventManager:
         serial_event.event_type = "SERIAL_"+notification['notification']+" ("+notification['error']+")"
       else:
         serial_event.event_type = "SERIAL_"+notification['notification']
-      serial_event.serial_key = notification.get('serial_key')
       self.tx.collection('Event').insert(serial_event.model_dump())
       NotificationManager.getInstance().notify(key=notification.get('serial_key'), notification=json.dumps(notification))
 

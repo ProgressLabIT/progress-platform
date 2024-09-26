@@ -88,7 +88,6 @@ class EventModel(ArangoDocument):
   should_adjust_duration: bool | None = None
 
   # Traceability fields
-  serial_key: Any | None = None
   serial_data: Any | None = None
   batch_serials: Set[str] | None = None # prevent duplicated entries from client
   serial_link_data: list[SerialLink] | None = None
