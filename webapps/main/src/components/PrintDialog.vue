@@ -277,11 +277,11 @@ onMounted(() => {
     loadSerial(props.context.link);
   }
 
-  if (props.context.step.batch_key) {
+  if (props.context?.step?.batch_key) {
     loadBatchSerial(props.context.step.batch_key);
   }
 
-  if (props.context.step.product_key) {
+  if (props.context?.step?.product_key) {
     loadProduct(props.context.step.product_key);
   }
 });

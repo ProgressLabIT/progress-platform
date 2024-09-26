@@ -251,9 +251,7 @@ export class IssueTypeContext extends TemplateContext {
       return undefined;
     }
 
-    const data = this.issue.data.find(
-      ({ form_field_key }) => form_field_key === formField._key,
-    );
+    const data = this.issue.data.find(({ _key }) => _key === formField._key);
     return data?.value;
   }
 }
@@ -343,10 +341,12 @@ export class StepContext extends TemplateContext {
         ({ custom_field_key }) => custom_field_key === customField._key,
       );
 
-      return serial_data?.value;
+      if (serial_data?.value) {
+        return serial_data?.value;
+      }
     }
 
-    if (this.product) {
+    if (this.product?.metadata) {
       const product_data = this.product.metadata.find(
         ({ custom_field_key }) => custom_field_key === customField._key,
       );
@@ -362,7 +362,7 @@ export class StepContext extends TemplateContext {
       return undefined;
     }
 
-    if (batchStep) {
+    if (!batchStep) {
       return undefined;
     }
 
