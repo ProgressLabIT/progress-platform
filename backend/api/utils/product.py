@@ -8,7 +8,7 @@ class Queries:
 
     FOR product IN Product
       // find active products matching the search pattern provided
-      LET search_context = LOWER(CONCAT(product.code, ' ', 'product.description'))
+      LET search_context = LOWER(CONCAT(product.code, ' ', product.description))
       FILTER !product.trash && LIKE(search_context, search, true)
       && (@active? product.active == @active: true)
       && (@tag
