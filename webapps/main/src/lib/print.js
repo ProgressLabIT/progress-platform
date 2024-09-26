@@ -252,7 +252,7 @@ export class IssueTypeContext extends TemplateContext {
     }
 
     const data = this.issue.data.find(({ _key }) => _key === formField._key);
-    return data?.value;
+    return customField.type == 'choice' ? data?.value?.value : data?.value;
   }
 }
 
@@ -332,45 +332,57 @@ export class StepContext extends TemplateContext {
   getCustomFieldValue(customFieldKey) {
     const customField = this._store.getters.getCustomFieldByKey(customFieldKey);
     const batchStep = this._store.getters.getBatchStep(this.step._key);
+
+    // Return empty if custom field not found
     if (!customField) {
       return undefined;
     }
 
+    // Check first among serial data, if present
     if (this.serial) {
       const serial_data = this.serial.data.find(
         ({ custom_field_key }) => custom_field_key === customField._key,
       );
 
       if (serial_data?.value) {
-        return serial_data?.value;
+        return customField.type == 'choice'
+          ? serial_data.value.value
+          : serial_data.value;
       }
     }
 
-    if (this.product?.metadata) {
-      const product_data = this.product.metadata.find(
-        ({ custom_field_key }) => custom_field_key === customField._key,
+    // If no serial field found or empty, check within batch data, if present
+    if (batchStep?.form_data.length) {
+      // Only uses the first matching field
+      const formField = this.step.form_fields.find(
+        ({ custom_field_key }) => custom_field_key === customFieldKey,
       );
 
-      return product_data?.value;
+      if (formField) {
+        const data = batchStep.form_data.find(
+          ({ form_field_key }) => form_field_key === formField._key,
+        );
+        if (data?.value) {
+          return customField.type == 'choice'
+            ? data?.value?.value
+            : data?.value;
+        }
+      }
     }
 
-    // Only uses the first matching field
-    const formField = this.step.form_fields.find(
-      ({ custom_field_key }) => custom_field_key === customFieldKey,
-    );
-    if (!formField) {
-      return undefined;
+    // If no batch data field or empty, check within product metadata, if present
+    if (this.product?.metadata) {
+      const product_metadata_field = this.product.metadata.find(
+        ({ custom_field_key }) => custom_field_key === customField._key,
+      );
+      if (product_metadata_field.value) {
+        return customField.type == 'choice'
+          ? product_metadata_field?.value?.value
+          : product_metadata_field?.value;
+      }
     }
 
-    if (!batchStep) {
-      return undefined;
-    }
-
-    const data = batchStep.form_data.find(
-      ({ form_field_key }) => form_field_key === formField._key,
-    );
-    if (data?.value) {
-      return data?.value;
-    }
+    // Return undefined if no value found
+    return undefined;
   }
 }
