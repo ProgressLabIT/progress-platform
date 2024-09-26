@@ -238,7 +238,7 @@ export default {
       default: '',
     },
     media_src: {
-      type: Object,
+      type: [Object, String],
       default: undefined,
     },
     instruction_title: {

@@ -1,11 +1,14 @@
 <template>
-  <div :style="'background-color: ' + ($q.dark.isActive ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.05)')">
+  <div
+    :style="
+      'background-color: ' +
+      ($q.dark.isActive ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.05)')
+    "
+  >
     <div class="row justify-between items-center q-pl-sm q-py-sm">
       <div class="q-ml-xs text-low">
         {{ label }}
-        <span v-if="mandatory" class="text-theme-red">
-          *
-        </span>
+        <span v-if="mandatory" class="text-theme-red"> * </span>
       </div>
       <q-btn
         flat
@@ -67,7 +70,7 @@
       multiple
       type="file"
       style="display: none"
-      accept="application/pdf, image/*"
+      accept="audio/*, video/*, image/*, application/pdf"
       @change="$emit('addFiles', $event.target.files)"
     />
 
@@ -110,8 +113,8 @@ export default {
     },
     mandatory: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
 
   emits: ['addFiles', 'deleteFile', 'restoreFile'],

@@ -320,7 +320,7 @@
             type="file"
             multiple
             style="display: none"
-            accept="application/pdf, image/*"
+            accept="audio/*, video/*, image/*, application/pdf"
             @change="addFiles($event.target.files)"
           />
           <q-btn
