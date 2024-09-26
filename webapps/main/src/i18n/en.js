@@ -916,4 +916,6 @@ export default {
       code_already_used: 'Serial "{name}" already in use',
     },
   },
+  download: 'Download',
+  cannot_render_content: 'Cannot render this file, download it',
 };

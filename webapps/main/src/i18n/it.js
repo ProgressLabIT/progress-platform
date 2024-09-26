@@ -932,4 +932,6 @@ export default {
       code_already_used: 'La matricola "{name}" è già usata',
     },
   },
+  download: 'Download',
+  cannot_render_content: 'Non è possibile visualizzare il contenuto',
 };

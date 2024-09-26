@@ -92,6 +92,7 @@
       :show="!!showPreview"
       :media_name="showPreview?.name"
       :media_src="showPreview?.pdf"
+      :is_pdf_stream="true"
       @close="showPreview = null"
     />
   </q-card>

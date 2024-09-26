@@ -153,7 +153,19 @@
           />
         </div>
         <div v-else>
-          <a :href="media_src" :download="media_src">{{ media_src }}</a>
+          <div class="col text-h5 text-uppercase font-weight-medium">
+            {{ $t('cannot_render_content') }}
+          </div>
+          <q-btn
+            flat
+            square
+            class="q-mr-lg"
+            :style="darkGlassStyle"
+            size="md"
+            :download="media_src"
+            :href="media_src"
+            >{{ $t('download') }}
+          </q-btn>
         </div>
       </div>
     </div>
@@ -216,6 +228,10 @@ export default {
     show: {
       type: Boolean,
       required: true,
+    },
+    is_pdf_stream: {
+      type: Boolean,
+      default: false,
     },
     media_name: {
       type: String,
@@ -294,6 +310,9 @@ export default {
     },
 
     is_pdf() {
+      if (this.is_pdf_stream) {
+        return true;
+      }
       return this.media_name
         ? this.pdf_extensions.some((e) =>
             this.media_name.toLowerCase().endsWith(e),
@@ -302,18 +321,22 @@ export default {
     },
 
     video_mimetype() {
-      if (!this.media_src) {
+      if (!this.media_name) {
         return undefined;
       }
 
-      const ext = this.media_src
-        .split('.')
-        .filter(Boolean) // removes empty extensions (e.g. `filename...txt`)
-        .slice(1)
-        .join('.');
-      const mimetype = this.mimetypes_kinds[ext.toLowerCase()];
+      try {
+        const ext = this.media_name
+          .split('.')
+          .filter(Boolean) // removes empty extensions (e.g. `filename...txt`)
+          .slice(1)
+          .join('.');
+        const mimetype = this.mimetypes_kinds[ext.toLowerCase()];
 
-      return mimetype || undefined;
+        return mimetype || undefined;
+      } catch {
+        return undefined;
+      }
     },
   },
 
