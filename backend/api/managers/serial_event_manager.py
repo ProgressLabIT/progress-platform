@@ -130,7 +130,8 @@ class SerialEventManager:
                   error = 'Counter not defined'
                   ))
 
-         new_serial_record['released'] = timestamp()
+         if finalize:
+            new_serial_record['released'] = timestamp()
          serial_key = self.tx.collection('Serial').insert(new_serial_record, return_new=True)['_key']
 
          serial_data['_key'] = serial_key

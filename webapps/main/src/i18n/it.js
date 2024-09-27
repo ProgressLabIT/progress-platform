@@ -233,9 +233,8 @@ export default {
   issue_type_update_success: 'Tipo di segnalazione aggiornata con successo',
   issue_update_success: 'Segnalazione aggiornata con successo',
   issue_update_title: 'Modifica segnalazione',
-  serial_id: 'id matricola',
-  serial: 'matricola',
-  serials: 'matricole',
+  serial_id: 'ID Matricola',
+  serial: 'Matricola | Matricole',
   serial_data: 'Dati matricola',
   serial_new_title: 'Nuova matricola',
   serial_update_title: 'Modifica seriale',
@@ -677,6 +676,7 @@ export default {
   session: {
     alerts: {
       close_session: 'vuoi davvero chiudere la sessione?',
+      invalid_username_password: 'Nome utente o password non valida',
     },
     close_session: 'chiudi sessione',
     lock_explainer:
@@ -931,4 +931,6 @@ export default {
       code_already_used: 'La matricola "{name}" è già usata',
     },
   },
+  download: 'Scarica',
+  cannot_render_content: 'Non è possibile visualizzare il contenuto',
 };

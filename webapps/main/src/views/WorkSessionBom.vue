@@ -222,7 +222,7 @@ export default {
         {
           name: 'serials',
           field: 'serials',
-          label: this.$t('serials').toUpperCase(),
+          label: this.$t('serial', 2).toUpperCase(),
         },
       ];
     },

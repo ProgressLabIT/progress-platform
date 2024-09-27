@@ -10,8 +10,8 @@
         color="theme-blue"
         icon="mdi-pencil"
         class="absolute-bottom-right q-mb-md q-mr-md"
-        @click="edit_mode = true"
         style="z-index: 999"
+        @click="edit_mode = true"
       />
 
       <!-- MAIN CONTENT -->
@@ -131,7 +131,7 @@
           :rows-per-page-options="[0]"
           :selection="edit_mode ? 'multiple' : false"
         >
-          <template #header-selection v-if="edit_mode">
+          <template v-if="edit_mode" #header-selection>
             <q-checkbox
               dense
               :model-value="userJobsModel(assignment.filtered_jobs)"
@@ -290,7 +290,7 @@
       <div class="col-auto">
         {{ $t('job.selected_count', selected_jobs.size) }}
       </div>
-      <div class="col-auto row items-center" v-if="selected_jobs.size">
+      <div v-if="selected_jobs.size" class="col-auto row items-center">
         <div class="q-mr-md text-uppercase">
           {{ $t('job.assign_to') }}
         </div>
@@ -589,7 +589,7 @@ export default {
             filtered_jobs.forEach((j) => {
               const data = {
                 ...j,
-                wo_sequence: this.wo_map[j.wo_key].sequence,
+                wo_sequence: this.wo_map[j.wo_key]?.sequence,
               };
               j.active ? active_jobs.push(data) : queued_jobs.push(data);
             });

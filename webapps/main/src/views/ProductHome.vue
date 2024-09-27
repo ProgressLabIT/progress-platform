@@ -148,7 +148,7 @@
           @update:model-value="updateField('tags', $event)"
         />
         <div v-else class="q-mt-xs">
-          <span v-if="product.tags.length === 0" class="text-h3">-</span>
+          <span v-if="product.tags?.length === 0" class="text-h3">-</span>
           <TagChips v-else :tags="product.tags" />
         </div>
       </div>
@@ -320,7 +320,7 @@
             type="file"
             multiple
             style="display: none"
-            accept="application/pdf, image/*"
+            accept="*"
             @change="addFiles($event.target.files)"
           />
           <q-btn
@@ -468,6 +468,7 @@
         :show="show_template !== null"
         :media_name="show_template?.name"
         :media_src="show_template?.pdf"
+        :is_pdf_stream="true"
         @close="show_template = null"
       />
       <BaseDialog
@@ -490,10 +491,10 @@ import BaseDialog from '@/components/BaseDialog.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
 import FormField from '@/components/FormField.vue';
 import MediaViewer from '@/components/MediaViewer.vue';
-import TagInput from '@/components/TagInput.vue';
-import CounterSearch from '../components/settings/counters/CounterSearch.vue';
 import TagChips from '@/components/TagChips.vue';
+import TagInput from '@/components/TagInput.vue';
 import AddCustomFieldDialog from '@/components/process-steps/AddCustomFieldDialog.vue';
+import CounterSearch from '../components/settings/counters/CounterSearch.vue';
 
 export default {
   name: 'ProductHome',

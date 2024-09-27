@@ -27,7 +27,7 @@
           v-if="mode === 'new' && with_links && form_step === 'links'"
           class="column q-gutter-md"
         >
-          <!-- "Path" selection (Order, Product, General) -->
+          <!-- "Path" selection (WorkOrder, Product, Serial, General...) -->
           <q-select
             :options="link_form_options"
             filled
@@ -73,7 +73,7 @@
 
           <!-- PHASE -->
           <q-select
-            v-if="phase_data"
+            v-if="phase_data && !links.serial"
             :model-value="links.phase"
             :label="$t('phase.short')"
             filled
@@ -299,12 +299,12 @@ export default {
           label: this.$t('product.label'),
         },
         {
-          value: 'general',
-          label: this.$t('general'),
-        },
-        {
           value: 'serial',
           label: this.$t('serial'),
+        },
+        {
+          value: 'general',
+          label: this.$t('general'),
         },
       ];
     },
@@ -339,7 +339,7 @@ export default {
       this.initLinks();
     },
 
-    initLinks() {
+    async initLinks() {
       // Inser links step if required
       if (this.mode == 'new' && this.with_links) {
         this.form_step = 'links';
@@ -355,13 +355,24 @@ export default {
       // Set auto links if required
       if (this.auto_link_mode == 'work_order' && this.auto_links.work_order) {
         this.link_form = 'order';
-        this.loadWorkOrder(this.auto_links.work_order);
+        await this.loadWorkOrder(this.auto_links.work_order);
       }
 
       if (this.auto_link_mode == 'work_session' && this.auto_links) {
-        Object.entries(this.auto_links).forEach(([k, v]) => {
-          this.links[k] = { _key: v };
-        });
+        this.link_form = 'order';
+        await this.loadWorkOrder(this.auto_links.work_order_data);
+        if (this.phase_data) {
+          let phase = this.phase_data.find(
+            (ph) => ph._key === this.auto_links?.phase,
+          );
+          await this.loadPhase(phase);
+        }
+        if (this.phase_jobs) {
+          let job = this.phase_jobs.find(
+            (j) => j._key === this.auto_links?.job,
+          );
+          this.links.job = job;
+        }
       }
     },
 
@@ -540,6 +551,20 @@ export default {
     },
 
     async save() {
+      const has_missing_required_fields = this.form_fields
+        .filter((f) => f.mandatory)
+        .some((f) => {
+          const type = this.$store.getters.getCustomFieldByKey(
+            f.custom_field_key,
+          ).type;
+          return type == 'ternary' ? f.value == null : !!f.value == false;
+        });
+
+      if (has_missing_required_fields) {
+        window.alert(this.$t('fill_mandatory_fields'));
+        return;
+      }
+
       this.saving = true;
 
       const issue_data = {

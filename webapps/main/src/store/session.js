@@ -97,7 +97,7 @@ const session = {
       }
       await commit('CLOSE_USER_SESSION');
       await this.$router.push({ name: 'login' });
-      VueCookies.delete('Authorization');
+      VueCookies.remove('Authorization');
     },
 
     unlockSession({ commit }) {

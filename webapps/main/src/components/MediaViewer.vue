@@ -73,42 +73,44 @@
           @click="$emit('close')"
         >
         </q-btn>
-        <q-btn
-          round
-          flat
-          padding="sm sm"
-          icon="mdi-magnify-plus-outline"
-          :style="darkGlassStyle"
-          @click="zoomIn"
-        >
-        </q-btn>
-        <q-btn
-          round
-          flat
-          padding="sm sm"
-          :style="darkGlassStyle"
-          icon="mdi-magnify-minus-outline"
-          @click="zoomOut"
-        >
-        </q-btn>
-        <q-btn
-          round
-          flat
-          padding="sm sm"
-          :style="darkGlassStyle"
-          icon="mdi-rotate-left"
-          @click="rotateLeft"
-        >
-        </q-btn>
-        <q-btn
-          round
-          flat
-          padding="sm sm"
-          :style="darkGlassStyle"
-          icon="mdi-rotate-right"
-          @click="rotateRight"
-        >
-        </q-btn>
+        <template v-if="show_view_controls">
+          <q-btn
+            round
+            flat
+            padding="sm sm"
+            icon="mdi-magnify-plus-outline"
+            :style="darkGlassStyle"
+            @click="zoomIn"
+          >
+          </q-btn>
+          <q-btn
+            round
+            flat
+            padding="sm sm"
+            :style="darkGlassStyle"
+            icon="mdi-magnify-minus-outline"
+            @click="zoomOut"
+          >
+          </q-btn>
+          <q-btn
+            round
+            flat
+            padding="sm sm"
+            :style="darkGlassStyle"
+            icon="mdi-rotate-left"
+            @click="rotateLeft"
+          >
+          </q-btn>
+          <q-btn
+            round
+            flat
+            padding="sm sm"
+            :style="darkGlassStyle"
+            icon="mdi-rotate-right"
+            @click="rotateRight"
+          >
+          </q-btn>
+        </template>
       </div>
     </div>
 
@@ -125,7 +127,7 @@
           :class="rotation_class"
         >
         </q-img>
-        <div v-else class="q-py-xl">
+        <div v-else-if="is_pdf" class="q-py-xl">
           <vue-pdf-embed
             ref="pdf"
             disable-text-layer
@@ -137,6 +139,40 @@
             @rendering-failed="(error) => console.log(error)"
           >
           </vue-pdf-embed>
+        </div>
+        <div v-else-if="video_mimetype">
+          <video-player
+            :options="{
+              autoplay: true,
+              controls: true,
+              sources: [
+                {
+                  src: media_src,
+                  type: video_mimetype,
+                },
+              ],
+            }"
+          />
+        </div>
+        <div v-else>
+          <div class="col column items-center q-gutter-lg">
+            <div class="text-h5 text-uppercase font-weight-medium">
+              {{ $t('cannot_render_content') }}
+            </div>
+            <div class="text-body1">
+              {{ media_name }}
+            </div>
+            <q-btn
+              color="theme-blue"
+              class="q-mt-xl"
+              stack
+              :style="darkGlassStyle"
+              icon="mdi-download"
+              :label="$t('download')"
+              :download="media_src"
+              :href="media_src"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -150,14 +186,14 @@
       <div class="fixed-bottom full-width">
         <q-btn
           flat
-          square
-          class="q-mr-lg"
+          round
+          class="absolute-top-left q-ml-sm"
+          style="margin-top: -55px"
           :style="darkGlassStyle"
           :icon="action_drawer ? 'mdi-chevron-down' : 'mdi-chevron-up'"
           size="md"
           @click="action_drawer = !action_drawer"
-        >
-        </q-btn>
+        />
         <q-slide-transition>
           <div v-if="action_drawer">
             <div class="row" style="height: 10vh; min-height: 75px">
@@ -181,6 +217,7 @@ import BaseDialog from '@/components/BaseDialog.vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import ProgressBtn from '@/components/ProgressBtn.vue';
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
+import VideoPlayer from '@/components/VideoPlayer.vue';
 
 export default {
   name: 'MediaViewer',
@@ -191,6 +228,7 @@ export default {
     StartPauseResumeBtn,
     ProgressBtn,
     BaseProgressBar,
+    VideoPlayer,
   },
 
   props: {
@@ -198,12 +236,16 @@ export default {
       type: Boolean,
       required: true,
     },
+    is_pdf_stream: {
+      type: Boolean,
+      default: false,
+    },
     media_name: {
       type: String,
       default: '',
     },
     media_src: {
-      type: Object,
+      type: [Object, String],
       default: undefined,
     },
     instruction_title: {
@@ -220,7 +262,27 @@ export default {
 
   data() {
     return {
-      image_extensions: ['png', 'jpeg', 'jpg'],
+      image_extensions: ['png', 'jpeg', 'jpg', 'gif'],
+      pdf_extensions: ['pdf'],
+      mimetypes_kinds: {
+        opus: 'video/ogg',
+        ogv: 'video/ogg',
+        mp4: 'video/mp4',
+        mov: 'video/mp4',
+        m4v: 'video/mp4',
+        mkv: 'video/x-matroska',
+        m4a: 'audio/mp4',
+        mp3: 'audio/mpeg',
+        aac: 'audio/aac',
+        caf: 'audio/x-caf',
+        flac: 'audio/flac',
+        oga: 'audio/ogg',
+        wav: 'audio/wav',
+        m3u8: 'application/x-mpegURL',
+        mpd: 'application/dash+xml',
+        svg: 'image/svg+xml',
+        webp: 'image/webp',
+      },
       doc_width: 800,
       rotation_class: '',
       info: 'icon',
@@ -252,6 +314,41 @@ export default {
             this.media_name.toLowerCase().endsWith(e),
           )
         : null;
+    },
+
+    is_pdf() {
+      if (this.is_pdf_stream) {
+        return true;
+      }
+      return this.media_name
+        ? this.pdf_extensions.some((e) =>
+            this.media_name.toLowerCase().endsWith(e),
+          )
+        : null;
+    },
+
+    show_view_controls() {
+      // Control zoom and rotate control visibility
+      return this.is_image || this.is_pdf;
+    },
+
+    video_mimetype() {
+      if (!this.media_name) {
+        return undefined;
+      }
+
+      try {
+        const ext = this.media_name
+          .split('.')
+          .filter(Boolean) // removes empty extensions (e.g. `filename...txt`)
+          .slice(1)
+          .join('.');
+        const mimetype = this.mimetypes_kinds[ext.toLowerCase()];
+
+        return mimetype || undefined;
+      } catch {
+        return undefined;
+      }
     },
   },
 

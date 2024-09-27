@@ -4,13 +4,13 @@
       <!-- MEDIA CONTAINER -->
       <div v-if="step_media.length" class="absolute-full scroll">
         <div
-          class="q-mx-auto flex flex-center full-width relative-position"
+          class="q-mx-auto flex flex-center fit relative-position"
           style="z-index: 0"
         >
           <!-- INVISIBLE NAVIGATION -->
-          <div class="row absolute-full">
-            <div class="col-6" style="z-index: 1" @click="show('prev')" />
-            <div class="col-6" style="z-index: 1" @click="show('next')" />
+          <div class="row absolute-full justify-between">
+            <div class="col-3" style="z-index: 1" @click="show('prev')" />
+            <div class="col-3" style="z-index: 1" @click="show('next')" />
           </div>
 
           <!-- IMAGE CONTENT -->
@@ -24,7 +24,7 @@
           </q-img>
 
           <!-- PDF CONTENT -->
-          <div v-else class="q-py-xl">
+          <div v-else-if="is_pdf" class="q-py-xl">
             <vue-pdf-embed
               id="pdf"
               ref="pdf"
@@ -34,6 +34,41 @@
               :source="media_src"
               :width="pdf_width"
             />
+          </div>
+
+          <!-- VIDEO/AUDIO CONTENT -->
+          <div v-else-if="video_mimetype">
+            <video-player
+              :options="{
+                autoplay: false,
+                controls: true,
+                sources: [
+                  {
+                    src: media_src,
+                    type: video_mimetype,
+                  },
+                ],
+              }"
+            />
+          </div>
+
+          <!-- UNKNOWN CONTENT -->
+          <div v-else class="column items-center q-gutter-lg">
+            <div class="col text-h5 text-uppercase font-weight-medium">
+              {{ $t('cannot_render_content') }}
+            </div>
+            <div class="text-body1">
+              {{ media_name }}
+            </div>
+            <q-btn
+              stack
+              size="md"
+              color="theme-blue"
+              icon="mdi-download"
+              :download="media_src"
+              :href="media_src"
+              >{{ $t('download') }}
+            </q-btn>
           </div>
         </div>
       </div>
@@ -49,7 +84,7 @@
         :style="step_media.length ? 'background-color: #111a' : ''"
       >
         <div class="text-h3 display">{{ step.title }}</div>
-        <div style="white-space: pre-line;">{{ step.description }}</div>
+        <div style="white-space: pre-line">{{ step.description }}</div>
       </div>
 
       <q-btn
@@ -76,9 +111,9 @@
 
       <MediaViewer
         :show="show_full_screen"
+        :media_name="media_name"
+        :media_src="media_src"
         v-bind="{
-          media_name,
-          media_src,
           instruction_title: step.title,
           instruction_detail: step.description,
         }"
@@ -113,13 +148,7 @@
     >
       <template #error>
         <div class="row fit flex-center surface1">
-          <q-icon
-            size="sm"
-            :name="
-              media.endsWith('.pdf') ? 'mdi-file-document-outline' : 'mdi-error'
-            "
-            class="text-low"
-          >
+          <q-icon size="sm" :name="media_icon(media)" class="text-low">
           </q-icon>
         </div>
       </template>
@@ -130,6 +159,7 @@
 <script>
 import VuePdfEmbed from 'vue-pdf-embed';
 import MediaViewer from '@/components/MediaViewer.vue';
+import VideoPlayer from '@/components/VideoPlayer.vue';
 
 export default {
   name: 'JobInstruction',
@@ -137,6 +167,7 @@ export default {
   components: {
     MediaViewer,
     VuePdfEmbed,
+    VideoPlayer,
   },
 
   props: {
@@ -153,14 +184,30 @@ export default {
       show_details: true,
       image_extensions: ['png', 'jpeg', 'jpg'],
       show_full_screen: false,
+      pdf_extensions: ['pdf'],
+      mimetypes_kinds: {
+        opus: 'video/ogg',
+        ogv: 'video/ogg',
+        mp4: 'video/mp4',
+        mov: 'video/mp4',
+        m4v: 'video/mp4',
+        mkv: 'video/x-matroska',
+        m4a: 'audio/mp4',
+        mp3: 'audio/mpeg',
+        aac: 'audio/aac',
+        caf: 'audio/x-caf',
+        flac: 'audio/flac',
+        oga: 'audio/ogg',
+        wav: 'audio/wav',
+        m3u8: 'application/x-mpegURL',
+        mpd: 'application/dash+xml',
+        svg: 'image/svg+xml',
+        webp: 'image/webp',
+      },
     };
   },
 
   computed: {
-    current_step_key() {
-      return this.$store.state.traceability.current_step_key;
-    },
-
     step_media() {
       return this.step.media ?? [];
     },
@@ -189,11 +236,13 @@ export default {
     is_image() {
       return this.image_extensions.some((e) => this.media_name.endsWith(e));
     },
-  },
 
-  watch: {
-    current_step_key() {
-      this.step_media_index = 0;
+    is_pdf() {
+      return this.check_pdf(this.media_name);
+    },
+
+    video_mimetype() {
+      return this.get_video_mimetype(this.media_name);
     },
   },
 
@@ -204,6 +253,8 @@ export default {
 
     const container = document.getElementById('media-container');
     this.pdf_width = container.clientWidth * 0.9;
+
+    this.step_media_index = 0;
   },
 
   methods: {
@@ -220,6 +271,41 @@ export default {
           : this.step_media_index--;
       } else {
         this.step_media_index = which;
+      }
+    },
+
+    check_pdf(media_name) {
+      return media_name
+        ? this.pdf_extensions.some((e) => media_name.toLowerCase().endsWith(e))
+        : null;
+    },
+
+    get_video_mimetype(media_name) {
+      if (!media_name) {
+        return undefined;
+      }
+
+      try {
+        const ext = media_name
+          .split('.')
+          .filter(Boolean) // removes empty extensions (e.g. `filename...txt`)
+          .slice(1)
+          .join('.');
+        const mimetype = this.mimetypes_kinds[ext.toLowerCase()];
+
+        return mimetype || undefined;
+      } catch {
+        return undefined;
+      }
+    },
+
+    media_icon(media) {
+      if (this.check_pdf(media)) {
+        return 'mdi-file-document-outline';
+      } else if (this.get_video_mimetype(media)) {
+        return 'mdi-video-outline';
+      } else {
+        return 'mdi-download-outline';
       }
     },
   },

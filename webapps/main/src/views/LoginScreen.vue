@@ -210,6 +210,14 @@ export default {
       api
         .post('auth', formData)
         .then((resp) => {
+          if (resp.response?.status === 401) {
+            this.logging_in = false;
+            this.credentials.username = null;
+            this.credentials.password = null;
+            window.alert(this.$t('session.alerts.invalid_username_password'));
+            return;
+          }
+
           const token = resp.data.access_token;
           this.$store.commit('UPDATE_AUTH_TOKEN', token);
 
