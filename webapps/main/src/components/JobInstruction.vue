@@ -8,9 +8,9 @@
           style="z-index: 0"
         >
           <!-- INVISIBLE NAVIGATION -->
-          <div class="row absolute-full">
-            <div class="col-6" style="z-index: 1" @click="show('prev')" />
-            <div class="col-6" style="z-index: 1" @click="show('next')" />
+          <div class="row absolute-full justify-between">
+            <div class="col-3" style="z-index: 1" @click="show('prev')" />
+            <div class="col-3" style="z-index: 1" @click="show('next')" />
           </div>
 
           <!-- IMAGE CONTENT -->
@@ -40,7 +40,7 @@
           <div v-else-if="video_mimetype">
             <video-player
               :options="{
-                autoplay: true,
+                autoplay: false,
                 controls: true,
                 sources: [
                   {
