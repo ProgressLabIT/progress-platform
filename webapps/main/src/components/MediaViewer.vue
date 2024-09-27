@@ -73,42 +73,44 @@
           @click="$emit('close')"
         >
         </q-btn>
-        <q-btn
-          round
-          flat
-          padding="sm sm"
-          icon="mdi-magnify-plus-outline"
-          :style="darkGlassStyle"
-          @click="zoomIn"
-        >
-        </q-btn>
-        <q-btn
-          round
-          flat
-          padding="sm sm"
-          :style="darkGlassStyle"
-          icon="mdi-magnify-minus-outline"
-          @click="zoomOut"
-        >
-        </q-btn>
-        <q-btn
-          round
-          flat
-          padding="sm sm"
-          :style="darkGlassStyle"
-          icon="mdi-rotate-left"
-          @click="rotateLeft"
-        >
-        </q-btn>
-        <q-btn
-          round
-          flat
-          padding="sm sm"
-          :style="darkGlassStyle"
-          icon="mdi-rotate-right"
-          @click="rotateRight"
-        >
-        </q-btn>
+        <template v-if="!video_mimetype">
+          <q-btn
+            round
+            flat
+            padding="sm sm"
+            icon="mdi-magnify-plus-outline"
+            :style="darkGlassStyle"
+            @click="zoomIn"
+          >
+          </q-btn>
+          <q-btn
+            round
+            flat
+            padding="sm sm"
+            :style="darkGlassStyle"
+            icon="mdi-magnify-minus-outline"
+            @click="zoomOut"
+          >
+          </q-btn>
+          <q-btn
+            round
+            flat
+            padding="sm sm"
+            :style="darkGlassStyle"
+            icon="mdi-rotate-left"
+            @click="rotateLeft"
+          >
+          </q-btn>
+          <q-btn
+            round
+            flat
+            padding="sm sm"
+            :style="darkGlassStyle"
+            icon="mdi-rotate-right"
+            @click="rotateRight"
+          >
+          </q-btn>
+        </template>
       </div>
     </div>
 
@@ -179,14 +181,14 @@
       <div class="fixed-bottom full-width">
         <q-btn
           flat
-          square
-          class="q-mr-lg"
+          round
+          class="absolute-top-left q-ml-sm"
+          style="margin-top: -55px"
           :style="darkGlassStyle"
           :icon="action_drawer ? 'mdi-chevron-down' : 'mdi-chevron-up'"
           size="md"
           @click="action_drawer = !action_drawer"
-        >
-        </q-btn>
+        />
         <q-slide-transition>
           <div v-if="action_drawer">
             <div class="row" style="height: 10vh; min-height: 75px">
