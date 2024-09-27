@@ -4,7 +4,7 @@
       <!-- MEDIA CONTAINER -->
       <div v-if="step_media.length" class="absolute-full scroll">
         <div
-          class="q-mx-auto flex flex-center full-width relative-position"
+          class="q-mx-auto flex flex-center fit relative-position"
           style="z-index: 0"
         >
           <!-- INVISIBLE NAVIGATION -->
@@ -53,16 +53,18 @@
           </div>
 
           <!-- UNKNOWN CONTENT -->
-          <div v-else>
+          <div v-else class="column items-center q-gutter-lg">
             <div class="col text-h5 text-uppercase font-weight-medium">
               {{ $t('cannot_render_content') }}
             </div>
+            <div class="text-body1">
+              {{ media_name }}
+            </div>
             <q-btn
-              flat
-              square
-              class="q-mr-lg"
-              :style="darkGlassStyle"
+              stack
               size="md"
+              color="theme-blue"
+              icon="mdi-download"
               :download="media_src"
               :href="media_src"
               >{{ $t('download') }}

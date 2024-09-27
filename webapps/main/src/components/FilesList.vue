@@ -70,7 +70,7 @@
       multiple
       type="file"
       style="display: none"
-      accept="audio/*, video/*, image/*, application/pdf"
+      accept="*"
       @change="$emit('addFiles', $event.target.files)"
     />
 

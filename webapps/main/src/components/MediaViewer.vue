@@ -73,7 +73,7 @@
           @click="$emit('close')"
         >
         </q-btn>
-        <template v-if="!video_mimetype">
+        <template v-if="show_view_controls">
           <q-btn
             round
             flat
@@ -155,19 +155,24 @@
           />
         </div>
         <div v-else>
-          <div class="col text-h5 text-uppercase font-weight-medium">
-            {{ $t('cannot_render_content') }}
+          <div class="col column items-center q-gutter-lg">
+            <div class="text-h5 text-uppercase font-weight-medium">
+              {{ $t('cannot_render_content') }}
+            </div>
+            <div class="text-body1">
+              {{ media_name }}
+            </div>
+            <q-btn
+              color="theme-blue"
+              class="q-mt-xl"
+              stack
+              :style="darkGlassStyle"
+              icon="mdi-download"
+              :label="$t('download')"
+              :download="media_src"
+              :href="media_src"
+            />
           </div>
-          <q-btn
-            flat
-            square
-            class="q-mr-lg"
-            :style="darkGlassStyle"
-            size="md"
-            :download="media_src"
-            :href="media_src"
-            >{{ $t('download') }}
-          </q-btn>
         </div>
       </div>
     </div>
@@ -320,6 +325,11 @@ export default {
             this.media_name.toLowerCase().endsWith(e),
           )
         : null;
+    },
+
+    show_view_controls() {
+      // Control zoom and rotate control visibility
+      return this.is_image || this.is_pdf;
     },
 
     video_mimetype() {
