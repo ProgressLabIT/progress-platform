@@ -49,8 +49,9 @@
               :label="
                 $capitalize([$t('serial'), component.component_code].join(' '))
               "
-              :product_key="component.component_key"
+              :hint="$t('serial_autocomplete_hint', { minChars: 3 })"
               :loading="loading"
+              :product_key="component.component_key"
               :can_create="true"
               :selection_qt="qt[component.component_key]"
               :filter_used="true"

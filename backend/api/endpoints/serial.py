@@ -205,6 +205,7 @@ def get_serial_selection(
   search: str | None = None,
   wo_key: str | None = None,
   product_key: str | None = None,
+  batch_key: str | None = None,
   filter_used: bool = False,
   limit: int = 100
 ):
@@ -213,6 +214,7 @@ def get_serial_selection(
       search = search,
       wo_key = wo_key,
       product_key = product_key,
+      batch_key = batch_key,
       limit = limit,
       filter_used = filter_used
     ))]:

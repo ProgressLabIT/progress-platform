@@ -38,6 +38,7 @@
                   [$t('serial'), serial?.code || serial._key].join(' '),
                 )
               "
+              :hint="$t('serial_autocomplete_hint', { minChars: 3 })"
               :product_key="component_key"
               :loading="loading"
               :can_create="true"

@@ -45,6 +45,7 @@
             v-model="links.serial"
             :initial_values="links.serial"
             :label="$capitalize($t('serial'))"
+            :hint="$t('serial_autocomplete_hint', { minChars: 3 })"
             @select="(selection) => loadSerial(selection)"
           >
           </BaseAutocompleteSerial>

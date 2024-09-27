@@ -1,9 +1,6 @@
 <template>
   <q-select
     ref="selectRef"
-    :work_order="work_order"
-    :product="product"
-    :product_key="product_key"
     use-input
     filled
     :multiple="multiple"
@@ -12,7 +9,7 @@
     :loading="loading"
     :label-slot="!!label"
     :dense="dense"
-    :hint="$t('serial_autocomplete_hint')"
+    :hint="hint"
     :placeholder="placeholder_computed"
     :clearable="clearable"
     :options="options"
@@ -22,7 +19,6 @@
     input-debounce="500"
     :emit-value="keyOnly"
     :map-options="keyOnly"
-    :work_order_key="work_order_key"
     @filter="filter"
     @update:model-value="
       (selection) => {
@@ -38,10 +34,12 @@
       >
         <q-item-section>
           <q-item-label class="highlight">
-            {{ scope.opt.label }}
+            {{
+              scope.opt.label || '(' + $t('serial_code_to_be_assigned') + ')'
+            }}
           </q-item-label>
           <q-item-label caption lines="2">
-            {{ scope.opt.value }}
+            {{ 'ID ' + scope.opt.value }}
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -57,9 +55,9 @@
           {{ $t('serial_field.noData') }}
         </q-item-section>
       </q-item>
-      <q-item v-else-if="inputValue.length < 3">
+      <q-item v-else-if="inputValue.length < minChars">
         <q-item-section class="text-low">
-          {{ $t('serial_field.noData_min_char', { minChars: 3 }) }}
+          {{ $t('serial_field.noData_min_char', { minChars }) }}
         </q-item-section>
       </q-item>
       <q-item
@@ -92,15 +90,15 @@
           }}
         </q-item-section>
       </q-item>
-      <SerialForm
-        :show="create_serial_form"
-        :auto_link_product="product_key"
-        mode="new"
-        :force_serial_code="inputValue"
-        @close="closeCreateForm"
-      >
-      </SerialForm>
     </template>
+    <SerialForm
+      :show="create_serial_form"
+      :auto_link_product="product_key"
+      mode="new"
+      :force_serial_code="inputValue"
+      @close="closeCreateForm"
+    >
+    </SerialForm>
   </q-select>
 </template>
 
@@ -145,22 +143,17 @@ export default {
       default: null,
     },
 
-    work_order: {
-      type: Object,
-      default: undefined,
-    },
-
     work_order_key: {
       type: String,
       default: undefined,
     },
 
-    product: {
-      type: Object,
+    product_key: {
+      type: String,
       default: undefined,
     },
 
-    product_key: {
+    batch_key: {
       type: String,
       default: undefined,
     },
@@ -179,17 +172,30 @@ export default {
       type: Number,
       default: 1,
     },
+
     filter_used: {
       type: Boolean,
       default: false,
     },
+
     initial_values: {
       type: Object,
       default: null,
     },
+
     filtered_values: {
       type: Object,
       default: null,
+    },
+
+    hint: {
+      type: String,
+      default: '',
+    },
+
+    minChars: {
+      type: Number,
+      default: 0,
     },
   },
 
@@ -203,7 +209,7 @@ export default {
       origin_list: [],
       last_research: undefined,
       events: NaN,
-      code_free: false,
+      code_free: false, // Serial code for product is taken (false) or not (true)
     };
   },
 
@@ -250,64 +256,52 @@ export default {
       this.loading = true;
       this.code_free = false;
       let params = {};
-      if (this.work_order?._key || this.work_order_key) {
-        params = {
-          ...params,
-          wo_key: this.work_order?._key || this.work_order_key,
-        };
+      if (this.work_order_key) {
+        params.wo_key = this.work_order_key;
       }
-      if (this.product?._key || this.product_key) {
-        params = {
-          ...params,
-          product_key: this.product?._key || this.product_key,
-        };
+
+      if (this.product_key) {
+        params.product_key = this.product_key;
       }
+
+      if (this.batch_key) {
+        params.batch_key = this.batch_key;
+      }
+
       if (this.filter_used) {
-        params = {
-          ...params,
-          filter_used: this.filter_used,
-        };
+        params.filter_used = this.filter_used;
       }
+
       if (search_value) {
-        params = {
-          ...params,
-          search: search_value,
-          limit: 50,
-        };
+        params.search = search_value;
+        params.limit = 50;
         this.last_research = search_value;
       }
+
       if (search_value) {
         this.$api
           .get('serial-code', {
             params: {
               serial_code: search_value,
-              product_key: this.product?._key || this.product_key,
+              product_key: this.product_key,
             },
           })
           .then((resp) => {
             if (resp.data?.length <= 0) {
               this.code_free = true;
             }
-            this.$api
-              .get('serial-selection', {
-                params: params,
-              })
-              .then((resp) => {
-                this.options = resp.data;
-                this.addInitialValues(search_value);
-                this.loading = false;
-              });
+            this.$api.get('serial-selection', { params }).then((resp) => {
+              this.options = resp.data;
+              this.addInitialValues(search_value);
+              this.loading = false;
+            });
           });
       } else {
-        this.$api
-          .get('serial-selection', {
-            params: params,
-          })
-          .then((resp) => {
-            this.options = resp.data;
-            this.addInitialValues(search_value);
-            this.loading = false;
-          });
+        this.$api.get('serial-selection', { params }).then((resp) => {
+          this.options = resp.data;
+          this.addInitialValues(search_value);
+          this.loading = false;
+        });
       }
     },
 
@@ -346,7 +340,7 @@ export default {
         update(() => {
           this.addInitialValues(value);
         });
-      } else if (value.length < 3 && !this.product_key) {
+      } else if (value.length < this.minChars && !this.product_key) {
         abort();
       } else {
         update(() => {

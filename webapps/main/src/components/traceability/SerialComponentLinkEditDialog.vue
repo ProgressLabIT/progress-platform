@@ -17,6 +17,7 @@
               [$t('serial'), start_node?.code || start_node._key].join(' '),
             )
           "
+          :hint="$t('serial_autocomplete_hint', { minChars: 3 })"
           :initial_values="initial_values"
           :product_key="start_node.product_key"
           :can_create="true"

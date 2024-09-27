@@ -76,7 +76,7 @@
             :can_search="serialModelInitalValue.length <= 0"
             :label="$capitalize($t('serial'))"
             :disable="serialModelInitalValue.length === 1"
-            :work_order_key="context.step.work_order_key"
+            :batch_key="context.step.batch_key"
             @select="selectSerial"
           >
           </BaseAutocompleteSerial>
@@ -182,6 +182,7 @@
 import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent } from 'quasar';
 import { nextTick, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -189,6 +190,7 @@ import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
 import BaseAutocompleteSerial from './BaseAutocompleteSerial.vue';
 
+const { t } = useI18n();
 const props = defineProps({
   context: {
     type: Object,
@@ -254,7 +256,9 @@ async function loadBatchSerial(batch_key) {
     serialModelInitalValue.value.push({
       value: serial._key,
       _key: serial._key,
-      label: serial.code,
+      label:
+        serial.code ||
+        '(' + t('serial_code_to_be_assigned') + ' - ID ' + serial._key + ')',
       wo_key: serial.wo_key,
       product_key: serial.product_key,
     });

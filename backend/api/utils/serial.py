@@ -96,22 +96,25 @@ class Queries:
   """
 
   GET_ALL_SERIALS = """
+    LET batch_serials = @batch_key ? (
+      FOR s IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
+      RETURN s._key
+    ) : null
     FOR s IN Serial
     FILTER
-       (@wo_key? s.wo_key == @wo_key: true)
-       && (@product_key? s.product_key == @product_key: true)
-       && (@search ? (
-        CONTAINS(LOWER(s.code), LOWER(@search))
-        ) : true)
+      (@wo_key? s.wo_key == @wo_key: true)
+      && (@product_key? s.product_key == @product_key: true)
+      && (@search ? CONTAINS(LOWER(s.code), LOWER(@search)) : true)
+      && (@batch_key ? s._key IN batch_serials : true)
 
-        LET used = (
-          FOR linked_serial IN contains
-              FILTER linked_serial._to == s._id
-              && linked_serial.replaced == false
-              RETURN linked_serial
-          )
+      LET used = (
+        FOR linked_serial IN contains
+            FILTER linked_serial._to == s._id
+            && linked_serial.replaced == false
+            RETURN linked_serial
+        )
 
-        FILTER @filter_used?(s.quantity == null ||  count(used) < s.quantity):true
+      FILTER @filter_used?(s.quantity == null ||  count(used) < s.quantity):true
 
     LIMIT @limit
     RETURN merge( { used: count(used) } , s)

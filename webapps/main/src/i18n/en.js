@@ -228,8 +228,9 @@ export default {
   issue_type_update_success: 'Issue type updated successfully',
   issue_update_success: 'Issue updated successfully',
   issue_update_title: 'Update the issue',
-  serial: 'Serial | Serials',
-  serial_id: 'Serial id',
+  serial: 'serial',
+  serials: 'serials',
+  serial_id: 'serial id',
   serial_data: 'Serial data',
   serial_new_title: 'New serial',
   serial_update_title: 'Update the serial',
@@ -666,7 +667,6 @@ export default {
   session: {
     alerts: {
       close_session: 'do you really want to close this session?',
-      invalid_username_password: 'Invalid usermane of password',
     },
     close_session: 'close session',
     lock_explainer:
@@ -890,7 +890,7 @@ export default {
     },
   },
   serial_autocomplete_hint:
-    'Input the text to search (min 3 characters) between serials. Will show first 100 results.',
+    'Input the text to search (min {minChars} characters) between serials. Will show first 100 results.',
   serial_delete_confirm_title: 'Delete serial',
   serial_delete_confirm_question: 'Do you want to delete this serial?',
   serial_edit_reason: 'Reason for changing',
@@ -915,6 +915,5 @@ export default {
       code_already_used: 'Serial "{name}" already in use',
     },
   },
-  download: 'Download',
-  cannot_render_content: 'Cannot render this file, download it',
+  serial_code_to_be_assigned: 'Code to be assigned',
 };
