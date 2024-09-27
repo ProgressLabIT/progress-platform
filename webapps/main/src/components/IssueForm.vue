@@ -27,7 +27,7 @@
           v-if="mode === 'new' && with_links && form_step === 'links'"
           class="column q-gutter-md"
         >
-          <!-- "Path" selection (Order, Product, General) -->
+          <!-- "Path" selection (WorkOrder, Product, Serial, General...) -->
           <q-select
             :options="link_form_options"
             filled
@@ -73,7 +73,7 @@
 
           <!-- PHASE -->
           <q-select
-            v-if="phase_data"
+            v-if="phase_data && !links.serial"
             :model-value="links.phase"
             :label="$t('phase.short')"
             filled
@@ -299,12 +299,12 @@ export default {
           label: this.$t('product.label'),
         },
         {
-          value: 'general',
-          label: this.$t('general'),
-        },
-        {
           value: 'serial',
           label: this.$t('serial'),
+        },
+        {
+          value: 'general',
+          label: this.$t('general'),
         },
       ];
     },
@@ -551,6 +551,20 @@ export default {
     },
 
     async save() {
+      const has_missing_required_fields = this.form_fields
+        .filter((f) => f.mandatory)
+        .some((f) => {
+          const type = this.$store.getters.getCustomFieldByKey(
+            f.custom_field_key,
+          ).type;
+          return type == 'ternary' ? f.value == null : !!f.value == false;
+        });
+
+      if (has_missing_required_fields) {
+        window.alert(this.$t('fill_mandatory_fields'));
+        return;
+      }
+
       this.saving = true;
 
       const issue_data = {
