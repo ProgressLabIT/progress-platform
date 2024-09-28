@@ -471,12 +471,15 @@ const traceability = {
           }
         }
 
+        //TODO: handle files
+
         const now = DT.utc();
         /* INSERT EVENT CREATION HERE */
         const event = createEvent(state, rootState.session, {
           event_type: 'BATCH_COMPLETED',
           timestamp: now.toISO(),
           completed_batch_qt: batch_qt,
+          form_data: formData,
         });
 
         api.post('event', event).then((resp) => {

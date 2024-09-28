@@ -77,6 +77,7 @@ class ProductionActivityEvent(BaseEvent):
     delete_serial,
     create_batch_serial_records,
     finalize_batch_serial,
+    store_form_data,
     store_batch_data,
     finalize_wo_serial,
     send_link_batch_serial_event
@@ -466,11 +467,17 @@ class ProductionActivityEvent(BaseEvent):
         elif free_wip_delta < 0:
           self.unbook_wip(abs(free_wip_delta))
 
-      self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
+      if (len(self.info.form_data) > 0):
+        self.store_form_data(completed_batch_qt=completed_batch_qt, form_data=self.info.form_data)
+      if (len(batch_execution_data) > 0):
+        self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
 
     elif (self.job.traceability_level is not None):
       # update batch serials data
-      self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
+      if (len(self.info.form_data) > 0):
+        self.store_form_data(completed_batch_qt=completed_batch_qt, form_data=self.info.form_data)
+      if (len(batch_execution_data) > 0):
+        self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
       self.finalize_batch_serial(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
 
     self.info.completed_batch_key = self.job.active_batch_key

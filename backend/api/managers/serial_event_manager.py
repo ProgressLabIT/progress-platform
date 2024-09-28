@@ -504,7 +504,7 @@ class SerialEventManager:
          self.notify_results(dict(
             serial_key = serial.key,
             serial = serial.code,
-            notification = SerialNotificationType.FINALIZED
+            notification = SerialNotificationType.UPDATED
          ))
 
     def release_serials(self, batch_execution_data):
