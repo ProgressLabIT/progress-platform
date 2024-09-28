@@ -41,9 +41,7 @@
             </span>
             <q-btn
               v-if="
-                props.value !== null &&
-                props.row.traceability_level !== null &&
-                traceability_enabled
+                props.value !== null && props.row.traceability_level !== null
               "
               size="sm"
               color="theme-blue"
@@ -65,6 +63,8 @@
         :batch_key="job.active_batch_key"
         :wo_key="job.wo_key"
         :phase_key="job.phase_key"
+        :batch_qty="job.active_batch_qt"
+        :traceability_enabled="traceability_enabled"
         mode="new"
         @close="
           () => {
@@ -104,7 +104,7 @@
           >
           </q-radio>
         </div>
-        <div v-if="traceability_enabled" class="col-auto">
+        <div class="col-auto">
           <q-btn
             size="md"
             padding="lg xl"
@@ -121,9 +121,11 @@
       <SerialBomForm
         :show="show_all_serial_form === true"
         :batch_key="job.active_batch_key ? job.active_batch_key : null"
+        :batch_qty="job.active_batch_qt"
         :wo_key="job.wo_key"
         :phase_key="job.phase_key"
         mode="new"
+        :traceability_enabled="traceability_enabled"
         :bom_components="bom"
         @close="
           () => {

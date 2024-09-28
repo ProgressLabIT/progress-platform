@@ -118,6 +118,10 @@ export default {
       type: Boolean,
       default: true,
     },
+    traceability_enabled: {
+      type: Boolean,
+      default: true,
+    },
     bom_line: {
       type: Object,
       default: null,
@@ -133,6 +137,10 @@ export default {
     wo_key: {
       type: String,
       required: true,
+    },
+    batch_qty: {
+      type: Number,
+      default: null,
     },
   },
 
@@ -172,8 +180,13 @@ export default {
     show: {
       handler() {
         this.initFormData();
-        if (this.show) {
+        if (!this.show) {
+          return;
+        }
+        if (this.traceability_enabled) {
           this.getBatchSerials();
+        } else {
+          this.fakeBatchSerials();
         }
       },
     },
@@ -192,6 +205,23 @@ export default {
       });
 
       this.batch_serials = batch_serials;
+      this.fillInitialData();
+
+      this.loading = false;
+    },
+
+    fakeBatchSerials() {
+      this.loading = true;
+
+      this.batch_serials = [];
+      for (var i = 0; i < this.batch_qty ? this.batch_qty : false; i++) {
+        this.batch_serials.push({
+          _id: `fake${{ i }}`,
+          _key: `fake${{ i }}`,
+          _code: `ITEM ${{ i }}`,
+          childs: [],
+        });
+      }
       this.fillInitialData();
 
       this.loading = false;
