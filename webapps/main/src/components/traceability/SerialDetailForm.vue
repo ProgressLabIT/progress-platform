@@ -148,6 +148,7 @@ export default {
       current_phase: 0,
       current_step: 0,
       data_column_width: 65,
+      events: NaN,
     };
   },
 
@@ -196,6 +197,20 @@ export default {
   created() {
     this.$store.dispatch('loadUsers');
     this.getHistory();
+    let eventURL =
+      this.$api.defaults.baseURL + '/notification/serial-notification';
+    this.events = new EventSource(eventURL, {
+      withCredentials: false,
+    });
+    this.events.addEventListener('serial-notification', (event) => {
+      this.handleMessage(event);
+    });
+  },
+
+  beforeUnmount() {
+    if (this.events) {
+      this.events.close();
+    }
   },
 
   methods: {
@@ -203,6 +218,13 @@ export default {
       this.$api
         .get('event', { params: { serial_key: this.serial_key } })
         .then((resp) => (this.history = resp.data));
+    },
+
+    handleMessage(message) {
+      let event = JSON.parse(message.data);
+      if (event?.serial_key === this.serial_key) {
+        this.getHistory();
+      }
     },
 
     getAvatarSrc(user) {
