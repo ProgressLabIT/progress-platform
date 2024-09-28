@@ -83,10 +83,14 @@ def convert_form_data(self, form_data):
 
 
 def store_form_data(self, completed_batch_qt = None, form_data = None):
-  SerialEventManager.getInstance().handle_event(self, SerialCommandType.STORE_BATCH_DATA, quantity=completed_batch_qt or self.info.active_batch_qt, batch_execution_data=convert_form_data(self, form_data))
+  batch_execution_data = convert_form_data(self, form_data)
+  if (len(batch_execution_data) > 0):
+    SerialEventManager.getInstance().handle_event(self, SerialCommandType.STORE_BATCH_DATA, quantity=completed_batch_qt or self.info.active_batch_qt, batch_execution_data=batch_execution_data)
 
 def store_batch_data(self, completed_batch_qt = None, batch_execution_data = None):
-  SerialEventManager.getInstance().handle_event(self, SerialCommandType.STORE_BATCH_DATA, quantity=completed_batch_qt or self.info.active_batch_qt, batch_execution_data=convert_batch_data(self, batch_execution_data))
+  batch_execution_data = convert_batch_data(self, batch_execution_data)
+  if (len(batch_execution_data) > 0):
+    SerialEventManager.getInstance().handle_event(self, SerialCommandType.STORE_BATCH_DATA, quantity=completed_batch_qt or self.info.active_batch_qt, batch_execution_data=batch_execution_data)
 
 def finalize_batch_serial(self, completed_batch_qt = None, batch_execution_data = None):
   SerialEventManager.getInstance().handle_event(self, SerialCommandType.FINALIZE_BATCH, quantity=completed_batch_qt or self.info.active_batch_qt, batch_execution_data=convert_batch_data(self, batch_execution_data))
