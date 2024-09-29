@@ -152,6 +152,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
@@ -193,10 +194,6 @@ export default {
       type: Object,
       default: null,
     },
-    batch_qty: {
-      type: Number,
-      default: null,
-    },
   },
 
   emits: ['close'],
@@ -221,6 +218,10 @@ export default {
   },
 
   computed: {
+    ...mapState({
+      faked_batch_serials: (state) =>
+        state.traceability.current_batch_faked_serials,
+    }),
     session_data() {
       return this.$store.state.session;
     },
@@ -265,7 +266,7 @@ export default {
     fakeBatchSerials() {
       this.loading = true;
 
-      this.batch_serials = [];
+      /*this.batch_serials = [];
       for (var i = 0; i < this.batch_qty ? this.batch_qty : false; i++) {
         this.batch_serials.push({
           _id: `fake${{ i }}`,
@@ -273,7 +274,8 @@ export default {
           _code: `ITEM ${{ i }}`,
           childs: [],
         });
-      }
+      }*/
+      this.batch_serials = this.faked_batch_serials;
 
       this.fillInitialData();
 

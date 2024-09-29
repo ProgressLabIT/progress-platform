@@ -63,7 +63,6 @@
         :batch_key="job.active_batch_key"
         :wo_key="job.wo_key"
         :phase_key="job.phase_key"
-        :batch_qty="job.active_batch_qt"
         :traceability_enabled="traceability_enabled"
         mode="new"
         @close="
@@ -121,7 +120,6 @@
       <SerialBomForm
         :show="show_all_serial_form === true"
         :batch_key="job.active_batch_key ? job.active_batch_key : null"
-        :batch_qty="job.active_batch_qt"
         :wo_key="job.wo_key"
         :phase_key="job.phase_key"
         mode="new"

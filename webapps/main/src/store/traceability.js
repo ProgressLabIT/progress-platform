@@ -95,6 +95,7 @@ const traceability = {
     heartbeat: null,
     batch_serials: [],
     current_batch_serials: {},
+    current_batch_faked_serials: {},
   },
 
   getters: {
@@ -222,6 +223,10 @@ const traceability = {
     UPDATE_BATCH_SERIALS(state, batch_serials) {
       state.current_batch_serials = batch_serials;
     },
+
+    UPDATE_BATCH_FAKED_SERIALS(state, batch_serials) {
+      state.current_batch_faked_serials = batch_serials;
+    },
   },
 
   actions: {
@@ -337,6 +342,20 @@ const traceability = {
           resolve();
         });
       });
+    },
+
+    async fakeBatchSerials({ commit }, { active_batch_qt }) {
+      let batch_serials = [];
+      for (var i = 0; i < active_batch_qt ? active_batch_qt : false; i++) {
+        batch_serials.push({
+          _id: `fake${{ i }}`,
+          _key: `fake${{ i }}`,
+          _code: `ITEM ${{ i }}`,
+          childs: [],
+        });
+      }
+
+      commit('UPDATE_BATCH_FAKED_SERIALS', batch_serials);
     },
 
     async reloadBatchSerials({ commit }, { active_batch_key }) {
