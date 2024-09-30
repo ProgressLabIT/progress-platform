@@ -21,6 +21,9 @@ class APIAuthManager:
             return headers
         raise ValueError("token not found: make sure to login first")
 
+    def setAPIToken(self, API_token):
+      self.token = API_token
+
     def authenticate(self, base_url, username = '', pwd = '', grant_type = '', scope = '', client_id = '', client_secret = ''):
         self.base_url = base_url
         auth_data = {'grant_type': grant_type,
