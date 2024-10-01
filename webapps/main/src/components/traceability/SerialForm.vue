@@ -29,6 +29,7 @@
             key-only
             :label="$capitalize($t('product.label'))"
             :disable="force_serial_code !== null"
+            :filter-origin="(p) => p.traceability_level !== null"
             @select="(selection) => loadProduct(selection)"
           />
 

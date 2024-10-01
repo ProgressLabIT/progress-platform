@@ -62,6 +62,11 @@ export default {
       default: false,
     },
 
+    filterOrigin: {
+      type: Function,
+      default: (v) => v,
+    },
+
     label: {
       type: String,
       default: undefined,
@@ -100,7 +105,7 @@ export default {
 
   methods: {
     initOptions() {
-      this.options = [...this.origin_list];
+      this.options = [...this.origin_list.filter(this.filterOrigin)];
     },
 
     filter(value, update) {
