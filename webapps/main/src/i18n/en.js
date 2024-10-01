@@ -99,6 +99,9 @@ export default {
   deleted: 'Deleted',
   department: 'department',
   description: 'Description',
+  context: 'Context',
+  signature: 'Signature',
+  expiration: 'Expiration',
   deselect_all: 'deselect all',
   document: {
     add: 'add document | add documents',
@@ -140,6 +143,9 @@ export default {
   api_token_add: 'Add API Token',
   api_token_add_text:
     'The token will be created. Write it down because it cannot be displayed anymore after the creation.',
+  api_token_add_error_text: 'The API token cannot be created',
+  api_token_add_error_mandatory:
+    'Description and expiration date are mandatory',
   api_token_delete: 'Delete API Token',
   api_token_delete_text:
     'The token will be deleted. It will not be possible to use it for integrations anymore',

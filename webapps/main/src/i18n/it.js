@@ -100,6 +100,9 @@ export default {
   deleted: 'Eliminato',
   department: 'reparto | reparti',
   description: 'Descrizione',
+  context: 'Contesto',
+  signature: 'Firma',
+  expiration: 'Scadenza',
   deselect_all: 'deseleziona tutti',
   document: {
     add: 'aggiungi documento | aggiungi documenti',
@@ -143,6 +146,9 @@ export default {
   api_token_delete: 'Rimuovi Token per API',
   api_token_add_text:
     'Il token verrà creato. Prendere note del token, perchè non sarà più possibile visualizzarlo dopo la creazione',
+  api_token_add_error_text: 'Il token non può essere creato',
+  api_token_add_error_mandatory:
+    'Descrizione e scadenza sono campi obbligatori',
   api_token_delete_text:
     'Il token verrà eliminato. Non sarà più possibile utilizzarlo nelle integrazioni.',
   field: 'campo | campi',

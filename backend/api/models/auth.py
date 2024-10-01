@@ -30,6 +30,7 @@ class TokenRecord(ArangoDocument):
   issued_at: datetime
   expires_at: datetime
   context: str | None = None
+  description: str | None = None
 
 
 class Scope(str, Enum):
