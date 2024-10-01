@@ -616,6 +616,7 @@ export default {
     long: 'quantity',
     planned: {
       short: 'pq',
+      long: 'Planned quantity',
     },
     released: {
       short: 'relq',
@@ -866,6 +867,10 @@ export default {
   work_order_autocomplete_hint:
     'Input the text to search (min 3 characters) between order code, product and project. Will show first 100 results.',
   workload_hours: 'Workload in hours',
+  workload_remaining: {
+    short: 'RWL',
+    long: 'Remaining workload (hours)',
+  },
   write: 'Write',
   yes: 'Yes',
   mandatory: 'Mandatory',

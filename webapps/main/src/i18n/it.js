@@ -626,6 +626,7 @@ export default {
     long: 'quantità',
     planned: {
       short: 'qp',
+      long: 'Quantità pianificata',
     },
     released: {
       short: 'qril',
@@ -879,6 +880,10 @@ export default {
   work_order_autocomplete_hint:
     'Inserisci il testo da ricercare (min 3 caratteri) fra codice ordine, prodotto, commessa. Verranno mostrati i primi 100 risultati.',
   workload_hours: 'Carico in ore',
+  workload_remaining: {
+    short: 'CLR',
+    long: 'Carico di lavoro residuo (ore)',
+  },
   yes: 'Sì',
   mandatory: 'Obbligatorio',
   fill_mandatory_fields: 'Compila tutti i campi obbligatori per continuare',

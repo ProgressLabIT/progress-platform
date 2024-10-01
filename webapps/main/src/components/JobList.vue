@@ -9,10 +9,74 @@
         round
         color="theme-blue"
         icon="mdi-pencil"
-        class="absolute-bottom-right q-mb-md q-mr-md"
+        class="absolute-bottom-left q-mb-sm q-ml-md"
         style="z-index: 999"
         @click="edit_mode = true"
       />
+
+      <div
+        v-if="!edit_mode"
+        class="absolute-bottom-right q-mb-sm q-mr-lg"
+        style="z-index: 9999"
+      >
+        <!-- TOTAL WORKLOAD HOURS -->
+        <q-chip
+          :ripple="false"
+          class="col-auto text-body1"
+          color="theme-blue"
+          size="md"
+        >
+          <q-icon name="mdi-timer-sand" class="q-mr-sm" size="14px" />
+          <strong>
+            {{ workload_hours.shown }}
+          </strong>
+          <span class="q-mx-xs">
+            {{ $t('of') }}
+          </span>
+          <strong>
+            {{ workload_hours.total }}
+          </strong>
+          <q-tooltip
+            :delay="200"
+            anchor="top middle"
+            self="center middle"
+            transition-show="fade"
+            transition-hide="fade"
+            class="transparent text-low"
+          >
+            {{ $capitalize($t('workload_hours')) }}
+          </q-tooltip>
+        </q-chip>
+
+        <!-- SHOWN VS TOTAL RECORDS -->
+        <q-chip
+          :ripple="false"
+          class="col-auto text-body2"
+          color="theme-grey"
+          size="md"
+        >
+          <q-icon name="mdi-eye-outline" class="q-mr-sm" size="14px" />
+          <strong>
+            {{ records_count.shown }}
+          </strong>
+          <span class="q-mx-xs">
+            {{ $t('of') }}
+          </span>
+          <strong>
+            {{ records_count.total }}
+          </strong>
+          <q-tooltip
+            :delay="200"
+            anchor="top middle"
+            self="center middle"
+            transition-show="fade"
+            transition-hide="fade"
+            class="transparent text-low"
+          >
+            {{ $capitalize($t('shown', 2)) }}
+          </q-tooltip>
+        </q-chip>
+      </div>
 
       <!-- MAIN CONTENT -->
       <template
@@ -147,6 +211,28 @@
             />
           </template>
 
+          <template #header-cell="props">
+            <q-th :props="props">
+              {{ props.col.label }}
+              <q-tooltip
+                v-if="
+                  ['qt_completed', 'qt_planned', 'remaining_workload'].includes(
+                    props.col.name,
+                  )
+                "
+                :delay="200"
+                anchor="top end"
+                self="center middle"
+                :offset="[-12, 8]"
+                transition-show="fade"
+                transition-hide="fade"
+                class="transparent text-low q-px-none"
+              >
+                {{ getTooltipText(props.col.name) }}
+              </q-tooltip>
+            </q-th>
+          </template>
+
           <template #header-cell-issue_count="props">
             <q-th :props="props">
               <q-icon name="mdi-flag" size="14px" />
@@ -197,7 +283,12 @@
                     </div>
                   </template>
 
-                  <template v-else-if="field.name.includes('qt')">
+                  <template
+                    v-else-if="
+                      field.name.includes('qt') ||
+                      field.name === 'remaining_workload'
+                    "
+                  >
                     {{ props.row[field.name] }}
                   </template>
 
@@ -321,6 +412,7 @@
         />
       </div>
     </div>
+    <div class="q-my-xl"></div>
   </div>
 </template>
 
@@ -539,6 +631,13 @@ export default {
           align: 'right',
         },
         {
+          label: this.$t('workload_remaining.short').toUpperCase(),
+          sortable: true,
+          field: 'remaining_workload',
+          name: 'remaining_workload',
+          align: 'right',
+        },
+        {
           label: this.$t('production.filters.ready').toUpperCase(),
           field: 'ready',
           name: 'ready',
@@ -598,7 +697,10 @@ export default {
               operator: assignment.operator,
               assigned_jobs_count: assignment.assigned_jobs.length,
               total_workload_hours,
-              filtered_jobs: [...active_jobs, ...queued_jobs],
+              filtered_jobs: [...active_jobs, ...queued_jobs].map((j) => ({
+                ...j,
+                remaining_workload: this.calculateWorkloadHours([j]),
+              })),
               independent: assignment.independent,
             });
           }
@@ -609,7 +711,20 @@ export default {
     },
 
     unassigned_jobs() {
-      return this.$store.state.job.unassigned_job_list;
+      return this.$store.state.job.unassigned_job_list.map((j) => ({
+        ...j,
+        remaining_workload: this.calculateWorkloadHours([j]),
+      }));
+    },
+
+    filtered_unassigned_jobs() {
+      return this.unassigned_jobs.filter(this.matchJobToFilters).map((job) => {
+        return {
+          ...job,
+          ready: this.isReleased(job) && job.next_batch_available,
+          wo_sequence: this.wo_map[job.wo_key].sequence,
+        };
+      });
     },
 
     operator_assignments() {
@@ -617,30 +732,23 @@ export default {
         ? [...this.filtered_assignments]
         : [];
 
-      if (this.filters.unassigned && this.filters.operator_key === undefined) {
-        const filtered_unassigned_jobs = this.unassigned_jobs
-          .filter(this.matchJobToFilters)
-          .map((job) => {
-            return {
-              ...job,
-              ready: this.isReleased(job) && job.next_batch_available,
-              wo_sequence: this.wo_map[job.wo_key].sequence,
-            };
-          });
-        if (filtered_unassigned_jobs.length > 0) {
-          result.push({
-            operator: {
-              _key: 'unassigned',
-              name: this.$t('job.unassigned_jobs'),
-              surname: '',
-            },
-            total_workload_hours: this.calculateWorkloadHours(
-              this.unassigned_jobs,
-            ),
-            assigned_jobs_count: this.unassigned_jobs.length,
-            filtered_jobs: filtered_unassigned_jobs,
-          });
-        }
+      if (
+        this.filters.unassigned &&
+        this.filters.operator_key === undefined &&
+        this.filtered_unassigned_jobs.length > 0
+      ) {
+        result.push({
+          operator: {
+            _key: 'unassigned',
+            name: this.$t('job.unassigned_jobs'),
+            surname: '',
+          },
+          total_workload_hours: this.calculateWorkloadHours(
+            this.unassigned_jobs,
+          ),
+          assigned_jobs_count: this.unassigned_jobs.length,
+          filtered_jobs: this.filtered_unassigned_jobs,
+        });
       }
 
       return result;
@@ -661,6 +769,27 @@ export default {
       return this.unassigned_jobs.filter((j) => {
         return multiMatch(this.assign_search_string, j, this.search_fields);
       });
+    },
+
+    full_job_list() {
+      const assigned = this.assignments.map((a) => a.assigned_jobs).flat();
+      const total = [...assigned, ...this.unassigned_jobs];
+      const filtered = this.operator_assignments
+        .map((x) => x.filtered_jobs)
+        .flat();
+      return { total, filtered };
+    },
+
+    workload_hours() {
+      const total = this.calculateWorkloadHours(this.full_job_list.total);
+      const shown = this.calculateWorkloadHours(this.full_job_list.filtered);
+      return { total, shown };
+    },
+
+    records_count() {
+      const total = this.full_job_list.total.length;
+      const shown = this.full_job_list.filtered.length;
+      return { total, shown };
     },
   },
 
@@ -907,6 +1036,15 @@ export default {
       }, 0);
 
       return Math.ceil(total_workload_seconds / 360) / 10; // round up to first decimal
+    },
+
+    getTooltipText(col_name) {
+      const map = {
+        remaining_workload: this.$t('workload_remaining.long'),
+        qt_completed: this.$t('quantity.completed.long'),
+        qt_planned: this.$t('quantity.planned.long'),
+      };
+      return map[col_name];
     },
   },
 };
