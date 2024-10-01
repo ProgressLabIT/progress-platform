@@ -114,7 +114,7 @@ collections = [
   'WorkSession'
 ]
 
-base_records[
+base_records = [
   # Administrator User
   {
     'collection': 'User',
@@ -148,14 +148,15 @@ configs = [
   dict(
     _key = 'company_name',
     value = 'PROGRESS PLATFORM'
-  )
+  ),
   dict(
     _key = 'default_operation_parameters',
     parallel_job_allowed = True,
     step_check = False,
     step_check_force_order = False,
     production_batch_qt = 1,
-    max_offline = 300 # 5 minutes
+    max_offline = 300, # 5 minutes
+    std_processing_time = 60 # 1 minute
   ),
   dict(
     _key = 'show_unassigned_jobs_to_operators',
@@ -171,7 +172,7 @@ configs = [
   ),
   dict(
     _key = 'operator_cost',
-    value = 1
+    value = 25
   )
 ]
 

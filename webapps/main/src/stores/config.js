@@ -14,6 +14,7 @@ export const useConfigStore = defineStore('config', () => {
       production_batch_qt: 1,
       auto_new_batch: true,
       unsupervised_work_allowed: false,
+      std_processing_time: 60,
     },
     serialFields: [],
     operatorCost: 0,
