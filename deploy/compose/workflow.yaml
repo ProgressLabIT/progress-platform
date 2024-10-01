@@ -12,7 +12,6 @@ secrets:
   progress_api_db_pwd:
     external: true
 
-
 networks:
   progress:
     external: true
@@ -45,7 +44,7 @@ services:
     image: registry.gitlab.com/progresslab/progress-platform/wf-sys-agent
     restart: always
     depends_on:
-      - server
+      - wf-server
     networks:
       - progress
     secrets:

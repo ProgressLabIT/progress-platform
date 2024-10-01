@@ -10,11 +10,9 @@ volumes:
   cmounts:
     external: true
 
-
 networks:
   progress:
     external: true
-
 
 secrets:
   progress_api_db_pwd:
@@ -22,12 +20,12 @@ secrets:
 
 services:
   wf-integration-agent: # Client Workflow Agent
-    image: prefecthq/prefect:2.8.3-python3.11
+    image: prefecthq/prefect:2-python3.11
     entrypoint: >
       sh -c "chmod +x /flows/entrypoint.sh &&
              /usr/bin/tini -g -- /flows/entrypoint.sh"
     depends_on:
-      - server
+      - wf-server
     volumes:
       - flows:/flows
       - cmounts:/cmounts
