@@ -94,6 +94,15 @@ export default {
       return currentStep?.form_fields ?? [];
     },
 
+    current_batch_form_fields() {
+      let form_fields = [];
+      for (const step of this.job.step_sequence) {
+        form_fields = form_fields.concat(step.form_fields);
+      }
+
+      return form_fields;
+    },
+
     completed_steps_count() {
       return this.batch_data
         ? this.batch_data.reduce((total, current) => total + current.done, 0)
@@ -189,6 +198,19 @@ export default {
       );
 
       return data?.value ?? null;
+    },
+
+    batch_field_value(field_key) {
+      for (const step_data of this.batch_data) {
+        const data = step_data.form_data?.find(
+          ({ form_field_key }) => form_field_key === field_key,
+        );
+        if (data?.value) {
+          return data?.value;
+        }
+      }
+
+      return null;
     },
 
     batchSerialToSerial(batch_serials) {
@@ -387,9 +409,9 @@ export default {
       const current_batch_was_last = this.current_batch_is_last;
 
       if (!this.job.parameters.step_check) {
-        const all_mandatory_fields_filled = this.batch_data.every((step) => {
-          step.form_data.every((field) => {
-            const value = this.field_value(field._key);
+        const all_mandatory_fields_filled =
+          this.current_batch_form_fields.every((field) => {
+            const value = this.batch_field_value(field._key);
             const type = this.$store.getters.getCustomFieldByKey(
               field.custom_field_key,
             )?.type;
@@ -402,7 +424,6 @@ export default {
                   !!value;
             return field_not_mandatory || field_filled_in;
           });
-        });
 
         if (!all_mandatory_fields_filled) {
           window.alert(this.$t('fill_mandatory_fields'));
