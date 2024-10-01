@@ -243,6 +243,7 @@ export default {
         parallel_job_allowed: true,
         step_check: false,
         step_check_force_order: false,
+        std_processing_time: 60,
         production_batch_qt: 1,
         auto_new_batch: true,
         unsupervised_work_allowed: false,
