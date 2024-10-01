@@ -386,6 +386,30 @@ export default {
       let can_proceed = true;
       const current_batch_was_last = this.current_batch_is_last;
 
+      if (!this.job.parameters.step_check) {
+        const all_mandatory_fields_filled = this.batch_data.every((step) => {
+          step.form_data.every((field) => {
+            const value = this.field_value(field._key);
+            const type = this.$store.getters.getCustomFieldByKey(
+              field.custom_field_key,
+            )?.type;
+            const field_not_mandatory = !field.mandatory;
+            const field_filled_in =
+              type === 'ternary'
+                ? // ternary field can be true or false, but must be filled in
+                  [true, false].includes(value)
+                : // All other values must not be false, null/undefined or empty string.
+                  !!value;
+            return field_not_mandatory || field_filled_in;
+          });
+        });
+
+        if (!all_mandatory_fields_filled) {
+          window.alert(this.$t('fill_mandatory_fields'));
+          return;
+        }
+      }
+
       if (this.checkMissingSerials() && this.traceability_enabled) {
         window.alert(this.$t('batch_declare_component_serials'));
         return;
