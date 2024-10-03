@@ -78,6 +78,8 @@ export default {
   data() {
     return {
       clickTimer: null,
+      bom_destination: { name: 'jobBom' },
+      step_destination: { name: 'jobSteps' },
     };
   },
 
@@ -145,7 +147,9 @@ export default {
     current_batch_form_fields() {
       let form_fields = [];
       for (const step of this.job.step_sequence) {
-        form_fields = form_fields.concat(step.form_fields);
+        for (const field of step.form_fields) {
+          form_fields.push({ ...field, step_key: step._key });
+        }
       }
 
       return form_fields;
@@ -412,6 +416,7 @@ export default {
         const missing_serials = this.checkMissingSerials();
         if (missing_serials && this.traceability_enabled) {
           window.alert(this.$t('batch_declare_component_serials'));
+          this.$router.push(this.bom_destination);
           return;
         }
 
@@ -465,6 +470,8 @@ export default {
       let can_proceed = true;
       const current_batch_was_last = this.current_batch_is_last;
 
+      let mandatory_step_missed = undefined;
+
       if (!this.job.parameters.step_check) {
         const all_mandatory_fields_filled =
           this.current_batch_form_fields.every((field) => {
@@ -479,17 +486,26 @@ export default {
                   [true, false].includes(value)
                 : // All other values must not be false, null/undefined or empty string.
                   !!value;
-            return field_not_mandatory || field_filled_in;
+            let field_ok = field_not_mandatory || field_filled_in;
+            if (!field_ok) {
+              mandatory_step_missed = field.step_key;
+            }
+            return field_ok;
           });
 
         if (!all_mandatory_fields_filled) {
           window.alert(this.$t('fill_mandatory_fields'));
+          if (mandatory_step_missed) {
+            this.$router.push(this.step_destination);
+            this.goToMissingMandatoryFieldStep(mandatory_step_missed);
+          }
           return;
         }
       }
 
       if (this.checkMissingSerials() && this.traceability_enabled) {
         window.alert(this.$t('batch_declare_component_serials'));
+        this.$router.push(this.bom_destination);
         return;
       }
 
