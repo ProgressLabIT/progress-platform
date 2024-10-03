@@ -1,9 +1,9 @@
 <template>
   <q-btn
+    v-if="progress_button_active"
     v-touch-hold.mouse="progress_button.altAction"
     square
     :style="`background-color: ${progress_button_color}`"
-    :disable="!progress_button_active"
     class="fit"
     @click="handleClick"
     @dblclick="handleDoubleClick"
@@ -14,6 +14,49 @@
       </div>
       <div class="col display medium offset-1 text-left q-pr-lg">
         <span>{{ progress_button.text }}</span>
+      </div>
+    </div>
+  </q-btn>
+  <template v-else-if="edit_mode">
+    <div class="row col-4 fit">
+      <div class="col">
+        <q-btn
+          :style="`background-color: ${$theme.green}aa`"
+          square
+          height="auto"
+          class="fit"
+          @click="saveStepData"
+        >
+          <span>{{ $t('save') }}</span>
+        </q-btn>
+      </div>
+
+      <div class="col">
+        <q-btn
+          :style="`background-color: ${$theme.red}aa`"
+          square
+          height="auto"
+          class="fit"
+          @click="discardStepData"
+        >
+          <span>{{ $t('cancel') }}</span>
+        </q-btn>
+      </div>
+    </div>
+  </template>
+  <q-btn
+    v-else
+    square
+    :style="`background-color: ${$theme.blue}aa`"
+    class="fit"
+    @click="toggleStepEditMode(true)"
+  >
+    <div class="row items-center absolute-full">
+      <div class="col-1 offset-2">
+        <q-icon size="lg" name="mdi-pencil" />
+      </div>
+      <div class="col display medium offset-1 text-left q-pr-lg">
+        <span>{{ $t('edit') }}</span>
       </div>
     </div>
   </q-btn>
@@ -155,6 +198,10 @@ export default {
         ?.traceability_level;
     },
 
+    edit_mode() {
+      return this.$store.getters.isCurrentStepEditMode();
+    },
+
     current_step_key: {
       get() {
         return this.$store.state.traceability.current_step_key;
@@ -167,6 +214,7 @@ export default {
 
   mounted() {
     this.goToNextUndoneStep();
+    this.$store.dispatch('setStepEditMode', false);
   },
 
   methods: {
@@ -541,6 +589,26 @@ export default {
 
       console.warn('No steps found, cannot go to any step');
       this.$store.dispatch('goToStep', undefined);
+    },
+
+    goToMissingMandatoryFieldStep(step_key) {
+      this.$store.dispatch('goToStep', step_key);
+      return;
+    },
+
+    async saveStepData() {
+      await this.$store.dispatch('editStepData', {
+        stepKey: this.current_step_key,
+      });
+      this.toggleStepEditMode(false);
+    },
+
+    async discardStepData() {
+      this.toggleStepEditMode(false);
+    },
+
+    toggleStepEditMode(editMode) {
+      this.$store.dispatch('setStepEditMode', editMode);
     },
   },
 };

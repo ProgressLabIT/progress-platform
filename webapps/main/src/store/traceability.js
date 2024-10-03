@@ -91,6 +91,7 @@ const traceability = {
     work_session_list: [],
     current_batch_data: {},
     current_step_key: undefined,
+    current_step_edit_mode: false,
     current_step_media_index: null,
     heartbeat: null,
     batch_serials: [],
@@ -110,6 +111,10 @@ const traceability = {
 
     getBatchSerials: (state) => () => {
       return state.batch_serials;
+    },
+
+    isCurrentStepEditMode: (state) => () => {
+      return state.current_step_edit_mode;
     },
   },
 
@@ -176,6 +181,10 @@ const traceability = {
       state.current_step_key = stepKey;
     },
 
+    SET_CURRENT_STEP_EDIT_MODE(state, editMode) {
+      state.current_step_edit_mode = editMode;
+    },
+
     CREATE_BATCH_STEP(state, stepKey) {
       const step = state.working_job_data.step_sequence.find(
         ({ _key }) => _key === stepKey,
@@ -231,11 +240,19 @@ const traceability = {
 
   actions: {
     goToStep({ commit }, stepKey) {
+      if (this.getters.isCurrentStepEditMode()) {
+        return;
+      }
       const batchStep = this.getters.getBatchStep(stepKey);
       if (batchStep === undefined) {
         commit('CREATE_BATCH_STEP', stepKey);
       }
       commit('SET_CURRENT_STEP_KEY', stepKey);
+      commit('SET_CURRENT_STEP_EDIT_MODE', false);
+    },
+
+    setStepEditMode({ commit }, editMode) {
+      commit('SET_CURRENT_STEP_EDIT_MODE', editMode);
     },
 
     async loadWorkingJobData({ commit, dispatch }, job_key) {
@@ -365,6 +382,115 @@ const traceability = {
 
       if (batch_serials) {
         commit('UPDATE_BATCH_SERIALS', batch_serials);
+      }
+    },
+
+    async editStepData({ commit, state, rootState, rootGetters }, { stepKey }) {
+      const batchStep = state.current_batch_data.step_data.find(
+        ({ _key }) => _key === stepKey,
+      );
+
+      const formData = cloneDeep(batchStep.form_data);
+
+      // TODO: Unify file handling logic with IssueForm
+      /**
+       * @type {{ type: string; form_fields: import('@/types/form').FormField[] } | undefined}
+       */
+      const stepDefinition = state.working_job_data.step_sequence.find(
+        ({ _key }) => _key === batchStep._key,
+      );
+      if (stepDefinition.type === 'form') {
+        const fields = stepDefinition.form_fields.map((field) => ({
+          ...field,
+          type: rootGetters.getCustomFieldByKey(field.custom_field_key)?.type,
+          value: formData.find(
+            ({ form_field_key }) => form_field_key === field._key,
+          )?.value,
+        }));
+
+        const promises = fields
+          .filter(({ type }) => type === 'files')
+          .map(async (field) => {
+            if (field.value === undefined) {
+              return;
+            }
+
+            const to_delete = [];
+            const to_add = [];
+
+            field.value.forEach((file) => {
+              if (file.temp) {
+                to_add.push(file.content);
+              } else if (file.delete) {
+                to_delete.push(file.name);
+              }
+            });
+
+            // update formData to only contain the file metadata
+            const formDataEntry = formData.find(
+              ({ form_field_key }) => form_field_key === field._key,
+            );
+            formDataEntry.value = field.value
+              .filter((file) => !file.delete)
+              .map((file) => ({
+                size: file.size,
+                name: file.name,
+              }));
+
+            const batch = state.current_batch_data;
+            const target = {
+              bucket: 'traceability',
+              object_key: batch.work_order_key,
+              subfolder: `${batch._key}/${batchStep._key}/${field.custom_field_key}/${field._key}`,
+            };
+
+            // Upload new files
+            if (to_add.length) {
+              // Populate form data
+              const add_body = new FormData();
+              Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
+              to_add.forEach((file) => add_body.append('contents', file));
+              // Post files
+              try {
+                await api.post('/files', add_body);
+              } catch (error) {
+                console.error(error);
+                window.alert(error);
+              }
+            }
+
+            // Delete files
+            if (to_delete.length) {
+              try {
+                await api.delete('/files', {
+                  data: {
+                    ...target,
+                    filenames: to_delete,
+                  },
+                });
+              } catch (error) {
+                console.error(error);
+                window.alert(error);
+              }
+            }
+          });
+        await Promise.all(promises);
+      }
+
+      const now = DT.utc();
+      const event = createEvent(state, rootState.session, {
+        event_type: 'STEP_EDITED',
+        step_key: batchStep._key,
+        timestamp: now.toISO(),
+        form_data: formData,
+      });
+
+      const { data } = await api.post('event', event);
+      const { job_data, batch_data } = data.detail;
+      commit('UPDATE_JOB', job_data);
+      commit('UPDATE_BATCH', batch_data);
+      if (job_data.status === 'closed') {
+        commit('SET_HEARTBEAT', false);
       }
     },
 

@@ -129,6 +129,7 @@ export default {
     JOB_RESUMED: 'Lavoro ripreso',
     JOB_BACK_ONLINE: 'Sessione online',
     STEP_COMPLETED: 'Passo completato',
+    STEP_EDITED: 'Passo modificato',
     BATCH_COMPLETED: 'Pezzo/Lotto completato',
     ISSUE_CREATED: 'Segnalazione creata',
     ISSUE_UPDATED: 'Segnalazione modificata',

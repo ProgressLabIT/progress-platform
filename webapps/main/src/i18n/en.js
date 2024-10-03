@@ -127,6 +127,7 @@ export default {
     JOB_RESUMED: 'Job resumed',
     JOB_BACK_ONLINE: 'Session back online',
     STEP_COMPLETED: 'Step completed',
+    STEP_EDITED: 'Step edited',
     BATCH_COMPLETED: 'Piece/Batch completed',
     ISSUE_CREATED: 'Issue created',
     ISSUE_UPDATED: 'Issue updated',

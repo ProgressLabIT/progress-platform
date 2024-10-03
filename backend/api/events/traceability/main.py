@@ -324,6 +324,42 @@ class ProductionActivityEvent(BaseEvent):
       )
 
   # ===================================================================
+  #                      EDIT STEP DATA
+  # ===================================================================
+
+  STEP_EDITED = EventMeta(
+    collections=production_collections + ['Counter'],
+    action='edit_step',
+    post_processing=production_post_processing
+  )
+
+  def edit_step(self):
+    self.get_job_data()
+    self.get_active_batch()
+
+    # Save current work session and batch keys in Event.info
+    if not self.info.work_session_key:
+      self.work_session = self.get_current_work_session()
+      self.info.work_session_key = self.work_session.key
+
+
+    # Create StepExecutionData record
+    step_data = StepExecutionData(**vars(self.info))
+
+    match = dict(job_key = step_data.job_key, step_key = step_data.step_key)
+    update = dict(form_data = step_data.form_data, modified = self.info.timestamp)
+
+    self.tx.collection('StepExecutionData').update_match(match, update)
+
+
+    self.response = dict(
+      message = f"Step edited for batch {self.info.active_batch_key}",
+      job_data = self.job,
+      batch_data = self.get_batch_execution_data()
+    )
+
+
+  # ===================================================================
   #             UPDATE ACTIVE BATCH
   # ===================================================================
 
