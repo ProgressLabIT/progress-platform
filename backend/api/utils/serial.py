@@ -195,12 +195,13 @@ class Queries:
     LET process_phases = document(Product, s.product_key).process_phases[* RETURN document(Phase, CURRENT)]
 
     LET data = (
-        FOR phase IN process_phases
-        FOR step IN phase.step_sequence[* RETURN document(Step, CURRENT)]
+        FOR phase IN NOT_NULL(process_phases, [])
+        LET steps = NOT_NULL(phase.step_sequence[* RETURN document(Step, CURRENT)], [])
+        FOR step IN steps
         FILTER step.type == 'form'
         FOR step_field in NOT_NULL(step.form_fields, [])
         LET value = FIRST(
-            FOR serial_field in s.data
+            FOR serial_field in NOT_NULL(s.data, [])
             FILTER serial_field.form_field_key == step_field._key
             RETURN serial_field.value
         )
