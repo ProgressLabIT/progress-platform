@@ -494,6 +494,18 @@ const traceability = {
       }
     },
 
+    async reloadBatchData({ commit, state }) {
+      // Get active batch data (if any)
+      let batch_data = {};
+      if (state.current_batch_data?._key) {
+        const batch_resp = await api.get(
+          `batch/${state.current_batch_data._key}`,
+        );
+        batch_data = batch_resp.data.detail;
+      }
+      commit('UPDATE_BATCH', batch_data);
+    },
+
     async completeStep(
       { commit, state, rootState, rootGetters },
       { stepKey, batchQt },

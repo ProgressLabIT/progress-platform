@@ -1,7 +1,8 @@
 <template>
   <q-btn
-    v-if="progress_button_active"
+    v-if="progress_button_visible"
     v-touch-hold.mouse="progress_button.altAction"
+    :disabled="!progress_button_active"
     square
     :style="`background-color: ${progress_button_color}`"
     class="fit"
@@ -87,6 +88,10 @@ export default {
       current_batch_serials: (state) =>
         state.traceability.current_batch_serials,
     }),
+
+    progress_button_visible() {
+      return !this.job.active || !this.current_step_done;
+    },
 
     progress_button_active() {
       return this.job.active && !this.current_step_done;
@@ -371,8 +376,7 @@ export default {
       return has_bom && !all_serials_filled_in;
     },
 
-    async completeStep() {
-      // Check all fields are either not mandatory or if it is, the value is existing
+    ensureMandatoryFields() {
       const all_mandatory_fields_filled = this.current_step_form_fields.every(
         (field) => {
           const value = this.field_value(field._key);
@@ -389,8 +393,13 @@ export default {
           return field_not_mandatory || field_filled_in;
         },
       );
+      return all_mandatory_fields_filled;
+    },
 
-      if (!all_mandatory_fields_filled) {
+    async completeStep() {
+      // Check all fields are either not mandatory or if it is, the value is existing
+
+      if (!this.ensureMandatoryFields()) {
         window.alert(this.$t('fill_mandatory_fields'));
         return;
       }
@@ -597,6 +606,10 @@ export default {
     },
 
     async saveStepData() {
+      if (!this.ensureMandatoryFields()) {
+        window.alert(this.$t('fill_mandatory_fields'));
+        return;
+      }
       await this.$store.dispatch('editStepData', {
         stepKey: this.current_step_key,
       });
@@ -604,6 +617,7 @@ export default {
     },
 
     async discardStepData() {
+      await this.$store.dispatch('reloadBatchData');
       this.toggleStepEditMode(false);
     },
 
