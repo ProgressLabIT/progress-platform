@@ -288,6 +288,14 @@ onMounted(() => {
   if (props.context?.step?.product_key) {
     loadProduct(props.context.step.product_key);
   }
+
+  if (props.context?.serial?.product_key) {
+    loadProduct(props.context.serial.product_key);
+  }
+
+  if (props.context?.serial?._key) {
+    loadSerial(props.context.serial._key);
+  }
 });
 
 async function selectTemplate(template) {

@@ -139,7 +139,6 @@ export default {
 
   setup() {
     const { config } = useConfigStore();
-
     return {
       config,
     };

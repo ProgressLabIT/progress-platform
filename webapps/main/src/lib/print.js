@@ -57,6 +57,8 @@ class TemplateContextFactory {
         return new IssueTypeContext(data, store);
       case 'step':
         return new StepContext(data, store);
+      case 'serial':
+        return new SerialContext(data, store);
       default:
         throw new Error(`Unknown template context type: ${type}`);
     }
@@ -253,6 +255,20 @@ export class IssueTypeContext extends TemplateContext {
 
     const data = this.issue.data.find(({ _key }) => _key === formField._key);
     return customField.type == 'choice' ? data?.value?.value : data?.value;
+  }
+}
+
+export class SerialContext extends TemplateContext {
+  type = 'product';
+  serial;
+
+  constructor(serial_key, store = useStore()) {
+    super(store);
+    this.serial = store.getters.getSerialData(serial_key);
+  }
+
+  getKey() {
+    return this.serial?.product?._key;
   }
 }
 

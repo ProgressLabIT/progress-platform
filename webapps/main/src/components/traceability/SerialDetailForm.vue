@@ -22,6 +22,16 @@
       </q-input>
 
       <q-space></q-space>
+      <q-btn
+        v-if="isAvailable"
+        flat
+        round
+        icon="mdi-printer"
+        class="q-ml-sm"
+        @click.stop="openPrintDialog"
+      >
+        <q-tooltip>{{ $capitalize($t('print')) }}</q-tooltip>
+      </q-btn>
     </div>
 
     <div class="row q-mt-sm q-col-gutter-lg items-center text-h6">
@@ -115,6 +125,7 @@
 <script>
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
+import { usePrintDialog } from '@/lib/print';
 
 export default {
   name: 'SerialDetailForm',
@@ -138,6 +149,17 @@ export default {
   },
 
   emits: ['exit'],
+
+  setup(props) {
+    const { open: openPrintDialog, isAvailable } = usePrintDialog({
+      context: 'serial',
+      contextData: props.serial_key,
+    });
+    return {
+      openPrintDialog,
+      isAvailable,
+    };
+  },
 
   data() {
     return {
