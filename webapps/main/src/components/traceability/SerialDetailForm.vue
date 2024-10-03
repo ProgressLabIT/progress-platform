@@ -317,3 +317,22 @@ export default {
   },
 };
 </script>
+
+<style lang="sass" scoped>
+.dot
+  height: 13px
+  width: 13px
+  border-radius: 100%
+  background-color: #888
+  border: 5px solid var(--surface-1)
+  box-sizing: content-box
+  z-index:99
+
+.thread
+  position: absolute
+  height: 100%
+  left: 11px
+  top: 20px
+  width: 1px
+  background-color: #fff3
+</style>

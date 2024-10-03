@@ -137,6 +137,8 @@ export default {
     MESSAGE_UPDATED: 'Message updated',
     MESSAGE_DELETED: 'Message deleted',
     SERIAL_CREATED: 'Serial created',
+    SERIAL_UPDATED: 'Serial updated',
+    SERIAL_FINALIZED: 'Serial finalized',
     SERIAL_LINKED: 'Serial Linked',
   },
   export: 'Export',
