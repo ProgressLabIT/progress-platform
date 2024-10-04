@@ -69,6 +69,7 @@ export class TemplateContext {
   type = 'NONE';
   serial = null;
   product = null;
+  workOrder = null;
 
   /** @protected */
   _store;
@@ -124,6 +125,26 @@ export class TemplateContext {
         case 'serial_create_time':
           return extractTime(this.serial?.created);
 
+        case 'product.code':
+          return this.product?.code;
+        case 'product.description':
+          return this.product?.description;
+
+        case 'work_order.code':
+          return this.workOrder?.wo_code;
+        case 'work_order.qt_planned':
+          return this.workOrder?.qt_planned;
+        case 'work_order.qt_completed':
+          return this.workOrder?.qt_completed;
+        case 'work_order.start_date':
+          return extractDate(this.workOrder?.start);
+        case 'work_order.start_time':
+          return extractTime(this.workOrder?.start);
+        case 'work_order.end_date':
+          return extractDate(this.workOrder?.end);
+        case 'work_order.end_time':
+          return extractTime(this.workOrder?.end);
+
         default:
           return undefined;
       }
@@ -142,6 +163,10 @@ export class TemplateContext {
 
   setSelectedProduct(product) {
     this.product = product;
+  }
+
+  setSelectedWorkOrder(workOrder) {
+    this.workOrder = workOrder;
   }
 }
 
@@ -269,6 +294,86 @@ export class SerialContext extends TemplateContext {
 
   getKey() {
     return this.serial?.product?._key;
+  }
+
+  getPresetValue(presetName) {
+    try {
+      const value = super.getPresetValue(presetName);
+      if (value !== undefined) {
+        return value;
+      }
+
+      switch (presetName) {
+        /*case 'job.key':
+          return job._key;
+        case 'job.qt_planned':
+          return job.qt_planned;
+        case 'job.qt_completed':
+          return job.qt_completed;
+        case 'job.phase_alias':
+          return job.phase_alias;
+        case 'job.start_date':
+          return extractDate(job.start);
+        case 'job.start_time':
+          return extractTime(job.start);
+        case 'job.end_date':
+          return extractDate(job.end);
+        case 'job.end_time':
+          return extractTime(job.end);
+
+        case 'project.code':
+          return job.project_code;
+
+        case 'work_order.code':
+          return job.wo_code;
+        case 'work_order.qt_planned':
+          return workOrder.qt_planned;
+        case 'work_order.qt_completed':
+          return workOrder.qt_completed;
+        case 'work_order.start_date':
+          return extractDate(workOrder.start);
+        case 'work_order.start_time':
+          return extractTime(workOrder.start);
+        case 'work_order.end_date':
+          return extractDate(workOrder.end);
+        case 'work_order.end_time':
+          return extractTime(workOrder.end);*/
+
+        default:
+          return undefined;
+      }
+    } catch (e) {
+      return '';
+    }
+  }
+
+  getCustomFieldValue(customFieldKey) {
+    const customField = this._store.getters.getCustomFieldByKey(customFieldKey);
+
+    if (this.serial) {
+      const serial_data = this.serial.data.find(
+        ({ custom_field_key }) => custom_field_key === customField._key,
+      );
+
+      if (serial_data?.value) {
+        return customField.type == 'choice'
+          ? serial_data.value.value
+          : serial_data.value;
+      }
+    }
+
+    if (this.product?.metadata) {
+      const product_metadata_field = this.product.metadata.find(
+        ({ custom_field_key }) => custom_field_key === customField._key,
+      );
+      if (product_metadata_field.value) {
+        return customField.type == 'choice'
+          ? product_metadata_field?.value?.value
+          : product_metadata_field?.value;
+      }
+    }
+
+    return undefined;
   }
 }
 

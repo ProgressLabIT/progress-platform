@@ -246,6 +246,15 @@ async function loadProduct(product_key) {
   }
 }
 
+async function loadWorkOrder(wo_key) {
+  if (wo_key) {
+    const { data } = await api.get(`work-order/${wo_key}`);
+    props.context.setSelectedWorkOrder(data?.detail);
+  } else {
+    props.context.setSelectedWorkOrder(null);
+  }
+}
+
 async function loadBatchSerial(batch_key) {
   const { data: batch_serials } = await api.get('serial-batch', {
     params: {
@@ -291,6 +300,10 @@ onMounted(() => {
 
   if (props.context?.serial?.product_key) {
     loadProduct(props.context.serial.product_key);
+  }
+
+  if (props.context?.serial?.wo_key) {
+    loadWorkOrder(props.context?.serial?.wo_key);
   }
 
   if (props.context?.serial?._key) {
