@@ -361,16 +361,15 @@ const traceability = {
       });
     },
 
-    async fakeBatchSerials({ commit }, { active_batch_qt }) {
+    async fakeBatchSerials({ commit }) {
       let batch_serials = [];
-      for (var i = 0; i < active_batch_qt ? active_batch_qt : false; i++) {
-        batch_serials.push({
-          _id: `fake${{ i }}`,
-          _key: `fake${{ i }}`,
-          _code: `ITEM ${{ i }}`,
-          childs: [],
-        });
-      }
+
+      batch_serials.push({
+        _id: 'fake',
+        _key: 'fake',
+        _code: 'ITEM',
+        childs: [],
+      });
 
       commit('UPDATE_BATCH_FAKED_SERIALS', batch_serials);
     },

@@ -579,9 +579,7 @@ export default {
 
     async fakeBatchSerials() {
       if (!this.traceability_enabled) {
-        await this.$store.dispatch('fakeBatchSerials', {
-          active_batch_qt: this.j.active_batch_qt,
-        });
+        await this.$store.dispatch('fakeBatchSerials');
       }
     },
 
