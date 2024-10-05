@@ -173,7 +173,11 @@ export default {
       return this.bom_line.component_key;
     },
     component_per_product() {
-      return this.bom_line.qt;
+      if (this.traceability_enabled) {
+        return this.bom_line.qt;
+      } else {
+        return this.bom_line?.batch_qt;
+      }
     },
   },
 
@@ -211,8 +215,12 @@ export default {
       this.loading = false;
     },
 
-    fakeBatchSerials() {
+    async fakeBatchSerials() {
       this.loading = true;
+
+      await this.$store.dispatch('fakeBatchSerials', {
+        batch_key: this.batch_key,
+      });
 
       this.batch_serials = this.faked_batch_serials;
       this.fillInitialData();

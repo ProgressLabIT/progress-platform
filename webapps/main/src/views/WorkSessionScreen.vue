@@ -579,7 +579,9 @@ export default {
 
     async fakeBatchSerials() {
       if (!this.traceability_enabled) {
-        await this.$store.dispatch('fakeBatchSerials');
+        await this.$store.dispatch('fakeBatchSerials', {
+          job_key: this.j._key,
+        });
       }
     },
 

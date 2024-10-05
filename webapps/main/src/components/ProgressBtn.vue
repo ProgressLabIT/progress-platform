@@ -414,7 +414,7 @@ export default {
 
       if (current_step_was_last) {
         const missing_serials = this.checkMissingSerials();
-        if (missing_serials && this.traceability_enabled) {
+        if (missing_serials) {
           window.alert(this.$t('batch_declare_component_serials'));
           this.$router.push(this.bom_destination);
           return;
@@ -503,7 +503,7 @@ export default {
         }
       }
 
-      if (this.checkMissingSerials() && this.traceability_enabled) {
+      if (this.checkMissingSerials()) {
         window.alert(this.$t('batch_declare_component_serials'));
         this.$router.push(this.bom_destination);
         return;

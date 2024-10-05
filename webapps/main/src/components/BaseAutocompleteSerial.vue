@@ -90,15 +90,15 @@
           }}
         </q-item-section>
       </q-item>
+      <SerialForm
+        :show="create_serial_form"
+        :auto_link_product="product_key"
+        mode="new"
+        :force_serial_code="inputValue"
+        @close="closeCreateForm"
+      >
+      </SerialForm>
     </template>
-    <SerialForm
-      :show="create_serial_form"
-      :auto_link_product="product_key"
-      mode="new"
-      :force_serial_code="inputValue"
-      @close="closeCreateForm"
-    >
-    </SerialForm>
   </q-select>
 </template>
 

@@ -361,14 +361,26 @@ const traceability = {
       });
     },
 
-    async fakeBatchSerials({ commit }) {
+    async fakeBatchSerials({ commit }, { job_key, batch_key }) {
+      let key = batch_key;
+      if (!key) {
+        const job_resp = await api.get(`job/${job_key}`);
+        const job_data = job_resp.data.detail;
+        key = job_data.active_batch_key;
+      }
       let batch_serials = [];
+
+      const { data: batch_components } = await api.get('component-batch', {
+        params: {
+          batch_key: key,
+        },
+      });
 
       batch_serials.push({
         _id: 'fake',
         _key: 'fake',
         _code: 'ITEM',
-        childs: [],
+        childs: batch_components ? batch_components : [],
       });
 
       commit('UPDATE_BATCH_FAKED_SERIALS', batch_serials);

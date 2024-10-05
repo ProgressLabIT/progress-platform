@@ -263,7 +263,7 @@ export default {
       this.loading = false;
     },
 
-    fakeBatchSerials() {
+    async fakeBatchSerials() {
       this.loading = true;
 
       /*this.batch_serials = [];
@@ -275,6 +275,10 @@ export default {
           childs: [],
         });
       }*/
+      await this.$store.dispatch('fakeBatchSerials', {
+        batch_key: this.batch_key,
+      });
+
       this.batch_serials = this.faked_batch_serials;
 
       this.fillInitialData();
@@ -296,7 +300,11 @@ export default {
       this.replace_serials = [];
       this.booked_serials = [];
       for (const component of this.bom_components) {
-        this.qt[component.component_key] = component.qt;
+        if (this.traceability_enabled) {
+          this.qt[component.component_key] = component.qt;
+        } else {
+          this.qt[component.component_key] = component.batch_qt;
+        }
       }
       for (const serial of this.batch_serials) {
         this.serial_ids.push(serial._id);
