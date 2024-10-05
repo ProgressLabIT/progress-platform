@@ -377,9 +377,9 @@ const traceability = {
       });
 
       batch_serials.push({
-        _id: 'fake',
-        _key: 'fake',
-        _code: 'ITEM',
+        _id: 'components',
+        _key: 'components',
+        _code: '',
         childs: batch_components ? batch_components : [],
       });
 

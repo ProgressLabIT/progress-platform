@@ -63,10 +63,10 @@
             <q-toggle
               v-if="props.row.traceability_level"
               :model-value="!!props.value"
+              :disable="!editMode"
               @update:model-value="
                 (value) => toggleMandatoryTraceability(props.rowIndex, value)
               "
-              :disable="!editMode"
             />
           </q-td>
         </template>
@@ -272,7 +272,7 @@ export default {
         {
           name: 'traceability_mandatory',
           field: 'traceability_mandatory',
-          label: this.$t('traceability').toUpperCase(),
+          label: this.$t('traceability.mandatory').toUpperCase(),
         },
       ];
     },

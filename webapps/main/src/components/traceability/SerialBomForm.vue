@@ -266,15 +266,6 @@ export default {
     async fakeBatchSerials() {
       this.loading = true;
 
-      /*this.batch_serials = [];
-      for (var i = 0; i < this.batch_qty ? this.batch_qty : false; i++) {
-        this.batch_serials.push({
-          _id: `fake${{ i }}`,
-          _key: `fake${{ i }}`,
-          _code: `ITEM ${{ i }}`,
-          childs: [],
-        });
-      }*/
       await this.$store.dispatch('fakeBatchSerials', {
         batch_key: this.batch_key,
       });
