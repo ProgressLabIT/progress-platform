@@ -23,6 +23,97 @@ function createEmptyBatch(state, startDT, job) {
   return new_batch;
 }
 
+async function getFormData(state, rootGetters, batchStep) {
+  const formData = cloneDeep(batchStep.form_data);
+
+  // TODO: Unify file handling logic with IssueForm
+  /**
+   * @type {{ type: string; form_fields: import('@/types/form').FormField[] } | undefined}
+   */
+  const stepDefinition = state.working_job_data.step_sequence.find(
+    ({ _key }) => _key === batchStep._key,
+  );
+  if (stepDefinition.type === 'form') {
+    const fields = stepDefinition.form_fields.map((field) => ({
+      ...field,
+      type: rootGetters.getCustomFieldByKey(field.custom_field_key)?.type,
+      value: formData.find(
+        ({ form_field_key }) => form_field_key === field._key,
+      )?.value,
+    }));
+
+    const promises = fields
+      .filter(({ type }) => type === 'files')
+      .map(async (field) => {
+        if (field.value === undefined) {
+          return;
+        }
+
+        const to_delete = [];
+        const to_add = [];
+
+        field.value.forEach((file) => {
+          if (file.temp) {
+            to_add.push(file.content);
+          } else if (file.delete) {
+            to_delete.push(file.name);
+          }
+        });
+
+        // update formData to only contain the file metadata
+        const formDataEntry = formData.find(
+          ({ form_field_key }) => form_field_key === field._key,
+        );
+        formDataEntry.value = field.value
+          .filter((file) => !file.delete)
+          .map((file) => ({
+            size: file.size,
+            name: file.name,
+          }));
+
+        const batch = state.current_batch_data;
+        const target = {
+          bucket: 'traceability',
+          object_key: batch.work_order_key,
+          subfolder: `${batch._key}/${batchStep._key}/${field.custom_field_key}/${field._key}`,
+        };
+
+        // Upload new files
+        if (to_add.length) {
+          // Populate form data
+          const add_body = new FormData();
+          Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
+          to_add.forEach((file) => add_body.append('contents', file));
+          // Post files
+          try {
+            await api.post('/files', add_body);
+          } catch (error) {
+            console.error(error);
+            window.alert(error);
+          }
+        }
+
+        // Delete files
+        if (to_delete.length) {
+          try {
+            await api.delete('/files', {
+              data: {
+                ...target,
+                filenames: to_delete,
+              },
+            });
+          } catch (error) {
+            console.error(error);
+            window.alert(error);
+          }
+        }
+      });
+    await Promise.all(promises);
+  }
+
+  return formData;
+}
+
 function createEvent(
   state,
   session_state,
@@ -401,92 +492,7 @@ const traceability = {
         ({ _key }) => _key === stepKey,
       );
 
-      const formData = cloneDeep(batchStep.form_data);
-
-      // TODO: Unify file handling logic with IssueForm
-      /**
-       * @type {{ type: string; form_fields: import('@/types/form').FormField[] } | undefined}
-       */
-      const stepDefinition = state.working_job_data.step_sequence.find(
-        ({ _key }) => _key === batchStep._key,
-      );
-      if (stepDefinition.type === 'form') {
-        const fields = stepDefinition.form_fields.map((field) => ({
-          ...field,
-          type: rootGetters.getCustomFieldByKey(field.custom_field_key)?.type,
-          value: formData.find(
-            ({ form_field_key }) => form_field_key === field._key,
-          )?.value,
-        }));
-
-        const promises = fields
-          .filter(({ type }) => type === 'files')
-          .map(async (field) => {
-            if (field.value === undefined) {
-              return;
-            }
-
-            const to_delete = [];
-            const to_add = [];
-
-            field.value.forEach((file) => {
-              if (file.temp) {
-                to_add.push(file.content);
-              } else if (file.delete) {
-                to_delete.push(file.name);
-              }
-            });
-
-            // update formData to only contain the file metadata
-            const formDataEntry = formData.find(
-              ({ form_field_key }) => form_field_key === field._key,
-            );
-            formDataEntry.value = field.value
-              .filter((file) => !file.delete)
-              .map((file) => ({
-                size: file.size,
-                name: file.name,
-              }));
-
-            const batch = state.current_batch_data;
-            const target = {
-              bucket: 'traceability',
-              object_key: batch.work_order_key,
-              subfolder: `${batch._key}/${batchStep._key}/${field.custom_field_key}/${field._key}`,
-            };
-
-            // Upload new files
-            if (to_add.length) {
-              // Populate form data
-              const add_body = new FormData();
-              Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
-              to_add.forEach((file) => add_body.append('contents', file));
-              // Post files
-              try {
-                await api.post('/files', add_body);
-              } catch (error) {
-                console.error(error);
-                window.alert(error);
-              }
-            }
-
-            // Delete files
-            if (to_delete.length) {
-              try {
-                await api.delete('/files', {
-                  data: {
-                    ...target,
-                    filenames: to_delete,
-                  },
-                });
-              } catch (error) {
-                console.error(error);
-                window.alert(error);
-              }
-            }
-          });
-        await Promise.all(promises);
-      }
+      const formData = await getFormData(state, rootGetters, batchStep);
 
       const now = DT.utc();
       const event = createEvent(state, rootState.session, {
@@ -525,92 +531,7 @@ const traceability = {
         ({ _key }) => _key === stepKey,
       );
 
-      const formData = cloneDeep(batchStep.form_data);
-
-      // TODO: Unify file handling logic with IssueForm
-      /**
-       * @type {{ type: string; form_fields: import('@/types/form').FormField[] } | undefined}
-       */
-      const stepDefinition = state.working_job_data.step_sequence.find(
-        ({ _key }) => _key === batchStep._key,
-      );
-      if (stepDefinition.type === 'form') {
-        const fields = stepDefinition.form_fields.map((field) => ({
-          ...field,
-          type: rootGetters.getCustomFieldByKey(field.custom_field_key)?.type,
-          value: formData.find(
-            ({ form_field_key }) => form_field_key === field._key,
-          )?.value,
-        }));
-
-        const promises = fields
-          .filter(({ type }) => type === 'files')
-          .map(async (field) => {
-            if (field.value === undefined) {
-              return;
-            }
-
-            const to_delete = [];
-            const to_add = [];
-
-            field.value.forEach((file) => {
-              if (file.temp) {
-                to_add.push(file.content);
-              } else if (file.delete) {
-                to_delete.push(file.name);
-              }
-            });
-
-            // update formData to only contain the file metadata
-            const formDataEntry = formData.find(
-              ({ form_field_key }) => form_field_key === field._key,
-            );
-            formDataEntry.value = field.value
-              .filter((file) => !file.delete)
-              .map((file) => ({
-                size: file.size,
-                name: file.name,
-              }));
-
-            const batch = state.current_batch_data;
-            const target = {
-              bucket: 'traceability',
-              object_key: batch.work_order_key,
-              subfolder: `${batch._key}/${batchStep._key}/${field.custom_field_key}/${field._key}`,
-            };
-
-            // Upload new files
-            if (to_add.length) {
-              // Populate form data
-              const add_body = new FormData();
-              Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
-              to_add.forEach((file) => add_body.append('contents', file));
-              // Post files
-              try {
-                await api.post('/files', add_body);
-              } catch (error) {
-                console.error(error);
-                window.alert(error);
-              }
-            }
-
-            // Delete files
-            if (to_delete.length) {
-              try {
-                await api.delete('/files', {
-                  data: {
-                    ...target,
-                    filenames: to_delete,
-                  },
-                });
-              } catch (error) {
-                console.error(error);
-                window.alert(error);
-              }
-            }
-          });
-        await Promise.all(promises);
-      }
+      const formData = await getFormData(state, rootGetters, batchStep);
 
       const now = DT.utc();
       const event = createEvent(state, rootState.session, {
