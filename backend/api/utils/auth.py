@@ -220,3 +220,14 @@ class Queries:
       }
       INSERT session_data IN UserSession RETURN NEW
   """
+
+class EntitlementChecker:
+  def __init__(self, token_str: str = Depends(bearer_token), allow_self: bool = True, allowed_scopes: None = []):
+        self.allow_self = allow_self
+        self.allowed_scopes = allowed_scopes
+        self.token_str = token_str
+
+  def __call__(self):
+      if self.token_str:
+          return verify_token(token_str=self.token_str)
+      raise credentials_exception
