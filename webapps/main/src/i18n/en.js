@@ -749,6 +749,9 @@ export default {
   update_time: 'Update time',
   update_time_disabled: 'Available for started jobs',
   update_time_success: 'Time updated successfully',
+  pause_job: 'Pause job',
+  pause_job_success: 'Job paused successfully',
+  pause_job_disabled: 'Available for active jobs',
   user: {
     add: 'add user',
     alerts: {

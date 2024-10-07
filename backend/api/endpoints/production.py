@@ -668,6 +668,37 @@ async def get_job_data(job_key: str):
 # ----------------------------------------------------------------------
 
 
+@router.get('/work-session',
+    dependencies=[Depends(auth.verify_token)])
+async def get_job_data(job_key: str):
+
+  bind_vars = dict(job_key = job_key)
+
+  try:
+    job_data = db.aql.execute(Queries.GET_WORK_SESSION, bind_vars=bind_vars).next()
+
+  except:
+    status_code=500
+    response=dict(
+      status_code=status_code,
+      message="Couldn't retrieve data from the DB",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+
+  response=dict(
+    message=f"Retrieved session for Job/{job_key}",
+    detail=job_data
+  )
+
+  return APIResponse(**response)
+
+
+
+# ----------------------------------------------------------------------
+
+
 @router.post('/job/update',
     dependencies=[Depends(auth.verify_token)])
 async def update_jobs(job_updates:List[JobUpdate]):

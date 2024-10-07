@@ -760,6 +760,9 @@ export default {
   update_time: 'Modifica tempi',
   update_time_disabled: 'Disponibile per lavori iniziati',
   update_time_success: 'Tempo modificato con successo',
+  pause_job: 'Ferma lavoro',
+  pause_job_success: 'Lavoro fermato con successo',
+  pause_job_disabled: 'Disponibile per lavori avviati',
   user: {
     add: 'aggiungi utente',
     alerts: {

@@ -255,16 +255,22 @@ async def start_user_session(
 @router.delete("/session/{session_key}")
 async def close_user_session(
   session_key: str,
+  force: bool | None = False,
   token_str: str = Depends(auth.bearer_token)
 ):
 
   token_json = jwt.decode(token_str, auth.TOKEN_SECRET, algorithms=[auth.ALGORITHM], verify_expiration=False)
   token = TokenData(**token_json)
 
+  is_entitled = False
+  if force:
+    caller = User( **db.collection('User').get(token.consumer_key))
+    is_entitled = 'admin' in caller.scope or 'production' in caller.scope
+
   try:
     session = db.collection('UserSession').get(session_key)
     session_token_key = session['token_key']
-    if not session_token_key == token.token_key:
+    if (not session_token_key == token.token_key and not force) and (force and not is_entitled):
       raise auth.credentials_exception
 
     else:

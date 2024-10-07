@@ -138,9 +138,43 @@
                   </q-tooltip>
                 </div>
 
+                <!-- JOB FORCED PAUSE MENU -->
+                <q-btn
+                  v-if="job.active && userCanStopJob"
+                  round
+                  flat
+                  size="sm"
+                  icon="mdi-dots-horizontal"
+                  class="q-ml-sm"
+                >
+                  <q-popup-proxy>
+                    <q-list style="max-width: 400px">
+                      <q-item
+                        v-ripple
+                        v-close-popup
+                        :disable="job.stage === 'created'"
+                        :clickable="job.stage !== 'created'"
+                        @click="pauseJob(job)"
+                      >
+                        <q-item-section avatar>
+                          <q-icon name="mdi-stop-circle-outline" />
+                        </q-item-section>
+                        <q-item-section>
+                          <q-item-label>
+                            {{ $t('pause_job') }}
+                          </q-item-label>
+                          <q-item-label caption lines="2">
+                            {{ $t('pause_job_disabled') }}
+                          </q-item-label>
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-popup-proxy>
+                </q-btn>
+
                 <!-- JOB FORCED UPDATES MENU -->
                 <q-btn
-                  v-if="job.assigned_to && !job.active"
+                  v-else-if="job.assigned_to && !job.active"
                   round
                   flat
                   size="sm"
@@ -597,6 +631,10 @@ export default {
       ];
     },
 
+    userCanStopJob() {
+      return true;
+    },
+
     selected_jobs_data() {
       return this.wo_data.jobs.filter((job) =>
         this.selected_jobs.includes(job._key),
@@ -774,6 +812,35 @@ export default {
         seconds: duration.seconds ?? 0,
       };
       this.edit_job_time = job_data._key;
+    },
+
+    async pauseJob(job_data) {
+      const resp = await this.$api.get('work-session', {
+        params: { job_key: job_data._key },
+      });
+
+      let userSessionKey = resp?.data?.detail?.user_session_key;
+      if (userSessionKey) {
+        this.$api.delete(`/session/${userSessionKey}`, {
+          params: { force: true },
+        });
+      }
+
+      console.log(resp);
+      this.$store
+        .dispatch('forcePauseJob', { job: job_data })
+        .then(async () => {
+          await this.$store.dispatch('loadWorkOrderData', this.wo_data._key);
+          this.$q.notify({
+            message: this.$t('pause_job_success'),
+            color: 'theme-green',
+            timeout: 1500,
+            position: 'top',
+          });
+        })
+        .catch((err) => {
+          window.alert(err);
+        });
     },
 
     async editJobProgress(job_data) {

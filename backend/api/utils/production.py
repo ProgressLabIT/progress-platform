@@ -91,6 +91,19 @@ class Queries:
   """
 
 
+  GET_WORK_SESSION = """
+    LET ws_key = FIRST(
+      FOR j IN Job
+      FILTER j._key == @job_key
+      RETURN j.last_work_session_started
+    )
+
+    LET ws = Document('WorkSession', ws_key)
+
+    RETURN ws
+  """
+
+
   REORDER_JOB_QUEUES = """
     LET wo_queue = (
       FOR q1 IN Queue

@@ -170,9 +170,12 @@ function getClosedWorkSessionData(state, endDT) {
   return work_session;
 }
 
-function sendHeartBeat(state) {
+async function sendHeartBeat(state) {
   const job_key = state.working_job_data._key;
-  api.post(`/job/${job_key}/heartbeat`);
+  const hb_resp = await api.post(`/job/${job_key}/heartbeat`);
+  if (hb_resp.response?.status === 401) {
+    clearInterval(state.heartbeat);
+  }
 }
 
 /** @type {import('vuex').Module} */
@@ -406,6 +409,27 @@ const traceability = {
       await api.post('event', event);
       commit('CLOSE_WORK_SESSION', work_session);
       commit('SET_HEARTBEAT', false);
+    },
+
+    async forcePauseJob({ state, rootState }, { job }) {
+      const now = DT.utc();
+
+      let event = createEvent(state, rootState.session, {
+        event_type: 'JOB_PAUSED',
+        timestamp: now.toISO(),
+      });
+
+      event = {
+        ...event,
+        job_key: job._key,
+        product_key: job.product_key,
+        work_order_key: job.wo_key,
+        phase_key: job.phase_key,
+        active_batch_key: job.active_batch_key,
+        project_code: job.project_code,
+      };
+
+      await api.post('event', event);
     },
 
     async resumeJob({ commit, state, rootState }, { batch_serials }) {
