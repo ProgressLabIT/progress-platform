@@ -505,15 +505,17 @@ class ProductionActivityEvent(BaseEvent):
 
       if (len(self.info.form_data) > 0):
         self.store_form_data(completed_batch_qt=completed_batch_qt, form_data=self.info.form_data)
-      if (len(batch_execution_data) > 0):
+      elif (len(batch_execution_data) > 0):
         self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
 
     elif (self.job.traceability_level is not None):
       # update batch serials data
       if (len(self.info.form_data) > 0):
         self.store_form_data(completed_batch_qt=completed_batch_qt, form_data=self.info.form_data)
-      if (len(batch_execution_data) > 0):
+      elif (len(batch_execution_data) > 0):
         self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
+
+
       self.finalize_batch_serial(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
 
     self.info.completed_batch_key = self.job.active_batch_key

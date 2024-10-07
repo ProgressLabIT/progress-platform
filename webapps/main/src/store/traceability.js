@@ -630,10 +630,10 @@ const traceability = {
       }
     },
 
-    declareBatch({ commit, state, rootState }, { batch_qt }) {
+    declareBatch({ commit, state, rootState }, { batch_qt, send_step_data }) {
       return new Promise((resolve) => {
         let formData = [];
-        if (state.current_batch_data?.step_data) {
+        if (send_step_data && state.current_batch_data?.step_data) {
           for (const batchStep of state.current_batch_data.step_data) {
             formData = formData.concat(cloneDeep(batchStep.form_data));
           }

@@ -526,6 +526,7 @@ export default {
       if (can_proceed) {
         await this.$store.dispatch('declareBatch', {
           batch_qt: this.job.active_batch_qt,
+          send_step_data: !this.job.parameters.step_check,
         });
 
         //if (this.traceability_enabled && !this.job.first_phase) {

@@ -25,7 +25,8 @@ class DelayedQueueItem:
     def __eq__(self, other) -> bool:
         if not isinstance(other, DelayedQueueItem):
             raise ValueError("comparison should be made between same types")
-        return self.item == other.item and self.key == other.key
+        #return self.item == other.item and self.key == other.key
+        return self.key == other.key
 
     def __repr__(self) -> str:
         return f"""(Item: {self.item}, Delay: {self.delay}, Time Func: {self.time_func}, Next Execution Time: {self.target_time})"""
