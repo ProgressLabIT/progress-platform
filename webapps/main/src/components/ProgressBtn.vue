@@ -262,7 +262,7 @@ export default {
         const data = step_data.form_data?.find(
           ({ form_field_key }) => form_field_key === field_key,
         );
-        if (data?.value) {
+        if (data) {
           return data?.value;
         }
       }
