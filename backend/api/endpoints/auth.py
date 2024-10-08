@@ -145,7 +145,7 @@ async def verify_user_password(
 
 @router.get('/whoami')
 async def get_current_user(
-  token: TokenData = Depends(auth.EntitlementChecker())
+  token: TokenData = auth.Permission("view", get_item))
 ):
   credentials_exception = HTTPException(
         status_code=401,
