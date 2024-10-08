@@ -632,7 +632,10 @@ export default {
     },
 
     userCanStopJob() {
-      return true;
+      return (
+        this.$store.getters.hasPermission('production') ||
+        this.$store.getters.hasPermission('admin')
+      );
     },
 
     selected_jobs_data() {
