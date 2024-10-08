@@ -1,0 +1,44 @@
+import { date } from 'quasar';
+
+export function calculateNextResetDate({ reset_period }) {
+  function nextweek() {
+    var d = new Date();
+    d.setDate(d.getDate() + ((1 + 7 - d.getDay()) % 7));
+    return d;
+  }
+
+  function nextmonth() {
+    var d = new Date();
+    if (d.getMonth() == 11) {
+      return new Date(d.getFullYear() + 1, 0, 1);
+    } else {
+      return new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    }
+  }
+
+  function nextyear() {
+    var d = new Date();
+    return new Date(d.getFullYear() + 1, 0, 1);
+  }
+
+  function formatResetDate(d) {
+    return date.formatDate(d, 'YYYY/MM/DD');
+  }
+
+  function calculateResetDate() {
+    switch (reset_period) {
+      case '%w':
+        return formatResetDate(nextweek());
+      case '%m':
+        return formatResetDate(nextmonth());
+      case '%y':
+        return formatResetDate(nextyear());
+      default:
+        return null;
+    }
+  }
+
+  const resetDate = calculateResetDate();
+
+  return { resetDate };
+}

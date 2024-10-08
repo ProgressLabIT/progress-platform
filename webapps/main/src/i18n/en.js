@@ -933,4 +933,7 @@ export default {
     },
   },
   serial_code_to_be_assigned: 'Code to be assigned',
+  year: 'Year',
+  month: 'Month',
+  week: 'Week',
 };

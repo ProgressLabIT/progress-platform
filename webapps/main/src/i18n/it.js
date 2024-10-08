@@ -949,4 +949,7 @@ export default {
     },
   },
   serial_code_to_be_assigned: 'Codice da assegnare',
+  year: 'Anno',
+  month: 'Mese',
+  week: 'Settimana',
 };

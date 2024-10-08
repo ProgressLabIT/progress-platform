@@ -28,12 +28,33 @@
 
           <!-- Frequency -->
           <div class="col-4">
-            <q-input
+            <!--<q-input
               v-model="temp_data.frequency"
               filled
               :label="$t('frequency')"
               :disable="!editMode"
               stack-label
+            />-->
+
+            <!--<q-select
+              v-model="temp_data.frequency"
+              filled
+              :rules="[(value) => !!value || $t('field_required_alert')]"
+              :options="[$t('year'), $t('month'), $t('week')]"
+              :label="$t('frequency')"
+              class="q-mt-md"
+              :disable="!editMode"
+              @update:model-value="(selection) => calculateResetDate(selection)"
+            />-->
+            <q-select
+              v-model="temp_data.frequency"
+              filled
+              :rules="[(value) => !!value || $t('field_required_alert')]"
+              :options="[$t('year'), $t('month'), $t('week')]"
+              :label="$t('frequency')"
+              class="q-mt-md"
+              :disable="!editMode"
+              @update:model-value="(selection) => refreshResetDate(selection)"
             />
           </div>
 
@@ -44,8 +65,7 @@
               filled
               mask="date"
               :label="$t('reset_date')"
-              :rules="['date']"
-              :disable="!editMode"
+              disable
             >
               <template #append>
                 <q-icon name="mdi-calendar" class="cursor-pointer">
@@ -137,6 +157,7 @@ import BaseActionCard from '@/components/BaseActionCard.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 import TemplateSelect from '@/components/settings/counters/TemplateSelect.vue';
+import { calculateNextResetDate } from '@/lib/dateUtils';
 
 export default {
   name: 'CounterDetail',
@@ -200,11 +221,45 @@ export default {
   },
 
   methods: {
+    refreshResetDate(reset_period) {
+      this.temp_data.reset_date = calculateNextResetDate({
+        reset_period: this.getFrequency(reset_period),
+      }).resetDate;
+    },
+
+    getFrequencyExt(reset_period) {
+      switch (reset_period) {
+        case '%w':
+          return this.$t('week');
+        case '%m':
+          return this.$t('month');
+        case '%y':
+          return this.$t('year');
+        default:
+          return undefined;
+      }
+    },
+
+    getFrequency(reset_period) {
+      switch (reset_period) {
+        case this.$t('week'):
+          return '%w';
+        case this.$t('month'):
+          return '%m';
+        case this.$t('year'):
+          return '%y';
+        default:
+          return undefined;
+      }
+    },
+
     initTempCounterData() {
       if (this.counter) {
         Object.keys(this.temp_data).forEach(
           (k) => (this.temp_data[k] = this.counter[k]),
         );
+        this.temp_data.frequency = this.getFrequencyExt(this.counter.frequency);
+        this.refreshResetDate(this.temp_data.frequency);
         this.template_model = this.counter.template;
       }
     },
@@ -213,11 +268,13 @@ export default {
       this.saving = true;
       const data = {
         name: this.temp_data.name,
-        frequency: this.temp_data.frequency,
+        frequency: this.getFrequency(this.temp_data.frequency),
         template: this.template_model,
         next_tick: this.temp_data.next_tick,
         reset_date: date.formatDate(
-          this.temp_data.reset_date,
+          calculateNextResetDate({
+            reset_period: this.getFrequency(this.temp_data.frequency),
+          }).resetDate,
           'YYYY-MM-DDTHH:mm:ss.SSSZ',
         ),
       };
