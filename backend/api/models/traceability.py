@@ -79,8 +79,7 @@ class WorkSession(FlexModel):
 
   @field_validator('duration', mode="before")
   def truncate_duration(cls, v) -> int:
-    if type(v) == float:
-      return int(v)
+    return int(v) if type(v) == float else v
 
 class WIP(ArangoEdge):
   # _from & _to refer to process phases or specific jobs
