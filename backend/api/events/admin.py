@@ -40,7 +40,7 @@ class ProductionAdminEvent(BaseEvent):
   # =====================================================================================
   # UTILITIES
   # =====================================================================================
-  
+
   def flag_job_as_forced(self):
     job_update = dict(_key=self.info.job_key, forced=self.info.id)
     self.tx.collection('Job').update(job_update)
@@ -101,7 +101,8 @@ class ProductionAdminEvent(BaseEvent):
 
     for b in job_batches:
       try:
-        batch_quota = b.qt_total / self.job.qt_completed
+        # Consider also the active batch
+        batch_quota = b.qt_total / (self.job.qt_completed + self.job.active_batch_qt)
       # Handle cases where there's active quantity but no completed quantity
       except ZeroDivisionError:
         batch_quota = 1
@@ -251,7 +252,7 @@ class ProductionAdminEvent(BaseEvent):
 
     if self.job.active_batch_qt:
       raise JobHasActiveBatchError("You can't override progress if the job has an active batch. Cancel the current batch first.")
-    
+
     if self.job.traceability_level:
       raise QuantityOverrideForSerialsNotAllowed("You can't override progress with traceability enabled, you can reset the job instead.")
 
@@ -645,9 +646,9 @@ class ProductionAdminEvent(BaseEvent):
           phase_keys = [self.job.phase_key]
         )
       )
-    elif self.job.traceability_level: 
+    elif self.job.traceability_level:
       # self.job.first_phase = True
-      # Remove incomplete serials and the relative link. 
+      # Remove incomplete serials and the relative link.
       # TODO: use a named graph to avoid deleting links explicitly
       self.tx.aql.execute("""
         FOR serial IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
@@ -659,13 +660,13 @@ class ProductionAdminEvent(BaseEvent):
       # Remember that serials documents have already been removed
       serials_cursor = self.tx.aql.execute("""
         FOR s, bs IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
-        REMOVE bs IN batch_serial                 
+        REMOVE bs IN batch_serial
         LET removed = OLD
         RETURN PARSE_IDENTIFIER(OLD._to).key
       """, bind_vars=dict(batch_key=batch_key))
 
       batch_serial_keys = [serial_key for serial_key in serials_cursor]
-      
+
       self.tx.aql.execute(
         SerialQueries.REMOVE_PHASE_DATA_FROM_SERIALS,
         bind_vars = dict(
@@ -710,9 +711,9 @@ class ProductionAdminEvent(BaseEvent):
       FILTER b.job_key == @job_key
       UPDATE b WITH { canceled: @event_key } IN Batch
       LET updated = NEW
-      RETURN updated._key                                             
+      RETURN updated._key
     """, bind_vars = dict(
-      job_key = self.job.key, 
+      job_key = self.job.key,
       event_key = self.info.id
     ))
     job_batch_keys = [b for b in job_batches_cursor]
@@ -741,7 +742,7 @@ class ProductionAdminEvent(BaseEvent):
       # Check all serials are available in the phase buffer downstream
       wip_serials_count = self.tx.aql.execute("""
         FOR w IN wip
-        FILTER 
+        FILTER
           w.serial_key IN @job_serial_keys
           AND w._from == CONCAT('Phase/', @phase_key)
         RETURN 1
