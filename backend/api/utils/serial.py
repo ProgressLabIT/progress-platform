@@ -105,6 +105,7 @@ class Queries:
       (@wo_key? s.wo_key == @wo_key: true)
       && (@product_key? s.product_key == @product_key: true)
       && (@search ? CONTAINS(LOWER(s.code), LOWER(@search)) : true)
+      && (@include_unreleased ? true : s.released != null)
       && (@batch_key ? s._key IN batch_serials : true)
 
       LET used = (

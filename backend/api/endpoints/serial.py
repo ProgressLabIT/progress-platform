@@ -207,6 +207,7 @@ def get_serial_selection(
   product_key: str | None = None,
   batch_key: str | None = None,
   filter_used: bool = False,
+  include_unreleased: bool = False,
   limit: int = 100
 ):
   all_serials = []
@@ -216,7 +217,8 @@ def get_serial_selection(
       product_key = product_key,
       batch_key = batch_key,
       limit = limit,
-      filter_used = filter_used
+      filter_used = filter_used,
+      include_unreleased = include_unreleased
     ))]:
     if serial['code']:
       all_serials.append(dict(
