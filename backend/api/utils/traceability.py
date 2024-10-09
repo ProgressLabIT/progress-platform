@@ -57,7 +57,10 @@ class Queries:
       LET step_data = KEEP(step, '_key', 'type')
       LET execution_data = FIRST(
         FOR s IN StepExecutionData
-        FILTER s.batch_key == batch._key && s.step_key == step._key
+        FILTER
+          s.batch_key == batch._key
+          && s.step_key == step._key
+          && !s.canceled
         RETURN KEEP(s, 'status', 'form_data')
       )
       LET step_done = execution_data ? execution_data.status == 'done' : false
@@ -76,7 +79,10 @@ class Queries:
   GET_BATCH_STEP_DONE_COUNT = """
     LET step_count = COUNT(
       FOR s IN StepExecutionData
-      FILTER s.batch_key == @batch_key && s.status == @status
+      FILTER
+        s.batch_key == @batch_key
+        && s.status == @status
+        && !s.canceled
       RETURN DISTINCT s.step_key
     )
     RETURN step_count
@@ -191,7 +197,10 @@ class Queries:
       LET step_progress_value = current_batch_total_value / LENGTH(j.step_sequence)
       LET step_done_count = SUM(
         FOR s IN StepExecutionData
-        FILTER s.batch_key == j.current_batch && s.status == 'done'
+        FILTER
+          s.batch_key == j.current_batch
+          && s.status == 'done'
+          && !s.canceled
         RETURN 1
       )
       RETURN step_progress_value * step_done_count

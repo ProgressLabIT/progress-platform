@@ -330,7 +330,8 @@ class ProductionActivityEvent(BaseEvent):
   STEP_EDITED = EventMeta(
     collections=production_collections + ['Counter'],
     action='edit_step',
-    post_processing=production_post_processing
+    post_processing=production_post_processing,
+    event_first = True
   )
 
   def edit_step(self):
@@ -342,16 +343,20 @@ class ProductionActivityEvent(BaseEvent):
       self.work_session = self.get_current_work_session()
       self.info.work_session_key = self.work_session.key
 
+    # Flag record as canceled
+    match = dict(job_key = self.job.key, step_key = self.info.step_key, canceled=None)
+    update = dict(canceled = self.info.id)
+    step_data = self.tx.collection('StepExecutionData').update_match(match, update)
 
-    # Create StepExecutionData record
+    # Create new StepExecutionData record
     step_data = StepExecutionData(**vars(self.info))
+    step_data.batch_key = self.info.active_batch_key
+    step_data.status = StepStatus.DONE
+    step_data.modified = self.info.id
+    step_data.completed = self.info.timestamp
+    self.tx.collection('StepExecutionData').insert(step_data)
 
-    match = dict(job_key = step_data.job_key, step_key = step_data.step_key)
-    update = dict(form_data = step_data.form_data, modified = self.info.timestamp)
-
-    self.tx.collection('StepExecutionData').update_match(match, update)
-
-
+    # Set response
     self.response = dict(
       message = f"Step edited for batch {self.info.active_batch_key}",
       job_data = self.job,

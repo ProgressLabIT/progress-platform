@@ -629,7 +629,7 @@ class ProductionAdminEvent(BaseEvent):
     self.tx.collection('Batch').update(batch_update)
 
     # Cancel StepExecutionData & WorkSession records
-    match = dict(batch_key = batch_key)
+    match = dict(batch_key = batch_key, canceled = None)
     update = dict(canceled = self.info.id)
     self.tx.collection('StepExecutionData').update_match(match, update)
     self.tx.collection('WorkSession').update_match(match, update)
@@ -801,7 +801,7 @@ class ProductionAdminEvent(BaseEvent):
       raise WipNotAvailableError("You can't reset the job because its output is being worked on in following phases. Reset those jobs first.")
 
     # Cancel StepExecutionData and WorkSession records
-    match = dict(job_key = self.info.job_key)
+    match = dict(job_key = self.info.job_key, canceled = None)
     update = dict(canceled = self.info.id)
     self.tx.collection('StepExecutionData').update_match(match, update)
     self.tx.collection('WorkSession').update_match(match, update)
