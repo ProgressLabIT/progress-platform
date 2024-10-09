@@ -1,5 +1,5 @@
 <template>
-  <div class="column q-px-md q-pb-sm fit">
+  <div class="column q-px-md fit">
     <!-- HEADER -->
     <div class="row items-center">
       <div
@@ -14,14 +14,15 @@
       <q-input
         v-else
         v-model="serial.code"
+        dense
         filled
         :label="$t('serial.code')"
-        size="70"
         class="input-uppercase"
       >
       </q-input>
 
       <q-space></q-space>
+
       <q-btn
         v-if="isAvailable"
         flat
@@ -34,7 +35,8 @@
       </q-btn>
     </div>
 
-    <div class="row q-mt-sm q-col-gutter-lg items-center text-h6">
+    <!-- SUB HEADER -->
+    <div class="row q-pt-md q-col-gutter-lg items-center text-h6">
       <div class="col-auto text-h5 text-low text-uppercase">
         {{ $t('creation_date') }}
       </div>
@@ -51,74 +53,85 @@
       </div>
     </div>
 
-    <!-- FORM DATA -->
-    <div class="col-auto text-h5 text-uppercase text-low q-mt-lg">
-      {{ $t('serial_data') }}
-    </div>
+    <!-- SERIAL DATA -->
+    <q-tabs
+      v-model="tab"
+      dense
+      class="q-mt-md text-low"
+      content-class="text-h5"
+      indicator-color="theme-blue"
+      align="left"
+      active-class="text-high weight-bold"
+    >
+      <q-tab name="form" :label="$t('serial_data')" class="text-left" />
+      <q-tab name="history" :label="$t('history')" />
+    </q-tabs>
 
-    <template v-if="serial.data.length > 0">
-      <div class="column col scroll q-py-md q-mb-md">
-        <FormField
-          v-for="field in serial.data"
-          :key="field._key"
-          :field="field"
-          :root-path="`/media/serial/${serial_key}`"
-          :disable="!(edit_mode && can_edit)"
-          @update="field.value = $event"
-        />
-      </div>
-    </template>
-    <div v-else class="col-auto text-italic">No data</div>
+    <q-card square class="col surface2 scroll">
+      <q-tab-panels v-model="tab" class="transparent">
+        <!-- SERIAL FORM DATA -->
+        <q-tab-panel name="form">
+          <template v-if="serial.data.length > 0">
+            <div class="column col scroll q-pt-sm">
+              <FormField
+                v-for="field in serial.data"
+                :key="field._key"
+                :field="field"
+                :root-path="`/media/serial/${serial_key}`"
+                :disable="!(edit_mode && can_edit)"
+                @update="field.value = $event"
+              />
+            </div>
+          </template>
+          <div v-else class="col-auto text-italic">No data</div>
+        </q-tab-panel>
 
-    <q-space />
+        <!-- ISSUE EVENTS -->
+        <q-tab-panel name="history">
+          <q-list class="q-pl-xl col scroll q-pb-lg">
+            <q-item
+              v-for="(e, index) in history"
+              :key="e._key"
+              class="q-mt-md relative-position row justify-between full-width items-baseline"
+            >
+              <!-- TIMELINE DOT & THREAD -->
+              <div
+                style="
+                  position: absolute;
+                  left: -30px;
+                  top: 13px;
+                  height: 100%;
+                  width: 32px;
+                "
+              >
+                <div class="column full-height">
+                  <div class="dot"></div>
+                  <div v-if="index < history.length - 1" class="thread"></div>
+                </div>
+              </div>
 
-    <!-- ISSUE EVENTS -->
-    <div class="row items-center q-pl-lg">
-      <div class="col-auto text-h5 weight bold text-uppercase text-low">
-        {{ $t('history') }}
-      </div>
-      <div class="col">
-        <q-separator inset />
-      </div>
-    </div>
+              <!-- TIMESTAMP -->
+              <q-item-section
+                class="text-italic q-pr-sm"
+                style="max-width: 200px"
+              >
+                {{ getHumanDate(e.timestamp) }}
+              </q-item-section>
 
-    <q-list class="q-ml-lg q-px-xl col scroll q-pb-lg">
-      <q-item
-        v-for="(e, index) in history"
-        :key="e._key"
-        class="q-mt-md relative-position row justify-between full-width items-baseline"
-      >
-        <!-- TIMELINE DOT & LINE -->
-        <div
-          style="
-            position: absolute;
-            left: -30px;
-            top: 13px;
-            height: 100%;
-            width: 32px;
-          "
-        >
-          <div class="column full-height">
-            <div class="dot"></div>
-            <div v-if="index < history.length - 1" class="thread"></div>
-          </div>
-        </div>
+              <!-- EVENT TYPE -->
+              <q-item-section class="text-h4 highlight text-uppercase">
+                {{ $t(`events.${e.event_type}`) }}
+              </q-item-section>
 
-        <!-- EVENT TYPE -->
-        <q-item-section class="text-italic">
-          {{ getHumanDate(e.timestamp) }}
-        </q-item-section>
-        <q-item-section class="text-h4 highlight text-uppercase">
-          {{ $t(`events.${e.event_type}`) }}
-        </q-item-section>
-        <q-space />
-        <q-item-section>
-          <BaseUserAvatar name_first :user="getUserData(e)" />
-        </q-item-section>
-      </q-item>
-    </q-list>
-
-    <q-space />
+              <!-- EVENT USER -->
+              <q-item-section class="col-auto">
+                <BaseUserAvatar name_first :user="getUserData(e)" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-tab-panel>
+      </q-tab-panels>
+    </q-card>
   </div>
 </template>
 
@@ -163,6 +176,7 @@ export default {
 
   data() {
     return {
+      tab: 'form',
       history: [],
       loading: false,
       recording: false,
@@ -346,7 +360,7 @@ export default {
   width: 13px
   border-radius: 100%
   background-color: #888
-  border: 5px solid var(--surface-1)
+  border: 5px solid var(--surface-2)
   box-sizing: content-box
   z-index:99
 

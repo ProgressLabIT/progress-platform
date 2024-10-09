@@ -1,8 +1,8 @@
 <template>
   <div v-if="!mini_state" class="q-pa-md q-gutter-sm">
     <q-tree
-      ref="serialNodes"
       id="serial-tree"
+      ref="serialNodes"
       v-model:selected="selected"
       :nodes="nodes"
       node-key="key"
@@ -20,7 +20,7 @@
             :class="{
               'text-disabled': prop.node.replaced && prop.node.key !== selected,
               'text-weight-bold text-high': prop.node.key === selected,
-              'text-primary': !prop.node.replaced && prop.node.key !== selected,
+              'text-low': !prop.node.replaced && prop.node.key !== selected,
             }"
           >
             {{ prop.node.product_code }}
@@ -291,6 +291,7 @@ export default {
   },
 };
 </script>
+
 <style lang="sass">
 #serial-tree .q-tree__node-body
   padding-top: 0px !important
