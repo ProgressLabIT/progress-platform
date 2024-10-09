@@ -40,4 +40,7 @@ class NotificationManager:
     self.delayed_queue.put(subtopic, message, delay)
 
   def notifyGlobalRefresh(self):
-      self.delayed_enqueue("global-notification", json.dumps({ "subtopic": "global-notification", "notification" : "REFRESH" }), 5)
+      self.notifyConflated("global-notification", json.dumps({ "subtopic": "global-notification", "notification" : "REFRESH" }), 5)
+
+  def notifyConflated(self, subtopic, message, delay):
+      self.delayed_enqueue(subtopic, message, delay)

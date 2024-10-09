@@ -19,6 +19,7 @@ class EventType(str, Enum):
   JOB_BACK_ONLINE = 'JOB_BACK_ONLINE'
   ACTIVE_BATCH_CHANGED = 'ACTIVE_BATCH_CHANGED'
   STEP_COMPLETED = 'STEP_COMPLETED'
+  STEP_EDITED = 'STEP_EDITED'
   BATCH_COMPLETED = 'BATCH_COMPLETED'
   JOB_RESET = 'JOB_RESET'
 
@@ -88,6 +89,7 @@ class EventModel(ArangoDocument):
   should_adjust_duration: bool | None = None
 
   # Traceability fields
+  serial_key: Any | None = None
   serial_data: Any | None = None
   batch_serials: Set[str] | None = None # prevent duplicated entries from client
   serial_link_data: list[SerialLink] | None = None

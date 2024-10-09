@@ -98,6 +98,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
@@ -115,6 +116,10 @@ export default {
 
   props: {
     show: {
+      type: Boolean,
+      default: true,
+    },
+    traceability_enabled: {
       type: Boolean,
       default: true,
     },
@@ -154,6 +159,10 @@ export default {
   },
 
   computed: {
+    ...mapState({
+      faked_batch_serials: (state) =>
+        state.traceability.current_batch_faked_serials,
+    }),
     session_data() {
       return this.$store.state.session;
     },
@@ -164,7 +173,11 @@ export default {
       return this.bom_line.component_key;
     },
     component_per_product() {
-      return this.bom_line.qt;
+      if (this.traceability_enabled) {
+        return this.bom_line.qt;
+      } else {
+        return this.bom_line?.batch_qt;
+      }
     },
   },
 
@@ -172,8 +185,13 @@ export default {
     show: {
       handler() {
         this.initFormData();
-        if (this.show) {
+        if (!this.show) {
+          return;
+        }
+        if (this.traceability_enabled) {
           this.getBatchSerials();
+        } else {
+          this.fakeBatchSerials();
         }
       },
     },
@@ -192,6 +210,19 @@ export default {
       });
 
       this.batch_serials = batch_serials;
+      this.fillInitialData();
+
+      this.loading = false;
+    },
+
+    async fakeBatchSerials() {
+      this.loading = true;
+
+      await this.$store.dispatch('fakeBatchSerials', {
+        batch_key: this.batch_key,
+      });
+
+      this.batch_serials = this.faked_batch_serials;
       this.fillInitialData();
 
       this.loading = false;

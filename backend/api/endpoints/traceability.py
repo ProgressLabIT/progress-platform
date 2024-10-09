@@ -70,6 +70,7 @@ async def apply_production_event(data: EventModel):
     dependencies=[Depends(auth.verify_token)])
 async def get_events(
   issue_key: str | None = None,
+  serial_key: str | None = None,
   job_key: str | None = None,
   work_order_key: str | None = None,
   time_from: datetime | None = None,
@@ -78,6 +79,7 @@ async def get_events(
 ):
   bind_vars = dict(
     issue_key = issue_key,
+    serial_key = serial_key,
     job_key = job_key,
     work_order_key = work_order_key,
     time_from = time_from,

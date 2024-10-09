@@ -55,7 +55,7 @@
           {{ $t('serial_field.noData') }}
         </q-item-section>
       </q-item>
-      <q-item v-else-if="inputValue.length < minChars">
+      <q-item v-else-if="inputValue?.length < minChars">
         <q-item-section class="text-low">
           {{ $t('serial_field.noData_min_char', { minChars }) }}
         </q-item-section>
@@ -90,15 +90,15 @@
           }}
         </q-item-section>
       </q-item>
+      <SerialForm
+        :show="create_serial_form"
+        :auto_link_product="product_key"
+        mode="new"
+        :force_serial_code="inputValue"
+        @close="closeCreateForm"
+      >
+      </SerialForm>
     </template>
-    <SerialForm
-      :show="create_serial_form"
-      :auto_link_product="product_key"
-      mode="new"
-      :force_serial_code="inputValue"
-      @close="closeCreateForm"
-    >
-    </SerialForm>
   </q-select>
 </template>
 

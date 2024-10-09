@@ -25,7 +25,7 @@
     <template #content>
       <q-splitter
         v-model="data_column_width"
-        class="fit q-py-sm"
+        class="fit q-pt-sm"
         separator-class="text-disabled"
       >
         <template #before>
@@ -49,7 +49,7 @@
                   :edit_mode="editMode"
                 />
               </div>
-              <div class="col-auto row q-gutter-md q-px-md justify-end">
+              <div class="col-auto row q-gutter-md q-px-md q-pt-md justify-end">
                 <q-btn
                   v-if="!editMode && can_edit"
                   color="theme-orange"
@@ -139,7 +139,6 @@ export default {
 
   setup() {
     const { config } = useConfigStore();
-
     return {
       config,
     };

@@ -4,7 +4,7 @@ from api_auth_manager import APIAuthManager
 client = httpx.Client()
 
 #APIAuthManager.getInstance().authenticate('http://localhost:8000', username='simone', pwd='simone')
-APIAuthManager.getInstance().setAPIToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiYTU5ZWFlMjAxYTkiLCJzdWIiOiIyOTIxMjQxNCIsImN0eXAiOiJ1c2VyIiwiaWF0IjoxNzI3NzA1NDU3LCJleHAiOjQ4ODM0NjU0NTcsImN0eCI6InNlc3Npb24ifQ.TUwe9KPFG6Zn31TlO0i8XMqNK23hk-IKAYhv7EG5AxA')
+APIAuthManager.getInstance().setAPIToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzBiZTNkZGQ4ZDYiLCJzdWIiOiIyOTY4MjYxMyIsImN0eXAiOiJ1c2VyIiwiaWF0IjoxNzI3ODg5NTQ3LCJleHAiOjE3NjA0ODY0MDAsImN0eCI6InNlc3Npb24ifQ.YzZ4cIY91Wm3E8YdMxcCJ5IxErJG-BPSx7ctDGuDEWs')
 
 response = client.get('http://localhost:8000/api/whoami', headers=APIAuthManager.getInstance().getAuthHeader())
 print(response.json())

@@ -36,6 +36,12 @@ class Queries:
       RETURN MERGE(serial, { childs: childs })
   """
 
+  GET_ALL_COMPONENTS_IN_BATCH = """
+    FOR linked_serial IN contains
+      FILTER linked_serial._from == @from_id
+      RETURN DOCUMENT(Serial, linked_serial._to)
+  """
+
 
   GET_SERIAL_PARENTS = """
       LET start = @serial_id

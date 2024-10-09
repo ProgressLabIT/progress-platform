@@ -43,7 +43,7 @@ async def get_department_list():
 #         API TOKEN
 # =================================
 @router.get("/api-token")
-async def get_api_token(user_token: TokenData = Depends(auth.verify_token)):
+async def get_api_token(token_description: str, token_expiration: datetime, user_token: TokenData = Depends(auth.verify_token)):
   credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
@@ -58,7 +58,7 @@ async def get_api_token(user_token: TokenData = Depends(auth.verify_token)):
 
     token, token_data = auth.issue_token(
       consumer_key = user_token.consumer_key,
-      seconds_until_expired = ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+      expiration_date=token_expiration,
       scope = user.scope,
     )
 
@@ -76,7 +76,8 @@ async def get_api_token(user_token: TokenData = Depends(auth.verify_token)):
       issued_at=token_data.issued_at,
       expires_at=token_data.expires_at,
       context=TokenContext.API,
-      signature=token_signature
+      signature=token_signature,
+      description=token_description
     )
     db.collection('Token').insert(token_record)
 

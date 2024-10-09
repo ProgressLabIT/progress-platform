@@ -237,6 +237,71 @@
             </div>
           </div>
         </q-card-section>
+
+        <!-- PRINT TEMPLATES -->
+        <q-card-section>
+          <div class="q-mt-lg col-auto">
+            <div class="text-h5 weight-bold text-uppercase">
+              {{ $t('print_templates') }}
+            </div>
+            <div class="row q-gutter-md items-center q-mt-xs">
+              <q-list class="col-shrink scroll">
+                <q-item
+                  v-for="(template, index) in product.print_templates"
+                  :key="template._key"
+                  :class="{ 'text-italic': template.temp }"
+                  @mouseenter="over_print = template._key"
+                  @mouseleave="over_print = null"
+                >
+                  <q-item-section>
+                    <q-item-label
+                      >{{ template.name }}
+                      {{
+                        template.temp
+                          ? '(' + $capitalize($t('unsaved')) + ')'
+                          : ''
+                      }}</q-item-label
+                    >
+                    <q-item-label caption>{{
+                      template.description
+                    }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <div class="row q-gutter-sm items-center">
+                      <q-btn
+                        v-show="over_print === template._key || editMode"
+                        flat
+                        round
+                        icon="mdi-file-search-outline"
+                        size="10px"
+                        @click="showTemplatePreview(template)"
+                      >
+                      </q-btn>
+                      <q-btn
+                        v-if="editMode"
+                        flat
+                        round
+                        size="10px"
+                        icon="mdi-close"
+                        class="hover-red"
+                        @click.stop="deleteTemplate(index)"
+                      >
+                      </q-btn>
+                    </div>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </div>
+          </div>
+        </q-card-section>
+
+        <BaseAutocompleteTemplate
+          v-if="editMode"
+          class="q-px-sm q-mt-md"
+          :label="$t('print_template_add')"
+          :selected="product.print_templates"
+          @select="addTemplate"
+        />
       </q-card>
 
       <!-- PRODUCTION NOTES -->
@@ -388,68 +453,6 @@
           </q-btn>
         </q-card>
       </div>
-
-      <!-- TODO: Enable after templates are being utilized somewhere -->
-      <!-- PRINT TEMPLATES -->
-      <q-card
-        v-if="false"
-        square
-        class="surface2 q-px-sm q-pt-sm q-pb-md q-mt-lg col-shrink column no-wrap"
-      >
-        <q-card-section class="text-h5 display highlight col-auto">
-          STAMPE ORDINE
-        </q-card-section>
-        <q-list class="col-shrink scroll">
-          <q-item
-            v-for="(template, index) in product.print_templates"
-            :key="template._key"
-            :class="{ 'text-italic': template.temp }"
-            @mouseenter="over_print = template._key"
-            @mouseleave="over_print = null"
-          >
-            <q-item-section>
-              <q-item-label
-                >{{ template.name }}
-                {{
-                  template.temp ? '(' + $capitalize($t('unsaved')) + ')' : ''
-                }}</q-item-label
-              >
-              <q-item-label caption>{{ template.description }}</q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <div class="row q-gutter-sm items-center">
-                <q-btn
-                  v-show="over_print === template._key || editMode"
-                  flat
-                  round
-                  icon="mdi-file-search-outline"
-                  size="10px"
-                  @click="showTemplatePreview(template)"
-                >
-                </q-btn>
-                <q-btn
-                  v-if="editMode"
-                  flat
-                  round
-                  size="10px"
-                  icon="mdi-close"
-                  class="hover-red"
-                  @click.stop="deleteTemplate(index)"
-                >
-                </q-btn>
-              </div>
-            </q-item-section>
-          </q-item>
-        </q-list>
-
-        <BaseAutocompleteTemplate
-          v-if="editMode"
-          class="q-px-sm q-mt-md"
-          :label="$t('print_template_add')"
-          :selected="product.print_templates"
-          @select="addTemplate"
-        />
-      </q-card>
 
       <!-- DOCUMENT VIEWER -->
       <MediaViewer

@@ -99,6 +99,9 @@ export default {
   deleted: 'Deleted',
   department: 'department',
   description: 'Description',
+  context: 'Context',
+  signature: 'Signature',
+  expiration: 'Expiration',
   deselect_all: 'deselect all',
   document: {
     add: 'add document | add documents',
@@ -124,6 +127,7 @@ export default {
     JOB_RESUMED: 'Job resumed',
     JOB_BACK_ONLINE: 'Session back online',
     STEP_COMPLETED: 'Step completed',
+    STEP_EDITED: 'Step edited',
     BATCH_COMPLETED: 'Piece/Batch completed',
     ISSUE_CREATED: 'Issue created',
     ISSUE_UPDATED: 'Issue updated',
@@ -133,6 +137,8 @@ export default {
     MESSAGE_UPDATED: 'Message updated',
     MESSAGE_DELETED: 'Message deleted',
     SERIAL_CREATED: 'Serial created',
+    SERIAL_UPDATED: 'Serial updated',
+    SERIAL_FINALIZED: 'Serial finalized',
     SERIAL_LINKED: 'Serial Linked',
   },
   export: 'Export',
@@ -140,6 +146,9 @@ export default {
   api_token_add: 'Add API Token',
   api_token_add_text:
     'The token will be created. Write it down because it cannot be displayed anymore after the creation.',
+  api_token_add_error_text: 'The API token cannot be created',
+  api_token_add_error_mandatory:
+    'Description and expiration date are mandatory',
   api_token_delete: 'Delete API Token',
   api_token_delete_text:
     'The token will be deleted. It will not be possible to use it for integrations anymore',

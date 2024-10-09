@@ -32,6 +32,7 @@ traceability_collections = [
 @router.delete('/reset/prod',
     dependencies=[Depends(auth.verify_token)])
 async def reset_production_and_traceability_data():
+  # TODO: Delete also all files linked to StepExecutionData
 
   try:
     tx = db.begin_transaction(write=traceability_collections)

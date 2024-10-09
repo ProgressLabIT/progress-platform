@@ -20,7 +20,7 @@ export const useConfigStore = defineStore('config', () => {
     operatorCost: 0,
     allowUnassignedJobs: true,
     allowIndependentReorderingOfJobQueues: false,
-    allowSerialDelete: true,
+    allowSerialDelete: false,
   };
 
   const isLoading = ref(true);

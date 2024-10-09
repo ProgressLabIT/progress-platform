@@ -7,9 +7,12 @@
         class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
       >
         <div class="col-3">
-          {{ $t('context') }}
+          {{ $t('expiration') }}
         </div>
-        <div class="col">
+        <div class="col-3">
+          {{ $t('description') }}
+        </div>
+        <div class="col-4">
           {{ $t('signature') }}
         </div>
       </div>
@@ -32,9 +35,12 @@
           @click="selectToken(tk._key)"
         >
           <div class="col-3">
-            {{ $capitalize(tk.context) }}
+            {{ $capitalize(formatDate(tk.expires_at)) }}
           </div>
-          <div class="col">
+          <div class="col-3">
+            {{ $capitalize(tk.description) }}
+          </div>
+          <div class="col-4">
             {{ $capitalize(tk.signature) }}
           </div>
         </div>
@@ -73,15 +79,64 @@
     <BaseDialog
       :show="show_new_api_token_form"
       :no-backdrop-dismiss="false"
-      @close="show_new_api_token_form = false"
+      @close="closeAddTokenForm"
     >
       <BaseActionCard
         :title="$t('api_token_add')"
         :save-label="$t('confirm')"
         @save="createToken"
-        @cancel="show_new_api_token_form = false"
+        @cancel="closeAddTokenForm"
       >
-        {{ $t('api_token_add_text') }}
+        <q-form ref="token-form">
+          <q-card-section>
+            {{ $t('api_token_add_text') }}
+          </q-card-section>
+          <q-card-section>
+            <q-input
+              v-model="token_description"
+              dense
+              filled
+              hide-bottom-space
+              :label="$t('description')"
+            />
+          </q-card-section>
+          <q-card-section>
+            <q-input
+              v-model="token_expiry_date"
+              dense
+              filled
+              mask="####-##-##"
+              hide-bottom-space
+              :rules="[checkDate]"
+              :label="$t('expiration')"
+            >
+              <template #append>
+                <q-icon name="mdi-calendar" class="cursor-pointer">
+                  <q-popup-proxy
+                    cover
+                    transition-show="scale"
+                    transition-hide="scale"
+                  >
+                    <q-date
+                      v-model="token_expiry_date"
+                      minimal
+                      mask="YYYY-MM-DD"
+                    >
+                      <div class="row items-center justify-end">
+                        <q-btn
+                          v-close-popup
+                          label="Close"
+                          color="primary"
+                          flat
+                        />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+          </q-card-section>
+        </q-form>
       </BaseActionCard>
     </BaseDialog>
 
@@ -120,7 +175,8 @@
 </template>
 
 <script>
-import { copyToClipboard } from 'quasar';
+import { DateTime as DT } from 'luxon';
+import { copyToClipboard, date } from 'quasar';
 import BaseActionCard from '@/components/BaseActionCard.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
@@ -163,6 +219,8 @@ export default {
       show_delete: false,
       selected_token_key: '',
       token: '',
+      token_description: '',
+      token_expiry_date: null,
     };
   },
 
@@ -178,15 +236,44 @@ export default {
         this.selected_token_key == token_key ? null : token_key;
     },
 
+    checkDate(d) {
+      return date.isValid(d);
+    },
+
     createToken() {
+      if (!this.token_description || !this.token_expiry_date) {
+        window.alert(this.$t('api_token_add_error_mandatory'));
+        return;
+      }
+
       this.show_new_api_token_form = false;
 
-      this.$api.get('api-token').then((data) => {
-        this.token = data?.data?.access_token;
-        this.$emit('reload');
-        this.selected_token_key = null;
-        this.show_new_api_token = true;
-      });
+      this.$api
+        .get('api-token', {
+          params: {
+            token_description: this.token_description,
+            token_expiration: date.formatDate(
+              this.token_expiry_date,
+              'YYYY-MM-DDTHH:mm:ss.SSSZ',
+            ),
+          },
+        })
+        .then((data) => {
+          this.token = data?.data?.access_token;
+          if (this.token) {
+            this.$emit('reload');
+            this.selected_token_key = null;
+            this.show_new_api_token = true;
+          } else {
+            this.closeAddTokenForm();
+            this.$q.notify({
+              message: this.$t('api_token_add_error_text'),
+              color: 'theme-red',
+              timeout: 1500,
+              position: 'top',
+            });
+          }
+        });
     },
 
     onClipboard() {
@@ -204,6 +291,23 @@ export default {
         this.$emit('reload');
         this.selected_token_key = null;
       });
+    },
+
+    closeAddTokenForm() {
+      this.show_new_api_token_form = false;
+      this.token_description = '';
+      this.token_expiry_date = null;
+    },
+
+    formatDate(date_string) {
+      if (!date_string) {
+        return '';
+      }
+      const exp_date = DT.fromISO(date_string);
+      if (exp_date < new Date()) {
+        return 'EXPIRED';
+      }
+      return this.$formatDateTime(date_string, this.$i18n.locale, DT.DATE_MED);
     },
   },
 };

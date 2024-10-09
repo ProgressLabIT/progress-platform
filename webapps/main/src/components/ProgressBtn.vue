@@ -1,9 +1,10 @@
 <template>
   <q-btn
+    v-if="progress_button_visible"
     v-touch-hold.mouse="progress_button.altAction"
+    :disabled="!progress_button_active"
     square
     :style="`background-color: ${progress_button_color}`"
-    :disable="!progress_button_active"
     class="fit"
     @click="handleClick"
     @dblclick="handleDoubleClick"
@@ -14,6 +15,49 @@
       </div>
       <div class="col display medium offset-1 text-left q-pr-lg">
         <span>{{ progress_button.text }}</span>
+      </div>
+    </div>
+  </q-btn>
+  <template v-else-if="edit_mode">
+    <div class="row col-4 fit">
+      <div class="col">
+        <q-btn
+          :style="`background-color: ${$theme.green}aa`"
+          square
+          height="auto"
+          class="fit"
+          @click="saveStepData"
+        >
+          <span>{{ $t('save') }}</span>
+        </q-btn>
+      </div>
+
+      <div class="col">
+        <q-btn
+          :style="`background-color: ${$theme.red}aa`"
+          square
+          height="auto"
+          class="fit"
+          @click="discardStepData"
+        >
+          <span>{{ $t('cancel') }}</span>
+        </q-btn>
+      </div>
+    </div>
+  </template>
+  <q-btn
+    v-else
+    square
+    :style="`background-color: ${$theme.blue}aa`"
+    class="fit"
+    @click="toggleStepEditMode(true)"
+  >
+    <div class="row items-center absolute-full">
+      <div class="col-1 offset-2">
+        <q-icon size="lg" name="mdi-pencil" />
+      </div>
+      <div class="col display medium offset-1 text-left q-pr-lg">
+        <span>{{ $t('edit') }}</span>
       </div>
     </div>
   </q-btn>
@@ -34,6 +78,8 @@ export default {
   data() {
     return {
       clickTimer: null,
+      bom_destination: { name: 'jobBom' },
+      step_destination: { name: 'jobSteps' },
     };
   },
 
@@ -44,6 +90,10 @@ export default {
       current_batch_serials: (state) =>
         state.traceability.current_batch_serials,
     }),
+
+    progress_button_visible() {
+      return !this.job.active || !this.current_step_done;
+    },
 
     progress_button_active() {
       return this.job.active && !this.current_step_done;
@@ -92,6 +142,17 @@ export default {
       );
 
       return currentStep?.form_fields ?? [];
+    },
+
+    current_batch_form_fields() {
+      let form_fields = [];
+      for (const step of this.job.step_sequence) {
+        for (const field of step.form_fields) {
+          form_fields.push({ ...field, step_key: step._key });
+        }
+      }
+
+      return form_fields;
     },
 
     completed_steps_count() {
@@ -146,6 +207,10 @@ export default {
         ?.traceability_level;
     },
 
+    edit_mode() {
+      return this.$store.getters.isCurrentStepEditMode();
+    },
+
     current_step_key: {
       get() {
         return this.$store.state.traceability.current_step_key;
@@ -158,6 +223,7 @@ export default {
 
   mounted() {
     this.goToNextUndoneStep();
+    this.$store.dispatch('setStepEditMode', false);
   },
 
   methods: {
@@ -189,6 +255,19 @@ export default {
       );
 
       return data?.value ?? null;
+    },
+
+    batch_field_value(field_key) {
+      for (const step_data of this.batch_data) {
+        const data = step_data.form_data?.find(
+          ({ form_field_key }) => form_field_key === field_key,
+        );
+        if (data) {
+          return data?.value;
+        }
+      }
+
+      return null;
     },
 
     batchSerialToSerial(batch_serials) {
@@ -301,8 +380,7 @@ export default {
       return has_bom && !all_serials_filled_in;
     },
 
-    async completeStep() {
-      // Check all fields are either not mandatory or if it is, the value is existing
+    ensureMandatoryFields() {
       const all_mandatory_fields_filled = this.current_step_form_fields.every(
         (field) => {
           const value = this.field_value(field._key);
@@ -319,8 +397,13 @@ export default {
           return field_not_mandatory || field_filled_in;
         },
       );
+      return all_mandatory_fields_filled;
+    },
 
-      if (!all_mandatory_fields_filled) {
+    async completeStep() {
+      // Check all fields are either not mandatory or if it is, the value is existing
+
+      if (!this.ensureMandatoryFields()) {
         window.alert(this.$t('fill_mandatory_fields'));
         return;
       }
@@ -331,8 +414,9 @@ export default {
 
       if (current_step_was_last) {
         const missing_serials = this.checkMissingSerials();
-        if (missing_serials && this.traceability_enabled) {
+        if (missing_serials) {
           window.alert(this.$t('batch_declare_component_serials'));
+          this.$router.push(this.bom_destination);
           return;
         }
 
@@ -386,8 +470,42 @@ export default {
       let can_proceed = true;
       const current_batch_was_last = this.current_batch_is_last;
 
-      if (this.checkMissingSerials() && this.traceability_enabled) {
+      let mandatory_step_missed = undefined;
+
+      if (!this.job.parameters.step_check) {
+        const all_mandatory_fields_filled =
+          this.current_batch_form_fields.every((field) => {
+            const value = this.batch_field_value(field._key);
+            const type = this.$store.getters.getCustomFieldByKey(
+              field.custom_field_key,
+            )?.type;
+            const field_not_mandatory = !field.mandatory;
+            const field_filled_in =
+              type === 'ternary'
+                ? // ternary field can be true or false, but must be filled in
+                  [true, false].includes(value)
+                : // All other values must not be false, null/undefined or empty string.
+                  !!value;
+            let field_ok = field_not_mandatory || field_filled_in;
+            if (!field_ok) {
+              mandatory_step_missed = field.step_key;
+            }
+            return field_ok;
+          });
+
+        if (!all_mandatory_fields_filled) {
+          window.alert(this.$t('fill_mandatory_fields'));
+          if (mandatory_step_missed) {
+            this.$router.push(this.step_destination);
+            this.goToMissingMandatoryFieldStep(mandatory_step_missed);
+          }
+          return;
+        }
+      }
+
+      if (this.checkMissingSerials()) {
         window.alert(this.$t('batch_declare_component_serials'));
+        this.$router.push(this.bom_destination);
         return;
       }
 
@@ -408,6 +526,7 @@ export default {
       if (can_proceed) {
         await this.$store.dispatch('declareBatch', {
           batch_qt: this.job.active_batch_qt,
+          send_step_data: !this.job.parameters.step_check,
         });
 
         //if (this.traceability_enabled && !this.job.first_phase) {
@@ -496,6 +615,31 @@ export default {
 
       console.warn('No steps found, cannot go to any step');
       this.$store.dispatch('goToStep', undefined);
+    },
+
+    goToMissingMandatoryFieldStep(step_key) {
+      this.$store.dispatch('goToStep', step_key);
+      return;
+    },
+
+    async saveStepData() {
+      if (!this.ensureMandatoryFields()) {
+        window.alert(this.$t('fill_mandatory_fields'));
+        return;
+      }
+      await this.$store.dispatch('editStepData', {
+        stepKey: this.current_step_key,
+      });
+      this.toggleStepEditMode(false);
+    },
+
+    async discardStepData() {
+      await this.$store.dispatch('reloadBatchData');
+      this.toggleStepEditMode(false);
+    },
+
+    toggleStepEditMode(editMode) {
+      this.$store.dispatch('setStepEditMode', editMode);
     },
   },
 };

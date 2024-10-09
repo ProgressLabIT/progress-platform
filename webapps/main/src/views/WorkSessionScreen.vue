@@ -320,6 +320,11 @@ export default {
       wo_data: (state) => state.workorder.wo_data,
     }),
 
+    traceability_enabled() {
+      return !!this.$store.state.traceability.working_job_data
+        .traceability_level;
+    },
+
     links() {
       return [
         {
@@ -497,6 +502,10 @@ export default {
       this.$router.push({ name: this.links_order[0] });
     }
 
+    if (!this.traceability_enabled) {
+      await this.fakeBatchSerials();
+    }
+
     // Make sure an alert is raised if user tries to close the page
     window.addEventListener('beforeunload', this.beforeUnloadAlert);
 
@@ -566,6 +575,14 @@ export default {
           }
         }
       });
+    },
+
+    async fakeBatchSerials() {
+      if (!this.traceability_enabled) {
+        await this.$store.dispatch('fakeBatchSerials', {
+          job_key: this.j._key,
+        });
+      }
     },
 
     getItemCountColor(link) {
@@ -645,6 +662,10 @@ export default {
       });
 
       if (newBatchQuantity) {
+        if (!this.traceability_enabled) {
+          this.fakeBatchSerials();
+        }
+
         return {
           message: this.$capitalize('Quantità modificata correttamente'),
           payload: { newBatchQuantity },

@@ -64,6 +64,14 @@ def get_serial_batch(
       batch_serials.append(serial)
   return batch_serials
 
+@router.get('/component-batch',
+    dependencies=[Depends(auth.verify_token)])
+def get_serial_batch(batch_key: str | None = None):
+  bind_vars = dict(
+    from_id = f'Batch/{batch_key}'
+  )
+  return [e for e in db.aql.execute(Queries.GET_ALL_COMPONENTS_IN_BATCH, bind_vars=bind_vars)]
+
 @router.get('/serial-parents',
     dependencies=[Depends(auth.verify_token)])
 def get_serial_parents(

@@ -77,6 +77,7 @@ class ProductionActivityEvent(BaseEvent):
     delete_serial,
     create_batch_serial_records,
     finalize_batch_serial,
+    store_form_data,
     store_batch_data,
     finalize_wo_serial,
     send_link_batch_serial_event
@@ -323,6 +324,47 @@ class ProductionActivityEvent(BaseEvent):
       )
 
   # ===================================================================
+  #                      EDIT STEP DATA
+  # ===================================================================
+
+  STEP_EDITED = EventMeta(
+    collections=production_collections + ['Counter'],
+    action='edit_step',
+    post_processing=production_post_processing,
+    event_first = True
+  )
+
+  def edit_step(self):
+    self.get_job_data()
+    self.get_active_batch()
+
+    # Save current work session and batch keys in Event.info
+    if not self.info.work_session_key:
+      self.work_session = self.get_current_work_session()
+      self.info.work_session_key = self.work_session.key
+
+    # Flag record as canceled
+    match = dict(job_key = self.job.key, step_key = self.info.step_key, canceled=None)
+    update = dict(canceled = self.info.id)
+    step_data = self.tx.collection('StepExecutionData').update_match(match, update)
+
+    # Create new StepExecutionData record
+    step_data = StepExecutionData(**vars(self.info))
+    step_data.batch_key = self.info.active_batch_key
+    step_data.status = StepStatus.DONE
+    step_data.modified = self.info.id
+    step_data.completed = self.info.timestamp
+    self.tx.collection('StepExecutionData').insert(step_data)
+
+    # Set response
+    self.response = dict(
+      message = f"Step edited for batch {self.info.active_batch_key}",
+      job_data = self.job,
+      batch_data = self.get_batch_execution_data()
+    )
+
+
+  # ===================================================================
   #             UPDATE ACTIVE BATCH
   # ===================================================================
 
@@ -466,11 +508,19 @@ class ProductionActivityEvent(BaseEvent):
         elif free_wip_delta < 0:
           self.unbook_wip(abs(free_wip_delta))
 
-      self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
+      if (len(self.info.form_data) > 0):
+        self.store_form_data(completed_batch_qt=completed_batch_qt, form_data=self.info.form_data)
+      elif (len(batch_execution_data) > 0):
+        self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
 
     elif (self.job.traceability_level is not None):
       # update batch serials data
-      self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
+      if (len(self.info.form_data) > 0):
+        self.store_form_data(completed_batch_qt=completed_batch_qt, form_data=self.info.form_data)
+      elif (len(batch_execution_data) > 0):
+        self.store_batch_data(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
+
+
       self.finalize_batch_serial(completed_batch_qt=completed_batch_qt, batch_execution_data=batch_execution_data)
 
     self.info.completed_batch_key = self.job.active_batch_key

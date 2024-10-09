@@ -2,7 +2,7 @@
   <SettingsSection
     v-slot="{ editMode }"
     :title="$t('views.apiTokenSettings')"
-    :save-fn="undefined"
+    :save-fn="() => {}"
     :hide-save="true"
     @cancel="cancel"
   >

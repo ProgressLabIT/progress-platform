@@ -100,6 +100,9 @@ export default {
   deleted: 'Eliminato',
   department: 'reparto | reparti',
   description: 'Descrizione',
+  context: 'Contesto',
+  signature: 'Firma',
+  expiration: 'Scadenza',
   deselect_all: 'deseleziona tutti',
   document: {
     add: 'aggiungi documento | aggiungi documenti',
@@ -126,6 +129,7 @@ export default {
     JOB_RESUMED: 'Lavoro ripreso',
     JOB_BACK_ONLINE: 'Sessione online',
     STEP_COMPLETED: 'Passo completato',
+    STEP_EDITED: 'Passo modificato',
     BATCH_COMPLETED: 'Pezzo/Lotto completato',
     ISSUE_CREATED: 'Segnalazione creata',
     ISSUE_UPDATED: 'Segnalazione modificata',
@@ -135,6 +139,8 @@ export default {
     MESSAGE_UPDATED: 'Messaggio modificato',
     MESSAGE_DELETED: 'Messaggio cancellato',
     SERIAL_CREATED: 'Seriale creato',
+    SERIAL_UPDATED: 'Seriale aggiornato',
+    SERIAL_FINALIZED: 'Seriale finalizzato',
     SERIAL_LINKED: 'Seriale collegato',
   },
   export: 'Esporta',
@@ -143,6 +149,9 @@ export default {
   api_token_delete: 'Rimuovi Token per API',
   api_token_add_text:
     'Il token verrà creato. Prendere note del token, perchè non sarà più possibile visualizzarlo dopo la creazione',
+  api_token_add_error_text: 'Il token non può essere creato',
+  api_token_add_error_mandatory:
+    'Descrizione e scadenza sono campi obbligatori',
   api_token_delete_text:
     'Il token verrà eliminato. Non sarà più possibile utilizzarlo nelle integrazioni.',
   field: 'campo | campi',

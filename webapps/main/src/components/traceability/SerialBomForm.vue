@@ -152,6 +152,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
@@ -169,6 +170,10 @@ export default {
 
   props: {
     show: {
+      type: Boolean,
+      default: true,
+    },
+    traceability_enabled: {
       type: Boolean,
       default: true,
     },
@@ -213,6 +218,10 @@ export default {
   },
 
   computed: {
+    ...mapState({
+      faked_batch_serials: (state) =>
+        state.traceability.current_batch_faked_serials,
+    }),
     session_data() {
       return this.$store.state.session;
     },
@@ -223,8 +232,13 @@ export default {
       handler() {
         this.index = 0;
         this.initFormData();
-        if (this.show) {
+        if (!this.show) {
+          return;
+        }
+        if (this.traceability_enabled) {
           this.getBatchSerials();
+        } else {
+          this.fakeBatchSerials();
         }
       },
     },
@@ -249,6 +263,20 @@ export default {
       this.loading = false;
     },
 
+    async fakeBatchSerials() {
+      this.loading = true;
+
+      await this.$store.dispatch('fakeBatchSerials', {
+        batch_key: this.batch_key,
+      });
+
+      this.batch_serials = this.faked_batch_serials;
+
+      this.fillInitialData();
+
+      this.loading = false;
+    },
+
     async initFormData() {
       this.saving = false;
       this.enableSave = false;
@@ -263,7 +291,11 @@ export default {
       this.replace_serials = [];
       this.booked_serials = [];
       for (const component of this.bom_components) {
-        this.qt[component.component_key] = component.qt;
+        if (this.traceability_enabled) {
+          this.qt[component.component_key] = component.qt;
+        } else {
+          this.qt[component.component_key] = component.batch_qt;
+        }
       }
       for (const serial of this.batch_serials) {
         this.serial_ids.push(serial._id);

@@ -1,5 +1,5 @@
 <template>
-  <div class="column q-px-md q-pb-sm fit">
+  <div class="column q-px-md fit">
     <!-- HEADER -->
     <div class="row items-center">
       <div
@@ -14,17 +14,29 @@
       <q-input
         v-else
         v-model="serial.code"
+        dense
         filled
         :label="$t('serial.code')"
-        size="70"
         class="input-uppercase"
       >
       </q-input>
 
       <q-space></q-space>
+
+      <q-btn
+        v-if="isAvailable"
+        flat
+        round
+        icon="mdi-printer"
+        class="q-ml-sm"
+        @click.stop="openPrintDialog"
+      >
+        <q-tooltip>{{ $capitalize($t('print')) }}</q-tooltip>
+      </q-btn>
     </div>
 
-    <div class="row q-mt-sm q-col-gutter-lg items-center text-h6">
+    <!-- SUB HEADER -->
+    <div class="row q-pt-md q-col-gutter-lg items-center text-h6">
       <div class="col-auto text-h5 text-low text-uppercase">
         {{ $t('creation_date') }}
       </div>
@@ -41,32 +53,92 @@
       </div>
     </div>
 
-    <!-- FORM DATA -->
-    <div class="col-auto text-h5 text-uppercase text-low q-mt-lg">
-      {{ $t('serial_data') }}
-    </div>
+    <!-- SERIAL DATA -->
+    <q-tabs
+      v-model="tab"
+      dense
+      class="q-mt-md text-low"
+      content-class="text-h5"
+      indicator-color="theme-blue"
+      align="left"
+      active-class="text-high weight-bold"
+    >
+      <q-tab name="form" :label="$t('serial_data')" class="text-left" />
+      <q-tab name="history" :label="$t('history')" />
+    </q-tabs>
 
-    <template v-if="serial.data.length > 0">
-      <div class="column col scroll q-py-md q-mb-md">
-        <FormField
-          v-for="field in serial.data"
-          :key="field._key"
-          :field="field"
-          :root-path="`/media/serial/${serial_key}`"
-          :disable="!(edit_mode && can_edit)"
-          @update="field.value = $event"
-        />
-      </div>
-    </template>
-    <div v-else class="col-auto text-italic">No data</div>
+    <q-card square class="col surface2 scroll">
+      <q-tab-panels v-model="tab" class="transparent">
+        <!-- SERIAL FORM DATA -->
+        <q-tab-panel name="form">
+          <template v-if="serial.data.length > 0">
+            <div class="column col scroll q-pt-sm">
+              <FormField
+                v-for="field in serial.data"
+                :key="field._key"
+                :field="field"
+                :root-path="`/media/serial/${serial_key}`"
+                :disable="!(edit_mode && can_edit)"
+                @update="field.value = $event"
+              />
+            </div>
+          </template>
+          <div v-else class="col-auto text-italic">No data</div>
+        </q-tab-panel>
 
-    <q-space />
+        <!-- ISSUE EVENTS -->
+        <q-tab-panel name="history">
+          <q-list class="q-pl-xl col scroll q-pb-lg">
+            <q-item
+              v-for="(e, index) in history"
+              :key="e._key"
+              class="q-mt-md relative-position row justify-between full-width items-baseline"
+            >
+              <!-- TIMELINE DOT & THREAD -->
+              <div
+                style="
+                  position: absolute;
+                  left: -30px;
+                  top: 13px;
+                  height: 100%;
+                  width: 32px;
+                "
+              >
+                <div class="column full-height">
+                  <div class="dot"></div>
+                  <div v-if="index < history.length - 1" class="thread"></div>
+                </div>
+              </div>
+
+              <!-- TIMESTAMP -->
+              <q-item-section
+                class="text-italic q-pr-sm"
+                style="max-width: 200px"
+              >
+                {{ getHumanDate(e.timestamp) }}
+              </q-item-section>
+
+              <!-- EVENT TYPE -->
+              <q-item-section class="text-h4 highlight text-uppercase">
+                {{ $t(`events.${e.event_type}`) }}
+              </q-item-section>
+
+              <!-- EVENT USER -->
+              <q-item-section class="col-auto">
+                <BaseUserAvatar name_first :user="getUserData(e)" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-tab-panel>
+      </q-tab-panels>
+    </q-card>
   </div>
 </template>
 
 <script>
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
+import { usePrintDialog } from '@/lib/print';
 
 export default {
   name: 'SerialDetailForm',
@@ -91,8 +163,20 @@ export default {
 
   emits: ['exit'],
 
+  setup(props) {
+    const { open: openPrintDialog, isAvailable } = usePrintDialog({
+      context: 'serial',
+      contextData: props.serial_key,
+    });
+    return {
+      openPrintDialog,
+      isAvailable,
+    };
+  },
+
   data() {
     return {
+      tab: 'form',
       history: [],
       loading: false,
       recording: false,
@@ -100,6 +184,7 @@ export default {
       current_phase: 0,
       current_step: 0,
       data_column_width: 65,
+      events: NaN,
     };
   },
 
@@ -147,9 +232,67 @@ export default {
 
   created() {
     this.$store.dispatch('loadUsers');
+    this.getHistory();
+    let eventURL =
+      this.$api.defaults.baseURL + '/notification/serial-notification';
+    this.events = new EventSource(eventURL, {
+      withCredentials: false,
+    });
+    this.events.addEventListener('serial-notification', (event) => {
+      this.handleMessage(event);
+    });
+  },
+
+  beforeUnmount() {
+    if (this.events) {
+      this.events.close();
+    }
   },
 
   methods: {
+    getHistory() {
+      this.$api
+        .get('event', { params: { serial_key: this.serial_key } })
+        .then((resp) => (this.history = resp.data));
+    },
+
+    handleMessage(message) {
+      let event = JSON.parse(message.data);
+      if (event?.serial_key === this.serial_key) {
+        this.getHistory();
+      }
+    },
+
+    getAvatarSrc(user) {
+      return (
+        this.base_path + (user.name + user.surname).replace(/\s+/g, '') + '.jpg'
+      );
+    },
+
+    getUserData(event) {
+      const user = this.$store.getters.user_data(event.user_key);
+      return {
+        ...user,
+        full_name: user.name + ' ' + user.surname,
+        src: this.getAvatarSrc(user),
+      };
+    },
+
+    getHumanDate(timestamp) {
+      const config = {
+        year: '2-digit',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        weekday: 'short',
+      };
+      return this.$capitalize(
+        this.$formatDateTime(timestamp, this.$i18n.locale, config),
+      );
+    },
+
     notify({ message, color = 'theme-green' }) {
       this.$q.notify({
         message,
@@ -210,3 +353,22 @@ export default {
   },
 };
 </script>
+
+<style lang="sass" scoped>
+.dot
+  height: 13px
+  width: 13px
+  border-radius: 100%
+  background-color: #888
+  border: 5px solid var(--surface-2)
+  box-sizing: content-box
+  z-index:99
+
+.thread
+  position: absolute
+  height: 100%
+  left: 11px
+  top: 20px
+  width: 1px
+  background-color: #fff3
+</style>

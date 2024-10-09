@@ -27,7 +27,7 @@
       <div v-for="field in formFields" :key="field._key" class="q-py-xs">
         <FormField
           :field="field"
-          :disable="!isJobActive || batchStep?.done"
+          :disable="(!isJobActive || batchStep?.done) && !stepEditMode"
           :root-path="`/media/step/${step._key}/${field._key}`"
           @update="(value) => updateField(field, value)"
         />
@@ -86,6 +86,8 @@ const formFields = computed(() =>
     };
   }),
 );
+
+const stepEditMode = computed(() => store.getters.isCurrentStepEditMode());
 
 const formData = computed(() => batchStep.value?.form_data ?? []);
 const formDataIndexByFieldKey = computed(() => {

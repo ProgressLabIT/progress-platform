@@ -504,7 +504,7 @@ class SerialEventManager:
          self.notify_results(dict(
             serial_key = serial.key,
             serial = serial.code,
-            notification = SerialNotificationType.FINALIZED
+            notification = SerialNotificationType.UPDATED
          ))
 
     def release_serials(self, batch_execution_data):
@@ -540,6 +540,8 @@ class SerialEventManager:
             notification = SerialNotificationType.FINALIZED
          ))
 
+    def can_be_conflated(self, notification_type):
+       return notification_type not in [SerialNotificationType.ERROR]
 
     def notify_results(self, notification):
       notification['subtopic'] = "serial-notification"
@@ -548,6 +550,11 @@ class SerialEventManager:
         serial_event.event_type = "SERIAL_"+notification['notification']+" ("+notification['error']+")"
       else:
         serial_event.event_type = "SERIAL_"+notification['notification']
+      serial_event.serial_key = notification.get('serial_key')
       self.tx.collection('Event').insert(serial_event.model_dump())
-      NotificationManager.getInstance().notify(key=notification.get('serial_key'), notification=json.dumps(notification))
+      if self.can_be_conflated(notification.get('notification')):
+         NotificationManager.getInstance().notifyConflated(subtopic="serial-notification", message=json.dumps(notification), delay=5)
+      else:
+         NotificationManager.getInstance().notify(key=notification.get('serial_key'), notification=json.dumps(notification))
+
 

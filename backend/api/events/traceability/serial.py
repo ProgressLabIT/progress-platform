@@ -45,6 +45,25 @@ def create_batch_serial_records(self, quantity):
 
   SerialEventManager.getInstance().handle_event(self, SerialCommandType.CREATE_FROM_BATCH, quantity=quantity)
 
+def convert_field(self, field):
+  field_data = SerialFormFieldValue()
+  setattr(field_data, 'form_field_key', field['form_field_key'])
+  setattr(field_data, 'custom_field_key', field['custom_field_key'])
+  setattr(field_data, 'value', field['value'])
+  setattr(field_data, 'phase_key', self.info.phase_key)
+  setattr(field_data, 'step_key', self.info.step_key)
+  return field_data
+
+def convert_form_field(self, field):
+  field_data = SerialFormFieldValue()
+  setattr(field_data, 'form_field_key', field.form_field_key)
+  setattr(field_data, 'custom_field_key', field.custom_field_key)
+  setattr(field_data, 'value', field.value)
+  setattr(field_data, 'phase_key', self.info.phase_key)
+  setattr(field_data, 'step_key', self.info.step_key)
+  return field_data
+
+
 def convert_batch_data(self, batch_execution_data):
   batch_data = []
   if batch_execution_data != None and 'step_data' in batch_execution_data:
@@ -52,17 +71,26 @@ def convert_batch_data(self, batch_execution_data):
       if 'form_data' in step:
         for field in step['form_data']:
           if field['value']!=None:
-            field_data = SerialFormFieldValue()
-            setattr(field_data, 'form_field_key', field['form_field_key'])
-            setattr(field_data, 'custom_field_key', field['custom_field_key'])
-            setattr(field_data, 'value', field['value'])
-            setattr(field_data, 'phase_key', self.info.phase_key)
-            setattr(field_data, 'step_key', self.info.step_key)
-            batch_data.append(field_data)
+            batch_data.append(convert_field(self, field=field))
   return batch_data
 
+def convert_form_data(self, form_data):
+  batch_data = []
+  for field in form_data:
+    if field.value!=None:
+            batch_data.append(convert_form_field(self, field=field))
+  return batch_data
+
+
+def store_form_data(self, completed_batch_qt = None, form_data = None):
+  batch_execution_data = convert_form_data(self, form_data)
+  if (len(batch_execution_data) > 0):
+    SerialEventManager.getInstance().handle_event(self, SerialCommandType.STORE_BATCH_DATA, quantity=completed_batch_qt or self.info.active_batch_qt, batch_execution_data=batch_execution_data)
+
 def store_batch_data(self, completed_batch_qt = None, batch_execution_data = None):
-  SerialEventManager.getInstance().handle_event(self, SerialCommandType.STORE_BATCH_DATA, quantity=completed_batch_qt or self.info.active_batch_qt, batch_execution_data=convert_batch_data(self, batch_execution_data))
+  batch_execution_data = convert_batch_data(self, batch_execution_data)
+  if (len(batch_execution_data) > 0):
+    SerialEventManager.getInstance().handle_event(self, SerialCommandType.STORE_BATCH_DATA, quantity=completed_batch_qt or self.info.active_batch_qt, batch_execution_data=batch_execution_data)
 
 def finalize_batch_serial(self, completed_batch_qt = None, batch_execution_data = None):
   SerialEventManager.getInstance().handle_event(self, SerialCommandType.FINALIZE_BATCH, quantity=completed_batch_qt or self.info.active_batch_qt, batch_execution_data=convert_batch_data(self, batch_execution_data))
