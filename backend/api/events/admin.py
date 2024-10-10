@@ -708,7 +708,7 @@ class ProductionAdminEvent(BaseEvent):
     # Cancel Batches
     job_batches_cursor = self.tx.aql.execute("""
       FOR b IN Batch
-      FILTER b.job_key == @job_key
+      FILTER b.job_key == @job_key && !b.canceled
       UPDATE b WITH { canceled: @event_key } IN Batch
       LET updated = NEW
       RETURN updated._key
