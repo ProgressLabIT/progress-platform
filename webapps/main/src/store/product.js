@@ -2,6 +2,13 @@ import { cloneDeep as _cloneDeep } from 'lodash';
 import { api } from '@/boot/axios.js';
 import { updateListItemByKey as updateProduct } from '@/lib/ListUpdate.js';
 
+const initProductNavigationState = (p) => ({
+  ...p,
+  last_page: 'home',
+  last_phase: 0,
+  last_steps: [0],
+});
+
 const product = {
   state: {
     saved: {},
@@ -155,11 +162,7 @@ const product = {
         api
           .get('product', { params: search_params })
           .then((resp) => {
-            const productList = resp.data;
-            productList.forEach((p) => {
-              p.last_page = 'home';
-              (p.last_phase = 0), (p.last_steps = [0]);
-            });
+            const productList = resp.data.map(initProductNavigationState);
             commit('LOAD_PRODUCT_LIST', productList);
             resolve();
           })
@@ -178,11 +181,7 @@ const product = {
         api
           .get('product', { params: search_params })
           .then((resp) => {
-            const productList = resp.data;
-            productList.forEach((p) => {
-              p.last_page = 'home';
-              (p.last_phase = 0), (p.last_steps = [0]);
-            });
+            const productList = resp.data.map(initProductNavigationState);
             commit('APPEND_PRODUCT_LIST', productList);
             resolve();
           })
@@ -193,7 +192,7 @@ const product = {
       });
     },
 
-    async loadProductDetails({ commit }, product_key) {
+    async loadProductDetails({ commit, state }, product_key) {
       const [
         { data: product },
         { data: print_templates },
@@ -209,6 +208,12 @@ const product = {
           params: { context: 'product', context_key: product_key },
         }),
       ]);
+
+      let loadNavState = !state.list.map((p) => p._key).includes(product_key);
+
+      if (loadNavState) {
+        commit('APPEND_PRODUCT_LIST', [initProductNavigationState(product)]);
+      }
 
       commit('LOAD_PRODUCT_DETAILS', {
         ...product,

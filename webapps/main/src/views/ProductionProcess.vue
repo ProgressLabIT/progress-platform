@@ -308,6 +308,10 @@ export default {
     },
 
     product_data() {
+      return this.$store.state.product.saved;
+    },
+
+    product_nav_state() {
       return this.$store.getters.productData(this.product_key);
     },
 
@@ -322,7 +326,7 @@ export default {
 
     current_phase: {
       get() {
-        return this.product_data.last_phase;
+        return this.product_nav_state.last_phase;
       },
 
       set(value) {
@@ -500,7 +504,7 @@ export default {
       }
 
       // ADD HERE REORDERING OF last_steps MAP
-      const new_steps_map = [...this.product_data.last_steps];
+      const new_steps_map = [...this.product_nav_state.last_steps];
       const moved = new_steps_map.splice(oldIndex, 1)[0];
       new_steps_map.splice(newIndex, 0, moved);
 

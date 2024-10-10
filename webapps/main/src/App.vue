@@ -13,6 +13,11 @@ export default defineComponent({
   name: 'App',
 
   mixins: [CSSVars],
+  computed: {
+    store() {
+      return this.$store.state;
+    },
+  },
 
   created() {
     // Save vuex state in localStorage before refresh or tab close
