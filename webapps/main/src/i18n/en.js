@@ -298,6 +298,7 @@ export default {
   massCopyProcess: {
     title: {
       product: 'Copy process to other products',
+      counter: 'Copy counter to other products',
       operation: 'Copy operation to related phases of products',
     },
     conditions: 'Conditions',
@@ -308,11 +309,13 @@ export default {
     excludesTags: 'Does not have these tags',
     success: {
       product: 'Successfully copied the process to {count} products',
+      counter: 'Successfully copied the counter to {count} products',
       operation:
         'Successfully copied the operation to related phases of {count} products',
     },
     error: {
       product: 'An error occurred while copying the process',
+      counter: 'An error occurred while copying the counter',
       operation: 'An error occurred while copying the operation',
     },
   },

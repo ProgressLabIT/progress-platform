@@ -234,12 +234,16 @@
                 icon="mdi-pencil"
                 @click="show_counter_form = true"
               />
-              <BaseTooltipIcon
-                icon="mdi-content-copy"
-                :tooltip="$t('massCopyProcess.copyToAll')"
-                :color="$theme.orange"
-                @icon-click="openMassCopyDialog"
-              />
+              <div class="row justify-between items-baseline">
+                <BaseTooltipIcon
+                  v-if="!editMode"
+                  icon="mdi-content-copy"
+                  icon_size="xs"
+                  :tooltip="$capitalize($t('copy'))"
+                  :color="$theme.orange"
+                  @icon-click="openMassCopyDialog"
+                />
+              </div>
             </div>
           </div>
         </q-card-section>
@@ -496,7 +500,7 @@ import { generate } from '@pdfme/generator';
 import { Dialog, Notify } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import { useStore, mapState, mapActions } from 'vuex';
+import { useStore, mapState /*, mapActions */ } from 'vuex';
 import { api } from '@/boot/axios';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -537,7 +541,7 @@ export default {
       Dialog.create({
         component: MassCopyToProductDialog,
         componentProps: {
-          title: t('massCopyProcess.title.product'),
+          title: t('massCopyProcess.title.counter'),
           products: store.getters
             .productCatalog(true)
             .filter(({ _key }) => _key !== sourceProduct._key),
@@ -547,12 +551,12 @@ export default {
         },
       }).onOk(async (selectedProducts) => {
         try {
-          await api.post(`/product/${sourceProduct._key}/process/copy`, {
+          await api.post(`/product/${sourceProduct._key}/counter/copy`, {
             target_product_keys: selectedProducts.map(({ _key }) => _key),
           });
           Notify.create({
             type: 'positive',
-            message: t('massCopyProcess.success.product', {
+            message: t('massCopyProcess.success.counter', {
               count: selectedProducts.length,
             }),
             color: 'theme-green',
@@ -561,7 +565,7 @@ export default {
           console.error(error);
           Notify.create({
             type: 'negative',
-            message: t('massCopyProcess.error.product'),
+            message: t('massCopyProcess.error.counter'),
             color: 'theme-red',
           });
         }
@@ -703,7 +707,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['loadProductDetails']),
+    //...mapActions(['loadProductDetails']),
 
     // deltaPcString(p) {
     //   let pc_sign = p.delta_pc > 0 ? '+' : ''

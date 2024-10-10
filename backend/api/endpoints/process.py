@@ -9,6 +9,7 @@ from utils import auth
 from fastapi.encoders import jsonable_encoder
 
 from models.process import *
+from models.product import ProductBaseData
 from utils import dt
 from utils.api import APIResponse
 from utils.db import db
@@ -399,6 +400,34 @@ async def copy_process_to_products(
     if isinstance(exception, HTTPError):
       raise exception
     raise HTTPError(500, "Could not copy process to products. Please contact the administrator.")
+
+@router.post('/product/{product_key}/counter/copy',
+    dependencies=[Depends(auth.verify_token)])
+async def copy_process_to_products(
+  product_key: str,
+  target_product_keys: Annotated[list[str], Body(embed=True)],
+):
+  try:
+    if product_key in target_product_keys:
+      raise HTTPError(400, "The source product cannot be in the list of target products")
+
+    tx = db.begin_transaction(write={'Product', *copy_process_to_product_writes})
+
+    source_product = ProductBaseData( **db.collection('Product').get(product_key))
+
+    products_updates = [dict(_key=p, counter_key=source_product.counter_key) for p in target_product_keys]
+    tx.collection('Product').update_many(products_updates)
+
+    tx.commit_transaction()
+
+    return APIResponse(
+      message="Counter successfully copied to all related products",
+    )
+  except Exception as exception:
+    tx.abort_transaction()
+    if isinstance(exception, HTTPError):
+      raise exception
+    raise HTTPError(500, "Could not copy counter to products. Please contact the administrator.")
 
 
 @router.get("/step/{step_key}/media",

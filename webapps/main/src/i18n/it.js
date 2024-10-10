@@ -307,20 +307,24 @@ export default {
   massCopyProcess: {
     title: {
       product: 'Copia processo ad altri prodotti',
+      counter: 'Copia contatore ad altri prodotti',
       operation: 'Copia operazione in fasi correlate di prodotti',
     },
     conditions: 'Condizioni',
     copyToAll: 'Copia a tutte le fasi',
+    copyToAllProducts: 'Copia a tutte le fasi',
     includesText: 'Include testo',
     excludesText: 'Esclude testo',
     includesTags: 'Ha questi tag',
     excludesTags: 'Non ha questi tag',
     success: {
       product: 'Processo copiato con successo in {count} prodotti',
+      counter: 'Contatore copiato con successo in {count} prodotti',
       operation: 'Operazione copiata con successo in {count} fasi',
     },
     error: {
       product: 'Errore durante la copia del processo',
+      counter: 'Errore durante la copia del contatore',
       operation: "Errore durante la copia dell'operazione",
     },
   },
