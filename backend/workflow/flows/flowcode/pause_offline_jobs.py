@@ -1,11 +1,14 @@
-from datetime import timedelta
-
 import httpx
 from arango import ArangoClient
-from prefect import task, flow, get_run_logger
+from prefect import task, flow
+from prefect.blocks.system import Secret
 from prefect.server.schemas.schedules import CronSchedule
 
-
+def setup_progress_client():
+  base_url='http://api:8000'
+  progress_api_token = Secret.load('progress-api-token').get()
+  headers=dict(Autorization=f'Bearer: {progress_api_token}')
+  return httpx.Client(base_url=base_url, headers=headers)
 
 def connect_to_progress_db():
   try:
@@ -23,11 +26,6 @@ def connect_to_progress_db():
 
 
 db = connect_to_progress_db()
-
-httpx_params = dict(
-    # proxies={ "all://progress.localhost": "http://localhost:80" },
-    base_url='http://api:8000'
-)
 
 query = """
   FOR j IN Job
@@ -59,7 +57,7 @@ def pause_job(job_data):
   """
   job_key = job_data['_key']
   print(f'Pausing job {job_key}...')
-  with httpx.Client(**httpx_params) as api:
+  with setup_progress_client() as api:
     event_data = dict(
       event_type = 'JOB_PAUSED_OFFLINE',
       job_key = job_key,
