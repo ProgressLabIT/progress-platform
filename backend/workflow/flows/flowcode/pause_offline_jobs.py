@@ -2,7 +2,7 @@ import httpx
 from arango import ArangoClient
 from prefect import task, flow
 from prefect.blocks.system import Secret
-from prefect.server.schemas.schedules import CronSchedule
+from prefect.client.schemas.schedules import CronSchedule
 
 def setup_progress_client():
   base_url='http://api:8000'
