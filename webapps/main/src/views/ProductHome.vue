@@ -234,6 +234,12 @@
                 icon="mdi-pencil"
                 @click="show_counter_form = true"
               />
+              <BaseTooltipIcon
+                icon="mdi-content-copy"
+                :tooltip="$t('massCopyProcess.copyToAll')"
+                :color="$theme.orange"
+                @icon-click="openMassCopyDialog"
+              />
             </div>
           </div>
         </q-card-section>
@@ -487,16 +493,21 @@
 
 <script>
 import { generate } from '@pdfme/generator';
-import { Dialog } from 'quasar';
-import { mapState, mapActions } from 'vuex';
+import { Dialog, Notify } from 'quasar';
+import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
+import { useStore, mapState, mapActions } from 'vuex';
+import { api } from '@/boot/axios';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
+import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 import FormField from '@/components/FormField.vue';
 import MediaViewer from '@/components/MediaViewer.vue';
 import TagChips from '@/components/TagChips.vue';
 import TagInput from '@/components/TagInput.vue';
 import AddCustomFieldDialog from '@/components/process-steps/AddCustomFieldDialog.vue';
+import MassCopyToProductDialog from '../components/MassCopyToProductDialog.vue';
 import CounterSearch from '../components/settings/counters/CounterSearch.vue';
 
 export default {
@@ -511,9 +522,56 @@ export default {
     TagInput,
     TagChips,
     CounterSearch,
+    BaseTooltipIcon,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
+
+  setup() {
+    const { t } = useI18n();
+    const store = useStore();
+    const route = useRoute();
+
+    function openMassCopyDialog() {
+      const sourceProduct = store.getters.productData(route.params.product_key);
+      Dialog.create({
+        component: MassCopyToProductDialog,
+        componentProps: {
+          title: t('massCopyProcess.title.product'),
+          products: store.getters
+            .productCatalog(true)
+            .filter(({ _key }) => _key !== sourceProduct._key),
+          defaultFilters: {
+            tagsToInclude: sourceProduct.tags,
+          },
+        },
+      }).onOk(async (selectedProducts) => {
+        try {
+          await api.post(`/product/${sourceProduct._key}/process/copy`, {
+            target_product_keys: selectedProducts.map(({ _key }) => _key),
+          });
+          Notify.create({
+            type: 'positive',
+            message: t('massCopyProcess.success.product', {
+              count: selectedProducts.length,
+            }),
+            color: 'theme-green',
+          });
+        } catch (error) {
+          console.error(error);
+          Notify.create({
+            type: 'negative',
+            message: t('massCopyProcess.error.product'),
+            color: 'theme-red',
+          });
+        }
+      });
+    }
+
+    return {
+      openMassCopyDialog,
+    };
+  },
 
   data() {
     return {
