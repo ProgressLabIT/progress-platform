@@ -64,6 +64,26 @@ class Queries:
   """
 
 
+  GET_WORK_ORDER_SEARCH_OPTIONS = """
+    LET phases = (FOR j IN Job
+       FILTER j.stage != 'closed'
+       COLLECT phase = j.phase_alias OPTIONS { method: "sorted" }
+       return phase)
+
+    LET products = (FOR j IN Job
+       FILTER j.stage != 'closed'
+       COLLECT product = j.product_code OPTIONS { method: "sorted" }
+       return product)
+
+    LET wo_codes = (FOR j IN Job
+       FILTER j.stage != 'closed'
+       COLLECT wo_code = j.wo_code OPTIONS { method: "sorted" }
+       return wo_code)
+
+    return {phases, products, wo_codes}
+  """
+
+
   GET_WORKING_JOB_DATA = """
     FOR j IN Job
     FILTER j._key == @job_key

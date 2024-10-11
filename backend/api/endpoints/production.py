@@ -430,7 +430,18 @@ async def delete_work_order(wo_key: str):
       detail=response
     )
 
+# ----------------------------------------------------------------------
 
+@router.get('/work-order-search-opts',
+    dependencies=[Depends(auth.verify_token)])
+async def search_work_orders():
+
+
+  try:
+    cursor = db.aql.execute(Queries.GET_WORK_ORDER_SEARCH_OPTIONS, bind_vars=dict())
+    return [opt for opt in cursor]
+  except StopIteration:
+    return []
 
 # ----------------------------------------------------------------------
 

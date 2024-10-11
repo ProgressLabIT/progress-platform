@@ -120,6 +120,66 @@
     >
       <!-- FILTERS SPECIFIC TO JOB LIST -->
       <template v-if="$route.name === 'jobList'">
+        <!-- BY CODE -->
+        <q-select
+          ref="code_filter"
+          v-model="code_selected"
+          filled
+          dense
+          use-input
+          clearable
+          :options="filtered_codes"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          :label="$capitalize($t('code', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1"
+          @filter="filterCode"
+        >
+        </q-select>
+
+        <!-- BY PRODUCT -->
+        <q-select
+          ref="product_filter"
+          v-model="product_selected"
+          filled
+          dense
+          use-input
+          clearable
+          :options="filtered_products"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          :label="$capitalize($t('product.label', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1"
+          @filter="filterproduct"
+        >
+        </q-select>
+
+        <!-- BY PHASE -->
+        <q-select
+          ref="phase_filter"
+          v-model="phase_selected"
+          filled
+          dense
+          use-input
+          clearable
+          :options="filtered_phases"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          :label="$capitalize($t('phase.phase', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1"
+          @filter="filterPhase"
+        >
+        </q-select>
+
         <!-- BY DEPARTMENT -->
         <q-select
           ref="department_filter"
@@ -396,6 +456,9 @@ export default {
       job_filters: ['assigned', 'unassigned'],
       // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       department_search_text: undefined,
+      phase_search_text: undefined,
+      code_search_text: undefined,
+      product_search_text: undefined,
       editing: false,
       saving: false,
       //polling_instance: undefined,
@@ -412,6 +475,10 @@ export default {
 
     operator_selected: queryModel(String, 'operator', undefined),
     department_selected: queryModel(String, 'department', undefined),
+
+    code_selected: queryModel(String, 'wo_code', undefined),
+    product_selected: queryModel(String, 'product_code', undefined),
+    phase_selected: queryModel(String, 'phase_alias', undefined),
 
     start_from_min: queryModel(String, 'min_start_from', null),
     start_from_max: queryModel(String, 'max_start_from', null),
@@ -475,12 +542,48 @@ export default {
       return this.$store.state.org.departments;
     },
 
+    department_list() {
+      return this.$store.state.org.departments;
+    },
+
+    department_list() {
+      return this.$store.state.org.departments;
+    },
+
+    department_list() {
+      return this.$store.state.org.departments;
+    },
+
     filtered_departments() {
       return this.department_search_text
         ? this.department_list.filter((d) =>
             d.name.toLowerCase().includes(this.department_search_text),
           )
         : this.department_list;
+    },
+
+    filtered_codes() {
+      return this.code_search_text
+        ? this.code_list.filter((d) =>
+            d.name.toLowerCase().includes(this.code_search_text),
+          )
+        : this.code_list;
+    },
+
+    filtered_products() {
+      return this.product_search_text
+        ? this.productt_list.filter((d) =>
+            d.name.toLowerCase().includes(this.product_search_text),
+          )
+        : this.product_list;
+    },
+
+    filtered_phases() {
+      return this.phase_search_text
+        ? this.phase_list.filter((d) =>
+            d.name.toLowerCase().includes(this.phase_search_text),
+          )
+        : this.phase_list;
     },
   },
 
