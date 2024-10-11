@@ -470,7 +470,7 @@ async def search_work_orders(
     LET now = DATE_NOW()
     LET work_sessions = (
       FOR ws IN WorkSession
-      FILTER ws.work_order_key == wo._key && !ws.canceled
+      FILTER ws.work_order_key == wo._key && ws.canceled == null
       LET duration = ws.active ? DATE_DIFF(ws.start, now, 'f') : ws.duration
       LET cost = ws.hourly_cost * duration / 3600000
       RETURN MERGE({ duration, cost })

@@ -90,7 +90,7 @@ class Queries:
       FILTER
         b.end >= last_year
         && b.phase_key IN phases[*]._key
-        && !b.canceled
+        && b.canceled == null
       RETURN b
     )
 

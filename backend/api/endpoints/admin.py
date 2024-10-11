@@ -104,7 +104,7 @@ async def force_delete_work_order_data(work_order_key: str):
     # Delete StepExecutionData based on deleted job_key
     step_data_delete_query = """
       FOR s IN StepExecutionData
-      FILTER POSITION(@jobs_to_delete, s.job_key)
+      FILTER s.job_key IN @jobs_to_delete
       REMOVE s IN StepExecutionData
     """
     tx.aql.execute(step_data_delete_query, bind_vars=dict(jobs_to_delete=jobs_to_delete))

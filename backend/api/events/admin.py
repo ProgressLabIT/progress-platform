@@ -22,7 +22,7 @@ from utils.traceability import Queries as TraceabilityQueries
 class Queries:
   CANCEL_JOB_WORK_SESSIONS = """
     FOR ws IN WorkSession
-    FILTER ws.job_key == @job_key && !ws.canceled
+    FILTER ws.job_key == @job_key && ws.canceled == null
     UPDATE ws WITH { canceled: @event_id } IN WorkSession
     RETURN NEW
   """
@@ -30,7 +30,7 @@ class Queries:
     LET now = DATE_NOW()
 
     FOR b IN Batch
-    FILTER b.job_key == @job_key && !b.canceled
+    FILTER b.job_key == @job_key && b.canceled == null
     SORT b.end DESC
     RETURN b
     """
@@ -150,11 +150,11 @@ class ProductionAdminEvent(BaseEvent):
       """
       RETURN AVG(
         FOR b IN Batch
-        FILTER b.job_key == @job_key && !b.canceled
+        FILTER b.job_key == @job_key && b.canceled == null
         SORT b.end DESC
         LET total_duration = SUM(
           FOR ws IN WorkSession
-          FILTER ws.batch_key == b._key && !ws.canceled
+          FILTER ws.batch_key == b._key && ws.canceled == null
           RETURN ws.duration
         )
         RETURN total_duration / b.qt_pass
@@ -293,7 +293,7 @@ class ProductionAdminEvent(BaseEvent):
       """
       RETURN SUM(
         FOR ws IN WorkSession
-        FILTER ws.job_key == @job_key && !ws.canceled
+        FILTER ws.job_key == @job_key && ws.canceled == null
         RETURN ws.duration
       )
       """,
@@ -536,7 +536,7 @@ class ProductionAdminEvent(BaseEvent):
           FILTER
             b.work_order_key == @work_order_key
             && b.phase_key == @phase_key
-            && !b.canceled
+            && b.canceled == null
           SORT b.end DESC
           RETURN b
           """,
@@ -708,7 +708,7 @@ class ProductionAdminEvent(BaseEvent):
     # Cancel Batches
     job_batches_cursor = self.tx.aql.execute("""
       FOR b IN Batch
-      FILTER b.job_key == @job_key && !b.canceled
+      FILTER b.job_key == @job_key && b.canceled == null
       UPDATE b WITH { canceled: @event_key } IN Batch
       LET updated = NEW
       RETURN updated._key

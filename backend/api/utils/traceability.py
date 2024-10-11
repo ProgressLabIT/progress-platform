@@ -60,7 +60,7 @@ class Queries:
         FILTER
           s.batch_key == batch._key
           && s.step_key == step._key
-          && !s.canceled
+          && s.canceled == null
         RETURN KEEP(s, 'status', 'form_data')
       )
       LET step_done = execution_data ? execution_data.status == 'done' : false
@@ -82,7 +82,7 @@ class Queries:
       FILTER
         s.batch_key == @batch_key
         && s.status == @status
-        && !s.canceled
+        && s.canceled == null
       RETURN DISTINCT s.step_key
     )
     RETURN step_count
@@ -143,7 +143,7 @@ class Queries:
     // Update PT and Cost
     LET work_sessions = (
       FOR ws IN WorkSession
-      FILTER ws.work_order_key == @wo_key && !ws.canceled
+      FILTER ws.work_order_key == @wo_key && ws.canceled == null
       LET benchmark = ws.active ? now : ws.end
       LET duration = DATE_DIFF(ws.start, benchmark, 'f')
       LET cost = ws.hourly_cost * duration / 3600000 // No. of milliseconds in an hour: 60*60*1000
@@ -200,7 +200,7 @@ class Queries:
         FILTER
           s.batch_key == j.current_batch
           && s.status == 'done'
-          && !s.canceled
+          && s.canceled == null
         RETURN 1
       )
       RETURN step_progress_value * step_done_count
@@ -218,7 +218,7 @@ class Queries:
 
     LET work_sessions = (
       FOR ws IN WorkSession
-      FILTER ws.batch_key == @batch_key
+      FILTER ws.batch_key == @batch_key && ws.canceled == null
       RETURN ws
     )
 

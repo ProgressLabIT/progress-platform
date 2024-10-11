@@ -6,7 +6,7 @@ class Queries:
 
   GET_PRODUCT_BOM = """
     FOR v,e IN 2..2 OUTBOUND DOCUMENT('Product', @product_key) requires
-      FILTER e.type like 'BomLine'
+      FILTER e.type == 'BomLine'
       LET phase = DOCUMENT(e._from)
       SORT v.code, phase.alias
       RETURN {

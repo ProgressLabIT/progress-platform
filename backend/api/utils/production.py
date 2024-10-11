@@ -43,7 +43,7 @@ class Queries:
         LET operator = KEEP(DOCUMENT(User, j.assigned_to), '_key', 'name', 'surname', 'active')
         LET work_sessions = (
           FOR ws IN WorkSession
-          FILTER ws.job_key == j._key && !ws.canceled
+          FILTER ws.job_key == j._key && ws.canceled == null
           LET duration = ws.active ? DATE_DIFF(ws.start, now, 'f') : ws.duration
           LET cost = ws.hourly_cost * duration / 3600000
           RETURN MERGE({ duration, cost })
