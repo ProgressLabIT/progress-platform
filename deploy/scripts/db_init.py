@@ -227,7 +227,7 @@ db_handles = [client.db(database, **root_creds) for database in dbs]
 for db in db_handles:
   for c in collections:
     # if collection name starts with a lowercase letter it's an edge collection
-    db.create_collection(name=c.name, edge=c[0].islower())
+    db.create_collection(name=c.name, edge=c.name[0].islower())
     collection = db.collection(c.name)
 
     for index in c.indexes:
