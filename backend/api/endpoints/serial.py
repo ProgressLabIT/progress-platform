@@ -33,21 +33,7 @@ def get_product_steps(product_key: str):
   )
   return [e for e in db.aql.execute(Queries.GET_PRODUCT_STEPS, bind_vars=bind_vars)]
 
-@router.get('/serial-wo-job',
-    dependencies=[Depends(auth.verify_token)])
-def get_serial_batch(
-  wo_key: str | None = None,
-  job_key: str | None = None,
-):
-  bind_vars = dict(
-    wo_key = wo_key,
-    job_key = f'Job/{job_key}'
-  )
-  batch_serials = []
-  for serial in [e for e in db.aql.execute(Queries.GET_AVAILABLE_SERIALS_IN_BATCH, bind_vars=bind_vars)]:
-    if serial['code']:
-      batch_serials.append(serial)
-  return batch_serials
+
 
 @router.get('/serial-batch',
     dependencies=[Depends(auth.verify_token)])
