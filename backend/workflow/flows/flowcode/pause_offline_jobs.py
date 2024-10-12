@@ -30,7 +30,7 @@ db = connect_to_progress_db()
 query = """
   FOR j IN Job
   FILTER
-    j.active
+    j.active == true
     && j.parameters.max_offline > 0
     && DATE_DIFF(DATE_TIMESTAMP(j.last_online), DATE_NOW(), 's', true) > j.parameters.max_offline
   RETURN j

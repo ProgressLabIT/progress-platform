@@ -25,8 +25,6 @@ class Queries:
       LET wo = DOCUMENT(WorkOrder, wo_key)
       FILTER wo != null // Prevent bugs in case queue has inexistent keys
       LET qt_remaining = wo.qt_planned - wo.qt_completed
-      LET jobs = (FOR j IN Job FILTER !j.trash && j.wo_key == wo._key RETURN j)
-      LET phases = (FOR j IN jobs RETURN DISTINCT j.phase_key)
       LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == wo._id RETURN 1)
       RETURN MERGE (wo, { qt_remaining: qt_remaining, issue_count })
   """
@@ -45,7 +43,7 @@ class Queries:
         LET operator = KEEP(DOCUMENT(User, j.assigned_to), '_key', 'name', 'surname', 'active')
         LET work_sessions = (
           FOR ws IN WorkSession
-          FILTER ws.job_key == j._key && !ws.canceled
+          FILTER ws.job_key == j._key && ws.canceled == null
           LET duration = ws.active ? DATE_DIFF(ws.start, now, 'f') : ws.duration
           LET cost = ws.hourly_cost * duration / 3600000
           RETURN MERGE({ duration, cost })

@@ -19,240 +19,179 @@
       - notebooks
     additional_folders:
       - config
-    swarm_join_tkn_manager: '{{ init.swarm_facts.JoinTokens.Manager }}'
-    swarm_join_tkn_worker: '{{ init.swarm_facts.JoinTokens.Worker }}'
+    swarm_join_tkn_manager: "{{ init.swarm_facts.JoinTokens.Manager }}"
+    swarm_join_tkn_worker: "{{ init.swarm_facts.JoinTokens.Worker }}"
     registry_url: registry.gitlab.com/progresslab/progress-platform
     secrets:
-      - { name: 'progress_api_db_pwd', length: 32 }
-      - { name: 'progress_admin_pwd', length: 6 }
-      - { name: 'progress_jwt_secret', length: 32 }
+      - { name: "progress_api_db_pwd", length: 32 }
+      - { name: "progress_admin_pwd", length: 6 }
+      - { name: "progress_jwt_secret", length: 32 }
 
   vars_files:
     - registry_creds
 
   tasks:
-  - name: Setup system
-    tags: system
-    block:
+    - name: Setup system
+      tags: system
+      block:
+        - name: Install aptitude
+          apt:
+            name: aptitude
+            state: latest
+            update_cache: true
 
-      - name: Install aptitude
-        apt:
-          name: aptitude
-          state: latest
-          update_cache: true
+        - name: Install required system packages
+          apt:
+            pkg:
+              - apt-transport-https
+              - ca-certificates
+              - curl
+              - software-properties-common
+              - python3-pip
+              - virtualenv
+              - python3-setuptools
+            state: latest
+            update_cache: true
 
-      - name: Install required system packages
-        apt:
-          pkg:
-            - apt-transport-https
-            - ca-certificates
-            - curl
-            - software-properties-common
-            - python3-pip
-            - virtualenv
-            - python3-setuptools
-          state: latest
-          update_cache: true
+        - name: Add Docker GPG apt Key
+          apt_key:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            state: present
 
-      - name: Add Docker GPG apt Key
-        apt_key:
-          url: https://download.docker.com/linux/ubuntu/gpg
-          state: present
+        - name: Add Docker Repository
+          apt_repository:
+            repo: deb https://download.docker.com/linux/ubuntu focal stable
+            state: present
 
-      - name: Add Docker Repository
-        apt_repository:
-          repo: deb https://download.docker.com/linux/ubuntu focal stable
-          state: present
+        - name: Update apt and install docker-ce
+          apt:
+            name: docker-ce
+            state: latest
+            update_cache: true
 
-      - name: Update apt and install docker-ce
-        apt:
-          name: docker-ce
-          state: latest
-          update_cache: true
+        - name: Install required python packages
+          tags: pip
+          pip:
+            name:
+              - docker
+              - jsondiff
+              - pyyaml
 
-      - name: Install required python packages
-        tags: pip
-        pip:
-          name:
-            - docker
-            - jsondiff
-            - pyyaml
+    - name: Setup folders
+      tags: folders
+      block:
+        - name: Create main project directory
+          ansible.builtin.file:
+            path: "{{ root_dir }}"
+            state: directory
 
-  - name: Setup folders
-    tags: folders
-    block:
+        - name: Create project subdirectories
+          ansible.builtin.file:
+            path: "{{ root_dir }}/{{ item }}"
+            state: directory
+          loop: "{{ volumes + additional_folders }}"
 
-      - name: Create main project directory
-        ansible.builtin.file:
-          path: '{{ root_dir }}'
-          state: directory
+    - name: Setup infrastructure
+      tags: docker
+      block:
+        - name: Login to GitLab container registry
+          community.docker.docker_login:
+            registry_url: "{{ registry_url }}"
+            username: "{{ registry_username }}"
+            password: "{{ registry_token }}"
 
-      - name: Create project subdirectories
-        ansible.builtin.file:
-          path: '{{ root_dir }}/{{ item }}'
-          state: directory
-        loop: '{{ volumes + additional_folders }}'
+        - name: Create docker volumes
+          community.docker.docker_volume:
+            name: "{{ item }}"
+            driver_options:
+              o: bind
+              type: none
+              device: "{{ root_dir }}/{{ item }}"
+          loop: "{{ volumes }}"
 
+        - name: Activate Swarm mode
+          community.docker.docker_swarm:
+            state: present
+          register: init
 
-  - name: Setup infrastructure
-    tags: docker
-    block:
-
-      - name: Login to GitLab container registry
-        community.docker.docker_login:
-          registry_url: '{{ registry_url }}'
-          username: '{{ registry_username }}'
-          password: '{{ registry_token }}'
-
-      - name: Create docker volumes
-        community.docker.docker_volume:
-          name: '{{ item }}'
-          driver_options:
-            o: bind
-            type: none
-            device: '{{ root_dir }}/{{ item }}'
-        loop: '{{ volumes }}'
-
-      - name: Activate Swarm mode
-        community.docker.docker_swarm:
-          state: present
-        register: init
-
-      - name: Create networks
-        community.docker.docker_network:
-          name: '{{ item }}'
-          attachable: true
-          driver: overlay
-        loop:
-          - reporting
-          - progress
-
-      - name: Generate secrets
-        ansible.builtin.shell:
-          cmd: 'openssl rand -hex {{ item.length }} | docker secret create {{ item.name }} -'
-        loop: '{{ secrets }}'
-
-  - name: Setup observability services
-    tags: observability
-    block:
-
-      - name: Create Portainer Agent service
-        community.docker.docker_swarm_service:
-          name: portainer_agent
-          image: 'portainer/agent:2.13.0'
-          placement:
-            constraints:
-              - 'node.platform.os == linux'
-          networks:
+        - name: Create networks
+          community.docker.docker_network:
+            name: "{{ item }}"
+            attachable: true
+            driver: overlay
+          loop:
             - reporting
-          mode: global
-          publish:
-            - published_port: 9001
-              target_port: 9001
-              protocol: tcp
-          mounts:
-            - source: '/var/run/docker.sock'
-              target: '/var/run/docker.sock'
-              type: bind
-            - source: '/var/lib/docker/volumes'
-              target: '/var/lib/docker/volumes'
-              type: bind
-
-      - name: Copy Vector config file
-        ansible.builtin.copy:
-          src: config/vector.toml
-          dest: '{{ root_dir }}/config/vector.toml'
-
-      - name: Create Vector logging service
-        community.docker.docker_swarm_service:
-          name: vector
-          image: 'timberio/vector:latest-debian'
-          networks:
-            - reporting
-          publish:
-            - published_port: 8383
-              target_port: 8383
-              protocol: tcp
-          mounts:
-            - source: '{{ root_dir }}/config/vector.toml'
-              target: '/etc/vector/vector.toml'
-              readonly: yes
-              type: bind
-            - source: '/var/run/docker.sock'
-              target: '/var/run/docker.sock'
-              readonly: yes
-              type: bind
-            - source: logs
-              target: '/out'
-              type: volume
-
-  - name: Deploy stack
-    tags: deploy
-    block:
-
-      - name: Copy deployment files
-        ansible.builtin.copy:
-          src: compose/ # copy contents only
-          dest: '{{ root_dir }}/config/'
-
-      - name: Generate DB root password
-        ansible.builtin.shell:
-          cmd: 'openssl rand -hex 12'
-        register: db_root_pwd
-
-      - name: Show DB root password
-        ansible.builtin.debug:
-          var: db_root_pwd.stdout
-
-      - name: Deploy to production
-        community.docker.docker_stack:
-          name: progress
-          with_registry_auth: yes
-          compose:
-            - '{{ root_dir}}/config/base.yaml'
-            - '{{ root_dir}}/config/stack.yaml'
-            - '{{ root_dir}}/config/workflow.yaml'
-        environment:
-          DB_ROOT_PWD: '{{ db_root_pwd.stdout }}'
-          HOST: '{{ inventory_hostname }}'
-
-      - name: Copy init script to be run
-        ansible.builtin.copy:
-          src: scripts/db_init.py
-          dest: '{{ root_dir }}/db_init.py'
-
-      - name: Run service to initialize databases and its users
-        # Requires a service to use secrets created before
-        community.docker.docker_swarm_service:
-          name: init-db
-          image: '{{ registry_url}}/api'
-          restart_config:
-            condition: none
-          secrets:
-            - secret_name: progress_admin_pwd
-            - secret_name: progress_api_db_pwd
-          networks:
             - progress
-          mounts:
-            - source: '{{ root_dir }}/db_init.py'
-              target: /db_init.py
-              type: bind
-          env:
-            DB_ROOT_PWD: '{{ db_root_pwd.stdout }}'
-          command: python3 /db_init.py
 
-      # Last try failed when loading flows because the agent container was not ready, probably busy installing python dependencies
-      - name: Wait for agent setup to finish
-        ansible.builtin.wait_for:
-          timeout: 30
+        - name: Generate secrets
+          ansible.builtin.shell:
+            cmd: "openssl rand -hex {{ item.length }} | docker secret create {{ item.name }} -"
+          loop: "{{ secrets }}"
 
-      - name: Deploy system workflows
-        ansible.builtin.shell:
-          cmd: 'docker exec $(docker ps -q --filter name=system) python /flows/sys_loader.py'
+    - name: Deploy stack
+      tags: deploy
+      block:
+        - name: Copy deployment files
+          ansible.builtin.copy:
+            src: compose/ # copy contents only
+            dest: "{{ root_dir }}/config/"
 
+        - name: Generate DB root password
+          ansible.builtin.shell:
+            cmd: "openssl rand -hex 12"
+          register: db_root_pwd
 
-    #TODO: clean up and erase db_data contents in case something goes wrong
+        - name: Show DB root password
+          ansible.builtin.debug:
+            var: db_root_pwd.stdout
 
+        - name: Deploy to production
+          community.docker.docker_stack:
+            name: progress
+            with_registry_auth: yes
+            compose:
+              - "{{ root_dir}}/config/base.yaml"
+              - "{{ root_dir}}/config/stack.yaml"
+              # - '{{ root_dir}}/config/workflow.yaml'
+          environment:
+            DB_ROOT_PWD: "{{ db_root_pwd.stdout }}"
+            HOST: "{{ inventory_hostname }}"
+
+        - name: Copy init script to be run
+          ansible.builtin.copy:
+            src: scripts/db_init.py
+            dest: "{{ root_dir }}/db_init.py"
+
+        - name: Run service to initialize databases and its users
+          # Requires a service to use secrets created before
+          community.docker.docker_swarm_service:
+            name: init-db
+            image: "{{ registry_url}}/api"
+            restart_config:
+              condition: none
+            secrets:
+              - secret_name: progress_admin_pwd
+              - secret_name: progress_api_db_pwd
+            networks:
+              - progress
+            mounts:
+              - source: "{{ root_dir }}/db_init.py"
+                target: /db_init.py
+                type: bind
+            env:
+              DB_ROOT_PWD: "{{ db_root_pwd.stdout }}"
+            command: python3 /db_init.py
+
+        # Last try failed when loading flows because the agent container was not ready, probably busy installing python dependencies
+        # - name: Wait for agent setup to finish
+        #   ansible.builtin.wait_for:
+        #     timeout: 30
+
+        # - name: Deploy system workflows
+        #   ansible.builtin.shell:
+        #     cmd: 'docker exec $(docker ps -q --filter name=system) python /flows/sys_loader.py'
+
+      #TODO: clean up and erase db_data contents in case something goes wrong
 
   # - name: Remove startup elements
   #   tags: cleanup
@@ -276,4 +215,3 @@
   #       ansible.builtin.file:
   #         path: '{{ root_dir }}/db_init.py'
   #         state: absent
-

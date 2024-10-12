@@ -5,6 +5,11 @@ from utils.file import FileHandler
 class Queries:
   GET_PRODUCT_LIST = """
     LET search = CONCAT('%', LOWER(@search), '%')
+    LET products_with_operation = (
+      FOR product, edge IN 2..2 INBOUND CONCAT('Operation/', @has_operation_key) requires
+      FILTER product != null
+      RETURN product._key
+    )
 
     FOR product IN Product
       // find active products matching the search pattern provided
@@ -22,16 +27,7 @@ class Queries:
         : true
       )
 
-      FILTER !@has_operation_key || FIRST(
-        LET operation = Document(Operation, @has_operation_key)
-        FOR phase, phase_edge IN 1..1 INBOUND operation requires
-          FILTER phase_edge.type == 'PhaseOperation'
-          FOR product_vertex, product_edge IN 1..1 INBOUND phase requires
-            FILTER product_edge.type == 'ProductPhase'
-              && product_vertex._id == product._id
-            LIMIT 1
-            RETURN true
-      )
+      FILTER !@has_operation_key || product._key IN products_with_operation
 
       LET tags = (
         FOR edge IN has_tag

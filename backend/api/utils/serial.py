@@ -91,15 +91,6 @@ class Queries:
       })
   """
 
-  GET_AVAILABLE_SERIALS_IN_BATCH = """
-    FOR w IN wip
-      FILTER
-        w.wo_key == @wo_key
-        && w.active == true
-        && w._to == @job_key
-      LET serial = DOCUMENT(Serial, w.serial_key)
-      RETURN serial
-  """
 
   GET_ALL_SERIALS = """
     LET batch_serials = @batch_key ? (
