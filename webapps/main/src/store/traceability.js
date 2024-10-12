@@ -323,6 +323,12 @@ const traceability = {
       state.current_batch_data = batch_data;
     },
 
+    RESUME_BATCH(state, batch_data) {
+      let step_data = cloneDeep(state.current_batch_data?.step_data);
+      state.current_batch_data = batch_data;
+      state.current_batch_data.step_data = step_data;
+    },
+
     UPDATE_BATCH_SERIALS(state, batch_serials) {
       state.current_batch_serials = batch_serials;
     },
@@ -447,7 +453,7 @@ const traceability = {
         const { job_data, batch_data } = data.detail;
         commit('UPDATE_JOB', job_data);
         if (batch_data) {
-          commit('UPDATE_BATCH', batch_data);
+          commit('RESUME_BATCH', batch_data);
         }
       }
       commit('SET_HEARTBEAT', true);
@@ -480,7 +486,7 @@ const traceability = {
       let key = batch_key;
       if (!key) {
         const job_resp = await api.get(`job/${job_key}`);
-        const job_data = job_resp.data.detail;
+        const job_data = job_resp.data?.detail;
         key = job_data.active_batch_key;
       }
       let batch_serials = [];
