@@ -136,7 +136,15 @@ collections = [
     )
   ]),
   Collection(name='contains'),
-  Collection(name='Counter'),
+  Collection(name='Counter', default_records=[
+    dict(
+      _key = 'default',
+      next_tick = 0,
+      template = ["#4"],
+      frequency = "%w",
+      reset_date = ""
+    )
+  ]),
   Collection(name='CustomField'),
   Collection(name='CustomListValue', indexes=[
     DBIndex(fields=['field_key'], name='clv-field')
