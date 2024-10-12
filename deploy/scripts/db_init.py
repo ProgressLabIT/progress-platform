@@ -140,7 +140,7 @@ collections = [
     dict(
       _key = 'default',
       next_tick = 0,
-      template = ["#4"],
+      template = ['%y', '#6'],
       frequency = "%w",
       reset_date = ""
     )
