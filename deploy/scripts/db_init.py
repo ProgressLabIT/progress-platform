@@ -141,7 +141,7 @@ collections = [
       _key = 'default',
       next_tick = 0,
       template = ['%y', '#6'],
-      frequency = "%w",
+      frequency = "year",
       reset_date = ""
     )
   ]),

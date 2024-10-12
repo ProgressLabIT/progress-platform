@@ -27,11 +27,11 @@ export function calculateNextResetDate({ reset_period }) {
 
   function calculateResetDate() {
     switch (reset_period) {
-      case '%w':
+      case 'week':
         return formatResetDate(nextweek());
-      case '%m':
+      case 'month':
         return formatResetDate(nextmonth());
-      case '%y':
+      case 'year':
         return formatResetDate(nextyear());
       default:
         return null;

@@ -105,11 +105,11 @@ export default {
     getFrequency(reset_period) {
       switch (reset_period) {
         case this.$t('week'):
-          return '%w';
+          return 'week';
         case this.$t('month'):
-          return '%m';
+          return 'month';
         case this.$t('year'):
-          return '%y';
+          return 'year';
         default:
           return undefined;
       }

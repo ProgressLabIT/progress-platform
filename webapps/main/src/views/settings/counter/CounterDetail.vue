@@ -228,26 +228,17 @@ export default {
     },
 
     getFrequencyExt(reset_period) {
-      switch (reset_period) {
-        case '%w':
-          return this.$t('week');
-        case '%m':
-          return this.$t('month');
-        case '%y':
-          return this.$t('year');
-        default:
-          return undefined;
-      }
+      return this.$t(reset_period);
     },
 
     getFrequency(reset_period) {
       switch (reset_period) {
         case this.$t('week'):
-          return '%w';
+          return 'week';
         case this.$t('month'):
-          return '%m';
+          return 'month';
         case this.$t('year'):
-          return '%y';
+          return 'year';
         default:
           return undefined;
       }
