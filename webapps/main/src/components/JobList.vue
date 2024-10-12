@@ -758,13 +758,7 @@ export default {
     },
 
     batch_assignment_cols() {
-      const cols = [
-        'wo_code',
-        'project_code',
-        'product_code',
-        'phase_alias',
-        'qt_planned',
-      ];
+      const cols = ['project_code', 'qt_planned'];
       return this.job_data.filter((col) => cols.includes(col.name));
     },
 

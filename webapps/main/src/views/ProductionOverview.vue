@@ -233,10 +233,7 @@
                   {{ $capitalize($t('production.search_explainer')) }}:
                 </span>
                 <ul>
-                  <li>{{ $capitalize($t('product.code')) }}</li>
-                  <li>{{ $capitalize($t('work_order.long')) }}</li>
                   <li>{{ $capitalize($t('project')) }}</li>
-                  <li>{{ $capitalize($t('phase.long')) }}</li>
                 </ul>
               </q-tooltip>
             </q-icon>
