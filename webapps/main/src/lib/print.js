@@ -59,6 +59,8 @@ class TemplateContextFactory {
         return new StepContext(data, store);
       case 'serial':
         return new SerialContext(data, store);
+      case 'print_template':
+        return new PrintTemplateContext(data, store);
       default:
         throw new Error(`Unknown template context type: ${type}`);
     }
@@ -283,6 +285,20 @@ export class IssueTypeContext extends TemplateContext {
   }
 }
 
+export class PrintTemplateContext extends TemplateContext {
+  type = 'template';
+  printTemplate_key;
+
+  constructor(printTemplate_key, store = useStore()) {
+    super(store);
+    this.printTemplate_key = printTemplate_key;
+  }
+
+  getKey() {
+    return this.printTemplate_key;
+  }
+}
+
 export class SerialContext extends TemplateContext {
   type = 'product';
   serial;
@@ -304,41 +320,6 @@ export class SerialContext extends TemplateContext {
       }
 
       switch (presetName) {
-        /*case 'job.key':
-          return job._key;
-        case 'job.qt_planned':
-          return job.qt_planned;
-        case 'job.qt_completed':
-          return job.qt_completed;
-        case 'job.phase_alias':
-          return job.phase_alias;
-        case 'job.start_date':
-          return extractDate(job.start);
-        case 'job.start_time':
-          return extractTime(job.start);
-        case 'job.end_date':
-          return extractDate(job.end);
-        case 'job.end_time':
-          return extractTime(job.end);
-
-        case 'project.code':
-          return job.project_code;
-
-        case 'work_order.code':
-          return job.wo_code;
-        case 'work_order.qt_planned':
-          return workOrder.qt_planned;
-        case 'work_order.qt_completed':
-          return workOrder.qt_completed;
-        case 'work_order.start_date':
-          return extractDate(workOrder.start);
-        case 'work_order.start_time':
-          return extractTime(workOrder.start);
-        case 'work_order.end_date':
-          return extractDate(workOrder.end);
-        case 'work_order.end_time':
-          return extractTime(workOrder.end);*/
-
         default:
           return undefined;
       }

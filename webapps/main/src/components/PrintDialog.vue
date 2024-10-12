@@ -13,6 +13,7 @@
       :style="{ minWidth: `${dialogWidth}px` }"
     >
       <q-step
+        v-if="allowSelectTemplate"
         :name="0"
         :done="activeStep > 0"
         active-icon="mdi-file-document"
@@ -211,6 +212,7 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
 const getDialogRef = () => dialogRef;
 
 const activeStep = ref(0);
+const allowSelectTemplate = ref(true);
 
 const selectedTemplate = ref();
 const isLoadingTemplate = ref(false);
@@ -288,6 +290,11 @@ onMounted(() => {
   //TODO: va verificato
   if (props.context.type === 'issue' && props.context.links) {
     loadSerial(props.context.link);
+  }
+
+  if (props.context.type === 'template') {
+    selectTemplate(props.templates[0]);
+    allowSelectTemplate.value = false;
   }
 
   if (props.context?.step?.batch_key) {

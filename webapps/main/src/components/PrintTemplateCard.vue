@@ -27,6 +27,18 @@
       >
         <q-tooltip>{{ $capitalize($t('print_template_preview')) }}</q-tooltip>
       </q-btn>
+
+      <q-btn
+        v-if="allowEdit"
+        flat
+        round
+        icon="mdi-printer"
+        class="q-ml-sm"
+        @click.stop="openPrintDialog"
+      >
+        <q-tooltip>{{ $capitalize($t('print')) }}</q-tooltip>
+      </q-btn>
+
       <q-btn
         v-if="allowEdit"
         flat
@@ -102,6 +114,7 @@
 import { generate } from '@pdfme/generator';
 import MediaViewer from '@/components/MediaViewer.vue';
 import PrintTemplateDesigner from '@/components/PrintTemplateDesigner.vue';
+import { usePrintDialog } from '@/lib/print';
 
 export default {
   name: 'PrintTemplateCard',
@@ -129,6 +142,16 @@ export default {
   },
 
   emits: ['saved', 'delete', 'restore'],
+
+  setup(props) {
+    const { open: openPrintDialog } = usePrintDialog({
+      context: 'print_template',
+      contextData: props.template._key,
+    });
+    return {
+      openPrintDialog,
+    };
+  },
 
   data() {
     return {

@@ -33,6 +33,25 @@ async def find_print_templates(
       RETURN MERGE(KEEP(template, '_key', 'name', 'description'), { entities : COUNT(entities) })
       """
     )
+  elif context == 'template':
+    cursor = db.aql.execute(
+      """
+      FOR template IN PrintTemplate
+      FILTER template._key == @context_key
+
+      LET entities = (
+        FOR edge IN can_use_print_template
+          FILTER edge._to == template._id
+          return edge
+      )
+
+      SORT template.name
+      RETURN MERGE(KEEP(template, '_key', 'name', 'description'), { entities : COUNT(entities) })
+      """,
+      bind_vars=dict(
+        context_key=context_key,
+      )
+    )
   else:
     context_to_collection = dict(
       product='Product',
