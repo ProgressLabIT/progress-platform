@@ -83,6 +83,7 @@ export default {
     return {
       loading: false,
       options: [],
+      last_research: undefined,
       search_fields: ['code', 'description'],
     };
   },
@@ -94,45 +95,48 @@ export default {
   },
 
   created() {
-    if (this.loadData) {
-      this.loading = true;
-      this.$store.dispatch('loadProductList').then(() => {
-        this.initOptions();
-        this.loading = false;
-      });
-    }
+    this.initialize();
   },
 
   methods: {
+    initialize() {
+      if (this.loadData) {
+        this.loadProducts();
+      }
+    },
+
+    loadProducts(search_value) {
+      this.loading = true;
+      let params = {};
+
+      if (search_value) {
+        params.search = search_value;
+        this.last_research = search_value;
+      }
+      params.limit = 100;
+
+      this.$api
+        .get('product', {
+          params,
+        })
+        .then((resp) => {
+          this.options = resp.data;
+          this.loading = false;
+        });
+    },
+
     initOptions() {
       this.options = [...this.origin_list.filter(this.filterOrigin)];
     },
 
     filter(value, update) {
-      if (value === '') {
+      if (this.last_research === value) {
+        update();
+      } else {
         update(() => {
-          this.initOptions();
+          this.loadProducts(value);
         });
-        return;
       }
-      update(() => {
-        this.loading = true;
-        /*const needle = value.toLowerCase();
-        this.options = this.origin_list.filter((option) => {
-          this.loading = false;
-          return multiMatch(needle, option, this.search_fields);
-        });*/
-        this.$api
-          .get('product', {
-            params: {
-              search: value,
-            },
-          })
-          .then((resp) => {
-            this.options = resp.data;
-            this.loading = false;
-          });
-      });
     },
   },
 };
