@@ -67,18 +67,18 @@ class Queries:
   GET_WORK_ORDER_SEARCH_OPTIONS = """
     LET phases = (FOR j IN Job
        FILTER j.stage != 'closed'
-       COLLECT phase = j.phase_alias OPTIONS { method: "sorted" }
-       return phase)
+       COLLECT phase_alias = j.phase_alias OPTIONS { method: "sorted" }
+       return { "_key": phase_alias, "name": phase_alias})
 
     LET products = (FOR j IN Job
        FILTER j.stage != 'closed'
-       COLLECT product = j.product_code OPTIONS { method: "sorted" }
-       return product)
+       COLLECT product_code = j.product_code, product_key = j.product_key OPTIONS { method: "sorted" }
+       return { "_key": product_key, "name": product_code})
 
     LET wo_codes = (FOR j IN Job
        FILTER j.stage != 'closed'
-       COLLECT wo_code = j.wo_code OPTIONS { method: "sorted" }
-       return wo_code)
+       COLLECT wo_code = j.wo_code, wo_key = j.wo_key OPTIONS { method: "sorted" }
+       return { "_key": wo_key, "name": wo_code})
 
     return {phases, products, wo_codes}
   """

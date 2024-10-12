@@ -156,7 +156,7 @@
           :label="$capitalize($t('product.label', 1))"
           class="q-mb-md"
           popup-content-class="surface1"
-          @filter="filterproduct"
+          @filter="filterProduct"
         >
         </q-select>
 
@@ -476,8 +476,8 @@ export default {
     operator_selected: queryModel(String, 'operator', undefined),
     department_selected: queryModel(String, 'department', undefined),
 
-    code_selected: queryModel(String, 'wo_code', undefined),
-    product_selected: queryModel(String, 'product_code', undefined),
+    code_selected: queryModel(String, 'wo', undefined),
+    product_selected: queryModel(String, 'product', undefined),
     phase_selected: queryModel(String, 'phase_alias', undefined),
 
     start_from_min: queryModel(String, 'min_start_from', null),
@@ -509,6 +509,9 @@ export default {
 
       return {
         search_string: this.search_string,
+        wo_key: this.code_selected,
+        phase_alias: this.phase_selected,
+        product_key: this.product_selected,
         archive_search: this.archive_search,
         ...bools,
         department_key: this.department_selected,
@@ -542,16 +545,16 @@ export default {
       return this.$store.state.org.departments;
     },
 
-    department_list() {
-      return this.$store.state.org.departments;
+    product_list() {
+      return this.$store.state.org.wo_open_proucts;
     },
 
-    department_list() {
-      return this.$store.state.org.departments;
+    code_list() {
+      return this.$store.state.org.wo_open_codes;
     },
 
-    department_list() {
-      return this.$store.state.org.departments;
+    phase_list() {
+      return this.$store.state.org.wo_open_phases;
     },
 
     filtered_departments() {
@@ -572,7 +575,7 @@ export default {
 
     filtered_products() {
       return this.product_search_text
-        ? this.productt_list.filter((d) =>
+        ? this.product_list.filter((d) =>
             d.name.toLowerCase().includes(this.product_search_text),
           )
         : this.product_list;
@@ -593,6 +596,7 @@ export default {
       this.$store.dispatch('loadDepartments'),
       this.$store.dispatch('loadUsers'),
       this.$store.dispatch('loadJobAssignments'),
+      this.$store.dispatch('loadWorkOrderSearchOptions'),
     ]).then((this.vuex_ready = true));
 
     //this.polling_instance = setInterval(() => {
@@ -673,6 +677,24 @@ export default {
     async filterDepartment(val, update) {
       update(() => {
         this.department_search_text = val.toLowerCase();
+      });
+    },
+
+    async filterProduct(val, update) {
+      update(() => {
+        this.product_search_text = val.toLowerCase();
+      });
+    },
+
+    async filterPhase(val, update) {
+      update(() => {
+        this.phase_search_text = val.toLowerCase();
+      });
+    },
+
+    async filterCode(val, update) {
+      update(() => {
+        this.code_search_text = val.toLowerCase();
       });
     },
 
