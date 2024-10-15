@@ -402,6 +402,9 @@ class SerialEventManager:
             for data in serial.data:
                if step.form_field_key == data.form_field_key:
                   data.value = step.value
+                  data.batch_key = step.batch_key
+                  data.phase_key = step.phase_key
+                  data.step_key = step.step_key
          updates.append(dict(_key=serial.key, data=serial.data))
 
       try:
@@ -448,6 +451,9 @@ class SerialEventManager:
               for data in serial.data:
                  if step.form_field_key == data.form_field_key:
                     data.value = step.value
+                    data.batch_key = step.batch_key
+                    data.phase_key = step.phase_key
+                    data.step_key = step.step_key
             confirm_serial_match = dict(_from=f'Batch/{self.event.info.active_batch_key}', from_serial=serial.key)
             confirm_serial_update = dict(_from=serial.id)
             self.tx.collection('contains').update_match(confirm_serial_match, confirm_serial_update)
@@ -490,6 +496,10 @@ class SerialEventManager:
            for data in serial.data:
               if step.form_field_key == data.form_field_key:
                  data.value = step.value
+                 data.batch_key = step.batch_key
+                 data.phase_key = step.phase_key
+                 data.step_key = step.step_key
+
          confirm_serial_match = dict(_from=f'Batch/{self.event.info.active_batch_key}', from_serial=serial.key)
          confirm_serial_update = dict(_from=serial.id)
          self.tx.collection('contains').update_match(confirm_serial_match, confirm_serial_update)
@@ -524,6 +534,9 @@ class SerialEventManager:
               for data in serial.data:
                  if step.form_field_key == data.form_field_key:
                     data.value = step.value
+                    data.batch_key = step.batch_key
+                    data.phase_key = step.phase_key
+                    data.step_key = step.step_key
          confirm_serial_match = dict(_from=f'Batch/{self.event.info.active_batch_key}', from_serial=serial.key)
          confirm_serial_update = dict(_from=serial.id)
          self.tx.collection('contains').update_match(confirm_serial_match, confirm_serial_update)
