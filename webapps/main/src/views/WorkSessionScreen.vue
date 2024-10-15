@@ -174,7 +174,7 @@
             <div class="row col-4 q-col-gutter-x-sm">
               <div class="col">
                 <q-btn
-                  color="theme-grey"
+                  :style="`background-color: ${$theme.grey}aa`"
                   square
                   height="auto"
                   class="fit"
@@ -186,7 +186,7 @@
 
               <div class="col">
                 <q-btn
-                  color="theme-grey"
+                  :style="`background-color: ${$theme.grey}aa`"
                   square
                   height="auto"
                   class="fit"
