@@ -1,8 +1,8 @@
 <template>
   <q-btn
-    v-if="progress_button_visible"
+    v-if="!edit_mode"
     v-touch-hold.mouse="progress_button.altAction"
-    :disabled="!progress_button_active"
+    :disabled="!job.active"
     square
     :style="`background-color: ${progress_button_color}`"
     class="fit"
@@ -18,8 +18,8 @@
       </div>
     </div>
   </q-btn>
-  <template v-else-if="edit_mode">
-    <div class="row col-4 fit">
+  <template v-else>
+    <div class="row col-4 full-height q-col-gutter-x-sm q-pr-none">
       <div class="col">
         <q-btn
           :style="`background-color: ${$theme.green}aa`"
@@ -34,33 +34,17 @@
 
       <div class="col">
         <q-btn
-          :style="`background-color: ${$theme.red}aa`"
+          :style="`background-color: ${$theme.grey}aa`"
           square
           height="auto"
           class="fit"
-          @click="discardStepData"
+          @click="discardTempStepData"
         >
           <span>{{ $t('cancel') }}</span>
         </q-btn>
       </div>
     </div>
   </template>
-  <q-btn
-    v-else
-    square
-    :style="`background-color: ${$theme.blue}aa`"
-    class="fit"
-    @click="toggleStepEditMode(true)"
-  >
-    <div class="row items-center absolute-full">
-      <div class="col-1 offset-2">
-        <q-icon size="lg" name="mdi-pencil" />
-      </div>
-      <div class="col display medium offset-1 text-left q-pr-lg">
-        <span>{{ $t('edit') }}</span>
-      </div>
-    </div>
-  </q-btn>
 </template>
 
 <script>
@@ -91,27 +75,35 @@ export default {
         state.traceability.current_batch_serials,
     }),
 
-    progress_button_visible() {
-      return !this.job.active || !this.current_step_done;
-    },
-
-    progress_button_active() {
-      return this.job.active && !this.current_step_done;
-    },
-
     progress_button_color() {
-      return this.progress_button_active
-        ? (this.job.critical ? this.$theme.red : this.$theme.green) + 'aa'
-        : this.$theme.surface2;
+      let color = undefined;
+      if (!this.job.active) {
+        color = this.$theme.surface2;
+      } else if (this.job.critical) {
+        color = this.$theme.red;
+      } else if (this.current_step_done) {
+        color = this.$theme.blue;
+      } else {
+        color = this.$theme.green;
+      }
+
+      return color + 'aa';
     },
 
     progress_button() {
-      const complete_step = {
-        icon: 'mdi-check',
-        text: this.$t('job.complete_step'),
-        action: this.completeStep,
-        altAction: this.completeStep,
-      };
+      const complete_step = this.current_step_done
+        ? {
+            icon: 'mdi-pencil',
+            text: this.$t('edit'),
+            action: this.toggleStepEditMode,
+            altAction: this.toggleStepEditMode,
+          }
+        : {
+            icon: 'mdi-check',
+            text: this.$t('job.complete_step'),
+            action: this.completeStep,
+            altAction: this.completeStep,
+          };
 
       const declare_batch = {
         icon: 'mdi-plus',
@@ -217,6 +209,17 @@ export default {
       },
       set(key) {
         this.$store.dispatch('goToStep', key);
+      },
+    },
+  },
+
+  watch: {
+    'job.active': {
+      handler() {
+        console.log('Checking...');
+        if (this.job.active === false && this.edit_mode === true) {
+          this.discardTempStepData();
+        }
       },
     },
   },
@@ -633,12 +636,21 @@ export default {
       this.toggleStepEditMode(false);
     },
 
-    async discardStepData() {
-      await this.$store.dispatch('reloadBatchData');
-      this.toggleStepEditMode(false);
+    async discardTempStepData() {
+      if (
+        window.confirm(
+          'This will discard unsaved data and reload the original step. Do you want to continue?',
+        )
+      ) {
+        await this.$store.dispatch('reloadBatchData');
+        this.toggleStepEditMode(false);
+      }
     },
 
     toggleStepEditMode(editMode) {
+      if (editMode == undefined) {
+        editMode = !this.edit_mode;
+      }
       this.$store.dispatch('setStepEditMode', editMode);
     },
   },
