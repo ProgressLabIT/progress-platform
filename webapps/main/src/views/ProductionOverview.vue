@@ -118,6 +118,34 @@
       :active-filters="filters_active"
       @reset="resetFilters"
     >
+      <!-- SEARCH BOX -->
+      <div class="row items-baseline q-col-gutter-md">
+        <q-input
+          v-model="search_string"
+          filled
+          dense
+          clearable
+          autocomplete="off"
+          name="search"
+          debounce="300"
+          :label="$capitalize($t('search'))"
+          class="q-mb-md col"
+        >
+          <template #append>
+            <q-icon name="mdi-information-outline" class="col-auto" size="sm">
+              <q-tooltip :delay="Number(300)" class="text-body2">
+                <span>
+                  {{ $capitalize($t('production.search_explainer')) }}:
+                </span>
+                <ul>
+                  <li>{{ $capitalize($t('project')) }}</li>
+                </ul>
+              </q-tooltip>
+            </q-icon>
+          </template>
+        </q-input>
+      </div>
+
       <!-- FILTERS SPECIFIC TO JOB LIST -->
       <template v-if="$route.name === 'jobList'">
         <!-- BY CODE -->
@@ -133,7 +161,7 @@
           option-value="_key"
           emit-value
           map-options
-          :label="$capitalize($t('code', 1))"
+          :label="$capitalize($t('work_order.long', 1))"
           class="q-mb-md"
           popup-content-class="surface1"
           @filter="filterCode"
@@ -181,7 +209,7 @@
         </q-select>
 
         <!-- BY DEPARTMENT -->
-        <q-select
+        <!-- <q-select
           ref="department_filter"
           v-model="department_selected"
           filled
@@ -198,7 +226,7 @@
           popup-content-class="surface1"
           @filter="filterDepartment"
         >
-        </q-select>
+        </q-select> -->
 
         <!-- BY OPERATOR -->
         <BaseAutocompleteUser
@@ -212,34 +240,6 @@
         </BaseAutocompleteUser>
       </template>
       <!-- END OF JOB-SPECIFIC FILTERS -->
-
-      <!-- SEARCH BOX -->
-      <div class="row items-baseline q-col-gutter-md">
-        <q-input
-          v-model="search_string"
-          filled
-          dense
-          clearable
-          autocomplete="off"
-          name="search"
-          debounce="300"
-          :label="$capitalize($t('search'))"
-          class="q-mb-md col"
-        >
-          <template #append>
-            <q-icon name="mdi-information-outline" class="col-auto" size="sm">
-              <q-tooltip :delay="Number(300)" class="text-body2">
-                <span>
-                  {{ $capitalize($t('production.search_explainer')) }}:
-                </span>
-                <ul>
-                  <li>{{ $capitalize($t('project')) }}</li>
-                </ul>
-              </q-tooltip>
-            </q-icon>
-          </template>
-        </q-input>
-      </div>
 
       <!-- DATE START RANGE -->
       <div class="row q-col-gutter-sm">
