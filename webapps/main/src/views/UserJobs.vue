@@ -1,5 +1,5 @@
 <template>
-  <q-page-container>
+  <q-page-container class="absolute-full">
     <template v-if="vuex_ready">
       <router-view :job-list="job_list" />
     </template>
