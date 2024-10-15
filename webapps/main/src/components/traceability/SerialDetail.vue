@@ -227,7 +227,7 @@ export default {
           field.value?.forEach((file) => {
             if (file.temp) {
               to_add.push(file.content);
-            } else if (file.delete) {
+            } else if (file.delete && file.bucket !== 'traceability') {
               to_delete.push(file.name);
             }
           });
@@ -286,10 +286,21 @@ export default {
               this.getFieldType(field_data) === 'files'
                 ? field_data.value
                     ?.filter((file) => !file.delete)
-                    .map((file) => ({
-                      size: file.size,
-                      name: file.name,
-                    }))
+                    .map((file) => {
+                      if (file.bucket === 'traceability') {
+                        return {
+                          size: file.size,
+                          name: file.name,
+                          path: file.path,
+                          bucket: file.bucket,
+                        };
+                      } else {
+                        return {
+                          size: file.size,
+                          name: file.name,
+                        };
+                      }
+                    })
                 : field_data.value,
           });
         }
