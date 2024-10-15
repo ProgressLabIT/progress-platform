@@ -53,7 +53,7 @@ def convert_field(self, field, batch_key, step_key, phase_key):
   for sub_key in field_value:
     if 'size' in sub_key:
       sub_key['bucket'] = 'traceability'
-      sub_key['base_path'] = batch_key+"/"+step_key+"/"+field['custom_field_key']+"/"+field['form_field_key']
+      sub_key['path'] = "/media/traceability/"+batch_key+"/"+step_key+"/"+field['custom_field_key']+"/"+field['form_field_key']
   setattr(field_data, 'value', field_value)
   setattr(field_data, 'batch_key', batch_key)
   setattr(field_data, 'phase_key', phase_key)
@@ -68,7 +68,7 @@ def convert_form_field(self, field, batch_key, step_key, phase_key):
   for sub_key in field_value:
     if 'size' in sub_key:
       sub_key['bucket'] = 'traceability'
-      sub_key['base_path'] = batch_key+"/"+step_key+"/"+field.custom_field_key+"/"+field.form_field_key
+      sub_key['path'] = "/media/traceability/"+batch_key+"/"+step_key+"/"+field.custom_field_key+"/"+field.form_field_key
   setattr(field_data, 'value', field_value)
   setattr(field_data, 'batch_key', batch_key)
   setattr(field_data, 'phase_key', phase_key)
