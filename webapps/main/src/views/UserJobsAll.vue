@@ -1,5 +1,10 @@
 <template>
   <div class="fit">
+    <div class="row justify-end q-pr-xl">
+      <q-btn size="md" color="theme-blue" @click="show_filters = !show_filters">
+        MOSTRA FILTRI
+      </q-btn>
+    </div>
     <FilterDrawer
       v-model="show_filters"
       :active-filters="filters_active"
