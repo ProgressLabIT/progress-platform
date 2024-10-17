@@ -50,11 +50,13 @@ def convert_field(self, field, work_order_key, batch_key, step_key, phase_key):
   setattr(field_data, 'form_field_key', field['form_field_key'])
   setattr(field_data, 'custom_field_key', field['custom_field_key'])
   field_value = field['value']
-  for sub_key in field_value:
-    if 'size' in sub_key:
-      sub_key['bucket'] = 'traceability'
-      sub_key['path'] = "/media/traceability/"+work_order_key+"/"+batch_key+"/"+step_key+"/"+field['custom_field_key']+"/"+field['form_field_key']+"/"+sub_key['name']
-
+  try:
+    for sub_key in field_value:
+      if 'size' in sub_key:
+        sub_key['bucket'] = 'traceability'
+        sub_key['path'] = "/media/traceability/"+work_order_key+"/"+batch_key+"/"+step_key+"/"+field['custom_field_key']+"/"+field['form_field_key']+"/"+sub_key['name']
+  except:
+    field_value = field['value']
   setattr(field_data, 'value', field_value)
   setattr(field_data, 'batch_key', batch_key)
   setattr(field_data, 'phase_key', phase_key)
@@ -66,10 +68,13 @@ def convert_form_field(self, field, work_order_key, batch_key, step_key, phase_k
   setattr(field_data, 'form_field_key', field.form_field_key)
   setattr(field_data, 'custom_field_key', field.custom_field_key)
   field_value = field.value
-  for sub_key in field_value:
-    if 'size' in sub_key:
-      sub_key['bucket'] = 'traceability'
-      sub_key['path'] = "/media/traceability/"+work_order_key+"/"+batch_key+"/"+step_key+"/"+field.custom_field_key+"/"+field.form_field_key+"/"+sub_key['name']
+  try:
+    for sub_key in field_value:
+      if 'size' in sub_key:
+        sub_key['bucket'] = 'traceability'
+        sub_key['path'] = "/media/traceability/"+work_order_key+"/"+batch_key+"/"+step_key+"/"+field.custom_field_key+"/"+field.form_field_key+"/"+sub_key['name']
+  except:
+    field_value = field.value
   setattr(field_data, 'value', field_value)
   setattr(field_data, 'batch_key', batch_key)
   setattr(field_data, 'phase_key', phase_key)
