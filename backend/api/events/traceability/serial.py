@@ -55,8 +55,8 @@ def convert_field(self, field, work_order_key, batch_key, step_key, phase_key):
       if 'size' in sub_key:
         sub_key['bucket'] = 'traceability'
         sub_key['path'] = "/media/traceability/"+work_order_key+"/"+batch_key+"/"+step_key+"/"+field['custom_field_key']+"/"+field['form_field_key']+"/"+sub_key['name']
-  except:
-    field_value = field['value']
+  except TypeError: # field_value not a dict (type 'files' or 'choice')
+    pass
   setattr(field_data, 'value', field_value)
   setattr(field_data, 'batch_key', batch_key)
   setattr(field_data, 'phase_key', phase_key)
@@ -73,8 +73,8 @@ def convert_form_field(self, field, work_order_key, batch_key, step_key, phase_k
       if 'size' in sub_key:
         sub_key['bucket'] = 'traceability'
         sub_key['path'] = "/media/traceability/"+work_order_key+"/"+batch_key+"/"+step_key+"/"+field.custom_field_key+"/"+field.form_field_key+"/"+sub_key['name']
-  except:
-    field_value = field.value
+  except TypeError: # field_value not a dict (type 'files' or 'choice')
+    pass
   setattr(field_data, 'value', field_value)
   setattr(field_data, 'batch_key', batch_key)
   setattr(field_data, 'phase_key', phase_key)
