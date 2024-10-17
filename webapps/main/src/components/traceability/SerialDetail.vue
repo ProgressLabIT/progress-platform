@@ -112,6 +112,7 @@
 </template>
 
 <script>
+import { cloneDeep } from 'lodash';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
 import MessageThread from '@/components/MessageThread.vue';
 import SerialDetailForm from '@/components/traceability/SerialDetailForm.vue';
@@ -226,7 +227,7 @@ export default {
           field.value?.forEach((file) => {
             if (file.temp) {
               to_add.push(file.content);
-            } else if (file.delete) {
+            } else if (file.delete && file.bucket !== 'traceability') {
               to_delete.push(file.name);
             }
           });
@@ -274,11 +275,36 @@ export default {
     async save() {
       this.saving = true;
 
-      let serial_data = this.serial;
+      let serial_data = cloneDeep(this.serial);
       if (this.serial?.data) {
+        let form_data = [];
         for (const field_data of this.serial.data) {
-          field_data.form_field_key = field_data._key;
+          form_data.push({
+            form_field_key: field_data._key,
+            custom_field_key: field_data.custom_field_key,
+            value:
+              this.getFieldType(field_data) === 'files'
+                ? field_data.value
+                    ?.filter((file) => !file.delete)
+                    .map((file) => {
+                      if (file.bucket === 'traceability') {
+                        return {
+                          size: file.size,
+                          name: file.name,
+                          path: file.path,
+                          bucket: file.bucket,
+                        };
+                      } else {
+                        return {
+                          size: file.size,
+                          name: file.name,
+                        };
+                      }
+                    })
+                : field_data.value,
+          });
         }
+        serial_data.data = form_data;
       }
 
       if (this.missingMandatoryValues(this.serial.data)) {

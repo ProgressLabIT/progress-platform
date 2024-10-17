@@ -14,7 +14,8 @@ collection_map = {
   FileBucket.ISSUE: 'Issue',
   FileBucket.PRODUCT: 'Product',
   FileBucket.TRACEABILITY: 'WorkOrder',
-  FileBucket.USER: 'User'
+  FileBucket.USER: 'User',
+  FileBucket.SERIALS: 'Serial'
 }
 
 
@@ -68,7 +69,17 @@ def verify_target_data(
               status_code = 404,
               detail = f'FormField with key {form_field_key} does not correspond to CustomField with key {custom_field_key}'
             )
-        
+    elif bucket == FileBucket.SERIALS:
+      serial = db.collection('Serial').get(object_key)
+      if not serial:
+        raise HTTPException(
+          status_code = 404,
+          detail = f'No Serial with key {object_key} exists on the database'
+        )
+      #for data in object['data']:
+      #  if data['form_field_key'] == subfolder:
+      #    invalid = False
+      #    break
     elif bucket == FileBucket.PRODUCT:
       doc_type, *rest = subfolder.split('/')
       if doc_type == 'meta':
@@ -83,7 +94,7 @@ def verify_target_data(
           raise HTTPException(
             status_code = 422,
             detail = f'Field {field_key} is not of file type'
-          )      
+          )
 
   return FileTargetData(bucket=bucket, object_key=object_key, subfolder=subfolder)
 

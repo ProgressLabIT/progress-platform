@@ -11,6 +11,7 @@
     persistent
   >
     <div class="column full-height q-px-lg">
+      <slot name="before-header" />
       <div class="col-auto row items-center q-mt-sm q-mb-md">
         <div class="col-auto highlight text-uppercase text-h5">
           {{ $t('filter', 2) }}
@@ -24,6 +25,7 @@
         />
         <div class="col-auto q-ml-md">
           <q-btn
+            v-if="hideable"
             size="sm"
             round
             flat
@@ -31,9 +33,7 @@
             @click="drawerModel = false"
           />
         </div>
-
         <q-space />
-
         <div class="col-auto">
           <q-btn
             v-show="!!activeFilters"
@@ -45,7 +45,6 @@
           </q-btn>
         </div>
       </div>
-
       <div class="col scroll q-pb-xl">
         <slot />
       </div>
@@ -64,6 +63,10 @@ const props = defineProps({
   activeFilters: {
     type: Number,
     default: 0,
+  },
+  hideable: {
+    type: Boolean,
+    default: true,
   },
 });
 

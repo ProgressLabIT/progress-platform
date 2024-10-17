@@ -274,9 +274,9 @@ export default {
 
       if (search_value) {
         params.search = search_value;
-        params.limit = 50;
         this.last_research = search_value;
       }
+      params.limit = 100;
 
       if (search_value) {
         this.$api

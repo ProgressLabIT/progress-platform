@@ -176,6 +176,7 @@ const { dialogRef, onDialogHide, onDialogCancel, onDialogOK } =
   }
 }
 </style>
+
 <style lang="scss">
 .q-option-group.q-option-group--inline > div {
   width: 230px;

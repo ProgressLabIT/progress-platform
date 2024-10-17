@@ -170,9 +170,12 @@ function getClosedWorkSessionData(state, endDT) {
   return work_session;
 }
 
-function sendHeartBeat(state) {
+async function sendHeartBeat(state) {
   const job_key = state.working_job_data._key;
-  api.post(`/job/${job_key}/heartbeat`);
+  const hb_resp = await api.post(`/job/${job_key}/heartbeat`);
+  if (hb_resp.response?.status === 401) {
+    clearInterval(state.heartbeat);
+  }
 }
 
 /** @type {import('vuex').Module} */
@@ -320,6 +323,12 @@ const traceability = {
       state.current_batch_data = batch_data;
     },
 
+    RESUME_BATCH(state, batch_data) {
+      let step_data = cloneDeep(state.current_batch_data?.step_data);
+      state.current_batch_data = batch_data;
+      state.current_batch_data.step_data = step_data;
+    },
+
     UPDATE_BATCH_SERIALS(state, batch_serials) {
       state.current_batch_serials = batch_serials;
     },
@@ -332,6 +341,10 @@ const traceability = {
   actions: {
     goToStep({ commit }, stepKey) {
       if (this.getters.isCurrentStepEditMode()) {
+        // TODO: translation
+        window.alert(
+          'Salva o annulla le modifiche prima di passare a un altro step',
+        );
         return;
       }
       const batchStep = this.getters.getBatchStep(stepKey);
@@ -408,6 +421,27 @@ const traceability = {
       commit('SET_HEARTBEAT', false);
     },
 
+    async forcePauseJob({ state, rootState }, { job }) {
+      const now = DT.utc();
+
+      let event = createEvent(state, rootState.session, {
+        event_type: 'JOB_PAUSED',
+        timestamp: now.toISO(),
+      });
+
+      event = {
+        ...event,
+        job_key: job._key,
+        product_key: job.product_key,
+        work_order_key: job.wo_key,
+        phase_key: job.phase_key,
+        active_batch_key: job.active_batch_key,
+        project_code: job.project_code,
+      };
+
+      await api.post('event', event);
+    },
+
     async resumeJob({ commit, state, rootState }, { batch_serials }) {
       const now = DT.utc();
       // const new_work_session = createWorkSession(state, rootState.session, now)
@@ -423,7 +457,7 @@ const traceability = {
         const { job_data, batch_data } = data.detail;
         commit('UPDATE_JOB', job_data);
         if (batch_data) {
-          commit('UPDATE_BATCH', batch_data);
+          commit('RESUME_BATCH', batch_data);
         }
       }
       commit('SET_HEARTBEAT', true);
@@ -456,7 +490,7 @@ const traceability = {
       let key = batch_key;
       if (!key) {
         const job_resp = await api.get(`job/${job_key}`);
-        const job_data = job_resp.data.detail;
+        const job_data = job_resp.data?.detail;
         key = job_data.active_batch_key;
       }
       let batch_serials = [];

@@ -217,7 +217,7 @@ import { api } from '@/boot/axios';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
 import BasePrompt from '@/components/BasePrompt.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
-import MassCopyProcessDialog from '@/components/MassCopyProcessDialog.vue';
+import MassCopyToProductDialog from '@/components/MassCopyToProductDialog.vue';
 import PhasePrintTemplates from '@/components/PhasePrintTemplates.vue';
 import ProcessParameters from '@/components/ProcessParameters.vue';
 import ProductionNotes from '@/components/ProductionNotes.vue';
@@ -248,7 +248,7 @@ export default {
     function openMassCopyDialog() {
       const sourceProduct = store.getters.productData(route.params.product_key);
       Dialog.create({
-        component: MassCopyProcessDialog,
+        component: MassCopyToProductDialog,
         componentProps: {
           title: t('massCopyProcess.title.product'),
           products: store.getters

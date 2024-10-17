@@ -99,6 +99,7 @@ class TemplateAssignmentContext(str, Enum):
   PHASE = 'phase'
   STEP = 'step'
   ISSUE_TYPE = 'issue_type'
+  TEMPLATE = 'template'
 
 class TemplateAssignmentUpdateType(str, Enum):
   ADD = 'add'

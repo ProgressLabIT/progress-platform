@@ -108,6 +108,7 @@ export default {
       loading: false,
       origin_list: [],
       options: [],
+      last_research: undefined,
     };
   },
 
@@ -117,22 +118,49 @@ export default {
     },
   },
 
+  created() {
+    this.initialize();
+  },
+
   methods: {
+    initialize() {
+      if (this.loadData) {
+        this.loadWorkOrders();
+      }
+    },
+
+    loadWorkOrders(search_value) {
+      this.loading = true;
+      let params = {};
+
+      if (search_value) {
+        params.search = search_value;
+        this.last_research = search_value;
+      }
+      params.limit = 100;
+      params.open = true;
+
+      this.$api
+        .get('work-order', {
+          params,
+        })
+        .then((resp) => {
+          this.options = resp.data;
+          this.loading = false;
+        });
+    },
+
     filter(value, update, abort) {
       if (value.length < 3) {
         abort();
         return;
+      } else if (this.last_research === value) {
+        update();
+      } else {
+        update(() => {
+          this.loadWorkOrders(value);
+        });
       }
-      update(() => {
-        this.loading = true;
-        // No need of multiFieldSearch here. The api already checks all the necessary fields with a single search term.
-        this.$api
-          .get('work-order', { params: { search: value, open: true } })
-          .then((resp) => {
-            this.options = resp.data;
-            this.loading = false;
-          });
-      });
     },
   },
 };

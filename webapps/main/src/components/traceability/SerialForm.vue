@@ -79,7 +79,7 @@
               ?.form_fields"
             :key="field._key"
             :field="field"
-            :root-path="`/media/serial/${serial?._key}`"
+            :root-path="`/media/serial/${serial?._key}/${field._key}`"
             @update="field.value = $event"
           />
         </q-card-section>

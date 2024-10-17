@@ -55,7 +55,7 @@ async def create_work_order(new_wo: WorkOrderNew):
   # 0.1 Generate automatic wo_code if not provided
   if not new_wo.wo_code:
     try:
-      new_wo.wo_code = _generate_counter(tx, 'work_order')
+      new_wo.wo_code = _generate_counter(tx, 'default')
     except:
       tx.abort_transaction()
       status_code=500
@@ -430,7 +430,18 @@ async def delete_work_order(wo_key: str):
       detail=response
     )
 
+# ----------------------------------------------------------------------
 
+@router.get('/work-order-search-opts',
+    dependencies=[Depends(auth.verify_token)])
+async def search_work_orders():
+
+
+  try:
+    cursor = db.aql.execute(Queries.GET_WORK_ORDER_SEARCH_OPTIONS, bind_vars=dict())
+    return [opt for opt in cursor]
+  except StopIteration:
+    return []
 
 # ----------------------------------------------------------------------
 
@@ -663,6 +674,37 @@ async def get_job_data(job_key: str):
   )
 
   return APIResponse(**response)
+
+
+# ----------------------------------------------------------------------
+
+
+@router.get('/work-session',
+    dependencies=[Depends(auth.verify_token)])
+async def get_job_data(job_key: str):
+
+  bind_vars = dict(job_key = job_key)
+
+  try:
+    job_data = db.aql.execute(Queries.GET_WORK_SESSION, bind_vars=bind_vars).next()
+
+  except:
+    status_code=500
+    response=dict(
+      status_code=status_code,
+      message="Couldn't retrieve data from the DB",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+
+  response=dict(
+    message=f"Retrieved session for Job/{job_key}",
+    detail=job_data
+  )
+
+  return APIResponse(**response)
+
 
 
 # ----------------------------------------------------------------------

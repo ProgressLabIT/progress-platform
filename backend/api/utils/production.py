@@ -64,6 +64,26 @@ class Queries:
   """
 
 
+  GET_WORK_ORDER_SEARCH_OPTIONS = """
+    LET phases = (FOR j IN Job
+       FILTER j.stage != 'closed'
+       COLLECT phase_alias = j.phase_alias OPTIONS { method: "sorted" }
+       return { "_key": phase_alias, "name": phase_alias})
+
+    LET products = (FOR j IN Job
+       FILTER j.stage != 'closed'
+       COLLECT product_code = j.product_code, product_key = j.product_key OPTIONS { method: "sorted" }
+       return { "_key": product_key, "name": product_code})
+
+    LET wo_codes = (FOR j IN Job
+       FILTER j.stage != 'closed'
+       COLLECT wo_code = j.wo_code, wo_key = j.wo_key OPTIONS { method: "sorted" }
+       return { "_key": wo_key, "name": wo_code})
+
+    return {phases, products, wo_codes}
+  """
+
+
   GET_WORKING_JOB_DATA = """
     FOR j IN Job
     FILTER j._key == @job_key
@@ -88,6 +108,19 @@ class Queries:
     LET order_notes = DOCUMENT(WorkOrder, j.wo_key).notes
     LET message_count = COUNT(FOR m IN message FILTER m._to == CONCAT('WorkOrder/', j.wo_key) RETURN 1)
     RETURN MERGE(j, { wo_bom, issue_count, product_notes, phase_notes, order_notes, message_count })
+  """
+
+
+  GET_WORK_SESSION = """
+    LET ws_key = FIRST(
+      FOR j IN Job
+      FILTER j._key == @job_key
+      RETURN j.last_work_session_started
+    )
+
+    LET ws = Document('WorkSession', ws_key)
+
+    RETURN ws
   """
 
 

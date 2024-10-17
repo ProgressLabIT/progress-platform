@@ -1,4 +1,6 @@
 import traceback
+import os
+import shutil
 
 from fastapi import APIRouter, HTTPException, Depends
 
@@ -29,6 +31,16 @@ traceability_collections = [
     'Serial'
   ]
 
+media_directories = [
+    'serial',
+    'traceability',
+    'issue'
+  ]
+
+def clean_dir(path):
+ if os.path.isdir(path):
+      shutil.rmtree(path)
+
 @router.delete('/reset/prod',
     dependencies=[Depends(auth.verify_token)])
 async def reset_production_and_traceability_data():
@@ -49,6 +61,9 @@ async def reset_production_and_traceability_data():
     ))
 
     tx.commit_transaction()
+
+    for dir in media_directories:
+      clean_dir("/media/"+dir)
 
     return 'Reset of Production and Traceability data successful'
 

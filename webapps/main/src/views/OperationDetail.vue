@@ -162,7 +162,7 @@ import NoDataAlert from '@/components/NoDataAlert.vue';
 import ProcessParameters from '@/components/ProcessParameters.vue';
 import ProductionNotes from '@/components/ProductionNotes.vue';
 import ProcessSteps from '@/components/process-steps/ProcessSteps.vue';
-import MassCopyProcessDialog from '../components/MassCopyProcessDialog.vue';
+import MassCopyToProductDialog from '../components/MassCopyToProductDialog.vue';
 
 export default {
   name: 'OperationDetail',
@@ -194,7 +194,7 @@ export default {
         },
       });
       Dialog.create({
-        component: MassCopyProcessDialog,
+        component: MassCopyToProductDialog,
         componentProps: {
           title: t('massCopyProcess.title.operation'),
           products,

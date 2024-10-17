@@ -433,7 +433,7 @@ export default {
       this.links.product = { _key: wo.product_key };
 
       let params = new URLSearchParams();
-      this.links.work_order.phase_sequence.forEach((pk) =>
+      this.links.work_order?.phase_sequence?.forEach((pk) =>
         params.append('phase_key', pk),
       );
 

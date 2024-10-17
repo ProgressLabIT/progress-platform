@@ -118,41 +118,6 @@
       :active-filters="filters_active"
       @reset="resetFilters"
     >
-      <!-- FILTERS SPECIFIC TO JOB LIST -->
-      <template v-if="$route.name === 'jobList'">
-        <!-- BY DEPARTMENT -->
-        <q-select
-          ref="department_filter"
-          v-model="department_selected"
-          filled
-          dense
-          use-input
-          clearable
-          :options="filtered_departments"
-          option-label="name"
-          option-value="_key"
-          emit-value
-          map-options
-          :label="$capitalize($t('department', 1))"
-          class="q-mb-md"
-          popup-content-class="surface1"
-          @filter="filterDepartment"
-        >
-        </q-select>
-
-        <!-- BY OPERATOR -->
-        <BaseAutocompleteUser
-          :placeholder="$capitalize($t('operator'))"
-          dense
-          class="q-mb-md"
-          key-only
-          :value="operator_selected"
-          @select="(selection) => (operator_selected = selection)"
-        >
-        </BaseAutocompleteUser>
-      </template>
-      <!-- END OF JOB-SPECIFIC FILTERS -->
-
       <!-- SEARCH BOX -->
       <div class="row items-baseline q-col-gutter-md">
         <q-input
@@ -173,16 +138,108 @@
                   {{ $capitalize($t('production.search_explainer')) }}:
                 </span>
                 <ul>
-                  <li>{{ $capitalize($t('product.code')) }}</li>
-                  <li>{{ $capitalize($t('work_order.long')) }}</li>
                   <li>{{ $capitalize($t('project')) }}</li>
-                  <li>{{ $capitalize($t('phase.long')) }}</li>
                 </ul>
               </q-tooltip>
             </q-icon>
           </template>
         </q-input>
       </div>
+
+      <!-- FILTERS SPECIFIC TO JOB LIST -->
+      <template v-if="$route.name === 'jobList'">
+        <!-- BY CODE -->
+        <q-select
+          ref="code_filter"
+          v-model="code_selected"
+          filled
+          dense
+          use-input
+          clearable
+          :options="filtered_codes"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          :label="$capitalize($t('work_order.long', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1"
+          @filter="filterCode"
+        >
+        </q-select>
+
+        <!-- BY PRODUCT -->
+        <q-select
+          ref="product_filter"
+          v-model="product_selected"
+          filled
+          dense
+          use-input
+          clearable
+          :options="filtered_products"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          :label="$capitalize($t('product.label', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1"
+          @filter="filterProduct"
+        >
+        </q-select>
+
+        <!-- BY PHASE -->
+        <q-select
+          ref="phase_filter"
+          v-model="phase_selected"
+          filled
+          dense
+          use-input
+          clearable
+          :options="filtered_phases"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          :label="$capitalize($t('phase.phase', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1"
+          @filter="filterPhase"
+        >
+        </q-select>
+
+        <!-- BY DEPARTMENT -->
+        <!-- <q-select
+          ref="department_filter"
+          v-model="department_selected"
+          filled
+          dense
+          use-input
+          clearable
+          :options="filtered_departments"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          :label="$capitalize($t('department', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1"
+          @filter="filterDepartment"
+        >
+        </q-select> -->
+
+        <!-- BY OPERATOR -->
+        <BaseAutocompleteUser
+          :placeholder="$capitalize($t('operator'))"
+          dense
+          class="q-mb-md"
+          key-only
+          :value="operator_selected"
+          @select="(selection) => (operator_selected = selection)"
+        >
+        </BaseAutocompleteUser>
+      </template>
+      <!-- END OF JOB-SPECIFIC FILTERS -->
 
       <!-- DATE START RANGE -->
       <div class="row q-col-gutter-sm">
@@ -396,6 +453,9 @@ export default {
       job_filters: ['assigned', 'unassigned'],
       // with_open_issues_only: { label: 'Solo con segnalazioni aperte', value: true },
       department_search_text: undefined,
+      phase_search_text: undefined,
+      code_search_text: undefined,
+      product_search_text: undefined,
       editing: false,
       saving: false,
       //polling_instance: undefined,
@@ -412,6 +472,10 @@ export default {
 
     operator_selected: queryModel(String, 'operator', undefined),
     department_selected: queryModel(String, 'department', undefined),
+
+    code_selected: queryModel(String, 'wo', undefined),
+    product_selected: queryModel(String, 'product', undefined),
+    phase_selected: queryModel(String, 'phase_alias', undefined),
 
     start_from_min: queryModel(String, 'min_start_from', null),
     start_from_max: queryModel(String, 'max_start_from', null),
@@ -442,6 +506,9 @@ export default {
 
       return {
         search_string: this.search_string,
+        wo_key: this.code_selected,
+        phase_alias: this.phase_selected,
+        product_key: this.product_selected,
         archive_search: this.archive_search,
         ...bools,
         department_key: this.department_selected,
@@ -475,12 +542,48 @@ export default {
       return this.$store.state.org.departments;
     },
 
+    product_list() {
+      return this.$store.state.org.wo_open_proucts;
+    },
+
+    code_list() {
+      return this.$store.state.org.wo_open_codes;
+    },
+
+    phase_list() {
+      return this.$store.state.org.wo_open_phases;
+    },
+
     filtered_departments() {
       return this.department_search_text
         ? this.department_list.filter((d) =>
             d.name.toLowerCase().includes(this.department_search_text),
           )
         : this.department_list;
+    },
+
+    filtered_codes() {
+      return this.code_search_text
+        ? this.code_list.filter((d) =>
+            d.name.toLowerCase().includes(this.code_search_text),
+          )
+        : this.code_list;
+    },
+
+    filtered_products() {
+      return this.product_search_text
+        ? this.product_list.filter((d) =>
+            d.name.toLowerCase().includes(this.product_search_text),
+          )
+        : this.product_list;
+    },
+
+    filtered_phases() {
+      return this.phase_search_text
+        ? this.phase_list.filter((d) =>
+            d.name.toLowerCase().includes(this.phase_search_text),
+          )
+        : this.phase_list;
     },
   },
 
@@ -490,6 +593,7 @@ export default {
       this.$store.dispatch('loadDepartments'),
       this.$store.dispatch('loadUsers'),
       this.$store.dispatch('loadJobAssignments'),
+      this.$store.dispatch('loadWorkOrderSearchOptions'),
     ]).then((this.vuex_ready = true));
 
     //this.polling_instance = setInterval(() => {
@@ -570,6 +674,24 @@ export default {
     async filterDepartment(val, update) {
       update(() => {
         this.department_search_text = val.toLowerCase();
+      });
+    },
+
+    async filterProduct(val, update) {
+      update(() => {
+        this.product_search_text = val.toLowerCase();
+      });
+    },
+
+    async filterPhase(val, update) {
+      update(() => {
+        this.phase_search_text = val.toLowerCase();
+      });
+    },
+
+    async filterCode(val, update) {
+      update(() => {
+        this.code_search_text = val.toLowerCase();
       });
     },
 

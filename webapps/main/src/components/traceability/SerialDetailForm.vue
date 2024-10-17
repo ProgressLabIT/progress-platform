@@ -77,7 +77,7 @@
                 v-for="field in serial.data"
                 :key="field._key"
                 :field="field"
-                :root-path="`/media/serial/${serial_key}`"
+                :root-path="`/media/serial/${serial_key}/${field._key}`"
                 :disable="!(edit_mode && can_edit)"
                 @update="field.value = $event"
               />

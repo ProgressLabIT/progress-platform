@@ -193,7 +193,7 @@
           table-class="text-high assignment-list"
           card-class="background no-shadow q-mt-md"
           :rows-per-page-options="[0]"
-          :selection="edit_mode ? 'multiple' : false"
+          :selection="edit_mode ? 'multiple' : 'none'"
         >
           <template v-if="edit_mode" #header-selection>
             <q-checkbox
@@ -462,6 +462,9 @@ export default {
           start_from_max: null,
           due_by_min: null,
           due_by_max: null,
+          wo_key: undefined,
+          phase_alias: undefined,
+          product_key: undefined,
         };
       },
     },
@@ -755,13 +758,7 @@ export default {
     },
 
     batch_assignment_cols() {
-      const cols = [
-        'wo_code',
-        'project_code',
-        'product_code',
-        'phase_alias',
-        'qt_planned',
-      ];
+      const cols = ['project_code', 'qt_planned'];
       return this.job_data.filter((col) => cols.includes(col.name));
     },
 
@@ -898,6 +895,24 @@ export default {
           case 'active':
             // Do not show if control is false and job is active
             if (!value && job.active) {
+              match = false;
+            }
+            break;
+
+          case 'wo_key':
+            if (value && job.wo_key !== value) {
+              match = false;
+            }
+            break;
+
+          case 'phase_alias':
+            if (value && job.phase_alias !== value) {
+              match = false;
+            }
+            break;
+
+          case 'product_key':
+            if (value && job.product_key !== value) {
               match = false;
             }
             break;

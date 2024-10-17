@@ -45,22 +45,40 @@ def create_batch_serial_records(self, quantity):
 
   SerialEventManager.getInstance().handle_event(self, SerialCommandType.CREATE_FROM_BATCH, quantity=quantity)
 
-def convert_field(self, field):
+def convert_field(self, field, work_order_key, batch_key, step_key, phase_key):
   field_data = SerialFormFieldValue()
   setattr(field_data, 'form_field_key', field['form_field_key'])
   setattr(field_data, 'custom_field_key', field['custom_field_key'])
-  setattr(field_data, 'value', field['value'])
-  setattr(field_data, 'phase_key', self.info.phase_key)
-  setattr(field_data, 'step_key', self.info.step_key)
+  field_value = field['value']
+  try:
+    for sub_key in field_value:
+      if 'size' in sub_key:
+        sub_key['bucket'] = 'traceability'
+        sub_key['path'] = "/media/traceability/"+work_order_key+"/"+batch_key+"/"+step_key+"/"+field['custom_field_key']+"/"+field['form_field_key']+"/"+sub_key['name']
+  except TypeError: # field_value not a dict (type 'files' or 'choice')
+    pass
+  setattr(field_data, 'value', field_value)
+  setattr(field_data, 'batch_key', batch_key)
+  setattr(field_data, 'phase_key', phase_key)
+  setattr(field_data, 'step_key', step_key)
   return field_data
 
-def convert_form_field(self, field):
+def convert_form_field(self, field, work_order_key, batch_key, step_key, phase_key):
   field_data = SerialFormFieldValue()
   setattr(field_data, 'form_field_key', field.form_field_key)
   setattr(field_data, 'custom_field_key', field.custom_field_key)
-  setattr(field_data, 'value', field.value)
-  setattr(field_data, 'phase_key', self.info.phase_key)
-  setattr(field_data, 'step_key', self.info.step_key)
+  field_value = field.value
+  try:
+    for sub_key in field_value:
+      if 'size' in sub_key:
+        sub_key['bucket'] = 'traceability'
+        sub_key['path'] = "/media/traceability/"+work_order_key+"/"+batch_key+"/"+step_key+"/"+field.custom_field_key+"/"+field.form_field_key+"/"+sub_key['name']
+  except TypeError: # field_value not a dict (type 'files' or 'choice')
+    pass
+  setattr(field_data, 'value', field_value)
+  setattr(field_data, 'batch_key', batch_key)
+  setattr(field_data, 'phase_key', phase_key)
+  setattr(field_data, 'step_key', step_key)
   return field_data
 
 
@@ -71,14 +89,14 @@ def convert_batch_data(self, batch_execution_data):
       if 'form_data' in step:
         for field in step['form_data']:
           if field['value']!=None:
-            batch_data.append(convert_field(self, field=field))
+            batch_data.append(convert_field(self, field=field, work_order_key=batch_execution_data['work_order_key'], batch_key=batch_execution_data['_key'], step_key=step['_key'], phase_key=batch_execution_data['phase_key']))
   return batch_data
 
 def convert_form_data(self, form_data):
   batch_data = []
   for field in form_data:
     if field.value!=None:
-            batch_data.append(convert_form_field(self, field=field))
+            batch_data.append(convert_form_field(self, field=field, work_order_key=self.info.work_order_key, batch_key=self.info.active_batch_key, step_key=self.info.step_key, phase_key=self.info.phase_key))
   return batch_data
 
 
