@@ -1,80 +1,92 @@
 <template>
   <div class="fit">
     <div class="row justify-end q-pr-xl">
-      <q-btn size="md" color="theme-blue" @click="show_filters = !show_filters">
-        MOSTRA FILTRI
+      <!-- FILTER BUTTON -->
+      <q-btn
+        v-if="!show_options"
+        class="q-ml-sm"
+        size="sm"
+        color="theme-blue"
+        @click="show_options = true"
+      >
+        MOSTRA OPZIONI
       </q-btn>
     </div>
     <FilterDrawer
-      v-model="show_filters"
+      v-model="show_options"
       :active-filters="filters_active"
-      :hideable="false"
       @reset="resetFilters"
     >
-      <div class="column full-height q-col-gutter-md">
-        <div class="col-auto">
-          <q-select
-            v-model="wo_filter"
-            :label="$t('work_order.short').toUpperCase()"
-            filled
-            use-input
-            dense
-            clearable
-            :options="work_orders"
-          />
-        </div>
-        <div class="col-auto">
-          <q-select
-            v-model="product_filter"
-            :label="$capitalize($t('product.label'))"
-            filled
-            use-input
-            dense
-            clearable
-            :options="products"
-          />
-        </div>
-        <div class="col-auto">
-          <q-select
-            v-model="phase_filter"
-            :label="$t('phase.short')"
-            filled
-            use-input
-            dense
-            clearable
-            :options="phases"
-          />
-        </div>
+      <template #default>
+        <div class="column full-height q-col-gutter-md">
+          <div class="col-auto">
+            <q-select
+              :label="$t('work_order.short').toUpperCase()"
+              filled
+              use-input
+              dense
+              clearable
+              :options="wo_options"
+              :model-value="wo_filter"
+              @filter="filterWos"
+              @update:model-value="(value) => (wo_filter = value)"
+            />
+          </div>
+          <div class="col-auto">
+            <q-select
+              :label="$capitalize($t('product.label'))"
+              filled
+              use-input
+              dense
+              clearable
+              :options="product_options"
+              :model-value="product_filter"
+              @filter="filterProducts"
+              @update:model-value="(value) => (product_filter = value)"
+            />
+          </div>
+          <div class="col-auto">
+            <q-select
+              :label="$t('phase.short')"
+              filled
+              use-input
+              dense
+              clearable
+              :options="phase_options"
+              :model-value="phase_filter"
+              @filter="filterPhases"
+              @update:model-value="(value) => (phase_filter = value)"
+            />
+          </div>
 
-        <div class="col-auto">
-          <q-checkbox
-            v-model="started_only"
-            :label="$capitalize($t('job.filters.started_only'))"
-            hide-bottom-space
-            no-ripple
-            class="q-ma-none q-pa-none nowrap text-low col-auto"
-          />
+          <div class="col-auto">
+            <q-checkbox
+              v-model="started_only"
+              :label="$capitalize($t('job.filters.started_only'))"
+              hide-bottom-space
+              no-ripple
+              class="q-ma-none q-pa-none nowrap text-low col-auto"
+            />
+          </div>
+
+          <div class="row justify-between items-center q-pb-md">
+            <span class="text-h5 uppercase"> visualizzazione </span>
+            <q-btn-toggle
+              v-model="layout"
+              :options="[
+                { value: 'card', icon: 'mdi-view-grid' },
+                { value: 'list', icon: 'mdi-view-agenda' },
+              ]"
+              color="theme-grey"
+              toggle-color="text-high"
+              flat
+              size="md"
+              padding="sm sm"
+              class="q-ma-none q-pa-none"
+            />
+          </div>
         </div>
-        <div
-          color="text-low"
-          class="row justify-between items-center col-auto absolute-bottom q-pb-md q-px-lg"
-        >
-          <span class="text-h5 text-low uppercase"> visualizzazione </span>
-          <q-btn-toggle
-            v-model="layout"
-            :options="[
-              { value: 'card', icon: 'mdi-view-grid' },
-              { value: 'list', icon: 'mdi-view-agenda' },
-            ]"
-            color="theme-grey"
-            toggle-color="text-high"
-            flat
-            size="md"
-            padding="sm sm"
-            class="q-ma-none q-pa-none"
-          />
-        </div>
-      </div>
+      </template>
     </FilterDrawer>
 
     <q-page class="q-px-lg fit scroll">
@@ -174,10 +186,13 @@ export default {
     return {
       search_string: '',
       started_only: false,
-      wo_filter: undefined,
       product_filter: undefined,
       phase_filter: undefined,
-      show_filters: false,
+      wo_filter: undefined,
+      wo_options: [],
+      phase_options: [],
+      product_options: [],
+      show_options: false,
     };
   },
 
@@ -239,12 +254,12 @@ export default {
     },
 
     filters_active() {
-      return (
-        this.wo_filter ||
-        this.product_filter ||
-        this.phase_filter ||
-        this.started_only
-      );
+      return [
+        this.wo_filter,
+        this.product_filter,
+        this.phase_filter,
+        this.started_only,
+      ].filter((v) => !!v).length;
     },
 
     layout: {
@@ -267,6 +282,9 @@ export default {
       this.layout = legacyLayout;
       localStorage.removeItem('LAYOUT');
     }
+
+    // Init filter options
+    this.initFilterOptions();
   },
 
   methods: {
@@ -279,6 +297,12 @@ export default {
           : true) &&
         (this.started_only ? job.stage != 'created' : true)
       );
+    },
+
+    initFilterOptions() {
+      this.wo_options = this.work_orders;
+      this.phase_options = this.phases;
+      this.product_options = this.products;
     },
 
     goToSelectedJob(job_key) {
@@ -294,6 +318,30 @@ export default {
       this.phase_filter = undefined;
       this.product_filter = undefined;
       this.started_only = false;
+    },
+
+    filterWos(value, update) {
+      update(() => {
+        this.wo_options = this.work_orders.filter((wo) =>
+          wo.toUpperCase().includes(value.toUpperCase()),
+        );
+      });
+    },
+
+    filterProducts(value, update) {
+      update(() => {
+        this.product_options = this.products.filter((p) =>
+          p.toUpperCase().includes(value.toUpperCase()),
+        );
+      });
+    },
+
+    filterPhases(value, update) {
+      update(() => {
+        this.phase_options = this.phases.filter((phase) =>
+          phase.toUpperCase().includes(value.toUpperCase()),
+        );
+      });
     },
   },
 };
