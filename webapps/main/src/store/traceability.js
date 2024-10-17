@@ -341,6 +341,10 @@ const traceability = {
   actions: {
     goToStep({ commit }, stepKey) {
       if (this.getters.isCurrentStepEditMode()) {
+        // TODO: translation
+        window.alert(
+          'Salva o annulla le modifiche prima di passare a un altro step',
+        );
         return;
       }
       const batchStep = this.getters.getBatchStep(stepKey);
