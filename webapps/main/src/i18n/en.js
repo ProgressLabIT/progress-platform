@@ -5,6 +5,10 @@ export default {
     productionOverview: 'production monitoring',
     userJobs: 'work session',
   },
+  login_page: {
+    login_first: 'Perform login to display this page',
+    not_authorized: 'User is not authorized for this page',
+  },
   active: 'active',
   add: 'add',
   add_equipment: 'add equipment',

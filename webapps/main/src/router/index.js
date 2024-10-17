@@ -1,3 +1,4 @@
+import { Quasar } from 'quasar';
 import { route } from 'quasar/wrappers';
 import {
   createRouter,
@@ -5,8 +6,9 @@ import {
   createWebHistory,
   createWebHashHistory,
 } from 'vue-router';
+import en from '@/i18n/en.js';
+import it from '@/i18n/it.js';
 import routes from './routes';
-
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;
@@ -33,8 +35,40 @@ export default route(function ({ store }) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
+  const messages = {
+    en: en,
+    it: it,
+  };
+
+  function getLocale() {
+    const preferredLocale = store.state.session.user.preferences.locale;
+    const detectedLocale = Quasar.lang.getLocale();
+    const rawLocale = preferredLocale ?? detectedLocale ?? 'it';
+    return rawLocale.startsWith('it') ? 'it' : 'en';
+  }
+
   function hasRoutePermission(route) {
     return store.getters.hasPermission(route.meta.scope);
+  }
+
+  function hasValue(v) {
+    return v !== undefined && v !== null;
+  }
+
+  function translate(message_code) {
+    let result = messages[getLocale()];
+    if (!hasValue(result)) {
+      return message_code;
+    }
+    for (const key of message_code.split('.')) {
+      result = result[key];
+      if (!hasValue(result)) {
+        return message_code;
+      }
+    }
+
+    // Load the messages in the specified locale if available or fallback to the default one
+    return hasValue(result) ? result : message_code;
   }
 
   Router.beforeEach(async (to, from, next) => {
@@ -54,18 +88,14 @@ export default route(function ({ store }) {
       !store.getters.isLoggedIn &&
       !(await store.dispatch('recognizeMe'))
     ) {
-      window.alert(
-        "Per visualizzare questa pagina è necessario fare prima l'accesso",
-      );
+      window.alert(translate('login_page.login_first'));
       next({ name: 'login', query: { redirect_to: to.fullPath } });
     }
     // Make sure user has appropriate permissions to access the page
     else {
       const not_authorized = to.matched.some((r) => !hasRoutePermission(r));
       if (not_authorized) {
-        window.alert(
-          "L'utente non ha le autorizzazioni necessarie per accedere a questa pagina",
-        );
+        window.alert(translate('login_page.not_authorized'));
         next(false);
       } else {
         // Consider the navigation as an interaction > Reset session timeout

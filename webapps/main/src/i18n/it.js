@@ -5,6 +5,12 @@ export default {
     productionOverview: 'monitoraggio produzione',
     userJobs: 'sessione di lavoro',
   },
+  login_page: {
+    login_first:
+      "Per visualizzare questa pagina è necessario fare prima l'accesso",
+    not_authorized:
+      "L'utente non ha le autorizzazioni necessarie per accedere a questa pagina",
+  },
   active: 'attivo',
   active_qt: 'qt in lavorazione',
   add: 'aggiungi',
