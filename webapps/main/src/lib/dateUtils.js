@@ -1,6 +1,12 @@
 import { date } from 'quasar';
 
 export function calculateNextResetDate({ reset_period }) {
+  function tomorrow() {
+    var d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d;
+  }
+
   function nextweek() {
     var d = new Date();
     d.setDate(d.getDate() + ((1 + 7 - d.getDay()) % 7));
@@ -27,6 +33,8 @@ export function calculateNextResetDate({ reset_period }) {
 
   function calculateResetDate() {
     switch (reset_period) {
+      case 'day':
+        return formatResetDate(tomorrow());
       case 'week':
         return formatResetDate(nextweek());
       case 'month':

@@ -943,4 +943,5 @@ export default {
   year: 'Year',
   month: 'Month',
   week: 'Week',
+  day: 'Day',
 };

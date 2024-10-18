@@ -50,7 +50,7 @@
               v-model="temp_data.frequency"
               filled
               :rules="[(value) => !!value || $t('field_required_alert')]"
-              :options="[$t('year'), $t('month'), $t('week')]"
+              :options="[$t('year'), $t('month'), $t('week'), $t('day')]"
               :label="$t('frequency')"
               class="q-mt-md"
               :disable="!editMode"
@@ -233,6 +233,8 @@ export default {
 
     getFrequency(reset_period) {
       switch (reset_period) {
+        case this.$t('day'):
+          return 'day';
         case this.$t('week'):
           return 'week';
         case this.$t('month'):

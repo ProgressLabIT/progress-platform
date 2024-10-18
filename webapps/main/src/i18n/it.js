@@ -962,4 +962,5 @@ export default {
   year: 'Anno',
   month: 'Mese',
   week: 'Settimana',
+  day: 'Giorno',
 };
