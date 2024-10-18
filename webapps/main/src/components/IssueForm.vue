@@ -259,6 +259,7 @@ export default {
     return {
       critical_only: false,
       saving: false,
+      initalized: false,
       issue_type: null,
       form_step: 'data',
       /** @type {import('@/types/form').FormField[]} */
@@ -318,8 +319,10 @@ export default {
     },
     show: {
       handler() {
+        this.initalized = false;
         this.initFormData();
         this.initLinks();
+        this.initalized = true;
       },
     },
     phase_data() {
@@ -354,12 +357,20 @@ export default {
       }
 
       // Set auto links if required
-      if (this.auto_link_mode == 'work_order' && this.auto_links.work_order) {
+      if (
+        this.auto_link_mode == 'work_order' &&
+        this.auto_links.work_order &&
+        !this.initalized
+      ) {
         this.link_form = 'order';
         await this.loadWorkOrder(this.auto_links.work_order);
       }
 
-      if (this.auto_link_mode == 'work_session' && this.auto_links) {
+      if (
+        this.auto_link_mode == 'work_session' &&
+        this.auto_links &&
+        !this.initalized
+      ) {
         this.link_form = 'order';
         await this.loadWorkOrder(this.auto_links.work_order_data);
         if (this.phase_data) {
