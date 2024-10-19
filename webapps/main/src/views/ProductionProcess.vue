@@ -525,6 +525,14 @@ export default {
           if (typeof p._key == 'number') {
             delete p._key;
           }
+          if (p.steps) {
+            p.steps.map((s) => {
+              if (s._key && s._key.startsWith('temp_key')) {
+                delete s._key;
+              }
+              return s;
+            });
+          }
           return p;
         }),
       };

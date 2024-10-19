@@ -123,7 +123,7 @@
           debounce="200"
           :placeholder="$t('description')"
         />
-        <div v-else class="q-mt-md" style="white-space: pre-line;">
+        <div v-else class="q-mt-md" style="white-space: pre-line">
           {{ stepsModel[currentStepIndex].description }}
         </div>
 
@@ -175,6 +175,7 @@
 </template>
 
 <script setup>
+import { uid } from 'quasar';
 import Sortable from 'sortablejs';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
@@ -270,6 +271,7 @@ function addStep(type) {
     media: [],
     form_fields: [],
     print_templates: [],
+    _key: `temp_key-${uid()}`,
   });
   currentStepIndex.value = stepsModel.value.length - 1;
 }
