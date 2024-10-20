@@ -9,6 +9,7 @@ export const useConfigStore = defineStore('config', () => {
     operationParameters: {
       max_offline: 60,
       parallel_job_allowed: true,
+      display_phase_progress: false,
       step_check: false,
       step_check_force_order: false,
       production_batch_qt: 1,

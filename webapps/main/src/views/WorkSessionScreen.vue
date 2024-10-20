@@ -145,6 +145,24 @@
             </template>
 
             <!-- JOB PROGRESS / STATUS -->
+            <template v-if="phase_progress">
+              <PhaseProgressBar
+                size="8px"
+                :data="phase_progress"
+                class="q-mt-lg q-mb-xs"
+              >
+              </PhaseProgressBar>
+              <div class="row justify-between items-center q-pt-xs">
+                <div class="text-h5 weight-bold text-uppercase">
+                  {{ $t('processing_time') }}
+                </div>
+                <div>
+                  {{ $durationFromMillisec(phase_progress.consumer_millis) }} /
+                  {{ $durationFromMillisec(phase_progress.total * 1000) }}
+                </div>
+              </div>
+            </template>
+
             <BaseProgressBar size="8px" :data="j" class="q-mt-lg q-mb-xs">
             </BaseProgressBar>
 
@@ -268,6 +286,7 @@ import { mapState } from 'vuex';
 
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import IssueForm from '@/components/IssueForm.vue';
+import PhaseProgressBar from '@/components/PhaseProgressBar.vue';
 import ProgressBtn from '@/components/ProgressBtn.vue';
 import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
@@ -278,6 +297,7 @@ export default {
 
   components: {
     BaseProgressBar,
+    PhaseProgressBar,
     IssueForm,
     ProgressBtn,
     StartPauseResumeBtn,
@@ -310,6 +330,9 @@ export default {
       alert_timeout: 4000,
       can_leave: false,
       events: undefined,
+      show_progress: false,
+      timer_count: 0,
+      phase_progress: undefined,
     };
   },
 
@@ -481,6 +504,17 @@ export default {
         this.loadJob();
       },
     },
+
+    timer_count: {
+      handler() {
+        if (this.show_progress && this.j.phase_key) {
+          setTimeout(() => {
+            this.refreshPhaseProgress();
+          }, 5000);
+        }
+      },
+      immediate: true, // This ensures the watcher is triggered upon creation
+    },
   },
 
   created() {
@@ -534,6 +568,8 @@ export default {
         ];
       },
     });
+
+    this.refreshPhaseProgress();
   },
 
   beforeUnmount() {
@@ -713,6 +749,26 @@ export default {
         this.$store.dispatch('loadWorkOrderData', this.j.wo_key),
       ]).then(([jobResponse]) => {
         this.$store.commit('UPDATE_JOB', jobResponse.data.detail);
+      });
+    },
+
+    refreshPhaseProgress() {
+      this.$api.get(`/progress/phase/${this.j.phase_key}`).then((resp) => {
+        this.timer_count = resp?.data?.detail?.phase_processing_time;
+        if (resp?.data?.detail?.params?.display_phase_progress) {
+          this.show_progress = true;
+          this.phase_progress = {
+            consumed: resp?.data?.detail?.phase_processing_time_sec,
+            consumer_millis: resp?.data?.detail?.phase_processing_time,
+            total:
+              resp?.data?.detail?.params?.std_processing_time *
+              this.j.qt_planned,
+            active: this.j.active,
+          };
+        } else {
+          this.show_progress = false;
+          this.phase_progress = undefined;
+        }
       });
     },
   },

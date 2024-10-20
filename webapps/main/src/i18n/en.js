@@ -455,6 +455,17 @@ export default {
           title: 'Allowed',
         },
       },
+      display_phase_progress: {
+        true: {
+          desc: 'Display phase progress in work session screen',
+          title: 'Enabled',
+        },
+        title: 'Display phase progress',
+        false: {
+          desc: 'Do not show progress',
+          title: 'Disabled',
+        },
+      },
       production_batch_qt: {
         desc: 'The quantity being processed with each single batch. The quantity indicated is valid throughout the job, with the exception of the last batch, which could have a smaller quantity than defined here. If set to zero, the batch quantity will be equal to the total quantity to be processed by the job.',
         title: 'Production batch',

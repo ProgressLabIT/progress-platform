@@ -467,6 +467,17 @@ export default {
           title: 'Autorizzato',
         },
       },
+      display_phase_progress: {
+        true: {
+          desc: 'Mostra il progresso della fase nella sessione di lavoro',
+          title: 'Abilita',
+        },
+        title: 'Mostra il progresso della fase',
+        false: {
+          desc: 'Non mostrare il progresso della fase nella sessione di lavoro',
+          title: 'Disabilita',
+        },
+      },
       production_batch_qt: {
         desc: "Quantità processata in ogni singolo lotto. La quantità indicata è valida per tutto il lavoro, con l'eccezione dell'ultimo lotto, che potrebbe essere inferiore al lotto definito. Se impostata a zero, il lotto di produzione corrisponde all'intera quantità del lavoro.",
         title: 'Lotto di produzione',

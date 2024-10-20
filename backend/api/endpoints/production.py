@@ -849,3 +849,26 @@ async def update_jobs(job_updates:List[JobUpdate]):
 
     raise HTTPException(status_code=status_code, detail=response)
 
+@router.get("/progress/phase/{phase_key}",
+    dependencies=[Depends(auth.verify_token)])
+async def get_phase_data(phase_key):
+  try:
+    bind_vars = dict(phase_key = phase_key)
+    progress_data = db.aql.execute(Queries.PHASE_PROGRESS, bind_vars=bind_vars).next()
+  except:
+    status_code=500
+    response=dict(
+      status_code=status_code,
+      message="Couldn't retrieve data from the DB",
+      error=traceback.format_exc()
+    )
+    raise HTTPException(status_code=status_code, detail=response)
+
+
+  response=dict(
+    message=f"Retrieved progress for phase/{phase_key}",
+    detail=progress_data
+  )
+
+  return APIResponse(**response)
+

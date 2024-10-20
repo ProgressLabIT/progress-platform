@@ -264,6 +264,24 @@ class Queries:
     RETURN NEW
   """
 
+  PHASE_PROGRESS = """
+    FOR p IN Phase
+      FILTER p._key == @phase_key
+      LET now = DATE_NOW()
+      LET work_sessions = (
+        FOR ws IN WorkSession
+        FILTER ws.phase_key == p._key
+        LET duration = ws.active ? DATE_DIFF(ws.start, now, 'f') : ws.duration
+        LET duration_sec = duration / 1000
+        LET cost = ws.hourly_cost * duration / 3600000
+        RETURN MERGE({ duration, duration_sec, cost })
+      )
+      LET phase_processing_time = SUM(work_sessions[*].duration)
+      LET phase_processing_time_sec = SUM(work_sessions[*].duration_sec)
+      LET phase_processing_cost = SUM(work_sessions[*].cost)
+    RETURN MERGE(p, { phase_processing_time, phase_processing_time_sec, phase_processing_cost })
+  """
+
 
 def update_target_queue(job_key, target_key, action, tx):
   """Add or remove jobs in a queue"""

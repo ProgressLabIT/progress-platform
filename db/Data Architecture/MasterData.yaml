@@ -32,7 +32,7 @@
   *ft name: str
   color: hex
   * target: str [Product, ProductionItem]
-	
+
 # Operation
 	code: str
 	description: str
@@ -60,6 +60,7 @@
     # material_check_mandatory: bool
     # missing_items_allowed: bool
     parallel_job_allowed: bool
+    display_phase_progress: bool
     step_check: bool
     step_check_force_order: bool
     release_style: str [CONTINUOUS, BATCH, SESSION, MANUAL, JOB]
@@ -69,7 +70,7 @@
 # Step
   phase: _key
   title: str
-  description: str 
+  description: str
   # doc: List[str] # doc title
   type: str [instruction, form, checklist]
   checks: List[str]

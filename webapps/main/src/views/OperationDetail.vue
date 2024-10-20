@@ -241,6 +241,7 @@ export default {
       temp_params: {
         max_offline: 60,
         parallel_job_allowed: true,
+        display_phase_progress: false,
         step_check: false,
         step_check_force_order: false,
         std_processing_time: 60,
