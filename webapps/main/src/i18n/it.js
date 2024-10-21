@@ -905,6 +905,7 @@ export default {
       workOrderIssues: 'segnalazioni',
       workOrderNotes: 'Note',
       workOrderMessages: 'Messaggi',
+      workOrderSerials: 'Matricole',
     },
     update_due_date: 'modifica data scadenza',
     update_from_date: 'modifica data rilascio',

@@ -82,6 +82,7 @@ export default {
         'workOrderIssues',
         'workOrderNotes',
         'workOrderMessages',
+        'workOrderSerials',
         // 'workOrderHistory'
       ],
       vuex_ready: false,

@@ -66,6 +66,18 @@ const productionRoutes = [
                       context: 'work_order',
                     }),
                   },
+                  {
+                    path: 'serials',
+                    name: 'workOrderSerials',
+                    component: () =>
+                      import(
+                        '@//components/workorderscreen/WorkOrderSerials.vue'
+                      ),
+                    props: (route) => ({
+                      context_key: route.params.wo_key,
+                      context: 'work_order',
+                    }),
+                  },
                 ],
               },
             ],

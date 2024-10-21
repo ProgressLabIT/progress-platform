@@ -265,6 +265,67 @@ class Queries:
     return base_result
   """
 
+  FIND_WO_SERIALS = """
+    FOR s IN Serial
+
+    // FILTER BY DOCUMENT PROPERTIES
+    FILTER
+      (@work_order_key ? s.wo_key == @work_order_key : true)
+      && s.deleted == false
+
+    LET data = (
+        FOR serial_field in NOT_NULL(s.data, [])
+        let step = DOCUMENT(Step, serial_field.step_key)
+        let phase = DOCUMENT(Phase, serial_field.phase_key)
+        let customField = DOCUMENT(CustomField, serial_field.custom_field_key)
+        RETURN MERGE(serial_field, {
+            step_title: step !=null ? step.title : null,
+            step_description: step !=null ? step.description : null,
+            phase_alias: phase !=null ? phase.alias : null,
+            phase_description: phase !=null ? phase.description : null,
+            custom_field_type: customField!= null ? customField.type : null,
+            custom_field_name: customField!= null ? customField.name : null
+        })
+    )
+
+
+    // PRODUCT
+    let product_code = FIRST(
+        FOR product IN Product
+        FILTER product._key == s.product_key
+        RETURN product.code
+    )
+
+    let batch = FIRST(
+        FOR edge IN batch_serial
+         FILTER edge._to == s._id
+         LET batch = DOCUMENT(Batch, edge._from)
+
+         RETURN batch
+
+    )
+
+    let user = FIRST(
+        FOR user IN User
+        FILTER user._key == s.created_by
+        RETURN user
+    )
+
+    // RETURN RESULTS, WITH LINKS IF REQUESTED
+    return MERGE(s, {
+      data,
+      product_code,
+      wo_code: DOCUMENT(WorkOrder, s.wo_key).wo_code,
+      batch_key: batch._key,
+      job_key: batch.job_key,
+      phase_key: batch.phase_key,
+      user_name: user.name,
+      user_surname: user.surname,
+    })
+
+
+  """
+
 
   BOOK_SERIAL_WIP = """
     FOR w IN wip
