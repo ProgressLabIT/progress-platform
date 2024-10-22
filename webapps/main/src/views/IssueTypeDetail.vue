@@ -252,6 +252,10 @@ export default {
       type: Object,
       required: true,
     },
+    issueTypeKey: {
+      type: Object,
+      required: true,
+    },
   },
 
   data() {
@@ -276,15 +280,10 @@ export default {
 
   watch: {
     editMode: 'setTempData',
-    issue_type: 'setTempData',
+    issueTypeKey: 'setTempData',
   },
 
   mounted() {
-    this.setTempData();
-  },
-
-  updated() {
-    // Ensure fields are updated when navigating to other issue types
     this.setTempData();
   },
 
