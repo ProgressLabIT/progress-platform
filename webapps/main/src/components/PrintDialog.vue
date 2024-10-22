@@ -99,11 +99,10 @@
                 :key="fieldName"
               >
                 <!-- TODO: Handle field type 'image' -->
-                <q-file
+                <q-img
                   v-if="field.type === 'image'"
-                  :label="fieldName"
-                  hint="WIP"
-                  readonly
+                  :src="field.path"
+                  style="width: 100%; min-height: 100px"
                 />
                 <q-input
                   v-else
@@ -297,8 +296,8 @@ onMounted(() => {
     allowSelectTemplate.value = false;
   }
 
-  if (props.context?.step?.batch_key) {
-    loadBatchSerial(props.context.step.batch_key);
+  if (props.context?.batch?._key) {
+    loadBatchSerial(props.context.batch._key);
   }
 
   if (props.context?.step?.product_key) {
