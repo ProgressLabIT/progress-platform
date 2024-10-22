@@ -54,6 +54,7 @@ class WorkOrderNew(BaseModel):
   notes: str | None = None
 
   traceability_level: TraceabilityLevel | None = None
+  serialcode_on_batchstart: bool = False
 
   extra: Any = None
 
@@ -141,6 +142,7 @@ class Job(FlexModel):
   next_batch_available: bool | None = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders
 
   traceability_level: str | None = None
+  serialcode_on_batchstart: bool = False
   # current_step: int | None = None
 
   on_time: bool = True

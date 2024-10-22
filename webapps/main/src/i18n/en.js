@@ -911,6 +911,7 @@ export default {
   traceability: {
     enabled: 'Enable traceability',
     mandatory: 'Mandatory traceability',
+    serialcode_on_batchstart: 'Create serial code on batch start',
     include_deleted: 'Include deleted',
     options: {
       none: 'None',

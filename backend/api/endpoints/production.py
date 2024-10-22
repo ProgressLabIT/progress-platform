@@ -109,6 +109,9 @@ async def create_work_order(new_wo: WorkOrderNew):
     if product_data.traceability_level:
       new_wo.traceability_level = product_data.traceability_level
 
+    if product_data.serialcode_on_batchstart:
+      new_wo.serialcode_on_batchstart = product_data.serialcode_on_batchstart
+
     new_wo_record = create_wo_record(new_wo, wo_coll)
 
   except StopIteration:

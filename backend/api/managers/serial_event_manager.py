@@ -46,7 +46,7 @@ class SerialEventManager:
         case SerialCommandType.CREATE_FROM_BATCH:
            self.create_from_batch(quantity=event_parameters['quantity'])
         case SerialCommandType.CREATE_AND_FINALIZE:
-           self.create_serial(serial_data=self.serial_data, batch_key=None, finalize=True)
+           self.create_serial(serial_data=self.serial_data, batch_key=None, counter=True, finalize=True)
         case SerialCommandType.FINALIZE_BATCH:
            self.confirm_serials(quantity=event_parameters['quantity'], batch_execution_data=event_parameters['batch_execution_data'])
         case SerialCommandType.STORE_BATCH_DATA:
@@ -103,7 +103,7 @@ class SerialEventManager:
         )
        return [e for e in cursor]
 
-    def create_serial(self, serial_data, batch_key, finalize):
+    def create_serial(self, serial_data, batch_key, counter, finalize):
       new_serial_record = Serial(
          **serial_data
       ).dict(by_alias=True)
@@ -119,7 +119,7 @@ class SerialEventManager:
          raise SerialCodeAlreadyPresent(f'Cannot create serial, serial code already used')
       try:
          serial_no = "MISSING-COUNTER"
-         if finalize and new_serial_record['code'] == None:
+         if counter and new_serial_record['code'] == None:
             if (serial_data['counter_key']):
                serial_no = _generate_counter(self.tx, serial_data['counter_key'])
                new_serial_record['code'] = serial_no
@@ -274,11 +274,21 @@ class SerialEventManager:
        product = self.tx.collection('Product').get(product_key)
 
        serial_data = Serial()
+       counter_key = None
        if 'counter_key' in product:
           setattr(serial_data, 'counter_key', product['counter_key'])
+          counter_key = product['counter_key']
        else:
           setattr(serial_data, 'counter_key', None)
        setattr(serial_data, 'product_key', product_key)
+
+       if self.event.job.serialcode_on_batchstart and not counter_key:
+          self.notify_results(dict(
+             notification = SerialNotificationType.ERROR,
+             error_code = SerialNotificationErrorCode.COUNTER_NOT_DEFINED,
+             error = 'Counter not defined'
+          ))
+          raise ValueError(f"Counter not defined for batch {self.event.info.active_batch_key}")
 
        phases_data = self.retrieve_serial_phases_data(product_key)
        data = []
@@ -298,7 +308,7 @@ class SerialEventManager:
        setattr(serial_data, 'wo_key', wo_key)
 
        for i in range(int(quantity)):
-          self.create_serial(serial_data=serial_data.model_dump(), batch_key=batch_key, finalize=False)
+          self.create_serial(serial_data=serial_data.model_dump(), batch_key=batch_key, counter=self.event.job.serialcode_on_batchstart, finalize=False)
 
     def verify_serial_code_free(self, serial_key, product_key, serial):
        cursor = self.tx.aql.execute(

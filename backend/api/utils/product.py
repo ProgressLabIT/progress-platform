@@ -36,7 +36,7 @@ class Queries:
       )
 
       // keep only required attributes
-      LET result = @details ? product : KEEP(product, ["_key", "code", "description", "active", "traceability_level"])
+      LET result = @details ? product : KEEP(product, ["_key", "code", "description", "active", "traceability_level", "serialcode_on_batchstart"])
 
       SORT result.code
       LIMIT @offset, @limit

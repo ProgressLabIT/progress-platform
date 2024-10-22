@@ -39,6 +39,7 @@ class ProductBaseData(FlexModel):
   tags: List[Tag] | None= []
   counter_key: str | None = None
   traceability_level: TraceabilityLevel | None = None
+  serialcode_on_batchstart: bool = False
 
 
 class ProductMetadataField(BaseModel):

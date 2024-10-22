@@ -119,7 +119,7 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
 
   JOB_STARTED = EventMeta(
-    collections=production_collections,
+    collections=production_collections + ['Counter'],
     action='start_job',
     post_processing=production_post_processing
   )
@@ -369,7 +369,7 @@ class ProductionActivityEvent(BaseEvent):
   # ===================================================================
 
   ACTIVE_BATCH_CHANGED = EventMeta(
-    collections=production_collections,
+    collections=production_collections + ['Counter'],
     action="update_active_batch",
     post_processing=["update_job_last_online"]
   )

@@ -925,6 +925,7 @@ export default {
   traceability: {
     enabled: 'abilita tracciabilità',
     mandatory: 'tracciabilità obbligatoria',
+    serialcode_on_batchstart: 'crea la matricola alla creazione del lotto',
     include_deleted: 'includi cancellati',
     options: {
       none: 'Nessuna',

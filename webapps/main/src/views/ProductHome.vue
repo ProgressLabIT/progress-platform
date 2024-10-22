@@ -215,6 +215,22 @@
           />
         </q-card-section>
 
+        <q-card-section>
+          <q-toggle
+            v-if="!!product.traceability_level"
+            filled
+            clearable
+            emit-value
+            map-options
+            :model-value="!!product.serialcode_on_batchstart"
+            :label="$t('traceability.serialcode_on_batchstart')"
+            :disable="!editMode"
+            @update:model-value="
+              (value) => updateField('serialcode_on_batchstart', value)
+            "
+          />
+        </q-card-section>
+
         <!-- PRODUCT COUNTER -->
         <q-card-section>
           <div class="q-mt-lg col-auto">
