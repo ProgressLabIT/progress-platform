@@ -209,6 +209,38 @@
                 <span>{{ props.row[column.name] || 0 }}</span>
               </template>
 
+              <template
+                v-else-if="
+                  ['product_code', 'wo_code', 'project_code'].includes(
+                    column.name,
+                  )
+                "
+              >
+                <span>
+                  {{ props.row[column.name] }}
+                  <q-tooltip
+                    :delay="500"
+                    anchor="top left"
+                    self="bottom left"
+                    :offset="[8, 6]"
+                    transition-show="fade"
+                    transition-hide="fade"
+                  >
+                    <template v-if="column.name === 'product_code'">
+                      <div class="highlight">
+                        {{ props.row.product_code }}
+                      </div>
+                      <div>
+                        {{ props.row.product_description }}
+                      </div>
+                    </template>
+                    <template v-else>
+                      {{ $capitalizeAll(props.row[column.name] || '') }}
+                    </template>
+                  </q-tooltip>
+                </span>
+              </template>
+
               <template v-else>
                 <span class="table-data">
                   {{ $capitalizeAll(props.row[column.name] || '') }}
