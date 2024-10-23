@@ -216,7 +216,6 @@ export default {
   watch: {
     'job.active': {
       handler() {
-        console.log('Checking...');
         if (this.job.active === false && this.edit_mode === true) {
           this.discardTempStepData();
         }

@@ -29,7 +29,10 @@
           <q-td :props="props">
             <span v-if="props.row.traceability_mandatory" class="q-mr-sm">
               <q-icon
-                v-if="props.row.batch_qt === props.row.declared_serials.length"
+                v-if="
+                  job.active_batch_qt &&
+                  props.row.batch_qt === props.row.declared_serials.length
+                "
                 name="mdi-check-circle"
                 color="theme-green"
               />
@@ -46,7 +49,7 @@
               size="sm"
               color="theme-blue"
               :loading="loading"
-              :disable="!job.active_batch_key"
+              :disable="!job.active_batch_key || !job.active"
               @click="serial_form_bom_line = props.row"
             >
               {{
