@@ -239,8 +239,9 @@ class ProductionActivityEvent(BaseEvent):
       job_update['active_batch_key'] = self.batch.key
 
     job_update['active_batch_qt'] = self.batch.qt_total
+    self.tx.collection('Job').update(job_update, return_new=True)['new']
 
-    self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
+    self.job = Job(**self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.info.job_key)).next())
 
     self.response = dict(
       message=f"Job {self.info.job_key} resumed",
