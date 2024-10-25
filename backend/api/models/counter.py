@@ -8,7 +8,7 @@ from utils.dt import timestamp
 
 class Counter(ArangoDocument):
   name: str | None = ""
-  next_tick: int = 0
+  next_tick: int | None = 1
   template: list[str] = []
   frequency: str | None = None
   reset_date: datetime | None = None
