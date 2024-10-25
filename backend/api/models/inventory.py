@@ -6,6 +6,12 @@ from pydantic import model_validator, field_validator, Field
 
 from models.base_models import ArangoDocument
 from utils.counter import _generate_counter
+from utils.dt import timestamp
+
+class InventoryUsagePolicy(str, Enum):
+  FIFO = 'fifo',
+  LIFO = 'lifo',
+  CLOSEST_TO_EXPIRATION = 'closest_to_expiration' # may be different than FIFO due to different expiration times since receipt
 
 
 class Position(ArangoDocument):
@@ -23,6 +29,8 @@ class Inventory(ArangoDocument): # edge located_in
   owned: bool = True # False means it's property of customers or suppliers
   value: float | None = None
   reference: str | None # entry transport document, traceability event, etc.
+  date_received: date | None = Field(default_factory=timestamp)
+  expiration_date: date | None = None
   extra: Any = None
 
 
