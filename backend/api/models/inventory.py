@@ -1,12 +1,19 @@
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import model_validator, field_validator, Field
+from pydantic import model_validator, Field
 
 from models.base_models import ArangoDocument
 from utils.counter import _generate_counter
 from utils.dt import timestamp
+
+
+
+class InventoryGlobalConfig(ArangoDocument):
+  allow_placement_different_from_planned: bool = True
+  allow_mission_closing_with_unstarted_movements: bool = False # started movements must be completed
+
 
 class InventoryUsagePolicy(str, Enum):
   FIFO = 'fifo',
@@ -33,6 +40,11 @@ class Inventory(ArangoDocument): # edge located_in
   expiration_date: date | None = None
   extra: Any = None
 
+class MovementStatus(str, Enum):
+  PLANNED = 'planned'
+  STARTED = 'started'
+  COMPLETED = 'completed'
+  CANCELED = 'canceled'
 
 
 class WarehouseMission(ArangoDocument):
@@ -40,8 +52,12 @@ class WarehouseMission(ArangoDocument):
   notes: str | None = None
   due_by: date | None = None
   assigned_to: str | None = None
+  created: datetime | None = Field(default_factory=timestamp)
+  start: datetime | None = None
+  end: datetime | None = None
+  status: MovementStatus | None = MovementStatus.PLANNED
+  references: list[str] | None = None
   extra: Any = None
-
 
 
 class InventoryMovementType(str, Enum):
@@ -51,13 +67,6 @@ class InventoryMovementType(str, Enum):
   PRODUCTION = 'production'
   CONSUMPTION = 'consumption'
   ADJUSTMENT = 'adjustment'
-
-
-class MovementStatus(str, Enum):
-  PLANNED = 'planned'
-  STARTED = 'started'
-  COMPLETED = 'completed'
-  CANCELED = 'canceled'
 
 
 class InventoryMovement(ArangoDocument):
@@ -82,12 +91,13 @@ class InventoryMovement(ArangoDocument):
 
   mission_key: str | None = None # link to WarehouseMission document, if present
 
-  reference: str | None = None # link to work order, job, project, etc.
+  movement_doc: str | None = None # RECEIPTS/SHIPMENTS: transport document, TRANSFERS: na, PROD/CONS: na
+  source_doc: str | None = None # RECEIPTS: purchase doc, SHIPMENTS: sales doc, TRANSFERS/PROD/CONS: work order/job
 
   extra: Any = None
 
   # Transfer routes must have at least two positions. Positions must be repeat.
-  @model_validator('after')
+  @model_validator(mode='after')
   def validate_route(self):
     if self.type == InventoryMovementType.TRANSFER:
       length = len(self.route)
