@@ -198,23 +198,27 @@ export default {
         {
           name: 'code',
           field: 'component_code',
+          sortable: true,
           label: this.$t('code').toUpperCase(),
           align: 'left',
         },
         {
           name: 'description',
           field: 'component_description',
+          sortable: true,
           label: this.$t('description').toUpperCase(),
           align: 'left',
         },
         {
           name: 'phase_name',
+          sortable: true,
           field: 'phase_name',
           label: this.$t('phase.short', 1).toUpperCase(),
           align: 'left',
         },
         {
           name: 'qt',
+          sortable: true,
           field: this.display_qt,
           label: this.$t('quantity.short').toUpperCase(),
         },
