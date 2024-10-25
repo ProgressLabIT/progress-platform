@@ -68,7 +68,7 @@
 
                 <template v-if="link.item_count">
                   <q-chip
-                    v-if="link.route_name === 'jobIssues'"
+                    v-if="['jobBom', 'jobIssues'].includes(link.route_name)"
                     size="9px"
                     :color="getItemCountColor(link)"
                     class="q-ml-xs weight-bold text-body2"
@@ -366,7 +366,7 @@ export default {
           route_name: 'jobBom',
           text: this.$t('material', 2),
           icon: 'mdi-file-tree',
-          item_count: this.j.job_bom.length,
+          item_count: this.j.job_bom.length + '/' + this.j.wo_bom.length,
         },
         {
           route_name: 'jobIssues',

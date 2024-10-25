@@ -1,144 +1,143 @@
 <template>
   <div class="absolute-full column">
-    <NoDataAlert v-if="!bom.length">
-      {{ $t('bom.missing') }}
-    </NoDataAlert>
-
-    <template v-else>
-      <q-table
-        id="job-bom"
-        ref="bom"
-        class="my-sticky-header-table col"
-        card-class="surface1 shadow-0"
-        row-key="_key"
-        virtual-scroll
-        :loading="loading"
-        :rows="bom"
-        :columns="columns"
-        :pagination="{ rowsPerPage: 0 }"
-        :rows-per-page-options="[0]"
-        :virtual-scroll-sticky-size-start="48"
-        hide-bottom
-      >
-        <template #body-cell-description="props">
-          <q-td style="text-wrap: wrap">
-            {{ props.value }}
-          </q-td>
-        </template>
-        <template #body-cell-serials="props">
-          <q-td :props="props">
-            <span v-if="props.row.traceability_mandatory" class="q-mr-sm">
-              <q-icon
-                v-if="
-                  job.active_batch_qt &&
-                  props.row.batch_qt === props.row.declared_serials.length
-                "
-                name="mdi-check-circle"
-                color="theme-green"
-              />
-              <q-icon
-                v-else
-                name="mdi-asterisk-circle-outline"
-                color="theme-red"
-              />
-            </span>
-            <q-btn
-              v-if="
-                props.value !== null && props.row.traceability_level !== null
-              "
-              size="sm"
-              color="theme-blue"
-              :loading="loading"
-              :disable="!job.active_batch_key || !job.active"
-              @click="serial_form_bom_line = props.row"
-            >
-              {{
-                props.row.phase_key === job.phase_key ? $t('edit') : $t('view')
-              }}
-            </q-btn>
-          </q-td>
-        </template>
-      </q-table>
-
-      <BomComponentSerialForm
-        :show="!!serial_form_bom_line"
-        :bom_line="serial_form_bom_line"
-        :batch_key="job.active_batch_key"
-        :wo_key="job.wo_key"
-        :phase_key="job.phase_key"
-        :traceability_enabled="traceability_enabled"
-        mode="new"
-        @close="
-          () => {
-            serial_form_bom_line = null;
-            refreshBom();
-          }
-        "
-      />
-
-      <q-separator />
-
-      <div
-        class="row items-center col-auto q-px-md text-body2 q-col-qutter-md q-pa-md"
-      >
-        <div class="col">
-          <span class="q-mr-3">
-            {{ $capitalize($t('bom.quantity_type.radio_label')) }}
-          </span>
-          <q-radio
-            v-for="qt_type in qt_types"
-            :key="qt_type"
-            v-model="quantity_type"
-            :val="qt_type"
-            :label="$t('bom.quantity_type.' + qt_type).toUpperCase()"
-          >
-          </q-radio>
-          <q-space />
-          <span class="q-mr-3">
-            {{ $capitalize($t('bom.bom_type.radio_label')) }}
-          </span>
-          <q-radio
-            v-for="b_type in bom_types"
-            :key="b_type"
-            v-model="bom_type"
-            :val="b_type"
-            :label="$t('bom.bom_type.' + b_type).toUpperCase()"
-          >
-          </q-radio>
+    <q-table
+      id="job-bom"
+      ref="bom"
+      class="my-sticky-header-table col"
+      card-class="surface1 shadow-0"
+      row-key="_key"
+      virtual-scroll
+      :loading="loading"
+      :rows="bom"
+      :columns="columns"
+      :pagination="{ rowsPerPage: 0 }"
+      :rows-per-page-options="[0]"
+      :virtual-scroll-sticky-size-start="48"
+      no-data-label="I didn't find anything for you"
+      hide-bottom
+    >
+      <template v-if="!bom.length" #top-row>
+        <div class="text-low absolute-center">
+          {{ $t('no_data') }}
         </div>
-        <div class="col-auto">
+      </template>
+      <template #body-cell-description="props">
+        <q-td style="text-wrap: wrap">
+          {{ props.value }}
+        </q-td>
+      </template>
+      <template #body-cell-serials="props">
+        <q-td :props="props">
+          <span v-if="props.row.traceability_mandatory" class="q-mr-sm">
+            <q-icon
+              v-if="
+                job.active_batch_qt &&
+                props.row.batch_qt === props.row.declared_serials.length
+              "
+              name="mdi-check-circle"
+              color="theme-green"
+            />
+            <q-icon
+              v-else
+              name="mdi-asterisk-circle-outline"
+              color="theme-red"
+            />
+          </span>
           <q-btn
-            size="md"
-            padding="lg xl"
+            v-if="props.value !== null && props.row.traceability_level !== null"
+            size="sm"
             color="theme-blue"
             :loading="loading"
-            :disable="!job.active_batch_key"
-            @click="show_all_serial_form = true"
+            :disable="!job.active_batch_key || !job.active"
+            @click="serial_form_bom_line = props.row"
           >
-            {{ $t('serial_field.bom_component') }}
+            {{
+              props.row.phase_key === job.phase_key ? $t('edit') : $t('view')
+            }}
           </q-btn>
-        </div>
+        </q-td>
+      </template>
+    </q-table>
+
+    <BomComponentSerialForm
+      :show="!!serial_form_bom_line"
+      :bom_line="serial_form_bom_line"
+      :batch_key="job.active_batch_key"
+      :wo_key="job.wo_key"
+      :phase_key="job.phase_key"
+      :traceability_enabled="traceability_enabled"
+      mode="new"
+      @close="
+        () => {
+          serial_form_bom_line = null;
+          refreshBom();
+        }
+      "
+    />
+
+    <q-separator />
+
+    <div
+      class="row items-center col-auto q-px-md text-body2 q-col-qutter-md q-pa-md"
+    >
+      <div class="col">
+        <span class="q-mr-3">
+          {{ $capitalize($t('bom.quantity_type.radio_label')) }}
+        </span>
+        <q-radio
+          v-for="qt_type in qt_types"
+          :key="qt_type"
+          v-model="quantity_type"
+          :val="qt_type"
+          :label="$t('bom.quantity_type.' + qt_type).toUpperCase()"
+        >
+        </q-radio>
+        <q-space />
+        <span class="q-mr-3">
+          {{ $capitalize($t('bom.bom_type.radio_label')) }}
+        </span>
+        <q-radio
+          v-for="b_type in bom_types"
+          :key="b_type"
+          v-model="bom_type"
+          :val="b_type"
+          :label="$t('bom.bom_type.' + b_type).toUpperCase()"
+        >
+        </q-radio>
       </div>
+      <div class="col-auto">
+        <q-btn
+          size="md"
+          padding="lg xl"
+          color="theme-blue"
+          :loading="loading"
+          :disable="!job.active_batch_key"
+          @click="show_all_serial_form = true"
+        >
+          {{ $t('serial_field.bom_component') }}
+        </q-btn>
+      </div>
+    </div>
 
-      <SerialBomForm
-        :show="show_all_serial_form === true"
-        :batch_key="job.active_batch_key ? job.active_batch_key : null"
-        :wo_key="job.wo_key"
-        :phase_key="job.phase_key"
-        mode="new"
-        :traceability_enabled="traceability_enabled"
-        :bom_components="bom"
-        @close="
-          () => {
-            show_all_serial_form = false;
-            refreshBom();
-          }
-        "
-      >
-      </SerialBomForm>
+    <SerialBomForm
+      :show="show_all_serial_form === true"
+      :batch_key="job.active_batch_key ? job.active_batch_key : null"
+      :wo_key="job.wo_key"
+      :phase_key="job.phase_key"
+      mode="new"
+      :traceability_enabled="traceability_enabled"
+      :bom_components="bom"
+      @close="
+        () => {
+          show_all_serial_form = false;
+          refreshBom();
+        }
+      "
+    >
+    </SerialBomForm>
 
-      <!-- INSERT HEREoa DIALOG FOR COMPONENT LOT REGISTRATION -->
-      <!-- <BaseModalForm :show="show_lot_input" @cancel="show_lot_input = false">
+    <!-- INSERT HEREoa DIALOG FOR COMPONENT LOT REGISTRATION -->
+    <!-- <BaseModalForm :show="show_lot_input" @cancel="show_lot_input = false">
         <template v-slot:title>
           REGISTRAZIONE LOTTI MATERIALI
         </template>
@@ -155,13 +154,11 @@
           </v-container>
         </template>
       </BaseModalForm> -->
-    </template>
   </div>
 </template>
 
 <script>
 // import BaseModalForm from '@/components/BaseModalForm.vue'
-import NoDataAlert from '@/components/NoDataAlert.vue';
 import BomComponentSerialForm from 'app/src/components/traceability/BomComponentSerialForm.vue';
 import SerialBomForm from 'app/src/components/traceability/SerialBomForm.vue';
 
@@ -170,7 +167,6 @@ export default {
 
   components: {
     //  BaseModalForm,
-    NoDataAlert,
     BomComponentSerialForm,
     SerialBomForm,
   },
