@@ -152,7 +152,7 @@
             compose:
               - "{{ root_dir}}/config/base.yaml"
               - "{{ root_dir}}/config/stack.yaml"
-              # - '{{ root_dir}}/config/workflow.yaml'
+              - "{{ root_dir}}/config/workflow.yaml"
           environment:
             DB_ROOT_PWD: "{{ db_root_pwd.stdout }}"
             HOST: "{{ inventory_hostname }}"
