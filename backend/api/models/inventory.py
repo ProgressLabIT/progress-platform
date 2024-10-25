@@ -57,7 +57,8 @@ class InventoryMovement(ArangoDocument):
 
   product_key: str
   serial_key: str | None = None
-  quantity: float
+  qt_planned: float
+  qt_confirmed: float
 
   route: list[str] | None = None
   # can be a multistep movement, listing in order all the positions it needs to go through,
