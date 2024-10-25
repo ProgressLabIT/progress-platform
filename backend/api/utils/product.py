@@ -74,6 +74,12 @@ class Queries:
       RETURN MERGE(product, { tags })
   """
 
+  GET_ACTIVE_WO_FOR_PRODUCT = """
+    FOR wo IN WorkOrder
+      FILTER wo.product_key == @product_key
+      RETURN wo
+  """
+
 
 def get_product_data_from_code(product_code: str) -> ProductFull:
   cursor = db.collection('Product').find(dict(code=product_code, trash=False))

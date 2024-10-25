@@ -562,6 +562,29 @@ async def get_product_data(product_key: str):
     )
 
 
+# =================================================
+#  GET /PRODUCT_KEY : GET PRODUCT ACTIVE WO
+# =================================================
+@router.get("/{product_key}/active-wo", response_model=ProductFull,
+    dependencies=[Depends(auth.verify_token)])
+async def get_product_data(product_key: str):
+  try:
+    wo = db.aql.execute(Queries.GET_ACTIVE_WO_FOR_PRODUCT, bind_vars=dict(product_key=product_key))
+    return wo
+
+  except:
+    error_str = traceback.format_exc()
+    status_code = 500
+    response=dict(
+      status=status_code,
+      message="There was an error getting data from the database.",
+      error_str=error_str
+    )
+    raise HTTPException(
+      status_code=status_code,
+      detail=response
+    )
+
 
 # =================================================
 #  PRODUCT STATS
