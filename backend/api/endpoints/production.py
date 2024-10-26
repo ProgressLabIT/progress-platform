@@ -94,6 +94,9 @@ async def create_work_order(new_wo: WorkOrderNew):
     if product_data.traceability_level:
       new_wo.traceability_level = product_data.traceability_level
 
+    if len(product_data.metadata):
+      new_wo.product_metadata = product.metadata
+
     new_wo_record = create_wo_record(new_wo, wo_coll)
 
   except StopIteration:
@@ -107,7 +110,6 @@ async def create_work_order(new_wo: WorkOrderNew):
       status_code=status_code,
       detail=response
     )
-    raise HTTPException()
 
   except:
     tx.abort_transaction()

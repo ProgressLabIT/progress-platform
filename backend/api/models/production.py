@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import model_validator, BaseModel, Field, PositiveFloat, field_validator, ValidationInfo
 
 from models.bom import BomLineRead
+from models.form import FormFieldValue
 from models.process import PhaseParameters, StepWithMediaInfo
 from models.product import ProductDoc
 from models.product import TraceabilityLevel
@@ -54,6 +55,7 @@ class WorkOrderNew(BaseModel):
   notes: str | None = None
 
   traceability_level: TraceabilityLevel | None = None
+  product_metadata: list[FormFieldValue] = []
 
   extra: Any = None
 
