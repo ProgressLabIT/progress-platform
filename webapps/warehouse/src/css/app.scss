@@ -1,0 +1,423 @@
+// app global css in SCSS form
+@use 'quasar.variables';
+@use 'theme';
+@use 'fonts';
+@use 'typography';
+
+$button-border-radius: 4px;
+$typography-font-family: 'Red Hat Text' !important;
+
+$toolbar-min-height: 45px;
+$separator-dark-color: rgba(255, 255, 255, 0.12);
+
+.hover-underline {
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.q-table {
+  th {
+    font-weight: bold;
+    color: var(--text-low);
+  }
+  td {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    &.filter-field {
+      cursor: pointer;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+  /* after = background of selected rows */
+  tbody td:after {
+    @extend .bg-blue-backdrop;
+  }
+  /* before = background of hovered row */
+  tbody td:before {
+  }
+}
+
+.hover-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.my-sticky-header-table {
+  .q-table__top,
+  .q-table__bottom,
+  thead tr th {
+    position: sticky;
+    z-index: 1;
+    font-weight: bold !important;
+  }
+  /* this will be the loading indicator */
+  thead tr:last-child th {
+    /* height of all previous header rows */
+    top: 48px;
+  }
+  thead tr:first-child th {
+    top: 0;
+  }
+
+  thead tr th:last-child {
+    padding-right: 38px;
+  }
+}
+
+.q-menu {
+  @extend .surface1;
+  border: 1px solid var(--theme-grey);
+  border-radius: 0px;
+  color: var(--text-high);
+}
+
+.drag-handle {
+  cursor: grab;
+}
+
+.dragging {
+  cursor: grabbing !important;
+}
+
+.hover-red-bg:hover {
+  background-color: var(--theme-red) !important;
+}
+
+.q-splitter__separator {
+  background-color: $separator-dark-color;
+}
+
+.q-field--filled .q-field__control {
+  border-radius: 0px;
+}
+
+.q-separator--dark {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.q-field--dense .q-field__control,
+.q-field--dense .q-field__marginal {
+  // height: 32px
+}
+
+.q-chip--square {
+  border-radius: 0px;
+}
+
+.q-btn {
+  letter-spacing: var(--display-spacing);
+  font-family: var(--display-font);
+  font-weight: bold;
+  // min-height: 28px;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: var(--display-spacing);
+  font-family: var(--display-font);
+  line-height: 2rem;
+  text-transform: uppercase;
+}
+
+#q-app .no-transition {
+  transition: none !important;
+}
+
+#q-app .nowrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#q-app .background-blur {
+  filter: blur(5px);
+}
+
+.glass {
+  background-color: rgb(100, 100, 100, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+body.body--dark {
+  color: var(--high-white) !important;
+}
+
+#q-app button.q-btn:not(.q-btn--text .q-btn--flat .q-btn--outline) {
+  font-family: var(--display-font);
+  letter-spacing: var(--display-spacing);
+  color: var(--high-white);
+  font-weight: bold;
+}
+
+#q-app .q-avatar {
+  color: #ffffffaa;
+}
+
+#q-app .q-avatar.highlight {
+  color: #fff;
+  font-weight: bold;
+}
+
+#q-app h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: var(--display-font);
+  letter-spacing: var(--display-spacing);
+  text-transform: uppercase;
+  vertical-align: text-bottom;
+  word-break: break-word;
+  color: var(--text-high);
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.app-bar-user-name {
+  @extend .display;
+  font-size: 0.83rem !important;
+  font-weight: bold;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+.q-toolbar__title {
+  @extend .display;
+  font-size: 1.17rem !important;
+  font-weight: bold;
+  color: var(--high-white);
+}
+
+.surface-1 {
+  background-color: #1f2a2d !important;
+}
+
+.parapraph {
+  font-family: var(--text-font);
+  letter-spacing: var(--text-spacing);
+  color: var(--low-white);
+}
+
+.fill {
+  height: 100%;
+  width: 100%;
+}
+
+.flex-fill {
+  /*flex: 1 1 auto;*/
+  height: 300px;
+}
+
+.q-dialog.fill {
+  max-height: 100% !important;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding-top: 8px;
+  padding-bottom: 24px;
+}
+
+span .display {
+  line-height: 0.8rem;
+}
+
+.fade-bottom {
+  /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#131e21+0,131e21+50&0+0,1+50 */
+  background: -moz-linear-gradient(
+    top,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* FF3.6-15 */
+  background: -webkit-linear-gradient(
+    top,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(
+    to bottom,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#131e21', endColorstr='#00131e21',GradientType=0 ); /* IE6-9 */
+}
+
+.fade-top {
+  /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#131e21+50,131e21+100&1+50,0+100 */
+  background: -moz-linear-gradient(
+    bottom,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* FF3.6-15 */
+  background: -webkit-linear-gradient(
+    bottom,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(
+    to top,
+    rgba(19, 30, 33, 1) 50%,
+    rgba(19, 30, 33, 0) 100%
+  ); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#131e21', endColorstr='#00131e21',GradientType=0 ); /* IE6-9 */
+}
+
+.fixed {
+  position: fixed;
+}
+
+.scroll {
+  overflow: auto !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Highlight color on hover for VDataTable rows */
+.q-data-table tr:hover:not(.q-data-table__expanded__content) {
+  background-color: rgba(39, 174, 209, 0.4) !important;
+  /*-webkit-box-shadow: 0px 0px 20px 0px rgba(34,174,209,1);
+  -moz-box-shadow:  0px 0px 20px 0px rgba(34,174,209,1);
+  box-shadow:  0px 0px 20px 0px rgba(34,174,209,1);*/
+}
+
+/*  Make Vertical tabs take all the width available
+    Not possible using properties or inline style
+    because the component generates an inner element
+    (.q-item-group) which is not directly targetable
+    from the parent component
+*/
+.q-tabs--vertical.q-tabs--grow .q-item-group {
+  flex: 1 1 auto !important;
+}
+
+/*Make step tabs not grow beyond container*/
+.q-tabs.q-tabs--grow .q-tabs-bar__content {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.q-tabs--dense .q-tab {
+  min-height: 32px;
+}
+
+/* Draggable ghost class */
+.ghost {
+  opacity: 0.2;
+}
+
+/* Style bom rows for deletion */
+#bom .q-data-table__selected {
+  background-color: transparent !important;
+}
+
+/*.q-autocomplete__content {
+  background-color: var(--surface-2) !important;
+  border-color: var(--box-border) !important;
+}*/
+
+.q-menu__content .q-card .q-list.q-sheet {
+  background-color: var(--surface-2);
+}
+
+/* TRANSITIONS */
+/*.slide-fade-enter-active, .fade-enter-active {
+  transition: all .3s ease;
+}
+.slide-fade-leave-active, .fade-leave-active {
+  transition: all .3s ease;
+}
+.slide-fade-enter, .fade-enter, .slide-fade-leave-to, .fade-leave-to
+{
+  transform: translateX(-10px);
+  opacity: 0;
+}*/
+
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition:
+    opacity 0.2s,
+    transform 0.3s;
+}
+
+.slide-fade-leave-to {
+  transform: translateX(-15px);
+  opacity: 0;
+}
+
+.slide-fade-enter {
+  transform: translateX(15px);
+  opacity: 0;
+}
+
+/* UPPERCASE STYLING FOR VUETIFY INPUTS */
+.input-uppercase input {
+  text-transform: uppercase;
+}
+
+/* hover highlight */
+.hover-highlight {
+  background-color: #293437;
+}
+
+.theme-bg-color {
+  background-color: var(--bg-color);
+}
+
+.opaque {
+  opacity: 1;
+}
+
+.q-data-table-header th {
+  white-space: nowrap;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.alternate-row {
+  background-color: #77777711;
+}
+
+.hover-red:hover {
+  color: var(--theme-red);
+}
+
+.step-divider {
+  display: block;
+  -webkit-box-flex: 1;
+  -ms-flex: 1 1 0px;
+  flex: 1 1 0px;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0px;
+  max-width: 100%;
+  height: 0px;
+  max-height: 0px;
+  border: solid;
+  border-width: 0 0 thin 0;
+  -webkit-transition: inherit;
+  transition: inherit;
+  border-color: rgba(255, 255, 255, 0.12);
+  overflow: visible;
+}
+
+.animate-pulse {
+  animation: q-pulse 2s infinite; /* rtl:ignore */
+}
+
+@keyframes q-pulse {
+  0% {
+    box-shadow: 0 0 0 0px #fff3;
+  }
+  100% {
+    box-shadow: 0 0 0 15px rgba(0, 0, 0, 0);
+  }
+}
