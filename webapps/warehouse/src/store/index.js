@@ -46,7 +46,7 @@ const store = createStore({
         delay: 500,
         delayOnTouchOnly: true,
       },
-      screen_title: 'progress',
+      screen_title: 'warehouse',
       show_drawer: false,
       theme_colors: {},
       icons: icon_list,
