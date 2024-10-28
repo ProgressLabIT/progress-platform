@@ -1,141 +1,167 @@
 <template>
   <div class="fullscreen background flex flex-center">
-    <div class="row full-width items-center">
-      <div class="row col-5 justify-end">
-        <q-img
-          width="300px"
-          height="300px"
-          :src="config.companyLogo"
-          fit="contain"
+    <q-layout view="lHh Lpr fff">
+      <q-page-container>
+        <q-page
+          class="window-height window-width row justify-center items-center"
         >
-          <template #error>
-            <q-avatar size="180" color="blue">
-              <div class="column text-center highlight">
-                <div>IL</div>
-                <div>VOSTRO</div>
-                <div>LOGO</div>
-              </div>
-            </q-avatar>
-          </template>
-        </q-img>
-      </div>
-
-      <q-separator vertical class="q-mx-xl" />
-
-      <q-card
-        class="surface1 full-height col-3 q-pa-lg"
-        square
-        style="width: 500px"
-      >
-        <transition name="fade" mode="out-in">
-          <!-- LOGIN FORM -->
-          <q-form
-            v-if="!logging_in && !verified && !reset_password"
-            key="form"
-            @submit.prevent="login"
-          >
-            <q-card-section>
-              <div class="card-title text-high">
-                {{ $t('session.login_title') }}
-              </div>
-            </q-card-section>
-
-            <q-card-section>
-              <q-input
-                v-model="credentials.username"
-                :label="$capitalize($t('user.username'))"
-                autocomplete="off"
-                class="q-mb-md"
-                for="username"
+          <div class="column q-pa-lg">
+            <div class="row">
+              <q-card
+                square
+                class="shadow-24"
+                style="width: 400px; height: 540px"
               >
-              </q-input>
-              <q-input
-                v-model="credentials.password"
-                type="password"
-                :label="$capitalize($t('user.password'))"
-                for="password"
-              >
-              </q-input>
-            </q-card-section>
+                <q-card-section color="theme-blue" class="full-width">
+                  <h4 class="text-h5 text-white q-my-md">{{ title }}</h4>
+                </q-card-section>
+                <q-card-section>
+                  <q-img
+                    width="50px"
+                    height="50px"
+                    class="absolute"
+                    style="top: 0; right: 12px; transform: translateY(-50%)"
+                    :src="config.companyLogo"
+                    fit="contain"
+                  >
+                    <template #error>
+                      <q-avatar size="180" color="blue">
+                        <div class="column text-center highlight">
+                          <div>IL</div>
+                          <div>VOSTRO</div>
+                          <div>LOGO</div>
+                        </div>
+                      </q-avatar>
+                    </template>
+                  </q-img>
 
-            <q-card-section>
-              <q-btn type="submit" color="theme-blue" class="full-width">
-                {{ $t('session.start_session') }}
-              </q-btn>
-            </q-card-section>
-          </q-form>
+                  <transition name="fade" mode="out-in">
+                    <!-- LOGIN FORM -->
+                    <q-form
+                      v-if="!logging_in && !verified && !reset_password"
+                      key="form"
+                      @submit.prevent="login"
+                    >
+                      <q-card-section>
+                        <div class="card-title text-high">
+                          {{ $t('session.login_title') }}
+                        </div>
+                      </q-card-section>
 
-          <div v-else-if="logging_in" key="progress">
-            <q-spinner
-              size="80px"
-              :thickness="4"
-              indeterminate
-              color="theme-blue"
-              class="q-ma-xl"
-            >
-            </q-spinner>
-          </div>
+                      <q-card-section>
+                        <q-input
+                          v-model="credentials.username"
+                          :label="$capitalize($t('user.username'))"
+                          autocomplete="off"
+                          class="q-mb-md"
+                          for="username"
+                        >
+                        </q-input>
+                        <q-input
+                          v-model="credentials.password"
+                          type="password"
+                          :label="$capitalize($t('user.password'))"
+                          for="password"
+                        >
+                        </q-input>
+                      </q-card-section>
 
-          <!-- WELCOME MESSAGE -->
-          <div v-else-if="verified" key="success">
-            <div class="row items-center">
-              <div class="col-auto q-ml-md">
-                <BaseUserAvatar size="90px" :user="user" :show_name="false">
-                </BaseUserAvatar>
-              </div>
+                      <q-card-section>
+                        <q-btn
+                          type="submit"
+                          color="theme-blue"
+                          class="full-width"
+                        >
+                          {{ $t('session.start_session') }}
+                        </q-btn>
+                      </q-card-section>
+                    </q-form>
 
-              <div class="col q-ml-md">
-                <transition name="slide-fade" mode="out-in">
-                  <span :key="user_message" class="highlight text-uppercase">
-                    {{ user_message }}
-                  </span>
-                </transition>
-              </div>
+                    <div v-else-if="logging_in" key="progress">
+                      <q-spinner
+                        size="80px"
+                        :thickness="4"
+                        indeterminate
+                        color="theme-blue"
+                        class="q-ma-xl"
+                      >
+                      </q-spinner>
+                    </div>
+
+                    <!-- WELCOME MESSAGE -->
+                    <div v-else-if="verified" key="success">
+                      <div class="row items-center">
+                        <div class="col-auto q-ml-md">
+                          <BaseUserAvatar
+                            size="90px"
+                            :user="user"
+                            :show_name="false"
+                          >
+                          </BaseUserAvatar>
+                        </div>
+
+                        <div class="col q-ml-md">
+                          <transition name="slide-fade" mode="out-in">
+                            <span
+                              :key="user_message"
+                              class="highlight text-uppercase"
+                            >
+                              {{ user_message }}
+                            </span>
+                          </transition>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- RESET PASSWORD -->
+                    <div v-else-if="reset_password" key="reset_password">
+                      <q-form @submit.prevent="resetPassword">
+                        <q-card-section>
+                          <div class="card-title text-high">
+                            {{ $t('user.reset_password') }}
+                          </div>
+                        </q-card-section>
+
+                        <q-card-section>
+                          <q-input
+                            v-model="new_password.first"
+                            type="password"
+                            :label="$capitalize($t('user.new_password'))"
+                            autocomplete="off"
+                          >
+                          </q-input>
+
+                          <q-input
+                            v-model="new_password.second"
+                            type="password"
+                            label="Password"
+                            autocomplete="off"
+                          >
+                          </q-input>
+                        </q-card-section>
+
+                        <q-card-actions>
+                          <q-btn
+                            type="submit"
+                            color="theme-blue"
+                            class="full-width"
+                            :disabled="!password_match"
+                          >
+                            {{
+                              $capitalize($t('user.new_password_save_action'))
+                            }}
+                          </q-btn>
+                        </q-card-actions>
+                      </q-form>
+                    </div>
+                  </transition>
+                </q-card-section>
+              </q-card>
             </div>
           </div>
-
-          <!-- RESET PASSWORD -->
-          <div v-else-if="reset_password" key="reset_password">
-            <q-form @submit.prevent="resetPassword">
-              <q-card-section>
-                <div class="card-title text-high">
-                  {{ $t('user.reset_password') }}
-                </div>
-              </q-card-section>
-
-              <q-card-section>
-                <q-input
-                  v-model="new_password.first"
-                  type="password"
-                  :label="$capitalize($t('user.new_password'))"
-                  autocomplete="off"
-                >
-                </q-input>
-
-                <q-input
-                  v-model="new_password.second"
-                  type="password"
-                  label="Password"
-                  autocomplete="off"
-                >
-                </q-input>
-              </q-card-section>
-
-              <q-card-actions>
-                <q-btn
-                  type="submit"
-                  color="theme-blue"
-                  class="full-width"
-                  :disabled="!password_match"
-                >
-                  {{ $capitalize($t('user.new_password_save_action')) }}
-                </q-btn>
-              </q-card-actions>
-            </q-form>
-          </div>
-        </transition>
-      </q-card>
-    </div>
+        </q-page>
+      </q-page-container>
+    </q-layout>
   </div>
 </template>
 
