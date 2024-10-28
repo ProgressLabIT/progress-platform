@@ -183,7 +183,7 @@ class ProductionAdminEvent(BaseEvent):
     ASSUMPTION: Event id, job data etc are already stored in the event class
     """
     if not unit_processing_time:
-      unit_processing_time = self._calculate_avg_unit_processing_time() or self.job.parameters.std_processing_time
+      unit_processing_time = self._calculate_avg_unit_processing_time() or self.job.parameters.std_processing_time * 1000
 
     operator_data = self.tx.collection('User').get(self.job.assigned_to)
     hourly_cost = operator_data.get('hourly_cost', 0)
