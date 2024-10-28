@@ -820,6 +820,7 @@ export default {
       traceability: 'Traceability area',
       reporting: 'Reports area',
       title: 'permissions',
+      warehouse: 'warehouse',
     },
     reset_password: 'reset password',
     reset_password_success:

@@ -145,7 +145,7 @@ export default {
 
   computed: {
     user_list() {
-      return this.$store.state.user.user_list;
+      return this.$store.state.user?.user_list;
     },
 
     filters_label() {

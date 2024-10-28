@@ -22,12 +22,9 @@ const api = axios.create({
 });
 
 export default boot(({ app, store }) => {
-  api.interceptors.request.use((config) => {
-    config.headers.common = {
-      ...config.headers.commons,
-      Authorization: `Bearer ${store.getters.getToken}`,
-    };
-    return config;
+  api.interceptors.request.use((request) => {
+    request.headers['Authorization'] = `Bearer ${store.getters.getToken}`;
+    return request;
   });
   api.interceptors.response.use(
     (res) => {

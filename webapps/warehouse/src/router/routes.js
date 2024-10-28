@@ -1,3 +1,5 @@
+import warehouse from './warehouseRoutes.js';
+
 const routes = [
   {
     path: '/',
@@ -6,16 +8,8 @@ const routes = [
     redirect: { name: 'login' },
     children: [
       {
-        path: '/app',
-        /*children: [
-          ...admin,
-          ...library,
-          ...production,
-          ...operator,
-          ...quality,
-          ...traceability,
-          ...report,
-        ],*/
+        path: '/warehouse',
+        children: [...warehouse],
       },
     ],
   },

@@ -834,6 +834,7 @@ export default {
       traceability: 'Area tracciabilitità',
       reporting: 'Area rapporti',
       title: 'permessi',
+      warehouse: 'magazzino',
     },
     reset_password: 'reimposta password',
     reset_password_success:

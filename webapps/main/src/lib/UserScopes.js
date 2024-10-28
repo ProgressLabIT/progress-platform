@@ -10,5 +10,6 @@ const scopes = [
   { name: 'quality', label: 'Qualità' },
   { name: 'traceability', label: 'Tracciabilità' },
   { name: 'reporting', label: 'Rapporti' },
+  { name: 'warehouse', label: 'Magazzino' },
 ];
 export default scopes;

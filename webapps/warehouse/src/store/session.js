@@ -1,5 +1,5 @@
 import VueCookies from 'vue-cookies';
-import { api } from 'src/boot/axios.js';
+import { api } from '@/boot/axios.js';
 
 const session = {
   state: {
@@ -175,27 +175,7 @@ const session = {
         return userDefaultPage;
       }
 
-      const scopes = state.scope.split(' ');
-      switch (true) {
-        case scopes.includes('operator'):
-          return 'operatorRoot';
-        case scopes.includes('production'):
-          return 'productionRoot';
-        case scopes.includes('library'):
-          return 'libraryRoot';
-        case scopes.includes('admin'):
-          return 'adminPanel';
-        case scopes.includes('quality'):
-          return 'qualityRoot';
-        case scopes.includes('traceability'):
-          return 'traceabilityRoot';
-        case scopes.includes('reporting'):
-          return 'reportRoot';
-        default:
-          throw new Error(
-            'No homepage found for user with scopes: ' + scopes.join(', ')
-          );
-      }
+      return 'warehouseRoot';
     },
   },
 };
