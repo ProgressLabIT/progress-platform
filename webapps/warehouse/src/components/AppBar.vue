@@ -1,7 +1,7 @@
 <template>
   <q-header class="header">
     <q-toolbar>
-      <q-btn flat icon="mdi-menu" padding="none" @click="drawerModel = true" />
+      <!--<q-btn flat icon="mdi-menu" padding="none" @click="drawerModel = true" />-->
 
       <q-toolbar-title shrink class="display q-ml-xs q-mr-auto">
         {{ screenTitle }}
@@ -147,11 +147,11 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { capitalize, capitalizeAll } from 'src/boot/filters.js';
-import { useDrawer } from 'src/composables/drawer';
+//import { useDrawer } from 'src/composables/drawer';
 import { useTheme } from 'src/composables/theme';
 
 const store = useStore();
-const { drawerModel } = useDrawer();
+//const { drawerModel } = useDrawer();
 
 const screenTitle = ref('PROGRESS');
 

@@ -5,7 +5,7 @@
     <!-- <template v-if="!session_locked"> -->
     <AppBar v-if="$q.screen.height > 400" />
 
-    <q-drawer
+    <!--<q-drawer
       id="menu"
       v-model="drawerModel"
       class="surface2"
@@ -28,24 +28,8 @@
         </q-tabs>
 
         <q-space />
-
-        <!-- LANGUAGE SELECTION -->
-        <!-- <div class="q-px-sm">
-          <div class="row justify-between items-center">
-            <span class="display medium">{{ $t('language') }}</span>
-            <q-tabs v-model="locale_index" right>
-              <q-tab
-                v-for="(lang, i) in locale_list"
-                :key="i"
-                class="q-ma-none"
-              >
-                {{ lang }}
-              </q-tab>
-            </q-tabs>
-          </div>
-        </div> -->
-      </div>
-    </q-drawer>
+      </div> </q-drawer
+    >-->
 
     <router-view />
 
