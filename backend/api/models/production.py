@@ -55,7 +55,7 @@ class WorkOrderNew(BaseModel):
   notes: str | None = None
 
   traceability_level: TraceabilityLevel | None = None
-  product_metadata: list[FormFieldValue] = []
+  product_metadata: list = []
 
   extra: Any = None
 
