@@ -95,9 +95,9 @@ async def create_work_order(new_wo: WorkOrderNew):
       new_wo.traceability_level = product_data.traceability_level
 
     if len(product_data.metadata):
-      new_wo.product_metadata = product.metadata
+      new_wo.product_metadata = product_data.metadata
 
-    new_wo_record = create_wo_record(new_wo, wo_coll)
+    new_wo_record = create_wo_record(tx, new_wo)
 
   except StopIteration:
     tx.abort_transaction()
