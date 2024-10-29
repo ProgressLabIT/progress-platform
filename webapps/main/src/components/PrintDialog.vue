@@ -99,11 +99,14 @@
                 :key="fieldName"
               >
                 <!-- TODO: Handle field type 'image' -->
-                <q-img
-                  v-if="field.type === 'image'"
-                  :src="field.path"
-                  style="width: 100%; min-height: 100px"
-                />
+                <template v-if="field.type === 'image'">
+                  <div>{{ fieldName }}</div>
+                  <q-img
+                    :src="formModel[fieldName]"
+                    fit="contain"
+                    style="width: 200px"
+                  />
+                </template>
                 <q-input
                   v-else
                   v-model="formModel[fieldName]"
@@ -224,9 +227,9 @@ const selectedTemplateBK = ref();
 
 const serialTemplateLinks = [
   'serial',
-  'serial_qt',
-  'serial_create_date',
-  'serial_create_time',
+  'serial.qt',
+  'serial.create_date',
+  'serial.create_time',
 ];
 
 async function loadSerial(serial_key) {
@@ -348,7 +351,7 @@ async function selectTemplate(template) {
 
         return [
           fieldName,
-          String(props.context.getCustomFieldValue(link.value) ?? ''),
+          props.context.getCustomFieldValue(link.value) ?? undefined,
         ];
       }),
     );
@@ -360,6 +363,43 @@ async function selectTemplate(template) {
   }
 }
 
+async function loadImage(url) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return new Promise((onSuccess) => {
+    const reader = new FileReader();
+    reader.onload = function () {
+      onSuccess(this.result);
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function prepareInputs() {
+  // Needed to parse input type to load images as base64
+  const inputs = [];
+  for (const schema of selectedTemplate.value.template.schemas) {
+    let schemaFields = [];
+    for (const [fieldName, fieldProps] of Object.entries(schema)) {
+      if (fieldProps.type === 'image') {
+        try {
+          const base64 = await loadImage(formModel.value[fieldName]); // Image URL
+          schemaFields.push([fieldName, base64]);
+        } catch (err) {
+          window.alert(
+            'Error while generating the image. Please contact the system administrator.',
+          );
+          console.log(err);
+        }
+      } else {
+        schemaFields.push([fieldName, formModel.value[fieldName]]);
+      }
+    }
+    inputs.push(Object.fromEntries(schemaFields));
+  }
+  return inputs;
+}
+
 const previewSrc = ref();
 async function goToPreview() {
   previewSrc.value = undefined;
@@ -367,9 +407,11 @@ async function goToPreview() {
   await nextTick();
 
   const { template } = selectedTemplate.value;
+  const inputs = await prepareInputs();
+  console.log(inputs);
   previewSrc.value = await generate({
     template,
-    inputs: [formModel.value],
+    inputs,
   });
 }
 

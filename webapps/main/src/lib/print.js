@@ -55,7 +55,7 @@ class TemplateContextFactory {
     switch (type) {
       case 'issue_type':
         return new IssueTypeContext(data, store);
-      case 'step':
+      case 'batch':
         return new BatchContext(data, store);
       case 'serial':
         return new SerialContext(data, store);
@@ -104,6 +104,53 @@ export class TemplateContext {
       fullName = fullName + ' ' + surname;
     }
     return fullName;
+  }
+
+  getFilePath(fieldInstance, file, fileBucket) {
+    const basePath = '/media';
+    const bucketMap = {
+      product: () =>
+        '/product/' +
+        [
+          this.product._key,
+          'meta',
+          fieldInstance.custom_field_key,
+          file.name,
+        ].join('/'),
+      batch: () =>
+        '/traceability/' +
+        [
+          this.workOrder._key,
+          this.batch._key,
+          fieldInstance.custom_field_key,
+          fieldInstance.form_field_key,
+          file.name,
+        ].join('/'),
+      serial: () =>
+        '/serial/' +
+        [
+          this.serial._key,
+          fieldInstance.custom_field_key,
+          fieldInstance.form_field_key,
+          file.name,
+        ].join('/'),
+    };
+    return basePath + bucketMap[fileBucket]();
+  }
+
+  getFieldValueByType(type, fieldInstance, fileBucket) {
+    switch (type) {
+      case 'choice':
+        return fieldInstance?.value?.value;
+      case 'files':
+        // Use embedded path if present
+        return (
+          fieldInstance?.value?.[0].path ??
+          this.getFilePath(fieldInstance, fieldInstance?.value?.[0], fileBucket)
+        );
+      default:
+        return fieldInstance?.value;
+    }
   }
 
   getPresetValue(presetName) {
@@ -262,7 +309,7 @@ export class IssueTypeContext extends TemplateContext {
     }
 
     const data = this.issue.data.find(({ _key }) => _key === formField._key);
-    return customField.type == 'choice' ? data?.value?.value : data?.value;
+    return this.getFieldValueByType(customField.type, data);
   }
 }
 
@@ -282,56 +329,38 @@ export class PrintTemplateContext extends TemplateContext {
 
 export class SerialContext extends TemplateContext {
   type = 'product';
+  product;
   serial;
 
   constructor(serial_key, store = useStore()) {
     super(store);
     this.serial = store.getters.getSerialData(serial_key);
+    this.product = this.serial.product;
   }
 
   getKey() {
     return this.serial?.product?._key;
   }
 
-  getPresetValue(presetName) {
-    try {
-      const value = super.getPresetValue(presetName);
-      if (value !== undefined) {
-        return value;
-      }
-
-      switch (presetName) {
-        default:
-          return undefined;
-      }
-    } catch (e) {
-      return '';
-    }
-  }
-
   getCustomFieldValue(customFieldKey) {
     const customField = this._store.getters.getCustomFieldByKey(customFieldKey);
 
     if (this.serial) {
-      const serial_data = this.serial.data.find(
+      const formField = this.serial.data.find(
         ({ custom_field_key }) => custom_field_key === customField._key,
       );
 
-      if (serial_data?.value) {
-        return customField.type == 'choice'
-          ? serial_data.value.value
-          : serial_data.value;
+      if (formField?.value) {
+        return this.getFieldValueByType(customField.type, formField, 'serial');
       }
     }
 
     if (this.product?.metadata) {
-      const product_metadata_field = this.product.metadata.find(
+      const formField = this.product.metadata.find(
         ({ custom_field_key }) => custom_field_key === customField._key,
       );
-      if (product_metadata_field.value) {
-        return customField.type == 'choice'
-          ? product_metadata_field?.value?.value
-          : product_metadata_field?.value;
+      if (formField?.value) {
+        return this.getFieldValueByType(customField.type, formField, 'product');
       }
     }
 
@@ -342,19 +371,19 @@ export class SerialContext extends TemplateContext {
 export class BatchContext extends TemplateContext {
   type = 'batch';
   batch;
+  batch_form_data;
   job;
+  product;
   serial;
   workOrder;
 
   constructor(store = useStore()) {
     super(store);
     this.batch = this._store.state.traceability.current_batch_data;
+    this.batch_form_data = this.batch.step_data.map((s) => s.form_data).flat();
     this.job = this._store.state.traceability.working_job_data;
-    this.serial = this.workOrder = this._store.state.workorder.wo_data;
-    this.product = (({ product_code, product_description }) => ({
-      code: product_code,
-      description: product_description,
-    }))(this.workOrder);
+    this.workOrder = this._store.state.workorder.wo_data;
+    this.product = this._store.state.product.saved;
   }
 
   getKey() {
@@ -363,62 +392,39 @@ export class BatchContext extends TemplateContext {
 
   getCustomFieldValue(customFieldKey) {
     const customField = this._store.getters.getCustomFieldByKey(customFieldKey);
-
     // Return empty if custom field not found
     if (!customField) {
       return undefined;
     }
 
-    // Check first among serial data, if present
-    if (this.batch?.step_data.length) {
+    // Check first among batch data, if present
+    if (this.batch_form_data?.length) {
       // Only uses the first matching field
-      const formField = this.batch.form_fields.find(
+      const formField = this.batch_form_data.step_data.find(
         ({ custom_field_key }) => custom_field_key === customFieldKey,
       );
 
-      if (formField) {
-        const data = batchStep.form_data.find(
-          ({ form_field_key }) => form_field_key === formField._key,
-        );
-        if (data?.value) {
-          return customField.type == 'choice'
-            ? data?.value?.value
-            : data?.value;
-        }
+      if (formField?.value) {
+        return this.getFieldValueByType(customField.type, formField, 'batch');
       }
     }
 
     // If no step data field found or empty, check within serial, if present
     if (this.serial) {
-      const serial_data = this.serial.data.find(
+      const formField = this.serial.data.find(
         ({ custom_field_key }) => custom_field_key === customField._key,
       );
-
-      if (serial_data?.value) {
-        return customField.type == 'choice'
-          ? serial_data.value.value
-          : serial_data.value;
+      if (formField?.value) {
+        return this.getFieldValueByType(customField.type, formField, 'serial');
       }
     }
 
     // If no batch data field or empty, check within product metadata, if present
-    if (this.product?.metadata) {
-      const product_metadata_field = this.product.metadata.find(
+    if (this.workOrder?.product_metadata) {
+      const formField = this.workOrder.product_metadata.find(
         ({ custom_field_key }) => custom_field_key === customField._key,
       );
-      if (product_metadata_field.value) {
-        switch (customField.type) {
-          case 'choice':
-            return product_metadata_field?.value?.value;
-          case 'files':
-            return {
-              ...product_metadata_field.value,
-              path: `/media/product/${this.product._key}/meta/${product_metadata_field.custom_field_key}/${product_metadata_field.value.name}`,
-            };
-          default:
-            return product_metadata_field?.value;
-        }
-      }
+      return this.getFieldValueByType(customField.type, formField, 'meta');
     }
 
     // Return undefined if no value found
