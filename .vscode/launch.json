@@ -88,6 +88,17 @@
       }
     },
     {
+      "name": "WSL Chrome - warehouse",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:9000",
+      "webRoot": "${workspaceFolder}/webapps/warehouse",
+      "sourceMapPathOverrides": {
+        "webpack:///./src/*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/*"
+      }
+    },
+    {
       "name": "Launch Cypress",
       "type": "node",
       "request": "launch",

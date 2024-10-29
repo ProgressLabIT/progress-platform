@@ -14,9 +14,19 @@
         </q-card-section>
 
         <q-card-section v-if="drawerMode !== 'handler'" class="col">
-          <div class="text-h6">Our Changing Planet</div>
-          <div class="text-subtitle2">by John Doe</div>
-          <div>{{ lorem }}</div>
+          <q-tabs class="col-auto" vertical switch-indicator inline-label>
+            <q-route-tab
+              v-for="tab in Object.keys(tab_routes)"
+              :key="tab"
+              :to="{ name: tab }"
+              active-class="text-theme-blue"
+              indicator-color="theme-blue"
+              content-class="display"
+              :icon="tab_routes[tab]"
+              :label="$t(`views.${tab}`)"
+            >
+            </q-route-tab>
+          </q-tabs>
         </q-card-section>
 
         <q-card-section v-if="drawerMode !== 'handler'" class="col">
@@ -40,7 +50,7 @@
 import { DateTime } from 'luxon';
 import { useConfigStore } from '../stores/config';
 
-const drawerMinHeight = 50;
+const drawerMinHeight = 70;
 const drawerTopOffset = 100;
 const drawerOpenRatioHalf = 50;
 
@@ -56,6 +66,13 @@ export default {
 
   data() {
     return {
+      tab_routes: {
+        warehouseRoot: 'mdi-home',
+        incomingRoot: 'mdi-import',
+        transferingRoot: 'mdi-swap-vertical',
+        shipmentRoot: 'mdi-export',
+        inventoryRoot: 'mdi-warehouse',
+      },
       now: 0,
       lorem:
         'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',

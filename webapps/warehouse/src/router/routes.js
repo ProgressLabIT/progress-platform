@@ -1,3 +1,7 @@
+import incoming from './incomingRoutes.js';
+import inventory from './inventoryRoutes.js';
+import shipment from './shipmentRoutes.js';
+import transfering from './transferingRoutes.js';
 import warehouse from './warehouseRoutes.js';
 
 const routes = [
@@ -9,7 +13,13 @@ const routes = [
     children: [
       {
         path: '/warehouse',
-        children: [...warehouse],
+        children: [
+          ...warehouse,
+          ...incoming,
+          ...transfering,
+          ...shipment,
+          ...inventory,
+        ],
       },
     ],
   },
