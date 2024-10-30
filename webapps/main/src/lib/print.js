@@ -55,8 +55,8 @@ class TemplateContextFactory {
     switch (type) {
       case 'issue_type':
         return new IssueTypeContext(data, store);
-      case 'batch':
-        return new BatchContext(data, store);
+      case 'step':
+        return new StepContext(data, store);
       case 'serial':
         return new SerialContext(data, store);
       case 'print_template':
@@ -117,11 +117,12 @@ export class TemplateContext {
           fieldInstance.custom_field_key,
           file.name,
         ].join('/'),
-      batch: () =>
+      step: () =>
         '/traceability/' +
         [
           this.workOrder._key,
           this.batch._key,
+          this.step._key,
           fieldInstance.custom_field_key,
           fieldInstance.form_field_key,
           file.name,
@@ -144,10 +145,14 @@ export class TemplateContext {
         return fieldInstance?.value?.value;
       case 'files':
         // Use embedded path if present
-        return (
-          fieldInstance?.value?.[0].path ??
-          this.getFilePath(fieldInstance, fieldInstance?.value?.[0], fileBucket)
-        );
+        return fieldInstance?.value?.length
+          ? (fieldInstance?.value?.[0]?.path ??
+              this.getFilePath(
+                fieldInstance,
+                fieldInstance?.value?.[0],
+                fileBucket,
+              ))
+          : undefined;
       default:
         return fieldInstance?.value;
     }
@@ -368,26 +373,23 @@ export class SerialContext extends TemplateContext {
   }
 }
 
-export class BatchContext extends TemplateContext {
-  type = 'batch';
+export class StepContext extends TemplateContext {
+  type = 'step';
   batch;
-  batch_form_data;
   job;
-  product;
   serial;
   workOrder;
 
-  constructor(store = useStore()) {
+  constructor(step, store = useStore()) {
     super(store);
-    this.batch = this._store.state.traceability.current_batch_data;
-    this.batch_form_data = this.batch.step_data.map((s) => s.form_data).flat();
-    this.job = this._store.state.traceability.working_job_data;
-    this.workOrder = this._store.state.workorder.wo_data;
-    this.product = this._store.state.product.saved;
+    this.step = step;
+    this.batch = store.state.traceability.current_batch_data;
+    this.job = store.state.traceability.working_job_data;
+    this.workOrder = store.state.workorder.wo_data;
   }
 
   getKey() {
-    return this.batch._key;
+    return this.step._key;
   }
 
   getCustomFieldValue(customFieldKey) {
@@ -398,14 +400,15 @@ export class BatchContext extends TemplateContext {
     }
 
     // Check first among batch data, if present
-    if (this.batch_form_data?.length) {
+    const batch_form_data = this.batch.step_data.map((s) => s.form_data).flat();
+    if (batch_form_data?.length) {
       // Only uses the first matching field
-      const formField = this.batch_form_data.step_data.find(
+      const formField = batch_form_data.find(
         ({ custom_field_key }) => custom_field_key === customFieldKey,
       );
 
-      if (formField?.value) {
-        return this.getFieldValueByType(customField.type, formField, 'batch');
+      if (formField?.value?.length) {
+        return this.getFieldValueByType(customField.type, formField, 'step');
       }
     }
 
@@ -414,18 +417,22 @@ export class BatchContext extends TemplateContext {
       const formField = this.serial.data.find(
         ({ custom_field_key }) => custom_field_key === customField._key,
       );
-      if (formField?.value) {
+      if (formField?.value?.length) {
         return this.getFieldValueByType(customField.type, formField, 'serial');
       }
     }
 
-    // If no batch data field or empty, check within product metadata, if present
-    if (this.workOrder?.product_metadata) {
-      const formField = this.workOrder.product_metadata.find(
+    // If no batch data field or empty, check within work order product metadata, if present
+    if (this.product?.metadata) {
+      const formField = this.product.metadata.find(
         ({ custom_field_key }) => custom_field_key === customField._key,
       );
-      return this.getFieldValueByType(customField.type, formField, 'meta');
+      if (formField?.value?.length) {
+        return this.getFieldValueByType(customField.type, formField, 'product');
+      }
     }
+
+    // TODO: Check product metadata directly from product if work order has none
 
     // Return undefined if no value found
     return undefined;

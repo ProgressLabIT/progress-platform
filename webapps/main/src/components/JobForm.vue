@@ -114,6 +114,12 @@ const isJobActive = computed(
 );
 
 const { open: openPrintDialog, isAvailable } = usePrintDialog({
-  context: 'batch',
+  context: 'step',
+  contextData: {
+    ...props.step,
+    work_order_key: props.work_order_key,
+    batch_key: props.batch_key,
+    product_key: props.product_key,
+  },
 });
 </script>
