@@ -40,6 +40,7 @@ async def record_event(data: EventModel):
     SerialNotCreatedError,
     SerialCodeAlreadyPresent
   ) as e:
+    print(e)
     raise HTTPException(
       status_code=422,
       detail=dict(
