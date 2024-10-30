@@ -259,6 +259,7 @@ const product = {
           field.value?.forEach((file, index, fileslist) => {
             if (file.delete) {
               to_delete.push(file.name);
+              fileslist.splice(index, 1);
             } else if (file.temp) {
               to_add.push(file.content);
               // Leave only name and size properties to be saved in the db
@@ -274,10 +275,11 @@ const product = {
 
           if (to_delete.length) {
             try {
-              await api.delete('files', {
+              const delete_body = {
                 filenames: to_delete,
                 ...target,
-              });
+              };
+              await api.delete('files', { data: delete_body });
             } catch (error) {
               console.log(error);
               window.alert(error);
