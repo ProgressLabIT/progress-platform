@@ -1,13 +1,11 @@
 import traceback
 
-from fastapi import APIRouter, HTTPException, Request, Query, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from utils import auth
 
 from events import Event
 from models.traceability import *
 from models.event import EventModel, EventType
-from typing import Dict, List, Union
-
 
 from utils.exceptions import *
 from utils.api import APIResponse
@@ -23,7 +21,7 @@ serials = db.collection('Serial')
 
 @router.post('/event',
     dependencies=[Depends(auth.verify_token)])
-async def apply_production_event(data: EventModel):
+async def record_event(data: EventModel):
   try:
     event = Event(data)
     response = event.save()
@@ -175,7 +173,6 @@ async def job_heartbeat(job_key: str, work_session_key: str | None = None):
     dependencies=[Depends(auth.verify_token)])
 async def get_wip_availability_for_job(job_key: str):
   tx = db.begin_transaction()
-  job_data = tx.collection('Job').get(job_key)
   available_wip_records = tx.aql.execute(
     Queries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB,
     bind_vars=dict(job_key=job_key)
