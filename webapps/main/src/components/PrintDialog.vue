@@ -226,7 +226,7 @@ const hasSerialLink = ref(false);
 const selectedTemplateBK = ref();
 
 const serialTemplateLinks = [
-  'serial',
+  'serial.code',
   'serial.qt',
   'serial.create_date',
   'serial.create_time',
