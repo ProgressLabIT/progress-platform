@@ -184,7 +184,7 @@
 <script setup>
 import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent } from 'quasar';
-import { nextTick, onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
@@ -218,7 +218,7 @@ const allowSelectTemplate = ref(true);
 
 const selectedTemplate = ref();
 const isLoadingTemplate = ref(false);
-const formModel = ref();
+let formModel = undefined;
 const serialModel = ref();
 const serialModelInitalValue = ref([]);
 const hasSerialLink = ref(false);
@@ -331,29 +331,31 @@ async function selectTemplate(template) {
     const { data } = await api.get(`print-template/${template._key}`);
     selectedTemplate.value = data;
 
-    formModel.value = Object.fromEntries(
-      data.template.columns.map((fieldName) => {
-        const link = data.links[fieldName];
-        if (!link) {
-          return [fieldName, ''];
-        }
+    formModel = reactive(
+      Object.fromEntries(
+        data.template.columns.map((fieldName) => {
+          const link = data.links[fieldName];
+          if (!link) {
+            return [fieldName, ''];
+          }
 
-        if (serialTemplateLinks.includes(link.value)) {
-          hasSerialLink.value = true;
-        }
+          if (serialTemplateLinks.includes(link.value)) {
+            hasSerialLink.value = true;
+          }
 
-        if (link.type === 'preset') {
+          if (link.type === 'preset') {
+            return [
+              fieldName,
+              String(props.context.getPresetValue(link.value) ?? ''),
+            ];
+          }
+
           return [
             fieldName,
-            String(props.context.getPresetValue(link.value) ?? ''),
+            props.context.getCustomFieldValue(link.value) ?? undefined,
           ];
-        }
-
-        return [
-          fieldName,
-          props.context.getCustomFieldValue(link.value) ?? undefined,
-        ];
-      }),
+        }),
+      ),
     );
   } catch (error) {
     console.error(error);
@@ -383,7 +385,7 @@ async function prepareInputs() {
     for (const [fieldName, fieldProps] of Object.entries(schema)) {
       if (fieldProps.type === 'image') {
         try {
-          const base64 = await loadImage(formModel.value[fieldName]); // Image URL
+          const base64 = await loadImage(formModel[fieldName]); // Image URL
           schemaFields.push([fieldName, base64]);
         } catch (err) {
           window.alert(
@@ -392,7 +394,7 @@ async function prepareInputs() {
           console.log(err);
         }
       } else {
-        schemaFields.push([fieldName, formModel.value[fieldName]]);
+        schemaFields.push([fieldName, formModel[fieldName]]);
       }
     }
     inputs.push(Object.fromEntries(schemaFields));
