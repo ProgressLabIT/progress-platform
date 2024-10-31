@@ -113,8 +113,8 @@
 </template>
 
 <script setup>
-import { Designer } from '@pdfme/ui';
 import { BLANK_PDF } from '@pdfme/common';
+import { Designer } from '@pdfme/ui';
 import { cloneDeep } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -160,6 +160,8 @@ const templateDataOptions = [
   'job.start_time',
   'job.end_date',
   'job.end_time',
+  'job.notes',
+  'job.extra',
 
   'project.code',
 
@@ -170,6 +172,8 @@ const templateDataOptions = [
   'work_order.start_time',
   'work_order.end_date',
   'work_order.end_time',
+  'work_order.notes',
+  'work_order.extra',
 
   'product.code',
   'product.description',

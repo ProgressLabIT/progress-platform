@@ -209,6 +209,10 @@ export class TemplateContext {
           return extractDate(this.job?.end);
         case 'job.end_time':
           return extractTime(this.job?.end);
+        case 'job.notes':
+          return this.job?.notes;
+        case 'job.extra':
+          return this.job?.extra;
 
         // Work Order presets
         case 'work_order.code':
@@ -217,6 +221,10 @@ export class TemplateContext {
           return this.workOrder?.qt_planned;
         case 'work_order.qt_completed':
           return this.workOrder?.qt_completed;
+        case 'work_order.notes':
+          return this.workOrder?.notes;
+        case 'work_order.extra':
+          return this.workOrder?.extra;
         case 'work_order.start_date':
           return extractDate(this.workOrder?.start);
         case 'work_order.start_time':
