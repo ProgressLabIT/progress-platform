@@ -385,7 +385,9 @@ async function prepareInputs() {
     for (const [fieldName, fieldProps] of Object.entries(schema)) {
       if (fieldProps.type === 'image') {
         try {
-          const base64 = await loadImage(formModel[fieldName]); // Image URL
+          const base64 = formModel[fieldName] // Image URL
+            ? await loadImage(formModel[fieldName])
+            : ''; // empty string will not render any image. Background, if present, will be visibile.
           schemaFields.push([fieldName, base64]);
         } catch (err) {
           window.alert(
