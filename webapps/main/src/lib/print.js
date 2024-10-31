@@ -407,40 +407,27 @@ export class StepContext extends TemplateContext {
       return undefined;
     }
 
-    // Check first among batch data, if present
-    const batch_form_data = this.batch.step_data.map((s) => s.form_data).flat();
-    if (batch_form_data?.length) {
-      // Only uses the first matching field
-      const formField = batch_form_data.find(
-        ({ custom_field_key }) => custom_field_key === customFieldKey,
-      );
+    const batch_form_data =
+      this._store.state.traceability.current_batch_data.step_data
+        .map((s) => s.form_data)
+        .flat();
+    const valueContexts = [
+      ['step', batch_form_data],
+      ['serial', this.serial?.data],
+      ['product', this.product?.metadata],
+    ];
+    for (const [context, contextValues] of valueContexts) {
+      if (contextValues?.length) {
+        // Only uses the first matching field
+        const formField = contextValues.find(
+          ({ custom_field_key }) => custom_field_key === customFieldKey,
+        );
 
-      if (formField?.value?.length) {
-        return this.getFieldValueByType(customField.type, formField, 'step');
+        if (formField?.value?.length) {
+          return this.getFieldValueByType(customField.type, formField, context);
+        }
       }
     }
-
-    // If no step data field found or empty, check within serial, if present
-    if (this.serial) {
-      const formField = this.serial.data.find(
-        ({ custom_field_key }) => custom_field_key === customField._key,
-      );
-      if (formField?.value?.length) {
-        return this.getFieldValueByType(customField.type, formField, 'serial');
-      }
-    }
-
-    // If no batch data field or empty, check within work order product metadata, if present
-    if (this.product?.metadata) {
-      const formField = this.product.metadata.find(
-        ({ custom_field_key }) => custom_field_key === customField._key,
-      );
-      if (formField?.value?.length) {
-        return this.getFieldValueByType(customField.type, formField, 'product');
-      }
-    }
-
-    // TODO: Check product metadata directly from product if work order has none
 
     // Return undefined if no value found
     return undefined;
