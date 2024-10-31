@@ -224,10 +224,10 @@ const hasSerialLink = ref(false);
 const selectedTemplateBK = ref();
 
 const serialTemplateLinks = [
-  'serial',
-  'serial_qt',
-  'serial_create_date',
-  'serial_create_time',
+  'serial.code',
+  'serial.qt',
+  'serial.create_date',
+  'serial.create_time',
 ];
 
 async function loadSerial(serial_key) {
