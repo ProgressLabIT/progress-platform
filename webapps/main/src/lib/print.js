@@ -267,6 +267,29 @@ export class TemplateContext {
     }
   }
 
+  searchValueInContexts(valueContexts, customField) {
+    /**
+     * valueContexts is an array of arrays [context, contextValues]
+     * that carries data from different contexts order by priority of search,
+     * e.g. first current batch data, then serial, then product metadata.
+     *
+     * If no matching custom field is found in any of the contexts,
+     * or the value is falsy or an empty array, it will return undefined
+     */
+    for (const [context, contextValues] of valueContexts) {
+      if (contextValues?.length) {
+        // Only uses the first matching field
+        const formField = contextValues.find(
+          ({ custom_field_key }) => custom_field_key === customField._key,
+        );
+
+        if (formField?.value?.length) {
+          return this.getFieldValueByType(customField.type, formField, context);
+        }
+      }
+    }
+  }
+
   getCustomFieldValue(_customFieldKey) {
     return undefined;
   }
@@ -315,16 +338,9 @@ export class IssueTypeContext extends TemplateContext {
       return undefined;
     }
 
-    // Only uses the first matching field
-    const formField = issueType.form_template.find(
-      ({ custom_field_key }) => custom_field_key === customFieldKey,
-    );
-    if (!formField) {
-      return undefined;
-    }
+    const valueContexts = [['issue', this.issue?.data]];
 
-    const data = this.issue.data.find(({ _key }) => _key === formField._key);
-    return this.getFieldValueByType(customField.type, data);
+    return this.searchValueInContexts(valueContexts, customField);
   }
 }
 
@@ -359,27 +375,15 @@ export class SerialContext extends TemplateContext {
 
   getCustomFieldValue(customFieldKey) {
     const customField = this._store.getters.getCustomFieldByKey(customFieldKey);
-
-    if (this.serial) {
-      const formField = this.serial.data.find(
-        ({ custom_field_key }) => custom_field_key === customField._key,
-      );
-
-      if (formField?.value) {
-        return this.getFieldValueByType(customField.type, formField, 'serial');
-      }
+    if (!customField) {
+      return undefined;
     }
 
-    if (this.product?.metadata) {
-      const formField = this.product.metadata.find(
-        ({ custom_field_key }) => custom_field_key === customField._key,
-      );
-      if (formField?.value) {
-        return this.getFieldValueByType(customField.type, formField, 'product');
-      }
-    }
-
-    return undefined;
+    const valueContexts = [
+      ['serial', this.serial?.data],
+      ['product', this.product?.metadata],
+    ];
+    return this.searchValueInContexts(valueContexts, customField);
   }
 }
 
@@ -413,25 +417,14 @@ export class StepContext extends TemplateContext {
       this._store.state.traceability.current_batch_data.step_data
         .map((s) => s.form_data)
         .flat();
+
     const valueContexts = [
       ['step', batch_form_data],
       ['serial', this.serial?.data],
       ['product', this.product?.metadata],
     ];
-    for (const [context, contextValues] of valueContexts) {
-      if (contextValues?.length) {
-        // Only uses the first matching field
-        const formField = contextValues.find(
-          ({ custom_field_key }) => custom_field_key === customFieldKey,
-        );
 
-        if (formField?.value?.length) {
-          return this.getFieldValueByType(customField.type, formField, context);
-        }
-      }
-    }
-
-    // Return undefined if no value found
-    return undefined;
+    // Returns a value if found. If not, will return undefined
+    return this.searchValueInContexts(valueContexts, customField);
   }
 }
