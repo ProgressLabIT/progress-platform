@@ -135,6 +135,8 @@ export class TemplateContext {
           fieldInstance.form_field_key,
           file.name,
         ].join('/'),
+      issue: () =>
+        '/issue/' + [this.issue._key, fieldInstance._key, file.name].join('/'),
     };
     return basePath + bucketMap[fileBucket]();
   }
