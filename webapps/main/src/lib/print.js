@@ -274,8 +274,10 @@ export class TemplateContext {
      * e.g. first current batch data, then serial, then product metadata.
      *
      * If no matching custom field is found in any of the contexts,
-     * or the value is falsy or an empty array, it will return undefined
+     * or the value is falsy or an empty array, it will return an empty string
+     * that will be rendered as empty field or no image
      */
+    const nothingFound = '';
     for (const [context, contextValues] of valueContexts) {
       if (contextValues?.length) {
         // Only uses the first matching field
@@ -288,6 +290,7 @@ export class TemplateContext {
         }
       }
     }
+    return nothingFound;
   }
 
   getCustomFieldValue(_customFieldKey) {
