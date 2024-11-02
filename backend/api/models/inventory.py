@@ -22,10 +22,18 @@ class InventoryUsagePolicy(str, Enum):
 
 
 class Position(ArangoDocument):
-  code: str
+  code: str | None = None
   owned: bool | None = True
-  disposable: bool | None = False # gets deleted when emptied
+  disposable: bool | None = False # gets deleted when emptied or shipped
   extra: Any = None
+
+
+class PositionLink(ArangoEdge):  #edge located_in
+ """
+ the located_in collection is used both for inventory and for position hierarchy.
+ This class is only used to distinguish what we're using the collection for.
+ """
+ pass
 
 
 class Inventory(ArangoDocument): # edge located_in
@@ -56,7 +64,6 @@ class WarehouseMission(ArangoDocument):
   start: datetime | None = None
   end: datetime | None = None
   status: MovementStatus | None = MovementStatus.PLANNED
-  references: list[str] | None = None
   extra: Any = None
 
 
