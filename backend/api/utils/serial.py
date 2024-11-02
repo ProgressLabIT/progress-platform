@@ -126,7 +126,7 @@ class Queries:
 
   GET_SERIALS_FOR_SERIAL_CODE = """
     FOR s IN Serial
-      FILTER (@serial_key ? s._key != @serial_key : true) && s.code == @serial
+      FILTER (@serial_key ? s._key != @serial_key : true) && UPPER(s.code) == UPPER(@serial)
       && s.product_key == @product_key
       RETURN s
   """

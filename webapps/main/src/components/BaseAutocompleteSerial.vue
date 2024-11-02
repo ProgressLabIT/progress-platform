@@ -16,9 +16,11 @@
     :display-value="value?.code"
     :option-value="keyOnly ? '_key' : null"
     :model-value="value"
-    input-debounce="500"
+    input-debounce="300"
+    input-class="text-uppercase"
     :emit-value="keyOnly"
     :map-options="keyOnly"
+    @input-value="makeInputUppercase"
     @filter="filter"
     @update:model-value="
       (selection) => {
@@ -250,6 +252,10 @@ export default {
         this.loadSerials();
         this.last_research = '';
       }
+    },
+
+    makeInputUppercase(value) {
+      this.$refs.selectRef.updateInputValue(value.toUpperCase());
     },
 
     loadSerials(search_value) {

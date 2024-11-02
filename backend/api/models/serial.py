@@ -1,22 +1,23 @@
 from datetime import datetime
+from typing import Annotated
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, StringConstraints
 from models.base_models import FlexModel, ArangoEdge, ArangoDocument
 from models.form import SerialFormFieldValue
 from utils.dt import timestamp
 
 class Serial(ArangoDocument):
-   code: str | None = None
-   created_by: str | None = None
-   product_key: str | None = None
-   wo_key: str | None = None
-   counter_key: str | None = None
-   user_key: str | None = None
-   quantity: int = 1
-   created: datetime | datetime = Field(default_factory=timestamp)
-   released: datetime | None = None
-   data: list[SerialFormFieldValue] | None = None
-   deleted: bool = False
+  code: Annotated[str, StringConstraints(to_upper=True)] | None = None
+  created_by: str | None = None
+  product_key: str | None = None
+  wo_key: str | None = None
+  counter_key: str | None = None
+  user_key: str | None = None
+  quantity: int = 1
+  created: datetime | datetime = Field(default_factory=timestamp)
+  released: datetime | None = None
+  data: list[SerialFormFieldValue] | None = None
+  deleted: bool = False
 
 class SerialCommandType(str, Enum):
   CREATE_FROM_BATCH = 'CREATE_FROM_BATCH'

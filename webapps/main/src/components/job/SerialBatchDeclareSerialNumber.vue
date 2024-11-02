@@ -17,13 +17,16 @@
             class="q-py-xs full-width"
           >
             <q-input
-              v-model="serial.serial_code"
               filled
               stack-label
               autogrow
               lazy-rules
               input-debounce="100"
               hide-bottom-space
+              :model-value="serial.serial_code"
+              @update:model-value="
+                (v) => (serial.serial_code = v.toUpperCase())
+              "
             >
             </q-input>
           </div>

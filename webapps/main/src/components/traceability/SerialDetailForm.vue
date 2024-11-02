@@ -16,11 +16,12 @@
       </div>
       <q-input
         v-else
-        v-model="serial.code"
+        :model-value="serial.code"
         dense
         filled
         :label="$t('serial.code')"
         class="input-uppercase"
+        @update:model-value="(v) => (serial.code = v.toUpperCase())"
       >
       </q-input>
 

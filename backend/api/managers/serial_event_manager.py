@@ -348,7 +348,7 @@ class SerialEventManager:
                     error = 'Serial already present'
                     ))
                  return
-              serial['code'] = self.serial_data.get('code')
+              serial['code'] = self.serial_data.get('code').upper()
            if (self.serial_data.get('data') != None):
               serial['data'] = self.serial_data.get('data')
            self.tx.update_document(serial)
