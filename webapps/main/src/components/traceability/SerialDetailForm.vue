@@ -8,7 +8,10 @@
       >
         {{ serial?.product?.code }}
       </div>
-      <div v-if="!(edit_mode && can_edit)" class="text-h4 col-auto">
+      <div
+        v-if="!(edit_mode && can_edit && config.allowSerialCodeEdit)"
+        class="text-h4 col-auto text-uppercase"
+      >
         {{ ' # ' + serial?.code }}
       </div>
       <q-input
@@ -136,9 +139,11 @@
 </template>
 
 <script>
+import { storeToRefs } from 'pinia';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
 import { usePrintDialog } from '@/lib/print';
+import { useConfigStore } from '@/stores/config';
 
 export default {
   name: 'SerialDetailForm',
@@ -164,11 +169,14 @@ export default {
   emits: ['exit'],
 
   setup(props) {
+    const { config } = storeToRefs(useConfigStore());
+
     const { open: openPrintDialog, isAvailable } = usePrintDialog({
       context: 'serial',
       contextData: props.serial_key,
     });
     return {
+      config,
       openPrintDialog,
       isAvailable,
     };

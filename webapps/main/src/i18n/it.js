@@ -698,6 +698,7 @@ export default {
     allowUnassignedJobs: 'Mostra lavori non assegnati agli operatori',
     allowIndependentReorderingOfJobQueues:
       'Consenti il riordinamento indipendente delle code di lavoro',
+    allowSerialCodeEdit: 'Consenti la modifica del codice dei seriali',
     allowSerialDelete: 'Consenti la cancellazione dei seriali',
     turnOffIndependentReordering: {
       title: 'Disattiva ordinamento indipendente',

@@ -22,6 +22,7 @@ export const useConfigStore = defineStore('config', () => {
     allowUnassignedJobs: true,
     allowIndependentReorderingOfJobQueues: false,
     allowSerialDelete: false,
+    allowSerialCodeEdit: false,
   };
 
   const isLoading = ref(true);
@@ -60,6 +61,9 @@ export const useConfigStore = defineStore('config', () => {
     if (typeof appConfig.allow_serial_delete === 'boolean') {
       config.allowSerialDelete = appConfig.allow_serial_delete;
     }
+    if (typeof appConfig.allow_serial_code_edit === 'boolean') {
+      config.allowSerialCodeEdit = appConfig.allow_serial_code_edit;
+    }
   }
   void (async () => {
     try {
@@ -94,6 +98,7 @@ export const useConfigStore = defineStore('config', () => {
       allow_independent_reordering_of_job_queues:
         configToUpdate.allowIndependentReorderingOfJobQueues,
       allow_serial_delete: configToUpdate.allowSerialDelete,
+      allow_serial_code_edit: configToUpdate.allowSerialCodeEdit,
     });
 
     Object.assign(config, configToUpdate);

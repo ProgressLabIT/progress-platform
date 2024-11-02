@@ -37,6 +37,11 @@
         :label="$t('settings.allowSerialDelete')"
         :disable="!editMode"
       />
+      <q-toggle
+        v-model="configModel.allowSerialCodeEdit"
+        :label="$t('settings.allowSerialCodeEdit')"
+        :disable="!editMode"
+      />
     </div>
   </SettingsSection>
 </template>
@@ -62,6 +67,7 @@ async function save() {
     allowIndependentReorderingOfJobQueues:
       configModel.value.allowIndependentReorderingOfJobQueues,
     allowSerialDelete: configModel.value.allowSerialDelete,
+    allowSerialCodeEdit: configModel.value.allowSerialCodeEdit,
   });
 }
 

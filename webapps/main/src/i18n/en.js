@@ -685,7 +685,8 @@ export default {
     allowUnassignedJobs: 'Show unassigned jobs to operators',
     allowIndependentReorderingOfJobQueues:
       'Allow independent reordering of job queues',
-    allowSerialDelete: 'Allow serial delete',
+    allowSerialCodeEdit: 'Allow editing serial codes',
+    allowSerialDelete: 'Allow deleting serials',
     turnOffIndependentReordering: {
       title: 'Turn off independent reordering',
       message:

@@ -329,6 +329,16 @@ class SerialEventManager:
        try:
            serial = self.tx.collection('Serial').get(self.serial_data.get("_key"))
            if (self.serial_data.get('code') != None):
+              can_edit_code = self.tx.collection('Config').get('allow_serial_code_edit')['value']
+              if not can_edit_code:
+                 self.notify_results(dict(
+                    serial = self.serial_data.get('code'),
+                    serial_key = self.serial_data.get("_key"),
+                    notification = SerialNotificationType.ERROR,
+                    error_code = SerialNotificationErrorCode.SERIAL_ALREADY_PRESENT,
+                    error = 'Serial code edit not allowed'
+                 ))
+                 return
               if (self.serial_data.get('code') != None and not self.verify_serial_code_free(serial_key=serial.get("_key"), product_key=serial.get("product_key"), serial=self.serial_data.get('code'))):
                  self.notify_results(dict(
                     serial = self.serial_data.get('code'),
