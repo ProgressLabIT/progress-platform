@@ -335,7 +335,7 @@ class SerialEventManager:
                     serial = self.serial_data.get('code'),
                     serial_key = self.serial_data.get("_key"),
                     notification = SerialNotificationType.ERROR,
-                    error_code = SerialNotificationErrorCode.SERIAL_ALREADY_PRESENT,
+                    error_code = SerialNotificationErrorCode.SERIAL_CODE_EDIT_NOT_ALLOWED,
                     error = 'Serial code edit not allowed'
                  ))
                  return
@@ -346,7 +346,7 @@ class SerialEventManager:
                     notification = SerialNotificationType.ERROR,
                     error_code = SerialNotificationErrorCode.SERIAL_ALREADY_PRESENT,
                     error = 'Serial already present'
-                    ))
+                  ))
                  return
               serial['code'] = self.serial_data.get('code').upper()
            if (self.serial_data.get('data') != None):
