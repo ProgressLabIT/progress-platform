@@ -135,6 +135,14 @@ collections = [
       _key = 'operator_cost',
       value = 25
     )
+    dict(
+      _key = 'system_counters',
+      value = dict(
+        work_orders = 'default',
+        warehouse_missions = 'default',
+        positions = 'default'
+      )
+    ),
   ]),
   Collection(name='contains'),
   Collection(name='Counter', default_records=[
