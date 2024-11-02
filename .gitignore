@@ -21,9 +21,9 @@ yarn-error.log*
 *.sublime-project
 *.sublime-workspace
 *.code-workspace
+/.vscode/settings.json
 
-
-# Media
+# Media & Attachments
 media/
 
 # DBs
