@@ -9,4 +9,27 @@ export default {
     login_first: 'Perform login to display this page',
     not_authorized: 'User is not authorized for this page',
   },
+  views: {
+    warehouseRoot: 'Warehouse',
+    incomingRoot: 'Incoming',
+    transferingRoot: 'Transfer',
+    shipmentRoot: 'Shipment',
+    inventoryRoot: 'Inventory',
+  },
+  incoming: {
+    suppliers: {
+      title: 'Documents to check',
+      suppliers: 'Suppliers',
+      search: 'search supplier',
+      no_data: 'cannot find suppliers',
+    },
+    products: {
+      title: 'Incoming products',
+      products: 'Products',
+      search: 'search product',
+      no_data: 'cannot find products',
+      barcode: 'barcode',
+      serial: 'serial',
+    },
+  },
 };
