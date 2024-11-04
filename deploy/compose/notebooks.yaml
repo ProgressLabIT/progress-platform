@@ -29,5 +29,7 @@ services:
       - "8888:8888"
     secrets:
       - progress_api_db_pwd
+    environment:
+      GRANT_SUDO: "yes"
     deploy:
       replicas: 1
