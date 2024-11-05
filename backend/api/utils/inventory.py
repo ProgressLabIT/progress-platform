@@ -1,57 +1,118 @@
 class Queries:
 
   SEARCH_POSITIONS = """
-    FOR p IN Position
+    LET start = CONCAT('Position/', NOT_NULL(@is_in_position, 'IN'))
 
-    LET search_match = @search ? LOWER(p.code) LIKE CONCAT('%', LOWER(@search), '%' p.code) : true
+    FOR v, e, p IN 1..99 INBOUND start is_in_position
 
-    LET parent_match = (
-      @is_in_position
-      ? COUNT(
-        FOR parent IN 1..99 OUTBOUND p located_in
-        PRUNE v._key == @is_in_position
-        FILTER v._key == @is_in_position
-        RETURN 1
-      )
-      : true
-    )
-
-    LET child_match = (
-      @contains_position
-      ? COUNT(
-        FOR child IN 1..99 INBOUND p located_in
-        PRUNE v._key == @contains_position
-        FILTER v._key == @contains_position
-        RETURN 1
-      )
-      : true
-    )
-
-    LET product_keys_match = (
-      @has_product_key
-      ? COUNT(
-        FOR product, inventory IN 1..99 INBOUND p located_in
-        PRUNE inventory._to == CONCAT('Product/', @has_product_key) && inventory.quantity > 0
-        FILTER inventory._to == CONCAT('Product/', @has_product_key) && inventory.quantity > 0
-        RETURN 1
-      )
-      : true
-    )
-
-    LET product_codes_match = (
-      @has_product_code
-      ? COUNT(
-        FOR product, inventory IN 1..99 INBOUND p located_in
-        PRUNE product.code == @has_product_code && inventory.quantity > 0
-        FILTER product.code == @has_product_code && inventory.quantity > 0
-        RETURN 1
-      )
-      : true
-
-
-    FILTER search_match && parent_match && product_keys_match && product_codes_match
+    FILTER
+      IS_SAME_COLLECTION('Position', v)
+      && (@contains_position ? @contains_position IN p.vertices[*]._key : true)
+      && (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%' p.code) : true)
+      && (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
+      && (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
 
     LIMIT @offset, @limit || null
 
-    RETURN p
+    RETURN v
+  """
+
+
+  SEARCH_MOVEMENTS = """
+    FOR m IN InventoryMovement
+
+    FILTER
+      (@movement_type ? m.type == @movement_type : true)
+      && (@movement_status ? m.status == @movement_status : true)
+      && (@include_planned == false ? m.status != 'planned' : true)
+      && (@start_from ? m.start >= @start_from : true)
+      && (@start_to ? m.start <= @start_to : true)
+      && (@end_from ? m.end >= @end_from : true)
+      && (@end_to ? m.end <= @end_to : true)
+      && (@product_key ? m.product_key == @product_key : true)
+      && (@product_code ? LENGTH(FOR p IN Product FILTER m.product_key == p._key && p.code == @product_code RETURN 1) : true)
+      && (@serial_key ? m.serial_key == @serial_key : true)
+      && (@serial_code ? m.serial_code == @serial_code : true)
+      && (@mission_key ? m.mission_key == @mission_key : true)
+      && (@mission_code ? m.mission_code == @mission_code : true)
+      && (@movement_doc ? m.movement_doc == @movement_doc : true)
+      && (@source_doc ? m.source_doc == @source_doc : true)
+      && (@through_position_key
+        ? (
+          (@through_position_key IN m.route)
+          OR (
+            @include_child_positions
+            ? LENGTH(
+                FOR p IN 1..99 INBOUND @through_position_key is_in_position
+                PRUNE p._key IN m.route && p._key == @through_position_key
+                RETURN p._key
+              )
+            : false
+          )
+        )
+        : true
+      )
+      && (@through_position_code
+        ? (
+          LENGTH(
+            FOR p IN Position
+            FILTER
+              p._key IN m.route
+              AND @p.code == @through_position_code
+            RETURN 1
+          )
+          OR (
+            @include_child_positions
+            ? LENGTH(
+                FOR parent IN Position
+                FILTER parent.code == @through_position_code
+                FOR child IN 1..99 INBOUND parent is_in_position
+                PRUNE child.code == @through_position_code && child._key IN m.route
+                FILTER child.code == @through_position_code && child._key IN m.route
+                RETURN 1
+              )
+            : false
+          )
+        )
+        : true
+      )
+
+    LIMIT @offset, @limit || null
+
+    RETURN m
+  """
+
+
+  SEARCH_INVENTORY_BY_PRODUCT = """
+    // TODO: Add filter by product tag
+
+    FOR p IN Product
+    FILTER
+      (@product_key ? p._key == @product_key : true)
+      && (@product_code ? p.code == @product_code : true)
+      && !p.trash
+    FOR position, inventory IN 1..99 OUTBOUND p is_in_position
+    FILTER inventory.quantity > 0
+    RETURN MERGE(
+      KEEP(p, '_key', 'code'), {
+      position: position.code,
+      quantity: inventory.quantity
+    })
+  """
+
+
+  SEARCH_INVENTORY_BY_POSITION = """
+    // TODO: Add filter by product tag
+
+    LET start = CONCAT('Position/', NOT_NULL(@position_key, 'IN'))
+
+
+    FOR v,e IN 1..99 INBOUND start is_in_position
+    FILTER e.quantity > 0
+    COLLECT product_key = v._key AGGREGATE product_stock = SUM(e.quantity)
+    RETURN {
+      product_key,
+      product_code: product.code,
+      product_stock
+    }
   """

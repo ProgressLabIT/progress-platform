@@ -2,7 +2,7 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import model_validator, Field
+from pydantic import BaseModel, model_validator, Field
 
 from models.base_models import ArangoDocument
 from utils.counter import _generate_counter
@@ -24,21 +24,36 @@ class InventoryUsagePolicy(str, Enum):
 class Position(ArangoDocument):
   code: str | None = None
   owned: bool | None = True
+  available: bool | None = True
   disposable: bool | None = False # gets deleted when emptied or shipped
   extra: Any = None
 
 
-class PositionLink(ArangoEdge):  #edge located_in
+class PositionLink(ArangoEdge):  #edge is_in_position
  """
- the located_in collection is used both for inventory and for position hierarchy.
+ the is_in_position collection is used both for inventory and for position hierarchy.
  This class is only used to distinguish what we're using the collection for.
  """
  pass
 
 
-class Inventory(ArangoDocument): # edge located_in
+class PositionSearchParams(BaseModel):
+  search: str | None = None
+  has_product_key: list[str] | None = None
+  has_product_code: list[str] | None = None
+  is_in_position: str | None = None
+  contains_position: str | None = None
+  include_non_disposable: bool | None = True
+  include_disposable: bool | None = True
+  include_owned: bool | None = True
+  include_not_owned: bool | None = True
+  limit: int | None = 200
+  offset: int | None = 0
+
+
+class Inventory(ArangoDocument): # edge is_in_position
   product_id: str = Field(..., alias='_from')
-  location_id: str = Field(..., alias='_to')
+  position_id: str = Field(..., alias='_to')
   serial_key: str | None = None
   quantity: float
   owned: bool = True # False means it's property of customers or suppliers
@@ -47,6 +62,17 @@ class Inventory(ArangoDocument): # edge located_in
   date_received: date | None = Field(default_factory=timestamp)
   expiration_date: date | None = None
   extra: Any = None
+
+
+class InventorySearchParams(BaseModel):
+  product_key: str | None = None
+  product_code: str | None = None
+  position_key: str | None = None
+  position_code: str | None = None
+  # include_child_positions: str | None = False
+  serial_key: str | None = None
+  serial_code: str | None = None
+  owned: bool | None = None
 
 class MovementStatus(str, Enum):
   PLANNED = 'planned'
@@ -101,30 +127,52 @@ class InventoryMovement(ArangoDocument):
   movement_doc: str | None = None # RECEIPTS/SHIPMENTS: transport document, TRANSFERS: na, PROD/CONS: na
   source_doc: str | None = None # RECEIPTS: purchase doc, SHIPMENTS: sales doc, TRANSFERS/PROD/CONS: work order/job
 
+  user_key: str | None = None
   extra: Any = None
 
   # Transfer routes must have at least two positions. Positions must be repeat.
   @model_validator(mode='after')
-  def validate_route(self):
+  def validate(self):
+    # validate route
     if self.type == InventoryMovementType.TRANSFER:
       length = len(self.route)
       if length < 2 and len(set(self.route)) != length:
         raise ValueError("Movement route must contain at least two positions and positions must not repeat")
-    return self
 
-
-  # Ensure start date is present if
-  @model_validator(mode='after')
-  def ensure_dates(self):
+    # validate dates
     if (
       self.status == MovementStatus.STARTED
       and self.start is None
     ):
       raise ValueError("In transfer movements must have a start date")
-    elif (
-      self.status != MovementStatus.COMPLETED
+
+    if (
+      self.status == MovementStatus.COMPLETED
       and (self.start is None or self.end is None)
     ):
       raise ValueError("Completed movements must have both a start and end date")
-    else:
-      return self
+
+    return self
+
+
+class InventoryMovementSearchParameters(BaseModel):
+  movement_type: InventoryMovementType | None = None
+  movement_status: MovementStatus | None = None
+  include_planned: bool | None = False
+  start_from: datetime | None = None
+  start_to: datetime | None = None
+  end_from: datetime | None = None
+  end_to: datetime | None = None
+  product_key: str | None = None
+  product_code: str | None = None
+  serial_key: str | None = None
+  serial_code: str | None = None
+  mission_key: str | None = None
+  mission_code: str | None = None
+  movement_doc: str | None = None
+  source_doc: str | None = None
+  through_position_key: str | None = None
+  through_position_code: str | None = None
+  include_child_positions: bool | None = True
+  limit: int | None = 500
+  offset: int | None = 0

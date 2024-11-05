@@ -1,6 +1,7 @@
 import traceback
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query
 
 from models.inventory import *
 from utils.api import APIResponse
@@ -15,27 +16,9 @@ router = APIRouter()
 # ===============================================
 
 @router.get('/position')
-async def get_positions(
-  search: str | None = None,
-  has_product_key: list[str] | None = None,
-  has_product_code: list[str] | None = None,
-  is_in_position: str | None = None,
-  contains_position: str | None = None,
-  limit: int | None = 200,
-  offset: int | None = 0
-):
-
-  bind_vars = dict(
-    search = search,
-    has_product_key = has_product_key,
-    has_product_code = has_product_code,
-    is_in_position = is_in_position,
-    contains_position = contains_position,
-    limit = limit,
-    offset = offset
-  )
-
+async def get_positions(params: Annotated[PositionSearchParams, Query()]):
   try:
+    bind_vars = dict(**params.model_dump())
     results = db.aql.execute(Queries.SEARCH_POSITIONS, bind_vars=bind_vars)
     return [Position(**r) for r in results]
 
@@ -85,27 +68,17 @@ async def delete_position(position_key):
 # ===============================================
 
 @router.get('/movement')
-def search_inventory_journal(
-  movement_type: InventoryMovementType | None = None,
-  movement_status: MovementStatus | None = None,
-  include_planned: bool | None = False,
-  start_from: datetime | None = None,
-  start_to: datetime | None = None,
-  end_from: datetime | None = None,
-  end_to: datetime | None = None,
-  product_key: str | None = None,
-  product_code: str | None = None,
-  serial_key: str | None = None,
-  serial_code: str | None = None,
-  mission_key: str | None = None,
-  mission_code: str | None = None,
-  movement_doc: str | None = None,
-  through_position_key: str | None = None,
-  through_position_code: str | None = None,
-  include_child_positions: bool | None = True,
-  search_extra: dict | None = None # search extra attributes
-):
-  ...
+def search_inventory_journal(params: Annotated[InventoryMovementSearchParameters, Query()]):
+  try:
+    bind_vars = dict(**params.model_dump())
+    results = db.aql.execute(Queries.SEARCH_MOVEMENTS, bind_vars=bind_vars)
+    return [InventoryMovement(**m) for m in results]
+
+  except Exception as e:
+    return HTTPException(
+      status_code=500,
+      detail=traceback.format_exc()
+    )
 
 
 @router.post('/movement')

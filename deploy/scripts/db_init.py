@@ -165,7 +165,15 @@ collections = [
     DBIndex(fields=['timestamp'], name='event-timestamp')
   ]),
   Collection(name='has_tag'),
-  Collection(name='InventoryMovement'),
+  Collection(name='InventoryMovement', indexes=[
+    DBIndex(fields=['product_key', 'status', 'stage'], name='movement-product'),
+    DBIndex(fields=['serial_key'], name="movement-serial"),
+    DBIndex(fields=['mission_key'], name="movement-mission"),
+    DBIndex(fields=['movement_doc'], name="movement-doc"),
+    DBIndex(fields=['source_doc'], name="movement-source-doc"),
+    DBIndex(fields=['start', 'end'], name="movement-time-range"),
+    DBIndex(fields=['route[*]'], name="movement-positions"),
+  ]),
   Collection(name='Issue', indexes=[
     DBIndex(fields=['issue_type_key'], name="issue-type"),
     DBIndex(fields=['created'], name='issue-created-time'),
@@ -179,7 +187,21 @@ collections = [
     DBIndex(fields=['assigned_to, stage'], name='job-assignment'),
     DBIndex(fields=['active'], name='job-active')
   ]),
-  Collection(name='located_in'),
+  Collection(name='is_in_position',
+    indexes=[
+      DBIndex(fields=['serial_key'], name='inventory-serial')
+    ],
+    default_records=[
+      dict(
+        _key = 'IN',
+        code = 'IN',
+        owned = True,
+        available = True,
+        disposable = False,
+        extra = None
+      )
+    ]
+  ),
   Collection(name='Media'),
   Collection(name='media_connection'),
   Collection(name='message'),
@@ -188,8 +210,9 @@ collections = [
     DBIndex(fields=['product_key, operation_key'])
   ]),
   Collection(name='Position', indexes=[
-    DBIndex(fields=['_key'], storedValues=['code'], name='position-key-code'),
-    DBIndex(fields=['code'], storedValues=['_key'], name='position-code-key')
+    DBIndex(fields=['_key'], storedValues=['code'], name='position-key'),
+    DBIndex(fields=['code'], storedValues=['_key'], name='position-code'),
+    DBIndex(fields=['_key', 'code'], name='position-key-code')
   ]),
   Collection(name='PrintTemplate'),
   Collection(name='Product', indexes=[
@@ -219,7 +242,7 @@ collections = [
   Collection(name='Site'),
   Collection(name='Step'),
   Collection(name='StepExecutionData', indexes=[
-    DBIndex(fields=['batch_key, step_key, status, canceled'], name='sxd-batch-step-status-canceled'),
+    DBIndex(fields=['batch_key, step_key, status, canceled'], name='sxd-batch-step-status-canceled')
   ]),
   Collection(name='Tag'),
   Collection(name='Token'),
@@ -242,7 +265,10 @@ collections = [
     DBIndex(fields=['serial_key'], name='wip-serial'),
     DBIndex(fields=['_to, wo_key, active, serial_key'], name='wip-target'),
   ]),
-  Collection(name='WarehouseMission'),
+  Collection(name='WarehouseMission', indexes=[
+    DBIndex(fields=['code'], name="mission-code"),
+    DBIndex(fields=['status', 'assigned_to'], name="mission-status-assignee")
+  ]),
   Collection(name='WorkOrder', indexes=[
     DBIndex(fields=['_key'], storedValues=['code'], name='workorder-key-code'),
     DBIndex(fields=['code'], storedValues=['_key'], name='workorder-code-key')
