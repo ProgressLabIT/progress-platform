@@ -30,7 +30,7 @@ class PhaseParameters(FlexModel):
   auto_new_batch: bool = True
   std_processing_time: int = 60 # seconds
   unsupervised_work_allowed: bool = False
-  display_phase_progress: bool = False
+  display_job_timer: bool = False
   # release_style: ReleaseStyle = ReleaseStyle.JOB
   # release_batch_qt: int = 1
   # wip_flow: WIPFlow = WIPFlow.BUFFER

@@ -467,15 +467,15 @@ export default {
           title: 'Autorizzato',
         },
       },
-      display_phase_progress: {
+      display_job_timer: {
         true: {
-          desc: 'Mostra il progresso della fase nella sessione di lavoro',
-          title: 'Abilita',
+          desc: 'Mostra il timer nella sessione di lavoro, visualizzando il tempo trascorso rispetto al tempo standard previsto per il lavoro.',
+          title: 'Mostra',
         },
-        title: 'Mostra il progresso della fase',
+        title: 'Timer tempo di esecuzione lavoro',
         false: {
-          desc: 'Non mostrare il progresso della fase nella sessione di lavoro',
-          title: 'Disabilita',
+          desc: 'Non mostrare il timer nella sessione di lavoro',
+          title: 'Nascondi',
         },
       },
       production_batch_qt: {

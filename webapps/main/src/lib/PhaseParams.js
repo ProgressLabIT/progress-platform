@@ -13,7 +13,7 @@ export const parallel_job_allowed = {
   values: [true, false],
 };
 
-export const display_phase_progress = {
+export const display_job_timer = {
   type: 'bool',
   values: [true, false],
 };
@@ -72,7 +72,7 @@ export default {
   step_check,
   step_check_force_order,
   parallel_job_allowed,
-  display_phase_progress,
+  display_job_timer,
   production_batch_qt,
   max_offline,
   auto_new_batch,

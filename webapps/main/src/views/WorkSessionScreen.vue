@@ -146,12 +146,12 @@
 
             <!-- JOB PROGRESS / STATUS -->
             <template v-if="phase_progress">
-              <PhaseProgressBar
+              <JobTimerProgressBar
                 size="8px"
                 :data="phase_progress"
                 class="q-mt-lg q-mb-xs"
               >
-              </PhaseProgressBar>
+              </JobTimerProgressBar>
               <div class="row justify-between items-center q-pt-xs">
                 <div class="text-h5 weight-bold text-uppercase">
                   {{ $t('processing_time') }}
@@ -286,7 +286,7 @@ import { mapState } from 'vuex';
 
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import IssueForm from '@/components/IssueForm.vue';
-import PhaseProgressBar from '@/components/PhaseProgressBar.vue';
+import JobTimerProgressBar from '@/components/JobTimerProgressBar.vue';
 import ProgressBtn from '@/components/ProgressBtn.vue';
 import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
@@ -297,7 +297,7 @@ export default {
 
   components: {
     BaseProgressBar,
-    PhaseProgressBar,
+    JobTimerProgressBar,
     IssueForm,
     ProgressBtn,
     StartPauseResumeBtn,
@@ -755,7 +755,7 @@ export default {
     refreshPhaseProgress() {
       this.$api.get(`/progress/phase/${this.j.phase_key}`).then((resp) => {
         this.timer_count = resp?.data?.detail?.phase_processing_time;
-        if (resp?.data?.detail?.params?.display_phase_progress) {
+        if (resp?.data?.detail?.params?.display_job_timer) {
           this.show_progress = true;
           this.phase_progress = {
             consumed: resp?.data?.detail?.phase_processing_time_sec,

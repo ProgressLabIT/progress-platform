@@ -112,7 +112,7 @@ collections = [
     dict(
       _key = 'default_operation_parameters',
       parallel_job_allowed = True,
-      display_phase_progress = False,
+      display_job_timer = False,
       step_check = False,
       step_check_force_order = False,
       production_batch_qt = 1,

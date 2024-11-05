@@ -455,14 +455,14 @@ export default {
           title: 'Allowed',
         },
       },
-      display_phase_progress: {
+      display_job_timer: {
         true: {
-          desc: 'Display phase progress in work session screen',
+          desc: 'Display job timer in the work session screen, showing elapsed processing time compared to standard.',
           title: 'Enabled',
         },
-        title: 'Display phase progress',
+        title: 'Display job timer',
         false: {
-          desc: 'Do not show progress',
+          desc: 'Do not show job timer.',
           title: 'Disabled',
         },
       },
