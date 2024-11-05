@@ -1,34 +1,44 @@
 <template>
-  <div id="incoming-root">
-    <SuppliersList
-      v-if="!selected_supplier"
-      @supplier-selected="onSupplierSelected"
-    ></SuppliersList>
-    <ProductsList
-      v-if="selected_supplier && !selected_product"
-      @product-selected="onProductSelected"
-    ></ProductsList>
-    <IncomingProduct
-      v-if="selected_supplier && selected_product"
-      :product="selected_product"
-      :supplier="selected_supplier"
-    ></IncomingProduct>
+  <div id="incoming-root" style="height: 90vh">
+    <!--      SUPPLIER SECTION    -->
+    <template v-if="!selected_supplier">
+      <SuppliersPage @supplier-selected="onSupplierSelected"></SuppliersPage>
+    </template>
+
+    <!--      PRODUCT SECTION    -->
+    <template v-if="selected_supplier && !selected_product">
+      <q-scroll-area :visible="false" style="height: 90vh">
+        <ProductsList @product-selected="onProductSelected"></ProductsList>
+      </q-scroll-area>
+      <q-space />
+    </template>
+
+    <!--      QUANTITY SELECTION    -->
+    <template v-if="selected_supplier && selected_product">
+      <QuantitySelectionPage
+        :product="selected_product"
+        :supplier="selected_supplier"
+        @back="selected_product = undefined"
+        @quantity-selected="onQuantitySelected(quantity)"
+      ></QuantitySelectionPage>
+    </template>
   </div>
 </template>
 
 <script>
-import ProductsList from '@/components/incoming/ProductsList.vue';
-import SuppliersList from '@/components/incoming/SuppliersList.vue';
-import IncomingProduct from 'app/src/components/incoming/IncomingProduct.vue';
+import ProductsList from '@/components/incoming/products/ProductsList.vue';
+import QuantitySelectionPage from '@/components/incoming/quantity/QuantitySelectionPage.vue';
+import SuppliersPage from '@/components/incoming/suppliers/SuppliersPage.vue';
 export default {
   name: 'IncomingRoot',
 
-  components: { SuppliersList, ProductsList, IncomingProduct },
+  components: { SuppliersPage, ProductsList, QuantitySelectionPage },
 
   data() {
     return {
       selected_supplier: null,
       selected_product: null,
+      selected_quantity: null,
     };
   },
 
@@ -46,6 +56,11 @@ export default {
     onProductSelected(product) {
       console.log(product);
       this.selected_product = product;
+    },
+
+    onQantitySelected(quantity) {
+      console.log(quantity);
+      this.selected_quantity = quantity;
     },
   },
 };

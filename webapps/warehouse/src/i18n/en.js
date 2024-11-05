@@ -17,6 +17,8 @@ export default {
     inventoryRoot: 'Inventory',
   },
   incoming: {
+    new: 'New incoming',
+
     suppliers: {
       title: 'Documents to check',
       suppliers: 'Suppliers',
@@ -30,6 +32,16 @@ export default {
       no_data: 'cannot find products',
       barcode: 'barcode',
       serial: 'serial',
+    },
+    quantity: {
+      title: 'Select quantity',
+      div10: '/10',
+      min10: '-10',
+      plus10: '+10',
+      mul10: '*10',
+      back: 'back',
+      next: 'next',
+      print_label: 'print label',
     },
   },
 };
