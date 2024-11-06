@@ -148,6 +148,13 @@ export default {
           align: 'left',
         },
         {
+          field: 'serial_field_value',
+          name: 'serial_field_value',
+          sortable: true,
+          label: this.$t('serial_field_value').toUpperCase(),
+          align: 'left',
+        },
+        {
           field: 'created',
           sortable: true,
           name: 'created',

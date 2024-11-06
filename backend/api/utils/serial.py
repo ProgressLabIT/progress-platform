@@ -288,7 +288,6 @@ class Queries:
         })
     )
 
-
     // PRODUCT
     let product_code = FIRST(
         FOR product IN Product
@@ -311,9 +310,39 @@ class Queries:
         RETURN user
     )
 
+    LET original_data = (
+        LET job = FIRST( FOR j IN Job FILTER j._key == batch.job_key RETURN j )
+
+        LET batch_step_data = (
+          FOR step IN job.step_sequence
+            LET step_data = KEEP(step, '_key', 'type')
+            LET execution_data = FIRST(
+              FOR sed IN StepExecutionData
+              FILTER
+                sed.batch_key == batch._key
+                && sed.step_key == step._key
+                && sed.canceled == null
+              RETURN KEEP(sed, 'form_data')
+            )
+          RETURN execution_data ? execution_data.form_data : []
+        )
+        RETURN FLATTEN(batch_step_data, 3)
+    )
+
+    let merged_data = (
+        FOR serial_data_field in data
+            let wo_field = FIRST(
+                FOR original_field in FIRST(original_data)
+                        FILTER original_field.form_field_key == serial_data_field.form_field_key
+                    RETURN original_field
+                )
+        RETURN MERGE(serial_data_field, { wo_value: wo_field!=NULL ? wo_field.value: null})
+    )
+
+
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     return MERGE(s, {
-      data,
+      data: merged_data,
       product_code,
       wo_code: DOCUMENT(WorkOrder, s.wo_key).wo_code,
       batch_key: batch._key,
@@ -322,7 +351,6 @@ class Queries:
       user_name: user.name,
       user_surname: user.surname,
     })
-
 
   """
 

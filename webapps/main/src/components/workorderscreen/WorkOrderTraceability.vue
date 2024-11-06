@@ -255,6 +255,8 @@ export default {
         if (resp.data) {
           for (const serial of resp.data) {
             for (const data of serial.data) {
+              let wo_value = this.getFieldValue(data, data.wo_value);
+              let serial_value = this.getFieldValue(data, data.value);
               wo_field_data.push({
                 serial_key: serial._key,
                 serial_code: serial.code,
@@ -266,7 +268,9 @@ export default {
                 custom_field_key: data.custom_field_key,
                 field_label: data.custom_field_name,
                 field_type: data.custom_field_type,
-                custom_field_value: this.getFieldValue(data),
+                custom_field_value: wo_value,
+                serial_field_value: serial_value,
+                value_changed: wo_value !== serial_value,
                 batch_key: serial.batch_key,
                 job_key: serial.job_key,
                 phase_key: data.phase_key,
@@ -344,7 +348,7 @@ export default {
       );
     },
 
-    getFieldValue(data) {
+    getFieldValue(data, raw_value) {
       if (!data || !data.custom_field_type) {
         return '';
       }
@@ -353,20 +357,20 @@ export default {
         case 'number':
         case 'boolean':
         case 'ternary':
-          return data.value;
+          return raw_value;
 
         case 'choice':
-          return data.value?.value;
+          return raw_value?.value;
         case 'date':
-          return data.value;
+          return raw_value;
         case 'time':
-          return data.value;
+          return raw_value;
         case 'files': {
-          if (!data.value) {
+          if (!raw_value) {
             return '';
           }
           return Array.prototype.join.call(
-            data.value?.map((file) => {
+            raw_value?.map((file) => {
               return file.name;
             }),
             '.',
@@ -376,7 +380,7 @@ export default {
         default:
           break;
       }
-      return data.value;
+      return raw_value;
     },
 
     async filterPhase(val, update) {

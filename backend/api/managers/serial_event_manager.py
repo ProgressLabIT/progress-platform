@@ -328,8 +328,11 @@ class SerialEventManager:
 
        try:
            serial = self.tx.collection('Serial').get(self.serial_data.get("_key"))
-           if (self.serial_data.get('code') != None):
-              can_edit_code = self.tx.collection('Config').get('allow_serial_code_edit')['value']
+           if (self.serial_data.get('code') != None and serial.get('code') != self.serial_data.get('code')):
+              code_edit_config = self.tx.collection('Config').get('allow_serial_code_edit')
+              can_edit_code = False
+              if (code_edit_config != None):
+                can_edit_code = code_edit_config['value']
               if not can_edit_code:
                  self.notify_results(dict(
                     serial = self.serial_data.get('code'),
