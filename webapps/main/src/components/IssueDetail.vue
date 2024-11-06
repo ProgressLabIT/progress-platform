@@ -1,91 +1,102 @@
 <template>
   <BaseDialog :show="true" maximized @close="exit">
     <q-card
-      class="surface1 row"
+      class="surface1 row q-px-sm"
       bordered
       square
       style="width: 95vw; height: 95vh"
     >
+    <q-splitter
+      v-model="dataColumnWidth"
+      class="fit"
+      separator-class="text-disabled">
+
+      <template #before>
       <!-- LEFT SECTION -->
-      <div class="col-7 column full-height">
+      <div class="column full-height q-px-md">
         <!-- HEADER -->
         <IssueHeader :issue="issue" @type-change="refreshIssue" />
 
-        <!-- FORM DATA -->
-        <div class="row items-center q-pl-lg q-mt-sm">
-          <div class="col-auto text-h5 weight bold text-uppercase text-low">
-            {{ $t('form_title') }}
-          </div>
-          <div class="col">
-            <q-separator inset />
-          </div>
-        </div>
 
-        <div class="row q-px-lg q-pt-md q-mb-md">
-          <template v-if="issue.data.length > 0">
-            <div
-              v-for="field in issue.data"
-              :key="field._key"
-              class="col-auto q-pr-md"
-            >
-              <FormField
-                :field="field"
-                :root-path="`${root_path}/${field._key}`"
-                dense
-                disable
-              />
-            </div>
-          </template>
-          <div v-else class="col-auto text-italic">No data</div>
-        </div>
+        <q-tabs
+          v-model="tab"
+          dense
+          class="q-mt-md text-low"
+          content-class="text-h5"
+          indicator-color="theme-blue"
+          align="left"
+          active-class="text-high weight-bold"
+        >
+          <q-tab name="form" :label="$t('form_title')" class="text-left" />
+          <q-tab name="history" :label="$t('history')" />
+        </q-tabs>
 
-        <!-- ISSUE EVENTS -->
-        <div class="row items-center q-pl-lg">
-          <div class="col-auto text-h5 weight bold text-uppercase text-low">
-            {{ $t('history') }}
-          </div>
-          <div class="col">
-            <q-separator inset />
-          </div>
-        </div>
-
-        <q-list class="q-ml-lg q-px-xl col scroll q-pb-lg">
-          <q-item
-            v-for="(e, index) in history"
-            :key="e._key"
-            class="q-mt-md relative-position row justify-between full-width items-baseline"
-          >
-            <!-- TIMELINE DOT & LINE -->
-            <div
-              style="
-                position: absolute;
-                left: -30px;
-                top: 13px;
-                height: 100%;
-                width: 32px;
-              "
-            >
-              <div class="column full-height">
-                <div class="dot"></div>
-                <div v-if="index < history.length - 1" class="thread"></div>
+        <q-card square class="col surface2 scroll">
+          <q-tab-panels v-model="tab" class="transparent">
+            <!-- FORM DATA -->
+            <q-tab-panel name="form">
+              <template v-if="issue.data.length > 0">
+                <div
+                  v-for="field in issue.data"
+                  :key="field._key"
+                  class="col-auto q-pr-md"
+                >
+                  <FormField
+                    :field="field"
+                    :root-path="`${root_path}/${field._key}`"
+                    dense
+                    disable
+                  />
+                </div>
+              </template>
+              <div v-else class="col-auto text-italic">
+                No data
               </div>
-            </div>
+            </q-tab-panel>
 
-            <!-- EVENT TYPE -->
-            <q-item-section class="text-italic">
-              {{ getHumanDate(e.timestamp) }}
-            </q-item-section>
-            <q-item-section class="text-h4 highlight text-uppercase">
-              {{ $t(`events.${e.event_type}`) }}
-            </q-item-section>
-            <q-space />
-            <q-item-section>
-              <BaseUserAvatar name_first :user="getUserData(e)" />
-            </q-item-section>
-          </q-item>
-        </q-list>
+            <!-- ISSUE EVENTS -->
+            <q-tab-panel name="history">
+              <q-list class="q-ml-lg q-px-xl col scroll q-pb-lg">
+                <q-item
+                  v-for="(e, index) in history"
+                  :key="e._key"
+                  class="q-mt-md relative-position row justify-between full-width items-baseline"
+                >
+                  <!-- TIMELINE DOT & LINE -->
+                  <div
+                    style="
+                      position: absolute;
+                      left: -30px;
+                      top: 13px;
+                      height: 100%;
+                      width: 32px;
+                    "
+                  >
+                    <div class="column full-height">
+                      <div class="dot"></div>
+                      <div v-if="index < history.length - 1" class="thread"></div>
+                    </div>
+                  </div>
 
-        <q-space />
+                  <!-- EVENT TYPE -->
+                  <q-item-section class="text-italic">
+                    {{ getHumanDate(e.timestamp) }}
+                  </q-item-section>
+                  <q-item-section class="text-h4 highlight text-uppercase">
+                    {{ $t(`events.${e.event_type}`) }}
+                  </q-item-section>
+                  <q-space />
+                  <q-item-section>
+                    <BaseUserAvatar name_first :user="getUserData(e)" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-tab-panel>
+
+          </q-tab-panels>
+
+      </q-card>
+
 
         <!-- ACTIONS -->
         <div class="row q-pa-md q-gutter-lg">
@@ -166,7 +177,8 @@
         </div>
       </div>
 
-      <q-separator vertical spaced />
+    </template>
+    <template #after>
 
       <!-- RIGHT SECTION -->
       <MessageThread
@@ -181,6 +193,9 @@
           <q-separator></q-separator>
         </template>
       </MessageThread>
+    </template>
+    </q-splitter>
+
     </q-card>
   </BaseDialog>
 </template>
@@ -222,6 +237,8 @@ export default {
       loading: false,
       recording: false,
       base_path: '/media/user/',
+      tab: 'form',
+      dataColumnWidth: 70
     };
   },
 
@@ -388,7 +405,7 @@ export default {
     },
 
     exit() {
-      this.$router.push({ name: this.$route.query.back_to });
+      this.$router.back();
     },
   },
 };
