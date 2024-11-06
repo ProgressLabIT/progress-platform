@@ -62,6 +62,7 @@ export default {
   cancel_active_batch_confirm: 'Confermi di voler cancellare i pezzi attivi?',
   cancel_active_batch_success: 'Pezzi attivi annullati con successo',
   cancel_changes: 'annulla modifiche',
+  cannot_render_content: 'Questo formato non può essere visualizzato',
   change: 'modifica | modifiche',
   close: 'chiudi',
   close_within: 'Chiudere entro',

@@ -59,6 +59,7 @@ export default {
   cancel_active_batch_confirm: 'Are you sure you want to cancel active pieces?',
   cancel_active_batch_success: 'Active pieces canceled successfully',
   cancel_changes: 'cancel changes',
+  cannot_render_content: 'This format cannot be shown',
   change: 'change',
   close: 'close',
   close_within: 'Close within',
