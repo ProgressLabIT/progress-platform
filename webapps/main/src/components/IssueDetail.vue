@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="true" maximized @close="exit">
+  <BaseDialog :show="true" maximized @close.stop="exit">
     <q-card
       class="surface1 row q-px-sm"
       bordered

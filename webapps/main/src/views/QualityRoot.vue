@@ -40,7 +40,7 @@
             :show="show_issue_form"
             mode="new"
             with_links
-            @close="show_issue_form = false"
+            @cancel="show_issue_form = false"
             @issue-created="getIssues"
           >
           </IssueForm>

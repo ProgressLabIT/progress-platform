@@ -258,7 +258,7 @@
         with_links
         auto_link_mode="work_session"
         :auto_links="issue_links"
-        @close="show_issue_form = false"
+        @cancel="show_issue_form = false"
       />
     </q-page>
   </q-page-container>

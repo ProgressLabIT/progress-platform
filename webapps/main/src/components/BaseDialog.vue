@@ -10,9 +10,9 @@
     transition-show="scale"
     transition-hide="scale"
     :style="{ ...CSSVars, '--backdrop-color': background }"
-    @escape-key="$emit('close')"
-    @hide="$emit('close')"
-    @keydown.esc="$emit('close')"
+    @escape-key="$emit('close', $event)"
+    @hide="$emit('close', $event)"
+    @keydown.esc="$emit('close', $event)"
   >
     <template v-if="maximized">
       <div

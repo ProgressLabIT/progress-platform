@@ -31,7 +31,7 @@
         with_links
         auto_link_mode="work_order"
         :auto_links="{ work_order: wo_data }"
-        @close="show_form = false"
+        @cancel="show_form = false"
         @issue-created="getIssues"
       >
       </IssueForm>

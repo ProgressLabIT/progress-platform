@@ -48,7 +48,7 @@
       :show="show_issue_update"
       :issue="issue"
       mode="edit"
-      @close="show_issue_update = false"
+      @cancel="show_issue_update = false"
     >
     </IssueForm>
   </q-item>
