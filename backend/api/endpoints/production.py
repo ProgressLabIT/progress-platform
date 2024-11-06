@@ -852,12 +852,12 @@ async def update_jobs(job_updates:List[JobUpdate]):
 
     raise HTTPException(status_code=status_code, detail=response)
 
-@router.get("/progress/phase/{phase_key}",
+@router.get("/job/{job_key}/time",
     dependencies=[Depends(auth.verify_token)])
-async def get_phase_data(phase_key):
+async def get_job_elapsed_time(job_key):
   try:
-    bind_vars = dict(phase_key = phase_key)
-    progress_data = db.aql.execute(Queries.PHASE_PROGRESS, bind_vars=bind_vars).next()
+    bind_vars = dict(job_key = job_key)
+    progress_data = db.aql.execute(Queries.GET_JOB_ELAPSED_TIME, bind_vars=bind_vars).next()
   except:
     status_code=500
     response=dict(
@@ -869,7 +869,7 @@ async def get_phase_data(phase_key):
 
 
   response=dict(
-    message=f"Retrieved progress for phase/{phase_key}",
+    message=f"Retrieved elapsed time for job {job_key}",
     detail=progress_data
   )
 
