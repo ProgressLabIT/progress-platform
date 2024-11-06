@@ -1,7 +1,7 @@
 <template>
   <div class="q-pa-lg">
     <q-table
-      id="wo_serials"
+      id="wo_field_data"
       :columns="columns"
       :rows="filtered_serials_list"
       row-key="_key"
@@ -61,7 +61,7 @@
 
 <script>
 export default {
-  name: 'WorkOrderSerialsData',
+  name: 'WorkOrderTraceabilityData',
 
   props: {
     filters: {
@@ -77,7 +77,7 @@ export default {
         };
       },
     },
-    wo_serials: {
+    wo_field_data: {
       type: Object,
       required: true,
     },
@@ -166,7 +166,7 @@ export default {
     },
 
     filtered_serials_list() {
-      return this.wo_serials.filter((serial) => {
+      return this.wo_field_data.filter((serial) => {
         /*
         Initialize filter results.
         If any false will be found in this array the filter function will return false

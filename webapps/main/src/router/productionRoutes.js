@@ -67,11 +67,11 @@ const productionRoutes = [
                     }),
                   },
                   {
-                    path: 'serials',
-                    name: 'workOrderSerials',
+                    path: 'traceability',
+                    name: 'workOrderTraceability',
                     component: () =>
                       import(
-                        '@//components/workorderscreen/WorkOrderSerials.vue'
+                        '@/components/workorderscreen/WorkOrderTraceability.vue'
                       ),
                     props: (route) => ({
                       context_key: route.params.wo_key,

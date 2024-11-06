@@ -27,12 +27,12 @@
 
         <!-- MAIN CONTENT -->
         <div class="col relative-position">
-          <WorkOrderSerialsData
-            v-if="wo_serials"
-            :wo_serials="wo_serials"
+          <WorkOrderTraceabilityData
+            v-if="wo_field_data"
+            :wo_field_data="wo_field_data"
             :filters="filters"
           >
-          </WorkOrderSerialsData>
+          </WorkOrderTraceabilityData>
           <NoDataAlert v-else />
         </div>
       </div>
@@ -144,20 +144,20 @@
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
-import WorkOrderSerialsData from '@/components/workorderscreen/WorkOrderSerialsData.vue';
+import WorkOrderTraceabilityData from '@/components/workorderscreen/WorkOrderTraceabilityData.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import queryModel from '@/lib/queryModelFactory.js';
 
 const header_plus_footer_height = 80;
 
 export default {
-  name: 'WorkOrderSerials',
+  name: 'WorkOrderTraceability',
 
   components: {
     BaseAutocompleteUser,
     NoDataAlert,
     FilterDrawer,
-    WorkOrderSerialsData,
+    WorkOrderTraceabilityData,
   },
 
   props: {
@@ -177,7 +177,7 @@ export default {
       editing: false,
       saving: false,
       showFilterDrawer: false,
-      wo_serials: undefined,
+      wo_field_data: undefined,
       field_list: undefined,
       phase_list: undefined,
       serial_list: undefined,
@@ -265,7 +265,7 @@ export default {
         },
       })
       .then((resp) => {
-        let wo_serials = [];
+        let wo_field_data = [];
         let phases = new Map([]);
         let serials = new Map([]);
         let jobs = new Map([]);
@@ -273,7 +273,7 @@ export default {
         if (resp.data) {
           for (const serial of resp.data) {
             for (const data of serial.data) {
-              wo_serials.push({
+              wo_field_data.push({
                 serial_key: serial._key,
                 serial_code: serial.code,
                 created: this.formatSerialDateTime(serial?.created),
@@ -327,7 +327,7 @@ export default {
           }
         }
 
-        this.wo_serials = wo_serials;
+        this.wo_field_data = wo_field_data;
         this.phase_list = Array.from(phases.values());
         this.serial_list = Array.from(serials.values());
         this.job_list = Array.from(jobs.values());

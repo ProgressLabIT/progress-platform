@@ -891,7 +891,7 @@ export default {
       workOrderIssues: 'issues',
       workOrderNotes: 'Notes',
       workOrderMessages: 'Messages',
-      workOrderSerials: 'Serials',
+      workOrderTraceability: 'Traceability',
     },
     update_due_date: 'change due date',
     update_from_date: 'change release date',
