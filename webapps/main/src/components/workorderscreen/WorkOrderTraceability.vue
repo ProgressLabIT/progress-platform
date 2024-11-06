@@ -1,148 +1,131 @@
 <template>
-  <q-page-container class="absolute-full">
-    <q-page class="row full-height">
-      <div class="column col full-height">
-        <div class="row col-auto items-center q-pl-xs q-pr-md q-py-sm">
-          <!-- FILTER BUTTON -->
-          <q-btn
-            v-if="!showFilterDrawer"
-            class="q-ml-sm"
-            size="sm"
-            round
-            :color="filters_active ? 'theme-blue' : 'theme-grey'"
-            icon="mdi-filter"
-            @click="showFilterDrawer = true"
-          >
-            <q-badge
-              v-if="filters_active"
-              floating
-              rounded
-              color="theme-red"
-              :label="filters_active"
-              size="4px"
-              style="font-family: 'Red Hat Text'; font-size: 8px"
-            />
-          </q-btn>
-        </div>
+  <div class="q-pa-md">
+    <!-- FILTERS -->
+    <div class="text-h5 text-uppercase low-text">
+      {{  $t('filter', 2) }}
+    </div>
 
-        <!-- MAIN CONTENT -->
-        <div class="col relative-position">
-          <WorkOrderTraceabilityData
-            v-if="wo_field_data"
-            :wo_field_data="wo_field_data"
-            :filters="filters"
-          >
-          </WorkOrderTraceabilityData>
-          <NoDataAlert v-else />
-        </div>
+    <div class="row q-col-gutter-sm q-mt-sm">
+       <!-- BY SERIAL -->
+      <div class="col">
+        <q-select
+          v-if="wo_data.traceability_level"
+          ref="serial_filter"
+          v-model="serial_selected"
+          filled
+          dense
+          use-input
+          clearable
+          :options="serial_list"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          :label="$capitalize($t('serial', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1"
+          @filter="serialSerial"
+        >
+        </q-select>
       </div>
-    </q-page>
-
-    <FilterDrawer
-      v-model="showFilterDrawer"
-      :active-filters="filters_active"
-      @reset="resetFilters"
-    >
-      <!-- FILTERS SPECIFIC TO JOB LIST -->
-
-      <!-- BY SERIAL -->
-      <q-select
-        ref="serial_filter"
-        v-model="serial_selected"
-        filled
-        dense
-        use-input
-        clearable
-        :options="serial_list"
-        option-label="name"
-        option-value="_key"
-        emit-value
-        map-options
-        :label="$capitalize($t('serial', 1))"
-        class="q-mb-md"
-        popup-content-class="surface1"
-        @filter="serialSerial"
-      >
-      </q-select>
 
       <!-- BY PHASE -->
-      <q-select
-        ref="phase_filter"
-        v-model="phase_selected"
-        filled
-        dense
-        use-input
-        clearable
-        :options="phase_list"
-        option-label="name"
-        option-value="_key"
-        emit-value
-        map-options
-        :label="$capitalize($t('phase.phase', 1))"
-        class="q-mb-md"
-        popup-content-class="surface1"
-        @filter="filterPhase"
-      >
-      </q-select>
+      <div class="col">
+        <q-select
+          ref="phase_filter"
+          v-model="phase_selected"
+          filled
+          dense
+          use-input
+          clearable
+          :options="phase_list"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          :label="$capitalize($t('phase.phase', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1"
+          @filter="filterPhase"
+        >
+        </q-select>
+      </div>
 
       <!-- BY JOB -->
-      <q-select
-        ref="job_filter"
-        v-model="job_selected"
-        filled
-        dense
-        use-input
-        clearable
-        :options="job_list"
-        option-label="name"
-        option-value="_key"
-        emit-value
-        map-options
-        :label="$capitalize($t('job.label', 1))"
-        class="q-mb-md"
-        popup-content-class="surface1"
-        @filter="filterJob"
-      >
-      </q-select>
+      <div class="col">
+        <q-select
+          ref="job_filter"
+          v-model="job_selected"
+          filled
+          dense
+          use-input
+          clearable
+          :options="job_list"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          :label="$capitalize($t('job.label', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1"
+          @filter="filterJob"
+        >
+        </q-select>
+      </div>
 
       <!-- BY OPERATOR -->
-      <BaseAutocompleteUser
-        :placeholder="$capitalize($t('operator'))"
-        dense
-        class="q-mb-md"
-        key-only
-        :value="operator_selected"
-        @select="(selection) => (operator_selected = selection)"
-      >
-      </BaseAutocompleteUser>
+      <div class="col">
+        <BaseAutocompleteUser
+          :placeholder="$capitalize($t('operator'))"
+          dense
+          :show-avatar="false"
+          class="q-mb-md"
+          key-only
+          :value="operator_selected"
+          @select="(selection) => (operator_selected = selection)"
+        >
+        </BaseAutocompleteUser>
+      </div>
 
       <!-- BY FIELD -->
-      <q-select
-        ref="field_filter"
-        v-model="field_selected"
-        filled
-        dense
-        use-input
-        clearable
-        :options="field_list"
-        option-label="name"
-        option-value="_key"
-        emit-value
-        map-options
-        :label="$capitalize($t('field', 1))"
-        class="q-mb-md"
-        popup-content-class="surface1"
-        @filter="filterField"
-      >
-      </q-select>
-      <!-- END OF JOB-SPECIFIC FILTERS -->
-    </FilterDrawer>
-  </q-page-container>
+      <div class="col">
+        <q-select
+          ref="field_filter"
+          v-model="field_selected"
+          filled
+          dense
+          use-input
+          clearable
+          :options="field_list"
+          option-label="name"
+          option-value="_key"
+          emit-value
+          map-options
+          :label="$capitalize($t('field', 1))"
+          class="q-mb-md"
+          popup-content-class="surface1"
+          @filter="filterField"
+        >
+        </q-select>
+      </div>
+    </div>
+
+    <div class="column col full-height">
+      <!-- MAIN CONTENT -->
+        <WorkOrderTraceabilityData
+          v-if="wo_field_data"
+          :wo_field_data="wo_field_data"
+          :filters="filters"
+        >
+        </WorkOrderTraceabilityData>
+        <NoDataAlert v-else />
+      </div>
+
+    </div>
 </template>
 
 <script>
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
-import FilterDrawer from '@/components/FilterDrawer.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import WorkOrderTraceabilityData from '@/components/workorderscreen/WorkOrderTraceabilityData.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
@@ -156,7 +139,6 @@ export default {
   components: {
     BaseAutocompleteUser,
     NoDataAlert,
-    FilterDrawer,
     WorkOrderTraceabilityData,
   },
 

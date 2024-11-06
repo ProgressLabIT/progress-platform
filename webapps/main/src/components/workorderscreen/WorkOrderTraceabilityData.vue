@@ -1,5 +1,4 @@
 <template>
-  <div class="q-pa-lg">
     <q-table
       id="wo_field_data"
       :columns="columns"
@@ -11,14 +10,9 @@
       class="full-height"
       separator="none"
       table-class="text-high"
-      card-class="background no-shadow"
+      card-class="surface1 no-shadow"
       :rows-per-page-options="[0]"
     >
-      <template #header-cell-issue_count="props">
-        <q-th :props="props">
-          <q-icon name="mdi-flag" size="14px" />
-        </q-th>
-      </template>
 
       <template #body="props">
         <q-tr :id="props.row._key" :key="props.row._key" :props="props">
@@ -56,7 +50,6 @@
         </q-tr>
       </template>
     </q-table>
-  </div>
 </template>
 
 <script>
