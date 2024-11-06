@@ -4,8 +4,11 @@ from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from models.process import PhaseData
-from models.production import Job, WorkOrderFull
+from models.production import Job, WorkOrderNew, WorkOrderFull
+from utils.bom import get_bom_from_db
 from utils.process import search_step_media
+from utils.product import get_product_docs
+
 
 class Queries:
   ADD_WORK_ORDER_TO_QUEUE = """
@@ -362,6 +365,18 @@ def _get_procedure_for_new_job(tx, phase_key):
 
   return job_steps
 
+
+def create_wo_record(tx, wo: WorkOrderNew):
+  new_wo_record = WorkOrderFull(
+    **wo.model_dump(),
+    wo_docs = get_product_docs(wo.product_key),
+    wo_bom = get_bom_from_db(tx, wo.product_key),
+  )
+  prepped = jsonable_encoder(new_wo_record, by_alias=True)
+  db_resp = tx.collection('WorkOrder').insert(prepped)
+  new_wo_record.id = db_resp['_id']
+  new_wo_record.key = db_resp['_key']
+  return new_wo_record
 
 def create_job_record(
   tx,

@@ -9,15 +9,14 @@ from fastapi.encoders import jsonable_encoder
 from models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
-from utils.bom import get_bom_from_db
 from utils.counter import _generate_counter
 from utils.db import db
 from utils.dt import timestamp
 from utils.exceptions import HTTPError
-from utils.product import get_product_docs
 from utils.production import (
   Queries,
   create_job_record,
+  create_wo_record,
   update_target_queue
 )
 from utils.traceability import _update_job_progress, Queries as TraceabilityQueries
@@ -35,21 +34,7 @@ async def create_work_order(new_wo: WorkOrderNew):
   # Initialize transaction
   tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'Counter'], read=['Phase', 'Product'])
   wo_coll = tx.collection('WorkOrder')
-  job_coll = tx.collection('Job')
   product_coll = tx.collection('Product')
-
-  # Define WO record creation procedure
-  def create_wo_record(wo: WorkOrderNew, collection):
-    new_wo_record = WorkOrderFull(
-      **wo.model_dump(),
-      wo_docs = get_product_docs(wo.product_key),
-      wo_bom = get_bom_from_db(tx, wo.product_key)
-    )
-    prepped = jsonable_encoder(new_wo_record, by_alias=True)
-    db_resp = collection.insert(prepped)
-    new_wo_record.id = db_resp['_id']
-    new_wo_record.key = db_resp['_key']
-    return new_wo_record
 
   # 0. Handle Work Order Code
   # 0.1 Generate automatic wo_code if not provided
@@ -112,7 +97,7 @@ async def create_work_order(new_wo: WorkOrderNew):
     if product_data.serialcode_on_batchstart:
       new_wo.serialcode_on_batchstart = product_data.serialcode_on_batchstart
 
-    new_wo_record = create_wo_record(new_wo, wo_coll)
+    new_wo_record = create_wo_record(tx, new_wo)
 
   except StopIteration:
     tx.abort_transaction()
@@ -125,9 +110,8 @@ async def create_work_order(new_wo: WorkOrderNew):
       status_code=status_code,
       detail=response
     )
-    raise HTTPException()
 
-  except:
+  except Exception:
     tx.abort_transaction()
     status_code=500
     response = dict(
