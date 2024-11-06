@@ -99,12 +99,14 @@
                 :key="fieldName"
               >
                 <!-- TODO: Handle field type 'image' -->
-                <q-file
-                  v-if="field.type === 'image'"
-                  :label="fieldName"
-                  hint="WIP"
-                  readonly
-                />
+                <template v-if="field.type === 'image'">
+                  <div>{{ fieldName }}</div>
+                  <q-img
+                    :src="formModel[fieldName]"
+                    fit="contain"
+                    style="width: 200px"
+                  />
+                </template>
                 <q-input
                   v-else
                   v-model="formModel[fieldName]"
@@ -182,7 +184,7 @@
 <script setup>
 import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent } from 'quasar';
-import { nextTick, onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
@@ -216,7 +218,7 @@ const allowSelectTemplate = ref(true);
 
 const selectedTemplate = ref();
 const isLoadingTemplate = ref(false);
-const formModel = ref();
+let formModel = undefined;
 const serialModel = ref();
 const serialModelInitalValue = ref([]);
 const hasSerialLink = ref(false);
@@ -297,8 +299,8 @@ onMounted(() => {
     allowSelectTemplate.value = false;
   }
 
-  if (props.context?.step?.batch_key) {
-    loadBatchSerial(props.context.step.batch_key);
+  if (props.context?.batch?._key) {
+    loadBatchSerial(props.context.batch._key);
   }
 
   if (props.context?.step?.product_key) {
@@ -329,29 +331,31 @@ async function selectTemplate(template) {
     const { data } = await api.get(`print-template/${template._key}`);
     selectedTemplate.value = data;
 
-    formModel.value = Object.fromEntries(
-      data.template.columns.map((fieldName) => {
-        const link = data.links[fieldName];
-        if (!link) {
-          return [fieldName, ''];
-        }
+    formModel = reactive(
+      Object.fromEntries(
+        data.template.columns.map((fieldName) => {
+          const link = data.links[fieldName];
+          if (!link) {
+            return [fieldName, ''];
+          }
 
-        if (serialTemplateLinks.includes(link.value)) {
-          hasSerialLink.value = true;
-        }
+          if (serialTemplateLinks.includes(link.value)) {
+            hasSerialLink.value = true;
+          }
 
-        if (link.type === 'preset') {
+          if (link.type === 'preset') {
+            return [
+              fieldName,
+              String(props.context.getPresetValue(link.value) ?? ''),
+            ];
+          }
+
           return [
             fieldName,
-            String(props.context.getPresetValue(link.value) ?? ''),
+            props.context.getCustomFieldValue(link.value) ?? undefined,
           ];
-        }
-
-        return [
-          fieldName,
-          String(props.context.getCustomFieldValue(link.value) ?? ''),
-        ];
-      }),
+        }),
+      ),
     );
   } catch (error) {
     console.error(error);
@@ -361,6 +365,45 @@ async function selectTemplate(template) {
   }
 }
 
+async function loadImage(url) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return new Promise((onSuccess) => {
+    const reader = new FileReader();
+    reader.onload = function () {
+      onSuccess(this.result);
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function prepareInputs() {
+  // Needed to parse input type to load images as base64
+  const inputs = [];
+  for (const schema of selectedTemplate.value.template.schemas) {
+    let schemaFields = [];
+    for (const [fieldName, fieldProps] of Object.entries(schema)) {
+      if (fieldProps.type === 'image') {
+        try {
+          const base64 = formModel[fieldName] // Image URL
+            ? await loadImage(formModel[fieldName])
+            : ''; // empty string will not render any image. Background, if present, will be visibile.
+          schemaFields.push([fieldName, base64]);
+        } catch (err) {
+          window.alert(
+            'Error while generating the image. Please contact the system administrator.',
+          );
+          console.log(err);
+        }
+      } else {
+        schemaFields.push([fieldName, formModel[fieldName]]);
+      }
+    }
+    inputs.push(Object.fromEntries(schemaFields));
+  }
+  return inputs;
+}
+
 const previewSrc = ref();
 async function goToPreview() {
   previewSrc.value = undefined;
@@ -368,9 +411,10 @@ async function goToPreview() {
   await nextTick();
 
   const { template } = selectedTemplate.value;
+  const inputs = await prepareInputs();
   previewSrc.value = await generate({
     template,
-    inputs: [formModel.value],
+    inputs,
   });
 }
 
