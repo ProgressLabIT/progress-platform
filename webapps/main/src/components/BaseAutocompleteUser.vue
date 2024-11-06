@@ -150,3 +150,8 @@ export default {
   },
 };
 </script>
+
+<style lang="sass">
+.q-select:has(.user-avatar) .q-field__input
+  min-width: 0px !important
+</style>

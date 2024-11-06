@@ -1,5 +1,5 @@
 <template>
-  <div class="row items-center" :class="name_first ? ' reverse' : ''">
+  <div class="row items-center user-avatar" :class="name_first ? ' reverse' : ''">
     <q-avatar
       v-if="initials && showAvatar"
       color="theme-grey"
@@ -20,16 +20,16 @@
     <div
       v-if="show_name && showAvatar"
       :class="dense ? 'q-mx-xs' : 'q-mx-sm'"
-    ></div>
+    />
 
-    <div v-if="show_name" class="column col-auto">
+    <div v-if="show_name" class="col-auto">
       <slot name="name">
         <div :class="name_class" :style="name_style">
           {{ full_name }}
         </div>
       </slot>
 
-      <slot name="subtitle"> </slot>
+      <slot name="subtitle" />
     </div>
   </div>
 </template>
