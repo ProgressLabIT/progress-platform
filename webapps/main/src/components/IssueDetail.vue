@@ -29,6 +29,7 @@
         >
           <q-tab name="form" :label="$t('form_title')" class="text-left" />
           <q-tab name="history" :label="$t('history')" />
+          <q-tab name="links" :label="$t('link', 2)" />
         </q-tabs>
 
         <q-card square class="col surface2 scroll">
@@ -88,6 +89,20 @@
                   <q-space />
                   <q-item-section>
                     <BaseUserAvatar name_first :user="getUserData(e)" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-tab-panel>
+
+            <!-- ISSUE LINKS -->
+            <q-tab-panel name="links">
+              <q-list>
+                <q-item v-for="[link, value] in Object.entries(issue.links)" :key="link">
+                  <q-item-section class="text-h5 text-uppercase col-4">
+                    {{ $t(linkTypes[link].label) }}
+                  </q-item-section>
+                  <q-item-section class="text-body2">
+                    {{ value?.[linkTypes[link].prop] ?? '-' }}
                   </q-item-section>
                 </q-item>
               </q-list>
@@ -238,7 +253,37 @@ export default {
       recording: false,
       base_path: '/media/user/',
       tab: 'form',
-      dataColumnWidth: 70
+      dataColumnWidth: 70,
+      linkTypes: {
+        job: {
+          label: 'job.label',
+          prop: '_key'
+        },
+        product: {
+          prop: 'code',
+          label: 'product.label'
+        },
+        phase: {
+          prop: 'alias',
+          label: 'phase.phase'
+        },
+        work_order: {
+          prop: 'wo_code',
+          label: 'work_order.long'
+        },
+        serial: {
+          prop: 'code',
+          label: 'serial',
+        },
+        user: {
+          prop: 'username',
+          label: 'user.label'
+        },
+        'operation': {
+          prop: 'name',
+          label: 'operation.label'
+        }
+      }
     };
   },
 
