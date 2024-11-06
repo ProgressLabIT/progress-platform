@@ -495,7 +495,7 @@ export default {
       this.form_step = 'links';
       this.link_form = null;
       this.critical_only = false;
-      this.$emit('close');
+      this.$emit('cancel');
     },
 
     /**
