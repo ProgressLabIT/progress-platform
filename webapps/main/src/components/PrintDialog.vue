@@ -352,7 +352,7 @@ async function selectTemplate(template) {
 
           return [
             fieldName,
-            props.context.getCustomFieldValue(link.value) ?? undefined,
+            props.context.getCustomFieldValue(link.value) ?? '',
           ];
         }),
       ),
