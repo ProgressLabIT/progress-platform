@@ -127,7 +127,7 @@
 
           <q-space />
 
-          <q-btn :label="$t('back')" color="theme-grey" @click="activeStep--" />
+          <q-btn v-if="!(activeStep === 1 && !allowSelectTemplate)" :label="$t('back')" color="theme-grey" @click="activeStep--" />
           <q-btn
             :label="$t('next')"
             color="primary"
