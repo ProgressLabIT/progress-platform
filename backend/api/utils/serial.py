@@ -275,17 +275,17 @@ class Queries:
 
     LET data = (
         FOR serial_field in NOT_NULL(s.data, [])
-        let step = DOCUMENT(Step, serial_field.step_key)
-        let phase = DOCUMENT(Phase, serial_field.phase_key)
-        let customField = DOCUMENT(CustomField, serial_field.custom_field_key)
-        RETURN MERGE(serial_field, {
-            step_title: step !=null ? step.title : null,
-            step_description: step !=null ? step.description : null,
-            phase_alias: phase !=null ? phase.alias : null,
-            phase_description: phase !=null ? phase.description : null,
-            custom_field_type: customField!= null ? customField.type : null,
-            custom_field_name: customField!= null ? customField.name : null
-        })
+          let step = DOCUMENT(Step, serial_field.step_key)
+          let phase = DOCUMENT(Phase, serial_field.phase_key)
+          let customField = DOCUMENT(CustomField, serial_field.custom_field_key)
+          RETURN MERGE(serial_field, {
+              step_title: step !=null ? step.title : null,
+              step_description: step !=null ? step.description : null,
+              phase_alias: phase !=null ? phase.alias : null,
+              phase_description: phase !=null ? phase.description : null,
+              custom_field_type: customField!= null ? customField.type : null,
+              custom_field_name: customField!= null ? customField.name : null
+          })
     )
 
     // PRODUCT
@@ -352,6 +352,63 @@ class Queries:
       user_surname: user.surname,
     })
 
+  """
+
+  FIND_WO_BATCH = """
+    FOR b in Batch
+        FILTER b.work_order_key == @work_order_key
+
+        let phase = DOCUMENT(Phase, b.phase_key)
+        LET job = FIRST( FOR j IN Job FILTER j._key == b.job_key RETURN j )
+
+        LET original_data = (
+            LET batch_step_data = (
+              FOR step_seq IN job.step_sequence
+                let step = DOCUMENT(Step, step_seq._key)
+                LET execution_data = FIRST(
+                  FOR sed IN StepExecutionData
+                  FILTER
+                    sed.batch_key == b._key
+                    && sed.step_key == step_seq._key
+                    && sed.canceled == null
+                  RETURN KEEP(sed, 'form_data', 'user_key')
+                )
+
+                LET aug_data = (
+                    FOR data in NOT_NULL(execution_data.form_data, [])
+                        let customField = DOCUMENT(CustomField, data.custom_field_key)
+                        LET user = FIRST( FOR u IN User FILTER u._key == execution_data.user_key RETURN u )
+                        return MERGE(data, {
+                              step_title: step !=null ? step.title : null,
+                              step_description: step !=null ? step.description : null,
+                              phase_alias: phase !=null ? phase.alias : null,
+                              phase_description: phase !=null ? phase.description : null,
+                              custom_field_type: customField!= null ? customField.type : null,
+                              custom_field_name: customField!= null ? customField.name : null,
+                              user_name: user.name,
+                              user_surname: user.surname,
+                            })
+                )
+              RETURN aug_data
+            )
+            RETURN FLATTEN(batch_step_data, 3)
+        )
+
+
+        FILTER original_data != [[]]
+
+
+
+        RETURN {
+            data: FIRST(original_data),
+            wo_code: DOCUMENT(WorkOrder, @work_order_key).wo_code,
+            product_code: job.product_code,
+            batch_key: b._key,
+            job_key: b.job_key,
+            phase_key: b.phase_key,
+            quantity: b.qt_total,
+            created: b.start
+        }
   """
 
 
