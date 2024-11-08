@@ -7,11 +7,11 @@
       flat
       bordered
       grid
+      :loading="loading"
       :title="$t('incoming.products.products')"
       :rows="rows"
       :columns="columns"
       row-key="_key"
-      :filter="filter"
       :rows-per-page-options="[0]"
       hide-header
     >
@@ -25,6 +25,7 @@
           <template #append>
             <q-icon name="mdi-magnify" />
             <q-btn
+              v-if="false"
               size="0.75rem"
               icon="mdi-barcode-scan"
               @click="show_code_scanner = true"
@@ -213,7 +214,19 @@ export default {
   data() {
     return {
       show_code_scanner: false,
+      loading: false,
+      last_research: undefined,
     };
+  },
+
+  watch: {
+    filter: {
+      handler() {
+        if (this.filter !== this.last_research) {
+          this.loadProducts(this.filter);
+        }
+      },
+    },
   },
 
   methods: {
@@ -227,6 +240,25 @@ export default {
       console.log(result);
       console.log(raw);
       this.show_code_scanner = false;
+    },
+    loadProducts(filter) {
+      this.loading = true;
+      let params = {};
+
+      if (filter) {
+        params.search = filter;
+        this.last_research = filter;
+      }
+      params.limit = 100;
+
+      this.$api
+        .get('product', {
+          params,
+        })
+        .then((resp) => {
+          this.rows = resp.data;
+          this.loading = false;
+        });
     },
   },
 };
