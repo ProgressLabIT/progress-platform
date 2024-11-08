@@ -107,12 +107,7 @@
         <div class="col-6 column full-height">
           <div class="row col-auto items-center q-my-sm">
             <div class="text-h5 uppercase">
-              {{
-                $t('countInfo.filtered', {
-                  count: filteredProducts.length,
-                  total: products.length,
-                })
-              }}
+              {{ $t('countInfo.shown') }}: {{ filteredProducts?.length }}
             </div>
             <q-btn
               size="xs"
@@ -121,7 +116,7 @@
               :label="$t('select_all')"
               color="theme-grey"
               class="q-ml-md"
-              @click="selectedProducts = [...filteredProducts]"
+              @click="selectedKeys = new Set(filteredProducts.map(p => p._key))"
             >
             </q-btn>
           </div>
@@ -143,7 +138,7 @@
                   size="sm"
                   dense
                   class="passive-checkbox"
-                  :model-value="selectedProducts.includes(item)"
+                  :model-value="!!selectedProducts.find(i => i._key === item._key)"
                   @click="toggleProduct(item)"
                 />
               </q-item-section>
@@ -164,7 +159,7 @@
         <div class="col column full-height">
           <div class="col-auto row items-center q-my-sm">
             <div class="text-h5 uppercase">
-              {{ $t('countInfo.selected', selectedProducts.length) }}
+              {{ $t('countInfo.selected', selectedProducts?.length) }}
             </div>
             <q-btn
               size="xs"
@@ -173,7 +168,7 @@
               :label="$t('deselect_all')"
               color="theme-grey"
               class="q-ml-md"
-              @click="selectedProducts = []"
+              @click="selectedKeys = new Set()"
             >
             </q-btn>
           </div>
@@ -181,7 +176,7 @@
             v-slot="{ item }"
             class="col fit"
             style="max-height: 100%"
-            :items="selectedProducts.toSorted((a, b) => a.code - b.code)"
+            :items="selectedProducts.toSorted((a, b) => a.code > b.code ? 1 : -1)"
           >
             <q-item key="_key" style="min-height: none">
               <q-item-section side>
@@ -236,9 +231,12 @@ const props = defineProps({
     type: String,
     required: true,
   },
-  products: {
-    type: Array,
-    required: true,
+  baseFilters: {
+    type: Object,
+    default: () => ({
+      hasOperationKey: null,
+      excludeProductKey: null
+    })
   },
   defaultFilters: {
     type: Object,
@@ -263,21 +261,18 @@ const textToExclude = ref(props.defaultFilters?.textToExclude ?? '');
 const tagsToInclude = ref(props.defaultFilters?.tagsToInclude ?? []);
 const tagsToExclude = ref(props.defaultFilters?.tagsToExclude ?? []);
 
-const selectedProducts = ref([]);
 const filteredProducts = ref([]);
-
+const selectedProducts = ref([]);
 const globalOperator = ref('AND');
 const includeTagsOperator = ref('AND');
 const excludeTagsOperator = ref('AND');
 
-function toggleProduct(product_key) {
-  if (selectedProducts.value.includes(product_key)) {
-    selectedProducts.value.splice(
-      selectedProducts.value.indexOf(product_key),
-      1,
-    );
+function toggleProduct(product) {
+  const idx = selectedProducts.value.findIndex(p => p._key === product._key)
+  if (idx !== - 1) {
+    selectedProducts.value.splice(idx, 1)
   } else {
-    selectedProducts.value.push(product_key);
+    selectedProducts.value.push(product);
   }
 }
 
@@ -327,9 +322,10 @@ async function filterProducts() {
       global_operator: globalOperator.value,
       include_tags_operator: includeTagsOperator.value,
       exclude_tags_operator: excludeTagsOperator.value,
+      has_operation_key: props.baseFilters.has_operation_key
     },
   });
-  filteredProducts.value = data;
+  filteredProducts.value = data.filter(p => p._key !== props.baseFilters.excludeProductKey);
 }
 
 filterProducts();

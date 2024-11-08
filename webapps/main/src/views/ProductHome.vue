@@ -558,9 +558,9 @@ export default {
         component: MassCopyToProductDialog,
         componentProps: {
           title: t('massCopyProcess.title.counter'),
-          products: store.getters
-            .productCatalog(true)
-            .filter(({ _key }) => _key !== sourceProduct._key),
+          baseFilters: {
+            excludeProductKey: sourceProduct._key
+          },
           defaultFilters: {
             tagsToInclude: sourceProduct.tags,
           },

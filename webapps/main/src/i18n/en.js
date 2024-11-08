@@ -81,6 +81,7 @@ export default {
     total: 'total cost',
   },
   countInfo: {
+    shown: 'Shown',
     filtered: 'Filtered: {count} of {total}',
     selected: 'Selected: {count}',
     selectedTotal: 'Selected {count} of {total}',

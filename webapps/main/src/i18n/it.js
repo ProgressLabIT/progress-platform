@@ -84,6 +84,7 @@ export default {
     total: 'costo totale',
   },
   countInfo: {
+    shown: 'Visualizzati',
     filtered: 'Filtrati: {count} di {total}',
     selected: 'Selezionati: {count}',
     selectedTotal: 'Selezionati {count} di {total}',

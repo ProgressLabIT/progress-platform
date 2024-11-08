@@ -46,7 +46,7 @@ async def get_product_list(
       has_operation_key = has_operation_key,
       details = details,
       tag = tag_search,
-      active = filter_inactive
+      active_only = filter_inactive
     )
   )
 
@@ -65,7 +65,8 @@ async def search_product(
   tags_to_exclude: str | None = None,
   global_operator: str | None = None,
   include_tags_operator: str | None = None,
-  exclude_tags_operator: str | None = None
+  exclude_tags_operator: str | None = None,
+  has_operation_key: str | None = None # filter by operation key
   ):
 
   globalOperator = "&&"
@@ -101,6 +102,7 @@ async def search_product(
       textToExclude = text_to_exclude,
       tagsToInclude = tags_to_include,
       tagsToExclude = tags_to_exclude,
+      has_operation_key = has_operation_key
     )
   )
 

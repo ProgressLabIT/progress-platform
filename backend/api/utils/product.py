@@ -13,27 +13,19 @@ class Queries:
 
     FOR product IN Product
       // find active products matching the search pattern provided
+      FILTER @has_operation_key == null || product._key IN products_with_operation
+      FILTER @active_only ? product.active == true : true
+
       LET search_context = LOWER(CONCAT(product.code, ' ', product.description))
       FILTER !product.trash && LIKE(search_context, search, true)
-      && (@active? product.active == @active: true)
-      && (@tag
-        ? LENGTH(
-            // This subquery returns match true/false for each filter
-            FOR edge IN has_tag
-                FILTER edge._from == product._id
-                FILTER edge._to == CONCAT('Tag/', @tag)
-            RETURN 1
-          ) >= 1
-        : true
-      )
-
-      FILTER !@has_operation_key || product._key IN products_with_operation
 
       LET tags = (
         FOR edge IN has_tag
           FILTER edge._from == product._id
           RETURN DOCUMENT(Tag, edge._to)
       )
+
+      FILTER @tag == null || @tag IN tags[*]._key
 
       // keep only required attributes
       LET result = @details ? product : KEEP(product, ["_key", "code", "description", "active", "traceability_level", "serialcode_on_batchstart"])
@@ -48,7 +40,16 @@ class Queries:
     LET search_include = CONCAT('%', LOWER(@textToInclude), '%')
     LET search_exclude = CONCAT('%', LOWER(@textToExclude), '%')
 
+    LET products_with_operation = (
+      FOR product, edge IN 2..2 INBOUND CONCAT('Operation/', @has_operation_key) requires
+      FILTER product != null
+      RETURN product._key
+    )
+
     FOR product IN Product
+      FILTER !product.trash
+      FILTER @has_operation_key == null || product._key IN products_with_operation
+
       LET search_context = LOWER(CONCAT(product.code, ' ', 'product.description'))
 
       LET tags = (
@@ -57,18 +58,11 @@ class Queries:
           RETURN DOCUMENT(Tag, edge._to)
       )
 
-      LET search_tags = (
-        FOR tag IN tags
-          RETURN tag._key
-      )
-
-      FILTER !product.trash
-
       FILTER
-        (@textToInclude?LIKE(search_context, search_include, true):<def>) <g_o>
-        (@textToExclude?!LIKE(search_context, search_exclude, true):<def>) <g_o>
-        (@tagsToInclude?TOKENS(@tagsToInclude, "text_en") <it_o>  search_tags:<def>) <g_o>
-        (@tagsToExclude?TOKENS(@tagsToExclude, "text_en") <et_o>  search_tags:<def>)
+        (@textToInclude ? LIKE(search_context, search_include, true) : <def>) <g_o>
+        (@textToExclude ? !LIKE(search_context, search_exclude, true) : <def>) <g_o>
+        (@tagsToInclude ? TOKENS(@tagsToInclude, "text_en") <it_o>  tags[*]._key : <def>) <g_o>
+        (@tagsToExclude ? TOKENS(@tagsToExclude, "text_en") <et_o>  tags[*]._key : <def>)
 
       SORT product.code
       RETURN MERGE(product, { tags })
