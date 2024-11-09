@@ -52,7 +52,7 @@
 
             <q-separator />
             <q-list dense>
-              <q-item :key="`barcode ${row._key}`">
+              <!--<q-item :key="`barcode ${row._key}`">
                 <q-item-section side>
                   <q-item-label caption>{{
                     $t('incoming.products.barcode')
@@ -61,15 +61,23 @@
                 <q-item-section>
                   <q-item-label>{{ row.barcode }}</q-item-label>
                 </q-item-section>
-              </q-item>
-              <q-item :key="`serial ${row._key}`">
+              </q-item>-->
+              <q-item :key="`code ${row._key}`">
                 <q-item-section side>
                   <q-item-label caption>{{
-                    $t('incoming.products.serial')
+                    $t('incoming.products.code')
                   }}</q-item-label>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>{{ row.serial }}</q-item-label>
+                  <q-item-label>{{ row.code }}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item :key="`desc ${row._key}`">
+                <q-item-section side>
+
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ row.description }}</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -98,99 +106,53 @@ import CameraCodeScanner from '@/components/barcode-reader/CameraCodeScanner.vue
 
 const columns = [
   {
-    name: 'name',
+    name: 'code',
     required: true,
     align: 'left',
     field: (row) => row.name,
     format: (val) => `${val}`,
     sortable: true,
   },
-  {
+  /*{
     name: 'barcode',
     required: true,
     align: 'left',
     field: (row) => row.barcode,
     format: (val) => `${val}`,
     sortable: true,
-  },
+  },*/
   {
-    name: 'serial',
+    name: 'description',
     required: true,
     align: 'left',
     field: (row) => row.serial,
     format: (val) => `${val}`,
     sortable: true,
   },
+
 ];
 
 const rows = [
   {
-    name: 'Product 1',
+    code: 'Product 1',
     _key: 'PRD 1',
     barcode: '822885026705',
-    serial: 'xxxxxx',
+    description: 'xxxxxx',
   },
 
   {
-    name: 'Product 2',
+    code: 'Product 2',
     _key: 'PRD 2',
     barcode: '1231231231231231231',
-    serial: 'xxxxxx',
+    description: 'xxxxxx',
   },
   {
-    name: 'Product 3',
+    code: 'Product 3',
     _key: 'PRD 3',
     barcode: '1231231231231231231',
-    serial: 'xxxxxx',
+    description: 'xxxxxx',
   },
-  {
-    name: 'Product 4',
-    _key: 'PRD 4',
-    barcode: '1231231231231231231',
-    serial: 'xxxxxx',
-  },
-  {
-    name: 'Product 5',
-    _key: 'PRD 5',
-    barcode: '1231231231231231231',
-    serial: 'xxxxxx',
-  },
-  {
-    name: 'Product 6',
-    _key: 'PRD 6',
-    barcode: '1231231231231231231',
-    serial: 'xxxxxx',
-  },
-  {
-    name: 'Product 7',
-    _key: 'PRD 7',
-    barcode: '1231231231231231231',
-    serial: 'xxxxxx',
-  },
-  {
-    name: 'Product 8',
-    _key: 'PRD 8',
-    barcode: '1231231231231231231',
-    serial: 'xxxxxx',
-  },
-  {
-    name: 'Product 9',
-    _key: 'PRD 9',
-    barcode: '1231231231231231231',
-    serial: 'xxxxxx',
-  },
-  {
-    name: 'Product 10',
-    _key: 'PRD 10',
-    barcode: '1231231231231231231',
-    serial: 'xxxxxx',
-  },
-  {
-    name: 'Product 11',
-    _key: 'PRD 11',
-    barcode: '1231231231231231231',
-    serial: 'xxxxxx',
-  },
+
 ];
 
 export default {

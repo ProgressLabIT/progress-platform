@@ -31,7 +31,7 @@ export default {
       search: 'search product',
       no_data: 'cannot find products',
       barcode: 'barcode',
-      serial: 'serial',
+      code: 'code',
     },
     quantity: {
       title: 'Select quantity',
