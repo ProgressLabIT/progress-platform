@@ -1,5 +1,8 @@
 <template>
-  <div class="q-pa-md">
+  <div v-if="loading">
+
+  </div>
+  <div v-else class="q-pa-md">
     <div class="text-subtitle1 q-py-xl text-center">
       {{ $t('incoming.quantity.title') }}
     </div>
@@ -58,6 +61,7 @@
           @click="$emit('quantitySelected', quantity)"
         ></q-btn>
         <q-btn
+          v-if="print_templates"
           color="theme-blue"
           :label="$t('incoming.quantity.print_label')"
           class="col-12"
@@ -78,7 +82,6 @@
 </template>
 
 <script>
-import { useQuasar } from 'quasar';
 import ModalBottomContainer from '@/components/ModalBottomContainer.vue';
 
 export default {
@@ -101,73 +104,32 @@ export default {
 
   emits: ['back', 'quantitySelected'],
 
-  setup() {
-    const $q = useQuasar();
-
-    function showPrintLabelBottomSheet() {
-      $q.bottomSheet({
-        dark: true,
-        message: 'Bottom Sheet message',
-        actions: [
-          {
-            label: 'Drive',
-            img: 'https://cdn.quasar.dev/img/logo_drive_128px.png',
-            id: 'drive',
-          },
-          {
-            label: 'Keep',
-            img: 'https://cdn.quasar.dev/img/logo_keep_128px.png',
-            id: 'keep',
-          },
-          {
-            label: 'Google Hangouts',
-            img: 'https://cdn.quasar.dev/img/logo_hangouts_128px.png',
-            id: 'calendar',
-          },
-          {
-            label: 'Calendar',
-            img: 'https://cdn.quasar.dev/img/logo_calendar_128px.png',
-            id: 'calendar',
-          },
-          {},
-          {
-            label: 'Share',
-            icon: 'share',
-            id: 'share',
-          },
-          {
-            label: 'Upload',
-            icon: 'cloud_upload',
-            color: 'primary',
-            id: 'upload',
-          },
-          {},
-          {
-            label: 'John',
-            avatar: 'https://cdn.quasar.dev/img/boy-avatar.png',
-            id: 'john',
-          },
-        ],
-      })
-        .onOk(() => {
-          // console.log('Action chosen:', action.id)
-        })
-        .onCancel(() => {
-          // console.log('Dismissed')
-        })
-        .onDismiss(() => {
-          // console.log('I am triggered on both OK and Cancel')
-        });
-    }
-
-    return { showPrintLabelBottomSheet };
-  },
 
   data() {
     return {
       quantity: 0,
       show_print_label: false,
+      print_templates: undefined,
+      selected_templates: undefined,
+      loading: true
     };
+  },
+
+  mounted() {
+    this.loading = true;
+
+if (this.product) {
+  this.$api.get('print-template', {
+      params: { context: 'product', context_key: this.product._key },
+    }).then((data) => {
+      if (data && data?.data.length > 0) {
+        this.print_templates = data?.data;
+      } else {
+        this.print_templates = undefined
+      }
+      this.loading = false;
+    })
+}
   },
 
   methods: {
@@ -187,6 +149,29 @@ export default {
         this.quantity = Math.floor(this.quantity / 10);
       }
     },
+    showPrintLabelBottomSheet() {
+      let actions = [];
+      for (const template of this.print_templates) {
+        actions.push({
+          label: template.name,
+          id: template._key
+        })
+      };
+      this.$q.bottomSheet({
+        title: "title",
+        message: 'Bottom Sheet message',
+        actions: actions
+      })
+        .onOk((action) => {
+          console.log('Action chosen:', action.id)
+        })
+        .onCancel(() => {
+          // console.log('Dismissed')
+        })
+        .onDismiss(() => {
+          // console.log('I am triggered on both OK and Cancel')
+        });
+    }
   },
 };
 </script>
