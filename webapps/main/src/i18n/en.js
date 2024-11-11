@@ -698,6 +698,7 @@ export default {
   session: {
     alerts: {
       close_session: 'do you really want to close this session?',
+      invalid_username_password: 'Incorrect username or password'
     },
     close_session: 'close session',
     lock_explainer:
