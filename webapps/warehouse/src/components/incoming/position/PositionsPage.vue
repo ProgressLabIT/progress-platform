@@ -1,11 +1,11 @@
 <template>
-  <div class="q-pa-md">
+  <q-scroll-area :visible="false" style="height: 50vh">
     <q-table
       flat
       bordered
       grid
       :loading="loading"
-      :title="$t('incoming.products.products')"
+      :title="$t('incoming.positions.positions')"
       :rows="rows"
       :columns="columns"
       row-key="_key"
@@ -17,17 +17,10 @@
           v-model="filter"
           dense
           debounce="300"
-          :placeholder="$t('incoming.products.search')"
+          :placeholder="$t('incoming.positions.search')"
         >
           <template #append>
             <q-icon name="mdi-magnify" />
-            <q-btn
-              v-if="false"
-              size="0.75rem"
-              icon="mdi-barcode-scan"
-              @click="show_code_scanner = true"
-            >
-            </q-btn>
           </template>
         </q-input>
       </template>
@@ -41,7 +34,7 @@
             bordered
             flat
             class="my-box cursor-pointer q-hoverable"
-            @click="$emit('productSelected', row)"
+            @click="$emit('positionSelected', row)"
           >
             <q-card-section>
               <div>{{ row.name }}</div>
@@ -49,28 +42,12 @@
 
             <q-separator />
             <q-list dense>
-              <!--<q-item :key="`barcode ${row._key}`">
-                <q-item-section side>
-                  <q-item-label caption>{{
-                    $t('incoming.products.barcode')
-                  }}</q-item-label>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ row.barcode }}</q-item-label>
-                </q-item-section>
-              </q-item>-->
               <q-item :key="`code ${row._key}`">
-                <q-item-section side>
-                  <q-item-label caption>{{
-                    $t('incoming.products.code')
-                  }}</q-item-label>
-                </q-item-section>
                 <q-item-section>
                   <q-item-label>{{ row.code }}</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item :key="`desc ${row._key}`">
-                <q-item-section side> </q-item-section>
                 <q-item-section>
                   <q-item-label>{{ row.description }}</q-item-label>
                 </q-item-section>
@@ -80,24 +57,29 @@
         </div>
       </template>
 
-      <template #no-data> {{ $t('incoming.products.no_data') }}</template>
+      <template #no-data> {{ $t('incoming.positions.no_data') }}</template>
     </q-table>
+  </q-scroll-area>
+  <div style="height: 30vh">
+    <div class="fit row justify-center items-start content-center">
+      <q-btn
+        color="theme-blue"
+        :label="$t('incoming.positions.create_container')"
+        class="col-12"
+        @click="showCreateContainerBottomSheet(true)"
+      ></q-btn>
+      <q-btn
+        color="theme-blue"
+        :label="$t('cancel')"
+        class="col-12"
+        @click="$emit('back')"
+      ></q-btn>
+    </div>
   </div>
-
-  <ModalBottomContainer
-    :show="show_code_scanner"
-    @close="show_code_scanner = false"
-  >
-    <template #content>
-      <CameraCodeScanner @scan="onScan" @load="onLoad"></CameraCodeScanner>
-    </template>
-  </ModalBottomContainer>
 </template>
 
 <script>
 import { ref } from 'vue';
-import ModalBottomContainer from '@/components/ModalBottomContainer.vue';
-import CameraCodeScanner from '@/components/barcode-reader/CameraCodeScanner.vue';
 
 const columns = [
   {
@@ -108,14 +90,6 @@ const columns = [
     format: (val) => `${val}`,
     sortable: true,
   },
-  /*{
-    name: 'barcode',
-    required: true,
-    align: 'left',
-    field: (row) => row.barcode,
-    format: (val) => `${val}`,
-    sortable: true,
-  },*/
   {
     name: 'description',
     required: true,
@@ -128,35 +102,56 @@ const columns = [
 
 const rows = [
   {
-    code: 'Product 1',
-    _key: 'PRD 1',
-    barcode: '822885026705',
-    description: 'xxxxxx',
-  },
-
-  {
-    code: 'Product 2',
-    _key: 'PRD 2',
-    barcode: '1231231231231231231',
+    code: 'position 1',
+    _key: 'POS 1',
     description: 'xxxxxx',
   },
   {
-    code: 'Product 3',
-    _key: 'PRD 3',
-    barcode: '1231231231231231231',
+    code: 'position 2',
+    _key: 'POS 2',
+    description: 'xxxxxx',
+  },
+  {
+    code: 'position 3',
+    _key: 'POS 3',
+    description: 'xxxxxx',
+  },
+  {
+    code: 'position 4',
+    _key: 'POS 4',
+    description: 'xxxxxx',
+  },
+  {
+    code: 'position 5',
+    _key: 'POS 5',
+    description: 'xxxxxx',
+  },
+  {
+    code: 'position 6',
+    _key: 'POS 6',
     description: 'xxxxxx',
   },
 ];
 
 export default {
-  name: 'ProductsList',
+  name: 'PositionsPage',
 
-  components: {
-    ModalBottomContainer,
-    CameraCodeScanner,
+  props: {
+    product: {
+      type: Object,
+      required: true,
+    },
+    supplier: {
+      type: Object,
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+    },
   },
 
-  emits: ['productSelected'],
+  emits: ['positionSelected', 'back'],
 
   setup() {
     return {
@@ -178,25 +173,14 @@ export default {
     filter: {
       handler() {
         if (this.filter !== this.last_research) {
-          this.loadProducts(this.filter);
+          this.loadPositions(this.filter);
         }
       },
     },
   },
 
   methods: {
-    onLoad({ controls, scannerElement, browserMultiFormatReader }) {
-      console.log(controls);
-      console.log(scannerElement);
-      console.log(browserMultiFormatReader);
-    },
-    onScan({ result, raw }) {
-      this.filter = result;
-      console.log(result);
-      console.log(raw);
-      this.show_code_scanner = false;
-    },
-    loadProducts(filter) {
+    loadPositions(filter) {
       this.loading = true;
       let params = {};
 
@@ -206,14 +190,18 @@ export default {
       }
       params.limit = 100;
 
-      this.$api
+      /*this.$api
         .get('product', {
           params,
         })
         .then((resp) => {
           this.rows = resp.data;
           this.loading = false;
-        });
+        });*/
+      this.loading = false;
+    },
+    showCreateContainerBottomSheet() {
+      this.$bus.emit('show-create-container');
     },
   },
 };

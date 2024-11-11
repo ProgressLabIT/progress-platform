@@ -16,9 +16,17 @@ export default {
     shipmentRoot: 'Shipment',
     inventoryRoot: 'Inventory',
   },
+  back: 'back',
+  next: 'next',
+  cancel: 'cancel',
+  close: 'close',
+  confirm_and_close: 'confirm and close',
+  confirm_and_start_again: 'confirm and start again',
   incoming: {
     new: 'New incoming',
-
+    product_caption: 'product',
+    quantity_caption: 'qty',
+    position_caption: 'position',
     suppliers: {
       title: 'Documents to check',
       suppliers: 'Suppliers',
@@ -26,7 +34,6 @@ export default {
       no_data: 'cannot find suppliers',
     },
     products: {
-      title: 'Incoming products',
       products: 'Products',
       search: 'search product',
       no_data: 'cannot find products',
@@ -39,9 +46,17 @@ export default {
       min10: '-10',
       plus10: '+10',
       mul10: '*10',
-      back: 'back',
-      next: 'next',
       print_label: 'print label',
+      loading: 'loading...',
     },
+    positions: {
+      print_label: 'print label',
+      positions: 'positions',
+      search: 'search position',
+      create_container: 'create_container',
+    },
+  },
+  printLabel: {
+    selectCopiesTitle: 'Select copies',
   },
 };

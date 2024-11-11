@@ -4,55 +4,8 @@
     This avoids access to content by tweaking SessionLock component visibility in the browser inspector -->
     <!-- <template v-if="!session_locked"> -->
     <AppBar v-if="$q.screen.height > 400" />
-
-    <q-drawer
-      id="menu"
-      v-model="drawerModel"
-      class="surface2"
-      behavior="mobile"
-      bordered
-      :width="400"
-    >
-      <div class="column fit q-pa-lg">
-        <q-tabs class="col-auto" vertical switch-indicator>
-          <q-route-tab
-            v-for="tab in tab_routes"
-            :key="tab"
-            :to="{ name: tab }"
-            active-class="text-theme-blue"
-            indicator-color="theme-blue"
-            content-class="display"
-          >
-            {{ $t(`views.${tab}`) }}
-          </q-route-tab>
-        </q-tabs>
-
-        <q-space />
-
-        <!-- LANGUAGE SELECTION -->
-        <!-- <div class="q-px-sm">
-          <div class="row justify-between items-center">
-            <span class="display medium">{{ $t('language') }}</span>
-            <q-tabs v-model="locale_index" right>
-              <q-tab
-                v-for="(lang, i) in locale_list"
-                :key="i"
-                class="q-ma-none"
-              >
-                {{ lang }}
-              </q-tab>
-            </q-tabs>
-          </div>
-        </div> -->
-      </div>
-    </q-drawer>
-
     <router-view />
-
     <AppFooter v-if="$q.screen.height > 400" />
-
-    <!-- Pass session_locked as prop instead of computing it locally inside the component since it's already needed for the v-if -->
-    <!-- <SessionLock v-else :session-locked="session_locked" /> -->
   </q-layout>
 </template>
 

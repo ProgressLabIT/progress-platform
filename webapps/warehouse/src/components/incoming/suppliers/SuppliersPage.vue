@@ -1,7 +1,5 @@
 <template>
-  <q-scroll-area :visible="false" style="height: 80vh">
-    <SuppliersList @supplier-selected="onSupplierSelected"></SuppliersList>
-  </q-scroll-area>
+  <SuppliersList @supplier-selected="onSupplierSelected"></SuppliersList>
   <q-space />
   <div style="height: 10vh">
     <q-btn-group style="flex-direction: column" spread stretch>

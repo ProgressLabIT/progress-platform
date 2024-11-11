@@ -1,68 +1,70 @@
 <template>
   <div class="q-pa-md">
-    <div class="text-subtitle1 q-py-xl text-center">
+    <div class="text-subtitle text-center" style="height: 5vh">
       {{ $t('incoming.suppliers.title') }}
     </div>
-    <q-table
-      flat
-      bordered
-      grid
-      :title="$t('incoming.suppliers.suppliers')"
-      :rows="rows"
-      :columns="columns"
-      row-key="_key"
-      :filter="filter"
-      :rows-per-page-options="[0]"
-      hide-header
-    >
-      <template #top-right>
-        <q-input
-          v-model="filter"
-          dense
-          debounce="300"
-          :placeholder="$t('incoming.suppliers.search')"
-        >
-          <template #append>
-            <q-icon name="mdi-magnify" />
-          </template>
-        </q-input>
-      </template>
-
-      <template #item="{ row }">
-        <div
-          class="q-pa-xs col-xs-12 col-sm-6 col-md-4 col-lg-3 grid-style-transition"
-        >
-          <q-card
-            v-ripple
-            bordered
-            flat
-            class="my-box cursor-pointer q-hoverable"
-            @click="$emit('supplierSelected', row)"
+    <q-scroll-area :visible="false" style="height: 65vh">
+      <q-table
+        flat
+        bordered
+        grid
+        :title="$t('incoming.suppliers.suppliers')"
+        :rows="rows"
+        :columns="columns"
+        row-key="_key"
+        :filter="filter"
+        :rows-per-page-options="[0]"
+        hide-header
+      >
+        <template #top-right>
+          <q-input
+            v-model="filter"
+            dense
+            debounce="300"
+            :placeholder="$t('incoming.suppliers.search')"
           >
-            <q-card-section>
-              <div>{{ row.name }}</div>
-            </q-card-section>
+            <template #append>
+              <q-icon name="mdi-magnify" />
+            </template>
+          </q-input>
+        </template>
 
-            <q-separator />
-            <q-list dense>
-              <q-item v-for="document in row.documents" :key="document._key">
-                <q-item-section>
-                  <q-item-label>{{ document.name }}</q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <q-item-label caption
-                    >{{ document.checked_rows }} /
-                    {{ document.rows }}</q-item-label
-                  >
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-card>
-        </div>
-      </template>
+        <template #item="{ row }">
+          <div
+            class="q-pa-xs col-xs-12 col-sm-6 col-md-4 col-lg-3 grid-style-transition"
+          >
+            <q-card
+              v-ripple
+              bordered
+              flat
+              class="my-box cursor-pointer q-hoverable"
+              @click="$emit('supplierSelected', row)"
+            >
+              <q-card-section>
+                <div>{{ row.name }}</div>
+              </q-card-section>
 
-      <template #no-data> {{ $t('incoming.suppliers.no_data') }}</template>
-    </q-table>
+              <q-separator />
+              <q-list dense>
+                <q-item v-for="document in row.documents" :key="document._key">
+                  <q-item-section>
+                    <q-item-label>{{ document.name }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-item-label caption
+                      >{{ document.checked_rows }} /
+                      {{ document.rows }}</q-item-label
+                    >
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card>
+          </div>
+        </template>
+
+        <template #no-data> {{ $t('incoming.suppliers.no_data') }}</template>
+      </q-table>
+    </q-scroll-area>
   </div>
 </template>
 
