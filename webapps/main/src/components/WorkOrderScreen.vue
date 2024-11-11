@@ -138,7 +138,6 @@ export default {
     get_wo_data() {
       Promise.all([
         this.$store.dispatch('loadWorkOrderData', this.wo_key),
-        this.$store.dispatch('loadUsers'),
         this.$store.dispatch('getIssues', {
           work_order_key: this.wo_key,
           with_links: true,
