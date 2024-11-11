@@ -109,9 +109,14 @@ export default {
         window.alert(this.$t('product.alerts.save_before_exit'));
       } else {
         this.show_modal = false;
-        let query = { ...this.$route.query };
-        delete query.back_to;
-        this.$router.push({ name: this.$route.query.back_to, query });
+        if (this.$route.query.back_to) {
+          let query = { ...this.$route.query };
+          delete query.back_to;
+          this.$router.push({ name: this.$route.query.back_to, query });
+        }
+        else {
+          this.$router.back()
+        }
       }
     },
 

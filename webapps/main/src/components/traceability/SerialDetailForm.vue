@@ -353,10 +353,6 @@ export default {
         params: {
           product_key: this.serial.product_key,
         },
-        query: {
-          back_to: this.$route.name,
-          ...this.$route.query,
-        },
       });
     },
   },

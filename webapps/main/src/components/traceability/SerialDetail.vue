@@ -189,7 +189,14 @@ export default {
 
   methods: {
     exit() {
-      this.$router.back({ name: this.$route.query.back_to });
+      if (this.$route.query.back_to) {
+        let query = { ...this.$route.query }
+        delete query.back_to;
+        this.$router.push({ name: this.$route.query.back_to, query });
+      }
+      else {
+        this.$router.back()
+      }
     },
 
     getFieldType(field) {

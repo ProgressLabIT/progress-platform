@@ -131,7 +131,7 @@ export default {
         const push_route = { name: this.$route.query.back_to, query };
         this.$router.push(push_route);
       } else {
-        this.$router.push({ name: 'workOrderList', query });
+        this.$router.back()
       }
     },
 
