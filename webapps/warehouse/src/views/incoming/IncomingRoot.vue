@@ -31,13 +31,6 @@
         <div v-if="selected_quantity" class="col-2">
           {{ selected_quantity }}
         </div>
-
-        <div v-if="selected_position" class="col-12">
-          {{ $t('incoming.position_caption') }}
-        </div>
-        <div v-if="selected_position" class="col-12">
-          {{ selected_position.code }}
-        </div>
       </div>
 
       <!--      QUANTITY SELECTION    -->
@@ -54,7 +47,7 @@
       </template>
 
       <!--      POSITION SECTION    -->
-      <template v-else-if="!selected_position">
+      <template v-else-if="!selected_positions">
         <q-scroll-area :visible="false" style="height: 70vh">
           <PositionsPage
             :product="selected_product"
@@ -69,27 +62,14 @@
 
       <!--      CONFIRM INCOMING    -->
       <template v-else>
-        <q-scroll-area :visible="false" style="height: 10vh"> </q-scroll-area>
-        <div class="fit row justify-center items-start content-center">
-          <q-btn
-            color="theme-blue"
-            :label="$t('incoming.confirm_and_close')"
-            class="col-12"
-            @click="confirm(true)"
-          ></q-btn>
-          <q-btn
-            color="theme-blue"
-            :label="$t('incoming.confirm_and_start_again')"
-            class="col-12"
-            @click="confirm(false)"
-          ></q-btn>
-          <q-btn
-            color="theme-blue"
-            :label="$t('cancel')"
-            class="col-12"
-            @click="selected_position = undefined"
-          ></q-btn>
-        </div>
+        <q-scroll-area :visible="false" style="height: 70vh">
+          <ConfirmPositionsPage
+            :quantity="selected_quantity"
+            :positions="selected_positions"
+            @position-confirmed="onPositionConfirmed"
+            @back="selected_positions = undefined"
+          ></ConfirmPositionsPage>
+        </q-scroll-area>
         <q-space />
       </template>
     </template>
@@ -100,6 +80,7 @@
 import ProductsList from '@/components/incoming/products/ProductsList.vue';
 import QuantitySelectionPage from '@/components/incoming/quantity/QuantitySelectionPage.vue';
 import SuppliersPage from '@/components/incoming/suppliers/SuppliersPage.vue';
+import ConfirmPositionsPage from 'app/src/components/incoming/position/ConfirmPositionsPage.vue';
 import PositionsPage from 'app/src/components/incoming/position/PositionsPage.vue';
 
 export default {
@@ -110,6 +91,7 @@ export default {
     ProductsList,
     QuantitySelectionPage,
     PositionsPage,
+    ConfirmPositionsPage,
   },
 
   data() {
@@ -117,7 +99,7 @@ export default {
       selected_supplier: null,
       selected_product: null,
       selected_quantity: 0,
-      selected_position: null,
+      selected_positions: null,
     };
   },
 
@@ -142,11 +124,27 @@ export default {
       }
     },
 
-    onPositionSelected(position) {
-      this.selected_position = position;
+    onPositionSelected(incoming_positions) {
+      if (incoming_positions.length <= 0) {
+        return;
+      }
+      let position_left = incoming_positions.length;
+      let quantity_left = this.selected_quantity;
+      let positions = [];
+      for (const position of incoming_positions) {
+        let quantity = Math.floor(quantity_left / position_left);
+        positions.push({
+          ...position,
+          quantity: quantity,
+          locked: false,
+        });
+        position_left -= 1;
+        quantity_left -= quantity;
+      }
+      this.selected_positions = positions;
     },
 
-    confirm(exit) {
+    onPositionConfirmed(exit) {
       //TODO: do something
       if (!exit) {
         this.clear();
@@ -156,7 +154,7 @@ export default {
     clear() {
       this.selected_product = null;
       this.selected_product = null;
-      this.selected_position = null;
+      this.selected_positions = null;
       this.selected_quantity = 0;
     },
   },

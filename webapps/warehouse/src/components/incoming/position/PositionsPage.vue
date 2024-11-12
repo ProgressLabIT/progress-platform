@@ -1,6 +1,7 @@
 <template>
   <q-scroll-area :visible="false" style="height: 50vh">
     <q-table
+      v-model:selected="selected"
       flat
       bordered
       grid
@@ -11,6 +12,7 @@
       row-key="_key"
       :rows-per-page-options="[0]"
       hide-header
+      selection="multiple"
     >
       <template #top-right>
         <q-input
@@ -25,31 +27,40 @@
         </q-input>
       </template>
 
-      <template #item="{ row }">
+      <template #item="props">
         <div
           class="q-pa-xs col-xs-12 col-sm-6 col-md-4 col-lg-3 grid-style-transition"
+          :style="props.selected ? 'transform: scale(0.95);' : ''"
         >
-          <q-card
+          <!-- <q-card
             v-ripple
             bordered
             flat
             class="my-box cursor-pointer q-hoverable"
             @click="$emit('positionSelected', row)"
+          > -->
+          <q-card
+            v-ripple
+            bordered
+            flat
+            class="my-box cursor-pointer q-hoverable"
+            @click="toggleSelection(props.row)"
           >
+            <!--q-card-section>
+              <div>{{ row.code }}</div>
+            </q-card-section> -->
             <q-card-section>
-              <div>{{ row.name }}</div>
+              <q-checkbox
+                v-model="props.selected"
+                dense
+                :label="props.row.code"
+              />
             </q-card-section>
-
             <q-separator />
             <q-list dense>
-              <q-item :key="`code ${row._key}`">
+              <q-item :key="`desc ${props.row._key}`">
                 <q-item-section>
-                  <q-item-label>{{ row.code }}</q-item-label>
-                </q-item-section>
-              </q-item>
-              <q-item :key="`desc ${row._key}`">
-                <q-item-section>
-                  <q-item-label>{{ row.description }}</q-item-label>
+                  <q-item-label>{{ props.row.description }}</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -70,9 +81,15 @@
       ></q-btn>
       <q-btn
         color="theme-blue"
-        :label="$t('cancel')"
-        class="col-12"
+        :label="$t('back')"
+        class="col-6"
         @click="$emit('back')"
+      ></q-btn>
+      <q-btn
+        color="theme-blue"
+        :label="$t('next')"
+        class="col-6"
+        @click="selectPosition()"
       ></q-btn>
     </div>
   </div>
@@ -96,7 +113,7 @@ const columns = [
     align: 'left',
     field: (row) => row.serial,
     format: (val) => `${val}`,
-    sortable: true,
+    sortable: false,
   },
 ];
 
@@ -156,6 +173,7 @@ export default {
   setup() {
     return {
       filter: ref(''),
+      selected: ref([]),
       columns,
       rows,
     };
@@ -202,6 +220,19 @@ export default {
     },
     showCreateContainerBottomSheet() {
       this.$bus.emit('show-create-container');
+    },
+    toggleSelection(row) {
+      const index = this.selected.findIndex((el) => el._key === row._key);
+      if (index >= 0) {
+        this.selected.splice(index, 1);
+      } else {
+        this.selected.push(row);
+      }
+    },
+    selectPosition() {
+      if (this.selected.length > 0) {
+        this.$emit('positionSelected', this.selected);
+      }
     },
   },
 };
