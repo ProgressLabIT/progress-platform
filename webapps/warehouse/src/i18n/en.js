@@ -50,10 +50,14 @@ export default {
       loading: 'loading...',
     },
     positions: {
-      print_label: 'print label',
       positions: 'positions',
       search: 'search position',
       create_container: 'create_container',
+      create_container_form: {
+        title: 'How many containers',
+        containers: 'containers',
+        print_label: 'print labels',
+      },
     },
   },
   printLabel: {

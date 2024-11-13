@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh lpr lFf" class="background">
+  <q-layout view="lHh lpr lFf" class="background" @click="closeFooter">
     <AppBar v-if="$q.screen.height > 400" />
     <router-view />
     <AppFooter v-if="$q.screen.height > 400" />
@@ -32,6 +32,12 @@ export default {
         'reportRoot',
       ],
     };
+  },
+
+  methods: {
+    closeFooter() {
+      this.$bus.emit('close-footer');
+    },
   },
 };
 </script>

@@ -2,7 +2,7 @@
   <template v-if="positions.length === 1">
     <div
       class="row justify-center items-start content-left"
-      style="height: 100px"
+      style="height: 50vh"
     >
       <div class="col-10">{{ $t('incoming.position_caption') }}</div>
       <div class="col-2">
@@ -15,33 +15,43 @@
     </div>
   </template>
   <template v-else>
-    <q-slider
-      v-for="position in positions"
-      :key="position._key"
-      v-model="position.quantity"
-      class="q-mt-lg"
-      :min="0"
-      :max="quantity"
-      :step="1"
-      label
-      :label-value="value"
-      label-always
-      @change="adjust(position)"
-    />
     <div
       class="row justify-center items-start content-left"
-      style="height: 100px"
+      style="height: 50vh"
     >
       <div class="col-10">{{ $t('incoming.position_caption') }}</div>
       <div class="col-2">
         {{ $t('incoming.quantity_caption') }}
       </div>
-      <div v-for="position in positions" :key="position._key">
-        <div class="col-10">{{ position.code }}</div>
-        <div class="col-2">
+
+      <template v-for="position in positions" :key="position._key">
+        <div class="col-12">{{ position.code }}</div>
+        <q-slider
+          v-model="position.quantity"
+          class="q-mt-lg col-10"
+          :min="0"
+          :max="quantity"
+          :step="1"
+          label
+          :label-value="value"
+          label-always
+          :disable="position.locked"
+          @change="adjust(position)"
+        />
+        <div class="col-1">
           {{ position.quantity }}
         </div>
-      </div>
+        <q-btn
+          color="primary"
+          :icon="
+            position.locked
+              ? 'mdi-lock-outline'
+              : 'mdi-lock-open-variant-outline'
+          "
+          class="col-1"
+          @click="position.locked = !position.locked"
+        />
+      </template>
     </div>
   </template>
 

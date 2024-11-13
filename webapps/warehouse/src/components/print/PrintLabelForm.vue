@@ -21,14 +21,16 @@
         {{ $t('printLabel.selectCopiesTitle') }}
       </div>
       <div>
-        <div ref="qtyarea" class="q-pa-md row justify-center">
-          <q-card
-            v-touch-repeat.mouse="handleRepeat"
-            class="custom-area cursor-pointer bg-primary text-white shadow-2 relative-position row flex-center"
-          >
-            <div class="text-center">{{ selected_copies }}</div>
-          </q-card>
-        </div>
+        <QuantitySelector
+          :initial_qty="0"
+          :show_buttons="false"
+          selector_style="height: 80px"
+          @quantity-changed="
+            (qt) => {
+              selected_copies = qt;
+            }
+          "
+        ></QuantitySelector>
       </div>
       <div>
         <div class="fit row justify-center items-start content-center">
@@ -97,17 +99,26 @@ const printers = [
   { _key: '222', name: 'PR2', description: 'PR2 desc' },
   { _key: '333', name: 'PR3', description: 'PR3 desc' },
 ];
+
+import QuantitySelector from '@/components/QuantitySelector.vue';
+
 export default {
   name: 'PrintLabelForm',
+
+  components: { QuantitySelector },
 
   props: {
     product: {
       type: Object,
-      required: true,
+      default: undefined,
     },
     supplier: {
       type: Object,
-      required: true,
+      default: undefined,
+    },
+    containers: {
+      type: Object,
+      default: undefined,
     },
     print_templates: {
       type: Object,
@@ -148,21 +159,15 @@ export default {
   },
 
   beforeUnmount() {
-    this.$bus.emit('close-footer');
+    this.stage = 'select_template';
+    this.selected_template = undefined;
+    this.selected_copies = 0;
+    this.selected_printers = undefined;
   },
 
   methods: {
     closeForm() {
       this.$bus.emit('close-footer');
-    },
-
-    handleRepeat(info) {
-      let qtyRect = this.$refs.qtyarea.getBoundingClientRect();
-      if (info.position.left > qtyRect.x + qtyRect.width / 2) {
-        this.selected_copies++;
-      } else if (this.selected_copies > 0) {
-        this.selected_copies--;
-      }
     },
 
     selectTemplate(template) {
@@ -185,11 +190,3 @@ export default {
   },
 };
 </script>
-
-<style lang="sass" scoped>
-.custom-area
-  width: 76%
-  height: 100px
-  border-radius: 3px
-  padding: 8px
-</style>

@@ -77,7 +77,12 @@
         color="theme-blue"
         :label="$t('incoming.positions.create_container')"
         class="col-12"
-        @click="showCreateContainerBottomSheet(true)"
+        @click="
+          (event) => {
+            event.stopPropagation();
+            showCreateContainerBottomSheet();
+          }
+        "
       ></q-btn>
       <q-btn
         color="theme-blue"

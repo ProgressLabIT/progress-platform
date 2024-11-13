@@ -1,5 +1,12 @@
 <template>
-  <q-footer class="footer footer-text">
+  <q-footer
+    class="footer footer-text"
+    @click="
+      (event) => {
+        event.stopPropagation();
+      }
+    "
+  >
     <div>
       <q-card
         class="slide-drawer slide-drawer--bottom text-white fixed-bottom column no-wrap"
@@ -21,6 +28,7 @@
           <PrintLabelForm
             :product="product"
             :supplier="supplier"
+            :containers="containers"
             :print_templates="print_templates"
             :available_height="available_height"
           />
@@ -28,12 +36,13 @@
 
         <!-- HANDLE CREATE CONTAINER -->
         <q-card-section
-          v-if="drawerMode !== 'handler' && show_create_container"
+          v-else-if="drawerMode !== 'handler' && show_create_container"
           class="col"
         >
           <CreateContainerForm :available_height="available_height" />
         </q-card-section>
 
+        <!-- ROUTER PART -->
         <q-card-section v-if="drawerMode !== 'handler'" class="col">
           <q-tabs class="col-auto" vertical switch-indicator inline-label>
             <q-route-tab
@@ -45,6 +54,7 @@
               content-class="display"
               :icon="tab_routes[tab]"
               :label="$t(`views.${tab}`)"
+              @click="forceHide"
             >
             </q-route-tab>
           </q-tabs>
@@ -154,19 +164,22 @@ export default {
 
     this.$bus.on('show-print-templates', (context) => {
       this.show_print_label = true;
+      this.show_create_container = false;
       this.product = context.product;
       this.supplier = context.supplier;
+      this.containers = context.containers;
       this.print_templates = context.print_templates;
       this.forceShow();
     });
 
     this.$bus.on('show-create-container', () => {
       this.show_create_container = true;
+      this.show_print_label = false;
       this.forceShow();
     });
 
     this.$bus.on('close-footer', () => {
-      this.clean();
+      this.forceHide();
     });
   },
 
@@ -182,8 +195,7 @@ export default {
       this.print_templates = undefined;
 
       this.show_create_container = false;
-
-      this.forceHide();
+      this.containers = undefined;
     },
 
     slideDrawer(ev) {
@@ -227,10 +239,14 @@ export default {
     },
 
     forceHide() {
-      //this.animateDrawerTo(this.drawerMinHeight);
+      this.drawerMode === 'handler';
+      this.animateDrawerTo(drawerMinHeight);
     },
 
     animateDrawerTo(height) {
+      if (height === drawerMinHeight) {
+        this.clean();
+      }
       clearTimeout(this.animateTimeout);
 
       const diff = height - this.drawerPos;

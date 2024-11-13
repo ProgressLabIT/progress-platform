@@ -1,128 +1,147 @@
 <template>
   <q-scroll-area :visible="false" :style="form_height">
-    <!-- SELECT TEMPLATE -->
-    <template v-if="stage === 'select_template'">
-      <q-list bordered separator>
-        <q-item
-          v-for="template in print_templates"
-          :key="template._key"
-          v-ripple
-          clickable
-          @click="selectTemplate(template)"
-        >
-          <q-item-label>{{ template.name }}</q-item-label>
-        </q-item>
-      </q-list>
-    </template>
-
-    <!-- SELECT COPIES -->
-    <template v-else-if="stage === 'select_copies'">
+    <!-- SELECT QUANTITY -->
+    <template v-if="!containers">
       <div class="text-subtitle1 q-py-xl text-center">
-        {{ $t('printLabel.selectCopiesTitle') }}
+        {{ $t('incoming.positions.create_container_form.title') }}
       </div>
       <div>
-        <div ref="qtyarea" class="q-pa-md row justify-center">
-          <q-card
-            v-touch-repeat.mouse="handleRepeat"
-            class="custom-area cursor-pointer bg-primary text-white shadow-2 relative-position row flex-center"
-          >
-            <div class="text-center">{{ selected_copies }}</div>
-          </q-card>
-        </div>
+        <QuantitySelector
+          :initial_qty="0"
+          :show_buttons="false"
+          selector_style="height: 80px"
+          @quantity-changed="
+            (qt) => {
+              selected_quantity = qt;
+            }
+          "
+        ></QuantitySelector>
       </div>
       <div>
         <div class="fit row justify-center items-start content-center">
           <q-btn
             color="theme-blue"
-            :label="$t('back')"
+            :label="$t('next')"
             class="col-6"
-            @click="stage = 'select_template'"
+            @click="createContainers()"
           ></q-btn>
           <q-btn
             color="theme-blue"
-            :label="$t('next')"
+            :label="$t('cancel')"
             class="col-6"
-            @click="selectCopies()"
+            @click="closeForm()"
           ></q-btn>
         </div>
       </div>
     </template>
 
-    <!-- SELECT PRINTER -->
-    <template v-else-if="stage === 'select_printer'">
-      <q-list bordered separator>
-        <q-item
-          v-for="printer in printers"
-          :key="printer._key"
-          v-ripple
-          clickable
-          @click="selectPrinter(printer)"
+    <!-- CONTAINERS CREATED -->
+    <template v-else>
+      <div class="q-pa-md">
+        <q-table
+          flat
+          bordered
+          grid
+          :title="$t('incoming.positions.create_container_form.containers')"
+          :rows="containers"
+          :columns="columns"
+          row-key="_key"
+          :rows-per-page-options="[0]"
+          hide-header
+          hide-bottom
         >
-          <q-item-label>{{ printer.name }}</q-item-label>
-          <q-item-label caption>{{ printer.description }}</q-item-label>
-        </q-item>
-      </q-list>
+        </q-table>
+      </div>
+      <div>
+        <div class="fit row justify-center items-start content-center">
+          <q-btn
+            color="theme-blue"
+            :label="$t('incoming.positions.create_container_form.print_label')"
+            class="col-6"
+            @click="showPrintLabelBottomSheet()"
+          ></q-btn>
+          <q-btn
+            color="theme-blue"
+            :label="$t('next')"
+            class="col-6"
+            @click="createContainers()"
+          ></q-btn>
+          <q-btn
+            color="theme-blue"
+            :label="$t('cancel')"
+            class="col-6"
+            @click="closeForm()"
+          ></q-btn>
+        </div>
+      </div>
     </template>
-
-    <!-- PRINTING -->
-    <template v-else-if="stage === 'printing'">
-      <q-inner-loading
-        :showing="stage === 'printing'"
-        label="Printing..."
-        label-class="text-teal"
-        label-style="font-size: 1.1em"
-      />
-    </template>
-
-    <!-- PRINT_DONE -->
-    <template v-else-if="stage === 'print_done'">
-      <div class="text-subtitle1 q-py-xl text-center">Print done!</div>
-    </template>
-
-    <div class="fit row justify-center items-start content-center">
-      <q-btn
-        v-if="stage !== 'printing'"
-        color="theme-blue"
-        :label="stage === 'print_done' ? $t('close') : $t('cancel')"
-        class="col-12"
-        @click="closeForm()"
-      ></q-btn>
-    </div>
   </q-scroll-area>
 </template>
 
 <script>
+import QuantitySelector from '@/components/QuantitySelector.vue';
+
+const columns = [
+  {
+    name: 'code',
+    required: true,
+    align: 'left',
+    field: (row) => row.code,
+    format: (val) => `${val}`,
+    sortable: true,
+  },
+  {
+    name: 'description',
+    required: true,
+    align: 'left',
+    field: (row) => row.description,
+    format: (val) => `${val}`,
+    sortable: true,
+  },
+];
+
 export default {
   name: 'CreateContainerForm',
 
+  components: { QuantitySelector },
+
   props: {
-    availableHeight: {
+    available_height: {
       type: Number,
       required: true,
     },
   },
 
+  setup() {
+    return {
+      columns,
+    };
+  },
+
   data() {
     return {
-      stage: 'select_template',
-      selected_template: undefined,
-      selected_copies: 0,
-      selected_printers: undefined,
+      stage: 'select_quantity',
+      selected_quantity: 0,
+      containers: undefined,
     };
   },
 
   computed: {
     form_height() {
-      return 'height: ' + (this.availableHeight - 30) + 'px';
+      return 'height: ' + (this.available_height - 30) + 'px';
     },
   },
 
   mounted() {
-    this.stage = 'select_template';
+    this.stage = 'select_quantity';
+    this.selected_quantity = 0;
+    this.containers = undefined;
   },
 
   beforeUnmount() {
-    this.$bus.emit('close-footer');
+    this.stage = 'select_quantity';
+    this.selected_quantity = 0;
+    this.containers = undefined;
   },
 
   methods: {
@@ -130,40 +149,24 @@ export default {
       this.$bus.emit('close-footer');
     },
 
-    handleRepeat(info) {
-      let qtyRect = this.$refs.qtyarea.getBoundingClientRect();
-      if (info.position.left > qtyRect.x + qtyRect.width / 2) {
-        this.selected_copies++;
-      } else if (this.selected_copies > 0) {
-        this.selected_copies--;
+    createContainers() {
+      this.containers = [];
+      for (let step = 0; step < this.selected_quantity; step++) {
+        this.containers.push({
+          _key: step,
+          code: `cont ${step}`,
+          description: `container ${step}`,
+        });
       }
     },
 
-    selectTemplate(template) {
-      this.selected_template = template;
-      this.stage = 'select_copies';
-    },
-
-    selectCopies() {
-      this.stage = 'select_printer';
-    },
-
-    selectPrinter(printer) {
-      this.selected_printers = printer;
-      this.stage = 'printing';
-
-      setTimeout(() => {
-        this.stage = 'print_done';
-      }, 3000);
+    showPrintLabelBottomSheet() {
+      let print_templates = [{}];
+      this.$bus.emit('show-print-templates', {
+        print_templates: print_templates,
+        containers: this.containers,
+      });
     },
   },
 };
 </script>
-
-<style lang="sass" scoped>
-.custom-area
-  width: 76%
-  height: 100px
-  border-radius: 3px
-  padding: 8px
-</style>

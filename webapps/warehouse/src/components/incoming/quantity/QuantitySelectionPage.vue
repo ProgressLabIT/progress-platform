@@ -6,48 +6,29 @@
     <div class="text-subtitle1 text-center">
       {{ $t('incoming.quantity.title') }}
     </div>
-    <div style="height: 40vh">
-      <div ref="qtyarea" class="q-pa-md row justify-center">
+    <div style="height: 5vh">
+      <div>
         <div>
           {{ product.name }}
         </div>
         <div>
           {{ supplier.name }}
         </div>
-        <q-card
-          v-touch-repeat.mouse="handleRepeat"
-          class="custom-area cursor-pointer bg-primary text-white shadow-2 relative-position row flex-center"
-        >
-          <div class="text-center">{{ quantity }}</div>
-        </q-card>
       </div>
     </div>
-    <div style="height: 30vh">
+    <div style="height: 35vh">
+      <QuantitySelector
+        :initial_qty="0"
+        :show_buttons="true"
+        @quantity-changed="
+          (qt) => {
+            quantity = qt;
+          }
+        "
+      ></QuantitySelector>
+    </div>
+    <div style="height: 40vh">
       <div class="fit row justify-center items-start content-center">
-        <q-btn
-          color="theme-blue"
-          :label="$t('incoming.quantity.div10')"
-          class="col-3"
-          @click="divideQty"
-        ></q-btn>
-        <q-btn
-          color="theme-blue"
-          :label="$t('incoming.quantity.min10')"
-          class="col-3"
-          @click="quantity = quantity > 10 ? quantity - 10 : 0"
-        ></q-btn>
-        <q-btn
-          color="theme-blue"
-          :label="$t('incoming.quantity.plus10')"
-          class="col-3"
-          @click="quantity = quantity + 10"
-        ></q-btn>
-        <q-btn
-          color="theme-blue"
-          :label="$t('incoming.quantity.mul10')"
-          class="col-3"
-          @click="quantity = quantity * 10"
-        ></q-btn>
         <q-btn
           color="theme-blue"
           :label="$t('back')"
@@ -65,7 +46,12 @@
           color="theme-blue"
           :label="$t('incoming.quantity.print_label')"
           class="col-12"
-          @click="showPrintLabelBottomSheet(true)"
+          @click="
+            (event) => {
+              event.stopPropagation();
+              showPrintLabelBottomSheet();
+            }
+          "
         ></q-btn>
       </div>
     </div>
@@ -73,8 +59,11 @@
 </template>
 
 <script>
+import QuantitySelector from '@/components/QuantitySelector.vue';
 export default {
   name: 'QuantitySelectionPage',
+
+  components: { QuantitySelector },
 
   props: {
     product: {
@@ -119,22 +108,6 @@ export default {
   },
 
   methods: {
-    handleRepeat(info) {
-      let qtyRect = this.$refs.qtyarea.getBoundingClientRect();
-      if (info.position.left > qtyRect.x + qtyRect.width / 2) {
-        this.quantity++;
-      } else if (this.quantity > 0) {
-        this.quantity--;
-      }
-    },
-
-    divideQty() {
-      if (this.quantity <= 0) {
-        this.quantity = 0;
-      } else {
-        this.quantity = Math.floor(this.quantity / 10);
-      }
-    },
     showPrintLabelBottomSheet() {
       this.$bus.emit('show-print-templates', {
         print_templates: this.print_templates,
@@ -167,11 +140,3 @@ export default {
   },
 };
 </script>
-
-<style lang="sass" scoped>
-.custom-area
-  width: 96%
-  height: 250px
-  border-radius: 3px
-  padding: 8px
-</style>
