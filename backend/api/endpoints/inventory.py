@@ -35,22 +35,36 @@ async def get_positions(params: Annotated[PositionSearchParams, Query()]):
 @router.get('/position/{position_key}',
     dependencies=[Depends(auth.verify_token)])
 async def get_position_contents(position_key):
-  ...
+  try:
+    return db.collection('Position').get(position_key)
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching position from the db.",
+        error=traceback.format_exc()
+      )
+    )
 
 
 
 @router.post('/position',
     dependencies=[Depends(auth.verify_token)])
-async def create_position(new_position: Position):
+async def create_position(new_position: Position, parent_position_key: str | None = 'IN'):
 
-  tx = db.begin_transaction(write=['Position', 'Counter'], read=['Config'])
-
-  if not new_position.code:
-    positions_counter_key = tx.collection('Config').get('system_counters')['positions']
-    new_position.code = _generate_counter(tx, counter_key=positions_counter_key)
+  tx = db.begin_transaction(write=['Position', 'Counter', 'is_in_position'], read=['Config', 'Position'])
 
   try:
-    tx.collection('Position').insert(new_position)
+    if not new_position.code:
+      positions_counter_key = tx.collection('Config').get('system_counters')['positions']
+      new_position.code = _generate_counter(tx, counter_key=positions_counter_key)
+
+    new_position_key = tx.collection('Position').insert(new_position, return_new=True)['_key']
+
+    tx.collection('is_in_position').insert(dict(
+                   _from=f'Position/{new_position_key}',
+                   _to=f'Position/{parent_position_key}'
+                ))
     tx.commit_transaction()
     return APIResponse(
       status=201,
