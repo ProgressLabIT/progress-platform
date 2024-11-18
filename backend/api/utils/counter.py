@@ -37,3 +37,12 @@ def compute_counter(counter):
 def _generate_counter(tx, counter_key):
   return compute_counter(tx.aql.execute(COUNTER_TICK, bind_vars={ 'counter_key': counter_key }).next())
 
+#def _generate_counter_wo_tx(counter_key):
+#  tx = db.begin_transaction(write=['Counter'], read=[])
+#  try:
+#    counter = _generate_counter(tx, counter_key)
+#    tx.commit_transaction()
+#    return counter
+#  except Exception as e:
+#    tx.abort_transaction()
+#    raise e

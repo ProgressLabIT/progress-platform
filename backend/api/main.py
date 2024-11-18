@@ -3,6 +3,7 @@ from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
+import endpoints.inventory
 from utils.config import get_config
 from utils.kafka.kafka_producer import KafkaProducer
 from managers.kafka_consumer_manager import KafkaConsumerManager
@@ -93,6 +94,7 @@ app.include_router(endpoints.collaboration, tags=['Collaboration'])
 app.include_router(endpoints.traceability, tags=['Traceability'])
 app.include_router(endpoints.counter, tags=['Traceability'])
 app.include_router(endpoints.notification, tags=['Notification'])
+app.include_router(endpoints.inventory, tags=['Inventory'])
 
 # app.include_router(global_router, prefix="/v1")
 

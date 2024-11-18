@@ -1,11 +1,13 @@
 from datetime import date, datetime
 from enum import Enum
 from typing import Any
+from typing import Annotated
 
-from pydantic import BaseModel, model_validator, Field
 
-from models.base_models import ArangoDocument
-from utils.counter import _generate_counter
+from pydantic import BaseModel, model_validator, Field, StringConstraints
+
+from models.base_models import ArangoDocument, ArangoEdge
+#from utils.counter import _generate_counter
 from utils.dt import timestamp
 
 
@@ -82,7 +84,8 @@ class MovementStatus(str, Enum):
 
 
 class WarehouseMission(ArangoDocument):
-  code: str | None = Field(default_factory=_generate_counter('default'))
+  #code: str | None = Field(default_factory=_generate_counter('default'))
+  code: Annotated[str, StringConstraints(to_upper=True)] | None = None
   notes: str | None = None
   due_by: date | None = None
   assigned_to: str | None = None

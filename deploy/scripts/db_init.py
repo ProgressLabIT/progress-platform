@@ -134,7 +134,7 @@ collections = [
     dict(
       _key = 'operator_cost',
       value = 25
-    )
+    ),
     dict(
       _key = 'system_counters',
       value = dict(
