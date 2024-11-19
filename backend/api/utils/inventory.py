@@ -17,6 +17,15 @@ class Queries:
     RETURN v
   """
 
+  GET_POSITION_CHILDREN_COUNT = """
+    LET start = CONCAT('Position/', NOT_NULL(@is_in_position, 'IN'))
+
+    LET children = (FOR v IN 1..99 INBOUND start is_in_position
+          RETURN v
+    )
+
+    RETURN COUNT(children)
+  """
 
   SEARCH_MOVEMENTS = """
     FOR m IN InventoryMovement

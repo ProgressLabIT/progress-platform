@@ -45,10 +45,10 @@ class PositionSearchParams(BaseModel):
   has_product_code: list[str] | None = None
   is_in_position: str | None = None
   contains_position: str | None = None
-  include_non_disposable: bool | None = True
-  include_disposable: bool | None = True
-  include_owned: bool | None = True
-  include_not_owned: bool | None = True
+  #include_non_disposable: bool | None = True
+  #include_disposable: bool | None = True
+  #include_owned: bool | None = True
+  #include_not_owned: bool | None = True
   limit: int | None = 200
   offset: int | None = 0
 

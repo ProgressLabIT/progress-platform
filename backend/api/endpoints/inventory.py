@@ -81,7 +81,25 @@ async def create_position(new_position: Position, parent_position_key: str | Non
 @router.delete('/position/{position_key}',
     dependencies=[Depends(auth.verify_token)])
 async def delete_position(position_key):
-  ...
+  if position_key == 'IN':
+    raise HTTPException(status_code=500, detail='Cannot delete default position')
+
+  try:
+    tx = db.begin_transaction(write=['Position', 'is_in_position'])
+
+    cursor = tx.aql.execute(Queries.GET_POSITION_CHILDREN_COUNT, bind_vars=dict(is_in_position = position_key))
+    if cursor.next() > 0:
+      tx.abort_transaction();
+      raise HTTPException(status_code=500, detail='Cannot delete position with children')
+
+    tx.collection('Position').delete(position_key)
+    tx.collection('is_in_position').delete_match(filters=dict(_from=f'Position/{position_key}'))
+
+    tx.commit_transaction()
+
+    return APIResponse(message = "Position deleted successfully")
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
 
