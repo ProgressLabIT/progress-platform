@@ -108,20 +108,16 @@ class InventoryMovementType(str, Enum):
   ADJUSTMENT = 'adjustment'
 
 
-class InventoryMovement(ArangoDocument):
+class InventoryMovement(ArangoEdge): # edge collection movement
+  # can be a segment of a multistep movement (to be used as graph),
+  # in case material needs to be assigned a specific position in e.g. a transfer trolley with codified shelves
+  # or in the future via a specific transport vehicle
   type: InventoryMovementType
 
   product_key: str
   serial_key: str | None = None
   qt_planned: float
   qt_confirmed: float
-
-  route: list[str] | None = None
-  # can be a multistep movement, listing in order all the positions it needs to go through,
-  # in case it needs to be assigned a specific position in e.g. a transfer trolley with codified shelves
-
-  stage: int | None = None
-  # index of the latest confirmed route position
 
   status: MovementStatus | None = MovementStatus.PLANNED
   created: datetime = Field(default_factory=timestamp)

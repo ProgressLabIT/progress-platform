@@ -165,14 +165,13 @@ collections = [
     DBIndex(fields=['timestamp'], name='event-timestamp')
   ]),
   Collection(name='has_tag'),
-  Collection(name='InventoryMovement', indexes=[
+  Collection(name='movement', indexes=[
     DBIndex(fields=['product_key', 'status', 'stage'], name='movement-product'),
     DBIndex(fields=['serial_key'], name="movement-serial"),
     DBIndex(fields=['mission_key'], name="movement-mission"),
     DBIndex(fields=['movement_doc'], name="movement-doc"),
     DBIndex(fields=['source_doc'], name="movement-source-doc"),
     DBIndex(fields=['start', 'end'], name="movement-time-range"),
-    DBIndex(fields=['route[*]'], name="movement-positions"),
   ]),
   Collection(name='Issue', indexes=[
     DBIndex(fields=['issue_type_key'], name="issue-type"),
