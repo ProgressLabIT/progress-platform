@@ -1,10 +1,10 @@
 <template>
   <div class="fullscreen background flex flex-center">
-    <div class="row full-width items-center">
+    <div class="full-width items-center" :class="$q.screen.gt.sm ? 'row' : 'column'">
       <div class="row col-5 justify-end">
         <q-img
-          width="300px"
-          height="300px"
+          :width="Math.min(300, $q.screen.width * 0.4) + 'px'"
+          :height="Math.min(300, $q.screen.width * 0.4) + 'px'"
           :src="config.companyLogo"
           fit="contain"
         >
@@ -20,12 +20,13 @@
         </q-img>
       </div>
 
-      <q-separator vertical class="q-mx-xl" />
+      <q-separator vertical class="q-mx-xl" v-if="$q.screen.gt.sm"/>
+      <div v-else class="q-my-lg" />
 
       <q-card
-        class="surface1 full-height col-3 q-pa-lg"
+        class="surface1 full-height q-pa-lg"
         square
-        style="width: 500px"
+        style="max-width: 500px; width: 90%"
       >
         <transition name="fade" mode="out-in">
           <!-- LOGIN FORM -->
