@@ -208,6 +208,10 @@ const homePageOptions = computed(() => [
     label: capitalizeAll(t('views.traceabilityRoot')),
     value: 'traceabilityRoot',
   },
+  {
+    label: capitalizeAll(t('views.warehouseRoot')),
+    value: 'warehouseRoot',
+  },
   { label: capitalizeAll(t('views.reportRoot')), value: 'reportRoot' },
 ]);
 const isUpdatingHomePage = ref(false);

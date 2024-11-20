@@ -35,6 +35,19 @@
       </div>
     </template>
 
+    <!-- CERATING CONTAINERS -->
+
+    <template v-else-if="creating_containers">
+      <q-inner-loading
+        :showing="creating_containers"
+        :label="
+          $t('incoming.positions.create_container_form.creating_containers')
+        "
+        label-class="text-teal"
+        label-style="font-size: 1.1em"
+      />
+    </template>
+
     <!-- CONTAINERS CREATED -->
     <template v-else>
       <div class="q-pa-md">
@@ -64,7 +77,7 @@
             color="theme-blue"
             :label="$t('next')"
             class="col-6"
-            @click="createContainers()"
+            @click="closeAndSelectCountainers()"
           ></q-btn>
           <q-btn
             color="theme-blue"
@@ -87,14 +100,6 @@ const columns = [
     required: true,
     align: 'left',
     field: (row) => row.code,
-    format: (val) => `${val}`,
-    sortable: true,
-  },
-  {
-    name: 'description',
-    required: true,
-    align: 'left',
-    field: (row) => row.description,
     format: (val) => `${val}`,
     sortable: true,
   },
@@ -123,6 +128,7 @@ export default {
       stage: 'select_quantity',
       selected_quantity: 0,
       containers: undefined,
+      creating_containers: false,
     };
   },
 
@@ -136,6 +142,7 @@ export default {
     this.stage = 'select_quantity';
     this.selected_quantity = 0;
     this.containers = undefined;
+    this.creating_containers = false;
   },
 
   beforeUnmount() {
@@ -149,14 +156,32 @@ export default {
       this.$bus.emit('close-footer');
     },
 
-    createContainers() {
+    async createContainers() {
       this.containers = [];
+      this.creating_containers = true;
       for (let step = 0; step < this.selected_quantity; step++) {
-        this.containers.push({
-          _key: step,
-          code: `cont ${step}`,
-          description: `container ${step}`,
-        });
+        Promise.all([
+          this.$api
+            .post('position', {
+              owned: true,
+              available: true,
+              disposable: false,
+              extra: 'string',
+            })
+            .then((resp) => {
+              if (resp.data.status === 201 && resp.data.detail) {
+                this.containers.push(resp.data.detail);
+              } else {
+                this.$q.notify({
+                  type: 'negative',
+                  position: 'top',
+                  message: this.$t(
+                    'incoming.positions.create_container_form.cannot_create_alert'
+                  ),
+                });
+              }
+            }),
+        ]).then(() => (this.creating_containers = false));
       }
     },
 
@@ -166,6 +191,11 @@ export default {
         print_templates: print_templates,
         containers: this.containers,
       });
+    },
+
+    closeAndSelectCountainers() {
+      this.$bus.emit('containers-created', this.containers);
+      this.closeForm();
     },
   },
 };

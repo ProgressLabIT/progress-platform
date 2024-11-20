@@ -23,6 +23,7 @@ import serial from './serial';
 import session from './session';
 import traceability from './traceability';
 import user from './user';
+import warehouse from './warehouse';
 import workorder from './workorder';
 
 /*
@@ -103,6 +104,7 @@ const store = createStore({
     quality,
     session,
     traceability,
+    warehouse,
     user,
     workorder,
     serial,

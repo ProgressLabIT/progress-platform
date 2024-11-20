@@ -880,6 +880,11 @@ export default {
     userJobs: 'selezione lavoro',
     workOrderArchive: 'Archivio',
     workOrderList: 'ordini di produzione',
+    warehouseRoot: 'Magazzino',
+    positions: 'Posizioni',
+    stock: 'Rimanenze',
+    missions: 'Missioni',
+    movements: 'Movimenti',
   },
   waiting: 'in attesa',
   work_order: {

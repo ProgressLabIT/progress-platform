@@ -864,6 +864,11 @@ export default {
     userJobs: 'job selection',
     workOrderArchive: 'Archive',
     workOrderList: 'work orders',
+    warehouseRoot: 'Warehouse',
+    positions: 'Positions',
+    stock: 'Stock',
+    missions: 'Missions',
+    movements: 'Movements',
   },
   waiting: 'waiting',
   work_order: {

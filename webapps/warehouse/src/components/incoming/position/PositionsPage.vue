@@ -202,6 +202,12 @@ export default {
     },
   },
 
+  created() {
+    this.$bus.on('containers-created', (containers) => {
+      this.$emit('positionSelected', containers);
+    });
+  },
+
   methods: {
     loadPositions(filter) {
       this.loading = true;
@@ -213,14 +219,14 @@ export default {
       }
       params.limit = 100;
 
-      /*this.$api
-        .get('product', {
+      this.$api
+        .get('position', {
           params,
         })
         .then((resp) => {
-          this.rows = resp.data;
+          this.rows = this.selected.concat(resp.data);
           this.loading = false;
-        });*/
+        });
       this.loading = false;
     },
     showCreateContainerBottomSheet() {

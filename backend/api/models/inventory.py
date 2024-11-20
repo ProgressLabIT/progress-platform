@@ -28,6 +28,8 @@ class Position(ArangoDocument):
   owned: bool | None = True
   available: bool | None = True
   disposable: bool | None = False # gets deleted when emptied or shipped
+  deleted: bool | None = False
+  created: datetime | datetime = Field(default_factory=timestamp)
   extra: Any = None
 
 
@@ -49,6 +51,7 @@ class PositionSearchParams(BaseModel):
   #include_disposable: bool | None = True
   #include_owned: bool | None = True
   #include_not_owned: bool | None = True
+  #include_deleted: bool | None = False  //include deleted non ha tanto senso perchè tanto non c'è piu' il link quindi non la trova lo stesso
   limit: int | None = 200
   offset: int | None = 0
 

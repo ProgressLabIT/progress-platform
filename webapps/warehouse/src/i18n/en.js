@@ -57,6 +57,8 @@ export default {
         title: 'How many containers',
         containers: 'containers',
         print_label: 'print labels',
+        creating_containers: 'creating containers',
+        cannot_create_alert: 'creating containers',
       },
     },
   },
