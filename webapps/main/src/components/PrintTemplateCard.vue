@@ -62,6 +62,19 @@
         </q-tooltip>
       </q-btn>
 
+      <q-btn
+        v-if="allowUnlink"
+        flat
+        round
+        size="sm"
+        icon="mdi-close"
+        @click="showUnlink = true"
+      >
+        <q-tooltip>
+          {{ $capitalize($t('unlink')) }}
+        </q-tooltip>
+      </q-btn>
+
       <slot name="extra-actions" />
     </q-card-section>
 
@@ -87,6 +100,29 @@
           {{ $t('confirm') }}
         </q-btn>
         <q-btn color="theme-grey" size="12px" @click.stop="showDelete = false">
+          {{ $t('cancel') }}
+        </q-btn>
+      </div>
+    </div>
+
+    <!-- UNLINK CONFIRMATION -->
+    <div
+      v-if="showUnlink"
+      class="absolute-full surface1 column"
+      :class="showImage ? 'q-pa-md' : 'q-pa-sm'"
+    >
+      <div class="display weight-medium q-mt-sm">
+        {{ template.name }}
+      </div>
+      <div>
+        {{ $t('print_template_confirm_unlink_question') }}
+      </div>
+      <q-space />
+      <div class="row justify-between">
+        <q-btn color="theme-red" size="12px" @click.stop="unlinkTemplate">
+          {{ $t('confirm') }}
+        </q-btn>
+        <q-btn color="theme-grey" size="12px" @click.stop="showUnlink = false">
           {{ $t('cancel') }}
         </q-btn>
       </div>
@@ -139,9 +175,14 @@ export default {
       type: Boolean,
       default: false,
     },
+
+    allowUnlink: {
+      type: Boolean,
+      default: false,
+    },
   },
 
-  emits: ['saved', 'delete', 'restore'],
+  emits: ['saved', 'delete', 'restore', 'unlink'],
 
   setup(props) {
     const { open: openPrintDialog } = usePrintDialog({
@@ -157,6 +198,7 @@ export default {
     return {
       showPreview: false,
       showDelete: false,
+      showUnlink: false,
       templateToEdit: null,
     };
   },
@@ -187,6 +229,11 @@ export default {
           this.showDelete = false;
           this.$emit('delete');
         });
+    },
+
+    async unlinkTemplate() {
+      this.showUnlink = false;
+      this.$emit('unlink');
     },
 
     resetDesigner() {

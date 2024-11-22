@@ -115,7 +115,9 @@ const process = {
 
               ...(newMediaByStepIndex.get(stepIndex) ?? []),
             ],
-            print_templates: step.print_templates.map(({ _key }) => _key),
+            print_templates: step.print_templates
+              .filter(({ trash }) => !trash)
+              .map(({ _key }) => _key),
           }),
         ),
       });

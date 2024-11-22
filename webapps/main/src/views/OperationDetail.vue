@@ -193,8 +193,8 @@ export default {
         componentProps: {
           title: t('massCopyProcess.title.operation'),
           baseFilters: {
-            has_operation_key: props.operation._key
-          }
+            has_operation_key: props.operation._key,
+          },
         },
       }).onOk(async (selectedProducts) => {
         try {
@@ -299,7 +299,6 @@ export default {
       this.saving = false;
       this.editMode = false;
     },
-
     async save() {
       this.saving = true;
       const data = {

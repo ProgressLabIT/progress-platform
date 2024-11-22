@@ -102,6 +102,7 @@ export default {
   decrease: 'decrease',
   default: 'Default',
   delete: 'delete',
+  unlink: 'unlink',
   deleted: 'Deleted',
   department: 'department',
   description: 'Description',
@@ -557,6 +558,8 @@ export default {
   print_template: 'Template | Templates',
   print_template_confirm_delete_question:
     'Do you really want to delete this template? It is associated to {entities} entities',
+  print_template_confirm_unlink_question:
+    'Do you really want to unlink this template?',
   print_templates: 'Prints',
   print_template_new: 'New template',
   print_template_none: 'No templates',
@@ -698,7 +701,7 @@ export default {
   session: {
     alerts: {
       close_session: 'do you really want to close this session?',
-      invalid_username_password: 'Incorrect username or password'
+      invalid_username_password: 'Incorrect username or password',
     },
     close_session: 'close session',
     lock_explainer:

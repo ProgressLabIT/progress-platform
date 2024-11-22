@@ -24,8 +24,8 @@
       >
         <PrintTemplateCard
           :template="template"
-          allow-delete
-          @delete="deleteTemplate(index)"
+          :allow-unlink="editMode"
+          @unlink="deleteTemplate(index)"
           @restore="template.trash = false"
         />
       </div>

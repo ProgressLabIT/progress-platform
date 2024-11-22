@@ -105,6 +105,7 @@ export default {
   },
   default: 'Predefinito | Predefiniti',
   delete: 'elimina',
+  unlink: 'scollega',
   deleted: 'Eliminato',
   department: 'reparto | reparti',
   description: 'Descrizione',
@@ -570,6 +571,8 @@ export default {
   print_template: 'Stampa | Stampe',
   print_template_confirm_delete_question:
     "Vuoi davvero cancellare questo template?  E' associato a {entities} entita",
+  print_template_confirm_unlink_question:
+    'Vuoi davvero scollegare questo template?',
   print_templates: 'Stampe',
   print_template_new: 'Nuovo template',
   print_template_none: 'Nessun template',
@@ -711,7 +714,7 @@ export default {
   session: {
     alerts: {
       close_session: 'vuoi davvero chiudere la sessione?',
-      invalid_username_password: 'Nome utente o password non corretti'
+      invalid_username_password: 'Nome utente o password non corretti',
     },
     close_session: 'chiudi sessione',
     lock_explainer:

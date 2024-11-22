@@ -7,6 +7,7 @@
           :template="template"
           allow-edit
           allow-delete
+          :allow-unlink="false"
           @saved="getTemplates"
           @delete="getTemplates"
         />
