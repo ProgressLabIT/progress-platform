@@ -52,18 +52,29 @@
 
     <!-- SELECT PRINTER -->
     <template v-else-if="stage === 'select_printer'">
-      <q-list bordered separator>
-        <q-item
-          v-for="printer in printers"
-          :key="printer._key"
-          v-ripple
-          clickable
-          @click="selectPrinter(printer)"
-        >
-          <q-item-label>{{ printer.name }}</q-item-label>
-          <q-item-label caption>{{ printer.description }}</q-item-label>
-        </q-item>
-      </q-list>
+      <template v-if="loading_printers">
+        <q-inner-loading
+          :showing="loading_printers"
+          :label="$t('printLabel.loadingPrinters')"
+          label-class="text-teal"
+          label-style="font-size: 1.1em"
+        />
+      </template>
+      <template v-else>
+        <q-list bordered separator>
+          <q-item
+            v-for="printer in printers"
+            :key="printer._key"
+            v-ripple
+            clickable
+            :disable="!printer.ready"
+            @click="selectPrinter(printer)"
+          >
+            <q-item-label>{{ printer.name }}</q-item-label>
+            <q-item-label caption>{{ printer.description }}</q-item-label>
+          </q-item>
+        </q-list>
+      </template>
     </template>
 
     <!-- PRINTING -->
@@ -94,12 +105,7 @@
 </template>
 
 <script>
-const printers = [
-  { _key: '111', name: 'PR1', description: 'PR1 desc' },
-  { _key: '222', name: 'PR2', description: 'PR2 desc' },
-  { _key: '333', name: 'PR3', description: 'PR3 desc' },
-];
-
+import BrowserPrint, { Printer } from 'browserprint-es';
 import QuantitySelector from '@/components/QuantitySelector.vue';
 
 export default {
@@ -130,16 +136,12 @@ export default {
     },
   },
 
-  setup() {
-    return {
-      printers,
-    };
-  },
-
   data() {
     return {
+      printers: [],
       stage: 'select_template',
       selected_template: undefined,
+      loading_printers: false,
       selected_copies: 0,
       selected_printers: undefined,
     };
@@ -156,6 +158,8 @@ export default {
     this.selected_template = undefined;
     this.selected_copies = 0;
     this.selected_printers = undefined;
+    this.loading_printers = false;
+    this.loadPrinters();
   },
 
   beforeUnmount() {
@@ -163,6 +167,8 @@ export default {
     this.selected_template = undefined;
     this.selected_copies = 0;
     this.selected_printers = undefined;
+    this.loading_printers = false;
+    this.printers = [];
   },
 
   methods: {
@@ -183,9 +189,46 @@ export default {
       this.selected_printers = printer;
       this.stage = 'printing';
 
+      printer.device.sendData();
+
       setTimeout(() => {
         this.stage = 'print_done';
       }, 3000);
+    },
+
+    loadPrinters() {
+      this.printers = [];
+      this.loading_printers = true;
+      BrowserPrint.getLocalDevicesAsync().then((devices) => {
+        if (!devices?.printer) {
+          this.loading_printers = false;
+          return;
+        }
+        for (const device of devices.printer) {
+          let printer = new Printer(device);
+          printer.getStatusAsync().then(
+            (status) => {
+              this.printers.push({
+                name: device.name,
+                description: device.uid,
+                device: device,
+                status: status,
+                ready: true,
+              });
+            },
+            () => {
+              this.printers.push({
+                name: device.name,
+                description: device.uid,
+                device: device,
+                status: 'offline',
+                ready: false,
+              });
+            }
+          );
+        }
+        this.loading_printers = false;
+      });
     },
   },
 };

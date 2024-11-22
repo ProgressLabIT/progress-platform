@@ -64,5 +64,6 @@ export default {
   },
   printLabel: {
     selectCopiesTitle: 'Select copies',
+    loadingPrinters: 'Loading printers',
   },
 };
