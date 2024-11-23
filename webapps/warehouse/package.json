@@ -12,6 +12,9 @@
     "build": "quasar build"
   },
   "dependencies": {
+    "@pdfme/common": "^2.2.1",
+    "@pdfme/generator": "^2.2.1",
+    "@pdfme/ui": "^2.2.1",
     "@quasar/extras": "^1.16.4",
     "@vueuse/core": "^11.1.0",
     "@zxing/browser": "^0.1.5",

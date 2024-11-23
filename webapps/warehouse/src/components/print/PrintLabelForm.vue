@@ -1,7 +1,17 @@
 <template>
   <q-scroll-area :visible="false" :style="form_height">
+    <!--- LOADING -->
+
+    <template v-if="loading_label">
+      <q-inner-loading
+        :showing="true"
+        :label="loading_label"
+        label-class="text-teal"
+        label-style="font-size: 1.1em"
+      />
+    </template>
     <!-- SELECT TEMPLATE -->
-    <template v-if="stage === 'select_template'">
+    <template v-else-if="stage === 'select_template'">
       <q-list bordered separator>
         <q-item
           v-for="template in print_templates"
@@ -18,7 +28,7 @@
     <!-- SELECT COPIES -->
     <template v-else-if="stage === 'select_copies'">
       <div class="text-subtitle1 q-py-xl text-center">
-        {{ $t('printLabel.selectCopiesTitle') }}
+        {{ $t('print_label.select_copies_title') }}
       </div>
       <div>
         <QuantitySelector
@@ -52,39 +62,19 @@
 
     <!-- SELECT PRINTER -->
     <template v-else-if="stage === 'select_printer'">
-      <template v-if="loading_printers">
-        <q-inner-loading
-          :showing="loading_printers"
-          :label="$t('printLabel.loadingPrinters')"
-          label-class="text-teal"
-          label-style="font-size: 1.1em"
-        />
-      </template>
-      <template v-else>
-        <q-list bordered separator>
-          <q-item
-            v-for="printer in printers"
-            :key="printer._key"
-            v-ripple
-            clickable
-            :disable="!printer.ready"
-            @click="selectPrinter(printer)"
-          >
-            <q-item-label>{{ printer.name }}</q-item-label>
-            <q-item-label caption>{{ printer.description }}</q-item-label>
-          </q-item>
-        </q-list>
-      </template>
-    </template>
-
-    <!-- PRINTING -->
-    <template v-else-if="stage === 'printing'">
-      <q-inner-loading
-        :showing="stage === 'printing'"
-        label="Printing..."
-        label-class="text-teal"
-        label-style="font-size: 1.1em"
-      />
+      <q-list bordered separator>
+        <q-item
+          v-for="printer in printers"
+          :key="printer._key"
+          v-ripple
+          clickable
+          :disable="!printer.ready"
+          @click="selectPrinter(printer)"
+        >
+          <q-item-label>{{ printer.name }}</q-item-label>
+          <q-item-label caption>{{ printer.description }}</q-item-label>
+        </q-item>
+      </q-list>
     </template>
 
     <!-- PRINT_DONE -->
@@ -105,6 +95,7 @@
 </template>
 
 <script>
+import { generate } from '@pdfme/generator';
 import BrowserPrint, { Printer } from 'browserprint-es';
 import QuantitySelector from '@/components/QuantitySelector.vue';
 
@@ -141,7 +132,7 @@ export default {
       printers: [],
       stage: 'select_template',
       selected_template: undefined,
-      loading_printers: false,
+      loading_label: undefined,
       selected_copies: 0,
       selected_printers: undefined,
     };
@@ -158,7 +149,7 @@ export default {
     this.selected_template = undefined;
     this.selected_copies = 0;
     this.selected_printers = undefined;
-    this.loading_printers = false;
+    this.loading_label = undefined;
     this.loadPrinters();
   },
 
@@ -167,7 +158,7 @@ export default {
     this.selected_template = undefined;
     this.selected_copies = 0;
     this.selected_printers = undefined;
-    this.loading_printers = false;
+    this.loading_label = undefined;
     this.printers = [];
   },
 
@@ -177,31 +168,103 @@ export default {
     },
 
     selectTemplate(template) {
-      this.selected_template = template;
-      this.stage = 'select_copies';
+      this.loading_label = this.$t('print_label.loading_template');
+      this.$api.get(`print-template/${template._key}`).then(
+        (response) => {
+          this.loading_label = undefined;
+          this.selected_template = response.data;
+          this.stage = 'select_copies';
+        },
+        () => {
+          this.$q.notify({
+            type: 'negative',
+            position: 'top',
+            message: this.$t('print_label.error_on_template'),
+          });
+          this.loading_label = undefined;
+        }
+      );
     },
 
     selectCopies() {
       this.stage = 'select_printer';
     },
 
+    prepareInputs() {
+      // Needed to parse input type to load images as base64
+      const inputs = [];
+      for (const schema of this.selected_template.template.schemas) {
+        let schemaFields = [];
+        for (const [fieldName /*, fieldProps*/] of Object.entries(schema)) {
+          //if (fieldProps.type === 'image') {
+          //  try {
+          //    const base64 = formModel[fieldName] // Image URL
+          //      ? await loadImage(formModel[fieldName])
+          //      : ''; // empty string will not render any image. Background, if present, will be visibile.
+          //    schemaFields.push([fieldName, base64]);
+          //  } catch (err) {
+          //    window.alert(
+          //      'Error while generating the image. Please contact the system administrator.'
+          //    );
+          //    console.log(err);
+          //  }
+          //} else {
+          schemaFields.push([fieldName, /*formModel[fieldName]*/ '']);
+          //}
+        }
+        inputs.push(Object.fromEntries(schemaFields));
+      }
+      return inputs;
+    },
+
     selectPrinter(printer) {
       this.selected_printers = printer;
-      this.stage = 'printing';
+      this.loading_label = 'printing';
+      let template = this.selected_template.template;
+      let inputs = this.prepareInputs();
 
-      printer.device.sendData();
-
-      setTimeout(() => {
-        this.stage = 'print_done';
-      }, 3000);
+      generate({ template, inputs }).then(
+        (data) => {
+          printer.device.sendFile(new Blob(data));
+          this.loading_label = undefined;
+          setTimeout(() => {
+            this.loading_label = undefined;
+            this.stage = 'print_done';
+          }, 3000);
+          /*printer.device.sendFile(data).then(
+            () => {
+              setTimeout(() => {
+                this.loading_label = undefined;
+                this.stage = 'print_done';
+              }, 3000);
+            },
+            () => {
+              this.loading_label = undefined;
+              this.$q.notify({
+                type: 'negative',
+                position: 'top',
+                message: this.$t('print_label.error_on_print'),
+              });
+            }
+          );*/
+        },
+        () => {
+          this.loading_label = undefined;
+          this.$q.notify({
+            type: 'negative',
+            position: 'top',
+            message: this.$t('print_label.error_on_template'),
+          });
+        }
+      );
     },
 
     loadPrinters() {
       this.printers = [];
-      this.loading_printers = true;
+      this.loading_label = this.$t('print_label.loading_printers');
       BrowserPrint.getLocalDevicesAsync().then((devices) => {
         if (!devices?.printer) {
-          this.loading_printers = false;
+          this.loading_label = undefined;
           return;
         }
         for (const device of devices.printer) {
@@ -227,7 +290,7 @@ export default {
             }
           );
         }
-        this.loading_printers = false;
+        this.loading_label = undefined;
       });
     },
   },

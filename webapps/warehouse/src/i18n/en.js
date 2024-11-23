@@ -62,8 +62,11 @@ export default {
       },
     },
   },
-  printLabel: {
-    selectCopiesTitle: 'Select copies',
-    loadingPrinters: 'Loading printers',
+  print_label: {
+    select_copies_title: 'Select copies',
+    loading_printers: 'Loading printers',
+    loading_template: 'Loading template',
+    error_on_template: 'Error on template',
+    error_on_print: 'Error on print',
   },
 };
