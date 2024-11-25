@@ -311,6 +311,10 @@ onMounted(() => {
     loadProduct(props.context.serial.product_key);
   }
 
+  if (props.context?.workOrder?.product_key) {
+    loadProduct(props.context.workOrder.product_key)
+  }
+
   if (props.context?.serial?.wo_key) {
     loadWorkOrder(props.context?.serial?.wo_key);
   }

@@ -17,7 +17,7 @@ export function usePrintDialog({ context: contextType, contextData }) {
 
   const { templates, isLoading } = usePrintTemplates({
     context: context.type,
-    contextKey: context.getKey(),
+    contextKey: context.getTemplateContextKey(),
   });
   const isAvailable = computed(
     () => !isLoading.value && templates.value.length > 0,
@@ -61,6 +61,8 @@ class TemplateContextFactory {
         return new SerialContext(data, store);
       case 'print_template':
         return new PrintTemplateContext(data, store);
+      case 'workorder':
+        return new WorkOrderContext(store);
       default:
         throw new Error(`Unknown template context type: ${type}`);
     }
@@ -80,7 +82,7 @@ export class TemplateContext {
     this._store = store;
   }
 
-  getKey() {
+  getTemplateContextKey() {
     return undefined;
   }
 
@@ -328,7 +330,7 @@ export class IssueTypeContext extends TemplateContext {
     this.workOrder = workOrder;
   }
 
-  getKey() {
+  getTemplateContextKey() {
     return this.issue.issue_type_key;
   }
 
@@ -356,7 +358,7 @@ export class PrintTemplateContext extends TemplateContext {
     this.printTemplate_key = printTemplate_key;
   }
 
-  getKey() {
+  getTemplateContextKey() {
     return this.printTemplate_key;
   }
 }
@@ -372,7 +374,7 @@ export class SerialContext extends TemplateContext {
     this.product = this.serial.product;
   }
 
-  getKey() {
+  getTemplateContextKey() {
     return this.serial?.product?._key;
   }
 
@@ -390,6 +392,36 @@ export class SerialContext extends TemplateContext {
   }
 }
 
+
+export class WorkOrderContext extends TemplateContext {
+  type = 'product';
+
+  constructor(store = useStore()) {
+    super(store)
+    this.workOrder = store.state.workorder.wo_data
+  }
+
+  getTemplateContextKey() {
+    return this.workOrder.product_key
+  }
+
+  getCustomFieldValue(customFieldKey) {
+    const customField = this._store.getters.getCustomFieldByKey(customFieldKey);
+    // Return empty if custom field not found
+    if (!customField) {
+      return undefined;
+    }
+
+    const valueContexts = [
+      ['product', this.product?.metadata],
+    ];
+
+    // Returns a value if found. If not, will return undefined
+    return this.searchValueInContexts(valueContexts, customField);
+  }
+
+}
+
 export class StepContext extends TemplateContext {
   type = 'step';
   batch;
@@ -405,7 +437,7 @@ export class StepContext extends TemplateContext {
     this.workOrder = store.state.workorder.wo_data;
   }
 
-  getKey() {
+  getTemplateContextKey() {
     return this.step._key;
   }
 

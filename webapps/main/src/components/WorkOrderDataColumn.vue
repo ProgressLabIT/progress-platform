@@ -4,8 +4,22 @@
     <div class="text-uppercase low-text text-h5 q-mb-xs">
       {{ $t('work_order.wo_code') }}
     </div>
-    <div class="full-width display weight-bold text-h3 ellipsis">
-      {{ wo_data.wo_code }}
+    <div class="row">
+      <div class="col display weight-bold text-h3 ellipsis">
+        {{ wo_data.wo_code }}
+      </div>
+      <div class="col-auto">
+        <q-btn
+          v-if="printDialogAvailable"
+          flat
+          round
+          icon="mdi-printer"
+          style="margin-top: -10px; margin-right: -10px"
+          @click.stop="openPrintDialog"
+        >
+          <q-tooltip>{{ $capitalize($t('print')) }}</q-tooltip>
+        </q-btn>
+      </div>
     </div>
 
     <div class="text-uppercase low-text text-h5 q-mb-xs q-mt-lg">
@@ -323,6 +337,7 @@ import WorkOrderJobQtRebalance from '@/components/WorkOrderJobQtRebalance.vue';
 import { durationFromMillisec } from '@/lib/duration.js';
 import { getPicPath } from '@/lib/media.js';
 import { formatDateTime } from '../lib/TimeHandling';
+import { usePrintDialog } from '@/lib/print';
 
 export default {
   name: 'WorkOrderDataColumn',
@@ -339,6 +354,20 @@ export default {
       type: Object,
       required: true,
     },
+  },
+
+  setup(props) {
+    const { open, isAvailable } = usePrintDialog({
+      context: 'workorder',
+      contextData: {
+        ...props.wo_data,
+      },
+    });
+
+    return {
+      openPrintDialog: open,
+      printDialogAvailable: isAvailable
+    }
   },
 
   data() {
