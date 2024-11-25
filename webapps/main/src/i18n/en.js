@@ -25,8 +25,8 @@ export default {
   back: 'back',
   batch: 'batch',
   batch_completed_quantity_question: 'How many new pieces are you working on?',
-  batch_serial_select: 'Select batch serial',
-  batch_declare_serial: 'Type batch serial number',
+  batch_serial_select: 'Select serials to work on',
+  batch_declare_serial: 'Insert serial numbers',
   bom: {
     add_line: 'add line',
     alerts: {

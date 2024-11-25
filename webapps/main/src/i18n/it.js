@@ -28,8 +28,8 @@ export default {
   back: 'Indietro',
   batch: 'lotto',
   batch_completed_quantity_question: 'Quanti pezzi stai lavorando?',
-  batch_serial_select: 'Seleziona seriali batch',
-  batch_declare_serial: 'Inserisci i seriali del batch',
+  batch_serial_select: 'Seleziona seriali in lavorazione',
+  batch_declare_serial: 'Inserisci i seriali',
   bom: {
     add_line: 'aggiungi riga',
     alerts: {
