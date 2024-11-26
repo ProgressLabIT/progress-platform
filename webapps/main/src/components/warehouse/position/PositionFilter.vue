@@ -1,6 +1,6 @@
 <template>
   <FilterDrawer
-    v-model="showFilterDrawer"
+    v-model="showFilter"
     :active-filters="filters_active"
     @reset="resetFilters"
   >
@@ -169,10 +169,19 @@ export default {
     FilterDrawer,
   },
 
+  props: {
+    showFilterDrawer: {
+      type: Boolean,
+      required: true,
+    },
+  },
+
+  emits: ['showFilterDrawer', 'filterActiveChange'],
+
   data() {
     return {
       bool_filters: [],
-      showFilterDrawer: false,
+      showFilter: false,
     };
   },
 
@@ -205,6 +214,20 @@ export default {
           ? value === false
           : !!value;
       }).length;
+    },
+  },
+
+  watch: {
+    showFilter: {
+      handler() {
+        this.$emit('showFilterDrawer', this.showFilter);
+      },
+    },
+    showFilterDrawer: {
+      handler() {
+        this.showFilter = this.showFilterDrawer;
+        this.$emit('filterActiveChange', this.filters_active);
+      },
     },
   },
 

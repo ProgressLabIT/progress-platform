@@ -23,6 +23,46 @@
           </q-tabs>
 
           <q-space />
+
+          <!-- POSITION BUTTONS -->
+          <template v-if="$route.name === 'positions'">
+            <q-btn
+              size="0.75rem"
+              :label="$t('new')"
+              color="theme-blue"
+              @click="show_position_form = true"
+            >
+            </q-btn>
+
+            <PositionNewForm
+              :show="show_position_form"
+              mode="new"
+              @close="show_position_form = false"
+              @position-created="refreshPositions"
+            >
+            </PositionNewForm>
+          </template>
+
+          <!-- FILTER BUTTONS -->
+          <q-btn
+            v-if="!showFilterDrawer"
+            class="q-ml-sm"
+            size="sm"
+            round
+            :color="filtersActiveNo > 0 ? 'theme-blue' : 'theme-grey'"
+            icon="mdi-filter"
+            @click="showFilterDrawer = true"
+          >
+            <q-badge
+              v-if="filtersActiveNo > 0"
+              floating
+              rounded
+              color="theme-red"
+              :label="filtersActiveNo"
+              size="4px"
+              style="font-family: 'Red Hat Text'; font-size: 8px"
+            />
+          </q-btn>
         </div>
 
         <!-- MAIN CONTENT -->
@@ -32,12 +72,26 @@
       </div>
     </q-page>
 
-    <position-filter v-if="$route.name === 'positions'"></position-filter>
+    <position-filter
+      v-if="$route.name === 'positions'"
+      :show-filter-drawer="showFilterDrawer"
+      @show-filter-drawer="
+        (showFilter) => {
+          showFilterDrawer = showFilter;
+        }
+      "
+      @filter-active-change="
+        (filtersActive) => {
+          filtersActiveNo = filtersActive;
+        }
+      "
+    ></position-filter>
   </q-page-container>
 </template>
 
 <script>
-import PositionFilter from 'app/src/components/warehouse/position/PositionFilter.vue';
+import PositionFilter from '@/components/warehouse/position/PositionFilter.vue';
+import PositionNewForm from 'app/src/components/warehouse/position/PositionNewForm.vue';
 
 const warehouse_views = [
   { component: 'Positions', route_name: 'positions' },
@@ -53,12 +107,16 @@ export default {
 
   components: {
     PositionFilter,
+    PositionNewForm,
   },
 
   data() {
     return {
       // content_height: 0,
+      show_position_form: false,
       views: warehouse_views,
+      showFilterDrawer: false,
+      filtersActiveNo: 0,
       current_view: 0,
     };
   },
@@ -68,6 +126,8 @@ export default {
       this.content_height =
         document.documentElement.clientHeight - header_plus_footer_height;
     },
+
+    refreshPositions() {},
   },
 };
 </script>

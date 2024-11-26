@@ -45,7 +45,7 @@
           </SerialForm>
 
           <q-btn
-            v-if="!showFilterDrawer && $route.name !== 'workOrderArchive'"
+            v-if="!showFilterDrawer"
             class="q-ml-sm"
             size="sm"
             round
