@@ -27,19 +27,18 @@
 
         <!-- MAIN CONTENT -->
         <div class="col relative-position">
-          <router-view
-            v-bind="{ filters }"
-            @set-search="setSearch($event)"
-            @item-dbl-click="showWorkOrderScreen($event)"
-            @editing="editing = true"
-          />
+          <router-view />
         </div>
       </div>
     </q-page>
+
+    <position-filter v-if="$route.name === 'positions'"></position-filter>
   </q-page-container>
 </template>
 
 <script>
+import PositionFilter from 'app/src/components/warehouse/position/PositionFilter.vue';
+
 const warehouse_views = [
   { component: 'Positions', route_name: 'positions' },
   { component: 'Stock', route_name: 'stock' },
@@ -51,6 +50,10 @@ const header_plus_footer_height = 80;
 
 export default {
   name: 'WarehouseRoot',
+
+  components: {
+    PositionFilter,
+  },
 
   data() {
     return {
