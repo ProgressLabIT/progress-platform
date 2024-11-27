@@ -59,6 +59,7 @@ export default {
         print_label: 'print labels',
         creating_containers: 'creating containers',
         cannot_create_alert: 'creating containers',
+        cannot_find_print_template: 'Cannot find print templaes',
       },
     },
   },

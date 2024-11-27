@@ -100,6 +100,7 @@ class TemplateAssignmentContext(str, Enum):
   STEP = 'step'
   ISSUE_TYPE = 'issue_type'
   TEMPLATE = 'template'
+  POSITION = 'position'
 
 class TemplateAssignmentUpdateType(str, Enum):
   ADD = 'add'

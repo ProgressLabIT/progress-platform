@@ -57,7 +57,8 @@ async def find_print_templates(
       product='Product',
       phase='Phase',
       step='Step',
-      issue_type='IssueType'
+      issue_type='IssueType',
+      position='Position'
     )
 
     cursor = db.aql.execute(

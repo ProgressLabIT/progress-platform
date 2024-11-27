@@ -158,6 +158,21 @@ const adminRoutes = [
         name: 'printTemplateLibrary',
         component: () => import('@/views/PrintTemplateLibrary.vue'),
       },
+      {
+        path: 'warehouse',
+        name: 'warehouseSettings',
+        component: () =>
+          import('@/views/settings/warehouse/WarehouseSettings.vue'),
+        redirect: { name: 'labelPrintTemplates' },
+        children: [
+          {
+            path: 'label-print-templates',
+            name: 'labelPrintTemplates',
+            component: () =>
+              import('@/views/settings/warehouse/LabelPrintTemplates.vue'),
+          },
+        ],
+      },
     ],
   },
 ];

@@ -40,5 +40,6 @@ const adminViews = [
   'counterLibrary',
   'flowLibrary',
   'printTemplateLibrary',
+  'warehouseSettings',
 ];
 </script>

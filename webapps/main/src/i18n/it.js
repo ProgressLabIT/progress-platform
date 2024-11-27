@@ -873,6 +873,7 @@ export default {
     workSession: 'sessione di lavoro',
     productionRoot: 'monitoraggio produzione',
     printTemplateLibrary: 'Stampe',
+    warehouseSettings: 'Magazzino',
     qualityRoot: 'Qualità',
     traceabilityRoot: 'Tracciabilità',
     reportRoot: 'Rapporti',
@@ -885,6 +886,7 @@ export default {
     stock: 'Rimanenze',
     missions: 'Missioni',
     movements: 'Movimenti',
+    labelPrintTemplates: 'Stampe etichette',
   },
   waiting: 'in attesa',
   work_order: {

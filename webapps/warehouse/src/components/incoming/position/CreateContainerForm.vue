@@ -186,11 +186,28 @@ export default {
     },
 
     showPrintLabelBottomSheet() {
-      let print_templates = [{}];
-      this.$bus.emit('show-print-templates', {
-        print_templates: print_templates,
-        containers: this.containers,
-      });
+      this.$api
+        .get('print-template', {
+          params: { context: 'position', context_key: 'IN' },
+        })
+        .then((data) => {
+          if (data && data?.data?.length > 0) {
+            let print_templates = data?.data;
+
+            this.$bus.emit('show-print-templates', {
+              print_templates: print_templates,
+              containers: this.containers,
+            });
+          } else {
+            this.$q.notify({
+              type: 'negative',
+              position: 'top',
+              message: this.$t(
+                'incoming.positions.create_container_form.cannot_find_print_template'
+              ),
+            });
+          }
+        });
     },
 
     closeAndSelectCountainers() {

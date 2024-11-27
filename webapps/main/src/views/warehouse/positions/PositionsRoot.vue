@@ -272,7 +272,7 @@ export default {
         this.offset += this.limit;
         this.loading = true;
         this.$store
-          .dispatch('appendSerials', {
+          .dispatch('appendPositions', {
             ...this.filters,
             filter_unreleased: true,
             offset: this.offset,
