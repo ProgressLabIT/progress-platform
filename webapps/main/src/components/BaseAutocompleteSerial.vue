@@ -48,7 +48,9 @@
     </template>
 
     <template v-if="!!label" #label>
-      {{ label }}
+      <div class="ellipsis">
+        {{ label }}
+      </div>
     </template>
 
     <template #no-option="{ inputValue }">

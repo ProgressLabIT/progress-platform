@@ -20,6 +20,9 @@
             <div class="text-h2 display highlight text-center">
               {{ component_code }}
             </div>
+            <div class="text-body1">
+              {{ bom_line.component_description }}
+            </div>
           </div>
         </q-card-section>
 

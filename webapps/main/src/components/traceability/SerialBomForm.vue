@@ -47,7 +47,7 @@
                 initalModel[getComponentLineKey(component.component_key)]
               "
               :label="
-                $capitalize([$t('serial'), component.component_code].join(' '))
+                $capitalize([$t('serial'), component.component_code, '-', component.component_description].join(' '))
               "
               :hint="$t('serial_autocomplete_hint', { minChars: 3 })"
               :loading="loading"
