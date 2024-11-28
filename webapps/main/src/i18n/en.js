@@ -975,4 +975,15 @@ export default {
   month: 'Month',
   week: 'Week',
   day: 'Day',
+  warehouse: {
+    position: {
+      add: 'Add positions',
+      new: 'Create a new position',
+      parent_position: 'Parent',
+      code: 'Code',
+      owned: 'Owned',
+      available: 'Available',
+      disposable: 'Disposable',
+    },
+  },
 };

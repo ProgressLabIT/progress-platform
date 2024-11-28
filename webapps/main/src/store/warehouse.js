@@ -6,6 +6,7 @@ const warehouse = {
     positions: [],
     temp_print_templates: [],
     saved_print_templates: [],
+    position_search_params: undefined,
   },
 
   getters: {
@@ -25,6 +26,10 @@ const warehouse = {
       } else {
         state.positions = positions;
       }
+    },
+
+    SET_POSITION_SEARCH_PARAMS(state, params) {
+      state.position_search_params = params;
     },
 
     ADD_TEMP_LABEL_PRINT_TEMPLATE(state, template) {
@@ -50,11 +55,22 @@ const warehouse = {
     async getPositions({ commit }, search_params) {
       const { data } = await api.get('position', { params: search_params });
       commit('LOAD_POSITIONS', data);
+      commit('SET_POSITION_SEARCH_PARAMS', search_params);
     },
+
     async appendPositions({ commit }, search_params) {
       const { data } = await api.get('position', { params: search_params });
       commit('APPEND_POSITIONS', data);
+      commit('SET_POSITION_SEARCH_PARAMS', search_params);
     },
+
+    async postPositions({ state, dispatch }, positions) {
+      await Promise.all(
+        positions.map((position) => api.post('position', position)),
+      );
+      await dispatch('getPositions', state.position_search_params);
+    },
+
     loadPrintLabelTemplates({ commit }) {
       api
         .get('print-template', {

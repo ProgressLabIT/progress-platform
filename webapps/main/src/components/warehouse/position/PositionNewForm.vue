@@ -1,20 +1,20 @@
 <template>
   <BaseModalForm
-    id="new-work-order-form"
+    id="new-position-form"
     :loading="loading"
     max-width="80vw"
-    @submit="postNewWorkOrder"
+    @submit="postNewPosition"
     @cancel="$router.back()"
   >
     <template #title>
-      {{ $t('work_order.new') }}
+      {{ $t('warehouse.position.new') }}
     </template>
 
     <template #form>
-      <!-- NEW WORK ORDER FIELD LABELS -->
+      <!-- NEW POSITION FIELD LABELS -->
       <div class="row q-col-gutter-md">
         <div
-          v-for="(info, field_name) in new_wo_data"
+          v-for="(info, field_name) in new_position_data"
           :key="field_name"
           :class="info.cols"
           class="text-h5 text-uppercase text-low"
@@ -23,20 +23,20 @@
         </div>
       </div>
 
-      <!-- NEW WORK ORDER DATA  -->
+      <!-- NEW POSITION DATA  -->
       <div
-        v-for="(line, index) in new_work_orders"
+        v-for="(line, index) in new_positions"
         :key="index"
         class="row q-col-gutter-md q-py-sm items-center"
       >
         <div
-          v-for="(info, field_name) in new_wo_data"
+          v-for="(info, field_name) in new_position_data"
           :key="field_name"
           :class="info.cols"
         >
           <q-input
             v-if="['start_from', 'due_by'].includes(field_name)"
-            v-model="new_work_orders[index][field_name]"
+            v-model="new_positions[index][field_name]"
             dense
             filled
             mask="####-##-##"
@@ -51,7 +51,7 @@
                   transition-hide="scale"
                 >
                   <q-date
-                    v-model="new_work_orders[index][field_name]"
+                    v-model="new_positions[index][field_name]"
                     minimal
                     mask="YYYY-MM-DD"
                   >
@@ -64,18 +64,18 @@
             </template>
           </q-input>
 
-          <BaseAutocompleteProduct
+          <!--<BaseAutocompleteProduct
             v-else-if="field_name === 'product'"
             dense
             :load-data="false"
-            :value="new_work_orders[index].product"
-            @select="new_work_orders[index].product = $event"
+            :value="new_positions[index].product"
+            @select="new_positions[index].product = $event"
           >
-          </BaseAutocompleteProduct>
+          </BaseAutocompleteProduct>-->
 
           <q-input
             v-else
-            v-model="new_work_orders[index][field_name]"
+            v-model="new_positions[index][field_name]"
             dense
             filled
             autocomplete="false"
@@ -86,7 +86,7 @@
 
         <div class="col-auto">
           <BaseTooltipIcon
-            v-if="new_work_orders.length > 1"
+            v-if="new_positions.length > 1"
             icon="mdi-close"
             :tooltip="$t('delete')"
             :color="$theme.red"
@@ -97,15 +97,13 @@
       </div>
 
       <q-btn flat class="display medium" @click="addLine">
-        + {{ $t('work_order.add') }}
+        + {{ $t('warehouse.position.add') }}
       </q-btn>
     </template>
   </BaseModalForm>
 </template>
 
 <script>
-import { date } from 'quasar';
-import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
 import BaseModalForm from '@/components/BaseModalForm.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 
@@ -113,7 +111,6 @@ export default {
   name: 'PositionNewForm',
 
   components: {
-    BaseAutocompleteProduct,
     BaseModalForm,
     BaseTooltipIcon,
   },
@@ -121,128 +118,89 @@ export default {
   data() {
     return {
       wo_code: null,
-      new_work_orders: [],
+      new_positions: [],
       show_picker: -1,
       loading: false,
     };
   },
 
   computed: {
-    default_due_by() {
-      const now = new Date();
-      return date.formatDate(now, 'yyyy/MM/dd');
-    },
-
-    new_wo_data() {
+    new_position_data() {
       return {
         code: {
-          label: this.$t('work_order.wo_code'),
+          label: this.$t('warehouse.position.code'),
           type: String,
           cols: 'col-2',
           initial_value: '',
         },
-        project_code: {
-          label: this.$t('project'),
-          type: String,
-          cols: 'col-2',
-          initial_value: '',
-        },
-        product: {
-          label: this.$t('product.label'),
+        parent: {
+          label: this.$t('warehouse.position.parent_position'),
           type: Object,
           cols: 'col-3',
           initial_value: null,
         },
-        qt_planned: {
-          label: this.$t('quantity.long'),
-          type: Number,
+        owned: {
+          label: this.$t('warehouse.position.owned'),
+          type: Boolean,
           cols: 'col-1',
-          initial_value: 0,
+          initial_value: true,
         },
-        start_from: {
-          label: this.$t('work_order.list_headers.start_from'),
-          type: Date,
-          cols: 'col',
-          initial_value: date.formatDate(new Date()),
+        available: {
+          label: this.$t('warehouse.position.available'),
+          type: Boolean,
+          cols: 'col-1',
+          initial_value: true,
         },
-        due_by: {
-          label: this.$t('by'),
-          type: Date,
-          cols: 'col',
-          initial_value: date.formatDate(new Date()),
+        disposable: {
+          label: this.$t('warehouse.position.disposable'),
+          type: Boolean,
+          cols: 'col-1',
+          initial_value: false,
         },
       };
-    },
-
-    product_list() {
-      return this.vuex_ready ? this.$store.getters.productCatalog() : [];
     },
   },
 
   created() {
-    this.$store.dispatch('loadProductList');
     this.addLine();
   },
 
   methods: {
     addLine() {
       let empty_line = Object.fromEntries(
-        Object.entries(this.new_wo_data).map(([field, value]) => [
+        Object.entries(this.new_position_data).map(([field, value]) => [
           field,
           value.initial_value,
         ]),
       );
-      this.new_work_orders.push(empty_line);
+      this.new_positions.push(empty_line);
     },
 
-    checkDate(d) {
-      return date.isValid(d);
-    },
-
-    postNewWorkOrder() {
-      const quantity_missing = this.new_work_orders.some(
-        (wo) => wo.qt_planned == 0,
-      );
-      const product_missing = this.new_work_orders.some(
-        (wo) => !wo.product._key,
-      );
-
-      if (quantity_missing || product_missing) {
-        window.alert(this.$capitalize(this.$t('form_missing_fields_alert')));
-      } else {
-        let new_records = this.new_work_orders.map((wo) => {
-          return {
-            wo_code: wo.code.toUpperCase(),
-            product_key: wo.product._key,
-            product_code: wo.product.code,
-            product_description: wo.product.description,
-            qt_planned: wo.qt_planned,
-            start_from: wo.start_from,
-            due_by: wo.due_by,
-            project_code: wo.project_code.toUpperCase(),
-          };
+    postNewPosition() {
+      let new_records = this.new_positions.map((position) => {
+        return {
+          code: position.code.toUpperCase(),
+          parent: position.parent,
+          owned: position.owned,
+          available: position.available,
+          disposable: position.disposable,
+        };
+      });
+      this.loading = true;
+      this.$store
+        .dispatch('postPositions', new_records)
+        .then(() => {
+          this.loading = false;
+          this.$router.back();
+        })
+        .catch((err) => {
+          window.alert(err);
+          this.loading = false;
         });
-        this.loading = true;
-        this.$store
-          .dispatch('postWorkOrder', new_records)
-          .then(() => {
-            this.loading = false;
-            this.$router.back();
-          })
-          .catch((err) => {
-            window.alert(err);
-            this.loading = false;
-          });
-      }
-    },
-
-    setDueBy(date, index) {
-      this.$set(this.new_work_orders[index], 'due_by', date);
-      this.show_picker = -1;
     },
 
     deleteRow(index) {
-      this.new_work_orders.splice(index, 1);
+      this.new_positions.splice(index, 1);
     },
   },
 };

@@ -994,4 +994,15 @@ export default {
   month: 'Mese',
   week: 'Settimana',
   day: 'Giorno',
+  warehouse: {
+    position: {
+      add: 'Aggingi posizione',
+      new: 'Crea nuova posizione',
+      parent_position: 'Contenitore',
+      code: 'Code',
+      owned: 'Owned',
+      available: 'Available',
+      disposable: 'Disposable',
+    },
+  },
 };
