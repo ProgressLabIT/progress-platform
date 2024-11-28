@@ -315,7 +315,7 @@ export default {
       }
 
       const { data: steps } = await this.$api.get(
-        `product-steps/${product_key}`,
+        `product/${product_key}/process`,
       );
       this.phase_data = steps;
 

@@ -24,17 +24,6 @@ def fetch_field():
     fields = serial_fields['value']
   return fields
 
-
-@router.get('/product-steps/{product_key}',
-    dependencies=[Depends(auth.verify_token)])
-def get_product_steps(product_key: str):
-  bind_vars = dict(
-    product_key = product_key
-  )
-  return [e for e in db.aql.execute(Queries.GET_PRODUCT_STEPS, bind_vars=bind_vars)]
-
-
-
 @router.get('/serial-batch',
     dependencies=[Depends(auth.verify_token)])
 def get_serial_batch(

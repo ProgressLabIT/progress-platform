@@ -8,6 +8,7 @@ from utils.dt import timestamp
 from models.serial import Serial, SerialCommandType, SerialNotificationType, SerialNotificationErrorCode
 from utils.counter import _generate_counter
 from models.form import SerialFormFieldValue
+from utils.process import Queries as ProcessQueries
 from utils.serial import Queries
 from managers.notification_manager import NotificationManager
 from models.event import EventModel
@@ -96,7 +97,7 @@ class SerialEventManager:
           return []
 
     def retrieve_serial_phases_data(self, product_key):
-       cursor = self.tx.aql.execute(Queries.GET_PRODUCT_STEPS,
+       cursor = self.tx.aql.execute(ProcessQueries.GET_PRODUCTION_PROCESS,
           bind_vars=dict(
             product_key = product_key,
           )
@@ -299,7 +300,7 @@ class SerialEventManager:
                field_data = SerialFormFieldValue()
                setattr(field_data, 'form_field_key', field['_key'])
                setattr(field_data, 'custom_field_key', field['custom_field_key'])
-               setattr(field_data, 'phase_key', phase['phase_key'])
+               setattr(field_data, 'phase_key', phase['_key'])
                setattr(field_data, 'step_key', step['_key'])
                data.append(field_data)
 

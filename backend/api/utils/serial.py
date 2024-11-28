@@ -1,20 +1,6 @@
 
 class Queries:
 
-  GET_PRODUCT_STEPS = """
-    FOR phase IN Phase
-      FILTER phase.product_key == @product_key
-      RETURN {
-        product_key: phase.product_key,
-        alias: phase.alias,
-        phase_key: phase._key,
-        steps: (
-          FOR step IN Step
-            FILTER step._key in phase.step_sequence
-            return step
-        )}
-  """
-
   GET_BATCH_SERIALS = """
     FOR s IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
     RETURN s
