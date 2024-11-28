@@ -224,10 +224,10 @@ export default {
       let inputs = this.prepareInputs();
 
       generate({ template, inputs }).then(
-        //(data) => {
-          () => {
-          //printer.device.sendFile(new Blob(data));
-          printer.device.sendAsync("^XA^FO200,200^A0N36,36^FDTest Label^FS^XZ");
+        (data) => {
+          //() => {
+          printer.device.sendFile(new Blob([data]));
+          //printer.device.sendAsync("^XA^FO200,200^A0N36,36^FDTest Label^FS^XZ");
           this.loading_label = undefined;
           setTimeout(() => {
             this.loading_label = undefined;
