@@ -352,6 +352,7 @@ export default {
   no_class: 'nessuna classe',
   no_data: 'Nessun dato',
   no_department: 'nessun reparto',
+  none: 'Nessuno',
   notes: 'Note',
   notes_empty: 'Nessuna nota',
   notes_order: 'Note ordine',
@@ -766,6 +767,7 @@ export default {
   template: 'Modello',
   frequency: 'Frequenza',
   reset_date: 'Data reset',
+  reset_frequency: 'Reset',
   reset_job: 'Annulla progresso',
   reset_job_confirm: "Vuoi annullare l'intero progresso del lavoro?",
   reset_job_disabled:

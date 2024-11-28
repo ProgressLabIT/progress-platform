@@ -341,6 +341,7 @@ export default {
   no_class: 'no class',
   no_data: 'No Data',
   no_department: 'no department',
+  none: 'None',
   notes: 'Notes',
   notes_empty: 'Notes empty',
   notes_order: 'Order notes',
@@ -759,6 +760,7 @@ export default {
   template: 'Template',
   frequency: 'Frequency',
   reset_date: 'Reset Date',
+  reset_frequency: 'Reset',
   reset_job: 'Reset job',
   reset_job_confirm: 'Do you want to reset this job?',
   reset_job_disabled:
