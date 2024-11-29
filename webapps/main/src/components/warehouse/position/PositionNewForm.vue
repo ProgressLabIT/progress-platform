@@ -180,7 +180,7 @@ export default {
       let new_records = this.new_positions.map((position) => {
         return {
           code: position.code.toUpperCase(),
-          parent: position.parent,
+          parent_position_key: position.parent || 'IN',
           owned: position.owned,
           available: position.available,
           disposable: position.disposable,

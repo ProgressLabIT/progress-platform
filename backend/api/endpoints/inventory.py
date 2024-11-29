@@ -46,11 +46,9 @@ async def get_position_contents(position_key):
       )
     )
 
-
-
 @router.post('/position',
     dependencies=[Depends(auth.verify_token)])
-async def create_position(new_position: Position, parent_position_key: str | None = 'IN'):
+async def create_position(new_position: PositionNew):
 
   tx = db.begin_transaction(write=['Position', 'Counter', 'is_in_position'], read=['Config', 'Position'])
 
@@ -59,12 +57,17 @@ async def create_position(new_position: Position, parent_position_key: str | Non
       positions_counter_key = tx.collection('Config').get('system_counters')['positions']
       new_position.code = _generate_counter(tx, counter_key=positions_counter_key)
 
-    created_position = tx.collection('Position').insert(new_position, return_new=True)
+    created_position = tx.collection('Position').insert(
+      dict(code=new_position.code,
+           owned=new_position.owned,
+           available=new_position.available,
+           disposable=new_position.disposable,
+           extra=new_position.extra), return_new=True)
     new_position_key = created_position['_key']
 
     tx.collection('is_in_position').insert(dict(
                    _from=f'Position/{new_position_key}',
-                   _to=f'Position/{parent_position_key}'
+                   _to=f'Position/{new_position.parent_position_key}'
                 ))
     tx.commit_transaction()
     return APIResponse(
@@ -72,6 +75,43 @@ async def create_position(new_position: Position, parent_position_key: str | Non
       message=f"Position {new_position.code} created successfully.",
       detail=created_position['new']
     )
+  except Exception as e:
+    tx.abort_transaction()
+    return HTTPException(
+      status_code=500,
+      detail=traceback.format_exc(),
+    )
+
+
+@router.patch('/position/{positions_key}',
+    dependencies=[Depends(auth.verify_token)])
+async def update_position(position_key: str, updated_fields: dict, parent_position_key: str | None = None):
+
+  tx = db.begin_transaction(write=['Position', 'is_in_position'], read=['Config', 'Position'])
+
+  try:
+    updated_position = tx.collection('Position').update(
+      dict(
+        _key=position_key,
+        updated=timestamp(),
+        **updated_fields
+      ), return_new=True
+    )['new']
+
+    if (parent_position_key != None):
+      link_cursor = tx.collection('is_in_position').find(dict(_from=f'Position/{position_key}'))
+      if link_cursor.count()>0:
+        tx.collection('is_in_position').update(dict(
+          _key = link_cursor.next()['_key'],
+          _to=f'Position/{parent_position_key}'))
+
+    tx.commit_transaction()
+    response = APIResponse(
+      status=200,
+      message=f"Position {updated_position['code']} (KEY: {updated_position['_key']}) updated",
+      detail=updated_position
+    )
+    return response
   except Exception as e:
     tx.abort_transaction()
     return HTTPException(

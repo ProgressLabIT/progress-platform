@@ -6,7 +6,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, model_validator, Field, StringConstraints
 
-from models.base_models import ArangoDocument, ArangoEdge
+from models.base_models import ArangoDocument, ArangoEdge, FlexModel
 #from utils.counter import _generate_counter
 from utils.dt import timestamp
 
@@ -30,6 +30,14 @@ class Position(ArangoDocument):
   disposable: bool | None = False # gets deleted when emptied or shipped
   deleted: bool | None = False
   created: datetime | datetime = Field(default_factory=timestamp)
+  extra: Any = None
+
+class PositionNew(FlexModel):
+  parent_position_key: str | None = 'IN'
+  code: str | None = None
+  owned: bool | None = True
+  available: bool | None = True
+  disposable: bool | None = False
   extra: Any = None
 
 
