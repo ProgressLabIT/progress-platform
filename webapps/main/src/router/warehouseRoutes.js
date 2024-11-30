@@ -16,7 +16,15 @@ const warehouseRoutes = [
             name: 'positions',
             component: () =>
               import('@/views/warehouse/positions/PositionsRoot.vue'),
-            children: [],
+            children: [
+              {
+                path: ':positionKey',
+                name: 'positionDetail',
+                component: () =>
+                  import('@/components/warehouse/position/PositionDetail.vue'),
+                props: true,
+              },
+            ],
           },
           {
             path: 'stock',

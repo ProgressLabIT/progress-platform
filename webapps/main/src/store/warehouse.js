@@ -13,6 +13,9 @@ const warehouse = {
     getPositionCount: (state) => () => {
       return state.positions.length;
     },
+    getPositionData: (state) => (position_key) => {
+      return state.positions.find((i) => i._key == position_key);
+    },
   },
   mutations: {
     LOAD_POSITIONS(state, positions) {

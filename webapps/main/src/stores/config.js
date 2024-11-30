@@ -23,6 +23,7 @@ export const useConfigStore = defineStore('config', () => {
     allowIndependentReorderingOfJobQueues: false,
     allowSerialDelete: false,
     allowSerialCodeEdit: false,
+    allowPositionDelete: true,
   };
 
   const isLoading = ref(true);

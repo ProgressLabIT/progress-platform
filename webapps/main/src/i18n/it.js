@@ -930,6 +930,7 @@ export default {
   },
   work_order_autocomplete_hint:
     'Inserisci il testo da ricercare (min 3 caratteri) fra codice ordine, prodotto, commessa. Verranno mostrati i primi 100 risultati.',
+
   workload_hours: 'Carico in ore',
   workload_remaining: {
     short: 'CLR',
@@ -1003,6 +1004,12 @@ export default {
       owned: 'Owned',
       available: 'Available',
       disposable: 'Disposable',
+      position_autocomplete_hint:
+        'Inserisci il testo da ricercare (min 3 caratteri). Verranno mostrati i primi 100 risultati.',
+      position_data: 'Dati posizione',
+      position_delete_confirm_title: 'Cancella posizione',
+      position_delete_confirm_question:
+        'Sei sicuro di voler cancellare questa posizione?',
     },
   },
 };

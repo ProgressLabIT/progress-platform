@@ -33,14 +33,6 @@
               @click="show_position_form = true"
             >
             </q-btn>
-
-            <PositionNewForm
-              :show="show_position_form"
-              mode="new"
-              @close="show_position_form = false"
-              @position-created="refreshPositions"
-            >
-            </PositionNewForm>
           </template>
 
           <!-- FILTER BUTTONS -->
@@ -87,6 +79,13 @@
       "
     ></position-filter>
   </q-page-container>
+
+  <PositionNewForm
+    :show="show_position_form"
+    mode="new"
+    @close-position="show_position_form = false"
+  >
+  </PositionNewForm>
 </template>
 
 <script>
@@ -126,8 +125,6 @@ export default {
       this.content_height =
         document.documentElement.clientHeight - header_plus_footer_height;
     },
-
-    refreshPositions() {},
   },
 };
 </script>

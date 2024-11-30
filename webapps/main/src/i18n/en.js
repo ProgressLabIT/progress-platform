@@ -914,6 +914,7 @@ export default {
   },
   work_order_autocomplete_hint:
     'Input the text to search (min 3 characters) between order code, product and project. Will show first 100 results.',
+
   workload_hours: 'Workload in hours',
   workload_remaining: {
     short: 'RWL',
@@ -984,6 +985,11 @@ export default {
       owned: 'Owned',
       available: 'Available',
       disposable: 'Disposable',
+      position_autocomplete_hint:
+        'Input the text to search (min 3 characters). Will show first 100 results.',
+      position_data: 'Position data',
+      position_delete_confirm_title: 'Delete position',
+      position_delete_confirm_question: 'Do you want to delete this position?',
     },
   },
 };

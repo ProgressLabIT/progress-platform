@@ -28,7 +28,7 @@
           :key="props.row._key"
           :props="props"
           :style="props.row.closed ? 'opacity: .5' : ''"
-          @dblclick="showSerialDetails(props.row._key)"
+          @dblclick="showPositionDetails(props.row._key)"
         >
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
@@ -49,7 +49,7 @@
       </template>
     </q-table>
 
-    <!-- SERIAL DETAIL -->
+    <!-- POSITION DETAIL -->
     <router-view />
   </div>
 </template>
@@ -59,7 +59,7 @@ import { ref } from 'vue';
 import queryModel from '@/lib/queryModelFactory.js';
 
 export default {
-  name: 'SerialsOverview',
+  name: 'PositionsRoot',
 
   setup() {
     const pagination = ref({
@@ -70,17 +70,8 @@ export default {
       rowsNumber: 1000,
     });
 
-    function onRequest(props) {
-      const { page, rowsPerPage, sortBy, descending } = props.pagination;
-      pagination.value.descending = descending;
-      pagination.value.sortBy = sortBy;
-      pagination.value.page = page;
-      pagination.value.rowsPerPage = rowsPerPage;
-    }
-
     return {
       pagination,
-      onRequest,
     };
   },
 
@@ -99,9 +90,7 @@ export default {
         'created_min',
         'created_max',
       ],
-      bool_filters: [
-        /*'serial_deleted'*/
-      ],
+      bool_filters: [],
     };
   },
 
@@ -228,10 +217,10 @@ export default {
       this.reloadPositions({ pagination: this.pagination });
     },
 
-    showPositionDetails(serialKey) {
+    showPositionDetails(positionKey) {
       const to_route = {
-        name: 'serialDetail',
-        params: { serialKey },
+        name: 'positionDetail',
+        params: { positionKey },
         query: {
           back_to: this.$route.name,
           ...this.$route.query,

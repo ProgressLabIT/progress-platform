@@ -4,7 +4,7 @@
     :loading="loading"
     max-width="80vw"
     @submit="postNewPosition"
-    @cancel="$router.back()"
+    @cancel="$emit('closePosition')"
   >
     <template #title>
       {{ $t('warehouse.position.new') }}
@@ -34,44 +34,27 @@
           :key="field_name"
           :class="info.cols"
         >
-          <q-input
-            v-if="['start_from', 'due_by'].includes(field_name)"
-            v-model="new_positions[index][field_name]"
-            dense
-            filled
-            mask="####-##-##"
-            hide-bottom-space
-            :rules="[checkDate]"
-          >
-            <template #append>
-              <q-icon name="mdi-calendar" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-date
-                    v-model="new_positions[index][field_name]"
-                    minimal
-                    mask="YYYY-MM-DD"
-                  >
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
+          <q-toggle
+            v-if="
+              field_name === 'owned' ||
+              field_name === 'available' ||
+              field_name === 'disposable'
+            "
+            :model-value="new_positions[index][field_name]"
+            :disable="false"
+            @update:model-value="
+              (value) => (new_positions[index][field_name] = value)
+            "
+          />
 
-          <!--<BaseAutocompleteProduct
-            v-else-if="field_name === 'product'"
+          <BaseAutocompletePosition
+            v-else-if="field_name === 'parent'"
             dense
             :load-data="false"
-            :value="new_positions[index].product"
-            @select="new_positions[index].product = $event"
+            :value="new_positions[index].parent"
+            @select="new_positions[index].parent = $event._key"
           >
-          </BaseAutocompleteProduct>-->
+          </BaseAutocompletePosition>
 
           <q-input
             v-else
@@ -79,7 +62,6 @@
             dense
             filled
             autocomplete="false"
-            :type="field_name === 'qt_planned' ? 'number' : ''"
           >
           </q-input>
         </div>
@@ -106,6 +88,7 @@
 <script>
 import BaseModalForm from '@/components/BaseModalForm.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
+import BaseAutocompletePosition from '@/components/warehouse/position/BaseAutocompletePosition.vue';
 
 export default {
   name: 'PositionNewForm',
@@ -113,11 +96,13 @@ export default {
   components: {
     BaseModalForm,
     BaseTooltipIcon,
+    BaseAutocompletePosition,
   },
+
+  emits: ['closePosition'],
 
   data() {
     return {
-      wo_code: null,
       new_positions: [],
       show_picker: -1,
       loading: false,
@@ -136,25 +121,25 @@ export default {
         parent: {
           label: this.$t('warehouse.position.parent_position'),
           type: Object,
-          cols: 'col-3',
+          cols: 'col-4',
           initial_value: null,
         },
         owned: {
           label: this.$t('warehouse.position.owned'),
           type: Boolean,
-          cols: 'col-1',
+          cols: 'col-2',
           initial_value: true,
         },
         available: {
           label: this.$t('warehouse.position.available'),
           type: Boolean,
-          cols: 'col-1',
+          cols: 'col-2',
           initial_value: true,
         },
         disposable: {
           label: this.$t('warehouse.position.disposable'),
           type: Boolean,
-          cols: 'col-1',
+          cols: 'col-2',
           initial_value: false,
         },
       };
@@ -191,11 +176,12 @@ export default {
         .dispatch('postPositions', new_records)
         .then(() => {
           this.loading = false;
-          this.$router.back();
+          this.$emit('closePosition');
         })
         .catch((err) => {
           window.alert(err);
           this.loading = false;
+          this.$emit('closePosition');
         });
     },
 
