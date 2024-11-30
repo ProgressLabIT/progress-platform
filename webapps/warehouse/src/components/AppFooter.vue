@@ -1,6 +1,7 @@
 <template>
   <q-footer
-    class="footer footer-text"
+    class="footer footer-text bg-blue-backdrop"
+    style="min-height: 29px;"
     @click="
       (event) => {
         event.stopPropagation();
