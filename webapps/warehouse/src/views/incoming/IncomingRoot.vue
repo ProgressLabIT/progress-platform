@@ -1,9 +1,11 @@
 <template>
+  <q-page>
+
   <!-- TITLE -->
-  <div class="text-subtitle1 q-py-xl text-left" style="height: 100px">
+  <div class="text-subtitle1 q-pl-md" style="height: 100px">
     {{ $t('incoming.new') }}
   </div>
-  <div id="incoming-root" style="height: 90vh">
+  <div id="incoming-root">
     <!--      SUPPLIER SECTION    -->
     <template v-if="!selected_supplier">
       <SuppliersPage @supplier-selected="onSupplierSelected"></SuppliersPage>
@@ -74,6 +76,9 @@
       </template>
     </template>
   </div>
+
+</q-page>
+
 </template>
 
 <script>

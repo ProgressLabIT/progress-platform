@@ -1,7 +1,9 @@
 <template>
   <q-layout view="lHh lpr lFf" class="background" @click="closeFooter">
     <AppBar v-if="$q.screen.height > 400" />
-    <router-view />
+      <q-page-container>
+        <router-view />
+      </q-page-container>
     <AppFooter v-if="$q.screen.height > 400" />
   </q-layout>
 </template>
