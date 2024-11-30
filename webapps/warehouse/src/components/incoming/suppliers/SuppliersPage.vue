@@ -1,14 +1,14 @@
 <template>
   <SuppliersList @supplier-selected="onSupplierSelected"></SuppliersList>
   <q-space />
-  <div style="height: 10vh">
-    <q-btn-group style="flex-direction: column" spread stretch>
+  <div class="q-mx-md">
       <q-btn
+        size="md"
+        class="full-width"
         color="theme-blue"
         :label="$t('incoming.new')"
         @click="$emit('supplierSelected', 'none')"
       ></q-btn>
-    </q-btn-group>
   </div>
 </template>
 
