@@ -61,11 +61,6 @@
         </q-card-section>
       </q-card>
     </div>
-    <div class="row q-pa-sm display smaller">
-      <div class="col">{{ config.companyName }}</div>
-      <div style="width: 90px">{{ time }}</div>
-      <div class="col text-right">{{ date }}</div>
-    </div>
   </q-footer>
 </template>
 
@@ -75,7 +70,7 @@ import CreateContainerForm from '@/components/incoming/position/CreateContainerF
 import PrintLabelForm from '@/components/print/PrintLabelForm.vue';
 import { useConfigStore } from '../stores/config';
 
-const drawerMinHeight = 70;
+const drawerMinHeight = 30;
 const drawerTopOffset = 100;
 const drawerOpenRatioHalf = 50;
 

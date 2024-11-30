@@ -191,10 +191,10 @@ h5 {
 }
 
 .q-toolbar__title {
-  @extend .display;
-  font-size: 1.17rem !important;
-  font-weight: bold;
-  color: var(--high-white);
+  // @extend .display;
+  font-size: 1rem !important;
+  // font-weight: bold;
+  color: var(--text-low);
 }
 
 .surface-1 {
