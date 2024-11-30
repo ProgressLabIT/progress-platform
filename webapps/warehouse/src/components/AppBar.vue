@@ -3,7 +3,7 @@
     <q-toolbar>
       <!--<q-btn flat icon="mdi-menu" padding="none" @click="drawerModel = true" />-->
 
-      <q-toolbar-title shrink class="uppercase caption q-mx-sm q-mr-auto">
+      <q-toolbar-title shrink class="uppercase caption q-mx-xs q-mr-auto">
         {{ screenTitle }}
       </q-toolbar-title>
 

@@ -1,11 +1,8 @@
 <template>
-  <q-page>
+  <q-page class="full-height">
 
   <!-- TITLE -->
-  <div class="text-subtitle1 q-pl-md" style="height: 100px">
-    {{ $t('incoming.new') }}
-  </div>
-  <div id="incoming-root">
+  <div id="incoming-root" class="full-height">
     <!--      SUPPLIER SECTION    -->
     <template v-if="!selected_supplier">
       <SuppliersPage @supplier-selected="onSupplierSelected"></SuppliersPage>
@@ -13,10 +10,7 @@
 
     <!--      PRODUCT SECTION    -->
     <template v-else-if="!selected_product">
-      <q-scroll-area :visible="false" style="height: 90vh">
         <ProductsList @product-selected="onProductSelected"></ProductsList>
-      </q-scroll-area>
-      <q-space />
     </template>
 
     <template v-else>
