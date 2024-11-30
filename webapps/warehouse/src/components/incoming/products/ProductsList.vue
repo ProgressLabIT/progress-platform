@@ -1,97 +1,63 @@
 <template>
-  <div class="q-pa-md">
-    <q-table
-      flat
-      bordered
-      grid
-      :loading="loading"
-      :title="$t('incoming.products.products')"
-      :rows="rows"
-      :columns="columns"
-      row-key="_key"
-      :rows-per-page-options="[0]"
-      hide-header
-    >
-      <template #top-right>
+  <div class="q-px-md q-pt-lg column fit">
+    <div class="text-h3 uppercase col-auto text-primary">
+      Nuovo Ricevimento
+    </div>
+    <div class="row q-col-gutter-sm q-mt-md col-auto">
+      <div class="col">
         <q-input
           v-model="filter"
-          dense
+          filled
           debounce="300"
-          :placeholder="$t('incoming.products.search')"
+          :label="$t('incoming.products.search')"
+          icon="mdi-magnify"
         >
           <template #append>
             <q-icon name="mdi-magnify" />
-            <q-btn
-              v-if="false"
-              size="0.75rem"
-              icon="mdi-barcode-scan"
-              @click="show_code_scanner = true"
-            >
-            </q-btn>
           </template>
         </q-input>
-      </template>
-
-      <template #item="{ row }">
-        <div
-          class="q-pa-xs col-xs-12 col-sm-6 col-md-4 col-lg-3 grid-style-transition"
-        >
-          <q-card
-            v-ripple
-            bordered
-            flat
-            class="my-box cursor-pointer q-hoverable"
-            @click="$emit('productSelected', row)"
-          >
-            <q-card-section>
-              <div>{{ row.name }}</div>
-            </q-card-section>
-
-            <q-separator />
-            <q-list dense>
-              <!--<q-item :key="`barcode ${row._key}`">
-                <q-item-section side>
-                  <q-item-label caption>{{
-                    $t('incoming.products.barcode')
-                  }}</q-item-label>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ row.barcode }}</q-item-label>
-                </q-item-section>
-              </q-item>-->
-              <q-item :key="`code ${row._key}`">
-                <q-item-section side>
-                  <q-item-label caption>{{
-                    $t('incoming.products.code')
-                  }}</q-item-label>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ row.code }}</q-item-label>
-                </q-item-section>
-              </q-item>
-              <q-item :key="`desc ${row._key}`">
-                <q-item-section side> </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ row.description }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-card>
-        </div>
-      </template>
-
-      <template #no-data> {{ $t('incoming.products.no_data') }}</template>
-    </q-table>
+      </div>
+  <div class="col-auto">
+    <q-btn
+      size="0.75rem"
+      icon="mdi-barcode-scan"
+      @click="show_code_scanner = true"
+    >
+    </q-btn>
   </div>
+    </div>
 
-  <ModalBottomContainer
-    :show="show_code_scanner"
-    @close="show_code_scanner = false"
-  >
-    <template #content>
-      <CameraCodeScanner @scan="onScan" @load="onLoad"></CameraCodeScanner>
-    </template>
-  </ModalBottomContainer>
+    <div class="col-auto q-mt-lg uppercase text-low">
+      Risultati ({{  rows.length }})
+    </div>
+    <div class="q-mt-md col scroll q-pb-md column">
+      <q-card
+        v-for="product in rows"
+        :key="product.key"
+        bordered
+        flat
+        class="surface2 q-px-md q-py-md q-mb-sm"
+        @click="$emit('productSelected', product)">
+        <div class="text-body1">
+          {{ product.code }}
+        </div>
+        <div class="caption text-low">
+          {{  product.description }}
+        </div>
+      </q-card>
+    </div>
+
+    <q-slide-transition>
+      <ModalBottomContainer
+        :show="show_code_scanner"
+        @close="show_code_scanner = false"
+      >
+        <template #content>
+          <CameraCodeScanner @scan="onScan" @load="onLoad"></CameraCodeScanner>
+        </template>
+      </ModalBottomContainer>
+    </q-slide-transition>
+  </div>
 </template>
 
 <script>
@@ -126,7 +92,7 @@ const columns = [
   },
 ];
 
-const rows = [
+const start_rows = [
   {
     code: 'Product 1',
     _key: 'PRD 1',
@@ -162,7 +128,7 @@ export default {
     return {
       filter: ref(''),
       columns,
-      rows,
+      rows: ref(start_rows),
     };
   },
 
