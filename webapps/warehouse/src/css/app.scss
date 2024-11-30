@@ -190,6 +190,15 @@ h5 {
   text-transform: capitalize;
 }
 
+.absolute-width {
+  position: relative; /* Ensure it maintains vertical flow */
+  left: 50%;          /* Start at the middle of the screen */
+  right: 50%;         /* Offset to the other middle */
+  width: 100vw;       /* Take the full viewport width */
+  margin-left: -50vw; /* Negate the offset of `left: 50%` */
+  margin-right: -50vw; /* Negate the offset of `right: 50%` */
+}
+
 .q-toolbar__title {
   // @extend .display;
   font-size: 1rem !important;
