@@ -161,7 +161,7 @@ class Queries:
         ? LENGTH(
             // This subquery returns match true/false for each filter
             FOR advanced_filter IN NOT_NULL(@advanced_filters.filters, [])
-            FOR d IN s.data
+            FOR d IN NOT_NULL(s.data, [])
             FILTER d.custom_field_key == advanced_filter._key
             LET type = DOCUMENT(CustomField, d.custom_field_key).type
             FILTER (
