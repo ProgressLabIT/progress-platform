@@ -1,5 +1,6 @@
 from events import (
   CollaborationEvent,
+  InventoryEvent,
   ProductionActivityEvent,
   ProductionAdminEvent,
   SharedEventMethods,
@@ -11,6 +12,7 @@ import uuid
 
 class Event(
   CollaborationEvent,
+  InventoryEvent,
   ProductionActivityEvent,
   ProductionAdminEvent,
   SharedEventMethods

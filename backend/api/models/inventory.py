@@ -11,6 +11,10 @@ from models.base_models import ArangoDocument, ArangoEdge, FlexModel
 from utils.dt import timestamp
 
 
+class InventoryCommandType(str, Enum):
+  ADD_MOVEMENT = 'ADD_MOVEMENT'
+  UPDATE_MOVEMENT = 'UPDATE_MOVEMENT'
+  DELETE_MOVEMENT = 'DELETE_MOVEMENT'
 
 class InventoryGlobalConfig(ArangoDocument):
   allow_placement_different_from_planned: bool = True
@@ -120,6 +124,8 @@ class InventoryMovement(ArangoEdge): # edge collection movement
   # can be a segment of a multistep movement (to be used as graph),
   # in case material needs to be assigned a specific position in e.g. a transfer trolley with codified shelves
   # or in the future via a specific transport vehicle
+  position_from: str = Field(..., alias='_from')
+  position_to: str = Field(..., alias='_to')
   type: InventoryMovementType
 
   product_key: str
