@@ -378,6 +378,12 @@ class SerialEventManager:
            ))
 
     def delete_serial(self, soft=True):
+        delete_children = False
+        try:
+          if (self.event.info.delete_children):
+             delete_children = self.event.info.delete_children
+        except:
+           delete_children = False
         serial_key = self.serial_data.get("_key")
         allow_serial_delete = db.collection('Config').get('allow_serial_delete')
         if (allow_serial_delete == None or allow_serial_delete['value'] == False):
@@ -389,10 +395,13 @@ class SerialEventManager:
            ))
            raise SerialNotDeletedError(f'Serial {serial_key} cannot be deleted because it is not allowed by configuration')
         try:
-           if soft:
-              self.tx.collection('Serial').update(dict(_key=serial_key, deleted=True))
-           else:
-              self.tx.collection('Serial').delete(serial_key)
+           if delete_children:
+              children = [i for i in self.tx.aql.execute(Queries.GET_SERIAL_CHILDREN, bind_vars=dict(
+                 serial_id = f'Serial/{serial_key}',
+                 level = 15))]
+              for child in children:
+                 self.do_delete(serial_key=child.get("serial_key"), soft=soft)
+           self.do_delete(serial_key=serial_key, soft=soft)
            self.notify_results(dict(
               serial_key = serial_key,
               notification = SerialNotificationType.DELETED
@@ -406,6 +415,13 @@ class SerialEventManager:
               error = traceback.format_exc()
            ))
            raise SerialNotDeletedError(f'Serial {serial_key} got exception while deleting')
+
+    def do_delete(self, serial_key, soft):
+       if soft:
+          self.tx.collection('Serial').update(dict(_key=serial_key, deleted=True))
+       else:
+          self.tx.collection('Serial').delete(serial_key)
+       self.tx.collection('contains').delete_match(filters=dict(_from=f'Serial/{serial_key}'))
 
 
     def ensure_quanty(self):

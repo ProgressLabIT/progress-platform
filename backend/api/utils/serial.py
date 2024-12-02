@@ -65,7 +65,7 @@ class Queries:
 
   GET_SERIAL_CHILDREN = """
       LET start = @serial_id
-        FOR v, e IN 1..1 OUTBOUND start contains
+        FOR v, e IN 1..@level OUTBOUND start contains
             LET product = DOCUMENT(Product, v.product_key)
             RETURN merge({
                 serial_key: v._key,

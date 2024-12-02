@@ -93,3 +93,4 @@ class EventModel(ArangoDocument):
   serial_data: Any | None = None
   batch_serials: Set[str] | None = None # prevent duplicated entries from client
   serial_link_data: list[SerialLink] | None = None
+  delete_children: bool | None = False

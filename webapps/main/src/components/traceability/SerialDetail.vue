@@ -190,12 +190,11 @@ export default {
   methods: {
     exit() {
       if (this.$route.query.back_to) {
-        let query = { ...this.$route.query }
+        let query = { ...this.$route.query };
         delete query.back_to;
         this.$router.push({ name: this.$route.query.back_to, query });
-      }
-      else {
-        this.$router.back()
+      } else {
+        this.$router.back();
       }
     },
 
@@ -379,15 +378,26 @@ export default {
           cancel: true,
           title: this.$t('serial_delete_confirm_title'),
           message: this.$t('serial_delete_confirm_question'),
+          options: {
+            type: 'toggle',
+            modelValue: '',
+            // inline: true
+            items: [
+              {
+                label: this.$t('serial_delete_also_children'),
+                value: 'delete_children',
+              },
+            ],
+          },
         })
-        .onOk(() => {
+        .onOk((delete_children) => {
           const user = this.session_data.user._key;
-
           const event = {
             event_type: 'SERIAL_DELETED',
             user_key: user,
             user_session_key: this.session_data.session_key,
             timestamp: timestamp(),
+            delete_children: delete_children,
             serial_data: {
               _key: this.serial._key,
             },

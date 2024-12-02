@@ -953,10 +953,11 @@ export default {
     },
   },
   serial_autocomplete_hint:
-    'Inserisci il testo da ricercare (min {minChars} caratteri) fra i seriali. Verranno mostrati i primi 100 risultati.',
-  serial_delete_confirm_title: 'Cancella seriale',
+    'Inserisci il testo da ricercare (min {minChars} caratteri) fra le matricole. Verranno mostrati i primi 100 risultati.',
+  serial_delete_confirm_title: 'Cancella matricola',
   serial_delete_confirm_question:
-    'Sei sicuro di voler cancellare questo seriale?',
+    'Sei sicuro di voler cancellare questa matricola?',
+  serial_delete_also_children: 'Cancella anche le matricole contenute',
   serials_declared: 'matricole collegate',
   serial_edit_reason: 'Motivo della modifica',
   batch_declare_component_serials:

@@ -939,6 +939,7 @@ export default {
     'Input the text to search (min {minChars} characters) between serials. Will show first 100 results.',
   serial_delete_confirm_title: 'Delete serial',
   serial_delete_confirm_question: 'Do you want to delete this serial?',
+  serial_delete_also_children: 'Delete also contained serials',
   serial_edit_reason: 'Reason for changing',
   load_more: 'load more',
   serials_declared: 'serials declared',

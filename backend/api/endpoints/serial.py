@@ -75,7 +75,8 @@ def get_serial_childs(
 ):
   try:
     bind_vars = dict(
-      serial_id = f'Serial/{serial_key}'
+      serial_id = f'Serial/{serial_key}',
+      level = 1
     )
     cursor = db.aql.execute(Queries.GET_SERIAL_CHILDREN, bind_vars=bind_vars)
     return [i for i in cursor]
