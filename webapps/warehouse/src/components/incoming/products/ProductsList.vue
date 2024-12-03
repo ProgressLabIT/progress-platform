@@ -8,6 +8,7 @@
         <q-input
           v-model="filter"
           filled
+          autofocus
           debounce="300"
           :label="$t('incoming.products.search')"
           icon="mdi-magnify"
@@ -19,6 +20,8 @@
       </div>
   <div class="col-auto">
     <q-btn
+      class="full-height"
+      color="primary"
       size="0.75rem"
       icon="mdi-barcode-scan"
       @click="show_code_scanner = true"
