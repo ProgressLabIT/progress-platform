@@ -58,13 +58,13 @@
   <div class="fit row justify-center items-start content-center">
     <q-btn
       color="theme-blue"
-      :label="$t('incoming.confirm_and_close')"
+      :label="$t('confirm_and_close')"
       class="col-12"
       @click="$emit('positionConfirmed', 'true')"
     ></q-btn>
     <q-btn
       color="theme-blue"
-      :label="$t('incoming.confirm_and_start_again')"
+      :label="$t('confirm_and_start_again')"
       class="col-12"
       @click="$emit('positionConfirmed', 'false')"
     ></q-btn>

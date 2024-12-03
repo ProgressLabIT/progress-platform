@@ -8,7 +8,8 @@ from models.collaboration import Message
 from models.form import FormFieldValue
 from models.base_models import ArangoDocument
 from utils.dt import timestamp
-from models.serial import SerialSelection, SerialLink
+from models.serial import SerialLink
+from models.inventory import InventoryMovementEvent
 
 class EventType(str, Enum):
   # Production Events
@@ -45,8 +46,12 @@ class EventType(str, Enum):
   SERIAL_CREATED = 'SERIAL_CREATED'
   SERIAL_UPDATED = 'SERIAL_UPDATED'
   SERIAL_DELETED = 'SERIAL_DELETED'
-
   SERIAL_LINKED = 'SERIAL_LINKED'
+
+  #Inventory Events
+  ADD_MOVEMENT = 'ADD_MOVEMENT'
+  UPDATE_MOVEMENT = 'UPDATE_MOVEMENT'
+  DELETE_MOVEMENT = 'DELETE_MOVEMENT'
 
 
 class EventModel(ArangoDocument):
@@ -94,3 +99,9 @@ class EventModel(ArangoDocument):
   batch_serials: Set[str] | None = None # prevent duplicated entries from client
   serial_link_data: list[SerialLink] | None = None
   delete_children: bool | None = False
+
+  # Inventory fields
+  movements: list[InventoryMovementEvent] | None = None
+  movement_key: str | None = None
+  supplier_key: Any | None = None
+

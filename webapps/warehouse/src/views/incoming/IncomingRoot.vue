@@ -79,8 +79,10 @@
 import ProductsList from '@/components/incoming/products/ProductsList.vue';
 import QuantitySelectionPage from '@/components/incoming/quantity/QuantitySelectionPage.vue';
 import SuppliersPage from '@/components/incoming/suppliers/SuppliersPage.vue';
+import sendEvent from '@/mixins/event.js';
 import ConfirmPositionsPage from 'app/src/components/incoming/position/ConfirmPositionsPage.vue';
 import PositionsPage from 'app/src/components/incoming/position/PositionsPage.vue';
+import { timestamp } from '/src/lib/TimeHandling.js';
 
 export default {
   name: 'IncomingRoot',
@@ -93,12 +95,15 @@ export default {
     ConfirmPositionsPage,
   },
 
+  mixins: [sendEvent],
+
   data() {
     return {
       selected_supplier: null,
       selected_product: null,
       selected_quantity: 0,
       selected_positions: null,
+      selected_position_keys: null,
     };
   },
 
@@ -144,14 +149,35 @@ export default {
     },
 
     onPositionConfirmed(exit) {
-      //TODO: do something
+      let movements = [];
+      const session_data = this.$store.state.session;
+      for (const position of this.selected_positions) {
+        movements.push({
+          position_from: 'Position/IN',
+          position_to: `Position/${position._key}`,
+          product_key: this.selected_product._key,
+          qt_planned: position.quantity,
+          qt_confirmed: position.quantity,
+          status: 'completed',
+          type: 'receipt',
+          user_key: session_data.user._key,
+          start: timestamp(),
+          end: timestamp(),
+        });
+      }
+      this.sendEvent({
+        event_type: 'ADD_MOVEMENT',
+        event_data: {
+          movements: movements,
+        },
+      });
       if (!exit) {
         this.clear();
       }
     },
 
     clear() {
-      this.selected_product = null;
+      this.selected_supplier = null;
       this.selected_product = null;
       this.selected_positions = null;
       this.selected_quantity = 0;

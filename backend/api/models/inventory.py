@@ -16,6 +16,14 @@ class InventoryCommandType(str, Enum):
   UPDATE_MOVEMENT = 'UPDATE_MOVEMENT'
   DELETE_MOVEMENT = 'DELETE_MOVEMENT'
 
+class InventoryNotificationType(str, Enum):
+  ERROR = 'ERROR'
+  MOVEMENT_ADDED = 'MOVEMENT_ADDED'
+
+
+class InventoryNotificationErrorCode(str, Enum):
+  EXCEPTION = 'EXCEPTION'
+
 class InventoryGlobalConfig(ArangoDocument):
   allow_placement_different_from_planned: bool = True
   allow_mission_closing_with_unstarted_movements: bool = False # started movements must be completed
@@ -119,7 +127,6 @@ class InventoryMovementType(str, Enum):
   CONSUMPTION = 'consumption'
   ADJUSTMENT = 'adjustment'
 
-
 class InventoryMovement(ArangoEdge): # edge collection movement
   # can be a segment of a multistep movement (to be used as graph),
   # in case material needs to be assigned a specific position in e.g. a transfer trolley with codified shelves
@@ -170,6 +177,8 @@ class InventoryMovement(ArangoEdge): # edge collection movement
 
     return self
 
+class InventoryMovementEvent(InventoryMovement):
+  quantity: float | None = None
 
 class InventoryMovementSearchParameters(BaseModel):
   movement_type: InventoryMovementType | None = None

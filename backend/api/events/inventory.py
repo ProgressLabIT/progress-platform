@@ -4,7 +4,7 @@ from managers.inventoy_event_manager import InventoryEventManager
 from models.inventory import InventoryCommandType
 
 class InventoryEvent(BaseEvent):
-  inventory_collections = []
+  inventory_collections = ['InventoryMovement', 'is_in_position']
 
   ADD_MOVEMENT = EventMeta(
     collections=inventory_collections,
