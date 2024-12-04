@@ -1011,5 +1011,19 @@ export default {
       position_delete_confirm_question:
         'Sei sicuro di voler cancellare questa posizione?',
     },
+    movement: {
+      product_code: 'Codice Prodotto',
+      position_from_code: 'Da Posizione',
+      position_to_code: 'A Posizione',
+      qt_planned: 'Quantità pianificata',
+      qt_confirmed: 'Quantità confermata',
+      start_from: 'Inizio Da',
+      start_to: 'Inizio A',
+      end_from: 'Fine Da',
+      end_to: 'Fine A',
+      through_position_code: 'Attraverso la posizione',
+      movement_type: 'Tipo di movimento',
+      status: 'Stato',
+    },
   },
 };

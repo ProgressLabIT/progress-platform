@@ -78,6 +78,21 @@
         }
       "
     ></position-filter>
+
+    <movement-filter
+      v-if="$route.name === 'movements'"
+      :show-filter-drawer="showFilterDrawer"
+      @show-filter-drawer="
+        (showFilter) => {
+          showFilterDrawer = showFilter;
+        }
+      "
+      @filter-active-change="
+        (filtersActive) => {
+          filtersActiveNo = filtersActive;
+        }
+      "
+    ></movement-filter>
   </q-page-container>
 
   <PositionNewForm
@@ -89,6 +104,7 @@
 </template>
 
 <script>
+import MovementFilter from '@/components/warehouse/movement/MovementFilter.vue';
 import PositionFilter from '@/components/warehouse/position/PositionFilter.vue';
 import PositionNewForm from 'app/src/components/warehouse/position/PositionNewForm.vue';
 
@@ -107,6 +123,7 @@ export default {
   components: {
     PositionFilter,
     PositionNewForm,
+    MovementFilter,
   },
 
   data() {

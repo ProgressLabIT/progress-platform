@@ -1,10 +1,10 @@
 <template>
   <div ref="container" class="q-px-sm q-pt-sm full-height">
     <q-table
-      id="position_list"
+      id="movement_list"
       v-model:pagination="pagination"
       :columns="columns"
-      :rows="position_list"
+      :rows="movement_list"
       row-key="_key"
       :loading="loading"
       color="primary"
@@ -19,8 +19,8 @@
       :virtual-scroll-item-size="48"
       :virtual-scroll-sticky-size-start="48"
       :rows-per-page-options="[0]"
-      @virtual-scroll="addPositions"
-      @request="reloadPositions"
+      @virtual-scroll="addMovements"
+      @request="reloadMovements"
     >
       <template #body="props">
         <q-tr
@@ -28,11 +28,13 @@
           :key="props.row._key"
           :props="props"
           :style="props.row.closed ? 'opacity: .5' : ''"
-          @dblclick="showPositionDetails(props.row._key)"
+          @dblclick="showMovementDetails(props.row._key)"
         >
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
-              <template v-if="['created', 'closed'].includes(column.name)">
+              <template
+                v-if="['created', 'start', 'end'].includes(column.name)"
+              >
                 {{
                   props.row[column.name] === null
                     ? '-'
@@ -49,7 +51,7 @@
       </template>
     </q-table>
 
-    <!-- POSITION DETAIL -->
+    <!-- MOVEMENT DETAIL -->
     <router-view />
   </div>
 </template>
@@ -59,7 +61,7 @@ import { ref } from 'vue';
 import queryModel from '@/lib/queryModelFactory.js';
 
 export default {
-  name: 'PositionsRoot',
+  name: 'MovementsRoot',
 
   setup() {
     const pagination = ref({
@@ -84,36 +86,48 @@ export default {
       offset: 0,
 
       filter_list: [
-        'search',
-        'is_in_position',
-        'contains_position',
-        'created_min',
-        'created_max',
+        'product_code',
+        'through_position_code',
+
+        'movement_type',
+        'movement_status',
+
+        'start_from',
+        'start_to',
+        'end_from',
+        'end_to',
       ],
       bool_filters: [],
     };
   },
 
   computed: {
-    search_string: queryModel(String, 'search', null),
-    is_in_position: queryModel(String, 'is_in_position', null),
-    contains_position: queryModel(String, 'contains_position', null),
+    product_code: queryModel(String, 'product_code', null),
+    through_position_code: queryModel(String, 'through_position_code', null),
 
-    created_min: queryModel(String, 'created_min', null),
-    created_max: queryModel(String, 'created_max', null),
+    movement_type: queryModel(String, 'movement_type', null),
+    movement_status: queryModel(String, 'movement_status', null),
+
+    start_from: queryModel(String, 'start_from', null),
+    start_to: queryModel(String, 'start_to', null),
+    end_from: queryModel(String, 'end_from', null),
+    end_to: queryModel(String, 'end_to', null),
 
     filters() {
       return {
-        search: this.search_string,
-        is_in_position: this.is_in_position,
-        contains_position: this.contains_position,
-        created_min: this.created_min,
-        created_max: this.created_max,
+        product_code: this.product_code,
+        through_position_code: this.through_position_code,
+        movement_type: this.movement_type,
+        movement_status: this.movement_status,
+        start_from: this.start_from,
+        start_to: this.start_to,
+        end_from: this.end_from,
+        end_to: this.end_to,
       };
     },
 
-    position_list() {
-      return this.$store.state.warehouse.positions;
+    movement_list() {
+      return this.$store.state.warehouse.movements;
     },
 
     columns() {
@@ -127,34 +141,58 @@ export default {
           style: 'max-width: 10vw',
         },
         {
-          name: 'code',
-          field: 'code',
+          name: 'type',
+          field: 'type',
           sortable: true,
-          label: this.$t('code').toUpperCase(),
+          label: this.$t('type').toUpperCase(),
           align: 'left',
           style: 'max-width: 10vw',
         },
         {
-          name: 'owned',
-          field: 'owned',
+          name: 'status',
+          field: 'status',
           sortable: true,
-          label: this.$t('owned').toUpperCase(),
+          label: this.$t('status').toUpperCase(),
           align: 'left',
           style: 'max-width: 10vw',
         },
         {
-          name: 'available',
-          field: 'available',
+          name: 'product_code',
+          field: 'product_code',
           sortable: true,
-          label: this.$t('available').toUpperCase(),
+          label: this.$t('warehouse.movement.product_code').toUpperCase(),
           align: 'left',
           style: 'max-width: 10vw',
         },
         {
-          name: 'disposable',
-          field: 'disposable',
+          name: 'position_from_code',
+          field: 'position_from_code',
           sortable: true,
-          label: this.$t('disposable').toUpperCase(),
+          label: this.$t('warehouse.movement.position_from_code').toUpperCase(),
+          align: 'left',
+          style: 'max-width: 10vw',
+        },
+        {
+          name: 'position_to_code',
+          field: 'position_to_code',
+          sortable: true,
+          label: this.$t('warehouse.movement.position_to_code').toUpperCase(),
+          align: 'left',
+          style: 'max-width: 10vw',
+        },
+        {
+          name: 'qt_planned',
+          field: 'qt_planned',
+          sortable: true,
+          label: this.$t('warehouse.movement.qt_planned').toUpperCase(),
+          align: 'left',
+          style: 'max-width: 10vw',
+        },
+        {
+          name: 'qt_confirmed',
+          field: 'qt_confirmed',
+          sortable: true,
+          label: this.$t('warehouse.movement.qt_confirmed').toUpperCase(),
           align: 'left',
           style: 'max-width: 10vw',
         },
@@ -166,6 +204,22 @@ export default {
           label: this.$t('creation_date').toUpperCase(),
           style: 'max-width: 5vw',
         },
+        {
+          name: 'start',
+          field: 'start',
+          sortable: true,
+          align: 'right',
+          label: this.$t('start_date').toUpperCase(),
+          style: 'max-width: 5vw',
+        },
+        {
+          name: 'end',
+          field: 'end',
+          sortable: true,
+          align: 'right',
+          label: this.$t('end_date').toUpperCase(),
+          style: 'max-width: 5vw',
+        },
       ];
     },
   },
@@ -173,12 +227,12 @@ export default {
   watch: {
     filters: {
       deep: true,
-      handler: 'getPositions',
+      handler: 'getMovements',
     },
   },
 
   created() {
-    this.getPositions();
+    this.getMovements();
     let eventURL =
       this.$api.defaults.baseURL + '/notification/inventory-notification';
     this.events = new EventSource(eventURL, {
@@ -197,30 +251,30 @@ export default {
 
   methods: {
     handleMessage(message) {
-      this.refreshPositions();
+      this.refreshMovements();
       let event = JSON.parse(message.data);
       if (event.notification === 'ERROR') {
         this.$q.notify({
           message: this.getErrorMessage(event.error_code, event.error),
           color: 'theme-red',
           timeout: 1500,
-          position: 'top',
+          movement: 'top',
         });
       }
     },
 
-    refreshPositions() {
-      this.getPositions();
+    refreshMovements() {
+      this.getMovements();
     },
 
-    getPositions() {
-      this.reloadPositions({ pagination: this.pagination });
+    getMovements() {
+      this.reloadMovements({ pagination: this.pagination });
     },
 
-    showPositionDetails(positionKey) {
+    showMovementDetails(movementKey) {
       const to_route = {
-        name: 'positionDetail',
-        params: { positionKey },
+        name: 'movementDetail',
+        params: { movementKey },
         query: {
           back_to: this.$route.name,
           ...this.$route.query,
@@ -229,14 +283,14 @@ export default {
       this.$router.push(to_route);
     },
 
-    reloadPositions(data) {
+    reloadMovements(data) {
       const { sortBy, descending } = data.pagination ?? {};
 
       this.sort_by = sortBy;
       this.sorting_order = descending ? 'desc' : 'asc';
       this.loading = true;
       this.$store
-        .dispatch('getPositions', {
+        .dispatch('getMovements', {
           ...this.filters,
           limit: this.offset + this.limit,
           offset: 0,
@@ -251,17 +305,17 @@ export default {
     },
 
     hasMore() {
-      return this.limit + this.offset <= this.$store.getters.getPositionCount();
+      return this.limit + this.offset <= this.$store.getters.getMovementCount();
     },
 
-    addPositions(data) {
-      const lastIndex = this.$store.getters.getPositionCount() - 1;
+    addMovements(data) {
+      const lastIndex = this.$store.getters.getMovementCount() - 1;
 
       if (this.loading !== true && data.to === lastIndex && this.hasMore()) {
         this.offset += this.limit;
         this.loading = true;
         this.$store
-          .dispatch('appendPositions', {
+          .dispatch('appendMovements', {
             ...this.filters,
             filter_unreleased: true,
             offset: this.offset,
@@ -280,7 +334,7 @@ export default {
 </script>
 
 <style lang="sass">
-#position_list
+#movement_list
   & th
     font-weight: bold
     color: var(--text-low)
@@ -296,7 +350,7 @@ export default {
     background-color: var(--bg-color)
 
   thead
-    position: sticky
+    movement: sticky
     z-index: 1
     top: 0
 </style>

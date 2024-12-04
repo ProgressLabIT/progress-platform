@@ -7,6 +7,8 @@ const warehouse = {
     temp_print_templates: [],
     saved_print_templates: [],
     position_search_params: undefined,
+    movements: [],
+    movement_search_params: undefined,
   },
 
   getters: {
@@ -16,8 +18,16 @@ const warehouse = {
     getPositionData: (state) => (position_key) => {
       return state.positions.find((i) => i._key == position_key);
     },
+
+    getMovementCount: (state) => () => {
+      return state.movements.length;
+    },
+    getMovementData: (state) => (movement_key) => {
+      return state.movements.find((i) => i._key == movement_key);
+    },
   },
   mutations: {
+    // POSITION
     LOAD_POSITIONS(state, positions) {
       state.positions = positions;
     },
@@ -30,11 +40,11 @@ const warehouse = {
         state.positions = positions;
       }
     },
-
     SET_POSITION_SEARCH_PARAMS(state, params) {
       state.position_search_params = params;
     },
 
+    // POSITION PRINT LABEL
     ADD_TEMP_LABEL_PRINT_TEMPLATE(state, template) {
       state.temp_print_templates.push({ ...template, temp: true });
     },
@@ -52,9 +62,27 @@ const warehouse = {
       state.temp_print_templates = [];
       state.saved_print_templates = [];
     },
+
+    // MOVEMENT
+    LOAD_MOVEMENTS(state, movements) {
+      state.movements = movements;
+    },
+    APPEND_MOVEMENTS(state, movements) {
+      if (state.movements) {
+        for (const movement of movements) {
+          state.movements.push(movement);
+        }
+      } else {
+        state.movements = movements;
+      }
+    },
+    SET_MOVEMENT_SEARCH_PARAMS(state, params) {
+      state.movement_search_params = params;
+    },
   },
 
   actions: {
+    // POSITIONS
     async getPositions({ commit }, search_params) {
       const { data } = await api.get('position', { params: search_params });
       commit('LOAD_POSITIONS', data);
@@ -73,6 +101,8 @@ const warehouse = {
       );
       await dispatch('getPositions', state.position_search_params);
     },
+
+    // PRINT LABELS
 
     loadPrintLabelTemplates({ commit }) {
       api
@@ -119,6 +149,19 @@ const warehouse = {
             });
         });
       }
+    },
+
+    // MOVEMENTS
+    async getMovements({ commit }, search_params) {
+      const { data } = await api.get('movement', { params: search_params });
+      commit('LOAD_MOVEMENTS', data);
+      commit('SET_MOVEMENT_SEARCH_PARAMS', search_params);
+    },
+
+    async appendMovements({ commit }, search_params) {
+      const { data } = await api.get('movement', { params: search_params });
+      commit('APPEND_MOVEMENTS', data);
+      commit('SET_MOVEMENT_SEARCH_PARAMS', search_params);
     },
   },
 };

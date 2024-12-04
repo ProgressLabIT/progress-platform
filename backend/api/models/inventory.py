@@ -196,8 +196,13 @@ class InventoryMovementSearchParameters(BaseModel):
   mission_code: str | None = None
   movement_doc: str | None = None
   source_doc: str | None = None
-  through_position_key: str | None = None
+  through_position_key: str | None = 'Position/IN'
   through_position_code: str | None = None
   include_child_positions: bool | None = True
   limit: int | None = 500
   offset: int | None = 0
+
+class InventoryMovementSearchResults(InventoryMovement):
+  position_from_code: str | None = None
+  position_to_code: str | None = None
+  product_code: str | None = None

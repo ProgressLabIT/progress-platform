@@ -67,7 +67,7 @@ class Queries:
             FOR p IN Position
             FILTER
               p._key IN m.route
-              AND @p.code == @through_position_code
+              AND p.code == @through_position_code
             RETURN 1
           )
           OR (
@@ -86,9 +86,34 @@ class Queries:
         : true
       )
 
+    // PRODUCT
+    let product = FIRST(
+        FOR product IN Product
+        FILTER product._key == m.product_key
+        RETURN product
+    )
+
+    // POSITION_FROM
+    let position_from = FIRST(
+        FOR position IN Position
+        FILTER position._id == m._from
+        RETURN position
+    )
+
+    // POSITION_TO
+    let position_to = FIRST(
+        FOR position IN Position
+        FILTER position._id == m._to
+        RETURN position
+    )
+
     LIMIT @offset, @limit || null
 
-    RETURN m
+    RETURN MERGE(m, {
+      product_code: product.code,
+      position_from_code: position_from.code,
+      position_to_code: position_to.code
+    })
   """
 
 

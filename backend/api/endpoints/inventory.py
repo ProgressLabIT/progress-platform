@@ -155,7 +155,7 @@ def search_inventory_journal(params: Annotated[InventoryMovementSearchParameters
   try:
     bind_vars = dict(**params.model_dump())
     results = db.aql.execute(Queries.SEARCH_MOVEMENTS, bind_vars=bind_vars)
-    return [InventoryMovement(**m) for m in results]
+    return [InventoryMovementSearchResults(**m) for m in results]
 
   except Exception as e:
     return HTTPException(
@@ -164,19 +164,19 @@ def search_inventory_journal(params: Annotated[InventoryMovementSearchParameters
     )
 
 
-@router.post('/movement',
-    dependencies=[Depends(auth.verify_token)])
-async def create_movements(new_movements: list[InventoryMovement]):
-  try:
-    prepped = [model_to_db_dict(m) for m in new_movements]
-    db.collection('InventoryMovement').insert_many(prepped)
-
-    return APIResponse(message="Positions created successfully")
-  except Exception as e:
-    return HTTPException(
-      status_code=500,
-      detail=traceback.format_exc()
-    )
+#@router.post('/movement',
+#    dependencies=[Depends(auth.verify_token)])
+#async def create_movements(new_movements: list[InventoryMovement]):
+#  try:
+#    prepped = [model_to_db_dict(m) for m in new_movements]
+#    db.collection('InventoryMovement').insert_many(prepped)
+#
+#    return APIResponse(message="Positions created successfully")
+#  except Exception as e:
+#    return HTTPException(
+#      status_code=500,
+#      detail=traceback.format_exc()
+#    )
 
 # ===============================================
 # MISSIONS

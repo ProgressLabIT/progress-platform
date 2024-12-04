@@ -41,7 +41,7 @@ const warehouseRoutes = [
           {
             path: 'movements',
             name: 'movements',
-            component: () => import('@/views/settings/GeneralSettings.vue'),
+            component: () => import('@/views/warehouse/movements/MovementsRoot.vue'),
             children: [],
           },
         ],
