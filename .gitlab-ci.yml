@@ -148,7 +148,7 @@ build:workflow:
     - docker push $WF_SYS_AGENT_IMAGE:latest
     - docker push $WF_SYS_AGENT_IMAGE:$TIMESTAMP
 
-build:webapp:
+build:webapp-dev:
   stage: build
   only:
     refs:
