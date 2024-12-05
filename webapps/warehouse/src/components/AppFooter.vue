@@ -90,11 +90,11 @@ export default {
   data() {
     return {
       tab_routes: {
-        warehouseRoot: 'mdi-home',
-        incomingRoot: 'mdi-import',
-        transferingRoot: 'mdi-swap-vertical',
-        shipmentRoot: 'mdi-export',
-        inventoryRoot: 'mdi-warehouse',
+        WarehouseRoot: 'mdi-home',
+        IncomingRoot: 'mdi-import',
+        TransfersRoot: 'mdi-swap-vertical',
+        ShipmentsRoot: 'mdi-export',
+        InventoryRoot: 'mdi-warehouse',
       },
       show_print_label: false,
       show_create_container: false,

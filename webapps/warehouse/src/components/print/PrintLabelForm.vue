@@ -10,6 +10,7 @@
         label-style="font-size: 1.1em"
       />
     </template>
+
     <!-- SELECT TEMPLATE -->
     <template v-else-if="stage === 'select_template'">
       <q-list bordered separator>
@@ -54,7 +55,7 @@
             color="theme-blue"
             :label="$t('next')"
             class="col-6"
-            @click="selectCopies()"
+            @click="selectPrinter(null)"
           ></q-btn>
         </div>
       </div>
@@ -95,6 +96,7 @@
 </template>
 
 <script>
+import { exportFile } from 'quasar';
 import { generate } from '@pdfme/generator';
 import BrowserPrint, { Printer } from 'browserprint-es';
 import QuantitySelector from '@/components/QuantitySelector.vue';
@@ -105,18 +107,18 @@ export default {
   components: { QuantitySelector },
 
   props: {
-    product: {
-      type: Object,
-      default: undefined,
-    },
-    supplier: {
-      type: Object,
-      default: undefined,
-    },
-    containers: {
-      type: Object,
-      default: undefined,
-    },
+    // product: {
+    //   type: Object,
+    //   default: undefined,
+    // },
+    // supplier: {
+    //   type: Object,
+    //   default: undefined,
+    // },
+    // containers: {
+    //   type: Object,
+    //   default: undefined,
+    // },
     print_templates: {
       type: Object,
       required: true,
@@ -221,12 +223,12 @@ export default {
       this.selected_printers = printer;
       this.loading_label = 'printing';
       let template = this.selected_template.template;
-      let inputs = this.prepareInputs();
 
-      generate({ template, inputs }).then(
+      generate({ template, inputs: this.prepareInputs() }).then(
         (data) => {
+          exportFile('test-no-mime.pdf', new Blob([data], { type: 'application/pdf' }))
           //() => {
-          printer.device.sendFile(new Blob([data]));
+          // printer.device.sendFile(new Blob([data]));
           //printer.device.sendAsync("^XA^FO200,200^A0N36,36^FDTest Label^FS^XZ");
           this.loading_label = undefined;
           setTimeout(() => {

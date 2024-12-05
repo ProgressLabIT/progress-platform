@@ -1,109 +1,54 @@
 <template>
-  <div ref="qtyarea" class="q-pa-md row justify-center">
+  <div ref="qtyarea">
     <q-card
       v-touch-repeat.mouse="handleRepeat"
-      class="custom-area cursor-pointer bg-primary text-white shadow-2 relative-position row flex-center"
+      outline
+      flat
+      class="cursor-pointer row justify-center q-py-md"
       :style="selector_style"
     >
-      <div class="text-center">{{ quantity }}</div>
+      <q-icon class="absolute-right" color="theme-blue" name="mdi-plus" size="80px" style="opacity: .3"/>
+      <q-icon class="absolute-left" color="theme-blue" name="mdi-minus" size="80px" style="opacity: .3"/>
+      <div class="col-auto ">
+        <q-input v-model="quantity" borderless input-class="text-center text-h1"/>
+      </div>
     </q-card>
-    <q-space />
-  </div>
-  <div class="fit row justify-center items-start content-center">
-    <template v-if="show_buttons">
-      <q-btn
-        color="theme-blue"
-        :label="$t('incoming.quantity.div10')"
-        class="col-3"
-        @click="divideQty"
-      ></q-btn>
-      <q-btn
-        color="theme-blue"
-        :label="$t('incoming.quantity.min10')"
-        class="col-3"
-        @click="quantity = quantity > 10 ? quantity - 10 : 0"
-      ></q-btn>
-      <q-btn
-        color="theme-blue"
-        :label="$t('incoming.quantity.plus10')"
-        class="col-3"
-        @click="quantity = quantity + 10"
-      ></q-btn>
-      <q-btn
-        color="theme-blue"
-        :label="$t('incoming.quantity.mul10')"
-        class="col-3"
-        @click="quantity = quantity * 10"
-      ></q-btn>
-      <q-space />
-    </template>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'QuantitySelector',
+<script setup>
+import { useTemplateRef } from 'vue';
 
-  props: {
-    initial_qty: {
-      type: Number,
-      default: 0,
-    },
-    show_buttons: {
-      type: Boolean,
-      default: false,
-    },
-    selector_style: {
-      type: String,
-      default: '',
-    },
+const { selector_style } = defineProps({
+  selector_style: {
+    type: String,
+    default: '',
   },
+})
 
-  emits: ['quantityChanged'],
+const quantity = defineModel({ type: Number })
 
-  data() {
-    return {
-      quantity: 0,
-    };
-  },
+const quantityArea = useTemplateRef('qtyarea')
 
-  watch: {
-    quantity: {
-      handler() {
-        this.$emit('quantityChanged', this.quantity);
-      },
-    },
-  },
 
-  mounted() {
-    this.quantity = this.initial_qty;
-  },
+function isTouchUpRight(touchPosition) {
+  // Quantity Area top-left/bottom-right diagonal: y = ax + b
+  // with y = top, x = left, b = rect.top (origin y)
+  const rect = quantityArea.value.getBoundingClientRect();
+  const a = rect.height / rect.width
+  const b = rect.top - rect.left * a
+  // y < ax + b
+  return touchPosition.top < a * touchPosition.left + b
+}
 
-  methods: {
-    handleRepeat(info) {
-      let qtyRect = this.$refs.qtyarea.getBoundingClientRect();
-      if (info.position.left > qtyRect.x + qtyRect.width / 2) {
-        this.quantity++;
-      } else if (this.quantity > 0) {
-        this.quantity--;
-      }
-    },
-
-    divideQty() {
-      if (this.quantity <= 0) {
-        this.quantity = 0;
-      } else {
-        this.quantity = Math.floor(this.quantity / 10);
-      }
-    },
-  },
-};
+function handleRepeat(info) {
+  if (isTouchUpRight(info.position)) {
+    quantity.value++;
+  } else if (quantity.value > 0) {
+    quantity.value--;
+  }
+}
 </script>
 
 <style lang="sass" scoped>
-.custom-area
-  width: 96%
-  height: 250px
-  border-radius: 3px
-  padding: 8px
 </style>

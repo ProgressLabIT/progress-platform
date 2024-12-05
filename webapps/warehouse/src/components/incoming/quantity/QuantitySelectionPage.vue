@@ -2,50 +2,104 @@
   <div v-if="loading">
     {{ $t('incoming.quantity.loading') }}
   </div>
-  <div v-else class="q-pa-md">
-    <div class="text-subtitle1 text-center">
-      {{ $t('incoming.quantity.title') }}
+  <div v-else class="col column q-mt-xl q-pb-md">
+
+    <!-- ITEM CODE & DESCRIPTION -->
+    <div class="col-auto">
+      <div class="text-h6 q-mb-sm">
+        PRODOTTO
+      </div>
+      <div class="text-h1">
+        {{ incoming.product.code }}
+      </div>
+      <div class="text-body1 q-mt-xs">
+        {{ incoming.product.description }}
+      </div>
     </div>
-    <div style="height: 5vh">
-      <div>
-        <div>
-          {{ product.name }}
+
+    <!-- QUANTITY -->
+    <div class="col-4 q-mt-xl">
+      <div class="text-h6 q-mb-md">
+        QUANTITÀ
+      </div>
+
+      <QuantitySelector v-model="incoming.quantity" />
+
+      <!-- ±10/100 -->
+      <div class="full-width row q-mt-md">
+        <div class="col">
+          <q-btn
+            color="theme-blue"
+            outline
+            label="-10"
+            size="lg"
+            class="full-width"
+            @click="updateQuantity(-10)"
+          />
         </div>
-        <div>
-          {{ supplier.name }}
+        <div class="q-mx-xs"></div>
+        <div class="col">
+          <q-btn
+            color="theme-blue"
+            outline
+            label="+10"
+            size="lg"
+            class="full-width"
+            @click="updateQuantity(10)"
+          />
+        </div>
+      </div>
+      <div class="full-width row q-mt-md">
+        <div class="col">
+          <q-btn
+            color="theme-blue"
+            outline
+            label="-100"
+            size="lg"
+            class="full-width"
+            @click="updateQuantity(-100)"
+          />
+        </div>
+        <div class="q-mx-xs"></div>
+        <div class="col">
+          <q-btn
+            color="theme-blue"
+            outline
+            label="+100"
+            size="lg"
+            class="full-width"
+            @click="updateQuantity(100)"
+          />
         </div>
       </div>
     </div>
-    <div style="height: 35vh">
-      <QuantitySelector
-        :initial_qty="0"
-        :show_buttons="true"
-        @quantity-changed="
-          (qt) => {
-            quantity = qt;
-          }
-        "
-      ></QuantitySelector>
-    </div>
-    <div style="height: 40vh">
-      <div class="fit row justify-center items-start content-center">
+
+    <!-- NAVIGATION -->
+    <q-space></q-space>
+    <div class="col-auto">
+      <div class="row full-width q-gutter-y-md">
         <q-btn
-          color="theme-blue"
+          color="theme-grey"
           :label="$t('back')"
-          class="col-6"
-          @click="$emit('back')"
-        ></q-btn>
+          unelevated
+          size="xl"
+          class="col"
+          @click="$router.back()"
+        />
+        <div class="q-mx-xs"></div>
         <q-btn
           color="theme-blue"
+          unelevated
           :label="$t('next')"
-          class="col-6"
-          @click="$emit('quantitySelected', quantity)"
-        ></q-btn>
+          size="xl"
+          class="col"
+        />
         <q-btn
-          v-if="print_templates"
           color="theme-blue"
           :label="$t('incoming.quantity.print_label')"
+          unelevated
           class="col-12"
+          size="xl"
           @click="
             (event) => {
               event.stopPropagation();
@@ -55,88 +109,36 @@
         ></q-btn>
       </div>
     </div>
+
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
+import { useIncomingStore } from 'app/src/stores/incoming';
+import { useRouter } from 'vue-router';
 import QuantitySelector from '@/components/QuantitySelector.vue';
-export default {
-  name: 'QuantitySelectionPage',
 
-  components: { QuantitySelector },
+const incoming = useIncomingStore()
 
-  props: {
-    product: {
-      type: Object,
-      required: true,
-    },
-    supplier: {
-      type: Object,
-      required: true,
-    },
-  },
+const $router = useRouter()
 
-  emits: ['back', 'quantitySelected'],
+const loading = ref(false)
 
-  data() {
-    return {
-      quantity: 0,
-      show_print_label: false,
-      print_templates: undefined,
-      selected_templates: undefined,
-      loading: true,
-    };
-  },
+  // data() {
+  //   return {
+  //     show_print_label: false,
+  //     print_templates: undefined,
+  //     selected_templates: undefined,
+  //     loading: true,
+  //   };
+  // },
 
-  mounted() {
-    this.loading = true;
+function updateQuantity(howMuch) {
+  incoming.quantity = Math.max(0, incoming.quantity + howMuch)
+}
 
-    if (this.product) {
-      this.$api
-        .get('print-template', {
-          params: { context: 'product', context_key: this.product._key },
-        })
-        .then((data) => {
-          if (data && data?.data.length > 0) {
-            this.print_templates = data?.data;
-          } else {
-            this.print_templates = undefined;
-          }
-          this.loading = false;
-        });
-    }
-  },
+function showPrintLabelBottomSheet() {
 
-  methods: {
-    showPrintLabelBottomSheet() {
-      this.$bus.emit('show-print-templates', {
-        print_templates: this.print_templates,
-        product: this.product,
-        supplier: this.supplier,
-      });
-      /*let actions = [];
-      for (const template of this.print_templates) {
-        actions.push({
-          label: template.name,
-          id: template._key,
-        });
-      }
-      this.$q
-        .bottomSheet({
-          title: 'title',
-          message: 'Bottom Sheet message',
-          actions: actions,
-        })
-        .onOk((action) => {
-          console.log('Action chosen:', action.id);
-        })
-        .onCancel(() => {
-          // console.log('Dismissed')
-        })
-        .onDismiss(() => {
-          // console.log('I am triggered on both OK and Cancel')
-        });*/
-    },
-  },
 };
 </script>

@@ -1,9 +1,10 @@
 <template>
-  <div class="q-px-md q-pt-lg column fit">
-    <div class="text-h3 uppercase col-auto text-primary">
-      Nuovo Ricevimento
-    </div>
+  <div class="col column">
+
+    <!-- PRODUCT SEARCH -->
     <div class="row q-col-gutter-sm q-mt-md col-auto">
+
+      <!-- INPUT -->
       <div class="col">
         <q-input
           v-model="filter"
@@ -12,35 +13,42 @@
           debounce="300"
           :label="$t('incoming.products.search')"
           icon="mdi-magnify"
+          @update:model-value="searchProducts"
         >
           <template #append>
             <q-icon name="mdi-magnify" />
           </template>
         </q-input>
       </div>
-  <div class="col-auto">
-    <q-btn
-      class="full-height"
-      color="primary"
-      size="0.75rem"
-      icon="mdi-barcode-scan"
-      @click="show_code_scanner = true"
-    >
-    </q-btn>
-  </div>
+
+      <!-- SCAN -->
+      <div class="col-auto">
+        <q-btn
+          class="full-height"
+          color="primary"
+          size="0.75rem"
+          icon="mdi-barcode-scan"
+          @click="show_code_scanner = true"
+        >
+        </q-btn>
+      </div>
     </div>
 
+    <!-- PRODUCT LIST -->
     <div class="col-auto q-mt-lg uppercase text-low">
       Risultati ({{  rows.length }})
     </div>
-    <div class="q-mt-md col scroll q-pb-md column">
+
+
+    <div class="q-mt-md col scroll column">
       <q-card
         v-for="product in rows"
         :key="product.key"
         bordered
+        v-ripple
         flat
         class="surface2 q-px-md q-py-md q-mb-sm"
-        @click="$emit('productSelected', product)">
+        @click="selectProduct(product)">
         <div class="text-body1">
           {{ product.code }}
         </div>
@@ -63,129 +71,68 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { useIncomingStore } from 'app/src/stores/incoming';
 import { ref } from 'vue';
+import { api as $api } from 'app/src/boot/axios';
+import { useRouter } from 'vue-router';
 import ModalBottomContainer from '@/components/ModalBottomContainer.vue';
 import CameraCodeScanner from '@/components/barcode-reader/CameraCodeScanner.vue';
 
-const columns = [
-  {
-    name: 'code',
-    required: true,
-    align: 'left',
-    field: (row) => row.name,
-    format: (val) => `${val}`,
-    sortable: true,
-  },
-  /*{
-    name: 'barcode',
-    required: true,
-    align: 'left',
-    field: (row) => row.barcode,
-    format: (val) => `${val}`,
-    sortable: true,
-  },*/
-  {
-    name: 'description',
-    required: true,
-    align: 'left',
-    field: (row) => row.serial,
-    format: (val) => `${val}`,
-    sortable: true,
-  },
-];
+const incoming = useIncomingStore()
+const $router = useRouter()
 
-const start_rows = [
-  {
-    code: 'Product 1',
-    _key: 'PRD 1',
-    barcode: '822885026705',
-    description: 'xxxxxx',
-  },
+const filter = ref('')
+const rows = ref('')
+const show_code_scanner = ref(false)
+const loading = ref(false)
+const last_research = ref(undefined)
 
-  {
-    code: 'Product 2',
-    _key: 'PRD 2',
-    barcode: '1231231231231231231',
-    description: 'xxxxxx',
-  },
-  {
-    code: 'Product 3',
-    _key: 'PRD 3',
-    barcode: '1231231231231231231',
-    description: 'xxxxxx',
-  },
-];
+function searchProducts() {
+  if (filter.value !== last_research.value) {
+    loadProducts(filter);
+  }
+}
 
-export default {
-  name: 'ProductsList',
 
-  components: {
-    ModalBottomContainer,
-    CameraCodeScanner,
-  },
+function onLoad({ controls, scannerElement, browserMultiFormatReader }) {
+  console.log(controls);
+  console.log(scannerElement);
+  console.log(browserMultiFormatReader);
+}
 
-  emits: ['productSelected'],
+function onScan({ result, raw }) {
+  filter.value = result;
+  console.log(result);
+  console.log(raw);
+  show_code_scanner.value = false;
+}
 
-  setup() {
-    return {
-      filter: ref(''),
-      columns,
-      rows: ref(start_rows),
-    };
-  },
+function loadProducts(filter) {
+  loading.value = true;
+  let params = {};
 
-  data() {
-    return {
-      show_code_scanner: false,
-      loading: false,
-      last_research: undefined,
-    };
-  },
+  if (filter.value) {
+    params.search = filter.value;
+    last_research.value = filter.value;
+  }
 
-  watch: {
-    filter: {
-      handler() {
-        if (this.filter !== this.last_research) {
-          this.loadProducts(this.filter);
-        }
-      },
-    },
-  },
+  params.limit = 100;
 
-  methods: {
-    onLoad({ controls, scannerElement, browserMultiFormatReader }) {
-      console.log(controls);
-      console.log(scannerElement);
-      console.log(browserMultiFormatReader);
-    },
-    onScan({ result, raw }) {
-      this.filter = result;
-      console.log(result);
-      console.log(raw);
-      this.show_code_scanner = false;
-    },
-    loadProducts(filter) {
-      this.loading = true;
-      let params = {};
-
-      if (filter) {
-        params.search = filter;
-        this.last_research = filter;
-      }
-      params.limit = 100;
-
-      this.$api
-        .get('product', {
-          params,
-        })
-        .then((resp) => {
-          this.rows = resp.data;
-          this.loading = false;
-        });
-    },
-  },
+  $api
+    .get('product', {
+      params,
+    })
+    .then((resp) => {
+      rows.value = resp.data;
+      loading.value = false;
+    });
 };
+
+function selectProduct(product) {
+  incoming.product = product
+  setTimeout(() => $router.push({ name: 'IncomingQuantity'}), 500)
+}
 </script>
 
 <style lang="sass">
