@@ -110,8 +110,8 @@ import PositionNewForm from 'app/src/components/warehouse/position/PositionNewFo
 
 const warehouse_views = [
   { component: 'Positions', route_name: 'positions' },
-  { component: 'Stock', route_name: 'stock' },
-  { component: 'Missions', route_name: 'missions' },
+  // { component: 'Stock', route_name: 'stock' },
+  // { component: 'Missions', route_name: 'missions' },
   { component: 'Movements', route_name: 'movements' },
 ];
 
