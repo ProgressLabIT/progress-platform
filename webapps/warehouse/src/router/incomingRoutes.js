@@ -40,7 +40,7 @@ const incomingRoutes = [
           },
           {
             path: 'routing',
-            name: 'IncomingRouting',
+            name: 'IncomingConfirm',
             component: () => import ('@/components/incoming/position/ConfirmPositionsPage.vue')
           }
         ]

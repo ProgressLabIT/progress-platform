@@ -2,37 +2,7 @@
   <div class="col column">
 
     <!-- PRODUCT SEARCH -->
-    <div class="row q-col-gutter-sm q-mt-md col-auto">
-
-      <!-- INPUT -->
-      <div class="col">
-        <q-input
-          v-model="filter"
-          filled
-          autofocus
-          debounce="300"
-          :label="$t('incoming.products.search')"
-          icon="mdi-magnify"
-          @update:model-value="searchProducts"
-        >
-          <template #append>
-            <q-icon name="mdi-magnify" />
-          </template>
-        </q-input>
-      </div>
-
-      <!-- SCAN -->
-      <div class="col-auto">
-        <q-btn
-          class="full-height"
-          color="primary"
-          size="0.75rem"
-          icon="mdi-barcode-scan"
-          @click="show_code_scanner = true"
-        >
-        </q-btn>
-      </div>
-    </div>
+    <SearchOrScan v-model="filter" @update:model-value="searchProducts" />
 
     <!-- PRODUCT LIST -->
     <div class="col-auto q-mt-lg uppercase text-low">
@@ -57,17 +27,6 @@
         </div>
       </q-card>
     </div>
-
-    <q-slide-transition>
-      <ModalBottomContainer
-        :show="show_code_scanner"
-        @close="show_code_scanner = false"
-      >
-        <template #content>
-          <CameraCodeScanner @scan="onScan" @load="onLoad"></CameraCodeScanner>
-        </template>
-      </ModalBottomContainer>
-    </q-slide-transition>
   </div>
 </template>
 
@@ -76,15 +35,14 @@ import { useIncomingStore } from 'app/src/stores/incoming';
 import { ref } from 'vue';
 import { api as $api } from 'app/src/boot/axios';
 import { useRouter } from 'vue-router';
-import ModalBottomContainer from '@/components/ModalBottomContainer.vue';
-import CameraCodeScanner from '@/components/barcode-reader/CameraCodeScanner.vue';
+import SearchOrScan from '../../SearchOrScan.vue';
+
 
 const incoming = useIncomingStore()
 const $router = useRouter()
 
 const filter = ref('')
 const rows = ref('')
-const show_code_scanner = ref(false)
 const loading = ref(false)
 const last_research = ref(undefined)
 
@@ -94,19 +52,6 @@ function searchProducts() {
   }
 }
 
-
-function onLoad({ controls, scannerElement, browserMultiFormatReader }) {
-  console.log(controls);
-  console.log(scannerElement);
-  console.log(browserMultiFormatReader);
-}
-
-function onScan({ result, raw }) {
-  filter.value = result;
-  console.log(result);
-  console.log(raw);
-  show_code_scanner.value = false;
-}
 
 function loadProducts(filter) {
   loading.value = true;

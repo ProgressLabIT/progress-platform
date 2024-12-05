@@ -1,252 +1,154 @@
 <template>
-  <q-scroll-area :visible="false" style="height: 50vh">
-    <q-table
-      v-model:selected="selected"
-      flat
-      bordered
-      grid
-      :loading="loading"
-      :title="$t('incoming.positions.positions')"
-      :rows="rows"
-      :columns="columns"
-      row-key="_key"
-      :rows-per-page-options="[0]"
-      hide-header
-      selection="multiple"
-    >
-      <template #top-right>
-        <q-input
-          v-model="filter"
-          dense
-          debounce="300"
-          :placeholder="$t('incoming.positions.search')"
-        >
-          <template #append>
-            <q-icon name="mdi-magnify" />
-          </template>
-        </q-input>
-      </template>
+  <div class="col column full-width">
 
-      <template #item="props">
-        <div
-          class="q-pa-xs col-xs-12 col-sm-6 col-md-4 col-lg-3 grid-style-transition"
-          :style="props.selected ? 'transform: scale(0.95);' : ''"
-        >
-          <!-- <q-card
-            v-ripple
-            bordered
-            flat
-            class="my-box cursor-pointer q-hoverable"
-            @click="$emit('positionSelected', row)"
-          > -->
-          <q-card
-            v-ripple
-            bordered
-            flat
-            class="my-box cursor-pointer q-hoverable"
-            @click="toggleSelection(props.row)"
-          >
-            <!--q-card-section>
-              <div>{{ row.code }}</div>
-            </q-card-section> -->
-            <q-card-section>
-              <q-checkbox
-                v-model="props.selected"
-                dense
-                :label="props.row.code"
-              />
-            </q-card-section>
-            <q-separator />
-            <q-list dense>
-              <q-item :key="`desc ${props.row._key}`">
-                <q-item-section>
-                  <q-item-label>{{ props.row.description }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-card>
+    <!-- ITEM CODE & DESCRIPTION -->
+    <div class="col-auto column full-width">
+      <div class="row">
+        <div class="col">
+          <div class="text-h6 q-mb-sm">
+            PRODOTTO
+          </div>
+          <div class="text-h1 q-pr-sm" style="word-wrap: break-word;">
+            {{ incoming.product?.code }}
+          </div>
         </div>
-      </template>
+        <div class="col-auto">
+          <div class="text-h6 text-right q-mb-sm">
+            QUANTITÀ
+          </div>
+          <div class="text-h1 text-right">
+            {{ incoming.quantity }}
+          </div>
+        </div>
+      </div>
+      <div class="text-body1 q-mt-xs">
+        {{ incoming.product?.description }}
+      </div>
+    </div>
 
-      <template #no-data> {{ $t('incoming.positions.no_data') }}</template>
-    </q-table>
-  </q-scroll-area>
-  <div style="height: 30vh">
-    <div class="fit row justify-center items-start content-center">
+
+    <div class="text-h6 q-mb-md q-mt-md">
+      DESTINAZIONE
+    </div>
+    <!-- POSITION SEARCH -->
+    <SearchOrScan v-model="filter" @update:model-value="loadPositions" />
+
+    <!-- SELECTED POSITIONS -->
+    <div class="text-h6">
+      POSIZIONI SELEZIONATE
+    </div>
+    <div class="row col-auto q-col-gutter-x-sm q-mt-md">
+      <div
+        v-for="selected in incoming.positions"
+        :key="selected._key"
+        class="col-auto">
+        <q-chip
+          clickable
+          color="theme-blue"
+          size="lg"
+          @click="toggleSelection(selected)">
+          {{ selected.code }}
+        </q-chip>
+      </div>
+    </div>
+
+
+    <!-- AVAILABLE POSITIONS -->
+    <div class="q-mt-lg text-h6">
+      POSIZIONI DISPONIBILI
+    </div>
+    <div class="col scroll">
+      <div class="row full-width q-col-gutter-x-sm q-mt-md">
+        <div class="col-auto" v-for="pos in availablePositions" :key="pos._key">
+          <q-chip
+          clickable
+          outline
+          size="lg"
+          @click="toggleSelection(pos)">
+          {{ pos.code }}
+        </q-chip>
+      </div>
+    </div>
+    </div>
+
+    <q-space></q-space>
+
+    <div class="col-auto q-gutter-y-md row justify-center">
       <q-btn
         color="theme-blue"
         :label="$t('incoming.positions.create_container')"
         class="col-12"
-        @click="
-          (event) => {
-            event.stopPropagation();
-            showCreateContainerBottomSheet();
-          }
-        "
-      ></q-btn>
+        size="xl"
+      />
       <q-btn
         color="theme-blue"
         :label="$t('back')"
-        class="col-6"
-        @click="$emit('back')"
-      ></q-btn>
+        class="col"
+        size="xl"
+        @click="router.back()"
+      />
+      <div class="q-mx-xs"></div>
       <q-btn
         color="theme-blue"
         :label="$t('next')"
-        class="col-6"
-        @click="selectPosition()"
-      ></q-btn>
+        class="col"
+        size="xl"
+        @click="router.push({ name: 'IncomingConfirm' })"
+      />
     </div>
   </div>
 </template>
 
-<script>
-import { ref } from 'vue';
+<script setup>
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useIncomingStore } from 'app/src/stores/incoming';
+import { api } from 'app/src/boot/axios';
+import SearchOrScan from '../../SearchOrScan.vue';
 
-const columns = [
-  {
-    name: 'code',
-    required: true,
-    align: 'left',
-    field: (row) => row.name,
-    format: (val) => `${val}`,
-    sortable: true,
-  },
-  {
-    name: 'description',
-    required: true,
-    align: 'left',
-    field: (row) => row.serial,
-    format: (val) => `${val}`,
-    sortable: false,
-  },
-];
+const incoming = useIncomingStore();
+const router = useRouter();
 
-const rows = [
-  {
-    code: 'position 1',
-    _key: 'POS 1',
-    description: 'xxxxxx',
-  },
-  {
-    code: 'position 2',
-    _key: 'POS 2',
-    description: 'xxxxxx',
-  },
-  {
-    code: 'position 3',
-    _key: 'POS 3',
-    description: 'xxxxxx',
-  },
-  {
-    code: 'position 4',
-    _key: 'POS 4',
-    description: 'xxxxxx',
-  },
-  {
-    code: 'position 5',
-    _key: 'POS 5',
-    description: 'xxxxxx',
-  },
-  {
-    code: 'position 6',
-    _key: 'POS 6',
-    description: 'xxxxxx',
-  },
-];
+const loading = ref(false);
 
-export default {
-  name: 'PositionsPage',
+const filter = ref('');
+const last_research = ref('');
+const positionResults = ref([]);
 
-  props: {
-    product: {
-      type: Object,
-      required: true,
-    },
-    supplier: {
-      type: Object,
-      required: true,
-    },
-    quantity: {
-      type: Number,
-      required: true,
-    },
-  },
+function loadPositions() {
+  loading.value = true;
+  let params = {};
 
-  emits: ['positionSelected', 'back'],
+  if (filter.value) {
+    params.search = filter.value;
+    last_research.value = filter.value;
+  }
+  params.limit = 100;
 
-  setup() {
-    return {
-      filter: ref(''),
-      selected: ref([]),
-      columns,
-      rows,
-    };
-  },
-
-  data() {
-    return {
-      show_code_scanner: false,
-      loading: false,
-      last_research: undefined,
-    };
-  },
-
-  watch: {
-    filter: {
-      handler() {
-        if (this.filter !== this.last_research) {
-          this.loadPositions(this.filter);
-        }
-      },
-    },
-  },
-
-  created() {
-    this.$bus.on('containers-created', (containers) => {
-      this.$emit('positionSelected', containers);
-    });
-  },
-
-  methods: {
-    loadPositions(filter) {
-      this.loading = true;
-      let params = {};
-
-      if (filter) {
-        params.search = filter;
-        this.last_research = filter;
-      }
-      params.limit = 100;
-
-      this.$api
-        .get('position', {
-          params,
-        })
-        .then((resp) => {
-          this.rows = this.selected.concat(resp.data);
-          this.loading = false;
-        });
-      this.loading = false;
-    },
-    showCreateContainerBottomSheet() {
-      this.$bus.emit('show-create-container');
-    },
-    toggleSelection(row) {
-      const index = this.selected.findIndex((el) => el._key === row._key);
-      if (index >= 0) {
-        this.selected.splice(index, 1);
-      } else {
-        this.selected.push(row);
-      }
-    },
-    selectPosition() {
-      if (this.selected.length > 0) {
-        this.$emit('positionSelected', this.selected);
-      }
-    },
-  },
+  api.get('position', { params }).then((resp) => {
+    positionResults.value = resp.data;
+    loading.value = false;
+  });
 };
+
+const availablePositions = computed(() => {
+  return positionResults.value.filter(p => !incoming.positionKeys.includes(p._key))
+});
+
+// function showCreateContainerBottomSheet() {
+//   // this.$bus.emit('show-create-container');
+// }
+
+function toggleSelection(position) {
+  console.log(position, incoming.positionKeys)
+  const index = incoming.positionKeys.findIndex((el) => el === position._key);
+  if (index >= 0) {
+    incoming.positions.splice(index, 1);
+  } else {
+    incoming.positions.push(position);
+  }
+}
+
 </script>
 
 <style lang="sass">

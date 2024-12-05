@@ -9,11 +9,11 @@
       <div class="text-h6 q-mb-sm">
         PRODOTTO
       </div>
-      <div class="text-h1">
-        {{ incoming.product.code }}
+      <div class="text-h1 q-pr-sm" style="word-wrap: break-word;">
+        {{ incoming.product?.code }}
       </div>
       <div class="text-body1 q-mt-xs">
-        {{ incoming.product.description }}
+        {{ incoming.product?.description }}
       </div>
     </div>
 
@@ -84,7 +84,7 @@
           unelevated
           size="xl"
           class="col"
-          @click="$router.back()"
+          @click="router.back()"
         />
         <div class="q-mx-xs"></div>
         <q-btn
@@ -93,6 +93,7 @@
           :label="$t('next')"
           size="xl"
           class="col"
+          @click="router.push({ name: 'IncomingPosition' })"
         />
         <q-btn
           color="theme-blue"
@@ -100,13 +101,8 @@
           unelevated
           class="col-12"
           size="xl"
-          @click="
-            (event) => {
-              event.stopPropagation();
-              showPrintLabelBottomSheet();
-            }
-          "
-        ></q-btn>
+          @click="showPrintLabelBottomSheet"
+        />
       </div>
     </div>
 
@@ -121,7 +117,7 @@ import QuantitySelector from '@/components/QuantitySelector.vue';
 
 const incoming = useIncomingStore()
 
-const $router = useRouter()
+const router = useRouter()
 
 const loading = ref(false)
 
