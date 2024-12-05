@@ -56,9 +56,9 @@ class InventoryEventManager:
           new_movement_record = InventoryMovement(**movement_data.dict()).dict(by_alias=True)
           movement_key = self.tx.collection('movement').insert(dict(new_movement_record), return_new=True)['_key']
           self.tx.collection('is_in_position').insert(dict(
-                   _from=movement_data.position_to,
-                   _to=f'Product/{movement_data.product_key}'
-                ))
+              _from=f'Product/{movement_data.product_key}',
+              _to=movement_data.position_to
+          ))
 
           self.notify_results(dict(
              movement_key = movement_key,
