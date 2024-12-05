@@ -148,3 +148,106 @@ build:workflow:
     - docker push $WF_SYS_AGENT_IMAGE:latest
     - docker push $WF_SYS_AGENT_IMAGE:$TIMESTAMP
 
+build:webapp:
+  stage: build
+  only:
+    refs:
+      - f/inventory-v0.1-deploy-test
+    changes:
+      - webapps/main/**/*
+  image: docker:stable
+  variables:
+    WEBAPP_ROOT: webapps/main
+    WEBAPP_DOCKERFILE: webapp.prod.Dockerfile
+    WEBAPP_IMAGE: $CI_REGISTRY_IMAGE/app
+  tags:
+    - gitlab-org-docker
+  script:
+    # Pull builder image if present, if not skip
+    - docker pull $WEBAPP_IMAGE:global-deps-stage || true
+    - docker pull $WEBAPP_IMAGE:develop-stage || true
+    - docker pull $WEBAPP_IMAGE:build-stage || true
+
+    # Navigate to build context
+    - cd $WEBAPP_ROOT
+
+    # Build global-deps image (first section of the Dockerfile), using cached layers when available. The tagging overwrites the image with the updated one
+    - >
+      docker build
+      --pull
+      --cache-from $WEBAPP_IMAGE:dev-global-deps-stage
+      --target global-deps-stage
+      -t $WEBAPP_IMAGE:dev-global-deps-stage
+      -f $WEBAPP_DOCKERFILE
+      .
+
+    # develop-stage
+    - >
+      docker build
+      --pull
+      --cache-from $WEBAPP_IMAGE:dev-develop-stage
+      --target develop-stage
+      -t $WEBAPP_IMAGE:dev-develop-stage
+      -f $WEBAPP_DOCKERFILE
+      .
+
+    # build-stage
+    - >
+      docker build
+      --pull
+      --cache-from $WEBAPP_IMAGE:dev-build-stage
+      --target build-stage
+      -t $WEBAPP_IMAGE:dev-build-stage
+      -f $WEBAPP_DOCKERFILE
+      .
+
+    # Build the final image using cached layers from each stage's image. Tag the image with current pipeline ID and `latest` tag.
+    - >
+      docker build
+      --pull
+      --cache-from $WEBAPP_IMAGE:dev-global-deps-stage
+      --cache-from $WEBAPP_IMAGE:dev-develop-stage
+      --cache-from $$WEBAPP_IMAGE:dev-latest
+      -t $WEBAPP_IMAGE:dev-latest
+      -t $WEBAPP_IMAGE:dev-$TIMESTAMP
+      -f $WEBAPP_DOCKERFILE
+      .
+
+    # Push new images to the registry
+    - docker push $WEBAPP_IMAGE:dev-global-deps-stage
+    - docker push $WEBAPP_IMAGE:dev-develop-stage
+    - docker push $WEBAPP_IMAGE:dev-latest
+    - docker push $WEBAPP_IMAGE:dev-$TIMESTAMP
+
+
+build:api-dev:
+  stage: build
+  only:
+    refs:
+      - f/inventory-v0.1-deploy-test
+    changes:
+      - backend/api/**/*
+  image: docker:stable
+  variables:
+    API_ROOT: backend/api
+    API_DOCKERFILE: Dockerfile
+    API_IMAGE: $CI_REGISTRY_IMAGE/api
+  tags:
+    - gitlab-org-docker
+  script:
+    # Navigate to build context
+    - cd $API_ROOT
+
+    # Build image using cache from existing ones
+    - >
+      docker build
+      --pull
+      --cache-from $API_IMAGE:dev-latest
+      -t $API_IMAGE:dev-$TIMESTAMP
+      -t $API_IMAGE:dev-latest
+      -f $API_DOCKERFILE
+      .
+
+    # Push new images to the registry
+    - docker push $API_IMAGE:dev-latest
+    - docker push $API_IMAGE:dev-$TIMESTAMP
