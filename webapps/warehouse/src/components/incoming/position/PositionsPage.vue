@@ -74,15 +74,15 @@
     <q-space></q-space>
 
     <div class="col-auto q-gutter-y-md row justify-center">
-      <q-btn
+      <!-- <q-btn
         color="theme-blue"
         :label="$t('incoming.positions.create_container')"
         class="col-12"
         size="xl"
-      />
+      /> -->
       <q-btn
         color="theme-blue"
-        :label="$t('back')"
+        label="INDIETRO"
         class="col"
         size="xl"
         @click="router.back()"
@@ -90,7 +90,7 @@
       <div class="q-mx-xs"></div>
       <q-btn
         color="theme-blue"
-        :label="$t('next')"
+        label="AVANTI"
         class="col"
         size="xl"
         @click="router.push({ name: 'IncomingConfirm' })"

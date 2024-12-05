@@ -45,7 +45,7 @@
       />
       <q-btn
         color="theme-grey"
-        label="ANNULLA"
+        label="INDIETRO"
         class="col-12"
         size="xl"
         @click="router.back()"

@@ -80,7 +80,7 @@
       <div class="row full-width q-gutter-y-md">
         <q-btn
           color="theme-grey"
-          :label="$t('back')"
+          label="INDIETRO"
           unelevated
           size="xl"
           class="col"
@@ -90,18 +90,18 @@
         <q-btn
           color="theme-blue"
           unelevated
-          :label="$t('next')"
+          label="AVANTI"
           size="xl"
           class="col"
           @click="router.push({ name: 'IncomingPosition' })"
         />
         <q-btn
           color="theme-blue"
-          :label="$t('incoming.quantity.print_label')"
+          label="STAMPA ETICHETTA PRODOTTO"
           unelevated
           class="col-12"
           size="xl"
-          @click="showPrintLabelBottomSheet"
+          @click="printProductLabel"
         />
       </div>
     </div>
@@ -114,6 +114,7 @@ import { ref } from 'vue';
 import { useIncomingStore } from 'app/src/stores/incoming';
 import { useRouter } from 'vue-router';
 import QuantitySelector from '@/components/QuantitySelector.vue';
+import { generateProductLabel, print } from 'app/src/lib/zebraTemplates';
 
 const incoming = useIncomingStore()
 
@@ -134,7 +135,8 @@ function updateQuantity(howMuch) {
   incoming.quantity = Math.max(0, incoming.quantity + howMuch)
 }
 
-function showPrintLabelBottomSheet() {
-
+function printProductLabel() {
+  const template = generateProductLabel(incoming.product.code, incoming.product.description)
+  print(template)
 };
 </script>
