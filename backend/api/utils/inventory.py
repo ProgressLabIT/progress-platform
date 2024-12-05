@@ -27,6 +27,50 @@ class Queries:
     RETURN COUNT(children)
   """
 
+  GET_LATEST_RECEIPT_POSITIONS = """
+    LET latest_movement_to = (FOR m IN movement
+        SORT m.created DESC
+        FILTER m.type == 'receipt'
+        LIMIT (@limit*10)
+        RETURN DISTINCT m._to
+    )
+
+    FOR m IN latest_movement_to
+
+    // POSITION_TO
+    let position = FIRST(
+        FOR position IN Position
+        FILTER position._id == m
+        RETURN position
+    )
+
+    LIMIT @limit
+
+    RETURN position
+  """
+
+  GET_LATEST_RECEIPT_PRODUCTS = """
+    LET latest_movement_prod = (FOR m IN movement
+        SORT m.created DESC
+        FILTER m.type == 'receipt'
+        LIMIT (@limit*10)
+        RETURN DISTINCT m.product_key
+    )
+
+    FOR m IN latest_movement_prod
+
+    // PRODUCT
+    let product = FIRST(
+        FOR product IN Product
+        FILTER product._key == m
+        RETURN product
+    )
+
+    LIMIT @limit
+
+    RETURN product
+  """
+
   SEARCH_MOVEMENTS = """
     FOR m IN movement
 

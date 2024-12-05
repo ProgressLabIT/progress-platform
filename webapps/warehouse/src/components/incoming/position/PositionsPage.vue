@@ -1,21 +1,16 @@
 <template>
   <div class="col column full-width">
-
     <!-- ITEM CODE & DESCRIPTION -->
     <div class="col-auto column full-width">
       <div class="row">
         <div class="col">
-          <div class="text-h6 q-mb-sm">
-            PRODOTTO
-          </div>
-          <div class="text-h1 q-pr-sm" style="word-wrap: break-word;">
+          <div class="text-h6 q-mb-sm">PRODOTTO</div>
+          <div class="text-h1 q-pr-sm" style="word-wrap: break-word">
             {{ incoming.product?.code }}
           </div>
         </div>
         <div class="col-auto">
-          <div class="text-h6 text-right q-mb-sm">
-            QUANTITÀ
-          </div>
+          <div class="text-h6 text-right q-mb-sm">QUANTITÀ</div>
           <div class="text-h1 text-right">
             {{ incoming.quantity }}
           </div>
@@ -26,49 +21,39 @@
       </div>
     </div>
 
-
-    <div class="text-h6 q-mb-md q-mt-md">
-      DESTINAZIONE
-    </div>
+    <div class="text-h6 q-mb-md q-mt-md">DESTINAZIONE</div>
     <!-- POSITION SEARCH -->
     <SearchOrScan v-model="filter" @update:model-value="loadPositions" />
 
     <!-- SELECTED POSITIONS -->
-    <div class="text-h6">
-      POSIZIONI SELEZIONATE
-    </div>
+    <div class="text-h6">POSIZIONI SELEZIONATE</div>
     <div class="row col-auto q-col-gutter-x-sm q-mt-md">
       <div
         v-for="selected in incoming.positions"
         :key="selected._key"
-        class="col-auto">
+        class="col-auto"
+      >
         <q-chip
           clickable
           color="theme-blue"
           size="lg"
-          @click="toggleSelection(selected)">
+          @click="toggleSelection(selected)"
+        >
           {{ selected.code }}
         </q-chip>
       </div>
     </div>
 
-
     <!-- AVAILABLE POSITIONS -->
-    <div class="q-mt-lg text-h6">
-      POSIZIONI DISPONIBILI
-    </div>
+    <div class="q-mt-lg text-h6">POSIZIONI DISPONIBILI</div>
     <div class="col scroll">
       <div class="row full-width q-col-gutter-x-sm q-mt-md">
-        <div class="col-auto" v-for="pos in availablePositions" :key="pos._key">
-          <q-chip
-          clickable
-          outline
-          size="lg"
-          @click="toggleSelection(pos)">
-          {{ pos.code }}
-        </q-chip>
+        <div v-for="pos in availablePositions" :key="pos._key" class="col-auto">
+          <q-chip clickable outline size="lg" @click="toggleSelection(pos)">
+            {{ pos.code }}
+          </q-chip>
+        </div>
       </div>
-    </div>
     </div>
 
     <q-space></q-space>
@@ -100,10 +85,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useIncomingStore } from 'app/src/stores/incoming';
 import { api } from 'app/src/boot/axios';
+import { useIncomingStore } from 'app/src/stores/incoming';
 import SearchOrScan from '../../SearchOrScan.vue';
 
 const incoming = useIncomingStore();
@@ -114,6 +99,20 @@ const loading = ref(false);
 const filter = ref('');
 const last_research = ref('');
 const positionResults = ref([]);
+const latest_used_positions = ref(undefined);
+
+function loadLatestUsedPositions() {
+  if (latest_used_positions.value) {
+    positionResults.value = latest_used_positions.value;
+  } else {
+    loading.value = true;
+    api.get('movement/latest-receipt-positions', { limit: 10 }).then((resp) => {
+      latest_used_positions.value = resp.data;
+      positionResults.value = latest_used_positions.value;
+      loading.value = false;
+    });
+  }
+}
 
 function loadPositions() {
   loading.value = true;
@@ -129,10 +128,12 @@ function loadPositions() {
     positionResults.value = resp.data;
     loading.value = false;
   });
-};
+}
 
 const availablePositions = computed(() => {
-  return positionResults.value.filter(p => !incoming.positionKeys.includes(p._key))
+  return positionResults.value.filter(
+    (p) => !incoming.positionKeys.includes(p._key)
+  );
 });
 
 // function showCreateContainerBottomSheet() {
@@ -140,7 +141,7 @@ const availablePositions = computed(() => {
 // }
 
 function toggleSelection(position) {
-  console.log(position, incoming.positionKeys)
+  console.log(position, incoming.positionKeys);
   const index = incoming.positionKeys.findIndex((el) => el === position._key);
   if (index >= 0) {
     incoming.positions.splice(index, 1);
@@ -149,6 +150,9 @@ function toggleSelection(position) {
   }
 }
 
+onMounted(() => {
+  loadLatestUsedPositions();
+});
 </script>
 
 <style lang="sass">

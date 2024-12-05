@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, Depends
 
 from models.inventory import *
+from models.product import ProductBaseData
 from utils.api import APIResponse
 from utils.inventory import Queries
 from utils.counter import _generate_counter
@@ -163,6 +164,33 @@ def search_inventory_journal(params: Annotated[InventoryMovementSearchParameters
       detail=traceback.format_exc()
     )
 
+@router.get('/movement/latest-receipt-positions',
+    dependencies=[Depends(auth.verify_token)])
+def get_latest_receipt_positions(limit: int | None = 10):
+  try:
+    bind_vars = dict(limit= limit)
+    results = db.aql.execute(Queries.GET_LATEST_RECEIPT_POSITIONS, bind_vars=bind_vars)
+    return [Position(**p) for p in results]
+
+  except Exception as e:
+    return HTTPException(
+      status_code=500,
+      detail=traceback.format_exc()
+    )
+
+@router.get('/movement/latest-receipt-products',
+    dependencies=[Depends(auth.verify_token)])
+def get_latest_receipt_products(limit: int | None = 10):
+  try:
+    bind_vars = dict(limit= limit)
+    results = db.aql.execute(Queries.GET_LATEST_RECEIPT_PRODUCTS, bind_vars=bind_vars)
+    return [ProductBaseData(**p) for p in results]
+
+  except Exception as e:
+    return HTTPException(
+      status_code=500,
+      detail=traceback.format_exc()
+    )
 
 #@router.post('/movement',
 #    dependencies=[Depends(auth.verify_token)])
