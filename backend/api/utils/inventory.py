@@ -28,7 +28,7 @@ class Queries:
   """
 
   SEARCH_MOVEMENTS = """
-    FOR m IN InventoryMovement
+    FOR m IN movement
 
     FILTER
       (@movement_type ? m.type == @movement_type : true)
@@ -46,45 +46,6 @@ class Queries:
       && (@mission_code ? m.mission_code == @mission_code : true)
       && (@movement_doc ? m.movement_doc == @movement_doc : true)
       && (@source_doc ? m.source_doc == @source_doc : true)
-      && (@through_position_key
-        ? (
-          (@through_position_key IN m.route)
-          OR (
-            @include_child_positions
-            ? LENGTH(
-                FOR p IN 1..99 INBOUND @through_position_key is_in_position
-                PRUNE p._key IN m.route && p._key == @through_position_key
-                RETURN p._key
-              )
-            : false
-          )
-        )
-        : true
-      )
-      && (@through_position_code
-        ? (
-          LENGTH(
-            FOR p IN Position
-            FILTER
-              p._key IN m.route
-              AND p.code == @through_position_code
-            RETURN 1
-          )
-          OR (
-            @include_child_positions
-            ? LENGTH(
-                FOR parent IN Position
-                FILTER parent.code == @through_position_code
-                FOR child IN 1..99 INBOUND parent is_in_position
-                PRUNE child.code == @through_position_code && child._key IN m.route
-                FILTER child.code == @through_position_code && child._key IN m.route
-                RETURN 1
-              )
-            : false
-          )
-        )
-        : true
-      )
 
     // PRODUCT
     let product = FIRST(
