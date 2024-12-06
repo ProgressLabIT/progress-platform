@@ -144,7 +144,7 @@ function printProductLabel() {
 function loadPrintTemplates() {
   api
     .get('print-template', {
-      params: { context: 'product', context_key: incoming.product?._key },
+      params: { context: 'product', context_key: incoming.product._key },
     })
     .then((data) => {
       if (data && data?.data?.length > 0) {

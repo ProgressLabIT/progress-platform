@@ -148,10 +148,26 @@ function toggleSelection(position) {
   } else {
     incoming.positions.push(position);
   }
+  adjustQuantityPerPosition();
+}
+
+function adjustQuantityPerPosition() {
+  if (incoming.positions.length <= 0) {
+    return;
+  }
+  let remainingQty = incoming.quantity;
+  let remainingPos = incoming.positions.length;
+  for (let position of incoming.positions) {
+    let posQty = Math.floor(remainingQty / remainingPos);
+    position.quantity = posQty;
+    remainingPos--;
+    remainingQty -= posQty;
+  }
 }
 
 onMounted(() => {
   loadLatestUsedPositions();
+  adjustQuantityPerPosition();
 });
 </script>
 
