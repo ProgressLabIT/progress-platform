@@ -25,15 +25,25 @@
           <q-space />
 
           <!-- POSITION BUTTONS -->
-          <template v-if="$route.name === 'positions'">
-            <q-btn
-              size="0.75rem"
-              :label="$t('new')"
-              color="theme-blue"
-              @click="show_position_form = true"
-            >
-            </q-btn>
-          </template>
+          <q-btn
+            v-if="$route.name === 'positions'"
+            size="0.75rem"
+            :label="$t('new')"
+            color="theme-blue"
+            @click="show_position_form = true"
+          >
+          </q-btn>
+
+          <PositionNewForm
+            :show="show_position_form"
+            mode="new"
+            @close-position="
+              () => {
+                show_position_form = false;
+              }
+            "
+          >
+          </PositionNewForm>
 
           <!-- FILTER BUTTONS -->
           <q-btn
@@ -94,19 +104,12 @@
       "
     ></movement-filter>
   </q-page-container>
-
-  <PositionNewForm
-    :show="show_position_form"
-    mode="new"
-    @close-position="show_position_form = false"
-  >
-  </PositionNewForm>
 </template>
 
 <script>
 import MovementFilter from '@/components/warehouse/movement/MovementFilter.vue';
 import PositionFilter from '@/components/warehouse/position/PositionFilter.vue';
-import PositionNewForm from 'app/src/components/warehouse/position/PositionNewForm.vue';
+import PositionNewForm from '@/components/warehouse/position/PositionNewForm.vue';
 
 const warehouse_views = [
   { component: 'Positions', route_name: 'positions' },

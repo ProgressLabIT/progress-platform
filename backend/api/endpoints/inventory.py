@@ -47,6 +47,86 @@ async def get_position_contents(position_key):
       )
     )
 
+
+@router.get('/position-hierarchy'
+#, dependencies=[Depends(auth.verify_token)]
+)
+def get_position_hierarchy(
+  position_key: str | None = None,
+):
+  try:
+    bind_vars = dict(
+      position_id = f'Position/{position_key}'
+    )
+    positions = {}
+    starting_positions = set()
+    for position in [e for e in db.aql.execute(Queries.GET_POSITION_HIERARCHY, bind_vars=bind_vars)]:
+      positions[position['position_id']] = position
+      if position['to'] == 'Position/IN':
+        starting_positions.add(position['to'])
+
+    #for position in positions:
+    #  if positions[position]['from'] != 'Position/IN':
+    #    starting_positions.discard(positions[position]['from'])
+
+    position_hierarchy = []
+    for starting_position in starting_positions:
+      if (starting_position in positions):
+         position_children = []
+         if (not 'deleted' in positions[starting_position] or not positions[starting_position]['deleted'] == True):
+           position_children = get_children(position_key=starting_position, positions=positions, level=0)
+         merged_position = dict()
+         merged_position.update(positions[starting_position])
+         if (len(position_children)>0):
+           merged_position['children'] = position_children
+         position_hierarchy.append(merged_position)
+
+    filtered_hierarchy = []
+    for hierarchy in position_hierarchy:
+      if (hierarchy['position_key'] == position_key):
+        filtered_hierarchy.append(hierarchy)
+      elif ('children' in hierarchy and search_children(position_key, hierarchy['children'])):
+          filtered_hierarchy.append(hierarchy)
+
+    return filtered_hierarchy
+
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching positions hierarcy from the db.",
+        error=traceback.format_exc()
+      )
+    )
+
+def get_children(position_key, positions, level):
+  children = []
+  if level > 15:
+    return children
+  level += 1
+  for position in positions:
+    if positions[position]['to'] == position_key:
+      child_key = positions[position]['from']
+      merged_position = dict()
+      merged_position.update(positions[child_key])
+      position_children = []
+      if (not 'deleted' in positions[position] or not positions[position]['deleted'] == True):
+        position_children = get_children(position_key=child_key, positions=positions, level=level)
+      if (len(position_children)>0):
+        merged_position['children'] = position_children
+      children.append(merged_position)
+
+  return children
+
+def search_children(position_key, children):
+  found = False
+  for child in children:
+    if (child['position_key'] == position_key):
+      found = True
+    elif 'children' in child:
+      found = found or search_children(position_key, child['children'])
+  return found
+
 @router.post('/position',
     dependencies=[Depends(auth.verify_token)])
 async def create_position(new_position: PositionNew):

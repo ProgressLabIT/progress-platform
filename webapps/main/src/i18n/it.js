@@ -1021,7 +1021,6 @@ export default {
       start_to: 'Inizio A',
       end_from: 'Fine Da',
       end_to: 'Fine A',
-      through_position_code: 'Attraverso la posizione',
       movement_type: 'Tipo di movimento',
       status: 'Stato',
     },

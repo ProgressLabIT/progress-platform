@@ -17,6 +17,21 @@ class Queries:
     RETURN v
   """
 
+
+  GET_POSITION_HIERARCHY = """
+    LET start = @position_id
+        FOR v, e IN 0..9999 ANY start is_in_position OPTIONS { uniqueVertices: "path" }
+
+        RETURN merge({
+            position_id: v._id,
+            position_key: v._key,
+            code: v.code,
+            product_key: v.product_key,
+            from: e._from,
+            to: e._to
+        })
+  """
+
   GET_POSITION_CHILDREN_COUNT = """
     LET start = CONCAT('Position/', NOT_NULL(@is_in_position, 'IN'))
 
@@ -74,23 +89,6 @@ class Queries:
   SEARCH_MOVEMENTS = """
     FOR m IN movement
 
-    FILTER
-      (@movement_type ? m.type == @movement_type : true)
-      && (@movement_status ? m.status == @movement_status : true)
-      && (@include_planned == false ? m.status != 'planned' : true)
-      && (@start_from ? m.start >= @start_from : true)
-      && (@start_to ? m.start <= @start_to : true)
-      && (@end_from ? m.end >= @end_from : true)
-      && (@end_to ? m.end <= @end_to : true)
-      && (@product_key ? m.product_key == @product_key : true)
-      && (@product_code ? LENGTH(FOR p IN Product FILTER m.product_key == p._key && p.code == @product_code RETURN 1) : true)
-      && (@serial_key ? m.serial_key == @serial_key : true)
-      && (@serial_code ? m.serial_code == @serial_code : true)
-      && (@mission_key ? m.mission_key == @mission_key : true)
-      && (@mission_code ? m.mission_code == @mission_code : true)
-      && (@movement_doc ? m.movement_doc == @movement_doc : true)
-      && (@source_doc ? m.source_doc == @source_doc : true)
-
     // PRODUCT
     let product = FIRST(
         FOR product IN Product
@@ -111,6 +109,27 @@ class Queries:
         FILTER position._id == m._to
         RETURN position
     )
+
+    FILTER
+      (@movement_type ? m.type == @movement_type : true)
+      && (@movement_status ? m.status == @movement_status : true)
+      && (@include_planned == false ? m.status != 'planned' : true)
+      && (@start_from ? m.start >= @start_from : true)
+      && (@start_to ? m.start <= @start_to : true)
+      && (@end_from ? m.end >= @end_from : true)
+      && (@end_to ? m.end <= @end_to : true)
+      && (@product_key ? m.product_key == @product_key : true)
+      && (@product_code ? LENGTH(FOR p IN Product FILTER m.product_key == p._key && CONTAINS(p.code, @product_code) RETURN 1) : true)
+      && (@serial_key ? m.serial_key == @serial_key : true)
+      && (@serial_code ? m.serial_code == @serial_code : true)
+      && (@mission_key ? m.mission_key == @mission_key : true)
+      && (@mission_code ? m.mission_code == @mission_code : true)
+      && (@movement_doc ? m.movement_doc == @movement_doc : true)
+      && (@source_doc ? m.source_doc == @source_doc : true)
+      && (@position_from ? position_from._key == @position_from : true)
+      && (@position_to ? position_to._key == @position_to : true)
+
+
 
     LIMIT @offset, @limit || null
 

@@ -4,7 +4,12 @@
     :loading="loading"
     max-width="80vw"
     @submit="postNewPosition"
-    @cancel="$emit('closePosition')"
+    @cancel="
+      () => {
+        $emit('closePosition');
+        $router.push({ name: 'positions' });
+      }
+    "
   >
     <template #title>
       {{ $t('warehouse.position.new') }}
@@ -51,8 +56,8 @@
             v-else-if="field_name === 'parent'"
             dense
             :load-data="false"
-            :value="new_positions[index].parent"
-            @select="new_positions[index].parent = $event._key"
+            :value="new_positions[index]?.parent"
+            @select="new_positions[index].parent = $event"
           >
           </BaseAutocompletePosition>
 
@@ -147,10 +152,16 @@ export default {
   },
 
   created() {
-    this.addLine();
+    this.clear();
   },
 
   methods: {
+    clear() {
+      this.new_positions = [];
+      this.show_picker = -1;
+      this.addLine();
+    },
+
     addLine() {
       let empty_line = Object.fromEntries(
         Object.entries(this.new_position_data).map(([field, value]) => [
@@ -165,7 +176,7 @@ export default {
       let new_records = this.new_positions.map((position) => {
         return {
           code: position.code.toUpperCase(),
-          parent_position_key: position.parent || 'IN',
+          parent_position_key: position.parent?._key || 'IN',
           owned: position.owned,
           available: position.available,
           disposable: position.disposable,
@@ -176,12 +187,16 @@ export default {
         .dispatch('postPositions', new_records)
         .then(() => {
           this.loading = false;
+          this.clear();
           this.$emit('closePosition');
+          this.$router.push({ name: 'positions' });
         })
         .catch((err) => {
           window.alert(err);
           this.loading = false;
+          this.clear();
           this.$emit('closePosition');
+          this.$router.push({ name: 'positions' });
         });
     },
 

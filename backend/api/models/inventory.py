@@ -50,6 +50,7 @@ class PositionNew(FlexModel):
   owned: bool | None = True
   available: bool | None = True
   disposable: bool | None = False
+  deleted: bool | None = False
   extra: Any = None
 
 
@@ -196,9 +197,8 @@ class InventoryMovementSearchParameters(BaseModel):
   mission_code: str | None = None
   movement_doc: str | None = None
   source_doc: str | None = None
-  # through_position_key: str | None = 'Position/IN'
-  # through_position_code: str | None = None
-  # include_child_positions: bool | None = True
+  position_from: str | None = None
+  position_to: str | None = None
   limit: int | None = 500
   offset: int | None = 0
 

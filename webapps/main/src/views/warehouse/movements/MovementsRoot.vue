@@ -87,7 +87,8 @@ export default {
 
       filter_list: [
         'product_code',
-        'through_position_code',
+        'position_from',
+        'position_to',
 
         'movement_type',
         'movement_status',
@@ -103,7 +104,8 @@ export default {
 
   computed: {
     product_code: queryModel(String, 'product_code', null),
-    through_position_code: queryModel(String, 'through_position_code', null),
+    position_from: queryModel(String, 'position_from', null),
+    position_to: queryModel(String, 'position_to', null),
 
     movement_type: queryModel(String, 'movement_type', null),
     movement_status: queryModel(String, 'movement_status', null),
@@ -116,7 +118,8 @@ export default {
     filters() {
       return {
         product_code: this.product_code,
-        through_position_code: this.through_position_code,
+        position_from: this.position_from,
+        position_to: this.position_to,
         movement_type: this.movement_type,
         movement_status: this.movement_status,
         start_from: this.start_from,

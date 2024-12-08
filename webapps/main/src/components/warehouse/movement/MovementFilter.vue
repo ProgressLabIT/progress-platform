@@ -20,20 +20,36 @@
       </q-input>
     </div>
 
-    <!-- THROUGH POSITION -->
+    <!-- POSITION FROM -->
     <div class="row items-baseline q-col-gutter-md">
-      <q-input
-        v-model="through_position_code"
-        filled
+      <BaseAutocompletePositions
         dense
-        clearable
-        autocomplete="off"
-        name="search"
-        debounce="300"
-        :label="$capitalize($t('warehouse.movement.through_position_code'))"
+        filled
         class="q-mb-md col"
-      >
-      </q-input>
+        behavior="menu"
+        popup-content-class="z-max"
+        key-only
+        :load-data="false"
+        :label="$capitalize($t('warehouse.movement.position_from_code'))"
+        :value="position_from"
+        @select="(selection) => (position_from = selection)"
+      />
+    </div>
+
+    <!-- POSITION TO -->
+    <div class="row items-baseline q-col-gutter-md">
+      <BaseAutocompletePositions
+        dense
+        filled
+        class="q-mb-md col"
+        behavior="menu"
+        popup-content-class="z-max"
+        key-only
+        :load-data="false"
+        :label="$capitalize($t('warehouse.movement.position_to_code'))"
+        :value="position_to"
+        @select="(selection) => (position_to = selection)"
+      />
     </div>
 
     <!-- Movement Type -->
@@ -43,6 +59,7 @@
         :options="movement_type_options"
         use-input
         filled
+        clearable
         input-debounce="100"
         class="q-mb-md col"
         :label="$capitalize($t('warehouse.movement.movement_type'))"
@@ -56,6 +73,7 @@
         :options="status_options"
         use-input
         filled
+        clearable
         input-debounce="100"
         class="q-mb-md col"
         :label="$capitalize($t('warehouse.movement.status'))"
@@ -201,6 +219,7 @@
 </template>
 
 <script>
+import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import queryModel from '@/lib/queryModelFactory.js';
 
@@ -209,6 +228,7 @@ export default {
 
   components: {
     FilterDrawer,
+    BaseAutocompletePositions,
   },
 
   props: {
@@ -239,7 +259,8 @@ export default {
   computed: {
     // Filters
     product_code: queryModel(String, 'product_code', null),
-    through_position_code: queryModel(String, 'through_position_code', null),
+    position_to: queryModel(String, 'position_to', null),
+    position_from: queryModel(String, 'position_from', null),
 
     movement_type: queryModel(String, 'movement_type', null),
     movement_status: queryModel(String, 'movement_status', null),
@@ -256,7 +277,8 @@ export default {
     filters() {
       return {
         produc_code: this.produc_code,
-        through_position_code: this.through_position_code,
+        position_from: this.position_from,
+        position_to: this.position_to,
 
         movement_type: this.movement_type,
         movement_status: this.movement_status,

@@ -30,7 +30,8 @@ traceability_collections = [
     'message',
     'Serial',
     'Position',
-    'is_in_position'
+    'is_in_position',
+    'movement'
   ]
 
 media_directories = [

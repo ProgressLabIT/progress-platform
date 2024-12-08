@@ -1001,7 +1001,6 @@ export default {
       start_to: 'Start To',
       end_from: 'End From',
       end_to: 'End To',
-      through_position_code: 'Through position',
       movement_type: 'Movement type',
       status: 'Status',
     },
