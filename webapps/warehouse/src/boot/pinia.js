@@ -1,7 +1,7 @@
 import { until } from '@vueuse/core';
 import { createPinia, storeToRefs } from 'pinia';
 import { boot } from 'quasar/wrappers';
-import { useConfigStore } from 'src/stores/config';
+import { useConfigStore } from '@/stores/config';
 
 export default boot(async ({ app }) => {
   const pinia = createPinia();

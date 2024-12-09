@@ -74,7 +74,7 @@ export default route(function ({ store }) {
 
   Router.beforeEach(async (to, from, next) => {
     // Make sure user is authenticated
-    const login_route = ['root', 'login'].includes(to.name);
+    const login_route = ['root', 'login', 'configuration'].includes(to.name);
 
     if (
       login_route &&

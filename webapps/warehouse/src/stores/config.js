@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { reactive, ref } from 'vue';
-import { api } from 'src/boot/axios';
+import { api } from '@/boot/axios';
 
 export const useConfigStore = defineStore('config', () => {
   const configDefaults = {
@@ -67,6 +67,7 @@ export const useConfigStore = defineStore('config', () => {
       await loadAppConfig();
       isLoading.value = false;
     } catch (error) {
+      isLoading.value = false;
       console.error('Failed to load app config, will use defaults', error);
     }
   })();

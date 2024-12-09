@@ -30,6 +30,12 @@ const routes = [
     component: () => import('src/views/LoginScreen.vue'),
   },
 
+  {
+    path: '/configuration',
+    name: 'configuration',
+    component: () => import('src/views/ConfigurationPage.vue'),
+  },
+
   // Always leave this as last one,
   // but you can also remove it
   {

@@ -87,6 +87,10 @@ const session = {
       VueCookies.remove('Authorization');
     },
 
+    async getDomainConfiguration() {
+      await this.$router.push({ name: 'configuration' });
+    },
+
     unlockSession({ commit }) {
       commit('TOGGLE_SESSION_LOCK', false);
       commit('SET_SESSION_TIMEOUT');

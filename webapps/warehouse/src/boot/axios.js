@@ -1,3 +1,4 @@
+import { Preferences } from '@capacitor/preferences';
 import axios from 'axios';
 import { boot } from 'quasar/wrappers';
 
@@ -8,20 +9,36 @@ import { boot } from 'quasar/wrappers';
 // "export default () => {}" function below (which runs individually
 // for each client)
 
-const domain =
+const fallbackDomain =
   window.location.hostname === 'localhost'
     ? 'http://localhost:8000'
     : 'http://' + window.location.hostname;
 
 const api_base_path = '/api';
+let api = axios.create({
+  baseURL:
+    `${(await getDomainConfiguration()) || fallbackDomain}` + api_base_path,
+});
+
+async function getDomainConfiguration() {
+  let domain = await Preferences.get({ key: 'domain' })?.value;
+  return domain;
+}
+
+async function ensureDomainConfiguration() {
+  let domain = await getDomainConfiguration();
+  if (!domain) {
+    return false;
+  }
+  return true;
+}
 
 //axios.defaults.withCredentials = true;
 
-const api = axios.create({
-  baseURL: domain + api_base_path,
-});
-
-export default boot(({ app, store }) => {
+export default boot(async ({ app, store }) => {
+  if (!(await ensureDomainConfiguration())) {
+    store.dispatch('getDomainConfiguration');
+  }
   api.interceptors.request.use((request) => {
     request.headers['Authorization'] = `Bearer ${store.getters.getToken}`;
     return request;
@@ -55,4 +72,4 @@ export default boot(({ app, store }) => {
   //       so you can easily perform requests against your app's API
 });
 
-export { axios, api };
+export { axios, getDomainConfiguration, ensureDomainConfiguration, api };
