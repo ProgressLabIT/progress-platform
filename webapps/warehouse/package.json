@@ -9,9 +9,15 @@
     "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
-    "build": "quasar build"
+    "build": "quasar build",
+    "build-android-dev": "quasar dev -m capacitor -T android",
+    "build-android-prod": "quasar build -m capacitor -T android"
   },
   "dependencies": {
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0",
     "@pdfme/common": "^2.2.1",
     "@pdfme/generator": "^2.2.1",
     "@pdfme/ui": "^2.2.1",

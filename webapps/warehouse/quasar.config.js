@@ -185,6 +185,12 @@ module.exports = configure(function (ctx) {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-capacitor-apps/configuring-capacitor
     capacitor: {
       hideSplashscreen: true,
+       /** If not present, will look for `package.json > name` */
+      //appName: 'warehouse';
+      /** If not present, will look for `package.json > version` */
+      //version: string;
+      /** If not present, will look for `package.json > description` */
+      //description?: string;
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/configuring-electron
