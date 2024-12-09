@@ -5,8 +5,9 @@
 
     <!-- PRODUCT LIST -->
     <div class="col-auto q-mt-lg uppercase text-low">
-      Risultati ({{ rows.length }})
+      {{ list_label }} ({{ rows.length }})
     </div>
+
 
     <div class="q-mt-md col scroll column">
       <q-card
@@ -39,6 +40,7 @@ import SearchOrScan from '../../SearchOrScan.vue';
 const incoming = useIncomingStore();
 const $router = useRouter();
 
+const list_label = ref('Recenti')
 const filter = ref('');
 const rows = ref('');
 const loading = ref(false);
@@ -49,8 +51,10 @@ function searchProducts() {
   if (filter.value !== last_research.value) {
     if (filter.value === '') {
       loadLatestUsedProducts();
+      list_label.value = 'Recenti'
     } else {
       loadProducts(filter);
+      list_label.value = 'Risultati'
     }
   }
 }
