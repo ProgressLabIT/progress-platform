@@ -23,7 +23,7 @@
 
     <div class="text-h6 q-mb-md q-mt-md">DESTINAZIONE</div>
     <!-- POSITION SEARCH -->
-    <SearchOrScan v-model="filter" @update:model-value="loadPositions" />
+    <SearchOrScan v-model="filter" @update:model-value="searchPositions" />
 
     <!-- SELECTED POSITIONS -->
     <div class="text-h6">POSIZIONI SELEZIONATE</div>
@@ -45,7 +45,7 @@
     </div>
 
     <!-- AVAILABLE POSITIONS -->
-    <div class="q-mt-lg text-h6">POSIZIONI DISPONIBILI</div>
+    <div class="q-mt-lg text-h6">POSIZIONI {{ positionResultsType }}</div>
     <div class="col scroll">
       <div class="row full-width q-col-gutter-x-sm q-mt-md">
         <div v-for="pos in availablePositions" :key="pos._key" class="col-auto">
@@ -99,7 +99,20 @@ const loading = ref(false);
 const filter = ref('');
 const last_research = ref('');
 const positionResults = ref([]);
+const positionResultsType = ref('RECENTI');
 const latest_used_positions = ref(undefined);
+
+function searchPositions() {
+  if (filter.value !== last_research.value) {
+    if (filter.value === '') {
+      loadLatestUsedPositions();
+      positionResultsType.value = 'RECENTI'
+    } else {
+      loadPositions(filter);
+      positionResultsType.value = 'DISPONIBILI'
+    }
+  }
+}
 
 function loadLatestUsedPositions() {
   if (latest_used_positions.value) {
