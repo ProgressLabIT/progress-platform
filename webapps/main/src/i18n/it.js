@@ -706,6 +706,7 @@ export default {
       'Consenti il riordinamento indipendente delle code di lavoro',
     allowSerialCodeEdit: 'Consenti la modifica del codice dei seriali',
     allowSerialDelete: 'Consenti la cancellazione dei seriali',
+    enableInventoryManagement: 'Abilita gestione inventario',
     turnOffIndependentReordering: {
       title: 'Disattiva ordinamento indipendente',
       message:

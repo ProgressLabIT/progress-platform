@@ -693,6 +693,7 @@ export default {
       'Allow independent reordering of job queues',
     allowSerialCodeEdit: 'Allow editing serial codes',
     allowSerialDelete: 'Allow deleting serials',
+    enableInventoryManagement: 'Enable inventory management',
     turnOffIndependentReordering: {
       title: 'Turn off independent reordering',
       message:

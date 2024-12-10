@@ -132,6 +132,10 @@ collections = [
       value = True
     ),
     dict(
+      _key = 'enable_inventory_management',
+      value = False
+    ),
+    dict(
       _key = 'operator_cost',
       value = 25
     ),
