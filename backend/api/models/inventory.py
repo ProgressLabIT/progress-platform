@@ -128,6 +128,16 @@ class InventoryMovementType(str, Enum):
   CONSUMPTION = 'consumption'
   ADJUSTMENT = 'adjustment'
 
+class InventoryMovementSource(BaseModel):
+  work_order_key: str | None = None
+  job_key: str | None = None
+  batch_key: str | None = None
+  event_key: str | None = None
+  event_group_key: str | None = None
+  transfer_doc: str | None = None
+  sales_doc: str | None = None
+  purchase_doc: str | None = None
+
 class InventoryMovement(ArangoEdge): # edge collection movement
   # can be a segment of a multistep movement (to be used as graph),
   # in case material needs to be assigned a specific position in e.g. a transfer trolley with codified shelves
@@ -148,11 +158,11 @@ class InventoryMovement(ArangoEdge): # edge collection movement
 
   mission_key: str | None = None # link to WarehouseMission document, if present
 
-  movement_doc: str | None = None # RECEIPTS/SHIPMENTS: transport document, TRANSFERS: na, PROD/CONS: na
-  source_doc: str | None = None # RECEIPTS: purchase doc, SHIPMENTS: sales doc, TRANSFERS/PROD/CONS: work order/job
-  source_event: str
+  source: InventoryMovementSource | None = None # RECEIPTS: purchase doc, SHIPMENTS: sales doc, TRANSFERS/PROD/CONS: work order/job
+  reason: str | None = None
 
   user_key: str | None = None
+
   extra: Any = None
 
   # Transfer routes must have at least two positions. Positions must be repeat.
