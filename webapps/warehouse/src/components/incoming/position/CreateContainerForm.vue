@@ -67,7 +67,7 @@
         color="theme-blue"
         :label="$t('print_label')"
         size="xl"
-        @click="showPrintLabelBottomSheet()"
+        @click="printPositionLabels()"
       />
       <q-btn
         color="theme-blue"
@@ -91,6 +91,7 @@ import { api as $api } from '@/boot/axios';
 import QuantitySelector from '@/components/QuantitySelector.vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
+import { printPositionLabel } from '@/lib/print';
 
 const $q = useQuasar();
 const $t = useI18n().t;
@@ -99,7 +100,7 @@ const $emit = defineEmits(['hide']);
 const selected_quantity = ref(0);
 const containers = ref([]);
 const creating_containers = ref(false);
-const print_templates = ref([]);
+// const print_templates = ref([]);
 
 const props = defineProps({
   max: {
@@ -139,26 +140,30 @@ async function createContainers() {
   creating_containers.value = false
 }
 
-function showPrintLabelBottomSheet() {
-  $api
-    .get('print-template', {
-      params: { context: 'position', context_key: 'IN' },
-    })
-    .then((data) => {
-      if (data && data?.data?.length > 0) {
-        print_templates.value= data?.data;
-
-      } else {
-        $q.notify({
-          type: 'negative',
-          position: 'top',
-          message: $t(
-            'alerts.cannot_find_print_template'
-          ),
-        });
-      }
-    });
+function printPositionLabels() {
+  containers.value.forEach((position) => {
+    printPositionLabel(position.code);
+  });
 }
+// function showPrintLabelBottomSheet() {
+//   $api
+//     .get('print-template', {
+//       params: { context: 'position', context_key: 'IN' },
+//     })
+//     .then((data) => {
+//       if (data && data?.data?.length > 0) {
+//         print_templates.value= data?.data;
 
-console.log('CreateContainerForm.vue loaded');
+//       } else {
+//         $q.notify({
+//           type: 'negative',
+//           position: 'top',
+//           message: $t(
+//             'alerts.cannot_find_print_template'
+//           ),
+//         });
+//       }
+//     });
+// }
+
 </script>

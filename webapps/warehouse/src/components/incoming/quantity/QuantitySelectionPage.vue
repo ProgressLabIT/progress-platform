@@ -46,13 +46,12 @@
           @click="selectQuantity(tempQuantity)"
         />
         <q-btn
-          :disable="!product_print_template"
           color="theme-blue"
           :label="$t('print_label')"
           unelevated
           class="col-12"
           size="xl"
-          @click="printProductLabel"
+          @click="printProductLabel(incoming.product.code, incoming.product.description)"
         />
       </div>
     </div>
@@ -60,39 +59,31 @@
 </template>
 
 <script setup>
-//import { generateProductLabel, print } from 'app/src/lib/zebraTemplates';
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import QuantitySelector from '@/components/QuantitySelector.vue';
-import { api } from 'app/src/boot/axios';
 import { useIncomingStore } from 'app/src/stores/incoming';
+import { printProductLabel } from 'app/src/lib/print';
 
 const incoming = useIncomingStore();
 
 const loading = ref(false);
 const tempQuantity = ref(incoming.quantity);
-const product_print_template = ref(undefined);
+// const product_print_template = ref(undefined);
 
-function printProductLabel() {
-  //const template = generateProductLabel(
-  //  incoming.product.code,
-  //  incoming.product.description
-  //);
-  //print(template);
-}
 
-function loadPrintTemplates() {
-  api
-    .get('print-template', {
-      params: { context: 'product', context_key: incoming.product._key },
-    })
-    .then((data) => {
-      if (data && data?.data?.length > 0) {
-        product_print_template.value = data.data;
-      } else {
-        product_print_template.value = undefined;
-      }
-    });
-}
+// function loadPrintTemplates() {
+//   api
+//     .get('print-template', {
+//       params: { context: 'product', context_key: incoming.product._key },
+//     })
+//     .then((data) => {
+//       if (data && data?.data?.length > 0) {
+//         product_print_template.value = data.data;
+//       } else {
+//         product_print_template.value = undefined;
+//       }
+//     });
+// }
 
 function selectQuantity(quantity) {
   incoming.quantity = quantity;
@@ -104,7 +95,7 @@ function back() {
   incoming.quantity = 0
 }
 
-onMounted(() => {
-  loadPrintTemplates();
-});
+// onMounted(() => {
+//   loadPrintTemplates();
+// });
 </script>
