@@ -4,6 +4,8 @@ import { watch } from 'vue';
 import { createI18n } from 'vue-i18n';
 import messages from 'src/i18n';
 
+let i18n;
+
 export default boot(({ app, store }) => {
   const preferredLocale = store.state.session.user.preferences.locale;
   // Detect locale can be in the form of en-US, it-IT, etc.
@@ -11,7 +13,7 @@ export default boot(({ app, store }) => {
   const rawLocale = preferredLocale ?? detectedLocale ?? 'it';
   const locale = rawLocale.startsWith('it') ? 'it' : 'en';
 
-  const i18n = createI18n({
+  i18n = createI18n({
     locale,
     globalInjection: true,
     messages,
@@ -34,3 +36,6 @@ export default boot(({ app, store }) => {
   // Set i18n instance on app
   app.use(i18n);
 });
+
+
+export { i18n };

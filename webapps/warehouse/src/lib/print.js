@@ -1,8 +1,8 @@
 import BrowserPrint from "browserprint-es";
 import { Notify } from "quasar";
-import { useI18n } from "vue-i18n";
+import { i18n } from "boot/i18n";
 
-const { t: $t } = useI18n();
+const { t: $t } = i18n.global;
 
 export function printProductLabel(productCode, productDescription) {
   const zpl = `
