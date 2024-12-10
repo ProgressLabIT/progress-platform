@@ -150,6 +150,7 @@ class InventoryMovement(ArangoEdge): # edge collection movement
 
   movement_doc: str | None = None # RECEIPTS/SHIPMENTS: transport document, TRANSFERS: na, PROD/CONS: na
   source_doc: str | None = None # RECEIPTS: purchase doc, SHIPMENTS: sales doc, TRANSFERS/PROD/CONS: work order/job
+  source_event: str
 
   user_key: str | None = None
   extra: Any = None
