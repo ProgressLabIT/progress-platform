@@ -62,6 +62,7 @@
       <q-btn
         color="theme-blue"
         :label="$t('position_create')"
+        :disable="tempPositions.length >= incoming.quantity"
         class="col-12"
         size="xl"
         @click="openCreateContainerForm"
@@ -87,7 +88,11 @@
       v-model="showCreateContainerBottomSheet"
       height="70vh"
     >
-      <CreateContainerForm @hide="showCreateContainerBottomSheet=false"/>
+      <CreateContainerForm
+        :max="incoming.quantity - tempPositions.length"
+        @hide="showCreateContainerBottomSheet=false"
+        @select="selectNewContainers"
+      />
     </SlideUpCard>
 
   </div>
@@ -111,7 +116,6 @@ const filter = ref('');
 const last_research = ref('');
 const positionResults = ref([]);
 const positionResultsType = ref('RECENTI');
-const latest_used_positions = ref(undefined);
 const showCreateContainerBottomSheet = ref(false);
 
 const tempPositions = ref([]);
@@ -133,16 +137,14 @@ function searchPositions() {
 
 
 function loadLatestUsedPositions() {
-  if (latest_used_positions.value) {
-    positionResults.value = latest_used_positions.value;
+  if (incoming.recentPositions.length) {
+    positionResults.value = incoming.recentPositions;
   }
   else {
     loading.value = true;
-    api.get('movement', { params: {limit: 10, with_details: true }}).then((resp) => {
-      latest_used_positions.value = [...new Set(resp.data.map(
-        ({ position_to, position_to_code }) => ({ _key: position_to._key, code: position_to_code })
-      ))];
-      positionResults.value = [...latest_used_positions.value];
+    api.get('movement/latest-receipt-positions', { limit: 10 }).then((resp) => {
+      incoming.recentPositions = resp.data;
+      positionResults.value = incoming.recentPositions;
       loading.value = false;
     });
   }
@@ -183,7 +185,6 @@ function toggleSelection(position) {
   } else {
     tempPositions.value.push(position);
   }
-  adjustQuantityPerPosition();
 }
 
 function adjustQuantityPerPosition() {
@@ -200,8 +201,14 @@ function adjustQuantityPerPosition() {
   }
 }
 
+function selectNewContainers(containers) {
+  tempPositions.value = [...tempPositions.value, ...containers];
+  next();
+}
+
 function next() {
-  incoming.positions = tempPositions.value;
+  adjustQuantityPerPosition()
+  incoming.positions = [...tempPositions.value];
   incoming.stage = 'confirm';
 }
 

@@ -6,5 +6,7 @@ export const useIncomingStore = defineStore('incoming', {
     quantity: 0,
     positions: [],
     stage: 'product',
+    recentProducts: [],
+    recentPositions: [],
   }),
 })

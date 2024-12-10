@@ -35,21 +35,23 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+// IMPORTS
+import { onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { api } from 'app/src/boot/axios';
 import { useIncomingStore } from 'app/src/stores/incoming';
 import SearchOrScan from '../../SearchOrScan.vue';
-import { useI18n } from 'vue-i18n';
 const incoming = useIncomingStore();
 const { t: $t } = useI18n();
 
+// DATA
 const list_label = ref('Recenti')
 const filter = ref('');
 const rows = ref('');
 const loading = ref(false);
 const last_research = ref(undefined);
-const latest_used_products = ref([]);
 
+// METHODS
 function searchProducts() {
   if (filter.value !== last_research.value) {
     if (filter.value === '') {
@@ -63,23 +65,15 @@ function searchProducts() {
 }
 
 function loadLatestUsedProducts() {
-  if (latest_used_products.value.length) {
-    rows.value = latest_used_products.value;
+  if (incoming.recentProducts.length) {
+    rows.value = incoming.recentProducts;
   } else {
     loading.value = true;
-    api
-    .get('movement', { params: {limit: 10, with_details: true }})
-    .then((resp) => {
-      resp.data.forEach(({ product_details }) => {
-        if (latest_used_products?.value?.find(({ _key }) => _key === product_details._key)) {
-          return;
-        }
-        latest_used_products.value.push(product_details)
-      })
-    })
-
-    rows.value = latest_used_products.value;
-    loading.value = false;
+    api.get('movement/latest-receipt-products', { limit: 5 }).then((resp) => {
+      incoming.recentProducts = resp.data;
+      rows.value = incoming.recentProducts;
+      loading.value = false;
+    });
   };
 }
 
@@ -104,18 +98,17 @@ function loadProducts(filter) {
     });
 }
 
-onMounted(() => {
-  loadLatestUsedProducts();
-});
-
 function selectProduct(product) {
   incoming.product = product;
   incoming.stage = 'quantity';
 }
 
-onBeforeUnmount(() => {
-  latest_used_products.value = undefined;
+
+// LIFECYCLE
+onMounted(() => {
+  loadLatestUsedProducts();
 });
+
 </script>
 
 <style lang="sass">
