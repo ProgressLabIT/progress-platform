@@ -5,6 +5,7 @@ export default {
     cannot_find_print_template: 'Cannot find print template',
     print_error: 'Print error',
     template_error: 'Template error',
+    no_printer_found: 'No printer found',
   },
   back: 'Back',
   cancel: 'Cancel',

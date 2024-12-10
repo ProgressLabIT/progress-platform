@@ -5,6 +5,7 @@ export default {
     cannot_find_print_template: 'Impossibile trovare template di stampa',
     print_error: 'Errore di stampa',
     template_error: 'Errore template',
+    no_printer_found: 'Nessuna stampante trovata',
   },
   back: 'Indietro',
   cancel: 'Annulla',
