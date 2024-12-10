@@ -29,7 +29,7 @@
     <!-- SELECT COPIES -->
     <template v-else-if="stage === 'select_copies'">
       <div class="text-subtitle1 q-py-xl text-center">
-        {{ $t('print_label.select_copies_title') }}
+        {{ $t('select_copies') }}
       </div>
       <div>
         <QuantitySelector
@@ -181,7 +181,7 @@ export default {
           this.$q.notify({
             type: 'negative',
             position: 'top',
-            message: this.$t('print_label.error_on_template'),
+            message: this.$t('alerts.template_error'),
           });
           this.loading_label = undefined;
         }
@@ -247,7 +247,7 @@ export default {
               this.$q.notify({
                 type: 'negative',
                 position: 'top',
-                message: this.$t('print_label.error_on_print'),
+                message: this.$t('alerts.print_error'),
               });
             }
           );*/
@@ -257,7 +257,7 @@ export default {
           this.$q.notify({
             type: 'negative',
             position: 'top',
-            message: this.$t('print_label.error_on_template'),
+            message: this.$t('alerts.template_error'),
           });
         }
       );
@@ -265,7 +265,7 @@ export default {
 
     loadPrinters() {
       this.printers = [];
-      this.loading_label = this.$t('print_label.loading_printers');
+      this.loading_label = this.$t('loading_printers');
       BrowserPrint.getLocalDevicesAsync().then((devices) => {
         if (!devices?.printer) {
           this.loading_label = undefined;

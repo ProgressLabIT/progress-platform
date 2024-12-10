@@ -6,7 +6,7 @@
         size="md"
         class="full-width"
         color="theme-blue"
-        :label="$t('incoming.new')"
+        :label="$t('incoming_new')"
         @click="$emit('supplierSelected', 'none')"
       ></q-btn>
   </div>

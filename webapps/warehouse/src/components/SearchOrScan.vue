@@ -46,6 +46,9 @@
 import { ref } from 'vue';
 import ModalBottomContainer from '@/components/ModalBottomContainer.vue';
 import CameraCodeScanner from '@/components/barcode-reader/CameraCodeScanner.vue';
+import { useI18n } from 'vue-i18n';
+
+const $t = useI18n().t;
 
 const inputText = defineModel({ type: String });
 const show_code_scanner = ref(false);

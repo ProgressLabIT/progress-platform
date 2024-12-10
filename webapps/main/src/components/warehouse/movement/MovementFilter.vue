@@ -14,7 +14,7 @@
         autocomplete="off"
         name="search"
         debounce="300"
-        :label="$capitalize($t('warehouse.movement.product_code'))"
+        :label="$capitalize($t('product_code'))"
         class="q-mb-md col"
       >
       </q-input>

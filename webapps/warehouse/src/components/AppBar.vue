@@ -55,15 +55,11 @@
                   @update:model-value="setTheme"
                 >
                   <template #light>
-                    <q-icon name="mdi-weather-sunny">
-                      <q-tooltip>{{ $t('preferences.theme.light') }}</q-tooltip>
-                    </q-icon>
+                    <q-icon name="mdi-weather-sunny" />
                   </template>
 
                   <template #dark>
-                    <q-icon name="mdi-weather-night">
-                      <q-tooltip>{{ $t('preferences.theme.dark') }}</q-tooltip>
-                    </q-icon>
+                    <q-icon name="mdi-weather-night" />
                   </template>
                 </q-btn-toggle>
               </q-item-section>
@@ -133,7 +129,7 @@
 
               <q-item-section>
                 <q-item-label>
-                  {{ capitalizeAll($t('session.logout')) }}
+                  {{ capitalizeAll($t('logout')) }}
                 </q-item-label>
               </q-item-section>
             </q-item>

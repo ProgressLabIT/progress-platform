@@ -44,14 +44,14 @@
                     >
                       <q-card-section>
                         <div class="card-title text-high">
-                          {{ $t('session.login_title') }}
+                          {{ $t('login') }}
                         </div>
                       </q-card-section>
 
                       <q-card-section>
                         <q-input
                           v-model="credentials.username"
-                          :label="$capitalize($t('user.username'))"
+                          :label="$capitalize($t('username'))"
                           autocomplete="off"
                           class="q-mb-md"
                           for="username"
@@ -60,7 +60,7 @@
                         <q-input
                           v-model="credentials.password"
                           type="password"
-                          :label="$capitalize($t('user.password'))"
+                          :label="$capitalize($t('password'))"
                           for="password"
                         >
                         </q-input>
@@ -72,7 +72,7 @@
                           color="theme-blue"
                           class="full-width"
                         >
-                          {{ $t('session.start_session') }}
+                          {{ $t('session_start') }}
                         </q-btn>
                       </q-card-section>
                     </q-form>
@@ -148,7 +148,7 @@
                             :disabled="!password_match"
                           >
                             {{
-                              $capitalize($t('user.new_password_save_action'))
+                              $capitalize($t('new_password_save'))
                             }}
                           </q-btn>
                         </q-card-actions>
@@ -286,7 +286,7 @@ export default {
         this.$store.commit('SET_SESSION_TIMEOUT');
 
         setTimeout(() => {
-          this.user_message = this.$t('session.login_welcome_message_1', {
+          this.user_message = this.$t('login_welcome_message_1', {
             name: this.user.name,
             surname: this.user.surname,
           });
@@ -294,7 +294,7 @@ export default {
           this.logging_in = false;
         }, 1000);
         setTimeout(() => {
-          this.user_message = this.$t('session.login_welcome_message_2');
+          this.user_message = this.$t('login_welcome_message_2');
         }, 3000);
         setTimeout(() => {
           this.$router.push(this.go_to_location);

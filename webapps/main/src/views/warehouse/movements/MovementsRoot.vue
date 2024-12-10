@@ -163,7 +163,7 @@ export default {
           name: 'product_code',
           field: 'product_code',
           sortable: true,
-          label: this.$t('warehouse.movement.product_code').toUpperCase(),
+          label: this.$t('product_code').toUpperCase(),
           align: 'left',
           style: 'max-width: 10vw',
         },
