@@ -4,7 +4,7 @@
     <div class="col-auto column full-width">
       <div class="row">
         <div class="col">
-          <div class="text-h6 q-mb-sm">PRODOTTO</div>
+          <div class="text-h6 q-mb-sm text-low weight-bold text-uppercase">{{ $t('product')}}</div>
           <div class="text-h1 q-pr-sm" style="word-wrap: break-word">
             {{ incoming.product?.code }}
           </div>
@@ -29,14 +29,14 @@
     <div class="text-h6">POSIZIONI SELEZIONATE</div>
     <div class="row col-auto q-col-gutter-x-sm q-mt-md">
       <div
-        v-for="selected in incoming.positions"
+        v-for="selected in tempPositions"
         :key="selected._key"
         class="col-auto"
       >
         <q-chip
           clickable
           color="theme-blue"
-          size="lg"
+          class="text-body1"
           @click="toggleSelection(selected)"
         >
           {{ selected.code }}
@@ -49,7 +49,7 @@
     <div class="col scroll">
       <div class="row full-width q-col-gutter-x-sm q-mt-md">
         <div v-for="pos in availablePositions" :key="pos._key" class="col-auto">
-          <q-chip clickable outline size="lg" @click="toggleSelection(pos)">
+          <q-chip clickable outline class="text-body1" @click="toggleSelection(pos)">
             {{ pos.code }}
           </q-chip>
         </div>
@@ -59,18 +59,19 @@
     <q-space></q-space>
 
     <div class="col-auto q-gutter-y-md row justify-center">
-      <!-- <q-btn
+      <q-btn
         color="theme-blue"
-        :label="$t('incoming.positions.create_container')"
+        :label="$t('position_create')"
         class="col-12"
         size="xl"
-      /> -->
+        @click="openCreateContainerForm"
+      />
       <q-btn
         color="theme-blue"
         label="INDIETRO"
         class="col"
         size="xl"
-        @click="router.back()"
+        @click="back"
       />
       <div class="q-mx-xs"></div>
       <q-btn
@@ -78,21 +79,31 @@
         label="AVANTI"
         class="col"
         size="xl"
-        @click="router.push({ name: 'IncomingConfirm' })"
+        @click="next"
       />
     </div>
+
+    <SlideUpCard
+      v-model="showCreateContainerBottomSheet"
+      height="70vh"
+    >
+      <CreateContainerForm @hide="showCreateContainerBottomSheet=false"/>
+    </SlideUpCard>
+
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { api } from 'app/src/boot/axios';
 import { useIncomingStore } from 'app/src/stores/incoming';
 import SearchOrScan from '../../SearchOrScan.vue';
+import SlideUpCard from '../../SlideUpCard.vue';
+import CreateContainerForm from './CreateContainerForm.vue';
+import { useI18n } from 'vue-i18n';
 
+const { t: $t } = useI18n();
 const incoming = useIncomingStore();
-const router = useRouter();
 
 const loading = ref(false);
 
@@ -101,6 +112,12 @@ const last_research = ref('');
 const positionResults = ref([]);
 const positionResultsType = ref('RECENTI');
 const latest_used_positions = ref(undefined);
+const showCreateContainerBottomSheet = ref(false);
+
+const tempPositions = ref([]);
+const tempPositionsKeys = computed(() => tempPositions.value.map((p) => p._key));
+
+
 
 function searchPositions() {
   if (filter.value !== last_research.value) {
@@ -114,14 +131,18 @@ function searchPositions() {
   }
 }
 
+
 function loadLatestUsedPositions() {
   if (latest_used_positions.value) {
     positionResults.value = latest_used_positions.value;
-  } else {
+  }
+  else {
     loading.value = true;
-    api.get('movement/latest-receipt-positions', { limit: 10 }).then((resp) => {
-      latest_used_positions.value = resp.data;
-      positionResults.value = latest_used_positions.value;
+    api.get('movement', { params: {limit: 10, with_details: true }}).then((resp) => {
+      latest_used_positions.value = [...new Set(resp.data.map(
+        ({ position_to, position_to_code }) => ({ _key: position_to._key, code: position_to_code })
+      ))];
+      positionResults.value = [...latest_used_positions.value];
       loading.value = false;
     });
   }
@@ -138,44 +159,54 @@ function loadPositions() {
   params.limit = 100;
 
   api.get('position', { params }).then((resp) => {
-    positionResults.value = resp.data;
+    positionResults.value = [...resp.data];
     loading.value = false;
   });
 }
 
 const availablePositions = computed(() => {
   return positionResults.value.filter(
-    (p) => !incoming.positionKeys.includes(p._key)
+    (p) => !tempPositionsKeys.value.includes(p._key)
   );
 });
 
-// function showCreateContainerBottomSheet() {
-//   // this.$bus.emit('show-create-container');
-// }
+function openCreateContainerForm() {
+  console.log('openCreateContainerForm');
+  showCreateContainerBottomSheet.value = true;
+}
 
 function toggleSelection(position) {
-  console.log(position, incoming.positionKeys);
-  const index = incoming.positionKeys.findIndex((el) => el === position._key);
+  console.log(position, tempPositionsKeys.value);
+  const index = tempPositionsKeys.value.findIndex((el) => el === position._key);
   if (index >= 0) {
-    incoming.positions.splice(index, 1);
+    tempPositions.value.splice(index, 1);
   } else {
-    incoming.positions.push(position);
+    tempPositions.value.push(position);
   }
   adjustQuantityPerPosition();
 }
 
 function adjustQuantityPerPosition() {
-  if (incoming.positions.length <= 0) {
+  if (tempPositions.value.length <= 0) {
     return;
   }
   let remainingQty = incoming.quantity;
-  let remainingPos = incoming.positions.length;
-  for (let position of incoming.positions) {
+  let remainingPos = tempPositions.value.length;
+  for (let position of tempPositions.value) {
     let posQty = Math.floor(remainingQty / remainingPos);
     position.quantity = posQty;
     remainingPos--;
     remainingQty -= posQty;
   }
+}
+
+function next() {
+  incoming.positions = tempPositions.value;
+  incoming.stage = 'confirm';
+}
+
+function back() {
+  incoming.stage = 'quantity';
 }
 
 onMounted(() => {

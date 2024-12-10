@@ -68,7 +68,7 @@
         label="INDIETRO"
         class="col-12"
         size="xl"
-        @click="router.back()"
+        @click="incoming.stage = 'position'"
       />
     </div>
     <!-- <div
@@ -124,7 +124,6 @@
 
 <script setup>
 import { Notify } from 'quasar';
-import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { sendEvent } from 'app/src/composables/event.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
@@ -132,7 +131,6 @@ import { useIncomingStore } from 'app/src/stores/incoming';
 
 const incoming = useIncomingStore();
 
-const router = useRouter();
 
 const store = useStore();
 
@@ -172,7 +170,6 @@ function confirm() {
         color: 'theme-orange',
       });
     });
-  router.push({ name: 'IncomingProduct' });
   incoming.$reset();
 }
 

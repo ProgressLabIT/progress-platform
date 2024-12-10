@@ -212,7 +212,7 @@ export default {
       const redirect = this.$route.query.redirect_to;
       return redirect
         ? { path: redirect }
-        : { name: this.$store.getters.userHomepage };
+        : { name: 'IncomingRoot' };
     },
 
     password_match() {

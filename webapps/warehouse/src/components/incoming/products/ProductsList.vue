@@ -1,15 +1,19 @@
 <template>
   <div class="col column">
+    <div class="col-auto q-mb-sm text-h6">
+      {{ $t('product')}}
+    </div>
+
     <!-- PRODUCT SEARCH -->
     <SearchOrScan v-model="filter" @update:model-value="searchProducts" />
 
     <!-- PRODUCT LIST -->
-    <div class="col-auto q-mt-lg uppercase text-low">
+    <div class="col-auto q-mt-md q-mb-sm text-h6">
       {{ list_label }} ({{ rows.length }})
     </div>
 
 
-    <div class="q-mt-md col scroll column">
+    <div class="col scroll column">
       <q-card
         v-for="product in rows"
         :key="product.key"
@@ -32,20 +36,19 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { api } from 'app/src/boot/axios';
 import { useIncomingStore } from 'app/src/stores/incoming';
 import SearchOrScan from '../../SearchOrScan.vue';
-
+import { useI18n } from 'vue-i18n';
 const incoming = useIncomingStore();
-const $router = useRouter();
+const { t: $t } = useI18n();
 
 const list_label = ref('Recenti')
 const filter = ref('');
 const rows = ref('');
 const loading = ref(false);
 const last_research = ref(undefined);
-const latest_used_products = ref(undefined);
+const latest_used_products = ref([]);
 
 function searchProducts() {
   if (filter.value !== last_research.value) {
@@ -60,16 +63,24 @@ function searchProducts() {
 }
 
 function loadLatestUsedProducts() {
-  if (latest_used_products.value) {
+  if (latest_used_products.value.length) {
     rows.value = latest_used_products.value;
   } else {
     loading.value = true;
-    api.get('movement/latest-receipt-products', { limit: 10 }).then((resp) => {
-      latest_used_products.value = resp.data;
-      rows.value = latest_used_products.value;
-      loading.value = false;
-    });
-  }
+    api
+    .get('movement', { params: {limit: 10, with_details: true }})
+    .then((resp) => {
+      resp.data.forEach(({ product_details }) => {
+        if (latest_used_products?.value?.find(({ _key }) => _key === product_details._key)) {
+          return;
+        }
+        latest_used_products.value.push(product_details)
+      })
+    })
+
+    rows.value = latest_used_products.value;
+    loading.value = false;
+  };
 }
 
 function loadProducts(filter) {
@@ -93,14 +104,14 @@ function loadProducts(filter) {
     });
 }
 
-function selectProduct(product) {
-  incoming.product = product;
-  setTimeout(() => $router.push({ name: 'IncomingQuantity' }), 500);
-}
-
 onMounted(() => {
   loadLatestUsedProducts();
 });
+
+function selectProduct(product) {
+  incoming.product = product;
+  incoming.stage = 'quantity';
+}
 
 onBeforeUnmount(() => {
   latest_used_products.value = undefined;

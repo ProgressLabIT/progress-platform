@@ -4,7 +4,6 @@ const incomingRoutes = [
     name: 'IncomingRoot',
     redirect: { name: 'IncomingManual'},
     meta: { scope: 'warehouse', screen_title: 'Incoming' },
-    component: () => import ('@/views/incoming/IncomingRoot.vue'),
     children: [
       {
         path: 'checks',
@@ -14,36 +13,7 @@ const incomingRoutes = [
       {
         path: 'manual',
         name: 'IncomingManual',
-        redirect: { name: 'IncomingProduct' },
-        children: [
-          {
-            path: 'product',
-            name: 'IncomingProduct',
-            component: () => import ('@/components/incoming/products/ProductsList.vue'),
-            children: [
-              {
-                name: 'PrintProductLabel',
-                path: 'print',
-                component: () => import ('@/components/print/PrintLabelForm.vue'),
-              }
-            ]
-          },
-          {
-            path: 'quantity',
-            name: 'IncomingQuantity',
-            component: () => import ('@/components/incoming/quantity/QuantitySelectionPage.vue'),
-          },
-          {
-            path: 'position',
-            name: 'IncomingPosition',
-            component: () => import ('@/components/incoming/position/PositionsPage.vue'),
-          },
-          {
-            path: 'routing',
-            name: 'IncomingConfirm',
-            component: () => import ('@/components/incoming/position/ConfirmPositionsPage.vue')
-          }
-        ]
+        component: () => import ('@/views/incoming/IncomingManual.vue')
       }
     ]
   },

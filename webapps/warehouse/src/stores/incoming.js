@@ -5,8 +5,6 @@ export const useIncomingStore = defineStore('incoming', {
     product: undefined,
     quantity: 0,
     positions: [],
+    stage: 'product',
   }),
-  getters: {
-    positionKeys: (state) => state.positions.map(p => p._key)
-  }
 })
