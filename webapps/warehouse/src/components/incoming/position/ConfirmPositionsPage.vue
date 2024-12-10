@@ -1,5 +1,5 @@
 <template>
-  <div class="col column full-width">
+  <div class="col column full-width scroll">
     <!-- ITEM CODE & DESCRIPTION -->
     <div class="col-auto full-width">
       <div class="row">
@@ -23,7 +23,7 @@
 
     <div class="text-h6 q-mb-sm q-mt-xl">DESTINAZIONE</div>
     <template v-for="position in incoming.positions" :key="position._key">
-      <div class="col-auto text-h1">
+      <div class="col-auto text-h2">
         {{ position.code }}
       </div>
       <div class="row justify-center items-start content-left">
@@ -71,54 +71,6 @@
         @click="incoming.stage = 'position'"
       />
     </div>
-    <!-- <div
-      class="row justify-center items-start content-left"
-      style="height: 50vh"
-    >
-      <div class="col-10">{{ $t('incoming.position_caption') }}</div>
-      <div class="col-2">
-        {{ $t('incoming.quantity_caption') }}
-      </div>
-
-      <template v-for="position in incoming.positions" :key="position._key">
-        <div class="col-12">{{ position.code }}</div>
-        <q-slider
-          v-model="position.quantity"
-          class="q-mt-lg col-10"
-          :min="0"
-          :max="quantity"
-          :step="1"
-          label
-          :label-value="value"
-          label-always
-          :disable="position.locked"
-          @change="adjust(position)"
-        />
-        <div class="col-1">
-          {{ position.quantity }}
-        </div>
-        <q-btn
-          color="primary"
-          :icon="
-            position.locked
-              ? 'mdi-lock-outline'
-              : 'mdi-lock-open-variant-outline'
-          "
-          class="col-1"
-          @click="position.locked = !position.locked"
-        />
-      </template>
-    </div>
-
-  <div class="fit row justify-center items-start content-center">
-    <q-btn
-      color="theme-blue"
-      :label="$t('confirm_and_close')"
-      class="col-12"
-      @click="$emit('positionConfirmed', 'true')"
-    ></q-btn>
-
-  </div> -->
   </div>
 </template>
 
@@ -129,10 +81,8 @@ import { sendEvent } from 'app/src/composables/event.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
 import { useIncomingStore } from 'app/src/stores/incoming';
 
-const incoming = useIncomingStore();
-
-
 const store = useStore();
+const incoming = useIncomingStore();
 
 function confirm() {
   let movements = [];

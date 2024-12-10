@@ -10,7 +10,7 @@
         v-model="selected_quantity"
         :initial_qty="0"
         :show_buttons="false"
-        :max="incoming.quantity"
+        :max="props.max"
         class="col"
       />
       <div class="col-auto">
@@ -73,7 +73,7 @@
         color="theme-blue"
         :label="$t('next')"
         size="xl"
-        @click="closeAndSelectCountainers()"
+        @click="$emit('select', containers);"
       />
       <q-btn
         color="theme-blue"
@@ -91,17 +91,23 @@ import { api as $api } from '@/boot/axios';
 import QuantitySelector from '@/components/QuantitySelector.vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
-import { useIncomingStore } from 'app/src/stores/incoming';
 
 const $q = useQuasar();
 const $t = useI18n().t;
 const $emit = defineEmits(['hide']);
-const incoming = useIncomingStore();
 
 const selected_quantity = ref(0);
 const containers = ref([]);
 const creating_containers = ref(false);
 const print_templates = ref([]);
+
+const props = defineProps({
+  max: {
+    type: Number,
+    default: 100,
+  },
+});
+
 
 function resetForm() {
   selected_quantity.value = 0;
@@ -153,10 +159,6 @@ function showPrintLabelBottomSheet() {
       }
     });
 }
-
-function closeAndSelectCountainers() {
-  console.log('closeAndSelectCountainers');
-};
 
 console.log('CreateContainerForm.vue loaded');
 </script>
