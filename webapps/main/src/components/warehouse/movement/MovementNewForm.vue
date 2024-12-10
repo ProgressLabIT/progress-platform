@@ -91,13 +91,15 @@ import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
 import BaseAutocompletePosition from '@/components/warehouse/position/BaseAutocompletePosition.vue';
 
 export default {
-  name: 'PositionNewForm',
+  name: 'MovementNewForm',
 
   components: {
     BaseModalForm,
     BaseTooltipIcon,
     BaseAutocompletePosition,
   },
+
+  emits: ['closePosition'],
 
   data() {
     return {

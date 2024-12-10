@@ -40,39 +40,26 @@ class InventoryEventManager:
 
     def add_movement(self):
       try:
-         for movement in self.event.info.movements:
-            self.create_movement(movement_data=movement)
+        movement_data=self.event.info.movement
+        new_movement_record = InventoryMovement(**movement_data.dict()).dict(by_alias=True)
+        movement_key = self.tx.collection('movement').insert(dict(new_movement_record), return_new=True)['_key']
+        self.tx.collection('is_in_position').insert(dict(
+            _from=f'Product/{movement_data.product_key}',
+            _to=movement_data.position_to
+        ))
+        self.notify_results(dict(
+           movement_key = movement_key,
+           notification = InventoryNotificationType.MOVEMENT_ADDED,
+           message="Movement created correctly",
+        ))
       except:
-           print(traceback.format_exc())
-           self.notify_results(dict(
-              notification = InventoryNotificationType.ERROR,
-              error_code = InventoryNotificationErrorCode.EXCEPTION,
-              error = traceback.format_exc()
-           ))
-           raise InventoryMovementException(f'Cannot add movements')
-
-    def create_movement(self, movement_data):
-       try:
-          new_movement_record = InventoryMovement(**movement_data.dict()).dict(by_alias=True)
-          movement_key = self.tx.collection('movement').insert(dict(new_movement_record), return_new=True)['_key']
-          self.tx.collection('is_in_position').insert(dict(
-              _from=f'Product/{movement_data.product_key}',
-              _to=movement_data.position_to
-          ))
-
-          self.notify_results(dict(
-             movement_key = movement_key,
-             notification = InventoryNotificationType.MOVEMENT_ADDED,
-             message="Movement created correctly",
-          ))
-       except:
-          print(traceback.format_exc())
-          self.notify_results(dict(
-             notification = InventoryNotificationType.ERROR,
-             error_code = InventoryNotificationErrorCode.EXCEPTION,
-             error = traceback.format_exc()
-          ))
-          raise InventoryMovementException(f'Cannot add movement')
+        print(traceback.format_exc())
+        self.notify_results(dict(
+           notification = InventoryNotificationType.ERROR,
+           error_code = InventoryNotificationErrorCode.EXCEPTION,
+           error = traceback.format_exc()
+        ))
+        raise InventoryMovementException(f'Cannot add movements')
 
     def can_be_conflated(self, notification_type):
        return notification_type not in [InventoryNotificationType.ERROR]

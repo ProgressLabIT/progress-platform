@@ -101,7 +101,7 @@ class EventModel(ArangoDocument):
   delete_children: bool | None = False
 
   # Inventory fields
-  movements: list[InventoryMovementEvent] | None = None
+  movement: InventoryMovementEvent | None = None
   movement_key: str | None = None
   supplier_key: Any | None = None
 

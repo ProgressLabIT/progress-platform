@@ -28,22 +28,21 @@
           <q-btn
             v-if="$route.name === 'positions'"
             size="0.75rem"
-            :label="$t('new')"
             color="theme-blue"
-            @click="show_position_form = true"
+            :label="$t('new')"
+            @click="$router.push({ name: 'positionNew' })"
           >
           </q-btn>
 
-          <PositionNewForm
-            :show="show_position_form"
-            mode="new"
-            @close-position="
-              () => {
-                show_position_form = false;
-              }
-            "
+          <!-- MOVEMENTS BUTTONS -->
+          <q-btn
+            v-if="$route.name === 'movements'"
+            size="0.75rem"
+            :label="$t('new')"
+            color="theme-blue"
+            @click="$router.push({ name: 'movementNew' })"
           >
-          </PositionNewForm>
+          </q-btn>
 
           <!-- FILTER BUTTONS -->
           <q-btn
@@ -109,7 +108,6 @@
 <script>
 import MovementFilter from '@/components/warehouse/movement/MovementFilter.vue';
 import PositionFilter from '@/components/warehouse/position/PositionFilter.vue';
-import PositionNewForm from '@/components/warehouse/position/PositionNewForm.vue';
 
 const warehouse_views = [
   { component: 'Positions', route_name: 'positions' },
@@ -125,14 +123,13 @@ export default {
 
   components: {
     PositionFilter,
-    PositionNewForm,
     MovementFilter,
   },
 
   data() {
     return {
       // content_height: 0,
-      show_position_form: false,
+      show_movement_form: false,
       views: warehouse_views,
       showFilterDrawer: false,
       filtersActiveNo: 0,

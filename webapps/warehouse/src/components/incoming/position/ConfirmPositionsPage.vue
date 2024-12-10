@@ -92,8 +92,8 @@ function confirm() {
       position_from: 'Position/IN',
       position_to: `Position/${position._key}`,
       product_key: incoming.product._key,
-      qt_planned: incoming.quantity,
-      qt_confirmed: incoming.quantity,
+      qt_planned: position.quantity,
+      qt_confirmed: position.quantity,
       status: 'completed',
       type: 'receipt',
       user_key: session_data.user._key,
@@ -101,25 +101,27 @@ function confirm() {
       end: timestamp(),
     });
   }
-  sendEvent({
-    event_type: 'ADD_MOVEMENT',
-    event_data: {
-      movements: movements,
-    },
-  })
-    .then(() => {
-      Notify.create({
-        message: 'Movimenti registrati',
-        color: 'theme-green',
-        timeout: 1500,
-      });
+  for (const movement of movements) {
+    sendEvent({
+      event_type: 'ADD_MOVEMENT',
+      event_data: {
+        movement: movement,
+      },
     })
-    .catch((err) => {
-      Notify.create({
-        message: err,
-        color: 'theme-orange',
+      .then(() => {
+        Notify.create({
+          message: 'Movimenti registrati',
+          color: 'theme-green',
+          timeout: 1500,
+        });
+      })
+      .catch((err) => {
+        Notify.create({
+          message: err,
+          color: 'theme-orange',
+        });
       });
-    });
+  }
   incoming.$reset();
 }
 

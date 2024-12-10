@@ -24,6 +24,12 @@ const warehouseRoutes = [
                   import('@/components/warehouse/position/PositionDetail.vue'),
                 props: true,
               },
+              {
+                path: 'new',
+                name: 'positionNew',
+                component: () =>
+                  import('@/components/warehouse/position/PositionNewForm.vue'),
+              },
             ],
           },
           {
@@ -41,8 +47,16 @@ const warehouseRoutes = [
           {
             path: 'movements',
             name: 'movements',
-            component: () => import('@/views/warehouse/movements/MovementsRoot.vue'),
-            children: [],
+            component: () =>
+              import('@/views/warehouse/movements/MovementsRoot.vue'),
+            children: [
+              {
+                path: 'new',
+                name: 'movementNew',
+                component: () =>
+                  import('@/components/warehouse/movement/MovementNewForm.vue'),
+              },
+            ],
           },
         ],
       },
