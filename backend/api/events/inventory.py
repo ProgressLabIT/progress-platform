@@ -1,6 +1,6 @@
 from events.base import BaseEvent
 from events.shared import EventMeta
-from managers.inventoy_event_manager import InventoryEventManager
+from managers.inventory_event_manager import InventoryEventManager
 from models.inventory import InventoryCommandType
 
 class InventoryEvent(BaseEvent):
