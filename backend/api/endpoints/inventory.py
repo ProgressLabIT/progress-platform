@@ -26,7 +26,7 @@ async def get_positions(params: Annotated[PositionSearchParams, Query()]):
     return [Position(**r) for r in results]
 
   except Exception as e:
-    return HTTPException(
+    raise HTTPException(
       status_code=500,
       detail=traceback.format_exc()
     )
@@ -158,7 +158,7 @@ async def create_position(new_position: PositionNew):
     )
   except Exception as e:
     tx.abort_transaction()
-    return HTTPException(
+    raise HTTPException(
       status_code=500,
       detail=traceback.format_exc(),
     )
@@ -195,7 +195,7 @@ async def update_position(position_key: str, updated_fields: dict, parent_positi
     return response
   except Exception as e:
     tx.abort_transaction()
-    return HTTPException(
+    raise HTTPException(
       status_code=500,
       detail=traceback.format_exc(),
     )
@@ -239,7 +239,7 @@ def search_inventory_journal(params: Annotated[InventoryMovementSearchParameters
     return [InventoryMovementSearchResults(**m) for m in results]
 
   except Exception as e:
-    return HTTPException(
+    raise HTTPException(
       status_code=500,
       detail=traceback.format_exc()
     )
@@ -253,7 +253,7 @@ def get_latest_receipt_positions(limit: int | None = 10):
     return [Position(**p) for p in results]
 
   except Exception as e:
-    return HTTPException(
+    raise HTTPException(
       status_code=500,
       detail=traceback.format_exc()
     )
@@ -267,7 +267,7 @@ def get_latest_receipt_products(limit: int | None = 10):
     return [ProductBaseData(**p) for p in results]
 
   except Exception as e:
-    return HTTPException(
+    raise HTTPException(
       status_code=500,
       detail=traceback.format_exc()
     )
