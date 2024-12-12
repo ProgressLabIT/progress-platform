@@ -310,4 +310,24 @@ def get_warehouse_mission_details(mission_key):
   ...
 
 
+# ===============================================
+# INVENTORY
+# ===============================================
+
+@router.get('/inventory',
+    dependencies=[Depends(auth.verify_token)])
+async def get_inventory(params: Annotated[InventorySearchParams, Query()]):
+  try:
+    bind_vars = dict(**params.model_dump())
+    results = db.aql.execute(Queries.SEARCH_INVENTORY, bind_vars=bind_vars)
+    return [InventorySearchResult(**r) for r in results]
+
+  except Exception as e:
+    raise HTTPException(
+      status_code=500,
+      detail=traceback.format_exc()
+    )
+
+
+
 

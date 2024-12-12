@@ -77,7 +77,7 @@ class PositionSearchParams(BaseModel):
   offset: int | None = 0
 
 
-class Inventory(ArangoDocument): # edge is_in_position
+class Inventory(ArangoEdge): # edge is_in_position
   product_id: str = Field(..., alias='_from')
   position_id: str = Field(..., alias='_to')
   serial_key: str | None = None
@@ -85,20 +85,26 @@ class Inventory(ArangoDocument): # edge is_in_position
   owned: bool = True # False means it's property of customers or suppliers
   value: float | None = None
   reference: str | None # entry transport document, traceability event, etc.
-  date_received: date | None = Field(default_factory=timestamp)
-  expiration_date: date | None = None
+  date_received: datetime | None = None
+  expiration_date: datetime | None = None
   extra: Any = None
+
+class InventorySearchResult(Inventory):
+  product_code: str | None = None
+  position_code: str | None = None
 
 
 class InventorySearchParams(BaseModel):
-  product_key: str | None = None
-  product_code: str | None = None
-  position_key: str | None = None
-  position_code: str | None = None
-  # include_child_positions: str | None = False
-  serial_key: str | None = None
-  serial_code: str | None = None
-  owned: bool | None = None
+  #TODO uncomment
+  #product_key: str | None = None
+  #product_code: str | None = None
+  #position_key: str | None = None
+  #position_code: str | None = None
+  #serial_key: str | None = None
+  #serial_code: str | None = None
+  #owned: bool | None = None
+  limit: int | None = 200
+  offset: int | None = 0
 
 class MovementStatus(str, Enum):
   PLANNED = 'planned'

@@ -9,6 +9,8 @@ const warehouse = {
     position_search_params: undefined,
     movements: [],
     movement_search_params: undefined,
+    inventory: [],
+    inventory_search_params: undefined,
   },
 
   getters: {
@@ -24,6 +26,13 @@ const warehouse = {
     },
     getMovementData: (state) => (movement_key) => {
       return state.movements.find((i) => i._key == movement_key);
+    },
+
+    getInventoryCount: (state) => () => {
+      return state.inventory.length;
+    },
+    getInventoryData: (state) => (inventory_key) => {
+      return state.inventory.find((i) => i._key == inventory_key);
     },
   },
   mutations: {
@@ -78,6 +87,23 @@ const warehouse = {
     },
     SET_MOVEMENT_SEARCH_PARAMS(state, params) {
       state.movement_search_params = params;
+    },
+
+    // INVENTORY
+    LOAD_INVENTORY(state, inventory) {
+      state.inventory = inventory;
+    },
+    APPEND_INVENTORY(state, inventory) {
+      if (state.inventory) {
+        for (const inv of inventory) {
+          state.inventory.push(inv);
+        }
+      } else {
+        state.inventory = inventory;
+      }
+    },
+    SET_INVENTORY_SEARCH_PARAMS(state, params) {
+      state.inventory_search_params = params;
     },
   },
 
@@ -162,6 +188,19 @@ const warehouse = {
       const { data } = await api.get('movement', { params: search_params });
       commit('APPEND_MOVEMENTS', data);
       commit('SET_MOVEMENT_SEARCH_PARAMS', search_params);
+    },
+
+    // INVENTORY
+    async getInventory({ commit }, search_params) {
+      const { data } = await api.get('inventory', { params: search_params });
+      commit('LOAD_INVENTORY', data);
+      commit('SET_INVENTORY_SEARCH_PARAMS', search_params);
+    },
+
+    async appendInventory({ commit }, search_params) {
+      const { data } = await api.get('movement', { params: search_params });
+      commit('APPEND_INVENTORY', data);
+      commit('SET_INVENTORY_SEARCH_PARAMS', search_params);
     },
   },
 };

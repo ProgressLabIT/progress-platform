@@ -887,6 +887,7 @@ export default {
     stock: 'Rimanenze',
     missions: 'Missioni',
     movements: 'Movimenti',
+    inventory: 'Inventario',
     labelPrintTemplates: 'Stampe etichette',
   },
   waiting: 'in attesa',
@@ -1024,6 +1025,15 @@ export default {
       end_to: 'Fine A',
       movement_type: 'Tipo di movimento',
       status: 'Stato',
+    },
+    inventory: {
+      position: 'Posizione',
+      product_code: 'Codice prodotto',
+      quantity: 'Quantita',
+      serial: 'Matricola',
+      owned: 'Posseduto',
+      date_received: 'Ricevuto',
+      expiration_date: 'Scadenza',
     },
   },
 };

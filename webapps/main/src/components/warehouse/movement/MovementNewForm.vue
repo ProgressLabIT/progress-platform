@@ -3,199 +3,115 @@
     id="new-position-form"
     :loading="loading"
     max-width="80vw"
-    @submit="postNewPosition"
+    @submit="createMovement"
     @cancel="$router.back()"
   >
-    <template #title>
-      {{ $t('warehouse.position.new') }}
-    </template>
-
     <template #form>
-      <!-- NEW POSITION FIELD LABELS -->
-      <div class="row q-col-gutter-md">
-        <div
-          v-for="(info, field_name) in new_position_data"
-          :key="field_name"
-          :class="info.cols"
-          class="text-h5 text-uppercase text-low"
-        >
-          {{ $capitalize(info.label) }}
-        </div>
-      </div>
+      <q-select
+        v-model="movement_type"
+        :options="movement_type_options"
+        use-input
+        filled
+        class="q-mb-md col"
+        clearable
+        input-debounce="100"
+        :label="$capitalize($t('warehouse.movement.movement_type'))"
+      />
 
-      <!-- NEW POSITION DATA  -->
-      <div
-        v-for="(line, index) in new_positions"
-        :key="index"
-        class="row q-col-gutter-md q-py-sm items-center"
-      >
-        <div
-          v-for="(info, field_name) in new_position_data"
-          :key="field_name"
-          :class="info.cols"
-        >
-          <q-toggle
-            v-if="
-              field_name === 'owned' ||
-              field_name === 'available' ||
-              field_name === 'disposable'
-            "
-            :model-value="new_positions[index][field_name]"
-            :disable="false"
-            @update:model-value="
-              (value) => (new_positions[index][field_name] = value)
-            "
-          />
-
-          <BaseAutocompletePosition
-            v-else-if="field_name === 'parent'"
+      <!--  SELECT POSITION -->
+      <template v-if="movement_type">
+        <!-- POSITION FROM -->
+        <div class="row items-baseline q-col-gutter-md">
+          <BaseAutocompletePositions
             dense
+            class="q-mb-md col"
             :load-data="false"
-            :value="new_positions[index]?.parent"
-            @select="new_positions[index].parent = $event"
-          >
-          </BaseAutocompletePosition>
+            :label="$capitalize($t('warehouse.movement.position_from_code'))"
+            :value="position_from"
+            @select="(selection) => (position_from = selection)"
+          />
+        </div>
 
-          <q-input
-            v-else
-            v-model="new_positions[index][field_name]"
+        <!-- POSITION TO -->
+        <div class="row items-baseline q-col-gutter-md">
+          <BaseAutocompletePositions
             dense
-            filled
-            autocomplete="false"
-          >
-          </q-input>
+            class="q-mb-md col"
+            :load-data="false"
+            :label="$capitalize($t('warehouse.movement.position_to_code'))"
+            :value="position_to"
+            @select="(selection) => (position_to = selection)"
+          />
         </div>
 
-        <div class="col-auto">
-          <BaseTooltipIcon
-            v-if="new_positions.length > 1"
-            icon="mdi-close"
-            :tooltip="$t('delete')"
-            :color="$theme.red"
-            @icon-click="deleteRow(index)"
+        <!-- PRODUCT -->
+        <div class="row items-baseline q-col-gutter-md">
+          <BaseAutocompleteProduct
+            dense
+            class="q-mb-md col"
+            :load-data="false"
+            :value="product"
+            :label="$capitalize($t('product.label'))"
+            @select="(selection) => (product = selection)"
           >
-          </BaseTooltipIcon>
+          </BaseAutocompleteProduct>
         </div>
-      </div>
 
-      <q-btn flat class="display medium" @click="addLine">
-        + {{ $t('warehouse.position.add') }}
-      </q-btn>
+        <!-- SERIAL -->
+        <div class="row items-baseline q-col-gutter-md">
+          <BaseAutocompleteSerial
+            dense
+            class="q-mb-md col"
+            :load-data="false"
+            :value="serial"
+            :product_key="product?._key"
+            :label="$capitalize($t('serial'))"
+            @select="(selection) => (serial = selection)"
+          >
+          </BaseAutocompleteSerial>
+        </div>
+
+        <!-- QUANTITY -->
+        <div class="row items-baseline q-col-gutter-md">
+          <q-input
+            v-model.number="quantity"
+            dense
+            :label="$capitalize($t('quantity.long'))"
+            type="number"
+            class="q-mb-md col"
+            min="1"
+          />
+        </div>
+      </template>
     </template>
   </BaseModalForm>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
+import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
+import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
+import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseModalForm from '@/components/BaseModalForm.vue';
-import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
-import BaseAutocompletePosition from '@/components/warehouse/position/BaseAutocompletePosition.vue';
 
-export default {
-  name: 'MovementNewForm',
+const movement_type_options = ref(['receipt', 'shipment', 'adjustment']);
 
-  components: {
-    BaseModalForm,
-    BaseTooltipIcon,
-    BaseAutocompletePosition,
+const movement_type = ref(undefined);
+
+const position_from = ref(undefined);
+const position_to = ref(undefined);
+const product = ref(undefined);
+const serial = ref(undefined);
+const quantity = ref(1);
+
+defineProps({
+  loading: {
+    type: Boolean,
+    default: false,
   },
+});
 
-  emits: ['closePosition'],
-
-  data() {
-    return {
-      new_positions: [],
-      show_picker: -1,
-      loading: false,
-    };
-  },
-
-  computed: {
-    new_position_data() {
-      return {
-        code: {
-          label: this.$t('warehouse.position.code'),
-          type: String,
-          cols: 'col-2',
-          initial_value: '',
-        },
-        parent: {
-          label: this.$t('warehouse.position.parent_position'),
-          type: Object,
-          cols: 'col-4',
-          initial_value: null,
-        },
-        owned: {
-          label: this.$t('warehouse.position.owned'),
-          type: Boolean,
-          cols: 'col-2',
-          initial_value: true,
-        },
-        available: {
-          label: this.$t('warehouse.position.available'),
-          type: Boolean,
-          cols: 'col-2',
-          initial_value: true,
-        },
-        disposable: {
-          label: this.$t('warehouse.position.disposable'),
-          type: Boolean,
-          cols: 'col-2',
-          initial_value: false,
-        },
-      };
-    },
-  },
-
-  created() {
-    this.clear();
-  },
-
-  methods: {
-    clear() {
-      this.new_positions = [];
-      this.show_picker = -1;
-      this.addLine();
-    },
-
-    addLine() {
-      let empty_line = Object.fromEntries(
-        Object.entries(this.new_position_data).map(([field, value]) => [
-          field,
-          value.initial_value,
-        ]),
-      );
-      this.new_positions.push(empty_line);
-    },
-
-    postNewPosition() {
-      let new_records = this.new_positions.map((position) => {
-        return {
-          code: position.code.toUpperCase(),
-          parent_position_key: position.parent?._key || 'IN',
-          owned: position.owned,
-          available: position.available,
-          disposable: position.disposable,
-        };
-      });
-      this.loading = true;
-      this.$store
-        .dispatch('postPositions', new_records)
-        .then(() => {
-          this.loading = false;
-          this.clear();
-          this.$router.back();
-        })
-        .catch((err) => {
-          window.alert(err);
-          this.loading = false;
-          this.clear();
-          this.$router.back();
-        });
-    },
-
-    deleteRow(index) {
-      this.new_positions.splice(index, 1);
-    },
-  },
-};
+function createMovement() {
+  console.log('suca');
+}
 </script>

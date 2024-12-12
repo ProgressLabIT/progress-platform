@@ -17,6 +17,39 @@ class Queries:
     RETURN v
   """
 
+  SEARCH_INVENTORY = """
+    FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
+
+    FILTER
+      IS_SAME_COLLECTION('Product', v)
+      //&& (@contains_position ? @contains_position IN p.vertices[*]._key : true)
+      //&& (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%') : true)
+      //&& (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
+      //&& (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
+
+      // POSITION
+      let position = FIRST(
+          FOR position IN Position
+          FILTER position._id == e._to
+          RETURN position
+      )
+
+      LIMIT @offset, @limit || null
+
+      RETURN merge(v, {
+              product_id: v._id,
+              product_code: v.code,
+              position_id: e._to,
+              position_code: position.code,
+              serial_key: e.serial_key,
+              quantity: e.quantity,
+              owned: e.owned,
+              value: e.value,
+              reference: e.reference,
+              date_received: e.date_received,
+              expiration_date: e.expiration_date
+      })
+  """
 
   GET_POSITION_HIERARCHY = """
     LET start = @position_id

@@ -871,6 +871,7 @@ export default {
     stock: 'Stock',
     missions: 'Missions',
     movements: 'Movements',
+    inventory: 'Inventory',
     labelPrintTemplates: 'Label print templates',
   },
   waiting: 'waiting',
@@ -1004,6 +1005,15 @@ export default {
       end_to: 'End To',
       movement_type: 'Movement type',
       status: 'Status',
+    },
+    inventory: {
+      position: 'Position',
+      product_code: 'Product Code',
+      quantity: 'Quantity',
+      serial: 'Serial',
+      owned: 'Owned',
+      date_received: 'Received',
+      expiration_date: 'Expiry',
     },
   },
 };

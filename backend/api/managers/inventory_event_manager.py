@@ -2,7 +2,7 @@ import traceback
 import copy
 import json
 
-from models.inventory import InventoryCommandType, InventoryNotificationType, InventoryNotificationErrorCode, InventoryMovement
+from models.inventory import InventoryCommandType, InventoryNotificationType, InventoryNotificationErrorCode, InventoryMovement, InventoryMovementType
 from fastapi.encoders import jsonable_encoder
 from managers.notification_manager import NotificationManager
 
@@ -42,11 +42,8 @@ class InventoryEventManager:
       try:
         movement_data=self.event.info.movement
         new_movement_record = InventoryMovement(**movement_data.dict()).dict(by_alias=True)
+        self.adjust_inventory(new_movement_record, new_movement_record['type'])
         movement_key = self.tx.collection('movement').insert(dict(new_movement_record), return_new=True)['_key']
-        self.tx.collection('is_in_position').insert(dict(
-            _from=f'Product/{movement_data.product_key}',
-            _to=movement_data.position_to
-        ))
         self.notify_results(dict(
            movement_key = movement_key,
            notification = InventoryNotificationType.MOVEMENT_ADDED,
@@ -60,6 +57,44 @@ class InventoryEventManager:
            error = traceback.format_exc()
         ))
         raise InventoryMovementException(f'Cannot add movements')
+
+    def adjust_inventory(self, new_movement_record, type):
+       match type:
+          case InventoryMovementType.RECEIPT:
+             return self.handle_receipt(new_movement_record)
+          case _:
+            raise InventoryMovementException(f'Invalid movement type')
+
+    def handle_receipt(self, new_movement_record):
+      product_key = new_movement_record['product_key']
+      record_match = dict(_from=f'Product/{product_key}', _to=new_movement_record['_to'])
+      if ('serial_key' in new_movement_record):
+         record_match['serial_key'] = new_movement_record['serial_key']
+      else:
+         record_match['serial_key'] = None
+      position_link_cursor = self.tx.collection('is_in_position').find(record_match)
+      if (position_link_cursor.count()>0):
+         position_status = position_link_cursor.next()
+         final_qty = position_status['quantity'] + new_movement_record['qt_confirmed']
+         self.tx.collection('is_in_position').update(dict(
+              _key = position_status['_key'],
+              _from=f'Product/{product_key}',
+              _to=new_movement_record['_to'],
+              quantity=final_qty,
+              owned=True,
+              date_received=new_movement_record['end'],
+              serial_key=new_movement_record['serial_key']
+          ))
+      else:
+        self.tx.collection('is_in_position').insert(dict(
+              _from=f'Product/{product_key}',
+              _to=new_movement_record['_to'],
+              quantity=new_movement_record['qt_confirmed'],
+              owned=True,
+              date_received=new_movement_record['end'],
+              serial_key=new_movement_record['serial_key']
+          ))
+
 
     def can_be_conflated(self, notification_type):
        return notification_type not in [InventoryNotificationType.ERROR]

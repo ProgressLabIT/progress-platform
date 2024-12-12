@@ -33,9 +33,10 @@ const warehouseRoutes = [
             ],
           },
           {
-            path: 'stock',
-            name: 'stock',
-            component: () => import('@/views/settings/GeneralSettings.vue'),
+            path: 'inventory',
+            name: 'inventory',
+            component: () =>
+              import('@/views/warehouse/inventory/InventoryRoot.vue'),
             children: [],
           },
           {

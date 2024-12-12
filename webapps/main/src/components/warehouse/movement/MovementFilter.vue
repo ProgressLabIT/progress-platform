@@ -276,7 +276,7 @@ export default {
 
     filters() {
       return {
-        produc_code: this.produc_code,
+        produc_code: this.product_code,
         position_from: this.position_from,
         position_to: this.position_to,
 
