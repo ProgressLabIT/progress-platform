@@ -23,6 +23,7 @@
         <!-- POSITION FROM -->
         <div class="row items-baseline q-col-gutter-md">
           <BaseAutocompletePositions
+            v-if="movement_type !== 'receipt'"
             dense
             class="q-mb-md col"
             :load-data="false"
@@ -35,6 +36,7 @@
         <!-- POSITION TO -->
         <div class="row items-baseline q-col-gutter-md">
           <BaseAutocompletePositions
+            v-if="movement_type === 'receipt'"
             dense
             class="q-mb-md col"
             :load-data="false"
@@ -88,11 +90,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { Notify } from 'quasar';
+import { ref, watch } from 'vue';
+import { useStore } from 'vuex';
 import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
 import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseModalForm from '@/components/BaseModalForm.vue';
+import { sendEvent } from '@/composables/event.js';
+import { timestamp } from '@/lib/TimeHandling';
 
 const movement_type_options = ref(['receipt', 'shipment', 'adjustment']);
 
@@ -104,6 +110,12 @@ const product = ref(undefined);
 const serial = ref(undefined);
 const quantity = ref(1);
 
+const store = useStore();
+
+watch(movement_type, () => {
+  clean();
+});
+
 defineProps({
   loading: {
     type: Boolean,
@@ -111,7 +123,94 @@ defineProps({
   },
 });
 
+function clean() {
+  position_from.value = undefined;
+  position_to.value = undefined;
+  product.value = undefined;
+  serial.value = undefined;
+  quantity.value = undefined;
+}
+
 function createMovement() {
-  console.log('suca');
+  const session_data = store.state.session;
+
+  let position_from_id = 'Position/IN';
+  if (position_from?.value?._key) {
+    position_from_id = `Position/${position_from?.value?._key}`;
+  }
+
+  let position_to_id = 'Position/XXX';
+  if (position_to?.value?._key) {
+    position_to_id = `Position/${position_to?.value?._key}`;
+  }
+
+  if (!validateMovement()) {
+    return;
+  }
+
+  let movement = {
+    position_from: position_from_id,
+    position_to: position_to_id,
+    product_key: product?.value?._key,
+    qt_planned: quantity.value,
+    qt_confirmed: quantity.value,
+    status: 'completed',
+    type: movement_type.value,
+    user_key: session_data.user._key,
+    start: timestamp(),
+    end: timestamp(),
+  };
+
+  sendEvent({
+    event_type: 'ADD_MOVEMENT',
+    event_data: {
+      movement: movement,
+    },
+  })
+    .then(() => {
+      Notify.create({
+        message: 'Movimenti registrati',
+        type: 'positive',
+        timeout: 1500,
+      });
+    })
+    .catch((err) => {
+      Notify.create({
+        message: err,
+        type: 'negative',
+        color: 'theme-orange',
+      });
+    });
+}
+
+function validateMovement() {
+  switch (movement_type.value) {
+    case 'receipt':
+      if (
+        !position_from?.value?._key ||
+        !product.value?._key ||
+        !quantity?.value
+      ) {
+        Notify.create({
+          message: 'missing fields',
+          type: 'negative',
+          color: 'theme-orange',
+        });
+        return false;
+      }
+      break;
+    case 'shipment':
+      break;
+    case 'adjustment':
+      break;
+    default:
+      Notify.create({
+        message: 'Invalid movement type',
+        type: 'negative',
+        color: 'theme-orange',
+      });
+      return false;
+  }
+  return true;
 }
 </script>

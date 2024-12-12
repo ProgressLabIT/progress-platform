@@ -62,6 +62,10 @@ class InventoryEventManager:
        match type:
           case InventoryMovementType.RECEIPT:
              return self.handle_receipt(new_movement_record)
+          case InventoryMovementType.SHIPMENT:
+             return self.handle_shipment(new_movement_record)
+          case InventoryMovementType.ADJUSTMENT:
+             return self.handle_adjustment(new_movement_record)
           case _:
             raise InventoryMovementException(f'Invalid movement type')
 
@@ -78,12 +82,7 @@ class InventoryEventManager:
          final_qty = position_status['quantity'] + new_movement_record['qt_confirmed']
          self.tx.collection('is_in_position').update(dict(
               _key = position_status['_key'],
-              _from=f'Product/{product_key}',
-              _to=new_movement_record['_to'],
-              quantity=final_qty,
-              owned=True,
-              date_received=new_movement_record['end'],
-              serial_key=new_movement_record['serial_key']
+              quantity=final_qty
           ))
       else:
         self.tx.collection('is_in_position').insert(dict(
@@ -94,6 +93,44 @@ class InventoryEventManager:
               date_received=new_movement_record['end'],
               serial_key=new_movement_record['serial_key']
           ))
+
+    def handle_shipment(self, new_movement_record):
+      product_key = new_movement_record['product_key']
+      record_match = dict(_from=f'Product/{product_key}', _to=new_movement_record['_from'])
+      if ('serial_key' in new_movement_record):
+         record_match['serial_key'] = new_movement_record['serial_key']
+      else:
+         record_match['serial_key'] = None
+      position_link_cursor = self.tx.collection('is_in_position').find(record_match)
+      if (position_link_cursor.count()>0):
+         position_status = position_link_cursor.next()
+         final_qty = position_status['quantity'] - new_movement_record['qt_confirmed']
+         if (final_qty<0):
+            raise InventoryMovementException(f'Cannot ship: quantity not enough')
+         self.tx.collection('is_in_position').update(dict(
+              _key = position_status['_key'],
+              quantity=final_qty
+          ))
+      else:
+        raise InventoryMovementException(f'Cannot find product to ship')
+
+    def handle_adjustment(self, new_movement_record):
+      product_key = new_movement_record['product_key']
+      record_match = dict(_from=f'Product/{product_key}', _to=new_movement_record['_from'])
+      if ('serial_key' in new_movement_record):
+         record_match['serial_key'] = new_movement_record['serial_key']
+      else:
+         record_match['serial_key'] = None
+      position_link_cursor = self.tx.collection('is_in_position').find(record_match)
+      if (position_link_cursor.count()>0):
+         position_status = position_link_cursor.next()
+         final_qty = new_movement_record['qt_confirmed']
+         self.tx.collection('is_in_position').update(dict(
+              _key = position_status['_key'],
+              quantity=final_qty
+          ))
+      else:
+        raise InventoryMovementException(f'Cannot find product to adjust')
 
 
     def can_be_conflated(self, notification_type):
