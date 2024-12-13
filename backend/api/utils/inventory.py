@@ -20,19 +20,25 @@ class Queries:
   SEARCH_INVENTORY = """
     FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
 
-    FILTER
-      IS_SAME_COLLECTION('Product', v)
-      //&& (@contains_position ? @contains_position IN p.vertices[*]._key : true)
-      //&& (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%') : true)
-      //&& (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
-      //&& (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
-
-      // POSITION
+    // POSITION
       let position = FIRST(
           FOR position IN Position
           FILTER position._id == e._to
           RETURN position
       )
+
+    FILTER
+      IS_SAME_COLLECTION('Product', v)
+      && (@position_key ? position._key == @position_key : true)
+      && (@position_code ? position.code == @position_code : true)
+      && (@product_key ? v._key == @product_key : true)
+      && (@product_code ? v.code == @product_code : true)
+      //&& (@contains_position ? @contains_position IN p.vertices[*]._key : true)
+      //&& (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%') : true)
+      //&& (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
+      //&& (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
+
+
 
       LIMIT @offset, @limit || null
 
@@ -49,6 +55,34 @@ class Queries:
               date_received: e.date_received,
               expiration_date: e.expiration_date
       })
+  """
+
+  SEARCH_INVENTORY_PRODUCT = """
+     FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
+
+    // POSITION
+      let position = FIRST(
+          FOR position IN Position
+          FILTER position._id == e._to
+          RETURN position
+      )
+
+    FILTER
+      IS_SAME_COLLECTION('Product', v)
+      && (@position_key ? position._key == @position_key : true)
+      && (@position_code ? position.code == @position_code : true)
+      && (@product_key ? v._key == @product_key : true)
+      && (@product_code ? v.code == @product_code : true)
+      //&& (@contains_position ? @contains_position IN p.vertices[*]._key : true)
+      //&& (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%') : true)
+      //&& (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
+      //&& (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
+
+
+
+      LIMIT @offset, @limit || null
+
+      RETURN v
   """
 
   GET_POSITION_HIERARCHY = """
@@ -192,18 +226,4 @@ class Queries:
   """
 
 
-  SEARCH_INVENTORY_BY_POSITION = """
-    // TODO: Add filter by product tag
 
-    LET start = CONCAT('Position/', NOT_NULL(@position_key, 'IN'))
-
-
-    FOR v,e IN 1..99 INBOUND start is_in_position
-    FILTER e.quantity > 0
-    COLLECT product_key = v._key AGGREGATE product_stock = SUM(e.quantity)
-    RETURN {
-      product_key,
-      product_code: product.code,
-      product_stock
-    }
-  """

@@ -1,9 +1,15 @@
 <template>
   <BaseModalForm
     id="new-position-form"
-    :loading="loading"
+    :loading="loadingVal"
     max-width="80vw"
-    @submit="createMovement"
+    :enable-save="saveButtonEnabled"
+    @submit="
+      () => {
+        createMovement();
+        $router.back();
+      }
+    "
     @cancel="$router.back()"
   >
     <template #form>
@@ -20,68 +26,63 @@
 
       <!--  SELECT POSITION -->
       <template v-if="movement_type">
-        <!-- POSITION FROM -->
+        <!-- POSITION -->
         <div class="row items-baseline q-col-gutter-md">
           <BaseAutocompletePositions
-            v-if="movement_type !== 'receipt'"
             dense
             class="q-mb-md col"
             :load-data="false"
-            :label="$capitalize($t('warehouse.movement.position_from_code'))"
-            :value="position_from"
-            @select="(selection) => (position_from = selection)"
-          />
-        </div>
-
-        <!-- POSITION TO -->
-        <div class="row items-baseline q-col-gutter-md">
-          <BaseAutocompletePositions
-            v-if="movement_type === 'receipt'"
-            dense
-            class="q-mb-md col"
-            :load-data="false"
-            :label="$capitalize($t('warehouse.movement.position_to_code'))"
-            :value="position_to"
-            @select="(selection) => (position_to = selection)"
+            :label="$capitalize($t('warehouse.movement.position_code'))"
+            :value="position"
+            :disable="loadingVal"
+            @select="(selection) => (position = selection)"
           />
         </div>
 
         <!-- PRODUCT -->
-        <div class="row items-baseline q-col-gutter-md">
+        <div v-if="position" class="row items-baseline q-col-gutter-md">
           <BaseAutocompleteProduct
             dense
             class="q-mb-md col"
+            :options="availableProducts"
             :load-data="false"
             :value="product"
+            :disable="loadingVal"
             :label="$capitalize($t('product.label'))"
             @select="(selection) => (product = selection)"
           >
           </BaseAutocompleteProduct>
         </div>
 
-        <!-- SERIAL -->
-        <div class="row items-baseline q-col-gutter-md">
+        <!-- SERIAL
+        <div
+          v-if="position"
+          class="row items-baseline q-col-gutter-md"
+        >
           <BaseAutocompleteSerial
             dense
             class="q-mb-md col"
             :load-data="false"
             :value="serial"
+            :disable="loadingVal"
             :product_key="product?._key"
             :label="$capitalize($t('serial'))"
             @select="(selection) => (serial = selection)"
           >
           </BaseAutocompleteSerial>
-        </div>
+        </div>-->
 
         <!-- QUANTITY -->
-        <div class="row items-baseline q-col-gutter-md">
+        <div v-if="product" class="row items-baseline q-col-gutter-md">
           <q-input
             v-model.number="quantity"
             dense
+            :disable="loadingVal"
             :label="$capitalize($t('quantity.long'))"
             type="number"
             class="q-mb-md col"
-            min="1"
+            :min="qtyMin"
+            :max="qtyMax"
           />
         </div>
       </template>
@@ -95,57 +96,172 @@ import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
-import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
+//import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseModalForm from '@/components/BaseModalForm.vue';
 import { sendEvent } from '@/composables/event.js';
 import { timestamp } from '@/lib/TimeHandling';
+import { api } from 'app/src/boot/axios';
 
 const movement_type_options = ref(['receipt', 'shipment', 'adjustment']);
 
 const movement_type = ref(undefined);
 
-const position_from = ref(undefined);
-const position_to = ref(undefined);
+const position = ref(undefined);
 const product = ref(undefined);
 const serial = ref(undefined);
 const quantity = ref(1);
 
 const store = useStore();
 
-watch(movement_type, () => {
-  clean();
+const qtyMin = ref(1);
+const qtyMax = ref(undefined);
+
+const saveButtonEnabled = ref(false);
+
+const originalPosition = ref(undefined);
+const availableProducts = ref([]);
+
+watch(movement_type, clean);
+watch(position, getAvailableProducts);
+
+watch(product, getOriginalPosition);
+watch(serial, getOriginalPosition);
+
+watch(quantity, () => {
+  saveButtonEnabled.value = !validateMovementError();
 });
 
-defineProps({
+const props = defineProps({
   loading: {
     type: Boolean,
     default: false,
   },
 });
+const loadingVal = ref(props.loading);
 
 function clean() {
-  position_from.value = undefined;
-  position_to.value = undefined;
+  position.value = undefined;
   product.value = undefined;
   serial.value = undefined;
-  quantity.value = undefined;
+  quantity.value = 1;
+  qtyMax.value = undefined;
+  originalPosition.value = undefined;
+  availableProducts.value = [];
+}
+
+function getOriginalPosition() {
+  quantity.value = 1;
+  qtyMax.value = undefined;
+  originalPosition.value = undefined;
+  if (
+    !product?.value ||
+    movement_type?.value === 'receipt' ||
+    !position?.value?._key
+  ) {
+    return;
+  }
+  loadingVal.value = true;
+  api
+    .get('/inventory', {
+      params: {
+        position_key: position.value._key,
+        product_key: product.value._key,
+      },
+    })
+    .then(
+      (data) => {
+        originalPosition.value = data.data[0];
+        quantity.value = originalPosition.value.quantity;
+        if (movement_type.value === 'shipment') {
+          qtyMax.value = quantity.value;
+        }
+        loadingVal.value = false;
+      },
+      () => {
+        originalPosition.value = undefined;
+        loadingVal.value = false;
+      },
+    );
+}
+
+function getAvailableProducts() {
+  availableProducts.value = [];
+  product.value = undefined;
+  quantity.value = 1;
+  qtyMax.value = undefined;
+  originalPosition.value = undefined;
+  if (!position?.value) {
+    return;
+  }
+  if (movement_type?.value === 'receipt') {
+    loadingVal.value = true;
+    api.get('/product').then(
+      (data) => {
+        availableProducts.value = data.data;
+        loadingVal.value = false;
+      },
+      () => {
+        availableProducts.value = [];
+        loadingVal.value = false;
+      },
+    );
+  } else {
+    if (position?.value?._key) {
+      loadingVal.value = true;
+      api
+        .get('/inventory/products', {
+          params: { position_key: position?.value?._key },
+        })
+        .then(
+          (data) => {
+            availableProducts.value = data.data;
+            loadingVal.value = false;
+          },
+          () => {
+            availableProducts.value = [];
+            loadingVal.value = false;
+          },
+        );
+    } else {
+      availableProducts.value = [];
+    }
+  }
 }
 
 function createMovement() {
   const session_data = store.state.session;
 
-  let position_from_id = 'Position/IN';
-  if (position_from?.value?._key) {
-    position_from_id = `Position/${position_from?.value?._key}`;
-  }
+  let error = validateMovementError();
 
-  let position_to_id = 'Position/XXX';
-  if (position_to?.value?._key) {
-    position_to_id = `Position/${position_to?.value?._key}`;
-  }
-
-  if (!validateMovement()) {
+  if (error) {
+    Notify.create({
+      message: error,
+      type: 'negative',
+      color: 'theme-orange',
+    });
     return;
+  }
+
+  let position_from_id = 'Position/OUT';
+  let position_to_id = 'Position/OUT';
+  let position_id = undefined;
+  if (position?.value?._key) {
+    position_id = `Position/${position?.value?._key}`;
+  }
+
+  switch (movement_type.value) {
+    case 'receipt':
+      position_to_id = position_id;
+      break;
+    case 'shipment':
+      position_from_id = position_id;
+      break;
+    case 'adjustment':
+      position_from_id = originalPosition.value.position_to;
+      position_to_id = originalPosition.value.position_to;
+      break;
+    default:
+      return 'Invalid movement type';
   }
 
   let movement = {
@@ -183,34 +299,32 @@ function createMovement() {
     });
 }
 
-function validateMovement() {
+function validateMovementError() {
+  if (!position?.value?._key || !product.value?._key || !quantity?.value) {
+    return 'missing fields';
+  }
   switch (movement_type.value) {
     case 'receipt':
-      if (
-        !position_from?.value?._key ||
-        !product.value?._key ||
-        !quantity?.value
-      ) {
-        Notify.create({
-          message: 'missing fields',
-          type: 'negative',
-          color: 'theme-orange',
-        });
-        return false;
+      if (quantity.value <= 0) {
+        return 'quantity should be > 0';
       }
       break;
     case 'shipment':
+      if (!originalPosition?.value) {
+        return 'cannot find position to update';
+      }
+      if (quantity.value > originalPosition.value.quantity) {
+        return `quantity should be <= ${originalPosition.value.quantity}`;
+      }
       break;
     case 'adjustment':
+      if (!originalPosition?.value) {
+        return 'cannot find position to update';
+      }
       break;
     default:
-      Notify.create({
-        message: 'Invalid movement type',
-        type: 'negative',
-        color: 'theme-orange',
-      });
-      return false;
+      return 'Invalid movement type';
   }
-  return true;
+  return undefined;
 }
 </script>

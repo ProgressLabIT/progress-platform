@@ -96,10 +96,10 @@ class InventorySearchResult(Inventory):
 
 class InventorySearchParams(BaseModel):
   #TODO uncomment
-  #product_key: str | None = None
-  #product_code: str | None = None
-  #position_key: str | None = None
-  #position_code: str | None = None
+  product_key: str | None = None
+  product_code: str | None = None
+  position_key: str | None = None
+  position_code: str | None = None
   #serial_key: str | None = None
   #serial_code: str | None = None
   #owned: bool | None = None

@@ -72,6 +72,15 @@ async def reset_production_and_traceability_data():
         extra = None
     ))
 
+    tx.collection('Position').insert(dict(
+        _key = 'OUT',
+        code = 'OUT',
+        owned = False,
+        available = False,
+        disposable = False,
+        extra = None
+    ))
+
     tx.commit_transaction()
 
     for dir in media_directories:

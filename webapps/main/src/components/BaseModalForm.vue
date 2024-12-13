@@ -18,6 +18,7 @@
                 class="full-width"
                 color="theme-blue"
                 :loading="loading"
+                :disable="!enableSave"
                 @click="$emit('submit')"
               >
                 {{ $t('save') }}
@@ -65,6 +66,10 @@ export default {
     maximized: {
       type: Boolean,
       default: false,
+    },
+    enableSave: {
+      type: Boolean,
+      default: true,
     },
   },
   emits: ['submit', 'cancel'],
