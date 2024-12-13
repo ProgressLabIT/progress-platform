@@ -89,7 +89,7 @@ function confirm() {
   const session_data = store.state.session;
   for (const position of incoming.positions) {
     movements.push({
-      position_from: 'Position/IN',
+      position_from: 'Position/OUT',
       position_to: `Position/${position._key}`,
       product_key: incoming.product._key,
       qt_planned: position.quantity,

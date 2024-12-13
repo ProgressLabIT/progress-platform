@@ -202,6 +202,14 @@ collections = [
         available = True,
         disposable = False,
         extra = None
+      ),
+      dict(
+        _key = 'OUT',
+        code = 'OUT',
+        owned = False,
+        available = False,
+        disposable = False,
+        extra = None
       )
     ]
   ),
