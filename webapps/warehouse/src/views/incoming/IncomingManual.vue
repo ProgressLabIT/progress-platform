@@ -1,10 +1,8 @@
 <template>
   <q-page
     id="incoming-root"
-    class="q-px-md q-pt-lg column fit q-col-gutter-y-lg"
+    class="q-px-md q-pt-md column fit q-col-gutter-y-lg"
   >
-    <!-- TITLE -->
-    <div class="text-h3 uppercase col-auto text-primary">Nuovo Ricevimento</div>
     <component :is="stageComponentMap[incoming.stage]" />
   </q-page>
 </template>

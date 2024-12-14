@@ -3,17 +3,21 @@
     <q-toolbar>
       <!--<q-btn flat icon="mdi-menu" padding="none" @click="drawerModel = true" />-->
 
-      <q-toolbar-title shrink class="uppercase caption q-mx-xs q-mr-auto">
-        {{ screenTitle }}
-      </q-toolbar-title>
+      <q-breadcrumbs separator=">" class="text-low uppercase" active-color="text-low">
+        <!-- <q-breadcrumbs-el>
+          <q-icon name="mdi-home" size="xs"/>
+        </q-breadcrumbs-el> -->
 
-      <!-- <div class="row items-center cursor-pointer">
-        <div class="app-bar-user-name q-mr-sm">{{ username }}</div>
-        <q-avatar size="28px">
-          <q-img :src="avatarUrl"></q-img>
-        </q-avatar>
-      </div> -->
+        <q-breadcrumbs-el
+          v-for="route in breadcrumb"
+          :key="route.name"
+          :label="$t(route.meta.title)"
+          :to="{ name: route.name }"
+        />
+      </q-breadcrumbs>
 
+
+      <q-space></q-space>
 
 
       <BaseUserAvatar :user="user" :show_name="false" id="avatar" style="cursor: pointer"/>
@@ -141,48 +145,24 @@
 </template>
 
 <script setup>
-import { findLast } from 'lodash';
-import { Notify } from 'quasar';
-import { computed, ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { capitalize, capitalizeAll } from 'src/boot/filters.js';
-//import { useDrawer } from 'src/composables/drawer';
 import { useTheme } from 'src/composables/theme';
 import BaseUserAvatar from './BaseUserAvatar.vue';
 
 const store = useStore();
-//const { drawerModel } = useDrawer();
-
-const screenTitle = ref('PROGRESS');
 
 const user = computed(() => store.state.session.user);
-// const username = computed(() => {
-//   const { name, surname } = user.value;
-//   return `${name} ${surname}`;
-// });
-// const avatarUrl = computed(() => {
-//   const avatarName = username.value.replace(/\s+/g, '').toLowerCase();
-//   return `/media/user/${avatarName}.jpg`;
-// });
 
 const { t, locale, availableLocales } = useI18n();
 const route = useRoute();
-watch(
-  [locale, route],
-  () => {
-    const routeWithTitle = findLast(
-      route.matched,
-      ({ meta }) => !!meta.screen_title
-    );
 
-    if (routeWithTitle) {
-      screenTitle.value = t(`views.${routeWithTitle.name}`) || 'PROGRESS';
-    }
-  },
-  { immediate: true }
-);
+const breadcrumb = computed(() => {
+  return route.matched.filter(({ meta }) => meta.title);
+});
 
 async function logout() {
   const confirm = window.confirm(capitalize(t('session.alerts.close_session')));
