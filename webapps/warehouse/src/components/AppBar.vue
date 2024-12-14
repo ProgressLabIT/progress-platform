@@ -105,23 +105,19 @@
               </q-item-section>
             </q-item>
 
-            <q-item>
+            <q-item clickable @click="openFullscreen">
               <q-item-section side>
-                <q-icon name="mdi-home" />
+                <q-icon name="mdi-fullscreen" />
               </q-item-section>
-
-              <q-item-section class="flex flex-center">
-                <q-select
-                  :model-value="homePage"
-                  :options="homePageOptions"
-                  emit-value
-                  map-options
-                  :loading="isUpdatingHomePage"
-                  :label="$t('preferences.homePage.label')"
-                  dense
-                  filled
-                  class="full-width"
-                  @update:model-value="updateHomePage"
+              <q-item-section>
+                <q-item-label>
+                  {{ capitalizeAll($t('fullscreen')) }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-toggle
+                  :model-value="fullScreenActive"
+                  @update:model-value="toggleFullscreen"
                 />
               </q-item-section>
             </q-item>
@@ -178,36 +174,18 @@ const localeOptions = availableLocales.map((locale) => ({
   value: locale,
 }));
 
-const homePage = computed(() => user.value.preferences.home_page || null);
-const homePageOptions = computed(() => [
-  { label: t('default'), value: null },
-  { label: capitalizeAll(t('views.adminPanel')), value: 'adminPanel' },
-  { label: capitalizeAll(t('views.libraryRoot')), value: 'libraryRoot' },
-  { label: capitalizeAll(t('views.productionRoot')), value: 'productionRoot' },
-  { label: capitalizeAll(t('views.userJobs')), value: 'operatorRoot' },
-  { label: capitalizeAll(t('views.qualityRoot')), value: 'qualityRoot' },
-  {
-    label: capitalizeAll(t('views.traceabilityRoot')),
-    value: 'traceabilityRoot',
-  },
-  { label: capitalizeAll(t('views.reportRoot')), value: 'reportRoot' },
-]);
-const isUpdatingHomePage = ref(false);
-async function updateHomePage(newHomePage) {
-  isUpdatingHomePage.value = true;
+const fullScreenActive = ref(false)
 
-  try {
-    await store.dispatch('updatePreferences', { home_page: newHomePage });
-  } catch (error) {
-    console.error(error);
-    Notify.create({
-      type: 'negative',
-      message: t('preferences.homePage.error'),
-    });
-  } finally {
-    isUpdatingHomePage.value = false;
+function toggleFullscreen(value) {
+  if (value) {
+    document.documentElement.requestFullscreen();
+    fullScreenActive.value = true;
+  } else {
+    document.exitFullscreen();
+    fullScreenActive.value = false;
   }
 }
+
 
 const displayFont = computed(
   () => user.value.preferences.display_font || 'orbitron'
