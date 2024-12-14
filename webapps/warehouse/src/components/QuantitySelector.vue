@@ -1,20 +1,35 @@
 <template>
-  <div ref="qtyarea" class="col column">
+  <div class="col column">
     <q-card
       v-touch-repeat.mouse="handleRepeat"
       outline
       flat
       class="cursor-pointer q-my-md surface2 col"
+      id="qtyarea"
       :style="selector_style"
     >
-    <div class="row justify-between full-height">
 
-      <q-icon color="theme-blue" class="self-end" name="mdi-minus" size="80px" style="opacity: .3"/>
-      <div class="col self-center">
-        <q-input type="number" v-model.number="quantity"  borderless input-class="text-center text-h1"/>
-      </div>
-      <q-icon color="theme-blue" class="self-start" name="mdi-plus" size="80px" style="opacity: .3"/>
-    </div>
+      <q-icon
+        color="theme-blue"
+        class="absolute-bottom-left"
+        name="mdi-minus"
+        size="50px"
+        style="opacity: .3"
+      />
+      <q-input
+        class="absolute-center"
+        type="number"
+        v-model.number="quantity"
+        borderless
+        input-class="text-center text-h1"
+      />
+      <q-icon
+        color="theme-blue"
+        class="absolute-top-right"
+        name="mdi-plus"
+        size="50px"
+        style="opacity: .3"
+      />
     </q-card>
 
     <!-- ±10/100 -->
@@ -25,7 +40,7 @@
             color="theme-blue"
             outline
             label="-10"
-            size="lg"
+            size="md"
             class="full-width"
             @click="updateQuantity(-10)"
           />
@@ -36,7 +51,7 @@
             color="theme-blue"
             outline
             label="+10"
-            size="lg"
+            size="md"
             class="full-width"
             @click="updateQuantity(10)"
           />
@@ -48,7 +63,7 @@
             color="theme-blue"
             outline
             label="-100"
-            size="lg"
+            size="md"
             class="full-width"
             @click="updateQuantity(-100)"
           />
@@ -59,7 +74,7 @@
             color="theme-blue"
             outline
             label="+100"
-            size="lg"
+            size="md"
             class="full-width"
             @click="updateQuantity(100)"
           />
@@ -70,7 +85,6 @@
 </template>
 
 <script setup>
-import { useTemplateRef } from 'vue';
 
 const props = defineProps({
   selector_style: {
@@ -93,17 +107,24 @@ const props = defineProps({
 
 const quantity = defineModel({ type: Number })
 
-const quantityArea = useTemplateRef('qtyarea')
 
 
 function isTouchUpRight(touchPosition) {
-  // Quantity Area top-left/bottom-right diagonal: y = ax + b
-  // with y = top, x = left, b = rect.top (origin y)
-  const rect = quantityArea.value.getBoundingClientRect();
-  const a = rect.height / rect.width
-  const b = rect.top - rect.left * a
-  // y < ax + b
-  return touchPosition.top < a * touchPosition.left + b
+  // Get the bounding rectangle of the quantity area
+  const quantityArea = document.getElementById('qtyarea')
+  const rect = quantityArea.getBoundingClientRect();
+
+  // Convert touch position to be relative to the rectangle's top-left corner
+  const relativeX = touchPosition.left - rect.left;
+  const relativeY = touchPosition.top - rect.top;
+
+  // Calculate slope of diagonal line from top-left to bottom-right
+  const slope = rect.height / rect.width;
+  console.log(slope);
+
+  // Point is above diagonal if relative y position is less than
+  // what y would be at that x position on the diagonal line
+  return relativeY < slope * relativeX;
 }
 
 function handleRepeat(info) {
@@ -120,4 +141,15 @@ function updateQuantity(howMuch) {
 </script>
 
 <style lang="sass" scoped>
+.diagonal-line
+  position: absolute
+  width: 141.4% // √2 * 100% to account for rotation
+  height: 1px
+  background-color: rgba(255, 0, 0, 0.3)
+  top: 50%
+  left: 50%
+  transform: translate(-50%, -50%) rotate(45deg)
+  transform-origin: center
+  pointer-events: none
+  z-index: 1
 </style>

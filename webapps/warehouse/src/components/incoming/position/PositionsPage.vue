@@ -5,23 +5,20 @@
       <div class="row">
         <div class="col">
           <div class="text-h6 q-mb-sm text-low weight-bold text-uppercase">{{ $t('product')}}</div>
-          <div class="text-h1 q-pr-sm" style="word-wrap: break-word">
+          <div class="text-h3 q-pr-sm" style="word-wrap: break-word">
             {{ incoming.product?.code }}
           </div>
         </div>
         <div class="col-auto">
-          <div class="text-h6 text-right q-mb-sm">QUANTITÀ</div>
-          <div class="text-h1 text-right">
+          <div class="text-h6 text-right q-mb-sm">{{ $t('quantity') }}</div>
+          <div class="text-h3 text-right">
             {{ incoming.quantity }}
           </div>
         </div>
       </div>
-      <div class="text-body1 q-mt-xs">
-        {{ incoming.product?.description }}
-      </div>
     </div>
 
-    <div class="text-h6 q-mb-md q-mt-md">DESTINAZIONE</div>
+    <div class="text-h3 q-mb-md q-mt-md">{{ $t('destination') }}</div>
     <!-- POSITION SEARCH -->
     <SearchOrScan v-model="filter" @update:model-value="searchPositions" />
 
@@ -64,29 +61,26 @@
         :label="$t('position_create')"
         :disable="tempPositions.length >= incoming.quantity"
         class="col-12"
-        size="xl"
         @click="openCreateContainerForm"
       />
       <q-btn
-        color="theme-blue"
-        label="INDIETRO"
+        color="theme-grey"
+        :label="$t('back')"
         class="col"
-        size="xl"
         @click="back"
       />
       <div class="q-mx-xs"></div>
       <q-btn
+        :disable="tempPositions.length === 0"
         color="theme-blue"
-        label="AVANTI"
+        :label="$t('next')"
         class="col"
-        size="xl"
         @click="next"
       />
     </div>
 
     <SlideUpCard
       v-model="showCreateContainerBottomSheet"
-      height="70vh"
     >
       <CreateContainerForm
         :max="incoming.quantity - tempPositions.length"

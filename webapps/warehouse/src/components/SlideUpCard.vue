@@ -5,7 +5,7 @@
     transition-show="slide-up"
     transition-hide="slide-down"
   >
-    <q-card class="q-pa-lg absolute-bottom full-width" :style="{ height: cardHeight }">
+    <q-card class="q-pa-lg absolute-bottom full-width column" :style="{ minHeight: cardHeight }">
       <slot></slot>
     </q-card>
   </q-dialog>
@@ -14,7 +14,7 @@
 <script setup>
 const cardHeight = defineModel('height', {
   type: String,
-  default: '80%',
+  default: '50%',
 })
 
 const show = defineModel({

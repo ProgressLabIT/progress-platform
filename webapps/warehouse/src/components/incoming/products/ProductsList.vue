@@ -1,6 +1,6 @@
 <template>
   <div class="col column">
-    <div class="col-auto q-mb-sm text-h6">
+    <div class="col-auto q-mb-sm text-h3">
       {{ $t('product')}}
     </div>
 

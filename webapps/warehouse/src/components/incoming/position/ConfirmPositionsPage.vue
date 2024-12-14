@@ -1,75 +1,93 @@
 <template>
-  <div class="col column full-width scroll">
+  <div class="col column full-width">
     <!-- ITEM CODE & DESCRIPTION -->
-    <div class="col-auto full-width">
-      <div class="row">
-        <div class="col">
-          <div class="text-h6 q-mb-sm">PRODOTTO</div>
-          <div class="text-h1 q-pr-xl" style="word-wrap: break-word">
-            {{ incoming.product?.code }}
-          </div>
-        </div>
-        <div class="col-auto">
-          <div class="text-h6 text-right q-mb-sm">QUANTITÀ</div>
-          <div class="text-h1 text-right">
-            {{ incoming.quantity }}
-          </div>
+    <div class="row col-auto full-width">
+      <div class="col">
+        <div class="text-h6 q-mb-sm">{{ $t('product') }}</div>
+        <div class="text-h3 q-pr-xl" style="word-wrap: break-word">
+          {{ incoming.product?.code }}
         </div>
       </div>
-      <div class="text-body1 q-mt-xs">
-        {{ incoming.product?.description }}
+      <div class="col-auto">
+        <div class="text-h6 text-right q-mb-sm">{{ $t('total') }}</div>
+        <div class="text-h3 text-right">
+          {{ incoming.quantity }}
+        </div>
       </div>
     </div>
 
-    <div class="text-h6 q-mb-sm q-mt-xl">DESTINAZIONE</div>
-    <template v-for="position in incoming.positions" :key="position._key">
-      <div class="col-auto text-h2">
+    <div class="row items-center justify-between q-mt-xl q-mb-md">
+      <div class="text-h6">
+        {{$t('destination')}}
+      </div>
+      <div class="text-h6">
+        {{$t('quantity')}}
+      </div>
+    </div>
+
+    <template
+      v-for="position in incoming.positions"
+      :key="position._key"
+      >
+      <div class="row items-center q-col-gutter-x-sm">
+
+      <div class="col-auto text-h3">
         {{ position.code }}
       </div>
-      <div class="row justify-center items-start content-left">
+
+      <div class="col-auto" v-if="incoming.positions.length > 1">
+        <q-btn
+          :outline="!position.locked"
+          round
+          size="xs"
+          color="primary"
+          :icon="
+              position.locked
+                ? 'mdi-lock-outline'
+              : 'mdi-lock-open-variant-outline'
+            "
+            @click="position.locked = !position.locked"
+        />
+      </div>
+      <q-space></q-space>
+      <div class="col-auto text-h3 text-right">
+        {{ position.quantity }}
+      </div>
+    </div>
+
+
+      <div class="row" v-if="incoming.positions.length > 1" >
         <q-slider
           v-model="position.quantity"
-          class="q-mt-lg col-10"
+          class="q-mb-md"
+          style="z-index: 1000"
           :min="0"
           :max="incoming.quantity"
           :step="1"
-          label
-          :label-value="value"
-          label-always
           :disable="position.locked"
           @change="adjust(position)"
-        />
-        <q-space></q-space>
-        <q-btn
-          color="primary"
-          :icon="
-            position.locked
-              ? 'mdi-lock-outline'
-              : 'mdi-lock-open-variant-outline'
-          "
-          class="col-1"
-          @click="position.locked = !position.locked"
         />
       </div>
     </template>
 
     <q-space></q-space>
-
-    <div class="row q-gutter-y-md">
-      <q-btn
-        color="theme-blue"
-        label="CONFERMA"
-        class="col-12"
-        size="xl"
+    <div class="row q-col-gutter-x-sm">
+      <div class="col-6">
+        <q-btn
+          color="theme-grey"
+          class="full-width"
+          :label="$t('back')"
+          @click="incoming.stage = 'position'"
+        />
+      </div>
+    <div class="col-6">
+        <q-btn
+          color="theme-blue"
+          class="full-width"
+          :label="$t('confirm')"
         @click="confirm"
-      />
-      <q-btn
-        color="theme-grey"
-        label="INDIETRO"
-        class="col-12"
-        size="xl"
-        @click="incoming.stage = 'position'"
-      />
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -111,6 +129,7 @@ function confirm() {
       .then(() => {
         Notify.create({
           message: 'Movimenti registrati',
+          position: 'top',
           color: 'theme-green',
           timeout: 1500,
         });

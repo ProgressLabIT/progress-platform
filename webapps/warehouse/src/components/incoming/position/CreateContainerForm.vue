@@ -1,5 +1,5 @@
 <template>
-  <div class="column col fit">
+  <div class="column col">
 
     <!-- SELECT QUANTITY -->
     <template v-if="!containers.length">
@@ -10,21 +10,20 @@
         v-model="selected_quantity"
         :initial_qty="0"
         :show_buttons="false"
-        :max="props.max"
         class="col"
+        :max="props.max"
       />
       <div class="col-auto">
         <q-btn
           color="theme-blue"
-          size="xl"
           class="full-width"
           :label="$t('next')"
           @click="createContainers()"
         />
-        <div class="q-my-md" />
+      </div>
+      <div class="q-my-md">
         <q-btn
           color="theme-blue"
-          size="xl"
           class="full-width"
           :label="$t('cancel')"
           @click="$emit('hide')"
@@ -66,19 +65,16 @@
       <q-btn
         color="theme-blue"
         :label="$t('print_label')"
-        size="xl"
         @click="printPositionLabels()"
       />
       <q-btn
         color="theme-blue"
         :label="$t('next')"
-        size="xl"
         @click="$emit('select', containers);"
       />
       <q-btn
         color="theme-blue"
         :label="$t('cancel')"
-        size="xl"
         @click="$emit('hide')"
       />
     </div>

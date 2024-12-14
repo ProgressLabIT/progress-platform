@@ -2,23 +2,23 @@
   <div v-if="loading">
     {{ $t('incoming.quantity.loading') }}
   </div>
-  <div v-else class="col column q-pb-md">
+  <div v-else class="col column">
     <!-- ITEM CODE & DESCRIPTION -->
     <div class="col-auto">
-      <div class="text-h6 q-mb-sm">PRODOTTO</div>
-      <div class="text-h1 q-pr-sm" style="word-wrap: break-word">
+      <div class="text-h6 q-mb-sm">{{ $t('product') }}</div>
+      <div class="text-h3 q-pr-sm" style="word-wrap: break-word">
         {{ incoming.product?.code }}
       </div>
-      <div class="text-body1 q-mt-xs">
+      <div class="text-body2 smaller q-mt-xs">
         {{ incoming.product?.description }}
       </div>
     </div>
 
     <!-- QUANTITY -->
-    <div class="col column q-my-xl">
-      <div class="text-h6 col-auto q-mb-md">QUANTITÀ</div>
+    <div class="col column q-my-lg">
+      <div class="text-h3 col-auto">{{ $t('quantity') }}</div>
 
-      <QuantitySelector v-model="tempQuantity" class="col"/>
+      <QuantitySelector v-model="tempQuantity" show-buttons class="col"/>
 
 
     </div>
@@ -31,7 +31,6 @@
           color="theme-grey"
           label="INDIETRO"
           unelevated
-          size="xl"
           class="col"
           @click="back"
         />
@@ -40,7 +39,6 @@
           color="theme-blue"
           unelevated
           label="AVANTI"
-          size="xl"
           class="col"
           :disable="tempQuantity <= 0"
           @click="selectQuantity(tempQuantity)"
@@ -50,7 +48,6 @@
           :label="$t('print_label')"
           unelevated
           class="col-12"
-          size="xl"
           @click="printProductLabel(incoming.product.code, incoming.product.description)"
         />
       </div>
