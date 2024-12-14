@@ -246,9 +246,15 @@
                 v-if="editMode"
                 size="sm"
                 flat
-                round
                 icon="mdi-pencil"
                 @click="show_counter_form = true"
+              />
+              <q-btn
+                v-if="editMode"
+                size="sm"
+                flat
+                icon="mdi-close"
+                @click="cleanCounter"
               />
               <div class="row justify-between items-baseline">
                 <BaseTooltipIcon
@@ -308,7 +314,7 @@
                         flat
                         round
                         size="10px"
-                        icon="mdi-close"
+                        icon="d"
                         class="hover-red"
                         @click.stop="deleteTemplate(index)"
                       >
@@ -559,7 +565,7 @@ export default {
         componentProps: {
           title: t('massCopyProcess.title.counter'),
           baseFilters: {
-            excludeProductKey: sourceProduct._key
+            excludeProductKey: sourceProduct._key,
           },
           defaultFilters: {
             tagsToInclude: sourceProduct.tags,
@@ -768,6 +774,12 @@ export default {
       this.new_product_counter = counter;
       this.product.counter_key = counter._key;
       this.show_counter_form = false;
+    },
+
+    cleanCounter() {
+      this.new_product_counter = null;
+      this.product.counter_key = null;
+      this.$store.state.product.temp.counter = null;
     },
 
     addFiles(fileList) {

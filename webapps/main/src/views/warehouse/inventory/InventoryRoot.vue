@@ -89,11 +89,7 @@ export default {
 
       filter_list: [
         'product_code',
-        'position_from',
-        'position_to',
-
-        'inventory_type',
-        'inventory_status',
+        'position',
 
         'start_from',
         'start_to',
@@ -105,12 +101,8 @@ export default {
   },
 
   computed: {
-    product_code: queryModel(String, 'product_code', null),
-    position_from: queryModel(String, 'position_from', null),
-    position_to: queryModel(String, 'position_to', null),
-
-    inventory_type: queryModel(String, 'inventory_type', null),
-    inventory_status: queryModel(String, 'inventory_status', null),
+    product: queryModel(String, 'product', null),
+    position: queryModel(String, 'position', null),
 
     start_from: queryModel(String, 'start_from', null),
     start_to: queryModel(String, 'start_to', null),
@@ -119,11 +111,9 @@ export default {
 
     filters() {
       return {
-        product_code: this.product_code,
-        position_from: this.position_from,
-        position_to: this.position_to,
-        inventory_type: this.inventory_type,
-        inventory_status: this.inventory_status,
+        product_key: this.product,
+        position_key: this.position,
+
         start_from: this.start_from,
         start_to: this.start_to,
         end_from: this.end_from,

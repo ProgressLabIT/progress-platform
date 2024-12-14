@@ -102,7 +102,7 @@ class InventorySearchParams(BaseModel):
   position_code: str | None = None
   #serial_key: str | None = None
   #serial_code: str | None = None
-  #owned: bool | None = None
+  owned: bool | None = None
   limit: int | None = 200
   offset: int | None = 0
 

@@ -44,6 +44,8 @@
           >
           </q-btn>
 
+          <!-- INVENTORY BUTTONS -->
+
           <!-- FILTER BUTTONS -->
           <q-btn
             v-if="!showFilterDrawer"
@@ -102,12 +104,28 @@
         }
       "
     ></movement-filter>
+
+    <inventory-filter
+      v-if="$route.name === 'inventory'"
+      :show-filter-drawer="showFilterDrawer"
+      @show-filter-drawer="
+        (showFilter) => {
+          showFilterDrawer = showFilter;
+        }
+      "
+      @filter-active-change="
+        (filtersActive) => {
+          filtersActiveNo = filtersActive;
+        }
+      "
+    ></inventory-filter>
   </q-page-container>
 </template>
 
 <script>
 import MovementFilter from '@/components/warehouse/movement/MovementFilter.vue';
 import PositionFilter from '@/components/warehouse/position/PositionFilter.vue';
+import InventoryFilter from '@/components/warehouse/inventory/InventoryFilter.vue';
 
 const warehouse_views = [
   { component: 'Positions', route_name: 'positions' },
@@ -125,6 +143,7 @@ export default {
   components: {
     PositionFilter,
     MovementFilter,
+    InventoryFilter,
   },
 
   data() {
