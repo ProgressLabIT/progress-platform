@@ -151,7 +151,7 @@ class Queries:
     FILTER
       // When filtering by document key, parameters will be arrays
       (@serial_key ? POSITION(@serial_key, s._key) : true)
-      && (@serial_search ? CONTAINS(s.code, @serial_search) : true)
+      && (@serial_search ? CONTAINS(LOWER(s.code), LOWER(@serial_search)) : true)
       && (@created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], s.created_by) : true)
       && (@time_created_from ? s.created >= @time_created_from : true)
       && (@time_created_to ? s.created <= @time_created_to : true)
