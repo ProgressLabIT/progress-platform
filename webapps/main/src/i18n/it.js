@@ -887,7 +887,7 @@ export default {
     stock: 'Rimanenze',
     missions: 'Missioni',
     movements: 'Movimenti',
-    inventory: 'Inventario',
+    inventory: 'Giacenze',
     labelPrintTemplates: 'Stampe etichette',
   },
   waiting: 'in attesa',
