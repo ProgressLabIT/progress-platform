@@ -241,21 +241,22 @@
               <div style="white-space: pre-line" class="text-body1">
                 {{ counter_name || 'NA' }}
               </div>
-
-              <q-btn
-                v-if="editMode"
-                size="sm"
-                flat
-                icon="mdi-pencil"
-                @click="show_counter_form = true"
-              />
-              <q-btn
-                v-if="editMode"
-                size="sm"
-                flat
-                icon="mdi-close"
-                @click="cleanCounter"
-              />
+              <q-btn-group>
+                <q-btn
+                  v-if="editMode"
+                  size="sm"
+                  flat
+                  icon="mdi-pencil"
+                  @click="show_counter_form = true"
+                />
+                <q-btn
+                  v-if="editMode"
+                  size="sm"
+                  flat
+                  icon="mdi-close"
+                  @click="cleanCounter"
+                />
+              </q-btn-group>
               <div class="row justify-between items-baseline">
                 <BaseTooltipIcon
                   v-if="!editMode"
