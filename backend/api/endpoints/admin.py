@@ -29,9 +29,6 @@ traceability_collections = [
     'issue_rel',
     'message',
     'Serial',
-    'Position',
-    'is_in_position',
-    'movement'
   ]
 
 media_directories = [
@@ -61,24 +58,6 @@ async def reset_production_and_traceability_data():
       subqueue_target_key = None,
       work_orders = [],
       jobs = []
-    ))
-
-    tx.collection('Position').insert(dict(
-        _key = 'IN',
-        code = 'IN',
-        owned = True,
-        available = True,
-        disposable = False,
-        extra = None
-    ))
-
-    tx.collection('Position').insert(dict(
-        _key = 'OUT',
-        code = 'OUT',
-        owned = False,
-        available = False,
-        disposable = False,
-        extra = None
     ))
 
     tx.commit_transaction()
