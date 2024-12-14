@@ -107,10 +107,13 @@ class InventoryEventManager:
          final_qty = position_status['quantity'] - new_movement_record['qt_confirmed']
          if (final_qty<0):
             raise InventoryMovementException(f'Cannot ship: quantity not enough')
-         self.tx.collection('is_in_position').update(dict(
+         elif (final_qty==0):
+          self.tx.collection('is_in_position').delete_match(filters=dict(_key = position_status['_key']))
+         else:
+            self.tx.collection('is_in_position').update(dict(
               _key = position_status['_key'],
               quantity=final_qty
-          ))
+            ))
       else:
         raise InventoryMovementException(f'Cannot find product to ship')
 

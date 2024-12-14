@@ -330,7 +330,7 @@ async def get_inventory(params: Annotated[InventorySearchParams, Query()]):
 
 @router.get('/inventory/products',
     dependencies=[Depends(auth.verify_token)])
-async def get_inventory(params: Annotated[InventorySearchParams, Query()]):
+async def get_inventory_products(params: Annotated[InventorySearchParams, Query()]):
   try:
     bind_vars = dict(**params.model_dump())
     results = db.aql.execute(Queries.SEARCH_INVENTORY_PRODUCT, bind_vars=bind_vars)
@@ -344,7 +344,7 @@ async def get_inventory(params: Annotated[InventorySearchParams, Query()]):
 
 @router.get('/inventory/positions',
     dependencies=[Depends(auth.verify_token)])
-async def get_inventory(params: Annotated[InventorySearchParams, Query()]):
+async def get_inventory_positions(params: Annotated[InventorySearchParams, Query()]):
   try:
     bind_vars = dict(**params.model_dump())
     results = db.aql.execute(Queries.SEARCH_INVENTORY_POSITIONS, bind_vars=bind_vars)

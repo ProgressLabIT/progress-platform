@@ -292,8 +292,8 @@ function createMovement() {
       position_from_id = position_id;
       break;
     case 'adjustment':
-      position_from_id = originalPosition.value.position_to;
-      position_to_id = originalPosition.value.position_to;
+      position_from_id = position_id;
+      position_to_id = position_id;
       break;
     default:
       return 'Invalid movement type';
