@@ -17,8 +17,7 @@ class Queries:
     RETURN v
   """
 
-  SEARCH_INVENTORY = """
-    FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
+  INVENTORY_FILTER = """
 
     // POSITION
       let position = FIRST(
@@ -38,9 +37,15 @@ class Queries:
       //&& (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
       //&& (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
 
+    LIMIT @offset, @limit || null
 
+  """
 
-      LIMIT @offset, @limit || null
+  SEARCH_INVENTORY = """
+    FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
+
+    """ + INVENTORY_FILTER + """
+
 
       RETURN merge(v, {
               product_id: v._id,
@@ -60,29 +65,17 @@ class Queries:
   SEARCH_INVENTORY_PRODUCT = """
      FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
 
-    // POSITION
-      let position = FIRST(
-          FOR position IN Position
-          FILTER position._id == e._to
-          RETURN position
-      )
-
-    FILTER
-      IS_SAME_COLLECTION('Product', v)
-      && (@position_key ? position._key == @position_key : true)
-      && (@position_code ? position.code == @position_code : true)
-      && (@product_key ? v._key == @product_key : true)
-      && (@product_code ? v.code == @product_code : true)
-      //&& (@contains_position ? @contains_position IN p.vertices[*]._key : true)
-      //&& (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%') : true)
-      //&& (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
-      //&& (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
-
-
-
-      LIMIT @offset, @limit || null
+    """ + INVENTORY_FILTER + """
 
       RETURN v
+  """
+
+  SEARCH_INVENTORY_POSITIONS = """
+     FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
+
+    """ + INVENTORY_FILTER + """
+
+      RETURN DISTINCT position
   """
 
   GET_POSITION_HIERARCHY = """

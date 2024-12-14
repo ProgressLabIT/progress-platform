@@ -35,6 +35,7 @@
             :label="$capitalize($t('warehouse.movement.position_code'))"
             :value="position"
             :disable="loadingVal"
+            :options="availablePositions"
             @select="(selection) => (position = selection)"
           />
         </div>
@@ -120,8 +121,9 @@ const saveButtonEnabled = ref(false);
 
 const originalPosition = ref(undefined);
 const availableProducts = ref([]);
+const availablePositions = ref([]);
 
-watch(movement_type, clean);
+watch(movement_type, getAvailablePositions);
 watch(position, getAvailableProducts);
 
 watch(product, getOriginalPosition);
@@ -147,6 +149,7 @@ function clean() {
   qtyMax.value = undefined;
   originalPosition.value = undefined;
   availableProducts.value = [];
+  availablePositions.value = [];
 }
 
 function getOriginalPosition() {
@@ -182,6 +185,38 @@ function getOriginalPosition() {
         loadingVal.value = false;
       },
     );
+}
+
+function getAvailablePositions() {
+  clean();
+  if (!movement_type?.value) {
+    return;
+  }
+
+  if (movement_type.value === 'receipt') {
+    loadingVal.value = true;
+    api.get('/position').then(
+      (data) => {
+        availablePositions.value = data.data;
+        loadingVal.value = false;
+      },
+      () => {
+        availablePositions.value = [];
+        loadingVal.value = false;
+      },
+    );
+  } else {
+    api.get('/inventory/positions').then(
+      (data) => {
+        availablePositions.value = data.data;
+        loadingVal.value = false;
+      },
+      () => {
+        availablePositions.value = [];
+        loadingVal.value = false;
+      },
+    );
+  }
 }
 
 function getAvailableProducts() {
