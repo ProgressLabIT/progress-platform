@@ -45,6 +45,14 @@
           </q-btn>
 
           <!-- INVENTORY BUTTONS -->
+          <q-btn
+            v-if="$route.name === 'inventory'"
+            size="0.75rem"
+            :label="$t('export')"
+            color="theme-blue"
+            @click="exportExcel"
+          >
+          </q-btn>
 
           <!-- FILTER BUTTONS -->
           <q-btn
@@ -123,9 +131,10 @@
 </template>
 
 <script>
+import InventoryFilter from '@/components/warehouse/inventory/InventoryFilter.vue';
 import MovementFilter from '@/components/warehouse/movement/MovementFilter.vue';
 import PositionFilter from '@/components/warehouse/position/PositionFilter.vue';
-import InventoryFilter from '@/components/warehouse/inventory/InventoryFilter.vue';
+import { XLSXDownload } from '@/lib/xlsxDownload';
 
 const warehouse_views = [
   { component: 'Positions', route_name: 'positions' },
@@ -161,6 +170,38 @@ export default {
     updateHeight() {
       this.content_height =
         document.documentElement.clientHeight - header_plus_footer_height;
+    },
+
+    exportExcel() {
+      switch (this.$route.name) {
+        case 'inventory':
+          this.exportInventory();
+          break;
+      }
+    },
+
+    exportInventory() {
+      XLSXDownload(
+        this.$store.state.warehouse.inventory.map((entry) => {
+          return {
+            [this.$t('warehouse.inventory.position').toUpperCase()]:
+              entry.position_code,
+            [this.$t('warehouse.inventory.product_code').toUpperCase()]:
+              entry.product_code,
+            [this.$t('warehouse.inventory.serial').toUpperCase()]:
+              entry.serial_key,
+            [this.$t('warehouse.inventory.quantity').toUpperCase()]:
+              entry.quantity,
+            [this.$t('warehouse.inventory.owned').toUpperCase()]: entry.owned,
+            [this.$t('warehouse.inventory.date_received').toUpperCase()]:
+              this.$shortDateString(entry.date_received, this.$i18n.locale),
+            [this.$t('warehouse.inventory.expiration_date').toUpperCase()]:
+              this.$shortDateString(entry.expiration_date, this.$i18n.locale),
+          };
+        }),
+        'inventory',
+        'inventory',
+      );
     },
   },
 };

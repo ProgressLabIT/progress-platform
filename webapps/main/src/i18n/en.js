@@ -996,6 +996,8 @@ export default {
     movement: {
       product_code: 'Product Code',
       position_code: 'Position',
+      position_from_code: 'Position from',
+      position_to_code: 'Position to',
       qt_planned: 'Quantity planned',
       qt_confirmed: 'Quantity confirmed',
       start_from: 'Start From',
