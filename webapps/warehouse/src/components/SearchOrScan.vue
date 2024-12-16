@@ -4,9 +4,11 @@
     <!-- INPUT -->
     <div class="col-12">
       <q-input
+        for="search-input"
         v-model="inputText"
         filled
         autofocus
+        clearable
         debounce="300"
         icon="mdi-magnify"
       >
