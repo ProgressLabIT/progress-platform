@@ -43,7 +43,7 @@
               </template>
 
               <template v-else>
-                {{ $capitalizeAll(props.row[column.name] || '-') }}
+                {{ $capitalizeAll(props.row[column.field] || '-') }}
               </template>
             </q-td>
           </template>

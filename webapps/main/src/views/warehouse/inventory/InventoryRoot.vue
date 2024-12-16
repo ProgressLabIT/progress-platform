@@ -27,7 +27,6 @@
           :id="props.row._key"
           :key="props.row._key"
           :props="props"
-          :style="props.row.closed ? 'opacity: .5' : ''"
           @dblclick="showInventoryDetails(props.row._key)"
         >
           <template v-for="column in columns" :key="column.name">
@@ -45,7 +44,7 @@
               </template>
 
               <template v-else>
-                {{ $capitalizeAll(props.row[column.name] || '-') }}
+                {{ $capitalizeAll(props.row[column.field] || '-') }}
               </template>
             </q-td>
           </template>
