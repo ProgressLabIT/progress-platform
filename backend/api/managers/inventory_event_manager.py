@@ -52,8 +52,8 @@ class InventoryEventManager:
       except:
         print(traceback.format_exc())
         self.notify_results(dict(
-           notification = InventoryNotificationType.ERROR,
-           error_code = InventoryNotificationErrorCode.EXCEPTION,
+           notification = InventoryNotificationErrorCode.EXCEPTION,
+           error_code = InventoryNotificationType.ERROR,
            error = traceback.format_exc()
         ))
         raise InventoryMovementException(f'Cannot add movements')
