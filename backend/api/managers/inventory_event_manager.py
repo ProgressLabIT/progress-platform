@@ -66,6 +66,8 @@ class InventoryEventManager:
              return self.handle_shipment(new_movement_record)
           case InventoryMovementType.ADJUSTMENT:
              return self.handle_adjustment(new_movement_record)
+          case InventoryMovementType.TRANSFER:
+             return self.handle_transfer(new_movement_record)
           case _:
             raise InventoryMovementException(f'Invalid movement type')
 
@@ -116,6 +118,55 @@ class InventoryEventManager:
             ))
       else:
         raise InventoryMovementException(f'Cannot find product to ship')
+
+    def handle_transfer(self, new_movement_record):
+      """
+      - Remove inventory from start position
+        - decrease quantity, if remaining quantity is 0, remove the record
+      - Add inventory to end position
+        - add quantity/serial
+      """
+      movement = InventoryMovement(**new_movement_record)
+
+      # Update inventory from start position
+      inventory_match = dict(_from='Product/' + movement.product_key, _to=movement.position_from)
+      if movement.serial_key is not None:
+        inventory_match['serial_key'] = movement.serial_key
+
+      print(inventory_match)
+      try:
+        current_inventory_record = self.tx.collection('is_in_position').find(inventory_match).next()
+      except StopIteration:
+        raise InventoryMovementException(f'Cannot find inventory to transfer')
+
+      final_qty = current_inventory_record['quantity'] - movement.qt_confirmed
+      if final_qty == 0:
+        self.tx.collection('is_in_position').delete_match(filters=inventory_match)
+      else:
+        self.tx.collection('is_in_position').update(dict(
+          _key = current_inventory_record['_key'],
+          quantity=final_qty
+        ))
+
+      # Update inventory to end position
+      if movement.serial_key is not None:
+        self.tx.collection('is_in_position').insert(dict(
+          _from='Product/' + movement.product_key,
+          _to=movement.position_to,
+          quantity=1,
+          owned=True,
+          date_received=movement.end,
+          serial_key=movement.serial_key
+        ))
+      else:
+        self.tx.collection('is_in_position').insert(dict(
+          _from='Product/' + movement.product_key,
+          _to='Position/' + movement.position_to,
+          quantity=movement.qt_confirmed,
+          owned=True,
+          date_received=movement.end,
+        ))
+
 
     def handle_adjustment(self, new_movement_record):
       product_key = new_movement_record['product_key']
