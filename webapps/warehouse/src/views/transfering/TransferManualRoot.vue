@@ -1,7 +1,54 @@
 <template>
   <q-page
-    class="q-px-md q-py-lg column fit"
+    class="q-px-md q-pt-lg column fit q-col-gutter-y-lg"
   >
+
+    <template v-if="transfer.selectMode === undefined">
+      <SlideUpCard
+        :model-value="true"
+        height="20vh"
+      >
+        <q-btn
+          class="full-width col"
+          :label="$t('start_from_serial')"
+          color="primary"
+          @click="transfer.selectMode = 'serials'"
+        />
+        <div class="q-my-sm"></div>
+        <q-btn
+          class="full-width col"
+          :label="$t('start_from_position')"
+          color="primary"
+          @click="transfer.selectMode = 'position'"
+        />
+      </SlideUpCard>
+    </template>
+
+    <template v-else>
+      <TransferManualFromPosition v-if="transfer.stage === 'start' && transfer.selectMode === 'position'" />
+      <TransferManualSerials v-if="transfer.stage === 'start' && transfer.selectMode === 'serials'" />
+      <TransferManualDestination v-if="transfer.stage === 'destination'"/>
+      <TransferManualConfirm v-if="transfer.stage === 'confirm'"/>
+    </template>
+
+<!--
+    <q-btn-toggle
+      v-model="startFrom"
+      @update:model-value="reset"
+      spread
+      unelevated
+      toggle-color="theme-blue"
+      color="blue-backdrop"
+      :options="[
+        { label: $t('position'), value: 'position' },
+        { label: $t('serial'), value: 'serial' },
+      ]"
+    />
+
+      <SearchOrScan
+      v-model="filter"
+      @update:model-value="search"
+    />
 
     <template v-if="results.length === 0">
       <q-space />
@@ -15,7 +62,6 @@
 
     <template v-else>
 
-      <!-- PRODUCT LIST -->
       <div class="col-auto q-mb-sm text-h6">
         {{ $t(list_label) }} ({{ results.length }})
       </div>
@@ -44,77 +90,26 @@
 
     </template>
 
-    <q-space />
+    <q-space /> -->
 
-     <!-- PRODUCT SEARCH -->
-    <SearchOrScan
-      v-model="filter"
-      @update:model-value="search"
-    />
 
-    <q-btn-toggle
-      v-model="startFrom"
-      @update:model-value="reset"
-      spread
-      unelevated
-      toggle-color="theme-blue"
-      color="blue-backdrop"
-      :options="[
-        { label: $t('position'), value: 'position' },
-        { label: $t('serial'), value: 'serial' },
-      ]"
-    />
+
+
   </q-page>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import SearchOrScan from '@/components/SearchOrScan.vue';
-import { api } from 'app/src/boot/axios';
-import { Notify } from 'quasar';
+import { onBeforeRouteLeave } from 'vue-router';
+import TransferManualFromPosition from '@/components/transfer/TransferManualFromPosition.vue';
+import TransferManualSerials from '@/components/transfer/TransferManualSerials.vue';
+import TransferManualDestination from '@/components/transfer/TransferManualDestination.vue';
+import TransferManualConfirm from '@/components/transfer/TransferManualConfirm.vue';
+import { useTransferStore } from '@/stores/transfer';
+import SlideUpCard from '@/components/SlideUpCard.vue';
 
+const transfer = useTransferStore();
 
-const startFrom = ref('position');
-const filter = ref('');
-const results = ref([]);
-const list_label = ref('recent')
-
-function loadResults(endpoint, params = {}) {
-  api.get(endpoint, { params })
-    .then(response => {
-      results.value = response.data;
-      list_label.value = 'results'
-    })
-    .catch(error => {
-      Notify.create({
-        message: error.response.data.message,
-        position: 'top',
-        color: 'red',
-        icon: 'error',
-      });
-    });
-}
-
-
-function reset() {
-  filter.value = '';
-  results.value = [];
-  document.getElementById('search-input').focus();
-}
-
-function selectItem(item) {
-  console.log(item);
-}
-
-function search() {
-  if (filter.value === '') {
-    results.value = [];
-    return;
-  }
-  if (startFrom.value === 'serial') {
-    loadResults('serial', { serial_search: filter.value });
-  } else {
-    loadResults('position', { search: filter.value });
-  }
-}
+onBeforeRouteLeave(() => {
+  transfer.$reset();
+});
 </script>

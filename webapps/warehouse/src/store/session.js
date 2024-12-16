@@ -162,7 +162,7 @@ const session = {
         return userDefaultPage;
       }*/
 
-      return 'warehouseRoot';
+      return 'IncomingManual';
     },
   },
 };
