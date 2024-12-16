@@ -13,6 +13,8 @@ import PositionsPage from '@/components/incoming/position/PositionsPage.vue';
 import ProductsList from '@/components/incoming/products/ProductsList.vue';
 import QuantitySelectionPage from '@/components/incoming/quantity/QuantitySelectionPage.vue';
 import { useIncomingStore } from '@/stores/incoming';
+import { onBeforeRouteLeave } from 'vue-router';
+
 const incoming = useIncomingStore();
 
 
@@ -22,4 +24,8 @@ const stageComponentMap = {
   position: PositionsPage,
   confirm: ConfirmPositionsPage,
 };
+
+onBeforeRouteLeave(() => {
+  incoming.$reset();
+});
 </script>
