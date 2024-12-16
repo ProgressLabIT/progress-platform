@@ -7,28 +7,25 @@ const { t: $t } = i18n.global;
 export function printProductLabel(productCode, productDescription) {
   const zpl = `
     ^XA
-    ^CI28
-
-    ^FO35,35
+    ^LH30,30
+    ^FO0,0
     ^FB525,1,10,L,0
     ^A0,60
-    ^FD${productCode}
-    ^FS
+    ^FD${productCode}^FS
 
-    ^FO35,100
-    ^BY3,3,
-    ^BC, 60,N, , ,^FD${productCode}
-    ^FS
+    ^FO0,80
+    ^BY2,3,
+    ^BC, 60,N, , ,
+    ^FD${productCode}^FS
 
-    ^FO35,180
+    ^FO0,160
     ^FB500,3,7,L,0
     ^A1,20
-    ^FD${productDescription}
-    ^FS
+    ^FD${productDescription}^FS
 
     ^XZ
   `;
-  sendZplToPrinter(zpl);
+  postZPL(zpl);
 }
 
 export function printPositionLabel(position) {
@@ -51,21 +48,22 @@ export function printPositionLabel(position) {
 
     ^XZ
   `
-  sendZplToPrinter(zpl);
+  postZPL(zpl);
 }
 
 
-export function postZPL(content, ip_addr) {
-  var url = "http://"+ip_addr+"/pstprnt";
+export function postZPL(zpl) {
+  console.log('Posting ZPL to the printer...', zpl)
+  var url = "http://10.0.0.152/pstprnt";
   var method = "POST";
   var async = true;
   var request = new XMLHttpRequest();
 
   request.open(method, url, async);
-  request.setRequestHeader("Content-Type", content.type);
+  request.setRequestHeader("Content-Type", 'text/plain');
 
   // Actually sends the request to the server.
-  request.send(content.value);
+  request.send(zpl);
 }
 
 async function getPrinter() {
