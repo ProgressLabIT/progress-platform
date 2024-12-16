@@ -33,6 +33,7 @@ class Queries:
       && (@product_key ? v._key == @product_key : true)
       && (@product_code ? v.code == @product_code : true)
       && (@owned ? e.owned == @owned : true)
+      && (@serial_keys ? e.serial_key IN @serial_keys : true)
       //&& (@contains_position ? @contains_position IN p.vertices[*]._key : true)
       //&& (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%') : true)
       //&& (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
@@ -54,6 +55,7 @@ class Queries:
               position_id: e._to,
               position_code: position.code,
               serial_key: e.serial_key,
+              serial_code: e.serial_key ? FIRST(FOR s IN Serial FILTER s._key == e.serial_key RETURN s.code) : null,
               quantity: e.quantity,
               owned: e.owned,
               value: e.value,
@@ -181,8 +183,7 @@ class Queries:
       && (@end_to ? m.end <= @end_to : true)
       && (@product_key ? m.product_key == @product_key : true)
       && (@product_code ? LENGTH(FOR p IN Product FILTER m.product_key == p._key && CONTAINS(p.code, @product_code) RETURN 1) : true)
-      && (@serial_key ? m.serial_key == @serial_key : true)
-      && (@serial_code ? m.serial_code == @serial_code : true)
+      && (@serial_keys ? m.serial_key IN @serial_keys : true)
       && (@mission_key ? m.mission_key == @mission_key : true)
       && (@mission_code ? m.mission_code == @mission_code : true)
       && (@movement_doc ? m.movement_doc == @movement_doc : true)

@@ -100,8 +100,8 @@ class InventorySearchParams(BaseModel):
   product_code: str | None = None
   position_key: str | None = None
   position_code: str | None = None
-  #serial_key: str | None = None
-  #serial_code: str | None = None
+  serial_keys: list[str] | None = None
+  # serial_code: str | None = None
   owned: bool | None = None
   limit: int | None = 200
   offset: int | None = 0
@@ -208,8 +208,7 @@ class InventoryMovementSearchParameters(BaseModel):
   end_to: datetime | None = None
   product_key: str | None = None
   product_code: str | None = None
-  serial_key: str | None = None
-  serial_code: str | None = None
+  serial_keys: list[str] | None = None
   mission_key: str | None = None
   mission_code: str | None = None
   movement_doc: str | None = None
