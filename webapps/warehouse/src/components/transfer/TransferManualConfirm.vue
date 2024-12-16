@@ -6,11 +6,11 @@
         <div class="text-h6">
           {{ $t('serial', 2) }}
           <q-avatar size="sm" color="theme-grey" class="q-ml-sm">
-          {{ transfer.selectedSerials.length }}
+          {{ transfer.contents.serials.length }}
         </q-avatar>
       </div>
       <div class="row q-col-gutter-x-xs q-mt-sm">
-        <div v-for="serial in transfer.selectedSerials" :key="serial._key" class="col-auto">
+        <div v-for="serial in transfer.contents.serials" :key="serial._key" class="col-auto">
           <q-chip color="theme-grey" class="text-body2 highlight">
             {{ serial.code }}
           </q-chip>
@@ -52,10 +52,11 @@
 </template>
 
 <script setup>
+import { Notify } from 'quasar';
 import { useStore } from 'vuex';
+import { api } from '@/boot/axios';
 import { useTransferStore } from '@/stores/transfer';
 import { sendEvent } from 'app/src/composables/event.js';
-import { Notify } from 'quasar';
 import { timestamp } from 'app/src/lib/TimeHandling';
 
 const transfer = useTransferStore();
@@ -70,10 +71,12 @@ function saveTransfer() {
 function confirmSerialMovements() {
   let movements = [];
   const session_data = store.state.session;
-  for (const serial of transfer.selectedSerials) {
+
+  for (const serial of transfer.contents.serials) {
     movements.push({
       position_to: `Position/${transfer.destinationPosition._key}`,
       product_key: serial.product._key,
+      serial_key: serial._key,
       qt_planned: 1,
       qt_confirmed: 1,
       status: 'completed',
@@ -83,26 +86,39 @@ function confirmSerialMovements() {
       end: timestamp(),
     });
   }
-  for (const movement of movements) {
-    sendEvent({
-      event_type: 'ADD_MOVEMENT',
-      event_data: {movement},
-    })
-    .then(() => {
-      Notify.create({
-        message: 'Movimenti registrati',
-        position: 'top',
-        color: 'theme-green',
-        timeout: 1500,
+
+  const serial_keys = new URLSearchParams();
+  transfer.contents.serials.forEach(s => serial_keys.append('serial_keys', s._key));
+  const promises = [];
+  api
+    .get('/inventory', { params: serial_keys })
+    .then(({ data }) => {
+      for (const movement of movements) {
+        // this works only for serials. TODO: add products/positions
+        movement.position_from = `Position/${data.find(s => s.serial_key === movement.serial_key).position_key}`;
+        promises.push(sendEvent({
+          event_type: 'ADD_MOVEMENT',
+          event_data: {movement},
+        }))
+      }
+      Promise.all(promises)
+      .then(() => {
+        Notify.create({
+          message: 'Movimenti registrati',
+          position: 'top',
+          color: 'theme-green',
+          timeout: 1500,
+        });
+      })
+      .catch(err => {
+        console.log(err);
       });
     })
-    .catch((err) => {
-      Notify.create({
-        message: err,
-        color: 'theme-orange',
-      });
+    .catch(err => {
+      console.log(err);
     });
-  }
+
+  console.log(movements);
   transfer.$reset();
 }
 

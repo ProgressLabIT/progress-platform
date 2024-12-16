@@ -4,9 +4,11 @@ export const useTransferStore = defineStore('transfer', {
   state: () => ({
     selectMode: undefined, // 'position' or 'serials'
     startPosition: undefined,
-    product: undefined,
-    quantity: undefined,
-    selectedSerials: [],
+    contents: {
+      position: undefined,  // Full container to transfer
+      serials: [],
+      products: [], // {product_key: product, quantity: quantity}
+    },
     destinationPosition: undefined,
     stage: 'start',
     recentPositions: [],

@@ -11,17 +11,17 @@
     />
 
       <div
-        v-if="transfer.selectedSerials.length"
+        v-if="transfer.contents.serials.length"
         class="col-auto row items-center q-gutter-x-sm q-mb-sm text-h6">
         <div>{{ $t('selected') }}</div>
         <q-avatar size="xs" color="theme-grey">
-          <div class="smaller highlight">{{ transfer.selectedSerials.length }}</div>
+          <div class="smaller highlight">{{ transfer.contents.serials.length }}</div>
         </q-avatar>
       </div>
 
       <div class="col-auto scroll q-my-md column">
         <q-card
-          v-for="item in transfer.selectedSerials"
+          v-for="item in transfer.contents.serials"
           :key="item.key"
           v-ripple
           bordered
@@ -60,7 +60,7 @@
     <q-space />
 
     <q-btn
-      :disable="transfer.selectedSerials.length === 0"
+      :disable="transfer.contents.serials.length === 0"
       color="theme-blue"
       :label="$t('next')"
       class="col-auto full-width"
@@ -130,7 +130,7 @@ function search() {
 
 const serialList = computed(() => {
   return [
-    ...results.value.filter(item => !transfer.selectedSerials.find(serial => serial._key === item._key))
+    ...results.value.filter(item => !transfer.contents.serials.find(serial => serial._key === item._key))
   ];
 });
 
@@ -142,10 +142,10 @@ function reset() {
 }
 
 function toggleItem(item) {
-  const index = transfer.selectedSerials.findIndex(serial => serial._key === item._key);
+  const index = transfer.contents.serials.findIndex(serial => serial._key === item._key);
   index !== -1 // if item is already in the list, remove it
-    ? transfer.selectedSerials.splice(index, 1)
-    : transfer.selectedSerials.push(item);
+    ? transfer.contents.serials.splice(index, 1)
+    : transfer.contents.serials.push(item);
 
   return index === -1 ? 'added' : 'removed'
 }

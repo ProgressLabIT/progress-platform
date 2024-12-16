@@ -1,65 +1,153 @@
 <template>
-  <template v-if="results.length === 0">
-      <q-space />
-      <div v-if="filter.length === 0" class="col-auto q-mb-sm text-h1 item-center" style="width: 70%;">
-        {{  $t('scan_start_position') }}
-      </div>
-      <div  v-else class="col-auto q-mb-sm text-h1 item-center" style="width: 70%;">
-        {{  $t('no_results') }}
-      </div>
+  <div class="col column full-width">
+
+    <div class="text-h3 q-mb-md q-mt-md">{{ $t('position') }}</div>
+
+    <!-- POSITION SEARCH -->
+    <SearchOrScan v-model="filter" @update:model-value="searchPositions" />
+
+    <!-- NO RESULTS -->
+    <template v-if="positionResults.length === 0">
+      <div class="text-h2">{{ $t('no_results') }}</div>
     </template>
 
+    <!-- AVAILABLE POSITIONS -->
     <template v-else>
-
-      <!-- PRODUCT LIST -->
-      <div class="col-auto q-mb-sm text-h6">
-        {{ $t(list_label) }} ({{ results.length }})
-      </div>
-
-
-      <div class="col scroll q-my-md column">
-        <q-card
-          v-for="item in results"
-          :key="item.key"
-          v-ripple
-          bordered
-          flat
-          class="surface2 q-px-md q-py-md q-mb-sm"
-          @click="selectItem(item)"
-        >
-          <div v-if="startFrom === 'serial'">
-            <div class="text-h6 text-low">{{ item.product.code }}</div>
-            <div class="text-body1 highlight">{{ item.code }}</div>
+      <div class="q-mt-lg text-h6">POSIZIONI {{ positionResultsType }}</div>
+      <div class="col scroll">
+        <div class="row full-width q-col-gutter-x-sm q-mt-md">
+          <div v-for="pos in positionResults" :key="pos._key" class="col-auto">
+            <q-chip clickable outline class="text-body1" @click="toggleSelection(pos)">
+              {{ pos.code }}
+            </q-chip>
           </div>
-
-          <div v-else>
-            <div class="text-body1 highlight">{{ item.code }}</div>
-          </div>
-        </q-card>
+        </div>
       </div>
-
     </template>
 
-    <q-space />
+    <q-space></q-space>
 
-     <!-- PRODUCT SEARCH -->
-    <SearchOrScan
-      v-model="filter"
-      @update:model-value="search"
-    />
 
-    <q-btn-toggle
-      v-model="startFrom"
-      @update:model-value="reset"
-      spread
-      unelevated
-      toggle-color="theme-blue"
-      color="blue-backdrop"
-      :options="[
-        { label: $t('position'), value: 'position' },
-        { label: $t('serial'), value: 'serial' },
-      ]"
+    <q-btn
+      color="theme-grey"
+      :label="$t('back')"
+      class="full-width"
+      @click="transfer.stage = 'start'"
     />
-  </template>
+    <div class="q-mx-xs"></div>
+
+
+    <SlideUpCard v-model="showCreateContainerBottomSheet">
+      <div class="column q-gutter-y-md">
+        <q-btn color="theme-blue" :label="$t('select_container')" class="full-width" @click="openCreateContainerForm" />
+        <q-btn color="theme-blue" :label="$t('select_contents')" class="full-width" @click="transfer.stage = 'contents'" />
+      </div>
+    </SlideUpCard>
+
+  </div>
+</template>
+
 <script setup>
+import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { api } from '@/boot/axios';
+import SearchOrScan from '@/components/SearchOrScan.vue';
+import SlideUpCard from '@/components/SlideUpCard.vue';
+import { useTransferStore } from '@/stores/transfer';
+
+const { t: $t } = useI18n();
+const transfer = useTransferStore();
+
+const loading = ref(false);
+
+const filter = ref('');
+const last_research = ref('');
+const positionResults = ref([]);
+const positionResultsType = ref('RECENTI');
+const showCreateContainerBottomSheet = ref(false);
+
+
+
+
+function searchPositions() {
+  if (filter.value !== last_research.value) {
+    if (filter.value === '') {
+      loadLatestUsedPositions();
+      positionResultsType.value = 'RECENTI'
+    } else {
+      loadPositions();
+      positionResultsType.value = 'DISPONIBILI'
+    }
+  }
+}
+
+
+function loadLatestUsedPositions() {
+  if (transfer?.recentPositions?.length) {
+    positionResults.value = transfer?.recentPositions;
+  }
+  else {
+    loading.value = true;
+    api.get('movement', { params: {
+      movement_type: 'transfer',
+      limit: 10
+    }})
+    .then((resp) => {
+      transfer.recentPositions = resp.data;
+      positionResults.value = transfer?.recentPositions;
+      loading.value = false;
+      positionResultsType.value = 'RECENTI';
+    });
+  }
+}
+
+function loadPositions() {
+  loading.value = true;
+  let params = {};
+
+  if (filter.value === last_research.value) {
+    return
+  }
+
+  if (filter.value.length === 0) {
+    loadLatestUsedPositions();
+    positionResultsType.value = 'RECENTI'
+  }
+
+  else {
+    params.search = filter.value;
+    last_research.value = filter.value;
+    params.limit = 100;
+
+    api.get('position', { params }).then((resp) => {
+      if (resp.data.length === 1) {
+        selectPosition(resp.data[0]);
+      }
+      else {
+        positionResults.value = [...resp.data];
+      }
+      loading.value = false;
+      positionResultsType.value = 'DISPONIBILI';
+    });
+  }
+}
+
+function selectPosition(position) {
+  // If position is a container, open dialog to select whole container or contents
+  console.log(position);
+}
+
+function openCreateContainerForm() {
+  console.log('openCreateContainerForm');
+  showCreateContainerBottomSheet.value = true;
+}
+
+onMounted(() => {
+  loadLatestUsedPositions();
+});
 </script>
+
+<style lang="sass">
+.grid-style-transition
+  transition: transform .28s, background-color .28s
+</style>
