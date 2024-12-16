@@ -32,7 +32,7 @@ class Queries:
       && (@position_code ? position.code == @position_code : true)
       && (@product_key ? v._key == @product_key : true)
       && (@product_code ? v.code == @product_code : true)
-      && (@owned ? v.owned == @owned : true)
+      && (@owned ? e.owned == @owned : true)
       //&& (@contains_position ? @contains_position IN p.vertices[*]._key : true)
       //&& (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%') : true)
       //&& (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
