@@ -2,11 +2,12 @@
   <q-dialog
     v-model="show"
     square
+    full-width
     transition-show="slide-up"
     transition-hide="slide-down"
     @hide="emit('hide')"
   >
-    <q-card class="q-pa-lg absolute-bottom full-width column" :style="{ minHeight: cardHeight }">
+    <q-card class="q-pa-lg absolute-bottom column" :style="{ minHeight: cardHeight, width: '100vw' }">
       <slot></slot>
     </q-card>
   </q-dialog>
