@@ -59,6 +59,7 @@
 <script>
 import { ref } from 'vue';
 import queryModel from '@/lib/queryModelFactory.js';
+import { useMovementColumns } from 'app/src/composables/warehouse';
 
 export default {
   name: 'MovementsRoot',
@@ -72,8 +73,11 @@ export default {
       rowsNumber: 1000,
     });
 
+    const movementColumns = useMovementColumns();
+
     return {
       pagination,
+      movementColumns,
     };
   },
 
@@ -134,96 +138,7 @@ export default {
     },
 
     columns() {
-      return [
-        {
-          name: '_key',
-          field: '_key',
-          sortable: true,
-          label: 'ID',
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'type',
-          field: 'type',
-          sortable: true,
-          label: this.$t('type').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'status',
-          field: 'status',
-          sortable: true,
-          label: this.$t('status').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'product_code',
-          field: 'product_code',
-          sortable: true,
-          label: this.$t('product_code').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'position_from_code',
-          field: 'position_from_code',
-          sortable: true,
-          label: this.$t('warehouse.movement.position_from_code').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'position_to_code',
-          field: 'position_to_code',
-          sortable: true,
-          label: this.$t('warehouse.movement.position_to_code').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'qt_planned',
-          field: 'qt_planned',
-          sortable: true,
-          label: this.$t('warehouse.movement.qt_planned').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'qt_confirmed',
-          field: 'qt_confirmed',
-          sortable: true,
-          label: this.$t('warehouse.movement.qt_confirmed').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'created',
-          field: 'created',
-          sortable: true,
-          align: 'right',
-          label: this.$t('creation_date').toUpperCase(),
-          style: 'max-width: 5vw',
-        },
-        {
-          name: 'start',
-          field: 'start',
-          sortable: true,
-          align: 'right',
-          label: this.$t('start_date').toUpperCase(),
-          style: 'max-width: 5vw',
-        },
-        {
-          name: 'end',
-          field: 'end',
-          sortable: true,
-          align: 'right',
-          label: this.$t('end_date').toUpperCase(),
-          style: 'max-width: 5vw',
-        },
-      ];
+      return this.movementColumns;
     },
   },
 

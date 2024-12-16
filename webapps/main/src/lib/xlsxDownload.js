@@ -1,6 +1,16 @@
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 
+export function XLSXGetData(rows, columns) {
+  return rows.map((entry) => {
+    let row = {};
+    columns.map((col) => {
+      row[col.label] = entry[col.field];
+    });
+    return row;
+  });
+}
+
 export function XLSXDownload(data, sheetName, fileName) {
   function s2ab(s) {
     var buf = new ArrayBuffer(s.length);

@@ -60,6 +60,7 @@
 <script>
 import { ref } from 'vue';
 import queryModel from '@/lib/queryModelFactory.js';
+import { useInventoryColumns } from 'app/src/composables/warehouse';
 
 export default {
   name: 'InventoryRoot',
@@ -73,8 +74,11 @@ export default {
       rowsNumber: 1000,
     });
 
+    const inventoryColumns = useInventoryColumns();
+
     return {
       pagination,
+      inventoryColumns,
     };
   },
 
@@ -125,67 +129,7 @@ export default {
     },
 
     columns() {
-      return [
-        {
-          name: 'position_code',
-          field: 'position_code',
-          sortable: true,
-          label: this.$t('warehouse.inventory.position').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-
-        {
-          name: 'product_code',
-          field: 'product_code',
-          sortable: true,
-          label: this.$t('warehouse.inventory.product_code').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'serial',
-          field: 'serial_code',
-          sortable: true,
-          label: this.$t('warehouse.inventory.serial').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'quantity',
-          field: 'quantity',
-          sortable: true,
-          label: this.$t('warehouse.inventory.quantity').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-
-        {
-          name: 'owned',
-          field: 'owned',
-          sortable: true,
-          label: this.$t('warehouse.inventory.owned').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'date_received',
-          field: 'date_received',
-          sortable: true,
-          align: 'right',
-          label: this.$t('warehouse.inventory.date_received').toUpperCase(),
-          style: 'max-width: 5vw',
-        },
-
-        {
-          name: 'expiration_date',
-          field: 'expiration_date',
-          sortable: true,
-          align: 'right',
-          label: this.$t('warehouse.inventory.expiration_date').toUpperCase(),
-          style: 'max-width: 5vw',
-        },
-      ];
+      return this.inventoryColumns;
     },
   },
 

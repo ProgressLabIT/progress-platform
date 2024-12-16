@@ -57,6 +57,7 @@
 <script>
 import { ref } from 'vue';
 import queryModel from '@/lib/queryModelFactory.js';
+import { usePositionColumns } from 'app/src/composables/warehouse';
 
 export default {
   name: 'PositionsRoot',
@@ -70,8 +71,11 @@ export default {
       rowsNumber: 1000,
     });
 
+    const positionColumns = usePositionColumns();
+
     return {
       pagination,
+      positionColumns,
     };
   },
 
@@ -117,56 +121,7 @@ export default {
     },
 
     columns() {
-      return [
-        {
-          name: '_key',
-          field: '_key',
-          sortable: true,
-          label: 'ID',
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'code',
-          field: 'code',
-          sortable: true,
-          label: this.$t('code').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'owned',
-          field: 'owned',
-          sortable: true,
-          label: this.$t('owned').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'available',
-          field: 'available',
-          sortable: true,
-          label: this.$t('available').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'disposable',
-          field: 'disposable',
-          sortable: true,
-          label: this.$t('disposable').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'created',
-          field: 'created',
-          sortable: true,
-          align: 'right',
-          label: this.$t('creation_date').toUpperCase(),
-          style: 'max-width: 5vw',
-        },
-      ];
+      return this.positionColumns;
     },
   },
 

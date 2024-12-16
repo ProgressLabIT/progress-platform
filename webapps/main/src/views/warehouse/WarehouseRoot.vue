@@ -133,7 +133,12 @@
 import InventoryFilter from '@/components/warehouse/inventory/InventoryFilter.vue';
 import MovementFilter from '@/components/warehouse/movement/MovementFilter.vue';
 import PositionFilter from '@/components/warehouse/position/PositionFilter.vue';
-import { XLSXDownload } from '@/lib/xlsxDownload';
+import { XLSXDownload, XLSXGetData } from '@/lib/xlsxDownload';
+import {
+  useInventoryColumns,
+  useMovementColumns,
+  usePositionColumns,
+} from 'app/src/composables/warehouse';
 
 const warehouse_views = [
   { component: 'Positions', route_name: 'positions' },
@@ -152,6 +157,13 @@ export default {
     PositionFilter,
     MovementFilter,
     InventoryFilter,
+  },
+
+  setup() {
+    const inventorColumns = useInventoryColumns();
+    const positionColumns = usePositionColumns();
+    const movementColumns = useMovementColumns();
+    return { inventorColumns, positionColumns, movementColumns };
   },
 
   data() {
@@ -185,12 +197,38 @@ export default {
       }
     },
 
-    exportPositions() {},
+    exportPositions() {
+      XLSXDownload(
+        XLSXGetData(
+          this.$store.state.warehouse.positions,
+          this.positionColumns,
+        ),
+        'positions',
+        'positions',
+      );
+    },
 
-    exportMovements() {},
+    exportMovements() {
+      XLSXDownload(
+        XLSXGetData(
+          this.$store.state.warehouse.movements,
+          this.movementColumns,
+        ),
+        'movements',
+        'movements',
+      );
+    },
 
     exportInventory() {
       XLSXDownload(
+        XLSXGetData(
+          this.$store.state.warehouse.inventory,
+          this.inventorColumns,
+        ),
+        'inventory',
+        'inventory',
+      );
+      /* XLSXDownload(
         this.$store.state.warehouse.inventory.map((entry) => {
           return {
             [this.$t('warehouse.inventory.position').toUpperCase()]:
@@ -207,10 +245,15 @@ export default {
             [this.$t('warehouse.inventory.expiration_date').toUpperCase()]:
               this.$shortDateString(entry.expiration_date, this.$i18n.locale),
           };
+          let row = {};
+          this.inventorColumns.map((col) => {
+            row[col.label] = entry[col.field];
+          });
+          return row;
         }),
         'inventory',
         'inventory',
-      );
+      );*/
     },
   },
 };
