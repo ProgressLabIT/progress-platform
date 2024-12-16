@@ -4,6 +4,7 @@
     square
     transition-show="slide-up"
     transition-hide="slide-down"
+    @hide="emit('hide')"
   >
     <q-card class="q-pa-lg absolute-bottom full-width column" :style="{ minHeight: cardHeight }">
       <slot></slot>
@@ -16,6 +17,8 @@ const cardHeight = defineModel('height', {
   type: String,
   default: '50%',
 })
+
+const emit = defineEmits(['hide'])
 
 const show = defineModel({
   type: Boolean,
