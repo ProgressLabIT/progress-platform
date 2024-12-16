@@ -145,7 +145,7 @@ export default {
         },
         {
           name: 'serial',
-          field: 'serial_key',
+          field: 'serial_code',
           sortable: true,
           label: this.$t('warehouse.inventory.serial').toUpperCase(),
           align: 'left',

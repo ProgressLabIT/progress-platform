@@ -26,6 +26,13 @@ class Queries:
           RETURN position
       )
 
+    // SERIAL
+      let serial = FIRST(
+          FOR serial IN Serial
+          FILTER serial._key == e.serial_key
+          RETURN serial
+      )
+
     FILTER
       IS_SAME_COLLECTION('Product', v)
       && (@position_key ? position._key == @position_key : true)
@@ -33,13 +40,13 @@ class Queries:
       && (@product_key ? v._key == @product_key : true)
       && (@product_code ? v.code == @product_code : true)
       && (@owned ? e.owned == @owned : true)
-      && (@serial_keys ? e.serial_key IN @serial_keys : true)
+      && (@serial_keys ? e.serial_key IN @serial_keys : @strict ? e.serial_key == null : true)
       //&& (@contains_position ? @contains_position IN p.vertices[*]._key : true)
       //&& (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%') : true)
       //&& (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
       //&& (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
 
-    LIMIT @offset, @limit || null
+
 
   """
 
@@ -48,6 +55,7 @@ class Queries:
 
     """ + INVENTORY_FILTER + """
 
+    LIMIT @offset, @limit || null
 
       RETURN merge(v, {
               product_id: v._id,
@@ -55,7 +63,7 @@ class Queries:
               position_id: e._to,
               position_code: position.code,
               serial_key: e.serial_key,
-              serial_code: e.serial_key ? FIRST(FOR s IN Serial FILTER s._key == e.serial_key RETURN s.code) : null,
+              serial_code: serial.code,
               quantity: e.quantity,
               owned: e.owned,
               value: e.value,
@@ -70,7 +78,9 @@ class Queries:
 
     """ + INVENTORY_FILTER + """
 
-      RETURN v
+    LIMIT @offset, @limit || null
+
+      RETURN DISTINCT v
   """
 
   SEARCH_INVENTORY_POSITIONS = """
@@ -78,7 +88,25 @@ class Queries:
 
     """ + INVENTORY_FILTER + """
 
+    LIMIT @offset, @limit || null
+
       RETURN DISTINCT position
+  """
+
+  SEARCH_INVENTORY_SERIALS = """
+     FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
+
+    """ + INVENTORY_FILTER + """
+      && e.serial_key != null
+
+    LIMIT @offset, @limit || null
+
+
+
+      RETURN DISTINCT MERGE (serial, {
+          label: serial.code,
+          value: serial._key
+      })
   """
 
   GET_POSITION_HIERARCHY = """

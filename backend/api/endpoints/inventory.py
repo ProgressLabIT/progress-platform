@@ -356,6 +356,20 @@ async def get_inventory_positions(params: Annotated[InventorySearchParams, Query
       detail=traceback.format_exc()
     )
 
+@router.get('/inventory/serials',
+    dependencies=[Depends(auth.verify_token)])
+async def get_inventory_serials(params: Annotated[InventorySearchParams, Query()]):
+  try:
+    bind_vars = dict(**params.model_dump())
+    results = db.aql.execute(Queries.SEARCH_INVENTORY_SERIALS, bind_vars=bind_vars)
+    return [r for r in results]
+
+  except Exception as e:
+    raise HTTPException(
+      status_code=500,
+      detail=traceback.format_exc()
+    )
+
 
 
 

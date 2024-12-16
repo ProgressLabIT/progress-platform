@@ -46,7 +46,6 @@
 
           <!-- INVENTORY BUTTONS -->
           <q-btn
-            v-if="$route.name === 'inventory'"
             size="0.75rem"
             :label="$t('export')"
             color="theme-blue"
@@ -177,8 +176,18 @@ export default {
         case 'inventory':
           this.exportInventory();
           break;
+        case 'positions':
+          this.exportPositions();
+          break;
+        case 'movements':
+          this.exportMovements();
+          break;
       }
     },
+
+    exportPositions() {},
+
+    exportMovements() {},
 
     exportInventory() {
       XLSXDownload(
@@ -189,7 +198,7 @@ export default {
             [this.$t('warehouse.inventory.product_code').toUpperCase()]:
               entry.product_code,
             [this.$t('warehouse.inventory.serial').toUpperCase()]:
-              entry.serial_key,
+              entry.serial_code,
             [this.$t('warehouse.inventory.quantity').toUpperCase()]:
               entry.quantity,
             [this.$t('warehouse.inventory.owned').toUpperCase()]: entry.owned,

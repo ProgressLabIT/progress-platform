@@ -92,6 +92,7 @@ class Inventory(ArangoEdge): # edge is_in_position
 class InventorySearchResult(Inventory):
   product_code: str | None = None
   position_code: str | None = None
+  serial_code: str | None = None
 
 
 class InventorySearchParams(BaseModel):
@@ -105,6 +106,7 @@ class InventorySearchParams(BaseModel):
   owned: bool | None = None
   limit: int | None = 200
   offset: int | None = 0
+  strict: bool | None = False
 
 class MovementStatus(str, Enum):
   PLANNED = 'planned'

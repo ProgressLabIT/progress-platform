@@ -36,7 +36,13 @@
             :value="position"
             :disable="loadingVal"
             :options="availablePositions"
-            @select="(selection) => (position = selection)"
+            @select="
+              (selection) => {
+                position = selection;
+                getAvailableProducts();
+                getAvailableSerials();
+              }
+            "
           />
         </div>
 
@@ -48,30 +54,27 @@
             :options="availableProducts"
             :load-data="false"
             :value="product"
-            :disable="loadingVal"
+            :disable="loadingVal || serial"
             :label="$capitalize($t('product.label'))"
-            @select="(selection) => (product = selection)"
+            @select="(selection) => productSelection(selection)"
           >
           </BaseAutocompleteProduct>
         </div>
 
-        <!-- SERIAL
-        <div
-          v-if="position"
-          class="row items-baseline q-col-gutter-md"
-        >
+        <!-- SERIAL -->
+        <div v-if="position" class="row items-baseline q-col-gutter-md">
           <BaseAutocompleteSerial
             dense
             class="q-mb-md col"
+            :options="availableSerials"
             :load-data="false"
             :value="serial"
             :disable="loadingVal"
-            :product_key="product?._key"
             :label="$capitalize($t('serial'))"
-            @select="(selection) => (serial = selection)"
+            @select="(selection) => serialSelection(selection)"
           >
           </BaseAutocompleteSerial>
-        </div>-->
+        </div>
 
         <!-- QUANTITY -->
         <div v-if="product" class="row items-baseline q-col-gutter-md">
@@ -97,7 +100,7 @@ import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
-//import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
+import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseModalForm from '@/components/BaseModalForm.vue';
 import { sendEvent } from '@/composables/event.js';
 import { timestamp } from '@/lib/TimeHandling';
@@ -121,13 +124,10 @@ const saveButtonEnabled = ref(false);
 
 const originalPosition = ref(undefined);
 const availableProducts = ref([]);
+const availableSerials = ref([]);
 const availablePositions = ref([]);
 
 watch(movement_type, getAvailablePositions);
-watch(position, getAvailableProducts);
-
-watch(product, getOriginalPosition);
-watch(serial, getOriginalPosition);
 
 watch(quantity, () => {
   saveButtonEnabled.value = !validateMovementError();
@@ -152,10 +152,48 @@ function clean() {
   availablePositions.value = [];
 }
 
-function getOriginalPosition() {
+function productSelection(selection) {
   quantity.value = 1;
   qtyMax.value = undefined;
   originalPosition.value = undefined;
+  product.value = selection;
+  serial.value = undefined;
+  availableSerials.value = undefined;
+  if (product.value && movement_type.value === 'receipt') {
+    api
+      .get('serial-selection', { params: { product_key: product.value._key } })
+      .then((resp) => {
+        availableSerials.value = resp.data;
+      });
+  } else {
+    getAvailableSerials();
+  }
+  getOriginalPosition();
+}
+
+function serialSelection(selection) {
+  quantity.value = 1;
+  qtyMax.value = undefined;
+  originalPosition.value = undefined;
+  serial.value = selection;
+  if (serial.value) {
+    if (movement_type.value === 'receipt') {
+      api.get(`/product/${serial.value.product_key}`).then(
+        (data) => {
+          product.value = data.data;
+          getOriginalPosition();
+        },
+        () => {
+          product.value = undefined;
+        },
+      );
+    }
+  } else {
+    getOriginalPosition();
+  }
+}
+
+function getOriginalPosition() {
   if (
     !product?.value ||
     movement_type?.value === 'receipt' ||
@@ -164,12 +202,17 @@ function getOriginalPosition() {
     return;
   }
   loadingVal.value = true;
+  let params = (params = {
+    position_key: position.value._key,
+    product_key: product.value._key,
+    strict: true,
+  });
+  if (serial.value) {
+    params.serial_key = serial.value._key;
+  }
   api
     .get('/inventory', {
-      params: {
-        position_key: position.value._key,
-        product_key: product.value._key,
-      },
+      params,
     })
     .then(
       (data) => {
@@ -263,6 +306,35 @@ function getAvailableProducts() {
   }
 }
 
+function getAvailableSerials() {
+  availableSerials.value = [];
+  serial.value = undefined;
+  if (!position?.value) {
+    return;
+  }
+  if (movement_type?.value !== 'receipt' && position?.value?._key) {
+    loadingVal.value = true;
+    let params = { position_key: position?.value?._key };
+    if (product.value) {
+      params.product_key = product.value._key;
+    }
+    api
+      .get('/inventory/serials', {
+        params: params,
+      })
+      .then(
+        (data) => {
+          availableSerials.value = data.data;
+          loadingVal.value = false;
+        },
+        () => {
+          availableSerials.value = [];
+          loadingVal.value = false;
+        },
+      );
+  }
+}
+
 function createMovement() {
   const session_data = store.state.session;
 
@@ -303,6 +375,7 @@ function createMovement() {
     position_from: position_from_id,
     position_to: position_to_id,
     product_key: product?.value?._key,
+    serial_key: serial?.value?._key,
     qt_planned: quantity.value,
     qt_confirmed: quantity.value,
     status: 'completed',
