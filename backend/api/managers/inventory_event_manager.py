@@ -41,7 +41,7 @@ class InventoryEventManager:
     def add_movement(self):
       try:
         movement_data=self.event.info.movement
-        new_movement_record = InventoryMovement(**movement_data.dict()).dict(by_alias=True)
+        new_movement_record = InventoryMovement(**movement_data.model_dump()).model_dump(by_alias=True)
         self.adjust_inventory(new_movement_record, new_movement_record['type'])
         movement_key = self.tx.collection('movement').insert(dict(new_movement_record), return_new=True)['_key']
         self.notify_results(dict(
