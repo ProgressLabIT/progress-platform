@@ -105,7 +105,7 @@
               </q-item-section>
             </q-item>
 
-            <q-item clickable @click="openFullscreen">
+            <q-item clickable @click="$q.fullscreen.toggle()">
               <q-item-section side>
                 <q-icon name="mdi-fullscreen" />
               </q-item-section>
@@ -116,8 +116,7 @@
               </q-item-section>
               <q-item-section side>
                 <q-toggle
-                  :model-value="fullScreenActive"
-                  @update:model-value="toggleFullscreen"
+                  v-model="$q.fullscreen.isActive"
                 />
               </q-item-section>
             </q-item>
@@ -141,15 +140,17 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { capitalize, capitalizeAll } from 'src/boot/filters.js';
 import { useTheme } from 'src/composables/theme';
 import BaseUserAvatar from './BaseUserAvatar.vue';
+import { useQuasar } from 'quasar';
 
 const store = useStore();
+const $q = useQuasar();
 
 const user = computed(() => store.state.session.user);
 
@@ -173,19 +174,6 @@ const localeOptions = availableLocales.map((locale) => ({
   label: locale,
   value: locale,
 }));
-
-const fullScreenActive = ref(false)
-
-function toggleFullscreen(value) {
-  if (value) {
-    document.documentElement.requestFullscreen();
-    fullScreenActive.value = true;
-  } else {
-    document.exitFullscreen();
-    fullScreenActive.value = false;
-  }
-}
-
 
 const displayFont = computed(
   () => user.value.preferences.display_font || 'orbitron'
