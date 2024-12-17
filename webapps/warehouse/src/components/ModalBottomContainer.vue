@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md q-gutter-sm">
+  <div class="q-gutter-sm">
     <q-dialog
       :model-value="show"
       position="bottom"

@@ -96,9 +96,9 @@
 import { ref, computed, onMounted } from 'vue';
 import { api } from 'app/src/boot/axios';
 import { useIncomingStore } from 'app/src/stores/incoming';
-import SearchOrScan from '../../SearchOrScan.vue';
-import SlideUpCard from '../../SlideUpCard.vue';
-import CreateContainerForm from './CreateContainerForm.vue';
+import SearchOrScan from '@/components/SearchOrScan.vue';
+import SlideUpCard from '@/components/SlideUpCard.vue';
+import CreateContainerForm from '@/components/CreateContainerForm.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t: $t } = useI18n();
@@ -136,7 +136,7 @@ function loadLatestUsedPositions() {
   }
   else {
     loading.value = true;
-    api.get('movement/latest-receipt-positions', { limit: 10 }).then((resp) => {
+    api.get('movement/latest-positions', { limit: 10 }).then((resp) => {
       incoming.recentPositions = resp.data;
       positionResults.value = incoming.recentPositions;
       loading.value = false;

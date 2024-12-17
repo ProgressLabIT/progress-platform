@@ -7,18 +7,13 @@
     transition-hide="slide-down"
     @hide="emit('hide')"
   >
-    <q-card class="q-pa-lg absolute-bottom column" :style="{ minHeight: cardHeight, width: '100vw' }">
+    <q-card class="q-pa-lg absolute-bottom column" style="width: 100%">
       <slot></slot>
     </q-card>
   </q-dialog>
 </template>
 
 <script setup>
-const cardHeight = defineModel('height', {
-  type: String,
-  default: '50%',
-})
-
 const emit = defineEmits(['hide'])
 
 const show = defineModel({

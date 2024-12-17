@@ -1,7 +1,7 @@
 <template>
   <div class="col column full-width">
 
-    <div class="text-h3 q-mb-md q-mt-md">{{ $t('position') }}</div>
+    <div class="text-h3 q-mb-md">{{ $t('start_from_position') }}</div>
 
     <!-- POSITION SEARCH -->
     <SearchOrScan v-model="filter" @update:model-value="searchPositions" />
@@ -17,7 +17,7 @@
       <div class="col scroll">
         <div class="row full-width q-col-gutter-x-sm q-mt-md">
           <div v-for="pos in positionResults" :key="pos._key" class="col-auto">
-            <q-chip clickable outline class="text-body1" @click="toggleSelection(pos)">
+            <q-chip clickable outline class="text-body1" @click="selectPosition(pos)">
               {{ pos.code }}
             </q-chip>
           </div>
@@ -30,18 +30,22 @@
 
     <q-btn
       color="theme-grey"
-      :label="$t('back')"
+      :label="$t('cancel')"
       class="full-width"
-      @click="transfer.stage = 'start'"
+      @click="router.push({ name: 'TransferRoot'})"
     />
     <div class="q-mx-xs"></div>
 
 
-    <SlideUpCard v-model="showCreateContainerBottomSheet">
-      <div class="column q-gutter-y-md">
-        <q-btn color="theme-blue" :label="$t('select_container')" class="full-width" @click="openCreateContainerForm" />
-        <q-btn color="theme-blue" :label="$t('select_contents')" class="full-width" @click="transfer.stage = 'contents'" />
-      </div>
+    <SlideUpCard
+      :model-value="showContentTypeSelection !== null"
+      @hide="showContentTypeSelection = null"
+    >
+      <TransferManualPositionAction
+        :position="showContentTypeSelection"
+        @select-container="selectContainer"
+        @select-contents="selectContents(showContentTypeSelection)"
+      />
     </SlideUpCard>
 
   </div>
@@ -53,8 +57,11 @@ import { useI18n } from 'vue-i18n';
 import { api } from '@/boot/axios';
 import SearchOrScan from '@/components/SearchOrScan.vue';
 import SlideUpCard from '@/components/SlideUpCard.vue';
+import TransferManualPositionAction from '@/components/transfer/TransferManualPositionAction.vue';
 import { useTransferStore } from '@/stores/transfer';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const { t: $t } = useI18n();
 const transfer = useTransferStore();
 
@@ -64,7 +71,7 @@ const filter = ref('');
 const last_research = ref('');
 const positionResults = ref([]);
 const positionResultsType = ref('RECENTI');
-const showCreateContainerBottomSheet = ref(false);
+const showContentTypeSelection = ref(null);
 
 
 
@@ -88,8 +95,8 @@ function loadLatestUsedPositions() {
   }
   else {
     loading.value = true;
-    api.get('movement', { params: {
-      movement_type: 'transfer',
+    api.get('movement/latest-positions', { params: {
+      type: 'transfer',
       limit: 10
     }})
     .then((resp) => {
@@ -134,12 +141,28 @@ function loadPositions() {
 
 function selectPosition(position) {
   // If position is a container, open dialog to select whole container or contents
-  console.log(position);
+  if (position.fixed == true) {
+    selectContents(position);
+    return
+  }
+  else {
+    showContentTypeSelection.value = position;
+  }
 }
 
-function openCreateContainerForm() {
-  console.log('openCreateContainerForm');
-  showCreateContainerBottomSheet.value = true;
+function selectContents(position) {
+  transfer.startPosition = position;
+  transfer.contents = [];
+  transfer.stage = 'contents';
+}
+
+
+function selectContainer() {
+  transfer.contents.push({
+    type: 'position',
+    ...showContentTypeSelection.value
+  });
+  transfer.stage = 'destination';
 }
 
 onMounted(() => {

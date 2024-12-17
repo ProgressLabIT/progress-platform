@@ -69,7 +69,7 @@ function loadLatestUsedProducts() {
     rows.value = incoming.recentProducts;
   } else {
     loading.value = true;
-    api.get('movement/latest-receipt-products', { limit: 5 }).then((resp) => {
+    api.get('movement/latest-products', { limit: 5 }).then((resp) => {
       incoming.recentProducts = resp.data;
       rows.value = incoming.recentProducts;
       loading.value = false;

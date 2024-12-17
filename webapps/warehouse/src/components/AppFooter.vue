@@ -67,7 +67,7 @@
 
 <script>
 import { DateTime } from 'luxon';
-import CreateContainerForm from '@/components/incoming/position/CreateContainerForm.vue';
+import CreateContainerForm from '@/components/CreateContainerForm.vue';
 import PrintLabelForm from '@/components/print/PrintLabelForm.vue';
 import { useConfigStore } from '../stores/config';
 

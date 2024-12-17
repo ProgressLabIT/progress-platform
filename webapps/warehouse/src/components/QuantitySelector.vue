@@ -6,7 +6,7 @@
       flat
       class="cursor-pointer q-my-md surface2 col"
       id="qtyarea"
-      :style="selector_style"
+      :style="selectorStyle"
     >
 
       <q-icon
@@ -87,7 +87,7 @@
 <script setup>
 
 const props = defineProps({
-  selector_style: {
+  selectorStyle: {
     type: String,
     default: '',
   },
@@ -102,7 +102,7 @@ const props = defineProps({
   showButtons: {
     type: Boolean,
     default: false,
-  },
+  }
 })
 
 const quantity = defineModel({ type: Number })

@@ -11,6 +11,7 @@
         :initial_qty="0"
         :show_buttons="false"
         class="col"
+        selector-style="min-height: 100px;"
         :max="props.max"
       />
       <div class="col-auto">
@@ -102,7 +103,7 @@ const props = defineProps({
   max: {
     type: Number,
     default: 100,
-  },
+  }
 });
 
 

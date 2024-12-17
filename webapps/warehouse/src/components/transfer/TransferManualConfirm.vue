@@ -1,23 +1,28 @@
 <template>
-  <div class="column col">
+  <div class="column col q-gutter-y-md">
     <!-- Selected Serials Section -->
-    <template v-if="transfer.selectMode === 'serials'">
-      <div class="q-mb-md">
-        <div class="text-h6">
-          {{ $t('serial', 2) }}
-          <q-avatar size="sm" color="theme-grey" class="q-ml-sm">
-          {{ transfer.contents.serials.length }}
-        </q-avatar>
-      </div>
-      <div class="row q-col-gutter-x-xs q-mt-sm">
-        <div v-for="serial in transfer.contents.serials" :key="serial._key" class="col-auto">
-          <q-chip color="theme-grey" class="text-body2 highlight">
-            {{ serial.code }}
-          </q-chip>
-        </div>
-      </div>
+    <div class="text-h6">
+      {{ $t('contents') }}
+      <q-avatar size="sm" color="theme-grey" class="q-ml-sm">
+        {{ transfer.contents.length }}
+      </q-avatar>
     </div>
-    </template>
+    <div class="row q-col-gutter-x-xs q-mt-sm">
+      <!-- Show first 3 serial numbers as chips -->
+      <div v-for="item in transfer.contents" :key="item._key" class="col-auto">
+        <q-chip color="theme-grey" class="text-body2" :icon="contentIcon[item.type]">
+          <span>{{ item.code }}</span>
+          <span v-if="item.type === 'product'">x {{ item.quantity }}</span>
+        </q-chip>
+      </div>
+      <!-- Show count of remaining serials if more than 3 are selected -->
+      <!-- <div v-if="transfer.contents.length > 3" class="col-auto">
+        <q-chip color="theme-grey" class="text-body2">
+          +{{ transfer.contents.length - 3 }}
+        </q-chip>
+      </div> -->
+    </div>
+
 
     <!-- Destination Position Section -->
     <div class="q-mb-md">
@@ -62,6 +67,12 @@ import { timestamp } from 'app/src/lib/TimeHandling';
 const transfer = useTransferStore();
 const store = useStore();
 
+const contentIcon = {
+  product: 'mdi-apps',
+  serial: 'mdi-cube-scan',
+  position: 'mdi-package-variant-closed',
+}
+
 function saveTransfer() {
   transfer.selectMode === 'serials'
   ? confirmSerialMovements()
@@ -72,7 +83,7 @@ function confirmSerialMovements() {
   let movements = [];
   const session_data = store.state.session;
 
-  for (const serial of transfer.contents.serials) {
+  for (const serial of transfer.contents) {
     movements.push({
       position_to: `Position/${transfer.destinationPosition._key}`,
       product_key: serial.product._key,
@@ -88,7 +99,7 @@ function confirmSerialMovements() {
   }
 
   const serial_keys = new URLSearchParams();
-  transfer.contents.serials.forEach(s => serial_keys.append('serial_keys', s._key));
+  transfer.contents.forEach(s => serial_keys.append('serial_keys', s._key));
   const promises = [];
   api
     .get('/inventory', { params: serial_keys })
@@ -122,8 +133,53 @@ function confirmSerialMovements() {
   transfer.$reset();
 }
 
+function getProductKey(item) {
+  switch(item.type) {
+    case 'product': return item._key;
+    case 'serial': return item.product_key;
+    case 'position': return null;
+  }
+}
+
 function confirmProductMovements() {
-  console.log('confirmProductMovements');
+  let movements = [];
+  const session_data = store.state.session;
+
+  for (const item of transfer.contents) {
+    movements.push({
+      position_from: `Position/${item.type === 'position' ? item._key : transfer.startPosition._key}`,
+      position_to: `Position/${transfer.destinationPosition._key}`,
+      product_key: getProductKey(item),
+      serial_key: item.type === 'serial' ? item._key : null,
+      qt_planned: item.type === 'product' ? item.quantity : null,
+      qt_confirmed: item.type === 'product' ? item.quantity : null,
+      status: 'completed',
+      type: 'transfer',
+      user_key: session_data.user._key,
+      start: timestamp(),
+      end: timestamp(),
+    });
+  }
+
+  for (const movement of movements) {
+    sendEvent({
+      event_type: 'ADD_MOVEMENT',
+      event_data: {movement},
+    })
+    .then(() => {
+      Notify.create({
+        message: 'Movimenti registrati',
+        position: 'top',
+        color: 'theme-green',
+        timeout: 1500,
+      });
+      transfer.$reset();
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  }
+
 }
 
 </script>

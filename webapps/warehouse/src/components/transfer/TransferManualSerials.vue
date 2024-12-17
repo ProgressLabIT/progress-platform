@@ -1,5 +1,5 @@
 <template>
-  <div class="col column">
+  <div class="col column q-gutter-y-sm">
 
     <div class="col-auto q-mb-sm text-body2 item-center">
       {{ $t(message) }}
@@ -10,18 +10,20 @@
       @update:model-value="search"
     />
 
+    <q-scroll-area class="col">
+
       <div
-        v-if="transfer.contents.serials.length"
+        v-if="transfer.contents.length"
         class="col-auto row items-center q-gutter-x-sm q-mb-sm text-h6">
         <div>{{ $t('selected') }}</div>
         <q-avatar size="xs" color="theme-grey">
-          <div class="smaller highlight">{{ transfer.contents.serials.length }}</div>
+          <div class="smaller highlight">{{ transfer.contents.length }}</div>
         </q-avatar>
       </div>
 
       <div class="col-auto scroll q-my-md column">
         <q-card
-          v-for="item in transfer.contents.serials"
+          v-for="item in transfer.contents"
           :key="item.key"
           v-ripple
           bordered
@@ -57,14 +59,20 @@
       </div>
 
 
-    <q-space />
+  </q-scroll-area>
 
     <q-btn
-      :disable="transfer.contents.serials.length === 0"
+      :disable="transfer.contents.length === 0"
       color="theme-blue"
       :label="$t('next')"
       class="col-auto full-width"
       @click="next"
+    />
+    <q-btn
+      color="grey"
+      :label="$t('cancel')"
+      class="col-auto full-width"
+      @click="cancel"
     />
 
   </div>
@@ -78,7 +86,9 @@ import SearchOrScan from '@/components/SearchOrScan.vue';
 import { api } from 'app/src/boot/axios';
 import { useTransferStore } from '@/stores/transfer';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const transfer = useTransferStore();
 const filter = ref('');
 const results = ref([]);
@@ -130,7 +140,7 @@ function search() {
 
 const serialList = computed(() => {
   return [
-    ...results.value.filter(item => !transfer.contents.serials.find(serial => serial._key === item._key))
+    ...results.value.filter(item => !transfer.contents.find(serial => serial._key === item._key))
   ];
 });
 
@@ -142,16 +152,21 @@ function reset() {
 }
 
 function toggleItem(item) {
-  const index = transfer.contents.serials.findIndex(serial => serial._key === item._key);
+  const index = transfer.contents.findIndex(serial => serial._key === item._key);
   index !== -1 // if item is already in the list, remove it
-    ? transfer.contents.serials.splice(index, 1)
-    : transfer.contents.serials.push(item);
+    ? transfer.contents.splice(index, 1)
+    : transfer.contents.push({...item, type: 'serial'});
 
   return index === -1 ? 'added' : 'removed'
 }
 
 function next() {
   transfer.stage = 'destination';
+}
+
+function cancel() {
+  transfer.$reset();
+  router.push({ name: 'TransferRoot' });
 }
 
 </script>
