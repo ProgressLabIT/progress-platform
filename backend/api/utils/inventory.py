@@ -17,8 +17,29 @@ class Queries:
     RETURN v
   """
 
-  INVENTORY_FILTER = """
+  GET_POSITION_CONTENTS = """
+    FOR v, e IN 1..1 INBOUND CONCAT('Position/', @position_key) is_in_position OPTIONS { uniqueVertices: "path" }
+    LET position = (IS_SAME_COLLECTION(Position, v) && v.fixed == false) ? MERGE({ type: 'position' }, KEEP(v, '_id', '_key', 'code')) : null
+    LET product = IS_SAME_COLLECTION(Product, v) ? MERGE({ type: 'product', quantity: e.quantity }, KEEP(v, '_id', '_key', 'code')) : null
+    LET serial = e.serial_key ? FIRST(
+      FOR s IN Serial
+      FILTER s._key == e.serial_key
+      RETURN {
+        type: 'serial',
+        _id: s._id,
+        _key: s._key,
+        code: s.code,
+        product_key: v._key,
+        product_code: v.code,
+        quantity: e.quantity
+      }
+    ): null
+    LET result = NOT_NULL(serial, product, position)
+    FILTER result != null && result.code != null
+    RETURN result
+  """
 
+  INVENTORY_FILTER = """
     // POSITION
       let position = FIRST(
           FOR position IN Position

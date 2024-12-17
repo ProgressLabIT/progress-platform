@@ -37,7 +37,7 @@ async def get_positions(params: Annotated[PositionSearchParams, Query()]):
     dependencies=[Depends(auth.verify_token)])
 async def get_position_contents(position_key):
   try:
-    return db.collection('Position').get(position_key)
+    return [x for x in db.aql.execute(Queries.GET_POSITION_CONTENTS, bind_vars=dict(position_key=position_key))]
   except Exception:
     raise HTTPException(
       status_code=500,
@@ -48,9 +48,8 @@ async def get_position_contents(position_key):
     )
 
 
-@router.get('/position-hierarchy'
-#, dependencies=[Depends(auth.verify_token)]
-)
+@router.get('/position-hierarchy',
+  dependencies=[Depends(auth.verify_token)])
 def get_position_hierarchy(
   position_key: str | None = None,
 ):
