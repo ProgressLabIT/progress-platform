@@ -90,6 +90,7 @@ class Queries:
       && (@search ? CONTAINS(LOWER(s.code), LOWER(@search)) : true)
       && (@include_unreleased ? true : s.released != null)
       && (@batch_key ? s._key IN batch_serials : true)
+      && s.deleted == false
 
       LET used = (
         FOR linked_serial IN contains
@@ -114,6 +115,7 @@ class Queries:
     FOR s IN Serial
       FILTER (@serial_key ? s._key != @serial_key : true) && UPPER(s.code) == UPPER(@serial)
       && s.product_key == @product_key
+      && s.deleted == false
       RETURN s
   """
 
@@ -140,6 +142,7 @@ class Queries:
   GET_SERIALS_FOR_CODE = """
     FOR s IN Serial
       FILTER (s.code == @serial_code && s.product_key == @product_key)
+      && s.deleted == False
       RETURN s
   """
 
