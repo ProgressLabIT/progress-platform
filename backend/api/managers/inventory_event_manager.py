@@ -49,14 +49,14 @@ class InventoryEventManager:
            notification = InventoryNotificationType.MOVEMENT_ADDED,
            message="Movement created correctly",
         ))
-      except:
+      except Exception as e:
         print(traceback.format_exc())
         self.notify_results(dict(
            notification = InventoryNotificationErrorCode.EXCEPTION,
            error_code = InventoryNotificationType.ERROR,
            error = traceback.format_exc()
         ))
-        raise InventoryMovementException(f'Cannot add movements')
+        raise InventoryMovementException(f'Cannot add movements', e, traceback.format_exc())
 
     def adjust_inventory(self, new_movement_record, type):
        match type:
