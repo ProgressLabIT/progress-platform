@@ -37,22 +37,11 @@
         >
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
-              <template v-if="['created', 'closed'].includes(column.name)">
+              <template v-if="column.format">
                 {{
-                  props.row[column.name] === null
-                    ? '-'
-                    : $shortDateString(props.row[column.name], $i18n.locale)
-                }}
-              </template>
-
-              <template v-else-if="['product_code'].includes(column.name)">
-                {{ $capitalizeAll(column.field(props.row) || '-') }}
-              </template>
-
-              <template v-else-if="column.custom">
-                {{
-                  $capitalizeAll(
-                    customFieldValue(props.row, column.field) || '-',
+                  column.format(
+                    (val = props.row[column.name]),
+                    (row = props.row),
                   )
                 }}
               </template>
@@ -73,6 +62,7 @@
 
 <script>
 import { ref } from 'vue';
+import { useSerialColumns } from '@/composables/traceability';
 
 export default {
   name: 'SerialsOverview',
@@ -103,9 +93,12 @@ export default {
       pagination.value.rowsPerPage = rowsPerPage;
     }
 
+    const serialColumns = useSerialColumns();
+
     return {
       pagination,
       onRequest,
+      serialColumns,
     };
   },
 
@@ -121,48 +114,7 @@ export default {
     },
 
     columns() {
-      return [
-        {
-          name: '_key',
-          field: '_key',
-          sortable: true,
-          label: 'ID',
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'code',
-          field: 'code',
-          sortable: true,
-          label: this.$t('serial').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'product_code',
-          field: (row) => row?.product?.code,
-          sortable: true,
-          align: 'left',
-          label: this.$t('product.label').toUpperCase(),
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'wo_code',
-          field: 'wo_code',
-          sortable: true,
-          align: 'left',
-          label: this.$t('work_order.long').toUpperCase(),
-          style: 'max-width: 10vw',
-        },
-        {
-          name: 'created',
-          field: 'created',
-          sortable: true,
-          align: 'right',
-          label: this.$t('creation_date').toUpperCase(),
-          style: 'max-width: 5vw',
-        },
-      ].concat(this.getCustomCols());
+      return this.serialColumns;
     },
   },
 
@@ -186,21 +138,6 @@ export default {
         });
       }
       return returnValue;
-    },
-
-    getCustomCols() {
-      if (!this.$store.state.serial.serial_fields) {
-        return [];
-      }
-      return this.$store.state.serial.serial_fields.map((field) => ({
-        name: field.name,
-        field: field._key,
-        sortable: false,
-        align: 'right',
-        label: field.name.toUpperCase(),
-        style: 'max-width: 5vw',
-        custom: true,
-      }));
     },
 
     showSerialDetails(serialKey) {

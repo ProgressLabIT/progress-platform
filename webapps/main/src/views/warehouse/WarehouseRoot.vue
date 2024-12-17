@@ -45,6 +45,8 @@
           </q-btn>
 
           <!-- INVENTORY BUTTONS -->
+
+          <!-- EXPORT EXCEL -->
           <q-btn
             size="0.75rem"
             :label="$t('export')"
