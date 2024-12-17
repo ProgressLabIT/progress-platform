@@ -244,12 +244,15 @@ def search_inventory_journal(params: Annotated[InventoryMovementSearchParameters
       detail=traceback.format_exc()
     )
 
-@router.get('/movement/latest-receipt-positions',
+@router.get('/movement/latest-positions',
     dependencies=[Depends(auth.verify_token)])
-def get_latest_receipt_positions(limit: int | None = 10):
+def get_recent_movement_positions(
+  type: Annotated[InventoryMovementType | None, Query()] = None,
+  limit: int | None = 10
+):
   try:
-    bind_vars = dict(limit= limit)
-    results = db.aql.execute(Queries.GET_LATEST_RECEIPT_POSITIONS, bind_vars=bind_vars)
+    bind_vars = dict(limit=limit, type=type)
+    results = db.aql.execute(Queries.GET_RECENT_MOVEMENT_START_POSITIONS, bind_vars=bind_vars)
     return [Position(**p) for p in results]
 
   except Exception as e:
@@ -258,12 +261,15 @@ def get_latest_receipt_positions(limit: int | None = 10):
       detail=traceback.format_exc()
     )
 
-@router.get('/movement/latest-receipt-products',
+@router.get('/movement/latest-products',
     dependencies=[Depends(auth.verify_token)])
-def get_latest_receipt_products(limit: int | None = 10):
+def get_recent_movement_products(
+  type: Annotated[InventoryMovementType | None, Query()] = None,
+  limit: int | None = 10
+):
   try:
-    bind_vars = dict(limit= limit)
-    results = db.aql.execute(Queries.GET_LATEST_RECEIPT_PRODUCTS, bind_vars=bind_vars)
+    bind_vars = dict(limit=limit, type=type)
+    results = db.aql.execute(Queries.GET_RECENT_MOVEMENT_PRODUCTS, bind_vars=bind_vars)
     return [ProductBaseData(**p) for p in results]
 
   except Exception as e:
