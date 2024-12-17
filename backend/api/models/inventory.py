@@ -40,6 +40,7 @@ class Position(ArangoDocument):
   owned: bool | None = True
   available: bool | None = True
   disposable: bool | None = False # gets deleted when emptied or shipped
+  fixed: bool | None = True
   deleted: bool | None = False
   created: datetime | datetime = Field(default_factory=timestamp)
   extra: Any = None
@@ -49,6 +50,7 @@ class PositionNew(FlexModel):
   code: str | None = None
   owned: bool | None = True
   available: bool | None = True
+  fixed: bool | None = True
   disposable: bool | None = False
   deleted: bool | None = False
   extra: Any = None
@@ -89,10 +91,20 @@ class Inventory(ArangoEdge): # edge is_in_position
   expiration_date: datetime | None = None
   extra: Any = None
 
-class InventorySearchResult(Inventory):
+class InventorySearchResult(BaseModel):
   product_code: str | None = None
   position_code: str | None = None
   serial_code: str | None = None
+  serial_key: str | None = None
+  product_key: str | None = None
+  position_key: str | None = None
+  quantity: float
+  owned: bool = True
+  value: float | None = None
+  reference: str | None = None
+  date_received: datetime | None = None
+  expiration_date: datetime | None = None
+  extra: Any = None
 
 
 class InventorySearchParams(BaseModel):
@@ -106,7 +118,6 @@ class InventorySearchParams(BaseModel):
   owned: bool | None = None
   limit: int | None = 200
   offset: int | None = 0
-  strict: bool | None = False
 
 class MovementStatus(str, Enum):
   PLANNED = 'planned'
@@ -154,10 +165,10 @@ class InventoryMovement(ArangoEdge): # edge collection movement
   position_to: str = Field(..., alias='_to')
   type: InventoryMovementType
 
-  product_key: str
+  product_key: str | None = None
   serial_key: str | None = None
-  qt_planned: float
-  qt_confirmed: float
+  qt_planned: float | None = None
+  qt_confirmed: float | None = None
 
   status: MovementStatus | None = MovementStatus.PLANNED
   created: datetime = Field(default_factory=timestamp)
@@ -176,12 +187,6 @@ class InventoryMovement(ArangoEdge): # edge collection movement
   # Transfer routes must have at least two positions. Positions must be repeat.
   @model_validator(mode='after')
   def validate(self):
-    # validate route
-    if self.type == InventoryMovementType.TRANSFER:
-      length = len(self.route)
-      if length < 2 and len(set(self.route)) != length:
-        raise ValueError("Movement route must contain at least two positions and positions must not repeat")
-
     # validate dates
     if (
       self.status == MovementStatus.STARTED
@@ -195,6 +200,11 @@ class InventoryMovement(ArangoEdge): # edge collection movement
     ):
       raise ValueError("Completed movements must have both a start and end date")
 
+    if (
+      self.product_key is None and self.serial_key is None and self.position_from is None
+    ):
+      raise ValueError("A movement must have a product, serial or container position")
+
     return self
 
 class InventoryMovementEvent(InventoryMovement):
@@ -202,7 +212,7 @@ class InventoryMovementEvent(InventoryMovement):
 
 class InventoryMovementSearchParameters(BaseModel):
   movement_type: InventoryMovementType | None = None
-  movement_status: MovementStatus | None = None
+  movement_status: MovementStatus | None = MovementStatus.COMPLETED
   include_planned: bool | None = False
   start_from: datetime | None = None
   start_to: datetime | None = None
@@ -213,14 +223,21 @@ class InventoryMovementSearchParameters(BaseModel):
   serial_keys: list[str] | None = None
   mission_key: str | None = None
   mission_code: str | None = None
-  movement_doc: str | None = None
-  source_doc: str | None = None
+  # source: InventoryMovementSource | None = None
   position_from: str | None = None
   position_to: str | None = None
   limit: int | None = 500
   offset: int | None = 0
 
 class InventoryMovementSearchResults(InventoryMovement):
+  position_from_key: str | None = None
   position_from_code: str | None = None
+  position_to_key: str | None = None
   position_to_code: str | None = None
+  product_key: str | None = None
   product_code: str | None = None
+  serial_key: str | None = None
+  serial_code: str | None = None
+  qt_planned: float | None = None
+  qt_completed: float | None = None
+  source: InventoryMovementSource | None = None

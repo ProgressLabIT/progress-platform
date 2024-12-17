@@ -128,12 +128,23 @@ class InventoryEventManager:
       """
       movement = InventoryMovement(**new_movement_record)
 
+      if movement.product_key is None and movement.serial_key is None and movement.position_from is not None:
+        # this is a container transfer
+        position = self.tx.collection('Position').get(movement.position_from)
+        if position['fixed']:
+          raise InventoryMovementException(f'Cannot transfer fixed position')
+        match = dict(_from=movement.position_from)
+        update = dict(_to=movement.position_to)
+        self.tx.collection('is_in_position').update_match(match, update)
+        return
+
+
       # Update inventory from start position
       inventory_match = dict(_from='Product/' + movement.product_key, _to=movement.position_from)
       if movement.serial_key is not None:
         inventory_match['serial_key'] = movement.serial_key
+        movement.qt_confirmed = 1
 
-      print(inventory_match)
       try:
         current_inventory_record = self.tx.collection('is_in_position').find(inventory_match).next()
       except StopIteration:
@@ -161,7 +172,7 @@ class InventoryEventManager:
       else:
         self.tx.collection('is_in_position').insert(dict(
           _from='Product/' + movement.product_key,
-          _to='Position/' + movement.position_to,
+          _to=movement.position_to,
           quantity=movement.qt_confirmed,
           owned=True,
           date_received=movement.end,
