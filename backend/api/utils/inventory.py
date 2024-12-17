@@ -210,8 +210,6 @@ class Queries:
       && (@serial_keys ? m.serial_key IN @serial_keys : true)
       && (@mission_key ? m.mission_key == @mission_key : true)
       && (@mission_code ? m.mission_code == @mission_code : true)
-      && (@movement_doc ? m.movement_doc == @movement_doc : true)
-      && (@source_doc ? m.source_doc == @source_doc : true)
       && (@position_from ? position_from._key == @position_from : true)
       && (@position_to ? position_to._key == @position_to : true)
 
@@ -220,9 +218,12 @@ class Queries:
     LIMIT @offset, @limit || null
 
     RETURN MERGE(m, {
-      product_code: product.code,
+      position_from_key: PARSE_IDENTIFIER(m._from).key,
       position_from_code: position_from.code,
-      position_to_code: position_to.code
+      position_to_key: PARSE_IDENTIFIER(m._to).key,
+      position_to_code: position_to.code,
+      serial_code: m.serial_key ? FIRST(FOR s IN Serial FILTER s._key == m.serial_key RETURN s.code) : null,
+      product_code: product.code,
     })
   """
 
