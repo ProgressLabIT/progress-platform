@@ -24,7 +24,7 @@ export default {
   loading_template: 'Loading templates...',
   login_page: {
     login_first: 'Login to view this page',
-    not_authorized: "User not authorized for this page",
+    not_authorized: 'User not authorized for this page',
   },
   logout: 'Logout',
   new: 'New',
@@ -34,8 +34,8 @@ export default {
   position: 'Position',
   position_create: 'Create position',
   position_created: 'Positions created',
-  position_creating: "Creating positions...",
-  position_new_prompt: "How many positions?",
+  position_creating: 'Creating positions...',
+  position_new_prompt: 'How many positions?',
   position_search: 'Search position',
   print_label: 'Print label',
   print_success: 'Print successful',
@@ -59,4 +59,5 @@ export default {
     TransfersRoot: 'Transfers',
     WarehouseRoot: 'Warehouse',
   },
-}
+  printer: 'Printer',
+};

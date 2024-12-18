@@ -3,7 +3,11 @@
     <q-toolbar>
       <!--<q-btn flat icon="mdi-menu" padding="none" @click="drawerModel = true" />-->
 
-      <q-breadcrumbs separator=">" class="text-low uppercase" active-color="text-low">
+      <q-breadcrumbs
+        separator=">"
+        class="text-low uppercase"
+        active-color="text-low"
+      >
         <!-- <q-breadcrumbs-el>
           <q-icon name="mdi-home" size="xs"/>
         </q-breadcrumbs-el> -->
@@ -16,138 +20,160 @@
         />
       </q-breadcrumbs>
 
-
       <q-space></q-space>
 
-
-      <BaseUserAvatar :user="user" :show_name="false" id="avatar" style="cursor: pointer"/>
+      <BaseUserAvatar
+        id="avatar"
+        :user="user"
+        :show_name="false"
+        style="cursor: pointer"
+      />
 
       <q-menu target="#avatar">
-          <q-list separator style="min-width: 200px">
-            <q-item>
-              <q-item-section side>
-                <q-icon name="mdi-web" />
-              </q-item-section>
+        <q-list separator style="min-width: 200px">
+          <q-item>
+            <q-item-section side>
+              <q-icon name="mdi-web" />
+            </q-item-section>
 
-              <q-item-section class="flex flex-center">
-                <q-btn-toggle
-                  v-model="locale"
-                  :options="localeOptions"
-                  dense
-                  padding="xs md"
-                  color="theme-grey"
-                />
-              </q-item-section>
-            </q-item>
+            <q-item-section class="flex flex-center">
+              <q-btn-toggle
+                v-model="locale"
+                :options="localeOptions"
+                dense
+                padding="xs md"
+                color="theme-grey"
+              />
+            </q-item-section>
+          </q-item>
 
-            <q-item>
-              <q-item-section side>
-                <q-icon name="mdi-palette-swatch" />
-              </q-item-section>
+          <q-item>
+            <q-item-section side>
+              <q-icon name="mdi-palette-swatch" />
+            </q-item-section>
 
-              <q-item-section class="flex flex-center">
-                <q-btn-toggle
-                  :model-value="theme"
-                  :options="[
-                    { slot: 'light', value: 'light' },
-                    { slot: 'dark', value: 'dark' },
-                  ]"
-                  dense
-                  no-caps
-                  padding="xs md"
-                  color="theme-grey"
-                  @update:model-value="setTheme"
-                >
-                  <template #light>
-                    <q-icon name="mdi-weather-sunny" />
-                  </template>
+            <q-item-section class="flex flex-center">
+              <q-btn-toggle
+                :model-value="theme"
+                :options="[
+                  { slot: 'light', value: 'light' },
+                  { slot: 'dark', value: 'dark' },
+                ]"
+                dense
+                no-caps
+                padding="xs md"
+                color="theme-grey"
+                @update:model-value="setTheme"
+              >
+                <template #light>
+                  <q-icon name="mdi-weather-sunny" />
+                </template>
 
-                  <template #dark>
-                    <q-icon name="mdi-weather-night" />
-                  </template>
-                </q-btn-toggle>
-              </q-item-section>
-            </q-item>
+                <template #dark>
+                  <q-icon name="mdi-weather-night" />
+                </template>
+              </q-btn-toggle>
+            </q-item-section>
+          </q-item>
 
-            <q-item>
-              <q-item-section side>
-                <q-icon name="mdi-format-font" />
-              </q-item-section>
+          <q-item>
+            <q-item-section side>
+              <q-icon name="mdi-format-font" />
+            </q-item-section>
 
-              <q-item-section class="flex flex-center">
-                <q-btn-toggle
-                  :model-value="displayFont"
-                  :options="[
-                    { slot: 'orbitron', value: 'orbitron' },
-                    {
-                      slot: 'red-hat-display',
-                      value: 'red-hat-display',
-                    },
-                  ]"
-                  dense
-                  no-caps
-                  padding="xs md"
-                  color="theme-grey"
-                  @update:model-value="updateDisplayFont"
-                >
-                  <template #orbitron>
-                    <q-icon name="mdi-orbit">
-                      <q-tooltip>Orbitron</q-tooltip>
-                    </q-icon>
-                  </template>
+            <q-item-section class="flex flex-center">
+              <q-btn-toggle
+                :model-value="displayFont"
+                :options="[
+                  { slot: 'orbitron', value: 'orbitron' },
+                  {
+                    slot: 'red-hat-display',
+                    value: 'red-hat-display',
+                  },
+                ]"
+                dense
+                no-caps
+                padding="xs md"
+                color="theme-grey"
+                @update:model-value="updateDisplayFont"
+              >
+                <template #orbitron>
+                  <q-icon name="mdi-orbit">
+                    <q-tooltip>Orbitron</q-tooltip>
+                  </q-icon>
+                </template>
 
-                  <template #red-hat-display>
-                    <q-icon name="mdi-redhat">
-                      <q-tooltip>Red Hat Display</q-tooltip>
-                    </q-icon>
-                  </template>
-                </q-btn-toggle>
-              </q-item-section>
-            </q-item>
+                <template #red-hat-display>
+                  <q-icon name="mdi-redhat">
+                    <q-tooltip>Red Hat Display</q-tooltip>
+                  </q-icon>
+                </template>
+              </q-btn-toggle>
+            </q-item-section>
+          </q-item>
 
-            <q-item clickable @click="$q.fullscreen.toggle()">
-              <q-item-section side>
-                <q-icon name="mdi-fullscreen" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>
-                  {{ capitalizeAll($t('fullscreen')) }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-toggle
-                  v-model="$q.fullscreen.isActive"
-                />
-              </q-item-section>
-            </q-item>
+          <q-item clickable @click="$q.fullscreen.toggle()">
+            <q-item-section side>
+              <q-icon name="mdi-fullscreen" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>
+                {{ capitalizeAll($t('fullscreen')) }}
+              </q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-toggle v-model="$q.fullscreen.isActive" />
+            </q-item-section>
+          </q-item>
 
-            <q-item clickable @click="logout">
-              <q-item-section side>
-                <q-icon name="mdi-logout-variant" />
-              </q-item-section>
+          <q-item>
+            <q-item-section side>
+              <q-icon name="mdi-printer" />
+            </q-item-section>
+            <q-item-section class="flex flex-center">
+              <q-select
+                :model-value="printer"
+                :options="printerOptions"
+                emit-value
+                map-options
+                :loading="isUpdatingPrinter"
+                :label="$t('printer')"
+                dense
+                filled
+                class="full-width"
+                @update:model-value="updatePrinter"
+              />
+            </q-item-section>
+          </q-item>
 
-              <q-item-section>
-                <q-item-label>
-                  {{ capitalizeAll($t('logout')) }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-menu>
+          <q-item clickable @click="logout">
+            <q-item-section side>
+              <q-icon name="mdi-logout-variant" />
+            </q-item-section>
 
+            <q-item-section>
+              <q-item-label>
+                {{ capitalizeAll($t('logout')) }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
     </q-toolbar>
   </q-header>
 </template>
 
 <script setup>
-import { computed, watch } from 'vue';
+import { cloneDeep } from 'lodash';
+import { useQuasar, Notify } from 'quasar';
+import { computed, watch, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
+import { useConfigStore } from '@/stores/config';
 import { capitalize, capitalizeAll } from 'src/boot/filters.js';
 import { useTheme } from 'src/composables/theme';
 import BaseUserAvatar from './BaseUserAvatar.vue';
-import { useQuasar } from 'quasar';
 
 const store = useStore();
 const $q = useQuasar();
@@ -191,4 +217,30 @@ watch(
   },
   { immediate: true }
 );
+
+const { config } = useConfigStore();
+
+const printer = computed(() => user.value.preferences.printer || null);
+const printerOptions = computed(() => {
+  return cloneDeep(config.printers).map((printer) => ({
+    label: printer.name,
+    value: `${printer.host}:${printer.port}`,
+  }));
+});
+const isUpdatingPrinter = ref(false);
+async function updatePrinter(newPrinter) {
+  isUpdatingPrinter.value = true;
+
+  try {
+    await store.dispatch('updatePreferences', { printer: newPrinter });
+  } catch (error) {
+    console.error(error);
+    Notify.create({
+      type: 'negative',
+      message: t('preferences.printer.error'),
+    });
+  } finally {
+    isUpdatingPrinter.value = false;
+  }
+}
 </script>

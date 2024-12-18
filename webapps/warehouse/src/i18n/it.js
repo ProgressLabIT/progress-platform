@@ -1,6 +1,6 @@
 export default {
   alerts: {
-    "404": 'questa pagina non esiste',
+    404: 'questa pagina non esiste',
     cannot_create_position: 'Impossibile creare contenitore',
     cannot_find_print_template: 'Impossibile trovare template di stampa',
     print_error: 'Errore di stampa',
@@ -41,8 +41,8 @@ export default {
   position: 'Posizione',
   position_create: 'Crea posizione',
   position_created: 'Posizioni create',
-  position_creating: "Creazione posizioni...",
-  position_new_prompt: "Quante posizioni?",
+  position_creating: 'Creazione posizioni...',
+  position_new_prompt: 'Quante posizioni?',
   position_search: 'Cerca posizione',
   print_label: 'Stampa etichetta',
   print_success: 'Stampa avvenuta con successo',
@@ -77,4 +77,5 @@ export default {
     TransferRoot: 'Trasferimenti',
     WarehouseRoot: 'Magazzino',
   },
-}
+  printer: 'Stampante',
+};

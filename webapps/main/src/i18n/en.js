@@ -208,6 +208,9 @@ export default {
       'You are turning off independent ordering. The jobs will be reordered according to the work order queue order. Do you confirm?',
   },
   info: 'info',
+  printers: 'Printers',
+  add_printer: 'add printer',
+  remove_printer: 'remove printer',
   issue: 'issue',
   issue_button_close: 'Close issue',
   issue_button_reopen: 'Reopen issue',
@@ -535,6 +538,10 @@ export default {
     homePage: {
       label: 'Home page',
       error: 'An error occurred while changing the default page',
+    },
+    printer: {
+      label: 'Printer',
+      error: 'An error occurred while changing the default printer',
     },
   },
   print: 'print',
@@ -873,7 +880,10 @@ export default {
     movements: 'Movements',
     inventory: 'Inventory',
     labelPrintTemplates: 'Label print templates',
+    printersLibrary: 'Printers',
   },
+  host: 'host',
+  port: 'port',
   waiting: 'waiting',
   work_order: {
     add: 'add order | add orders',

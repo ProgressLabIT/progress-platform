@@ -159,6 +159,12 @@ const adminRoutes = [
         component: () => import('@/views/PrintTemplateLibrary.vue'),
       },
       {
+        path: 'printers',
+        name: 'printersLibrary',
+        component: () =>
+          import('@/views/settings/printers/PrintersLibrary.vue'),
+      },
+      {
         path: 'warehouse',
         name: 'warehouseSettings',
         component: () =>

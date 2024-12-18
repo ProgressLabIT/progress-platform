@@ -121,6 +121,26 @@
               </q-item-section>
             </q-item>
 
+            <q-item>
+              <q-item-section side>
+                <q-icon name="mdi-printer" />
+              </q-item-section>
+              <q-item-section class="flex flex-center">
+                <q-select
+                  :model-value="printer"
+                  :options="printerOptions"
+                  emit-value
+                  map-options
+                  :loading="isUpdatingPrinter"
+                  :label="$t('preferences.printer.label')"
+                  dense
+                  filled
+                  class="full-width"
+                  @update:model-value="updatePrinter"
+                />
+              </q-item-section>
+            </q-item>
+
             <q-item clickable @click="logout">
               <q-item-section side>
                 <q-icon name="mdi-logout-variant" />
@@ -140,7 +160,7 @@
 </template>
 
 <script setup>
-import { findLast } from 'lodash';
+import { cloneDeep, findLast } from 'lodash';
 import { Notify } from 'quasar';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -149,6 +169,7 @@ import { useStore } from 'vuex';
 import { capitalize, capitalizeAll } from '@/boot/filters.js';
 import { useDrawer } from '@/composables/drawer';
 import { useTheme } from '@/composables/theme';
+import { useConfigStore } from '@/stores/config';
 
 const store = useStore();
 const { drawerModel } = useDrawer();
@@ -228,6 +249,32 @@ async function updateHomePage(newHomePage) {
     });
   } finally {
     isUpdatingHomePage.value = false;
+  }
+}
+
+const { config } = useConfigStore();
+
+const printer = computed(() => user.value.preferences.printer || null);
+const printerOptions = computed(() => {
+  return cloneDeep(config.printers).map((printer) => ({
+    label: printer.name,
+    value: `${printer.host}:${printer.port}`,
+  }));
+});
+const isUpdatingPrinter = ref(false);
+async function updatePrinter(newPrinter) {
+  isUpdatingPrinter.value = true;
+
+  try {
+    await store.dispatch('updatePreferences', { printer: newPrinter });
+  } catch (error) {
+    console.error(error);
+    Notify.create({
+      type: 'negative',
+      message: t('preferences.printer.error'),
+    });
+  } finally {
+    isUpdatingPrinter.value = false;
   }
 }
 

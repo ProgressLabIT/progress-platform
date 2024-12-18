@@ -16,6 +16,7 @@ export const useConfigStore = defineStore('config', () => {
       auto_new_batch: true,
       unsupervised_work_allowed: false,
       std_processing_time: 60,
+      printers: [],
     },
     serialFields: [],
     operatorCost: 0,
@@ -44,6 +45,9 @@ export const useConfigStore = defineStore('config', () => {
     }
     if (appConfig.serial_fields) {
       config.serialFields = appConfig.serial_fields;
+    }
+    if (appConfig.printers) {
+      config.printers = appConfig.printers;
     }
     if (typeof appConfig.operator_cost === 'number') {
       config.operatorCost = appConfig.operator_cost;

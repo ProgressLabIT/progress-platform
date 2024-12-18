@@ -25,6 +25,7 @@ export const useConfigStore = defineStore('config', () => {
     enableInventoryManagement: false,
     allowSerialCodeEdit: false,
     allowPositionDelete: true,
+    printers: [],
   };
 
   const isLoading = ref(true);
@@ -47,6 +48,9 @@ export const useConfigStore = defineStore('config', () => {
     }
     if (appConfig.serial_fields) {
       config.serialFields = appConfig.serial_fields;
+    }
+    if (appConfig.printers) {
+      config.printers = appConfig.printers;
     }
     if (typeof appConfig.operator_cost === 'number') {
       config.operatorCost = appConfig.operator_cost;
@@ -98,6 +102,7 @@ export const useConfigStore = defineStore('config', () => {
       company_name: configToUpdate.companyName,
       operation_parameters: configToUpdate.operationParameters,
       serial_fields: configToUpdate.serialFields,
+      printers: configToUpdate.printers,
       operator_cost: configToUpdate.operatorCost,
       show_unassigned_jobs_to_operators: configToUpdate.allowUnassignedJobs,
       allow_independent_reordering_of_job_queues:
