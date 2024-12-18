@@ -764,6 +764,8 @@ export default {
   counter_delete_success: 'Counter deleted',
   counter_delete_text:
     'The counter will be deleted, but serials already recorded will not be deleted.',
+  printer_delete: 'Remove printer',
+  printer_delete_text: 'This printer will be removed',
   next_tick: 'Tick',
   template: 'Template',
   frequency: 'Frequency',

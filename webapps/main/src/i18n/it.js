@@ -784,6 +784,8 @@ export default {
   counter_delete_success: 'Contatore eliminato',
   counter_delete_text:
     'Il contatore verrà eliminato, ma i seriali già registrati non verranno cancellati.',
+  printer_delete: 'Rimuovi stampante',
+  printer_delete_text: 'La stampante verrà rimossa',
   unassigned: 'non assegnato | non assegnati',
   unsaved: 'non salvato',
   undo: 'ripristina',

@@ -31,9 +31,10 @@
           class="row pointer q-px-lg q-py-xs medium full-width"
           :class="{
             'alternate-row': index % 2 === 0,
-            'bg-blue-backdrop': printer.name === selected_printer_name,
+            'bg-blue-backdrop': printer === selected_printer_obj,
           }"
           style="white-space: nowrap"
+          @click="selectPrinter(printer)"
         >
           <div class="col-3">
             {{ $capitalize(printer.name) }}
@@ -65,7 +66,7 @@
         >
         </q-btn>
         <q-btn
-          v-if="selected_printer_name && editMode"
+          v-if="selected_printer_obj && editMode"
           color="theme-red"
           class="col-auto"
           size="12px"
@@ -149,19 +150,21 @@ export default {
       search_text: undefined,
       show_new_printer_form: false,
       show_delete: false,
-      selected_printer_name: undefined,
+      selected_printer_obj: undefined,
     };
   },
 
   computed: {
     selected_printer() {
-      return this.printer_list.find(
-        (printer) => printer.name == this.selected_printer_name,
+      return this.printer_list.findIndex(
+        (printer) => printer === this.selected_printer_obj,
       );
     },
   },
-
   methods: {
+    selectPrinter(printer) {
+      this.selected_printer_obj = printer;
+    },
     addPrinter(printer) {
       this.show_new_printer_form = false;
       let temp_values = this.printer_list;
@@ -173,7 +176,7 @@ export default {
     deletePrinter() {
       this.show_delete = false;
       let temp_values = this.printer_list;
-      temp_values.pop(this.selected_printer);
+      temp_values.splice(this.selected_printer, 1);
       this.$emit('update:printer_list', temp_values);
       this.$emit('reload');
     },
