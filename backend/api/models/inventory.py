@@ -118,6 +118,7 @@ class InventorySearchParams(BaseModel):
   owned: bool | None = None
   limit: int | None = 200
   offset: int | None = 0
+  strict: bool | None = False
 
 class MovementStatus(str, Enum):
   PLANNED = 'planned'
