@@ -5,7 +5,11 @@ export function XLSXGetData(rows, columns) {
   return rows.map((entry) => {
     let row = {};
     columns.map((col) => {
-      row[col.label] = entry[col.field];
+      if (col.format) {
+        row[col.label] = col.format(entry[col.field], entry);
+      } else {
+        row[col.label] = entry[col.field];
+      }
     });
     return row;
   });

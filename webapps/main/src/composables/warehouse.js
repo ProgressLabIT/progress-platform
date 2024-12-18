@@ -1,4 +1,5 @@
 import { useI18n } from 'vue-i18n';
+import { shortDateString } from '../lib/TimeHandling';
 
 export function usePositionColumns() {
   const { t } = useI18n();
@@ -51,6 +52,7 @@ export function usePositionColumns() {
       align: 'right',
       label: t('creation_date').toUpperCase(),
       style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
     },
   ];
 }
@@ -130,6 +132,7 @@ export function useMovementColumns() {
       align: 'right',
       label: t('creation_date').toUpperCase(),
       style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
     },
     {
       name: 'start',
@@ -138,6 +141,7 @@ export function useMovementColumns() {
       align: 'right',
       label: t('start_date').toUpperCase(),
       style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
     },
     {
       name: 'end',
@@ -146,6 +150,7 @@ export function useMovementColumns() {
       align: 'right',
       label: t('end_date').toUpperCase(),
       style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
     },
   ];
 }
@@ -203,6 +208,7 @@ export function useInventoryColumns() {
       align: 'right',
       label: t('warehouse.inventory.date_received').toUpperCase(),
       style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
     },
 
     {
@@ -212,6 +218,7 @@ export function useInventoryColumns() {
       align: 'right',
       label: t('warehouse.inventory.expiration_date').toUpperCase(),
       style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
     },
   ];
 }

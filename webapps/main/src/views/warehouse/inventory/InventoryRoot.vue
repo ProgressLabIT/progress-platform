@@ -31,15 +31,12 @@
         >
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
-              <template
-                v-if="
-                  ['expiration_date', 'date_received'].includes(column.name)
-                "
-              >
+              <template v-if="column.format">
                 {{
-                  props.row[column.name] === null
-                    ? '-'
-                    : $shortDateString(props.row[column.name], $i18n.locale)
+                  column.format(
+                    (val = props.row[column.name]),
+                    (row = props.row),
+                  )
                 }}
               </template>
 
