@@ -1,5 +1,7 @@
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { shortDateString } from '../lib/TimeHandling';
+import { useQueryModel } from '../lib/queryModelFactory';
 
 export function usePositionColumns() {
   const { t } = useI18n();
@@ -221,4 +223,34 @@ export function useInventoryColumns() {
       format: (val) => (val ? shortDateString(val) : '-'),
     },
   ];
+}
+
+export function useInventoryFilters() {
+  const product = ref(useQueryModel(String, 'product', null));
+  const position = ref(useQueryModel(String, 'position', null));
+  const serial = ref(useQueryModel(String, 'serial', null));
+
+  const filters = computed({
+    get: () => ({
+      product_key: product.value,
+      position_key: position.value,
+      serial_keys: serial.value,
+    }),
+  });
+
+  const filters_active = computed({
+    get: () => {
+      return Object.entries(filters).filter(([value]) => {
+        return !!value;
+      }).length;
+    },
+  });
+
+  return {
+    product,
+    position,
+    serial,
+    filters,
+    filters_active,
+  };
 }

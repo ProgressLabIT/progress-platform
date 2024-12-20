@@ -59,7 +59,7 @@ import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vu
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
 import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
-import queryModel from '@/lib/queryModelFactory.js';
+import { useInventoryFilters } from 'app/src/composables/warehouse';
 
 export default {
   name: 'InventoryFilter',
@@ -80,38 +80,17 @@ export default {
 
   emits: ['showFilterDrawer', 'filterActiveChange'],
 
+  setup() {
+    const { product, position, serial, filters_active } = useInventoryFilters();
+
+    return { product, position, serial, filters_active };
+  },
+
   data() {
     return {
       bool_filters: [],
       showFilter: false,
     };
-  },
-
-  computed: {
-    // Filters
-    product: queryModel(String, 'product', null),
-    position: queryModel(String, 'position', null),
-    serial: queryModel(String, 'serial', null),
-
-    _this() {
-      return this;
-    },
-
-    filters() {
-      return {
-        product_key: this.product,
-        position_key: this.position,
-        serial_keys: this.serial,
-      };
-    },
-
-    filters_active() {
-      return Object.entries(this.filters).filter(([name, value]) => {
-        return [...this.bool_filters].includes(name)
-          ? value === false
-          : !!value;
-      }).length;
-    },
   },
 
   watch: {

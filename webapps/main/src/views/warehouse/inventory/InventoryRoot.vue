@@ -56,8 +56,10 @@
 
 <script>
 import { ref } from 'vue';
-import queryModel from '@/lib/queryModelFactory.js';
-import { useInventoryColumns } from 'app/src/composables/warehouse';
+import {
+  useInventoryColumns,
+  useInventoryFilters,
+} from 'app/src/composables/warehouse';
 
 export default {
   name: 'InventoryRoot',
@@ -72,10 +74,12 @@ export default {
     });
 
     const inventoryColumns = useInventoryColumns();
+    const { filters } = useInventoryFilters();
 
     return {
       pagination,
       inventoryColumns,
+      filters,
     };
   },
 
@@ -93,18 +97,6 @@ export default {
   },
 
   computed: {
-    product: queryModel(String, 'product', null),
-    position: queryModel(String, 'position', null),
-    serial: queryModel(String, 'serial', null),
-
-    filters() {
-      return {
-        product_key: this.product,
-        position_key: this.position,
-        serial_keys: this.serial,
-      };
-    },
-
     inventory_list() {
       return this.$store.state.warehouse.inventory;
     },
