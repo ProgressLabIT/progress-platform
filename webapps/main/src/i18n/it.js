@@ -189,6 +189,7 @@ export default {
   first_x_shown: 'Primi {x} record visualizzati',
   form_title: 'campi modulo',
   form_missing_fields_alert: 'compilare tutti i campi',
+  fullscreen: 'fullscreen',
   general: 'Generale',
   greeting: {
     afternoon: 'buon pomeriggio',

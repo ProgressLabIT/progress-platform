@@ -31,6 +31,8 @@
 
       <q-menu target="#avatar">
         <q-list separator style="min-width: 200px">
+
+          <!-- LANGUAGE -->
           <q-item>
             <q-item-section side>
               <q-icon name="mdi-web" />
@@ -47,6 +49,7 @@
             </q-item-section>
           </q-item>
 
+          <!-- THEME -->
           <q-item>
             <q-item-section side>
               <q-icon name="mdi-palette-swatch" />
@@ -76,6 +79,7 @@
             </q-item-section>
           </q-item>
 
+          <!-- DISPLAY FONT -->
           <q-item>
             <q-item-section side>
               <q-icon name="mdi-format-font" />
@@ -112,20 +116,7 @@
             </q-item-section>
           </q-item>
 
-          <q-item clickable @click="$q.fullscreen.toggle()">
-            <q-item-section side>
-              <q-icon name="mdi-fullscreen" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>
-                {{ capitalizeAll($t('fullscreen')) }}
-              </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-toggle v-model="$q.fullscreen.isActive" />
-            </q-item-section>
-          </q-item>
-
+          <!-- PRINTER -->
           <q-item>
             <q-item-section side>
               <q-icon name="mdi-printer" />
@@ -146,6 +137,22 @@
             </q-item-section>
           </q-item>
 
+          <!-- FULLSCREEN -->
+          <q-item clickable @click="$q.fullscreen.toggle()">
+            <q-item-section side>
+              <q-icon name="mdi-fullscreen" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>
+                {{ capitalizeAll($t('fullscreen')) }}
+              </q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-toggle v-model="$q.fullscreen.isActive" />
+            </q-item-section>
+          </q-item>
+
+          <!-- LOGOUT -->
           <q-item clickable @click="logout">
             <q-item-section side>
               <q-icon name="mdi-logout-variant" />
