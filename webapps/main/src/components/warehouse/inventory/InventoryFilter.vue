@@ -14,7 +14,7 @@
         popup-content-class="z-max"
         key-only
         :load-data="false"
-        :label="$capitalize($t('warehouse.inventory.product'))"
+        :label="$capitalize($t('warehouse.inventory.product_code'))"
         :value="product"
         @select="(selection) => (product = selection)"
       />
@@ -35,12 +35,29 @@
         @select="(selection) => (position = selection)"
       />
     </div>
+
+    <!-- SERIAL -->
+    <div class="row items-baseline q-col-gutter-md">
+      <BaseAutocompleteSerial
+        dense
+        filled
+        class="q-mb-md col"
+        behavior="menu"
+        popup-content-class="z-max"
+        key-only
+        :load-data="false"
+        :label="$capitalize($t('serial'))"
+        :value="serial"
+        @select="(selection) => (serial = selection)"
+      />
+    </div>
   </FilterDrawer>
 </template>
 
 <script>
 import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
+import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import queryModel from '@/lib/queryModelFactory.js';
 
@@ -51,6 +68,7 @@ export default {
     FilterDrawer,
     BaseAutocompletePositions,
     BaseAutocompleteProduct,
+    BaseAutocompleteSerial,
   },
 
   props: {
@@ -73,6 +91,7 @@ export default {
     // Filters
     product: queryModel(String, 'product', null),
     position: queryModel(String, 'position', null),
+    serial: queryModel(String, 'serial', null),
 
     _this() {
       return this;
@@ -80,13 +99,9 @@ export default {
 
     filters() {
       return {
-        produc: this.product,
-        position: this.position,
-
-        start_from: this.start_from,
-        start_to: this.start_to,
-        end_from: this.end_from,
-        end_to: this.end_to,
+        product_key: this.product,
+        position_key: this.position,
+        serial_keys: this.serial,
       };
     },
 
@@ -114,10 +129,6 @@ export default {
   },
 
   methods: {
-    setSearch(text) {
-      this.search_string = text;
-    },
-
     resetFilters() {
       this.$router.replace({ query: null });
     },

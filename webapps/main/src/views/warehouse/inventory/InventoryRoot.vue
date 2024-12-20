@@ -87,15 +87,7 @@ export default {
       limit: 200,
       offset: 0,
 
-      filter_list: [
-        'product_code',
-        'position',
-
-        'start_from',
-        'start_to',
-        'end_from',
-        'end_to',
-      ],
+      filter_list: ['product_code', 'position', 'serial'],
       bool_filters: [],
     };
   },
@@ -103,21 +95,13 @@ export default {
   computed: {
     product: queryModel(String, 'product', null),
     position: queryModel(String, 'position', null),
-
-    start_from: queryModel(String, 'start_from', null),
-    start_to: queryModel(String, 'start_to', null),
-    end_from: queryModel(String, 'end_from', null),
-    end_to: queryModel(String, 'end_to', null),
+    serial: queryModel(String, 'serial', null),
 
     filters() {
       return {
         product_key: this.product,
         position_key: this.position,
-
-        start_from: this.start_from,
-        start_to: this.start_to,
-        end_from: this.end_from,
-        end_to: this.end_to,
+        serial_keys: this.serial,
       };
     },
 
