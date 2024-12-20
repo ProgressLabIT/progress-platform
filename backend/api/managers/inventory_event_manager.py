@@ -68,8 +68,39 @@ class InventoryEventManager:
              return self.handle_adjustment(new_movement_record)
           case InventoryMovementType.TRANSFER:
              return self.handle_transfer(new_movement_record)
+          case InventoryMovementType.CONSUMPTION:
+             return self.handle_consumption(new_movement_record)
+          case InventoryMovementType.PRODUCTION:
+             return self.handle_production(new_movement_record)
           case _:
             raise InventoryMovementException(f'Invalid movement type')
+
+    def handle_production(self, new_movement_record):
+       self.handle_receipt(new_movement_record)
+
+    def handle_consumption(self, new_movement_record):
+       #TODO: duplicate code, refactor while handling production events
+       product_key = new_movement_record['product_key']
+       record_match = dict(_from=f'Product/{product_key}', _to=new_movement_record['_from'])
+       if ('serial_key' in new_movement_record):
+          record_match['serial_key'] = new_movement_record['serial_key']
+       else:
+          record_match['serial_key'] = None
+       position_link_cursor = self.tx.collection('is_in_position').find(record_match)
+       if (position_link_cursor.count()>0):
+          position_status = position_link_cursor.next()
+          final_qty = position_status['quantity'] - new_movement_record['qt_confirmed']
+          if (final_qty<0):
+             raise InventoryMovementException(f'Cannot consume: quantity not enough')
+          elif (final_qty==0):
+           self.tx.collection('is_in_position').delete_match(filters=dict(_key = position_status['_key']))
+          else:
+             self.tx.collection('is_in_position').update(dict(
+               _key = position_status['_key'],
+               quantity=final_qty
+             ))
+       else:
+         raise InventoryMovementException(f'Cannot find product to consume')
 
     def handle_receipt(self, new_movement_record):
       product_key = new_movement_record['product_key']
