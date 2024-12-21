@@ -177,17 +177,15 @@ function serialSelection(selection) {
   originalPosition.value = undefined;
   serial.value = selection;
   if (serial.value) {
-    if (movement_type.value === 'receipt') {
-      api.get(`/product/${serial.value.product_key}`).then(
-        (data) => {
-          product.value = data.data;
-          getOriginalPosition();
-        },
-        () => {
-          product.value = undefined;
-        },
-      );
-    }
+    api.get(`/product/${serial.value.product_key}`).then(
+      (data) => {
+        product.value = data.data;
+        getOriginalPosition();
+      },
+      () => {
+        product.value = undefined;
+      },
+    );
   } else {
     getOriginalPosition();
   }
@@ -202,13 +200,13 @@ function getOriginalPosition() {
     return;
   }
   loadingVal.value = true;
-  let params = (params = {
+  let params = {
     position_key: position.value._key,
     product_key: product.value._key,
     strict: true,
-  });
+  };
   if (serial.value) {
-    params.serial_key = serial.value._key;
+    params.serial_keys = serial.value._key;
   }
   api
     .get('/inventory', {
@@ -217,7 +215,7 @@ function getOriginalPosition() {
     .then(
       (data) => {
         originalPosition.value = data.data[0];
-        quantity.value = originalPosition.value.quantity;
+        quantity.value = originalPosition.value?.quantity;
         if (movement_type.value === 'shipment') {
           qtyMax.value = quantity.value;
         }
