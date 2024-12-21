@@ -1010,6 +1010,7 @@ export default {
       position_code: 'Position',
       position_from_code: 'Position from',
       position_to_code: 'Position to',
+      position_filters: 'Position filters',
       qt_planned: 'Quantity planned',
       qt_confirmed: 'Quantity confirmed',
       start_from: 'Start From',

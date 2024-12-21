@@ -227,6 +227,7 @@ class InventoryMovementSearchParameters(BaseModel):
   # source: InventoryMovementSource | None = None
   position_from: str | None = None
   position_to: str | None = None
+  position_filter_operator: str | None = 'AND'
   limit: int | None = 500
   offset: int | None = 0
 

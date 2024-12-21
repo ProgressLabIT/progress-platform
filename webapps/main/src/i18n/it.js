@@ -1027,6 +1027,7 @@ export default {
       position_code: 'Posizione',
       position_from_code: 'Da Positione',
       position_to_code: 'A Positione',
+      position_filters: 'Filtri posizione',
       qt_planned: 'Quantità pianificata',
       qt_confirmed: 'Quantità confermata',
       start_from: 'Inizio Da',

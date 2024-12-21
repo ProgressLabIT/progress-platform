@@ -94,6 +94,8 @@ export default {
         'position_from',
         'position_to',
 
+        'position_filter_operator',
+
         'movement_type',
         'movement_status',
 
@@ -111,6 +113,12 @@ export default {
     position_from: queryModel(String, 'position_from', null),
     position_to: queryModel(String, 'position_to', null),
 
+    positionFilterOperator: queryModel(
+      String,
+      'position_filter_operator',
+      'AND',
+    ),
+
     movement_type: queryModel(String, 'movement_type', null),
     movement_status: queryModel(String, 'movement_status', null),
 
@@ -124,6 +132,8 @@ export default {
         product_code: this.product_code,
         position_from: this.position_from,
         position_to: this.position_to,
+        position_filter_operator: this.positionFilterOperator,
+
         movement_type: this.movement_type,
         movement_status: this.movement_status,
         start_from: this.start_from,

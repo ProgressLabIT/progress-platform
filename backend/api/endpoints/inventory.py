@@ -233,6 +233,7 @@ async def delete_position(position_key):
     dependencies=[Depends(auth.verify_token)])
 def search_inventory_journal(params: Annotated[InventoryMovementSearchParameters, Query()]):
   try:
+
     bind_vars = dict(**params.model_dump())
     results = db.aql.execute(Queries.SEARCH_MOVEMENTS, bind_vars=bind_vars)
     return [InventoryMovementSearchResults(**m) for m in results]

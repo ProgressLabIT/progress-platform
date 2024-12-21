@@ -27,7 +27,8 @@
           :id="props.row._key"
           :key="props.row._key"
           :props="props"
-          @dblclick="showInventoryDetails(props.row._key)"
+          @dblclick="routeToMovemets(props.row)"
+          @right-click="routeToMovemets(props.row)"
         >
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
@@ -153,13 +154,15 @@ export default {
       this.reloadInventory({ pagination: this.pagination });
     },
 
-    showInventoryDetails(inventoryKey) {
+    routeToMovemets(row) {
       const to_route = {
-        name: 'inventoryDetail',
-        params: { inventoryKey },
+        name: 'movements',
+        params: { row },
         query: {
           back_to: this.$route.name,
-          ...this.$route.query,
+          position_from: row.position_key,
+          position_to: row.position_key,
+          position_filter_operator: 'OR',
         },
       };
       this.$router.push(to_route);

@@ -210,8 +210,10 @@ class Queries:
       && (@serial_keys ? m.serial_key IN @serial_keys : true)
       && (@mission_key ? m.mission_key == @mission_key : true)
       && (@mission_code ? m.mission_code == @mission_code : true)
-      && (@position_from ? position_from._key == @position_from : true)
-      && (@position_to ? position_to._key == @position_to : true)
+      && (@position_filter_operator == 'AND' ?
+              (@position_from ? position_from._key == @position_from : true) && (@position_to ? position_to._key == @position_to : true) :
+              (@position_from ? position_from._key == @position_from : true) || (@position_to ? position_to._key == @position_to : true)
+          )
 
 
 

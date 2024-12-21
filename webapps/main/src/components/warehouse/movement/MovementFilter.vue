@@ -52,6 +52,24 @@
       />
     </div>
 
+    <div class="row items-baseline q-col-gutter-md">
+      <div class="highlight text-uppercase text-h6">
+        {{ $t('warehouse.movement.position_filters') }}
+      </div>
+
+      <q-space />
+
+      <q-btn-toggle
+        v-model="positionFilterOperator"
+        :options="[
+          { label: $t('all', 2), value: 'AND' },
+          { label: $t('any'), value: 'OR' },
+        ]"
+        size="xs"
+        class="q-mr-md"
+      />
+    </div>
+
     <!-- Movement Type -->
     <div class="row items-baseline q-col-gutter-md">
       <q-select
@@ -262,6 +280,12 @@ export default {
     position_to: queryModel(String, 'position_to', null),
     position_from: queryModel(String, 'position_from', null),
 
+    positionFilterOperator: queryModel(
+      String,
+      'position_filter_operator',
+      'AND',
+    ),
+
     movement_type: queryModel(String, 'movement_type', null),
     movement_status: queryModel(String, 'movement_status', null),
 
@@ -279,6 +303,8 @@ export default {
         produc_code: this.product_code,
         position_from: this.position_from,
         position_to: this.position_to,
+
+        position_filter_operator: this.positionFilterOperator,
 
         movement_type: this.movement_type,
         movement_status: this.movement_status,
