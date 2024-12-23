@@ -28,6 +28,11 @@
                 (v) => (serial.serial_code = v.toUpperCase())
               "
             >
+              <template v-slot:append>
+                <span class="text-low text-italic text-body2">
+                  ID: {{ serial.serial_key }}
+                </span>
+              </template>
             </q-input>
           </div>
         </q-card-section>
