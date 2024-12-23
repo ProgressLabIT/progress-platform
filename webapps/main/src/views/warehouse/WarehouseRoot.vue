@@ -143,11 +143,10 @@ import {
 } from 'app/src/composables/warehouse';
 
 const warehouse_views = [
-  { component: 'Positions', route_name: 'positions' },
-  // { component: 'Stock', route_name: 'stock' },
-  // { component: 'Missions', route_name: 'missions' },
-  { component: 'Movements', route_name: 'movements' },
   { component: 'Inventory', route_name: 'inventory' },
+  { component: 'Movements', route_name: 'movements' },
+  { component: 'Lists', route_name: 'movementLists' },
+  { component: 'Positions', route_name: 'positions' },
 ];
 
 const header_plus_footer_height = 80;

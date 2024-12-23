@@ -59,6 +59,11 @@ const warehouseRoutes = [
               },
             ],
           },
+          {
+            path: 'lists',
+            name: 'movementLists',
+            component: () => import ('@/views/warehouse/lists/MovementListsRoot.vue')
+          },
         ],
       },
     ],

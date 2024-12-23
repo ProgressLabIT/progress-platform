@@ -105,6 +105,17 @@ const warehouse = {
     SET_INVENTORY_SEARCH_PARAMS(state, params) {
       state.inventory_search_params = params;
     },
+
+    // MOVEMENT LIST
+    LOAD_MOVEMENT_LISTS(state, movement_lists) {
+      state.movement_lists = movement_lists;
+    },
+    APPEND_MOVEMENT_LISTS(state, movement_lists) {
+      state.movement_lists.push(...movement_lists);
+    },
+    SET_MOVEMENT_LIST_SEARCH_PARAMS(state, params) {
+      state.movement_list_search_params = params;
+    },
   },
 
   actions: {
@@ -201,6 +212,18 @@ const warehouse = {
       const { data } = await api.get('movement', { params: search_params });
       commit('APPEND_INVENTORY', data);
       commit('SET_INVENTORY_SEARCH_PARAMS', search_params);
+    },
+
+    async getMovementLists({ commit }, search_params) {
+      const { data } = await api.get('movement-list', { params: search_params });
+      commit('LOAD_MOVEMENT_LISTS', data);
+      commit('SET_MOVEMENT_LIST_SEARCH_PARAMS', search_params);
+    },
+
+    async appendMovementLists({ commit }, search_params) {
+      const { data } = await api.get('movement-list', { params: search_params });
+      commit('APPEND_MOVEMENT_LISTS', data);
+      commit('SET_MOVEMENT_LIST_SEARCH_PARAMS', search_params);
     },
   },
 };

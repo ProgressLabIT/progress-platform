@@ -893,6 +893,7 @@ export default {
     stock: 'Rimanenze',
     missions: 'Missioni',
     movements: 'Movimenti',
+    movementLists: 'Liste',
     inventory: 'Giacenze',
     labelPrintTemplates: 'Stampe etichette',
     printersLibrary: 'Stampanti',

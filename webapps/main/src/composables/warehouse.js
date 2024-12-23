@@ -157,6 +157,58 @@ export function useMovementColumns() {
   ];
 }
 
+
+export function useMovementListColumns() {
+  const { t } = useI18n();
+
+  return [
+    {
+      name: 'id',
+      field: '_key',
+      sortable: true,
+      label: 'ID',
+      align: 'left',
+      style: 'max-width: 10vw',
+    },
+    {
+      name: 'code',
+      field: 'code',
+      sortable: true,
+      label: t('code').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 10vw',
+    },
+
+    {
+      name: 'status',
+      field: 'status',
+      sortable: true,
+      label: t('status').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 10vw',
+    },
+    {
+      name: 'created',
+      field: 'created',
+      sortable: true,
+      align: 'right',
+      label: t('creation_date').toUpperCase(),
+      style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
+    },
+    {
+      name: 'due_by',
+      field: 'due_by',
+      sortable: true,
+      align: 'right',
+      label: t('due_by').toUpperCase(),
+      style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
+    },
+  ]
+}
+
+
 export function useInventoryColumns() {
   const { t } = useI18n();
 

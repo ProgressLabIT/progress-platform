@@ -127,19 +127,6 @@ class MovementStatus(str, Enum):
   CANCELED = 'canceled'
 
 
-class WarehouseMission(ArangoDocument):
-  #code: str | None = Field(default_factory=_generate_counter('default'))
-  code: Annotated[str, StringConstraints(to_upper=True)] | None = None
-  notes: str | None = None
-  due_by: date | None = None
-  assigned_to: str | None = None
-  created: datetime | None = Field(default_factory=timestamp)
-  start: datetime | None = None
-  end: datetime | None = None
-  status: MovementStatus | None = MovementStatus.PLANNED
-  extra: Any = None
-
-
 class InventoryMovementType(str, Enum):
   TRANSFER = 'transfer'
   RECEIPT = 'receipt'
@@ -148,12 +135,13 @@ class InventoryMovementType(str, Enum):
   CONSUMPTION = 'consumption'
   ADJUSTMENT = 'adjustment'
 
-class InventoryMovementSource(BaseModel):
+class InventoryMovementReferences(BaseModel):
   work_order_key: str | None = None
   job_key: str | None = None
   batch_key: str | None = None
   event_key: str | None = None
   event_group_key: str | None = None
+  transport_doc: str | None = None
   transfer_doc: str | None = None
   sales_doc: str | None = None
   purchase_doc: str | None = None
@@ -168,17 +156,17 @@ class InventoryMovement(ArangoEdge): # edge collection movement
 
   product_key: str | None = None
   serial_key: str | None = None
-  qt_planned: float | None = None
-  qt_confirmed: float | None = None
+  qt_planned: float | None = 1
+  qt_confirmed: float | None = 0
 
   status: MovementStatus | None = MovementStatus.PLANNED
   created: datetime = Field(default_factory=timestamp)
   start: datetime | None = None
   end: datetime | None = None
 
-  mission_key: str | None = None # link to WarehouseMission document, if present
+  movement_list_key: str | None = None # link to MovementList document, if present
 
-  source: InventoryMovementSource | None = None # RECEIPTS: purchase doc, SHIPMENTS: sales doc, TRANSFERS/PROD/CONS: work order/job
+  source: InventoryMovementReferences | None = None # RECEIPTS: purchase doc, SHIPMENTS: sales doc, TRANSFERS/PROD/CONS: work order/job
   reason: str | None = None
 
   user_key: str | None = None
@@ -222,8 +210,8 @@ class InventoryMovementSearchParameters(BaseModel):
   product_key: str | None = None
   product_code: str | None = None
   serial_keys: list[str] | None = None
-  mission_key: str | None = None
-  mission_code: str | None = None
+  movement_list_key: str | None = None
+  movement_list_code: str | None = None
   # source: InventoryMovementSource | None = None
   position_from: str | None = None
   position_to: str | None = None
@@ -242,4 +230,34 @@ class InventoryMovementSearchResults(InventoryMovement):
   serial_code: str | None = None
   qt_planned: float | None = None
   qt_completed: float | None = None
-  source: InventoryMovementSource | None = None
+  source: InventoryMovementReferences | None = None
+
+
+
+class MovementList(ArangoDocument):
+  #code: str | None = Field(default_factory=_generate_counter('default'))
+  code: Annotated[str, StringConstraints(to_upper=True)] | None = None
+  notes: str | None = None
+  due_by: date | None = None
+  created: datetime | None = Field(default_factory=timestamp)
+  start: datetime | None = None
+  end: datetime | None = None
+  status: MovementStatus | None = MovementStatus.PLANNED
+  extra: Any = None
+  source: InventoryMovementReferences | None = None
+  type: InventoryMovementType | None = None
+
+
+class MovementListNew(MovementList):
+  movements: list[InventoryMovement] | None = None
+
+  @model_validator(mode='after')
+  def validate(self):
+    if self.movements is None or len(self.movements) == 0:
+      raise ValueError("A movement list must have at least one movement")
+    for movement in self.movements:
+      if movement.position_from is None or movement.position_to is None:
+        raise ValueError("A movement must have a position from and to")
+      if movement.type != self.type:
+        raise ValueError("All movements in a movement list must be of the same type")
+    return self

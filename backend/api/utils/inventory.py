@@ -249,3 +249,15 @@ class Queries:
 
 
 
+  SEARCH_MOVEMENT_LISTS = """
+    FOR m IN MovementList
+    FILTER
+      (@search ? CONTAINS(LOWER(m.code), LOWER(@search)) : true)
+      && (@includes_product_key ? @includes_product_key IN m.movements[*].product_key : true)
+      && (@includes_product_code ? @includes_product_code IN m.movements[* RETURN DOCUMENT(Product, CURRENT.product_key).code] : true)
+      && (@due_by_min ? m.due_by >= @due_by_min : true)
+      && (@due_by_max ? m.due_by <= @due_by_max : true)
+      && (@status ? m.status == @status : true)
+      && (@type ? m.type == @type : true)
+    RETURN m
+  """
