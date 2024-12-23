@@ -3,6 +3,7 @@ class Queries:
 
   GET_BATCH_SERIALS = """
     FOR s IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
+    SORT s.code, s._key
     RETURN s
   """
 
@@ -18,7 +19,7 @@ class Queries:
               && linked_serial.replaced == false
               RETURN DOCUMENT(Serial, linked_serial._to)
           )
-
+      SORT serial.code, serial._key
       RETURN MERGE(serial, { childs: childs })
   """
 
