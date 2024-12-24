@@ -29,6 +29,11 @@
 
 
     <q-btn
+      color="primary"
+      :label="$t('select_root_position')"
+      @click="selectRootPosition()"
+    />
+    <q-btn
       color="theme-grey"
       :label="$t('cancel')"
       class="full-width"
@@ -148,6 +153,14 @@ function selectPosition(position) {
   else {
     showContentTypeSelection.value = position;
   }
+}
+
+function selectRootPosition() {
+  selectContents({
+    fixed: true,
+    _key: 'IN',
+    code: 'IN',
+  });
 }
 
 function selectContents(position) {
