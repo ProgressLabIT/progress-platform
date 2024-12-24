@@ -36,7 +36,7 @@ class Queries:
     ): null
     LET result = NOT_NULL(serial, product, position)
     FILTER result != null && result.code != null
-    FILTER @search ? CONTAINS(LOWER(result.code), LOWER(@search)) : true
+    FILTER @search ? (CONTAINS(LOWER(result.code), LOWER(@search)) || CONTAINS(LOWER(result.product_code), LOWER(@search))) : true
     SORT result.code ASC
     LIMIT @limit
     RETURN result
