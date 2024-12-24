@@ -95,8 +95,8 @@ const list = ref([]);
 const cardItem = ref(null);
 const itemQuantity = ref(1);
 
-function getPositionContents(position) {
-  api.get(`position/${position._key}`).then((resp) => {
+function getPositionContents(position, search = null) {
+  api.get(`position/${position._key}`, { params: { search } }).then((resp) => {
     results.value = resp.data;
     list.value = resp.data;
   });
@@ -120,12 +120,12 @@ function getColor(item) {
   return transfer.contents.find(c => c._id === item._id) ? `bg-theme-${color}` : `bg-${color}-backdrop`
 }
 
-function searchContents() {
+async function searchContents() {
   if (filter.value.length === 0) {
     list.value = results.value;
     return
   }
-  const filteredList = results.value.filter(item => item.code.toLowerCase().includes(filter.value.toLowerCase()));
+  const filteredList = await getPositionContents(transfer.startPosition, filter.value);
   if (filteredList.length === 1) {
     toggleItem(filteredList[0]);
     filter.value = null;
