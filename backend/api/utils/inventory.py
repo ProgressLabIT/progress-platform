@@ -76,23 +76,23 @@ class Queries:
 
     """ + INVENTORY_FILTER + """
 
+    COLLECT pos = position, product = v, ser = serial, owned = e.owned
+    AGGREGATE quantity = SUM(e.quantity), value = SUM(e.value)
     LIMIT @offset, @limit || null
 
-      RETURN merge(v, {
-        product_id: v._id,
-        product_code: v.code,
-        position_id: e._to,
-        position_key: position._key,
-        position_code: position.code,
-        serial_key: e.serial_key,
-        serial_code: e.serial_key ? FIRST(FOR s IN Serial FILTER s._key == e.serial_key RETURN s.code) : null,
-        quantity: e.quantity,
-        owned: e.owned,
-        value: e.value,
-        reference: e.reference,
-        date_received: e.date_received,
-        expiration_date: e.expiration_date
-      })
+
+      RETURN {
+        product_id: product._id,
+        product_code: product.code,
+        position_id: pos._id,
+        position_key: pos._key,
+        position_code: pos.code,
+        serial_key: ser._key,
+        serial_code: ser.code,
+        quantity,
+        owned,
+        value
+      }
   """
 
   SEARCH_INVENTORY_PRODUCT = """
