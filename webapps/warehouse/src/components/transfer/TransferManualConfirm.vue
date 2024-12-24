@@ -3,9 +3,9 @@
     <!-- Selected Serials Section -->
     <div class="text-h6">
       {{ $t('contents') }}
-      <q-avatar size="sm" color="theme-grey" class="q-ml-sm">
+      <q-chip size="sm" color="theme-grey" class="q-ml-sm">
         {{ transfer.contents.length }}
-      </q-avatar>
+      </q-chip>
     </div>
     <div class="row q-col-gutter-x-xs q-mt-sm">
       <!-- Show first 3 serial numbers as chips -->

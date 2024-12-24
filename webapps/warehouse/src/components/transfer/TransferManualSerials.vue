@@ -16,9 +16,9 @@
         v-if="transfer.contents.length"
         class="col-auto row items-center q-gutter-x-sm q-mb-sm text-h6">
         <div>{{ $t('selected') }}</div>
-        <q-avatar size="xs" color="theme-grey">
+        <q-chip size="xs" color="theme-grey">
           <div class="smaller highlight">{{ transfer.contents.length }}</div>
-        </q-avatar>
+        </q-chip>
       </div>
 
       <div class="col-auto scroll q-my-md column">
@@ -38,9 +38,9 @@
 
       <div class="col-auto row items-center q-gutter-x-sm q-mb-sm text-h6">
         <div>{{ $t('results') }}</div>
-        <q-avatar size="xs" color="theme-grey">
+        <q-chip size="xs" color="theme-grey">
           <div class="smaller highlight">{{ serialList.length }}</div>
-        </q-avatar>
+        </q-chip>
       </div>
 
       <div class="col scroll q-my-md column">
