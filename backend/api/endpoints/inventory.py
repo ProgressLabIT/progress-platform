@@ -293,27 +293,92 @@ def get_recent_movement_products(
 #    )
 
 # ===============================================
-# MISSIONS
+# MOVEMENT LISTS
 # ===============================================
 
-@router.get('/mission',
+@router.get('/movement-list',
     dependencies=[Depends(auth.verify_token)])
-async def search_warehouse_missions(
+async def search_movement_lists(
   search: str | None = None, # searches the mission code and references
   includes_product_key: str | None = None,
   includes_product_code: str | None = None,
   due_by_min: date | None = None,
   due_by_max: date | None = None,
   status: MovementStatus | None = None,
+  type: InventoryMovementType | None = None,
 ):
-  ...
+  """Retrieves movement lists"""
+  try:
+    bind_vars = dict(
+      search=search,
+      includes_product_key=includes_product_key,
+      includes_product_code=includes_product_code,
+      due_by_min=due_by_min,
+      due_by_max=due_by_max,
+      status=status.value if status else None,
+      type=type.value if type else None
+    )
+    results = db.aql.execute(Queries.SEARCH_MOVEMENT_LISTS, bind_vars=bind_vars)
+    return [MovementList(**m) for m in results]
+
+  except Exception as e:
+    raise HTTPException(
+      status_code=500,
+      detail=traceback.format_exc()
+    )
 
 
-@router.get('/mission/{mission_key}',
+@router.post('/movement-list',
     dependencies=[Depends(auth.verify_token)])
-def get_warehouse_mission_details(mission_key):
-  # Must include data about all the related movements
-  ...
+def create_movement_list(new_movement_list: MovementListNew):
+  """Must include data about all the related movements"""
+  try:
+    tx = db.begin_transaction(write=['MovementList', 'movement'])
+
+    # Fetch product keys if by code
+    if new_movement_list.by_code:
+      product_codes = [m.product_code for m in new_movement_list.movements]
+      try:
+        products_key_map = tx.aql.execute("""
+          RETURN MERGE(
+            FOR p IN Product
+            FILTER p.code IN @codes
+            RETURN {[p.code]: p._key}
+          )""",
+          bind_vars=dict(codes=product_codes)
+        ).next()
+      except StopIteration:
+        raise HTTPException(status_code=404, detail="Could not find products with the codes provided")
+
+      for movement in new_movement_list.movements:
+        product_key = products_key_map.get(movement.product_code, None)
+        if product_key is None:
+          raise HTTPException(status_code=404, detail=f"Could not find product with code {movement.product_code}")
+        movement.product_key = product_key
+
+    # Create the movements
+    new_movement_records = []
+    for m in new_movement_list.movements:
+      input_dump = m.model_dump()
+      db_record = model_to_db_dict(InventoryMovement(**input_dump), by_alias=True)
+      new_movement_records.append(db_record)
+
+    tx.collection('movement').insert_many(new_movement_records)
+
+    # Create the movement list
+    new_movement_list_record = model_to_db_dict(new_movement_list)
+    del new_movement_list_record['movements']
+    tx.collection('MovementList').insert(new_movement_list_record)
+    tx.commit_transaction()
+
+    return APIResponse(message="Movement list created successfully")
+
+  except Exception as e:
+    tx.abort_transaction()
+    raise HTTPException(
+      status_code=500,
+      detail=traceback.format_exc()
+    )
 
 
 # ===============================================
