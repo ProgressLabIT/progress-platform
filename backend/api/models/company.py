@@ -17,8 +17,10 @@ class Site(ArangoDocument):
   postal_code: str
   country: str
   description: str | None = None
+  allow_shipments_to: bool = True
+  allow_shipments_from: bool = True
 
-class has_site(ArangoEdge):
+class owns_site(ArangoEdge):
   since: datetime | None = Field(default_factory=timestamp)
   until: datetime | None = None
 

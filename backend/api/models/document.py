@@ -8,15 +8,15 @@ from utils.dt import timestamp
 
 
 class DocumentType(str, Enum):
-  TRANSPORT_DOCUMENT: 'td'
-  SALES_ORDER: 'so'
-  PURCHASE_ORDER: 'po'
-  RETURN_REQUEST: 'rr'
-  CUSTOMER_INVOICE: 'si'
-  SUPPLIER_INVOICE: 'ci'
+  TRANSPORT_DOCUMENT: 'TD'
+  SALES_ORDER: 'SO'
+  PURCHASE_ORDER: 'PO'
+  RETURN_REQUEST: 'RR'
+  CUSTOMER_INVOICE: 'SI'
+  SUPPLIER_INVOICE: 'CI'
 
 
-class transport_document(ArangoDocument):
+class Transport(ArangoDocument):
   source_site: str = Field(alias='_from') # can be of any company
   destination_site: str = Field(alias='_to')
   document_number: str
