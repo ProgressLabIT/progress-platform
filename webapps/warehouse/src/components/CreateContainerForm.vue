@@ -121,7 +121,8 @@ async function createContainers() {
     $api.post('position', {
       owned: true,
       available: true,
-      disposable: false,
+      disposable: true,
+      fixed: false,
     })
     .then((resp) => containers.value.push(resp.data.detail))
     .catch((err) => {
