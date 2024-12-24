@@ -35,9 +35,10 @@ async def get_positions(params: Annotated[PositionSearchParams, Query()]):
 
 @router.get('/position/{position_key}',
     dependencies=[Depends(auth.verify_token)])
-async def get_position_contents(position_key):
+async def get_position_contents(position_key: str, search: str | None = None, limit: int | None = 100):
   try:
-    return [x for x in db.aql.execute(Queries.GET_POSITION_CONTENTS, bind_vars=dict(position_key=position_key))]
+    bind_vars = dict(position_key=position_key, search=search, limit=limit)
+    return [x for x in db.aql.execute(Queries.GET_POSITION_CONTENTS, bind_vars=bind_vars)]
   except Exception:
     raise HTTPException(
       status_code=500,
