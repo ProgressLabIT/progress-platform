@@ -88,7 +88,7 @@ const list = computed(() => {
     else {
       return {
         type: 'RECENTI',
-        items: transfer.recentPositions.filter(pos => pos._key !== transfer.startPosition._key),
+        items: transfer.recentPositions.filter(pos => pos._key !== transfer.startPosition?._key),
         message: 'scan_destination_position'
       };
     }
