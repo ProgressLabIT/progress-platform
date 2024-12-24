@@ -211,15 +211,15 @@ class Queries:
       && (@product_key ? m.product_key == @product_key : true)
       && (@product_code ? LENGTH(FOR p IN Product FILTER m.product_key == p._key && CONTAINS(p.code, @product_code) RETURN 1) : true)
       && (@serial_keys ? m.serial_key IN @serial_keys : true)
-      && (@mission_key ? m.mission_key == @mission_key : true)
-      && (@mission_code ? m.mission_code == @mission_code : true)
+      && (@list_key ? m.list_key == @list_key : true)
+      && (@list_code ? m.list_code == @list_code : true)
       && (@position_filter_operator == 'AND' ?
               (@position_from ? position_from._key == @position_from : true) && (@position_to ? position_to._key == @position_to : true) :
               (@position_from ? position_from._key == @position_from : true) || (@position_to ? position_to._key == @position_to : true)
           )
 
 
-
+    SORT m.created DESC
     LIMIT @offset, @limit || null
 
     RETURN MERGE(m, {

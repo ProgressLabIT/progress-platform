@@ -210,8 +210,8 @@ class InventoryMovementSearchParameters(BaseModel):
   product_key: str | None = None
   product_code: str | None = None
   serial_keys: list[str] | None = None
-  movement_list_key: str | None = None
-  movement_list_code: str | None = None
+  list_key: str | None = None
+  list_code: str | None = None
   # source: InventoryMovementSource | None = None
   position_from: str | None = None
   position_to: str | None = None
