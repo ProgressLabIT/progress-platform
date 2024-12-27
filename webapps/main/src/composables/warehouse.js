@@ -40,6 +40,14 @@ export function usePositionColumns() {
       style: 'max-width: 10vw',
     },
     {
+      name: 'fixed',
+      field: 'fixed',
+      sortable: true,
+      label: t('fixed').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 10vw',
+    },
+    {
       name: 'disposable',
       field: 'disposable',
       sortable: true,
@@ -94,6 +102,14 @@ export function useMovementColumns() {
       label: t('product_code').toUpperCase(),
       align: 'left',
       style: 'max-width: 10vw',
+    },
+    {
+      name: 'serial_code',
+      field: 'serial_code',
+      sortable: true,
+      label: t('serial_code').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 10vw'
     },
     {
       name: 'position_from_code',
@@ -213,20 +229,20 @@ export function useInventoryColumns() {
   const { t } = useI18n();
 
   return [
-    {
-      name: 'position_code',
-      field: 'position_code',
-      sortable: true,
-      label: t('warehouse.inventory.position').toUpperCase(),
-      align: 'left',
-      style: 'max-width: 10vw',
-    },
 
     {
       name: 'product_code',
       field: 'product_code',
       sortable: true,
       label: t('warehouse.inventory.product_code').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 10vw',
+    },
+    {
+      name: 'position_code',
+      field: 'position_code',
+      sortable: true,
+      label: t('warehouse.inventory.position').toUpperCase(),
       align: 'left',
       style: 'max-width: 10vw',
     },
@@ -255,25 +271,25 @@ export function useInventoryColumns() {
       align: 'left',
       style: 'max-width: 10vw',
     },
-    {
-      name: 'date_received',
-      field: 'date_received',
-      sortable: true,
-      align: 'right',
-      label: t('warehouse.inventory.date_received').toUpperCase(),
-      style: 'max-width: 5vw',
-      format: (val) => (val ? shortDateString(val) : '-'),
-    },
+    // {
+    //   name: 'date_received',
+    //   field: 'date_received',
+    //   sortable: true,
+    //   align: 'right',
+    //   label: t('warehouse.inventory.date_received').toUpperCase(),
+    //   style: 'max-width: 5vw',
+    //   format: (val) => (val ? shortDateString(val) : '-'),
+    // },
 
-    {
-      name: 'expiration_date',
-      field: 'expiration_date',
-      sortable: true,
-      align: 'right',
-      label: t('warehouse.inventory.expiration_date').toUpperCase(),
-      style: 'max-width: 5vw',
-      format: (val) => (val ? shortDateString(val) : '-'),
-    },
+    // {
+    //   name: 'expiration_date',
+    //   field: 'expiration_date',
+    //   sortable: true,
+    //   align: 'right',
+    //   label: t('warehouse.inventory.expiration_date').toUpperCase(),
+    //   style: 'max-width: 5vw',
+    //   format: (val) => (val ? shortDateString(val) : '-'),
+    // },
   ];
 }
 
