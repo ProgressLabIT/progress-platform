@@ -49,9 +49,9 @@
         <!-- PRODUCT -->
         <div v-if="position" class="row items-baseline q-col-gutter-md">
           <BaseAutocompleteProduct
+            v-if="movement_type === 'receipt'"
             dense
             class="q-mb-md col"
-            :options="availableProducts"
             :load-data="false"
             :value="product"
             :disable="loadingVal || serial"
@@ -59,11 +59,45 @@
             @select="(selection) => productSelection(selection)"
           >
           </BaseAutocompleteProduct>
+          <q-select
+            v-else
+            :model-value="product"
+            dense
+            filled
+            class="q-mb-md col"
+            option-label="code"
+            :options="availableProducts"
+            :disable="loadingVal || serial"
+            :label="$capitalize($t('product.label'))"
+            @update:model-value="(selection) => productSelection(selection)">
+            <template #option="scope">
+              <q-item v-bind="scope.itemProps" :id="scope.opt.code">
+                <q-item-section>
+                  <q-item-label class="highlight">
+                    {{ scope.opt.code }}
+                  </q-item-label>
+                  <q-item-label caption lines="2">
+                    {{ scope.opt.description }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
         </div>
 
         <!-- SERIAL -->
-        <div v-if="position" class="row items-baseline q-col-gutter-md">
+        <div v-if="position && requiresSerialCode" class="row items-baseline q-col-gutter-md">
+          <q-input
+            v-if="movement_type === 'receipt'"
+            v-model="newSerialCode"
+            dense
+            class="q-mb-md col"
+            :label="$t('serial')"
+            filled
+          />
+
           <BaseAutocompleteSerial
+            v-else
             dense
             class="q-mb-md col"
             :options="availableSerials"
@@ -79,7 +113,9 @@
         <!-- QUANTITY -->
         <div v-if="product" class="row items-baseline q-col-gutter-md">
           <q-input
+            v-if="!requiresSerialCode"
             v-model.number="quantity"
+            filled
             dense
             :disable="loadingVal"
             :label="$capitalize($t('quantity.long'))"
@@ -113,6 +149,8 @@ const movement_type = ref(undefined);
 const position = ref(undefined);
 const product = ref(undefined);
 const serial = ref(undefined);
+const requiresSerialCode = ref(undefined);
+const newSerialCode = ref(undefined)
 const quantity = ref(1);
 
 const store = useStore();
@@ -130,6 +168,10 @@ const availablePositions = ref([]);
 watch(movement_type, getAvailablePositions);
 
 watch(quantity, () => {
+  saveButtonEnabled.value = !validateMovementError();
+});
+
+watch(newSerialCode, () => {
   saveButtonEnabled.value = !validateMovementError();
 });
 
@@ -152,7 +194,7 @@ function clean() {
   availablePositions.value = [];
 }
 
-function productSelection(selection) {
+async function productSelection(selection) {
   quantity.value = 1;
   qtyMax.value = undefined;
   originalPosition.value = undefined;
@@ -160,11 +202,8 @@ function productSelection(selection) {
   serial.value = undefined;
   availableSerials.value = undefined;
   if (product.value && movement_type.value === 'receipt') {
-    api
-      .get('serial-selection', { params: { product_key: product.value._key } })
-      .then((resp) => {
-        availableSerials.value = resp.data;
-      });
+    const { data } = await api.get(`product/${selection._key}`)
+    requiresSerialCode.value = !!data?.traceability_level
   } else {
     getAvailableSerials();
   }
@@ -374,6 +413,7 @@ function createMovement() {
     position_to: position_to_id,
     product_key: product?.value?._key,
     serial_key: serial?.value?._key,
+    serial_code: newSerialCode.value,
     qt_planned: quantity.value,
     qt_confirmed: quantity.value,
     status: 'completed',
@@ -411,7 +451,10 @@ function validateMovementError() {
   }
   switch (movement_type.value) {
     case 'receipt':
-      if (quantity.value <= 0) {
+      if (requiresSerialCode.value === true && newSerialCode.value?.length === 0) {
+        return 'Indicate a serial code';
+      }
+      if (requiresSerialCode.value === false && quantity.value <= 0) {
         return 'quantity should be > 0';
       }
       break;
