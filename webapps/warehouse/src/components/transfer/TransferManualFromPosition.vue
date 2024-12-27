@@ -33,6 +33,7 @@
       :label="$t('select_root_position')"
       @click="selectRootPosition()"
     />
+    <div class="q-my-sm"></div>
     <q-btn
       color="theme-grey"
       :label="$t('cancel')"

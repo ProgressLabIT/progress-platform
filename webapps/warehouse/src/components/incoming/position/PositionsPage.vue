@@ -1,16 +1,18 @@
 <template>
-  <div class="col column full-width">
+  <div class="col column full-width q-gutter-y-lg">
     <!-- ITEM CODE & DESCRIPTION -->
     <div class="col-auto column full-width">
       <div class="row">
         <div class="col">
-          <div class="text-h6 q-mb-sm text-low weight-bold text-uppercase">{{ $t('product')}}</div>
+          <div class="text-h6 text-low weight-bold text-uppercase q-mb-xs">
+            {{ $t('product')}}
+          </div>
           <div class="text-h3 q-pr-sm" style="word-wrap: break-word">
             {{ incoming.product?.code }}
           </div>
         </div>
         <div class="col-auto">
-          <div class="text-h6 text-right q-mb-sm">{{ $t('quantity') }}</div>
+          <div class="text-h6 text-right q-mb-xs">{{ $t('quantity') }}</div>
           <div class="text-h3 text-right">
             {{ incoming.quantity }}
           </div>
@@ -18,37 +20,44 @@
       </div>
     </div>
 
-    <div class="text-h3 q-mb-md q-mt-md">{{ $t('destination') }}</div>
-    <!-- POSITION SEARCH -->
-    <SearchOrScan v-model="filter" @update:model-value="searchPositions" />
+    <div class="col-auto">
+      <div class="text-h3 q-mb-xs">
+        {{ $t('destination') }}</div>
+      <!-- POSITION SEARCH -->
+      <SearchOrScan v-model="filter" @update:model-value="searchPositions" />
+    </div>
 
     <!-- SELECTED POSITIONS -->
-    <div class="text-h6">POSIZIONI SELEZIONATE</div>
-    <div class="row col-auto q-col-gutter-x-sm q-mt-md">
-      <div
-        v-for="selected in tempPositions"
-        :key="selected._key"
-        class="col-auto"
-      >
-        <q-chip
-          clickable
-          color="theme-blue"
-          class="text-body1"
-          @click="toggleSelection(selected)"
+    <div class="col-auto">
+      <div class="text-h6 q-mb-xs">POSIZIONI SELEZIONATE</div>
+      <div class="row col-auto q-col-gutter-x-sm">
+        <div
+          v-for="selected in tempPositions"
+          :key="selected._key"
+          class="col-auto"
         >
-          {{ selected.code }}
-        </q-chip>
+          <q-chip
+            clickable
+            color="theme-blue"
+            class="text-body1"
+            @click="toggleSelection(selected)"
+          >
+            {{ selected.code }}
+          </q-chip>
+        </div>
       </div>
     </div>
 
     <!-- AVAILABLE POSITIONS -->
-    <div class="q-mt-lg text-h6">POSIZIONI {{ positionResultsType }}</div>
-    <div class="col scroll">
-      <div class="row full-width q-col-gutter-x-sm q-mt-md">
-        <div v-for="pos in availablePositions" :key="pos._key" class="col-auto">
-          <q-chip clickable outline class="text-body1" @click="toggleSelection(pos)">
-            {{ pos.code }}
-          </q-chip>
+    <div class="col-auto">
+      <div class="text-h6 q-mb-xs">POSIZIONI {{ positionResultsType }}</div>
+      <div class="col scroll">
+        <div class="row full-width q-col-gutter-x-sm">
+          <div v-for="pos in availablePositions" :key="pos._key" class="col-auto">
+            <q-chip clickable outline class="text-body1" @click="toggleSelection(pos)">
+              {{ pos.code }}
+            </q-chip>
+          </div>
         </div>
       </div>
     </div>
