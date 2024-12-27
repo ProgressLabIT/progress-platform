@@ -13,7 +13,17 @@ export function sendEvent({ event_type, event_data }) {
     };
     api
       .post('event', event)
-      .then((resp) => resolve(resp))
-      .catch((err) => reject(err));
+      .then((resp) => {
+        // Check for HTTP status code
+        if (resp.status >= 200 && resp.status < 300) {
+          resolve(resp); // Successful response
+        }
+        else {
+          reject(resp.response)
+        }
+      })
+      .catch((err) => {
+        reject(err)
+      });
   });
 }
