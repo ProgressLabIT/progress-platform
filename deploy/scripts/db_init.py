@@ -172,9 +172,7 @@ collections = [
   Collection(name='movement', indexes=[
     DBIndex(fields=['product_key', 'status', 'stage'], name='movement-product'),
     DBIndex(fields=['serial_key'], name="movement-serial"),
-    DBIndex(fields=['mission_key'], name="movement-mission"),
-    DBIndex(fields=['movement_doc'], name="movement-doc"),
-    DBIndex(fields=['source_doc'], name="movement-source-doc"),
+    DBIndex(fields=['list_key'], name="movement-list"),
     DBIndex(fields=['start', 'end'], name="movement-time-range"),
   ]),
   Collection(name='Issue', indexes=[
@@ -276,9 +274,9 @@ collections = [
     DBIndex(fields=['serial_key'], name='wip-serial'),
     DBIndex(fields=['_to, wo_key, active, serial_key'], name='wip-target'),
   ]),
-  Collection(name='WarehouseMission', indexes=[
-    DBIndex(fields=['code'], name="mission-code"),
-    DBIndex(fields=['status', 'assigned_to'], name="mission-status-assignee")
+  Collection(name='MovementList', indexes=[
+    DBIndex(fields=['code'], name="list-code"),
+    DBIndex(fields=['status', 'assigned_to'], name="list-status-assignee")
   ]),
   Collection(name='WorkOrder', indexes=[
     DBIndex(fields=['_key'], storedValues=['code'], name='workorder-key-code'),
