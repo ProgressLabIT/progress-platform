@@ -4,7 +4,7 @@ from typing import Any
 from typing import Annotated
 
 
-from pydantic import BaseModel, model_validator, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints
 
 from models.base_models import ArangoDocument, ArangoEdge, FlexModel
 #from utils.counter import _generate_counter
@@ -80,14 +80,15 @@ class PositionSearchParams(BaseModel):
   offset: int | None = 0
 
 
-class Inventory(ArangoEdge): # edge is_in_position
+class Inventory(BaseModel): # edge is_in_position
+  model_config = ConfigDict(populate_by_name=True)
+
   product_id: str = Field(..., alias='_from')
   position_id: str = Field(..., alias='_to')
   serial_key: str | None = None
   quantity: float
   owned: bool = True # False means it's property of customers or suppliers
   value: float | None = None
-  reference: str | None # entry transport document, traceability event, etc.
   date_received: datetime | None = None
   expiration_date: datetime | None = None
   extra: Any = None

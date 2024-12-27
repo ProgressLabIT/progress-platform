@@ -2,7 +2,7 @@ import traceback
 import copy
 import json
 
-from models.inventory import InventoryCommandType, InventoryNotificationType, InventoryNotificationErrorCode, InventoryMovement, InventoryMovementType
+from models.inventory import *
 from models.serial import Serial
 from fastapi.encoders import jsonable_encoder
 from managers.notification_manager import NotificationManager
@@ -42,8 +42,7 @@ class InventoryEventManager:
     def add_movement(self):
       try:
         movement_data=self.event.info.movement
-        movement_confirmed = movement_data.status == MovementStatus.CONFIRMED
-        self.adjust_inventory(movement_confirmed)
+        self.adjust_inventory()
         new_movement_record = InventoryMovement(**movement_data.model_dump())
         movement_key = self.tx.collection('movement').insert(new_movement_record)['_key']
         self.notify_results(dict(
@@ -105,7 +104,7 @@ class InventoryEventManager:
          raise InventoryMovementException(f'Cannot find product to consume')
 
 
-    def _handle_receipt_with_traceability(self, movement_confirmed):
+    def _handle_receipt_with_traceability(self):
       serial_code = self.event.info.movement.serial_code or ''
       serial_code_provided = len(serial_code) > 0
 
@@ -130,21 +129,22 @@ class InventoryEventManager:
         code=serial_code,
         created=self.event.info.timestamp,
         released=self.event.info.timestamp,
-        available=movement_confirmed,
+        available=self.event.info.movement.status == MovementStatus.COMPLETED,
         user_key=self.event.info.user_key,
       ))['_key']
 
       self.event.info.movement.serial_key = new_serial_key
 
-      if movement_confirmed:
+
+      if self.event.info.movement.status == MovementStatus.COMPLETED:
         new_inventory_record = self.tx.collection('is_in_position').insert(Inventory(
           product_id = 'Product/' + product_key,
           position_id = self.event.info.movement.position_to,
-          serial_key = serial_key,
+          serial_key = new_serial_key,
           quantity = 1
         ))
 
-    def handle_receipt(self, movement_confirmed):
+    def handle_receipt(self):
       """
       # SCENARIO 1: Receipt of product with traceability
       - Ensure serial code is provided
@@ -170,13 +170,13 @@ class InventoryEventManager:
 
       # SCENARIO 1: Receipt of product with traceability
       if product_requires_serial:
-        self._handle_receipt_with_traceability(movement_confirmed)
+        self._handle_receipt_with_traceability()
         return
 
       # SCENARIO 2: Receipt of product without traceability.
       # Update inventory only if the movement is confirmed
 
-      if movement_confirmed:
+      if self.event.info.movement.status == MovementStatus.COMPLETED:
         record_match = dict(_from=f'Product/{product_key}', _to=self.event.info.movement.position_to)
         position_link_cursor = self.tx.collection('is_in_position').find(record_match)
         if (position_link_cursor.count()>0):
