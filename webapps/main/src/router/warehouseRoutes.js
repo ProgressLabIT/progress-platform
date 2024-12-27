@@ -3,7 +3,7 @@ const warehouseRoutes = [
     path: 'warehouse',
     name: 'warehouseRoot',
     component: () => import('@/components/BaseEmptyParentRoute.vue'),
-    redirect: { name: 'positions' },
+    redirect: { name: 'inventory' },
     meta: { scope: 'warehouse', screen_title: 'warehouse' },
     children: [
       {
