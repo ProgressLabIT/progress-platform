@@ -42,7 +42,8 @@ class Position(ArangoDocument):
   disposable: bool | None = False # gets deleted when emptied or shipped
   fixed: bool | None = True
   deleted: bool | None = False
-  created: datetime | datetime = Field(default_factory=timestamp)
+  created: datetime | None = Field(default_factory=timestamp)
+  allow_consumption: bool | None = None
   extra: Any = None
 
 class PositionNew(FlexModel):
@@ -52,7 +53,7 @@ class PositionNew(FlexModel):
   available: bool | None = True
   fixed: bool | None = True
   disposable: bool | None = False
-  deleted: bool | None = False
+  allow_consumption: bool | None = None
   extra: Any = None
 
 
@@ -141,10 +142,51 @@ class InventoryMovementReferences(BaseModel):
   batch_key: str | None = None
   event_key: str | None = None
   event_group_key: str | None = None
-  transport_doc: str | None = None
   transfer_doc: str | None = None
   sales_doc: str | None = None
   purchase_doc: str | None = None
+  partner_name: str | None = None # supplier/customer name
+  partner_code: str | None = None # supplier/customer code
+
+
+class InventoryMovementNew(FlexModel):
+  position_from: str = Field(..., alias='_from')
+  position_to: str | None = Field('Position/IN', alias='_to')
+  type: InventoryMovementType | None = None
+  status: MovementStatus | None = MovementStatus.COMPLETED
+  product_key: str | None = None
+  serial_key: str | None = None
+  serial_code: str | None = None
+  quantity: float | None = 1
+  start: datetime | None = None
+  end: datetime | None = None
+  source: InventoryMovementReferences | None = None
+  reason: str | None = None
+  user_key: str | None = None
+  extra: Any = None
+
+  @model_validator(mode='before')
+  def set_default_values(cls, values):
+    if values.get('type') == InventoryMovementType.RECEIPT.value:
+      values['_from'] = 'Position/OUT'
+    if values.get('type') == InventoryMovementType.SHIPMENT.value:
+      values['_to'] = 'Position/OUT'
+    if values.get('status') in [MovementStatus.STARTED.value, MovementStatus.COMPLETED.value] and values.get('start', None) is None:
+      values['start'] = timestamp()
+    if values.get('status') == MovementStatus.COMPLETED.value and values.get('end', None) is None:
+      values['end'] = timestamp()
+    return values
+
+  @model_validator(mode='after')
+  def validate(self):
+    if self.product_key is None and self.product_code is None:
+      raise ValueError("A movement must have a product")
+    if self.serial_key is not None and self.qt_planned > 1:
+      raise ValueError("A serial movement must have a quantity of 1")
+    if self.position_from == self.position_to:
+      raise ValueError("A movement must have a different position from and to")
+    return self
+
 
 class InventoryMovement(ArangoEdge): # edge collection movement
   # can be a segment of a multistep movement (to be used as graph),
@@ -156,6 +198,8 @@ class InventoryMovement(ArangoEdge): # edge collection movement
 
   product_key: str | None = None
   serial_key: str | None = None
+
+  # quantity: float | None --> This doesn't get into the model but is used from InventoryMovementNew and parsed into qt_planned/confirmed
   qt_planned: float | None = 1
   qt_confirmed: float | None = 0
 
@@ -173,6 +217,14 @@ class InventoryMovement(ArangoEdge): # edge collection movement
 
   extra: Any = None
 
+  @model_validator(mode='before')
+  def parse_quantity(cls, values):
+    if values.get('quantity', None) is not None:
+      values['qt_planned'] = values['quantity']
+      if values.get('status', None) == MovementStatus.COMPLETED.value:
+        values['qt_confirmed'] = values['quantity']
+    return values
+
   # Transfer routes must have at least two positions. Positions must be repeat.
   @model_validator(mode='after')
   def validate(self):
@@ -181,7 +233,7 @@ class InventoryMovement(ArangoEdge): # edge collection movement
       self.status == MovementStatus.STARTED
       and self.start is None
     ):
-      raise ValueError("In transfer movements must have a start date")
+      raise ValueError("Started movements must have a start date")
 
     if (
       self.status == MovementStatus.COMPLETED
@@ -194,15 +246,18 @@ class InventoryMovement(ArangoEdge): # edge collection movement
     ):
       raise ValueError("A movement must have a product, serial or container position")
 
+    if self.type == InventoryMovementType.TRANSFER and (self.position_from is None or self.position_to is None):
+      raise ValueError("A transfer movement must have a position from and to")
+
     return self
 
-class InventoryMovementEvent(InventoryMovement):
+class InventoryMovementEvent(InventoryMovementNew):
   quantity: float | None = None
 
 class InventoryMovementSearchParameters(BaseModel):
   movement_type: InventoryMovementType | None = None
-  movement_status: MovementStatus | None = MovementStatus.COMPLETED
-  include_planned: bool | None = False
+  movement_status: MovementStatus | None = None
+  include_planned: bool | None = True
   start_from: datetime | None = None
   start_to: datetime | None = None
   end_from: datetime | None = None
@@ -249,7 +304,8 @@ class MovementList(ArangoDocument):
 
 
 class MovementListNew(MovementList):
-  movements: list[InventoryMovement] | None = None
+  movements: list[InventoryMovementNew] | None = None
+  by_code: bool | None = False
 
   @model_validator(mode='after')
   def validate(self):

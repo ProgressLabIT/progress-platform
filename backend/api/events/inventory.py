@@ -7,7 +7,7 @@ class InventoryEvent(BaseEvent):
   inventory_collections = ['movement', 'is_in_position']
 
   ADD_MOVEMENT = EventMeta(
-    collections=inventory_collections,
+    collections=inventory_collections + ['Serial'],
     action="add_movement"
   )
 
