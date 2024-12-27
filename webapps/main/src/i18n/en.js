@@ -22,6 +22,7 @@ export default {
   archive: 'archive',
   assign: 'assign',
   assignment_success: 'Jobs assigned successfully',
+  available: 'Available',
   back: 'back',
   batch: 'batch',
   batch_completed_quantity_question: 'How many new pieces are you working on?',
