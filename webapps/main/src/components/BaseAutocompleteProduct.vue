@@ -10,7 +10,7 @@
     option-label="code"
     :model-value="value"
     :label="label"
-    input-debounce="100"
+    input-debounce="300"
     :option-value="keyOnly ? '_key' : null"
     :emit-value="keyOnly"
     :map-options="keyOnly"
@@ -67,6 +67,11 @@ export default {
       default: (v) => v,
     },
 
+    traceabilityOnly: {
+      type: Boolean,
+      default: false
+    },
+
     label: {
       type: String,
       default: undefined,
@@ -88,12 +93,6 @@ export default {
     };
   },
 
-  computed: {
-    origin_list() {
-      return this.$store.getters.productCatalog(true);
-    },
-  },
-
   created() {
     this.initialize();
   },
@@ -109,6 +108,10 @@ export default {
       this.loading = true;
       let params = {};
 
+      if (this.traceabilityOnly) {
+        params.traceability_only = true
+      }
+
       if (search_value) {
         params.search = search_value;
         this.last_research = search_value;
@@ -120,16 +123,15 @@ export default {
           params,
         })
         .then((resp) => {
-          this.options = resp.data;
+          this.options = resp.data.filter(this.filterOrigin);
           this.loading = false;
         });
     },
 
-    initOptions() {
-      this.options = [...this.origin_list.filter(this.filterOrigin)];
-    },
-
     filter(value, update) {
+      if (value === '') {
+        this.loadProducts()
+      }
       if (this.last_research === value) {
         update();
       } else {

@@ -26,10 +26,11 @@
           <BaseAutocompleteProduct
             :value="links.product"
             :hint="!phase_data ? $t('phase.no_phase') : null"
+            :load-data="true"
+            :traceability-only="true"
             key-only
             :label="$capitalize($t('product.label'))"
             :disable="force_serial_code !== null"
-            :filter-origin="(p) => p.traceability_level !== null"
             @select="(selection) => loadProduct(selection)"
           />
 
@@ -178,7 +179,7 @@ export default {
     force_serial_code: {
       type: String,
       default: null,
-    },
+    }
   },
 
   emits: ['close', 'serialCreated'],

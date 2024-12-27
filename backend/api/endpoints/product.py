@@ -35,7 +35,8 @@ async def get_product_list(
   has_operation_key: str | None = None, # filter by operation key
   details: bool = False,
   filter_inactive: bool = False,
-  tag_search: str | None = None
+  tag_search: str | None = None,
+  traceability_only: bool | None = False
 ):
   product_list =  db.aql.execute(
     Queries.GET_PRODUCT_LIST,
@@ -46,7 +47,8 @@ async def get_product_list(
       has_operation_key = has_operation_key,
       details = details,
       tag = tag_search,
-      active_only = filter_inactive
+      active_only = filter_inactive,
+      traceability_only = traceability_only
     )
   )
 
