@@ -27,8 +27,14 @@
 
       <q-space></q-space>
 
+      <q-chip
+        :color="serialAvailable ? 'theme-green' : 'theme-grey'"
+        class="smaller text-uppercase highlight">
+        {{ serialAvailable ? $t('available') : $t('unavailable') }}
+      </q-chip>
+
       <q-btn
-        v-if="isAvailable"
+        v-if="printAvailable"
         flat
         round
         icon="mdi-printer"
@@ -47,7 +53,7 @@
       <div class="col-auto">{{ serial_created_time_string }}</div>
       <div class="col-auto row items-center">
         <BaseUserAvatar
-          :user="$store.getters.user_data(serial?.created_by)"
+          :user="$store.getters.user_data(serial?.user_key)"
           size="24px"
           class="q-ml-md"
         />
@@ -179,7 +185,7 @@ export default {
     return {
       config,
       openPrintDialog,
-      isAvailable,
+      printAvailable: isAvailable,
     };
   },
 
@@ -213,6 +219,10 @@ export default {
       return this.$capitalize(
         this.$formatDateTime(this.serial?.created, this.$i18n.locale, config),
       );
+    },
+
+    serialAvailable() {
+      return [true, false].includes(this.serial.available) ? this.serial.available : true
     },
 
     form_fields() {

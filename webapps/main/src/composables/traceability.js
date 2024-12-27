@@ -88,5 +88,12 @@ export function useSerialColumns() {
       style: 'max-width: 5vw',
       format: (val) => (val ? shortDateString(val) : '-'),
     },
+    {
+      name: 'available',
+      field: 'available',
+      sortable: true,
+      align: 'right',
+      label: t('available').toUpperCase()
+    }
   ].concat(getCustomCols());
 }
