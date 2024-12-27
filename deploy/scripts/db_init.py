@@ -244,6 +244,8 @@ collections = [
   ),
   Collection(name='requires'),
   Collection(name='Serial', indexes=[
+    DBIndex(fields=['_key'], storedValues=['code'], name='serial-key-code'),
+    DBIndex(fields=['code'], storedValues=['_key'], name='serial-code-key'),
     DBIndex(fields=['wo_key', 'released'], name='serial-wo'),
     DBIndex(fields=['product_key', 'released'], name='serial-product'),
     DBIndex(fields=['released'], name='serial-released'),
