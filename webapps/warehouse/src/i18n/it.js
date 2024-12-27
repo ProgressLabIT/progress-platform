@@ -11,8 +11,13 @@ export default {
   breadcrumb: {
     incoming_root: 'Ricevimenti',
     incoming_manual: 'Nuovo',
+    incoming_lists: 'Liste',
     transfer_root: 'Trasferimenti',
     transfer_manual: 'Nuovo',
+    transfer_lists: 'Liste',
+    shipment_root: 'Spedizioni',
+    shipment_manual: 'Nuovo',
+    shipment_lists: 'Liste'
   },
   cancel: 'Annulla',
   close: 'Chiudi',
@@ -57,6 +62,7 @@ export default {
   select_copies_title: 'Seleziona copie',
   select_container: 'Seleziona contenitore',
   select_contents: 'Seleziona contenuti',
+  select_root_position: 'Seleziona posizione globale',
   serial: 'Seriale | Seriali',
   serial_added: 'Seriale aggiunto',
   serial_removed: 'Seriale rimosso',

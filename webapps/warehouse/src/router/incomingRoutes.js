@@ -4,10 +4,11 @@ const incomingRoutes = [
     name: 'IncomingRoot',
     redirect: { name: 'IncomingManual'},
     meta: { scope: 'warehouse', title: 'breadcrumb.incoming_root' },
+    component: () => import ('@/views/incoming/IncomingRoot.vue'),
     children: [
       {
-        path: 'checks',
-        name: 'IncomingChecks',
+        path: 'lists',
+        name: 'IncomingLists',
         component: () => import ('@/components/incoming/suppliers/SuppliersPage.vue'),
       },
       {
