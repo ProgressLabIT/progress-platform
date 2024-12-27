@@ -1,8 +1,13 @@
 import traceback
+import uuid
+
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Depends
 
+from events import Event
+from managers.inventory_event_manager import InventoryEventManager
+from models.event import EventModel
 from models.inventory import *
 from models.product import ProductBaseData
 from utils.api import APIResponse
@@ -10,6 +15,7 @@ from utils.inventory import Queries
 from utils.counter import _generate_counter
 from utils.db import db, model_to_db_dict
 from utils import auth
+
 
 router = APIRouter()
 
@@ -329,7 +335,7 @@ async def search_movement_lists(
 def create_movement_list(new_movement_list: MovementListNew):
   """Must include data about all the related movements"""
   try:
-    tx = db.begin_transaction(write=['MovementList', 'movement'])
+    tx = db.begin_transaction(write=['MovementList', 'movement', 'Serial', 'Event'])
 
     # Fetch product keys if by code
     if new_movement_list.by_code:
@@ -353,18 +359,27 @@ def create_movement_list(new_movement_list: MovementListNew):
         movement.product_key = product_key
 
     # Create the movements
-    new_movement_records = []
     for m in new_movement_list.movements:
-      input_dump = m.model_dump()
-      db_record = model_to_db_dict(InventoryMovement(**input_dump), by_alias=True)
-      new_movement_records.append(db_record)
-
-    tx.collection('movement').insert_many(new_movement_records)
-
+      movement_info = InventoryMovementNew(
+        type = new_movement_list.type,
+        serial_code = m.serial_code,
+        serial_key = m.serial_key,
+        quantity = m.quantity,
+        product_key = m.product_key,
+        status = MovementStatus.PLANNED,
+        source = getattr(m, 'source', new_movement_list.source),
+        movement_list_key = new_movement_list,
+        extra = getattr(m, 'extra', new_movement_list.extra)
+      )
+      event = Event(EventModel(
+        event_type = 'ADD_MOVEMENT',
+        movement = movement_info,
+        event_group = str(uuid.uuid4()),
+        user_key = 'FAKE',
+        primary= False
+      ))
+      event.save(tx=tx)
     # Create the movement list
-    new_movement_list_record = model_to_db_dict(new_movement_list)
-    del new_movement_list_record['movements']
-    tx.collection('MovementList').insert(new_movement_list_record)
     tx.commit_transaction()
 
     return APIResponse(message="Movement list created successfully")

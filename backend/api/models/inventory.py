@@ -151,11 +151,14 @@ class InventoryMovementReferences(BaseModel):
 
 
 class InventoryMovementNew(FlexModel):
+  model_config = ConfigDict(populate_by_name=True)
+
   position_from: str = Field(..., alias='_from')
   position_to: str | None = Field('Position/IN', alias='_to')
   type: InventoryMovementType | None = None
   status: MovementStatus | None = MovementStatus.COMPLETED
   product_key: str | None = None
+  product_code: str | None = None
   serial_key: str | None = None
   serial_code: str | None = None
   quantity: float | None = 1
@@ -173,9 +176,9 @@ class InventoryMovementNew(FlexModel):
     if values.get('type') == InventoryMovementType.SHIPMENT.value:
       values['_to'] = 'Position/OUT'
     if values.get('status') in [MovementStatus.STARTED.value, MovementStatus.COMPLETED.value] and values.get('start', None) is None:
-      values['start'] = timestamp()
+      values['start'] = now = timestamp()
     if values.get('status') == MovementStatus.COMPLETED.value and values.get('end', None) is None:
-      values['end'] = timestamp()
+      values['end'] = now if now is not None else timestamp()
     return values
 
   @model_validator(mode='after')
@@ -250,6 +253,8 @@ class InventoryMovement(ArangoEdge): # edge collection movement
     if self.type == InventoryMovementType.TRANSFER and (self.position_from is None or self.position_to is None):
       raise ValueError("A transfer movement must have a position from and to")
 
+    if self.position_from is None or self.position_to is None:
+      raise ValueError("A movement must have a position from and to")
     return self
 
 class InventoryMovementEvent(InventoryMovementNew):
@@ -292,7 +297,8 @@ class InventoryMovementSearchResults(InventoryMovement):
 
 class MovementList(ArangoDocument):
   #code: str | None = Field(default_factory=_generate_counter('default'))
-  code: Annotated[str, StringConstraints(to_upper=True)] | None = None
+  # keep code mandatory until completion of list counter setup
+  code: Annotated[str, StringConstraints(to_upper=True)]
   notes: str | None = None
   due_by: date | None = None
   created: datetime | None = Field(default_factory=timestamp)
@@ -305,16 +311,14 @@ class MovementList(ArangoDocument):
 
 
 class MovementListNew(MovementList):
-  movements: list[InventoryMovementNew] | None = None
-  by_code: bool | None = False
+  movements: list[InventoryMovementNew] | None = Field(None, exlcude=True)
+  by_code: bool | None = Field(False, exclude=True)
 
   @model_validator(mode='after')
   def validate(self):
     if self.movements is None or len(self.movements) == 0:
       raise ValueError("A movement list must have at least one movement")
     for movement in self.movements:
-      if movement.position_from is None or movement.position_to is None:
-        raise ValueError("A movement must have a position from and to")
       if movement.type != self.type:
         raise ValueError("All movements in a movement list must be of the same type")
     return self

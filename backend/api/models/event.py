@@ -9,7 +9,7 @@ from models.form import FormFieldValue
 from models.base_models import ArangoDocument
 from utils.dt import timestamp
 from models.serial import SerialLink
-from models.inventory import InventoryMovementEvent
+from models.inventory import InventoryMovementNew, MovementListNew
 
 class EventType(str, Enum):
   # Production Events
@@ -52,6 +52,7 @@ class EventType(str, Enum):
   ADD_MOVEMENT = 'ADD_MOVEMENT'
   UPDATE_MOVEMENT = 'UPDATE_MOVEMENT'
   DELETE_MOVEMENT = 'DELETE_MOVEMENT'
+  WAREHOUSE_LIST_CREATED = 'WAREHOUSE_LIST_CREATED'
 
 
 class EventModel(ArangoDocument):
@@ -61,6 +62,7 @@ class EventModel(ArangoDocument):
   event_group: str | None = None #
   user_session_key: str | None = None #
   timestamp: datetime = Field(default_factory=timestamp) #
+  primary: bool = False
   description: str | None = None # optional descriptive field for auditing reasons
 
   # Production Fields
@@ -101,7 +103,8 @@ class EventModel(ArangoDocument):
   delete_children: bool | None = False
 
   # Inventory fields
-  movement: InventoryMovementEvent | None = None
+  movement: InventoryMovementNew | None = None
+  movement_list: MovementListNew | None = None
   movement_key: str | None = None
   supplier_key: Any | None = None
 
