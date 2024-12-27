@@ -35,13 +35,13 @@
           @click="selectToken(tk._key)"
         >
           <div class="col-3">
-            {{ $capitalize(formatDate(tk.expires_at)) }}
+            {{ formatDate(tk.expires_at) }}
           </div>
           <div class="col-3">
-            {{ $capitalize(tk.description) }}
+            {{ tk.description }}
           </div>
           <div class="col-4">
-            {{ $capitalize(tk.signature) }}
+            {{ tk.signature }}
           </div>
         </div>
       </div>
