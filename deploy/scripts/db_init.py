@@ -85,7 +85,7 @@ class DBIndex(BaseModel):
   fields: list[str]
   name: str | None = None
   inBackground: bool | None = False
-  storedValues: list[str]
+  storedValues: list[str] | None = None
 
 class Collection(BaseModel):
   name: str
