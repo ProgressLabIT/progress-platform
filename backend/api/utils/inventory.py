@@ -169,6 +169,7 @@ class Queries:
 
   GET_RECENT_MOVEMENT_PRODUCTS = """
     FOR m IN movement
+    FILTER m.product_key != null
     FILTER @type ? m.type == @type : true
     SORT m.created DESC
     COLLECT product = DOCUMENT(Product, m.product_key)
