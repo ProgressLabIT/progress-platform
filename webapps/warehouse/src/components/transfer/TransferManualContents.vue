@@ -125,14 +125,15 @@ async function searchContents() {
     list.value = results.value;
     return
   }
-  const filteredList = await getPositionContents(transfer.startPosition, filter.value);
-  if (filteredList.length === 1) {
-    toggleItem(filteredList[0]);
-    filter.value = null;
-  }
-  else {
-    list.value = filteredList;
-  }
+  api.get(`position/${transfer.startPosition._key}`, { params: { search: filter.value } }).then((resp) => {
+    if (resp.data.length === 1) {
+      toggleItem(resp.data[0]);
+      filter.value = null;
+    }
+    else {
+      list.value = resp.data;
+    }
+  })
 }
 
 function toggleItem(item) {
