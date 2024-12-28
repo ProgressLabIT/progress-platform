@@ -176,7 +176,18 @@ function confirmProductMovements() {
       transfer.$reset();
     })
     .catch(err => {
-      console.log(err);
+      Notify.create({
+        message: err,
+        position: 'top',
+        color: 'theme-orange',
+        timeout: 0,
+        actions: [
+          {
+            label: 'Close', color: 'white', handler: () => undefined
+          }
+        ]
+
+      })
     });
   }
 
