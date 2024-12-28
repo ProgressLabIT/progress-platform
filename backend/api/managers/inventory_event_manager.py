@@ -224,7 +224,7 @@ class InventoryEventManager:
       - Add inventory to end position
         - add quantity/serial
       """
-      movement = InventoryMovement(**self.event.info.movement)
+      movement = InventoryMovement(**self.event.info.movement.model_dump())
 
 
       # CONTAINER TRANSFER ======================================================
