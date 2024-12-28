@@ -11,9 +11,23 @@
       <div class="col-auto">
         <div class="text-h6 text-right q-mb-sm">{{ $t('total') }}</div>
         <div class="text-h3 text-right">
-          {{ incoming.quantity }}
+          {{ incoming.refQuantity }}
         </div>
       </div>
+    </div>
+
+    <div
+      v-if="incoming.product.traceability_level"
+      class="row col-auto full-width q-gutter-x-sm q-mt-md"
+    >
+      <q-chip
+        v-for="serial in incoming.serials"
+        :key="serial"
+        color="theme-green"
+        class="text-white weight-bold"
+      >
+        {{  serial }}
+      </q-chip>
     </div>
 
     <div class="row items-center justify-between q-mt-xl q-mb-md">
@@ -62,7 +76,7 @@
           class="q-mb-md"
           style="z-index: 1000"
           :min="0"
-          :max="incoming.quantity"
+          :max="incoming.refQuantity"
           :step="1"
           :disable="position.locked"
           @change="adjust(position)"
@@ -104,48 +118,65 @@ const incoming = useIncomingStore();
 
 function confirm() {
   let movements = [];
+  let now = timestamp()
   const session_data = store.state.session;
-  for (const position of incoming.positions) {
-    movements.push({
-      position_from: 'Position/OUT',
-      position_to: `Position/${position._key}`,
-      product_key: incoming.product._key,
-      qt_planned: position.quantity,
-      qt_confirmed: position.quantity,
-      status: 'completed',
-      type: 'receipt',
-      user_key: session_data.user._key,
-      start: timestamp(),
-      end: timestamp(),
-    });
+  if (incoming.product.traceability_level) {
+    for (const serialCode of incoming.serials) {
+      movements.push({
+        position_from: `Position/${incoming.positions[0]._key}`,
+        serial_code: serialCode
+      })
+    }
+  }
+  else {
+    for (const position of incoming.positions) {
+      movements.push({
+        position_to: `Position/${position._key}`,
+        quantity: position.quantity,
+      });
+    }
   }
   for (const movement of movements) {
     sendEvent({
       event_type: 'ADD_MOVEMENT',
       event_data: {
-        movement: movement,
+        movement: {
+          ...movement,
+          product_key: incoming.product._key,
+          position_from: 'Position/OUT',
+          status: 'completed',
+          type: 'receipt',
+          user_key: session_data.user._key,
+          start: now,
+          end: now
+        }
       },
     })
-      .then(() => {
-        Notify.create({
-          message: 'Movimenti registrati',
-          position: 'top',
-          color: 'theme-green',
-          timeout: 1500,
-        });
-      })
-      .catch((err) => {
-        Notify.create({
-          message: err,
-          color: 'theme-orange',
-        });
+    .then(() => {
+      Notify.create({
+        message: 'Movimenti registrati',
+        position: 'top',
+        color: 'theme-green',
+        timeout: 1500,
       });
+    })
+    .catch((err) => {
+      Notify.create({
+        position: 'top',
+        timeout: 0,
+        message: err,
+        color: 'theme-orange',
+        actions: [
+          { label: 'Close', textColor: 'white', handler: () => undefined }
+        ]
+      });
+    });
   }
   incoming.$reset();
 }
 
 function adjust(position) {
-  let quantity_to_adjust = incoming.quantity;
+  let quantity_to_adjust = incoming.refQuantity;
   for (const pos of incoming.positions) {
     quantity_to_adjust -= pos.quantity;
   }

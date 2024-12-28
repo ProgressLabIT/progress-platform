@@ -14,7 +14,7 @@
         <div class="col-auto">
           <div class="text-h6 text-right q-mb-xs">{{ $t('quantity') }}</div>
           <div class="text-h3 text-right">
-            {{ incoming.quantity }}
+            {{ incoming.refQuantity }}
           </div>
         </div>
       </div>
@@ -39,7 +39,7 @@
           <q-chip
             clickable
             color="theme-blue"
-            class="text-body1"
+            class="text-body1 text-white weight-bold"
             @click="toggleSelection(selected)"
           >
             {{ selected.code }}
@@ -68,7 +68,7 @@
       <q-btn
         color="theme-blue"
         :label="$t('position_create')"
-        :disable="tempPositions.length >= incoming.quantity"
+        :disable="tempPositions.length >= incoming.refQuantity"
         class="col-12"
         @click="openCreateContainerForm"
       />
@@ -92,7 +92,7 @@
       v-model="showCreateContainerBottomSheet"
     >
       <CreateContainerForm
-        :max="incoming.quantity - tempPositions.length"
+        :max="incoming.refQuantity - tempPositions.length"
         @hide="showCreateContainerBottomSheet=false"
         @select="selectNewContainers"
       />
@@ -103,12 +103,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { api } from 'app/src/boot/axios';
-import { useIncomingStore } from 'app/src/stores/incoming';
+import { useI18n } from 'vue-i18n';
+import CreateContainerForm from '@/components/CreateContainerForm.vue';
 import SearchOrScan from '@/components/SearchOrScan.vue';
 import SlideUpCard from '@/components/SlideUpCard.vue';
-import CreateContainerForm from '@/components/CreateContainerForm.vue';
-import { useI18n } from 'vue-i18n';
+import { api } from 'app/src/boot/axios';
+import { useIncomingStore } from 'app/src/stores/incoming';
 
 const { t: $t } = useI18n();
 const incoming = useIncomingStore();
@@ -176,17 +176,19 @@ const availablePositions = computed(() => {
 });
 
 function openCreateContainerForm() {
-  console.log('openCreateContainerForm');
   showCreateContainerBottomSheet.value = true;
 }
 
 function toggleSelection(position) {
-  console.log(position, tempPositionsKeys.value);
   const index = tempPositionsKeys.value.findIndex((el) => el === position._key);
   if (index >= 0) {
     tempPositions.value.splice(index, 1);
   } else {
     tempPositions.value.push(position);
+    if (incoming.product.traceability_level) {
+      // For simplicity in defining the destination position for multiple setials use just one position
+      next()
+    }
   }
 }
 
@@ -194,7 +196,7 @@ function adjustQuantityPerPosition() {
   if (tempPositions.value.length <= 0) {
     return;
   }
-  let remainingQty = incoming.quantity;
+  let remainingQty = incoming.refQuantity;
   let remainingPos = tempPositions.value.length;
   for (let position of tempPositions.value) {
     let posQty = Math.floor(remainingQty / remainingPos);
@@ -216,7 +218,7 @@ function next() {
 }
 
 function back() {
-  incoming.stage = 'quantity';
+  incoming.stage = incoming.product.traceability_level ? 'serials' : 'quantity';
 }
 
 onMounted(() => {

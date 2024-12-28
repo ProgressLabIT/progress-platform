@@ -12,6 +12,7 @@ import ConfirmPositionsPage from '@/components/incoming/position/ConfirmPosition
 import PositionsPage from '@/components/incoming/position/PositionsPage.vue';
 import ProductsList from '@/components/incoming/products/ProductsList.vue';
 import QuantitySelectionPage from '@/components/incoming/quantity/QuantitySelectionPage.vue';
+import SerialSelectionPage from '@/components/incoming/quantity/SerialSelectionPage.vue';
 import { useIncomingStore } from '@/stores/incoming';
 import { onBeforeRouteLeave } from 'vue-router';
 
@@ -21,6 +22,7 @@ const incoming = useIncomingStore();
 const stageComponentMap = {
   product: ProductsList,
   quantity: QuantitySelectionPage,
+  serials: SerialSelectionPage,
   position: PositionsPage,
   confirm: ConfirmPositionsPage,
 };

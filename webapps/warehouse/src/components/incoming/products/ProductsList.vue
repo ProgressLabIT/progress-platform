@@ -9,7 +9,7 @@
 
     <!-- PRODUCT LIST -->
     <div class="col-auto q-mt-md q-mb-sm text-h6">
-      {{ list_label }} ({{ rows.length }})
+      {{ list_label }} ({{ rows?.length }})
     </div>
 
 
@@ -36,13 +36,15 @@
 
 <script setup>
 // IMPORTS
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { api } from 'app/src/boot/axios';
 import { useIncomingStore } from 'app/src/stores/incoming';
 import SearchOrScan from '../../SearchOrScan.vue';
-const incoming = useIncomingStore();
 const { t: $t } = useI18n();
+
+const incoming = useIncomingStore();
+incoming.$reset()
 
 // DATA
 const list_label = ref('Recenti')
@@ -65,7 +67,7 @@ function searchProducts() {
 }
 
 function loadLatestUsedProducts() {
-  if (incoming.recentProducts.length) {
+  if (incoming.recentProducts?.length) {
     rows.value = incoming.recentProducts;
   } else {
     loading.value = true;
@@ -76,6 +78,8 @@ function loadLatestUsedProducts() {
     });
   };
 }
+
+loadLatestUsedProducts();
 
 function loadProducts(filter) {
   loading.value = true;
@@ -100,14 +104,11 @@ function loadProducts(filter) {
 
 function selectProduct(product) {
   incoming.product = product;
-  incoming.stage = 'quantity';
+  incoming.stage = product.traceability_level ? 'serials' : 'quantity';
 }
 
 
 // LIFECYCLE
-onMounted(() => {
-  loadLatestUsedProducts();
-});
 
 </script>
 
