@@ -62,7 +62,7 @@ class EventModel(ArangoDocument):
   event_group: str | None = None #
   user_session_key: str | None = None #
   timestamp: datetime = Field(default_factory=timestamp) #
-  primary: bool = False
+  primary: bool = True
   description: str | None = None # optional descriptive field for auditing reasons
 
   # Production Fields
