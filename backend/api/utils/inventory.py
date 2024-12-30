@@ -263,7 +263,7 @@ class Queries:
       && (@includes_product_code ? @includes_product_code IN m.movements[* RETURN DOCUMENT(Product, CURRENT.product_key).code] : true)
       && (@due_by_min ? m.due_by >= @due_by_min : true)
       && (@due_by_max ? m.due_by <= @due_by_max : true)
-      && (@open_only ? m.status IN ['completed', 'started'] : true)
+      && (@open_only ? m.status IN ['planned', 'started'] : true)
       && (@status ? m.status IN @status : true)
       && (@type ? m.type IN @type : true)
     LIMIT @offset, @limit || null
