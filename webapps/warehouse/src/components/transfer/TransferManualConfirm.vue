@@ -143,6 +143,7 @@ function getProductKey(item) {
 
 function confirmProductMovements() {
   let movements = [];
+  const now = timestamp()
   const session_data = store.state.session;
 
   for (const item of transfer.contents) {
@@ -151,13 +152,12 @@ function confirmProductMovements() {
       position_to: `Position/${transfer.destinationPosition._key}`,
       product_key: getProductKey(item),
       serial_key: item.type === 'serial' ? item._key : null,
-      qt_planned: item.type === 'product' ? item.quantity : null,
-      qt_confirmed: item.type === 'product' ? item.quantity : null,
+      quantity: item.type === 'product' ? item.quantity : 1,
       status: 'completed',
       type: 'transfer',
       user_key: session_data.user._key,
-      start: timestamp(),
-      end: timestamp(),
+      start: now,
+      end: now,
     });
   }
 
