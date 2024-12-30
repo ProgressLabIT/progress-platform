@@ -11,7 +11,7 @@ from models.event import EventModel
 from models.inventory import *
 from models.product import ProductBaseData
 from utils.api import APIResponse
-from utils.inventory import Queries
+from utils.inventory import Queries, merge_references
 from utils.counter import _generate_counter
 from utils.db import db, model_to_db_dict
 from utils import auth
@@ -306,7 +306,7 @@ async def search_movement_lists(
   includes_product_code: str | None = None,
   due_by_min: date | None = None,
   due_by_max: date | None = None,
-  status: MovementStatus | None = None,
+  status: list[MovementStatus] | None = None,
   type: InventoryMovementType | None = None,
 ):
   """Retrieves movement lists"""
@@ -337,6 +337,15 @@ def create_movement_list(new_movement_list: MovementListNew):
   try:
     tx = db.begin_transaction(write=['MovementList', 'movement', 'Serial', 'Event'])
 
+    # Ensure no duplicate codes for lists of the same type
+    list_code_exists = tx.collection('MovementList').find(dict(code=new_movement_list.code, type=new_movement_list.type)).count()
+    if list_code_exists:
+      raise ValueError(f"List of type '{new_movement_list.type.value}' with code '{new_movement_list.code}' already exists.")
+
+    # MovementListNew model has the `movements` and `by_code` attributes set with export=False
+    # so they won't be included in the list DB record
+    new_list_key = tx.collection('MovementList').insert(new_movement_list)['_key']
+
     # Fetch product keys if by code
     if new_movement_list.by_code:
       product_codes = [m.product_code for m in new_movement_list.movements]
@@ -365,10 +374,10 @@ def create_movement_list(new_movement_list: MovementListNew):
         serial_code = m.serial_code,
         serial_key = m.serial_key,
         quantity = m.quantity,
+        movement_list_key = new_list_key,
         product_key = m.product_key,
         status = MovementStatus.PLANNED,
-        source = getattr(m, 'source', new_movement_list.source),
-        movement_list_key = new_movement_list,
+        references = merge_references(list_references=new_movement_list.references, movement_references=movement.references),
         extra = getattr(m, 'extra', new_movement_list.extra)
       )
       event = Event(EventModel(

@@ -1,3 +1,5 @@
+from models.inventory import InventoryMovementReferences
+
 class Queries:
 
   SEARCH_POSITIONS = """
@@ -261,7 +263,25 @@ class Queries:
       && (@includes_product_code ? @includes_product_code IN m.movements[* RETURN DOCUMENT(Product, CURRENT.product_key).code] : true)
       && (@due_by_min ? m.due_by >= @due_by_min : true)
       && (@due_by_max ? m.due_by <= @due_by_max : true)
-      && (@status ? m.status == @status : true)
+      && (@status ? m.status IN @status : true)
       && (@type ? m.type == @type : true)
     RETURN m
   """
+
+
+def merge_references(
+  list_references: InventoryMovementReferences,
+  movement_references: InventoryMovementReferences
+  ) -> InventoryMovementReferences:
+  """Add references from list if not present in the movement"""
+
+  merged = dict()
+  for attr in InventoryMovementReferences.__fields__.keys():
+    list_attr = getattr(list_references, attr)
+    movement_attr = getattr(movement_references, attr)
+    merged[attr] = movement_attr if movement_attr is not None else list_attr
+
+  return InventoryMovementReferences(**merged)
+
+
+

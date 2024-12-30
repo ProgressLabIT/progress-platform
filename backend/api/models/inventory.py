@@ -164,7 +164,7 @@ class InventoryMovementNew(FlexModel):
   quantity: float | None = 1
   start: datetime | None = None
   end: datetime | None = None
-  source: InventoryMovementReferences | None = None
+  references: InventoryMovementReferences | None = None
   reason: str | None = None
   user_key: str | None = None
   extra: Any = None
@@ -214,7 +214,7 @@ class InventoryMovement(ArangoEdge): # edge collection movement
 
   movement_list_key: str | None = None # link to MovementList document, if present
 
-  source: InventoryMovementReferences | None = None # RECEIPTS: purchase doc, SHIPMENTS: sales doc, TRANSFERS/PROD/CONS: work order/job
+  references: InventoryMovementReferences | None = None # RECEIPTS: purchase doc, SHIPMENTS: sales doc, TRANSFERS/PROD/CONS: work order/job
   reason: str | None = None
 
   user_key: str | None = None
@@ -291,7 +291,7 @@ class InventoryMovementSearchResults(InventoryMovement):
   serial_code: str | None = None
   qt_planned: float | None = None
   qt_completed: float | None = None
-  source: InventoryMovementReferences | None = None
+  references: InventoryMovementReferences | None = None
 
 
 
@@ -306,7 +306,7 @@ class MovementList(ArangoDocument):
   end: datetime | None = None
   status: MovementStatus | None = MovementStatus.PLANNED
   extra: Any = None
-  source: InventoryMovementReferences | None = None
+  references: InventoryMovementReferences | None = None
   type: InventoryMovementType | None = None
 
 
