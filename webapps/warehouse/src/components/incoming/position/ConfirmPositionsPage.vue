@@ -123,7 +123,7 @@ function confirm() {
   if (incoming.product.traceability_level) {
     for (const serialCode of incoming.serials) {
       movements.push({
-        position_from: `Position/${incoming.positions[0]._key}`,
+        position_to: `Position/${incoming.positions[0]._key}`,
         serial_code: serialCode
       })
     }
