@@ -12,8 +12,16 @@
     </div>
 
 
-    <div class="col-auto q-mt-lg text-h3 item-center">
-      Inserisci seriali
+    <div class="row items-center q-mt-lg">
+
+      <div class="col-auto text-h3 q-mr-sm">
+        Inserisci seriali
+      </div>
+
+      <q-chip v-if="incoming.serials.length" size="xs" color="theme-grey">
+        <div class="smaller highlight">{{ incoming.serials.length }}</div>
+      </q-chip>
+
     </div>
 
     <div class="col-auto row">
@@ -43,16 +51,7 @@
 
     <q-scroll-area class="col">
 
-      <div
-        v-if="incoming.serials.length"
-        class="col-auto row items-center q-gutter-x-sm q-mb-sm text-h6">
-        <div>{{ $t('selected') }}</div>
-        <q-chip size="xs" color="theme-grey">
-          <div class="smaller highlight">{{ incoming.serials.length }}</div>
-        </q-chip>
-      </div>
-
-      <div class="col-auto scroll q-my-md column">
+      <div class="col-auto q-my-md column">
         <q-card
           v-for="serialCode in incoming.serials"
           :key="serialCode"

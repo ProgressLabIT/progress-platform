@@ -1,14 +1,10 @@
 <template>
-  <q-page class="q-px-md q-py-lg column fit">
-    <div class="text-h1 q-mb-lg">
+  <q-page class="q-px-md q-py-md column fit">
+    <div class="text-h1 q-mb-md">
       Liste di carico
     </div>
 
-    <template v-if="loading">
-      LOADING
-    </template>
-
-    <template v-else-if="lists.headers.length">
+    <template v-if="lists.headers.length">
       <template v-for="([supplier, supplierLists]) in lists.byPartner" :key="supplier">
         <!-- Supplier Header -->
         <div class="text-h3 full-width row justify-between items-baseline q-mt-lg q-mb-sm">
@@ -26,7 +22,7 @@
             :key="list._key"
             v-ripple
             class="row text-body1 surface1 justify-between q-pa-md"
-            @click="null">
+            @click="$router.push({ name: 'IncomingList', params: { listKey: list._key }})">
             <div>
               {{ list.code  }}
             </div>
@@ -51,14 +47,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import { useListsStore } from 'stores/lists'
-
 const lists = useListsStore();
-
-const loading = ref(true);
-
-lists.loadData().then(() => setTimeout(() => loading.value = false, 500));
 
 function getListCounts(listKey) {
   return {

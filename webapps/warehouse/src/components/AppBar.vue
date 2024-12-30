@@ -1,6 +1,6 @@
 <template>
   <q-header class="header">
-    <q-toolbar>
+    <q-toolbar class="q-px-md">
       <!--<q-btn flat icon="mdi-menu" padding="none" @click="drawerModel = true" />-->
 
       <q-breadcrumbs
@@ -17,6 +17,12 @@
           :key="route.name"
           :label="$t(route.meta.title)"
           :to="{ name: route.name }"
+        />
+
+        <q-breadcrumbs-el
+          v-for="label in nav.dynamicBreadcrumb"
+          :key="label"
+          :label="label"
         />
       </q-breadcrumbs>
 
@@ -178,12 +184,14 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { useConfigStore } from '@/stores/config';
+import { useNavStore } from '@/stores/navigation';
 import { capitalize, capitalizeAll } from 'src/boot/filters.js';
 import { useTheme } from 'src/composables/theme';
 import BaseUserAvatar from './BaseUserAvatar.vue';
 
 const store = useStore();
 const $q = useQuasar();
+const nav = useNavStore();
 
 const user = computed(() => store.state.session.user);
 

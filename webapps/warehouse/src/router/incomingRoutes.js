@@ -13,8 +13,10 @@ const incomingRoutes = [
       },
       {
         path: 'list/:listKey',
+        props: true,
         name: 'IncomingList',
-        component: () => import ('@/components/incoming/suppliers/SuppliersPage.vue'),
+        meta: { dynamicBreadcrumb: true },
+        component: () => import ('@/views/incoming/IncomingList.vue'),
       },
       {
         path: 'manual',

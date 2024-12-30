@@ -1,7 +1,7 @@
 <template>
   <q-page
     id="incoming-root"
-    class="column fit q-px-md q-py-lg q-col-gutter-y-lg"
+    class="column fit q-px-md q-py-sm"
   >
     <component :is="stageComponentMap[incoming.stage]" />
   </q-page>
