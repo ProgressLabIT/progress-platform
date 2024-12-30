@@ -301,24 +301,32 @@ def get_recent_movement_products(
 @router.get('/movement-list',
     dependencies=[Depends(auth.verify_token)])
 async def search_movement_lists(
-  search: str | None = None, # searches the mission code and references
+  search: str | None = None, # searches the mission code
+  list_key: list[str] | None = None,
   includes_product_key: str | None = None,
   includes_product_code: str | None = None,
   due_by_min: date | None = None,
   due_by_max: date | None = None,
   status: list[MovementStatus] | None = None,
-  type: InventoryMovementType | None = None,
+  type: list[InventoryMovementType] | None = None,
+  open_only: bool = False,
+  limit: int = 100,
+  offset: int = 0
 ):
   """Retrieves movement lists"""
   try:
     bind_vars = dict(
       search=search,
+      list_key=list_key,
       includes_product_key=includes_product_key,
       includes_product_code=includes_product_code,
       due_by_min=due_by_min,
       due_by_max=due_by_max,
-      status=status.value if status else None,
-      type=type.value if type else None
+      status=status,
+      type=type,
+      open_only=open_only,
+      limit=limit,
+      offset=offset
     )
     results = db.aql.execute(Queries.SEARCH_MOVEMENT_LISTS, bind_vars=bind_vars)
     return [MovementList(**m) for m in results]
@@ -344,7 +352,7 @@ def create_movement_list(new_movement_list: MovementListNew):
 
     # MovementListNew model has the `movements` and `by_code` attributes set with export=False
     # so they won't be included in the list DB record
-    new_list_key = tx.collection('MovementList').insert(new_movement_list)['_key']
+    new_list_key = tx.collection('MovementList').insert(new_movement_list.model_dump())['_key']
 
     # Fetch product keys if by code
     if new_movement_list.by_code:

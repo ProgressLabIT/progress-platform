@@ -164,6 +164,7 @@ class InventoryMovementNew(FlexModel):
   quantity: float | None = 1
   start: datetime | None = None
   end: datetime | None = None
+  movement_list_key: str | None = None # link to MovementList document, if present
   references: InventoryMovementReferences | None = None
   reason: str | None = None
   user_key: str | None = None
@@ -271,8 +272,7 @@ class InventoryMovementSearchParameters(BaseModel):
   product_key: str | None = None
   product_code: str | None = None
   serial_keys: list[str] | None = None
-  list_key: str | None = None
-  list_code: str | None = None
+  list_key: list[str] | None = None
   # source: InventoryMovementSource | None = None
   position_from: str | None = None
   position_to: str | None = None
@@ -296,6 +296,10 @@ class InventoryMovementSearchResults(InventoryMovement):
 
 
 class MovementList(ArangoDocument):
+  """
+  The model implies movement references do NOT conflict with the list references.
+  TODO: enforce consistency at the model level or in the `merge_references` function
+  """
   #code: str | None = Field(default_factory=_generate_counter('default'))
   # keep code mandatory until completion of list counter setup
   code: Annotated[str, StringConstraints(to_upper=True)]

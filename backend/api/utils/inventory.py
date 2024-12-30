@@ -214,8 +214,7 @@ class Queries:
       && (@product_key ? m.product_key == @product_key : true)
       && (@product_code ? LENGTH(FOR p IN Product FILTER m.product_key == p._key && CONTAINS(p.code, @product_code) RETURN 1) : true)
       && (@serial_keys ? m.serial_key IN @serial_keys : true)
-      && (@list_key ? m.list_key == @list_key : true)
-      && (@list_code ? m.list_code == @list_code : true)
+      && (@list_key ? m.movement_list_key IN @list_key : true)
       && (@position_filter_operator == 'AND' ?
               (@position_from ? position_from._key == @position_from : true) && (@position_to ? position_to._key == @position_to : true) :
               (@position_from ? position_from._key == @position_from : true) || (@position_to ? position_to._key == @position_to : true)
@@ -259,12 +258,15 @@ class Queries:
     FOR m IN MovementList
     FILTER
       (@search ? CONTAINS(LOWER(m.code), LOWER(@search)) : true)
+      && (@list_key ? m.movement_list_key IN @list_key : true)
       && (@includes_product_key ? @includes_product_key IN m.movements[*].product_key : true)
       && (@includes_product_code ? @includes_product_code IN m.movements[* RETURN DOCUMENT(Product, CURRENT.product_key).code] : true)
       && (@due_by_min ? m.due_by >= @due_by_min : true)
       && (@due_by_max ? m.due_by <= @due_by_max : true)
+      && (@open_only ? m.status IN ['completed', 'started'] : true)
       && (@status ? m.status IN @status : true)
-      && (@type ? m.type == @type : true)
+      && (@type ? m.type IN @type : true)
+    LIMIT @offset, @limit || null
     RETURN m
   """
 
@@ -273,7 +275,11 @@ def merge_references(
   list_references: InventoryMovementReferences,
   movement_references: InventoryMovementReferences
   ) -> InventoryMovementReferences:
-  """Add references from list if not present in the movement"""
+  """
+  Add references from list if not present in the movement.
+  This implies an important assumption: movement references do NOT conflict with the list references.
+  TODO: enforce consistency either at the model level or in this function.
+  """
 
   merged = dict()
   for attr in InventoryMovementReferences.__fields__.keys():

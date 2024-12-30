@@ -9,10 +9,10 @@ const transferRoutes = [
         component: () => import('app/src/views/transfering/TransferRoot.vue'),
       },
       {
-        path: 'mission/:key',
-        name: 'TransferMission',
+        path: 'list/:key',
+        name: 'TransferList',
         // component: () => import('app/src/views/transfering/WarehouseMissions.vue'),
-        meta: { title: 'breadcrumb.transfer_missions' }
+        meta: { title: 'breadcrumb.transfer_lists' }
       },
       {
         path: 'manual',
