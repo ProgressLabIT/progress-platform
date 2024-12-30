@@ -186,6 +186,7 @@ export default {
   first_x_shown: 'First {x} records shown',
   form_title: 'form fields',
   form_missing_fields_alert: 'please fill in all fields',
+  from: 'from',
   general: 'General',
   greeting: {
     afternoon: 'good afternoon',
@@ -757,6 +758,7 @@ export default {
     second: 'Second',
   },
   title: 'title',
+  to: 'to',
   total_cost: 'total cost',
   type: 'Type',
   counter: 'Counter',

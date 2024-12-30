@@ -42,6 +42,18 @@
                 }}
               </template>
 
+              <template v-else-if="column.name === 'type'">
+                <q-icon :name="typeIconMap[props.row.type]" size="xs"/>
+              </template>
+
+              <template v-else-if="column.name === 'status'">
+                <q-icon :name="statusIconMap[props.row.status]" size="15px"/>
+              </template>
+
+              <template v-else-if="column.name === 'quantity'">
+                {{ props.row.qt_confirmed }} / {{ props.row.qt_planned }}
+              </template>
+
               <template v-else>
                 {{ $capitalizeAll(props.row[column.field] || '-') }}
               </template>
@@ -73,11 +85,25 @@ export default {
       rowsNumber: 1000,
     });
 
+    const typeIconMap = {
+      'receipt': 'mdi-import',
+      'transfer': 'mdi-swap-horizontal',
+      'shipment': 'mdi-export',
+      'adjustment': 'mdi-plus-minus-variant'
+    }
+
+    const statusIconMap = {
+      'completed': 'mdi-check-circle-outline',
+      'planned': 'mdi-calendar-clock-outline'
+    }
+
     const movementColumns = useMovementColumns();
 
     return {
       pagination,
       movementColumns,
+      typeIconMap,
+      statusIconMap
     };
   },
 
