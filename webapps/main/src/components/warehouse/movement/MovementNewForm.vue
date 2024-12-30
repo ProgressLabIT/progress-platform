@@ -408,19 +408,20 @@ function createMovement() {
       return 'Invalid movement type';
   }
 
+  const now = timestamp()
+
   let movement = {
     position_from: position_from_id,
     position_to: position_to_id,
     product_key: product?.value?._key,
     serial_key: serial?.value?._key,
     serial_code: newSerialCode.value,
-    qt_planned: quantity.value,
-    qt_confirmed: quantity.value,
+    quantity: quantity.value, // 1 by default if not set otherwise
     status: 'completed',
     type: movement_type.value,
     user_key: session_data.user._key,
-    start: timestamp(),
-    end: timestamp(),
+    start: now,
+    end: now,
   };
 
   sendEvent({
