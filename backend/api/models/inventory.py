@@ -325,4 +325,6 @@ class MovementListNew(MovementList):
     for movement in self.movements:
       if movement.type != self.type:
         raise ValueError("All movements in a movement list must be of the same type")
+
+    # TODO: Ensure there is only one movement per product without serial with the same references
     return self

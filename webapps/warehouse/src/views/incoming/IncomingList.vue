@@ -11,10 +11,10 @@
       </div>
       <div class="col-auto">
         <div class="text-h5 text-low">
-          Movimenti completati
+          Righe completate
         </div>
         <div class="text-right text-body1">
-          {{ movements.filter(m => m.status === 'completed').length }} / {{  movements.length }}
+          {{ listItems.filter(i => i.qt_planned === i.qt_confirmed).length }} / {{  listItems.length }}
         </div>
       </div>
     </div>
@@ -22,22 +22,19 @@
     <q-scroll-area class="col q-my-md">
 
     <q-card
-      v-for="m in movements"
-      :key="m._key"
-      class="surface1 q-pa-md q-mb-xs row justify-between items-baseline text-body1"
-      :class="m.status === 'completed' ? 'theme-green' : 'surface1'"
+      v-for="i in listItems"
+      :key="i.product_code"
+      class="surface1 q-pa-md q-mb-xs row items-baseline text-body1"
+      :class="i.qt_planned === i.qt_completed ? 'theme-green' : 'surface1'"
     >
-
+      <q-icon v-if="i.type === 'serial'" name="mdi-cube-scan" />
+      <q-icon v-else name="mdi-apps" />
+      <div class="q-ml-md">
+        {{ i.product_code }}
+      </div>
+      <q-space></q-space>
       <div>
-        {{ m.product_code }}
-      </div>
-      <div v-if="m.serial_code">
-        <span>
-          # {{ m.serial_code }}
-        </span>
-      </div>
-      <div v-else>
-        {{ m.qt_planned - m.qt_completed }} / {{ m.qt_planned }}
+        {{ i.qt_confirmed }} / {{ i.qt_planned }}
       </div>
     </q-card>
     </q-scroll-area>
@@ -66,22 +63,29 @@
       class="full-width q-mt-sm"
       @click="null"
     />
+
+    <SlideUpCard :show="show">
+      TEST
+    </SlideUpCard>
   </q-page>
 </template>
 
 <script setup>
-// import { ref } from 'vue';
+import { ref } from 'vue';
 import { useListsStore } from 'stores/lists';
 import { useI18n } from 'vue-i18n';
+import SlideUpCard from 'app/src/components/SlideUpCard.vue';
+// import { QuantitySelector } from 'components/QuantitySelector.vue'
 
 const lists = useListsStore();
 const { t: $t } = useI18n();
 
+const show = ref(false)
 const props = defineProps({
   listKey: String
 });
 
 const list = lists.headers.find(l => l._key == props.listKey);
-const movements = lists.movements[props.listKey];
+const listItems = lists.movementsByListAndProduct[props.listKey];
 
 </script>

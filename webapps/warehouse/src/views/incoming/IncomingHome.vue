@@ -51,9 +51,10 @@ import { useListsStore } from 'stores/lists'
 const lists = useListsStore();
 
 function getListCounts(listKey) {
+  const listItems = lists.movementsByListAndProduct[listKey]
   return {
-    completed: lists.movements[listKey].filter(m => m.status == 'completed').length,
-    total: lists.movements[listKey].length
+    completed: listItems.filter(i => i.qt_completed === i.qt_planned).length,
+    total: listItems.length
   }
 }
 </script>

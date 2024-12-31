@@ -5,7 +5,8 @@ import { api } from "@/boot/axios"
 export const useListsStore = defineStore('lists', {
   state: () => ({
     headers: [],
-    movements: {} // by list key
+    movements: [],
+    movementsByListAndProduct: {} // by list key & product
   }),
   getters: {
     byPartner: (state) => {
@@ -23,15 +24,23 @@ export const useListsStore = defineStore('lists', {
         this.headers = (await api.get('/movement-list', { params: { type: 'receipt', open_only: true }})).data
 
         if (this.headers.length) {
-          // fetch movements and group them by list key
+          // fetch movements and group them by list and product
           const listKeys = new URLSearchParams()
           this.headers.forEach(l => listKeys.append('list_key', l._key))
-
-          const movementData = (await api.get('/movement', { params: listKeys })).data
-          this.movements = movementData.reduce((result, movement) => {
-            (result[movement.movement_list_key] = result[movement.movement_list_key] || []).push(movement)
-            return result
-          }, {})
+          this.movements = (await api.get('/movement', { params: listKeys })).data
+          this.headers.forEach(list => {
+            const listMovements = this.movements.filter(m => m.movement_list_key === list._key)
+            const product_codes = new Set(listMovements.map(m => m.product_code))
+            const listItems = []
+            product_codes.forEach(p => {
+              const productMovements = listMovements.filter(m => m.product_code === p)
+              const qt_planned = productMovements.reduce((sum, mov) => sum += mov.qt_planned, 0)
+              const qt_confirmed = productMovements.reduce((sum, mov) => sum += mov.qt_confirmed, 0)
+              const type = productMovements[0].serial_code ? 'serial' : 'quantity'
+              listItems.push({ product_code: p, type, qt_planned, qt_confirmed, movements: productMovements });
+            })
+            this.movementsByListAndProduct[list._key] = listItems
+          })
         }
       }
       catch (err) {
