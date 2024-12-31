@@ -90,8 +90,38 @@
       </div>
     </SlideUpCard>
 
-    <SlideUpCard :model-value="selectedItem !== undefined" @hide="() => selectedItem = undefined">
-      TEST
+    <SlideUpCard
+      :model-value="selectedItem !== undefined"
+      @hide="() => selectedItem = undefined"
+      height="90vh">
+      <ItemSerialsSelection v-if="selectedItem.type === 'serial'" :item="selectedItem" />
+      <ItemQuantitySelection v-else :item="selectedItem" />
+      <div class="col-auto q-mb-md">
+        <q-btn
+          color="theme-blue"
+          :label="$t('print_label')"
+          unelevated
+          class="full-width"
+          @click="printProductLabel(selectedItem.product_code, selectedItem.product_description)"
+        />
+      </div>
+      <div class="col-auto row q-col-gutter-x-md">
+        <div class="col-6">
+          <q-btn
+            class="full-width"
+            color="theme-grey"
+            :label="$t('cancel')"
+            @click="() => selectedItem = undefined"
+          />
+        </div>
+        <div class="col-6">
+          <q-btn
+            class="full-width"
+            color="theme-blue"
+            :label="$t('confirm')"
+          />
+        </div>
+      </div>
     </SlideUpCard>
   </q-page>
 </template>
@@ -101,7 +131,10 @@ import { ref } from 'vue';
 import { useListsStore } from 'stores/lists';
 import { useI18n } from 'vue-i18n';
 import SlideUpCard from 'app/src/components/SlideUpCard.vue';
+import ItemSerialsSelection from 'app/src/components/lists/ItemSerialsSelection.vue';
+import ItemQuantitySelection from 'app/src/components/lists/ItemQuantitySelection.vue';
 // import { QuantitySelector } from 'components/QuantitySelector.vue'
+import { printProductLabel } from 'app/src/lib/print';
 
 
 const lists = useListsStore();
