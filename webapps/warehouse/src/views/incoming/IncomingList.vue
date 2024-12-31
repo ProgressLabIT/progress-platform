@@ -24,13 +24,24 @@
     <q-card
       v-for="i in listItems"
       :key="i.product_code"
-      class="surface1 q-pa-md q-mb-xs row items-baseline text-body1"
+      class="surface1 q-pa-md q-mb-xs row items-center text-body1"
       :class="i.qt_planned === i.qt_completed ? 'theme-green' : 'surface1'"
+      v-touch-hold.mouse="() => showItemReferences = i"
+      @click.stop="() => selectedItem = i"
     >
-      <q-icon v-if="i.type === 'serial'" name="mdi-cube-scan" />
-      <q-icon v-else name="mdi-apps" />
-      <div class="q-ml-md">
-        {{ i.product_code }}
+
+      <div class="col-auto">
+        <q-icon v-if="i.type === 'serial'" name="mdi-cube-scan" size="sm"/>
+        <q-icon v-else name="mdi-apps" />
+      </div>
+      <div class="q-mx-md col-auto">
+        <div class="text-h4 highlight">{{ i.product_code }}</div>
+        <div class="smaller" style="line-height: 1rem;">{{ i.product_description }}</div>
+        <div
+          v-if="i.references.purchase_doc"
+          class="text-h6 weight-bold uppercase q-mt-xs">
+          {{ i.references.purchase_doc }}
+        </div>
       </div>
       <q-space></q-space>
       <div>
@@ -64,7 +75,22 @@
       @click="null"
     />
 
-    <SlideUpCard :show="show">
+    <SlideUpCard
+      :model-value="showItemReferences !== false"
+      @hide="() => showItemReferences=false"
+    >
+      <div class="text-h4 highlight q-mb-md">
+        {{ showItemReferences.product_code }}
+      </div>
+      <div
+        v-for="([ref, value]) in Object.entries(showItemReferences.references)"
+        :key="ref"
+      >
+        {{ ref }}: <span class="highlight">{{ value }}</span>
+      </div>
+    </SlideUpCard>
+
+    <SlideUpCard :model-value="selectedItem !== undefined" @hide="() => selectedItem = undefined">
       TEST
     </SlideUpCard>
   </q-page>
@@ -77,15 +103,16 @@ import { useI18n } from 'vue-i18n';
 import SlideUpCard from 'app/src/components/SlideUpCard.vue';
 // import { QuantitySelector } from 'components/QuantitySelector.vue'
 
+
 const lists = useListsStore();
 const { t: $t } = useI18n();
 
-const show = ref(false)
+const selectedItem = ref(undefined)
+const showItemReferences = ref(false)
 const props = defineProps({
   listKey: String
 });
 
 const list = lists.headers.find(l => l._key == props.listKey);
 const listItems = lists.movementsByListAndProduct[props.listKey];
-
 </script>
