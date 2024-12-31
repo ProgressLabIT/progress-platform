@@ -287,10 +287,11 @@ class InventoryMovementSearchResults(InventoryMovement):
   position_to_code: str | None = None
   product_key: str | None = None
   product_code: str | None = None
+  product_description: str | None = None
   serial_key: str | None = None
   serial_code: str | None = None
   qt_planned: float | None = None
-  qt_completed: float | None = None
+  qt_confirmed: float | None = None
   references: InventoryMovementReferences | None = None
 
 

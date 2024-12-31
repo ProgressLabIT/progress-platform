@@ -231,6 +231,7 @@ class Queries:
       position_to_code: position_to.code,
       serial_code: m.serial_key ? FIRST(FOR s IN Serial FILTER s._key == m.serial_key RETURN s.code) : null,
       product_code: product.code,
+      product_description: product.description
     })
   """
 
