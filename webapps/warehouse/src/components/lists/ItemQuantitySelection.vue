@@ -4,10 +4,10 @@
     <div class="col-auto">
       <div class="text-h6 q-mb-sm">{{ $t('product') }}</div>
       <div class="text-h3 q-pr-sm" style="word-wrap: break-word">
-        {{ props.item.product_code }}
+        {{ movement.product_code }}
       </div>
       <div class="text-body2 smaller q-mt-xs">
-        {{ props.item.product_description }}
+        {{ movement.product_description }}
       </div>
     </div>
 
@@ -15,25 +15,22 @@
     <div class="col column q-my-lg">
       <div class="text-h3 col-auto">{{ $t('quantity') }}</div>
 
-      <QuantitySelector v-model="tempQuantity" show-buttons class="col"/>
+      <QuantitySelector
+        v-model="movement.qt_confirmed"
+        show-buttons
+        class="col"
+        :max="movement.qt_planned"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed } from 'vue';
 import QuantitySelector from '@/components/QuantitySelector.vue';
+import { useListsStore } from 'app/src/stores/lists';
 
-const tempQuantity = ref(0);
+const lists = useListsStore()
 
-const props = defineProps({
-  item: {
-    type: Object,
-    required: true
-  }
-});
-
-// onMounted(() => {
-//   loadPrintTemplates();
-// });
+const movement = computed(() => lists.getMovementByKey(lists.selectedItem.movements[0]._key))
 </script>

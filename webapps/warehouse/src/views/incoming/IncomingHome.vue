@@ -1,13 +1,13 @@
 <template>
-  <q-page class="q-px-md q-py-md column fit">
-    <div class="text-h1 q-mb-md">
+  <q-page class="q-px-md q-py-md column fit q-gutter-y-sm">
+    <div class="text-h1 q-mb-sm">
       Liste di carico
     </div>
 
     <template v-if="lists.headers.length">
       <template v-for="([supplier, supplierLists]) in lists.byPartner" :key="supplier">
         <!-- Supplier Header -->
-        <div class="text-h3 full-width row justify-between items-baseline q-mt-lg q-mb-sm">
+        <div class="text-h3 full-width row justify-between items-baseline q-mt-lg">
           <div class="col highlight">
             {{  supplierLists[0].references.partner_name }}
           </div>
@@ -26,7 +26,7 @@
             <div>
               {{ list.code  }}
             </div>
-            <div side>
+            <div>
               {{ getListCounts(list._key).completed }} / {{ getListCounts(list._key).total }}
             </div>
           </q-card>

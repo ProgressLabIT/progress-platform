@@ -3,15 +3,15 @@
   <div class="col-auto">
     <div class="text-h6 q-mb-sm">{{ $t('product') }}</div>
     <div class="text-h3 q-pr-sm" style="word-wrap: break-word">
-      {{ item.product_code }}
+      {{ selectedItem.product_code }}
     </div>
     <div class="text-body2 smaller q-mt-xs">
-      {{ item.product_description }}
+      {{ selectedItem.product_description }}
     </div>
     <div
-      v-if="item.references.purchase_doc"
+      v-if="selectedItem.references.purchase_doc"
       class="text-h6 weight-bold uppercase q-mt-xs text-low">
-      {{ item.references.purchase_doc }}
+      {{ selectedItem.references.purchase_doc }}
     </div>
   </div>
 
@@ -21,8 +21,8 @@
       Inserisci seriali
     </div>
 
-    <q-chip v-if="selectedSerials.size" size="xs" color="theme-grey">
-      <div class="smaller highlight">{{ selectedSerials.size }}</div>
+    <q-chip v-if="selectedSerials.length" size="xs" color="theme-grey">
+      <div class="smaller highlight">{{ selectedSerials.length }}</div>
     </q-chip>
 
   </div>
@@ -55,37 +55,34 @@
   <q-scroll-area class="col q-mt-lg">
     <div class="col-auto row q-gutter-md">
       <q-card
-        v-for="serialCode in selectedSerials"
-        :key="serialCode"
+        v-for="serial in selectedSerials"
+        :key="serial._key"
         flat
         class="bg-theme-blue q-pa-sm highlight"
-        @click="toggleItem(serialCode)"
+        @click="toggleItem(serial.serial_code)"
       >
-        {{ serialCode }}
+        {{ serial.serial_code }}
       </q-card>
     </div>
   </q-scroll-area>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-// import { useListsStore } from 'app/src/stores/lists';
+import { ref, computed } from 'vue';
+import { useListsStore } from 'app/src/stores/lists';
 import { Notify } from 'quasar';
 import { useI18n } from 'vue-i18n';
+import { storeToRefs } from 'pinia';
 
 const { t: $t } = useI18n()
+const lists = useListsStore()
+const { selectedItem } = storeToRefs(lists)
 
-const props = defineProps({
-  item: {
-    type: Object,
-    required: true
-  }
-});
 
-// const lists = useListsStore();
 const newSerialCode = ref('');
-const selectedSerials = ref(new Set);
-// const movementList = lists.movements
+const selectedSerials = computed(() => {
+  return lists.selectedItemSerials
+})
 
 function resetInput() {
   newSerialCode.value = ''
@@ -93,14 +90,14 @@ function resetInput() {
 }
 
 function toggleItem(serialCode) {
-  const match = props.item.movements.find(m => m.serial_code == serialCode)
+  const match = selectedItem.value.movements.find(m => m.serial_code == serialCode)
   if (match) {
-    if (selectedSerials.value.has(serialCode)) {
-      selectedSerials.value.delete(serialCode)
+    if (match.qt_confirmed === 1) {
+      lists.update({...match, qt_confirmed: 0})
       resetInput()
     }
     else {
-      selectedSerials.value.add(serialCode)
+      lists.update({...match, qt_confirmed: 1})
       resetInput()
     }
   }

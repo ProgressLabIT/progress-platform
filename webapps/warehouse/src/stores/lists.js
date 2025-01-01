@@ -6,6 +6,7 @@ export const useListsStore = defineStore('lists', {
   state: () => ({
     headers: [],
     movements: [],
+    selectedItem: undefined
   }),
   getters: {
     byPartner: (state) => {
@@ -29,12 +30,13 @@ export const useListsStore = defineStore('lists', {
           const itemMovements = listMovements.filter(m => m.itemKey === ik)
           const qt_planned = itemMovements.reduce((sum, mov) => sum += mov.qt_planned, 0)
           const qt_confirmed = itemMovements.reduce((sum, mov) => sum += mov.qt_confirmed, 0)
-          const type = 'quantity' //itemMovements[0].serial_code ? 'serial' : 'quantity'
+          const type = itemMovements[0].serial_code ? 'serial' : 'quantity'
           listItems.push({
             itemKey: ik,
             product_code: itemMovements[0].product_code,
             product_description: itemMovements[0].product_description,
             references: itemMovements[0].references,
+            listKey: list._key,
             type,
             qt_planned,
             qt_confirmed,
@@ -44,13 +46,27 @@ export const useListsStore = defineStore('lists', {
         result[list._key] = listItems
       })
       return result
+    },
+    getMovementByKey: (state) => {
+      return (movementKey) => {
+        return state.movements.find(m => m._key == movementKey)
+      }
+    },
+    getMovementBySerial: (state) => {
+      return ({ serialCode, productCode }) => {
+        return state.movements.find(m => m.serial_code === serialCode && m.product_code === productCode)
+      }
+    },
+    selectedItemSerials: (state) => {
+      const selectedItemMovementKeys = state.selectedItem.movements.map(m => m._key)
+      return state.movements.filter(mov => selectedItemMovementKeys.includes(mov._key) && mov.qt_confirmed == 1)
     }
   },
   actions: {
-    async loadData() {
+    async loadLists(type) {
       try {
         // fetch lists
-        this.headers = (await api.get('/movement-list', { params: { type: 'receipt', open_only: true }})).data
+        this.headers = (await api.get('/movement-list', { params: { type, open_only: true }})).data
 
         if (this.headers.length) {
           // fetch movements and group them by list and product
@@ -71,6 +87,10 @@ export const useListsStore = defineStore('lists', {
           ]
         })
       }
+    },
+    update(movementUpdate) {
+      const movement = this.movements.find(m => m._key == movementUpdate._key)
+      movement.qt_confirmed = movementUpdate.qt_confirmed
     }
   }
 })

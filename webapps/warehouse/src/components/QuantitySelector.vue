@@ -120,7 +120,6 @@ function isTouchUpRight(touchPosition) {
 
   // Calculate slope of diagonal line from top-left to bottom-right
   const slope = rect.height / rect.width;
-  console.log(slope);
 
   // Point is above diagonal if relative y position is less than
   // what y would be at that x position on the diagonal line

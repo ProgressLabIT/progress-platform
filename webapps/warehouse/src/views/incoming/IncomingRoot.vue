@@ -14,7 +14,7 @@ const $q = useQuasar()
 
 nav.loading = true
 $q.loading.show()
-lists.loadData().then(() => setTimeout(() => {
+lists.loadLists().then(() => setTimeout(() => {
   nav.loading = false;
   $q.loading.hide();
 }, 300));

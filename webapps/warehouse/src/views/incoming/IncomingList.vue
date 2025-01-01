@@ -27,24 +27,32 @@
       class="surface1 q-pa-md q-mb-xs row items-center text-body1"
       :class="i.qt_planned === i.qt_completed ? 'theme-green' : 'surface1'"
       v-touch-hold.mouse="() => showItemReferences = i"
-      @click.stop="() => selectedItem = i"
+      @click.stop="selectItem(i)"
     >
 
       <div class="col-auto">
         <q-icon v-if="i.type === 'serial'" name="mdi-cube-scan" size="sm"/>
-        <q-icon v-else name="mdi-apps" />
+        <q-icon v-else name="mdi-apps" size="sm"/>
       </div>
-      <div class="q-mx-md col-auto">
+      <div class="q-mx-md col">
         <div class="text-h4 highlight">{{ i.product_code }}</div>
-        <div class="smaller" style="line-height: 1rem;">{{ i.product_description }}</div>
+        <div class="smaller ellipsis" style="line-height: 1rem;">{{ i.product_description }}</div>
         <div
           v-if="i.references.purchase_doc"
           class="text-h6 weight-bold uppercase q-mt-xs">
           {{ i.references.purchase_doc }}
         </div>
       </div>
+      <q-circular-progress
+        class="col-auto q-mr-md"
+        :value="100 * i.qt_confirmed / i.qt_planned"
+        color="white"
+        track-color="theme-grey"
+        :thickness=".2"
+        size="sm"
+      />
       <q-space></q-space>
-      <div>
+      <div class="col-2 text-right">
         {{ i.qt_confirmed }} / {{ i.qt_planned }}
       </div>
     </q-card>
@@ -94,58 +102,50 @@
       :model-value="selectedItem !== undefined"
       @hide="() => selectedItem = undefined"
       height="90vh">
-      <ItemSerialsSelection v-if="selectedItem.type === 'serial'" :item="selectedItem" />
-      <ItemQuantitySelection v-else :item="selectedItem" />
-      <div class="col-auto q-mb-md">
+      <ItemSerialsSelection v-if="selectedItem.type === 'serial'" />
+      <ItemQuantitySelection v-else :max="selectedItem.qt_planned"/>
         <q-btn
           color="theme-blue"
           :label="$t('print_label')"
           unelevated
-          class="full-width"
+          class="full-width q-mb-md"
           @click="printProductLabel(selectedItem.product_code, selectedItem.product_description)"
         />
-      </div>
-      <div class="col-auto row q-col-gutter-x-md">
-        <div class="col-6">
-          <q-btn
-            class="full-width"
-            color="theme-grey"
-            :label="$t('cancel')"
-            @click="() => selectedItem = undefined"
-          />
-        </div>
-        <div class="col-6">
-          <q-btn
-            class="full-width"
-            color="theme-blue"
-            :label="$t('confirm')"
-          />
-        </div>
-      </div>
+      <q-btn
+        class="full-width"
+        color="theme-grey"
+        :label="$t('close')"
+        @click="() => selectedItem = undefined"
+      />
     </SlideUpCard>
   </q-page>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useListsStore } from 'stores/lists';
 import { useI18n } from 'vue-i18n';
 import SlideUpCard from 'app/src/components/SlideUpCard.vue';
 import ItemSerialsSelection from 'app/src/components/lists/ItemSerialsSelection.vue';
 import ItemQuantitySelection from 'app/src/components/lists/ItemQuantitySelection.vue';
-// import { QuantitySelector } from 'components/QuantitySelector.vue'
 import { printProductLabel } from 'app/src/lib/print';
+import { storeToRefs } from 'pinia';
 
 
 const lists = useListsStore();
 const { t: $t } = useI18n();
 
-const selectedItem = ref(undefined)
-const showItemReferences = ref(false)
 const props = defineProps({
   listKey: String
 });
 
+const showItemReferences = ref(false)
+
 const list = lists.headers.find(l => l._key == props.listKey);
-const listItems = lists.movementsByListAndProduct[props.listKey];
+const listItems = computed(() => lists.movementsByListAndProduct[props.listKey]);
+const { selectedItem } = storeToRefs(lists)
+
+function selectItem(item) {
+  selectedItem.value = item
+}
 </script>
