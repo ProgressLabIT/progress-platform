@@ -385,7 +385,7 @@ def create_movement_list(new_movement_list: MovementListNew):
         movement_list_key = new_list_key,
         product_key = m.product_key,
         status = MovementStatus.PLANNED,
-        references = merge_references(list_references=new_movement_list.references, movement_references=movement.references),
+        references = merge_references(list_references=new_movement_list.references, movement_references=m.references),
         extra = getattr(m, 'extra', new_movement_list.extra)
       )
       event = Event(EventModel(
