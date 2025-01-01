@@ -161,7 +161,8 @@ class InventoryMovementNew(FlexModel):
   product_code: str | None = None
   serial_key: str | None = None
   serial_code: str | None = None
-  quantity: float | None = 1
+  qt_planned: float | None = 1
+  qt_confirmed: float | None = 0
   start: datetime | None = None
   end: datetime | None = None
   movement_list_key: str | None = None # link to MovementList document, if present
@@ -221,14 +222,6 @@ class InventoryMovement(ArangoEdge): # edge collection movement
   user_key: str | None = None
 
   extra: Any = None
-
-  @model_validator(mode='before')
-  def parse_quantity(cls, values):
-    if values.get('quantity', None) is not None:
-      values['qt_planned'] = values['quantity']
-      if values.get('status', None) == MovementStatus.COMPLETED.value:
-        values['qt_confirmed'] = values['quantity']
-    return values
 
   # Transfer routes must have at least two positions. Positions must be repeat.
   @model_validator(mode='after')

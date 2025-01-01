@@ -132,7 +132,8 @@ function confirm() {
     for (const position of incoming.positions) {
       movements.push({
         position_to: `Position/${position._key}`,
-        quantity: position.quantity,
+        qt_planned: position.quantity,
+        qt_confirmed: position.quantity,
       });
     }
   }

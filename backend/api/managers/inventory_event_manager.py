@@ -181,7 +181,7 @@ class InventoryEventManager:
         position_link_cursor = self.tx.collection('is_in_position').find(record_match)
         if (position_link_cursor.count()>0):
           position_status = position_link_cursor.next()
-          final_qty = position_status['quantity'] + self.event.info.movement.quantity
+          final_qty = position_status['quantity'] + self.event.info.movement.qt_confirmed
           self.tx.collection('is_in_position').update(dict(
             _key = position_status['_key'],
             quantity=final_qty
@@ -190,7 +190,7 @@ class InventoryEventManager:
           self.tx.collection('is_in_position').insert(Inventory(
             product_id=f'Product/{product_key}',
             position_id=self.event.info.movement.position_to,
-            quantity=self.event.info.movement.quantity,
+            quantity=self.event.info.movement.qt_confirmed,
             owned=True
           ))
 

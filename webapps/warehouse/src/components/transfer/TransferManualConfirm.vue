@@ -82,7 +82,7 @@ function saveTransfer() {
 function confirmSerialMovements() {
   let movements = [];
   const session_data = store.state.session;
-
+  const now = timestamp();
   for (const serial of transfer.contents) {
     movements.push({
       position_to: `Position/${transfer.destinationPosition._key}`,
@@ -93,8 +93,8 @@ function confirmSerialMovements() {
       status: 'completed',
       type: 'transfer',
       user_key: session_data.user._key,
-      start: timestamp(),
-      end: timestamp(),
+      start: now,
+      end: now,
     });
   }
 
@@ -152,7 +152,8 @@ function confirmProductMovements() {
       position_to: `Position/${transfer.destinationPosition._key}`,
       product_key: getProductKey(item),
       serial_key: item.type === 'serial' ? item._key : null,
-      quantity: item.type === 'product' ? item.quantity : 1,
+      qt_planned: item.type === 'product' ? item.quantity : 1,
+      qt_confirmed: item.type === 'product' ? item.quantity : 1,
       status: 'completed',
       type: 'transfer',
       user_key: session_data.user._key,

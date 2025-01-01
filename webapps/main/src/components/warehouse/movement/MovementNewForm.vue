@@ -416,7 +416,8 @@ function createMovement() {
     product_key: product?.value?._key,
     serial_key: serial?.value?._key,
     serial_code: newSerialCode.value,
-    quantity: quantity.value, // 1 by default if not set otherwise
+    qt_planned: quantity.value, // 1 by default if not set otherwise
+    qt_confirmed: quantity.value, // 1 by default if not set otherwise
     status: 'completed',
     type: movement_type.value,
     user_key: session_data.user._key,
