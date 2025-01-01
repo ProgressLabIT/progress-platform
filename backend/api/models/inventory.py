@@ -101,7 +101,7 @@ class InventorySearchResult(BaseModel):
   product_key: str | None = None
   position_key: str | None = None
   quantity: float
-  owned: bool = True
+  owned: bool | None = True
   value: float | None = None
   reference: str | None = None
   date_received: datetime | None = None
@@ -187,7 +187,7 @@ class InventoryMovementNew(FlexModel):
   def validate(self):
     if self.product_key is None and self.product_code is None and self.position_from is None:
       raise ValueError("A new movement must include a product or container position")
-    if self.serial_key is not None and self.quantity > 1:
+    if self.serial_key is not None and (self.qt_planned > 1 or self.qt_confirmed > 1):
       raise ValueError("A serial movement must have a quantity of 1")
     if self.position_from == self.position_to:
       raise ValueError("A movement must have a different position from and to")

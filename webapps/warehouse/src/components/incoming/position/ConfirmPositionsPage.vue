@@ -124,7 +124,9 @@ function confirm() {
     for (const serialCode of incoming.serials) {
       movements.push({
         position_to: `Position/${incoming.positions[0]._key}`,
-        serial_code: serialCode
+        serial_code: serialCode,
+        qt_planned: 1,
+        qt_confirmed: 1,
       })
     }
   }

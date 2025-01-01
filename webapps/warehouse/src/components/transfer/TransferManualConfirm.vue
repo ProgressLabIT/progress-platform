@@ -79,58 +79,46 @@ function saveTransfer() {
   : confirmProductMovements();
 }
 
-function confirmSerialMovements() {
-  let movements = [];
+async function confirmSerialMovements() {
   const session_data = store.state.session;
   const now = timestamp();
+  const promises = [];
+
+  const params = new URLSearchParams()
+  transfer.contents.forEach(s => params.append('serial_keys', s._key));
+  const inventoryRecords = (await api.get('/inventory', { params })).data
+
   for (const serial of transfer.contents) {
-    movements.push({
-      position_to: `Position/${transfer.destinationPosition._key}`,
-      product_key: serial.product._key,
-      serial_key: serial._key,
-      qt_planned: 1,
-      qt_confirmed: 1,
-      status: 'completed',
-      type: 'transfer',
-      user_key: session_data.user._key,
-      start: now,
-      end: now,
-    });
+    const position_from_key = inventoryRecords.find(r => r.serial_key == serial._key).position_key
+    promises.push(sendEvent({
+      event_type: 'ADD_MOVEMENT',
+      event_data: { movement: {
+        position_from: `Position/${position_from_key}`,
+        position_to: `Position/${transfer.destinationPosition._key}`,
+        product_key: serial.product._key,
+        serial_key: serial._key,
+        qt_planned: 1,
+        qt_confirmed: 1,
+        status: 'completed',
+        type: 'transfer',
+        user_key: session_data.user._key,
+        start: now,
+        end: now,
+      }}
+    }))
   }
 
-  const serial_keys = new URLSearchParams();
-  transfer.contents.forEach(s => serial_keys.append('serial_keys', s._key));
-  const promises = [];
-  api
-    .get('/inventory', { params: serial_keys })
-    .then(({ data }) => {
-      for (const movement of movements) {
-        // this works only for serials. TODO: add products/positions
-        movement.position_from = `Position/${data.find(s => s.serial_key === movement.serial_key).position_key}`;
-        promises.push(sendEvent({
-          event_type: 'ADD_MOVEMENT',
-          event_data: {movement},
-        }))
-      }
-      Promise.all(promises)
-      .then(() => {
-        Notify.create({
-          message: 'Movimenti registrati',
-          position: 'top',
-          color: 'theme-green',
-          timeout: 1500,
-        });
-      })
-      .catch(err => {
-        console.log(err);
-      });
-    })
-    .catch(err => {
-      console.log(err);
+  Promise.all(promises).then(() => {
+    Notify.create({
+      message: 'Movimenti registrati',
+      position: 'top',
+      color: 'theme-green',
+      timeout: 1500,
     });
-
-  console.log(movements);
-  transfer.$reset();
+    transfer.$reset();
+  }).catch(err => {
+    console.log(err)
+  });
 }
 
 function getProductKey(item) {
