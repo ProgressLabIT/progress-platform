@@ -11,10 +11,10 @@
       </div>
       <div class="col-auto">
         <div class="text-h5 text-low">
-          Righe completate
+          Da controllare
         </div>
         <div class="text-right text-body1">
-          {{ listItems.filter(i => i.qt_planned === i.qt_confirmed).length }} / {{  listItems.length }}
+          {{ listItems.filter(i => i.status !== 'completed').length }} / {{  listItems.length }}
         </div>
       </div>
     </div>
@@ -24,17 +24,17 @@
     <q-card
       v-for="i in listItems"
       :key="i.product_code"
-      class="surface1 q-pa-md q-mb-xs row items-center text-body1"
+      class="surface1 q-pa-md q-mb-sm row items-center text-body1"
       :class="i.qt_planned === i.qt_confirmed ? 'theme-green' : 'surface1'"
       v-touch-hold.mouse="() => showItemReferences = i"
       @click.stop="selectItem(i)"
     >
-      <div class="col-8 column">
+      <div class="col-8 column" style="min-width: 0">
         <div class="col">
           <div class="text-h4 highlight">
             {{ i.product_code }}
           </div>
-          <div class="smaller ellipsis" style="line-height: 1rem;">
+          <div class="smaller ellipsis" style="line-height: 1rem; max-width: 60vw;">
             {{ i.product_description }}
           </div>
           <div
@@ -49,7 +49,7 @@
       <div class="col-auto column full-height justify-between q-col-gutter-y-sm">
         <div class="col-auto self-end row q-gutter-x-sm items-center">
           <div class="col-auto highlight">
-            {{ i.qt_confirmed }} / {{ i.qt_planned }}
+            {{ i.qt_planned - i.qt_confirmed }} / {{ i.qt_planned }}
           </div>
         </div>
         <div class="col-auto row items-center text-low justify-end">
@@ -84,7 +84,7 @@
           color="theme-blue"
           :label="$t('confirm')"
           class="full-width"
-          @click="save"
+          @click="closeList"
         />
       </div>
     </div>
@@ -105,7 +105,7 @@
     </SlideUpCard>
 
 
-    <IncomingItem v-if="selectedItem !== undefined" />
+    <IncomingItem v-if="lists.selectedItem !== undefined" />
   </q-page>
 </template>
 
@@ -114,7 +114,6 @@ import { computed, ref } from 'vue';
 import { useListsStore } from 'stores/lists';
 import { useI18n } from 'vue-i18n';
 import SlideUpCard from 'app/src/components/SlideUpCard.vue';
-import { storeToRefs } from 'pinia';
 import { Dialog } from 'quasar';
 import { sendEvent } from 'app/src/composables/event';
 import { useNavStore } from 'app/src/stores/navigation';
@@ -140,17 +139,14 @@ onBeforeRouteLeave(() => {
 })
 
 const listItems = computed(() => lists.movementsByListAndProduct[props.listKey]);
-const { selectedItem } = storeToRefs(lists)
 
 function selectItem(item) {
-  console.log('selectItem', item)
-  selectedItem.value = item
-  $router.push({ name: 'IncomingItem'})
+  lists.selectedItem = JSON.parse(JSON.stringify(item))
 }
 
 
 
-function save() {
+function closeList() {
   // Retrieve all movements with qt_confrimed > 0 and status planned, send as movement with
   const updatedMovements = lists.movements.filter(m => m.status === 'planned' && m.qt_confirmed > 0)
 

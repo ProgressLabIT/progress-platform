@@ -4,10 +4,15 @@
     <div class="col-auto">
       <div class="text-h6 q-mb-sm">{{ $t('product') }}</div>
       <div class="text-h3 q-pr-sm" style="word-wrap: break-word">
-        {{ movement.product_code }}
+        {{ lists.selectedItem.product_code }}
       </div>
       <div class="text-body2 smaller q-mt-xs">
-        {{ movement.product_description }}
+        {{ lists.selectedItem.product_description }}
+      </div>
+      <div
+        v-if="lists.selectedItem.references.purchase_doc"
+        class="text-h6 weight-bold uppercase q-mt-xs text-low">
+        {{ lists.selectedItem.references.purchase_doc }}
       </div>
     </div>
 
@@ -16,21 +21,20 @@
       <div class="text-h3 col-auto">{{ $t('quantity') }}</div>
 
       <QuantitySelector
-        v-model="movement.qt_confirmed"
+        v-model="selectedItem.qt_confirmed"
         show-buttons
         class="col"
-        :max="movement.qt_planned"
+        :max="selectedItem.qt_planned"
       />
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
 import QuantitySelector from '@/components/QuantitySelector.vue';
 import { useListsStore } from 'app/src/stores/lists';
+import { storeToRefs } from 'pinia';
+const lists = useListsStore();
+const { selectedItem } = storeToRefs(lists);
 
-const lists = useListsStore()
-
-const movement = computed(() => lists.getMovementByKey(lists.selectedItem.movements[0]._key))
 </script>

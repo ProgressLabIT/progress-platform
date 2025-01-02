@@ -60,9 +60,8 @@ export const useListsStore = defineStore('lists', {
         return state.movements.find(m => m.serial_code === serialCode && m.product_code === productCode)
       }
     },
-    selectedItemSerials: (state) => {
-      const selectedItemMovementKeys = state.selectedItem?.movements.map(m => m._key)
-      return state.movements.filter(mov => selectedItemMovementKeys.includes(mov._key) && mov.qt_confirmed == 1)
+    itemSerials: (state) => {
+      return state.selectedItem.movements.filter(m => m.qt_confirmed == 1)
     }
   },
   actions: {

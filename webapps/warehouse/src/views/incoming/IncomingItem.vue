@@ -1,34 +1,60 @@
 <template>
   <SlideUpCard
-    :model-value="selectedItem !== undefined"
+    :model-value="lists.selectedItem !== undefined"
     height="95vh"
-    @hide="() => selectedItem = undefined"
+    @hide="close"
   >
 
     <!-- ITEM SELECTION (QUANTITY / SERIALS)-->
     <template v-if="step==='selection'">
-      <ItemSerialsSelection v-if="selectedItem.type === 'serial'" />
-      <ItemQuantitySelection v-else :max="selectedItem.qt_planned"/>
-      <div class="row q-gutter-x-md">
+      <ItemSerialsSelection v-if="lists.selectedItem.type === 'serial'" />
+      <ItemQuantitySelection v-else />
 
-      </div>
       <q-btn
         color="theme-blue"
         :label="$t('print_label')"
         unelevated
-        class="full-width q-mb-md"
-        @click="printProductLabel(selectedItem.product_code, selectedItem.product_description)"
+        class="full-width"
+        @click="printProductLabel(lists.selectedItem.product_code, lists.selectedItem.product_description)"
+      />
+      <q-btn
+        color="theme-blue"
+        :label="$t('next')"
+        :disable="lists.selectedItem.qt_confirmed === 0"
+        unelevated
+        class="full-width q-mt-md"
+        @click="step = 'destination'"
       />
     </template>
 
     <!-- DESTINATION -->
     <template v-else-if="step==='destination'">
-      TEST
-
+      <ItemPosition v-model="positionsTo" @next="() => step = 'confirm'" />
+      <div class="row q-mt-md">
+        <div class="col">
+          <q-btn
+            color="theme-grey"
+            :label="$t('back')"
+            unelevated
+            class="full-width"
+            @click="() => step = 'selection'"
+          />
+        </div>
+        <div class="q-mx-sm"></div>
+        <div class="col">
+          <q-btn
+            color="theme-blue"
+            :label="$t('next')"
+            unelevated
+            class="full-width"
+            @click="() => step = 'confirm'"
+          />
+        </div>
+      </div>
     </template>
 
     <template v-else>
-
+      <ItemConfirmation />
     </template>
 
 
@@ -36,25 +62,23 @@
 </template>
 
 <script setup>
-import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SlideUpCard from 'app/src/components/SlideUpCard.vue';
 import ItemQuantitySelection from 'app/src/components/lists/ItemQuantitySelection.vue';
 import ItemSerialsSelection from 'app/src/components/lists/ItemSerialsSelection.vue';
+import ItemPosition from 'app/src/components/lists/ItemPosition.vue';
 import { printProductLabel } from 'app/src/lib/print';
 import { useListsStore } from 'stores/lists';
-import { onBeforeRouteLeave, useRouter } from 'vue-router';
-
 
 const lists = useListsStore();
 const { t: $t } = useI18n();
-const { selectedItem } = storeToRefs(lists);
+
+
+const close = () => {
+  lists.selectedItem = undefined;
+};
 
 const step = ref('selection'); // destination, confirm
-const $router = useRouter();
-onBeforeRouteLeave(() => {
-  $router.push({ name: 'IncomingList', params: { listKey: selectedItem.value.list_key } })
-  selectedItem.value = undefined;
-});
+const positionsTo = ref([]);
 </script>

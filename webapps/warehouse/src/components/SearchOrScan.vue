@@ -8,6 +8,7 @@
         v-model="inputText"
         filled
         autofocus
+        dense
         clearable
         debounce="300"
         icon="mdi-magnify"

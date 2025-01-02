@@ -92,7 +92,7 @@ import { printPositionLabel } from '@/lib/print';
 
 const $q = useQuasar();
 const $t = useI18n().t;
-const $emit = defineEmits(['hide']);
+const $emit = defineEmits(['hide', 'select']);
 
 const selected_quantity = ref(0);
 const containers = ref([]);
