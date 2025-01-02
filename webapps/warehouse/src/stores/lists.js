@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
 import { Notify } from "quasar";
 import { api } from "@/boot/axios"
+import { useNavStore } from 'app/src/stores/navigation';
+
+const nav = useNavStore();
 
 export const useListsStore = defineStore('lists', {
   state: () => ({
@@ -58,12 +61,14 @@ export const useListsStore = defineStore('lists', {
       }
     },
     selectedItemSerials: (state) => {
-      const selectedItemMovementKeys = state.selectedItem.movements.map(m => m._key)
+      const selectedItemMovementKeys = state.selectedItem?.movements.map(m => m._key)
       return state.movements.filter(mov => selectedItemMovementKeys.includes(mov._key) && mov.qt_confirmed == 1)
     }
   },
   actions: {
     async loadLists(type) {
+      this.$reset();
+      nav.loading = true;
       try {
         // fetch lists
         this.headers = (await api.get('/movement-list', { params: { type, open_only: true }})).data
@@ -74,6 +79,7 @@ export const useListsStore = defineStore('lists', {
           this.headers.forEach(l => listKeys.append('list_key', l._key))
           this.movements = (await api.get('/movement', { params: listKeys })).data
         }
+        nav.loading = false;
       }
       catch (err) {
         console.log(err)

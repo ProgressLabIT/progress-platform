@@ -1,7 +1,9 @@
 <template>
   <!-- ITEM CODE & DESCRIPTION -->
   <div class="col-auto">
-    <div class="text-h6 q-mb-sm">{{ $t('product') }}</div>
+    <div class="text-h6 q-mb-sm">
+      {{ $t('product') }}
+    </div>
     <div class="text-h3 q-pr-sm" style="word-wrap: break-word">
       {{ selectedItem.product_code }}
     </div>

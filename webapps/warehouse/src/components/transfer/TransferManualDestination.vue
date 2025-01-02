@@ -7,14 +7,13 @@
         {{ transfer.contents.length }}
       </q-chip>
     </div>
-    <div class="row q-col-gutter-x-xs q-mt-sm">
+    <div class="row q-gutter-x-xs q-mt-sm">
       <!-- Show first 3 serial numbers as chips -->
-      <div v-for="item in transfer.contents.slice(0,3)" :key="item._key" class="col-auto">
-        <q-chip color="theme-grey" class="text-body2" :icon="contentIcon[item.type]">
-          <span>{{ item.code }}</span>
-          <span v-if="item.type === 'product'">x{{ item.quantity }}</span>
-        </q-chip>
-      </div>
+      <ContentChip
+        v-for="item in transfer.contents.slice(0,3)"
+        :key="item._key"
+        :item="item"
+      />
       <!-- Show count of remaining serials if more than 3 are selected -->
       <div v-if="transfer.contents.length > 3" class="col-auto">
         <q-chip color="theme-grey" class="text-body2">
@@ -73,6 +72,7 @@ import { api } from '@/boot/axios';
 import SlideUpCard from '@/components/SlideUpCard.vue';
 import CreateContainerForm from '@/components/CreateContainerForm.vue';
 import { Notify } from 'quasar';
+import ContentChip from '@/components/ContentChip.vue';
 
 
 const transfer = useTransferStore();
@@ -95,16 +95,10 @@ const list = computed(() => {
   }
   return {
     type: 'DISPONIBILI',
-    items: results.value.filter(pos => pos._key !== transfer.startPosition._key),
+    items: results.value.filter(pos => pos._key !== transfer.startPosition?._key),
     message: 'scan_destination_position'
   };
 });
-
-const contentIcon = {
-  product: 'mdi-apps',
-  serial: 'mdi-cube-scan',
-  position: 'mdi-package-variant-closed',
-}
 
 function searchPositions() {
   api
@@ -136,6 +130,7 @@ function searchPositions() {
 function reset() {
   filter.value = '';
   results.value = [];
+  document.getElementById('search-input').focus()
 }
 
 function setDestination(pos) {

@@ -10,10 +10,7 @@
     <div class="row q-col-gutter-x-xs q-mt-sm">
       <!-- Show first 3 serial numbers as chips -->
       <div v-for="item in transfer.contents" :key="item._key" class="col-auto">
-        <q-chip color="theme-grey" class="text-body2" :icon="contentIcon[item.type]">
-          <span>{{ item.code }}</span>
-          <span v-if="item.type === 'product'">x {{ item.quantity }}</span>
-        </q-chip>
+        <ContentChip :item="item" />
       </div>
       <!-- Show count of remaining serials if more than 3 are selected -->
       <!-- <div v-if="transfer.contents.length > 3" class="col-auto">
@@ -63,15 +60,10 @@ import { api } from '@/boot/axios';
 import { useTransferStore } from '@/stores/transfer';
 import { sendEvent } from 'app/src/composables/event.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
+import ContentChip from '../ContentChip.vue';
 
 const transfer = useTransferStore();
 const store = useStore();
-
-const contentIcon = {
-  product: 'mdi-apps',
-  serial: 'mdi-cube-scan',
-  position: 'mdi-package-variant-closed',
-}
 
 function saveTransfer() {
   transfer.selectMode === 'serials'

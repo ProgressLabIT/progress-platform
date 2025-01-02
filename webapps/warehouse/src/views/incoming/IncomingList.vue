@@ -25,36 +25,48 @@
       v-for="i in listItems"
       :key="i.product_code"
       class="surface1 q-pa-md q-mb-xs row items-center text-body1"
-      :class="i.qt_planned === i.qt_completed ? 'theme-green' : 'surface1'"
+      :class="i.qt_planned === i.qt_confirmed ? 'theme-green' : 'surface1'"
       v-touch-hold.mouse="() => showItemReferences = i"
       @click.stop="selectItem(i)"
     >
-
-      <div class="col-auto">
-        <q-icon v-if="i.type === 'serial'" name="mdi-cube-scan" size="sm"/>
-        <q-icon v-else name="mdi-apps" size="sm"/>
-      </div>
-      <div class="q-mx-md col">
-        <div class="text-h4 highlight">{{ i.product_code }}</div>
-        <div class="smaller ellipsis" style="line-height: 1rem;">{{ i.product_description }}</div>
-        <div
-          v-if="i.references.purchase_doc"
-          class="text-h6 weight-bold uppercase q-mt-xs">
-          {{ i.references.purchase_doc }}
+      <div class="col-8 column">
+        <div class="col">
+          <div class="text-h4 highlight">
+            {{ i.product_code }}
+          </div>
+          <div class="smaller ellipsis" style="line-height: 1rem;">
+            {{ i.product_description }}
+          </div>
+          <div
+            v-if="i.references.purchase_doc"
+            class="text-h6 text-low uppercase q-mt-xs">
+            {{ i.references.purchase_doc }}
+          </div>
         </div>
       </div>
-      <q-circular-progress
-        class="col-auto q-mr-md"
-        :value="100 * i.qt_confirmed / i.qt_planned"
-        color="white"
+      <q-space></q-space>
+
+      <div class="col-auto column full-height justify-between q-col-gutter-y-sm">
+        <div class="col-auto self-end row q-gutter-x-sm items-center">
+          <div class="col-auto highlight">
+            {{ i.qt_confirmed }} / {{ i.qt_planned }}
+          </div>
+        </div>
+        <div class="col-auto row items-center text-low justify-end">
+          <q-icon v-if="i.type === 'serial'" name="mdi-cube-scan" size="xs"/>
+          <q-icon v-else name="mdi-apps" size="xs"/>
+          <!-- <q-icon name="mdi-arrow-right-thin" />
+          <div class="text-h5">{{ i.position_to }}</div> -->
+        </div>
+      </div>
+      <q-linear-progress
+        class="absolute-bottom"
+        :value="i.qt_confirmed / i.qt_planned"
+        color="theme-blue"
         track-color="theme-grey"
         :thickness=".2"
-        size="sm"
+        size="xs"
       />
-      <q-space></q-space>
-      <div class="col-2 text-right">
-        {{ i.qt_confirmed }} / {{ i.qt_planned }}
-      </div>
     </q-card>
     </q-scroll-area>
 
@@ -64,24 +76,18 @@
           color="theme-grey"
           :label="$t('back')"
           class="full-width"
-          @click="$router.back()"
+          @click="$router.push({ name: 'IncomingHome'})"
         />
       </div>
       <div class="col-6">
         <q-btn
-          color="theme-green"
-          :label="$t('save')"
+          color="theme-blue"
+          :label="$t('confirm')"
           class="full-width"
-          @click="null"
+          @click="save"
         />
       </div>
     </div>
-    <q-btn
-      color="theme-blue"
-      :label="$t('complete')"
-      class="full-width q-mt-sm"
-      @click="null"
-    />
 
     <SlideUpCard
       :model-value="showItemReferences !== false"
@@ -98,26 +104,8 @@
       </div>
     </SlideUpCard>
 
-    <SlideUpCard
-      :model-value="selectedItem !== undefined"
-      @hide="() => selectedItem = undefined"
-      height="90vh">
-      <ItemSerialsSelection v-if="selectedItem.type === 'serial'" />
-      <ItemQuantitySelection v-else :max="selectedItem.qt_planned"/>
-        <q-btn
-          color="theme-blue"
-          :label="$t('print_label')"
-          unelevated
-          class="full-width q-mb-md"
-          @click="printProductLabel(selectedItem.product_code, selectedItem.product_description)"
-        />
-      <q-btn
-        class="full-width"
-        color="theme-grey"
-        :label="$t('close')"
-        @click="() => selectedItem = undefined"
-      />
-    </SlideUpCard>
+
+    <IncomingItem v-if="selectedItem !== undefined" />
   </q-page>
 </template>
 
@@ -126,14 +114,17 @@ import { computed, ref } from 'vue';
 import { useListsStore } from 'stores/lists';
 import { useI18n } from 'vue-i18n';
 import SlideUpCard from 'app/src/components/SlideUpCard.vue';
-import ItemSerialsSelection from 'app/src/components/lists/ItemSerialsSelection.vue';
-import ItemQuantitySelection from 'app/src/components/lists/ItemQuantitySelection.vue';
-import { printProductLabel } from 'app/src/lib/print';
 import { storeToRefs } from 'pinia';
-
+import { Dialog } from 'quasar';
+import { sendEvent } from 'app/src/composables/event';
+import { useNavStore } from 'app/src/stores/navigation';
+import { onBeforeRouteLeave, useRouter } from 'vue-router';
+import IncomingItem from './IncomingItem.vue';
 
 const lists = useListsStore();
 const { t: $t } = useI18n();
+const nav = useNavStore();
+const $router = useRouter();
 
 const props = defineProps({
   listKey: String
@@ -142,10 +133,52 @@ const props = defineProps({
 const showItemReferences = ref(false)
 
 const list = lists.headers.find(l => l._key == props.listKey);
+
+nav.dynamicBreadcrumb = [list.code]
+onBeforeRouteLeave(() => {
+  nav.dynamicBreadcrumb = []
+})
+
 const listItems = computed(() => lists.movementsByListAndProduct[props.listKey]);
 const { selectedItem } = storeToRefs(lists)
 
 function selectItem(item) {
+  console.log('selectItem', item)
   selectedItem.value = item
+  $router.push({ name: 'IncomingItem'})
 }
+
+
+
+function save() {
+  // Retrieve all movements with qt_confrimed > 0 and status planned, send as movement with
+  const updatedMovements = lists.movements.filter(m => m.status === 'planned' && m.qt_confirmed > 0)
+
+  // Ask to keep open or not if qt_confirmed < qt_planned
+  Dialog.create({
+    message: "Confermi di voler registrare i ricevimenti indicati?",
+    cancel: { label: $t('cancel'), color: 'theme-grey'},
+    ok: { label: $t('confirm'), color: 'theme-blue'}
+  }).onOk(() => {
+    // let keepOpen = false;
+    Dialog.create({
+      message: "Vuoi mantenere aperti i movimenti pianificati rimanenti?",
+      cancel: { label: $t('no'), color: 'theme-orange'},
+      ok: { label: $t('yes'), color: 'theme-blue'}
+    }).onOk(() => {
+      console.log('saving')
+      for (const update of updatedMovements) {
+        sendEvent({
+          event_type: 'MOVEMENT_CONFIRMED',
+          event_data: {
+            movement_update: update
+          },
+        })
+      }})
+      .onCancel(() => console.log('Close partial movements'))
+    })
+    .onCancel(() => {
+      console.log('canceled')
+    })
+  }
 </script>

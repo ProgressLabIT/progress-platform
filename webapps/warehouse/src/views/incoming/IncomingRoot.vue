@@ -4,18 +4,10 @@
 </template>
 
 <script setup>
-import { useListsStore } from 'stores/lists'
 import { useNavStore } from 'app/src/stores/navigation';
-import { useQuasar } from 'quasar';
-
+import { useListsStore } from 'app/src/stores/lists';
+const nav = useNavStore();
 const lists = useListsStore();
-const nav = useNavStore()
-const $q = useQuasar()
 
-nav.loading = true
-$q.loading.show()
-lists.loadLists().then(() => setTimeout(() => {
-  nav.loading = false;
-  $q.loading.hide();
-}, 300));
+lists.loadLists();
 </script>
