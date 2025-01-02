@@ -32,8 +32,8 @@ class InventoryEventManager:
       match event_command:
         case InventoryCommandType.ADD_MOVEMENT:
            self.add_movement()
-        case InventoryCommandType.UPDATE_MOVEMENT:
-           ...
+        case InventoryCommandType.CONFIRM_MOVEMENT:
+           self.confirm_movement()
         case InventoryCommandType.DELETE_MOVEMENT:
            ...
         case _:
@@ -58,6 +58,24 @@ class InventoryEventManager:
            error = traceback.format_exc()
         ))
         raise InventoryMovementException(f'Cannot add movements', e, traceback.format_exc())
+
+    def confirm_movement(self):
+      try:
+        movement_data=self.event.info.movement
+        self.tx.collection('movement').update(movement_data)
+        self.adjust_inventory()
+        self.notify_results(dict(
+           movement_key = movement_data.key,
+           notification = InventoryNotificationType.MOVEMENT_CONFIRMED,
+           message="Movement confirmed correctly",
+        ))
+      except Exception as e:
+        print(traceback.format_exc())
+        self.notify_results(dict(
+          notification = InventoryNotificationErrorCode.EXCEPTION,
+          error_code = InventoryNotificationType.ERROR,
+          error = traceback.format_exc()
+        ))
 
     def adjust_inventory(self):
        match self.event.info.movement.type:

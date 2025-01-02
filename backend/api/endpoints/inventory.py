@@ -381,7 +381,7 @@ def create_movement_list(new_movement_list: MovementListNew):
         type = new_movement_list.type,
         serial_code = m.serial_code,
         serial_key = m.serial_key,
-        quantity = m.quantity,
+        qt_planned = m.qt_planned,
         movement_list_key = new_list_key,
         product_key = m.product_key,
         status = MovementStatus.PLANNED,

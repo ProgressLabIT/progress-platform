@@ -13,7 +13,7 @@ class InventoryEvent(BaseEvent):
     action="add_movement"
   )
 
-  UPDATE_MOVEMENT = EventMeta(
+  MOVEMENT_CONFIRMED = EventMeta(
     collections=inventory_collections,
     action="update_movement"
   )
@@ -37,7 +37,7 @@ class InventoryEvent(BaseEvent):
     InventoryEventManager.getInstance().handle_event(self, InventoryCommandType.ADD_MOVEMENT)
 
   def update_movement(self):
-    InventoryEventManager.getInstance().handle_event(self, InventoryCommandType.UPDATE_MOVEMENT)
+    InventoryEventManager.getInstance().handle_event(self, InventoryCommandType.CONFIRM_MOVEMENT)
 
   def delete_movement(self):
     InventoryEventManager.getInstance().handle_event(self, InventoryCommandType.DELETE_MOVEMENT)
