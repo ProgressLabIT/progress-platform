@@ -144,7 +144,7 @@ async def create_position(new_position: PositionNew):
       positions_counter_key = tx.collection('Config').get('system_counters')['positions']
       new_position.code = _generate_counter(tx, counter_key=positions_counter_key)
 
-    created_position = tx.collection('Position').insert(new_position, return_new=True)
+    created_position = tx.collection('Position').insert(Position(**new_position.model_dump()), return_new=True)
     new_position_key = created_position['_key']
 
     tx.collection('is_in_position').insert(dict(
