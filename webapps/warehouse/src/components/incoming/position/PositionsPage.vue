@@ -49,18 +49,16 @@
     </div>
 
     <!-- AVAILABLE POSITIONS -->
-    <div class="col-auto">
-      <div class="text-h6 q-mb-xs">POSIZIONI {{ positionResultsType }}</div>
-      <div class="col scroll">
-        <div class="row full-width q-col-gutter-x-sm">
-          <div v-for="pos in availablePositions" :key="pos._key" class="col-auto">
-            <q-chip clickable outline class="text-body1" @click="toggleSelection(pos)">
-              {{ pos.code }}
-            </q-chip>
-          </div>
+    <div class="text-h6 col-auto">POSIZIONI {{ positionResultsType }}</div>
+    <q-scroll-area class="col">
+      <div class="row full-width q-col-gutter-xs">
+        <div v-for="pos in availablePositions" :key="pos._key" class="col-auto">
+          <q-chip clickable outline class="text-body1" @click="toggleSelection(pos)">
+            {{ pos.code }}
+          </q-chip>
         </div>
       </div>
-    </div>
+    </q-scroll-area>
 
     <q-space></q-space>
 
@@ -109,7 +107,7 @@ import SearchOrScan from '@/components/SearchOrScan.vue';
 import SlideUpCard from '@/components/SlideUpCard.vue';
 import { api } from 'app/src/boot/axios';
 import { useIncomingStore } from 'app/src/stores/incoming';
-
+import { Notify } from 'quasar';
 const { t: $t } = useI18n();
 const incoming = useIncomingStore();
 
@@ -183,6 +181,13 @@ function toggleSelection(position) {
   const index = tempPositionsKeys.value.findIndex((el) => el === position._key);
   if (index >= 0) {
     tempPositions.value.splice(index, 1);
+  } else if (tempPositions.value.length >= incoming.refQuantity) {
+    Notify.create({
+      message: 'Non puoi selezionare più posizioni di quelle richieste',
+      color: 'theme-orange',
+      position: 'top',
+      timeout: 1500
+    })
   } else {
     tempPositions.value.push(position);
     if (incoming.product.traceability_level) {

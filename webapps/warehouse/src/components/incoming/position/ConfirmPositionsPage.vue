@@ -18,19 +18,21 @@
 
     <div
       v-if="incoming.product.traceability_level"
-      class="row col-auto full-width q-gutter-x-sm q-mt-md"
+      class="row col-auto q-gutter-x-sm q-mt-md"
     >
-      <q-chip
+      <q-card
         v-for="serial in incoming.serials"
         :key="serial"
-        color="theme-green"
-        class="text-white weight-bold"
+        flat
+        class="bg-theme-green q-pa-sm highlight"
       >
         {{  serial }}
-      </q-chip>
+      </q-card>
     </div>
 
-    <div class="row items-center justify-between q-mt-xl q-mb-md">
+    <q-icon name="mdi-arrow-down-thin" size="lg" class="q-mt-md"/>
+
+    <div class="row items-center justify-between q-mt-lg q-mb-md">
       <div class="text-h6">
         {{$t('destination')}}
       </div>
@@ -78,7 +80,7 @@
           :min="0"
           :max="incoming.refQuantity"
           :step="1"
-          :disable="position.locked"
+          :disable="position.locked || allOthersLocked[position._key]"
           @change="adjust(position)"
         />
       </div>
@@ -108,6 +110,7 @@
 
 <script setup>
 import { Notify } from 'quasar';
+import { computed } from 'vue';
 import { useStore } from 'vuex';
 import { sendEvent } from 'app/src/composables/event.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
@@ -115,6 +118,13 @@ import { useIncomingStore } from 'app/src/stores/incoming';
 
 const store = useStore();
 const incoming = useIncomingStore();
+
+const allOthersLocked = computed(() => {
+  return incoming.positions.reduce((acc, pos) => {
+    acc[pos._key] = incoming.positions.filter(p => p._key !== pos._key).every(p => p.locked);
+    return acc;
+  }, {});
+})
 
 function confirm() {
   let movements = [];

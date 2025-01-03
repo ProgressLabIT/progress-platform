@@ -5,16 +5,16 @@
     <div class="row justify-between">
       <div class="col-auto">
         <div class="text-h5 text-low">
-          {{ list.references.partner_name }}
+          {{ list?.references?.partner_name }}
         </div>
-        <div class="text-h3">{{ list.code }}</div>
+        <div class="text-h3">{{ list?.code }}</div>
       </div>
       <div class="col-auto">
         <div class="text-h5 text-low">
           Da controllare
         </div>
         <div class="text-right text-body1">
-          {{ listItems.filter(i => i.status !== 'completed').length }} / {{  listItems.length }}
+          {{ listItems?.filter(i => i.status !== 'completed').length }} / {{  listItems?.length }}
         </div>
       </div>
     </div>
@@ -24,10 +24,10 @@
     <q-card
       v-for="i in listItems"
       :key="i.product_code"
+      v-touch-hold.mouse="() => showItemReferences = i"
       class="surface1 q-pa-md q-mb-sm row items-center text-body1"
       :class="i.qt_planned === i.qt_confirmed ? 'theme-green' : 'surface1'"
-      v-touch-hold.mouse="() => showItemReferences = i"
-      @click.stop="selectItem(i)"
+      @click.stop="() => i.status === 'planned' ? selectItem(i) : null"
     >
       <div class="col-8 column" style="min-width: 0">
         <div class="col">
@@ -55,8 +55,10 @@
         <div class="col-auto row items-center text-low justify-end">
           <q-icon v-if="i.type === 'serial'" name="mdi-cube-scan" size="xs"/>
           <q-icon v-else name="mdi-apps" size="xs"/>
-          <!-- <q-icon name="mdi-arrow-right-thin" />
-          <div class="text-h5">{{ i.position_to }}</div> -->
+          <template v-if="i.status === 'completed'">
+            <q-icon name="mdi-arrow-right-thin" />
+            <div class="text-h5">{{ i.position_to }}</div>
+          </template>
         </div>
       </div>
       <q-linear-progress
@@ -133,7 +135,11 @@ const showItemReferences = ref(false)
 
 const list = lists.headers.find(l => l._key == props.listKey);
 
-nav.dynamicBreadcrumb = [list.code]
+if (list === undefined) {
+  $router.push({ name: 'IncomingHome'})
+}
+
+nav.dynamicBreadcrumb = [list?.code]
 onBeforeRouteLeave(() => {
   nav.dynamicBreadcrumb = []
 })
@@ -145,10 +151,9 @@ function selectItem(item) {
 }
 
 
-
 function closeList() {
   // Retrieve all movements with qt_confrimed > 0 and status planned, send as movement with
-  const updatedMovements = lists.movements.filter(m => m.status === 'planned' && m.qt_confirmed > 0)
+  const updatedMovements = lists?.movements?.filter(m => m.status === 'planned' && m.qt_confirmed > 0)
 
   // Ask to keep open or not if qt_confirmed < qt_planned
   Dialog.create({

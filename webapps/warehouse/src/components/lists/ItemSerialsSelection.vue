@@ -60,7 +60,7 @@
         v-for="serial in lists.itemSerials"
         :key="serial._key"
         flat
-        class="bg-theme-blue q-pa-sm highlight"
+        class="bg-theme-green q-pa-sm highlight"
         @click="toggleItem(serial.serial_code)"
       >
         {{ serial.serial_code }}
@@ -93,11 +93,23 @@ function toggleItem(serialCode) {
       match.qt_confirmed = 0
       lists.selectedItem.qt_confirmed -= 1
       resetInput()
+      Notify.create({
+        position: 'top',
+        color: 'theme-grey',
+        message: `Seriale ${serialCode} rimosso`,
+        timeout: 1500
+      })
     }
     else {
       match.qt_confirmed = 1
       lists.selectedItem.qt_confirmed += 1
       resetInput()
+      Notify.create({
+        position: 'top',
+        color: 'theme-green',
+        message: `Seriale ${serialCode} aggiunto`,
+        timeout: 1500
+      })
     }
   }
   else {

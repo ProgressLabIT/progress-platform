@@ -51,16 +51,15 @@
 
     <q-scroll-area class="col">
 
-      <div class="col-auto q-my-md column">
+      <div class="col-auto q-my-md row q-gutter-md">
         <q-card
           v-for="serialCode in incoming.serials"
           :key="serialCode"
-          bordered
           flat
-          class="bg-theme-green q-px-md q-py-md q-mb-sm row items-center justify-between text-white"
+          class="bg-theme-green q-pa-sm highlight"
+          @click="toggleItem(serialCode)"
         >
-          <div class="text-body1 weight-bold">{{ serialCode }}</div>
-          <q-btn flat round icon="mdi-close" size="sm" @click="toggleItem(serialCode)" />
+          {{ serialCode }}
         </q-card>
       </div>
 
@@ -105,7 +104,7 @@ async function toggleItem(serialCode) {
     Notify.create({
       position: 'top',
       color: 'theme-grey',
-      message: `Serial ${serialCode} removed`,
+      message: `Seriale ${serialCode} rimosso`,
       timeout: 1500
     })
 
@@ -118,7 +117,7 @@ async function toggleItem(serialCode) {
         Notify.create({
           position: 'top',
           color: 'theme-orange',
-          message: `Serial ${serialCode} for product ${incoming.product.code} already exists`,
+          message: `Seriale ${serialCode} per il prodotto ${incoming.product.code} già esistente`,
           timeout: 1500
         })
       }
@@ -127,7 +126,7 @@ async function toggleItem(serialCode) {
         Notify.create({
           position: 'top',
           color: 'theme-green',
-          message: `Serial ${serialCode} added`,
+          message: `Seriale ${serialCode} aggiunto`,
           timeout: 1500
         })
       }

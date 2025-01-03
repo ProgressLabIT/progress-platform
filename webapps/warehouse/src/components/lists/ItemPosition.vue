@@ -104,9 +104,11 @@ import SearchOrScan from '../SearchOrScan.vue';
 import { computed, ref } from 'vue';
 import CreateContainerForm from '@/components/CreateContainerForm.vue';
 import { api } from 'app/src/boot/axios';
+import { Notify } from 'quasar';
 const lists = useListsStore();
 const positionResultsType = ref('RECENTI');
 const positionResults = ref([]);
+
 // const position = defineModel();
 
 
@@ -129,7 +131,7 @@ const maxNewPositions = computed(() => {
     return 1 - tempPositions.value.length;
   }
   else {
-    return lists.selectedItem.qt_planned - lists.selectedItem.qt_confirmed - tempPositions.value.length;
+    return lists.selectedItem.qt_confirmed - tempPositions.value.length;
   }
 });
 
@@ -174,6 +176,13 @@ function toggleSelection(position) {
   const index = tempPositionsKeys.value.findIndex((el) => el === position._key);
   if (index >= 0) {
     tempPositions.value.splice(index, 1);
+  } else if (tempPositions.value.length >= lists.selectedItem.qt_confirmed) {
+    Notify.create({
+      message: 'Non puoi selezionare più posizioni di quelle richieste',
+      color: 'theme-orange',
+      position: 'top',
+      timeout: 1500
+    })
   } else {
     tempPositions.value.push(position);
     if (lists.selectedItem.type === 'serial') {
@@ -181,13 +190,14 @@ function toggleSelection(position) {
       $emit('next');
     }
   }
+  adjustQuantityPerPosition();
 }
 
 function adjustQuantityPerPosition() {
   if (tempPositions.value.length <= 0) {
     return;
   }
-  let remainingQty = lists.selectedItem.qt_planned - lists.selectedItem.qt_confirmed;
+  let remainingQty = lists.selectedItem.qt_confirmed;
   let remainingPos = tempPositions.value.length;
   for (let position of tempPositions.value) {
     let posQty = Math.floor(remainingQty / remainingPos);

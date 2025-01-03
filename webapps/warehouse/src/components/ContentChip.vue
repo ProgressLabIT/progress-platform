@@ -1,7 +1,17 @@
 <template>
-  <q-chip color="theme-grey" class="text-body2 highlight" :icon="contentIcon[item.type]">
-    <span>{{ props.item.type === 'quantity' ? props.item.qt_confirmed : props.item.serial_code }}</span>
-    <span v-if="props.item.type === 'product'" class="q-ml-xs">{{ props.item.quantity }}x</span>
+  <q-chip
+    :color="contentType[item.type].color"
+    class="text-body2 highlight"
+    :icon="contentType[item.type].icon"
+  >
+    <span>
+      {{ props.item.code }}
+    </span>
+    <span
+      v-if="props.item.type === 'product'"
+      class="q-ml-xs">
+      {{ props.item.quantity }}x
+    </span>
   </q-chip>
 </template>
 
@@ -12,9 +22,16 @@ const props = defineProps({
     required: true
   }
 })
-const contentIcon = {
-  product: 'mdi-apps',
-  serial: 'mdi-cube-scan',
-  position: 'mdi-package-variant-closed',
+const contentType = {
+  product: { icon: 'mdi-apps', color: 'theme-blue' },
+  serial: { icon: 'mdi-cube-scan', color: 'theme-green' },
+  position: { icon: 'mdi-package-variant-closed', color: 'theme-orange' },
+  fixedPosition: { icon: 'mdi-file-table-box-outline', color: 'theme-grey' }
 };
 </script>
+
+<style scoped>
+.highlight {
+  background-color: var(--q-color-theme-grey);
+}
+</style>

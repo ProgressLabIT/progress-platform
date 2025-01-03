@@ -34,7 +34,7 @@
     </template>
 
     <template v-else>
-      NO DATA
+      Nessuna lista di carico disponibile
     </template>
 
     <q-space></q-space>
