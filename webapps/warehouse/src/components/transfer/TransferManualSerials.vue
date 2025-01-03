@@ -103,7 +103,11 @@ function search() {
     return;
   }
   else {
-    api.get('serial', { params: { serial_search: filter.value } })
+    api.get('serial', { params: {
+      serial_search: filter.value,
+      sort_by: 'code',
+      sorting_order: 'asc'
+    }})
     .then(response => {
       if (response.data.length === 0) {
         results.value = [];
