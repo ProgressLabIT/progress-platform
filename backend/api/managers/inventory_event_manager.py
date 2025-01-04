@@ -96,6 +96,7 @@ class InventoryEventManager:
             owned=True,
             product_id="Product/" + m.product_key,
             position_id=m.position_to,
+            serial_key=m.serial_key,
             quantity=m.qt_confirmed
           ).model_dump(by_alias=True) for m in new_movements]
           self.tx.collection('is_in_position').insert_many(new_inventory_records)
