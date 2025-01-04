@@ -87,7 +87,7 @@ function resetInput() {
 }
 
 function toggleItem(serialCode) {
-  const match = lists.selectedItem.movements.find(m => m.serial_code == serialCode)
+  const match = lists.selectedItem.movements.find(m => m.serial_code == serialCode && m.status == 'planned')
   if (match) {
     if (match.qt_confirmed === 1) {
       match.qt_confirmed = 0

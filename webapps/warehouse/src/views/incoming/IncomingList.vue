@@ -11,10 +11,10 @@
       </div>
       <div class="col-auto">
         <div class="text-h5 text-low">
-          Da controllare
+          Verificati
         </div>
         <div class="text-right text-body1">
-          {{ listItems?.filter(i => i.status !== 'completed').length }} / {{  listItems?.length }}
+          {{ listItems?.filter(i => i.qt_confirmed === i.qt_planned).length }} / {{  listItems?.length }}
         </div>
       </div>
     </div>
@@ -25,11 +25,13 @@
       v-for="i in listItems"
       :key="i.product_code"
       v-touch-hold.mouse="() => showItemReferences = i"
-      class="surface1 q-pa-md q-mb-sm row items-center text-body1"
+      class="surface1 q-pa-md q-mb-sm row items-center text-body1 col-auto"
       :class="i.qt_planned === i.qt_confirmed ? 'theme-green' : 'surface1'"
-      @click.stop="() => i.status === 'planned' ? selectItem(i) : null"
+      :style="i.qt_planned === i.qt_confirmed ? 'opacity: 0.5' : ''"
+      @click.stop="() => i.qt_planned > i.qt_confirmed ? selectItem(i) : null"
     >
       <div class="col-8 column" style="min-width: 0">
+        <!-- PRODUCT DATA -->
         <div class="col">
           <div class="text-h4 highlight">
             {{ i.product_code }}
@@ -43,30 +45,48 @@
             {{ i.references.purchase_doc }}
           </div>
         </div>
+
+        <!-- COMPLETED MOVEMENTS -->
+        <div v-if="i.movements.some(m => m.status === 'completed')" class="row q-mt-sm">
+          <div
+            v-for="movement in i.movements.filter(m => m.status === 'completed')"
+            :key="movement._key"
+            class="row items-center full-height text-caption text-low q-gutter-x-sm"
+          >
+            <div class="col-auto">
+              {{ new Date(movement.end).toLocaleDateString() }}
+            </div>
+            <div class="col-auto" v-if="movement.serial_code">
+              {{ movement.serial_code }}
+            </div>
+            <div class="col-auto" v-else>
+              {{ movement.qt_confirmed }}x
+            </div>
+            <q-icon name="mdi-arrow-right-thin" size="xs"/>
+            <div class="col-auto">
+              {{ movement.position_to_code }}
+            </div>
+          </div>
+        </div>
       </div>
       <q-space></q-space>
 
-      <div class="col-auto column full-height justify-between q-col-gutter-y-sm">
-        <div class="col-auto self-end row q-gutter-x-sm items-center">
-          <div class="col-auto highlight">
-            {{ i.qt_planned - i.qt_confirmed }} / {{ i.qt_planned }}
-          </div>
-        </div>
-        <div class="col-auto row items-center text-low justify-end">
-          <q-icon v-if="i.type === 'serial'" name="mdi-cube-scan" size="xs"/>
-          <q-icon v-else name="mdi-apps" size="xs"/>
-          <template v-if="i.status === 'completed'">
-            <q-icon name="mdi-arrow-right-thin" />
-            <div class="text-h5">{{ i.position_to }}</div>
-          </template>
-        </div>
+      <!-- QUANTITY CONFIRMED/PLANNED -->
+      <div class="absolute-top-right q-mt-md q-mr-md highlight">
+        {{ i.qt_confirmed }} / {{ i.qt_planned }}
       </div>
+      <div class="absolute-bottom-right q-mb-md q-mr-md">
+        <q-icon v-if="i.qt_confirmed === i.qt_planned" name="mdi-check-circle" color="theme-green" size="xs"/>
+        <q-icon v-else-if="i.type === 'serial'" name="mdi-cube-scan" size="xs"/>
+        <q-icon v-else name="mdi-apps" size="xs"/>
+      </div>
+
       <q-linear-progress
         class="absolute-bottom"
         :value="i.qt_confirmed / i.qt_planned"
         color="theme-blue"
         track-color="theme-grey"
-        :thickness=".2"
+        :thickness=".5"
         size="xs"
       />
     </q-card>

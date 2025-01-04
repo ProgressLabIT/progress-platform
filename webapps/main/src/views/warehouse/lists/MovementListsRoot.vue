@@ -31,12 +31,12 @@
         >
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
-              <template v-if="['created', 'closed'].includes(column.name)">
-                {{
-                  props.row[column.name] === null
-                    ? '-'
-                    : $shortDateString(props.row[column.name], $i18n.locale)
-                }}
+              <template v-if="column.name === 'type'">
+                <q-icon :name="typeIconMap[props.row[column.field]]" />
+              </template>
+
+              <template v-else-if="column.format">
+                {{ column.format(props.row[column.field]) }}
               </template>
 
               <template v-else>
@@ -59,8 +59,6 @@ import queryModel from '@/lib/queryModelFactory.js';
 import { useMovementListColumns } from 'app/src/composables/warehouse';
 
 export default {
-  name: 'PositionsRoot',
-
   setup() {
     const pagination = ref({
       rowsPerPage: 0,
@@ -72,9 +70,17 @@ export default {
 
     const movementListColumns = useMovementListColumns();
 
+    const typeIconMap = {
+      'receipt': 'mdi-import',
+      'transfer': 'mdi-swap-horizontal',
+      'shipment': 'mdi-export',
+      'adjustment': 'mdi-plus-minus-variant'
+    }
+
     return {
       pagination,
       movementListColumns,
+      typeIconMap,
     };
   },
 

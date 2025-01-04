@@ -20,7 +20,7 @@
       <q-btn
         color="theme-blue"
         :label="$t('next')"
-        :disable="lists.selectedItem.qt_confirmed === 0"
+        :disable="lists.movementQuantity === 0"
         unelevated
         class="full-width q-mt-md"
         @click="step = 'destination'"
@@ -103,6 +103,7 @@ const router = useRouter();
 
 const close = () => {
   lists.selectedItem = undefined;
+  lists.tempQuantity = 0;
 };
 
 const step = ref('selection'); // destination, confirm
@@ -111,38 +112,39 @@ const positionsTo = ref([]);
 function prepareMovementUpdates() {
   // It's either a single position for 1:N serials or 1:N positions for a single product qt_confirmed
   const updates = [];
-
+  const movementComplete = lists.selectedItem.qt_confirmed + lists.movementQuantity === lists.selectedItem.qt_planned
   // Serials
   if (lists.selectedItem.type == 'serial') {
-    for (let movement of lists.selectedItem.movements.filter(m => m.qt_confirmed === 1)) {
+    for (let movement of lists.selectedItem.movements.filter(m => m.qt_confirmed === 1 && m.status !== 'completed')) {
       updates.push({
         ...movement,
         position_to: `Position/${positionsTo.value[0]._key}`,
+        _to: `Position/${positionsTo.value[0]._key}`,
         status: 'completed',
       });
     }
   }
   // Products with one destination
   else if (positionsTo.value.length === 1) {
-    console.log('quantity single')
     updates.push({
       ...lists.selectedItem.movements[0],
+      qt_confirmed: lists.movementQuantity,
       position_to: `Position/${positionsTo.value[0]._key}`,
-      status: 'completed',
+      _to: `Position/${positionsTo.value[0]._key}`,
+      status: movementComplete ? 'completed' : 'started'
     });
   }
   // Products with multiple destinations
   else {
-    console.log('quantity multiple')
     const splitData = positionsTo.value.map(position => ({
       position_to: `Position/${position._key}`,
       qt_confirmed: position.quantity,
     }));
     updates.push({
       ...lists.selectedItem.movements[0],
-      qt_confirmed: lists.selectedItem.qt_confirmed,
+      qt_confirmed: lists.movementQuantity,
       split_into: splitData,
-      status: 'completed',
+      status: movementComplete ? 'completed' : 'started'
     });
   }
   return updates
@@ -163,7 +165,7 @@ function confirm() {
           ...update,
           user_key: session_data.user._key,
           start: now,
-          end: now,
+          end: update.qt_confirmed === update.qt_planned ? now : null,
         }
       }
     })
@@ -174,8 +176,8 @@ function confirm() {
         color: 'theme-green',
         timeout: 1500,
       });
+      router.push({ name: 'IncomingList', params: { listKey: lists.selectedItem.listKey }})
       lists.loadLists('receipt');
-      router.push({ name: 'IncomingList', params: { listKey: lists.selectedItem.list_key }})
     })
     .catch((err) => {
       Notify.create({

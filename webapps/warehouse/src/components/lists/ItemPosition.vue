@@ -23,7 +23,7 @@
       <div class="col column items-end">
         <div class="text-h6 q-mb-sm">{{ $t('quantity') }}</div>
         <div class="text-h3 q-pr-sm">
-          {{ lists.selectedItem.qt_confirmed }}
+          {{ lists.movementQuantity }}
         </div>
       </div>
 
@@ -131,7 +131,7 @@ const maxNewPositions = computed(() => {
     return 1 - tempPositions.value.length;
   }
   else {
-    return lists.selectedItem.qt_confirmed - tempPositions.value.length;
+    return lists.movementQuantity - tempPositions.value.length;
   }
 });
 
@@ -176,7 +176,7 @@ function toggleSelection(position) {
   const index = tempPositionsKeys.value.findIndex((el) => el === position._key);
   if (index >= 0) {
     tempPositions.value.splice(index, 1);
-  } else if (tempPositions.value.length >= lists.selectedItem.qt_confirmed) {
+  } else if (tempPositions.value.length >= lists.movementQuantity) {
     Notify.create({
       message: 'Non puoi selezionare più posizioni di quelle richieste',
       color: 'theme-orange',
@@ -197,7 +197,7 @@ function adjustQuantityPerPosition() {
   if (tempPositions.value.length <= 0) {
     return;
   }
-  let remainingQty = lists.selectedItem.qt_confirmed;
+  let remainingQty = lists.movementQuantity;
   let remainingPos = tempPositions.value.length;
   for (let position of tempPositions.value) {
     let posQty = Math.floor(remainingQty / remainingPos);

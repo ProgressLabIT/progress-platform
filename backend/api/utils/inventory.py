@@ -207,6 +207,7 @@ class Queries:
       (@movement_type ? m.type == @movement_type : true)
       && (@movement_status ? m.status == @movement_status : true)
       && (@include_planned == false ? m.status != 'planned' : true)
+      && (@include_completed == false ? m.status != 'completed' : true)
       && (@start_from ? m.start >= @start_from : true)
       && (@start_to ? m.start <= @start_to : true)
       && (@end_from ? m.end >= @end_from : true)
@@ -269,6 +270,19 @@ class Queries:
       && (@type ? m.type IN @type : true)
     LIMIT @offset, @limit || null
     RETURN m
+  """
+
+  UPDATE_MOVEMENT_LIST = """
+    LET list_movements = (
+      FOR m IN movement
+      FILTER m.movement_list_key == @list_key
+      RETURN m
+    )
+    LET start = MIN(list_movements[*].start)
+    LET completed = list_movements[? ALL FILTER CURRENT.status IN ['canceled', 'completed']]
+    LET end = completed ? MAX(list_movements[*].end) : null
+    LET status = start == null ? 'planned' : (completed ? 'completed' : 'started' )
+    UPDATE @list_key WITH { status, start, end } in MovementList
   """
 
 

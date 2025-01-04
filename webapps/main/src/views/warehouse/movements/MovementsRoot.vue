@@ -94,6 +94,7 @@ export default {
 
     const statusIconMap = {
       'completed': 'mdi-check-circle-outline',
+      'started': 'mdi-ray-start-arrow',
       'planned': 'mdi-calendar-clock-outline'
     }
 

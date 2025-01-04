@@ -15,11 +15,11 @@ class InventoryCommandType(str, Enum):
   ADD_MOVEMENT = 'ADD_MOVEMENT'
   UPDATE_MOVEMENT = 'UPDATE_MOVEMENT'
   DELETE_MOVEMENT = 'DELETE_MOVEMENT'
-  CONFIRM_MOVEMENT = 'CONFIRM_MOVEMENT'
 
 class InventoryNotificationType(str, Enum):
   ERROR = 'ERROR'
   MOVEMENT_ADDED = 'MOVEMENT_ADDED'
+  MOVEMENT_UPDATED = 'MOVEMENT_UPDATED'
 
 
 class InventoryNotificationErrorCode(str, Enum):
@@ -179,9 +179,9 @@ class InventoryMovementNew(FlexModel):
     if values.get('type') == InventoryMovementType.SHIPMENT.value:
       values['_to'] = 'Position/OUT'
     if values.get('status') in [MovementStatus.STARTED.value, MovementStatus.COMPLETED.value] and values.get('start', None) is None:
-      values['start'] = now = timestamp()
+      values['start'] = timestamp()
     if values.get('status') == MovementStatus.COMPLETED.value and values.get('end', None) is None:
-      values['end'] = now if now is not None else timestamp()
+      values['end'] = timestamp()
     return values
 
   @model_validator(mode='after')
@@ -195,7 +195,7 @@ class InventoryMovementNew(FlexModel):
     return self
 
 
-class InventoryMovement(ArangoEdge): # edge collection movement
+class InventoryMovement(ArangoDocument): # edge collection movement
   # can be a segment of a multistep movement (to be used as graph),
   # in case material needs to be assigned a specific position in e.g. a transfer trolley with codified shelves
   # or in the future via a specific transport vehicle
@@ -252,13 +252,27 @@ class InventoryMovement(ArangoEdge): # edge collection movement
       raise ValueError("A movement must have a position from and to")
     return self
 
-class InventoryMovementEvent(InventoryMovementNew):
-  quantity: float | None = None
+
+class MovementSplitData(BaseModel):
+  position_from: str | None = None
+  position_to: str | None = None
+  qt_confirmed: float
+  qt_planned: float | None = None
+
+  @model_validator(mode='after')
+  def set_qt_planned(self):
+    if self.qt_planned is None:
+      self.qt_planned = self.qt_confirmed
+    return self
+
+class InventoryMovementUpdate(InventoryMovement):
+  split_into: list[MovementSplitData] | None = []
 
 class InventoryMovementSearchParameters(BaseModel):
   movement_type: InventoryMovementType | None = None
   movement_status: MovementStatus | None = None
   include_planned: bool | None = True
+  include_completed: bool | None = True
   start_from: datetime | None = None
   start_to: datetime | None = None
   end_from: datetime | None = None

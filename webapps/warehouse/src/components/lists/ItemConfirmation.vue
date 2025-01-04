@@ -21,20 +21,20 @@
       <div class="col column items-end">
         <div class="text-h6 q-mb-sm">{{ $t('total') }}</div>
         <div class="text-h3 q-pr-sm">
-          {{ selectedItem.qt_confirmed }}
+          {{ lists.movementQuantity }}
         </div>
       </div>
     </div>
 
     <div
       v-if="lists.itemSerials.length"
-      class="row col-auto q-gutter-x-sm"
+      class="row col-auto q-gutter-x-sm q-mt-md"
     >
       <q-badge
         v-for="serial in lists.itemSerials"
         :key="serial"
         color="theme-green"
-        class="text-body2 q-pa-sm highlight"
+        class="text-body2 q-py-xs q-px-sm highlight"
       >
         {{ serial.serial_code }}
       </q-badge>
@@ -84,7 +84,7 @@
             class="q-mb-md"
             style="z-index: 1000"
             :min="0"
-            :max="selectedItem.qt_confirmed"
+            :max="lists.movementQuantity"
             :step="1"
             :disable="position.locked || allOthersLocked[position._key]"
             @update:model-value="adjust(position)"

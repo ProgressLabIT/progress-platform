@@ -9,7 +9,8 @@ export const useListsStore = defineStore('lists', {
   state: () => ({
     headers: [],
     movements: [],
-    selectedItem: undefined
+    selectedItem: undefined,
+    tempQuantity: 0
   }),
   getters: {
     byPartner: (state) => {
@@ -61,7 +62,12 @@ export const useListsStore = defineStore('lists', {
       }
     },
     itemSerials: (state) => {
-      return state.selectedItem.movements.filter(m => m.qt_confirmed == 1)
+      return state.selectedItem.movements.filter(m => m.serial_key && m.qt_confirmed == 1 && m.status == 'planned')
+    },
+    movementQuantity: (state) => {
+      return state?.selectedItem?.type === 'serial'
+      ? state.selectedItem.movements.reduce((sum, m) => sum += m.qt_confirmed, 0)
+      : state.tempQuantity
     }
   },
   actions: {
@@ -74,9 +80,9 @@ export const useListsStore = defineStore('lists', {
 
         if (this.headers.length) {
           // fetch movements and group them by list and product
-          const listKeys = new URLSearchParams()
-          this.headers.forEach(l => listKeys.append('list_key', l._key))
-          this.movements = (await api.get('/movement', { params: listKeys })).data
+          const params = new URLSearchParams()
+          this.headers.forEach(l => params.append('list_key', l._key))
+          this.movements = (await api.get('/movement', { params })).data
         }
         nav.loading = false;
       }

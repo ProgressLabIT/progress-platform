@@ -18,13 +18,13 @@
 
     <!-- QUANTITY -->
     <div class="col column q-my-lg">
-      <div class="text-h3 col-auto">{{ $t('quantity') }}</div>
+      <div class="text-h3 col-auto">Quantità da confermare</div>
 
       <QuantitySelector
-        v-model="selectedItem.qt_confirmed"
+        v-model="lists.tempQuantity"
         show-buttons
         class="col"
-        :max="selectedItem.qt_planned"
+        :max="selectedItem.qt_planned - selectedItem.qt_confirmed"
       />
     </div>
   </div>
@@ -36,5 +36,4 @@ import { useListsStore } from 'app/src/stores/lists';
 import { storeToRefs } from 'pinia';
 const lists = useListsStore();
 const { selectedItem } = storeToRefs(lists);
-
 </script>
