@@ -298,6 +298,7 @@ class InventoryMovementSearchResults(InventoryMovement):
   position_from_code: str | None = None
   position_to_key: str | None = None
   position_to_code: str | None = None
+  movement_list_code: str | None = None
   product_key: str | None = None
   product_code: str | None = None
   product_description: str | None = None

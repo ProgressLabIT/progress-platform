@@ -226,6 +226,7 @@ class Queries:
     LIMIT @offset, @limit || null
 
     RETURN MERGE(m, {
+      movement_list_code: m.movement_list_key ? FIRST(FOR ml IN MovementList FILTER ml._key == m.movement_list_key RETURN ml.code) : null,
       position_from_key: PARSE_IDENTIFIER(m._from).key,
       position_from_code: position_from.code,
       position_to_key: PARSE_IDENTIFIER(m._to).key,

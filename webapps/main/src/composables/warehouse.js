@@ -80,6 +80,14 @@ export function useMovementColumns() {
       style: 'max-width: 10vw',
     },
     {
+      name: 'movement_list_code',
+      field: 'movement_list_code',
+      sortable: true,
+      label: t('list').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 10vw',
+    },
+    {
       name: 'type',
       field: 'type',
       sortable: true,
