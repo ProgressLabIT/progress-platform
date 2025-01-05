@@ -143,7 +143,11 @@ function loadLatestUsedPositions() {
   }
   else {
     loading.value = true;
-    api.get('movement/latest-positions', { limit: 10 }).then((resp) => {
+    api.get('movement/latest-positions', { params: {
+      position_type: 'to',
+      movement_type: 'receipt',
+      limit: 10
+    }}).then((resp) => {
       incoming.recentPositions = resp.data;
       positionResults.value = incoming.recentPositions;
       loading.value = false;

@@ -249,12 +249,13 @@ def search_inventory_journal(params: Annotated[InventoryMovementSearchParameters
 @router.get('/movement/latest-positions',
     dependencies=[Depends(auth.verify_token)])
 def get_recent_movement_positions(
-  type: Annotated[InventoryMovementType | None, Query()] = None,
+  position_type: Annotated[PositionType, Query(...)],
+  movement_type: Annotated[InventoryMovementType | None, Query()] = None,
   limit: int | None = 10
 ):
   try:
-    bind_vars = dict(limit=limit, type=type)
-    results = db.aql.execute(Queries.GET_RECENT_MOVEMENT_START_POSITIONS, bind_vars=bind_vars)
+    bind_vars = dict(limit=limit, movement_type=movement_type, position_type=position_type)
+    results = db.aql.execute(Queries.GET_RECENT_POSITIONS, bind_vars=bind_vars)
     return [Position(**p) for p in results]
 
   except Exception as e:

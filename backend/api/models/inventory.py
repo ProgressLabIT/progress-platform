@@ -58,6 +58,11 @@ class PositionNew(FlexModel):
   extra: Any = None
 
 
+
+class PositionType(str, Enum):
+  FROM = 'from'
+  TO = 'to'
+
 class PositionLink(ArangoEdge):  #edge is_in_position
  """
  the is_in_position collection is used both for inventory and for position hierarchy.

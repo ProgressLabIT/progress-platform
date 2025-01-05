@@ -160,13 +160,13 @@ class Queries:
     RETURN COUNT(children)
   """
 
-  GET_RECENT_MOVEMENT_START_POSITIONS = """
+  GET_RECENT_POSITIONS = """
     FOR m IN movement
-    FILTER @type ? m.type == @type : true
+    FILTER @movement_type ? m.type == @movement_type : true
     SORT m.created DESC
-    COLLECT position_from = DOCUMENT(m._from)
+    COLLECT position = DOCUMENT(m[@position_type == 'from' ? '_from' : '_to'])
     LIMIT @limit
-    RETURN position_from
+    RETURN position
   """
 
   GET_RECENT_MOVEMENT_PRODUCTS = """

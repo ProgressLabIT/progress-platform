@@ -102,7 +102,8 @@ function loadLatestUsedPositions() {
   else {
     loading.value = true;
     api.get('movement/latest-positions', { params: {
-      type: 'transfer',
+      position_type: 'from',
+      movement_type: 'transfer',
       limit: 10
     }})
     .then((resp) => {

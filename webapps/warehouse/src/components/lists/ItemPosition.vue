@@ -162,7 +162,11 @@ function searchPositions() {
 }
 
 function loadLatestUsedPositions() {
-  api.get('movement/latest-positions', { limit: 10 }).then((resp) => {
+  api.get('movement/latest-positions', { params: {
+    limit: 5,
+    movement_type: 'receipt',
+    position_type: 'to'
+  } }).then((resp) => {
     positionResults.value = resp.data;
   });
 }
