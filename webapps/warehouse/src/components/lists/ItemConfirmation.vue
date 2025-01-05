@@ -69,7 +69,7 @@
               size="xs"
               color="primary"
               :icon="position.locked ? 'mdi-lock-outline' : 'mdi-lock-open-variant-outline'"
-              @click="position.locked = !position.locked"
+              @click="updatePositionLock(position)"
             />
           </div>
           <q-space></q-space>
@@ -85,9 +85,10 @@
             style="z-index: 1000"
             :min="0"
             :max="lists.movementQuantity"
+            :inner-max="freeQuantity"
             :step="1"
             :disable="position.locked || allOthersLocked[position._key]"
-            @update:model-value="adjust(position)"
+            @change="adjust(position)"
           />
         </div>
       </template>
@@ -98,9 +99,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { useListsStore } from 'stores/lists'
 import { storeToRefs } from 'pinia';
+import { computed, ref } from 'vue';
+import { useListsStore } from 'stores/lists'
 const lists = useListsStore();
 const { selectedItem } = storeToRefs(lists);
 
@@ -113,11 +114,17 @@ const allOthersLocked = computed(() => {
   }, {});
 })
 
-function adjust(position) {
-  // The @change event is triggered before the model is updated
+// Max quantity for unlocked positions
+const freeQuantity = ref(lists.movementQuantity);
 
+function updatePositionLock(position) {
+  position.locked = !position.locked;
+  freeQuantity.value = selectedPositions.value.filter(p => !p.locked).reduce((acc, p) => acc + p.quantity, 0);
+}
+
+function adjust(position) {
   // Total quantity to distribute
-  let quantity_to_adjust = selectedItem.value.qt_confirmed;
+  let quantity_to_adjust = lists.movementQuantity;
   for (const pos of selectedPositions.value) {
     quantity_to_adjust -= pos.quantity;
   }

@@ -62,7 +62,7 @@
                 ? 'mdi-lock-outline'
               : 'mdi-lock-open-variant-outline'
             "
-            @click="position.locked = !position.locked"
+            @click="updatePositionLock(position)"
         />
       </div>
       <q-space></q-space>
@@ -79,6 +79,7 @@
           style="z-index: 1000"
           :min="0"
           :max="incoming.refQuantity"
+          :inner-max="freeQuantity"
           :step="1"
           :disable="position.locked || allOthersLocked[position._key]"
           @change="adjust(position)"
@@ -110,7 +111,7 @@
 
 <script setup>
 import { Notify } from 'quasar';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
 import { sendEvent } from 'app/src/composables/event.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
@@ -125,6 +126,9 @@ const allOthersLocked = computed(() => {
     return acc;
   }, {});
 })
+
+// Max quantity for unlocked positions
+const freeQuantity = ref(incoming.refQuantity);
 
 function confirm() {
   let movements = [];
@@ -186,6 +190,11 @@ function confirm() {
     });
   }
   incoming.$reset();
+}
+
+function updatePositionLock(position) {
+  position.locked = !position.locked;
+  freeQuantity.value = incoming.positions.filter(p => !p.locked).reduce((acc, p) => acc + p.quantity, 0);
 }
 
 function adjust(position) {
