@@ -259,27 +259,28 @@ class InventoryEventManager:
           ))
 
     def handle_shipment(self):
-      product_key = self.event.info.movement.product_key
-      record_match = dict(_from=f'Product/{product_key}', _to=self.event.info.movement.position_from)
-      if ('serial_key' in self.event.info.movement):
-         record_match['serial_key'] = self.event.info.movement.serial_key
-      else:
-         record_match['serial_key'] = None
-      position_link_cursor = self.tx.collection('is_in_position').find(record_match)
-      if (position_link_cursor.count()>0):
-         position_status = position_link_cursor.next()
-         final_qty = position_status['quantity'] - self.event.info.movement.qt_confirmed
-         if (final_qty<0):
-            raise InventoryMovementException(f'Cannot ship: quantity not enough')
-         elif (final_qty==0):
-          self.tx.collection('is_in_position').delete_match(filters=dict(_key = position_status['_key']))
-         else:
-            self.tx.collection('is_in_position').update(dict(
-              _key = position_status['_key'],
-              quantity=final_qty
-            ))
-      else:
-        raise InventoryMovementException(f'Cannot find product to ship')
+      if self.event.info.movement.status == MovementStatus.COMPLETED:
+        product_key = self.event.info.movement.product_key
+        record_match = dict(_from=f'Product/{product_key}', _to=self.event.info.movement.position_from)
+        if ('serial_key' in self.event.info.movement):
+          record_match['serial_key'] = self.event.info.movement.serial_key
+        else:
+          record_match['serial_key'] = None
+        position_link_cursor = self.tx.collection('is_in_position').find(record_match)
+        if (position_link_cursor.count()>0):
+          position_status = position_link_cursor.next()
+          final_qty = position_status['quantity'] - self.event.info.movement.qt_confirmed
+          if (final_qty<0):
+              raise InventoryMovementException(f'Cannot ship: quantity not enough')
+          elif (final_qty==0):
+            self.tx.collection('is_in_position').delete_match(filters=dict(_key = position_status['_key']))
+          else:
+              self.tx.collection('is_in_position').update(dict(
+                _key = position_status['_key'],
+                quantity=final_qty
+              ))
+        else:
+          raise InventoryMovementException(f'Cannot find product inventory to ship')
 
     def handle_transfer(self):
       """
