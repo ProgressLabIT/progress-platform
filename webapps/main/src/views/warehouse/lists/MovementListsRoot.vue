@@ -35,6 +35,10 @@
                 <q-icon :name="typeIconMap[props.row[column.field]]" />
               </template>
 
+              <template v-else-if="column.name === 'status'">
+                <q-icon :name="statusIconMap[props.row[column.field]]" />
+              </template>
+
               <template v-else-if="column.format">
                 {{ column.format(props.row[column.field]) }}
               </template>
@@ -77,10 +81,17 @@ export default {
       'adjustment': 'mdi-plus-minus-variant'
     }
 
+    const statusIconMap = {
+      'completed': 'mdi-check-circle-outline',
+      'started': 'mdi-progress-helper',
+      'planned': 'mdi-calendar-clock-outline'
+    }
+
     return {
       pagination,
       movementListColumns,
       typeIconMap,
+      statusIconMap
     };
   },
 
