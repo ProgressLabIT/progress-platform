@@ -302,7 +302,7 @@ def get_recent_movement_products(
 @router.get('/movement-list',
     dependencies=[Depends(auth.verify_token)])
 async def search_movement_lists(
-  search: str | None = None, # searches the mission code
+  search: str | None = None, # searches the list code
   list_key: list[str] | None = None,
   includes_product_key: str | None = None,
   includes_product_code: str | None = None,
@@ -349,7 +349,7 @@ def create_movement_list(new_movement_list: MovementListNew):
     # Ensure no duplicate codes for lists of the same type
     list_code_exists = tx.collection('MovementList').find(dict(code=new_movement_list.code, type=new_movement_list.type)).count()
     if list_code_exists:
-      raise ValueError(f"List of type '{new_movement_list.type.value}' with code '{new_movement_list.code}' already exists.")
+      raise HTTPException(status_code=409, detail=f"List of type '{new_movement_list.type.value}' with code '{new_movement_list.code}' already exists.")
 
     # MovementListNew model has the `movements` and `by_code` attributes set with export=False
     # so they won't be included in the list DB record
