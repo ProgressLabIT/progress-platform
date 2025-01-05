@@ -138,16 +138,33 @@ class Queries:
 
   GET_POSITION_HIERARCHY = """
     LET start = @position_id
-        FOR v, e IN 0..9999 ANY start is_in_position OPTIONS { uniqueVertices: "path" }
 
-        RETURN merge({
+    LET ancestors = (
+        FOR v, e IN 0..9999 OUTBOUND start is_in_position OPTIONS { uniqueVertices: "path" }
+        RETURN {
             position_id: v._id,
             position_key: v._key,
             code: v.code,
             product_key: v.product_key,
             from: e._from,
             to: e._to
-        })
+        }
+    )
+
+    LET descendants = (
+        FOR v, e IN 0..9999 INBOUND start is_in_position OPTIONS { uniqueVertices: "path" }
+        RETURN {
+            position_id: v._id,
+            position_key: v._key,
+            code: v.code,
+            product_key: v.product_key,
+            from: e._from,
+            to: e._to
+        }
+    )
+
+    FOR p in UNION_DISTINCT(ancestors, descendants)
+    RETURN p
   """
 
   GET_POSITION_CHILDREN_COUNT = """
