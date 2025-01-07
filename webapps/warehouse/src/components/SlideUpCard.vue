@@ -57,4 +57,7 @@ const props = defineProps({
 .slide-up-card-enter, .slide-up-card-leave-to {
   transform: translateY(100%);
 } */
+.q-dialog__inner--minimized > div {
+  max-height: 99vh !important;
+}
 </style>
