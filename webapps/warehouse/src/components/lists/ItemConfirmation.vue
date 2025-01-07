@@ -28,7 +28,7 @@
 
     <div
       v-if="lists.itemSerials.length"
-      class="row col-auto q-gutter-x-sm q-mt-md"
+      class="row col-auto q-gutter-sm q-mt-md"
     >
       <q-badge
         v-for="serial in lists.itemSerials"

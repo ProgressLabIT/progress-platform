@@ -17,17 +17,12 @@
     </div>
   </div>
 
-  <div class="row items-center q-mt-lg q-mb-sm">
 
-    <div class="col-auto text-h3 q-mr-sm">
+    <div class="col-auto text-h3 q-mt-md q-mb-sm">
       Inserisci seriali
     </div>
 
-    <q-chip v-if="lists.itemSerials.length" size="xs" color="theme-grey">
-      <div class="smaller highlight">{{ lists.itemSerials.length }}</div>
-    </q-chip>
 
-  </div>
 
   <div class="col-auto row">
   <q-input
@@ -54,13 +49,28 @@
   />
   </div>
 
-  <q-scroll-area class="col q-mt-lg">
-    <div class="col-auto row q-gutter-md">
+  <!-- SERIALS -->
+  <div class="row col-auto items-center q-mt-md q-mb-sm q-gutter-x-sm">
+    <div class="text-h6">
+      Selezionati
+    </div>
+    <q-chip size="xs" color="theme-grey">
+      <div class="smaller highlight">{{ lists.itemSerials.length }} / {{ lists.selectedItem.qt_planned }}</div>
+    </q-chip>
+    <q-space></q-space>
+    <q-btn color="theme-grey" size="xs" padding="xs md" icon="mdi-checkbox-multiple-blank-outline" @click="() => toggleAll(false)" />
+    <q-btn color="theme-blue" size="xs" padding="xs md" icon="mdi-checkbox-multiple-marked" @click="() => toggleAll(true)" />
+
+    </div>
+  <q-scroll-area class="col q-mt-md">
+    <div class="col-auto row q-gutter-sm">
       <q-card
-        v-for="serial in lists.itemSerials"
+        v-for="serial in lists.itemSerials.concat(availableSerials)"
         :key="serial._key"
         flat
-        class="bg-theme-green q-pa-sm highlight"
+        :bordered="serial.qt_confirmed === 0"
+        class="q-pa-sm"
+        :class="{ 'bg-theme-green highlight': serial.qt_confirmed === 1 }"
         @click="toggleItem(serial.serial_code)"
       >
         {{ serial.serial_code }}
@@ -70,12 +80,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useListsStore } from 'app/src/stores/lists';
 import { Notify } from 'quasar';
-import { useI18n } from 'vue-i18n';
 
-const { t: $t } = useI18n()
 const lists = useListsStore()
 
 
@@ -86,8 +94,24 @@ function resetInput() {
   document.getElementById('serial-input').focus()
 }
 
+const availableSerials = computed(() => {
+  return lists.selectedItem.movements
+    .filter(m => m.status == 'planned' && !lists.itemSerials.some(s => s.serial_code == m.serial_code))
+    .sort((a, b) => a.serial_code.localeCompare(b.serial_code))
+})
+
+function toggleAll(select) {
+  if (select) {
+    lists.selectedItem.movements.forEach(m => m.qt_confirmed = 1)
+    lists.selectedItem.qt_confirmed = lists.selectedItem.movements.length
+  } else {
+    lists.selectedItem.movements.forEach(m => m.qt_confirmed = 0)
+    lists.selectedItem.qt_confirmed = 0
+  }
+}
+
 function toggleItem(serialCode) {
-  const match = lists.selectedItem.movements.find(m => m.serial_code == serialCode && m.status == 'planned')
+  const match = lists.selectedItem.movements.find(m => m.serial_code == serialCode)
   if (match) {
     if (match.qt_confirmed === 1) {
       match.qt_confirmed = 0

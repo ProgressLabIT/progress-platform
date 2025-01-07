@@ -1,7 +1,7 @@
 <template>
   <SlideUpCard
     :model-value="lists.selectedItem !== undefined"
-    height="95vh"
+    :height="cardHeight"
     @hide="close"
   >
 
@@ -10,21 +10,27 @@
       <ItemSerialsSelection v-if="lists.selectedItem.type === 'serial'" />
       <ItemQuantitySelection v-else />
 
-      <q-btn
-        color="theme-blue"
-        :label="$t('print_label')"
-        unelevated
-        class="full-width"
-        @click="printProductLabel(lists.selectedItem.product_code, lists.selectedItem.product_description)"
-      />
-      <q-btn
-        color="theme-blue"
-        :label="$t('next')"
-        :disable="lists.movementQuantity === 0"
-        unelevated
-        class="full-width q-mt-md"
-        @click="step = 'destination'"
-      />
+      <div class="row q-mt-md q-gutter-x-sm">
+        <div class="col">
+          <q-btn
+            color="theme-blue"
+            label="etichetta"
+            unelevated
+            class="full-width"
+            @click="printProductLabel(lists.selectedItem.product_code, lists.selectedItem.product_description)"
+          />
+        </div>
+        <div class="col">
+          <q-btn
+            color="theme-blue"
+            :label="$t('next')"
+            :disable="lists.movementQuantity === 0"
+            unelevated
+            class="full-width"
+            @click="step = 'destination'"
+          />
+        </div>
+      </div>
     </template>
 
     <!-- DESTINATION -->
@@ -81,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SlideUpCard from 'app/src/components/SlideUpCard.vue';
 import ItemQuantitySelection from 'app/src/components/lists/ItemQuantitySelection.vue';
@@ -100,6 +106,10 @@ const store = useStore();
 const lists = useListsStore();
 const { t: $t } = useI18n();
 const router = useRouter();
+
+const cardHeight = computed(() => {
+  return window.innerHeight - 50 + 'px';
+});
 
 const close = () => {
   lists.selectedItem = undefined;
@@ -176,7 +186,7 @@ function confirm() {
         color: 'theme-green',
         timeout: 1500,
       });
-      router.push({ name: 'IncomingList', params: { listKey: lists.selectedItem.listKey }})
+      router.push({ name: 'IncomingList', params: { listKey: router.currentRoute.value.params.listKey }})
       lists.loadLists('receipt');
     })
     .catch((err) => {

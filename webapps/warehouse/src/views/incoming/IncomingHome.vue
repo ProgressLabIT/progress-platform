@@ -1,13 +1,13 @@
 <template>
   <q-page class="q-px-md q-py-md column fit q-gutter-y-sm">
-    <div class="text-h1 q-mb-sm">
+    <div class="text-h1 q-mb-sm col-auto">
       Liste di carico
     </div>
 
-    <template v-if="lists.headers.length">
+    <q-scroll-area v-if="lists.headers.length" class="col">
       <template v-for="([supplier, supplierLists]) in lists.byPartner" :key="supplier">
         <!-- Supplier Header -->
-        <div class="text-h3 full-width row justify-between items-baseline q-mt-lg">
+        <div class="text-h4 full-width row justify-between items-baseline q-mt-lg">
           <div class="col highlight">
             {{  supplierLists[0].references.partner_name }}
           </div>
@@ -21,7 +21,7 @@
             v-for="list in supplierLists"
             :key="list._key"
             v-ripple
-            class="row text-body1 surface1 justify-between q-pa-md"
+            class="row text-body1 surface1 justify-between q-pa-md q-mt-xs"
             @click="$router.push({ name: 'IncomingList', params: { listKey: list._key }})">
             <div>
               {{ list.code  }}
@@ -31,13 +31,12 @@
             </div>
           </q-card>
       </template>
-    </template>
+    </q-scroll-area>
 
-    <template v-else>
+    <div v-else class="col">
       Nessuna lista di carico disponibile
-    </template>
+    </div>
 
-    <q-space></q-space>
     <q-btn
       color="theme-blue"
       label="NUOVO RICEVIMENTO"

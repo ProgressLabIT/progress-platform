@@ -62,7 +62,7 @@ export const useListsStore = defineStore('lists', {
       }
     },
     itemSerials: (state) => {
-      return state.selectedItem.movements.filter(m => m.serial_key && m.qt_confirmed == 1 && m.status == 'planned')
+      return state.selectedItem?.movements?.filter(m => m.serial_key && m.qt_confirmed == 1 && m.status == 'planned').sort((a, b) => a.serial_code.localeCompare(b.serial_code))
     },
     movementQuantity: (state) => {
       return state?.selectedItem?.type === 'serial'
