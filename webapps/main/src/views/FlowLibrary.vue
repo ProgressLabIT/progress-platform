@@ -58,9 +58,16 @@
             class="background smaller full-with scroll relative-position q-pa-md"
             style="height: 400px; font-family: monospace; white-space: pre-line"
           >
-            <div v-for="(l, index) in flow_logs" :key="index" class="q-mb-sm">
-              {{ l }}
-            </div>
+            <q-list dense>
+              <q-item v-for="(l, index) in flow_logs" :key="index" class="q-mb-sm">
+                <q-item-section class="text-disabled">
+                  {{ l.timestamp }}
+                </q-item-section>
+                <q-item-section>
+                  {{ l.message }}
+                </q-item-section>
+              </q-item>
+            </q-list>
             <div id="scroll-anchor" class="q-mb-sm">
               <q-spinner v-if="active_states.includes(flow_state)" />
               <q-badge v-else color="theme-grey">END</q-badge>
@@ -242,7 +249,13 @@ export default {
     },
 
     async updateLogs(log_resp) {
-      const new_logs = log_resp.data.map((l) => `${l.timestamp}: ${l.message}`);
+      const new_logs = log_resp.data.map((l) => {
+        // Keep only the time part of the timestamp, remove the date and timezone
+        const timestamp = l.timestamp.split('T')[1].split('+')[0];
+        // Replace newlines with <br>
+        const message = l.message.replace(/\n/, '<br>');
+        return { timestamp, message };
+      });
       const logbox = document.getElementById('flow-log');
       this.flow_logs.push(...new_logs);
       logbox.scrollTop = logbox.scrollHeight;
