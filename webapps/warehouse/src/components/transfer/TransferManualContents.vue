@@ -126,7 +126,7 @@ async function searchContents() {
     return
   }
   api.get(`position/${transfer.startPosition._key}`, { params: { search: filter.value } }).then((resp) => {
-    if (resp.data.length === 1) {
+    if (resp.data.length === 1 && resp.data[0].code === filter.value) {
       toggleItem(resp.data[0]);
       filter.value = null;
     }

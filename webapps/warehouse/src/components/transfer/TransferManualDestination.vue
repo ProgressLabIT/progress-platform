@@ -119,7 +119,7 @@ function searchPositions() {
     .then((response) => {
       if (response.data.length === 0) {
         results.value = [];
-      } else if (response.data.length === 1) {
+      } else if (response.data.length === 1 && response.data[0].code === filter.value) {
         // if only one result, toggle it and notify the user
         setDestination(response.data[0]);
         reset();

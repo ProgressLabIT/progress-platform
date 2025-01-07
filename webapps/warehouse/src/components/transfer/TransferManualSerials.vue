@@ -112,7 +112,7 @@ function search() {
       if (response.data.length === 0) {
         results.value = [];
         message.value = 'no_results';
-      } else if (response.data.length === 1) {
+      } else if (response.data.length === 1 && response.data[0].code === filter.value) {
         // if only one result, toggle it and notify the user
         const serial = response.data[0];
         const action = toggleItem(serial);

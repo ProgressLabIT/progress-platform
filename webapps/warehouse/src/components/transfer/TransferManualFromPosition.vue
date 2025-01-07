@@ -134,7 +134,7 @@ function loadPositions() {
     params.limit = 100;
 
     api.get('position', { params }).then((resp) => {
-      if (resp.data.length === 1) {
+      if (resp.data.length === 1 && resp.data[0].code === filter.value) {
         selectPosition(resp.data[0]);
       }
       else {
