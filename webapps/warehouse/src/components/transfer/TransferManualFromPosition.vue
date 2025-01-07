@@ -96,8 +96,8 @@ function searchPositions() {
 
 
 function loadLatestUsedPositions() {
-  if (transfer?.recentPositions?.length) {
-    positionResults.value = transfer?.recentPositions;
+  if (transfer?.recentPositions?.from?.length) {
+    positionResults.value = transfer?.recentPositions?.from;
   }
   else {
     loading.value = true;
@@ -107,8 +107,8 @@ function loadLatestUsedPositions() {
       limit: 10
     }})
     .then((resp) => {
-      transfer.recentPositions = resp.data;
-      positionResults.value = transfer?.recentPositions;
+      transfer.recentPositions.from = resp.data;
+      positionResults.value = transfer?.recentPositions?.from;
       loading.value = false;
       positionResultsType.value = 'RECENTI';
     });

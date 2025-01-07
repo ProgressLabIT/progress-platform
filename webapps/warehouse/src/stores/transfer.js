@@ -7,6 +7,9 @@ export const useTransferStore = defineStore('transfer', {
     contents: [],
     destinationPosition: undefined,
     stage: 'start',
-    recentPositions: [],
+    recentPositions: {
+      from: [],
+      to: [],
+    },
   }),
 })

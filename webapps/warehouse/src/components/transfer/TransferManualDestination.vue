@@ -79,6 +79,17 @@ const transfer = useTransferStore();
 const filter = ref('');
 const results = ref([]);
 const showCreateContainerBottomSheet = ref(false);
+
+
+api.get('movement/latest-positions', { params: {
+  position_type: 'to',
+  movement_type: 'transfer',
+  limit: 5
+}})
+.then((resp) => {
+  transfer.recentPositions.to = resp.data;
+});
+
 const list = computed(() => {
 
   if (results.value.length === 0) {
@@ -88,7 +99,7 @@ const list = computed(() => {
     else {
       return {
         type: 'RECENTI',
-        items: transfer.recentPositions.filter(pos => pos._key !== transfer.startPosition?._key),
+        items: transfer.recentPositions.to.filter(pos => pos._key !== transfer.startPosition?._key),
         message: 'scan_destination_position'
       };
     }
