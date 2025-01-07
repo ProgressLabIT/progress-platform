@@ -52,7 +52,7 @@ const lists = useListsStore();
 function getListCounts(listKey) {
   const listItems = lists.movementsByListAndProduct[listKey]
   return {
-    completed: listItems.filter(i => i.qt_completed === i.qt_planned).length,
+    completed: listItems.filter(i => i.qt_confirmed === i.qt_planned).length,
     total: listItems.length
   }
 }
