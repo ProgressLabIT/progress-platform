@@ -285,7 +285,7 @@ class Queries:
       && (@due_by_max ? m.due_by <= @due_by_max : true)
       && (@open_only ? m.status IN ['planned', 'started'] : true)
       && (@status ? m.status IN @status : true)
-      && (@type ? m.type IN @type : true)
+      && (@type ? m.type == @type : true)
     LIMIT @offset, @limit || null
     RETURN m
   """

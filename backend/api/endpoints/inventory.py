@@ -309,7 +309,7 @@ async def search_movement_lists(
   due_by_min: date | None = None,
   due_by_max: date | None = None,
   status: list[MovementStatus] | None = None,
-  type: list[InventoryMovementType] | None = None,
+  type: InventoryMovementType | None = None,
   open_only: bool = False,
   limit: int = 100,
   offset: int = 0
