@@ -59,11 +59,11 @@
             style="height: 400px; font-family: monospace; white-space: pre-line"
           >
             <q-list dense>
-              <q-item v-for="(l, index) in flow_logs" :key="index" class="q-mb-sm">
-                <q-item-section class="text-disabled">
+              <q-item v-for="(l, index) in flow_logs" :key="index" class="q-mb-sm q-px-none">
+                <q-item-section side top class="text-disabled">
                   {{ l.timestamp }}
                 </q-item-section>
-                <q-item-section>
+                <q-item-section top>
                   {{ l.message }}
                 </q-item-section>
               </q-item>
@@ -249,9 +249,9 @@ export default {
     },
 
     async updateLogs(log_resp) {
-      const new_logs = log_resp.data.map((l) => {
-        // Keep only the time part of the timestamp, remove the date and timezone
-        const timestamp = l.timestamp.split('T')[1].split('+')[0];
+      const new_logs = log_resp.map((l) => {
+        // Keep only the time part of the timestamp up to milliseconds, without date and timezone
+        const timestamp = l.timestamp.slice(11, 23);
         // Replace newlines with <br>
         const message = l.message.replace(/\n/, '<br>');
         return { timestamp, message };
@@ -286,6 +286,9 @@ export default {
 <style lang="sass" scoped>
 #flow-log *
   overflow-anchor: none !important
+
+.q-list--dense > .q-item
+  padding: 0px !important
 
 #scroll-anchor
   overflow-anchor: auto
