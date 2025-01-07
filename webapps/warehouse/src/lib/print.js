@@ -1,6 +1,7 @@
 import BrowserPrint from "browserprint-es";
 import { Notify } from "quasar";
 import { i18n } from "boot/i18n";
+import store from "@/store/index.js";
 
 const { t: $t } = i18n.global;
 
@@ -51,10 +52,10 @@ export function printPositionLabel(position) {
   postZPL(zpl);
 }
 
-
 export function postZPL(zpl) {
+  const printerAddress = store?.state?.session?.user?.preferences?.printer; // IP:PORT
   console.log('Posting ZPL to the printer...', zpl)
-  var url = "http://10.0.0.152/pstprnt";
+  var url = `http://${printerAddress}/pstprnt`;
   var method = "POST";
   var async = true;
   var request = new XMLHttpRequest();
