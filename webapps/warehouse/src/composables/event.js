@@ -1,5 +1,5 @@
 import { timestamp } from '@/lib/TimeHandling.js';
-import session from '@/store/session.js';
+import store from '@/store/index.js';
 import { api } from '../boot/axios';
 
 
@@ -7,8 +7,8 @@ export function sendEvent({ event_type, event_data }) {
   return new Promise((resolve, reject) => {
     const event = {
       event_type,
-      user_key: session.state.user._key,
-      user_session_key: session.state.session_key,
+      user_key: store.state.session.user._key,
+      user_session_key: store.state.session.session_key,
       timestamp: timestamp(),
       ...event_data,
     };
