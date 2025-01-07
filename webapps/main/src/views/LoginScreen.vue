@@ -116,7 +116,7 @@
                 <q-input
                   v-model="new_password.second"
                   type="password"
-                  label="Password"
+                  :label="$capitalize($t('user.new_password_repeat'))"
                   autocomplete="off"
                 >
                 </q-input>

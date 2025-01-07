@@ -819,7 +819,8 @@ export default {
     more_filters: 'more filters',
     name: 'Name',
     new: 'new',
-    new_password: 'new password',
+    new_password: 'Insert new password',
+    new_password_repeat: 'repeat new password',
     new_password_save_action: 'save password and start session',
     new_success:
       'user successfully created. Take note of the temporary password for the user. It will not be shown again. The user must change it with a private one during his next access.',

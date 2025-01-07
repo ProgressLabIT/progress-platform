@@ -28,6 +28,8 @@ export default {
   },
   logout: 'Logout',
   new: 'New',
+  new_password: 'Insert new password',
+  new_password_repeat: 'Repeat new password',
   new_password_save_action: 'Save new password and start session',
   next: 'Next',
   no_results: 'No results',

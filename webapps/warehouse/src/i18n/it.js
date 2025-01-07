@@ -39,6 +39,8 @@ export default {
   login_welcome_message_2: 'Buon lavoro!',
   logout: 'Esci',
   new: 'Nuovo',
+  new_password: 'Inserisci nuova password',
+  new_password_repeat: 'Ripeti nuova password',
   new_password_save_action: 'Salva nuova password e inizia sessione',
   next: 'Avanti',
   no_results: 'Nessun risultato',

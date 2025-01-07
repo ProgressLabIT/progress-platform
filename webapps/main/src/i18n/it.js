@@ -831,7 +831,8 @@ export default {
     more_filters: 'più filtri',
     name: 'Nome',
     new: 'nuovo utente',
-    new_password: 'nuova password',
+    new_password: 'Inserisci nuova password',
+    new_password_repeat: 'Ripeti nuova password',
     new_password_save_action: 'salva password e inizia sessione',
     new_success:
       "Utente creato con successo. Prendi nota della password temporanea per l'utente. Non verrà mostrata di nuovo. Al prossimo accesso l'utente dovrà sostituirla con una privata.",
