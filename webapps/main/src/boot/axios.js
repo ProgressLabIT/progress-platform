@@ -45,7 +45,7 @@ export default boot(({ app, store }) => {
           //return app.router.push('/login');
         }
       }
-      return error;
+      throw error;
     },
   );
 
