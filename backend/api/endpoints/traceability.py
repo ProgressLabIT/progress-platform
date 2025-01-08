@@ -5,7 +5,7 @@ from utils import auth
 
 from events import Event
 from models.traceability import *
-from models.event import EventModel, EventType
+from models.event import EventModel, ProductionEventModel, SerialEventModel, CollaborationEventModel, AdminEventModel, EventType
 
 from utils.exceptions import *
 from utils.api import APIResponse
@@ -21,7 +21,7 @@ serials = db.collection('Serial')
 
 @router.post('/event',
     dependencies=[Depends(auth.verify_token)])
-async def record_event(data: EventModel):
+async def record_event(data: EventModel | ProductionEventModel | SerialEventModel | CollaborationEventModel | AdminEventModel):
   try:
     event = Event(data)
     response = event.save()

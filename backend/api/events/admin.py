@@ -5,6 +5,7 @@ from events.shared import EventMeta
 from models.production import Job, WorkStatus
 from models.traceability import Batch, WIP, WorkSession
 from utils.serial import Queries as SerialQueries
+from models.event import EventModel, AdminEventModel
 
 from utils.exceptions import (
   JobHasActiveBatchError,
@@ -36,6 +37,14 @@ class Queries:
     """
 
 class ProductionAdminEvent(BaseEvent):
+
+  def __init__(self, event: AdminEventModel, database=None, tx=None):
+    super().__init__(database, tx)
+    self.info = event
+    self.define_action(event.event_type.value)
+
+  def can_handle(self):
+    return self.action != None
 
   # =====================================================================================
   # UTILITIES

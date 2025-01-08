@@ -4,8 +4,18 @@ from events.base import BaseEvent
 from events.shared import EventMeta
 from managers.inventory_event_manager import InventoryEventManager
 from models.inventory import *
+from models.event import EventModel, InventoryEventModel
 
 class InventoryEvent(BaseEvent):
+
+  def __init__(self, event: InventoryEventModel, database=None, tx=None):
+    super().__init__(database, tx)
+    self.info = event
+    self.define_action(event.event_type.value)
+
+  def can_handle(self):
+    return self.action != None
+
   inventory_collections = ['movement', 'is_in_position']
 
   ADD_MOVEMENT = EventMeta(

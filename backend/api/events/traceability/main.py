@@ -8,6 +8,8 @@ from events.shared import EventMeta
 from models.traceability import *
 from models.production import Job, WorkStatus
 from models.product import TraceabilityLevel
+from models.event import EventModel, ProductionEventModel
+
 
 from utils.exceptions import JobIsStartedError, JobHasNoAssigneeError, WipNotAvailableError
 from utils.production import Queries as ProductionQueries, update_target_queue
@@ -24,6 +26,14 @@ from fastapi import HTTPException
 
 
 class ProductionActivityEvent(BaseEvent):
+  def __init__(self, event: ProductionEventModel, database, tx=None):
+    super().__init__(database, tx)
+    self.info = event
+    self.define_action(event.event_type.value)
+
+  def can_handle(self):
+    return self.action != None
+
   production_collections = [
     'Batch',
     'batch_serial',

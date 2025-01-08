@@ -5,8 +5,18 @@ from models.form import FileBucket
 from utils.dt import timestamp
 from utils.collaboration import Queries
 from utils.file import FileHandler
+from models.event import EventModel, CollaborationEventModel
 
 class CollaborationEvent(BaseEvent):
+
+  def __init__(self, event: CollaborationEventModel, database=None, tx=None):
+    super().__init__(database, tx)
+    self.info = event
+    self.define_action(event.event_type.value)
+
+  def can_handle(self):
+    return self.action != None
+
   issue_collections = ['Event', 'Issue', 'issue_rel', 'WorkOrder', 'Job']
   message_collections = ['Event', 'message']
   # Mapping of event types to metadata

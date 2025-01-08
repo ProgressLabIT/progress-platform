@@ -5,18 +5,13 @@ from events import (
   ProductionAdminEvent,
   SharedEventMethods,
 )
+from events.base import BaseEvent
 from models.event import EventModel
 from utils.db import db
 import uuid
 
 
-class Event(
-  CollaborationEvent,
-  InventoryEvent,
-  ProductionActivityEvent,
-  ProductionAdminEvent,
-  SharedEventMethods
-  ):
+class Event(BaseEvent):
   """
   This class serves as collector of all event categories and as main "entrypoint" for the event API
   It abstracts the general logic of processing and saving events from the specifics defined in each
@@ -32,50 +27,33 @@ class Event(
   ######################################################################
 
   def __init__(self, event: EventModel, database=db, tx=None):
-    self.db = database
-    self.info = event
-    self.meta = getattr(self, self.info.event_type.value)
-    self.response = None
+    self.event_managers = {
+                        'ProductionAdminEvent': ProductionAdminEvent(event=event, database=database, tx=tx),
+                        'CollaborationEvent': CollaborationEvent(event=event, database=database, tx=tx),
+                        'InventoryEvent': InventoryEvent(event=event, database=database, tx=tx),
+                        'ProductionActivityEvent': ProductionActivityEvent(event=event, database=database, tx=tx),
+                        #'SharedEventMethods': SharedEventMethods(event=event)
+                     }
 
     # define action to be taken based on the event type
-    self.action = getattr(self, self.meta.action)
+    # self.action = getattr(self, self.meta.action)
 
   def save(self, tx=None):
-    # Initialize transaction
-    self.meta.collections.append('Event')
+    for manager in self.event_managers.values():
+      if manager.can_handle():
+        manager.apply(tx=tx)
 
-    self.tx = tx if tx is not None else self.db.begin_transaction(write=self.meta.collections)
+  def can_handle(self):
+    for manager in self.event_managers.values():
+      if manager.can_handle():
+        return True
+    return False
 
-    # Define event UUID
-    if self.info.event_group is None:
-      self.info.event_group = str(uuid.uuid4())
 
-    try:
-      # Save event, storing its key for later use
-      if self.meta.event_first:
-        event_record = self.tx.collection('Event').insert(self.info, return_new=True)['new']
-        self.info = EventModel(**event_record)
+  def notify(self, event_tx: BaseEvent):
 
-      # Apply updates to global application state based on specific event
-      self.action()
-
-      # Apply updates based on event category shared logic
-      for method in self.meta.post_processing or []:
-        getattr(self, method)()
-
-      # Re-save event with new data added
-      self.tx.collection('Event').insert(self.info, overwrite=True)
-
-      # Commit transaction
-      if self.info.primary:
-        self.tx.commit_transaction()
-
-      # Return any required value
-      return self.response
-
-    # In case of exceptions, abort transaction without catching them
-    finally:
-      if self.tx.transaction_status() != 'committed' and self.info.primary:
-        self.tx.abort_transaction()
+    #TODO: context have to be managed, figured it out
+    event = Event(event_tx)
+    event.save(tx=self.tx)
 
 

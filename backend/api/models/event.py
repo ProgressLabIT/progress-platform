@@ -40,7 +40,7 @@ class EventType(str, Enum):
   PROGRESS_OVERRIDE_REQUESTED = 'PROGRESS_OVERRIDE_REQUESTED'
   BATCH_CANCELED = 'BATCH_CANCELED'
   STEP_CANCELED = 'STEP_CANCELED'
-  STEP_MODIFIED = 'STEP_MODIFIED'
+  #STEP_MODIFIED = 'STEP_MODIFIED'
 
   # Serial Events
   SERIAL_CREATED = 'SERIAL_CREATED'
@@ -49,10 +49,11 @@ class EventType(str, Enum):
   SERIAL_LINKED = 'SERIAL_LINKED'
 
   #Inventory Events
-  ADD_MOVEMENT = 'ADD_MOVEMENT'
-  UPDATE_MOVEMENT = 'UPDATE_MOVEMENT'
-  DELETE_MOVEMENT = 'DELETE_MOVEMENT'
-  MOVEMENT_UPDATED = 'MOVEMENT_UPDATED'
+  ADD_MOVEMENT = 'ADD_MOVEMENT'   #MOVEMENT_CREATED
+  UPDATE_MOVEMENT = 'UPDATE_MOVEMENT'  #MOVEMENT_UPDATED
+  DELETE_MOVEMENT = 'DELETE_MOVEMENT'  #MOVEMENT_DELETED
+  MOVEMENT_UPDATED = 'MOVEMENT_UPDATED' #MOVEMENT_UPDATED
+  MOVEMENT_COMPLETED = 'MOVEMENT_COMPLETED'
   WAREHOUSE_LIST_CREATED = 'WAREHOUSE_LIST_CREATED'
 
 
@@ -66,6 +67,29 @@ class EventModel(ArangoDocument):
   primary: bool = True
   description: str | None = None # optional descriptive field for auditing reasons
 
+class AdminEventModel(EventModel):
+  # Admin fields
+  new_job_duration: int | None = None # milliseconds
+  new_job_qt_completed: float | None = None
+  new_job_qt_released: float | None = None
+  should_adjust_duration: bool | None = None
+
+class InventoryEventModel(EventModel):
+  # Inventory fields
+  movement: InventoryMovementNew | InventoryMovementUpdate | None = None
+  movement_list: MovementListNew | None = None
+  movement_key: str | None = None
+  supplier_key: Any | None = None
+
+class SerialEventModel(EventModel):
+  # Traceability fields
+  serial_key: Any | None = None
+  serial_data: Any | None = None
+  batch_serials: Set[str] | None = None # prevent duplicated entries from client
+  serial_link_data: list[SerialLink] | None = None
+  delete_children: bool | None = False
+
+class ProductionEventModel(SerialEventModel):
   # Production Fields
   work_session_key: str | None = None
   work_session_end: datetime | None = None
@@ -86,26 +110,7 @@ class EventModel(ArangoDocument):
   step_changed_qt: float | None = None
   form_data: list[FormFieldValue] = []
 
+class CollaborationEventModel(EventModel):
   # Quality Fields
   issue_data: Any | None = None
   message_data: Message | None = None
-
-  # Admin fields
-  new_job_duration: int | None = None # milliseconds
-  new_job_qt_completed: float | None = None
-  new_job_qt_released: float | None = None
-  should_adjust_duration: bool | None = None
-
-  # Traceability fields
-  serial_key: Any | None = None
-  serial_data: Any | None = None
-  batch_serials: Set[str] | None = None # prevent duplicated entries from client
-  serial_link_data: list[SerialLink] | None = None
-  delete_children: bool | None = False
-
-  # Inventory fields
-  movement: InventoryMovementNew | InventoryMovementUpdate | None = None
-  movement_list: MovementListNew | None = None
-  movement_key: str | None = None
-  supplier_key: Any | None = None
-
