@@ -11,6 +11,7 @@
         dense
         clearable
         debounce="300"
+        :label="props.label"
         icon="mdi-magnify"
       >
         <template #append>
@@ -51,7 +52,12 @@ import CameraCodeScanner from '@/components/barcode-reader/CameraCodeScanner.vue
 // import { useI18n } from 'vue-i18n';
 
 // const $t = useI18n().t;
-
+const props = defineProps({
+  label: {
+    type: String,
+    default: ''
+  }
+});
 const inputText = defineModel({ type: String });
 const show_code_scanner = ref(false);
 
