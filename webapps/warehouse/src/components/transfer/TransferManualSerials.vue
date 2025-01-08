@@ -5,10 +5,26 @@
       {{ $t(message) }}
     </div>
 
-    <SearchOrScan
-      v-model="filter"
-      @update:model-value="search"
-    />
+    <div class="row q-col-gutter-sm">
+      <div class="col-6">
+        <SearchOrScan
+          v-model="filter"
+          label="Seriale"
+          @update:model-value="search"
+        />
+      </div>
+      <div class="col-6">
+        <q-input
+          filled
+          dense
+          clearable
+          input-class="text-uppercase"
+          label="Prodotto"
+          v-model="productCodeFilter"
+          @update:model-value="search"
+        />
+      </div>
+    </div>
 
     <q-scroll-area class="col">
 
@@ -91,6 +107,7 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 const transfer = useTransferStore();
 const filter = ref('');
+const productCodeFilter = ref('');
 const results = ref([]);
 const message = ref('scan_serial')
 const { t } = useI18n();
@@ -106,7 +123,8 @@ function search() {
     api.get('serial', { params: {
       serial_search: filter.value,
       sort_by: 'code',
-      sorting_order: 'asc'
+      sorting_order: 'asc',
+      product_code_search: productCodeFilter.value ?? null
     }})
     .then(response => {
       if (response.data.length === 0) {
