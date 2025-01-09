@@ -172,6 +172,7 @@ class InventoryMovementNew(FlexModel):
   start: datetime | None = None
   end: datetime | None = None
   movement_list_key: str | None = None # link to MovementList document, if present
+  movement_list_item: float | None = None # "row" number in the movement list
   references: InventoryMovementReferences | None = None
   reason: str | None = None
   user_key: str | None = None
@@ -221,6 +222,7 @@ class InventoryMovement(ArangoDocument): # edge collection movement
   end: datetime | None = None
 
   movement_list_key: str | None = None # link to MovementList document, if present
+  movement_list_item: float | None = None # "row" number in the movement list
 
   references: InventoryMovementReferences | None = None # RECEIPTS: purchase doc, SHIPMENTS: sales doc, TRANSFERS/PROD/CONS: work order/job
   reason: str | None = None
@@ -333,13 +335,32 @@ class MovementListNew(MovementList):
   movements: list[InventoryMovementNew] | None = Field(None, exlcude=True)
   by_code: bool | None = Field(False, exclude=True)
 
-  @model_validator(mode='after')
-  def validate(self):
-    if self.movements is None or len(self.movements) == 0:
+  @model_validator(mode='before')
+  def validate(cls, values):
+    if values.get('movements') is None or len(values.get('movements')) == 0:
       raise ValueError("A movement list must have at least one movement")
-    for movement in self.movements:
-      if movement.type != self.type:
-        raise ValueError("All movements in a movement list must be of the same type")
 
-    # TODO: Ensure there is only one movement per product without serial with the same references
-    return self
+    items_product = {}
+    for movement in values.get('movements'):
+      if movement.get('type') is not None and movement.get('type') != values.get('type'):
+        raise ValueError("All movements in a movement list must be of the same type")
+      if movement.get('type') is None:
+        movement['type'] = values['type']
+
+      product_ref = 'product_code' if values.get('by_code') else 'product_key'
+      if movement.get(product_ref) is None:
+        raise ValueError(f"{product_ref} is required for all movements. Missing for movement {movement}")
+
+      # Prevent different products or multiple non-serial movements with same list item
+      by_code = values.get('by_code')
+      list_item = movement.get('movement_list_item')
+      movement_serial = movement.get('serial_code' if by_code else 'serial_key')
+      if items_product.get(list_item) is not None:
+        if items_product.get(list_item).get('product') != movement.get(product_ref):
+          raise ValueError(f"Cannot have multiple products with the same movement list item {list_item}")
+        elif movement_serial in items_product.get(list_item).get('serials'):
+          raise ValueError(f"Cannot have the same serial number or no serial number in multiple movements with in the same list item (Item: {list_item})")
+      else:
+        items_product[list_item] = dict(product=movement.get(product_ref), serials=[movement_serial])
+
+    return values

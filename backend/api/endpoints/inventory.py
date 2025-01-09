@@ -384,6 +384,7 @@ def create_movement_list(new_movement_list: MovementListNew):
         serial_key = m.serial_key,
         qt_planned = m.qt_planned,
         movement_list_key = new_list_key,
+        movement_list_item = m.movement_list_item,
         product_key = m.product_key,
         status = MovementStatus.PLANNED,
         references = merge_references(list_references=new_movement_list.references, movement_references=m.references),

@@ -20,36 +20,28 @@ export const useListsStore = defineStore('lists', {
       }, {})
       return Object.entries(map)
     },
-    movementsByListAndProduct: (state) => {
-      const result = {}
-      state.headers.forEach(list => {
-        const listMovements = state.movements.filter(m => m.movement_list_key === list._key).map(m => {
-          const refKey = Object.values(m.references).filter(r => r).join('-')
-          const itemKey = `${m.product_code}-${refKey}`
-          return { ...m, itemKey }
-        })
-        const itemKeys = new Set(listMovements.map(m => m.itemKey))
-        const listItems = []
-        itemKeys.forEach(ik => {
-          const itemMovements = listMovements.filter(m => m.itemKey === ik)
-          const qt_planned = itemMovements.reduce((sum, mov) => sum += mov.qt_planned, 0)
-          const qt_confirmed = itemMovements.reduce((sum, mov) => sum += mov.qt_confirmed, 0)
-          const type = itemMovements[0].serial_code ? 'serial' : 'quantity'
-          listItems.push({
-            itemKey: ik,
-            product_code: itemMovements[0].product_code,
-            product_description: itemMovements[0].product_description,
-            references: itemMovements[0].references,
-            listKey: list._key,
+    movementsByListAndItem: (state) => {
+      return state.headers.reduce((result, list) => {
+        const listMovementsByItem = Object.groupBy(state.movements.filter(m => m.movement_list_key == list._key), m => m.movement_list_item)
+        const listItems = Object.entries(listMovementsByItem).map(([item, movements]) => {
+          const qt_planned = movements.reduce((sum, mov) => sum += mov.qt_planned, 0)
+          const qt_confirmed = movements.reduce((sum, mov) => sum += mov.qt_confirmed, 0)
+          const type = movements[0].serial_code ? 'serial' : 'quantity'
+          return {
+            item,
+            product_code: movements[0].product_code,
+            product_description: movements[0].product_description,
+            references: movements[0].references,
+            listKey: movements[0].movement_list_key,
             type,
             qt_planned,
             qt_confirmed,
-            movements: itemMovements
-          });
+            movements
+          };
         })
         result[list._key] = listItems
-      })
-      return result
+        return result
+      }, {})
     },
     getMovementByKey: (state) => {
       return (movementKey) => {
