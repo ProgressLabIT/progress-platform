@@ -21,8 +21,11 @@
           input-class="text-uppercase"
           label="Prodotto"
           v-model="productCodeFilter"
-          @update:model-value="search"
-        />
+        >
+          <template #append>
+            <q-icon name="mdi-filter" />
+          </template>
+        </q-input>
       </div>
     </div>
 
@@ -119,7 +122,7 @@ function search() {
     reset();
     return;
   }
-  else {
+  else if (filter.value) {
     api.get('serial', { params: {
       serial_search: filter.value,
       sort_by: 'code',
@@ -162,7 +165,9 @@ function search() {
 
 const serialList = computed(() => {
   return [
-    ...results.value.filter(item => !transfer.contents.find(serial => serial._key === item._key))
+    ...results.value
+    .filter(s => s.product.code.includes(productCodeFilter.value))
+    .filter(item => !transfer.contents.find(serial => serial._key === item._key))
   ];
 });
 
