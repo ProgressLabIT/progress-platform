@@ -212,7 +212,8 @@ function adjustQuantityPerPosition() {
 }
 
 function selectNewContainers(containers) {
-  tempPositions.value = [...tempPositions.value, ...containers];
+  tempPositions.value.push(...containers);
+  adjustQuantityPerPosition();
   showCreateContainerBottomSheet.value = false;
 }
 
