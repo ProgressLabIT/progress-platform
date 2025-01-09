@@ -134,17 +134,7 @@ function prepareMovementUpdates() {
       });
     }
   }
-  // Products with one destination
-  else if (positionsTo.value.length === 1) {
-    updates.push({
-      ...lists.selectedItem.movements[0],
-      qt_confirmed: lists.movementQuantity,
-      position_to: `Position/${positionsTo.value[0]._key}`,
-      _to: `Position/${positionsTo.value[0]._key}`,
-      status: movementComplete ? 'completed' : 'started'
-    });
-  }
-  // Products with multiple destinations
+  // Quantity
   else {
     const splitData = positionsTo.value.map(position => ({
       position_to: `Position/${position._key}`,
