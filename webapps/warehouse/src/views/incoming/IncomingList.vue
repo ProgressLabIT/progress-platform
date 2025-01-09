@@ -47,24 +47,21 @@
         </div>
 
         <!-- COMPLETED MOVEMENTS -->
-        <div v-if="i.movements.some(m => m.status === 'completed')" class="row q-mt-sm">
+        <div v-if="i.movements.some(m => m.status === 'completed')" class="q-mt-sm">
           <div
-            v-for="movement in i.movements.filter(m => m.status === 'completed')"
-            :key="movement._key"
+            v-for="(group, index) in getCompletedMovementsSummary(i.movements)"
+            :key="index"
             class="row items-center full-height text-caption text-low q-gutter-x-sm"
           >
             <div class="col-auto">
-              {{ new Date(movement.end).toLocaleDateString() }}
+              {{ group.date }}
             </div>
-            <div class="col-auto" v-if="movement.serial_code">
-              {{ movement.serial_code }}
-            </div>
-            <div class="col-auto" v-else>
-              {{ movement.qt_confirmed }}x
+            <div class="col-auto">
+              {{ group.qt_confirmed }}x
             </div>
             <q-icon name="mdi-arrow-right-thin" size="xs"/>
             <div class="col-auto">
-              {{ movement.position_to_code }}
+              {{ group.position_to_code }}
             </div>
           </div>
         </div>
@@ -164,10 +161,24 @@ onBeforeRouteLeave(() => {
   nav.dynamicBreadcrumb = []
 })
 
-const listItems = computed(() => lists.movementsByListAndProduct[props.listKey]);
+const listItems = computed(() => lists.movementsByListAndItem[props.listKey]);
 
 function selectItem(item) {
   lists.selectedItem = JSON.parse(JSON.stringify(item))
+}
+
+function getCompletedMovementsSummary(movements) {
+  const groups = Object.groupBy(
+    movements.filter(m => m.status === 'completed'),
+    (m) => `${new Date(m.end).toLocaleDateString()}-${m.position_to_code}`
+  )
+  return Object.entries(groups).map(([key, value]) => {
+    return {
+      date: key.split('-')[0],
+      position_to_code: key.split('-')[1],
+      qt_confirmed: value.reduce((acc, m) => acc + m.qt_confirmed, 0),
+    }
+  })
 }
 
 
@@ -187,7 +198,6 @@ function closeList() {
       cancel: { label: $t('no'), color: 'theme-orange'},
       ok: { label: $t('yes'), color: 'theme-blue'}
     }).onOk(() => {
-      console.log('saving')
       for (const update of updatedMovements) {
         sendEvent({
           event_type: 'MOVEMENT_CONFIRMED',
