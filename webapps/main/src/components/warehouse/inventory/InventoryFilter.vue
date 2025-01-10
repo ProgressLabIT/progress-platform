@@ -1,27 +1,13 @@
 <template>
   <FilterDrawer
-    v-model="showFilter"
+    v-model="showFilterDrawer"
     :active-filters="filters_active"
     @reset="resetFilters"
   >
     <!-- PRODUCT CODE -->
-    <div class="row items-baseline q-col-gutter-md">
-      <BaseAutocompleteProduct
-        dense
-        filled
-        class="q-mb-md col"
-        behavior="menu"
-        popup-content-class="z-max"
-        key-only
-        :load-data="false"
-        :label="$capitalize($t('warehouse.inventory.product_code'))"
-        :value="product"
-        @select="(selection) => (product = selection)"
-      />
-    </div>
+    <div class="column q-col-gutter-xs">
 
-    <!-- POSITION -->
-    <div class="row items-baseline q-col-gutter-md">
+    <!-- ROOT POSITION -->
       <BaseAutocompletePositions
         dense
         filled
@@ -30,87 +16,77 @@
         popup-content-class="z-max"
         key-only
         :load-data="false"
-        :label="$capitalize($t('warehouse.inventory.position'))"
-        :value="position"
-        @select="(selection) => (position = selection)"
+        label="Posizione di partenza"
+        :value="rootPositionKey"
+        @select="(selection) => (rootPositionKey = selection)"
       />
-    </div>
 
-    <!-- SERIAL -->
-    <div class="row items-baseline q-col-gutter-md">
-      <BaseAutocompleteSerial
-        dense
+      <!-- PRODUCT SEARCH -->
+      <q-input
+        v-model="productSearch"
         filled
+        dense
+        clearable
+        autocomplete="off"
+        name="search"
+        debounce="300"
+        label="Filtro prodotto"
         class="q-mb-md col"
-        behavior="menu"
-        popup-content-class="z-max"
-        key-only
-        :load-data="false"
-        :label="$capitalize($t('serial'))"
-        :value="serial"
-        @select="(selection) => (serial = selection)"
+      />
+
+      <!-- SERIAL SEARCH -->
+      <q-input
+        v-model="serialSearch"
+        filled
+        dense
+        clearable
+        autocomplete="off"
+        name="search"
+        debounce="300"
+        label="Filtro seriale"
+        class="q-mb-md col"
+      />
+
+      <!-- POSITION SEARCH -->
+      <q-input
+        v-model="positionSearch"
+        filled
+        dense
+        clearable
+        autocomplete="off"
+        name="search"
+        debounce="300"
+        label="Filtro posizione"
+        class="q-mb-md col"
       />
     </div>
   </FilterDrawer>
 </template>
 
-<script>
+<script setup>
 import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
-import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
-import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import { useInventoryFilters } from 'app/src/composables/warehouse';
+import { useRouter } from 'vue-router';
+import { watch } from 'vue';
+const $router = useRouter();
 
-export default {
-  name: 'InventoryFilter',
+const showFilterDrawer = defineModel('showFilterDrawer', {
+  type: Boolean,
+  required: true,
+});
 
-  components: {
-    FilterDrawer,
-    BaseAutocompletePositions,
-    BaseAutocompleteProduct,
-    BaseAutocompleteSerial,
-  },
+const emit = defineEmits(['filterActiveChange']);
 
-  props: {
-    showFilterDrawer: {
-      type: Boolean,
-      required: true,
-    },
-  },
+const { productSearch, positionSearch, serialSearch, rootPositionKey, filters_active } = useInventoryFilters();
 
-  emits: ['showFilterDrawer', 'filterActiveChange'],
 
-  setup() {
-    const { product, position, serial, filters_active } = useInventoryFilters();
+function resetFilters() {
+  $router.replace({ query: null });
+}
 
-    return { product, position, serial, filters_active };
-  },
+watch(filters_active, (newVal) => {
+  emit('filterActiveChange', newVal);
+});
 
-  data() {
-    return {
-      bool_filters: [],
-      showFilter: false,
-    };
-  },
-
-  watch: {
-    showFilter: {
-      handler() {
-        this.$emit('showFilterDrawer', this.showFilter);
-      },
-    },
-    showFilterDrawer: {
-      handler() {
-        this.showFilter = this.showFilterDrawer;
-        this.$emit('filterActiveChange', this.filters_active);
-      },
-    },
-  },
-
-  methods: {
-    resetFilters() {
-      this.$router.replace({ query: null });
-    },
-  },
-};
 </script>

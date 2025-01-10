@@ -318,31 +318,34 @@ export function useInventoryColumns() {
 }
 
 export function useInventoryFilters() {
-  const product = ref(useQueryModel(String, 'product', null));
-  const position = ref(useQueryModel(String, 'position', null));
-  const serial = ref(useQueryModel(String, 'serial', null));
+  const productSearch = ref(useQueryModel(String, 'product_search', null));
+  const serialSearch = ref(useQueryModel(String, 'serial_search', null));
+  const positionSearch = ref(useQueryModel(String, 'position_search', null));
+  const rootPositionKey = ref(useQueryModel(String, 'root_position_key', null));
 
   const filters = computed({
     get: () => ({
-      product_key: product.value,
-      position_key: position.value,
-      serial_keys: serial.value,
+      product_search: productSearch.value,
+      position_search: positionSearch.value,
+      serial_search: serialSearch.value,
+      root_position_key: rootPositionKey.value,
     }),
   });
 
   const filters_active = computed({
     get: () => {
-      return Object.entries(filters).filter(([value]) => {
+      return [productSearch, serialSearch, positionSearch, rootPositionKey].filter(({value}) => {
         return !!value;
       }).length;
     },
   });
 
   return {
-    product,
-    position,
-    serial,
     filters,
+    productSearch,
+    positionSearch,
+    serialSearch,
+    rootPositionKey,
     filters_active,
   };
 }

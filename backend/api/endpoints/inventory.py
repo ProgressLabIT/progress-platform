@@ -417,10 +417,10 @@ def create_movement_list(new_movement_list: MovementListNew):
 
 @router.get('/inventory',
     dependencies=[Depends(auth.verify_token)])
-async def get_inventory(params: Annotated[InventorySearchParams, Query()]):
+async def get_inventory(params: Annotated[InventoryGraphSearchParams, Query()]):
   try:
     bind_vars = dict(**params.model_dump())
-    results = db.aql.execute(Queries.SEARCH_INVENTORY, bind_vars=bind_vars)
+    results = db.aql.execute(Queries.SEARCH_INVENTORY_GRAPH, bind_vars=bind_vars)
     return [InventorySearchResult(**r) for r in results]
 
   except Exception as e:

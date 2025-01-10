@@ -116,12 +116,7 @@
 
     <inventory-filter
       v-if="$route.name === 'inventory'"
-      :show-filter-drawer="showFilterDrawer"
-      @show-filter-drawer="
-        (showFilter) => {
-          showFilterDrawer = showFilter;
-        }
-      "
+      v-model:show-filter-drawer="showFilterDrawer"
       @filter-active-change="
         (filtersActive) => {
           filtersActiveNo = filtersActive;

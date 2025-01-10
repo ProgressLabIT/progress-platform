@@ -1,5 +1,6 @@
 import { cloneDeep as _cloneDeep } from 'lodash';
 import { api } from '@/boot/axios.js';
+import { Notify } from 'quasar';
 
 const warehouse = {
   state: {
@@ -190,9 +191,18 @@ const warehouse = {
 
     // MOVEMENTS
     async getMovements({ commit }, search_params) {
-      const { data } = await api.get('movement', { params: search_params });
-      commit('LOAD_MOVEMENTS', data);
-      commit('SET_MOVEMENT_SEARCH_PARAMS', search_params);
+      try {
+        const { data } = await api.get('movement', { params: search_params });
+        commit('LOAD_MOVEMENTS', data);
+        commit('SET_MOVEMENT_SEARCH_PARAMS', search_params);
+      } catch (error) {
+        Notify.create({
+          message: error.message,
+          color: 'theme-red',
+          timeout: 1500,
+          position: 'top',
+        });
+      }
     },
 
     async appendMovements({ commit }, search_params) {

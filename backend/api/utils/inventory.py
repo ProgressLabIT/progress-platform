@@ -63,6 +63,10 @@ class Queries:
       IS_SAME_COLLECTION('Product', v)
       && (@position_key ? position._key == @position_key : true)
       && (@position_code ? position.code == @position_code : true)
+      && (@serial_code ? serial.code == @serial_code : true)
+      && (@position_search ? CONTAINS(LOWER(position.code), LOWER(@position_search)) : true)
+      && (@product_search ? CONTAINS(LOWER(v.code), LOWER(@product_search)) : true)
+      && (@serial_search ? CONTAINS(LOWER(serial.code), LOWER(@serial_search)) : true)
       && (@product_key ? v._key == @product_key : true)
       && (@product_code ? v.code == @product_code : true)
       && (@owned ? e.owned == @owned : true)
@@ -71,9 +75,6 @@ class Queries:
       //&& (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%') : true)
       //&& (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
       //&& (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
-
-
-
   """
 
   SEARCH_INVENTORY = """
@@ -86,18 +87,57 @@ class Queries:
     LIMIT @offset, @limit || null
 
 
-      RETURN {
-        product_id: product._id,
-        product_code: product.code,
-        position_id: pos._id,
-        position_key: pos._key,
-        position_code: pos.code,
-        serial_key: ser._key,
-        serial_code: ser.code,
-        quantity,
-        owned,
-        value
-      }
+    RETURN {
+      product_id: product._id,
+      product_code: product.code,
+      position_id: pos._id,
+      position_key: pos._key,
+      position_code: pos.code,
+      serial_key: ser._key,
+      serial_code: ser.code,
+      quantity,
+      owned,
+      value
+    }
+  """
+
+  SEARCH_INVENTORY_GRAPH = """
+    LET start = @root_position_key ? CONCAT('Position/', @root_position_key) : 'Position/IN'
+
+    LET positions = (
+        FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
+        FILTER IS_SAME_COLLECTION(v, Position)
+        RETURN v
+    )
+
+    FOR position IN positions
+    FILTER @position_search ? CONTAINS(LOWER(position.code), LOWER(@position_search)) : true
+    FOR i IN is_in_position
+    FILTER i._to == position._id && IS_SAME_COLLECTION(i._from, Product)
+
+    LET product = DOCUMENT(i._from)
+    LET serial = DOCUMENT(Serial, i.serial_key)
+
+    FILTER
+      (@product_search ? CONTAINS(LOWER(product.code), LOWER(@product_search)) : true)
+      && (@serial_search ? CONTAINS(LOWER(serial.code), LOWER(@serial_search)) : true)
+      && (@owned ? i.owned == @owned : true)
+
+    COLLECT prod = product, pos = position, ser = serial
+    AGGREGATE quantity = SUM(i.quantity), value = SUM(i.value)
+
+    LIMIT @offset || 0, @limit || null
+
+    RETURN {
+      product_key: prod._key,
+      product_code: prod.code,
+      position_key: pos._key,
+      position_code: pos.code,
+      serial_key: ser._key,
+      serial_code: ser.code,
+      quantity,
+      value
+    }
   """
 
   SEARCH_INVENTORY_PRODUCT = """
@@ -107,7 +147,7 @@ class Queries:
 
     LIMIT @offset, @limit || null
 
-      RETURN DISTINCT v
+    RETURN DISTINCT v
   """
 
   SEARCH_INVENTORY_POSITIONS = """

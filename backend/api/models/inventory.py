@@ -115,6 +115,15 @@ class InventorySearchResult(BaseModel):
   extra: Any = None
 
 
+class InventoryGraphSearchParams(BaseModel):
+  root_position_key: str | None = None
+  product_search: str | None = None
+  serial_search: str | None = None
+  position_search: str | None = None
+  owned: bool | None = None
+  limit: int | None = 200
+  offset: int | None = 0
+
 class InventorySearchParams(BaseModel):
   #TODO uncomment
   product_key: str | None = None
