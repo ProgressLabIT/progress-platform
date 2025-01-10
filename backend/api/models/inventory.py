@@ -15,6 +15,7 @@ class InventoryCommandType(str, Enum):
   ADD_MOVEMENT = 'ADD_MOVEMENT'
   UPDATE_MOVEMENT = 'UPDATE_MOVEMENT'
   DELETE_MOVEMENT = 'DELETE_MOVEMENT'
+  CLOSE_LIST = 'CLOSE_LIST'
 
 class InventoryNotificationType(str, Enum):
   ERROR = 'ERROR'
