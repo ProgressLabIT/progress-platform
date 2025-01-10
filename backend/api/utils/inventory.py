@@ -102,13 +102,13 @@ class Queries:
   """
 
   SEARCH_INVENTORY_GRAPH = """
-    LET start = @root_position_key ? CONCAT('Position/', @root_position_key) : 'Position/IN'
+    LET start = @root_position_key ? DOCUMENT(Position, @root_position_key) : DOCUMENT(Position, 'Position/IN')
 
-    LET positions = (
+    LET positions = UNION([start],(
         FOR v, e, p IN 1..99 INBOUND start is_in_position OPTIONS { uniqueVertices: "path" }
         FILTER IS_SAME_COLLECTION(v, Position)
         RETURN v
-    )
+    ))
 
     FOR position IN positions
     FILTER @position_search ? CONTAINS(LOWER(position.code), LOWER(@position_search)) : true
