@@ -120,6 +120,7 @@ class Queries:
 
     FILTER
       (@product_search ? CONTAINS(LOWER(product.code), LOWER(@product_search)) : true)
+      && (@serial_keys ? i.serial_key IN @serial_keys : true)
       && (@serial_search ? CONTAINS(LOWER(serial.code), LOWER(@serial_search)) : true)
       && (@owned ? i.owned == @owned : true)
 
