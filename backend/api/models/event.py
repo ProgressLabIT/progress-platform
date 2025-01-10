@@ -54,6 +54,7 @@ class EventType(str, Enum):
   DELETE_MOVEMENT = 'DELETE_MOVEMENT'
   MOVEMENT_UPDATED = 'MOVEMENT_UPDATED'
   WAREHOUSE_LIST_CREATED = 'WAREHOUSE_LIST_CREATED'
+  WAREHOUSE_LIST_CLOSED = 'WAREHOUSE_LIST_CLOSED'
 
 
 class EventModel(ArangoDocument):
@@ -106,6 +107,7 @@ class EventModel(ArangoDocument):
   # Inventory fields
   movement: InventoryMovementNew | InventoryMovementUpdate | None = None
   movement_list: MovementListNew | None = None
+  movement_list_key: str | None = None
   movement_key: str | None = None
   supplier_key: Any | None = None
 

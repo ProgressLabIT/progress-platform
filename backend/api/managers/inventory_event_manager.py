@@ -36,6 +36,8 @@ class InventoryEventManager:
            self.update_movement()
         case InventoryCommandType.DELETE_MOVEMENT:
            ...
+        case InventoryCommandType.CLOSE_LIST:
+           self.close_list()
         case _:
            raise InventoryMovementException(f'Invalid inventory event command')
 
@@ -167,6 +169,15 @@ class InventoryEventManager:
        else:
          raise InventoryMovementException(f'Cannot find product to consume')
 
+    def close_list(self):
+      self.tx.collection('MovementList').update(dict(
+        _key = self.event.info.movement_list_key,
+        status = MovementStatus.COMPLETED
+      ))
+      self.tx.collection('movement').update_match(
+        dict(movement_list_key=self.event.info.movement_list_key),
+        dict(status=MovementStatus.COMPLETED)
+      )
 
     def _handle_receipt_with_traceability(self):
       serial_code = self.event.info.movement.serial_code or ''

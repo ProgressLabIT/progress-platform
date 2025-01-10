@@ -101,7 +101,7 @@
       <div class="col-6">
         <q-btn
           color="theme-blue"
-          :label="$t('confirm')"
+          :label="$t('close')"
           class="full-width"
           @click="closeList"
         />
@@ -133,7 +133,7 @@ import { computed, ref } from 'vue';
 import { useListsStore } from 'stores/lists';
 import { useI18n } from 'vue-i18n';
 import SlideUpCard from 'app/src/components/SlideUpCard.vue';
-import { Dialog } from 'quasar';
+import { Dialog, Notify } from 'quasar';
 import { sendEvent } from 'app/src/composables/event';
 import { useNavStore } from 'app/src/stores/navigation';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
@@ -183,33 +183,36 @@ function getCompletedMovementsSummary(movements) {
 
 
 function closeList() {
-  // Retrieve all movements with qt_confrimed > 0 and status planned, send as movement with
-  const updatedMovements = lists?.movements?.filter(m => m.status === 'planned' && m.qt_confirmed > 0)
-
   // Ask to keep open or not if qt_confirmed < qt_planned
   Dialog.create({
-    message: "Confermi di voler registrare i ricevimenti indicati?",
+    message: "Confermi di voler chiudere la lista nello stato attuale?",
     cancel: { label: $t('cancel'), color: 'theme-grey'},
     ok: { label: $t('confirm'), color: 'theme-blue'}
   }).onOk(() => {
-    // let keepOpen = false;
-    Dialog.create({
-      message: "Vuoi mantenere aperti i movimenti pianificati rimanenti?",
-      cancel: { label: $t('no'), color: 'theme-orange'},
-      ok: { label: $t('yes'), color: 'theme-blue'}
-    }).onOk(() => {
-      for (const update of updatedMovements) {
-        sendEvent({
-          event_type: 'MOVEMENT_CONFIRMED',
-          event_data: {
-            movement_update: update
-          },
-        })
-      }})
-      .onCancel(() => console.log('Close partial movements'))
+    sendEvent({
+      event_type: 'WAREHOUSE_LIST_CLOSED',
+      event_data: {
+        movement_list_key: props.listKey
+      },
+    }).then(() => {
+      lists.loadLists()
+      $router.push({ name: 'IncomingHome'})
+    }).catch((error) => {
+      Notify.create({
+        position: 'top',
+        color: 'theme-orange',
+        message: "Si è verificato un errore: " + error.message,
+        timeout: 0,
+        actions: [{
+          label: $t('close'),
+          color: 'white',
+          handler: () => undefined
+        }]
+      })
     })
-    .onCancel(() => {
-      console.log('canceled')
-    })
+  })
+  .onCancel(() => {
+    console.log('canceled')
+  })
   }
 </script>
