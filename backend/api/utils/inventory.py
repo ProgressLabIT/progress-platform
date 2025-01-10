@@ -105,7 +105,7 @@ class Queries:
     LET start = @root_position_key ? CONCAT('Position/', @root_position_key) : 'Position/IN'
 
     LET positions = (
-        FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
+        FOR v, e, p IN 1..99 INBOUND start is_in_position OPTIONS { uniqueVertices: "path" }
         FILTER IS_SAME_COLLECTION(v, Position)
         RETURN v
     )
