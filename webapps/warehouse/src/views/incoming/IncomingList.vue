@@ -14,7 +14,7 @@
           Verificati
         </div>
         <div class="text-right text-body1">
-          {{ listItems?.filter(i => i.qt_confirmed === i.qt_planned).length }} / {{  listItems?.length }}
+          {{ listItems?.filter(i => i.qt_confirmed >= i.qt_planned).length }} / {{  listItems?.length }}
         </div>
       </div>
     </div>
@@ -26,8 +26,8 @@
       :key="i.product_code"
       v-touch-hold.mouse="() => showItemReferences = i"
       class="surface1 q-pa-md q-mb-sm row items-center text-body1 col-auto"
-      :class="i.qt_planned === i.qt_confirmed ? 'theme-green' : 'surface1'"
-      :style="i.qt_planned === i.qt_confirmed ? 'opacity: 0.5' : ''"
+      :class="i.qt_planned <= i.qt_confirmed ? 'theme-green' : 'surface1'"
+      :style="i.qt_planned <= i.qt_confirmed ? 'opacity: 0.5' : ''"
       @click.stop="() => i.qt_planned > i.qt_confirmed ? selectItem(i) : null"
     >
       <div class="col-8 column" style="min-width: 0">
@@ -73,7 +73,7 @@
         {{ i.qt_confirmed }} / {{ i.qt_planned }}
       </div>
       <div class="absolute-bottom-right q-mb-md q-mr-md">
-        <q-icon v-if="i.qt_confirmed === i.qt_planned" name="mdi-check-circle" color="theme-green" size="xs"/>
+        <q-icon v-if="i.qt_confirmed >= i.qt_planned" name="mdi-check-circle" color="theme-green" size="xs"/>
         <q-icon v-else-if="i.type === 'serial'" name="mdi-cube-scan" size="xs"/>
         <q-icon v-else name="mdi-apps" size="xs"/>
       </div>

@@ -24,7 +24,6 @@
         v-model="lists.tempQuantity"
         show-buttons
         class="col"
-        :max="selectedItem.qt_planned - selectedItem.qt_confirmed"
       />
     </div>
   </div>
@@ -33,7 +32,5 @@
 <script setup>
 import QuantitySelector from '@/components/QuantitySelector.vue';
 import { useListsStore } from 'app/src/stores/lists';
-import { storeToRefs } from 'pinia';
 const lists = useListsStore();
-const { selectedItem } = storeToRefs(lists);
 </script>
