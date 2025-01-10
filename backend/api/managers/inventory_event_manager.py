@@ -71,7 +71,7 @@ class InventoryEventManager:
 
           # If the split is for the whole movement, delete the original movement
           # TODO: confirm whole quantity and generate transfers
-          if movement_data.qt_confirmed == movement_data.qt_planned:
+          if movement_data.qt_confirmed >= movement_data.qt_planned:
             self.tx.collection('movement').delete(movement_data.key)
           else:
             # If the split is for a partial movement, subtract the quantity from the original movement
