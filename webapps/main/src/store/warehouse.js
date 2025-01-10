@@ -219,7 +219,7 @@ const warehouse = {
     },
 
     async appendInventory({ commit }, search_params) {
-      const { data } = await api.get('movement', { params: search_params });
+      const { data } = await api.get('inventory', { params: search_params });
       commit('APPEND_INVENTORY', data);
       commit('SET_INVENTORY_SEARCH_PARAMS', search_params);
     },
