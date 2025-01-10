@@ -1017,12 +1017,12 @@ export default {
       add: 'Aggingi posizione',
       new: 'Crea nuova posizione',
       parent_position: 'Contenitore',
-      code: 'Code',
-      owned: 'Owned',
-      available: 'Available',
-      disposable: 'Disposable',
+      owned: 'Posseduto',
+      fixed: 'Fisso',
+      available: 'Disponibile',
+      disposable: 'Usa e getta',
       position_autocomplete_hint:
-        'Inserisci il testo da ricercare (min 3 caratteri). Verranno mostrati i primi 100 risultati.',
+        'Inserisci il testo da ricercare. Verranno mostrati i primi 100 risultati.',
       position_data: 'Dati posizione',
       position_delete_confirm_title: 'Cancella posizione',
       position_delete_confirm_question:

@@ -121,11 +121,8 @@ export default {
         });
     },
 
-    filter(value, update, abort) {
-      if (value.length < 3) {
-        abort();
-        return;
-      } else if (this.last_research === value) {
+    filter(value, update) {
+      if (this.last_research === value) {
         update();
       } else {
         update(() => {

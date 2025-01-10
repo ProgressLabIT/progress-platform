@@ -2,7 +2,7 @@
   <BaseModalForm
     id="new-position-form"
     :loading="loading"
-    max-width="80vw"
+    max-width="90vw"
     @submit="postNewPosition"
     @cancel="$router.back()"
   >
@@ -11,60 +11,43 @@
     </template>
 
     <template #form>
-      <!-- NEW POSITION FIELD LABELS -->
-      <div class="row q-col-gutter-md">
-        <div
-          v-for="(info, field_name) in new_position_data"
-          :key="field_name"
-          :class="info.cols"
-          class="text-h5 text-uppercase text-low"
-        >
-          {{ $capitalize(info.label) }}
-        </div>
-      </div>
-
       <!-- NEW POSITION DATA  -->
       <div
         v-for="(line, index) in new_positions"
         :key="index"
-        class="row q-col-gutter-md q-py-sm items-center"
+        class="row q-col-gutter-x-md q-py-sm items-start"
       >
-        <div
-          v-for="(info, field_name) in new_position_data"
-          :key="field_name"
-          :class="info.cols"
-        >
-          <q-toggle
-            v-if="
-              field_name === 'owned' ||
-              field_name === 'available' ||
-              field_name === 'disposable'
-            "
-            :model-value="new_positions[index][field_name]"
-            :disable="false"
-            @update:model-value="
-              (value) => (new_positions[index][field_name] = value)
-            "
-          />
+          <div class="col">
+            <q-input
+              v-model="new_positions[index].code"
+              filled
+              :label="$t('code')"
+              autocomplete="false"
+            />
+          </div>
+          <div class="col">
+            <BaseAutocompletePosition
+              :load-data="false"
+              :label="$t('warehouse.position.parent_position')"
+              :value="new_positions[index]?.parent"
+              @select="new_positions[index].parent = $event"
+            />
+          </div>
 
-          <BaseAutocompletePosition
-            v-else-if="field_name === 'parent'"
-            dense
-            :load-data="false"
-            :value="new_positions[index]?.parent"
-            @select="new_positions[index].parent = $event"
+          <div
+            class="col-auto q-gutter-sm"
+            :key="field_name"
+            v-for="field_name in ['owned', 'available', 'disposable', 'fixed']"
           >
-          </BaseAutocompletePosition>
-
-          <q-input
-            v-else
-            v-model="new_positions[index][field_name]"
-            dense
-            filled
-            autocomplete="false"
-          >
-          </q-input>
-        </div>
+            <q-checkbox
+              :model-value="new_positions[index][field_name]"
+              :disable="false"
+              :label="$t(`warehouse.position.${field_name}`)"
+              @update:model-value="
+                (value) => (new_positions[index][field_name] = value)
+              "
+            />
+          </div>
 
         <div class="col-auto">
           <BaseTooltipIcon
@@ -113,7 +96,7 @@ export default {
         code: {
           label: this.$t('warehouse.position.code'),
           type: String,
-          cols: 'col-2',
+          cols: 'col-4',
           initial_value: '',
         },
         parent: {
@@ -125,19 +108,25 @@ export default {
         owned: {
           label: this.$t('warehouse.position.owned'),
           type: Boolean,
-          cols: 'col-2',
+          cols: 'col-auto',
           initial_value: true,
         },
         available: {
           label: this.$t('warehouse.position.available'),
           type: Boolean,
-          cols: 'col-2',
+          cols: 'col-auto',
           initial_value: true,
         },
         disposable: {
           label: this.$t('warehouse.position.disposable'),
           type: Boolean,
-          cols: 'col-2',
+          cols: 'col-auto',
+          initial_value: false,
+        },
+        fixed: {
+          label: this.$t('warehouse.position.fixed'),
+          type: Boolean,
+          cols: 'col-auto',
           initial_value: false,
         },
       };
