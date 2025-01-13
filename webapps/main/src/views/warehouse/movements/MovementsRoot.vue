@@ -63,8 +63,6 @@
       </template>
     </q-table>
 
-    <!-- MOVEMENT DETAIL -->
-    <router-view />
   </div>
 </template>
 
