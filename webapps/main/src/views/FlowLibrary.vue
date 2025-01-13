@@ -248,8 +248,8 @@ export default {
       });
     },
 
-    async updateLogs(log_resp) {
-      const new_logs = log_resp.map((l) => {
+    async updateLogs(logs) {
+      const new_logs = logs.map((l) => {
         // Keep only the time part of the timestamp up to milliseconds, without date and timezone
         const timestamp = l.timestamp.slice(11, 23);
         // Replace newlines with <br>
@@ -262,12 +262,12 @@ export default {
     },
 
     async checkRun() {
-      const [status, logs] = await this.$axios.all([
+      const [statusResp, logResp] = await this.$axios.all([
         this.$axios.post(this.status.url, this.status.body),
         this.$axios.post(this.logs.url, this.logs.body),
       ]);
-      this.flow_state = status.data[0].state_type;
-      this.updateLogs(logs);
+      this.flow_state = statusResp.data[0].state_type;
+      this.updateLogs(logResp.data);
 
       if (['COMPLETED', 'FAILED', 'CRASHED'].includes(this.flow_state)) {
         clearInterval(this.polling_instance);
