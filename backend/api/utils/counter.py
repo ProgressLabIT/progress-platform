@@ -9,9 +9,9 @@ let c = DOCUMENT(Counter, @counter_key)
 let reset_counter = DATE_NOW() > DATE_TIMESTAMP(c.reset_date)
 
 // Increment tick and reset_date (if needed)
-let next_tick = reset_counter ? 2 : c.next_tick + 1
+let current_tick = reset_counter ? 1 : c.next_tick
 let reset_date = reset_counter ? DATE_ADD(c.reset_date, 1, c.frequency) : c.reset_date
-update c with { reset_date, next_tick } in Counter
+update c with { reset_date, next_tick: current_tick + 1 } in Counter
 
 // Return the counter value prior to update
 RETURN c
