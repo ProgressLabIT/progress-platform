@@ -429,13 +429,25 @@ async def get_inventory(params: Annotated[InventoryGraphSearchParams, Query()]):
       detail=traceback.format_exc()
     )
 
-@router.get('/inventory/products',
+@router.get('/inventory/product/{product_key}',
     dependencies=[Depends(auth.verify_token)])
-async def get_inventory_products(params: Annotated[InventorySearchParams, Query()]):
+async def get_inventory_product(
+  product_key: str,
+  position_search: str | None = None,
+  serial_search: str | None = None,
+  offset: int = 0,
+  limit: int = 100
+):
   try:
-    bind_vars = dict(**params.model_dump())
-    results = db.aql.execute(Queries.SEARCH_INVENTORY_PRODUCT, bind_vars=bind_vars)
-    return [ProductBaseData(**r) for r in results]
+    bind_vars = dict(
+      product_key=product_key,
+      position_search=position_search,
+      serial_search=serial_search,
+      offset=offset,
+      limit=limit
+    )
+    results = db.aql.execute(Queries.GET_PRODUCT_INVENTORY, bind_vars=bind_vars)
+    return list(results)
 
   except Exception as e:
     raise HTTPException(

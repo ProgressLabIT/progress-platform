@@ -141,6 +141,29 @@ class Queries:
     }
   """
 
+  GET_PRODUCT_INVENTORY = """
+    FOR path IN 1..99 INBOUND K_PATHS 'Position/IN' TO CONCAT('Product/', @product_key) is_in_position
+    FILTER @position_search ? path.vertices[? ANY FILTER CONTAINS(CURRENT.code, @position_search)] : true
+    LET inventory = LAST(path.edges)
+    LET serial_code = DOCUMENT(Serial, inventory.serial_key).code
+    FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
+    LIMIT @offset, @limit || null
+    RETURN {
+      path: (
+        FOR vertex IN SHIFT(POP(path.vertices)) // Exclude root position IN and final product vertex
+        RETURN {
+          position_key: vertex._key,
+          position_code: vertex.code
+        }
+      ),
+      quantity: inventory.quantity,
+      serial_key: inventory.serial_key,
+      serial_code,
+      value: inventory.value,
+      _key: inventory._key
+    }
+  """
+
   SEARCH_INVENTORY_PRODUCT = """
      FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
 
