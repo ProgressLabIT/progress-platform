@@ -5,102 +5,48 @@
     @reset="resetFilters"
   >
     <!-- PRODUCT CODE -->
-    <div class="row items-baseline q-col-gutter-md">
-      <q-input
-        v-model="product_code"
-        filled
-        dense
-        clearable
-        autocomplete="off"
-        name="search"
-        debounce="300"
-        :label="$capitalize($t('product_code'))"
-        class="q-mb-md col"
-      >
-      </q-input>
-    </div>
+    <q-input
+      v-model="product_code"
+      filled
+      dense
+      clearable
+      autocomplete="off"
+      name="search"
+      debounce="300"
+      :label="$capitalize($t('product.code'))"
+      class="q-mb-md col"
+    />
 
-    <!-- POSITION FROM -->
-    <div class="row items-baseline q-col-gutter-md">
-      <BaseAutocompletePositions
-        dense
-        filled
-        class="q-mb-md col"
-        behavior="menu"
-        popup-content-class="z-max"
-        key-only
-        :load-data="false"
-        :label="$capitalize($t('warehouse.movement.position_from_code'))"
-        :value="position_from"
-        @select="(selection) => (position_from = selection)"
-      />
-    </div>
 
-    <!-- POSITION TO -->
-    <div class="row items-baseline q-col-gutter-md">
-      <BaseAutocompletePositions
-        dense
-        filled
-        class="q-mb-md col"
-        behavior="menu"
-        popup-content-class="z-max"
-        key-only
-        :load-data="false"
-        :label="$capitalize($t('warehouse.movement.position_to_code'))"
-        :value="position_to"
-        @select="(selection) => (position_to = selection)"
-      />
-    </div>
+    <!-- MOVEMENT TYPE -->
+    <q-select
+      v-model="movement_type"
+      :options="movement_type_options"
+      use-input
+      filled
+      dense
+      clearable
+      input-debounce="100"
+      class="q-mb-md col"
+      :label="$capitalize($t('warehouse.movement.movement_type'))"
+    />
 
-    <div class="row items-baseline q-col-gutter-md">
-      <div class="highlight text-uppercase text-h6">
-        {{ $t('warehouse.movement.position_filters') }}
-      </div>
+    <!-- STATUS -->
+    <q-select
+      v-model="movement_status"
+      :options="status_options"
+      use-input
+      filled
+      dense
+      clearable
+      input-debounce="100"
+      class="q-mb-md col"
+      :label="$capitalize($t('warehouse.movement.status'))"
+    />
 
-      <q-space />
-
-      <q-btn-toggle
-        v-model="positionFilterOperator"
-        :options="[
-          { label: $t('all', 2), value: 'AND' },
-          { label: $t('any'), value: 'OR' },
-        ]"
-        size="xs"
-        class="q-mr-md"
-      />
-    </div>
-
-    <!-- Movement Type -->
-    <div class="row items-baseline q-col-gutter-md">
-      <q-select
-        v-model="movement_type"
-        :options="movement_type_options"
-        use-input
-        filled
-        clearable
-        input-debounce="100"
-        class="q-mb-md col"
-        :label="$capitalize($t('warehouse.movement.movement_type'))"
-      />
-    </div>
-
-    <!-- Status -->
-    <div class="row items-baseline q-col-gutter-md">
-      <q-select
-        v-model="movement_status"
-        :options="status_options"
-        use-input
-        filled
-        clearable
-        input-debounce="100"
-        class="q-mb-md col"
-        :label="$capitalize($t('warehouse.movement.status'))"
-      />
-    </div>
-
-    <!-- DATE START RANGE -->
+    <!-- DATE FILTERS -->
     <div class="row q-col-gutter-sm">
-      <div class="col">
+      <div class="col-6">
         <q-input
           v-model="start_from"
           filled
@@ -132,7 +78,7 @@
           </template>
         </q-input>
       </div>
-      <div class="col">
+      <div class="col-6">
         <q-input
           v-model="start_to"
           filled
@@ -164,11 +110,7 @@
           </template>
         </q-input>
       </div>
-    </div>
-
-    <!-- DATE END RANGE -->
-    <div class="row q-col-gutter-sm">
-      <div class="col">
+      <div class="col-6">
         <q-input
           v-model="end_from"
           filled
@@ -200,7 +142,7 @@
           </template>
         </q-input>
       </div>
-      <div class="col">
+      <div class="col-6">
         <q-input
           v-model="end_to"
           filled
@@ -233,6 +175,85 @@
         </q-input>
       </div>
     </div>
+
+     <!-- POSITION FILTERS -->
+    <div class="row items-baseline q-gutter-md q-mt-md q-mb-md">
+      <div class="weight-bold text-low text-uppercase text-h6">
+        {{ $t('warehouse.movement.position_filters') }}
+      </div>
+
+      <q-space />
+
+      <q-btn-toggle
+        v-model="positionFilterOperator"
+        :options="[
+          { label: $t('all', 2), value: 'AND' },
+          { label: $t('any'), value: 'OR' },
+        ]"
+        size="xs"
+      />
+    </div>
+
+    <div class="row items-baseline q-col-gutter-md">
+      <BaseAutocompletePositions
+        dense
+        filled
+        class="q-mb-md col"
+        behavior="menu"
+        popup-content-class="z-max"
+        key-only
+        :load-data="false"
+        :label="$capitalize($t('warehouse.movement.position_from_code'))"
+        :value="position_from"
+        @select="(selection) => (position_from = selection)"
+      />
+    </div>
+
+    <div class="row items-baseline q-col-gutter-md">
+      <BaseAutocompletePositions
+        dense
+        filled
+        class="q-mb-md col"
+        behavior="menu"
+        popup-content-class="z-max"
+        key-only
+        :load-data="false"
+        :label="$capitalize($t('warehouse.movement.position_to_code'))"
+        :value="position_to"
+        @select="(selection) => (position_to = selection)"
+      />
+    </div>
+
+    <!-- POSITION HIERARCHY -->
+    <q-checkbox
+      v-model="excludeChildren"
+      label="Escludi positioni interne"
+    />
+
+    <!-- REFERENCES -->
+    <div class="weight-bold text-low text-uppercase text-h6 q-mt-md q-mb-md">
+      Riferimenti
+    </div>
+
+    <!-- WORK ORDER -->
+    <q-input
+      v-model="work_order"
+      filled
+      dense
+      clearable
+      class="q-mb-md"
+      label="Ordine di produzione"
+    />
+
+    <!-- LIST FILTER -->
+    <q-input
+      v-model="list"
+      filled
+      dense
+      clearable
+      label="Lista movimenti"
+    />
+
   </FilterDrawer>
 </template>
 
@@ -260,7 +281,8 @@ export default {
 
   data() {
     return {
-      bool_filters: [],
+      bool_filters: ['excludeChildren'],
+      excludeChildren: false,
       movement_type_options: [
         'transfer',
         'receipt',
@@ -276,7 +298,7 @@ export default {
 
   computed: {
     // Filters
-    product_code: queryModel(String, 'product_code', null),
+    product_code: queryModel(String, 'product_code_search', null),
     position_to: queryModel(String, 'position_to', null),
     position_from: queryModel(String, 'position_from', null),
 
@@ -294,13 +316,16 @@ export default {
     end_from: queryModel(String, 'end_from', null),
     end_to: queryModel(String, 'end_to', null),
 
+    work_order: queryModel(String, 'work_order_code_search', null),
+    list: queryModel(String, 'list_code_search', null),
+
     _this() {
       return this;
     },
 
     filters() {
       return {
-        produc_code: this.product_code,
+        product_code: this.product_code,
         position_from: this.position_from,
         position_to: this.position_to,
 
@@ -313,6 +338,9 @@ export default {
         start_to: this.start_to,
         end_from: this.end_from,
         end_to: this.end_to,
+
+        work_order: this.work_order,
+        list: this.list,
       };
     },
 

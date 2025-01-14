@@ -35,14 +35,6 @@
           </q-btn>
 
           <!-- MOVEMENTS BUTTONS -->
-          <q-btn
-            v-if="$route.name === 'movements'"
-            size="0.75rem"
-            :label="$t('new')"
-            color="theme-blue"
-            @click="$router.push({ name: 'movementNew' })"
-          >
-          </q-btn>
 
           <!-- INVENTORY BUTTONS -->
 
