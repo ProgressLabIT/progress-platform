@@ -143,7 +143,39 @@ class InventoryEventManager:
             raise InventoryMovementException(f'Invalid movement type')
 
     def handle_production(self):
-       self.handle_receipt(self.event.info.movement)
+      #TODO: duplicate code, refactor while handling production events
+      product_key = self.event.info.movement.product_key
+      serial_key = self.event.info.movement.serial_key
+
+      if serial_key is not None:
+        self.tx.collection('is_in_position').insert(Inventory(
+          product_id=f'Product/{product_key}',
+          position_id=self.event.info.movement.position_to,
+          quantity = 1,
+          serial_key = serial_key
+        ))
+      else:
+        try:
+          existing_inventory = self.tx.collection('is_in_position').find(dict(
+            _from=f'Product/{product_key}',
+            _to=self.event.info.movement.position_from,
+            serial_key=None
+          )).next()
+
+          final_qty = existing_inventory['quantity'] + self.event.info.movement.qt_confirmed
+
+          self.tx.collection('is_in_position').update(dict(
+            _key = existing_inventory['_key'],
+            quantity=final_qty
+          ))
+
+        except StopIteration: # No existing inventory found, create new inventory
+          self.tx.collection('is_in_position').insert(Inventory(
+            product_id=f'Product/{product_key}',
+            position_id=self.event.info.movement.position_to,
+            quantity=self.event.info.movement.qt_confirmed,
+            owned=True
+          ))
 
     def handle_consumption(self):
        #TODO: duplicate code, refactor while handling production events
@@ -158,16 +190,16 @@ class InventoryEventManager:
           position_status = position_link_cursor.next()
           final_qty = position_status['quantity'] - self.event.info.movement.qt_confirmed
           if (final_qty<0):
-             raise InventoryMovementException(f'Cannot consume: quantity not enough')
+            raise InventoryMovementException(f'Cannot consume: quantity not enough in the provided position')
           elif (final_qty==0):
-           self.tx.collection('is_in_position').delete_match(filters=dict(_key = position_status['_key']))
+            self.tx.collection('is_in_position').delete_match(filters=dict(_key = position_status['_key']))
           else:
              self.tx.collection('is_in_position').update(dict(
                _key = position_status['_key'],
                quantity=final_qty
              ))
        else:
-         raise InventoryMovementException(f'Cannot find product to consume')
+         raise InventoryMovementException(f'Cannot find product to consume in the provided position')
 
     def close_list(self):
       self.tx.collection('MovementList').update(dict(
