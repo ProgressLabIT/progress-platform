@@ -167,6 +167,11 @@ export default {
         start_to: this.start_to,
         end_from: this.end_from,
         end_to: this.end_to,
+
+        product_code_search: this.product_code,
+        serial_code_search: this.serial_code,
+        work_order_code_search: this.work_order_code,
+        list_code_search: this.list_code,
       };
     },
 
