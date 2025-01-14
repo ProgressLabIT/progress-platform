@@ -87,7 +87,9 @@ export default {
       'receipt': 'mdi-import',
       'transfer': 'mdi-swap-horizontal',
       'shipment': 'mdi-export',
-      'adjustment': 'mdi-plus-minus-variant'
+      'adjustment': 'mdi-plus-minus-variant',
+      'production': 'mdi-package-variant-closed-plus',
+      'consumption': 'mdi-package-variant-closed-minus'
     }
 
     const statusIconMap = {
