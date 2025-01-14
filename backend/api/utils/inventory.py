@@ -217,6 +217,7 @@ class Queries:
 
     LET descendants = (
         FOR v, e IN 0..9999 INBOUND start is_in_position OPTIONS { uniqueVertices: "path" }
+        FILTER IS_SAME_COLLECTION(Position, v)
         RETURN {
             position_id: v._id,
             position_key: v._key,
