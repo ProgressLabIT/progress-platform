@@ -294,9 +294,12 @@ class Queries:
       && (@end_from ? m.end >= @end_from : true)
       && (@end_to ? m.end <= @end_to : true)
       && (@product_key ? m.product_key == @product_key : true)
-      && (@product_code ? LENGTH(FOR p IN Product FILTER m.product_key == p._key && CONTAINS(p.code, @product_code) RETURN 1) : true)
+      && (@product_code_search ? LENGTH(FOR p IN Product FILTER m.product_key == p._key && CONTAINS(LOWER(p.code), LOWER(@product_code_search)) RETURN 1) : true)
       && (@serial_keys ? m.serial_key IN @serial_keys : true)
       && (@list_key ? m.movement_list_key IN @list_key : true)
+      && (@serial_code_search ? CONTAINS(LOWER(DOCUMENT(Serial, m.serial_key).code), LOWER(@serial_code_search)) : true)
+      && (@work_order_code_search ? CONTAINS(LOWER(DOCUMENT(WorkOrder, m.references.work_order_key).code), LOWER(@work_order_code_search)) : true)
+      && (@list_code_search ? CONTAINS(LOWER(DOCUMENT(MovementList, m.movement_list_key).code), LOWER(@list_code_search)) : true)
       && (@position_filter_operator == 'AND' ?
               (@position_from ? position_from._key == @position_from : true) && (@position_to ? position_to._key == @position_to : true) :
               (@position_from ? position_from._key == @position_from : true) || (@position_to ? position_to._key == @position_to : true)
