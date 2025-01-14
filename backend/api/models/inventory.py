@@ -96,8 +96,6 @@ class Inventory(BaseModel): # edge is_in_position
   quantity: float
   owned: bool = True # False means it's property of customers or suppliers
   value: float | None = None
-  date_received: datetime | None = None
-  expiration_date: datetime | None = None
   extra: Any = None
 
 class InventorySearchResult(BaseModel):
@@ -111,8 +109,6 @@ class InventorySearchResult(BaseModel):
   owned: bool | None = True
   value: float | None = None
   reference: str | None = None
-  date_received: datetime | None = None
-  expiration_date: datetime | None = None
   extra: Any = None
 
 

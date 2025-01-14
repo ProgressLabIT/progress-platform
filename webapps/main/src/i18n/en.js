@@ -1030,8 +1030,6 @@ export default {
       quantity: 'Quantity',
       serial: 'Serial',
       owned: 'Owned',
-      date_received: 'Received',
-      expiration_date: 'Expiry',
     },
   },
 };

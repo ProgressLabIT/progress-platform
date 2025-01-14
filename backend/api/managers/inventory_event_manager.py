@@ -293,7 +293,7 @@ class InventoryEventManager:
             _key = position_status['_key'],
             quantity=final_qty
           ))
-        else:
+        else: # No existing inventory found, create new inventory
           self.tx.collection('is_in_position').insert(Inventory(
             product_id=f'Product/{product_key}',
             position_id=self.event.info.movement.position_to,
@@ -374,17 +374,24 @@ class InventoryEventManager:
           _to=movement.position_to,
           quantity=1,
           owned=True,
-          date_received=movement.end,
           serial_key=movement.serial_key
         ))
       else:
-        self.tx.collection('is_in_position').insert(dict(
-          _from='Product/' + movement.product_key,
-          _to=movement.position_to,
-          quantity=movement.qt_confirmed,
-          owned=True,
-          date_received=movement.end,
-        ))
+        destination_match = dict(_from='Product/' + movement.product_key, _to=movement.position_to)
+        try:
+          existing_inventory = self.tx.collection('is_in_position').find(destination_match).next()
+          final_qty = existing_inventory['quantity'] + movement.qt_confirmed
+          self.tx.collection('is_in_position').update(dict(
+            _key = existing_inventory['_key'],
+            quantity=final_qty
+          ))
+        except StopIteration: # No existing inventory found, create new inventory
+          self.tx.collection('is_in_position').insert(dict(
+            _from='Product/' + movement.product_key,
+            _to=movement.position_to,
+            quantity=movement.qt_confirmed,
+            owned=True,
+          ))
 
 
     def handle_adjustment(self):

@@ -1049,8 +1049,6 @@ export default {
       quantity: 'Quantita',
       serial: 'Matricola',
       owned: 'Posseduto',
-      date_received: 'Ricevuto',
-      expiration_date: 'Scadenza',
     },
   },
 };
