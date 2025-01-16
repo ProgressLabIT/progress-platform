@@ -264,26 +264,49 @@ class Queries:
   SEARCH_MOVEMENTS = """
     FOR m IN movement
 
-    // PRODUCT
+    // PRODUCT FILTERS
     let product = FIRST(
         FOR product IN Product
         FILTER product._key == m.product_key
         RETURN product
     )
 
-    // POSITION_FROM
-    let position_from = FIRST(
-        FOR position IN Position
-        FILTER position._id == m._from
-        RETURN position
-    )
+    FILTER @product_key ? m.product_key == @product_key : true
+    LET search_context = CONCAT(product.code, ' ', product.description)
+    FILTER @product_search ? CONTAINS(LOWER(search_context), LOWER(@product_search)) : true
 
-    // POSITION_TO
-    let position_to = FIRST(
-        FOR position IN Position
-        FILTER position._id == m._to
-        RETURN position
-    )
+    // SERIAL FILTERS
+    FILTER @serial_keys ? m.serial_key IN @serial_keys : true
+    FILTER @serial_search ? CONTAINS(LOWER(search_context), LOWER(@serial_search)) : true
+
+    // POSITION FILTERS
+
+    LET position_from_requested = @position_from ? CONCAT('Position/', @position_from) : 'Position/IN'
+    LET position_to_requested = @position_to ? CONCAT('Position/', @position_to) : 'Position/IN'
+
+    LET allowed_positions_from = @position_from && @search_graph ? UNION(
+        [position_from_requested],
+        (FOR v IN 1..99 INBOUND position_from_requested is_in_position
+         FILTER IS_SAME_COLLECTION(v, Position)
+         RETURN v._id)
+    ) : (@position_from ? [position_from_requested] : [])
+
+    LET allowed_positions_to = @position_to && @search_graph ? UNION(
+        [position_to_requested],
+        (FOR v IN 1..99 INBOUND position_to_requested is_in_position
+         FILTER IS_SAME_COLLECTION(v, Position)
+         RETURN v._id)
+    ) : (@position_to ? [position_to_requested] : [])
+
+    LET match_from = (@position_from ? m._from IN allowed_positions_from : true)
+    LET match_to = (@position_to ? m._to IN allowed_positions_to : true)
+    LET position_match = (@position_filter_operator || 'AND') == 'AND'
+        ? match_from && match_to
+        : match_from || match_to
+
+    FILTER position_match
+
+    // MOVEMENT FILTERS
 
     FILTER
       (@movement_type ? m.type == @movement_type : true)
@@ -294,28 +317,22 @@ class Queries:
       && (@start_to ? m.start <= @start_to : true)
       && (@end_from ? m.end >= @end_from : true)
       && (@end_to ? m.end <= @end_to : true)
-      && (@product_key ? m.product_key == @product_key : true)
-      && (@product_code_search ? LENGTH(FOR p IN Product FILTER m.product_key == p._key && CONTAINS(LOWER(p.code), LOWER(@product_code_search)) RETURN 1) : true)
-      && (@serial_keys ? m.serial_key IN @serial_keys : true)
-      && (@list_key ? m.movement_list_key IN @list_key : true)
-      && (@serial_code_search ? CONTAINS(LOWER(DOCUMENT(Serial, m.serial_key).code), LOWER(@serial_code_search)) : true)
-      && (@work_order_code_search ? CONTAINS(LOWER(DOCUMENT(WorkOrder, m.references.work_order_key).code), LOWER(@work_order_code_search)) : true)
-      && (@list_code_search ? CONTAINS(LOWER(DOCUMENT(MovementList, m.movement_list_key).code), LOWER(@list_code_search)) : true)
-      && (@position_filter_operator == 'AND' ?
-              (@position_from ? position_from._key == @position_from : true) && (@position_to ? position_to._key == @position_to : true) :
-              (@position_from ? position_from._key == @position_from : true) || (@position_to ? position_to._key == @position_to : true)
-          )
 
+      && (@list_key ? m.movement_list_key IN @list_key : true)
+      && (@list_code_search ? CONTAINS(LOWER(DOCUMENT(MovementList, m.movement_list_key).code), LOWER(@list_code_search)) : true)
+
+      && (@work_order_code_search ? CONTAINS(LOWER(DOCUMENT(WorkOrder, m.references.work_order_key).code), LOWER(@work_order_code_search)) : true)
 
     SORT m.created DESC
+
     LIMIT @offset, @limit || null
 
     RETURN MERGE(m, {
       movement_list_code: m.movement_list_key ? FIRST(FOR ml IN MovementList FILTER ml._key == m.movement_list_key RETURN ml.code) : null,
       position_from_key: PARSE_IDENTIFIER(m._from).key,
-      position_from_code: position_from.code,
+      position_from_code: DOCUMENT(Position, m._from).code,
       position_to_key: PARSE_IDENTIFIER(m._to).key,
-      position_to_code: position_to.code,
+      position_to_code: DOCUMENT(Position, m._to).code,
       serial_code: m.serial_key ? FIRST(FOR s IN Serial FILTER s._key == m.serial_key RETURN s.code) : null,
       product_code: product.code,
       product_description: product.description
