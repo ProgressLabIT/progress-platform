@@ -43,6 +43,7 @@ class InventoryEventManager:
 
     def add_movement(self):
       try:
+        # TODO: allow inserting movements by product/serial code
         movement_data=self.event.info.movement
         self.adjust_inventory()
         new_movement_record = InventoryMovement(**movement_data.model_dump())
@@ -402,12 +403,23 @@ class InventoryEventManager:
       else:
          record_match['serial_key'] = None
       position_link_cursor = self.tx.collection('is_in_position').find(record_match)
-      if (position_link_cursor.count()>0):
+      try:
          position_status = position_link_cursor.next()
-         final_qty = self.event.info.movement.qt_confirmed
-         self.tx.collection('is_in_position').update(dict(
+         final_qty = position_status['quantity'] + self.event.info.movement.qt_confirmed
+         if final_qty == 0:
+           self.tx.collection('is_in_position').delete(position_status['_key'])
+         else:
+           self.tx.collection('is_in_position').update(dict(
               _key = position_status['_key'],
               quantity=final_qty
+          ))
+      except StopIteration:
+        if self.event.info.movement.qt_confirmed > 0:
+          self.tx.collection('is_in_position').insert(dict(
+            _from='Product/' + product_key,
+            _to=self.event.info.movement.position_from,
+            quantity=self.event.info.movement.qt_confirmed,
+            owned=True,
           ))
       else:
         raise InventoryMovementException(f'Cannot find product to adjust')

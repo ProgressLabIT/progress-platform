@@ -203,7 +203,7 @@ class InventoryMovementNew(FlexModel):
       raise ValueError("A new movement must include a product or container position")
     if self.serial_key is not None and (self.qt_planned > 1 or self.qt_confirmed > 1):
       raise ValueError("A serial movement must have a quantity of 1")
-    if self.position_from == self.position_to:
+    if self.position_from == self.position_to and self.type != InventoryMovementType.ADJUSTMENT:
       raise ValueError("A movement must have a different position from and to")
     return self
 
@@ -258,9 +258,6 @@ class InventoryMovement(ArangoDocument): # edge collection movement
       self.product_key is None and self.serial_key is None and self.position_from is None
     ):
       raise ValueError("A movement must have a product, serial or container position")
-
-    if self.type == InventoryMovementType.TRANSFER and (self.position_from is None or self.position_to is None):
-      raise ValueError("A transfer movement must have a position from and to")
 
     if self.position_from is None or self.position_to is None:
       raise ValueError("A movement must have a position from and to")
