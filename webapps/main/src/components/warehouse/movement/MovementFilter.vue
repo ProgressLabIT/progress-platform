@@ -301,7 +301,7 @@ export default {
     serial_search: queryModel(String, 'serial_search', null),
     work_order: queryModel(String, 'work_order_search', null),
     list: queryModel(String, 'list_search', null),
-    search_graph: queryModel(String, 'search_graph', true),
+    search_graph: queryModel(Boolean, 'search_graph', true),
 
     position_to: queryModel(String, 'position_to', null),
     position_from: queryModel(String, 'position_from', null),

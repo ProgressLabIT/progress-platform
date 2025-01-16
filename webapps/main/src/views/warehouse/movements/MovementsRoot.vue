@@ -122,7 +122,7 @@ export default {
     product_search: queryModel(String, 'product_search', null),
     position_from: queryModel(String, 'position_from', null),
     position_to: queryModel(String, 'position_to', null),
-    search_graph: queryModel(String, 'search_graph', null),
+    search_graph: queryModel(Boolean, 'search_graph', true),
 
     positionFilterOperator: queryModel(
       String,
