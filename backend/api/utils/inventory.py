@@ -318,10 +318,18 @@ class Queries:
       && (@end_from ? m.end >= @end_from : true)
       && (@end_to ? m.end <= @end_to : true)
 
-      && (@list_key ? m.movement_list_key IN @list_key : true)
-      && (@list_search ? CONTAINS(LOWER(DOCUMENT(MovementList, m.movement_list_key).code), LOWER(@list_search)) : true)
 
-      && (@work_order_search ? CONTAINS(LOWER(DOCUMENT(WorkOrder, m.references.work_order_key).code), LOWER(@work_order_search)) : true)
+    // LIST FILTERS
+    LET list = FIRST(FOR ml IN MovementList Filter ml._key == m.movement_list_key RETURN ml)
+    FILTER
+      @list_key ? m.movement_list_key IN @list_key : true
+      && (@list_search ? CONTAINS(LOWER(list.code), LOWER(@list_search)) : true)
+
+
+    // WORK ORDER FILTERS
+    LET wo = FIRST(FOR wo IN WorkOrder Filter wo._key == m.references.work_order_key RETURN wo)
+    FILTER @work_order_search ? CONTAINS(LOWER(wo.wo_code), LOWER(@work_order_search)) : true
+
 
     SORT m.created DESC
 
