@@ -115,23 +115,6 @@ export default {
       events: NaN,
       limit: 200,
       offset: 0,
-
-      filter_list: [
-        'product_code',
-        'position_from',
-        'position_to',
-
-        'position_filter_operator',
-
-        'movement_type',
-        'movement_status',
-
-        'start_from',
-        'start_to',
-        'end_from',
-        'end_to',
-      ],
-      bool_filters: [],
     };
   },
 
@@ -139,6 +122,7 @@ export default {
     product_code: queryModel(String, 'product_code', null),
     position_from: queryModel(String, 'position_from', null),
     position_to: queryModel(String, 'position_to', null),
+    search_graph: queryModel(String, 'search_graph', null),
 
     positionFilterOperator: queryModel(
       String,
@@ -154,12 +138,16 @@ export default {
     end_from: queryModel(String, 'end_from', null),
     end_to: queryModel(String, 'end_to', null),
 
+    serial_code: queryModel(String, 'serial_code', null),
+    work_order_code: queryModel(String, 'work_order_code', null),
+    list_code: queryModel(String, 'list_code', null),
+
     filters() {
       return {
-        product_code: this.product_code,
         position_from: this.position_from,
         position_to: this.position_to,
         position_filter_operator: this.positionFilterOperator,
+        search_graph: this.search_graph,
 
         movement_type: this.movement_type,
         movement_status: this.movement_status,

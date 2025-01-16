@@ -226,8 +226,8 @@
 
     <!-- POSITION HIERARCHY -->
     <q-checkbox
-      v-model="excludeChildren"
-      label="Escludi positioni interne"
+      v-model="search_graph"
+      label="Includi posizioni interne"
     />
 
     <!-- REFERENCES -->
@@ -281,8 +281,7 @@ export default {
 
   data() {
     return {
-      bool_filters: ['excludeChildren'],
-      excludeChildren: false,
+      bool_filters: ['search_graph'],
       movement_type_options: [
         'transfer',
         'receipt',
@@ -298,7 +297,12 @@ export default {
 
   computed: {
     // Filters
-    product_code: queryModel(String, 'product_code_search', null),
+    product_code_search: queryModel(String, 'product_code_search', null),
+    serial_code_search: queryModel(String, 'serial_code_search', null),
+    work_order_code_search: queryModel(String, 'work_order_code_search', null),
+    list_code_search: queryModel(String, 'list_code_search', null),
+    search_graph: queryModel(String, 'search_graph', true),
+
     position_to: queryModel(String, 'position_to', null),
     position_from: queryModel(String, 'position_from', null),
 
@@ -325,11 +329,15 @@ export default {
 
     filters() {
       return {
-        product_code: this.product_code,
+        product_code_search: this.product_code,
+        serial_code_search: this.serial_code,
+        work_order_code_search: this.work_order_code,
+        list_code_search: this.list_code,
+
         position_from: this.position_from,
         position_to: this.position_to,
-
-        position_filter_operator: this.positionFilterOperator,
+        // search_graph is not a filter, it's a parameter
+        // position_filter_operator is not a filter, it's a parameter
 
         movement_type: this.movement_type,
         movement_status: this.movement_status,
