@@ -139,8 +139,8 @@ export default {
     end_to: queryModel(String, 'end_to', null),
 
     serial_search: queryModel(String, 'serial_search', null),
-    work_order: queryModel(String, 'work_order_search', null),
-    list: queryModel(String, 'list_search', null),
+    work_order_search: queryModel(String, 'work_order_search', null),
+    list_search: queryModel(String, 'list_search', null),
 
     filters() {
       return {
@@ -158,8 +158,8 @@ export default {
 
         product_search: this.product_search,
         serial_search: this.serial_search,
-        work_order: this.work_order,
-        list: this.list,
+        work_order_search: this.work_order_search,
+        list_search: this.list_search,
       };
     },
 
