@@ -297,10 +297,10 @@ export default {
 
   computed: {
     // Filters
-    product_code_search: queryModel(String, 'product_code_search', null),
-    serial_code_search: queryModel(String, 'serial_code_search', null),
-    work_order_code_search: queryModel(String, 'work_order_code_search', null),
-    list_code_search: queryModel(String, 'list_code_search', null),
+    product_search: queryModel(String, 'product_search', null),
+    serial_search: queryModel(String, 'serial_search', null),
+    work_order: queryModel(String, 'work_order_search', null),
+    list: queryModel(String, 'list_search', null),
     search_graph: queryModel(String, 'search_graph', true),
 
     position_to: queryModel(String, 'position_to', null),
@@ -320,16 +320,13 @@ export default {
     end_from: queryModel(String, 'end_from', null),
     end_to: queryModel(String, 'end_to', null),
 
-    work_order: queryModel(String, 'work_order_code_search', null),
-    list: queryModel(String, 'list_code_search', null),
-
     _this() {
       return this;
     },
 
     filters() {
       return {
-        product_code_search: this.product_code,
+        product_search: this.product_code,
         serial_code_search: this.serial_code,
         work_order_code_search: this.work_order_code,
         list_code_search: this.list_code,

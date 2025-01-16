@@ -289,18 +289,18 @@ class InventoryMovementSearchParameters(BaseModel):
   end_from: datetime | None = None
   end_to: datetime | None = None
   product_key: str | None = None
-  product_code_search: str | None = None
+  product_search: str | None = None
   serial_keys: list[str] | None = None
-  serial_code_search: str | None = None
+  serial_search: str | None = None
   list_key: list[str] | None = None
-  list_code_search: str | None = None
-  work_order_code_search: str | None = None
+  list_search: str | None = None
+  work_order_search: str | None = None
   position_from: str | None = None
   position_to: str | None = None
   position_filter_operator: str | None = 'AND'
   limit: int | None = 500
   offset: int | None = 0
-
+  search_graph: bool | None = True
 class InventoryMovementSearchResults(InventoryMovement):
   position_from_key: str | None = None
   position_from_code: str | None = None

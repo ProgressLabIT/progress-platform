@@ -319,9 +319,9 @@ class Queries:
       && (@end_to ? m.end <= @end_to : true)
 
       && (@list_key ? m.movement_list_key IN @list_key : true)
-      && (@list_code_search ? CONTAINS(LOWER(DOCUMENT(MovementList, m.movement_list_key).code), LOWER(@list_code_search)) : true)
+      && (@list_search ? CONTAINS(LOWER(DOCUMENT(MovementList, m.movement_list_key).code), LOWER(@list_search)) : true)
 
-      && (@work_order_code_search ? CONTAINS(LOWER(DOCUMENT(WorkOrder, m.references.work_order_key).code), LOWER(@work_order_code_search)) : true)
+      && (@work_order_search ? CONTAINS(LOWER(DOCUMENT(WorkOrder, m.references.work_order_key).code), LOWER(@work_order_search)) : true)
 
     SORT m.created DESC
 
