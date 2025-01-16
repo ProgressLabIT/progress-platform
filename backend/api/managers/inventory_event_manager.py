@@ -421,8 +421,8 @@ class InventoryEventManager:
             quantity=self.event.info.movement.qt_confirmed,
             owned=True,
           ))
-      else:
-        raise InventoryMovementException(f'Cannot find product to adjust')
+      except Exception as e:
+        raise Exception(f'Cannot adjust inventory', e)
 
 
     def can_be_conflated(self, notification_type):
