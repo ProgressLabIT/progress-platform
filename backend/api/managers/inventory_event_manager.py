@@ -95,14 +95,38 @@ class InventoryEventManager:
           new_movements = [movement_data]
 
         if movement_data.type == InventoryMovementType.RECEIPT:
-          new_inventory_records = [Inventory(
-            owned=True,
-            product_id="Product/" + m.product_key,
-            position_id=m.position_to,
-            serial_key=m.serial_key,
-            quantity=m.qt_confirmed
-          ).model_dump(by_alias=True) for m in new_movements]
-          self.tx.collection('is_in_position').insert_many(new_inventory_records)
+          for movement in new_movements:
+            if movement.serial_key is not None:
+              # For serialized items, always create new inventory record
+              self.tx.collection('is_in_position').insert(Inventory(
+                owned=True,
+                product_id="Product/" + movement.product_key,
+                position_id=movement.position_to,
+                serial_key=movement.serial_key,
+                quantity=1
+              ).model_dump(by_alias=True))
+            else:
+              # For non-serialized items, check if inventory exists and update quantity
+              try:
+                existing_inventory = self.tx.collection('is_in_position').find(dict(
+                  _from=f'Product/{movement.product_key}',
+                  _to=movement.position_to,
+                  serial_key=None
+                )).next()
+
+                final_qty = existing_inventory['quantity'] + movement.qt_confirmed
+                self.tx.collection('is_in_position').update(dict(
+                  _key=existing_inventory['_key'],
+                  quantity=final_qty
+                ))
+              except StopIteration:
+                # No existing inventory found, create new record
+                self.tx.collection('is_in_position').insert(Inventory(
+                  owned=True,
+                  product_id="Product/" + movement.product_key,
+                  position_id=movement.position_to,
+                  quantity=movement.qt_confirmed
+                ).model_dump(by_alias=True))
 
         # Update list status
         if movement_data.movement_list_key is not None:
@@ -144,7 +168,6 @@ class InventoryEventManager:
             raise InventoryMovementException(f'Invalid movement type')
 
     def handle_production(self):
-      #TODO: duplicate code, refactor while handling production events
       product_key = self.event.info.movement.product_key
       serial_key = self.event.info.movement.serial_key
 
@@ -159,7 +182,7 @@ class InventoryEventManager:
         try:
           existing_inventory = self.tx.collection('is_in_position').find(dict(
             _from=f'Product/{product_key}',
-            _to=self.event.info.movement.position_from,
+            _to=self.event.info.movement.position_to,
             serial_key=None
           )).next()
 
