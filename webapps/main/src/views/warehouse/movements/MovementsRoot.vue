@@ -151,10 +151,10 @@ export default {
 
         movement_type: this.movement_type,
         movement_status: this.movement_status,
-        start_from: this.start_from,
-        start_to: this.start_to,
-        end_from: this.end_from,
-        end_to: this.end_to,
+        start_from: this.start_from ? this.formatDate(this.start_from) : null,
+        start_to: this.start_to ? this.formatDate(this.start_to, true) : null,
+        end_from: this.end_from ? this.formatDate(this.end_from) : null,
+        end_to: this.end_to ? this.formatDate(this.end_to, true) : null,
 
         product_search: this.product_search,
         serial_search: this.serial_search,
@@ -209,6 +209,14 @@ export default {
           movement: 'top',
         });
       }
+    },
+
+    formatDate(date, endOfDay = false) {
+      const formattedDate = new Date(date);
+      if (endOfDay) {
+        formattedDate.setHours(23, 59, 59, 999);
+      }
+      return formattedDate.toISOString();
     },
 
     refreshMovements() {

@@ -6,7 +6,7 @@
   >
     <!-- PRODUCT CODE -->
     <q-input
-      v-model="product_code"
+      v-model="product_search"
       filled
       dense
       clearable
@@ -326,7 +326,7 @@ export default {
 
     filters() {
       return {
-        product_search: this.product_code,
+        product_search: this.product_search,
         serial_code_search: this.serial_code,
         work_order_code_search: this.work_order_code,
         list_code_search: this.list_code,
