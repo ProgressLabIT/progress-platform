@@ -123,33 +123,40 @@ function search() {
     return;
   }
   else if (filter.value) {
-    api.get('serial', { params: {
-      serial_search: filter.value,
-      sort_by: 'code',
-      sorting_order: 'asc',
-      product_code_search: productCodeFilter.value ?? null
-    }})
+    api.get('inventory', { params: { serial_search: filter.value }})
     .then(response => {
       if (response.data.length === 0) {
         results.value = [];
         message.value = 'no_results';
-      } else if (response.data.length === 1 && response.data[0].code === filter.value) {
-        // if only one result, toggle it and notify the user
-        const serial = response.data[0];
-        const action = toggleItem(serial);
-        Notify.create({
-          message: action === 'added' ? t('serial_added') : t('serial_removed'),
-          caption: serial.code,
-          position: 'top',
-          color: action === 'added' ? 'theme-green' : 'theme-orange',
-          icon: action === 'added' ? 'mdi-check' : 'mdi-close',
-          timeout: 1500,
-        });
-        filter.value = '';
-        reset();
       } else {
-        // show search results
-        results.value = response.data;
+        // Map inventory results to match expected model
+        const mappedResults = response.data.map(item => ({
+          _key: item.serial_key,
+          code: item.serial_code,
+          product: {
+            _key: item.product_key,
+            code: item.product_code
+          }
+        }));
+
+        if (mappedResults.length === 1 && mappedResults[0].code === filter.value) {
+          // if only one result, toggle it and notify the user
+          const serial = mappedResults[0];
+          const action = toggleItem(serial);
+          Notify.create({
+            message: action === 'added' ? t('serial_added') : t('serial_removed'),
+            caption: serial.code,
+            position: 'top',
+            color: action === 'added' ? 'theme-green' : 'theme-orange',
+            icon: action === 'added' ? 'mdi-check' : 'mdi-close',
+            timeout: 1500,
+          });
+          filter.value = '';
+          reset();
+        } else {
+          // show search results
+          results.value = mappedResults;
+        }
       }
     })
     .catch(error => {
