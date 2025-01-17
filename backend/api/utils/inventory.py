@@ -116,10 +116,11 @@ class Queries:
     FILTER i._to == position._id && IS_SAME_COLLECTION(i._from, Product)
 
     LET product = DOCUMENT(i._from)
+    LET search_context = CONCAT(product.code, ' ', product.description)
     LET serial = DOCUMENT(Serial, i.serial_key)
 
     FILTER
-      (@product_search ? CONTAINS(LOWER(product.code), LOWER(@product_search)) : true)
+      (@product_search ? CONTAINS(LOWER(search_context), LOWER(@product_search)) : true)
       && (@serial_keys ? i.serial_key IN @serial_keys : true)
       && (@serial_search ? CONTAINS(LOWER(serial.code), LOWER(@serial_search)) : true)
       && (@owned ? i.owned == @owned : true)
