@@ -16,11 +16,7 @@
 
     <!-- QUANTITY -->
     <div class="col column q-my-lg">
-      <div class="text-h3 col-auto">{{ $t('quantity') }}</div>
-
-      <QuantitySelector v-model="tempQuantity" show-buttons class="col"/>
-
-
+      <QuantitySelector v-model="tempQuantity" :heading="$t('quantity')" show-buttons class="col"/>
     </div>
 
     <!-- NAVIGATION -->

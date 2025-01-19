@@ -25,18 +25,21 @@
       v-for="i in listItems"
       :key="i.product_code"
       v-touch-hold.mouse="() => showItemReferences = i"
-      class="surface1 q-pa-md q-mb-sm row items-center text-body1 col-auto"
+      class="surface1 q-pa-md q-mb-sm row items-start text-body1 col-auto"
       :class="i.qt_planned <= i.qt_confirmed ? 'theme-green' : 'surface1'"
       :style="i.qt_planned <= i.qt_confirmed ? 'opacity: 0.5' : ''"
       @click.stop="() => i.qt_planned > i.qt_confirmed ? selectItem(i) : null"
     >
-      <div class="col-8 column" style="min-width: 0">
+      <div class="col column" style="min-width: 0">
         <!-- PRODUCT DATA -->
-        <div class="col">
-          <div class="text-h4 highlight">
+        <div class="col row items-center">
+          <q-icon v-if="i.qt_confirmed >= i.qt_planned" name="mdi-check-circle" color="theme-green" size="xs"/>
+          <q-icon v-else-if="i.type === 'serial'" name="mdi-cube-scan" size="xs"/>
+          <q-icon v-else name="mdi-apps" size="xs"/>
+          <div class="text-h4 highlight q-ml-sm">
             {{ i.product_code }}
           </div>
-          <div class="smaller ellipsis" style="line-height: 1rem; max-width: 60vw;">
+          <div class="smaller ellipsis q-mt-xs" style="line-height: 1rem; max-width: 60vw;">
             {{ i.product_description }}
           </div>
           <div
@@ -69,13 +72,8 @@
       <q-space></q-space>
 
       <!-- QUANTITY CONFIRMED/PLANNED -->
-      <div class="absolute-top-right q-mt-md q-mr-md highlight">
+      <div class="col-auto row items-center highlight">
         {{ i.qt_confirmed }} / {{ i.qt_planned }}
-      </div>
-      <div class="absolute-bottom-right q-mb-md q-mr-md">
-        <q-icon v-if="i.qt_confirmed >= i.qt_planned" name="mdi-check-circle" color="theme-green" size="xs"/>
-        <q-icon v-else-if="i.type === 'serial'" name="mdi-cube-scan" size="xs"/>
-        <q-icon v-else name="mdi-apps" size="xs"/>
       </div>
 
       <q-linear-progress

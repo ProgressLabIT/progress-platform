@@ -3,11 +3,9 @@
 
     <!-- SELECT QUANTITY -->
     <template v-if="!containers.length">
-      <div class="text-h2 col-auto">
-        {{ $t('position_new_prompt') }}
-      </div>
       <QuantitySelector
         v-model="selected_quantity"
+        :heading="$t('position_new_prompt')"
         :initial_qty="0"
         :show_buttons="false"
         class="col"

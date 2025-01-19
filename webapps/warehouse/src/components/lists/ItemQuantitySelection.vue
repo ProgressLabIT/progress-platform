@@ -18,10 +18,11 @@
 
     <!-- QUANTITY -->
     <div class="col column q-my-lg">
-      <div class="text-h3 col-auto">Quantità da confermare</div>
-
       <QuantitySelector
         v-model="lists.tempQuantity"
+        heading="Quantità da confermare"
+        :max="lists.selectedItem.qt_planned - lists.selectedItem.qt_confirmed"
+        soft-max
         show-buttons
         class="col"
       />

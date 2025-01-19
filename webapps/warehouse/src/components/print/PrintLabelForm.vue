@@ -28,11 +28,9 @@
 
     <!-- SELECT COPIES -->
     <template v-else-if="stage === 'select_copies'">
-      <div class="text-subtitle1 q-py-xl text-center">
-        {{ $t('select_copies') }}
-      </div>
       <div>
         <QuantitySelector
+          :heading="$t('select_copies')"
           :initial_qty="0"
           :show_buttons="false"
           selector_style="height: 80px"

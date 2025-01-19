@@ -66,8 +66,14 @@
       />
       <!-- Select product quantity -->
       <template v-else>
-        <div class="text-h2">{{ $t('quantity') }} {{ cardItem.code }}</div>
-        <QuantitySelector v-model="itemQuantity" show-buttons selector-style="min-height: 100px;" min="1" :max="cardItem.quantity"/>
+        <QuantitySelector
+          v-model="itemQuantity"
+          show-buttons
+          selector-style="min-height: 100px;"
+          min="1"
+          :max="cardItem.quantity"
+          :heading="$t('quantity') + ' ' + cardItem.code"
+        />
         <q-btn color="theme-blue" class="q-mt-md" :label="$t('transfer_quantity')" @click="selectItemQuantity" />
       </template>
     </SlideUpCard>

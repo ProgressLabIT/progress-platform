@@ -1,10 +1,28 @@
 <template>
   <div class="col column">
+    <!-- HEADER -->
+    <div class="row col-auto">
+      <slot name="heading">
+        <div class="col text-h3">{{ heading || $t('quantity') }}</div>
+      </slot>
+      <div class="col-auto" v-if="quantity > props.max">
+        <span class="text-h6 text-theme-orange q-mr-sm">
+          Max {{ props.max }}
+        </span>
+        <q-icon
+          name="mdi-alert"
+          color="theme-orange"
+          size="20px"
+        />
+      </div>
+    </div>
+
     <q-card
-      v-touch-repeat.mouse="handleRepeat"
+      v-touch-repeat:0:800:800:100.mouse="handleRepeat"
       outline
       flat
       class="cursor-pointer q-my-md surface2 col"
+      :class="{ 'warning-border': quantity > props.max }"
       id="qtyarea"
       :style="selectorStyle"
     >
@@ -33,8 +51,8 @@
     </q-card>
 
     <!-- ±10/100 -->
-     <template v-if="showButtons">
-    <div class="full-width row q-mt-md">
+    <template v-if="showButtons">
+      <div class="full-width row q-mt-md">
         <div class="col">
           <q-btn
             color="theme-blue"
@@ -42,7 +60,7 @@
             label="-10"
             size="md"
             class="full-width"
-            @click="updateQuantity(-10)"
+            v-touch-repeat:0:800:800:100.mouse="() => addQuantity(-10)"
           />
         </div>
         <div class="q-mx-xs"></div>
@@ -53,7 +71,7 @@
             label="+10"
             size="md"
             class="full-width"
-            @click="updateQuantity(10)"
+            v-touch-repeat:0:800:800:100.mouse="() => addQuantity(10)"
           />
         </div>
       </div>
@@ -65,7 +83,7 @@
             label="-100"
             size="md"
             class="full-width"
-            @click="updateQuantity(-100)"
+            v-touch-repeat:0:800:800:100.mouse="() => addQuantity(-100)"
           />
         </div>
         <div class="q-mx-xs"></div>
@@ -76,20 +94,44 @@
             label="+100"
             size="md"
             class="full-width"
-            @click="updateQuantity(100)"
+            v-touch-repeat:0:800:800:100.mouse="() => addQuantity(100)"
           />
         </div>
       </div>
-      </template>
+      <div class="full-width row q-mt-md" v-if="props.max">
+        <div class="col">
+          <q-btn
+            color="theme-blue"
+            outline
+            size="md"
+            class="full-width"
+            @click="setQuantity(props.max)"
+          >
+            <div class="row full-width justify-between">
+              <div class="col">MAX</div>
+              <div class="col-1"></div>
+              <div class="col">{{ props.max }}</div>
+            </div>
+          </q-btn>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n';
+
+const { t: $t} = useI18n();
 
 const props = defineProps({
   selectorStyle: {
     type: String,
     default: '',
+  },
+  heading: {
+    type: String,
+    default: undefined,
   },
   min: {
     type: Number,
@@ -97,7 +139,12 @@ const props = defineProps({
   },
   max: {
     type: Number,
-    default: 999999999999,
+    default: undefined,
+  },
+  softMax: {
+    // Allow the quantity to go above the max with a warning
+    type: Boolean,
+    default: false,
   },
   showButtons: {
     type: Boolean,
@@ -128,15 +175,24 @@ function isTouchUpRight(touchPosition) {
 
 function handleRepeat(info) {
   if (isTouchUpRight(info.position)) {
-    updateQuantity(1);
+    addQuantity(1);
   } else if (quantity.value > 0) {
-    updateQuantity(-1);
+    addQuantity(-1);
   }
 }
 
-function updateQuantity(howMuch) {
-  quantity.value = Math.max(props.min, Math.min(props.max, quantity.value + howMuch));
+function addQuantity(howMuch) {
+  setQuantity(quantity.value + howMuch);
 }
+
+function setQuantity(value) {
+  if (props.softMax) {
+    quantity.value = Math.max(props.min, value);
+  } else {
+    quantity.value = Math.max(props.min, Math.min(props.max || 999999999999, value));
+  }
+}
+
 </script>
 
 <style lang="sass" scoped>
@@ -151,4 +207,7 @@ function updateQuantity(howMuch) {
   transform-origin: center
   pointer-events: none
   z-index: 1
+
+.warning-border
+  border: 1px solid var(--theme-orange)
 </style>
