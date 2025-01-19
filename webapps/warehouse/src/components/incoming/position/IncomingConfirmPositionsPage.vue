@@ -41,53 +41,12 @@
       </div>
     </div>
 
-    <template
-      v-for="position in incoming.positions"
-      :key="position._key"
-      >
-      <div class="row items-center q-col-gutter-x-sm">
+    <PositionQuantityDistribution
+      :positions="incoming.positions"
+      :refQuantity="incoming.refQuantity"
+    />
 
-      <div class="col-auto text-h3">
-        {{ position.code }}
-      </div>
-
-      <div class="col-auto" v-if="incoming.positions.length > 1">
-        <q-btn
-          :outline="!position.locked"
-          round
-          size="xs"
-          color="primary"
-          :icon="
-              position.locked
-                ? 'mdi-lock-outline'
-              : 'mdi-lock-open-variant-outline'
-            "
-            @click="updatePositionLock(position)"
-        />
-      </div>
-      <q-space></q-space>
-      <div class="col-auto text-h3 text-right">
-        {{ position.quantity }}
-      </div>
-    </div>
-
-
-      <div class="row" v-if="incoming.positions.length > 1" >
-        <q-slider
-          v-model="position.quantity"
-          class="q-mb-md"
-          style="z-index: 1000"
-          :min="0"
-          :max="incoming.refQuantity"
-          :inner-max="freeQuantity"
-          :step="1"
-          :disable="position.locked || allOthersLocked[position._key]"
-          @change="adjust(position)"
-        />
-      </div>
-    </template>
-
-    <q-space></q-space>
+    <q-space />
     <div class="row q-col-gutter-x-sm">
       <div class="col-6">
         <q-btn
@@ -111,24 +70,15 @@
 
 <script setup>
 import { Notify } from 'quasar';
-import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
 import { sendEvent } from 'app/src/composables/event.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
 import { useIncomingStore } from 'app/src/stores/incoming';
+import PositionQuantityDistribution from 'components/PositionQuantityDistribution.vue';
 
 const store = useStore();
 const incoming = useIncomingStore();
 
-const allOthersLocked = computed(() => {
-  return incoming.positions.reduce((acc, pos) => {
-    acc[pos._key] = incoming.positions.filter(p => p._key !== pos._key).every(p => p.locked);
-    return acc;
-  }, {});
-})
-
-// Max quantity for unlocked positions
-const freeQuantity = ref(incoming.refQuantity);
 
 function confirm() {
   let movements = [];
@@ -192,48 +142,7 @@ function confirm() {
   incoming.$reset();
 }
 
-function updatePositionLock(position) {
-  position.locked = !position.locked;
-  freeQuantity.value = incoming.positions.filter(p => !p.locked).reduce((acc, p) => acc + p.quantity, 0);
-}
 
-function adjust(position) {
-  let quantity_to_adjust = incoming.refQuantity;
-  for (const pos of incoming.positions) {
-    quantity_to_adjust -= pos.quantity;
-  }
-
-  let position_index = incoming.positions.findIndex(
-    (pos) => pos._key === position._key
-  );
-
-  let next_index = position_index + 1;
-
-  while (quantity_to_adjust !== 0) {
-    if (next_index === incoming.positions.length) {
-      next_index = 0;
-    }
-    let next_position = incoming.positions[next_index];
-    if (quantity_to_adjust > 0) {
-      if (!next_position.locked) {
-        next_position.quantity += quantity_to_adjust;
-        quantity_to_adjust = 0;
-      }
-      next_index += 1;
-    } else {
-      let adjustment = 0 - quantity_to_adjust;
-      let possible_adjustment =
-        next_position.quantity - adjustment >= 0
-          ? adjustment
-          : next_position.quantity;
-      if (!next_position.locked) {
-        next_position.quantity -= possible_adjustment;
-        quantity_to_adjust += possible_adjustment;
-      }
-      next_index += 1;
-    }
-  }
-}
 </script>
 
 <style lang="sass">
