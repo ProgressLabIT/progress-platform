@@ -243,35 +243,42 @@ class InventoryEventManager:
         raise InventoryMovementException(f'Serial code is required for receipts of products with traceability')
 
       product_key = self.event.info.movement.product_key
-      serial_exists = self.tx.collection('Serial').find(dict(
+
+      # First try to find an existing serial
+      serial_cursor = self.tx.collection('Serial').find(dict(
         code=serial_code,
         product_key=product_key,
         deleted=False
-      )).count() > 0
+      ))
+      if serial_cursor.count() == 0:
+         # Serial does not exist, create new serial
+        new_serial_key = self.tx.collection('Serial').insert(Serial(
+          product_key=product_key,
+          code=serial_code,
+          created=self.event.info.timestamp,
+          released=self.event.info.timestamp,
+          available=self.event.info.movement.status == MovementStatus.COMPLETED,
+          user_key=self.event.info.user_key,
+        ))['_key']
+        self.event.info.movement.serial_key = new_serial_key
 
-      if serial_exists:
-        raise InventoryMovementException(f'Serial already exists')
+      else:
+        # Serial exists, check if it's in inventory
+        existing_serial = serial_cursor.next()
+        self.event.info.movement.serial_key = existing_serial['_key']
 
-      # Create serial
-      # TODO: Use SerialEventManager to create serial
-      # TODO: Update serials as available when confirming planned movement
-      new_serial_key = self.tx.collection('Serial').insert(Serial(
-        product_key=product_key,
-        code=serial_code,
-        created=self.event.info.timestamp,
-        released=self.event.info.timestamp,
-        available=self.event.info.movement.status == MovementStatus.COMPLETED,
-        user_key=self.event.info.user_key,
-      ))['_key']
+        inventory_exists = self.tx.collection('is_in_position').find(dict(
+          serial_key=existing_serial['_key']
+        )).count() > 0
 
-      self.event.info.movement.serial_key = new_serial_key
-
+        if inventory_exists:
+          raise InventoryMovementException(f'Serial is already in inventory')
 
       if self.event.info.movement.status == MovementStatus.COMPLETED:
         new_inventory_record = self.tx.collection('is_in_position').insert(Inventory(
           product_id = 'Product/' + product_key,
           position_id = self.event.info.movement.position_to,
-          serial_key = new_serial_key,
+          serial_key = self.event.info.movement.serial_key,
           quantity = 1
         ))
 
