@@ -1,7 +1,5 @@
 <template>
   <q-page class="q-px-md q-pb-md q-py-sm column fit">
-
-
     <div class="row justify-between">
       <div class="col-auto">
         <div class="text-h5 text-low">
@@ -39,14 +37,14 @@
           <div class="text-h4 highlight q-ml-sm">
             {{ i.product_code }}
           </div>
-          <div class="smaller ellipsis q-mt-xs" style="line-height: 1rem; max-width: 60vw;">
-            {{ i.product_description }}
-          </div>
-          <div
-            v-if="i.references.purchase_doc"
-            class="text-h6 text-low uppercase q-mt-xs">
-            {{ i.references.purchase_doc }}
-          </div>
+        </div>
+        <div class="smaller ellipsis q-mt-xs" style="line-height: 1rem; max-width: 60vw;">
+          {{ i.product_description }}
+        </div>
+        <div
+          v-if="i.references.purchase_doc"
+          class="text-h6 text-low uppercase q-mt-xs">
+          {{ list.type === 'shipment' ? i.references.sales_doc : i.references.purchase_doc }}
         </div>
 
         <!-- COMPLETED MOVEMENTS -->
@@ -55,6 +53,7 @@
             v-for="(group, index) in getCompletedMovementsSummary(i.movements)"
             :key="index"
             class="row items-center full-height text-caption text-low q-gutter-x-sm"
+            :class="{ 'reverse': list.type === 'shipment' }"
           >
             <div class="col-auto">
               {{ group.date }}
@@ -64,7 +63,7 @@
             </div>
             <q-icon name="mdi-arrow-right-thin" size="xs"/>
             <div class="col-auto">
-              {{ group.position_to_code }}
+              {{ group.position_code }}
             </div>
           </div>
         </div>
@@ -121,8 +120,10 @@
       </div>
     </SlideUpCard>
 
-
-    <IncomingItem v-if="lists.selectedItem !== undefined" />
+    <template v-if="lists.selectedItem !== undefined">
+      <IncomingItem v-if="list.type === 'receipt'" />
+      <!-- <ShipmentItem v-else /> -->
+    </template>
   </q-page>
 </template>
 
@@ -135,8 +136,8 @@ import { Dialog, Notify } from 'quasar';
 import { sendEvent } from 'app/src/composables/event';
 import { useNavStore } from 'app/src/stores/navigation';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
-import IncomingItem from './IncomingItem.vue';
-
+import IncomingItem from 'app/src/views/incoming/IncomingItem.vue';
+// import ShipmentItem from 'app/src/views/shipment/ShipmentItem.vue';
 const lists = useListsStore();
 const { t: $t } = useI18n();
 const nav = useNavStore();
@@ -151,7 +152,7 @@ const showItemReferences = ref(false)
 const list = lists.headers.find(l => l._key == props.listKey);
 
 if (list === undefined) {
-  $router.push({ name: 'IncomingHome'})
+  $router.push({ name: list.type === 'shipment' ? 'ShipmentHome' : 'IncomingHome'})
 }
 
 nav.dynamicBreadcrumb = [list?.code]
@@ -168,12 +169,16 @@ function selectItem(item) {
 function getCompletedMovementsSummary(movements) {
   const groups = Object.groupBy(
     movements.filter(m => m.status === 'completed'),
-    (m) => `${new Date(m.end).toLocaleDateString()}-${m.position_to_code}`
+    (m) => {
+      const date = new Date(m.end).toLocaleDateString()
+      const position_code = list.type === 'receipt' ? m.position_to_code : m.position_from_code
+      return `${date}-${position_code}`
+    }
   )
   return Object.entries(groups).map(([key, value]) => {
     return {
       date: key.split('-')[0],
-      position_to_code: key.split('-')[1],
+      position_code: key.split('-')[1],
       qt_confirmed: value.reduce((acc, m) => acc + m.qt_confirmed, 0),
     }
   })
@@ -193,8 +198,8 @@ function closeList() {
         movement_list_key: props.listKey
       },
     }).then(() => {
-      lists.loadLists()
-      $router.push({ name: 'IncomingHome'})
+      lists.loadLists(list.type)
+      $router.push({ name: list.type === 'shipment' ? 'ShipmentHome' : 'IncomingHome'})
     }).catch((error) => {
       Notify.create({
         position: 'top',

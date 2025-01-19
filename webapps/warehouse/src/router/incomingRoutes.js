@@ -16,7 +16,7 @@ const incomingRoutes = [
         props: true,
         name: 'IncomingList',
         meta: { dynamicBreadcrumb: true },
-        component: () => import ('@/views/incoming/IncomingList.vue'),
+        component: () => import ('app/src/views/lists/ListItems.vue'),
       },
       {
         path: 'manual',
