@@ -1,15 +1,19 @@
 <template>
-  <div id="q-app">
-    <div class="q-pa-md">
-      <div class="text-subtitle1 q-py-xl text-center">
-        Play with the drawer on bottom
-      </div>
-    </div>
-  </div>
+  <template v-if="nav.loading" />
+  <router-view v-else/>
 </template>
 
-<script>
-export default {
-  name: 'ShipmentRoot',
-};
+<script setup>
+import { useNavStore } from 'app/src/stores/navigation';
+import { useListsStore } from 'app/src/stores/lists';
+import { onBeforeRouteLeave } from 'vue-router';
+const nav = useNavStore();
+const lists = useListsStore();
+
+lists.loadLists('shipment'); // includes reset + loading UI
+
+onBeforeRouteLeave(() => {
+  lists.$reset()
+});
+
 </script>
