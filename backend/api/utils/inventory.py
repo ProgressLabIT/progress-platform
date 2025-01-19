@@ -410,8 +410,8 @@ def merge_references(
 
   merged = dict()
   for attr in InventoryMovementReferences.__fields__.keys():
-    list_attr = getattr(list_references, attr)
-    movement_attr = getattr(movement_references, attr)
+    list_attr = getattr(list_references, attr, None)
+    movement_attr = getattr(movement_references, attr, None)
     merged[attr] = movement_attr if movement_attr is not None else list_attr
 
   return InventoryMovementReferences(**merged)
