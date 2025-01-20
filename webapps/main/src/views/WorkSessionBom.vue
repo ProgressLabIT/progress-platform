@@ -180,7 +180,7 @@ export default {
 
   data() {
     return {
-      quantity_type: 'batch',
+      quantity_type: 'job',
       qt_types: ['item', 'batch', 'job'],
       bom_type: 'job_bom',
       bom_types: ['job_bom', 'wo_bom'],
