@@ -228,12 +228,24 @@ class InventoryEventManager:
     def close_list(self):
       self.tx.collection('MovementList').update(dict(
         _key = self.event.info.movement_list_key,
-        status = MovementStatus.COMPLETED
+        status = MovementStatus.COMPLETED,
+        end = self.event.info.timestamp
       ))
-      self.tx.collection('movement').update_match(
-        dict(movement_list_key=self.event.info.movement_list_key),
-        dict(status=MovementStatus.COMPLETED)
-      )
+      # Update all movements in the list
+      self.tx.aql.execute("""
+        FOR m IN movement
+          FILTER
+            m.movement_list_key == @movement_list_key
+            AND m.status != "completed"
+          UPDATE m WITH {
+            status: m.qt_confirmed == 0 ? "canceled" : "completed",
+            start: m.qt_confirmed == 0 ? null : @timestamp,
+            end: m.qt_confirmed == 0 ? null : @timestamp
+          } IN movement
+      """, bind_vars=dict(
+        movement_list_key=self.event.info.movement_list_key,
+        timestamp=self.event.info.timestamp
+      ))
 
     def _handle_receipt_with_traceability(self):
       serial_code = self.event.info.movement.serial_code or ''

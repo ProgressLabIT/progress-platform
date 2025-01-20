@@ -368,7 +368,7 @@ def create_movement_list(new_movement_list: MovementListNew):
           bind_vars=dict(codes=product_codes)
         ).next()
       except StopIteration:
-        raise HTTPException(status_code=404, detail="Could not find products with the codes provided")
+        raise HTTPException(status_code=404, detail="Could not find any product with the codes provided")
 
       for movement in new_movement_list.movements:
         product_key = products_key_map.get(movement.product_code, None)
