@@ -466,6 +466,8 @@ class InventoryEventManager:
             serial_key=self.event.info.movement.serial_key,
             owned=True,
           ))
+        else:
+          raise InventoryMovementException(f'Cannot adjust inventory: quantity cannot be negative')
       except Exception as e:
         raise Exception(f'Error adjusting inventory', e)
 
