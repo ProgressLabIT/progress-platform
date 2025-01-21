@@ -102,66 +102,40 @@ class Queries:
   """
 
   SEARCH_INVENTORY_GRAPH = """
-    LET start = @root_position_key ? DOCUMENT(Position, @root_position_key) : DOCUMENT(Position, 'Position/IN')
+    FOR product IN Product
+    FILTER @product_key ? product._key == @product_key : true
+    SORT product.code
+    LET context = CONCAT(product.code, ' ', product.description)
+    FILTER @product_search ? CONTAINS(LOWER(context), LOWER(@product_search)) : true
 
-    LET positions = UNION([start],(
-        FOR v, e, p IN 1..99 INBOUND start is_in_position OPTIONS { uniqueVertices: "path" }
-        FILTER IS_SAME_COLLECTION(v, Position)
-        RETURN v
-    ))
+    LET start = @root_position_key ? DOCUMENT(Position, @root_position_key) : DOCUMENT('Position/IN')
+    FOR path IN 1..99 INBOUND K_PATHS start TO product._id is_in_position
+        FILTER @position_search ? path.vertices[? ANY FILTER CONTAINS(LOWER(CURRENT.code), LOWER(@position_search))] : true
+        LET inventory = LAST(path.edges)
+        FILTER @owned ? inventory.owned : true
+        FILTER @serial_keys ? inventory.serial_key IN @serial_keys : true
+        LET serial_code = DOCUMENT(Serial, inventory.serial_key).code
+        FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
+        LIMIT @offset || 0, @limit || null
+        LET p = (
+            FOR vertex IN SHIFT(POP(path.vertices)) // Exclude root position IN and final product vertex
+            RETURN {
+              position_key: vertex._key,
+              position_code: vertex.code
+            }
+          )
 
-    FOR position IN positions
-    FILTER @position_search ? CONTAINS(LOWER(position.code), LOWER(@position_search)) : true
-    FOR i IN is_in_position
-    FILTER i._to == position._id && IS_SAME_COLLECTION(i._from, Product)
-
-    LET product = DOCUMENT(i._from)
-    LET search_context = CONCAT(product.code, ' ', product.description)
-    LET serial = DOCUMENT(Serial, i.serial_key)
-
-    FILTER
-      (@product_search ? CONTAINS(LOWER(search_context), LOWER(@product_search)) : true)
-      && (@serial_keys ? i.serial_key IN @serial_keys : true)
-      && (@serial_search ? CONTAINS(LOWER(serial.code), LOWER(@serial_search)) : true)
-      && (@owned ? i.owned == @owned : true)
-
-    COLLECT prod = product, pos = position, ser = serial
-    AGGREGATE quantity = SUM(i.quantity), value = SUM(i.value)
-
-    LIMIT @offset || 0, @limit || null
-
-    RETURN {
-      product_key: prod._key,
-      product_code: prod.code,
-      position_key: pos._key,
-      position_code: pos.code,
-      serial_key: ser._key,
-      serial_code: ser.code,
-      quantity,
-      value
-    }
-  """
-
-  GET_PRODUCT_INVENTORY = """
-    FOR path IN 1..99 INBOUND K_PATHS 'Position/IN' TO CONCAT('Product/', @product_key) is_in_position
-    FILTER @position_search ? path.vertices[? ANY FILTER CONTAINS(CURRENT.code, @position_search)] : true
-    LET inventory = LAST(path.edges)
-    LET serial_code = DOCUMENT(Serial, inventory.serial_key).code
-    FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
-    LIMIT @offset, @limit || null
-    RETURN {
-      path: (
-        FOR vertex IN SHIFT(POP(path.vertices)) // Exclude root position IN and final product vertex
         RETURN {
-          position_key: vertex._key,
-          position_code: vertex.code
-        }
-      ),
-      quantity: inventory.quantity,
-      serial_key: inventory.serial_key,
-      serial_code,
-      value: inventory.value,
-      _key: inventory._key
+          // Show root position in case the product is there (no path)
+          path: LENGTH(p) == 0 ? [{ position_key: start._key, position_code: start.code }] : p,
+          quantity: inventory.quantity,
+          serial_key: inventory.serial_key,
+          product_key: product._key,
+          product_code: product.code,
+          product_desc: product.description,
+          serial_code,
+          value: inventory.value,
+          _key: inventory._key
     }
   """
 

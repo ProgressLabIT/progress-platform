@@ -263,8 +263,8 @@ export function useInventoryColumns() {
       style: 'max-width: 10vw',
     },
     {
-      name: 'position_code',
-      field: 'position_code',
+      name: 'position',
+      field: 'path',
       sortable: true,
       label: t('warehouse.inventory.position').toUpperCase(),
       align: 'left',

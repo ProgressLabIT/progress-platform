@@ -98,9 +98,14 @@ class Inventory(BaseModel): # edge is_in_position
   value: float | None = None
   extra: Any = None
 
+class InventoryPathItem(BaseModel):
+  position_key: str | None = None
+  position_code: str | None = None
+
 class InventorySearchResult(BaseModel):
   product_code: str | None = None
   position_code: str | None = None
+  path: list[InventoryPathItem] | None = []
   serial_code: str | None = None
   serial_key: str | None = None
   product_key: str | None = None
@@ -114,6 +119,7 @@ class InventorySearchResult(BaseModel):
 
 class InventoryGraphSearchParams(BaseModel):
   root_position_key: str | None = None
+  product_key: str | None = None
   product_search: str | None = None
   serial_search: str | None = None
   serial_keys: list[str] | None = None

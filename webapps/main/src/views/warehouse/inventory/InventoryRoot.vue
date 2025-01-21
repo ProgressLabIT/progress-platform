@@ -41,6 +41,10 @@
                 }}
               </template>
 
+              <template v-else-if="column.name === 'position'">
+                {{ props.row.path.map(p => p.position_code).join(' > ') }}
+              </template>
+
               <template v-else>
                 {{ $capitalizeAll(props.row[column.field] || '-') }}
               </template>
