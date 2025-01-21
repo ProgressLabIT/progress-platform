@@ -80,21 +80,6 @@ const positionResultsType = ref('RECENTI');
 const showContentTypeSelection = ref(null);
 
 
-
-
-function searchPositions() {
-  if (filter.value !== last_research.value) {
-    if (filter.value === '') {
-      loadLatestUsedPositions();
-      positionResultsType.value = 'RECENTI'
-    } else {
-      loadPositions();
-      positionResultsType.value = 'DISPONIBILI'
-    }
-  }
-}
-
-
 function loadLatestUsedPositions() {
   if (transfer?.recentPositions?.from?.length) {
     positionResults.value = transfer?.recentPositions?.from;
@@ -115,7 +100,7 @@ function loadLatestUsedPositions() {
   }
 }
 
-function loadPositions() {
+function searchPositions() {
   loading.value = true;
   let params = {};
 
