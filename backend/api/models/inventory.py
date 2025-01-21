@@ -103,6 +103,7 @@ class InventoryPathItem(BaseModel):
   position_code: str | None = None
 
 class InventorySearchResult(BaseModel):
+  key: str = Field(..., alias='_key')
   product_code: str | None = None
   position_code: str | None = None
   path: list[InventoryPathItem] | None = []
