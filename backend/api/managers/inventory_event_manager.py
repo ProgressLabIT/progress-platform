@@ -347,11 +347,11 @@ class InventoryEventManager:
     def handle_shipment(self):
       if self.event.info.movement.status == MovementStatus.COMPLETED:
         product_key = self.event.info.movement.product_key
-        record_match = dict(_from=f'Product/{product_key}', _to=self.event.info.movement.position_from)
-        if ('serial_key' in self.event.info.movement):
-          record_match['serial_key'] = self.event.info.movement.serial_key
-        else:
-          record_match['serial_key'] = None
+        record_match = dict(
+          _from=f'Product/{product_key}',
+          _to=self.event.info.movement.position_from,
+          serial_key=getattr(self.event.info.movement, 'serial_key', None)
+        )
         position_link_cursor = self.tx.collection('is_in_position').find(record_match)
         if (position_link_cursor.count()>0):
           position_status = position_link_cursor.next()
