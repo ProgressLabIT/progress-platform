@@ -441,30 +441,33 @@ class InventoryEventManager:
       product_key = self.event.info.movement.product_key
       record_match = dict(_from=f'Product/{product_key}', _to=self.event.info.movement.position_from)
       if self.event.info.movement.serial_key is not None:
-         record_match['serial_key'] = self.event.info.movement.serial_key
+        record_match['serial_key'] = self.event.info.movement.serial_key
       else:
-         record_match['serial_key'] = None
+        record_match['serial_key'] = None
       position_link_cursor = self.tx.collection('is_in_position').find(record_match)
       try:
-         position_status = position_link_cursor.next()
-         final_qty = position_status['quantity'] + self.event.info.movement.qt_confirmed
-         if final_qty == 0:
-           self.tx.collection('is_in_position').delete(position_status['_key'])
-         else:
-           self.tx.collection('is_in_position').update(dict(
-              _key = position_status['_key'],
-              quantity=final_qty
+        position_status = position_link_cursor.next()
+        final_qty = position_status['quantity'] + self.event.info.movement.qt_confirmed
+        if final_qty < 0:
+          raise InventoryMovementException(f'Cannot adjust inventory: quantity cannot be negative')
+        elif final_qty == 0:
+          self.tx.collection('is_in_position').delete(position_status['_key'])
+        else:
+          self.tx.collection('is_in_position').update(dict(
+            _key = position_status['_key'],
+            quantity=final_qty
           ))
-      except StopIteration:
+      except StopIteration: # No existing inventory found, create new inventory
         if self.event.info.movement.qt_confirmed > 0:
           self.tx.collection('is_in_position').insert(dict(
             _from='Product/' + product_key,
             _to=self.event.info.movement.position_from,
             quantity=self.event.info.movement.qt_confirmed,
+            serial_key=self.event.info.movement.serial_key,
             owned=True,
           ))
       except Exception as e:
-        raise Exception(f'Cannot adjust inventory', e)
+        raise Exception(f'Error adjusting inventory', e)
 
 
     def can_be_conflated(self, notification_type):

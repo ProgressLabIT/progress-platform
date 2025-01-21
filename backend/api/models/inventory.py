@@ -201,8 +201,8 @@ class InventoryMovementNew(FlexModel):
   def validate(self):
     if self.product_key is None and self.product_code is None and self.position_from is None:
       raise ValueError("A new movement must include a product or container position")
-    if self.serial_key is not None and (self.qt_planned > 1 or self.qt_confirmed > 1):
-      raise ValueError("A serial movement must have a quantity of 1")
+    if self.serial_key is not None and (abs(self.qt_planned) > 1 or abs(self.qt_confirmed) > 1):
+      raise ValueError("A serial movement must have a quantity of +/-1")
     if self.position_from == self.position_to and self.type != InventoryMovementType.ADJUSTMENT:
       raise ValueError("A movement must have a different position from and to")
     return self
