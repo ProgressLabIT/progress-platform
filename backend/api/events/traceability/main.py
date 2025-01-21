@@ -27,6 +27,7 @@ class ProductionActivityEvent(BaseEvent):
   production_collections = [
     'Batch',
     'batch_serial',
+    'Counter',
     'Event',
     'Job',
     'Queue',
