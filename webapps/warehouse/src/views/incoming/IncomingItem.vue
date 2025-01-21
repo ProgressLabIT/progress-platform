@@ -7,8 +7,8 @@
 
     <!-- ITEM SELECTION (QUANTITY / SERIALS)-->
     <template v-if="step==='selection'">
-      <ItemSerialsSelection v-if="lists.selectedItem.type === 'serial'" />
-      <ItemQuantitySelection v-else />
+      <IncomingItemSerialsSelection v-if="lists.selectedItem.type === 'serial'" />
+      <IncomingItemQuantitySelection v-else />
 
       <div class="row q-mt-md q-gutter-x-sm">
         <div class="col">
@@ -35,7 +35,7 @@
 
     <!-- DESTINATION -->
     <template v-else-if="step==='destination'">
-      <ItemPosition v-model="positionsTo" @next="() => step = 'confirm'" />
+      <IncomingItemPosition v-model="positionsTo" @next="() => step = 'confirm'" />
       <div class="row q-mt-md">
         <div class="col">
           <q-btn
@@ -60,7 +60,7 @@
     </template>
 
     <template v-else>
-      <ItemConfirmation v-model="positionsTo" />
+      <IncomingItemConfirmation v-model="positionsTo" />
       <q-space></q-space>
       <div class="row col-auto q-col-gutter-x-sm">
         <div class="col-6">
@@ -90,10 +90,10 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SlideUpCard from 'app/src/components/SlideUpCard.vue';
-import ItemQuantitySelection from 'app/src/components/lists/ItemQuantitySelection.vue';
-import ItemSerialsSelection from 'app/src/components/lists/ItemSerialsSelection.vue';
-import ItemPosition from 'app/src/components/lists/ItemPosition.vue';
-import ItemConfirmation from 'app/src/components/lists/ItemConfirmation.vue';
+import IncomingItemQuantitySelection from 'app/src/components/lists/IncomingItemQuantitySelection.vue';
+import IncomingItemSerialsSelection from 'app/src/components/lists/IncomingItemSerialsSelection.vue';
+import IncomingItemPosition from 'app/src/components/lists/IncomingItemPosition.vue';
+import IncomingItemConfirmation from 'app/src/components/lists/IncomingItemConfirmation.vue';
 import { printProductLabel } from 'app/src/lib/print';
 import { useListsStore } from 'stores/lists';
 import { useStore } from 'vuex';
