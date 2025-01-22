@@ -9,7 +9,7 @@
       </div>
       <div class="col-auto">
         <div class="text-h5 text-low">
-          Verificati
+          {{ list?.type === 'receipt' ? 'Verificati' : 'Completati' }}
         </div>
         <div class="text-right text-body1">
           {{ listItems?.filter(i => i.qt_confirmed >= i.qt_planned).length }} / {{  listItems?.length }}
@@ -53,7 +53,7 @@
             v-for="(group, index) in getCompletedMovementsSummary(i.movements)"
             :key="index"
             class="row items-center full-height text-caption text-low q-gutter-x-sm"
-            :class="{ 'reverse': list.type === 'shipment' }"
+            :class="{ 'reverse justify-end': list.type === 'shipment' }"
           >
             <div class="col-auto">
               {{ group.date }}
@@ -92,7 +92,7 @@
           color="theme-grey"
           :label="$t('back')"
           class="full-width"
-          @click="$router.push({ name: 'IncomingHome'})"
+          @click="$router.push({ name: list.type === 'receipt' ? 'IncomingHome' : 'ShipmentHome'})"
         />
       </div>
       <div class="col-6">
@@ -105,24 +105,9 @@
       </div>
     </div>
 
-    <SlideUpCard
-      :model-value="showItemReferences !== false"
-      @hide="() => showItemReferences=false"
-    >
-      <div class="text-h4 highlight q-mb-md">
-        {{ showItemReferences.product_code }}
-      </div>
-      <div
-        v-for="([ref, value]) in Object.entries(showItemReferences.references)"
-        :key="ref"
-      >
-        {{ ref }}: <span class="highlight">{{ value }}</span>
-      </div>
-    </SlideUpCard>
-
     <template v-if="lists.selectedItem !== undefined">
       <IncomingItem v-if="list.type === 'receipt'" />
-      <!-- <ShipmentItem v-else /> -->
+      <ShipmentItem v-else />
     </template>
   </q-page>
 </template>
@@ -131,18 +116,17 @@
 import { computed, ref } from 'vue';
 import { useListsStore } from 'stores/lists';
 import { useI18n } from 'vue-i18n';
-import SlideUpCard from 'app/src/components/SlideUpCard.vue';
 import { Dialog, Notify } from 'quasar';
 import { sendEvent } from 'app/src/composables/event';
 import { useNavStore } from 'app/src/stores/navigation';
-import { onBeforeRouteLeave, useRouter } from 'vue-router';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import IncomingItem from 'app/src/views/incoming/IncomingItem.vue';
-// import ShipmentItem from 'app/src/views/shipment/ShipmentItem.vue';
+import ShipmentItem from 'app/src/views/shipment/ShipmentItem.vue';
 const lists = useListsStore();
 const { t: $t } = useI18n();
 const nav = useNavStore();
 const $router = useRouter();
-
+const $route = useRoute();
 const props = defineProps({
   listKey: String
 });
@@ -152,7 +136,7 @@ const showItemReferences = ref(false)
 const list = lists.headers.find(l => l._key == props.listKey);
 
 if (list === undefined) {
-  $router.push({ name: list.type === 'shipment' ? 'ShipmentHome' : 'IncomingHome'})
+  $router.push({ name: $route.matched.some(m => m.name === 'ShipmentRoot') ? 'ShipmentHome' : 'IncomingHome'})
 }
 
 nav.dynamicBreadcrumb = [list?.code]

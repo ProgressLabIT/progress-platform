@@ -26,11 +26,12 @@ export const useListsStore = defineStore('lists', {
         const listItems = Object.entries(listMovementsByItem).map(([item, movements]) => {
           const qt_planned = movements.reduce((sum, mov) => sum += mov.qt_planned, 0)
           const qt_confirmed = movements.reduce((sum, mov) => sum += mov.qt_confirmed, 0)
-          const type = movements[0].serial_code ? 'serial' : 'quantity'
+          const type = movements[0].serial_code || movements[0].serial_key ? 'serial' : 'quantity'
           return {
             item,
             product_code: movements[0].product_code,
             product_description: movements[0].product_description,
+            product_key: movements[0].product_key,
             references: movements[0].references,
             listKey: movements[0].movement_list_key,
             type,

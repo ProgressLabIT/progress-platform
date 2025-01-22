@@ -18,6 +18,9 @@ export const useShipmentStore = defineStore('shipment', {
         const match = state.selectedInventory.find(i => i._key === inventoryKey);
         return match ? match.selected : 0;
       }
+    },
+    shipmentQuantity: (state) => {
+      return state.selectedInventory.reduce((acc, i) => acc + i.selected, 0);
     }
   },
   actions: {
@@ -42,22 +45,6 @@ export const useShipmentStore = defineStore('shipment', {
         movements.push({
           position_from: `Position/${inventoryItem.path.slice(-1)[0].position_key}`,
           serial_key: inventoryItem.serial_key,
-          product_key: this.product._key,
-          qt_planned: item.selected,
-          qt_confirmed: item.selected,
-        });
-      }
-
-      // Process non-serial items
-      const nonSerialItems = this.selectedInventory.filter(item => {
-        const inventoryItem = this.inventory.find(i => i._key === item._key);
-        return !inventoryItem?.serial_key && item.selected > 0;
-      });
-
-      for (const item of nonSerialItems) {
-        const inventoryItem = this.inventory.find(i => i._key === item._key);
-        movements.push({
-          position_from: `Position/${inventoryItem.path.slice(-1)[0].position_key}`,
           product_key: this.product._key,
           qt_planned: item.selected,
           qt_confirmed: item.selected,
