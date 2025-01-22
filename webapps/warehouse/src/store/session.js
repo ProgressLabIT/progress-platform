@@ -156,13 +156,11 @@ const session = {
       return state.user.name + ' ' + state.user.surname;
     },
 
-    userHomepage: (/*state*/) => {
-      /*const userDefaultPage = state.user.preferences.home_page;
+    userHomepage: (state) => {
+      const userDefaultPage = state.user.preferences.home_page;
       if (userDefaultPage) {
         return userDefaultPage;
-      }*/
-
-      return 'IncomingManual';
+      }
     },
   },
 };

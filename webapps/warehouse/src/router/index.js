@@ -83,6 +83,10 @@ export default route(function ({ store }) {
       let nextPage = to.query.redirect_to
         ? to.query.redirect_to
         : store.getters.userHomepage;
+      if (!Router.hasRoute(nextPage)) {
+        console.warn(`Route ${nextPage} not found, falling back to IncomingHome`);
+        nextPage = 'IncomingHome';
+      }
       next({ name: nextPage });
     } else if (
       !login_route &&
