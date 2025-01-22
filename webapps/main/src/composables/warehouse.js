@@ -268,7 +268,7 @@ export function useInventoryColumns() {
       sortable: true,
       label: t('warehouse.inventory.position').toUpperCase(),
       align: 'left',
-      style: 'max-width: 10vw',
+      style: 'max-width: 40vw',
     },
     {
       name: 'serial',

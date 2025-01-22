@@ -31,7 +31,7 @@
           @right-click="routeToMovemets(props.row)"
         >
           <template v-for="column in columns" :key="column.name">
-            <q-td class="ellipsis" :props="props">
+            <q-td class="ellipsis" :props="props" :style="column.style">
               <template v-if="column.format">
                 {{
                   column.format(
