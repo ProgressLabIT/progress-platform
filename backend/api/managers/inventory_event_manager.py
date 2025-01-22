@@ -345,6 +345,38 @@ class InventoryEventManager:
           ))
 
     def handle_shipment(self):
+      product_key = self.event.info.movement.product_key
+
+      try:
+        product_record = self.tx.collection('Product').get(product_key)
+      except StopIteration:
+        raise InventoryMovementException(f'Product not found')
+
+      product_requires_serial = product_record.get('traceability_level', False)
+
+      # SCENARIO 1: Receipt of product with traceability
+      if product_requires_serial:
+        serial_code = self.event.info.movement.serial_code
+        serial_key = self.event.info.movement.serial_key
+        serial_provided = any([serial_code, serial_key])
+
+        if serial_key is None:
+          if serial_code is None:
+            self.event.info.movement.serial_code = 'NONE'
+          else:
+            try:
+              serial_key = self.tx.collection('Serial').find(dict(
+                code=serial_code,
+                product_key=product_key,
+                deleted=False
+              )).next()['_key']
+              self.event.info.movement.serial_key = serial_key
+            except StopIteration:
+              raise InventoryMovementException(f'Serial {serial_code} not found')
+        else:
+          if not self.tx.collection('Serial').has(serial_key):
+            raise InventoryMovementException(f'Serial {serial_key} not found')
+
       if self.event.info.movement.status == MovementStatus.COMPLETED:
         product_key = self.event.info.movement.product_key
         record_match = dict(
