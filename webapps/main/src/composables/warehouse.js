@@ -287,14 +287,14 @@ export function useInventoryColumns() {
       style: 'max-width: 10vw',
     },
 
-    {
-      name: 'owned',
-      field: 'owned',
-      sortable: true,
-      label: t('warehouse.inventory.owned').toUpperCase(),
-      align: 'left',
-      style: 'max-width: 10vw',
-    },
+    // {
+    //   name: 'owned',
+    //   field: 'owned',
+    //   sortable: true,
+    //   label: t('warehouse.inventory.owned').toUpperCase(),
+    //   align: 'left',
+    //   style: 'max-width: 10vw',
+    // },
     // {
     //   name: 'date_received',
     //   field: 'date_received',
