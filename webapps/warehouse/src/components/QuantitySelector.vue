@@ -139,7 +139,7 @@ const props = defineProps({
   },
   max: {
     type: Number,
-    default: undefined,
+    default: 999999999999,
   },
   softMax: {
     // Allow the quantity to go above the max with a warning
@@ -189,7 +189,7 @@ function setQuantity(value) {
   if (props.softMax) {
     quantity.value = Math.max(props.min, value);
   } else {
-    quantity.value = Math.max(props.min, Math.min(props.max || 999999999999, value));
+    quantity.value = Math.max(props.min, Math.min(props.max, value));
   }
 }
 
