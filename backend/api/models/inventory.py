@@ -274,6 +274,8 @@ class InventoryMovement(ArangoDocument): # edge collection movement
 class MovementSplitData(BaseModel):
   position_from: str | None = None
   position_to: str | None = None
+  serial_key: str | None = None
+  serial_code: str | None = None
   qt_confirmed: float
   qt_planned: float | None = None
 

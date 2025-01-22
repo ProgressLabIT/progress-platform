@@ -63,7 +63,7 @@ class InventoryEventManager:
         raise InventoryMovementException(f'Cannot add movements', e, traceback.format_exc())
 
     def update_movement(self):
-      # TODO: WORKS ONLY FOR RECEIPT MOVEMENTS
+      """Used for updating planned movement"""
       try:
         movement_data=self.event.info.movement
         if len(movement_data.split_into) > 0:
@@ -127,6 +127,35 @@ class InventoryEventManager:
                   position_id=movement.position_to,
                   quantity=movement.qt_confirmed
                 ).model_dump(by_alias=True))
+
+
+        if movement_data.type == InventoryMovementType.SHIPMENT:
+          for movement in new_movements:
+            if movement.serial_key is not None:
+              self.tx.collection('is_in_position').delete_match(dict(
+                _from=f'Product/{movement.product_key}',
+                _to=movement.position_from, # the position from is the one where the product is shipped, _to in the inventory record
+                serial_key=movement.serial_key
+              ))
+            else:
+              try:
+                existing_inventory = self.tx.collection('is_in_position').find(dict(
+                  _from=f'Product/{movement.product_key}',
+                  _to=movement.position_from,
+                  serial_key=None
+                )).next()
+
+                final_qty = existing_inventory['quantity'] - movement.qt_confirmed
+                if final_qty == 0:
+                  self.tx.collection('is_in_position').delete(existing_inventory['_key'])
+                else:
+                  self.tx.collection('is_in_position').update(dict(
+                    _key=existing_inventory['_key'],
+                    quantity=final_qty
+                  ))
+              except StopIteration:
+                # No existing inventory found, create new record
+                raise InventoryMovementException(f'Cannot find product inventory to ship')
 
         # Update list status
         if movement_data.movement_list_key is not None:
