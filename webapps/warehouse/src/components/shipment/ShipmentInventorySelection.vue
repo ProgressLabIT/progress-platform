@@ -16,15 +16,16 @@
     <div class="text-h2">{{ $t('transfer_contents_select')}}</div>
     <div class="row q-col-gutter-sm">
       <q-input
-      v-model="positionFilter"
+        v-model="positionFilter"
         filled
         dense
         label="Filtro posizione"
-        class="col-6"
+        class="col"
         :debounce="300"
         @update:model-value="filterResults"
       />
       <q-input
+        v-if="shipment.product?.type === 'serial'"
         v-model="serialFilter"
         filled
         dense
@@ -62,7 +63,7 @@
             <template
               v-for="(position, index) in item.path"
               :key="index"
-          >
+            >
             <div class="col-auto">
               {{ position.position_code }}
             </div>
@@ -82,7 +83,7 @@
           {{ item.serial_code }}
         </div>
 
-        <div v-else class="col-2 highlight text-right">
+        <div v-else class="col-auto highlight text-right">
           {{ shipment.inventorySelectedQt(item._key) }} / {{ item.quantity }}
           </div>
         </div>
@@ -104,7 +105,7 @@
         v-model="tempQuantity"
         show-buttons
         selector-style="min-height: 100px;"
-        min="0"
+        :min="0"
         :max="getCurrentItem?.quantity || 0"
       />
       <q-btn color="theme-blue" class="q-mt-md" label="seleziona" @click="selectItemQuantity" />
