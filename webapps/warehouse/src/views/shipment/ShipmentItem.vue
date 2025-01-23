@@ -103,6 +103,7 @@ function prepareMovementUpdates() {
       updates.push({
         ...movement,
         position_from: `Position/${inventory.path.slice(-1)[0].position_key}`,
+        _from: `Position/${inventory.path.slice(-1)[0].position_key}`,
         status: 'completed',
         qt_confirmed: 1,
       });
