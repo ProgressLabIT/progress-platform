@@ -88,23 +88,31 @@ class InventoryEventManager:
             data = movement_data.model_dump()
             data.update(split.model_dump(), status=MovementStatus.COMPLETED)
             new_movements.append(InventoryMovementNew(**data))
-          test = self.tx.collection('movement').insert_many([m.model_dump(by_alias=True) for m in new_movements])
+            new_records = [m.model_dump(by_alias=True) for m in new_movements]
+          test = self.tx.collection('movement').insert_many(new_records)
 
         else:
-          self.tx.collection('movement').update(InventoryMovement(**movement_data.model_dump()).model_dump(by_alias=True))
+          self.tx.collection('movement').update(movement_data.model_dump(by_alias=True))
           new_movements = [movement_data]
 
         if movement_data.type == InventoryMovementType.RECEIPT:
           for movement in new_movements:
             if movement.serial_key is not None:
-              # For serialized items, always create new inventory record
-              self.tx.collection('is_in_position').insert(Inventory(
-                owned=True,
-                product_id="Product/" + movement.product_key,
-                position_id=movement.position_to,
-                serial_key=movement.serial_key,
-                quantity=1
-              ).model_dump(by_alias=True))
+              # For serialized items, always create new inventory record if not already present
+              existing_inventory = self.tx.collection('is_in_position').find(dict(
+                _from=f'Product/{movement.product_key}',
+                serial_key=movement.serial_key
+              )).count() > 0
+              if existing_inventory:
+                  raise InventoryMovementException("Serial already in inventory")
+              else:
+                self.tx.collection('is_in_position').insert(Inventory(
+                  owned=True,
+                  product_id="Product/" + movement.product_key,
+                  position_id=movement.position_to,
+                  serial_key=movement.serial_key,
+                  quantity=1
+                ).model_dump(by_alias=True))
             else:
               # For non-serialized items, check if inventory exists and update quantity
               try:
