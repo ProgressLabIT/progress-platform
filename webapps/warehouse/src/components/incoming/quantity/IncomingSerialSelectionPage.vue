@@ -111,13 +111,14 @@ async function toggleItem(serialCode) {
   }
   else {
     loading.value = true;
-    api.get('serial-code', { params: { product_key: incoming.product._key, serial_code: newSerialCode.value }}).then(({ data }) => {
+    api.get('inventory', { params: { product_key: incoming.product._key, serial_search: serialCode }}).then(({ data }) => {
       loading.value = false
-      if (data.length > 0) {
+      const isAlreadyInInventory = data.some(i => i.serial_code === serialCode)
+      if (isAlreadyInInventory) {
         Notify.create({
           position: 'top',
           color: 'theme-orange',
-          message: `Seriale ${serialCode} per il prodotto ${incoming.product.code} già esistente`,
+          message: `Seriale ${serialCode} per il prodotto ${incoming.product.code} già in giacenza`,
           timeout: 1500
         })
       }
