@@ -1,19 +1,21 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
+      if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+
 services:
   - docker:dind
 
 # Login to GitLab container Registry for push and pull operations
-before_script:
-  # - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.com
-  - export TIMESTAMP=$(date +%Y%m%d-%H%M)
+default:
+  before_script:
+    # - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.com
 
 # Just extract version info
 version-info:
   stage: .pre
   image: alpine:latest
-  rules:
-    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
   script:
     - |
       # Extract version from tag
@@ -35,9 +37,7 @@ build:webapp:
     WEBAPP_DOCKERFILE: webapp.prod.Dockerfile
     IMAGE_NAME: $CI_REGISTRY_IMAGE/app
   rules:
-    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
-      changes:
+    - changes:
         - webapps/main/**/*
   script:
     - cd $WEBAPP_ROOT
@@ -59,9 +59,7 @@ build:api:
     API_DOCKERFILE: Dockerfile
     IMAGE_NAME: $CI_REGISTRY_IMAGE/api
   rules:
-    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
-      changes:
+    - changes:
         - backend/api/**/*
   script:
     - cd $API_ROOT
@@ -83,9 +81,7 @@ build:workflow:
     WF_DOCKERFILE: Dockerfile
     IMAGE_NAME: $CI_REGISTRY_IMAGE/wf-sys-agent
   rules:
-    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
-      changes:
+    - changes:
         - backend/workflow/**/*
   script:
     - cd $WF_ROOT
@@ -97,47 +93,20 @@ build:workflow:
       .
     - docker push $IMAGE_NAME:$BRANCH_VERSION-latest
 
-tag:webapp:
-  stage: tag
+tag-version:
+  stage: build
   image: docker:stable
   needs:
     - version-info
   variables:
-    IMAGE_NAME: $CI_REGISTRY_IMAGE/app
-  rules:
-    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
+    SERVICES: >- # the dash strips newlines at the end avoid potential errors in the loop below
+      app
+      api
+      wf-sys-agent
   script:
-    - docker pull $IMAGE_NAME:$BRANCH_VERSION-latest
-    - docker tag $IMAGE_NAME:$BRANCH_VERSION-latest $IMAGE_NAME:$VERSION
-    - docker push $IMAGE_NAME:$VERSION
-
-tag:api:
-  stage: tag
-  image: docker:stable
-  needs:
-    - version-info
-  variables:
-    IMAGE_NAME: $CI_REGISTRY_IMAGE/api
-  rules:
-    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
-  script:
-    - docker pull $IMAGE_NAME:$BRANCH_VERSION-latest
-    - docker tag $IMAGE_NAME:$BRANCH_VERSION-latest $IMAGE_NAME:$VERSION
-    - docker push $IMAGE_NAME:$VERSION
-
-tag:workflow:
-  stage: tag
-  image: docker:stable
-  needs:
-    - version-info
-  variables:
-    IMAGE_NAME: $CI_REGISTRY_IMAGE/wf-sys-agent
-  rules:
-    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
-  script:
-    - docker pull $IMAGE_NAME:$BRANCH_VERSION-latest
-    - docker tag $IMAGE_NAME:$BRANCH_VERSION-latest $IMAGE_NAME:$VERSION
-    - docker push $IMAGE_NAME:$VERSION
+    - |
+      for SERVICE in $SERVICES; do
+        docker pull $CI_REGISTRY_IMAGE/$SERVICE:$BRANCH_VERSION-latest
+        docker tag $CI_REGISTRY_IMAGE/$SERVICE:$BRANCH_VERSION-latest $CI_REGISTRY_IMAGE/$SERVICE:$VERSION
+        docker push $CI_REGISTRY_IMAGE/$SERVICE:$VERSION
+      done
