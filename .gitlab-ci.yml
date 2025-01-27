@@ -7,144 +7,137 @@ before_script:
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.com
   - export TIMESTAMP=$(date +%Y%m%d-%H%M)
 
+# Just extract version info
+version-info:
+  stage: .pre
+  image: alpine:latest
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
+  script:
+    - |
+      # Extract version from tag
+      echo "VERSION=${CI_COMMIT_TAG#v}" >> build.env
+      # Extract version from branch name (e.g., release/0.9 -> 0.9)
+      echo "BRANCH_VERSION=${CI_COMMIT_BRANCH#release/}" >> build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+
 # Build Webapp image and push it to registry.
-# Uses a multi-stage dockerfile with intermediate builder image to reduce final image size and build time
 build:webapp:
   stage: build
-  only:
-    refs:
-      - DEV
-      - master
-    changes:
-      - webapps/main/**/*
   image: docker:stable
+  needs:
+    - version-info
   variables:
     WEBAPP_ROOT: webapps/main
     WEBAPP_DOCKERFILE: webapp.prod.Dockerfile
-    WEBAPP_IMAGE: $CI_REGISTRY_IMAGE/app
-  tags:
-    - gitlab-org-docker
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/app
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
+      changes:
+        - webapps/main/**/*
   script:
-    # Pull builder image if present, if not skip
-    - docker pull $WEBAPP_IMAGE:global-deps-stage || true
-    - docker pull $WEBAPP_IMAGE:develop-stage || true
-    - docker pull $WEBAPP_IMAGE:build-stage || true
-
-    # Navigate to build context
     - cd $WEBAPP_ROOT
-
-    # Build global-deps image (first section of the Dockerfile), using cached layers when available. The tagging overwrites the image with the updated one
     - >
       docker build
       --pull
-      --cache-from $WEBAPP_IMAGE:global-deps-stage
-      --target global-deps-stage
-      -t $WEBAPP_IMAGE:global-deps-stage
+      -t $IMAGE_NAME:$BRANCH_VERSION-latest
       -f $WEBAPP_DOCKERFILE
       .
-
-    # develop-stage
-    - >
-      docker build
-      --pull
-      --cache-from $WEBAPP_IMAGE:develop-stage
-      --target develop-stage
-      -t $WEBAPP_IMAGE:develop-stage
-      -f $WEBAPP_DOCKERFILE
-      .
-
-    # build-stage
-    - >
-      docker build
-      --pull
-      --cache-from $WEBAPP_IMAGE:build-stage
-      --target build-stage
-      -t $WEBAPP_IMAGE:build-stage
-      -f $WEBAPP_DOCKERFILE
-      .
-
-    # Build the final image using cached layers from each stage's image. Tag the image with current pipeline ID and `latest` tag.
-    - >
-      docker build
-      --pull
-      --cache-from $WEBAPP_IMAGE:global-deps-stage
-      --cache-from $WEBAPP_IMAGE:develop-stage
-      --cache-from $$WEBAPP_IMAGE:latest
-      -t $WEBAPP_IMAGE:latest
-      -t $WEBAPP_IMAGE:$TIMESTAMP
-      -f $WEBAPP_DOCKERFILE
-      .
-
-    # Push new images to the registry
-    - docker push $WEBAPP_IMAGE:global-deps-stage
-    - docker push $WEBAPP_IMAGE:develop-stage
-    - docker push $WEBAPP_IMAGE:latest
-    - docker push $WEBAPP_IMAGE:$TIMESTAMP
-
+    - docker push $IMAGE_NAME:$BRANCH_VERSION-latest
 
 build:api:
   stage: build
-  only:
-    refs:
-      - master
-      - DEV
-    changes:
-      - backend/api/**/*
   image: docker:stable
+  needs:
+    - version-info
   variables:
     API_ROOT: backend/api
     API_DOCKERFILE: Dockerfile
-    API_IMAGE: $CI_REGISTRY_IMAGE/api
-  tags:
-    - gitlab-org-docker
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/api
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
+      changes:
+        - backend/api/**/*
   script:
-    # Navigate to build context
     - cd $API_ROOT
-
-    # Build image using cache from existing ones
     - >
       docker build
       --pull
-      --cache-from $API_IMAGE:latest
-      -t $API_IMAGE:$TIMESTAMP
-      -t $API_IMAGE:latest
+      -t $IMAGE_NAME:$BRANCH_VERSION-latest
       -f $API_DOCKERFILE
       .
-
-    # Push new images to the registry
-    - docker push $API_IMAGE:latest
-    - docker push $API_IMAGE:$TIMESTAMP
-
+    - docker push $IMAGE_NAME:$BRANCH_VERSION-latest
 
 build:workflow:
   stage: build
-  only:
-    refs:
-      - master
-      - DEV
-    changes:
-      - backend/workflow/**/*
   image: docker:stable
+  needs:
+    - version-info
   variables:
-    WF_SYS_AGENT_DOCKERFILE: Dockerfile
-    WF_SYS_AGENT_IMAGE: $CI_REGISTRY_IMAGE/wf-sys-agent
-  tags:
-    - gitlab-org-docker
+    WF_ROOT: backend/workflow
+    WF_DOCKERFILE: Dockerfile
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/wf-sys-agent
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
+      changes:
+        - backend/workflow/**/*
   script:
-    # Navigate to build context
-    - cd backend/workflow
-
-    # Build image using cache from existing ones
+    - cd $WF_ROOT
     - >
       docker build
       --pull
-      --cache-from $WF_SYS_AGENT_IMAGE:latest
-      -t $WF_SYS_AGENT_IMAGE:$TIMESTAMP
-      -t $WF_SYS_AGENT_IMAGE:latest
-      -f $WF_SYS_AGENT_DOCKERFILE
+      -t $IMAGE_NAME:$BRANCH_VERSION-latest
+      -f $WF_DOCKERFILE
       .
+    - docker push $IMAGE_NAME:$BRANCH_VERSION-latest
 
-    # Push new images to the registry
-    - docker push $WF_SYS_AGENT_IMAGE:latest
-    - docker push $WF_SYS_AGENT_IMAGE:$TIMESTAMP
+tag:webapp:
+  stage: tag
+  image: docker:stable
+  needs:
+    - version-info
+  variables:
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/app
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
+  script:
+    - docker pull $IMAGE_NAME:$BRANCH_VERSION-latest
+    - docker tag $IMAGE_NAME:$BRANCH_VERSION-latest $IMAGE_NAME:$VERSION
+    - docker push $IMAGE_NAME:$VERSION
 
+tag:api:
+  stage: tag
+  image: docker:stable
+  needs:
+    - version-info
+  variables:
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/api
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
+  script:
+    - docker pull $IMAGE_NAME:$BRANCH_VERSION-latest
+    - docker tag $IMAGE_NAME:$BRANCH_VERSION-latest $IMAGE_NAME:$VERSION
+    - docker push $IMAGE_NAME:$VERSION
+
+tag:workflow:
+  stage: tag
+  image: docker:stable
+  needs:
+    - version-info
+  variables:
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/wf-sys-agent
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
+  script:
+    - docker pull $IMAGE_NAME:$BRANCH_VERSION-latest
+    - docker tag $IMAGE_NAME:$BRANCH_VERSION-latest $IMAGE_NAME:$VERSION
+    - docker push $IMAGE_NAME:$VERSION
