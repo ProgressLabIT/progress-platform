@@ -20,18 +20,6 @@ class Serial(ArangoDocument):
   data: list[SerialFormFieldValue] | None = None
   deleted: bool = False
 
-class SerialCommandType(str, Enum):
-  CREATE_FROM_BATCH = 'CREATE_FROM_BATCH'
-  UPDATE_DATA_FROM_BATCH = 'UPDATE_DATA_FROM_BATCH'
-  FINALIZE_BATCH = 'FINALIZE_BATCH'
-  STORE_BATCH_DATA = 'STORE_BATCH_DATA'
-  FINALIZE_WO = 'FINALIZE_WO'
-  CREATE_AND_FINALIZE = 'CREATE_AND_FINALIZE'
-  UPDATE = 'UPDATE'
-  DELETE = 'DELETE'
-  LINK_BATCH = 'LINK_BATCH'
-  LINK_SERIALS = 'LINK_SERIALS'
-
 class SerialSelection(BaseModel):
    serial_key: str | None = Field(None, validation_alias='_key')
    serial_code: str | None = Field(None, validation_alias='code')
@@ -47,21 +35,6 @@ class SerialLink(BaseModel):
   replaced: bool = False
   reason: str | None = None
   link_serial_directly: bool = False
-
-class SerialEvent(Serial):
-   operation: SerialCommandType | None = None
-   batch_key: str | None = None
-   serial: Serial | None = None
-   serial_key: str | None = None
-   step_data: list[SerialFormFieldValue] | None = None
-   created_by: str | None = None
-   quantity: int | float | None = 1
-   wo_key: str | None = None
-   product_key: str | None = None
-   batch_serials: list[SerialSelection] | list[str] | None = None
-   serial_link_data: list[SerialLink] | None = None
-   last_phase: bool = False
-   traceability_level: str | None = None
 
 class SerialNotificationType(str, Enum):
   CREATED = 'CREATED'

@@ -5,9 +5,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Depends
 
-from events import Event
-from managers.inventory_event_manager import InventoryEventManager
-from models.event import EventModel
+from events import BaseEvent, EventManager
 from models.inventory import *
 from models.product import ProductBaseData
 from utils.api import APIResponse
@@ -390,14 +388,15 @@ def create_movement_list(new_movement_list: MovementListNew):
         references = merge_references(list_references=new_movement_list.references, movement_references=m.references),
         extra = getattr(m, 'extra', new_movement_list.extra)
       )
-      event = Event(EventModel(
+
+      detail=EventManager.send_event(BaseEvent(
         event_type = 'ADD_MOVEMENT',
         movement = movement_info,
         event_group = str(uuid.uuid4()),
         user_key = 'FAKE',
         primary= False
-      ))
-      event.save(tx=tx)
+      ), tx=tx)
+
     # Create the movement list
     tx.commit_transaction()
 
