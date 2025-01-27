@@ -55,7 +55,7 @@ export const useShipmentStore = defineStore('shipment', {
       for (const movement of movements) {
         try {
           await sendEvent({
-            event_type: 'ADD_MOVEMENT',
+            event_type: 'MOVEMENT_CREATED',
             event_data: {
               movement: {
                 ...movement,

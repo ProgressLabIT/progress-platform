@@ -5,6 +5,8 @@ import json
 
 from typing import Any
 from events.base_event import BaseEvent
+from events.event_model import EventModel
+from abc import ABC, abstractmethod
 from pydantic import model_validator
 from models.inventory import *
 from models.serial import Serial
@@ -16,120 +18,146 @@ from utils.exceptions import (
   InventoryMovementException
 )
 
-class BaseInventory(BaseEvent):
+class BaseInventoryModel(EventModel):
     # Inventory fields
     movement: InventoryMovementNew | InventoryMovementUpdate | None = None
     movement_list: MovementListNew | None = None
     movement_key: str | None = None
     supplier_key: Any | None = None
 
+class BaseInventory(BaseEvent, ABC):
+    event_data: BaseInventoryModel
 
-    @classmethod
-    def get_write_collections(self):
-      return list(set(super().get_write_collections() + ['movement', 'is_in_position']))
-
-    @classmethod
-    def get_read_collections(self):
-      return list(set(super().get_read_collections() + []))
-
-    @classmethod
-    def get_computed_event(self):
-      return self
-
-    @model_validator(mode="before")
-    @classmethod
-    def pre_process(cls, data: Any) -> Any:
-      return data
-
-    @classmethod
     def adjust_inventory(self):
-      match self.movement.type:
-        case InventoryMovementType.RECEIPT:
-           return self.handle_receipt()
-        case InventoryMovementType.SHIPMENT:
-           return self.handle_shipment()
-        case InventoryMovementType.ADJUSTMENT:
-           return self.handle_adjustment()
-        case InventoryMovementType.TRANSFER:
-           return self.handle_transfer()
-        case InventoryMovementType.CONSUMPTION:
-           return self.handle_consumption()
-        case InventoryMovementType.PRODUCTION:
-           return self.handle_production()
-        case _:
-          raise InventoryMovementException(f'Invalid movement type')
+       match self.event_data.movement.type:
+          case InventoryMovementType.RECEIPT:
+             return self.handle_receipt()
+          case InventoryMovementType.SHIPMENT:
+             return self.handle_shipment()
+          case InventoryMovementType.ADJUSTMENT:
+             return self.handle_adjustment()
+          case InventoryMovementType.TRANSFER:
+             return self.handle_transfer()
+          case InventoryMovementType.CONSUMPTION:
+             return self.handle_consumption()
+          case InventoryMovementType.PRODUCTION:
+             return self.handle_production()
+          case _:
+            raise InventoryMovementException(f'Invalid movement type')
 
-    @classmethod
+    @abstractmethod
+    def apply(self):
+      pass
+
+    @abstractmethod
+    def set_model(self, base_model: EventModel):
+      pass
+
     def handle_production(self):
-       self.handle_receipt()
+      product_key = self.event_data.movement.product_key
+      serial_key = self.event_data.movement.serial_key
 
-    @classmethod
+      if serial_key is not None:
+        self.tx.collection('is_in_position').insert(Inventory(
+          product_id=f'Product/{product_key}',
+          position_id=self.event_data.movement.position_to,
+          quantity = 1,
+          serial_key = serial_key
+        ))
+      else:
+        try:
+          existing_inventory = self.tx.collection('is_in_position').find(dict(
+            _from=f'Product/{product_key}',
+            _to=self.event_data.movement.position_to,
+            serial_key=None
+          )).next()
+
+          final_qty = existing_inventory['quantity'] + self.event_data.movement.qt_confirmed
+
+          self.tx.collection('is_in_position').update(dict(
+            _key = existing_inventory['_key'],
+            quantity=final_qty
+          ))
+
+        except StopIteration: # No existing inventory found, create new inventory
+          self.tx.collection('is_in_position').insert(Inventory(
+            product_id=f'Product/{product_key}',
+            position_id=self.event_data.movement.position_to,
+            quantity=self.event_data.movement.qt_confirmed,
+            owned=True
+          ))
+
     def handle_consumption(self):
        #TODO: duplicate code, refactor while handling production events
-       product_key = self.movement.product_key
-       record_match = dict(_from=f'Product/{product_key}', _to=self.movement.position_from)
-       if self.movement.serial_key is not None:
-          record_match['serial_key'] = self.movement.serial_key
+       product_key = self.event_data.movement.product_key
+       record_match = dict(_from=f'Product/{product_key}', _to=self.event_data.movement.position_from)
+       if self.event_data.movement.serial_key is not None:
+          record_match['serial_key'] = self.event_data.movement.serial_key
        else:
           record_match['serial_key'] = None
        position_link_cursor = self.tx.collection('is_in_position').find(record_match)
        if (position_link_cursor.count()>0):
           position_status = position_link_cursor.next()
-          final_qty = position_status['quantity'] - self.movement.qt_confirmed
+          final_qty = position_status['quantity'] - self.event_data.movement.qt_confirmed
           if (final_qty<0):
-             raise InventoryMovementException(f'Cannot consume: quantity not enough')
+            raise InventoryMovementException(f'Cannot consume: quantity not enough in the provided position')
           elif (final_qty==0):
-           self.tx.collection('is_in_position').delete_match(filters=dict(_key = position_status['_key']))
+            self.tx.collection('is_in_position').delete_match(filters=dict(_key = position_status['_key']))
           else:
              self.tx.collection('is_in_position').update(dict(
                _key = position_status['_key'],
                quantity=final_qty
              ))
        else:
-         raise InventoryMovementException(f'Cannot find product to consume')
+         raise InventoryMovementException(f'Cannot find product to consume in the provided position')
 
-    @classmethod
     def _handle_receipt_with_traceability(self):
-      serial_code = self.movement.serial_code or ''
+      serial_code = self.event_data.movement.serial_code or ''
       serial_code_provided = len(serial_code) > 0
 
       if not serial_code_provided:
         raise InventoryMovementException(f'Serial code is required for receipts of products with traceability')
 
-      product_key = self.movement.product_key
-      serial_exists = self.tx.collection('Serial').find(dict(
+      product_key = self.event_data.movement.product_key
+
+      # First try to find an existing serial
+      serial_cursor = self.tx.collection('Serial').find(dict(
         code=serial_code,
         product_key=product_key,
         deleted=False
-      )).count() > 0
+      ))
+      if serial_cursor.count() == 0:
+         # Serial does not exist, create new serial
+        new_serial_key = self.tx.collection('Serial').insert(Serial(
+          product_key=product_key,
+          code=serial_code,
+          created=self.event_data.timestamp,
+          released=self.event_data.timestamp,
+          available=self.event_data.movement.status == MovementStatus.COMPLETED,
+          user_key=self.event_data.user_key,
+        ))['_key']
+        self.event_data.movement.serial_key = new_serial_key
 
-      if serial_exists:
-        raise InventoryMovementException(f'Serial already exists')
+      else:
+        # Serial exists, check if it's in inventory
+        existing_serial = serial_cursor.next()
+        self.event_data.movement.serial_key = existing_serial['_key']
 
-      # Create serial
-      # TODO: Use SerialEventManager to create serial
-      # TODO: Update serials as available when confirming planned movement
-      new_serial_key = self.tx.collection('Serial').insert(Serial(
-        product_key=product_key,
-        code=serial_code,
-        created=self.timestamp,
-        released=self.timestamp,
-        available=self.movement.status == MovementStatus.COMPLETED,
-        user_key=self.user_key,
-      ))['_key']
+        inventory_exists = self.tx.collection('is_in_position').find(dict(
+          serial_key=existing_serial['_key']
+        )).count() > 0
 
-      self.movement.serial_key = new_serial_key
+        if inventory_exists:
+          raise InventoryMovementException(f'Serial is already in inventory')
 
-
-      if self.movement.status == MovementStatus.COMPLETED:
+      if self.event_data.movement.status == MovementStatus.COMPLETED:
         new_inventory_record = self.tx.collection('is_in_position').insert(Inventory(
           product_id = 'Product/' + product_key,
-          position_id = self.movement.position_to,
-          serial_key = new_serial_key,
+          position_id = self.event_data.movement.position_to,
+          serial_key = self.event_data.movement.serial_key,
           quantity = 1
         ))
 
-    @classmethod
     def handle_receipt(self):
       """
       # SCENARIO 1: Receipt of product with traceability
@@ -145,7 +173,7 @@ class BaseInventory(BaseEvent):
       """
       # TODO: handle serial creation if product requires it
 
-      product_key = self.movement.product_key
+      product_key = self.event_data.movement.product_key
 
       try:
         product_record = self.tx.collection('Product').get(product_key)
@@ -162,37 +190,68 @@ class BaseInventory(BaseEvent):
       # SCENARIO 2: Receipt of product without traceability.
       # Update inventory only if the movement is confirmed
 
-      if self.movement.status == MovementStatus.COMPLETED:
-        record_match = dict(_from=f'Product/{product_key}', _to=self.movement.position_to)
+      if self.event_data.movement.status == MovementStatus.COMPLETED:
+        record_match = dict(_from=f'Product/{product_key}', _to=self.event_data.movement.position_to)
         position_link_cursor = self.tx.collection('is_in_position').find(record_match)
         if (position_link_cursor.count()>0):
           position_status = position_link_cursor.next()
-          final_qty = position_status['quantity'] + self.movement.qt_confirmed
+          final_qty = position_status['quantity'] + self.event_data.movement.qt_confirmed
           self.tx.collection('is_in_position').update(dict(
             _key = position_status['_key'],
             quantity=final_qty
           ))
-        else:
+        else: # No existing inventory found, create new inventory
           self.tx.collection('is_in_position').insert(Inventory(
             product_id=f'Product/{product_key}',
-            position_id=self.movement.position_to,
-            quantity=self.movement.qt_confirmed,
+            position_id=self.event_data.movement.position_to,
+            quantity=self.event_data.movement.qt_confirmed,
             owned=True
           ))
 
-    @classmethod
     def handle_shipment(self):
-      if self.movement.status == MovementStatus.COMPLETED:
-        product_key = self.movement.product_key
-        record_match = dict(_from=f'Product/{product_key}', _to=self.movement.position_from)
-        if ('serial_key' in self.movement):
-          record_match['serial_key'] = self.movement.serial_key
+      product_key = self.event_data.movement.product_key
+
+      try:
+        product_record = self.tx.collection('Product').get(product_key)
+      except StopIteration:
+        raise InventoryMovementException(f'Product not found')
+
+      product_requires_serial = product_record.get('traceability_level', False)
+
+      # SCENARIO 1: Receipt of product with traceability
+      if product_requires_serial:
+        serial_code = self.event_data.movement.serial_code
+        serial_key = self.event_data.movement.serial_key
+        serial_provided = any([serial_code, serial_key])
+
+        if serial_key is None:
+          if serial_code is None:
+            self.event_data.movement.serial_code = 'NONE'
+          else:
+            try:
+              serial_key = self.tx.collection('Serial').find(dict(
+                code=serial_code,
+                product_key=product_key,
+                deleted=False
+              )).next()['_key']
+              self.event_data.movement.serial_key = serial_key
+            except StopIteration:
+              raise InventoryMovementException(f'Serial {serial_code} not found')
         else:
-          record_match['serial_key'] = None
+          if not self.tx.collection('Serial').has(serial_key):
+            raise InventoryMovementException(f'Serial {serial_key} not found')
+
+      if self.event_data.movement.status == MovementStatus.COMPLETED:
+        product_key = self.event_data.movement.product_key
+        record_match = dict(
+          _from=f'Product/{product_key}',
+          _to=self.event_data.movement.position_from,
+          serial_key=getattr(self.event_data.movement, 'serial_key', None)
+        )
         position_link_cursor = self.tx.collection('is_in_position').find(record_match)
         if (position_link_cursor.count()>0):
           position_status = position_link_cursor.next()
-          final_qty = position_status['quantity'] - self.movement.qt_confirmed
+          final_qty = position_status['quantity'] - self.event_data.movement.qt_confirmed
           if (final_qty<0):
               raise InventoryMovementException(f'Cannot ship: quantity not enough')
           elif (final_qty==0):
@@ -205,7 +264,6 @@ class BaseInventory(BaseEvent):
         else:
           raise InventoryMovementException(f'Cannot find product inventory to ship')
 
-    @classmethod
     def handle_transfer(self):
       """
       - Remove inventory from start position
@@ -213,7 +271,7 @@ class BaseInventory(BaseEvent):
       - Add inventory to end position
         - add quantity/serial
       """
-      movement = InventoryMovement(**self.movement.model_dump())
+      movement = InventoryMovement(**self.event_data.movement.model_dump())
 
 
       # CONTAINER TRANSFER ======================================================
@@ -255,45 +313,67 @@ class BaseInventory(BaseEvent):
           _to=movement.position_to,
           quantity=1,
           owned=True,
-          date_received=movement.end,
           serial_key=movement.serial_key
         ))
       else:
-        self.tx.collection('is_in_position').insert(dict(
-          _from='Product/' + movement.product_key,
-          _to=movement.position_to,
-          quantity=movement.qt_confirmed,
-          owned=True,
-          date_received=movement.end,
-        ))
-
-    @classmethod
-    def handle_adjustment(self):
-      product_key = self.movement.product_key
-      record_match = dict(_from=f'Product/{product_key}', _to=self.movement.position_from)
-      if self.movement.serial_key is not None:
-         record_match['serial_key'] = self.movement.serial_key
-      else:
-         record_match['serial_key'] = None
-      position_link_cursor = self.tx.collection('is_in_position').find(record_match)
-      if (position_link_cursor.count()>0):
-         position_status = position_link_cursor.next()
-         final_qty = self.movement.qt_confirmed
-         self.tx.collection('is_in_position').update(dict(
-              _key = position_status['_key'],
-              quantity=final_qty
+        destination_match = dict(_from='Product/' + movement.product_key, _to=movement.position_to)
+        try:
+          existing_inventory = self.tx.collection('is_in_position').find(destination_match).next()
+          final_qty = existing_inventory['quantity'] + movement.qt_confirmed
+          self.tx.collection('is_in_position').update(dict(
+            _key = existing_inventory['_key'],
+            quantity=final_qty
           ))
-      else:
-        raise InventoryMovementException(f'Cannot find product to adjust')
+        except StopIteration: # No existing inventory found, create new inventory
+          self.tx.collection('is_in_position').insert(dict(
+            _from='Product/' + movement.product_key,
+            _to=movement.position_to,
+            quantity=movement.qt_confirmed,
+            owned=True,
+          ))
 
-    @classmethod
+
+    def handle_adjustment(self):
+      product_key = self.event_data.movement.product_key
+      record_match = dict(_from=f'Product/{product_key}', _to=self.event_data.movement.position_from)
+      if self.event_data.movement.serial_key is not None:
+        record_match['serial_key'] = self.event_data.movement.serial_key
+      else:
+        record_match['serial_key'] = None
+      position_link_cursor = self.tx.collection('is_in_position').find(record_match)
+      try:
+        position_status = position_link_cursor.next()
+        final_qty = position_status['quantity'] + self.event_data.movement.qt_confirmed
+        if final_qty < 0:
+          raise InventoryMovementException(f'Cannot adjust inventory: quantity cannot be negative')
+        elif final_qty == 0:
+          self.tx.collection('is_in_position').delete(position_status['_key'])
+        else:
+          self.tx.collection('is_in_position').update(dict(
+            _key = position_status['_key'],
+            quantity=final_qty
+          ))
+      except StopIteration: # No existing inventory found, create new inventory
+        if self.event_data.movement.qt_confirmed > 0:
+          self.tx.collection('is_in_position').insert(dict(
+            _from='Product/' + product_key,
+            _to=self.event_data.movement.position_from,
+            quantity=self.event_data.movement.qt_confirmed,
+            serial_key=self.event_data.movement.serial_key,
+            owned=True,
+          ))
+        else:
+          raise InventoryMovementException(f'Cannot adjust inventory: quantity cannot be negative')
+      except Exception as e:
+        raise Exception(f'Error adjusting inventory', e)
+
+
     def can_be_conflated(self, notification_type):
        return notification_type not in [InventoryNotificationType.ERROR]
 
-    @classmethod
     def notify_results(self, notification):
       notification['subtopic'] = "inventory-notification"
-      inventory_event = copy.deepcopy(self)
+      inventory_event = copy.deepcopy(self.event_data)
       if 'error' in notification:
         inventory_event.event_type = "INVENTORY_"+notification['notification']+" ("+notification['error']+")"
       else:

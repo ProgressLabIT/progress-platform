@@ -11,12 +11,6 @@ from models.base_models import ArangoDocument, ArangoEdge, FlexModel
 from utils.dt import timestamp
 
 
-class InventoryCommandType(str, Enum):
-  ADD_MOVEMENT = 'ADD_MOVEMENT'
-  UPDATE_MOVEMENT = 'UPDATE_MOVEMENT'
-  DELETE_MOVEMENT = 'DELETE_MOVEMENT'
-  CLOSE_LIST = 'CLOSE_LIST'
-
 class InventoryNotificationType(str, Enum):
   ERROR = 'ERROR'
   MOVEMENT_ADDED = 'MOVEMENT_ADDED'

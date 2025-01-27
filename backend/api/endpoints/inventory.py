@@ -13,7 +13,7 @@ from utils.inventory import Queries, merge_references
 from utils.counter import _generate_counter
 from utils.db import db, model_to_db_dict
 from utils import auth
-
+from events.inventory.movement_created import MovementCreatedModel
 
 router = APIRouter()
 
@@ -389,8 +389,7 @@ def create_movement_list(new_movement_list: MovementListNew):
         extra = getattr(m, 'extra', new_movement_list.extra)
       )
 
-      detail=EventManager.send_event(BaseEvent(
-        event_type = 'ADD_MOVEMENT',
+      detail=EventManager.send_event(MovementCreatedModel(
         movement = movement_info,
         event_group = str(uuid.uuid4()),
         user_key = 'FAKE',

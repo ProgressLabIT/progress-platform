@@ -50,11 +50,9 @@ class JobResumed(BaseProduction):
     job_update['active_batch_qt'] = self.batch.qt_total
     self.tx.collection('Job').update(job_update, return_new=True)['new']
 
-    self.job = Job(**self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.event_data.job_key)).next())
-
     self.set_response(dict(
       message=f"Job {self.event_data.job_key} resumed",
       batch_data = self.get_batch_execution_data(),
-      job_data = self.job
+      job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.event_data.job_key)).next()
     ))
 

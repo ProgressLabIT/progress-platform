@@ -1,18 +1,27 @@
 import traceback
 
-from events.inventory.base_inventory import BaseInventory
+from events.inventory.base_inventory import BaseInventory, BaseInventoryModel
 from models.inventory import *
+from events.event_type import EventType
+from events.event_model import EventModel
 
 from utils.exceptions import (
   InventoryMovementException
 )
 
+class MovementCreatedModel(BaseInventoryModel):
+    event_type: str = EventType.MOVEMENT_CREATED.name
 
 class MovementCreated(BaseInventory):
+  event_data: MovementCreatedModel
+
+  def __init__(self, **data):
+    super().__init__(**data)
 
   def apply(self):
     try:
-      movement_data=self.movement
+      # TODO: allow inserting movements by product/serial code
+      movement_data=self.event_data.movement
       self.adjust_inventory()
       new_movement_record = InventoryMovement(**movement_data.model_dump())
       movement_key = self.tx.collection('movement').insert(new_movement_record)['_key']

@@ -48,7 +48,7 @@ class SerialCreated(BaseSerial):
          serial_no = "MISSING-COUNTER"
          if self.event_data.counter and new_serial_record['code'] == None:
             if ('counter_key' in self.event_data.serial_data):
-               serial_no = _generate_counter(self.tx, self.event_data.serial_data['counter_key'])
+               serial_no = _generate_counter(self.tx, 'Counter/' + self.event_data.serial_data['counter_key'])
                new_serial_record['code'] = serial_no
             else:
                self.notify_results(dict(

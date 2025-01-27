@@ -89,7 +89,7 @@ async function confirmSerialMovements() {
     const inventoryRecord = inventoryRecords.find(r => r.serial_key == serial._key)
     const positionFromKey = getOriginPositionKey(inventoryRecord)
     promises.push(sendEvent({
-      event_type: 'ADD_MOVEMENT',
+      event_type: 'MOVEMENT_CREATED',
       event_data: { movement: {
         position_from: `Position/${positionFromKey}`,
         position_to: `Position/${transfer.destinationPosition._key}`,
@@ -150,7 +150,7 @@ function confirmProductMovements() {
 
   for (const movement of movements) {
     sendEvent({
-      event_type: 'ADD_MOVEMENT',
+      event_type: 'MOVEMENT_CREATED',
       event_data: {movement},
     })
     .then(() => {
