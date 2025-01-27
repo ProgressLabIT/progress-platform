@@ -8,7 +8,6 @@ from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from fastapi.encoders import jsonable_encoder
 
 from models.collaboration import *
-from models.event import EventModel, EventType
 from utils.api import APIResponse
 from utils import auth
 from utils.db import db

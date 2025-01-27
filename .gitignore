@@ -67,3 +67,5 @@ webapps/main/src__
 webapps/api/package-lock.json
 testing/cypress/e2e/1-getting-started
 testing/cypress/e2e/2-advanced-examples
+results
+testing/robot-test/reports

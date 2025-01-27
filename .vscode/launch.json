@@ -76,6 +76,7 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "test"]
     },
+
     {
       "name": "WSL Chrome",
       "type": "chrome",
@@ -105,6 +106,29 @@
       "cwd": "${workspaceFolder}/testing",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "open-cypress"]
+    },
+    {
+      "name": "RobotCode: Run All",
+      "type": "robotcode",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/testing/robot-test",
+      "target": "."
+    },
+    {
+      "name": "RobotCode: Remote Attach",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "0.0.0.0",
+        "port": 5680
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/testing/robot-test",
+          "remoteRoot": "/robot-test"
+        }
+      ],
+      "justMyCode": true
     }
   ]
 }

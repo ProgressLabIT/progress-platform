@@ -3,9 +3,8 @@ import traceback
 from fastapi import APIRouter, HTTPException, Depends
 from utils import auth
 
-from events import Event
+from events import BaseEvent, EventManager, EventType, EventModel
 from models.traceability import *
-from models.event import EventModel, EventType
 
 from utils.exceptions import *
 from utils.api import APIResponse
@@ -23,9 +22,7 @@ serials = db.collection('Serial')
     dependencies=[Depends(auth.verify_token)])
 async def record_event(data: EventModel):
   try:
-    event = Event(data)
-    response = event.save()
-    return APIResponse(detail=response)
+    return APIResponse(detail=EventManager.send_event(data))
 
   except (
     JobIsActiveError,
@@ -45,7 +42,8 @@ async def record_event(data: EventModel):
       status_code=422,
       detail=dict(
         error_type = e.__class__.__name__,
-        message = e.args[0]
+        message = len(e.args) > 0 and e.args[0] or None,
+        exception = traceback.format_exc()
       )
     )
 
