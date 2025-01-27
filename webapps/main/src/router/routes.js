@@ -5,6 +5,7 @@ import production from './productionRoutes.js';
 import quality from './qualityRoutes.js';
 import report from './reportRoutes.js';
 import traceability from './traceabilityRoutes.js';
+import warehouse from './warehouseRoutes.js';
 
 const routes = [
   {
@@ -22,6 +23,7 @@ const routes = [
           ...operator,
           ...quality,
           ...traceability,
+          ...warehouse,
           ...report,
         ],
       },

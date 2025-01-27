@@ -36,6 +36,14 @@
           >
           </q-btn>
 
+          <q-btn
+            size="0.75rem"
+            :label="$t('export')"
+            color="theme-blue"
+            @click="exportSerials"
+          >
+          </q-btn>
+
           <SerialForm
             :show="show_serial_form"
             mode="new"
@@ -45,7 +53,7 @@
           </SerialForm>
 
           <q-btn
-            v-if="!showFilterDrawer && $route.name !== 'workOrderArchive'"
+            v-if="!showFilterDrawer"
             class="q-ml-sm"
             size="sm"
             round
@@ -362,7 +370,9 @@ import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import FormField from '@/components/FormField.vue';
 import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js';
+import { XLSXDownload, XLSXGetData } from '@/lib/xlsxDownload';
 import SerialForm from 'app/src/components/traceability/SerialForm.vue';
+import { useSerialColumns } from 'app/src/composables/traceability';
 
 export default {
   name: 'TraceabilityRoot',
@@ -389,6 +399,8 @@ export default {
         advancedFilters.value.push(formField);
       });
     }
+
+    const serialColumns = useSerialColumns();
 
     const advancedFilterQuery = useQueryModel(Object, 'advanced_filters', null);
     watch(
@@ -433,6 +445,7 @@ export default {
       advancedFilters,
       addAdvancedFilter,
       advancedFilterQuery,
+      serialColumns,
     };
   },
 
@@ -658,6 +671,14 @@ export default {
             }, 1000),
           );
       }
+    },
+
+    exportSerials() {
+      XLSXDownload(
+        XLSXGetData(this.$store.state.serial.serials, this.serialColumns),
+        'serials',
+        'serials',
+      );
     },
   },
 };

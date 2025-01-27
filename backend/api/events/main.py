@@ -1,5 +1,6 @@
 from events import (
   CollaborationEvent,
+  InventoryEvent,
   ProductionActivityEvent,
   ProductionAdminEvent,
   SharedEventMethods,
@@ -11,6 +12,7 @@ import uuid
 
 class Event(
   CollaborationEvent,
+  InventoryEvent,
   ProductionActivityEvent,
   ProductionAdminEvent,
   SharedEventMethods
@@ -29,7 +31,7 @@ class Event(
   # INIT & SAVE
   ######################################################################
 
-  def __init__(self, event: EventModel, database=db):
+  def __init__(self, event: EventModel, database=db, tx=None):
     self.db = database
     self.info = event
     self.meta = getattr(self, self.info.event_type.value)
@@ -38,13 +40,15 @@ class Event(
     # define action to be taken based on the event type
     self.action = getattr(self, self.meta.action)
 
-  def save(self):
+  def save(self, tx=None):
     # Initialize transaction
     self.meta.collections.append('Event')
-    self.tx = self.db.begin_transaction(write=self.meta.collections)
+
+    self.tx = tx if tx is not None else self.db.begin_transaction(write=self.meta.collections)
 
     # Define event UUID
-    self.info.event_group = str(uuid.uuid4())
+    if self.info.event_group is None:
+      self.info.event_group = str(uuid.uuid4())
 
     try:
       # Save event, storing its key for later use
@@ -63,14 +67,15 @@ class Event(
       self.tx.collection('Event').insert(self.info, overwrite=True)
 
       # Commit transaction
-      self.tx.commit_transaction()
+      if self.info.primary:
+        self.tx.commit_transaction()
 
       # Return any required value
       return self.response
 
     # In case of exceptions, abort transaction without catching them
     finally:
-      if self.tx.transaction_status() != 'committed':
+      if self.tx.transaction_status() != 'committed' and self.info.primary:
         self.tx.abort_transaction()
 
 

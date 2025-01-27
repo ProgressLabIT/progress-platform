@@ -61,6 +61,14 @@
       "runtimeArgs": ["run", "dev"]
     },
     {
+      "name": "Launch warehouse",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/webapps/warehouse",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["run", "dev"]
+    },
+    {
       "name": "Launch test",
       "type": "node",
       "request": "launch",
@@ -74,6 +82,17 @@
       "request": "launch",
       "url": "http://localhost:9000",
       "webRoot": "${workspaceFolder}/webapps/main",
+      "sourceMapPathOverrides": {
+        "webpack:///./src/*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "WSL Chrome - warehouse",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:9000",
+      "webRoot": "${workspaceFolder}/webapps/warehouse",
       "sourceMapPathOverrides": {
         "webpack:///./src/*": "${webRoot}/*",
         "webpack:///src/*": "${webRoot}/*"

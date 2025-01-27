@@ -35,17 +35,19 @@ export default boot(({ app, store }) => {
     },
     (error) => {
       if (error) {
-        if (
-          error.response.status === 401 &&
-          error.config.url !== 'whoami' &&
-          !error.config.url.includes('session')
-        ) {
-          //originalRequest._retry = true;
-          store.dispatch('logout');
+        if (error.response.status === 401) {
+          if (
+            error.config.url !== 'whoami' &&
+            !error.config.url.includes('session')
+          ) {
+            //originalRequest._retry = true;
+            store.dispatch('logout');
+          }
+          return error;
           //return app.router.push('/login');
         }
       }
-      return error;
+      throw error;
     },
   );
 

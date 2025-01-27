@@ -110,7 +110,7 @@ export default {
     origin_list() {
       return this.operatorOnly
         ? this.$store.getters.operator_list()
-        : this.$store.state.user.user_list;
+        : this.$store.state.user?.user_list;
     },
 
     placeholder_computed() {

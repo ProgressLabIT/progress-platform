@@ -15,6 +15,7 @@ class Queries:
       // find active products matching the search pattern provided
       FILTER @has_operation_key == null || product._key IN products_with_operation
       FILTER @active_only ? product.active == true : true
+      FILTER @traceability_only ? LENGTH(product.traceability_level) : true
 
       LET search_context = LOWER(CONCAT(product.code, ' ', product.description))
       FILTER !product.trash && LIKE(search_context, search, true)

@@ -1,6 +1,7 @@
 node_modules
 dist
 deployment.yaml
+src-capacitor
 
 # local env files
 .env.local

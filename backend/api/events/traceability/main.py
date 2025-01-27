@@ -27,6 +27,7 @@ class ProductionActivityEvent(BaseEvent):
   production_collections = [
     'Batch',
     'batch_serial',
+    'Counter',
     'Event',
     'Job',
     'Queue',
@@ -184,7 +185,7 @@ class ProductionActivityEvent(BaseEvent):
     self.response = dict(
       message = f"Job {self.info.job_key} started",
       batch_data = self.get_batch_execution_data(),
-      job_data = self.job
+      job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.job.key)).next()
     )
 
   # ===================================================================

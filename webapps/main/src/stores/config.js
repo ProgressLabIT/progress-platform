@@ -22,7 +22,10 @@ export const useConfigStore = defineStore('config', () => {
     allowUnassignedJobs: true,
     allowIndependentReorderingOfJobQueues: false,
     allowSerialDelete: false,
+    enableInventoryManagement: false,
     allowSerialCodeEdit: false,
+    allowPositionDelete: true,
+    printers: [],
   };
 
   const isLoading = ref(true);
@@ -46,6 +49,9 @@ export const useConfigStore = defineStore('config', () => {
     if (appConfig.serial_fields) {
       config.serialFields = appConfig.serial_fields;
     }
+    if (appConfig.printers) {
+      config.printers = appConfig.printers;
+    }
     if (typeof appConfig.operator_cost === 'number') {
       config.operatorCost = appConfig.operator_cost;
     }
@@ -60,6 +66,9 @@ export const useConfigStore = defineStore('config', () => {
     }
     if (typeof appConfig.allow_serial_delete === 'boolean') {
       config.allowSerialDelete = appConfig.allow_serial_delete;
+    }
+    if (typeof appConfig.enable_inventory_management === 'boolean') {
+      config.enableInventoryManagement = appConfig.enable_inventory_management;
     }
     if (typeof appConfig.allow_serial_code_edit === 'boolean') {
       config.allowSerialCodeEdit = appConfig.allow_serial_code_edit;
@@ -93,12 +102,14 @@ export const useConfigStore = defineStore('config', () => {
       company_name: configToUpdate.companyName,
       operation_parameters: configToUpdate.operationParameters,
       serial_fields: configToUpdate.serialFields,
+      printers: configToUpdate.printers,
       operator_cost: configToUpdate.operatorCost,
       show_unassigned_jobs_to_operators: configToUpdate.allowUnassignedJobs,
       allow_independent_reordering_of_job_queues:
         configToUpdate.allowIndependentReorderingOfJobQueues,
       allow_serial_delete: configToUpdate.allowSerialDelete,
       allow_serial_code_edit: configToUpdate.allowSerialCodeEdit,
+      enable_inventory_management: configToUpdate.enableInventoryManagement,
     });
 
     Object.assign(config, configToUpdate);

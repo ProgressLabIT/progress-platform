@@ -1,6 +1,5 @@
 import os
 import time
-from typing import List
 
 from arango import ArangoClient
 from pydantic import BaseModel
@@ -83,14 +82,15 @@ with sys_db_connection.begin_batch_execution() as sys_db:
 # ————————————————————————————
 class DBIndex(BaseModel):
   type: str | None = 'persistent'
-  fields: List[str]
+  fields: list[str]
   name: str | None = None
   inBackground: bool | None = False
+  storedValues: list[str] | None = None
 
 class Collection(BaseModel):
   name: str
-  indexes: List[DBIndex] | None =[]
-  default_records: List[dict] | None = []
+  indexes: list[DBIndex] | None =[]
+  default_records: list[dict] | None = []
 
 
 collections = [
@@ -132,15 +132,27 @@ collections = [
       value = True
     ),
     dict(
+      _key = 'enable_inventory_management',
+      value = False
+    ),
+    dict(
       _key = 'operator_cost',
       value = 25
-    )
+    ),
+    dict(
+      _key = 'system_counters',
+      value = dict(
+        work_orders = 'default',
+        warehouse_missions = 'default',
+        positions = 'default'
+      )
+    ),
   ]),
   Collection(name='contains'),
   Collection(name='Counter', default_records=[
     dict(
       _key = 'default',
-      next_tick = 0,
+      next_tick = 1,
       template = ['%y', '#6'],
       frequency = "year",
       reset_date = ""
@@ -157,6 +169,12 @@ collections = [
     DBIndex(fields=['timestamp'], name='event-timestamp')
   ]),
   Collection(name='has_tag'),
+  Collection(name='movement', indexes=[
+    DBIndex(fields=['product_key', 'status', 'stage'], name='movement-product'),
+    DBIndex(fields=['serial_key'], name="movement-serial"),
+    DBIndex(fields=['list_key'], name="movement-list"),
+    DBIndex(fields=['start', 'end'], name="movement-time-range"),
+  ]),
   Collection(name='Issue', indexes=[
     DBIndex(fields=['issue_type_key'], name="issue-type"),
     DBIndex(fields=['created'], name='issue-created-time'),
@@ -170,6 +188,29 @@ collections = [
     DBIndex(fields=['assigned_to, stage'], name='job-assignment'),
     DBIndex(fields=['active'], name='job-active')
   ]),
+  Collection(name='is_in_position',
+    indexes=[
+      DBIndex(fields=['serial_key'], name='inventory-serial')
+    ],
+    default_records=[
+      dict(
+        _key = 'IN',
+        code = 'IN',
+        owned = True,
+        available = True,
+        disposable = False,
+        extra = None
+      ),
+      dict(
+        _key = 'OUT',
+        code = 'OUT',
+        owned = False,
+        available = False,
+        disposable = False,
+        extra = None
+      )
+    ]
+  ),
   Collection(name='Media'),
   Collection(name='media_connection'),
   Collection(name='message'),
@@ -177,20 +218,34 @@ collections = [
   Collection(name='Phase', indexes=[
     DBIndex(fields=['product_key, operation_key'])
   ]),
-  Collection(name='PrintTemplate'),
-  Collection(name='Product'),
-  Collection(name='Queue', indexes=[
-    DBIndex(fields=['type, independent, subqueue_target_key'], name='queue-type-independent-target'),
-    DBIndex(fields=['subqueue_target_key'], name="queue-target")
-  ], default_records=[
-    dict(
-      type = 's',
-      site_key = '0',
-      work_orders = []
-    )
+  Collection(name='Position', indexes=[
+    DBIndex(fields=['_key'], storedValues=['code'], name='position-key'),
+    DBIndex(fields=['code'], storedValues=['_key'], name='position-code'),
+    DBIndex(fields=['_key', 'code'], name='position-key-code')
   ]),
+  Collection(name='PrintTemplate'),
+  Collection(name='Product', indexes=[
+    DBIndex(fields=['_key'], storedValues=['code'], name='product-key-code'),
+    DBIndex(fields=['code'], storedValues=['_key'], name='product-code-key')
+  ]),
+  Collection(
+    name='Queue',
+    indexes=[
+      DBIndex(fields=['type, independent, subqueue_target_key'], name='queue-type-independent-target'),
+      DBIndex(fields=['subqueue_target_key'], name="queue-target")
+    ],
+    default_records=[
+      dict(
+        type = 's',
+        site_key = '0',
+        work_orders = []
+      )
+    ]
+  ),
   Collection(name='requires'),
   Collection(name='Serial', indexes=[
+    DBIndex(fields=['_key'], storedValues=['code'], name='serial-key-code'),
+    DBIndex(fields=['code'], storedValues=['_key'], name='serial-code-key'),
     DBIndex(fields=['wo_key', 'released'], name='serial-wo'),
     DBIndex(fields=['product_key', 'released'], name='serial-product'),
     DBIndex(fields=['released'], name='serial-released'),
@@ -198,7 +253,7 @@ collections = [
   Collection(name='Site'),
   Collection(name='Step'),
   Collection(name='StepExecutionData', indexes=[
-    DBIndex(fields=['batch_key, step_key, status, canceled'], name='sxd-batch-step-status-canceled'),
+    DBIndex(fields=['batch_key, step_key, status, canceled'], name='sxd-batch-step-status-canceled')
   ]),
   Collection(name='Tag'),
   Collection(name='Token'),
@@ -221,7 +276,14 @@ collections = [
     DBIndex(fields=['serial_key'], name='wip-serial'),
     DBIndex(fields=['_to, wo_key, active, serial_key'], name='wip-target'),
   ]),
-  Collection(name='WorkOrder'),
+  Collection(name='MovementList', indexes=[
+    DBIndex(fields=['code'], name="list-code"),
+    DBIndex(fields=['status', 'assigned_to'], name="list-status-assignee")
+  ]),
+  Collection(name='WorkOrder', indexes=[
+    DBIndex(fields=['_key'], storedValues=['code'], name='workorder-key-code'),
+    DBIndex(fields=['code'], storedValues=['_key'], name='workorder-code-key')
+  ]),
   Collection(name='WorkSession', indexes=[
     DBIndex(fields=['work_order_key'], name='ws-wo'),
     DBIndex(fields=['job_key, canceled'], name='ws-job-canceled'),

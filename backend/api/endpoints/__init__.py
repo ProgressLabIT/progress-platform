@@ -16,3 +16,4 @@ from .collaboration import router as collaboration
 from .traceability import router as traceability
 from .notification import router as notification
 from .counter import router as counter
+from .inventory import router as inventory

@@ -9,9 +9,9 @@ let c = DOCUMENT(Counter, @counter_key)
 let reset_counter = DATE_NOW() > DATE_TIMESTAMP(c.reset_date)
 
 // Increment tick and reset_date (if needed)
-let next_tick = reset_counter ? 2 : c.next_tick + 1
+let current_tick = reset_counter ? 1 : c.next_tick
 let reset_date = reset_counter ? DATE_ADD(c.reset_date, 1, c.frequency) : c.reset_date
-update c with { reset_date, next_tick } in Counter
+update c with { reset_date, next_tick: current_tick + 1 } in Counter
 
 // Return the counter value prior to update
 RETURN c
@@ -37,3 +37,12 @@ def compute_counter(counter):
 def _generate_counter(tx, counter_key):
   return compute_counter(tx.aql.execute(COUNTER_TICK, bind_vars={ 'counter_key': counter_key }).next())
 
+#def _generate_counter_wo_tx(counter_key):
+#  tx = db.begin_transaction(write=['Counter'], read=[])
+#  try:
+#    counter = _generate_counter(tx, counter_key)
+#    tx.commit_transaction()
+#    return counter
+#  except Exception as e:
+#    tx.abort_transaction()
+#    raise e

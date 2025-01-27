@@ -22,6 +22,7 @@ export default {
   archive: 'archive',
   assign: 'assign',
   assignment_success: 'Jobs assigned successfully',
+  available: 'Available',
   back: 'back',
   batch: 'batch',
   batch_completed_quantity_question: 'How many new pieces are you working on?',
@@ -185,6 +186,7 @@ export default {
   first_x_shown: 'First {x} records shown',
   form_title: 'form fields',
   form_missing_fields_alert: 'please fill in all fields',
+  from: 'from',
   general: 'General',
   greeting: {
     afternoon: 'good afternoon',
@@ -208,6 +210,9 @@ export default {
       'You are turning off independent ordering. The jobs will be reordered according to the work order queue order. Do you confirm?',
   },
   info: 'info',
+  printers: 'Printers',
+  add_printer: 'add printer',
+  remove_printer: 'remove printer',
   issue: 'issue',
   issue_button_close: 'Close issue',
   issue_button_reopen: 'Reopen issue',
@@ -536,6 +541,10 @@ export default {
       label: 'Home page',
       error: 'An error occurred while changing the default page',
     },
+    printer: {
+      label: 'Printer',
+      error: 'An error occurred while changing the default printer',
+    },
   },
   print: 'print',
   printDialog: {
@@ -693,6 +702,7 @@ export default {
       'Allow independent reordering of job queues',
     allowSerialCodeEdit: 'Allow editing serial codes',
     allowSerialDelete: 'Allow deleting serials',
+    enableInventoryManagement: 'Enable inventory management',
     turnOffIndependentReordering: {
       title: 'Turn off independent reordering',
       message:
@@ -748,6 +758,7 @@ export default {
     second: 'Second',
   },
   title: 'title',
+  to: 'to',
   total_cost: 'total cost',
   type: 'Type',
   counter: 'Counter',
@@ -756,6 +767,8 @@ export default {
   counter_delete_success: 'Counter deleted',
   counter_delete_text:
     'The counter will be deleted, but serials already recorded will not be deleted.',
+  printer_delete: 'Remove printer',
+  printer_delete_text: 'This printer will be removed',
   next_tick: 'Tick',
   template: 'Template',
   frequency: 'Frequency',
@@ -806,7 +819,8 @@ export default {
     more_filters: 'more filters',
     name: 'Name',
     new: 'new',
-    new_password: 'new password',
+    new_password: 'Insert new password',
+    new_password_repeat: 'repeat new password',
     new_password_save_action: 'save password and start session',
     new_success:
       'user successfully created. Take note of the temporary password for the user. It will not be shown again. The user must change it with a private one during his next access.',
@@ -820,6 +834,7 @@ export default {
       traceability: 'Traceability area',
       reporting: 'Reports area',
       title: 'permissions',
+      warehouse: 'warehouse',
     },
     reset_password: 'reset password',
     reset_password_success:
@@ -856,6 +871,7 @@ export default {
     workSession: 'work session',
     productionRoot: 'production monitoring',
     printTemplateLibrary: 'Prints',
+    warehouseSettings: 'Warehouse',
     qualityRoot: 'Quality',
     traceabilityRoot: 'Traceability',
     reportRoot: 'Reports',
@@ -863,7 +879,17 @@ export default {
     userJobs: 'job selection',
     workOrderArchive: 'Archive',
     workOrderList: 'work orders',
+    warehouseRoot: 'Warehouse',
+    positions: 'Positions',
+    stock: 'Stock',
+    missions: 'Missions',
+    movements: 'Movements',
+    inventory: 'Inventory',
+    labelPrintTemplates: 'Label print templates',
+    printersLibrary: 'Printers',
   },
+  host: 'host',
+  port: 'port',
   waiting: 'waiting',
   work_order: {
     add: 'add order | add orders',
@@ -906,6 +932,7 @@ export default {
   },
   work_order_autocomplete_hint:
     'Input the text to search (min 3 characters) between order code, product and project. Will show first 100 results.',
+
   workload_hours: 'Workload in hours',
   workload_remaining: {
     short: 'RWL',
@@ -967,4 +994,42 @@ export default {
   month: 'Month',
   week: 'Week',
   day: 'Day',
+  warehouse: {
+    position: {
+      add: 'Add positions',
+      new: 'Create a new position',
+      parent_position: 'Parent',
+      code: 'Code',
+      owned: 'Owned',
+      available: 'Available',
+      disposable: 'Disposable',
+      position_autocomplete_hint:
+        'Input the text to search (min 3 characters). Will show first 100 results.',
+      position_data: 'Position data',
+      position_delete_confirm_title: 'Delete position',
+      position_delete_confirm_question: 'Do you want to delete this position?',
+    },
+    movement: {
+      product_code: 'Product Code',
+      position_code: 'Position',
+      position_from_code: 'Position from',
+      position_to_code: 'Position to',
+      position_filters: 'Position filters',
+      qt_planned: 'Quantity planned',
+      qt_confirmed: 'Quantity confirmed',
+      start_from: 'Start From',
+      start_to: 'Start To',
+      end_from: 'End From',
+      end_to: 'End To',
+      movement_type: 'Movement type',
+      status: 'Status',
+    },
+    inventory: {
+      position: 'Position',
+      product_code: 'Product Code',
+      quantity: 'Quantity',
+      serial: 'Serial',
+      owned: 'Owned',
+    },
+  },
 };

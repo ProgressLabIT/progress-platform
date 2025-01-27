@@ -58,9 +58,16 @@
             class="background smaller full-with scroll relative-position q-pa-md"
             style="height: 400px; font-family: monospace; white-space: pre-line"
           >
-            <div v-for="(l, index) in flow_logs" :key="index" class="q-mb-sm">
-              {{ l }}
-            </div>
+            <q-list dense>
+              <q-item v-for="(l, index) in flow_logs" :key="index" class="q-mb-sm q-px-none">
+                <q-item-section side top class="text-disabled">
+                  {{ l.timestamp }}
+                </q-item-section>
+                <q-item-section top>
+                  {{ l.message }}
+                </q-item-section>
+              </q-item>
+            </q-list>
             <div id="scroll-anchor" class="q-mb-sm">
               <q-spinner v-if="active_states.includes(flow_state)" />
               <q-badge v-else color="theme-grey">END</q-badge>
@@ -241,20 +248,26 @@ export default {
       });
     },
 
-    async updateLogs(log_resp) {
-      const new_logs = log_resp.data.map((l) => `${l.timestamp}: ${l.message}`);
+    async updateLogs(logs) {
+      const new_logs = logs.map((l) => {
+        // Keep only the time part of the timestamp up to milliseconds, without date and timezone
+        const timestamp = l.timestamp.slice(11, 23);
+        // Replace newlines with <br>
+        const message = l.message.replace(/\n/, '<br>');
+        return { timestamp, message };
+      });
       const logbox = document.getElementById('flow-log');
       this.flow_logs.push(...new_logs);
       logbox.scrollTop = logbox.scrollHeight;
     },
 
     async checkRun() {
-      const [status, logs] = await this.$axios.all([
+      const [statusResp, logResp] = await this.$axios.all([
         this.$axios.post(this.status.url, this.status.body),
         this.$axios.post(this.logs.url, this.logs.body),
       ]);
-      this.flow_state = status.data[0].state_type;
-      this.updateLogs(logs);
+      this.flow_state = statusResp.data[0].state_type;
+      this.updateLogs(logResp.data);
 
       if (['COMPLETED', 'FAILED', 'CRASHED'].includes(this.flow_state)) {
         clearInterval(this.polling_instance);
@@ -273,6 +286,9 @@ export default {
 <style lang="sass" scoped>
 #flow-log *
   overflow-anchor: none !important
+
+.q-list--dense > .q-item
+  padding: 0px !important
 
 #scroll-anchor
   overflow-anchor: auto

@@ -15,6 +15,8 @@
 
         <q-menu>
           <q-list separator style="min-width: 200px">
+
+            <!-- LANGUAGE -->
             <q-item>
               <q-item-section side>
                 <q-icon name="mdi-web" />
@@ -31,6 +33,7 @@
               </q-item-section>
             </q-item>
 
+            <!-- THEME -->
             <q-item>
               <q-item-section side>
                 <q-icon name="mdi-palette-swatch" />
@@ -64,6 +67,7 @@
               </q-item-section>
             </q-item>
 
+            <!-- DISPLAY FONT -->
             <q-item>
               <q-item-section side>
                 <q-icon name="mdi-format-font" />
@@ -100,6 +104,7 @@
               </q-item-section>
             </q-item>
 
+            <!-- HOME PAGE -->
             <q-item>
               <q-item-section side>
                 <q-icon name="mdi-home" />
@@ -121,6 +126,43 @@
               </q-item-section>
             </q-item>
 
+            <!-- PRINTER -->
+            <q-item>
+              <q-item-section side>
+                <q-icon name="mdi-printer" />
+              </q-item-section>
+              <q-item-section class="flex flex-center">
+                <q-select
+                  :model-value="printer"
+                  :options="printerOptions"
+                  emit-value
+                  map-options
+                  :loading="isUpdatingPrinter"
+                  :label="$t('preferences.printer.label')"
+                  dense
+                  filled
+                  class="full-width"
+                  @update:model-value="updatePrinter"
+                />
+              </q-item-section>
+            </q-item>
+
+            <!-- FULLSCREEN -->
+            <q-item clickable @click="$q.fullscreen.toggle()">
+              <q-item-section side>
+                <q-icon name="mdi-fullscreen" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>
+                  {{ capitalizeAll($t('fullscreen')) }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-toggle v-model="$q.fullscreen.isActive" />
+              </q-item-section>
+            </q-item>
+
+            <!-- LOGOUT -->
             <q-item clickable @click="logout">
               <q-item-section side>
                 <q-icon name="mdi-logout-variant" />
@@ -140,7 +182,7 @@
 </template>
 
 <script setup>
-import { findLast } from 'lodash';
+import { cloneDeep, findLast } from 'lodash';
 import { Notify } from 'quasar';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -149,9 +191,12 @@ import { useStore } from 'vuex';
 import { capitalize, capitalizeAll } from '@/boot/filters.js';
 import { useDrawer } from '@/composables/drawer';
 import { useTheme } from '@/composables/theme';
+import { useConfigStore } from '@/stores/config';
+import { useQuasar } from 'quasar';
 
 const store = useStore();
 const { drawerModel } = useDrawer();
+const $q = useQuasar();
 
 const screenTitle = ref('PROGRESS');
 
@@ -208,6 +253,10 @@ const homePageOptions = computed(() => [
     label: capitalizeAll(t('views.traceabilityRoot')),
     value: 'traceabilityRoot',
   },
+  {
+    label: capitalizeAll(t('views.warehouseRoot')),
+    value: 'warehouseRoot',
+  },
   { label: capitalizeAll(t('views.reportRoot')), value: 'reportRoot' },
 ]);
 const isUpdatingHomePage = ref(false);
@@ -224,6 +273,32 @@ async function updateHomePage(newHomePage) {
     });
   } finally {
     isUpdatingHomePage.value = false;
+  }
+}
+
+const { config } = useConfigStore();
+
+const printer = computed(() => user.value.preferences.printer || null);
+const printerOptions = computed(() => {
+  return cloneDeep(config.printers).map((printer) => ({
+    label: printer.name,
+    value: `${printer.host}:${printer.port}`,
+  }));
+});
+const isUpdatingPrinter = ref(false);
+async function updatePrinter(newPrinter) {
+  isUpdatingPrinter.value = true;
+
+  try {
+    await store.dispatch('updatePreferences', { printer: newPrinter });
+  } catch (error) {
+    console.error(error);
+    Notify.create({
+      type: 'negative',
+      message: t('preferences.printer.error'),
+    });
+  } finally {
+    isUpdatingPrinter.value = false;
   }
 }
 

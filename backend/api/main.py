@@ -3,6 +3,7 @@ from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
+import endpoints.inventory
 from utils.config import get_config
 from utils.kafka.kafka_producer import KafkaProducer
 from managers.kafka_consumer_manager import KafkaConsumerManager
@@ -30,12 +31,35 @@ app = FastAPI(
 # global_router = APIRouter()
 
 origins = [
-    config.webapp_url,
+    "http://localhost",
+    "http://localhost:9000",
+    "http://localhost:9001",
+    "http://0.0.0.0",
+    "http://0.0.0.0:9000",
+    "http://0.0.0.0:9001",
+    "http://127.0.0.1",
+    "http://127.0.0.1:9000",
+    "http://127.0.0.1:9001",
+    "http://192.168.1.3",
+    "http://192.168.1.3:9000",
+    "http://192.168.1.3:9001",
+    "http://192.168.2.1:9000",
+    "http://192.168.2.1:9001",
+    "http://192.168.2.1",
+    "http://192.168.64.1:9000",
+    "http://192.168.64.1:9001",
+    "http://192.168.64.1",
+    "http://10.0.0.156:9000",
+    "http://10.0.0.156:9001",
+    "http://10.0.0.156",
+    "http://10.0.0.70",
+    "http://10.0.0.70:9000",
+    "http://10.0.0.70:9001",
+    "http://172.232.211.239:9000"
 ]
-
 app.add_middleware(
   CORSMiddleware,
-  allow_origins=["*"],
+  allow_origins=origins,
   allow_credentials=True,
   allow_methods=["*"],
   allow_headers=["*"],
@@ -93,6 +117,7 @@ app.include_router(endpoints.collaboration, tags=['Collaboration'])
 app.include_router(endpoints.traceability, tags=['Traceability'])
 app.include_router(endpoints.counter, tags=['Traceability'])
 app.include_router(endpoints.notification, tags=['Notification'])
+app.include_router(endpoints.inventory, tags=['Inventory'])
 
 # app.include_router(global_router, prefix="/v1")
 

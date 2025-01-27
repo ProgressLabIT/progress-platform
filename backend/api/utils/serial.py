@@ -3,6 +3,7 @@ class Queries:
 
   GET_BATCH_SERIALS = """
     FOR s IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
+    SORT s.code, s._key
     RETURN s
   """
 
@@ -18,7 +19,7 @@ class Queries:
               && linked_serial.replaced == false
               RETURN DOCUMENT(Serial, linked_serial._to)
           )
-
+      SORT serial.code, serial._key
       RETURN MERGE(serial, { childs: childs })
   """
 
@@ -90,6 +91,8 @@ class Queries:
       && (@search ? CONTAINS(LOWER(s.code), LOWER(@search)) : true)
       && (@include_unreleased ? true : s.released != null)
       && (@batch_key ? s._key IN batch_serials : true)
+      && s.deleted == false
+      && s.available IN [null, true] //keep null for backwards compatibility
 
       LET used = (
         FOR linked_serial IN contains
@@ -114,6 +117,7 @@ class Queries:
     FOR s IN Serial
       FILTER (@serial_key ? s._key != @serial_key : true) && UPPER(s.code) == UPPER(@serial)
       && s.product_key == @product_key
+      && s.deleted == false
       RETURN s
   """
 
@@ -140,6 +144,7 @@ class Queries:
   GET_SERIALS_FOR_CODE = """
     FOR s IN Serial
       FILTER (s.code == @serial_code && s.product_key == @product_key)
+      && s.deleted == False
       RETURN s
   """
 
@@ -150,8 +155,9 @@ class Queries:
     // FILTER BY DOCUMENT PROPERTIES
     FILTER
       // When filtering by document key, parameters will be arrays
-      (@serial_key ? POSITION(@serial_key, s._key) : true)
-      && (@serial_search ? CONTAINS(s.code, @serial_search) : true)
+      s.deleted == false
+      && (@serial_key ? POSITION(@serial_key, s._key) : true)
+      && (@serial_search ? CONTAINS(LOWER(s.code), LOWER(@serial_search)) : true)
       && (@created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], s.created_by) : true)
       && (@time_created_from ? s.created >= @time_created_from : true)
       && (@time_created_to ? s.created <= @time_created_to : true)

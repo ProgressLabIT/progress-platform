@@ -161,7 +161,7 @@ class SerialEventManager:
             error_code = SerialNotificationErrorCode.EXCEPTION,
             error = traceback.format_exc()
          ))
-         raise SerialNotCreatedError(f'Cannot create serial')
+         raise SerialNotCreatedError(f'Cannot create serial', str(traceback.format_exc()))
 
     def link_batch_serial(self):
       batch_key = self.event.batch.key
@@ -491,7 +491,7 @@ class SerialEventManager:
          now = timestamp()
 
          for serial in batch_serials:
-            serial.code = _generate_counter(self.tx, 'Counter/' + counter_key)
+            serial.code = _generate_counter(self.tx, counter_key)
             serial.released = now if last_phase else None
             for step in batch_execution_data:
               for data in serial.data:

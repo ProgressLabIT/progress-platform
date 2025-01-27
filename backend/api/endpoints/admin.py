@@ -28,7 +28,7 @@ traceability_collections = [
     'Issue',
     'issue_rel',
     'message',
-    'Serial'
+    'Serial',
   ]
 
 media_directories = [
@@ -36,6 +36,7 @@ media_directories = [
     'traceability',
     'issue'
   ]
+
 
 def clean_dir(path):
  if os.path.isdir(path):
@@ -79,6 +80,26 @@ async def get_work_order_jobs(work_order_key):
   cursor = db.collection('Job').find(dict(wo_key=work_order_key))
   return [j['_key'] for j in cursor]
 
+
+@router.delete('/reset/inventory',
+    dependencies=[Depends(auth.verify_token)])
+async def reset_warehouse_data():
+  try:
+    for c in ['movement', 'MovementList']:
+      db.collection(c).truncate()
+    db.aql.execute("""
+      FOR i IN is_in_position
+      FILTER IS_SAME_COLLECTION(Product, i._from)
+      REMOVE i IN is_in_position
+    """)
+    return 'Reset of inventory data successful'
+
+  except Exception:
+    tx.abort_transaction()
+    raise HTTPException(
+      status_code=500,
+      detail=traceback.format_exc()
+    )
 
 
 @router.delete('/force-delete-work-order/{work_order_key}',

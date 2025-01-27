@@ -50,6 +50,7 @@ class HomePageOptions(str, Enum):
   OPERATOR = 'operatorRoot'
   QUALITY = 'qualityRoot'
   REPORTS = 'reportRoot'
+  WAREHOUSE = 'warehouseRoot'
 
 class WorkSessionTabs(str, Enum):
   PROCEDURE = 'jobSteps'
