@@ -42,9 +42,9 @@
           {{ i.product_description }}
         </div>
         <div
-          v-if="i.references.purchase_doc"
+          v-if="i.reference"
           class="text-h6 text-low uppercase q-mt-xs">
-          {{ list.type === 'shipment' ? i.references.sales_doc : i.references.purchase_doc }}
+          {{ i.reference }}
         </div>
 
         <!-- COMPLETED MOVEMENTS -->

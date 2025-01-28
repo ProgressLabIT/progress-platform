@@ -34,6 +34,7 @@ export const useListsStore = defineStore('lists', {
             product_key: movements[0].product_key,
             references: movements[0].references,
             listKey: movements[0].movement_list_key,
+            reference: list.type == 'receipt' ? movements[0].references.purchase_doc : movements[0].references.sales_doc,
             type,
             qt_planned,
             qt_confirmed,
