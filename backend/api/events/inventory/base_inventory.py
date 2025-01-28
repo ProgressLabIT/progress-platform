@@ -53,6 +53,16 @@ class BaseInventory(BaseEvent, ABC):
     def set_model(self, base_model: EventModel):
       pass
 
+    def get_write_collections(self):
+      return list(set(super().get_write_collections() + [
+        'is_in_position',
+        'Serial',
+        'Product',
+        'Position',
+        'movement',
+        'Event'
+      ]))
+
     def handle_production(self):
       product_key = self.event_data.movement.product_key
       serial_key = self.event_data.movement.serial_key

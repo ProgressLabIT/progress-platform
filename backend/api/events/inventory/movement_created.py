@@ -18,6 +18,9 @@ class MovementCreated(BaseInventory):
   def __init__(self, **data):
     super().__init__(**data)
 
+  def set_model(self, base_model: EventModel):
+   self.event_data = MovementCreatedModel(**base_model.model_dump())
+
   def apply(self):
     try:
       # TODO: allow inserting movements by product/serial code
