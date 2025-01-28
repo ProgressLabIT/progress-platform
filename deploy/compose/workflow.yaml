@@ -41,7 +41,7 @@ services:
         - "traefik.http.services.wf-server.loadbalancer.server.port=4200"
 
   wf-system-agent: # System Workflow Agent
-    image: registry.gitlab.com/progresslab/progress-platform/wf-sys-agent
+    image: registry.gitlab.com/progresslab/progress-platform/wf-sys-agent:${VERSION}
     restart: always
     depends_on:
       - wf-server

@@ -30,6 +30,9 @@ services:
       - "8000"
     volumes:
       - media:/media
+    depends_on:
+      - db
+      - broker
 
   db:
     volumes:
