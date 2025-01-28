@@ -22,10 +22,15 @@
       </div>
     </div>
 
-    <!-- PRODUCT WITH TRACEABILITY AND SERIALS SPECIFIED -->
+    <!-- ITEMS WITH TRACEABILITY AND SERIALS SPECIFIED -->
     <div class="col column" v-if="requestedSerials.length > 0">
-      <div class="text-h2 col-auto">
-        Seriali richiesti
+      <div class="row items-center q-gutter-x-xs">
+        <div class="text-h2 col-auto">
+          Seriali richiesti
+        </div>
+        <q-space></q-space>
+        <q-btn color="theme-grey" size="xs" padding="xs md" icon="mdi-checkbox-multiple-blank-outline" @click="() => toggleAll(false)" />
+        <q-btn color="theme-blue" size="xs" padding="xs md" icon="mdi-checkbox-multiple-marked" @click="() => toggleAll(true)" />
       </div>
 
       <SearchOrScan
@@ -72,10 +77,10 @@
       </div>
 
       <SearchOrScan
-        v-model="positionFilter"
+        v-model="inventoryFilter"
         class="q-my-md"
-        label="Scansiona o ricerca seriale"
-        @update:model-value="filterPosition"
+        label="Filtra per seriale o posizione"
+        @update:model-value="filterInventory"
       />
 
       <q-scroll-area class="col scroll">
@@ -155,7 +160,7 @@ const lists = useListsStore();
 shipment.product = { _key: lists.selectedItem.product_key };
 shipment.loadInventory();
 
-const positionFilter = ref('');
+const inventoryFilter = ref('');
 const serialFilter = ref('');
 
 
@@ -195,16 +200,23 @@ function isDisabled(item) {
 }
 
 const shownSerials = computed(() => {
-  return requestedSerials.value.filter(s => s.serial_code.includes(serialFilter.value));
+  return requestedSerials.value.filter(s => s.serial_code.toLowerCase().includes(serialFilter.value.toLowerCase()));
 });
 
 const selectedSerials = computed(() => {
   return shipment.selectedInventory.map(i => i.serial_code);
 });
 
+
+function getInventoryFilterContext(item) {
+  const positions = item.path.map(p => p.position_code).join(' ') || 'IN'
+  const serial = item.serial_code
+  return `${serial} ${positions}`
+}
+
 const shownInventory = computed(() => {
-  if (positionFilter.value) {
-    return shipment.inventory.filter(i => i.path.map(p => p.position_code).some(p => p.includes(positionFilter.value)));
+  if (inventoryFilter.value) {
+    return shipment.inventory.filter(i => getInventoryFilterContext(i).toLowerCase().includes(inventoryFilter.value.toLowerCase()));
   }
   return shipment.inventory;
 });
@@ -225,7 +237,7 @@ function filterSerials(value) {
   }
 }
 
-function filterPosition(value) {
+function filterInventory(value) {
   if (shownInventory.value.length === 1 && shownInventory.value[0].path.map(p => p.position_code).some(p => p === value)) {
     onItemClick(shownInventory.value[0]);
     resetInput();
@@ -305,6 +317,34 @@ function toggleSerial(inventoryItem) {
     }
   }
 }
+
+
+function toggleAll(select = true) {
+  if (select) {
+    // Add all available items that aren't already selected
+    shownSerials.value.forEach(item => {
+      if (item.available && !selectedSerials.value.includes(item.serial_code)) {
+        if (requestedSerials.value.length === 0) {
+          selectSerial(item);
+        } else {
+          // Only select if serial is among requested serials
+          const movementMatch = itemMovements.value.find(m => m.serial_code === item.serial_code);
+          if (movementMatch) {
+            selectSerial(item);
+          }
+        }
+      }
+    });
+  } else {
+    // Remove all shown items from selection
+    const shownSerialCodes = shownSerials.value.map(s => s.serial_code);
+    shipment.selectedInventory = shipment.selectedInventory.filter(
+      item => !item.serial_code || !shownSerialCodes.includes(item.serial_code)
+    );
+    resetInput();
+  }
+}
+
 
 
 function selectItemQuantity() {

@@ -7,19 +7,20 @@
         {{ transfer.contents.length }}
       </q-chip>
     </div>
-    <div class="row q-col-gutter-x-xs q-mt-sm">
-      <!-- Show first 3 serial numbers as chips -->
-      <div v-for="item in transfer.contents.sort((a, b) => a.code.localeCompare(b.code))" :key="item._key" class="col-auto">
-        <ContentChip :item="item" />
+    <q-scroll-area class="col q-mt-sm">
+      <div class="row q-col-gutter-x-xs">
+        <!-- Show first 3 serial numbers as chips -->
+        <div v-for="item in transfer.contents.sort((a, b) => a.code.localeCompare(b.code))" :key="item._key" class="col-auto">
+          <ContentChip :item="item" />
+        </div>
+        <!-- Show count of remaining serials if more than 3 are selected -->
+        <!-- <div v-if="transfer.contents.length > 3" class="col-auto">
+          <q-chip color="theme-grey" class="text-body2">
+            +{{ transfer.contents.length - 3 }}
+          </q-chip>
+        </div> -->
       </div>
-      <!-- Show count of remaining serials if more than 3 are selected -->
-      <!-- <div v-if="transfer.contents.length > 3" class="col-auto">
-        <q-chip color="theme-grey" class="text-body2">
-          +{{ transfer.contents.length - 3 }}
-        </q-chip>
-      </div> -->
-    </div>
-
+    </q-scroll-area>
 
     <!-- Destination Position Section -->
     <div class="q-mb-md">

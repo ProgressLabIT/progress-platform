@@ -12,7 +12,12 @@
     </div>
 
     <!-- Contents search / selection -->
-    <div class="text-h2">{{ $t('transfer_contents_select')}}</div>
+    <div class="row items-center q-gutter-x-xs">
+      <div class="text-h2">{{ $t('transfer_contents_select')}}</div>
+      <q-space></q-space>
+      <q-btn color="theme-grey" size="xs" padding="xs md" icon="mdi-checkbox-multiple-blank-outline" @click="() => toggleAll(false)" />
+      <q-btn color="theme-blue" size="xs" padding="xs md" icon="mdi-checkbox-multiple-marked" @click="() => toggleAll(true)" />
+    </div>
     <SearchOrScan v-model="filter" @update:model-value="searchContents" />
 
     <template v-if="list.length === 0">
@@ -48,7 +53,6 @@
     </q-scroll-area>
 
 
-    <q-space></q-space>
 
     <q-btn :disable="transfer.contents.length === 0" color="theme-blue" :label="$t('next')" @click="next" />
     <q-btn color="theme-grey" :label="$t('cancel')" @click="cancel" />
@@ -178,6 +182,27 @@ function transferContainer(item) {
   transfer.contents.push(item);
   cardItem.value = null;
 }
+
+function toggleAll(select = true) {
+  if (select) {
+    // Add all items that aren't already in contents
+    list.value.forEach(item => {
+      if (!transfer.contents.find(c => c._id === item._id)) {
+        // if (['position', 'product'].includes(item.type)) {
+        //   // Skip positions/products as they need quantity input
+        //   return;
+        // }
+        transfer.contents.push(item);
+      }
+    });
+  } else {
+    // Remove all items from current list
+    transfer.contents = transfer.contents.filter(
+      content => !list.value.find(item => item._id === content._id)
+    );
+  }
+}
+
 
 function next() {
   transfer.stage = 'destination';
