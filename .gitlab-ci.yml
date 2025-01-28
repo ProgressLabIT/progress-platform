@@ -1,7 +1,8 @@
 workflow:
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
-      if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/'
+      when: always
+    - when: never
 
 services:
   - docker:dind
@@ -16,12 +17,14 @@ default:
 version-info:
   stage: .pre
   image: alpine:latest
+  before_script: []  # Override the default docker login since we don't need it (and alpine doesn't have docker)
   script:
     - |
       # Extract version from tag
       echo "VERSION=${CI_COMMIT_TAG#v}" >> build.env
       # Extract version from branch name (e.g., release/0.9 -> 0.9)
-      echo "BRANCH_VERSION=${CI_COMMIT_BRANCH#release/}" >> build.env
+      MAJOR_MINOR=$(echo ${CI_COMMIT_TAG#v} | cut -d'.' -f1,2)
+      echo "BRANCH_VERSION=$MAJOR_MINOR" >> build.env
   artifacts:
     reports:
       dotenv: build.env
@@ -37,6 +40,7 @@ build:webapp:
     WEBAPP_DOCKERFILE: webapp.prod.Dockerfile
     IMAGE_NAME: $CI_REGISTRY_IMAGE/app
   rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.0$/' # build also in case the version is the first in the branch
     - changes:
         - webapps/main/**/*
   script:
@@ -59,6 +63,7 @@ build:api:
     API_DOCKERFILE: Dockerfile
     IMAGE_NAME: $CI_REGISTRY_IMAGE/api
   rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.0$/' # build also in case the version is the first in the branch
     - changes:
         - backend/api/**/*
   script:
@@ -81,6 +86,7 @@ build:workflow:
     WF_DOCKERFILE: Dockerfile
     IMAGE_NAME: $CI_REGISTRY_IMAGE/wf-sys-agent
   rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.0$/' # build also in case the version is the first in the branch
     - changes:
         - backend/workflow/**/*
   script:
