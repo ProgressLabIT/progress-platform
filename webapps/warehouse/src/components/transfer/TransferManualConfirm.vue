@@ -72,6 +72,10 @@ function saveTransfer() {
   : confirmProductMovements();
 }
 
+function getOriginPositionKey(inventoryRecord) {
+  return inventoryRecord.path.slice(-1)[0].position_key
+}
+
 async function confirmSerialMovements() {
   const session_data = store.state.session;
   const now = timestamp();
@@ -82,11 +86,12 @@ async function confirmSerialMovements() {
   const inventoryRecords = (await api.get('/inventory', { params })).data
 
   for (const serial of transfer.contents) {
-    const position_from_key = inventoryRecords.find(r => r.serial_key == serial._key).position_key
+    const inventoryRecord = inventoryRecords.find(r => r.serial_key == serial._key)
+    const positionFromKey = getOriginPositionKey(inventoryRecord)
     promises.push(sendEvent({
       event_type: 'ADD_MOVEMENT',
       event_data: { movement: {
-        position_from: `Position/${position_from_key}`,
+        position_from: `Position/${positionFromKey}`,
         position_to: `Position/${transfer.destinationPosition._key}`,
         product_key: serial.product._key,
         serial_key: serial._key,
@@ -173,5 +178,4 @@ function confirmProductMovements() {
     });
   }
 }
-
 </script>
