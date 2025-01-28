@@ -1,10 +1,10 @@
 *** Settings ***
 Library     ../../resources/MovementsEvents.py
 Resource    ../../resources/definitions.resource
-Library     String
+Resource    ../../resources/keywords/serials.resource
 
 *** Variables ***
-${serial_code}    Generata random string    8    [NUMBERS]
+${serial_code}    Generate random serial code
 
 *** Test Cases ***
 Send movement created event

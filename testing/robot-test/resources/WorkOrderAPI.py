@@ -6,8 +6,8 @@ from datetime import datetime
 
 class WorkOrderAPI(Api):
 
-    @keyword('Create work order')
-    def create_work_order(self, wo_code, product_key, qt_planned, start_from = datetime.now().isoformat(), due_by = datetime.now().isoformat(), project_code = None):
+    @keyword('Do create work order')
+    def do_create_work_order(self, wo_code, product_key, qt_planned, start_from = datetime.now().isoformat(), due_by = datetime.now().isoformat(), project_code = None):
         workorder_data = {
             'wo_code': wo_code,
             'product_key': product_key,

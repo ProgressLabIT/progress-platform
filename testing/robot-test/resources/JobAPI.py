@@ -7,8 +7,8 @@ from datetime import datetime
 class JobAPI(Api):
 
 
-    @keyword('Assign job')
-    def assign_job(self,  job_key, assign_to, qt_planned):
+    @keyword('Do assign job')
+    def do_assign_job(self,  job_key, assign_to, qt_planned):
         data = {
             '_key': job_key,
             'assigned_to': assign_to,
