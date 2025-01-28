@@ -307,7 +307,7 @@ for db in db_handles:
     if len(c.default_records):
       collection.insert_many(c.default_records)
 
-    print(f"Created collection {c} in {db.db_name}")
+    print(f"Created collection {c.name} in {db.db_name}")
 
   print('Created collections and data in db ', db.db_name)
 
