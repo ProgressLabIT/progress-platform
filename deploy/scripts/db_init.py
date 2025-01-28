@@ -2,7 +2,7 @@ import os
 import time
 
 from arango import ArangoClient
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from passlib.context import CryptContext
 
 
@@ -74,18 +74,14 @@ with sys_db_connection.begin_batch_execution() as sys_db:
   print('Done\n\nCreating collections...', end=' ')
 
 
-
-
-
 # ————————————————————————————
 # Create Collections and base records
 # ————————————————————————————
 class DBIndex(BaseModel):
   type: str | None = 'persistent'
   fields: list[str]
-  name: str | None = None
-  inBackground: bool | None = False
-  storedValues: list[str] | None = None
+  name: str
+  storedValues: list[str] | None = Field(None, exclude=True)
 
 class Collection(BaseModel):
   name: str
@@ -216,7 +212,7 @@ collections = [
   Collection(name='message'),
   Collection(name='Operation'),
   Collection(name='Phase', indexes=[
-    DBIndex(fields=['product_key, operation_key'])
+    DBIndex(fields=['product_key, operation_key'], name='phase-product-operation')
   ]),
   Collection(name='Position', indexes=[
     DBIndex(fields=['_key'], storedValues=['code'], name='position-key'),
@@ -277,7 +273,8 @@ collections = [
     DBIndex(fields=['_to, wo_key, active, serial_key'], name='wip-target'),
   ]),
   Collection(name='MovementList', indexes=[
-    DBIndex(fields=['code'], name="list-code"),
+    DBIndex(fields=['code'], storedValues=['_key'], name="list-code-key"),
+    DBIndex(fields=['_key'], storedValues=['code'], name="list-key-code"),
     DBIndex(fields=['status', 'assigned_to'], name="list-status-assignee")
   ]),
   Collection(name='WorkOrder', indexes=[
