@@ -884,6 +884,7 @@ export default {
     stock: 'Stock',
     missions: 'Missions',
     movements: 'Movements',
+    movementLists: 'Lists',
     inventory: 'Inventory',
     labelPrintTemplates: 'Label print templates',
     printersLibrary: 'Printers',
@@ -995,6 +996,10 @@ export default {
   week: 'Week',
   day: 'Day',
   warehouse: {
+    title: 'Warehouse',
+    manage: 'Manage inventory',
+    allow_negative: 'Allow negative values',
+    bom_options: 'Consumption options',
     position: {
       add: 'Add positions',
       new: 'Create a new position',

@@ -57,7 +57,7 @@ class BaseSerial(BaseEvent, ABC):
     else:
       serial_event.event_type = "SERIAL_"+notification['notification']
     serial_event.serial_key = notification.get('serial_key')
-    self.tx.collection('Event').insert(serial_event)
+    #self.tx.collection('Event').insert(serial_event)
     if self.can_be_conflated(notification.get('notification')):
        NotificationManager.getInstance().notifyConflated(subtopic="serial-notification", message=json.dumps(notification), delay=5)
     else:

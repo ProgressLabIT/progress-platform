@@ -389,7 +389,7 @@ class BaseInventory(BaseEvent, ABC):
       else:
         inventory_event.event_type = "INVENTORY_"+notification['notification']
       inventory_event.movement_key = notification.get('movement_key')
-      self.tx.collection('Event').insert(inventory_event.model_dump())
+      #self.tx.collection('Event').insert(inventory_event.model_dump())
       if self.can_be_conflated(notification.get('notification')):
          NotificationManager.getInstance().notifyConflated(subtopic="inventory-notification", message=json.dumps(notification), delay=5)
       else:

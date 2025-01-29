@@ -18,15 +18,11 @@ Create work order
     ${wo_code} =    Get Time    epoch
     ${workorder_response} =    Do create work order    WO${wo_code}    ${product_key}    ${create_quantity}
     Log    ${workorder_response}
-    ${workorder_key} =    Set Variable    ${workorder_response['work_order']['_key']}
-    Log    ${workorder_key}
-    ${job_key} =    Set Variable        ${workorder_response['jobs'][0]['_key']}
-    Log    ${job_key}
-    ${phase_key} =    Set Variable        ${workorder_response['jobs'][0]['phase_key']}
-    Log    ${phase_key}
-    RETURN    ${workorder_key}    ${job_key}    ${phase_key}
+    RETURN    ${workorder_response['work_order']['_key']}    ${workorder_response['jobs'][0]['_key']}    ${workorder_response['jobs'][0]['phase_key']}
 
 Assign job
     [Arguments]    ${job_key}    ${create_quantity}
     ${logged_user_key}=    Get Logged User Key
     Do assign job    ${job_key}    ${logged_user_key}    ${create_quantity}
+
+

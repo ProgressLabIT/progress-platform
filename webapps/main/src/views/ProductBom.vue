@@ -71,6 +71,17 @@
           </q-td>
         </template>
 
+        <template #body-cell-manage_inventory="props">
+          <q-btn
+            v-if="config.enableInventoryManagement"
+            color="theme-blue"
+            :disable="!editMode"
+            :label="$t('edit')"
+            @click="editConsumptionOptions(props.row)"
+          >
+          </q-btn>
+        </template>
+
         <template #body-cell-code="{ value }">
           <div class="nowrap">{{ value }}</div>
         </template>
@@ -166,7 +177,7 @@
             <q-toggle
               v-if="new_line_product?.traceability_level"
               v-model="new_line_traceability_mandatory"
-              class="col-2"
+              class="col-1"
               :label="$t('traceability.mandatory')"
             />
           </div>
@@ -193,6 +204,40 @@
         </div>
       </q-card>
     </BaseDialog>
+
+    <BaseDialog :show="!!show_consumption_options">
+      <q-card style="max-width: 700px" class="surface1 q-pa-md">
+        <q-card-section class="display text-h3 highlight">
+          {{ $t('warehouse.bom_options') }}
+        </q-card-section>
+        <q-card-section> </q-card-section>
+        <div class="row q-col-gutter-md q-pa-md">
+          <div class="col-6">
+            <q-btn
+              class="full-width"
+              color="theme-blue"
+              :label="$t('save')"
+              @click="
+                saveConsumptionOptions(
+                  show_consumption_options.rowIndex,
+                  show_consumption_options,
+                )
+              "
+            >
+            </q-btn>
+          </div>
+          <div class="col-6">
+            <q-btn
+              class="full-width"
+              color="theme-grey"
+              :label="$t('cancel')"
+              @click="show_consumption_options = null"
+            >
+            </q-btn>
+          </div>
+        </div>
+      </q-card>
+    </BaseDialog>
   </div>
 </template>
 
@@ -202,6 +247,7 @@ import { mapState } from 'vuex';
 import { api } from '@/boot/axios.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
+import { useConfigStore } from '@/stores/config';
 import BaseAutocompleteProduct from 'components/BaseAutocompleteProduct.vue';
 // import { throttle as _throttle } from 'lodash';
 
@@ -215,18 +261,27 @@ export default {
 
   emits: ['changesSaved', 'changesCanceled'],
 
+  setup() {
+    const { config } = useConfigStore();
+    return {
+      config,
+    };
+  },
+
   data() {
     return {
       search_text: '',
       table_height: '83vh',
       delete_lines: [],
       show_product_catalog: false,
+      show_consumption_options: null,
       catalog_loading: false,
       product_catalog: [],
       new_line_product: {},
       new_line_phase: {},
       new_line_qt: null,
       new_line_traceability_mandatory: null,
+      new_line_consumption_options: null,
       show_cancel_confirmation: false,
       show_save_confirmation: false,
       saving: false,
@@ -244,7 +299,7 @@ export default {
 
     table_headers() {
       // TODO: refactor into mixin / composition function, used also in WorkSessionBom
-      return [
+      let columns = [
         {
           name: 'component_code',
           field: 'component_code',
@@ -268,13 +323,26 @@ export default {
           name: 'qt',
           field: 'qt',
           label: this.$t('quantity.short').toUpperCase(),
+          align: 'left',
         },
         {
           name: 'traceability_mandatory',
           field: 'traceability_mandatory',
           label: this.$t('traceability.mandatory').toUpperCase(),
+          align: 'center',
         },
       ];
+
+      if (this.config.enableInventoryManagement) {
+        columns.push({
+          name: 'manage_inventory',
+          field: 'manage_inventory',
+          label: this.$t('warehouse.bom_options').toUpperCase(),
+          align: 'center',
+        });
+      }
+
+      return columns;
     },
 
     editMode: {
@@ -324,6 +392,7 @@ export default {
       this.new_line_qt = null;
       this.new_line_phase = null;
       this.new_line_traceability_mandatory = null;
+      this.new_line_consumption_options = null;
     },
   },
 
@@ -408,6 +477,17 @@ export default {
       this.delete_lines = [];
     },
 
+    async editConsumptionOptions(line) {
+      this.show_consumption_options = line;
+    },
+
+    async saveConsumptionOptions(lineIndex, options) {
+      let temp_item = this.temp_bom[lineIndex];
+      temp_item.consumption_options = options;
+      this.temp_bom = this.temp_bom.toSpliced(lineIndex, 1, temp_item);
+      this.show_consumption_options = null;
+    },
+
     async addItem() {
       const is_duplicate = this.temp_bom.some((line) => {
         return (
@@ -429,6 +509,7 @@ export default {
           component_code: this.new_line_product.code,
           component_description: this.new_line_product.description,
           traceability_mandatory: this.new_line_traceability_mandatory,
+          consumption_options: this.new_line_consumption_options,
           qt: this.new_line_qt,
           phase_name: this.new_line_phase?.alias ?? null,
           phase_key: this.new_line_phase?._key ?? null,

@@ -1013,8 +1013,12 @@ export default {
   week: 'Settimana',
   day: 'Giorno',
   warehouse: {
+    title: 'Magazzino',
+    manage: 'Gestione inventario',
+    allow_negative: 'Consenti valori negativi',
+    bom_options: 'Opzioni Consumo',
     position: {
-      add: 'Aggingi posizione',
+      add: 'Aggiungi posizione',
       new: 'Crea nuova posizione',
       parent_position: 'Contenitore',
       owned: 'Posseduto',

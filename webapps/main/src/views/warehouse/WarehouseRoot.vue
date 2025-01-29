@@ -26,7 +26,7 @@
 
           <!-- POSITION BUTTONS -->
           <q-btn
-            v-if="$route.name === 'positions'"
+            v-if="$route.name?.startsWith('position')"
             size="0.75rem"
             color="theme-blue"
             :label="$t('new')"
@@ -77,7 +77,7 @@
     </q-page>
 
     <position-filter
-      v-if="$route.name === 'positions'"
+      v-if="$route.name.startsWith('position')"
       :show-filter-drawer="showFilterDrawer"
       @show-filter-drawer="
         (showFilter) => {
