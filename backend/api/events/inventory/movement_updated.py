@@ -114,11 +114,11 @@ class MovementUpdated(BaseInventory):
               # No existing inventory found, create new record
               raise InventoryMovementException(f'Cannot find product inventory to ship')
       # Update list status
-      if movement_data.movement_list_key is not None:
-        self.tx.aql.execute(
-          Queries.UPDATE_MOVEMENT_LIST,
-          bind_vars=dict(list_key=movement_data.movement_list_key)
-        )
+      #if movement_data.movement_list_key is not None:
+      #  self.tx.aql.execute(
+      #    Queries.UPDATE_MOVEMENT_LIST,
+      #    bind_vars=dict(list_key=movement_data.movement_list_key)
+      #  )
       # ADD OTHER TYPES OF MOVEMENTS
       self.notify_results(dict(
          movement_key = movement_data.key,
