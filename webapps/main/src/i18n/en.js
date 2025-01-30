@@ -1000,6 +1000,12 @@ export default {
     manage: 'Manage inventory',
     allow_negative: 'Allow negative values',
     bom_options: 'Consumption options',
+    consumption_options: {
+      preferred_position_key: 'Preferred position',
+      preferred_position_mandatory: 'Preferred position mandatory',
+      all_or_minimum_in_case_negative: 'All or minimum in case negative',
+      mandatory_quantity: 'Mandatory quantity',
+    },
     position: {
       add: 'Add positions',
       new: 'Create a new position',

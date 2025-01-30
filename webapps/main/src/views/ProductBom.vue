@@ -77,7 +77,9 @@
             color="theme-blue"
             :disable="!editMode"
             :label="$t('edit')"
-            @click="editConsumptionOptions(props.row)"
+            @click="
+              editConsumptionOptions(props.row, props.row.consumption_options)
+            "
           >
           </q-btn>
         </template>
@@ -205,24 +207,60 @@
       </q-card>
     </BaseDialog>
 
-    <BaseDialog :show="!!show_consumption_options">
+    <BaseDialog :show="!!consumption_options">
       <q-card style="max-width: 700px" class="surface1 q-pa-md">
         <q-card-section class="display text-h3 highlight">
           {{ $t('warehouse.bom_options') }}
         </q-card-section>
-        <q-card-section> </q-card-section>
+
+        <q-card-section>
+          <q-input
+            v-model="consumption_options.mandatory_quantity"
+            v-model.number="consumption_options.mandatory_quantity"
+            dense
+            class="col-2"
+            type="number"
+            step="1"
+            min="1"
+            :label="$t('warehouse.consumption_options.mandatory_quantity')"
+          >
+          </q-input>
+
+          <q-toggle
+            v-model="consumption_options.all_or_minimum_in_case_negative"
+            :label="
+              $t(
+                'warehouse.consumption_options.all_or_minimum_in_case_negative',
+              )
+            "
+          />
+
+          <BaseAutocompletePositions
+            :model-value="consumption_options.preferred_position_key"
+            :label="$t('warehouse.consumption_options.preferred_position_key')"
+            :filled="false"
+            :dense="true"
+            @select="
+              (selection) =>
+                (consumption_options.preferred_position_key = selection)
+            "
+          />
+
+          <q-toggle
+            v-model="consumption_options.preferred_position_mandatory"
+            :label="
+              $t('warehouse.consumption_options.preferred_position_mandatory')
+            "
+          />
+        </q-card-section>
+
         <div class="row q-col-gutter-md q-pa-md">
           <div class="col-6">
             <q-btn
               class="full-width"
               color="theme-blue"
               :label="$t('save')"
-              @click="
-                saveConsumptionOptions(
-                  show_consumption_options.rowIndex,
-                  show_consumption_options,
-                )
-              "
+              @click="saveConsumptionOptions(consumption_options.rowIndex)"
             >
             </q-btn>
           </div>
@@ -231,7 +269,7 @@
               class="full-width"
               color="theme-grey"
               :label="$t('cancel')"
-              @click="show_consumption_options = null"
+              @click="consumption_options = null"
             >
             </q-btn>
           </div>
@@ -242,12 +280,14 @@
 </template>
 
 <script>
+import { cloneDeep } from 'lodash';
 import { mapState } from 'vuex';
 
 import { api } from '@/boot/axios.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useConfigStore } from '@/stores/config';
+import BaseAutocompletePositions from 'components/BaseAutocompletePositions.vue';
 import BaseAutocompleteProduct from 'components/BaseAutocompleteProduct.vue';
 // import { throttle as _throttle } from 'lodash';
 
@@ -257,6 +297,7 @@ export default {
   components: {
     BaseDialog,
     BaseAutocompleteProduct,
+    BaseAutocompletePositions,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
@@ -274,7 +315,7 @@ export default {
       table_height: '83vh',
       delete_lines: [],
       show_product_catalog: false,
-      show_consumption_options: null,
+      consumption_options: null,
       catalog_loading: false,
       product_catalog: [],
       new_line_product: {},
@@ -477,15 +518,23 @@ export default {
       this.delete_lines = [];
     },
 
-    async editConsumptionOptions(line) {
-      this.show_consumption_options = line;
+    async editConsumptionOptions(row, options) {
+      if (!options) {
+        options = {
+          preferred_position_key: null,
+          preferred_position_mandatory: false,
+          mandatory_quantity: row.qt,
+          all_or_minimum_in_case_negative: false,
+        };
+      }
+      this.consumption_options = options;
     },
 
-    async saveConsumptionOptions(lineIndex, options) {
+    async saveConsumptionOptions(lineIndex) {
       let temp_item = this.temp_bom[lineIndex];
-      temp_item.consumption_options = options;
+      temp_item.consumption_options = cloneDeep(this.consumption_options);
       this.temp_bom = this.temp_bom.toSpliced(lineIndex, 1, temp_item);
-      this.show_consumption_options = null;
+      this.consumption_options = null;
     },
 
     async addItem() {

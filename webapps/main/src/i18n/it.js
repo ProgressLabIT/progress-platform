@@ -1017,6 +1017,12 @@ export default {
     manage: 'Gestione inventario',
     allow_negative: 'Consenti valori negativi',
     bom_options: 'Opzioni Consumo',
+    consumption_options: {
+      preferred_position_key: 'Posizione preferita',
+      preferred_position_mandatory: 'Posizione preferita obbligatoria',
+      mandatory_quantity: 'Quantità obbligatoria',
+      all_or_minimum_in_case_negative: 'Tutto o minimo in caso negativo',
+    },
     position: {
       add: 'Aggiungi posizione',
       new: 'Crea nuova posizione',
