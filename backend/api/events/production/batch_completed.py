@@ -15,9 +15,10 @@ from events.wip.wip_declared import WIPDeclaredModel
 from events.wip.wip_removed import WIPRemovedModel
 from events.wip.wip_unbooked import WIPUnbookedModel
 from events.batch.batch_created import BatchCreatedModel
+from events.inventory.movement_created import MovementCreatedModel
 from events.work_session.work_session_created import WorkSessionCreatedModel
 from events.wip.wip_booked import WIPBookedModel
-
+from models.inventory import InventoryMovementType, MovementStatus
 class BatchCompletedModel(BaseProductionModel):
   event_type: str = EventType.BATCH_COMPLETED.name
 
@@ -125,6 +126,32 @@ class BatchCompleted(BaseProduction):
         end=self.event_data.timestamp
       )
     )
+
+    #create production movement
+    EventManager.notify_event(self, MovementCreatedModel(
+      movement = dict(
+        product_key = self.event_data.product_key,
+        qt_planned = self.event_data.completed_batch_qt,
+        qt_confirmed = self.event_data.completed_batch_qt,
+        type = InventoryMovementType.PRODUCTION,
+        status = MovementStatus.COMPLETED,
+      ),
+      batch_key = self.event_data.active_batch_key,
+    ))
+
+    #create consumption movement
+    for bom_line in self.job.wo_bom:
+      EventManager.notify_event(self, MovementCreatedModel(
+        movement = dict(
+          product_key = bom_line.product_key,
+          qt_planned = bom_line.quantity,
+          qt_confirmed = bom_line.quantity,
+          type = InventoryMovementType.CONSUMPTION,
+          status = MovementStatus.COMPLETED,
+        ),
+        batch_key = self.event_data.active_batch_key,
+      ))
+
 
     # Update job completed quantity as reference for methods being called later (e.g. create_batch)
     self.job.qt_completed += self.event_data.completed_batch_qt

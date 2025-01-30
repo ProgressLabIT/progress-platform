@@ -37,28 +37,12 @@ class EventManager:
 
         # Define event UUID
         event.event_data.event_group = str(uuid.uuid4())
-        event_key = None
+
         try:
-          # Save event, storing its key for later use
-          if event.is_event_first():
-            event_key = event.tx.collection('Event').insert(event.event_data, return_new=True)['new']['_key']
-
-          # Apply updates to global application state based on specific event
-          event.apply()
-          response = event.get_response()
-
-          # Apply updates based on event category shared logic
-          event.post_processing()
-
-          # Re-save event with new data added
-          event_key = event.tx.collection('Event').insert(event.event_data, overwrite=True, return_new=True)['new']['_key']
-
+          response = EventManager.handle_event(event)
+          response['child_responses'] = event.child_responses
           # Commit transaction
           event.tx.commit_transaction()
-
-          response['event_key'] = event_key
-          response['managed_event_type'] = event.event_data.event_type
-          response['child_responses'] = event.child_responses
           # Return any required value
           return response
 
@@ -68,6 +52,29 @@ class EventManager:
             event.tx.abort_transaction()
 
     @staticmethod
+    def handle_event(event):
+      event_key = None
+      # Save event, storing its key for later use
+      if event.is_event_first():
+        event_key = event.tx.collection('Event').insert(event.event_data, return_new=True)['new']['_key']
+
+      if event.validate_event():
+        # Apply updates to global application state based on specific event
+        event.apply()
+        # Apply updates based on event category shared logic
+        event.post_processing()
+        # Re-save event with new data added
+        event_key = event.tx.collection('Event').insert(event.event_data, overwrite=True, return_new=True)['new']['_key']
+
+      response = event.get_response()
+
+      if event_key is not None:
+        response['event_key'] = event_key
+
+      response['managed_event_type'] = event.event_data.event_type
+      return response
+
+    @staticmethod
     def notify_event(origin: BaseEvent, event_model: EventModel):
       event_model.user_key = origin.event_data.user_key
       event_model.event_group = origin.event_data.event_group
@@ -75,24 +82,13 @@ class EventManager:
       event_model.user_session_key = origin.event_data.user_session_key
 
       event = EventManager.create_event(event_model)
-      event_key = None
+
 
       event.set_response(dict())
       # Initialize transaction
       event.set_transaction(origin.tx)
-      # Save event, storing its key for later use
-      if event.is_event_first():
-        event_key = event.tx.collection('Event').insert(event.event_data, return_new=True)['new']['_key']
-      # Apply updates to global application state based on specific event
-      event.apply()
-      response = event.get_response()
-      # Apply updates based on event category shared logic
-      event.post_processing()
-      # Re-save event with new data added
-      event_key = event.tx.collection('Event').insert(event.event_data, overwrite=True, return_new=True)['new']['_key']
 
-      response['event_key'] = event_key
-      response['managed_event_type'] = event.event_data.event_type
+      response = EventManager.handle_event(event)
       origin.child_responses.append(response)
       # Return any required value
       return response

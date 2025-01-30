@@ -31,6 +31,9 @@ class BaseEvent(ABC):
   def set_model(self, base_model: EventModel):
     pass
 
+  def validate_event(self):
+    return True
+
   def get_write_collections(self):
     return []
 
@@ -38,11 +41,11 @@ class BaseEvent(ABC):
     self.tx = tx
 #
 #
-  #def get_write_collections(self):
-  #  return ['Event']
-#
-  #def get_read_collections(self):
-  #  return ['Event']
+  def not_handled_response(self, reason):
+    self.response = dict(
+      notification = 'Not handled',
+      reason = reason
+    )
 
   def post_processing(self):
     pass

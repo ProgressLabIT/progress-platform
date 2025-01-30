@@ -4,6 +4,7 @@ from events.inventory.base_inventory import BaseInventory, BaseInventoryModel
 from models.inventory import *
 from events.event_type import EventType
 from events.event_model import EventModel
+from typing import List
 
 from utils.exceptions import (
   InventoryMovementException
@@ -11,6 +12,7 @@ from utils.exceptions import (
 
 class MovementCreatedModel(BaseInventoryModel):
     event_type: str = EventType.MOVEMENT_CREATED.name
+    batch_key: str | None = None
 
 class MovementCreated(BaseInventory):
   event_data: MovementCreatedModel
@@ -20,6 +22,10 @@ class MovementCreated(BaseInventory):
 
   def set_model(self, base_model: EventModel):
    self.event_data = MovementCreatedModel(**base_model.model_dump())
+
+
+  def validate_event(self):
+    return super().validate_event()
 
   def apply(self):
     try:

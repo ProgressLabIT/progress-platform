@@ -11,7 +11,7 @@ from pydantic import model_validator
 from models.inventory import *
 from models.serial import Serial
 from fastapi.encoders import jsonable_encoder
-
+from models.product import ProductFull
 from managers.notification_manager import NotificationManager
 
 from utils.exceptions import (
@@ -27,6 +27,8 @@ class BaseInventoryModel(EventModel):
 
 class BaseInventory(BaseEvent, ABC):
     event_data: BaseInventoryModel
+
+    product: ProductFull | None = None
 
     def adjust_inventory(self):
        match self.event_data.movement.type:
@@ -52,6 +54,13 @@ class BaseInventory(BaseEvent, ABC):
     @abstractmethod
     def set_model(self, base_model: EventModel):
       pass
+
+    def validate_event(self):
+      enable_inventory_management = self.tx.collection('Config').get('enable_inventory_management') or False
+      if not enable_inventory_management:
+        self.not_handled_response('Inventory management is not enabled')
+        return False
+      return super().validate_event()
 
     def get_write_collections(self):
       return list(set(super().get_write_collections() + [
@@ -183,14 +192,9 @@ class BaseInventory(BaseEvent, ABC):
       """
       # TODO: handle serial creation if product requires it
 
-      product_key = self.event_data.movement.product_key
+      self._get_product()
 
-      try:
-        product_record = self.tx.collection('Product').get(product_key)
-      except StopIteration:
-        raise InventoryMovementException(f'Product not found')
-
-      product_requires_serial = product_record.get('traceability_level', False)
+      product_requires_serial = self.product.get('traceability_level', False)
 
       # SCENARIO 1: Receipt of product with traceability
       if product_requires_serial:
@@ -201,7 +205,7 @@ class BaseInventory(BaseEvent, ABC):
       # Update inventory only if the movement is confirmed
 
       if self.event_data.movement.status == MovementStatus.COMPLETED:
-        record_match = dict(_from=f'Product/{product_key}', _to=self.event_data.movement.position_to)
+        record_match = dict(_from=f'Product/{self.product.key}', _to=self.event_data.movement.position_to)
         position_link_cursor = self.tx.collection('is_in_position').find(record_match)
         if (position_link_cursor.count()>0):
           position_status = position_link_cursor.next()
@@ -212,21 +216,16 @@ class BaseInventory(BaseEvent, ABC):
           ))
         else: # No existing inventory found, create new inventory
           self.tx.collection('is_in_position').insert(Inventory(
-            product_id=f'Product/{product_key}',
+            product_id=f'Product/{self.product.key}',
             position_id=self.event_data.movement.position_to,
             quantity=self.event_data.movement.qt_confirmed,
             owned=True
           ))
 
     def handle_shipment(self):
-      product_key = self.event_data.movement.product_key
+      self._get_product()
 
-      try:
-        product_record = self.tx.collection('Product').get(product_key)
-      except StopIteration:
-        raise InventoryMovementException(f'Product not found')
-
-      product_requires_serial = product_record.get('traceability_level', False)
+      product_requires_serial = self.product.get('traceability_level', False)
 
       # SCENARIO 1: Receipt of product with traceability
       if product_requires_serial:
@@ -241,7 +240,7 @@ class BaseInventory(BaseEvent, ABC):
             try:
               serial_key = self.tx.collection('Serial').find(dict(
                 code=serial_code,
-                product_key=product_key,
+                product_key=self.product.key,
                 deleted=False
               )).next()['_key']
               self.event_data.movement.serial_key = serial_key
@@ -252,9 +251,8 @@ class BaseInventory(BaseEvent, ABC):
             raise InventoryMovementException(f'Serial {serial_key} not found')
 
       if self.event_data.movement.status == MovementStatus.COMPLETED:
-        product_key = self.event_data.movement.product_key
         record_match = dict(
-          _from=f'Product/{product_key}',
+          _from=f'Product/{self.product.key}',
           _to=self.event_data.movement.position_from,
           serial_key=getattr(self.event_data.movement, 'serial_key', None)
         )
@@ -376,6 +374,23 @@ class BaseInventory(BaseEvent, ABC):
           raise InventoryMovementException(f'Cannot adjust inventory: quantity cannot be negative')
       except Exception as e:
         raise Exception(f'Error adjusting inventory', e)
+
+
+    def _get_product(self):
+      if self.event_data.movement.product_key is not None:
+        product_cursor = self.tx.collection('Product').get(self.event_data.movement.product_key)
+        if product_cursor.count() > 0:
+          self.product = product_cursor.next()
+
+      if self.event_data.movement.product_code is not None:
+        product_cursor = self.tx.collection('Product').find(dict(
+          code=self.event_data.movement.product_code
+        ))
+        if product_cursor.count() > 0:
+          self.product = product_cursor.next()
+
+      if self.product is None:
+        raise InventoryMovementException(f'Product not found')
 
 
     def can_be_conflated(self, notification_type):
