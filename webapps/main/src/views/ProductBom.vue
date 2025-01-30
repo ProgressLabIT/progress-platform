@@ -78,7 +78,11 @@
             :disable="!editMode"
             :label="$t('edit')"
             @click="
-              editConsumptionOptions(props.row, props.row.consumption_options)
+              editConsumptionOptions(
+                props.row,
+                props.row.consumption_options,
+                props.rowIndex,
+              )
             "
           >
           </q-btn>
@@ -260,7 +264,7 @@
               class="full-width"
               color="theme-blue"
               :label="$t('save')"
-              @click="saveConsumptionOptions(consumption_options.rowIndex)"
+              @click="saveConsumptionOptions()"
             >
             </q-btn>
           </div>
@@ -316,6 +320,7 @@ export default {
       delete_lines: [],
       show_product_catalog: false,
       consumption_options: null,
+      consumption_options_rowIndex: null,
       catalog_loading: false,
       product_catalog: [],
       new_line_product: {},
@@ -518,7 +523,7 @@ export default {
       this.delete_lines = [];
     },
 
-    async editConsumptionOptions(row, options) {
+    async editConsumptionOptions(row, options, rowIndex) {
       if (!options) {
         options = {
           preferred_position_key: null,
@@ -527,14 +532,20 @@ export default {
           all_or_minimum_in_case_negative: false,
         };
       }
+      this.consumption_options_rowIndex = rowIndex;
       this.consumption_options = options;
     },
 
-    async saveConsumptionOptions(lineIndex) {
-      let temp_item = this.temp_bom[lineIndex];
+    async saveConsumptionOptions() {
+      let temp_item = this.temp_bom[this.consumption_options_rowIndex];
       temp_item.consumption_options = cloneDeep(this.consumption_options);
-      this.temp_bom = this.temp_bom.toSpliced(lineIndex, 1, temp_item);
+      this.temp_bom = this.temp_bom.toSpliced(
+        this.consumption_options_rowIndex,
+        1,
+        temp_item,
+      );
       this.consumption_options = null;
+      this.consumption_options_rowIndex = null;
     },
 
     async addItem() {
