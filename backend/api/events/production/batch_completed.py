@@ -19,6 +19,8 @@ from events.inventory.movement_created import MovementCreatedModel
 from events.work_session.work_session_created import WorkSessionCreatedModel
 from events.wip.wip_booked import WIPBookedModel
 from models.inventory import InventoryMovementType, MovementStatus
+from events.inventory.inventory_produced import InventoryProducedModel
+from events.inventory.inventory_consumed import InventoryConsumedModel
 class BatchCompletedModel(BaseProductionModel):
   event_type: str = EventType.BATCH_COMPLETED.name
 
@@ -128,29 +130,19 @@ class BatchCompleted(BaseProduction):
     )
 
     #create production movement
-    EventManager.notify_event(self, MovementCreatedModel(
-      movement = dict(
-        product_key = self.event_data.product_key,
-        qt_planned = self.event_data.completed_batch_qt,
-        qt_confirmed = self.event_data.completed_batch_qt,
-        type = InventoryMovementType.PRODUCTION,
-        status = MovementStatus.COMPLETED,
-      ),
+    EventManager.notify_event(self, InventoryProducedModel(
+      job_key = self.event_data.job_key,
+      product_key = self.event_data.product_key,
       batch_key = self.event_data.active_batch_key,
+      quantity = self.event_data.completed_batch_qt,
     ))
 
     #create consumption movement
-    for bom_line in self.job.wo_bom:
-      EventManager.notify_event(self, MovementCreatedModel(
-        movement = dict(
-          product_key = bom_line.product_key,
-          qt_planned = bom_line.quantity,
-          qt_confirmed = bom_line.quantity,
-          type = InventoryMovementType.CONSUMPTION,
-          status = MovementStatus.COMPLETED,
-        ),
-        batch_key = self.event_data.active_batch_key,
-      ))
+    EventManager.notify_event(self, InventoryConsumedModel(
+      job_key = self.event_data.job_key,
+      product_key = self.event_data.product_key,
+      batch_key = self.event_data.active_batch_key
+   ))
 
 
     # Update job completed quantity as reference for methods being called later (e.g. create_batch)

@@ -96,7 +96,10 @@ class BaseProduction(BaseEvent, ABC):
         'WorkSession',
         'contains',
         'Config',
-        'Counter'
+        'Counter',
+        'is_in_position',
+        'Position',
+        'movement',
       ]))
 
   def post_processing(self):

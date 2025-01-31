@@ -12,17 +12,12 @@ from utils.exceptions import (
 
 class MovementCreatedModel(BaseInventoryModel):
     event_type: str = EventType.MOVEMENT_CREATED.name
-    batch_key: str | None = None
 
 class MovementCreated(BaseInventory):
   event_data: MovementCreatedModel
 
-  def __init__(self, **data):
-    super().__init__(**data)
-
   def set_model(self, base_model: EventModel):
    self.event_data = MovementCreatedModel(**base_model.model_dump())
-
 
   def validate_event(self):
     return super().validate_event()

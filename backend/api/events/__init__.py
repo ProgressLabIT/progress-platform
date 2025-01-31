@@ -41,6 +41,8 @@ from events.inventory.movement_deleted import MovementDeleted
 from events.inventory.movement_completed import MovementCompleted
 from events.inventory.warehouse_list_created import WarehouseListCreated
 from events.inventory.warehouse_list_closed import WarehouseListClosed
+from events.inventory.inventory_produced import InventoryProduced
+from events.inventory.inventory_consumed import InventoryConsumed
 
 #PRODUCTION EVENTS
 from events.production.base_production import BaseProduction

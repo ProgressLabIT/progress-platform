@@ -246,7 +246,7 @@
             :dense="true"
             @select="
               (selection) =>
-                (consumption_options.preferred_position_key = selection)
+                (consumption_options.preferred_position_key = selection._key)
             "
           />
 

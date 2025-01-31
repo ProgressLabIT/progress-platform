@@ -377,12 +377,12 @@ class BaseInventory(BaseEvent, ABC):
 
 
     def _get_product(self):
-      if self.event_data.movement.product_key is not None:
+      if self.event_data.movement is not None and self.event_data.movement.product_key is not None:
         product_cursor = self.tx.collection('Product').get(self.event_data.movement.product_key)
         if product_cursor.count() > 0:
           self.product = product_cursor.next()
 
-      if self.event_data.movement.product_code is not None:
+      if self.event_data.movement is not None and self.event_data.movement.product_code is not None:
         product_cursor = self.tx.collection('Product').find(dict(
           code=self.event_data.movement.product_code
         ))

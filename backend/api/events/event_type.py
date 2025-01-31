@@ -58,6 +58,8 @@ class EventType(Enum):
   MOVEMENT_COMPLETED = EventTypeDef('MOVEMENT_COMPLETED', "MovementCompleted")
   WAREHOUSE_LIST_CREATED = EventTypeDef('WAREHOUSE_LIST_CREATED', "WarehouseListCreated")
   WAREHOUSE_LIST_CLOSED = EventTypeDef('WAREHOUSE_LIST_CLOSED', "WarehouseListClosed")
+  INVENTORY_PRODUCED = EventTypeDef('INVENTORY_PRODUCED', "InventoryProduced")
+  INVENTORY_CONSUMED = EventTypeDef('INVENTORY_CONSUMED', "InventoryConsumed")
 
   #Work Order
   WORK_ORDER_STARTED = EventTypeDef('WORK_ORDER_STARTED', "WorkOrderStarted")

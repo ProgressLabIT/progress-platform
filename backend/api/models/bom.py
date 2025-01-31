@@ -4,6 +4,11 @@ from pydantic import Field
 
 from models.base_models import FlexModel
 
+class BomLineConsumptionOptions(FlexModel):
+  preferred_position_key: str | None = None
+  preferred_position_mandatory: bool | None = None
+  all_or_minimum_in_case_negative: bool | None = None
+  mandatory_quantity: float | None = None
 
 class BomLineRead(FlexModel):
   component_key: str
@@ -15,7 +20,7 @@ class BomLineRead(FlexModel):
   phase_name: str | None = None
   traceability_mandatory: bool | None = False
   traceability_level: str | None = None
-  consumption_options: str | None = None
+  consumption_options: BomLineConsumptionOptions | None = None
   extra: Any = None
 
 
@@ -27,7 +32,7 @@ class BomLineWriteIn(FlexModel):
   type: str = 'BomLine'
   traceability_mandatory: bool | None = None
   traceability_level: str | None = None
-  consumption_options: str | None = None
+  consumption_options: BomLineConsumptionOptions | None = None
   extra: Any = None
 
 class BomLineWriteOut(FlexModel):
@@ -35,7 +40,7 @@ class BomLineWriteOut(FlexModel):
   qt: float
   traceability_mandatory: bool | None = None
   traceability_level: str | None = None
-  consumption_options: str | None = None
+  consumption_options: BomLineConsumptionOptions | None = None
   phase_id: str = Field(..., alias="_from")
   type: str = 'BomLine'
   extra: Any = None
