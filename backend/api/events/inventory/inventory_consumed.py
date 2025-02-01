@@ -44,12 +44,12 @@ class InventoryConsumed(BaseInventory):
     self._get_batch()
 
 
-    for bom_line in self.job['wo_bom']:
+    for bom_line in self.job['job_bom']:
       EventManager.notify_event(self, MovementCreatedModel(
           movement = dict(
-            #product_key = serial.product_key,
-            qt_planned = self.event_data.quantity,    #DEFINE QUANTITY
-            qt_confirmed = self.event_data.quantity,
+            product_key = bom_line['component_key'],
+            qt_planned = bom_line['qt'],    #DEFINE QUANTITY
+            qt_confirmed = bom_line['qt'],
             #serial_key = serial.key,
             type = InventoryMovementType.CONSUMPTION,
             status = MovementStatus.COMPLETED,

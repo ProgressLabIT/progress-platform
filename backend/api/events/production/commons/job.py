@@ -1,6 +1,8 @@
 from models.production import Job, WorkStatus
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
+from utils.dt import timestamp
+
 
 # ===================================================================
 # Job
@@ -67,11 +69,11 @@ def complete_job(self, completed_qt):
   # Query allows for single call to DB to get and update job data
 
   bind_vars=dict(
-    job_key=self.job_key,
+    job_key=self.event_data.job_key,
     stage=WorkStatus.CLOSED,
     notes="Job completed",
     qt_completed=completed_qt,
-    end=self.timestamp,
+    end=self.event_data.timestamp,
   )
   completed_job = self.tx.aql.execute(
     TraceabilityQueries.COMPLETE_JOB,
@@ -83,7 +85,7 @@ def complete_job(self, completed_qt):
   self.tx.aql.execute(
     ProductionQueries.REMOVE_JOB_FROM_QUEUE,
     bind_vars=dict(
-      job_key=self.job_key,
-      target_key=self.user_key
+      job_key=self.event_data.job_key,
+      target_key=self.event_data.user_key
     )
   )
