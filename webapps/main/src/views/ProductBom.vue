@@ -72,20 +72,24 @@
         </template>
 
         <template #body-cell-manage_inventory="props">
-          <q-btn
-            v-if="config.enableInventoryManagement"
-            color="theme-blue"
-            :disable="!editMode"
-            :label="$t('edit')"
-            @click="
-              editConsumptionOptions(
-                props.row,
-                props.row.consumption_options,
-                props.rowIndex,
-              )
-            "
-          >
-          </q-btn>
+          <q-td class="text-center">
+            <q-btn
+              v-if="config.enableInventoryManagement"
+              icon="mdi-dots-vertical"
+              round
+              flat
+              color="low"
+              size="sm"
+              :disable="!editMode"
+              @click="
+                editConsumptionOptions(
+                  props.row,
+                  props.row.consumption_options,
+                  props.rowIndex,
+                )
+              "
+            />
+          </q-td>
         </template>
 
         <template #body-cell-code="{ value }">
@@ -212,48 +216,49 @@
     </BaseDialog>
 
     <BaseDialog :show="!!consumption_options">
-      <q-card style="max-width: 700px" class="surface1 q-pa-md">
+      <q-card style="max-width: 700px" class="surface1 q-pa-md q-gutter-y-md">
         <q-card-section class="display text-h3 highlight">
           {{ $t('warehouse.bom_options') }}
         </q-card-section>
 
-        <q-card-section>
+        <q-card-section class="column q-gutter-md">
           <q-input
-            v-model="consumption_options.mandatory_quantity"
-            v-model.number="consumption_options.mandatory_quantity"
+            v-model="consumption_options.minimum_quantity"
+            v-model.number="consumption_options.minimum_quantity"
             dense
-            class="col-2"
+            filled
             type="number"
             step="1"
             min="1"
-            :label="$t('warehouse.consumption_options.mandatory_quantity')"
+            :label="$t('warehouse.consumption_options.minimum_quantity')"
           >
           </q-input>
 
           <q-toggle
-            v-model="consumption_options.all_or_minimum_in_case_negative"
+            v-model="consumption_options.minimum_quantity_if_negative"
             :label="
               $t(
-                'warehouse.consumption_options.all_or_minimum_in_case_negative',
+                'warehouse.consumption_options.minimum_quantity_if_negative',
               )
             "
           />
+        </q-card-section>
 
+        <q-card-section class="column q-gutter-md">
           <BaseAutocompletePositions
-            :model-value="consumption_options.preferred_position_key"
-            :label="$t('warehouse.consumption_options.preferred_position_key')"
-            :filled="false"
+            :model-value="consumption_options.consumption_position_key"
+            :label="$t('warehouse.consumption_options.consumption_position_key')"
             :dense="true"
             @select="
               (selection) =>
-                (consumption_options.preferred_position_key = selection._key)
+                (consumption_options.consumption_position_key = selection._key)
             "
           />
 
           <q-toggle
-            v-model="consumption_options.preferred_position_mandatory"
+            v-model="consumption_options.consumption_position_mandatory"
             :label="
-              $t('warehouse.consumption_options.preferred_position_mandatory')
+              $t('warehouse.consumption_options.consumption_position_mandatory')
             "
           />
         </q-card-section>

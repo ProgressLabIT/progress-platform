@@ -712,7 +712,7 @@ export default {
       'Consenti il riordinamento indipendente delle code di lavoro',
     allowSerialCodeEdit: 'Consenti la modifica del codice dei seriali',
     allowSerialDelete: 'Consenti la cancellazione dei seriali',
-    enableInventoryManagement: 'Abilita gestione inventario',
+    enableInventoryManagement: 'Abilita gestione magazzino',
     turnOffIndependentReordering: {
       title: 'Disattiva ordinamento indipendente',
       message:
@@ -1014,14 +1014,14 @@ export default {
   day: 'Giorno',
   warehouse: {
     title: 'Magazzino',
-    manage: 'Gestione inventario',
+    manage: 'Gestione magazzino',
     allow_negative: 'Consenti valori negativi',
     bom_options: 'Opzioni Consumo',
     consumption_options: {
-      preferred_position_key: 'Posizione preferita',
-      preferred_position_mandatory: 'Posizione preferita obbligatoria',
-      mandatory_quantity: 'Quantità obbligatoria',
-      all_or_minimum_in_case_negative: 'Tutto o minimo in caso negativo',
+      consumption_position_key: 'Posizione di consumo di default',
+      consumption_position_mandatory: 'Consuma solo dalla posizione di default',
+      minimum_quantity_if_negative: 'Consuma solo quantità minima in caso di giacenza negativa',
+      minimum_quantity: 'Quantità minima da consumare',
     },
     position: {
       add: 'Aggiungi posizione',

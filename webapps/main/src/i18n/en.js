@@ -1001,10 +1001,10 @@ export default {
     allow_negative: 'Allow negative values',
     bom_options: 'Consumption options',
     consumption_options: {
-      preferred_position_key: 'Preferred position',
-      preferred_position_mandatory: 'Preferred position mandatory',
-      all_or_minimum_in_case_negative: 'All or minimum in case negative',
-      mandatory_quantity: 'Mandatory quantity',
+      consumption_position_key: 'Default consumption position',
+      consumption_position_mandatory: 'Consume only from default position',
+      mandatory_quantity: 'Minimum consumption quantity',
+      mandatory_quantity_if_negative: 'Consume only minimum quantity if inventory below zero',
     },
     position: {
       add: 'Add positions',

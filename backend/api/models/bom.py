@@ -5,10 +5,10 @@ from pydantic import Field
 from models.base_models import FlexModel
 
 class BomLineConsumptionOptions(FlexModel):
-  preferred_position_key: str | None = None
-  preferred_position_mandatory: bool | None = None
-  all_or_minimum_in_case_negative: bool | None = None
-  mandatory_quantity: float | None = None
+  consumption_position_key: str | None = None
+  consumption_position_mandatory: bool | None = None
+  minimum_quantity_if_negative: bool | None = None
+  minimum_quantity: float | None = None
 
 class BomLineRead(FlexModel):
   component_key: str
