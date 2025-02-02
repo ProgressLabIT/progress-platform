@@ -121,7 +121,7 @@ class WIPBooked(BaseWIP):
         )
       )
 
-      EventManager.notify_event(self, SerialBatchLinkedModel(
+      EventManager.trigger_event(self, SerialBatchLinkedModel(
           batch_key = self.event_data.batch_key,
           batch_serials=self.event_data.batch_serials,
           user_key = self.event_data.user_key

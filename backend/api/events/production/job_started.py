@@ -43,7 +43,7 @@ class JobStarted(BaseProduction):
         add_to_queue = True
 
     # Create new batch and store _key in Event.info
-    self.batch = EventManager.notify_event(self, BatchCreatedModel(
+    self.batch = EventManager.trigger_event(self, BatchCreatedModel(
       job_key = self.event_data.job_key,
       work_order_key = self.event_data.work_order_key,
       phase_key = self.event_data.phase_key,
@@ -52,7 +52,7 @@ class JobStarted(BaseProduction):
     ))['new_batch_out']
 
     # Create new WorkSession and store _key in Event.info
-    self.event_data.work_session_key = EventManager.notify_event(self, WorkSessionCreatedModel(
+    self.event_data.work_session_key = EventManager.trigger_event(self, WorkSessionCreatedModel(
       job_key = self.event_data.job_key,
       batch_key = self.batch.key,
       work_order_key = self.event_data.work_order_key,
@@ -60,7 +60,7 @@ class JobStarted(BaseProduction):
     ))['work_session_key']
 
     # Update WorkOrder status
-    self.stage = EventManager.notify_event(self, WorkOrderStartedModel(
+    self.stage = EventManager.trigger_event(self, WorkOrderStartedModel(
       work_order_key = self.event_data.work_order_key
     ))['stage']
 

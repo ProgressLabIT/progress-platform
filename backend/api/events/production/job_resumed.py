@@ -23,14 +23,14 @@ class JobResumed(BaseProduction):
     if self.job.active_batch_key:
       self.get_active_batch()
     else:
-      self.batch = EventManager.notify_event(self, BatchCreatedModel(
+      self.batch = EventManager.trigger_event(self, BatchCreatedModel(
         job_key = self.event_data.job_key,
         work_order_key = self.event_data.work_order_key,
         phase_key = self.event_data.phase_key,
         batch_serials = self.event_data.batch_serials,
       ))['new_batch_out']
 
-    self.event_data.work_session_key = EventManager.notify_event(self, WorkSessionCreatedModel(
+    self.event_data.work_session_key = EventManager.trigger_event(self, WorkSessionCreatedModel(
       job_key = self.event_data.job_key,
       work_order_key = self.event_data.work_order_key,
       phase_key = self.event_data.phase_key,

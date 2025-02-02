@@ -45,7 +45,7 @@ class InventoryConsumed(BaseInventory):
 
 
     for bom_line in self.job['job_bom']:
-      EventManager.notify_event(self, MovementCreatedModel(
+      EventManager.trigger_event(self, MovementCreatedModel(
           movement = dict(
             product_key = bom_line['component_key'],
             qt_planned = bom_line['qt'],    #DEFINE QUANTITY

@@ -14,7 +14,7 @@ class JobPaused(BaseProduction):
     self.event_data = JobPausedModel(**base_model.model_dump())
 
   def apply(self):
-    EventManager.notify_event(self, WorkSessionClosedModel(
+    EventManager.trigger_event(self, WorkSessionClosedModel(
       job_key = self.event_data.job_key,
       work_session_end = self.event_data.work_session_end
     ));

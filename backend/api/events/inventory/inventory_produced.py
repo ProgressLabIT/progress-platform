@@ -47,7 +47,7 @@ class InventoryProduced(BaseInventory):
       # JUST IN CASE: Consider only serials to be released to avoid reassigning a new release date
       batch_serials = [Serial(**s) for s in cursor if s['released'] is None]
       for serial in batch_serials:
-        EventManager.notify_event(self, MovementCreatedModel(
+        EventManager.trigger_event(self, MovementCreatedModel(
           movement = dict(
             product_key = serial.product_key,
             qt_planned = 1,
@@ -58,7 +58,7 @@ class InventoryProduced(BaseInventory):
           )
         ))
     else:
-      EventManager.notify_event(self, MovementCreatedModel(
+      EventManager.trigger_event(self, MovementCreatedModel(
         movement = dict(
           batch_key = self.event_data.batch_key,
           job_key = self.event_data.job_key,

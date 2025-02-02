@@ -60,7 +60,7 @@ class BatchCreated(BaseBatch):
     # Book wip from buffer
     if not self.job.first_phase:
       #self.book_wip(batch_qt)
-      EventManager.notify_event(self, WIPBookedModel(
+      EventManager.trigger_event(self, WIPBookedModel(
         job_key=self.event_data.job_key,
         phase_key=self.event_data.phase_key,
         work_order_key=self.event_data.work_order_key,

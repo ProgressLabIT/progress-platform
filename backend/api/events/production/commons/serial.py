@@ -70,7 +70,7 @@ def _create_batch_serial_records(self, quantity):
   setattr(serial_data, 'wo_key', wo_key)
   for i in range(int(quantity)):
      #self.create_serial(serial_data=serial_data.model_dump(), batch_key=batch_key, counter=self.event.job.serialcode_on_batchstart, finalize=False)
-     EventManager.notify_event(self, SerialCreatedModel(
+     EventManager.trigger_event(self, SerialCreatedModel(
        batch_key = batch_key,
        counter = self.job.serialcode_on_batchstart,
        finalize = False,

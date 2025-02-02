@@ -75,7 +75,7 @@ class EventManager:
       return response
 
     @staticmethod
-    def notify_event(origin: BaseEvent, event_model: EventModel):
+    def trigger_event(origin: BaseEvent, event_model: EventModel):
       event_model.user_key = origin.event_data.user_key
       event_model.event_group = origin.event_data.event_group
       event_model.timestamp = origin.event_data.timestamp

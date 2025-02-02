@@ -48,7 +48,7 @@ class StepCompleted(BaseProduction):
 
     # if last step complete batch
     if (self.current_step_was_last_to_do()):
-      EventManager.notify_event(self, BatchCompletedModel(
+      EventManager.trigger_event(self, BatchCompletedModel(
         job_key = self.event_data.job_key,
         work_order_key = self.event_data.work_order_key,
         phase_key = self.event_data.phase_key,
@@ -74,7 +74,7 @@ class StepCompleted(BaseProduction):
 
   def store_batch_data(self, batch_execution_data):
     if (len(batch_execution_data) > 0):
-      EventManager.notify_event(self, SerialDataUpdatedModel(
+      EventManager.trigger_event(self, SerialDataUpdatedModel(
         batch_key = self.event_data.active_batch_key,
         batch_execution_data = batch_execution_data,
         user_key = self.event_data.user_key
