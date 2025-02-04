@@ -1,7 +1,7 @@
 from models.serial import Serial
 from events.serial.base_serial import BaseSerial, BaseSerialModel
-from events.event_type import EventType
-from events.event_model import EventModel
+from models.event import EventType
+from models.event import EventModel
 from models.serial import Serial, SerialNotificationType, SerialNotificationErrorCode
 from utils.counter import _generate_counter
 import traceback

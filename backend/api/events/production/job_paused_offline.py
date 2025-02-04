@@ -1,7 +1,7 @@
-from events.production.job_paused import JobPaused, BaseProductionModel
+from events.production.job_paused import JobPausedEvent, BaseProductionModel
 from utils.dt import timestamp
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 from events.work_session.work_session_closed import WorkSessionClosedModel
 from events.event_manager import EventManager
 from models.production import Job
@@ -9,7 +9,7 @@ from models.production import Job
 class JobPausedOfflineModel(BaseProductionModel):
   event_type: str = EventType.JOB_PAUSED_OFFLINE.name
 
-class JobPausedOffline(JobPaused):
+class JobPausedOffline(JobPausedEvent):
   event_data: JobPausedOfflineModel
 
   def set_model(self, base_model: EventModel):

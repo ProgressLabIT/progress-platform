@@ -1,6 +1,6 @@
 from typing import Any, Set
 from events.base_event import BaseEvent
-from events.event_model import EventModel
+from models.event import EventModel
 from abc import ABC, abstractmethod
 from managers.notification_manager import NotificationManager
 

@@ -1,6 +1,6 @@
 from events.wip.base_wip import BaseWIP, BaseWIPModel
-from events.event_type import EventType
-from events.event_model import EventModel
+from models.event import EventType
+from models.event import EventModel
 from models.traceability import WIP
 from utils.exceptions import WipNotAvailableError
 

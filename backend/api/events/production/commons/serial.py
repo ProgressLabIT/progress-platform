@@ -4,11 +4,11 @@ import traceback
 from fastapi import HTTPException
 
 from utils.kafka.kafka_producer import KafkaProducer
-from models.serial import Serial
+from models.event import EventModel
 from models.form import SerialFormFieldValue
 from models.serial import Serial, SerialNotificationType, SerialNotificationErrorCode
 from utils.process import Queries as ProcessQueries
-from events import EventManager, EventType, BaseEvent, SerialCreated
+from events.base_event import BaseEvent
 from events.serial.serial_created import SerialCreatedModel
 
 

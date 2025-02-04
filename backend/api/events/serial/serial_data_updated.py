@@ -1,8 +1,8 @@
 from events.serial.base_serial import BaseSerial, BaseSerialModel
 from typing import Any
 from utils.db import db, model_to_db_dict
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 from models.serial import  SerialNotificationType, Serial
 import traceback
 from utils.serial import Queries

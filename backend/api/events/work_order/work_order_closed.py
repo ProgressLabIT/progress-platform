@@ -1,6 +1,6 @@
 from events.work_order.base_work_order import BaseWorkOrder, BaseWorkOrderModel
-from events.event_type import EventType
-from events.event_model import EventModel
+from models.event import EventType
+from models.event import EventModel
 
 class WorkOrderClosedModel(BaseWorkOrderModel):
   event_type: str = EventType.WORK_ORDER_CLOSED.name

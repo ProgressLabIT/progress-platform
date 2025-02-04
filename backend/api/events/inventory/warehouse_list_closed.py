@@ -2,8 +2,8 @@ from events.inventory.base_inventory import BaseInventory
 from utils.dt import timestamp
 from models.inventory import *
 from events.inventory.base_inventory import BaseInventory, BaseInventoryModel
-from events.event_type import EventType
-from events.event_model import EventModel
+from models.event import EventType
+from models.event import EventModel
 
 class WarehouseListClosedModel(BaseInventoryModel):
     event_type: str = EventType.WAREHOUSE_LIST_CLOSED.name

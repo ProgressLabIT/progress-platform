@@ -10,7 +10,7 @@ import { boot } from 'quasar/wrappers';
 
 const domain =
   window.location.hostname === 'localhost'
-    ? 'http://localhost:8000'
+    ? 'http://0.0.0.0:8000'
     : 'http://' + window.location.hostname;
 
 const api_base_path = '/api';

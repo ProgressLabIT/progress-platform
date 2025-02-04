@@ -1,14 +1,13 @@
-
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 from events.base_event import BaseEvent
 
-from events.event_model import EventModel
+from models.event import EventModel, EventInfo
 from abc import ABC, abstractmethod
 from typing import Set
 from models.production import Job
 
-class BaseBatchModel(EventModel):
+class BaseBatchModel(EventInfo):
   #Batch Fields
   batch_serials: Set[str] | None = None
   job_key: str | None = None
@@ -16,10 +15,7 @@ class BaseBatchModel(EventModel):
   phase_key: str | None = None
   product_key: str | None = None
 
-class BaseBatch(BaseEvent, ABC):
-  event_data: BaseBatchModel
-
-  job: Job | None = None
+class BaseBatchEvent(BaseEvent, ABC):
 
   from events.production.commons.job import (
     _get_job_data,
@@ -32,28 +28,24 @@ class BaseBatch(BaseEvent, ABC):
     _convert_form_field,
   )
 
-
-  def get_write_collections(self):
-    return list(set(super().get_write_collections() + [
-        'Batch',
-        'batch_serial',
-        'Event',
-        'Job',
-        'Queue',
-        'Serial',
-        'StepExecutionData',
-        'wip',
-        'WorkOrder',
-        'WorkSession',
-        'contains',
-        'Config',
-        'Counter'
-      ]))
+  @property
+  def tx_collections(self):
+    return list(set(super().tx_collections + [
+      'Batch',
+      'batch_serial',
+      'Event',
+      'Job',
+      'Queue',
+      'Serial',
+      'StepExecutionData',
+      'wip',
+      'WorkOrder',
+      'WorkSession',
+      'contains',
+      'Config',
+      'Counter'
+    ]))
 
   @abstractmethod
   def apply(self):
-    pass
-
-  @abstractmethod
-  def set_model(self, base_model: EventModel):
     pass

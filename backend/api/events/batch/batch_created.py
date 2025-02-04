@@ -1,23 +1,27 @@
-from events.batch.base_batch import BaseBatch, BaseBatchModel
-from events.event_type import EventType
-from events.event_manager import EventManager
-from events.event_model import EventModel
-from events.production.commons.job import Job
+from events.base_event import BaseEvent
+from events.batch.base_batch import BaseBatchEvent, BaseBatchModel
+from models.event import EventType, EventModel
 from models.traceability import Batch, StepStatus
-from events.wip.wip_booked import WIPBookedModel
+from events.wip.wip_booked import WIPBooked
 from typing import Set
 
 
-class BatchCreatedModel(BaseBatchModel):
-  event_type: str = EventType.BATCH_CREATED.name
-  new_batch_key: str | None = None
+class BatchCreatedEvent(BaseBatchEvent):
+  class InfoModel(BaseBatchModel):
+    new_batch_key: str | None = None
 
-class BatchCreated(BaseBatch):
-  event_data: BatchCreatedModel
+  @staticmethod
+  def get_event_type() -> EventType:
+    return EventType.BATCH_CREATED
 
-
-  def set_model(self, base_model: EventModel):
-    self.event_data = BatchCreatedModel(**base_model.model_dump())
+  @property
+  def tx_collections(self):
+    return list(set(super().tx_collections + [
+      'Batch',
+      'batch_serial',
+      'Event',
+      'Job'
+    ]))
 
   def apply(self):
     self._get_job_data()
@@ -44,9 +48,9 @@ class BatchCreated(BaseBatch):
       raise ValueError("Quantity cannot be zero or negative")
 
     new_batch_in = Batch(
-      job_key = self.event_data.job_key,
-      phase_key = self.event_data.phase_key,
-      work_order_key = self.event_data.work_order_key,
+      job_key = self.info.job_key,
+      phase_key = self.info.phase_key,
+      work_order_key = self.info.work_order_key,
       qt_total = batch_qt,
       start = self.event_data.timestamp,
       active = True
@@ -55,20 +59,20 @@ class BatchCreated(BaseBatch):
     new_batch_out = self.tx.collection('Batch').insert(new_batch_in, return_new=True)['new']
 
     self.batch = Batch(**new_batch_out)
-    self.event_data.new_batch_key = self.batch.key
+    self.info.new_batch_key = self.batch.key
 
     # Book wip from buffer
     if not self.job.first_phase:
       #self.book_wip(batch_qt)
-      EventManager.trigger_event(self, WIPBookedModel(
+      WIPBookedEvent.create_as_child(self, dict(
         job_key=self.event_data.job_key,
         phase_key=self.event_data.phase_key,
         work_order_key=self.event_data.work_order_key,
         quantity=batch_qt,
-        batch_key=self.event_data.new_batch_key
+        batch_key=self.info.new_batch_key
       ))
     elif use_serials:
       self._create_batch_serial_records(quantity=batch_qt)
 
-    self.set_response(dict(new_batch_out=self.batch))
+    self.response = self.batch
 

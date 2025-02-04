@@ -1,8 +1,8 @@
 import traceback
 
 from events.inventory.base_inventory import BaseInventory, BaseInventoryModel
-from events.event_type import EventType
-from events.event_model import EventModel
+from models.event import EventType
+from models.event import EventModel
 from models.inventory import *
 from utils.inventory import Queries
 

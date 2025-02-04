@@ -1,4 +1,4 @@
-from events.production.base_production import BaseProduction, BaseProductionModel
+from events.production.base_production import BaseProductionEvent, BaseProductionModel
 from models.traceability import *
 from models.production import Job, WorkStatus
 from utils.exceptions import JobIsStartedError, JobHasNoAssigneeError
@@ -6,26 +6,27 @@ from utils.production import update_target_queue
 from utils.db import model_to_db_dict
 from utils.traceability import Queries as TraceabilityQueries
 
+from events.base_event import BaseEvent
 from events.serial.serial_created import SerialCreated
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel, EventInfo
+from models.event import EventType
 from events.event_manager import EventManager
-from events.batch.batch_created import BatchCreatedModel
-from events.work_session.work_session_created import WorkSessionCreatedModel
-from events.work_order.work_order_started import WorkOrderStartedModel
+from events.batch.batch_created import BatchCreatedEvent
+from events.work_session.work_session_started import WorkSessionStartedEvent
 from utils.production import Queries as ProductionQueries
-class JobStartedModel(BaseProductionModel):
-  event_type: str = EventType.JOB_STARTED.name
 
-class JobStarted(BaseProduction):
-  event_data: JobStartedModel
-  stage: str
-  def set_model(self, base_model: EventModel):
-    self.event_data = JobStartedModel(**base_model.model_dump())
+
+class JobStartedEvent(BaseProductionEvent):
+
+  class InfoModel(EventInfo):
+    job_key: str
+
+  @classmethod
+  def get_event_type(cls) -> EventType:
+    return EventType.JOB_STARTED
 
 
   def apply(self):
-
     # Check job hasn't been started already
     self._get_job_data()
     if self.job.stage != WorkStatus.CREATED:
@@ -43,32 +44,27 @@ class JobStarted(BaseProduction):
         add_to_queue = True
 
     # Create new batch and store _key in Event.info
-    self.batch = EventManager.trigger_event(self, BatchCreatedModel(
-      job_key = self.event_data.job_key,
-      work_order_key = self.event_data.work_order_key,
-      phase_key = self.event_data.phase_key,
-      batch_serials = self.event_data.batch_serials,
-      product_key = self.event_data.product_key
-    ))['new_batch_out']
+    self.batch = BatchCreatedEvent.create_as_child(context=self, new_event_data=dict(
+      job_key = self.info.job_key,
+      phase_key = self.info.phase_key,
+      work_order_key = self.info.work_order_key,
+      product_key = self.info.product_key
+    ))
 
     # Create new WorkSession and store _key in Event.info
-    self.event_data.work_session_key = EventManager.trigger_event(self, WorkSessionCreatedModel(
-      job_key = self.event_data.job_key,
-      batch_key = self.batch.key,
-      work_order_key = self.event_data.work_order_key,
-      phase_key = self.event_data.phase_key,
-    ))['work_session_key']
-
-    # Update WorkOrder status
-    self.stage = EventManager.trigger_event(self, WorkOrderStartedModel(
-      work_order_key = self.event_data.work_order_key
-    ))['stage']
+    self.event_data.work_session_key = WorkSessionStartedEvent.create_as_child(context=self, new_event_data=dict(
+      job_key = self.info.job_key,
+      batch_key = self.info.batch_key,
+      phase_key = self.info.phase_key,
+      work_order_key = self.info.work_order_key,
+      product_key = self.info.product_key
+    ))
 
     # Update job
     job_update=dict(
-      _key = self.event_data.job_key,
+      _key = self.info.job_key,
       start = self.event_data.timestamp,
-      stage = self.stage,
+      stage = WorkStatus.STARTED,
       last_work_session_started = self.event_data.work_session_key,
       active_batch_key = self.batch.key,
       active_batch_qt = self.batch.qt_total,
@@ -80,23 +76,17 @@ class JobStarted(BaseProduction):
 
     if add_to_queue:
       update_target_queue(
-        job_key = self.event_data.job_key,
+        job_key = self.info.job_key,
         target_key = self.event_data.user_key,
         action = 'add',
         tx = self.tx
       )
 
-
-    self.set_response(dict(
-      message = f"Job {self.event_data.job_key} started",
-      batch_data = self.get_batch_execution_data(),
+    self.response = dict(
+      message = f"Job {self.info.job_key} started",
+      batch_data = self._get_batch_execution_data(),
       job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.job.key)).next()
-    ))
+    )
 
-  def get_batch_execution_data(self):
-    batch_execution_data = self.tx.aql.execute(
-      TraceabilityQueries.GET_BATCH_EXECUTION_DATA,
-      # in self info can be under new_batch_key or active_batch_key, taking it from self.batch makes it more consistent.
-      bind_vars=dict(batch_key=self.batch.key if hasattr(self, 'batch') and hasattr(self.batch, 'key') else self.event_data.active_batch_key)
-    ).next()
-    return batch_execution_data
+    super().apply() # post processing
+

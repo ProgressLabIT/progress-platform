@@ -1,4 +1,4 @@
-from events.production.base_production import BaseProduction, BaseProductionModel
+from events.production.base_production import BaseProductionEvent, BaseProductionModel
 from models.traceability import *
 from utils.production import Queries as ProductionQueries
 from models.traceability import *
@@ -6,9 +6,8 @@ from models.production import Job
 from utils.exceptions import WipNotAvailableError
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
-from events import EventType, EventManager, BaseEvent, SerialBatchConfirmed, SerialDataUpdated, SerialUpdated, SerialReleased
-from events.event_model import EventModel
-from events.event_type import EventType
+from events import BaseEvent, SerialBatchConfirmed, SerialDataUpdated, SerialUpdated, SerialReleased
+from models.event import EventModel, EventType
 from events.serial.serial_batch_confirmed import SerialBatchConfirmedModel
 from events.serial.serial_data_updated import SerialDataUpdatedModel
 from events.serial.serial_released import SerialReleasedModel
@@ -16,7 +15,7 @@ from events.production.batch_completed import BatchCompletedModel
 class StepCompletedModel(BaseProductionModel):
   event_type: str = EventType.STEP_COMPLETED.name
 
-class StepCompleted(BaseProduction):
+class StepCompleted(BaseProductionEvent):
   event_data: StepCompletedModel
 
   def set_model(self, base_model: EventModel):

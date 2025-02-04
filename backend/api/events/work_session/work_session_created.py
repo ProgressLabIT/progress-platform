@@ -1,13 +1,13 @@
-from events.work_session.base_work_session import BaseWorkSession, BaseWorkSessionModel
-from events.event_type import EventType
-from events.event_model import EventModel
+from events.work_session.base_work_session import BaseWorkSession, WorkSessionEventModel
+from models.event import EventType
+from models.event import EventModel
 from models.traceability import WorkSession
 from utils.traceability import Queries as TraceabilityQueries
-class WorkSessionCreatedModel(BaseWorkSessionModel):
+class WorkSessionCreatedModel(WorkSessionEventModel):
   event_type: str = EventType.WORK_SESSION_CREATED.name
   work_session: WorkSession | None = None
 
-class WorkSessionCreated(BaseWorkSession):
+class WorkSessionCreatedEvent(BaseWorkSession):
   event_data: WorkSessionCreatedModel
 
   def set_model(self, base_model: EventModel):

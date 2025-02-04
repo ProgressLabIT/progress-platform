@@ -1,8 +1,8 @@
 from events.collaboration.base_collaboration import BaseCollaboration, BaseCollaborationModel
 from models.collaboration import Message, MessageUpdate
-from events.event_model import EventModel
+from models.event import EventModel
 from utils.dt import timestamp
-from events.event_type import EventType
+from models.event import EventType
 class MessageUpdatedModel(BaseCollaborationModel):
   event_type: str = EventType.MESSAGE_UPDATED.name
   message_data: MessageUpdate | None = None

@@ -1,13 +1,13 @@
-from events.production.base_production import BaseProduction, BaseProductionModel
+from events.production.base_production import BaseProductionEvent, BaseProductionModel
 from models.production import Job
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 from events.work_session.work_session_closed import WorkSessionClosedModel
 from events.event_manager import EventManager
 class JobPausedModel(BaseProductionModel):
   event_type: str = EventType.JOB_PAUSED.name
 
-class JobPaused(BaseProduction):
+class JobPausedEvent(BaseProductionEvent):
   event_data: JobPausedModel
 
   def set_model(self, base_model: EventModel):

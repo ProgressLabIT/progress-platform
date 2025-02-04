@@ -1,7 +1,7 @@
 from events.collaboration.base_collaboration import BaseCollaboration, BaseCollaborationModel
 from utils.dt import timestamp
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 
 class IssueClosedModel(BaseCollaborationModel):
   event_type: str = EventType.ISSUE_CLOSED.name

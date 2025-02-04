@@ -1,11 +1,11 @@
 from events.serial.base_serial import BaseSerial, BaseSerialModel
 from models.serial import  SerialNotificationType, SerialNotificationErrorCode
 import traceback
-from events.event_type import EventType
+from models.event import EventType
 from utils.exceptions import (
   SerialNotUpdatedError
 )
-from events.event_model import EventModel
+from models.event import EventModel
 class SerialUpdatedModel(BaseSerialModel):
   event_type: str = EventType.SERIAL_UPDATED.name
 

@@ -2,8 +2,8 @@ from events.serial.base_serial import BaseSerial, BaseSerialModel
 from models.serial import SerialNotificationType, SerialNotificationErrorCode
 from utils.serial import Queries
 import traceback
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 
 from utils.exceptions import (
   SerialNotDeletedError

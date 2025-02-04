@@ -1,6 +1,6 @@
 from typing import Any, Set
 from events.base_event import BaseEvent
-from events.event_model import EventModel
+from models.event import EventModel
 from abc import ABC, abstractmethod
 from managers.notification_manager import NotificationManager
 
@@ -13,19 +13,17 @@ from models.production import Job
 
 from utils.dt import timestamp
 
-class BaseWorkSessionModel(EventModel):
+class WorkSessionEventModel(EventModel):
    # Work Session Fields
    job_key: str | None = None
    work_order_key: str | None = None
    phase_key: str | None = None
    batch_key: str | None = None
+   product_key: str | None = None
 
 
 
 class BaseWorkSession(BaseEvent, ABC):
-  event_data: BaseWorkSessionModel
-
-  job: Job | None = None
 
   from events.production.commons.job import (
     _get_job_data,
@@ -47,12 +45,4 @@ class BaseWorkSession(BaseEvent, ABC):
         'Config',
         'Counter'
       ]))
-
-  @abstractmethod
-  def apply(self):
-    pass
-
-  @abstractmethod
-  def set_model(self, base_model: EventModel):
-    pass
 

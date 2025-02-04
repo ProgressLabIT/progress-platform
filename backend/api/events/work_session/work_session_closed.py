@@ -1,17 +1,17 @@
-from events.work_session.base_work_session import BaseWorkSession, BaseWorkSessionModel
-from events.event_type import EventType
-from events.event_model import EventModel
+from events.work_session.base_work_session import BaseWorkSession, WorkSessionEventModel
+from models.event import EventType
+from models.event import EventModel
 from datetime import datetime
 from models.traceability import WorkSession
 from utils.traceability import Queries as TraceabilityQueries
 
 
 
-class WorkSessionClosedModel(BaseWorkSessionModel):
+class WorkSessionClosedModel(WorkSessionEventModel):
   event_type: str = EventType.WORK_SESSION_CLOSED.name
   work_session_end: datetime | None = None
 
-class WorkSessionClosed(BaseWorkSession):
+class WorkSessionClosedEvent(BaseWorkSession):
   event_data: WorkSessionClosedModel
 
   def set_model(self, base_model: EventModel):

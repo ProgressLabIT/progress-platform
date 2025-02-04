@@ -1,11 +1,11 @@
 from events.inventory.base_inventory import BaseInventory
-from events.event_type import EventType
-from events.event_model import EventModel
+from models.event import EventType
+from models.event import EventModel
 from models.traceability import Batch
 from models.product import TraceabilityLevel
 from models.production import Job, WorkStatus
 from utils.serial import Queries as SerialQueries
-from events.event_model import EventModel
+from models.event import EventModel
 from models.serial import Serial
 from models.inventory import InventoryMovementType, MovementStatus
 from events.event_manager import EventManager

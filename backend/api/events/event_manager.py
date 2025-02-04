@@ -1,7 +1,5 @@
 from events.base_event import BaseEvent
-from events.event_model import EventModel
-from events.event_type import EventType
-from events.serial.serial_created import SerialCreated
+from models.event import EventModel, EventType
 from utils.db import db
 from typing import Any
 import traceback

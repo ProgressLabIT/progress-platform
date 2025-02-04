@@ -24,12 +24,12 @@ def update_job_last_online(self):
   self.tx.collection('Job').update(update_data)
 
 def _get_job_data(self):
-  job = self.tx.collection('Job').get(self.event_data.job_key)
+  job = self.tx.collection('Job').get(self.info.job_key)
   self.job = Job(**job)
-  self.event_data.job_key = self.job.key
-  self.event_data.work_order_key = self.job.wo_key
-  self.event_data.phase_key = self.job.phase_key
-  self.event_data.active_batch_key = self.job.active_batch_key
+  self.event_data.info.job_key = self.job.key
+  self.event_data.info.work_order_key = self.job.wo_key
+  self.event_data.info.phase_key = self.job.phase_key
+  self.event_data.info.active_batch_key = self.job.active_batch_key
 
 
 def get_job_steps_count(self):

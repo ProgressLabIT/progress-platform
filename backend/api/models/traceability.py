@@ -33,8 +33,9 @@ class StepExecutionData(FlexModel):
 class Batch(FlexModel):
   key: str | None = Field(None, alias="_key")
   job_key: str
-  work_order_key: str
   phase_key: str
+  work_order_key: str
+  product_key: str | None = None
 
   start: datetime
   end: datetime | None = None

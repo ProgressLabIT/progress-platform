@@ -10,7 +10,7 @@ export function sendEvent({ event_type, event_data }) {
       user_key: store.state.session.user._key,
       user_session_key: store.state.session.session_key,
       timestamp: timestamp(),
-      ...event_data,
+      info: event_data,
     };
     api.post('event', event)
       .then((resp) => {

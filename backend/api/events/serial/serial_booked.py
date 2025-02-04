@@ -1,13 +1,13 @@
 from events.serial.base_serial import BaseSerial, BaseSerialModel
 from models.serial import Serial, SerialNotificationType, SerialNotificationErrorCode
 import traceback
-from events.event_model import EventModel
+from models.event import EventModel
 from typing import Any
 from utils.db import model_to_db_dict
 from utils.dt import timestamp
 from utils.counter import _generate_counter
 from utils.serial import Queries
-from events.event_type import EventType
+from models.event import EventType
 from utils.exceptions import (
   SerialNotLinkedError
 )

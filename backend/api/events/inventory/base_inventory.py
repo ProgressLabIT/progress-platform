@@ -1,11 +1,10 @@
-
 import traceback
 import copy
 import json
 
 from typing import Any
 from events.base_event import BaseEvent
-from events.event_model import EventModel
+from models.event import EventModel
 from abc import ABC, abstractmethod
 from pydantic import model_validator
 from models.inventory import *
@@ -23,7 +22,7 @@ class BaseInventoryModel(EventModel):
     movement: InventoryMovementNew | InventoryMovementUpdate | None = None
     movement_list: MovementListNew | None = None
     movement_key: str | None = None
-    supplier_key: Any | None = None
+    # supplier_key: Any | None = None
 
 class BaseInventory(BaseEvent, ABC):
     event_data: BaseInventoryModel
@@ -409,3 +408,19 @@ class BaseInventory(BaseEvent, ABC):
          NotificationManager.getInstance().notifyConflated(subtopic="inventory-notification", message=json.dumps(notification), delay=5)
       else:
          NotificationManager.getInstance().notify(key=notification.get('movement_key'), notification=json.dumps(notification))
+
+
+
+    def add_inventory(self):
+      """
+      - Add inventory to a position
+      - Add serial to a position
+      """
+      ...
+
+    def remove_inventory(self):
+      ...
+
+
+
+

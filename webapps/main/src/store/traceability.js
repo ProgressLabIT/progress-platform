@@ -136,19 +136,21 @@ function createEvent(
     event_type,
     user_key,
     user_session_key: session_state.session_key,
-    job_key: job._key,
-    product_key: job.product_key,
-    work_order_key: job.wo_key,
-    phase_key: job.phase_key,
-    active_batch_key: job.active_batch_key,
-    project_code: job.project_code,
-    step_key,
-    form_data,
-    completed_batch_qt,
     timestamp, // ISO format
-    batch_serials: serials,
-    step_changed_qt: step_changed_qt,
-    new_active_batch_qt,
+    info: {
+      job_key: job._key,
+      product_key: job.product_key,
+      work_order_key: job.wo_key,
+      phase_key: job.phase_key,
+      active_batch_key: job.active_batch_key,
+      project_code: job.project_code,
+      step_key,
+      form_data,
+      completed_batch_qt,
+      batch_serials: serials,
+      step_changed_qt: step_changed_qt,
+      new_active_batch_qt,
+    },
   };
 
   return event;

@@ -1,8 +1,8 @@
 from events.collaboration.base_collaboration import BaseCollaboration, BaseCollaborationModel
 from utils.file import FileHandler
 from models.form import FileBucket
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 
 class IssueDeletedModel(BaseCollaborationModel):
   event_type: str = EventType.ISSUE_DELETED.name

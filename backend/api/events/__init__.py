@@ -1,7 +1,6 @@
+from utils.event import register_event_class
+
 from events.base_event import BaseEvent
-from events.event_type import EventType
-from events.event_manager import EventManager
-from events.event_model import EventModel
 
 #COLLABORATION EVENTS
 from events.collaboration.base_collaboration import BaseCollaboration
@@ -45,9 +44,9 @@ from events.inventory.inventory_produced import InventoryProduced
 from events.inventory.inventory_consumed import InventoryConsumed
 
 #PRODUCTION EVENTS
-from events.production.base_production import BaseProduction
-from events.production.job_started import JobStarted
-from events.production.job_paused import JobPaused
+from events.production.base_production import BaseProductionEvent
+from events.production.job_started import JobStartedEvent
+from events.production.job_paused import JobPausedEvent
 from events.production.job_paused_offline import JobPausedOffline
 from events.production.job_resumed import JobResumed
 from events.production.job_back_online import JobBackOnline
@@ -76,12 +75,25 @@ from events.work_order.work_order_closed import WorkOrderClosed
 
 #Work Session
 from events.work_session.base_work_session import BaseWorkSession
-from events.work_session.work_session_started import WorkSessionStarted
-from events.work_session.work_session_closed import WorkSessionClosed
-from events.work_session.work_session_created import WorkSessionCreated
-from events.work_session.work_session_canceled import WorkSessionCanceled
+from events.work_session.work_session_started import WorkSessionStartedEvent
+from events.work_session.work_session_closed import WorkSessionClosedEvent
+from events.work_session.work_session_created import WorkSessionCreatedEvent
+from events.work_session.work_session_canceled import WorkSessionCanceledEvent
 
 #Batch
-from events.batch.base_batch import BaseBatch
-from events.batch.batch_created import BatchCreated
-from events.batch.batch_canceled import BatchCanceled
+from events.batch.base_batch import BaseBatchEvent
+from events.batch.batch_created import BatchCreatedEvent
+
+
+# Get all classes defined in this module's namespace
+all_classes = list(locals().values())
+
+# Filter for classes that inherit from BaseEvent and have event_type property
+for cls in all_classes:
+  if (isinstance(cls, type) and  # Check if it's a class
+    issubclass(cls, BaseEvent) and  # Check if it inherits from BaseEvent
+    cls != BaseEvent and  # Skip the base class itself
+    hasattr(cls, 'get_event_type')):  # Has get_event_type method
+    # Register the event class with its type
+    register_event_class(cls.get_event_type(), cls) # Use fget because the property is a descriptor and requires a function call to get the value
+

@@ -1,12 +1,58 @@
-from events.work_session.base_work_session import BaseWorkSession, BaseWorkSessionModel
-from events.event_type import EventType
-from events.event_model import EventModel
+from events.work_session.base_work_session import BaseWorkSession, WorkSessionEventModel
+from models.event import EventModel, EventType
+from models.traceability import WorkSession
+from utils.traceability import Queries as TraceabilityQueries
 
-class WorkSessionStartedModel(BaseWorkSessionModel):
-  event_type: str = EventType.WORK_SESSION_STARTED.name
 
-class WorkSessionStarted(BaseWorkSession):
-  event_data: WorkSessionStartedModel
+class WorkSessionStartedEvent(BaseWorkSession):
+  @property
+  def event_model(self):
+    return WorkSessionEventModel
 
-  def set_model(self, base_model: EventModel):
-    self.event_data = WorkSessionStartedModel(**base_model.model_dump())
+  @property
+  def event_type(self):
+    return EventType.WORK_SESSION_STARTED
+
+  @property
+  def tx_collections(self):
+    return list(set(super().tx_collections + [
+      'WorkSession',
+    ]))
+
+  def apply(self):
+      # Close unallowed parallel work sessions
+    bind_vars = dict(
+      user_key = self.event_data.user_key,
+      timestamp = self.event_data.timestamp
+    )
+
+    closed_sessions_cursor = self.tx.aql.execute(
+      TraceabilityQueries.CLOSE_UNALLOWED_PARALLEL_WORK_SESSIONS,
+      bind_vars=bind_vars
+    )
+    closed_sessions_jobs = [ws['job_key'] for ws in closed_sessions_cursor]
+    if len(closed_sessions_jobs):
+      self.tx.aql.execute(
+        """
+        FOR j IN Job
+        FILTER j._key IN @jobs
+        UPDATE j WITH { 'active': false } IN Job
+        """,
+        bind_vars=dict(jobs=closed_sessions_jobs)
+      )
+
+    # Create new work session
+    new_work_session = self.tx.aql.execute(
+      TraceabilityQueries.CREATE_WORK_SESSION, bind_vars=dict(
+        job_key = self.info.job_key,
+        batch_key = self.info.batch_key, # in self info can be under new_batch_key or active_batch_key, taking it from self.batch makes it more consistent.
+        work_order_key = self.info.work_order_key,
+        phase_key = self.info.phase_key,
+        product_key = self.info.product_key,
+        user_key = self.event_data.user_key,
+        user_session_key = self.event_data.user_session_key,
+        start = self.event_data.timestamp,
+      )
+    ).next()
+
+    self.response = WorkSession(**new_work_session)

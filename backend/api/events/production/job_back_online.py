@@ -1,11 +1,11 @@
-from events.production.base_production import BaseProduction, BaseProductionModel
+from events.production.base_production import BaseProductionEvent, BaseProductionModel
 from utils.dt import timestamp
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 class JobBackOnlineModel(BaseProductionModel):
   event_type: str = EventType.JOB_BACK_ONLINE.name
 
-class JobBackOnline(BaseProduction):
+class JobBackOnline(BaseProductionEvent):
   event_data: JobBackOnlineModel
 
   def set_model(self, base_model: EventModel):

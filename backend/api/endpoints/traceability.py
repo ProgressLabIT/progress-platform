@@ -3,7 +3,7 @@ import traceback
 from fastapi import APIRouter, HTTPException, Depends
 from utils import auth
 
-from events import BaseEvent, EventManager, EventType, EventModel
+from models.event import EventInputModel, EventType, EventModel
 from models.traceability import *
 
 from utils.exceptions import *
@@ -11,6 +11,7 @@ from utils.api import APIResponse
 from models.serial import SerialSelection
 from utils.db import db
 from utils.dt import timestamp
+from utils.event import get_event_class
 from utils.serial import Queries as SerialQueries
 from utils.traceability import Queries
 
@@ -20,9 +21,12 @@ serials = db.collection('Serial')
 
 @router.post('/event',
     dependencies=[Depends(auth.verify_token)])
-async def record_event(data: EventModel):
+async def record_event(event_data: EventInputModel):
   try:
-    return APIResponse(detail=EventManager.send_event(data))
+    event_class = get_event_class(event_data.event_type)
+    event = event_class(EventModel(**event_data.model_dump()))
+    event.save()
+    return APIResponse(detail=event.response)
 
   except (
     JobIsActiveError,

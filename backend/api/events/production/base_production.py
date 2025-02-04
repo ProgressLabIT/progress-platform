@@ -10,7 +10,7 @@ from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 from models.production import Job, WorkStatus
 from utils.production import Queries as ProductionQueries
-from events.event_model import EventModel
+from models.event import EventModel
 from abc import ABC, abstractmethod
 from utils.dt import timestamp
 class BaseProductionModel(EventModel):
@@ -36,21 +36,12 @@ class BaseProductionModel(EventModel):
 
     batch_serials: Set[str] | None = None # prevent duplicated entries from client
 
-class BaseProduction(BaseEvent, ABC):
-  event_data: BaseProductionModel
+class BaseProductionEvent(BaseEvent):
 
   @abstractmethod
   def apply(self):
-    pass
-
-  @abstractmethod
-  def set_model(self, base_model: EventModel):
-    pass
-
-  #Class variables
-  job: Job | None = None
-  batch: Batch | None = None
-  work_session: WorkSession | None = None
+    self.update_job_last_online()
+    self.update_work_order()
 
   from events.production.commons.serial import(
     send_to_consumer,
@@ -67,7 +58,6 @@ class BaseProduction(BaseEvent, ABC):
     current_step_was_last_to_do
   )
 
-
   from events.production.commons.job import (
     set_job_active_state,
     update_job_last_online,
@@ -77,34 +67,26 @@ class BaseProduction(BaseEvent, ABC):
     complete_job
   )
 
-  @model_validator(mode="before")
-  @classmethod
-  def pre_process(cls, data: Any) -> Any:
-    return data
-
-  def get_write_collections(self):
-    return list(set(super().get_write_collections() + [
-        'Batch',
-        'batch_serial',
-        'Event',
-        'Job',
-        'Queue',
-        'Serial',
-        'StepExecutionData',
-        'wip',
-        'WorkOrder',
-        'WorkSession',
-        'contains',
-        'Config',
-        'Counter',
-        'is_in_position',
-        'Position',
-        'movement',
-      ]))
-
-  def post_processing(self):
-    self.update_job_last_online()
-    self.update_work_order()
+  @property
+  def tx_collections(self) -> list[str]:
+    return [
+      'Batch',
+      'batch_serial',
+      'Event',
+      'Job',
+      'Queue',
+      'Serial',
+      'StepExecutionData',
+      'wip',
+      'WorkOrder',
+      'WorkSession',
+      'contains',
+      'Config',
+      'Counter',
+      'is_in_position',
+      'Position',
+      'movement',
+    ]
 
   def update_job_last_online(self):
     update_data = dict(

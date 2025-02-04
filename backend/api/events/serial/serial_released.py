@@ -2,7 +2,7 @@ from events.serial.base_serial import BaseSerial, BaseSerialModel
 from typing import Any
 from utils.db import db, model_to_db_dict
 from utils.dt import timestamp
-from events.event_type import EventType
+from models.event import EventType
 
 from models.serial import  SerialNotificationType, Serial
 import traceback
@@ -10,7 +10,7 @@ from utils.serial import Queries
 from utils.exceptions import (
   SerialNotUpdatedError
 )
-from events.event_model import EventModel
+from models.event import EventModel
 class SerialReleasedModel(BaseSerialModel):
   event_type: str = EventType.SERIAL_RELEASED.name
   batch_execution_data: Any | None = None

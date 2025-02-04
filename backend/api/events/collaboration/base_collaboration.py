@@ -1,7 +1,7 @@
 from typing import Any
 from abc import ABC, abstractmethod
 from events.base_event import BaseEvent
-from events.event_model import EventModel
+from models.event import EventModel
 from models.collaboration import IssueLink
 from utils.collaboration import Queries
 

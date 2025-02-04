@@ -1,7 +1,7 @@
 from events.collaboration.base_collaboration import BaseCollaboration, BaseCollaborationModel
 from models.collaboration import Message
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 
 class MessagePostedModel(BaseCollaborationModel):
   event_type: str = EventType.MESSAGE_POSTED.name

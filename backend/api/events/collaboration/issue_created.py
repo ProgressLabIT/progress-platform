@@ -1,7 +1,7 @@
 from models.collaboration import Issue, IssueWithLinks
 from events.collaboration.base_collaboration import BaseCollaboration, BaseCollaborationModel
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 
 class IssueCreatedModel(BaseCollaborationModel):
    event_type: str = EventType.ISSUE_CREATED.name

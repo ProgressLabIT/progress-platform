@@ -1,11 +1,11 @@
-from events.work_session.base_work_session import BaseWorkSession, BaseWorkSessionModel
-from events.event_type import EventType
-from events.event_model import EventModel
+from events.work_session.base_work_session import BaseWorkSession, WorkSessionEventModel
+from models.event import EventType
+from models.event import EventModel
 
-class WorkSessionCanceledModel(BaseWorkSessionModel):
+class WorkSessionCanceledModel(WorkSessionEventModel):
   event_type: str = EventType.WORK_SESSION_CANCELED.name
 
-class WorkSessionCanceled(BaseWorkSession):
+class WorkSessionCanceledEvent(BaseWorkSession):
   event_data: WorkSessionCanceledModel
 
   def set_model(self, base_model: EventModel):

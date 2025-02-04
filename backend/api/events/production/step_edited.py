@@ -1,11 +1,11 @@
-from events.production.base_production import BaseProduction, BaseProductionModel
+from events.production.base_production import BaseProductionEvent, BaseProductionModel
 from models.traceability import *
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 class StepEditedModel(BaseProductionModel):
   event_type: str = EventType.STEP_EDITED.name
 
-class StepEdited(BaseProduction):
+class StepEdited(BaseProductionEvent):
   event_data: StepEditedModel
 
   def set_model(self, base_model: EventModel):

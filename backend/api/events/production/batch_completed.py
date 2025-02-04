@@ -1,20 +1,19 @@
-from events import EventManager, SerialDataUpdated, SerialBatchConfirmed, EventType, SerialReleased
+from events import SerialDataUpdated, SerialBatchConfirmed, SerialReleased
 from events.serial.serial_batch_confirmed import SerialBatchConfirmedModel
 from events.serial.serial_released import SerialReleasedModel
-from events.production.base_production import BaseProduction, BaseProductionModel
+from events.production.base_production import BaseProductionEvent, BaseProductionModel
 from models.traceability import *
 from models.production import Job
 from utils.exceptions import WipNotAvailableError
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
-from events.event_model import EventModel
-from events.event_type import EventType
+from models.event import EventModel
+from models.event import EventType
 from events.serial.serial_data_updated import SerialDataUpdatedModel
 from events.work_session.work_session_closed import WorkSessionClosedModel
 from events.wip.wip_declared import WIPDeclaredModel
 from events.wip.wip_removed import WIPRemovedModel
 from events.wip.wip_unbooked import WIPUnbookedModel
-from events.batch.batch_created import BatchCreatedModel
 from events.inventory.movement_created import MovementCreatedModel
 from events.work_session.work_session_created import WorkSessionCreatedModel
 from events.wip.wip_booked import WIPBookedModel
@@ -24,7 +23,7 @@ from events.inventory.inventory_consumed import InventoryConsumedModel
 class BatchCompletedModel(BaseProductionModel):
   event_type: str = EventType.BATCH_COMPLETED.name
 
-class BatchCompleted(BaseProduction):
+class BatchCompleted(BaseProductionEvent):
   event_data: BatchCompletedModel
 
   def set_model(self, base_model: EventModel):
@@ -76,7 +75,7 @@ class BatchCompleted(BaseProduction):
         booked_wip_quantity = active_batch_qt
         free_wip_delta = completed_batch_qt - booked_wip_quantity
         if free_wip_delta > 0:
-          EventManager.trigger_event(self, WIPBookedModel(
+          WIPBookedEvent.create_as_child(self, dict(
             job_key=self.event_data.job_key,
             phase_key=self.event_data.phase_key,
             work_order_key=self.event_data.work_order_key,
@@ -84,7 +83,7 @@ class BatchCompleted(BaseProduction):
             batch_key=self.event_data.new_batch_key
           ))
         elif free_wip_delta < 0:
-          EventManager.trigger_event(self, WIPUnbookedModel(
+          WIPUnbookedEvent.create_as_child(self, dict(
             job_key=self.event_data.job_key,
             phase_key=self.event_data.phase_key,
             work_order_key=self.event_data.work_order_key,
@@ -104,7 +103,7 @@ class BatchCompleted(BaseProduction):
       elif (len(batch_execution_data) > 0):
         self.store_batch_data(self.convert_batch_data(dict(batch_execution_data)))
 
-      EventManager.trigger_event(self, SerialBatchConfirmedModel(
+      SerialBatchConfirmedEvent.create_as_child(self, dict(
         batch_key = self.event_data.active_batch_key,
         batch_execution_data = self.convert_batch_data(dict(batch_execution_data)),
         job = self.job,
@@ -115,7 +114,7 @@ class BatchCompleted(BaseProduction):
     self.event_data.completed_batch_qt = completed_batch_qt
     self.event_data.work_session_key = self.job.last_work_session_started
 
-    EventManager.trigger_event(self, WorkSessionClosedModel(
+    WorkSessionClosedEvent.create_as_child(self, dict(
       work_session_end = self.event_data.work_session_end,
       job_key = self.event_data.job_key
     ));
@@ -130,7 +129,7 @@ class BatchCompleted(BaseProduction):
     )
 
     #create production movement
-    EventManager.trigger_event(self, InventoryProducedModel(
+    InventoryProducedEvent.create_as_child(self, dict(
       job_key = self.event_data.job_key,
       product_key = self.event_data.product_key,
       batch_key = self.event_data.active_batch_key,
@@ -138,7 +137,7 @@ class BatchCompleted(BaseProduction):
     ))
 
     #create consumption movement
-    EventManager.trigger_event(self, InventoryConsumedModel(
+    InventoryConsumedEvent.create_as_child(self, dict(
       job_key = self.event_data.job_key,
       product_key = self.event_data.product_key,
       batch_key = self.event_data.active_batch_key
@@ -179,21 +178,14 @@ class BatchCompleted(BaseProduction):
       )
 
       if create_new_batch:
-        self.batch = EventManager.trigger_event(self, BatchCreatedModel(
-          job_key = self.event_data.job_key,
-          work_order_key = self.event_data.work_order_key,
-          phase_key = self.event_data.phase_key,
-          batch_serials = self.event_data.batch_serials,
-          product_key = self.event_data.product_key,
-        ))['new_batch_out']
         job_update['active_batch_key'] = self.batch.key
         job_update['active_batch_qt'] = self.batch.qt_total
-        self.event_data.work_session_key = EventManager.trigger_event(self, WorkSessionCreatedModel(
+        self.event_data.work_session_key = WorkSessionCreatedEvent.create_as_child(self, dict(
           job_key = self.event_data.job_key,
           batch_key = self.batch.key,
           work_order_key = self.event_data.work_order_key,
           phase_key = self.event_data.phase_key,
-        ))['work_session_key']
+        ))
         job_update['last_work_session_started'] = self.event_data.work_session_key
         job_update['active'] = True
 
@@ -214,7 +206,7 @@ class BatchCompleted(BaseProduction):
           setattr(self.job, 'wo_bom', new_job_data['wo_bom'])
 
     if not self.job.first_phase:
-      EventManager.trigger_event(self, WIPRemovedModel(
+      WIPRemovedEvent.create_as_child(self, dict(
         job_key=self.event_data.job_key,
         phase_key=self.event_data.phase_key,
         work_order_key=self.event_data.work_order_key,
@@ -224,7 +216,7 @@ class BatchCompleted(BaseProduction):
 
     # is next_phase generate a WIP record and update job input availability state
     if not self.job.last_phase:
-      EventManager.trigger_event(self, WIPDeclaredModel(
+      WIPDeclaredEvent.create_as_child(self, dict(
         job_key=self.event_data.job_key,
         phase_key=self.event_data.phase_key,
         work_order_key=self.event_data.work_order_key,
@@ -235,7 +227,7 @@ class BatchCompleted(BaseProduction):
     else:
       if getattr(self.job, 'traceability_level', None) is not None:
         # update batch serials data
-        EventManager.trigger_event(self, SerialReleasedModel(
+        SerialReleasedEvent.create_as_child(self, dict(
           batch_key = self.event_data.active_batch_key,
           batch_execution_data = self.convert_batch_data(dict(batch_execution_data)),
           user_key = self.event_data.user_key
@@ -243,7 +235,7 @@ class BatchCompleted(BaseProduction):
 
   def store_batch_data(self, batch_execution_data):
     if (len(batch_execution_data) > 0):
-      EventManager.trigger_event(self, SerialDataUpdatedModel(
+      SerialDataUpdatedEvent.create_as_child(self, dict(
         batch_key = self.event_data.active_batch_key,
         batch_execution_data = batch_execution_data,
         user_key = self.event_data.user_key

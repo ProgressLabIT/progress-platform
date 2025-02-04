@@ -2,11 +2,11 @@ from events.serial.base_serial import BaseSerial, BaseSerialModel
 from models.serial import SerialLink
 import traceback
 from models.serial import SerialNotificationType, SerialNotificationErrorCode
-from events.event_type import EventType
+from models.event import EventType
 from utils.exceptions import (
   SerialNotLinkedError,
 )
-from events.event_model import EventModel
+from models.event import EventModel
 class SerialLinkedModel(BaseSerialModel):
   event_type: str = EventType.SERIAL_LINKED.name
   serial_link_data: list[SerialLink] | None = None

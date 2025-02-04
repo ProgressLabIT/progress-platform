@@ -2,15 +2,15 @@
 
 from models.traceability import *
 from models.production import Job
-from events.production.base_production import BaseProduction, BaseProductionModel
-from events.event_model import EventModel
+from events.production.base_production import BaseProductionEvent, BaseProductionModel
+from models.event import EventModel
 
 from utils.serial import Queries as SerialQueries
 
 class ActiveBatchChangedModel(BaseProductionModel):
   ...
 
-class ActiveBatchChanged(BaseProduction):
+class ActiveBatchChanged(BaseProductionEvent):
   event_data: ActiveBatchChangedModel
 
   def set_model(self, base_model: EventModel):
