@@ -17,7 +17,7 @@ class MovementCreated(BaseInventory):
   event_data: MovementCreatedModel
 
   def set_model(self, base_model: EventModel):
-   self.event_data = MovementCreatedModel(**base_model.model_dump())
+   self.info = MovementCreatedModel(**base_model.model_dump())
 
   def validate_event(self):
     return super().validate_event()
@@ -25,7 +25,7 @@ class MovementCreated(BaseInventory):
   def apply(self):
     try:
       # TODO: allow inserting movements by product/serial code
-      movement_data=self.event_data.movement
+      movement_data=self.info.movement
       self.adjust_inventory()
       new_movement_record = InventoryMovement(**movement_data.model_dump())
       movement_key = self.tx.collection('movement').insert(new_movement_record)['_key']

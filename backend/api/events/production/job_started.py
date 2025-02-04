@@ -8,7 +8,7 @@ from utils.traceability import Queries as TraceabilityQueries
 
 from events.base_event import BaseEvent
 from events.serial.serial_created import SerialCreated
-from models.event import EventModel, EventInfo
+from models.event import EventModel, EventInfoModel
 from models.event import EventType
 from events.event_manager import EventManager
 from events.batch.batch_created import BatchCreatedEvent
@@ -18,13 +18,12 @@ from utils.production import Queries as ProductionQueries
 
 class JobStartedEvent(BaseProductionEvent):
 
-  class InfoModel(EventInfo):
+  class InfoModel(EventInfoModel):
     job_key: str
 
   @classmethod
   def get_event_type(cls) -> EventType:
     return EventType.JOB_STARTED
-
 
   def apply(self):
     # Check job hasn't been started already
@@ -51,8 +50,10 @@ class JobStartedEvent(BaseProductionEvent):
       product_key = self.info.product_key
     ))
 
+    self.info.batch_key = self.batch.key
+
     # Create new WorkSession and store _key in Event.info
-    self.event_data.work_session_key = WorkSessionStartedEvent.create_as_child(context=self, new_event_data=dict(
+    self.work_session = WorkSessionStartedEvent.create_as_child(context=self, new_event_data=dict(
       job_key = self.info.job_key,
       batch_key = self.info.batch_key,
       phase_key = self.info.phase_key,
@@ -60,31 +61,33 @@ class JobStartedEvent(BaseProductionEvent):
       product_key = self.info.product_key
     ))
 
+    self.info.work_session_key = self.work_session.key
+
     # Update job
     job_update=dict(
       _key = self.info.job_key,
-      start = self.event_data.timestamp,
+      start = self.info.timestamp,
       stage = WorkStatus.STARTED,
-      last_work_session_started = self.event_data.work_session_key,
+      last_work_session_started = self.info.work_session_key,
       active_batch_key = self.batch.key,
       active_batch_qt = self.batch.qt_total,
       active = True,
-      assigned_to = self.event_data.user_key,
-      last_online = self.event_data.timestamp
+      assigned_to = self.info.user_key,
+      last_online = self.info.timestamp
     )
     self.job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
 
     if add_to_queue:
       update_target_queue(
         job_key = self.info.job_key,
-        target_key = self.event_data.user_key,
+        target_key = self.info.user_key,
         action = 'add',
         tx = self.tx
       )
 
     self.response = dict(
       message = f"Job {self.info.job_key} started",
-      batch_data = self._get_batch_execution_data(),
+      batch_data = self.get_batch_execution_data(),
       job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.job.key)).next()
     )
 

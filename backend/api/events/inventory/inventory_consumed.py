@@ -25,7 +25,7 @@ class InventoryConsumed(BaseInventory):
 
 
   def set_model(self, base_model: EventModel):
-    self.event_data = InventoryConsumedModel(**base_model.model_dump())
+    self.info = InventoryConsumedModel(**base_model.model_dump())
 
   def validate_event(self):
     enable_inventory_management = self.tx.collection('Config').get('enable_inventory_management') or False
@@ -57,16 +57,16 @@ class InventoryConsumed(BaseInventory):
         ))
 
   def _get_product(self):
-    self.product = self.tx.collection('Product').get(self.event_data.product_key)
+    self.product = self.tx.collection('Product').get(self.info.product_key)
     if self.product is None:
       raise InventoryMovementException(f'Product not found')
 
   def _get_batch(self):
-    self.batch = self.tx.collection('Batch').get(self.event_data.batch_key)
+    self.batch = self.tx.collection('Batch').get(self.info.batch_key)
     if self.batch is None:
       raise Exception(f'Batch not found')
 
   def _get_job(self):
-    self.job = self.tx.collection('Job').get(self.event_data.job_key)
+    self.job = self.tx.collection('Job').get(self.info.job_key)
     if self.job is None:
       raise Exception(f'Job not found')

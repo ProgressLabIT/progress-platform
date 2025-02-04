@@ -19,27 +19,27 @@ class SerialDataUpdated(BaseSerial):
   event_data: SerialDataUpdatedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = SerialDataUpdatedModel(**base_model.model_dump())
+    self.info = SerialDataUpdatedModel(**base_model.model_dump())
 
   def apply(self):
     cursor = self.tx.aql.execute(
        Queries.GET_BATCH_SERIALS,
-       bind_vars=dict(batch_key=self.event_data.batch_key
+       bind_vars=dict(batch_key=self.info.batch_key
     ))
     # JUST IN CASE: Consider only serials to be confirmed to avoid reassigning a new code
     batch_serials = [Serial(**s) for s in cursor]
     for serial in batch_serials:
-       for step in self.event_data.batch_execution_data:
+       for step in self.info.batch_execution_data:
          for data in serial.data:
             if step['form_field_key'] == data.form_field_key:
                data.value = step['value']
                data.batch_key = step['batch_key']
                data.phase_key = step['phase_key']
                data.step_key = step['step_key']
-       confirm_serial_match = dict(_from=f'Batch/{self.event_data.batch_key}', from_serial=serial.key)
+       confirm_serial_match = dict(_from=f'Batch/{self.info.batch_key}', from_serial=serial.key)
        confirm_serial_update = dict(_from=serial.id)
        self.tx.collection('contains').update_match(confirm_serial_match, confirm_serial_update)
-    clean_serial_match = dict(_from=f'Batch/{self.event_data.batch_key}')
+    clean_serial_match = dict(_from=f'Batch/{self.info.batch_key}')
     self.tx.collection('contains').delete_match(clean_serial_match)
     new = self.tx.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials], return_new=True)
     #self.tx.commit_transaction()

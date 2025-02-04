@@ -82,25 +82,24 @@ class EventType(str, Enum):
   WIP_DECLARED = 'WIP_DECLARED'
 
 
-class EventInfo(BaseModel):
+class EventInfoModel(BaseModel):
+  """
+  Event info model to be extended by the event class
+  """
   model_config = ConfigDict(extra='allow')
 
-
-class EventInputModel(BaseModel):
   event_type: EventType
+  primary: bool = True
   user_key: str | None = None
   user_session_key: str | None = None
   timestamp: datetime | None = Field(default_factory=timestamp)
   description: str | None = None # optional descriptive field for auditing reasons
-  info: EventInfo # will be validated when the event object is created via the specific event model
-
-class EventModel(EventInputModel):
-  event_key: str | None = Field(None, alias='_key')
   event_group: str | None = None #
-  primary: bool = True
-  tx: TransactionDatabase | None = Field(None, exclude=True)
 
-  model_config = ConfigDict(arbitrary_types_allowed=True)
+class EventModel(BaseModel):
+  model_config = ConfigDict(arbitrary_types_allowed=True, extra='allow')
+  tx: TransactionDatabase | None = Field(None, exclude=True)
+  info: Any # model to be set at the event class level as a subclass of EventInfoModel
 
 
 class SerialNotificationEventModel(ArangoDocument):

@@ -15,10 +15,10 @@ class SerialLinked(BaseSerial):
   event_data: SerialLinkedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = SerialLinkedModel(**base_model.model_dump())
+    self.info = SerialLinkedModel(**base_model.model_dump())
 
   def apply(self):
-    serial_link_data = self.event_data.serial_link_data
+    serial_link_data = self.info.serial_link_data
     booked_serial = []
     for serial_links in serial_link_data:
        if serial_links.to_serial in booked_serial:

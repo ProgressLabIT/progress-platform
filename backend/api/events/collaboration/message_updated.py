@@ -10,11 +10,11 @@ class MessageUpdated(BaseCollaboration):
   event_data: MessageUpdatedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = MessageUpdatedModel(**base_model.model_dump())
+    self.info = MessageUpdatedModel(**base_model.model_dump())
 
   def apply(self):
-    self.event_data.message_data.updated = self.event_data.timestamp
-    message_record = self.event_data.message_data.dict(by_alias=True)
+    self.info.message_data.updated = self.info.timestamp
+    message_record = self.info.message_data.dict(by_alias=True)
     db_resp = self.tx.collection('message').update(message_record, return_new=True)
     self.set_response(dict(
       message="Message updated correctly",

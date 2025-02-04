@@ -24,7 +24,7 @@ class InventoryProduced(BaseInventory):
   job: Job
 
   def set_model(self, base_model: EventModel):
-    self.event_data = InventoryProducedModel(**base_model.model_dump())
+    self.info = InventoryProducedModel(**base_model.model_dump())
 
   def validate_event(self):
     enable_inventory_management = self.tx.collection('Config').get('enable_inventory_management') or False
@@ -41,7 +41,7 @@ class InventoryProduced(BaseInventory):
     if (self.job['traceability_level'] is not None):
       cursor = self.tx.aql.execute(
          SerialQueries.GET_BATCH_SERIALS,
-         bind_vars=dict(batch_key=self.event_data.batch_key
+         bind_vars=dict(batch_key=self.info.batch_key
       ))
       # JUST IN CASE: Consider only serials to be released to avoid reassigning a new release date
       batch_serials = [Serial(**s) for s in cursor if s['released'] is None]
@@ -59,24 +59,24 @@ class InventoryProduced(BaseInventory):
     else:
       EventManager.trigger_event(self, MovementCreatedModel(
         movement = dict(
-          batch_key = self.event_data.batch_key,
-          job_key = self.event_data.job_key,
-          product_key = self.event_data.product_key,
-          quantity = self.event_data.quantity,
+          batch_key = self.info.batch_key,
+          job_key = self.info.job_key,
+          product_key = self.info.product_key,
+          quantity = self.info.quantity,
         )
       ))
 
   def _get_product(self):
-    self.product = self.tx.collection('Product').get(self.event_data.product_key)
+    self.product = self.tx.collection('Product').get(self.info.product_key)
     if self.product is None:
       raise InventoryMovementException(f'Product not found')
 
   def _get_batch(self):
-    self.batch = self.tx.collection('Batch').get(self.event_data.batch_key)
+    self.batch = self.tx.collection('Batch').get(self.info.batch_key)
     if self.batch is None:
       raise Exception(f'Batch not found')
 
   def _get_job(self):
-    self.job = self.tx.collection('Job').get(self.event_data.job_key)
+    self.job = self.tx.collection('Job').get(self.info.job_key)
     if self.job is None:
       raise Exception(f'Job not found')

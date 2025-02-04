@@ -9,7 +9,7 @@ class WorkOrderClosed(BaseWorkOrder):
   event_data: WorkOrderClosedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = WorkOrderClosedModel(**base_model.model_dump())
+    self.info = WorkOrderClosedModel(**base_model.model_dump())
 
   def apply(self):
     pass

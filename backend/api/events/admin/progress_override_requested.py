@@ -24,7 +24,7 @@ class ProgressOverrideRequested(BaseAdmin):
     # shouldn't be able to increase the quantity if required fields are present in the process
     # decreasing the quantity should cancel StepExecutionData of the canceled batches
 
-    self.job = Job(**self.tx.collection('Job').get(self.event_data.job_key))
+    self.job = Job(**self.tx.collection('Job').get(self.info.job_key))
 
     if self.job.assigned_to == None:
       raise JobHasNoAssigneeError("You can't declare progress without associating it to a user. Assign the job first.")
@@ -41,12 +41,12 @@ class ProgressOverrideRequested(BaseAdmin):
     # Initialize job update.
     # Will save at the end after enrichment based on override type
 
-    new_job_progress = round(100 * self.event_data.new_job_qt_completed / self.job.qt_planned)
+    new_job_progress = round(100 * self.info.new_job_qt_completed / self.job.qt_planned)
 
     job_update = dict(
       _key = self.job.key,
-      qt_completed = self.event_data.new_job_qt_completed,
-      qt_released = self.event_data.new_job_qt_completed,
+      qt_completed = self.info.new_job_qt_completed,
+      qt_released = self.info.new_job_qt_completed,
       progress = new_job_progress,
       forced = self.id
     )

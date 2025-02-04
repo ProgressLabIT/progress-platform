@@ -10,15 +10,15 @@ class IssueClosed(BaseCollaboration):
   event_data: IssueClosedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = IssueClosedModel(**base_model.model_dump())
+    self.info = IssueClosedModel(**base_model.model_dump())
 
   def apply(self):
-    issue_key = self.event_data.issue_data['_key']
+    issue_key = self.info.issue_data['_key']
     issue_update = dict(
       _key = issue_key,
       open = False,
       closed = timestamp(),
-      closed_by = f'User/{self.event_data.user_key}'
+      closed_by = f'User/{self.info.user_key}'
     )
     self.tx.collection('Issue').update(issue_update)
 

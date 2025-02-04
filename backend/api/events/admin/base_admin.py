@@ -62,39 +62,39 @@ class BaseAdmin(BaseEvent):
       self.flag_job_as_forced()
 
     def flag_job_as_forced(self):
-       job_update = dict(_key=self.event_data.job_key, forced=self.id)
+       job_update = dict(_key=self.info.job_key, forced=self.id)
        self.tx.collection('Job').update(job_update)
 
     @classmethod
     def get_work_order_data(self):
-      wo_data = self.tx.collection('WorkOrder').get(self.event_data.work_order_key)
+      wo_data = self.tx.collection('WorkOrder').get(self.info.work_order_key)
       wo_data_out = WorkOrderFull(**wo_data)
       return wo_data_out
 
     @classmethod
     def update_work_order(self):
-      if not self.event_data.work_order_key:
+      if not self.info.work_order_key:
         self._get_job_data()
-        self.event_data.work_order_key = self.job.wo_key
+        self.info.work_order_key = self.job.wo_key
 
       wo_previous_state = self.get_work_order_data()
 
       updated_wo = WorkOrderFull(**self.tx.aql.execute(
         TraceabilityQueries.UPDATE_WORK_ORDER,
-        bind_vars=dict(wo_key=self.event_data.work_order_key)
+        bind_vars=dict(wo_key=self.info.work_order_key)
       ).next())
 
       # Remove work order from the queue if override closed it
       if updated_wo.status == WorkStatus.CLOSED:
         self.tx.aql.execute(
           ProductionQueries.REMOVE_WORK_ORDER_FROM_QUEUE,
-          bind_vars=dict(wo_key=self.event_data.work_order_key)
+          bind_vars=dict(wo_key=self.info.work_order_key)
         )
 
       # Restore work order in the queue if override reopens it
       elif wo_previous_state.status == WorkStatus.CLOSED:
         self.tx.aql.execute(
           ProductionQueries.ADD_WORK_ORDER_TO_QUEUE,
-          bind_vars=dict(new_wo_key=self.event_data.work_order_key)
+          bind_vars=dict(new_wo_key=self.info.work_order_key)
         )
 

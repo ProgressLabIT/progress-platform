@@ -14,7 +14,7 @@ class ActiveBatchChanged(BaseProductionEvent):
   event_data: ActiveBatchChangedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = ActiveBatchChangedModel(**base_model.model_dump())
+    self.info = ActiveBatchChangedModel(**base_model.model_dump())
 
   def post_processing(self):
     self.update_job_last_online()
@@ -24,13 +24,13 @@ class ActiveBatchChanged(BaseProductionEvent):
     self._get_job_data()
     self.get_active_batch()
 
-    if not self.event_data.work_session_key:
-      self.event_data.work_session = self.get_current_work_session()
-      self.event_data.work_session_key = self.event_data.work_session.key
+    if not self.info.work_session_key:
+      self.info.work_session = self.get_current_work_session()
+      self.info.work_session_key = self.info.work_session.key
 
-    active_batch_qt_delta = self.event_data.new_active_batch_qt - self.job.active_batch_qt
+    active_batch_qt_delta = self.info.new_active_batch_qt - self.job.active_batch_qt
 
-    if active_batch_qt_delta == 0 and not len(self.event_data.batch_serials):
+    if active_batch_qt_delta == 0 and not len(self.info.batch_serials):
       raise ValueError("Active batch quantity already matches the quantity requested")
 
     else:
@@ -47,7 +47,7 @@ class ActiveBatchChanged(BaseProductionEvent):
             count = True
           ).count()
 
-          serials_delta = self.event_data.new_active_batch_qt - batch_serials_qt
+          serials_delta = self.info.new_active_batch_qt - batch_serials_qt
 
           if serials_delta > 0:
             self._create_batch_serial_records(quantity=serials_delta)
@@ -65,7 +65,7 @@ class ActiveBatchChanged(BaseProductionEvent):
 
         # Has serials but not first phase
         else:
-          if self.event_data.batch_serials is not None and len(self.event_data.batch_serials) == self.event_data.new_active_batch_qt:
+          if self.info.batch_serials is not None and len(self.info.batch_serials) == self.info.new_active_batch_qt:
             self.book_wip_serials()
           else:
             raise ValueError(f"The serials provided do not match the update requested. New qt: {self.new_active_batch_qt}. Serials provided: {self.batch_serials}")
@@ -82,18 +82,18 @@ class ActiveBatchChanged(BaseProductionEvent):
     # Update Batch
     self.batch = Batch(**self.tx.collection('Batch').update(dict(
       _key=self.batch.key,
-      qt_total=self.event_data.new_active_batch_qt
+      qt_total=self.info.new_active_batch_qt
     ), return_new=True)['new'])
 
     # Update Job
     self.job = Job(**self.tx.collection('Job').update(dict(
       _key=self.job.key,
-      active_batch_qt=self.event_data.new_active_batch_qt
+      active_batch_qt=self.info.new_active_batch_qt
     ), return_new=True)['new'])
 
     # Set response
     self.set_response(dict(
-      message=f"Active batch { self.event_data.active_batch_key } has been correctly updated with quantity { self.event_data.new_active_batch_qt }",
+      message=f"Active batch { self.info.active_batch_key } has been correctly updated with quantity { self.info.new_active_batch_qt }",
       job_data=self.job,
       batch_data=self.get_batch_execution_data()
     ))

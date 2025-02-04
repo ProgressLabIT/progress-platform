@@ -11,12 +11,12 @@ class MessagePosted(BaseCollaboration):
   event_data: MessagePostedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = MessagePostedModel(**base_model.model_dump())
+    self.info = MessagePostedModel(**base_model.model_dump())
 
   def apply(self):
-      issue_key = self.event_data.message_data.recipient.split('/')[1]
-      self.event_data.issue_data = dict(_key=issue_key)
-      message_data = self.event_data.message_data.dict(by_alias=True, exclude={'_key', '_id', '_rev'})
+      issue_key = self.info.message_data.recipient.split('/')[1]
+      self.info.issue_data = dict(_key=issue_key)
+      message_data = self.info.message_data.dict(by_alias=True, exclude={'_key', '_id', '_rev'})
       self.message_data = self.tx.collection('message').insert(message_data, return_new=True)['new']
       self.set_response(dict(
         message="Message posted correctly to issue "+issue_key,

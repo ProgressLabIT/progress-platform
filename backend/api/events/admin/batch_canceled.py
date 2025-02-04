@@ -32,7 +32,7 @@ class BatchCanceled(BaseAdmin):
     batch_update = dict(
       _key = batch_key,
       active = False,
-      end = self.event_data.timestamp,
+      end = self.info.timestamp,
       canceled = self.id
     )
     self.tx.collection('Batch').update(batch_update)

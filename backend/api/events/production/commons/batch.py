@@ -16,8 +16,8 @@ def get_active_batch(self):
   try:
     data_from_db = self.tx.collection('Batch').find(match).next()
     self.batch = Batch(**data_from_db)
-    self.event_data.active_batch_key = self.batch.key
-    self.event_data.active_batch_qt = self.batch.qt_total
+    self.info.active_batch_key = self.batch.key
+    self.info.active_batch_qt = self.batch.qt_total
   except StopIteration:
     pass
 
@@ -44,7 +44,7 @@ def get_batch_execution_data(self):
   batch_execution_data = self.tx.aql.execute(
     TraceabilityQueries.GET_BATCH_EXECUTION_DATA,
     # in self info can be under new_batch_key or active_batch_key, taking it from self.batch makes it more consistent.
-    bind_vars=dict(batch_key=self.batch.key if hasattr(self, 'batch') and hasattr(self.batch, 'key') else self.event_data.active_batch_key)
+    bind_vars=dict(batch_key=self.batch.key if hasattr(self, 'batch') and hasattr(self.batch, 'key') else self.info.active_batch_key)
   ).next()
 
   return batch_execution_data

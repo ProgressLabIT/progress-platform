@@ -1,16 +1,16 @@
 from events.work_session.base_work_session import BaseWorkSession, WorkSessionEventModel
-from models.event import EventModel, EventType
+from models.event import EventModel, EventType, EventInfoModel
 from models.traceability import WorkSession
 from utils.traceability import Queries as TraceabilityQueries
 
 
 class WorkSessionStartedEvent(BaseWorkSession):
-  @property
-  def event_model(self):
-    return WorkSessionEventModel
+  class InfoModel(WorkSessionEventModel):
+    pass
 
-  @property
-  def event_type(self):
+
+  @classmethod
+  def get_event_type(cls):
     return EventType.WORK_SESSION_STARTED
 
   @property
@@ -22,8 +22,8 @@ class WorkSessionStartedEvent(BaseWorkSession):
   def apply(self):
       # Close unallowed parallel work sessions
     bind_vars = dict(
-      user_key = self.event_data.user_key,
-      timestamp = self.event_data.timestamp
+      user_key = self.info.user_key,
+      timestamp = self.info.timestamp
     )
 
     closed_sessions_cursor = self.tx.aql.execute(
@@ -49,9 +49,9 @@ class WorkSessionStartedEvent(BaseWorkSession):
         work_order_key = self.info.work_order_key,
         phase_key = self.info.phase_key,
         product_key = self.info.product_key,
-        user_key = self.event_data.user_key,
-        user_session_key = self.event_data.user_session_key,
-        start = self.event_data.timestamp,
+        user_key = self.info.user_key,
+        user_session_key = self.info.user_session_key,
+        start = self.info.timestamp,
       )
     ).next()
 

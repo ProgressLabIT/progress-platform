@@ -6,28 +6,28 @@ from models.traceability import WorkSession
 from utils.traceability import Queries as TraceabilityQueries
 
 
-
-class WorkSessionClosedModel(WorkSessionEventModel):
-  event_type: str = EventType.WORK_SESSION_CLOSED.name
-  work_session_end: datetime | None = None
-
 class WorkSessionClosedEvent(BaseWorkSession):
-  event_data: WorkSessionClosedModel
+  class InfoModel(WorkSessionEventModel):
+    work_session_end: datetime | None = None
 
-  def set_model(self, base_model: EventModel):
-    self.event_data = WorkSessionClosedModel(**base_model.model_dump())
+  @classmethod
+  def get_event_type(cls):
+    return EventType.WORK_SESSION_CLOSED
+
+  @property
+  def tx_collections(self):
+    return [
+      'WorkSession'
+    ]
 
   def apply(self):
-    if self.event_data.work_session_end == None:
-      self.event_data.work_session_end = self.event_data.timestamp
+    if self.info.work_session_end == None:
+      self.info.work_session_end = self.info.timestamp
 
     updated_work_session = WorkSession(**self.tx.aql.execute(
       TraceabilityQueries.CLOSE_WORK_SESSION, bind_vars = dict(
-        job_key = self.event_data.job_key,
-        end = self.event_data.work_session_end,
+        job_key = self.info.job_key,
+        end = self.info.work_session_end,
     )).next())
-
-    self.event_data.work_session = updated_work_session
-    self.event_data.work_session_key = updated_work_session.key
 
     return updated_work_session

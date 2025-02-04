@@ -11,10 +11,10 @@ class IssueDeleted(BaseCollaboration):
   event_data: IssueDeletedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = IssueDeletedModel(**base_model.model_dump())
+    self.info = IssueDeletedModel(**base_model.model_dump())
 
   def apply(self):
-      issue_key = self.event_data.issue_data['_key']
+      issue_key = self.info.issue_data['_key']
 
       self.tx.collection('Issue').delete(issue_key)
       self.tx.collection('issue_rel').delete_match(filters=dict(_from=f'Issue/{issue_key}'))

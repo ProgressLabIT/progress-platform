@@ -12,13 +12,13 @@ class WarehouseListClosed(BaseInventory):
   event_data: WarehouseListClosedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = WarehouseListClosedModel(**base_model.model_dump())
+    self.info = WarehouseListClosedModel(**base_model.model_dump())
 
   def apply(self):
     self.tx.collection('MovementList').update(dict(
-      _key = self.event_data.movement_list_key,
+      _key = self.info.movement_list_key,
       status = MovementStatus.COMPLETED,
-      end = self.event_data.timestamp
+      end = self.info.timestamp
     ))
     # Update all movements in the list
     self.tx.aql.execute("""
@@ -32,6 +32,6 @@ class WarehouseListClosed(BaseInventory):
           end: m.qt_confirmed == 0 ? null : @timestamp
         } IN movement
     """, bind_vars=dict(
-      movement_list_key=self.event_data.movement_list_key,
-      timestamp=self.event_data.timestamp
+      movement_list_key=self.info.movement_list_key,
+      timestamp=self.info.timestamp
     ))

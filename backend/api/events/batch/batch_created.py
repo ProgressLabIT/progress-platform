@@ -29,8 +29,8 @@ class BatchCreatedEvent(BaseBatchEvent):
     use_serials = getattr(self.job, 'traceability_level', None)
 
     if use_serials and not self.job.first_phase:
-      if len(self.event_data.batch_serials):
-        batch_qt = len(self.event_data.batch_serials)
+      if len(self.info.batch_serials):
+        batch_qt = len(self.info.batch_serials)
       else:
         raise ValueError("You must provide serials to be linked to this new batch")
     else:
@@ -52,7 +52,7 @@ class BatchCreatedEvent(BaseBatchEvent):
       phase_key = self.info.phase_key,
       work_order_key = self.info.work_order_key,
       qt_total = batch_qt,
-      start = self.event_data.timestamp,
+      start = self.info.timestamp,
       active = True
     )
 
@@ -65,9 +65,9 @@ class BatchCreatedEvent(BaseBatchEvent):
     if not self.job.first_phase:
       #self.book_wip(batch_qt)
       WIPBookedEvent.create_as_child(self, dict(
-        job_key=self.event_data.job_key,
-        phase_key=self.event_data.phase_key,
-        work_order_key=self.event_data.work_order_key,
+        job_key=self.info.job_key,
+        phase_key=self.info.phase_key,
+        work_order_key=self.info.work_order_key,
         quantity=batch_qt,
         batch_key=self.info.new_batch_key
       ))

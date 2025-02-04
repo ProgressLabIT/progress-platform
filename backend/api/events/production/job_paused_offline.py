@@ -1,28 +1,27 @@
+from datetime import datetime
 from events.production.job_paused import JobPausedEvent, BaseProductionModel
 from utils.dt import timestamp
-from models.event import EventModel
-from models.event import EventType
-from events.work_session.work_session_closed import WorkSessionClosedModel
+from models.event import EventModel, EventInfoModel, EventType
+from events.work_session.work_session_closed import WorkSessionClosedEvent
 from events.event_manager import EventManager
 from models.production import Job
 
-class JobPausedOfflineModel(BaseProductionModel):
-  event_type: str = EventType.JOB_PAUSED_OFFLINE.name
-
 class JobPausedOffline(JobPausedEvent):
-  event_data: JobPausedOfflineModel
+  class InfoModel(EventInfoModel):
+    work_session_end: datetime | None = None
 
-  def set_model(self, base_model: EventModel):
-    self.event_data = JobPausedOfflineModel(**base_model.model_dump())
+  @classmethod
+  def get_event_type(cls):
+    return EventType.JOB_PAUSED_OFFLINE
 
   def apply(self):
-    EventManager.trigger_event(self, WorkSessionClosedModel(
-      job_key = self.event_data.job_key,
-      work_session_end = self.event_data.work_session_end
+    EventManager.trigger_event(self, WorkSessionClosedEvent(
+      job_key = self.info.job_key,
+      work_session_end = self.info.work_session_end
     ));
 
     update_data = dict(
-      _key=self.event_data.job_key,
+      _key=self.info.job_key,
       active=False
     )
     updated_job = self.tx.collection('Job').update(update_data, check_rev=False, return_new=True)['new']

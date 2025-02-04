@@ -9,11 +9,11 @@ class IssueReopened(BaseCollaboration):
   event_data: IssueReopenedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = IssueReopenedModel(**base_model.model_dump())
+    self.info = IssueReopenedModel(**base_model.model_dump())
 
   def apply(self):
-      issue_key = self.event_data.issue_data['_key']
-      open_as_critical = self.event_data.issue_data.get('critical', False)
+      issue_key = self.info.issue_data['_key']
+      open_as_critical = self.info.issue_data.get('critical', False)
       issue_update = dict(
         _key = issue_key,
         open = True,

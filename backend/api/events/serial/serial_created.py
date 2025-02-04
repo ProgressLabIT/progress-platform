@@ -28,11 +28,11 @@ class SerialCreated(BaseSerial):
     self.serial_key = None
 
   def set_model(self, base_model: EventModel):
-    self.event_data = SerialCreatedModel(**base_model.model_dump())
+    self.info = SerialCreatedModel(**base_model.model_dump())
 
   def apply(self):
       new_serial_record = Serial(
-         **self.event_data.serial_data
+         **self.info.serial_data
       ).dict(by_alias=True)
 
       #tx = self.tx.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
@@ -46,9 +46,9 @@ class SerialCreated(BaseSerial):
          raise SerialCodeAlreadyPresent(f'Cannot create serial, serial code already used')
       try:
          serial_no = "MISSING-COUNTER"
-         if self.event_data.counter and new_serial_record['code'] == None:
-            if ('counter_key' in self.event_data.serial_data):
-               serial_no = _generate_counter(self.tx, 'Counter/' + self.event_data.serial_data['counter_key'])
+         if self.info.counter and new_serial_record['code'] == None:
+            if ('counter_key' in self.info.serial_data):
+               serial_no = _generate_counter(self.tx, 'Counter/' + self.info.serial_data['counter_key'])
                new_serial_record['code'] = serial_no
             else:
                self.notify_results(dict(
@@ -57,15 +57,15 @@ class SerialCreated(BaseSerial):
                   error = 'Counter not defined'
                 ))
 
-         if self.event_data.finalize:
+         if self.info.finalize:
             new_serial_record['released'] = timestamp()
          serial_key = self.tx.collection('Serial').insert(new_serial_record, return_new=True)['_key']
 
          self.serial_key = serial_key
 
-         if self.event_data.batch_key:
+         if self.info.batch_key:
             self.tx.collection('batch_serial').insert(dict(
-               _from=f'Batch/{self.event_data.batch_key}',
+               _from=f'Batch/{self.info.batch_key}',
                _to=f'Serial/{serial_key}'))
 
          #tx.commit_transaction()

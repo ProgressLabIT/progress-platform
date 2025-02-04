@@ -2,12 +2,12 @@ from models.event import EventModel
 from models.event import EventType
 from events.base_event import BaseEvent
 
-from models.event import EventModel, EventInfo
+from models.event import EventModel, EventInfoModel
 from abc import ABC, abstractmethod
 from typing import Set
 from models.production import Job
 
-class BaseBatchModel(EventInfo):
+class BaseBatchModel(EventInfoModel):
   #Batch Fields
   batch_serials: Set[str] | None = None
   job_key: str | None = None

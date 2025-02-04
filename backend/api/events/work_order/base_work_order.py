@@ -47,7 +47,7 @@ class BaseWorkOrder(BaseEvent, ABC):
     pass
 
   def _get_work_order_data(self):
-    wo_data = self.tx.collection('WorkOrder').get(self.event_data.work_order_key)
+    wo_data = self.tx.collection('WorkOrder').get(self.info.work_order_key)
     wo_data_out = WorkOrderFull(**wo_data)
     return wo_data_out
 

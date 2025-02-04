@@ -9,11 +9,11 @@ class IssueUpdated(BaseCollaboration):
   event_data: IssueUpdatedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = IssueUpdatedModel(**base_model.model_dump())
+    self.info = IssueUpdatedModel(**base_model.model_dump())
 
   def apply(self):
-    self.tx.collection('Issue').update(self.event_data.issue_data)
-    issue_key = self.event_data.issue_data['_key']
+    self.tx.collection('Issue').update(self.info.issue_data)
+    issue_key = self.info.issue_data['_key']
 
     # Update critical status of related job and work order
     self._update_production_status(f'Issue/{issue_key}')

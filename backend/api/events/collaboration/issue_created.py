@@ -10,18 +10,18 @@ class IssueCreated(BaseCollaboration):
   event_data: IssueCreatedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = IssueCreatedModel(**base_model.model_dump())
+    self.info = IssueCreatedModel(**base_model.model_dump())
 
 
   def apply(self):
-     self.issue_data = IssueWithLinks(**self.event_data.issue_data)
+     self.issue_data = IssueWithLinks(**self.info.issue_data)
      # Remove links and exclude document id fields
      new_issue_record = Issue(
-       **self.event_data.issue_data
+       **self.info.issue_data
      ).dict(by_alias=True)
      new_issue_id = self.tx.collection('Issue').insert(new_issue_record, return_new=True)['_id']
 
-     rels = [BaseCollaboration._build_issue_link(_from=new_issue_id, link_dict=rel) for rel in self.event_data.issue_data['linked_to']]
+     rels = [BaseCollaboration._build_issue_link(_from=new_issue_id, link_dict=rel) for rel in self.info.issue_data['linked_to']]
 
 
      self.tx.collection('issue_rel').insert_many(rels, silent=True)

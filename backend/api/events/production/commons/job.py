@@ -26,10 +26,10 @@ def update_job_last_online(self):
 def _get_job_data(self):
   job = self.tx.collection('Job').get(self.info.job_key)
   self.job = Job(**job)
-  self.event_data.info.job_key = self.job.key
-  self.event_data.info.work_order_key = self.job.wo_key
-  self.event_data.info.phase_key = self.job.phase_key
-  self.event_data.info.active_batch_key = self.job.active_batch_key
+  self.info.job_key = self.job.key
+  self.info.work_order_key = self.job.wo_key
+  self.info.phase_key = self.job.phase_key
+  self.info.active_batch_key = self.job.active_batch_key
 
 
 def get_job_steps_count(self):
@@ -39,7 +39,7 @@ def get_job_steps_count(self):
       FILTER job._key == @job_key
       RETURN LENGTH(job.step_sequence)
     """,
-    bind_vars=dict(job_key=self.event_data.job_key)
+    bind_vars=dict(job_key=self.info.job_key)
   ).next()
 
 
@@ -69,11 +69,11 @@ def complete_job(self, completed_qt):
   # Query allows for single call to DB to get and update job data
 
   bind_vars=dict(
-    job_key=self.event_data.job_key,
+    job_key=self.info.job_key,
     stage=WorkStatus.CLOSED,
     notes="Job completed",
     qt_completed=completed_qt,
-    end=self.event_data.timestamp,
+    end=self.info.timestamp,
   )
   completed_job = self.tx.aql.execute(
     TraceabilityQueries.COMPLETE_JOB,
@@ -85,7 +85,7 @@ def complete_job(self, completed_qt):
   self.tx.aql.execute(
     ProductionQueries.REMOVE_JOB_FROM_QUEUE,
     bind_vars=dict(
-      job_key=self.event_data.job_key,
-      target_key=self.event_data.user_key
+      job_key=self.info.job_key,
+      target_key=self.info.user_key
     )
   )

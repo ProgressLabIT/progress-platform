@@ -13,14 +13,14 @@ class WIPRemoved(BaseWIP):
   event_data: WIPRemovedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = WIPRemovedModel(**base_model.model_dump())
+    self.info = WIPRemovedModel(**base_model.model_dump())
 
   def apply(self):
     """
     Remove upstream wip records related to the completed batch
     """
     booked_wips_cursor = self.tx.collection('wip').find(dict(
-      _to=f'Job/{self.event_data.job_key}',
+      _to=f'Job/{self.info.job_key}',
     ))
     booked_wips = [WIP(**wip) for wip in booked_wips_cursor]
     # Here we sort the wip by quantity in ascending order to remove as many full records as possible, starting from the smallest one.
@@ -29,22 +29,22 @@ class WIPRemoved(BaseWIP):
 
     # Remove/reduce wip, record by record up to declared quantity
     for wip in booked_wips:
-      if self.event_data.quantity >= wip.quantity:
+      if self.info.quantity >= wip.quantity:
         # Remove entire wip for job
         self.tx.collection('wip').delete(wip.key)
-        self.event_data.quantity -= wip.quantity
-        if self.event_data.quantity == 0:
+        self.info.quantity -= wip.quantity
+        if self.info.quantity == 0:
           break
       else:
         # Partially remove wip by reducing the quantity
-        unbooking_percentage = self.event_data.quantity / wip.quantity
+        unbooking_percentage = self.info.quantity / wip.quantity
         self.tx.collection('wip').update(dict(
           _key=wip.key,
-          quantity=wip.quantity - self.event_data.quantity,
+          quantity=wip.quantity - self.info.quantity,
           value=wip.value * (1 - unbooking_percentage)
         ))
-        self.event_data.quantity = 0
+        self.info.quantity = 0
         break
 
-    if self.event_data.quantity > 0:
-      raise WipNotAvailableError(f"Not enough booked wip to remove. Needed { self.event_data.quantity } more")
+    if self.info.quantity > 0:
+      raise WipNotAvailableError(f"Not enough booked wip to remove. Needed { self.info.quantity } more")

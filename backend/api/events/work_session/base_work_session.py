@@ -1,6 +1,6 @@
 from typing import Any, Set
 from events.base_event import BaseEvent
-from models.event import EventModel
+from models.event import EventInfoModel
 from abc import ABC, abstractmethod
 from managers.notification_manager import NotificationManager
 
@@ -13,7 +13,7 @@ from models.production import Job
 
 from utils.dt import timestamp
 
-class WorkSessionEventModel(EventModel):
+class WorkSessionEventModel(EventInfoModel):
    # Work Session Fields
    job_key: str | None = None
    work_order_key: str | None = None

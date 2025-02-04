@@ -17,12 +17,12 @@ class MovementUpdated(BaseInventory):
   event_data: MovementUpdatedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = MovementUpdatedModel(**base_model.model_dump())
+    self.info = MovementUpdatedModel(**base_model.model_dump())
 
   def apply(self):
     """Used for updating planned movement"""
     try:
-      movement_data=self.event_data.movement
+      movement_data=self.info.movement
       if len(movement_data.split_into) > 0:
         # TODO: use multiple events to confirm the initial movement
         # and automatically generate transfers for the splits

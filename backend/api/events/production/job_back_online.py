@@ -9,11 +9,11 @@ class JobBackOnline(BaseProductionEvent):
   event_data: JobBackOnlineModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = JobBackOnlineModel(**base_model.model_dump())
+    self.info = JobBackOnlineModel(**base_model.model_dump())
 
   def apply(self):
     updated_work_session = dict(
-      _key=self.event_data.work_session_key,
+      _key=self.info.work_session_key,
       active=True,
       end=None
     )

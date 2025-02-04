@@ -3,7 +3,7 @@ import traceback
 from fastapi import APIRouter, HTTPException, Depends
 from utils import auth
 
-from models.event import EventInputModel, EventType, EventModel
+from models.event import EventInfoModel, EventType, EventModel
 from models.traceability import *
 
 from utils.exceptions import *
@@ -21,10 +21,11 @@ serials = db.collection('Serial')
 
 @router.post('/event',
     dependencies=[Depends(auth.verify_token)])
-async def record_event(event_data: EventInputModel):
+async def record_event(event_data: EventInfoModel):
+  # Event data validation will happen at the event class level
   try:
     event_class = get_event_class(event_data.event_type)
-    event = event_class(EventModel(**event_data.model_dump()))
+    event = event_class(info=event_data.model_dump())
     event.save()
     return APIResponse(detail=event.response)
 

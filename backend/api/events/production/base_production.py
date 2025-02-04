@@ -90,19 +90,19 @@ class BaseProductionEvent(BaseEvent):
 
   def update_job_last_online(self):
     update_data = dict(
-      _key=self.event_data.job_key,
-      last_online=self.event_data.timestamp
+      _key=self.info.job_key,
+      last_online=self.info.timestamp
     )
     self.tx.collection('Job').update(update_data)
 
   def get_work_order_data(self):
-    wo_data = self.tx.collection('WorkOrder').get(self.event_data.work_order_key)
+    wo_data = self.tx.collection('WorkOrder').get(self.info.work_order_key)
     wo_data_out = WorkOrderFull(**wo_data)
     return wo_data_out
 
   def get_current_work_session(self):
     match=dict(
-      job_key=self.event_data.job_key,
+      job_key=self.info.job_key,
       active=True
     )
     data_from_db = self.tx.collection('WorkSession').find(match).next()
@@ -110,25 +110,25 @@ class BaseProductionEvent(BaseEvent):
     return work_session
 
   def update_work_order(self):
-    if not self.event_data.work_order_key:
+    if not self.info.work_order_key:
       self._get_job_data()
-      self.event_data.work_order_key = self.job.wo_key
+      self.info.work_order_key = self.job.wo_key
     wo_previous_state = self.get_work_order_data()
     updated_wo = WorkOrderFull(**self.tx.aql.execute(
       TraceabilityQueries.UPDATE_WORK_ORDER,
-      bind_vars=dict(wo_key=self.event_data.work_order_key)
+      bind_vars=dict(wo_key=self.info.work_order_key)
     ).next())
     # Remove work order from the queue if override closed it
     if updated_wo.status == WorkStatus.CLOSED:
       self.tx.aql.execute(
         ProductionQueries.REMOVE_WORK_ORDER_FROM_QUEUE,
-        bind_vars=dict(wo_key=self.event_data.work_order_key)
+        bind_vars=dict(wo_key=self.info.work_order_key)
       )
     # Restore work order in the queue if override reopens it
     elif wo_previous_state.status == WorkStatus.CLOSED:
       self.tx.aql.execute(
         ProductionQueries.ADD_WORK_ORDER_TO_QUEUE,
-        bind_vars=dict(new_wo_key=self.event_data.work_order_key)
+        bind_vars=dict(new_wo_key=self.info.work_order_key)
       )
 
 

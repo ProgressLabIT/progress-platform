@@ -33,9 +33,9 @@ def _create_batch_serial_records(self, quantity):
     self.job = self.get_job_data()
 
   batch_key = self.batch.key
-  created_by = self.event_data.user_key
-  wo_key = self.event_data.work_order_key
-  product_key = self.event_data.product_key
+  created_by = self.info.user_key
+  wo_key = self.info.work_order_key
+  product_key = self.info.product_key
   product = self.tx.collection('Product').get(product_key)
   serial_data = Serial()
   counter_key = None
@@ -75,13 +75,13 @@ def _create_batch_serial_records(self, quantity):
        counter = self.job.serialcode_on_batchstart,
        finalize = False,
        serial_data = serial_data.model_dump(),
-       user_key = self.event_data.user_key
+       user_key = self.info.user_key
      ))
 
 def _retrieve_serial_phases_data(self):
   cursor = self.tx.aql.execute(ProcessQueries.GET_PRODUCTION_PROCESS,
      bind_vars=dict(
-       product_key = self.event_data.product_key,
+       product_key = self.info.product_key,
      )
    )
   return [e for e in cursor]
@@ -137,6 +137,6 @@ def convert_form_data(self, form_data):
   batch_data = []
   for field in form_data:
     if field.value!=None:
-            batch_data.append(self._convert_form_field(field=field, work_order_key=self.event_data.work_order_key, batch_key=self.event_data.active_batch_key, step_key=self.event_data.step_key, phase_key=self.event_data.phase_key))
+            batch_data.append(self._convert_form_field(field=field, work_order_key=self.info.work_order_key, batch_key=self.info.active_batch_key, step_key=self.info.step_key, phase_key=self.info.phase_key))
   return batch_data
 

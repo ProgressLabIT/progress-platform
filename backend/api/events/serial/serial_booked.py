@@ -22,11 +22,11 @@ class SerialBooked(BaseSerial):
   event_data: SerialBookedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = SerialBookedModel(**base_model.model_dump())
+    self.info = SerialBookedModel(**base_model.model_dump())
 
   def apply(self):
-    batch_key = self.event_data.batch_key
-    batch_serials = self.event_data.batch_serials
+    batch_key = self.info.batch_key
+    batch_serials = self.info.batch_serials
     new_batch_serial_records = [dict(
        _from=f'Batch/{batch_key}',
        _to=f'Serial/{serial_key}'

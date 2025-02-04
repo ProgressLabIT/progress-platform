@@ -9,4 +9,4 @@ class WorkSessionCanceledEvent(BaseWorkSession):
   event_data: WorkSessionCanceledModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = WorkSessionCanceledModel(**base_model.model_dump())
+    self.info = WorkSessionCanceledModel(**base_model.model_dump())

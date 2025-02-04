@@ -95,5 +95,5 @@ for cls in all_classes:
     cls != BaseEvent and  # Skip the base class itself
     hasattr(cls, 'get_event_type')):  # Has get_event_type method
     # Register the event class with its type
-    register_event_class(cls.get_event_type(), cls) # Use fget because the property is a descriptor and requires a function call to get the value
+    register_event_class(cls.get_event_type(), cls)
 

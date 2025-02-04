@@ -18,16 +18,16 @@ class SerialDeleted(BaseSerial):
   event_data: SerialDeletedModel
 
   def set_model(self, base_model: EventModel):
-    self.event_data = SerialDeletedModel(**base_model.model_dump())
+    self.info = SerialDeletedModel(**base_model.model_dump())
 
   def apply(self):
     delete_children = False
     try:
-      if (self.event_data.delete_children):
-         delete_children = self.event_data.delete_children
+      if (self.info.delete_children):
+         delete_children = self.info.delete_children
     except:
        delete_children = False
-    serial_key = self.event_data.serial_data.get("_key")
+    serial_key = self.info.serial_data.get("_key")
     allow_serial_delete = self.tx.collection('Config').get('allow_serial_delete')
     if (allow_serial_delete == None or allow_serial_delete['value'] == False):
        self.notify_results(dict(
@@ -64,7 +64,7 @@ class SerialDeleted(BaseSerial):
        raise SerialNotDeletedError(f'Serial {serial_key} got exception while deleting')
 
   def do_delete(self, serial_key):
-    if self.event_data.soft:
+    if self.info.soft:
        self.tx.collection('Serial').update(dict(_key=serial_key, deleted=True))
     else:
        self.tx.collection('Serial').delete(serial_key)

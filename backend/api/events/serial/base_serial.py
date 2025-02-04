@@ -51,7 +51,7 @@ class BaseSerial(BaseEvent, ABC):
 
   def notify_results(self, notification):
     notification['subtopic'] = "serial-notification"
-    serial_event = copy.deepcopy(self.event_data)
+    serial_event = copy.deepcopy(self.info)
     if 'error' in notification:
       serial_event.event_type = "SERIAL_"+notification['notification']+" ("+notification['error']+")"
     else:
