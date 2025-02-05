@@ -62,7 +62,7 @@
       @hide="cardItem = null"
     >
       <!-- Transfer container or use as start position  -->
-      <TransferManualPositionAction
+      <PositionAction
         v-if="cardItem.type === 'position'"
         :position="cardItem"
         @select-contents="changeStartPosition"
@@ -92,7 +92,7 @@ import { useTransferStore } from '@/stores/transfer';
 import QuantitySelector from '@/components/QuantitySelector.vue';
 import SearchOrScan from '@/components/SearchOrScan.vue';
 import SlideUpCard from '@/components/SlideUpCard.vue';
-import TransferManualPositionAction from '@/components/transfer/TransferManualPositionAction.vue';
+import PositionAction from '@/components/PositionAction.vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -215,7 +215,7 @@ function cancel() {
 
 </script>
 
-<style scoped lang="sass">
+<style lang="sass">
 .content-card
   border-radius: 5px
 </style>

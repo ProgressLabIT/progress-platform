@@ -17,7 +17,8 @@ export default {
     transfer_lists: 'Liste',
     shipment_root: 'Spedizioni',
     shipment_manual: 'Nuovo',
-    shipment_lists: 'Liste'
+    shipment_lists: 'Liste',
+    inventory_root: 'Giacenze',
   },
   cancel: 'Annulla',
   close: 'Chiudi',

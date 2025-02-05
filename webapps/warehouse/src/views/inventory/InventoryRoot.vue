@@ -1,15 +1,8 @@
 <template>
-  <div id="q-app">
-    <div class="q-pa-md">
-      <div class="text-subtitle1 q-py-xl text-center">
-        Play with the drawer on bottom
-      </div>
-    </div>
-  </div>
-</template>
+  <q-page class="q-px-md q-pt-lg column fit">
 
-<script>
-export default {
-  name: 'InventoryRoot',
-};
-</script>
+
+    <router-view></router-view>
+
+  </q-page>
+</template>
