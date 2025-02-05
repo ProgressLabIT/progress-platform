@@ -56,10 +56,11 @@
 
       <template v-else>
         <div class="text-h6 q-mb-md">{{ $t('contents') }}</div>
+        <SearchOrScan v-model="filter" @update:model-value="loadPositionContents" />
         <q-scroll-area class="col q-mb-md">
           <q-list>
             <q-item
-            v-for="item in positionContents"
+            v-for="item in filteredContents"
             :key="item._key"
             :clickable="item.type !== 'serial'"
             class="content-card q-my-xs q-pa-md text-body1"
@@ -211,8 +212,8 @@ function searchPositions() {
   }
 }
 
-async function loadPositionContents(position_key) {
-  const response = await api.get(`/position/${position_key}`);
+async function loadPositionContents() {
+  const response = await api.get(`/position/${selectedPosition.value._key}`, { params: { search: filter.value } });
   positionContents.value = response.data;
 }
 
@@ -225,17 +226,25 @@ function selectRootPosition() {
 }
 
 function selectPosition(position) {
+  filter.value = '';
   selectedPosition.value = position;
   loadPositionContents(position._key);
   stage.value = 'contents';
 }
 
 function backToPositionSelection() {
+  filter.value = '';
   selectedPosition.value = null;
   positionContents.value = [];
   stage.value = 'position';
 }
 
+const filteredContents = computed(() => {
+  return positionContents.value.filter(item => {
+    const searchContext = item.code + ' ' + item.product_code;
+    return searchContext.toLowerCase().includes(filter.value.toLowerCase());
+  });
+});
 
 onMounted(() => {
   loadLatestUsedPositions();
@@ -278,7 +287,7 @@ function confirmQuantity() {
   })
   .then(() => {
     unselectItem();
-    loadPositionContents(selectedPosition.value._key);
+    loadPositionContents();
     Notify.create({
       message: 'Quantità aggiornata',
       color: 'theme-green',
