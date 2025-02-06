@@ -17,7 +17,7 @@
       <div class="col scroll">
         <div class="row full-width q-col-gutter-x-sm q-mt-md">
           <div v-for="pos in positionResults" :key="pos._key" class="col-auto">
-            <q-chip flat outline class="text-body1" @click="selectPosition(pos)">
+            <q-chip clickable outline class="text-body1" @click="selectPosition(pos)">
               {{ pos.code }}
             </q-chip>
           </div>
