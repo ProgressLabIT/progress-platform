@@ -160,6 +160,7 @@ function selectContents(position) {
 function selectContainer() {
   transfer.contents.push({
     type: 'position',
+    position_key: showContentTypeSelection.value._key,
     ...showContentTypeSelection.value
   });
   transfer.stage = 'destination';

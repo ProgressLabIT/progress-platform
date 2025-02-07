@@ -50,8 +50,8 @@
           class="bg-theme-blue q-px-md q-py-md q-mb-sm"
           @click="toggleItem(item)"
         >
-          <div class="text-h6 text-low">{{ item.product.code }}</div>
-          <div class="text-body1 highlight">{{ item.code }}</div>
+          <div class="text-h6 text-low">{{ item.product_code }}</div>
+          <div class="text-body1 highlight">{{ item.serial_code }}</div>
         </q-card>
       </div>
 
@@ -72,8 +72,8 @@
           class="surface2 q-px-md q-py-md q-mb-sm"
           @click="toggleItem(item)"
         >
-          <div class="text-h6 text-low">{{ item.product.code }}</div>
-          <div class="text-body1 highlight">{{ item.code }}</div>
+          <div class="text-h6 text-low">{{ item.product_code }}</div>
+          <div class="text-body1 highlight">{{ item.serial_code }}</div>
         </q-card>
       </div>
 
@@ -117,7 +117,6 @@ const { t } = useI18n();
 
 
 function search() {
-  console.log(filter.value);
   if (!filter.value) {
     reset();
     return;
@@ -130,22 +129,13 @@ function search() {
         message.value = 'no_results';
       } else {
         // Map inventory results to match expected model
-        const mappedResults = response.data.map(item => ({
-          _key: item.serial_key,
-          code: item.serial_code,
-          product: {
-            _key: item.product_key,
-            code: item.product_code
-          }
-        }));
-
-        if (mappedResults.length === 1 && mappedResults[0].code === filter.value) {
+        if (response.data.length === 1 && response.data[0].serial_code === filter.value) {
           // if only one result, toggle it and notify the user
-          const serial = mappedResults[0];
+          const serial = response.data[0];
           const action = toggleItem(serial);
           Notify.create({
             message: action === 'added' ? t('serial_added') : t('serial_removed'),
-            caption: serial.code,
+            caption: serial.serial_code,
             position: 'top',
             color: action === 'added' ? 'theme-green' : 'theme-orange',
             icon: action === 'added' ? 'mdi-check' : 'mdi-close',
@@ -155,7 +145,7 @@ function search() {
           reset();
         } else {
           // show search results
-          results.value = mappedResults;
+          results.value = response.data;
         }
       }
     })
@@ -173,7 +163,7 @@ function search() {
 const serialList = computed(() => {
   return [
     ...results.value
-    .filter(s => s.product.code.includes(productCodeFilter.value))
+    .filter(s => s.product_code.includes(productCodeFilter.value))
     .filter(item => !transfer.contents.find(serial => serial._key === item._key))
   ];
 });
@@ -189,7 +179,7 @@ function toggleItem(item) {
   const index = transfer.contents.findIndex(serial => serial._key === item._key);
   index !== -1 // if item is already in the list, remove it
     ? transfer.contents.splice(index, 1)
-    : transfer.contents.push({...item, type: 'serial'});
+    : transfer.contents.push({...item, type: 'serial', code: item.serial_code});
 
   return index === -1 ? 'added' : 'removed'
 }

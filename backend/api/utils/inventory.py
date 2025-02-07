@@ -21,27 +21,29 @@ class Queries:
 
   GET_POSITION_CONTENTS = """
     FOR v, e IN 1..1 INBOUND CONCAT('Position/', @position_key) is_in_position OPTIONS { uniqueVertices: "path" }
-    LET position = (IS_SAME_COLLECTION(Position, v) && v.fixed == false) ? MERGE({ type: 'position' }, KEEP(v, '_id', '_key', 'code')) : null
-    LET product = IS_SAME_COLLECTION(Product, v) ? MERGE({ type: 'product', quantity: e.quantity }, KEEP(v, '_id', '_key', 'code')) : null
+    LET position = (IS_SAME_COLLECTION(Position, v) && v.fixed == false) ? MERGE({ type: 'position' }, v) : null
+    LET product = IS_SAME_COLLECTION(Product, v) ? MERGE({ type: 'product', quantity: e.quantity }, v) : null
     LET serial = e.serial_key ? FIRST(
       FOR s IN Serial
       FILTER s._key == e.serial_key
-      RETURN {
-        type: 'serial',
-        _id: s._id,
-        _key: s._key,
-        code: s.code,
-        product_key: v._key,
-        product_code: v.code,
-        quantity: e.quantity
-      }
+      RETURN MERGE({ type: 'serial', product_code: v.code }, s)
     ): null
     LET result = NOT_NULL(serial, product, position)
     FILTER result != null && result.code != null
     FILTER @search ? (CONTAINS(LOWER(result.code), LOWER(@search)) || CONTAINS(LOWER(result.product_code), LOWER(@search))) : true
     SORT result.code ASC
     LIMIT @limit
-    RETURN result
+    RETURN {
+      _key: e._key,
+      type: result.type,
+      code: result.code,
+      position_key: result.type == 'position' ? v._key : null,
+      product_code: result.type == 'position' ? null : v.code,
+      product_key: result.type == 'position' ? null : v._key,
+      quantity: e.quantity,
+      serial_code: result.type == 'serial' ? serial.code : null,
+      serial_key: result.type == 'serial' ? serial._key : null,
+    }
   """
 
   INVENTORY_FILTER = """

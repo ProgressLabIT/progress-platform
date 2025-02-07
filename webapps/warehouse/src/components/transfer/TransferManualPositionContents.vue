@@ -179,7 +179,11 @@ function changeStartPosition() {
 }
 
 function transferContainer(item) {
-  transfer.contents.push(item);
+  transfer.contents.push({
+    ...item,
+    type: 'position',
+    position_key: item._key,
+  });
   cardItem.value = null;
 }
 

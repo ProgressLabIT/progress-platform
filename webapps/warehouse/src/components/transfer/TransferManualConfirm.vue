@@ -9,18 +9,14 @@
     </div>
     <q-scroll-area class="col q-mt-sm">
       <div class="row q-col-gutter-x-xs">
-        <!-- Show first 3 serial numbers as chips -->
         <div v-for="item in transfer.contents.sort((a, b) => a.code.localeCompare(b.code))" :key="item._key" class="col-auto">
-          <ContentChip :item="item" />
+          <ContentChip :item="item" :show-from-position="transfer.selectMode === 'product'" />
         </div>
-        <!-- Show count of remaining serials if more than 3 are selected -->
-        <!-- <div v-if="transfer.contents.length > 3" class="col-auto">
-          <q-chip color="theme-grey" class="text-body2">
-            +{{ transfer.contents.length - 3 }}
-          </q-chip>
-        </div> -->
       </div>
     </q-scroll-area>
+
+    <q-icon name="mdi-arrow-down-thin" size="lg" class="q-mt-md"/>
+
 
     <!-- Destination Position Section -->
     <div class="q-mb-md">
@@ -33,7 +29,7 @@
     <q-space />
 
     <!-- Action Buttons -->
-    <div class="row q-col-gutter-sm">
+    <div class="row q-col-gutter-sm col-auto">
       <div class="col-6">
         <q-btn
           color="grey"
@@ -57,7 +53,6 @@
 <script setup>
 import { Notify } from 'quasar';
 import { useStore } from 'vuex';
-import { api } from '@/boot/axios';
 import { useTransferStore } from '@/stores/transfer';
 import { sendEvent } from 'app/src/composables/event.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
@@ -67,77 +62,25 @@ const transfer = useTransferStore();
 const store = useStore();
 
 function saveTransfer() {
-  transfer.selectMode === 'serials'
-  ? confirmSerialMovements()
-  : confirmProductMovements();
-}
-
-function getOriginPositionKey(inventoryRecord) {
-  return inventoryRecord.path.slice(-1)[0].position_key
-}
-
-async function confirmSerialMovements() {
-  const session_data = store.state.session;
-  const now = timestamp();
-  const promises = [];
-
-  const params = new URLSearchParams()
-  transfer.contents.forEach(s => params.append('serial_keys', s._key));
-  const inventoryRecords = (await api.get('/inventory', { params })).data
-
-  for (const serial of transfer.contents) {
-    const inventoryRecord = inventoryRecords.find(r => r.serial_key == serial._key)
-    const positionFromKey = getOriginPositionKey(inventoryRecord)
-    promises.push(sendEvent({
-      event_type: 'ADD_MOVEMENT',
-      event_data: { movement: {
-        position_from: `Position/${positionFromKey}`,
-        position_to: `Position/${transfer.destinationPosition._key}`,
-        product_key: serial.product._key,
-        serial_key: serial._key,
-        qt_planned: 1,
-        qt_confirmed: 1,
-        status: 'completed',
-        type: 'transfer',
-        user_key: session_data.user._key,
-        start: now,
-        end: now,
-      }}
-    }))
-  }
-
-  Promise.all(promises).then(() => {
-    Notify.create({
-      message: 'Movimenti registrati',
-      position: 'top',
-      color: 'theme-green',
-      timeout: 1500,
-    });
-    transfer.$reset();
-  }).catch(err => {
-    console.log(err)
-  });
-}
-
-function getProductKey(item) {
-  switch(item.type) {
-    case 'product': return item._key;
-    case 'serial': return item.product_key;
-    case 'position': return null;
-  }
-}
-
-function confirmProductMovements() {
   let movements = [];
   const now = timestamp()
   const session_data = store.state.session;
 
   for (const item of transfer.contents) {
+    const position_from_key = item.type === 'position' ? item.position_key : (transfer.startPosition?._key ?? item.path.slice(-1)[0].position_key);
+    if (position_from_key === null) {
+      Notify.create({
+        message: 'Errore: movimenti con posizione di origine non disponibile',
+        position: 'top',
+        color: 'theme-red',
+      });
+      return;
+    }
     movements.push({
-      position_from: `Position/${item.type === 'position' ? item._key : transfer.startPosition._key}`,
+      position_from: `Position/${position_from_key}`,
       position_to: `Position/${transfer.destinationPosition._key}`,
-      product_key: getProductKey(item),
-      serial_key: item.type === 'serial' ? item._key : null,
+      product_key: item.type === 'position' ? null : item.product_key,
+      serial_key: item.type === 'serial' ? item.serial_key : null,
       qt_planned: item.type === 'product' ? item.quantity : 1,
       qt_confirmed: item.type === 'product' ? item.quantity : 1,
       status: 'completed',
