@@ -24,7 +24,7 @@
       <div class="text-body2">{{ $t('no_results')}}</div>
     </template>
 
-    <q-scroll-area v-else class="col scroll">
+    <q-scroll-area v-else class="col">
       <q-list>
         <q-item
           v-for="item in list"

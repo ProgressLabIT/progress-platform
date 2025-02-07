@@ -14,7 +14,7 @@
       label="Filtra per seriale o posizione"
     />
 
-    <q-scroll-area class="col scroll">
+    <q-scroll-area class="col">
       <q-list>
         <q-item
           v-for="item in shownInventory"

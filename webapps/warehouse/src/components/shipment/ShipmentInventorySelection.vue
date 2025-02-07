@@ -40,7 +40,7 @@
       <div class="text-body2">{{ $t('no_results')}}</div>
     </template>
 
-    <q-scroll-area v-else class="col scroll q-mt-md">
+    <q-scroll-area v-else class="col q-mt-md">
       <q-card
         v-for="item in shipment.inventory"
         :key="item._key"
