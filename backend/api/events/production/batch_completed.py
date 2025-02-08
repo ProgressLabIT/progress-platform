@@ -32,7 +32,6 @@ class BatchCompleted(BaseProductionEvent):
   from events.production.commons.serial import(
     convert_form_data,
     convert_batch_data,
-    _convert_field,
     _convert_form_field
   )
 

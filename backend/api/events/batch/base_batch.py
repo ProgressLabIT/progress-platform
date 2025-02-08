@@ -24,7 +24,6 @@ class BaseBatchEvent(BaseEvent, ABC):
   from events.production.commons.serial import (
     _create_batch_serial_records,
     _retrieve_serial_phases_data,
-    _convert_field,
     _convert_form_field,
   )
 
