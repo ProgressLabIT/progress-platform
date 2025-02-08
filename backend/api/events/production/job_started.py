@@ -7,7 +7,7 @@ from utils.db import model_to_db_dict
 from utils.traceability import Queries as TraceabilityQueries
 
 from events.base_event import BaseEvent
-from events.serial.serial_created import SerialCreated
+from events.serial.serial_created import SerialCreatedEvent
 from models.event import EventModel, EventInfoModel
 from models.event import EventType
 from events.event_manager import EventManager

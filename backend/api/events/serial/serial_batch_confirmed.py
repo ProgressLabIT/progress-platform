@@ -1,4 +1,4 @@
-from events.serial.base_serial import BaseSerial, BaseSerialModel
+from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
 from models.event import EventModel
 from models.event import EventType
 from models.serial import Serial, SerialNotificationType, SerialNotificationErrorCode
@@ -8,14 +8,14 @@ from utils.db import model_to_db_dict
 from utils.dt import timestamp
 from utils.counter import _generate_counter
 from utils.serial import Queries
-from events.serial.serial_created import SerialCreated
+
 class SerialBatchConfirmedModel(BaseSerialModel):
   event_type: str = EventType.SERIAL_BATCH_CONFIRMED.name
   batch_execution_data: Any | None = None
   batch_key: str
   job: Any
 
-class SerialBatchConfirmed(BaseSerial):
+class SerialBatchConfirmed(BaseSerialEvent):
   event_data: SerialBatchConfirmedModel
 
   def set_model(self, base_model: EventModel):

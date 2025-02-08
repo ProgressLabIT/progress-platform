@@ -1,4 +1,4 @@
-from events.serial.base_serial import BaseSerial, BaseSerialModel
+from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
 from models.serial import Serial, SerialNotificationType, SerialNotificationErrorCode
 import traceback
 from models.event import EventModel
@@ -18,7 +18,7 @@ class SerialBookedModel(BaseSerialModel):
   batch_key: str
   job: Any
 
-class SerialBooked(BaseSerial):
+class SerialBooked(BaseSerialEvent):
   event_data: SerialBookedModel
 
   def set_model(self, base_model: EventModel):

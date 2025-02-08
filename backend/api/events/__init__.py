@@ -21,8 +21,8 @@ from events.admin.batch_canceled import BatchCanceled
 from events.admin.job_reset import JobReset
 
 #SERIAL EVENTS
-from events.serial.base_serial import BaseSerial
-from events.serial.serial_created import SerialCreated
+from events.serial.base_serial import BaseSerialEvent
+from events.serial.serial_created import SerialCreatedEvent
 from events.serial.serial_updated import SerialUpdated
 from events.serial.serial_deleted import SerialDeleted
 from events.serial.serial_linked import SerialLinked

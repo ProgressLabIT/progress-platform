@@ -1,4 +1,4 @@
-from events.serial.base_serial import BaseSerial, BaseSerialModel
+from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
 from models.serial import SerialLink
 import traceback
 from models.serial import SerialNotificationType, SerialNotificationErrorCode
@@ -11,7 +11,7 @@ class SerialLinkedModel(BaseSerialModel):
   event_type: str = EventType.SERIAL_LINKED.name
   serial_link_data: list[SerialLink] | None = None
 
-class SerialLinked(BaseSerial):
+class SerialLinked(BaseSerialEvent):
   event_data: SerialLinkedModel
 
   def set_model(self, base_model: EventModel):

@@ -1,4 +1,4 @@
-from events.serial.base_serial import BaseSerial, BaseSerialModel
+from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
 from models.serial import  SerialNotificationType, SerialNotificationErrorCode
 import traceback
 from models.event import EventType
@@ -9,7 +9,7 @@ from models.event import EventModel
 class SerialUpdatedModel(BaseSerialModel):
   event_type: str = EventType.SERIAL_UPDATED.name
 
-class SerialUpdated(BaseSerial):
+class SerialUpdated(BaseSerialEvent):
   event_data: SerialUpdatedModel
 
   def set_model(self, base_model: EventModel):

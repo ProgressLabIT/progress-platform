@@ -45,7 +45,6 @@ class BaseProductionEvent(BaseEvent):
 
   from events.production.commons.serial import(
     send_to_consumer,
-    _create_batch_serial_records,
     _retrieve_serial_phases_data,
     _convert_form_field,
   )

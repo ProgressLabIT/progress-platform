@@ -1,25 +1,29 @@
-from typing import Any, Set
-from events.base_event import BaseEvent
-from models.event import EventModel
-from abc import ABC, abstractmethod
-from managers.notification_manager import NotificationManager
-
-from utils.serial import Queries
 import copy
 import json
+import traceback
+from abc import ABC, abstractmethod
+from typing import Any, Set
+
+from fastapi import HTTPException
+
+from events.base_event import BaseEvent
+from managers.notification_manager import NotificationManager
+from models.event import EventInfoModel
 from models.serial import Serial, SerialNotificationType
-
 from utils.dt import timestamp
+from utils.kafka.kafka_producer import KafkaProducer
+from utils.process import Queries as ProcessQueries
+from utils.serial import Queries
 
-class BaseSerialModel(EventModel):
+
+class BaseSerialModel(EventInfoModel):
    # Traceability fields
    serial_key: Any | None = None
    serial_data: Any | None = None
    batch_serials: Set[str] | None = None # prevent duplicated entries from client
 
 
-class BaseSerial(BaseEvent, ABC):
-  event_data: BaseSerialModel
+class BaseSerialEvent(BaseEvent, ABC):
 
   def get_write_collections(self):
     return list(set(super().get_write_collections() + [
@@ -38,13 +42,6 @@ class BaseSerial(BaseEvent, ABC):
         'Counter'
       ]))
 
-  @abstractmethod
-  def apply(self):
-    pass
-
-  @abstractmethod
-  def set_model(self, base_model: EventModel):
-    pass
 
   def can_be_conflated(self, notification_type):
      return notification_type not in [SerialNotificationType.ERROR]
@@ -76,3 +73,5 @@ class BaseSerial(BaseEvent, ABC):
         return len([Serial(**t) for t in cursor])<=0
      except:
       return False
+
+

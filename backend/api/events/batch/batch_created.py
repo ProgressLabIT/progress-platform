@@ -23,6 +23,7 @@ class BatchCreatedEvent(BaseBatchEvent):
       'Job'
     ]))
 
+
   def apply(self):
     self._get_job_data()
 

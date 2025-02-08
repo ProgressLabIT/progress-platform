@@ -1,4 +1,4 @@
-from events.serial.base_serial import BaseSerial, BaseSerialModel
+from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
 from typing import Any
 from utils.db import db, model_to_db_dict
 from utils.dt import timestamp
@@ -17,7 +17,7 @@ class SerialReleasedModel(BaseSerialModel):
   batch_key: str
 
 
-class SerialReleased(BaseSerial):
+class SerialReleased(BaseSerialEvent):
   event_data: SerialReleasedModel
 
   def set_model(self, base_model: EventModel):

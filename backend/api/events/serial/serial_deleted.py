@@ -1,4 +1,4 @@
-from events.serial.base_serial import BaseSerial, BaseSerialModel
+from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
 from models.serial import SerialNotificationType, SerialNotificationErrorCode
 from utils.serial import Queries
 import traceback
@@ -14,7 +14,7 @@ class SerialDeletedModel(BaseSerialModel):
   soft: bool = True
   delete_children: bool | None = False
 
-class SerialDeleted(BaseSerial):
+class SerialDeleted(BaseSerialEvent):
   event_data: SerialDeletedModel
 
   def set_model(self, base_model: EventModel):
