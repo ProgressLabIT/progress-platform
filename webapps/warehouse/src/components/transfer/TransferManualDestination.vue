@@ -1,5 +1,5 @@
 <template>
-  <div class="column col q-gutter-y-md">
+  <div class="column col q-gutter-y-sm">
     <!-- Display selected serials when in serial mode -->
     <div class="text-h6">
       {{ $t('contents') }}
@@ -13,6 +13,7 @@
         v-for="item in transfer.contents.slice(0,3)"
         :key="item._key"
         :item="item"
+        :show-from-position="transfer.selectMode === 'product'"
       />
       <!-- Show count of remaining serials if more than 3 are selected -->
       <div v-if="transfer.contents.length > 3" class="col-auto">
@@ -28,13 +29,13 @@
     <div class="text-h3 q-mt-lg">{{ $t(list.message) }}</div>
     <SearchOrScan v-model="filter" @update:model-value="searchPositions" />
 
-    <div class="text-h6">POSIZIONI {{ list.type }}</div>
+    <div class="text-h6 q-mt-md">POSIZIONI {{ list.type }}</div>
     <div class="col scroll">
-      <div class="row full-width q-col-gutter-x-sm">
+      <div class="row q-col-gutter-sm">
         <div v-for="pos in list.items" :key="pos._key" class="col-auto">
-          <q-chip clickable outline class="text-body1" @click="setDestination(pos)">
+          <q-card bordered class="text-body2 q-pa-sm transparent" @click="setDestination(pos)">
             {{ pos.code }}
-          </q-chip>
+          </q-card>
         </div>
       </div>
     </div>
@@ -47,7 +48,7 @@
       @click="showCreateContainerBottomSheet = true"
     />
     <q-btn
-      color="primary"
+      color="theme-grey"
       :label="$t('back')"
       @click="transfer.stage = 'start'"
     />
@@ -99,16 +100,24 @@ const list = computed(() => {
     else {
       return {
         type: 'RECENTI',
-        items: transfer.recentPositions.to.filter(pos => pos._key !== transfer.startPosition?._key),
+        items: transfer.recentPositions.to.filter(pos => !startPositionKeys.value.includes(pos._key)),
         message: 'scan_destination_position'
       };
     }
   }
   return {
     type: 'DISPONIBILI',
-    items: results.value.filter(pos => pos._key !== transfer.startPosition?._key),
+    items: results.value,
     message: 'scan_destination_position'
   };
+});
+
+function getStartPositionKey(item) {
+  return item.type === 'position' ? item.position_key : (transfer.startPosition?._key ?? item.path.slice(-1)[0].position_key);
+}
+
+const startPositionKeys = computed(() => {
+  return [...new Set(transfer.contents.map(getStartPositionKey)), transfer.startPosition?._key];
 });
 
 function searchPositions() {
@@ -117,15 +126,16 @@ function searchPositions() {
       params: { search: filter.value, }
     })
     .then((response) => {
-      if (response.data.length === 0) {
+      const resultSet = response.data.filter(pos => !startPositionKeys.value.includes(pos._key));
+      if (resultSet.length === 0) {
         results.value = [];
-      } else if (response.data.length === 1 && response.data[0].code === filter.value) {
+      } else if (resultSet.length === 1 && resultSet[0].code === filter.value) {
         // if only one result, toggle it and notify the user
-        setDestination(response.data[0]);
+        setDestination(resultSet[0]);
         reset();
       } else {
         // show search results
-        results.value = response.data;
+        results.value = resultSet;
       }
     })
     .catch(error => {

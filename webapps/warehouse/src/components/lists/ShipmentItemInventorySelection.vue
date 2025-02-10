@@ -40,7 +40,7 @@
         @update:model-value="filterSerials"
       />
 
-      <q-scroll-area class="col scroll">
+      <q-scroll-area class="col">
         <q-list>
           <q-item
             v-for="item in shownSerials"
@@ -83,7 +83,7 @@
         @update:model-value="filterInventory"
       />
 
-      <q-scroll-area class="col scroll">
+      <q-scroll-area class="col">
         <q-list>
           <q-item
             v-for="item in shownInventory"

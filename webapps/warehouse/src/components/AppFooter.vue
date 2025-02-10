@@ -56,8 +56,7 @@
               :icon="tab_routes[tab]"
               :label="$t(`views.${tab}`)"
               @click="forceHide"
-            >
-            </q-route-tab>
+            />
           </q-tabs>
         </q-card-section>
       </q-card>

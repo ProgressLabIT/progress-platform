@@ -47,7 +47,7 @@
       :model-value="showContentTypeSelection !== null"
       @hide="showContentTypeSelection = null"
     >
-      <TransferManualPositionAction
+      <PositionAction
         :position="showContentTypeSelection"
         @select-container="selectContainer"
         @select-contents="selectContents(showContentTypeSelection)"
@@ -63,7 +63,7 @@ import { useI18n } from 'vue-i18n';
 import { api } from '@/boot/axios';
 import SearchOrScan from '@/components/SearchOrScan.vue';
 import SlideUpCard from '@/components/SlideUpCard.vue';
-import TransferManualPositionAction from '@/components/transfer/TransferManualPositionAction.vue';
+import PositionAction from '@/components/PositionAction.vue';
 import { useTransferStore } from '@/stores/transfer';
 import { useRouter } from 'vue-router';
 
@@ -160,6 +160,7 @@ function selectContents(position) {
 function selectContainer() {
   transfer.contents.push({
     type: 'position',
+    position_key: showContentTypeSelection.value._key,
     ...showContentTypeSelection.value
   });
   transfer.stage = 'destination';

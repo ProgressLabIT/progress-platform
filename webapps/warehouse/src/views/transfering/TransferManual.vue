@@ -4,29 +4,47 @@
     <template v-if="transfer.selectMode === undefined">
       <SlideUpCard
         :model-value="true"
-        height="20vh"
         @hide="router.push({ name: 'TransferRoot'})"
       >
-        <q-btn
-          class="full-width col"
-          :label="$t('start_from_serial')"
-          color="primary"
-          @click="transfer.selectMode = 'serials'"
-        />
-        <div class="q-my-sm"></div>
-        <q-btn
-          class="full-width col"
-          :label="$t('start_from_position')"
-          color="primary"
-          @click="transfer.selectMode = 'position'"
-        />
+        <div class="column full-height q-gutter-y-md">
+          <div class="text-h3">
+            Da dove vuoi iniziare?
+          </div>
+          <q-btn
+            class="full-width"
+            :label="$t('product')"
+            color="theme-blue"
+            @click="transfer.selectMode = 'product'"
+          />
+          <q-btn
+            class="full-width"
+            :label="$t('serial', 2)"
+            color="theme-green"
+            @click="transfer.selectMode = 'serials'"
+          />
+          <q-btn
+            class="full-width"
+            :label="$t('position')"
+            color="theme-grey"
+            @click="transfer.selectMode = 'position'"
+          />
+        </div>
       </SlideUpCard>
     </template>
 
     <template v-else>
-      <TransferManualFromPosition v-if="transfer.stage === 'start' && transfer.selectMode === 'position'" />
-      <TransferManualSerials v-if="transfer.stage === 'start' && transfer.selectMode === 'serials'" />
-      <TransferManualContents v-if="transfer.stage === 'contents' && transfer.selectMode === 'position'" />
+      <template v-if="transfer.stage === 'start'">
+        <ProductSearch v-if="transfer.selectMode === 'product'" @select="selectProduct" />
+        <TransferManualSerials v-if="transfer.selectMode === 'serials'" />
+        <TransferManualFromPosition v-if="transfer.selectMode === 'position'" />
+      </template>
+
+      <template v-if="transfer.stage === 'contents'">
+        <TransferManualProductInventory v-if="transfer.selectMode === 'product'" />
+        <TransferManualPositionContents v-if="transfer.selectMode === 'position'" />
+      </template>
+
+      <!-- Destination -->
       <TransferManualDestination v-if="transfer.stage === 'destination'"/>
       <TransferManualConfirm v-if="transfer.stage === 'confirm'"/>
     </template>
@@ -40,14 +58,21 @@ import TransferManualFromPosition from '@/components/transfer/TransferManualFrom
 import TransferManualSerials from '@/components/transfer/TransferManualSerials.vue';
 import TransferManualDestination from '@/components/transfer/TransferManualDestination.vue';
 import TransferManualConfirm from '@/components/transfer/TransferManualConfirm.vue';
-import TransferManualContents from '@/components/transfer/TransferManualContents.vue';
+import TransferManualProductInventory from '@/components/transfer/TransferManualProductInventory.vue';
+import TransferManualPositionContents from '@/components/transfer/TransferManualPositionContents.vue';
 import { useTransferStore } from '@/stores/transfer';
 import SlideUpCard from '@/components/SlideUpCard.vue';
 import { useRouter } from 'vue-router';
+import ProductSearch from 'app/src/components/ProductSearch.vue';
 
 const router = useRouter();
 
 const transfer = useTransferStore();
+
+const selectProduct = (product) => {
+  transfer.product = product;
+  transfer.stage = 'contents';
+};
 
 onBeforeRouteLeave(() => {
   transfer.$reset();
