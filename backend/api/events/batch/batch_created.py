@@ -14,15 +14,6 @@ class BatchCreatedEvent(BaseBatchEvent):
   def get_event_type() -> EventType:
     return EventType.BATCH_CREATED
 
-  @property
-  def tx_collections(self):
-    return list(set(super().tx_collections + [
-      'Batch',
-      'batch_serial',
-      'Event',
-      'Job'
-    ]))
-
 
   def apply(self):
     self._get_job_data()

@@ -13,11 +13,6 @@ class WorkSessionStartedEvent(BaseWorkSession):
   def get_event_type(cls):
     return EventType.WORK_SESSION_STARTED
 
-  @property
-  def tx_collections(self):
-    return list(set(super().tx_collections + [
-      'WorkSession',
-    ]))
 
   def apply(self):
       # Close unallowed parallel work sessions

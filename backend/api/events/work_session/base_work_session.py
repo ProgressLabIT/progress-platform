@@ -29,20 +29,21 @@ class BaseWorkSession(BaseEvent, ABC):
     _get_job_data,
   )
 
-  def get_write_collections(self):
-    return list(set(super().get_write_collections() + [
-        'Batch',
-        'batch_serial',
-        'Event',
-        'Job',
-        'Queue',
-        'Serial',
-        'StepExecutionData',
-        'wip',
-        'WorkOrder',
-        'WorkSession',
-        'contains',
-        'Config',
-        'Counter'
-      ]))
+  @property
+  def tx_collections(cls):
+    return [
+      'Batch',
+      'batch_serial',
+      'Event',
+      'Job',
+      'Queue',
+      'Serial',
+      'StepExecutionData',
+      'wip',
+      'WorkOrder',
+      'WorkSession',
+      'contains',
+      'Config',
+      'Counter'
+    ]
 

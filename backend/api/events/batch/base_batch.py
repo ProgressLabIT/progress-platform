@@ -30,8 +30,8 @@ class BaseBatchEvent(BaseEvent, ABC):
   )
 
   @property
-  def tx_collections(self):
-    return list(set(super().tx_collections + [
+  def tx_collections(cls):
+    return [
       'Batch',
       'batch_serial',
       'Event',
@@ -45,7 +45,7 @@ class BaseBatchEvent(BaseEvent, ABC):
       'contains',
       'Config',
       'Counter'
-    ]))
+    ]
 
   @abstractmethod
   def apply(self):
