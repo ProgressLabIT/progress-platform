@@ -49,7 +49,7 @@ from events.production.job_started import JobStartedEvent
 from events.production.job_paused import JobPausedEvent
 from events.production.job_paused_offline import JobPausedOffline
 from events.production.job_resumed import JobResumed
-from events.production.job_back_online import JobBackOnline
+from events.production.job_back_online import JobBackOnlineEvent
 from events.production.active_batch_changed import ActiveBatchChanged
 from events.production.step_completed import StepCompleted
 from events.production.step_edited import StepEdited

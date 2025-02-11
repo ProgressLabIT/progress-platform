@@ -1,15 +1,16 @@
 from events.production.base_production import BaseProductionEvent, BaseProductionModel
 from utils.dt import timestamp
-from models.event import EventModel
+from models.event import EventModel, EventInfoModel
 from models.event import EventType
-class JobBackOnlineModel(BaseProductionModel):
-  event_type: str = EventType.JOB_BACK_ONLINE.name
 
-class JobBackOnline(BaseProductionEvent):
-  event_data: JobBackOnlineModel
 
-  def set_model(self, base_model: EventModel):
-    self.info = JobBackOnlineModel(**base_model.model_dump())
+class JobBackOnlineEvent(BaseProductionEvent):
+  class InfoModel(EventInfoModel):
+    job_key: str
+
+  @classmethod
+  def get_event_type(cls):
+    return EventType.JOB_BACK_ONLINE
 
   def apply(self):
     updated_work_session = dict(
