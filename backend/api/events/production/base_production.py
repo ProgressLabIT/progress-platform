@@ -38,8 +38,8 @@ class BaseProductionModel(EventModel):
 
 class BaseProductionEvent(BaseEvent):
 
-  @abstractmethod
-  def apply(self):
+
+  def post_processing(self):
     self.update_job_last_online()
     self.update_work_order()
 

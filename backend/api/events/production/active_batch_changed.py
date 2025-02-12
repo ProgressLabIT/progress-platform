@@ -11,13 +11,7 @@ class ActiveBatchChangedModel(BaseProductionModel):
   ...
 
 class ActiveBatchChanged(BaseProductionEvent):
-  event_data: ActiveBatchChangedModel
 
-  def set_model(self, base_model: EventModel):
-    self.info = ActiveBatchChangedModel(**base_model.model_dump())
-
-  def post_processing(self):
-    self.update_job_last_online()
 
 
   def apply(self):

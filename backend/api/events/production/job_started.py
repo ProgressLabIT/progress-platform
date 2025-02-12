@@ -91,5 +91,4 @@ class JobStartedEvent(BaseProductionEvent):
       job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.job.key)).next()
     )
 
-    super().apply() # post processing
 

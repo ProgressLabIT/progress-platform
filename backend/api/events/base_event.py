@@ -42,15 +42,15 @@ class BaseEvent(ABC):
   @classmethod
   def get_event_model(cls) -> type[BaseModel]:
     """
-    Returns the event model used to validate event data. Must be implemented by the subclass,
-    defining an InfoModel class that inherits from EventInfoModel.
+    Returns the event model used to validate event data.
+    Each subclass must define an InfoModel class that inherits from EventInfoModel.
     """
     return cls.InfoModel
 
   @classmethod
   def create_as_child(cls, context: EventModel, new_event_data: 'cls.InfoModel') -> Self:
     """
-    Create a child event from an existing event.
+    Create a child event from an existing event, passing event group id, transaction, and user/session data.
     """
     info = context.info.model_dump()
     info['primary'] = False
@@ -68,6 +68,9 @@ class BaseEvent(ABC):
     # TODO: Consider always storing events in the database first, and then processing them to remove the need for this property and dual logic
     return False
 
+  # ================================
+  # INITIALIZATION METHOD
+  # ================================
   def __init__(self, info, tx: TransactionDatabase | None = None):
     self.tx = tx
     self.response = None
@@ -85,7 +88,24 @@ class BaseEvent(ABC):
     # Validate and store event specific data. Will raise ValueError if validation fails
     self.info = self.get_event_model()(**info)
 
+  # ================================
+  # PRE/POST PROCESSING METHODS
+  # ================================
+  def pre_processing(self):
+    """
+    Can be overridden by subclasses to perform any pre-processing steps.
+    """
+    pass
 
+  def post_processing(self):
+    """
+    Can be overridden by subclasses to perform any post-processing steps.
+    """
+    pass
+
+  # ================================
+  # STORE EVENT METHOD
+  # ================================
   def store_event(self):
     """
     Store the event in the database.
@@ -97,6 +117,9 @@ class BaseEvent(ABC):
 
     self.event_key = self.tx.collection('Event').insert(record, overwrite=True)['_key']
 
+  # ================================
+  # SAVE EVENT METHOD
+  # ================================
   def save(self):
     """
     Save the event to the database and handle transaction.
@@ -111,8 +134,14 @@ class BaseEvent(ABC):
       if self.event_first:
         self.store_event()
 
+      # Perform any pre-processing steps
+      self.pre_processing()
+
       # Apply updates to global application state based on specific event
       self.apply()
+
+      # Perform any post-processing steps
+      self.post_processing()
 
       # Re-save event with new data added
       self.store_event()

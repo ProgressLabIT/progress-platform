@@ -23,6 +23,3 @@ class JobPausedEvent(BaseProductionEvent):
     )
     updated_job = self.tx.collection('Job').update(update_data, check_rev=False, return_new=True)['new']
     self.job = Job(**updated_job)
-
-    # update job last online and work order
-    super().apply()

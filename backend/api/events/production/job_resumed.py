@@ -55,6 +55,3 @@ class JobResumed(BaseProductionEvent):
       batch_data = self.get_batch_execution_data(),
       job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.info.job_key)).next()
     )
-
-    # update job last online and work order
-    super().apply()
