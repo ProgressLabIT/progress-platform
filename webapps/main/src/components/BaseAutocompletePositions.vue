@@ -3,6 +3,7 @@
     use-input
     filled
     :label="label"
+    :disable="disable"
     :dense="dense"
     :clearable="clearable"
     :options="options"
@@ -60,6 +61,11 @@ export default {
     label: {
       type: String,
       required: true,
+    },
+
+    disable: {
+      type: Boolean,
+      default: false,
     },
   },
 

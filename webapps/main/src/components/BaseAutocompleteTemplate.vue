@@ -3,13 +3,14 @@
     :model-value="value"
     :emit-value="keyOnly"
     :map-options="keyOnly"
+    :disable="disable"
     :options="
       options.filter(
         (option) => !selected.some(({ _key }) => _key === option._key),
       )
     "
     :option-value="keyOnly ? '_key' : null"
-    :option-label="(item) => $capitalize(item.name)"
+    :option-label="(item) => item?.name"
     :loading="isLoading"
     use-input
     input-debounce="100"
@@ -72,6 +73,11 @@ const props = defineProps({
   contextKey: {
     type: String,
     default: undefined,
+  },
+
+  disable: {
+    type: Boolean,
+    default: false,
   },
 });
 

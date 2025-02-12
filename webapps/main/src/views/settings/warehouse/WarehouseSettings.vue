@@ -1,49 +1,84 @@
 <template>
   <LoadingSignal v-if="isLoading" />
-  <div v-else class="row full-height">
-    <div class="col-3 full-height column">
-      <div
-        class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
-      >
-        <div class="col-6">
-          {{ $t('settings.section') }}
-        </div>
-      </div>
+  <SettingsSection
+    v-else
+    title="Warehouse Settings"
+    v-slot="{ editMode }"
+    :saveFn="save"
+    @cancel="cancel"
+  >
+    <div class="column q-gutter-y-md">
+      <q-toggle
+        v-model="configModel.enableInventoryManagement"
+        :label="$t('settings.enableInventoryManagement')"
+        :disable="!editMode"
+    />
 
-      <q-separator />
-
-      <!-- TODO: Use q-list ? -->
-      <div class="scroll col">
-        <div
-          v-for="(section, index) in sections"
-          :key="section"
-          class="pointer q-px-lg q-py-xs medium"
-          :class="{
-            'alternate-row': index % 2 === 0,
-            'bg-blue-backdrop': section === $route.name,
-          }"
-          style="white-space: nowrap"
-          @click="$router.push({ name: section })"
-        >
-          {{ $capitalizeAll($t(`views.${section}`)) }}
-        </div>
-      </div>
+    <template v-if="configModel.enableInventoryManagement">
+      <!-- Default production position -->
+      <BaseAutocompletePositions
+        :label="$t('settings.defaultProductionPosition')"
+        :value="configModel.defaultProductionPosition"
+        key-only
+        :disable="!editMode"
+        @select="(position) => (configModel.defaultProductionPosition = position)"
+      />
+      <!-- Default consumption position -->
+      <BaseAutocompletePositions
+        :label="$t('settings.defaultConsumptionPosition')"
+        :value="configModel.defaultConsumptionPosition"
+        key-only
+        :disable="!editMode"
+        @select="(position) => (configModel.defaultConsumptionPosition = position)"
+      />
+      <!-- Product label template -->
+      <BaseAutocompleteTemplate
+        :label="$t('settings.productLabelTemplate')"
+        :value="configModel.productLabelTemplate"
+        key-only
+        :disable="!editMode"
+        :dense="false"
+        @select="(template) => (configModel.productLabelTemplate = template)"
+      />
+      <!-- Position label template -->
+      <BaseAutocompleteTemplate
+        :label="$t('settings.positionLabelTemplate')"
+        :value="configModel.positionLabelTemplate"
+        key-only
+        :dense="false"
+        :disable="!editMode"
+          @select="(template) => (configModel.positionLabelTemplate = template)"
+        />
+      </template>
     </div>
-
-    <q-separator vertical />
-
-    <div class="col full-height">
-      <router-view />
-    </div>
-  </div>
+  </SettingsSection>
 </template>
 
 <script setup>
-import { storeToRefs } from 'pinia';
+import { cloneDeep } from 'lodash';
+import { ref } from 'vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import { useConfigStore } from '@/stores/config';
+import SettingsSection from '@/components/SettingsSection.vue';
+import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
+import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
 
-const sections = ['labelPrintTemplates'];
+const { isLoading, config, updateAppConfig } = useConfigStore();
 
-const { isLoading } = storeToRefs(useConfigStore());
+const configModel = ref(cloneDeep(config));
+
+function cancel() {
+  configModel.value = cloneDeep(config);
+}
+
+async function save() {
+  await updateAppConfig({
+    enableInventoryManagement: configModel.value.enableInventoryManagement,
+    defaultProductionPosition: configModel.value.defaultProductionPosition,
+    defaultConsumptionPosition: configModel.value.defaultConsumptionPosition,
+    productLabelTemplate: configModel.value.productLabelTemplate,
+    positionLabelTemplate: configModel.value.positionLabelTemplate,
+  });
+}
+
 </script>

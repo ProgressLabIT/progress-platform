@@ -2,31 +2,30 @@ const adminRoutes = [
   {
     path: 'admin',
     name: 'adminPanel',
-    component: () => import('@/views/AdminSection.vue'),
+    component: () => import ('@/views/AdminSection.vue'),
     redirect: { name: 'generalSettings' },
     meta: { scope: 'admin', screen_title: 'Impostazioni' },
     children: [
       {
         path: 'general',
         name: 'generalSettings',
-        component: () => import('@/views/settings/GeneralSettings.vue'),
+        component: () => import ('@/views/settings/GeneralSettings.vue'),
         redirect: { name: 'companyDetails' },
         children: [
           {
             path: 'company',
             name: 'companyDetails',
-            component: () => import('@/views/settings/CompanyDetails.vue'),
+            component: () => import ('@/views/settings/CompanyDetails.vue'),
           },
           {
             path: 'default-phase',
             name: 'defaultOperationParameters',
-            component: () =>
-              import('@/views/settings/DefaultOperationParams.vue'),
+            component: () => import ('@/views/settings/DefaultOperationParams.vue'),
           },
           {
             path: 'serial-field',
             name: 'serialFieldSettings',
-            component: () => import('@/views/settings/SerialFieldSettings.vue'),
+            component: () => import ('@/views/settings/SerialFieldSettings.vue'),
             children: [
               {
                 path: ':field_key',
@@ -35,9 +34,14 @@ const adminRoutes = [
             ],
           },
           {
+            path: 'warehouse',
+            name: 'warehouseSettings',
+            component: () => import ('@/views/settings/warehouse/WarehouseSettings.vue'),
+          },
+          {
             path: 'api-token',
             name: 'apiTokenSettings',
-            component: () => import('@/views/settings/APITokenSettings.vue'),
+            component: () => import ('@/views/settings/APITokenSettings.vue'),
           },
           {
             path: 'print-templates',
@@ -47,86 +51,86 @@ const adminRoutes = [
           {
             path: 'printers',
             name: 'printersLibrary',
-            component: () => import('@/views/settings/printers/PrintersLibrary.vue'),
+            component: () => import ('@/views/settings/printers/PrintersLibrary.vue'),
           },
           {
             path: 'other',
             name: 'otherSettings',
-            component: () => import('@/views/settings/OtherSettings.vue'),
+            component: () => import ('@/views/settings/OtherSettings.vue'),
           },
         ],
       },
       {
         path: 'users',
         name: 'userLibrary',
-        component: () => import('@/views/UserLibrary.vue'),
+        component: () => import ('@/views/UserLibrary.vue'),
         children: [
           {
             path: ':user_key',
             name: 'userInfo',
-            component: () => import('@/components/UserInfoScreen.vue'),
+            component: () => import ('@/components/UserInfoScreen.vue'),
             props: true,
           },
           {
             path: 'new',
             name: 'newUser',
-            component: () => import('@/views/UserNew.vue'),
+            component: () => import ('@/views/UserNew.vue'),
           },
           {
             path: ':user_key/reset-password',
             name: 'passwordReset',
-            component: () => import('@/views/UserPasswordReset.vue'),
+            component: () => import ('@/views/UserPasswordReset.vue'),
           },
           {
             path: ':user_key/delete',
             name: 'userDelete',
-            component: () => import('@/views/UserDelete.vue'),
+            component: () => import ('@/views/UserDelete.vue'),
           },
         ],
       },
       {
         path: 'operations',
         name: 'operationLibrary',
-        component: () => import('@/views/OperationLibrary.vue'),
+        component: () => import ('@/views/OperationLibrary.vue'),
         children: [
           {
             path: ':operation_key',
             name: 'operationDetail',
-            component: () => import('@/views/OperationDetail.vue'),
+            component: () => import ('@/views/OperationDetail.vue'),
             props: true,
           },
           {
             path: 'new',
             name: 'operationNew',
-            component: () => import('@/views/OperationNew.vue'),
+            component: () => import ('@/views/OperationNew.vue'),
           },
           {
             path: ':operation_key/delete',
             name: 'operationDelete',
-            component: () => import('@/views/OperationDelete.vue'),
+            component: () => import ('@/views/OperationDelete.vue'),
           },
         ],
       },
       {
         path: 'issue-types',
         name: 'issueTypeLibrary',
-        component: () => import('@/views/IssueTypeLibrary.vue'),
+        component: () => import ('@/views/IssueTypeLibrary.vue'),
         children: [
           {
             path: ':issueTypeKey',
             name: 'issueTypeDetail',
-            component: () => import('@/views/IssueTypeDetail.vue'),
+            component: () => import ('@/views/IssueTypeDetail.vue'),
             props: true,
           },
           {
             path: 'new',
             name: 'issueTypeNew',
-            component: () => import('@/views/IssueTypeNew.vue'),
+            component: () => import ('@/views/IssueTypeNew.vue'),
           },
           {
             path: ':issueTypeKey/delete',
             name: 'issueTypeDelete',
-            component: () => import('@/views/IssueTypeDelete.vue'),
+            component: () => import ('@/views/IssueTypeDelete.vue'),
             props: true,
           },
         ],
@@ -134,12 +138,12 @@ const adminRoutes = [
       {
         path: 'field',
         name: 'formFieldLibrary',
-        component: () => import('@/views/FormFieldLibrary.vue'),
+        component: () => import ('@/views/FormFieldLibrary.vue'),
         children: [
           {
             path: ':field_key',
             name: 'formFieldDetail',
-            component: () => import('@/views/FormFieldDetail.vue'),
+            component: () => import ('@/views/FormFieldDetail.vue'),
             props: true,
           },
         ],
@@ -147,13 +151,13 @@ const adminRoutes = [
       {
         path: 'counter',
         name: 'counterLibrary',
-        component: () => import('@/views/settings/counter/CounterLibrary.vue'),
+        component: () => import ('@/views/settings/counter/CounterLibrary.vue'),
         children: [
           {
             path: ':counter_key',
             name: 'counterDetail',
             component: () =>
-              import('@/views/settings/counter/CounterDetail.vue'),
+              import ('@/views/settings/counter/CounterDetail.vue'),
             props: true,
           },
         ],
@@ -161,22 +165,7 @@ const adminRoutes = [
       {
         path: 'flows',
         name: 'flowLibrary',
-        component: () => import('@/views/FlowLibrary.vue'),
-      },
-      {
-        path: 'warehouse',
-        name: 'warehouseSettings',
-        component: () =>
-          import('@/views/settings/warehouse/WarehouseSettings.vue'),
-        redirect: { name: 'labelPrintTemplates' },
-        children: [
-          {
-            path: 'label-print-templates',
-            name: 'labelPrintTemplates',
-            component: () =>
-              import('@/views/settings/warehouse/LabelPrintTemplates.vue'),
-          },
-        ],
+        component: () => import ('@/views/FlowLibrary.vue'),
       },
     ],
   },

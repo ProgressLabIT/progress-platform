@@ -50,6 +50,7 @@ const sections = [
   'apiTokenSettings',
   'printTemplateLibrary',
   'printersLibrary',
+  'warehouseSettings',
   'otherSettings',
 ];
 

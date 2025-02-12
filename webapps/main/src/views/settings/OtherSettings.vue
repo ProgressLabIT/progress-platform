@@ -42,11 +42,6 @@
         :label="$t('settings.allowSerialCodeEdit')"
         :disable="!editMode"
       />
-      <q-toggle
-        v-model="configModel.enableInventoryManagement"
-        :label="$t('settings.enableInventoryManagement')"
-        :disable="!editMode"
-      />
     </div>
   </SettingsSection>
 </template>
@@ -73,7 +68,6 @@ async function save() {
       configModel.value.allowIndependentReorderingOfJobQueues,
     allowSerialDelete: configModel.value.allowSerialDelete,
     allowSerialCodeEdit: configModel.value.allowSerialCodeEdit,
-    enableInventoryManagement: configModel.value.enableInventoryManagement,
   });
 }
 

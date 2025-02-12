@@ -23,6 +23,10 @@ export const useConfigStore = defineStore('config', () => {
     allowIndependentReorderingOfJobQueues: false,
     allowSerialDelete: false,
     enableInventoryManagement: false,
+    defaultProductionPosition: 'IN',
+    defaultConsumptionPosition: 'IN',
+    productLabelTemplate: null,
+    positionLabelTemplate: null,
     allowSerialCodeEdit: false,
     allowPositionDelete: true,
     printers: [],
@@ -70,6 +74,18 @@ export const useConfigStore = defineStore('config', () => {
     if (typeof appConfig.enable_inventory_management === 'boolean') {
       config.enableInventoryManagement = appConfig.enable_inventory_management;
     }
+    if (typeof appConfig.default_production_position === 'string') {
+      config.defaultProductionPosition = appConfig.default_production_position;
+    }
+    if (typeof appConfig.default_consumption_position === 'string') {
+      config.defaultConsumptionPosition = appConfig.default_consumption_position;
+    }
+    if (typeof appConfig.product_label_template === 'string') {
+      config.productLabelTemplate = appConfig.product_label_template;
+    }
+    if (typeof appConfig.position_label_template === 'string') {
+      config.positionLabelTemplate = appConfig.position_label_template;
+    }
     if (typeof appConfig.allow_serial_code_edit === 'boolean') {
       config.allowSerialCodeEdit = appConfig.allow_serial_code_edit;
     }
@@ -110,6 +126,10 @@ export const useConfigStore = defineStore('config', () => {
       allow_serial_delete: configToUpdate.allowSerialDelete,
       allow_serial_code_edit: configToUpdate.allowSerialCodeEdit,
       enable_inventory_management: configToUpdate.enableInventoryManagement,
+      default_production_position: configToUpdate.defaultProductionPosition,
+      default_consumption_position: configToUpdate.defaultConsumptionPosition,
+      product_label_template: configToUpdate.productLabelTemplate,
+      position_label_template: configToUpdate.positionLabelTemplate,
     });
 
     Object.assign(config, configToUpdate);
