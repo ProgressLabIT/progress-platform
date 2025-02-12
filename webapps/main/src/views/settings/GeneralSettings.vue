@@ -48,6 +48,7 @@ const sections = [
   'defaultOperationParameters',
   'serialFieldSettings',
   'apiTokenSettings',
+  'printTemplateLibrary',
   'printersLibrary',
   'otherSettings',
 ];

@@ -40,6 +40,11 @@ const adminRoutes = [
             component: () => import('@/views/settings/APITokenSettings.vue'),
           },
           {
+            path: 'print-templates',
+            name: 'printTemplateLibrary',
+            component: () => import ('@/views/PrintTemplateLibrary.vue'),
+          },
+          {
             path: 'printers',
             name: 'printersLibrary',
             component: () => import('@/views/settings/printers/PrintersLibrary.vue'),
@@ -157,11 +162,6 @@ const adminRoutes = [
         path: 'flows',
         name: 'flowLibrary',
         component: () => import('@/views/FlowLibrary.vue'),
-      },
-      {
-        path: 'print-templates',
-        name: 'printTemplateLibrary',
-        component: () => import('@/views/PrintTemplateLibrary.vue'),
       },
       {
         path: 'warehouse',
