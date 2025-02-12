@@ -2,25 +2,28 @@
 
 from models.traceability import *
 from models.production import Job
-from events.production.base_production import BaseProductionEvent, BaseProductionModel
-from models.event import EventModel
+from events.production.base_production import BaseProductionEvent
+from events.batch.base_batch import BaseBatchEvent
+from models.event import EventInfoModel, EventType
 
 from utils.serial import Queries as SerialQueries
 
-class ActiveBatchChangedModel(BaseProductionModel):
-  ...
+class ActiveBatchChangedEvent(BaseProductionEvent, BaseBatchEvent):
 
-class ActiveBatchChanged(BaseProductionEvent):
+  class InfoModel(EventInfoModel):
+    new_active_batch_qt: int
+    batch_serials: list[str]
 
-
+  @classmethod
+  def get_event_type(cls):
+    return EventType.ACTIVE_BATCH_CHANGED
 
   def apply(self):
     self._get_job_data()
     self.get_active_batch()
 
-    if not self.info.work_session_key:
-      self.info.work_session = self.get_current_work_session()
-      self.info.work_session_key = self.info.work_session.key
+    self.work_session = self.get_current_work_session()
+    self.info.work_session_key = self.work_session.key
 
     active_batch_qt_delta = self.info.new_active_batch_qt - self.job.active_batch_qt
 
@@ -86,8 +89,8 @@ class ActiveBatchChanged(BaseProductionEvent):
     ), return_new=True)['new'])
 
     # Set response
-    self.set_response(dict(
+    self.response = dict(
       message=f"Active batch { self.info.active_batch_key } has been correctly updated with quantity { self.info.new_active_batch_qt }",
       job_data=self.job,
       batch_data=self.get_batch_execution_data()
-    ))
+    )
