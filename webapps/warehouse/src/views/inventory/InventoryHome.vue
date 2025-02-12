@@ -2,12 +2,12 @@
   <div class="col column q-gutter-md">
     <div class="text-h1">Giacenze</div>
       <q-space></q-space>
-      <!-- <q-btn
+      <q-btn
         class="col-auto"
         color="theme-blue"
         label="Visualizza per prodotto"
         @click="$router.push({ name: 'InventoryProduct' })"
-      /> -->
+      />
 
       <q-btn
         class="col-auto"
