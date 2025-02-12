@@ -169,7 +169,7 @@ class InventoryMovementNew(FlexModel):
 
   position_from: str = Field(..., alias='_from')
   position_to: str | None = Field(..., alias='_to')
-  type: InventoryMovementType | None = None
+  type: InventoryMovementType
   status: MovementStatus | None = MovementStatus.COMPLETED
   product_key: str | None = None
   product_code: str | None = None
@@ -188,10 +188,18 @@ class InventoryMovementNew(FlexModel):
 
   @model_validator(mode='before')
   def set_default_values(cls, values):
-    if values.get('position_from') is None:
-      values['_from'] = 'Position/OUT' if values.get('type') == InventoryMovementType.RECEIPT.value else 'Position/IN'
-    if values.get('position_to') is None:
-      values['_to'] = 'Position/OUT' if values.get('type') == InventoryMovementType.SHIPMENT.value else 'Position/IN'
+    match values.get('type', None):
+      case InventoryMovementType.PRODUCTION.value:
+        values['_from'] = 'Position/NULL'
+      case InventoryMovementType.CONSUMPTION.value:
+        values['_to'] = 'Position/NULL'
+      case InventoryMovementType.SHIPMENT.value:
+        values['_to'] = 'Position/OUT'
+      case InventoryMovementType.RECEIPT.value:
+        values['_from'] = 'Position/OUT'
+      case _:
+        pass
+
     if values.get('status') in [MovementStatus.STARTED.value, MovementStatus.COMPLETED.value] and values.get('start', None) is None:
       values['start'] = timestamp()
     if values.get('status') == MovementStatus.COMPLETED.value and values.get('end', None) is None:

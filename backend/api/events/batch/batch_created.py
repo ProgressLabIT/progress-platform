@@ -8,7 +8,7 @@ from typing import Set
 
 class BatchCreatedEvent(BaseBatchEvent):
   class InfoModel(BaseBatchModel):
-    new_batch_key: str | None = None
+    pass # no additional info
 
   @staticmethod
   def get_event_type() -> EventType:
@@ -42,6 +42,7 @@ class BatchCreatedEvent(BaseBatchEvent):
     new_batch_in = Batch(
       job_key = self.info.job_key,
       phase_key = self.info.phase_key,
+      product_key = self.info.product_key,
       work_order_key = self.info.work_order_key,
       qt_total = batch_qt,
       start = self.info.timestamp,

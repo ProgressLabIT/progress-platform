@@ -10,16 +10,14 @@ from utils.exceptions import (
   SerialNotUpdatedError
 )
 
-class SerialDataUpdatedModel(BaseSerialModel):
-  event_type: str = EventType.SERIAL_DATA_UPDATED.name
-  batch_execution_data: Any | None = None
-  batch_key: str
+class SerialDataUpdatedEvent(BaseSerialEvent):
+  class InfoModel(BaseSerialModel):
+    batch_execution_data: Any | None = None
+    batch_key: str
 
-class SerialDataUpdated(BaseSerialEvent):
-  event_data: SerialDataUpdatedModel
-
-  def set_model(self, base_model: EventModel):
-    self.info = SerialDataUpdatedModel(**base_model.model_dump())
+  @classmethod
+  def get_event_type(cls):
+    return EventType.SERIAL_DATA_UPDATED
 
   def apply(self):
     cursor = self.tx.aql.execute(
@@ -42,7 +40,6 @@ class SerialDataUpdated(BaseSerialEvent):
     clean_serial_match = dict(_from=f'Batch/{self.info.batch_key}')
     self.tx.collection('contains').delete_match(clean_serial_match)
     new = self.tx.collection('Serial').update_many([model_to_db_dict(s) for s in batch_serials], return_new=True)
-    #self.tx.commit_transaction()
     for serial in batch_serials:
        self.notify_results(dict(
           serial_key = serial.key,

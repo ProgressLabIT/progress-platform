@@ -6,20 +6,20 @@ from models.production import Job
 from utils.exceptions import WipNotAvailableError
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
-from events import BaseEvent, SerialBatchConfirmed, SerialDataUpdated, SerialUpdated, SerialReleased
-from models.event import EventModel, EventType
-from events.serial.serial_batch_confirmed import SerialBatchConfirmedModel
-from events.serial.serial_data_updated import SerialDataUpdatedModel
-from events.serial.serial_released import SerialReleasedModel
-from events.production.batch_completed import BatchCompletedModel
-class StepCompletedModel(BaseProductionModel):
-  event_type: str = EventType.STEP_COMPLETED.name
+from events.base_event import BaseEvent
+from events.serial.serial_data_updated import SerialDataUpdatedEvent
+from events.production.batch_completed import BatchCompletedEvent
+from models.event import EventInfoModel, EventType
 
-class StepCompleted(BaseProductionEvent):
-  event_data: StepCompletedModel
+class StepCompletedEvent(BaseProductionEvent):
 
-  def set_model(self, base_model: EventModel):
-    self.info = StepCompletedModel(**base_model.model_dump())
+  class InfoModel(EventInfoModel):
+    ...
+
+  @classmethod
+  def get_event_type(cls):
+    return EventType.STEP_COMPLETED
+
 
   from events.production.commons.serial import(
     convert_form_data,
@@ -32,13 +32,12 @@ class StepCompleted(BaseProductionEvent):
     self.get_active_batch()
 
     # Save current work session and batch keys in Event.info
-    if not self.info.work_session_key:
-      self.work_session = self.get_current_work_session()
-      self.info.work_session_key = self.work_session.key
+    self.work_session = self.get_current_work_session()
+    self.info.work_session_key = self.work_session.key
 
 
     # Create StepExecutionData record
-    step_data = StepExecutionData(**vars(self.info))
+    step_data = StepExecutionData(**self.info.model_dump())
     step_data.batch_key = self.info.active_batch_key
     step_data.completed = self.info.timestamp
     step_data.status = StepStatus.DONE
@@ -46,13 +45,13 @@ class StepCompleted(BaseProductionEvent):
 
     # if last step complete batch
     if (self.current_step_was_last_to_do()):
-      EventManager.trigger_event(self, BatchCompletedModel(
+      BatchCompletedEvent.create_as_child(self, dict(
         job_key = self.info.job_key,
         work_order_key = self.info.work_order_key,
         phase_key = self.info.phase_key,
         batch_serials = self.info.batch_serials,
-        completed_batch_qt = self.info.completed_batch_qt,
-        completed_batch_key = self.info.completed_batch_key,
+        completed_batch_qt = self.batch.qt_total,
+        completed_batch_key = self.batch.key,
         product_key = self.info.product_key,
       ))
 
@@ -63,16 +62,16 @@ class StepCompleted(BaseProductionEvent):
       if ('wo_bom' in new_job_data):
         setattr(self.job, 'wo_bom', new_job_data['wo_bom'])
 
-      self.set_response(dict(
-        message = f"Step completed for batch {self.info.active_batch_key}",
-        job_data = self.job,
-        batch_data = self.get_batch_execution_data()
-      ))
+    self.response = dict(
+      message = f"Step completed for batch {self.info.active_batch_key}",
+      job_data = self.job,
+      batch_data = self.get_batch_execution_data()
+    )
 
 
   def store_batch_data(self, batch_execution_data):
     if (len(batch_execution_data) > 0):
-      EventManager.trigger_event(self, SerialDataUpdatedModel(
+      SerialDataUpdatedEvent.create_as_child(self, dict(
         batch_key = self.info.active_batch_key,
         batch_execution_data = batch_execution_data,
         user_key = self.info.user_key

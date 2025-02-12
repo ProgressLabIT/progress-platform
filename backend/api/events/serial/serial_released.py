@@ -7,21 +7,16 @@ from models.event import EventType
 from models.serial import  SerialNotificationType, Serial
 import traceback
 from utils.serial import Queries
-from utils.exceptions import (
-  SerialNotUpdatedError
-)
-from models.event import EventModel
-class SerialReleasedModel(BaseSerialModel):
-  event_type: str = EventType.SERIAL_RELEASED.name
-  batch_execution_data: Any | None = None
-  batch_key: str
 
 
-class SerialReleased(BaseSerialEvent):
-  event_data: SerialReleasedModel
+class SerialReleasedEvent(BaseSerialEvent):
+  class InfoModel(BaseSerialModel):
+    batch_execution_data: Any | None = None
+    batch_key: str
 
-  def set_model(self, base_model: EventModel):
-    self.info = SerialReleasedModel(**base_model.model_dump())
+  @classmethod
+  def get_event_type(cls):
+    return EventType.SERIAL_RELEASED
 
   def apply(self):
     cursor = self.tx.aql.execute(

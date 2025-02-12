@@ -9,17 +9,16 @@ from utils.dt import timestamp
 from utils.counter import _generate_counter
 from utils.serial import Queries
 
-class SerialBatchConfirmedModel(BaseSerialModel):
-  event_type: str = EventType.SERIAL_BATCH_CONFIRMED.name
-  batch_execution_data: Any | None = None
-  batch_key: str
-  job: Any
 
-class SerialBatchConfirmed(BaseSerialEvent):
-  event_data: SerialBatchConfirmedModel
+class SerialBatchConfirmedEvent(BaseSerialEvent):
+  class InfoModel(BaseSerialModel):
+    batch_execution_data: Any | None = None
+    batch_key: str
+    job: Any
 
-  def set_model(self, base_model: EventModel):
-    self.info = SerialBatchConfirmedModel(**base_model.model_dump())
+  @classmethod
+  def get_event_type(cls):
+    return EventType.SERIAL_BATCH_CONFIRMED
 
   def apply(self):
     cursor = self.tx.aql.execute(

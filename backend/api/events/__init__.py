@@ -23,13 +23,13 @@ from events.admin.job_reset import JobReset
 #SERIAL EVENTS
 from events.serial.base_serial import BaseSerialEvent
 from events.serial.serial_created import SerialCreatedEvent
-from events.serial.serial_updated import SerialUpdated
+from events.serial.serial_updated import SerialUpdatedEvent
 from events.serial.serial_deleted import SerialDeleted
 from events.serial.serial_linked import SerialLinked
-from events.serial.serial_batch_confirmed import SerialBatchConfirmed
+from events.serial.serial_batch_confirmed import SerialBatchConfirmedEvent
 from events.serial.serial_booked import SerialBooked
-from events.serial.serial_data_updated import SerialDataUpdated
-from events.serial.serial_released import SerialReleased
+from events.serial.serial_data_updated import SerialDataUpdatedEvent
+from events.serial.serial_released import SerialReleasedEvent
 
 
 #INVENTORY EVENTS
@@ -50,10 +50,10 @@ from events.production.job_paused import JobPausedEvent
 from events.production.job_paused_offline import JobPausedOffline
 from events.production.job_resumed import JobResumed
 from events.production.job_back_online import JobBackOnlineEvent
-from events.production.active_batch_changed import ActiveBatchChanged
-from events.production.step_completed import StepCompleted
+from events.production.active_batch_changed import ActiveBatchChangedEvent
+from events.production.step_completed import StepCompletedEvent
 from events.production.step_edited import StepEdited
-from events.production.batch_completed import BatchCompleted
+from events.production.batch_completed import BatchCompletedEvent
 
 #COMMONS
 from events.production.commons.batch import Batch
