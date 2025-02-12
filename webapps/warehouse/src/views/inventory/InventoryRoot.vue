@@ -1,5 +1,5 @@
 <template>
-  <q-page class="q-px-md q-pt-lg column fit">
+  <q-page class="q-px-md column fit">
 
 
     <router-view></router-view>

@@ -4,6 +4,7 @@ import { api } from '@/boot/axios';
 export const useInventoryStore = defineStore('inventory', {
   state: () => ({
     position: null,
+    product: null,
     contents: [],
   }),
   actions: {
