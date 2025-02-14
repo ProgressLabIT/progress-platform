@@ -96,6 +96,13 @@ class EventInfoModel(BaseModel):
   description: str | None = None # optional descriptive field for auditing reasons
   event_group: str | None = None #
 
+  # Override model_dump to exclude extra fields when saving events
+  # so we don't store data from parent event in each child
+  def model_dump(self, exclude_extra: bool = False, **kwargs) -> dict[str, Any]:
+    if exclude_extra is True:
+      kwargs["exclude"] = list(kwargs.get("exclude", [])) + list(self.model_extra.keys())
+    return super().model_dump(**kwargs)
+
 class EventModel(BaseModel):
   model_config = ConfigDict(arbitrary_types_allowed=True, extra='allow')
   tx: TransactionDatabase | None = Field(None, exclude=True)

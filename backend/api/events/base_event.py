@@ -54,7 +54,7 @@ class BaseEvent(ABC):
     """
     info = context.info.model_dump()
     info['primary'] = False
-    info.update(new_event_data)
+    info.update(dict(**new_event_data, event_type = cls.get_event_type()))
     new_event = cls(tx = context.tx, info = info)
     new_event.save()
     return new_event.response
@@ -110,7 +110,7 @@ class BaseEvent(ABC):
     """
     Store the event in the database.
     """
-    record = self.info.model_dump()
+    record = self.info.model_dump(exclude_extra=True)
     # update with data modified through the apply method
     if hasattr(self, 'event_key'):
       record.update(dict(_key=self.event_key))
