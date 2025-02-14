@@ -20,6 +20,7 @@
         :label="$t('settings.defaultProductionPosition')"
         :value="configModel.defaultProductionPosition"
         key-only
+        clearable
         :disable="!editMode"
         @select="(position) => (configModel.defaultProductionPosition = position)"
       />
@@ -28,6 +29,7 @@
         :label="$t('settings.defaultConsumptionPosition')"
         :value="configModel.defaultConsumptionPosition"
         key-only
+        clearable
         :disable="!editMode"
         @select="(position) => (configModel.defaultConsumptionPosition = position)"
       />
@@ -36,6 +38,7 @@
         :label="$t('settings.productLabelTemplate')"
         :value="configModel.productLabelTemplate"
         key-only
+        clearable
         :disable="!editMode"
         :dense="false"
         @select="(template) => (configModel.productLabelTemplate = template)"
@@ -44,6 +47,7 @@
       <BaseAutocompleteTemplate
         :label="$t('settings.positionLabelTemplate')"
         :value="configModel.positionLabelTemplate"
+        clearable
         key-only
         :dense="false"
         :disable="!editMode"
