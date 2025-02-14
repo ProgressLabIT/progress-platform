@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import Field, field_validator, ValidationInfo
+from pydantic import Field, model_validator
 
 from events.inventory.base_inventory import BaseInventoryEvent
 from events.inventory.inventory_changed import InventoryChangedEvent
@@ -18,7 +18,7 @@ class MovementCompletedEvent(BaseInventoryEvent):
     product_key: str
     serial_key: str | None = None
     serial_code: str | None = Field(None, exclude=True) # Necessary for receipts not planned in advance
-    qt_planned: float | None = None
+    qt_planned: float
     qt_confirmed: float
     position_from: str | None = None
     position_to: str | None = None
@@ -28,9 +28,27 @@ class MovementCompletedEvent(BaseInventoryEvent):
     reason: str | None = None
     extra: Any = None
 
-    @field_validator('qt_planned')
-    def set_implied_qt_planned(cls, qt_planned: float | None, info: ValidationInfo):
-      return info.data['qt_confirmed'] if qt_planned is None else qt_planned
+    @model_validator(mode='before')
+    def set_implicit_values(cls, values):
+      match values.get('movement_type', None):
+        case InventoryMovementType.PRODUCTION.value:
+          values['position_from'] = 'NULL'
+        case InventoryMovementType.CONSUMPTION.value:
+          values['position_to'] = 'NULL'
+        case InventoryMovementType.SHIPMENT.value:
+          values['position_to'] = 'OUT'
+        case InventoryMovementType.RECEIPT.value:
+          values['position_from'] = 'OUT'
+        case _:
+          pass
+
+      if values.get('status') in [MovementStatus.STARTED.value, MovementStatus.COMPLETED.value] and values.get('start', None) is None:
+        values['start'] = values.get('timestamp')
+      if values.get('status') == MovementStatus.COMPLETED.value and values.get('end', None) is None:
+        values['end'] = values.get('timestamp')
+      return values
+
+
 
   @classmethod
   def get_event_type(cls):
@@ -48,6 +66,11 @@ class MovementCompletedEvent(BaseInventoryEvent):
     }
 
 
+  @property
+  def event_first(self):
+    return True
+
+
   def apply(self):
     self.info.end = self.info.timestamp
     if self.info.movement_key is None:
@@ -56,6 +79,7 @@ class MovementCompletedEvent(BaseInventoryEvent):
     else:
       self.movement = self._update_movement()
 
+    self.info.movement_key = self.movement['_key']
     self.handlers[self.info.movement_type]()
 
   def _update_movement(self):
@@ -64,7 +88,7 @@ class MovementCompletedEvent(BaseInventoryEvent):
 
   def _handle_production(self):
     InventoryChangedEvent.create_as_child(self, dict(
-      position_id = self.movement.position_from,
+      position_id = self.movement.position_to,
       product_key = self.movement.product_key,
       serial_key = self.movement.serial_key,
       quantity_change = self.movement.qt_confirmed
