@@ -156,7 +156,7 @@ class InventoryMovementReferences(BaseModel):
   job_key: str | None = None
   batch_key: str | None = None
   event_key: str | None = None
-  event_group_key: str | None = None
+  event_group: str | None = None
   transfer_doc: str | None = None
   sales_doc: str | None = None
   purchase_doc: str | None = None
