@@ -249,12 +249,13 @@ class Queries:
     )
 
     FILTER @product_key ? m.product_key == @product_key : true
-    LET search_context = CONCAT(product.code, ' ', product.description)
-    FILTER @product_search ? CONTAINS(LOWER(search_context), LOWER(@product_search)) : true
+    LET product_search_context = CONCAT(product.code, ' ', product.description)
+    FILTER @product_search ? CONTAINS(LOWER(product_search_context), LOWER(@product_search)) : true
 
     // SERIAL FILTERS
     FILTER @serial_keys ? m.serial_key IN @serial_keys : true
-    FILTER @serial_search ? CONTAINS(LOWER(search_context), LOWER(@serial_search)) : true
+    LET serial_code = FIRST(FOR s IN Serial FILTER s._key == m.serial_key RETURN s.code)
+    FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
 
     // POSITION FILTERS
 
