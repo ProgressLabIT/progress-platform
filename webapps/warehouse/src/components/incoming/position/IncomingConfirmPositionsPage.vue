@@ -124,6 +124,7 @@ function confirm() {
         color: 'theme-green',
         timeout: 1500,
       });
+      incoming.$reset();
     })
     .catch((err) => {
       Notify.create({
@@ -137,7 +138,6 @@ function confirm() {
       });
     });
   }
-  incoming.$reset();
 }
 
 
