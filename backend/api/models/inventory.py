@@ -167,8 +167,8 @@ class InventoryMovementReferences(BaseModel):
 class InventoryMovementNew(FlexModel):
   model_config = ConfigDict(populate_by_name=True)
 
-  position_from: str = Field(..., serialization_alias='_from')
-  position_to: str | None = Field(..., serialization_alias='_to')
+  position_from: str | None = Field(None, serialization_alias='_from')
+  position_to: str | None = Field(None, serialization_alias='_to')
   movement_type: InventoryMovementType = Field(..., serialization_alias='type')
   status: MovementStatus | None = MovementStatus.COMPLETED
   product_key: str | None = None
