@@ -1,8 +1,10 @@
+from pydantic import Field
+
 from events.serial.serial_batch_confirmed import SerialBatchConfirmedEvent
 from events.serial.serial_released import SerialReleasedEvent
 from events.serial.serial_data_updated import SerialDataUpdatedEvent
 from events.production.base_production import BaseProductionEvent, BaseProductionModel
-from models.form import FormFieldValue
+from models.form import FormFieldValue, SerialFormFieldValue
 from models.traceability import *
 from models.production import Job
 from utils.exceptions import WipNotAvailableError
@@ -10,6 +12,7 @@ from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 from models.event import EventType
 from events.batch.base_batch import BaseBatchModel
+from events.batch.batch_created import BatchCreatedEvent
 from events.work_session.work_session_closed import WorkSessionClosedEvent
 from events.wip.wip_declared import WIPDeclaredModel
 from events.wip.wip_removed import WIPRemovedModel
@@ -17,13 +20,13 @@ from events.wip.wip_unbooked import WIPUnbookedModel
 from events.inventory.movement_created import MovementCreatedModel
 from events.work_session.work_session_created import WorkSessionCreatedEvent
 from events.wip.wip_booked import WIPBookedModel
-from models.inventory import InventoryMovementType, MovementStatus
-from events.inventory import InventoryChangedEvent
+from models.inventory import InventoryMovementType, MovementStatus, InventoryMovementReferences
+from events.inventory.movement_completed import MovementCompletedEvent
 
 class BatchCompletedEvent(BaseProductionEvent):
   class InfoModel(BaseBatchModel):
-    completed_batch_key: str
-    form_data: list[FormFieldValue]
+    form_data: list[FormFieldValue] | None = None
+    serial_data: list[SerialFormFieldValue] | None = None
 
 
   @classmethod
@@ -38,6 +41,7 @@ class BatchCompletedEvent(BaseProductionEvent):
 
   def apply(self):
     self._get_job_data()
+    self.batch = Batch(**self.tx.collection('Batch').get(self.job.active_batch_key))
 
     if self.job.stage == 'closed':
       raise ValueError("Job is already closed")
@@ -46,11 +50,6 @@ class BatchCompletedEvent(BaseProductionEvent):
 
     # save into a variable since self.job gets updated in the process
     active_batch_qt = self.job.active_batch_qt
-    completed_batch_qt = self.info.completed_batch_qt or active_batch_qt
-
-    if completed_batch_qt <= 0:
-      raise ValueError("Quantity cannot be zero or negative")
-
     is_next_batch_available = self.job.next_batch_available
 
     if (self.job.traceability_level is not None):
@@ -68,7 +67,7 @@ class BatchCompletedEvent(BaseProductionEvent):
       ))
 
     self.info.completed_batch_key = self.job.active_batch_key
-    self.info.completed_batch_qt = completed_batch_qt
+    self.info.completed_batch_qt = self.batch.qt_total
     self.info.work_session_key = self.job.last_work_session_started
 
     WorkSessionClosedEvent.create_as_child(self, dict(
@@ -85,21 +84,7 @@ class BatchCompletedEvent(BaseProductionEvent):
       )
     )
 
-    #create production movement
-    InventoryProducedEvent.create_as_child(self, dict(
-      job_key = self.info.job_key,
-      product_key = self.info.product_key,
-      batch_key = self.info.active_batch_key,
-      quantity = self.info.completed_batch_qt,
-    ))
-
-    #create consumption movement
-    InventoryConsumedEvent.create_as_child(self, dict(
-      job_key = self.info.job_key,
-      product_key = self.info.product_key,
-      batch_key = self.info.active_batch_key
-   ))
-
+    self._process_inventory_changes()
 
     # Update job completed quantity as reference for methods being called later (e.g. create_batch)
     self.job.qt_completed += self.info.completed_batch_qt
@@ -111,6 +96,7 @@ class BatchCompletedEvent(BaseProductionEvent):
         message = f"Batch {self.info.active_batch_key} and Job {self.info.job_key} completed.",
         job_data = self.job
       )
+      return
 
     # JOB HAS REMAINING QUANTITY
     else:
@@ -135,16 +121,23 @@ class BatchCompletedEvent(BaseProductionEvent):
       )
 
       if create_new_batch:
-        self.info.work_session_key = WorkSessionCreatedEvent.create_as_child(self, dict(
+        new_batch = BatchCreatedEvent.create_as_child(self, dict(
+          # batch_serials is not needed since auto new batch works only without serials
           job_key = self.info.job_key,
-          batch_key = self.batch.key,
+          work_order_key = self.info.work_order_key,
+          phase_key = self.info.phase_key,
+          product_key = self.info.product_key,
+        ))
+        new_work_session = WorkSessionCreatedEvent.create_as_child(self, dict(
+          job_key = self.info.job_key,
+          batch_key = new_batch.key,
           work_order_key = self.info.work_order_key,
           phase_key = self.info.phase_key,
         ))
         job_update.update(dict(
-          active_batch_qt = self.batch.qt_total,
-          active_batch_key = self.batch.key,
-          last_work_session_started = self.info.work_session_key,
+          active_batch_qt = new_batch.qt_total,
+          active_batch_key = new_batch.key,
+          last_work_session_started = new_work_session.key,
           active = True
         ))
 
@@ -153,7 +146,7 @@ class BatchCompletedEvent(BaseProductionEvent):
 
       # Must be done after new batch and session have been created, if they have to
       self.response = dict(
-        message = f"Batch {self.info.active_batch_key} completed.",
+        message = f"Batch {self.batch.key} completed.",
         job_data = self.job,
         batch_data = dict(),
       )
@@ -201,37 +194,42 @@ class BatchCompletedEvent(BaseProductionEvent):
       ))
 
 
-  def process_inventory_changes(self):
+  # ===================================================================
+  # GENERATE PRODUCTION/CONSUMPTION MOVEMENTS
+  # ===================================================================
+
+  def _process_inventory_changes(self):
     # Check if warehouse management is enabled
     warehouse_enabled = self.tx.collection('Config').get('enable_inventory_management') or False
     if not warehouse_enabled:
       return
 
+    references = InventoryMovementReferences(
+      work_order_key = self.info.work_order_key,
+      job_key = self.info.job_key,
+      batch_key = self.info.active_batch_key,
+    )
+
     # Generate production movement
     output_qt = self.info.completed_batch_qt
+    production_position_key = self.tx.collection('WorkOrder').get(self.info.work_order_key).get('output_position_key', 'IN')
 
-    product_data = self.tx.collection('Product').get(self.job.product_key)
-    production_position_key = product_data.get('default_production_position', None)
-    if production_position_key is None:
-      production_position_key = self.tx.collection('Config').get('default_production_position').get('value', 'IN')
-
-    InventoryChangedEvent.create_as_child(self, dict(
-      position_to = f'Position/{production_position_key}',
+    MovementCompletedEvent.create_as_child(self, dict(
+      position_to = production_position_key,
       product_key = self.job.product_key,
-      quantity = output_qt,
-      type = InventoryMovementType.PRODUCTION,
+      qt_confirmed = output_qt,
+      movement_type = InventoryMovementType.PRODUCTION,
+      references = references,
     ))
 
     # Get phase bom and generate consumption movements
     bom = [line for line in self.job.wo_bom if line['phase_key'] == self.info.phase_key]
-    default_consumption_position = self.tx.collection('Config').get('default_consumption_position').get('value', 'IN')
 
     for line in bom:
-      component_data = self.tx.collection('Product').get(line['component_key'])
-      consumption_position_key = component_data.get('default_consumption_position', default_consumption_position)
-      InventoryChangedEvent.create_as_child(self, dict(
-        position_from = f'Position/{consumption_position_key}',
+      MovementCompletedEvent.create_as_child(self, dict(
+        position_from = line.consumption_options.consumption_position_key,
         product_key = line['component_key'],
-        quantity = line['qt'] * output_qt,
-        type = InventoryMovementType.CONSUMPTION,
+        qt_confirmed = line['qt'] * output_qt,
+        movement_type = InventoryMovementType.CONSUMPTION,
+        references = references,
       ))

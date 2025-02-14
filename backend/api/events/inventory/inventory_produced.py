@@ -1,4 +1,4 @@
-from events.inventory.base_inventory import BaseInventory
+from events.inventory.base_inventory import BaseInventoryEvent
 from models.event import EventType
 from models.event import EventModel
 from models.traceability import Batch
@@ -18,7 +18,7 @@ class InventoryProducedModel(EventModel):
   product_key: str
   quantity: float
 
-class InventoryProduced(BaseInventory):
+class InventoryProduced(BaseInventoryEvent):
   event_data: InventoryProducedModel
   batch: Batch
   job: Job

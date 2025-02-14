@@ -272,18 +272,18 @@ function unselectItem() {
 function confirmQuantity() {
   const now = timestamp();
   sendEvent({
-    event_type: 'ADD_MOVEMENT',
-    event_data: { movement: {
-      position_from: `Position/${selectedPosition.value._key}`,
-      position_to: `Position/${selectedPosition.value._key}`,
+    event_type: 'MOVEMENT_COMPLETED',
+    event_data: {
+      position_from: selectedPosition.value._key,
+      position_to: selectedPosition.value._key,
       product_key: selectedItem.value._key,
       qt_planned: adjustmentQuantity.value,
       qt_confirmed: adjustmentQuantity.value,
       status: 'completed',
-      type: 'adjustment',
+      movement_type: 'adjustment',
       start: now,
       end: now,
-    }}
+    }
   })
   .then(() => {
     unselectItem();

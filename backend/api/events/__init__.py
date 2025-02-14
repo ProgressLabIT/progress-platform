@@ -33,15 +33,14 @@ from events.serial.serial_released import SerialReleasedEvent
 
 
 #INVENTORY EVENTS
-from events.inventory.base_inventory import BaseInventory
-from events.inventory.movement_created import MovementCreated
+from events.inventory.base_inventory import BaseInventoryEvent
+from events.inventory.movement_created import MovementCreatedEvent
 from events.inventory.movement_updated import MovementUpdated
 from events.inventory.movement_deleted import MovementDeleted
-from events.inventory.movement_completed import MovementCompleted
+from events.inventory.movement_completed import MovementCompletedEvent
 from events.inventory.warehouse_list_created import WarehouseListCreated
 from events.inventory.warehouse_list_closed import WarehouseListClosed
-from events.inventory.inventory_produced import InventoryProduced
-from events.inventory.inventory_consumed import InventoryConsumed
+from events.inventory.inventory_changed import InventoryChangedEvent
 
 #PRODUCTION EVENTS
 from events.production.base_production import BaseProductionEvent

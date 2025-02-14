@@ -1,6 +1,6 @@
 import traceback
 
-from events.inventory.base_inventory import BaseInventory, BaseInventoryModel
+from events.inventory.base_inventory import BaseInventoryEvent, BaseInventoryModel
 from models.inventory import *
 from models.event import EventType
 from models.event import EventModel
@@ -13,7 +13,7 @@ from utils.exceptions import (
 class MovementCreatedModel(BaseInventoryModel):
     event_type: str = EventType.MOVEMENT_CREATED.name
 
-class MovementCreated(BaseInventory):
+class MovementCreatedEvent(BaseInventoryEvent):
   event_data: MovementCreatedModel
 
   def set_model(self, base_model: EventModel):
