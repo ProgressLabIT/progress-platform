@@ -19,6 +19,7 @@ class EventType(str, Enum):
   JOB_STARTED = 'JOB_STARTED'
   JOB_PAUSED = 'JOB_PAUSED'
   JOB_RESUMED = 'JOB_RESUMED'
+  JOB_CLOSED = 'JOB_CLOSED'
 
 
   # Issue Events

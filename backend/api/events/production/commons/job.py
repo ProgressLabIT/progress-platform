@@ -63,29 +63,3 @@ def update_job_step_progress(self):
   job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
   self.job = job
 
-
-def complete_job(self, completed_qt):
-  # Close job
-  # Query allows for single call to DB to get and update job data
-
-  bind_vars=dict(
-    job_key=self.info.job_key,
-    stage=WorkStatus.CLOSED,
-    notes="Job completed",
-    qt_completed=completed_qt,
-    end=self.info.timestamp,
-  )
-  completed_job = self.tx.aql.execute(
-    TraceabilityQueries.COMPLETE_JOB,
-    bind_vars=bind_vars
-  ).next()
-
-  self.job = Job(**completed_job)
-
-  self.tx.aql.execute(
-    ProductionQueries.REMOVE_JOB_FROM_QUEUE,
-    bind_vars=dict(
-      job_key=self.info.job_key,
-      target_key=self.info.user_key
-    )
-  )

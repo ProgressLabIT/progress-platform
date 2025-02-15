@@ -53,6 +53,7 @@ from events.production.active_batch_changed import ActiveBatchChangedEvent
 from events.production.step_completed import StepCompletedEvent
 from events.production.step_edited import StepEdited
 from events.production.batch_completed import BatchCompletedEvent
+from events.production.job_closed import JobClosedEvent
 
 #COMMONS
 from events.production.commons.batch import Batch

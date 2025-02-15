@@ -33,7 +33,6 @@ class BaseAdmin(BaseEvent):
       _get_job_data,
       get_job_steps_count,
       update_job_step_progress,
-      complete_job
     )
 
     @model_validator(mode="before")

@@ -7,10 +7,11 @@ from events.production.base_production import BaseProductionEvent, BaseProductio
 from models.form import FormFieldValue, SerialFormFieldValue
 from models.traceability import *
 from models.production import Job
+from models.event import EventType
+from models.inventory import InventoryMovementType, MovementStatus, InventoryMovementReferences
 from utils.exceptions import WipNotAvailableError
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
-from models.event import EventType
 from events.batch.base_batch import BaseBatchModel
 from events.batch.batch_created import BatchCreatedEvent
 from events.work_session.work_session_closed import WorkSessionClosedEvent
@@ -18,9 +19,9 @@ from events.wip.wip_declared import WIPDeclaredModel
 from events.wip.wip_removed import WIPRemovedModel
 from events.wip.wip_unbooked import WIPUnbookedModel
 from events.inventory.movement_created import MovementCreatedModel
+from events.production.job_closed import JobClosedEvent
 from events.work_session.work_session_created import WorkSessionCreatedEvent
 from events.wip.wip_booked import WIPBookedModel
-from models.inventory import InventoryMovementType, MovementStatus, InventoryMovementReferences
 from events.inventory.movement_completed import MovementCompletedEvent
 
 class BatchCompletedEvent(BaseProductionEvent):
@@ -91,7 +92,10 @@ class BatchCompletedEvent(BaseProductionEvent):
 
     # NO REMAINING QUANTITY TO DO - LAST BATCH
     if self.job.qt_completed >= self.job.qt_planned: # No more pieces to work
-      self.complete_job(self.job.qt_completed)
+      self.job = JobClosedEvent.create_as_child(self, dict(
+        job_key = self.info.job_key,
+        completed_qt = self.job.qt_completed,
+      ))
       self.response = dict(
         message = f"Batch {self.info.active_batch_key} and Job {self.info.job_key} completed.",
         job_data = self.job
