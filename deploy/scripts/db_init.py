@@ -132,6 +132,14 @@ collections = [
       value = False
     ),
     dict(
+      _key = 'default_production_position',
+      value = 'IN'
+    ),
+    dict(
+      _key = 'default_consumption_position',
+      value = 'IN'
+    ),
+    dict(
       _key = 'operator_cost',
       value = 25
     ),

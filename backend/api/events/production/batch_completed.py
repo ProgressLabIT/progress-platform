@@ -200,8 +200,8 @@ class BatchCompletedEvent(BaseProductionEvent):
 
   def _process_inventory_changes(self):
     # Check if warehouse management is enabled
-    warehouse_enabled = self.tx.collection('Config').get('enable_inventory_management') or False
-    if not warehouse_enabled:
+    warehouse_enabled = self.tx.collection('Config').get('enable_inventory_management')
+    if warehouse_enabled is None or not warehouse_enabled.get('value', False):
       return
 
     references = InventoryMovementReferences(
@@ -218,18 +218,20 @@ class BatchCompletedEvent(BaseProductionEvent):
       position_to = production_position_key,
       product_key = self.job.product_key,
       qt_confirmed = output_qt,
+      qt_planned = output_qt,
       movement_type = InventoryMovementType.PRODUCTION,
       references = references,
     ))
 
     # Get phase bom and generate consumption movements
-    bom = [line for line in self.job.wo_bom if line['phase_key'] == self.info.phase_key]
+    bom = [line for line in self.job.job_bom if line.phase_key == self.info.phase_key]
 
     for line in bom:
       MovementCompletedEvent.create_as_child(self, dict(
         position_from = line.consumption_options.consumption_position_key,
-        product_key = line['component_key'],
-        qt_confirmed = line['qt'] * output_qt,
+        product_key = line.component_key,
+        qt_confirmed = line.qt * output_qt,
+        qt_planned = line.qt * output_qt,
         movement_type = InventoryMovementType.CONSUMPTION,
         references = references,
       ))
