@@ -6,7 +6,7 @@ from events.inventory.base_inventory import BaseInventoryEvent
 from events.inventory.inventory_changed import InventoryChangedEvent
 from events.serial.serial_created import SerialCreatedEvent
 from models.event import EventInfoModel, EventType
-from models.inventory import InventoryMovementType, InventoryMovementReferences
+from models.inventory import InventoryMovementType, InventoryMovementReferences, MovementStatus
 from utils.dt import timestamp
 from utils.exceptions import InventoryMovementException
 
@@ -79,7 +79,7 @@ class MovementCompletedEvent(BaseInventoryEvent):
     else:
       self.movement = self._update_movement()
 
-    self.info.movement_key = self.movement['_key']
+    self.info.movement_key = self.movement.key
     self.handlers[self.info.movement_type]()
 
   def _update_movement(self):
