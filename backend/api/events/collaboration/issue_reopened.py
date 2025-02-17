@@ -1,30 +1,28 @@
-from events.collaboration.base_collaboration import BaseCollaboration, BaseCollaborationModel
-from models.event import EventModel
+from events.collaboration.base_collaboration import BaseCollaboration, BaseIssueModel
 from models.event import EventType
 
-class IssueReopenedModel(BaseCollaborationModel):
-  event_type: str = EventType.ISSUE_REOPENED.name
+class IssueReopenedEvent(BaseCollaboration):
+  class InfoModel(BaseIssueModel):
+    pass
 
-class IssueReopened(BaseCollaboration):
-  event_data: IssueReopenedModel
-
-  def set_model(self, base_model: EventModel):
-    self.info = IssueReopenedModel(**base_model.model_dump())
+  @classmethod
+  def get_event_type(cls) -> EventType:
+    return EventType.ISSUE_REOPENED
 
   def apply(self):
-      issue_key = self.info.issue_data['_key']
-      open_as_critical = self.info.issue_data.get('critical', False)
-      issue_update = dict(
-        _key = issue_key,
-        open = True,
-        critical = open_as_critical,
-        closed = None,
-        closed_by = None
-      )
-      self.tx.collection('Issue').update(issue_update)
+    issue_key = self.info.issue_data['_key']
+    open_as_critical = self.info.issue_data.get('critical', False)
+    issue_update = dict(
+      _key = issue_key,
+      open = True,
+      critical = open_as_critical,
+      closed = None,
+      closed_by = None
+    )
+    self.tx.collection('Issue').update(issue_update)
 
-      self._update_production_status(f'Issue/{issue_key}')
+    self._update_production_status(f'Issue/{issue_key}')
 
-      self.set_response(dict(
-        message=f"Issue {issue_key} opened successfuly."
-      ))
+    self.response = dict(
+      message=f"Issue {issue_key} opened successfuly."
+    )

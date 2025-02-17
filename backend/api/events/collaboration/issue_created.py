@@ -1,17 +1,15 @@
 from models.collaboration import Issue, IssueWithLinks
-from events.collaboration.base_collaboration import BaseCollaboration, BaseCollaborationModel
-from models.event import EventModel
+from events.collaboration.base_collaboration import BaseCollaboration, BaseIssueModel
 from models.event import EventType
 
-class IssueCreatedModel(BaseCollaborationModel):
-   event_type: str = EventType.ISSUE_CREATED.name
+class IssueCreatedEvent(BaseCollaboration):
 
-class IssueCreated(BaseCollaboration):
-  event_data: IssueCreatedModel
+  class InfoModel(BaseIssueModel):
+    pass
 
-  def set_model(self, base_model: EventModel):
-    self.info = IssueCreatedModel(**base_model.model_dump())
-
+  @classmethod
+  def get_event_type(cls) -> EventType:
+    return EventType.ISSUE_CREATED
 
   def apply(self):
      self.issue_data = IssueWithLinks(**self.info.issue_data)
@@ -32,8 +30,8 @@ class IssueCreated(BaseCollaboration):
      issue_key=new_issue_id.split('/')[1]
      self.issue_data.key = issue_key
 
-     self.set_response(dict(
+     self.response = dict(
        message="Issue created correctly",
        issue_key=issue_key
-     ))
+     )
 

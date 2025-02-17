@@ -1,15 +1,15 @@
-from events.collaboration.base_collaboration import BaseCollaboration, BaseCollaborationModel
-from models.event import EventModel
-from models.event import EventType
+from events.collaboration.base_collaboration import BaseCollaboration, BaseIssueModel
+from models.event import EventType, EventInfoModel
 
-class IssueUpdatedModel(BaseCollaborationModel):
-  event_type: str = EventType.ISSUE_UPDATED.name
 
-class IssueUpdated(BaseCollaboration):
-  event_data: IssueUpdatedModel
+class IssueUpdatedEvent(BaseCollaboration):
 
-  def set_model(self, base_model: EventModel):
-    self.info = IssueUpdatedModel(**base_model.model_dump())
+  class InfoModel(BaseIssueModel):
+    pass
+
+  @classmethod
+  def get_event_type(cls) -> EventType:
+    return EventType.ISSUE_UPDATED
 
   def apply(self):
     self.tx.collection('Issue').update(self.info.issue_data)
@@ -18,6 +18,7 @@ class IssueUpdated(BaseCollaboration):
     # Update critical status of related job and work order
     self._update_production_status(f'Issue/{issue_key}')
 
-    self.set_response(dict(
+    self.response = dict(
       message=f"Issue { issue_key } updated successfully"
-    ))
+    )
+

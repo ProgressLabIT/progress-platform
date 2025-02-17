@@ -1,27 +1,24 @@
 from typing import Any
 from abc import ABC, abstractmethod
-from events.base_event import BaseEvent
-from models.event import EventModel
+from events.base_event import BaseEvent, EventInfoModel
 from models.collaboration import IssueLink
 from utils.collaboration import Queries
 
 
-class BaseCollaborationModel(EventModel):
+class BaseIssueModel(EventInfoModel):
   issue_data: Any | None = None
 
-class BaseCollaboration(BaseEvent, ABC):
-    event_data: BaseCollaborationModel
 
-    def get_write_collections(self):
-      return list(set(super().get_write_collections() + ['Event', 'Issue', 'issue_rel', 'WorkOrder', 'Job', 'message']))
+class BaseCollaboration(BaseEvent, ABC):
+
+    @property
+    def tx_collections(self):
+      return ['Event', 'Issue', 'issue_rel', 'WorkOrder', 'Job', 'message']
 
     @abstractmethod
     def apply(self):
       pass
 
-    @abstractmethod
-    def set_model(self, base_model: EventModel):
-      pass
 
     @staticmethod
     def _build_issue_link(_from: str, link_dict: IssueLink):

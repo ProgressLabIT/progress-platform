@@ -148,7 +148,7 @@ export default {
       this.loading = true;
       this.sendEvent({
         event_type: 'MESSAGE_POSTED',
-        event_data: { message_data },
+        event_data: { ...message_data },
       }).then(() => {
         this.getMessages();
         this.new_message = '';

@@ -1,22 +1,22 @@
-from events.collaboration.base_collaboration import BaseCollaboration, BaseCollaborationModel
-from models.collaboration import Message, MessageUpdate
-from models.event import EventModel
-from models.event import EventType
-class MessageDeletedModel(BaseCollaborationModel):
-  event_type: str = EventType.MESSAGE_DELETED.name
-  message_data: MessageUpdate | None = None
+from events.collaboration.base_collaboration import BaseCollaboration
+from models.event import EventInfoModel, EventType
 
-class MessageDeleted(BaseCollaboration):
-  event_data: MessageDeletedModel
+class MessageDeletedEvent(BaseCollaboration):
+  class InfoModel(EventInfoModel):
+    message_key: str
 
-  def set_model(self, base_model: EventModel):
-    self.info = MessageDeletedModel(**base_model.model_dump())
+  @classmethod
+  def get_event_type(cls) -> EventType:
+    return EventType.MESSAGE_DELETED
 
   def apply(self):
-      self.info.message_data.content = '[deleted]'
-      self.info.message_data.deleted = self.info.timestamp
-      message_record = self.info.message_data.dict(by_alias=True)
-      db_resp = self.tx.collection('message').update(message_record, return_new=True)
-      self.set_response(dict(
-        message="Message deleted correctly",
-      ))
+    message_update = dict(
+      _key = self.info.message_key,
+      content = '[deleted]',
+      deleted = self.info.timestamp
+    )
+    self.tx.collection('message').update(message_update)
+    self.response = dict(
+      message=f"Message {self.info.message_key} deleted correctly",
+    )
+

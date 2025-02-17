@@ -4,14 +4,14 @@ from events.base_event import BaseEvent
 
 #COLLABORATION EVENTS
 from events.collaboration.base_collaboration import BaseCollaboration
-from events.collaboration.issue_created import IssueCreated
-from events.collaboration.issue_updated import IssueUpdated
-from events.collaboration.issue_closed import IssueClosed
-from events.collaboration.issue_reopened import IssueReopened
-from events.collaboration.issue_deleted import IssueDeleted
-from events.collaboration.message_posted import MessagePosted
-from events.collaboration.message_updated import MessageUpdated
-from events.collaboration.message_deleted import MessageDeleted
+from events.collaboration.issue_created import IssueCreatedEvent
+from events.collaboration.issue_updated import IssueUpdatedEvent
+from events.collaboration.issue_closed import IssueClosedEvent
+from events.collaboration.issue_reopened import IssueReopenedEvent
+from events.collaboration.issue_deleted import IssueDeletedEvent
+from events.collaboration.message_posted import MessagePostedEvent
+from events.collaboration.message_updated import MessageUpdatedEvent
+from events.collaboration.message_deleted import MessageDeletedEvent
 
 #ADMIN EVENTS
 from events.admin.base_admin import BaseAdmin

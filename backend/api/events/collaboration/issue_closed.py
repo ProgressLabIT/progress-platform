@@ -1,16 +1,15 @@
-from events.collaboration.base_collaboration import BaseCollaboration, BaseCollaborationModel
+from events.collaboration.base_collaboration import BaseCollaboration, BaseIssueModel
 from utils.dt import timestamp
-from models.event import EventModel
-from models.event import EventType
+from models.event import EventType, EventInfoModel
 
-class IssueClosedModel(BaseCollaborationModel):
-  event_type: str = EventType.ISSUE_CLOSED.name
+class IssueClosedEvent(BaseCollaboration):
 
-class IssueClosed(BaseCollaboration):
-  event_data: IssueClosedModel
+  class InfoModel(BaseIssueModel):
+    pass
 
-  def set_model(self, base_model: EventModel):
-    self.info = IssueClosedModel(**base_model.model_dump())
+  @classmethod
+  def get_event_type(cls) -> EventType:
+    return EventType.ISSUE_CLOSED
 
   def apply(self):
     issue_key = self.info.issue_data['_key']
@@ -26,6 +25,6 @@ class IssueClosed(BaseCollaboration):
     self._update_production_status(f'Issue/{issue_key}')
 
 
-    self.set_response(dict(
+    self.response = dict(
       message=f"Issue {issue_key} closed successfuly."
-    ))
+    )
