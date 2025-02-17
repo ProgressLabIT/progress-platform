@@ -1,19 +1,12 @@
-from events.production.base_production import BaseProductionEvent, BaseProductionModel
-from models.traceability import *
+from events.production.base_production import BaseProductionEvent
+from events.production.batch_created import BatchCreatedEvent
+from events.work_session.work_session_created import WorkSessionCreatedEvent
+from models.event import EventInfoModel, EventType
 from models.production import Job, WorkStatus
-from utils.exceptions import JobIsStartedError, JobHasNoAssigneeError
-from utils.production import update_target_queue
-from utils.db import model_to_db_dict
-from utils.traceability import Queries as TraceabilityQueries
-
-from events.base_event import BaseEvent
-from events.serial.serial_created import SerialCreatedEvent
-from models.event import EventModel, EventInfoModel
-from models.event import EventType
-from events.event_manager import EventManager
-from events.batch.batch_created import BatchCreatedEvent
-from events.work_session.work_session_started import WorkSessionStartedEvent
+from models.traceability import *
+from utils.exceptions import JobHasNoAssigneeError, JobIsStartedError
 from utils.production import Queries as ProductionQueries
+from utils.production import update_target_queue
 
 
 class JobStartedEvent(BaseProductionEvent):
@@ -26,8 +19,9 @@ class JobStartedEvent(BaseProductionEvent):
     return EventType.JOB_STARTED
 
   def apply(self):
-    # Check job hasn't been started already
     self._get_job_data()
+
+    # Check job hasn't been started already
     if self.job.stage != WorkStatus.CREATED:
       raise JobIsStartedError('Job has already been started')
 
@@ -53,13 +47,7 @@ class JobStartedEvent(BaseProductionEvent):
     self.info.batch_key = self.batch.key
 
     # Create new WorkSession and store _key in Event.info
-    self.work_session = WorkSessionStartedEvent.create_as_child(context=self, new_event_data=dict(
-      job_key = self.info.job_key,
-      batch_key = self.info.batch_key,
-      phase_key = self.info.phase_key,
-      work_order_key = self.info.work_order_key,
-      product_key = self.info.product_key
-    ))
+    self.work_session = WorkSessionCreatedEvent.create_as_child(self, dict(job_key = self.info.job_key))
 
     self.info.work_session_key = self.work_session.key
 

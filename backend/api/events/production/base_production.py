@@ -1,68 +1,20 @@
-from datetime import datetime
-from typing import Any, Set, ClassVar
-from models.form import FormFieldValue
+
 from events.base_event import BaseEvent
-from pydantic import model_validator
-from models.production import WorkOrderFull
-from utils.traceability import Queries as TraceabilityQueries
+from events.production.commons.batch import BaseBatchEvent
+from events.production.commons.job import BaseJobEvent
+from events.production.commons.serial import BaseSerialEvent
+from models.production import WorkOrderFull, WorkStatus
 from models.traceability import *
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
-from models.production import Job, WorkStatus
-from utils.production import Queries as ProductionQueries
-from models.event import EventModel
-from abc import ABC, abstractmethod
-from utils.dt import timestamp
-class BaseProductionModel(EventModel):
-  # Production Fields
-    work_session_key: str | None = None
-    work_session_end: datetime | None = None
-    job_key: str | None = None
-    product_key: str | None = None
-    work_order_key: str | None = None
-    phase_key: str | None = None
-    next_phase_key: str | None = None
-    active_batch_key: str | None = None
-    active_batch_qt: float | None = None
-    step_key: str | None = None
-    completed_batch_key: str | None = None
-    completed_batch_qt: float | None = None
-    new_active_batch_qt: float | None = None
-    new_batch_key: str | None = None
-    project_code: str | None = None
-    message_key: str | None = None
-    step_changed_qt: float | None = None
-    form_data: list[FormFieldValue] = []
 
-    batch_serials: Set[str] | None = None # prevent duplicated entries from client
 
-class BaseProductionEvent(BaseEvent):
-
+class BaseProductionEvent(BaseEvent, BaseBatchEvent, BaseJobEvent, BaseSerialEvent):
 
   def post_processing(self):
     self.update_job_last_online()
     self.update_work_order()
 
-  from events.production.commons.serial import(
-    send_to_consumer,
-    _retrieve_serial_phases_data,
-    _convert_form_field,
-  )
-
-  from events.production.commons.batch import(
-    get_active_batch,
-    get_batch_step_done_count,
-    get_batch_execution_data,
-    current_step_was_last_to_do
-  )
-
-  from events.production.commons.job import (
-    set_job_active_state,
-    update_job_last_online,
-    _get_job_data,
-    get_job_steps_count,
-    update_job_step_progress,
-  )
 
   @property
   def tx_collections(self) -> list[str]:
@@ -115,6 +67,9 @@ class BaseProductionEvent(BaseEvent):
       TraceabilityQueries.UPDATE_WORK_ORDER,
       bind_vars=dict(wo_key=self.info.work_order_key)
     ).next())
+
+    # TODO: Add WORK_ORDER_STARTED and WORK_ORDER_CLOSED events, and include in them QUEUE_UPDATED events
+
     # Remove work order from the queue if override closed it
     if updated_wo.status == WorkStatus.CLOSED:
       self.tx.aql.execute(
@@ -128,7 +83,10 @@ class BaseProductionEvent(BaseEvent):
         bind_vars=dict(new_wo_key=self.info.work_order_key)
       )
 
-
-
+  def update_wip_availability_for_phases(self, phase_keys: list[str]):
+    self.tx.aql.execute(
+      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
+      bind_vars=dict(wo_key=self.info.work_order_key, phase_keys=phase_keys)
+    )
 
 

@@ -1,19 +1,18 @@
-from events.wip.base_wip import BaseWIP, BaseWIPModel
-from models.event import EventType
-from models.event import EventModel
+from events.production.base_production import BaseProductionEvent
+from models.event import EventInfoModel, EventType
 from models.traceability import WIP
 from utils.exceptions import WipNotAvailableError
 
-class WIPRemovedModel(BaseWIPModel):
-  event_type: str = EventType.WIP_REMOVED.name
-  quantity: int
 
+class WIPRemovedEvent(BaseProductionEvent):
+  class InfoModel(EventInfoModel):
+    job_key: str
+    quantity: int
 
-class WIPRemoved(BaseWIP):
-  event_data: WIPRemovedModel
+  @classmethod
+  def get_event_type(cls):
+    return EventType.WIP_REMOVED
 
-  def set_model(self, base_model: EventModel):
-    self.info = WIPRemovedModel(**base_model.model_dump())
 
   def apply(self):
     """

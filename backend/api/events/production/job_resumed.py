@@ -1,10 +1,9 @@
-from events.production.base_production import BaseProductionEvent, BaseProductionModel
-from utils.dt import timestamp
-from models.production import Job
-from utils.production import Queries as ProductionQueries
-from models.event import EventModel, EventInfoModel, EventType
+from events.production.base_production import BaseProductionEvent
+from events.production.batch_created import BatchCreatedEvent
 from events.work_session.work_session_created import WorkSessionCreatedEvent
-from events.batch.batch_created import BatchCreatedEvent
+from models.event import EventInfoModel, EventType
+from utils.production import Queries as ProductionQueries
+
 
 class JobResumed(BaseProductionEvent):
   class InfoModel(EventInfoModel):
@@ -28,12 +27,7 @@ class JobResumed(BaseProductionEvent):
         batch_serials = self.info.batch_serials,
       ))
 
-    self.work_session = WorkSessionCreatedEvent.create_as_child(self, dict(
-      job_key = self.info.job_key,
-      work_order_key = self.info.work_order_key,
-      phase_key = self.info.phase_key,
-      batch_key = self.batch.key
-    ))
+    self.work_session = WorkSessionCreatedEvent.create_as_child(self, dict(job_key = self.info.job_key))
 
     self.info.work_session_key = self.work_session.key
 

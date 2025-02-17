@@ -1,15 +1,16 @@
-from events.production.base_production import BaseProductionEvent, BaseProductionModel
+from events.production.base_production import BaseProductionEvent
+from models.event import EventInfoModel, EventType
 from models.traceability import *
-from models.event import EventModel
-from models.event import EventType
-class StepEditedModel(BaseProductionModel):
-  event_type: str = EventType.STEP_EDITED.name
+
 
 class StepEdited(BaseProductionEvent):
-  event_data: StepEditedModel
+  class InfoModel(EventInfoModel):
+    job_key: str
+    step_key: str
 
-  def set_model(self, base_model: EventModel):
-    self.info = StepEditedModel(**base_model.model_dump())
+  @classmethod
+  def get_event_type(cls):
+    return EventType.STEP_EDITED
 
   def is_event_first(self):
     return True

@@ -1,31 +1,28 @@
-from pydantic import Field
 
+from events.inventory.movement_completed import MovementCompletedEvent
+from events.production.base_production import BaseProductionEvent
+from events.production.batch_created import BatchCreatedEvent
+from events.production.job_closed import JobClosedEvent
 from events.serial.serial_batch_confirmed import SerialBatchConfirmedEvent
-from events.serial.serial_released import SerialReleasedEvent
 from events.serial.serial_data_updated import SerialDataUpdatedEvent
-from events.production.base_production import BaseProductionEvent, BaseProductionModel
+from events.serial.serial_released import SerialReleasedEvent
+from events.wip.wip_declared import WIPDeclaredEvent
+from events.wip.wip_removed import WIPRemovedEvent
+from events.work_session.work_session_closed import WorkSessionClosedEvent
+from events.work_session.work_session_created import WorkSessionCreatedEvent
+from models.event import EventInfoModel, EventType
 from models.form import FormFieldValue, SerialFormFieldValue
-from models.traceability import *
+from models.inventory import InventoryMovementReferences, InventoryMovementType
 from models.production import Job
-from models.event import EventType
-from models.inventory import InventoryMovementType, MovementStatus, InventoryMovementReferences
-from utils.exceptions import WipNotAvailableError
+from models.traceability import *
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
-from events.batch.base_batch import BaseBatchModel
-from events.batch.batch_created import BatchCreatedEvent
-from events.work_session.work_session_closed import WorkSessionClosedEvent
-from events.wip.wip_declared import WIPDeclaredModel
-from events.wip.wip_removed import WIPRemovedModel
-from events.wip.wip_unbooked import WIPUnbookedModel
-from events.inventory.movement_created import MovementCreatedModel
-from events.production.job_closed import JobClosedEvent
-from events.work_session.work_session_created import WorkSessionCreatedEvent
-from events.wip.wip_booked import WIPBookedModel
-from events.inventory.movement_completed import MovementCompletedEvent
+
 
 class BatchCompletedEvent(BaseProductionEvent):
-  class InfoModel(BaseBatchModel):
+  class InfoModel(EventInfoModel):
+    active_batch_key: str
+    completed_batch_qt: int
     form_data: list[FormFieldValue] | None = None
     serial_data: list[SerialFormFieldValue] | None = None
 
@@ -34,15 +31,10 @@ class BatchCompletedEvent(BaseProductionEvent):
   def get_event_type(cls):
     return EventType.BATCH_COMPLETED
 
-
-  from events.production.commons.serial import(
-    convert_form_data,
-    convert_batch_data,
-  )
-
   def apply(self):
+    self.batch = Batch(**self.tx.collection('Batch').get(self.info.active_batch_key))
+    self.info.job_key = self.batch.job_key
     self._get_job_data()
-    self.batch = Batch(**self.tx.collection('Batch').get(self.job.active_batch_key))
 
     if self.job.stage == 'closed':
       raise ValueError("Job is already closed")
@@ -67,19 +59,18 @@ class BatchCompletedEvent(BaseProductionEvent):
         user_key = self.info.user_key
       ))
 
-    self.info.completed_batch_key = self.job.active_batch_key
+    self.info.active_batch_key = self.job.active_batch_key
     self.info.completed_batch_qt = self.batch.qt_total
-    self.info.work_session_key = self.job.last_work_session_started
 
     WorkSessionClosedEvent.create_as_child(self, dict(
       work_session_end = self.info.timestamp,
-      job_key = self.info.job_key
-    ));
+      work_session_key = self.info.work_session_key
+    ))
 
     # Complete batch
     self.tx.aql.execute(
       TraceabilityQueries.COMPLETE_BATCH, bind_vars=dict(
-        batch_key=self.info.completed_batch_key,
+        batch_key=self.info.active_batch_key,
         qt_pass=self.info.completed_batch_qt,
         end=self.info.timestamp
       )
@@ -132,12 +123,8 @@ class BatchCompletedEvent(BaseProductionEvent):
           phase_key = self.info.phase_key,
           product_key = self.info.product_key,
         ))
-        new_work_session = WorkSessionCreatedEvent.create_as_child(self, dict(
-          job_key = self.info.job_key,
-          batch_key = new_batch.key,
-          work_order_key = self.info.work_order_key,
-          phase_key = self.info.phase_key,
-        ))
+        new_work_session = WorkSessionCreatedEvent.create_as_child(self, dict(job_key = self.info.job_key))
+
         job_update.update(dict(
           active_batch_qt = new_batch.qt_total,
           active_batch_key = new_batch.key,
@@ -164,21 +151,15 @@ class BatchCompletedEvent(BaseProductionEvent):
     if not self.job.first_phase:
       WIPRemovedEvent.create_as_child(self, dict(
         job_key=self.info.job_key,
-        phase_key=self.info.phase_key,
-        work_order_key=self.info.work_order_key,
-        quantity=completed_batch_qt,
-        batch_key=self.info.new_batch_key
+        quantity=self.info.completed_batch_qt,
       ))
 
     # is next_phase generate a WIP record and update job input availability state
     if not self.job.last_phase:
       WIPDeclaredEvent.create_as_child(self, dict(
         job_key=self.info.job_key,
-        phase_key=self.info.phase_key,
-        work_order_key=self.info.work_order_key,
-        quantity=completed_batch_qt,
-        batch_key=self.info.new_batch_key,
-        product_key=self.info.product_key,
+        batch_key=self.info.active_batch_key,
+        quantity=self.info.completed_batch_qt,
       ))
     else:
       if getattr(self.job, 'traceability_level', None) is not None:

@@ -1,9 +1,12 @@
 from typing import Any
+
 from events.base_event import BaseEvent
+from events.production.commons.job import BaseJobEvent
+from models.production import WorkOrderFull, WorkStatus
 from pydantic import model_validator
-from models.production import WorkStatus, WorkOrderFull
+from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
-from utils.production import Queries as ProductionQueries, update_target_queue
+
 
 class Queries:
   CANCEL_JOB_WORK_SESSIONS = """
@@ -20,20 +23,12 @@ class Queries:
     SORT b.end DESC
     RETURN b
     """
-class BaseAdmin(BaseEvent):
+class BaseAdmin(BaseEvent, BaseJobEvent):
     # Admin fields
     new_job_duration: int | None = None # milliseconds
     new_job_qt_completed: float | None = None
     new_job_qt_released: float | None = None
     should_adjust_duration: bool | None = None
-
-    from events.production.commons.job import (
-      set_job_active_state,
-      update_job_last_online,
-      _get_job_data,
-      get_job_steps_count,
-      update_job_step_progress,
-    )
 
     @model_validator(mode="before")
     @classmethod

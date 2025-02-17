@@ -1,10 +1,8 @@
-from pydantic import BaseModel
-
-from events.production.base_production import BaseProductionEvent, BaseProductionModel
-from models.production import Job
-from models.event import EventModel, EventInfoModel
-from models.event import EventType
+from events.production.base_production import BaseProductionEvent
 from events.work_session.work_session_closed import WorkSessionClosedEvent
+from models.event import EventInfoModel, EventType
+from models.production import Job
+
 
 class JobPausedEvent(BaseProductionEvent):
   class InfoModel(EventInfoModel):
@@ -15,7 +13,11 @@ class JobPausedEvent(BaseProductionEvent):
     return EventType.JOB_PAUSED
 
   def apply(self):
-    WorkSessionClosedEvent.create_as_child(self, dict(job_key = self.info.job_key))
+    self._get_job_data()
+    WorkSessionClosedEvent.create_as_child(self, dict(
+      work_session_key = self.info.work_session_key,
+      work_session_end = self.info.timestamp
+    ))
 
     update_data = dict(
       _key=self.info.job_key,

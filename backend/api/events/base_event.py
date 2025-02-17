@@ -1,15 +1,12 @@
-from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import Any, Self
 import uuid
+from abc import ABC, abstractmethod
+from typing import Self
 
 from arango.database import TransactionDatabase
-from pydantic import BaseModel, model_validator, Field
-
-from utils.event import get_event_class
-from models.event import EventType, EventModel, EventInfoModel
+from models.event import EventInfoModel, EventType
+from pydantic import BaseModel
 from utils.db import db
-from utils.dt import timestamp
+
 
 class BaseEvent(ABC):
   """
@@ -48,7 +45,7 @@ class BaseEvent(ABC):
     return cls.InfoModel
 
   @classmethod
-  def create_as_child(cls, context: EventModel, new_event_data: 'cls.InfoModel') -> Self:
+  def create_as_child(cls, context: EventInfoModel, new_event_data: 'cls.InfoModel') -> Self:
     """
     Create a child event from an existing event, passing event group id, transaction, and user/session data.
     """

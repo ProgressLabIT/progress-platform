@@ -1,12 +1,16 @@
-from events.work_session.base_work_session import BaseWorkSession, WorkSessionEventModel
-from models.event import EventType
-from models.event import EventModel
+from datetime import datetime
+
+from events.production.base_production import BaseProductionEvent
+from models.event import EventInfoModel, EventType
 from models.traceability import WorkSession
 from utils.traceability import Queries as TraceabilityQueries
 
-class WorkSessionCreatedEvent(BaseWorkSession):
-  class InfoModel(WorkSessionEventModel):
-    pass
+
+class WorkSessionCreatedEvent(BaseProductionEvent):
+  class InfoModel(EventInfoModel):
+    job_key: str
+    work_session_end: datetime | None = None
+    forced: bool | None = False
 
   @classmethod
   def get_event_type(cls):
@@ -30,7 +34,10 @@ class WorkSessionCreatedEvent(BaseWorkSession):
       TraceabilityQueries.CLOSE_UNALLOWED_PARALLEL_WORK_SESSIONS,
       bind_vars=bind_vars
     )
+
     closed_sessions_jobs = [ws['job_key'] for ws in closed_sessions_cursor]
+
+    # TODO: Use JOB_PAUSED event to close other work sessions
     if len(closed_sessions_jobs):
       self.tx.aql.execute(
         """
@@ -45,13 +52,15 @@ class WorkSessionCreatedEvent(BaseWorkSession):
     new_work_session = self.tx.aql.execute(
       TraceabilityQueries.CREATE_WORK_SESSION, bind_vars=dict(
         job_key = self.job.key,
-        batch_key = self.info.batch_key, # in self info can be under new_batch_key or active_batch_key, taking it from self.batch makes it more consistent.
+        batch_key = self.info.active_batch_key,
         work_order_key = self.job.wo_key,
         phase_key = self.job.phase_key,
         product_key = self.job.product_key,
         user_key = self.info.user_key,
         user_session_key = self.info.user_session_key,
         start = self.info.timestamp,
+        end = self.info.work_session_end,
+        forced = self.info.event_group if self.info.forced else None,
       )
     ).next()
 

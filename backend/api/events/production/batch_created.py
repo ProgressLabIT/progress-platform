@@ -1,14 +1,15 @@
-from events.base_event import BaseEvent
-from events.batch.base_batch import BaseBatchEvent, BaseBatchModel
-from models.event import EventType, EventModel
-from models.traceability import Batch, StepStatus
-from events.wip.wip_booked import WIPBooked
-from typing import Set
+from events.production.base_production import BaseProductionEvent
+from events.wip.wip_booked import WIPBookedEvent
+from models.event import EventInfoModel, EventType
+from models.traceability import Batch
 
 
-class BatchCreatedEvent(BaseBatchEvent):
-  class InfoModel(BaseBatchModel):
-    pass # no additional info
+class BatchCreatedEvent(BaseProductionEvent):
+  class InfoModel(EventInfoModel):
+    job_key: str
+    phase_key: str
+    work_order_key: str
+    product_key: str
 
   @staticmethod
   def get_event_type() -> EventType:

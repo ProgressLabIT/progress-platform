@@ -1,25 +1,21 @@
-from events.wip.base_wip import BaseWIP, BaseWIPModel
-from models.event import EventType
-from models.event import EventModel
-from utils.traceability import Queries as TraceabilityQueries
+from events.production.base_production import BaseProductionEvent
+from models.event import EventInfoModel, EventType
 from models.traceability import WIP
 from utils.exceptions import WipNotAvailableError
-from typing import Set
-from models.serial import Serial
 from utils.serial import Queries as SerialQueries
-
-from events.event_manager import EventManager
-
-class WIPBookedModel(BaseWIPModel):
-  event_type: str = EventType.WIP_BOOKED.name
-  quantity: int
+from utils.traceability import Queries as TraceabilityQueries
 
 
-class WIPBooked(BaseWIP):
-  event_data: WIPBookedModel
+class WIPBookedEvent(BaseProductionEvent):
+  class InfoModel(EventInfoModel):
+    job_key: str
+    phase_key: str
+    work_order_key: str
+    quantity: int
 
-  def set_model(self, base_model: EventModel):
-    self.info = WIPBookedModel(**base_model.model_dump())
+  @classmethod
+  def get_event_type(cls) -> EventType:
+    return EventType.WIP_BOOKED
 
   def apply(self):
     self._get_job_data()
@@ -121,10 +117,10 @@ class WIPBooked(BaseWIP):
         )
       )
 
-      EventManager.trigger_event(self, SerialBatchLinkedModel(
-          batch_key = self.info.batch_key,
-          batch_serials=self.info.batch_serials,
-          user_key = self.info.user_key
-        ))
+      # EventManager.trigger_event(self, SerialBatchLinkedModel(
+      #     batch_key = self.info.batch_key,
+      #     batch_serials=self.info.batch_serials,
+      #     user_key = self.info.user_key
+      #   ))
 
     self.update_wip_availability_for_phases(phase_keys=[self.info.phase_key])

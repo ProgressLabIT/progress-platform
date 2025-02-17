@@ -13,12 +13,6 @@ class StepCompletedEvent(BaseProductionEvent):
     def get_event_type(cls):
         return EventType.STEP_COMPLETED
 
-    from events.production.commons.serial import (
-        _convert_form_field,
-        convert_batch_data,
-        convert_form_data,
-    )
-
     def apply(self):
         self._get_job_data()
         self.get_active_batch()

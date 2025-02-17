@@ -1,20 +1,18 @@
-from events.wip.base_wip import BaseWIP, BaseWIPModel
-from models.event import EventType
-from models.event import EventModel
+from events.production.base_production import BaseProductionEvent
+from models.event import EventInfoModel, EventType
 from models.traceability import WIP
 from utils.exceptions import WipNotAvailableError
 
 
-class WIPUnbookedModel(BaseWIPModel):
-  event_type: str = EventType.WIP_UNBOOKED.name
-  quantity: int
+class WIPUnbookedEvent(BaseProductionEvent):
+  class InfoModel(EventInfoModel):
+    job_key: str
+    quantity: int
 
+  @classmethod
+  def get_event_type(cls):
+    return EventType.WIP_UNBOOKED
 
-class WIPUnbooked(BaseWIP):
-  event_data: WIPUnbookedModel
-
-  def set_model(self, base_model: EventModel):
-    self.info = WIPUnbookedModel(**base_model.model_dump())
 
   def apply(self):
     if not hasattr(self, 'job'):

@@ -1,10 +1,10 @@
 from datetime import datetime
-from events.production.job_paused import JobPausedEvent, BaseProductionModel
-from utils.dt import timestamp
-from models.event import EventModel, EventInfoModel, EventType
+
+from events.production.job_paused import JobPausedEvent
 from events.work_session.work_session_closed import WorkSessionClosedEvent
-from events.event_manager import EventManager
+from models.event import EventInfoModel, EventType
 from models.production import Job
+
 
 class JobPausedOffline(JobPausedEvent):
   class InfoModel(EventInfoModel):
@@ -15,10 +15,11 @@ class JobPausedOffline(JobPausedEvent):
     return EventType.JOB_PAUSED_OFFLINE
 
   def apply(self):
-    EventManager.trigger_event(self, WorkSessionClosedEvent(
-      job_key = self.info.job_key,
+    self._get_job_data()
+    WorkSessionClosedEvent.create_as_child(self, dict(
+      job_key = self.info.work_session_key,
       work_session_end = self.info.work_session_end
-    ));
+    ))
 
     update_data = dict(
       _key=self.info.job_key,

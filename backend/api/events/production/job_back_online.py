@@ -1,7 +1,5 @@
-from events.production.base_production import BaseProductionEvent, BaseProductionModel
-from utils.dt import timestamp
-from models.event import EventModel, EventInfoModel
-from models.event import EventType
+from events.production.base_production import BaseProductionEvent
+from models.event import EventInfoModel, EventType
 
 
 class JobBackOnlineEvent(BaseProductionEvent):

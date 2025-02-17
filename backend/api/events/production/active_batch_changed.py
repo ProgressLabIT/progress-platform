@@ -1,16 +1,16 @@
 
 
-from models.traceability import *
-from models.production import Job
 from events.production.base_production import BaseProductionEvent
-from events.batch.base_batch import BaseBatchEvent
 from models.event import EventInfoModel, EventType
-
+from models.production import Job
+from models.traceability import *
 from utils.serial import Queries as SerialQueries
 
-class ActiveBatchChangedEvent(BaseProductionEvent, BaseBatchEvent):
+
+class ActiveBatchChangedEvent(BaseProductionEvent):
 
   class InfoModel(EventInfoModel):
+    job_key: str
     new_active_batch_qt: int
     batch_serials: list[str]
 
@@ -21,9 +21,6 @@ class ActiveBatchChangedEvent(BaseProductionEvent, BaseBatchEvent):
   def apply(self):
     self._get_job_data()
     self.get_active_batch()
-
-    self.work_session = self.get_current_work_session()
-    self.info.work_session_key = self.work_session.key
 
     active_batch_qt_delta = self.info.new_active_batch_qt - self.job.active_batch_qt
 

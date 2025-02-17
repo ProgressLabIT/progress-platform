@@ -1,5 +1,3 @@
-from models.production import Job
-from models.traceability import StepStatus
 
 class Queries:
 
@@ -40,8 +38,8 @@ class Queries:
       start: @start,
       active: true,
       canceled: null,
-      forced: null,
-      end: null
+      forced: @forced,
+      end: @end
     }
 
     INSERT new_ws INTO WorkSession RETURN NEW
