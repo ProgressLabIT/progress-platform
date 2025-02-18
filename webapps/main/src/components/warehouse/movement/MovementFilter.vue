@@ -11,12 +11,22 @@
       dense
       clearable
       autocomplete="off"
-      name="search"
       debounce="300"
       :label="$capitalize($t('product.code'))"
       class="q-mb-md col"
     />
 
+    <!-- SERIAL CODE -->
+    <q-input
+      v-model="serial_search"
+      filled
+      dense
+      clearable
+      autocomplete="off"
+      debounce="300"
+      :label="$capitalize($t('serial'))"
+      class="q-mb-md col"
+    />
 
     <!-- MOVEMENT TYPE -->
     <q-select
