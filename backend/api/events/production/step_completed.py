@@ -33,13 +33,9 @@ class StepCompletedEvent(BaseProductionEvent):
             BatchCompletedEvent.create_as_child(
                 self,
                 dict(
-                    job_key=self.info.job_key,
-                    work_order_key=self.info.work_order_key,
-                    phase_key=self.info.phase_key,
                     batch_serials=self.info.batch_serials,
                     completed_batch_qt=self.batch.qt_total,
-                    completed_batch_key=self.batch.key,
-                    product_key=self.info.product_key,
+                    active_batch_key=self.batch.key,
                 ),
             )
 
