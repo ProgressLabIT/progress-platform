@@ -25,8 +25,8 @@ class BaseSerialModel(EventInfoModel):
 
 class BaseSerialEvent(BaseEvent, ABC):
 
-  @property
-  def tx_collections(cls):
+  @classmethod
+  def get_tx_collections(cls):
     return [
       'Batch',
       'batch_serial',

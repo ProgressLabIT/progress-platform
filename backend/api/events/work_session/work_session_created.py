@@ -16,8 +16,8 @@ class WorkSessionCreatedEvent(BaseProductionEvent):
   def get_event_type(cls):
     return EventType.WORK_SESSION_CREATED
 
-  @property
-  def tx_collections(self):
+  @classmethod
+  def get_tx_collections(cls):
     return [
       'WorkSession',
     ]

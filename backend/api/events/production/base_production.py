@@ -16,8 +16,8 @@ class BaseProductionEvent(BaseEvent, BaseBatchEvent, BaseJobEvent, BaseSerialEve
     self.update_work_order()
 
 
-  @property
-  def tx_collections(self) -> list[str]:
+  @classmethod
+  def get_tx_collections(cls) -> list[str]:
     return [
       'Batch',
       'batch_serial',

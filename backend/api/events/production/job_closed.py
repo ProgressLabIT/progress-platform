@@ -14,8 +14,8 @@ class JobClosedEvent(BaseEvent):
   def get_event_type(cls):
     return 'JOB_CLOSED'
 
-  @property
-  def tx_collections(self):
+  @classmethod
+  def get_tx_collections(cls):
     return ['Job', 'Queue', 'WorkOrder']
 
   def apply(self):

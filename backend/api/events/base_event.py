@@ -6,6 +6,7 @@ from arango.database import TransactionDatabase
 from models.event import EventInfoModel, EventType
 from pydantic import BaseModel
 from utils.db import db
+from utils.event import get_event_class
 
 
 class BaseEvent(ABC):
@@ -20,9 +21,10 @@ class BaseEvent(ABC):
     """
     pass
 
-  @property
+
+  @classmethod
   @abstractmethod
-  def tx_collections(self) -> list[str]:
+  def get_tx_collections(cls) -> list[str]:
     """
     Returns the collections that should be used for the transaction. Must be implemented by the subclass.
     """
@@ -56,6 +58,55 @@ class BaseEvent(ABC):
     new_event.save()
     return new_event.response
 
+
+  @staticmethod
+  def spawn_multiple(
+    shared_data: EventInfoModel,
+    event_data: list[dict],
+    tx: TransactionDatabase | None = None,
+    ) -> None:
+    """
+    Generate multiple events from a list of event data sharing the same transaction and group id
+    without the need to have a single primary event.
+    """
+
+    if not event_data:
+      return
+
+    # All events must share the same event group
+    if shared_data.event_group is None:
+      shared_data.event_group = str(uuid.uuid4())
+
+    # If no transaction is provided, create one with the collections of all event types
+    commit = False
+    if tx is None:
+      commit = True
+      try:
+        event_classes = [get_event_class(data.get('event_type')) for data in event_data]
+        collections = set(sum((event_class.get_tx_collections() for event_class in event_classes), []))
+      except KeyError:
+        raise ValueError('Event type is required')
+
+      tx = db.begin_transaction(write=collections)
+
+    # Create and process each event
+    for data in event_data:
+      try:
+        event_type = data.get('event_type')
+      except KeyError:
+        raise ValueError('Event type is required')
+
+      try:
+        event_class = get_event_class(event_type)
+      except KeyError:
+        raise ValueError(f'Invalid event type: {event_type}')
+
+      context = EventModel(tx=tx, info=shared_data)
+      event = event_class.create_as_child(context=context, new_event_data=data)
+      event.save()
+
+    if commit:
+      tx.commit_transaction()
 
   @property
   def event_first(self) -> bool:
@@ -121,7 +172,7 @@ class BaseEvent(ABC):
     """
     Save the event to the database and handle transaction.
     """
-    collections = self.tx_collections + ['Event']
+    collections = self.get_tx_collections() + ['Event']
 
     try:
       if self.info.primary:

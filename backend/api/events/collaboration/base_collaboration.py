@@ -11,8 +11,8 @@ class BaseIssueModel(EventInfoModel):
 
 class BaseCollaboration(BaseEvent, ABC):
 
-    @property
-    def tx_collections(self):
+    @classmethod
+    def get_tx_collections(cls):
       return ['Event', 'Issue', 'issue_rel', 'WorkOrder', 'Job', 'message']
 
     @abstractmethod

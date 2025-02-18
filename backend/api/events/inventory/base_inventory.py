@@ -23,8 +23,8 @@ class BaseInventoryModel(EventModel):
 
 class BaseInventoryEvent(BaseEvent, ABC):
 
-  @property
-  def tx_collections(self):
+  @classmethod
+  def get_tx_collections(cls):
     return [
       'is_in_position',
       'Serial',

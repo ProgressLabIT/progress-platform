@@ -15,8 +15,8 @@ class WorkSessionClosedEvent(BaseEvent):
   def get_event_type(cls):
     return EventType.WORK_SESSION_CLOSED
 
-  @property
-  def tx_collections(self):
+  @classmethod
+  def get_tx_collections(cls):
     return [
       'WorkSession'
     ]
