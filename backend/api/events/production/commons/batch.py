@@ -51,8 +51,8 @@ class BaseBatchEvent:
     return batch_execution_data
 
 
-  def current_step_was_last_to_do(self):
-    total_step_count = self.get_job_steps_count()
-    step_done_count = self.get_batch_step_done_count()
-
-    return step_done_count == total_step_count
+  def _check_all_batch_steps_done(self):
+    return self.tx.aql.execute(
+      TraceabilityQueries.ALL_BATCH_STEPS_DONE,
+      bind_vars=dict(batch_key=self.batch.key, job_key=self.job.key)
+    ).next()

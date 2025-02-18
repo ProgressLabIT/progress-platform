@@ -368,6 +368,25 @@ class Queries:
     RETURN { upstream_free_wip, downstream_free_wip, next_phase_key, previous_phase_key }
   """
 
+
+  ALL_BATCH_STEPS_DONE = """
+    LET steps = DOCUMENT(Job, @job_key).step_sequence[*]._key
+
+    LET steps_done = (
+      FOR s IN steps
+      LET done = NOT_NULL(FIRST(
+        FOR x IN StepExecutionData
+          FILTER
+            x.batch_key == @batch_key
+            && x.step_key == s
+            && !x.canceled
+          RETURN x.status == 'done'
+        ), false)
+      RETURN done
+    )
+    RETURN steps_done[? ALL FILTER CURRENT == true]
+  """
+
 # ------------- END OF QUERIES CLASS ----------------------------------
 
 

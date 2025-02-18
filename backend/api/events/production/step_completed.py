@@ -29,7 +29,7 @@ class StepCompletedEvent(BaseProductionEvent):
         self.tx.collection("StepExecutionData").insert(step_data)
 
         # if last step complete batch
-        if self.current_step_was_last_to_do():
+        if self._check_all_batch_steps_done():
             BatchCompletedEvent.create_as_child(
                 self,
                 dict(
