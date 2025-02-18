@@ -5,7 +5,7 @@ from models.traceability import *
 
 class StepEdited(BaseProductionEvent):
   class InfoModel(EventInfoModel):
-    job_key: str
+    batch_key: str
     step_key: str
 
   @classmethod
@@ -20,26 +20,24 @@ class StepEdited(BaseProductionEvent):
     self.get_active_batch()
 
     # Save current work session and batch keys in Event.info
-    if not self.work_session_key:
-      self.work_session = self.get_current_work_session()
-      self.work_session_key = self.work_session.key
+    self.info.work_session_key = self.job.last_work_session_started
 
     # Flag record as canceled
     match = dict(job_key = self.info.job_key, step_key = self.info.step_key, canceled=None)
-    update = dict(canceled = self.id)
+    update = dict(canceled = self.info.event_group)
     step_data = self.tx.collection('StepExecutionData').update_match(match, update)
 
     # Create new StepExecutionData record
     step_data = StepExecutionData(**vars(self))
     step_data.batch_key = self.info.active_batch_key
     step_data.status = StepStatus.DONE
-    step_data.modified = self.id
-    step_data.completed = self.timestamp
+    step_data.modified = self.info.event_group
+    step_data.completed = self.info.timestamp
     self.tx.collection('StepExecutionData').insert(step_data)
 
     # Set response
-    self.set_response(dict(
+    self.response = dict(
       message = f"Step edited for batch {self.info.active_batch_key}",
       job_data = self.job,
       batch_data = self.get_batch_execution_data()
-    ))
+    )

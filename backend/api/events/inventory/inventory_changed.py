@@ -1,11 +1,10 @@
-from typing import Any
 
-from pydantic import Field
 
 from events.inventory.base_inventory import BaseInventoryEvent
 from models.event import EventInfoModel, EventType
 from models.inventory import Inventory
 from utils.exceptions import InventoryMovementException
+
 
 class InventoryChangedEvent(BaseInventoryEvent):
 
@@ -53,4 +52,6 @@ class InventoryChangedEvent(BaseInventoryEvent):
         ))
         return False
       else:
-        raise InventoryMovementException # Enrich with more information from the caller
+        self._get_product()
+        position = self.tx.collection('Position').get(self.info.position_id)
+        raise InventoryMovementException(f"Not enough inventory for product {self.product.code} in position {position['code']}")

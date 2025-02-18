@@ -47,7 +47,15 @@ class JobStartedEvent(BaseProductionEvent):
     self.info.batch_key = self.batch.key
 
     # Create new WorkSession and store _key in Event.info
-    self.work_session = WorkSessionCreatedEvent.create_as_child(self, dict(job_key = self.info.job_key))
+    self.work_session = WorkSessionCreatedEvent.create_as_child(self, dict(
+      job_key = self.info.job_key,
+      batch_key = self.info.batch_key,
+      work_order_key = self.info.work_order_key,
+      phase_key = self.info.phase_key,
+      product_key = self.info.product_key,
+      user_key = self.info.user_key,
+      user_session_key = self.info.user_session_key
+    ))
 
     self.info.work_session_key = self.work_session.key
 

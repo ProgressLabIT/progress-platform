@@ -1,6 +1,8 @@
 
 
 from events.production.base_production import BaseProductionEvent
+from events.wip.wip_booked import WIPBookedEvent
+from events.wip.wip_unbooked import WIPUnbookedEvent
 from models.event import EventInfoModel, EventType
 from models.production import Job
 from models.traceability import *
@@ -59,17 +61,33 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
 
         # Has serials but not first phase
         else:
+          shared_event_data = dict(
+            job_key=self.job.key,
+            phase_key=self.job.phase_key,
+            batch_key=self.batch.key,
+            work_order_key=self.job.wo_key,
+            batch_serials=self.info.batch_serials
+          )
           if self.info.batch_serials is not None and len(self.info.batch_serials) == self.info.new_active_batch_qt:
-            self.book_wip_serials()
+            WIPBookedEvent.create_as_child(self, dict(
+              **shared_event_data,
+              quantity=self.info.new_active_batch_qt,
+            ))
           else:
             raise ValueError(f"The serials provided do not match the update requested. New qt: {self.new_active_batch_qt}. Serials provided: {self.batch_serials}")
       # No serial, only update batch quantity
       else:
         if not self.job.first_phase:
           if active_batch_qt_delta > 0:
-            self.book_wip(active_batch_qt_delta)
+            WIPBookedEvent.create_as_child(self, dict(
+              **shared_event_data,
+              quantity=active_batch_qt_delta,
+            ))
           else: # active_batch_qt_delta < 0:
-            self.unbook_wip(abs(active_batch_qt_delta))
+            WIPUnbookedEvent.create_as_child(self, dict(
+              **shared_event_data,
+              quantity=abs(active_batch_qt_delta)
+            ))
         # no else here, if first phase and no serial no need to manage other collections
         # just proceed with batch/job updates
 

@@ -8,7 +8,13 @@ from utils.traceability import Queries as TraceabilityQueries
 
 class WorkSessionCreatedEvent(BaseProductionEvent):
   class InfoModel(EventInfoModel):
+    user_key: str
+    user_session_key: str
     job_key: str
+    batch_key: str
+    work_order_key: str
+    phase_key: str
+    product_key: str
     work_session_end: datetime | None = None
     forced: bool | None = False
 
@@ -52,7 +58,7 @@ class WorkSessionCreatedEvent(BaseProductionEvent):
     new_work_session = self.tx.aql.execute(
       TraceabilityQueries.CREATE_WORK_SESSION, bind_vars=dict(
         job_key = self.job.key,
-        batch_key = self.info.active_batch_key,
+        batch_key = self.info.batch_key,
         work_order_key = self.job.wo_key,
         phase_key = self.job.phase_key,
         product_key = self.job.product_key,

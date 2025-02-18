@@ -1,13 +1,11 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Set
+from typing import Any
 
 from arango.database import TransactionDatabase
-from pydantic import BaseModel, Field, ConfigDict
-
-from models.base_models import ArangoDocument
-from models.serial import SerialLink
+from pydantic import BaseModel, ConfigDict, Field
 from utils.dt import timestamp
+
 
 class EventType(str, Enum):
 
@@ -49,6 +47,7 @@ class EventType(str, Enum):
   SERIAL_CREATED = 'SERIAL_CREATED'
   SERIAL_DELETED = 'SERIAL_DELETED'
   SERIAL_LINKED = 'SERIAL_LINKED'
+  SERIAL_UNLINKED = 'SERIAL_UNLINKED'
   SERIAL_UPDATED = 'SERIAL_UPDATED'
   SERIAL_BATCH_CONFIRMED = 'SERIAL_BATCH_CONFIRMED'
   SERIAL_DATA_UPDATED = 'SERIAL_DATA_UPDATED'
@@ -110,18 +109,18 @@ class EventModel(BaseModel):
   info: Any # model to be set at the event class level as a subclass of EventInfoModel
 
 
-class SerialNotificationEventModel(ArangoDocument):
-  event_type: str | EventType | None = None #
-  user_key: str | None = None #
-  event_group: str | None = None #
-  user_session_key: str | None = None #
-  timestamp: datetime = Field(default_factory=timestamp) #
-  primary: bool = True
-  description: str | None = None # optional descriptive field for auditing reasons
-  # Traceability fields
-  serial_key: Any | None = None
-  serial_data: Any | None = None
-  batch_serials: Set[str] | None = None # prevent duplicated entries from client
-  serial_link_data: list[SerialLink] | None = None
-  delete_children: bool | None = False
+# class SerialNotificationEventModel(ArangoDocument):
+#   event_type: str | EventType | None = None #
+#   user_key: str | None = None #
+#   event_group: str | None = None #
+#   user_session_key: str | None = None #
+#   timestamp: datetime = Field(default_factory=timestamp) #
+#   primary: bool = True
+#   description: str | None = None # optional descriptive field for auditing reasons
+#   # Traceability fields
+#   serial_key: Any | None = None
+#   serial_data: Any | None = None
+#   batch_serials: Set[str] | None = None # prevent duplicated entries from client
+#   serial_link_data: list[SerialLink] | None = None
+#   delete_children: bool | None = False
 

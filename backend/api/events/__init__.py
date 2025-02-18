@@ -50,7 +50,7 @@ from events.serial.serial_booked import SerialBooked
 from events.serial.serial_created import SerialCreatedEvent
 from events.serial.serial_data_updated import SerialDataUpdatedEvent
 from events.serial.serial_deleted import SerialDeleted
-from events.serial.serial_linked import SerialLinked
+from events.serial.serial_linked import SerialLinkedEvent
 from events.serial.serial_released import SerialReleasedEvent
 from events.serial.serial_updated import SerialUpdatedEvent
 

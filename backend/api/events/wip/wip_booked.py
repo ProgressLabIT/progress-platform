@@ -12,6 +12,8 @@ class WIPBookedEvent(BaseProductionEvent):
     phase_key: str
     work_order_key: str
     quantity: int
+    batch_key: str
+    batch_serials: list[str] | None = None
 
   @classmethod
   def get_event_type(cls) -> EventType:

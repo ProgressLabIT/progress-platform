@@ -1,10 +1,12 @@
 from datetime import datetime
-from typing import Annotated
 from enum import Enum
-from pydantic import BaseModel, Field, field_validator, StringConstraints
-from models.base_models import FlexModel, ArangoEdge, ArangoDocument
+from typing import Annotated
+
+from models.base_models import ArangoDocument, ArangoEdge
 from models.form import SerialFormFieldValue
+from pydantic import BaseModel, Field, StringConstraints
 from utils.dt import timestamp
+
 
 class Serial(ArangoDocument):
   code: Annotated[str, StringConstraints(to_upper=True)] | None = None
@@ -14,7 +16,7 @@ class Serial(ArangoDocument):
   counter_key: str | None = None
   user_key: str | None = None
   quantity: int = 1
-  created: datetime | datetime = Field(default_factory=timestamp)
+  created: datetime | None = Field(default_factory=timestamp)
   released: datetime | None = None
   available: bool = True
   data: list[SerialFormFieldValue] | None = None
@@ -26,15 +28,12 @@ class SerialSelection(BaseModel):
    counter_key: str | None = Field(None, validation_alias='counter_key')
    active: bool = False
 
-class SerialLink(BaseModel):
-  from_serial: str
-  to_serial:str
+class SerialLink(ArangoEdge):
   wo_key: str | None = None,
   component_key: str | None = None,
   batch_key: str | None = None,
   replaced: bool = False
   reason: str | None = None
-  link_serial_directly: bool = False
 
 class SerialNotificationType(str, Enum):
   CREATED = 'CREATED'

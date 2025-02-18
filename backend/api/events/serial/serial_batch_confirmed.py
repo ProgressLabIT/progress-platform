@@ -1,12 +1,11 @@
-from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
-from models.event import EventModel
-from models.event import EventType
-from models.serial import Serial, SerialNotificationType, SerialNotificationErrorCode
-
 from typing import Any
+
+from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
+from models.event import EventType
+from models.serial import Serial, SerialNotificationErrorCode, SerialNotificationType
+from utils.counter import _generate_counter
 from utils.db import model_to_db_dict
 from utils.dt import timestamp
-from utils.counter import _generate_counter
 from utils.serial import Queries
 
 
@@ -14,7 +13,6 @@ class SerialBatchConfirmedEvent(BaseSerialEvent):
   class InfoModel(BaseSerialModel):
     batch_execution_data: Any | None = None
     batch_key: str
-    job: Any
 
   @classmethod
   def get_event_type(cls):

@@ -17,6 +17,7 @@ from models.production import Job
 from models.traceability import *
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
+from utils.inventory import Queries as InventoryQueries
 
 
 class BatchCompletedEvent(BaseProductionEvent):
@@ -123,7 +124,13 @@ class BatchCompletedEvent(BaseProductionEvent):
           phase_key = self.info.phase_key,
           product_key = self.info.product_key,
         ))
-        new_work_session = WorkSessionCreatedEvent.create_as_child(self, dict(job_key = self.info.job_key))
+        new_work_session = WorkSessionCreatedEvent.create_as_child(self, dict(
+          job_key = self.info.job_key,
+          batch_key = new_batch.key,
+          work_order_key = self.info.work_order_key,
+          phase_key = self.info.phase_key,
+          product_key = self.info.product_key,
+        ))
 
         job_update.update(dict(
           active_batch_qt = new_batch.qt_total,
@@ -195,28 +202,39 @@ class BatchCompletedEvent(BaseProductionEvent):
       batch_key = self.info.active_batch_key,
     )
 
-    # Generate production movement
-    output_qt = self.info.completed_batch_qt
-    production_position_key = self.tx.collection('WorkOrder').get(self.info.work_order_key).get('output_position_key', 'IN')
-
-    MovementCompletedEvent.create_as_child(self, dict(
-      position_to = production_position_key,
-      product_key = self.job.product_key,
-      qt_confirmed = output_qt,
-      qt_planned = output_qt,
-      movement_type = InventoryMovementType.PRODUCTION,
-      references = references,
-    ))
-
-    # Get phase bom and generate consumption movements
+    product_keys = [self.job.product_key]
     bom = [line for line in self.job.job_bom if line.phase_key == self.info.phase_key]
-
     for line in bom:
+      product_keys.append(line.component_key)
+
+    inventory_config = self.tx.aql.execute(
+      InventoryQueries.PRODUCTS_INVENTORY_CONFIG,
+      bind_vars=dict(product_keys=product_keys)
+    ).next()
+
+    # Generate production movement
+    if inventory_config.get(self.job.product_key, False):
+      output_qt = self.info.completed_batch_qt
+      production_position_key = self.tx.collection('WorkOrder').get(self.info.work_order_key).get('output_position_key', 'IN')
+
       MovementCompletedEvent.create_as_child(self, dict(
-        position_from = line.consumption_options.consumption_position_key,
-        product_key = line.component_key,
-        qt_confirmed = line.qt * output_qt,
-        qt_planned = line.qt * output_qt,
-        movement_type = InventoryMovementType.CONSUMPTION,
+        position_to = production_position_key,
+        product_key = self.job.product_key,
+        qt_confirmed = output_qt,
+        qt_planned = output_qt,
+        movement_type = InventoryMovementType.PRODUCTION,
         references = references,
       ))
+
+    # generate consumption movements
+
+    for line in bom:
+      if inventory_config.get(line.component_key, False):
+        MovementCompletedEvent.create_as_child(self, dict(
+          position_from = line.consumption_options.consumption_position_key,
+          product_key = line.component_key,
+          qt_confirmed = line.qt * output_qt,
+          qt_planned = line.qt * output_qt,
+          movement_type = InventoryMovementType.CONSUMPTION,
+          references = references,
+        ))

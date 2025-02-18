@@ -2,6 +2,14 @@ from models.inventory import InventoryMovementReferences
 
 class Queries:
 
+  PRODUCTS_INVENTORY_CONFIG = """
+    RETURN MERGE(
+      FOR p IN Product
+      FILTER p._key IN @product_keys
+      RETURN { [p._key]: p.manage_inventory }
+    )
+  """
+
   SEARCH_POSITIONS = """
     LET start = CONCAT('Position/', NOT_NULL(@is_in_position, 'IN'))
 

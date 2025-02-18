@@ -10,6 +10,7 @@ class BatchCreatedEvent(BaseProductionEvent):
     phase_key: str
     work_order_key: str
     product_key: str
+    batch_serials: list[str] | None = None
 
   @staticmethod
   def get_event_type() -> EventType:
@@ -63,7 +64,8 @@ class BatchCreatedEvent(BaseProductionEvent):
         phase_key=self.info.phase_key,
         work_order_key=self.info.work_order_key,
         quantity=batch_qt,
-        batch_key=self.info.new_batch_key
+        batch_key=self.info.new_batch_key,
+        batch_serials=self.info.batch_serials
       ))
     elif use_serials:
       self._create_batch_serial_records(quantity=batch_qt)

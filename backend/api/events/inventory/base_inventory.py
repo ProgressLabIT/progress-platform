@@ -1,19 +1,14 @@
-import traceback
 import copy
 import json
+from abc import ABC
 
-from typing import Any
 from events.base_event import BaseEvent
-from models.event import EventModel
-from abc import ABC, abstractmethod
-from pydantic import model_validator
-from models.inventory import *
-from models.serial import Serial
-from fastapi.encoders import jsonable_encoder
-from models.product import ProductFull
 from managers.notification_manager import NotificationManager
-
+from models.event import EventModel
+from models.inventory import *
+from models.product import ProductFull
 from utils.exceptions import InventoryMovementException
+
 
 class BaseInventoryModel(EventModel):
     # Inventory fields
@@ -52,7 +47,7 @@ class BaseInventoryEvent(BaseEvent, ABC):
     try:
       self.product = ProductFull(**self.tx.collection('Product').get(self.info.product_key))
     except StopIteration:
-      raise InventoryMovementException(f'Product not found')
+      raise InventoryMovementException('Product not found')
 
   def can_be_conflated(self, notification_type):
     return notification_type not in [InventoryNotificationType.ERROR]

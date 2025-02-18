@@ -8,6 +8,7 @@ from utils.production import Queries as ProductionQueries
 class JobResumed(BaseProductionEvent):
   class InfoModel(EventInfoModel):
     job_key: str
+    batch_serials: list[str] | None = None
 
   @classmethod
   def get_event_type(cls):
@@ -27,7 +28,13 @@ class JobResumed(BaseProductionEvent):
         batch_serials = self.info.batch_serials,
       ))
 
-    self.work_session = WorkSessionCreatedEvent.create_as_child(self, dict(job_key = self.info.job_key))
+    self.work_session = WorkSessionCreatedEvent.create_as_child(self, dict(
+      job_key = self.info.job_key,
+      batch_key = self.batch.key,
+      work_order_key = self.info.work_order_key,
+      phase_key = self.info.phase_key,
+      product_key = self.info.product_key,
+    ))
 
     self.info.work_session_key = self.work_session.key
 

@@ -1,26 +1,20 @@
 import copy
 import json
-import traceback
-from abc import ABC, abstractmethod
-from typing import Any, Set
-
-from fastapi import HTTPException
+from abc import ABC
+from typing import Any
 
 from events.base_event import BaseEvent
 from managers.notification_manager import NotificationManager
 from models.event import EventInfoModel
 from models.serial import Serial, SerialNotificationType
-from utils.dt import timestamp
-from utils.kafka.kafka_producer import KafkaProducer
-from utils.process import Queries as ProcessQueries
 from utils.serial import Queries
 
 
 class BaseSerialModel(EventInfoModel):
    # Traceability fields
    serial_key: Any | None = None
-   serial_data: Any | None = None
-   batch_serials: Set[str] | None = None # prevent duplicated entries from client
+   code: Any | None = None
+   product_key: Any | None = None
 
 
 class BaseSerialEvent(BaseEvent, ABC):

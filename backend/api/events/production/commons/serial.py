@@ -4,7 +4,7 @@ import traceback
 from events.serial.serial_created import SerialCreatedEvent
 from fastapi import HTTPException
 from models.form import SerialFormFieldValue
-from models.serial import Serial, SerialNotificationErrorCode, SerialNotificationType
+from models.serial import SerialNotificationErrorCode, SerialNotificationType
 from utils.kafka.kafka_producer import KafkaProducer
 from utils.process import Queries as ProcessQueries
 
@@ -107,20 +107,11 @@ class BaseSerialEvent:
             )
             data.append(field_data)
 
-    serial_data = Serial(
-      data = data,
-      created_by = 'User/'+created_by,
-      user_key = created_by,
-      wo_key = wo_key,
-      product_key = product_key,
-      counter_key = counter_key
-    )
-
     for i in range(int(quantity)):
       SerialCreatedEvent.create_as_child(self, dict(
+        data = data,
         batch_key = batch_key,
-        counter = self.job.serialcode_on_batchstart,
-        finalize = False,
-        serial_data = serial_data.model_dump(),
-        user_key = self.info.user_key
+        wo_key = wo_key,
+        product_key = product_key,
+        counter_key = counter_key
       ))
