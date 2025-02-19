@@ -505,7 +505,7 @@ const traceability = {
         _id: 'components',
         _key: 'components',
         _code: '',
-        childs: batch_components ? batch_components : [],
+        children: batch_components ? batch_components : [],
       });
 
       commit('UPDATE_BATCH_FAKED_SERIALS', batch_serials);

@@ -249,7 +249,7 @@ export default {
           this.replace_serials[serial._id] = false;
           this.replace_serials_reason[serial._id] = null;
         }
-        for (const child of serial.childs) {
+        for (const child of serial.children) {
           if (child.product_key === this.component_key) {
             let serial_link = {
               _key: child._key,

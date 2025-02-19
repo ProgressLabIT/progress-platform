@@ -310,7 +310,7 @@ export default {
           }
         }
 
-        for (const child of serial.childs) {
+        for (const child of serial.children) {
           const key = [serial._id, child.product_key].join(' ');
           if (!this.serialModel[key]) {
             this.serialModel[key] = [];

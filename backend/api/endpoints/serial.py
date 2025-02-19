@@ -68,9 +68,9 @@ def get_serial_parents(
       )
     )
 
-@router.get('/serial-childs',
+@router.get('/serial-children',
     dependencies=[Depends(auth.verify_token)])
-def get_serial_childs(
+def get_serial_children(
   serial_key: str | None = None,
 ):
   try:

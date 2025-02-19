@@ -12,7 +12,7 @@ class Queries:
       FILTER edge._from == @from_id
       LET serial = DOCUMENT(Serial, edge._to)
 
-      LET childs = (
+      LET children = (
           FOR linked_serial IN contains
               FILTER linked_serial.wo_key == serial.wo_key
               && (linked_serial._from == serial.id || linked_serial.from_serial == serial._key)
@@ -20,7 +20,7 @@ class Queries:
               RETURN DOCUMENT(Serial, linked_serial._to)
           )
       SORT serial.code, serial._key
-      RETURN MERGE(serial, { childs: childs })
+      RETURN MERGE(serial, { children })
   """
 
   GET_ALL_COMPONENTS_IN_BATCH = """
