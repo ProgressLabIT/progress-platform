@@ -30,9 +30,7 @@ def get_serial_batch(
   batch_key: str | None = None,
   filter_empty: bool = False
 ):
-  bind_vars = dict(
-    from_id = f'Batch/{batch_key}'
-  )
+  bind_vars = dict(batch_key = batch_key)
   batch_serials = []
   for serial in [e for e in db.aql.execute(Queries.GET_ALL_SERIALS_IN_BATCH, bind_vars=bind_vars)]:
     if serial['code'] or not filter_empty:

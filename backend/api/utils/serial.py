@@ -9,13 +9,13 @@ class Queries:
 
   GET_ALL_SERIALS_IN_BATCH = """
     FOR edge IN batch_serial
-      FILTER edge._from == @from_id
+      FILTER edge._from == CONCAT('Batch/', @batch_key)
       LET serial = DOCUMENT(Serial, edge._to)
 
       LET children = (
           FOR linked_serial IN contains
               FILTER linked_serial.wo_key == serial.wo_key
-              && (linked_serial._from == serial.id || linked_serial.from_serial == serial._key)
+              && linked_serial._from == serial._id
               && linked_serial.replaced == false
               RETURN DOCUMENT(Serial, linked_serial._to)
           )
