@@ -10,7 +10,7 @@ class BatchCreatedEvent(BaseProductionEvent):
     phase_key: str
     work_order_key: str
     product_key: str
-    batch_serials: list[str] | None = None
+    batch_serials: list[str] | None = None # Can be list of serial keys or serial codes
 
   @staticmethod
   def get_event_type() -> EventType:
@@ -68,7 +68,21 @@ class BatchCreatedEvent(BaseProductionEvent):
         batch_serials=self.info.batch_serials
       ))
     elif use_serials:
-      self._create_batch_serial_records(quantity=batch_qt)
+      product = self.tx.collection('Product').get(self.info.product_key)
+      start_with_code = product.get('serialcode_on_batchstart', False)
+      counter_key = product.get('counter_key', None)
+      if start_with_code and not len(self.info.batch_serials) and counter_key is None:
+        raise ValueError("You must provide serial codes or define counter to start a new batch for this product")
+
+      self._create_serial_records(
+        quantity=batch_qt,
+        counter_key=counter_key,
+        batch_key=self.info.new_batch_key,
+        wo_key=self.info.work_order_key,
+        product_key=self.info.product_key,
+        serial_codes=self.info.batch_serials,
+        released=None
+      )
 
     self.response = self.batch
 

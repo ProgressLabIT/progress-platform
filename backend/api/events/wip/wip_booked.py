@@ -111,6 +111,7 @@ class WIPBookedEvent(BaseProductionEvent):
     if len(unavailable_serials):
       raise WipNotAvailableError(f'Serials {unavailable_serials} are not available')
     else:
+      # Book serials in wip
       self.tx.aql.execute(
         SerialQueries.BOOK_SERIAL_WIP,
         bind_vars=dict(
@@ -119,10 +120,11 @@ class WIPBookedEvent(BaseProductionEvent):
         )
       )
 
-      # EventManager.trigger_event(self, SerialBatchLinkedModel(
-      #     batch_key = self.info.batch_key,
-      #     batch_serials=self.info.batch_serials,
-      #     user_key = self.info.user_key
-      #   ))
+      # Link serials to batch
+      self._create_batch_serial_records(
+        batch_key=self.info.batch_key,
+        serial_keys=serials_to_update
+      )
+
 
     self.update_wip_availability_for_phases(phase_keys=[self.info.phase_key])

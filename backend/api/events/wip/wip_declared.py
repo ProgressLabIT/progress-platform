@@ -11,6 +11,9 @@ class WIPDeclaredEvent(BaseProductionEvent):
     job_key: str
     batch_key: str
     quantity: int
+    work_order_key: str
+    phase_key: str
+    product_key: str
 
   @classmethod
   def get_event_type(cls):

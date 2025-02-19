@@ -1,5 +1,6 @@
 import json
 import traceback
+from datetime import datetime
 
 from events.serial.serial_created import SerialCreatedEvent
 from fastapi import HTTPException
@@ -25,10 +26,10 @@ class BaseSerialEvent:
         )
       )
 
-  def _retrieve_serial_phases_data(self):
+  def _get_production_process(self, product_key):
     cursor = self.tx.aql.execute(ProcessQueries.GET_PRODUCTION_PROCESS,
       bind_vars=dict(
-        product_key = self.info.product_key,
+        product_key = product_key,
       )
     )
     return [e for e in cursor]
@@ -74,26 +75,8 @@ class BaseSerialEvent:
     return batch_data
 
 
-  def _create_batch_serial_records(self, quantity):
-    if not self.job:
-      self.job = self.get_job_data()
-
-    batch_key = self.batch.key
-    created_by = self.info.user_key
-    wo_key = self.info.work_order_key
-    product_key = self.info.product_key
-    product = self.tx.collection('Product').get(product_key)
-    counter_key = product.get('counter_key', None)
-
-    if self.job.serialcode_on_batchstart and not counter_key:
-      self.notify_results(dict(
-          notification = SerialNotificationType.ERROR,
-          error_code = SerialNotificationErrorCode.COUNTER_NOT_DEFINED,
-          error = 'Counter not defined'
-      ))
-      raise ValueError(f"Counter not defined for batch {self.batch.key}")
-
-    phases_data = self._retrieve_serial_phases_data()
+  def _define_serial_form_fields(self, product_key):
+    phases_data = self._get_production_process(product_key=product_key)
     data = []
     for phase in phases_data:
       for step in phase['steps']:
@@ -106,12 +89,53 @@ class BaseSerialEvent:
               step_key = step['_key']
             )
             data.append(field_data)
+    return data
 
+  def _create_serial_records(
+    self,
+    quantity: float,
+    product_key: str,
+    batch_key: str | None = None,
+    wo_key: str | None = None,
+    serial_codes: list[str] | None = [],
+    counter_key: str | None = None,
+    released: datetime | None = None
+    ):
+    # Get product counter key
+    if len(serial_codes) and len(serial_codes) != quantity:
+      raise ValueError("Serial codes must be provided for each serial, if provided")
+
+    # Define the data to be sent to the serial created event
+    data = self._define_serial_form_fields(product_key=product_key)
+
+    # Create the serial records
+    new_serials = []
     for i in range(int(quantity)):
-      SerialCreatedEvent.create_as_child(self, dict(
+      new_serial_key = SerialCreatedEvent.create_as_child(self, dict(
         data = data,
+        code = serial_codes[i] if serial_codes else None,
         batch_key = batch_key,
         wo_key = wo_key,
         product_key = product_key,
-        counter_key = counter_key
+        counter_key = counter_key,
+        released = released
+      ))['serial_key']
+      new_serials.append(new_serial_key)
+
+    # Link to batch if provided
+    if batch_key:
+      self._create_batch_serial_records(batch_key=batch_key, serial_keys=new_serials)
+
+    return new_serials
+
+
+  def _create_batch_serial_records(self, batch_key, serial_keys):
+    records = []
+    for serial_key in serial_keys:
+      records.append(dict(
+        _from=f'Batch/{batch_key}',
+        _to=f'Serial/{serial_key}'
       ))
+
+    self.tx.collection('batch_serial').insert_many(records)
+
