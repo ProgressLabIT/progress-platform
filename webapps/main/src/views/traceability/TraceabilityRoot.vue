@@ -40,6 +40,7 @@
             size="0.75rem"
             :label="$t('export')"
             color="theme-blue"
+            class="q-ml-sm"
             @click="exportSerials"
           >
           </q-btn>
