@@ -18,7 +18,6 @@ class Serial(ArangoDocument):
   quantity: int = 1
   created: datetime | None = Field(default_factory=timestamp)
   released: datetime | None = None
-  available: bool = True
   data: list[SerialFormFieldValue] | None = None
   deleted: bool = False
 
