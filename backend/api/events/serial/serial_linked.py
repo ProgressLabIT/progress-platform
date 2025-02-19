@@ -32,8 +32,15 @@ class SerialLinkedEvent(BaseSerialEvent):
 
     try:
       # Ensure serial is not already linked
-      if self.tx.collection('contains').find(dict(_to=f'Serial/{self.info.to_serial}')).count() > 0:
-        raise ValueError('Cannot link serials: multiple usage of the same component')
+      cursor = self.tx.collection('contains').find(dict(_to=f'Serial/{self.info.child_serial_key}'))
+      if cursor.count() > 0:
+        # ignore if the link is the same as already recorded
+        parent_id = f"Serial/{self.info.parent_serial_key}" if self.info.parent_serial_key else f"Batch/{self.info.batch_key}"
+        if cursor.next()['_from'] == parent_id:
+          self.response = dict(message="Link already exists")
+          return
+        else:
+          raise ValueError('Cannot link serials: multiple usage of the same component')
 
       # Link to batch
       if self.info.parent_serial_key is None:
