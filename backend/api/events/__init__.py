@@ -32,16 +32,21 @@ from events.production.active_batch_changed import ActiveBatchChangedEvent
 from events.production.base_production import BaseProductionEvent
 from events.production.batch_completed import BatchCompletedEvent
 from events.production.batch_created import BatchCreatedEvent
-
-#COMMONS
 from events.production.job_back_online import JobBackOnlineEvent
 from events.production.job_closed import JobClosedEvent
 from events.production.job_paused import JobPausedEvent
-from events.production.job_paused_offline import JobPausedOffline
-from events.production.job_resumed import JobResumed
+from events.production.job_paused_offline import JobPausedOfflineEvent
+from events.production.job_resumed import JobResumedEvent
 from events.production.job_started import JobStartedEvent
+from events.production.queue_updated import QueueUpdatedEvent
 from events.production.step_completed import StepCompletedEvent
-from events.production.step_edited import StepEdited
+from events.production.step_edited import StepEditedEvent
+from events.production.work_order_events import (
+  WorkOrderClosedEvent,
+  WorkOrderStartedEvent,
+  WorkOrderUpdatedEvent,
+  WorkOrderCreatedEvent
+)
 
 #SERIAL EVENTS
 from events.serial.base_serial import BaseSerialEvent

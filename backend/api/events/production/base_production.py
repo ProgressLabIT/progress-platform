@@ -3,6 +3,7 @@ from events.base_event import BaseEvent
 from events.production.commons.batch import BaseBatchEvent
 from events.production.commons.job import BaseJobEvent
 from events.production.commons.serial import BaseSerialEvent
+from events.production.work_order_events import WorkOrderClosedEvent, WorkOrderStartedEvent
 from models.production import WorkOrderFull, WorkStatus
 from models.traceability import *
 from utils.production import Queries as ProductionQueries
@@ -59,6 +60,10 @@ class BaseProductionEvent(BaseEvent, BaseBatchEvent, BaseJobEvent, BaseSerialEve
     return work_session
 
   def update_work_order(self):
+    # Avoid updating work order multiple times in each child event of the main processing function
+    if not self.info.primary:
+      return
+
     if not self.info.work_order_key:
       self._get_job_data()
       self.info.work_order_key = self.job.wo_key
@@ -70,14 +75,22 @@ class BaseProductionEvent(BaseEvent, BaseBatchEvent, BaseJobEvent, BaseSerialEve
 
     # TODO: Add WORK_ORDER_STARTED and WORK_ORDER_CLOSED events, and include in them QUEUE_UPDATED events
 
-    # Remove work order from the queue if override closed it
-    if updated_wo.status == WorkStatus.CLOSED:
+    if wo_previous_state.status == WorkStatus.CREATED and updated_wo.status == WorkStatus.STARTED:
+      WorkOrderStartedEvent.create_as_child(self, dict(
+        work_order_key = self.info.work_order_key,
+      ))
+
+    # Remove work order from the queue if latest event closed it
+    if wo_previous_state.status == WorkStatus.STARTED and updated_wo.status == WorkStatus.CLOSED:
       self.tx.aql.execute(
         ProductionQueries.REMOVE_WORK_ORDER_FROM_QUEUE,
         bind_vars=dict(wo_key=self.info.work_order_key)
       )
-    # Restore work order in the queue if override reopens it
-    elif wo_previous_state.status == WorkStatus.CLOSED:
+      WorkOrderClosedEvent.create_as_child(self, dict(
+        work_order_key = self.info.work_order_key,
+      ))
+    # Restore work order in the queue if latest event reopened it
+    if wo_previous_state.status == WorkStatus.CLOSED and updated_wo.status == WorkStatus.STARTED:
       self.tx.aql.execute(
         ProductionQueries.ADD_WORK_ORDER_TO_QUEUE,
         bind_vars=dict(new_wo_key=self.info.work_order_key)

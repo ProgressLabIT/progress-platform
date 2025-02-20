@@ -3,7 +3,7 @@ from models.event import EventInfoModel, EventType
 from models.traceability import *
 
 
-class StepEdited(BaseProductionEvent):
+class StepEditedEvent(BaseProductionEvent):
   class InfoModel(EventInfoModel):
     batch_key: str
     step_key: str

@@ -6,7 +6,7 @@ from models.event import EventInfoModel, EventType
 from models.production import Job
 
 
-class JobPausedOffline(JobPausedEvent):
+class JobPausedOfflineEvent(JobPausedEvent):
   class InfoModel(EventInfoModel):
     work_session_end: datetime | None = None
 

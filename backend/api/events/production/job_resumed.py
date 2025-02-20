@@ -5,7 +5,7 @@ from models.event import EventInfoModel, EventType
 from utils.production import Queries as ProductionQueries
 
 
-class JobResumed(BaseProductionEvent):
+class JobResumedEvent(BaseProductionEvent):
   class InfoModel(EventInfoModel):
     job_key: str
     batch_serials: list[str] | None = None
