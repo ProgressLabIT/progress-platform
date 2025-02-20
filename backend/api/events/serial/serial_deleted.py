@@ -2,23 +2,21 @@ from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
 from models.serial import SerialNotificationType, SerialNotificationErrorCode
 from utils.serial import Queries
 import traceback
-from models.event import EventModel
-from models.event import EventType
+from models.event import EventInfoModel, EventType
 
 from utils.exceptions import (
   SerialNotDeletedError
 )
 
-class SerialDeletedModel(BaseSerialModel):
-  event_type: str = EventType.SERIAL_DELETED.name
-  soft: bool = True
-  delete_children: bool | None = False
 
 class SerialDeleted(BaseSerialEvent):
-  event_data: SerialDeletedModel
+  class InfoModel(BaseSerialModel):
+    soft: bool = True
+    delete_children: bool | None = False
 
-  def set_model(self, base_model: EventModel):
-    self.info = SerialDeletedModel(**base_model.model_dump())
+  @classmethod
+  def get_event_type(cls):
+    return EventType.SERIAL_DELETED
 
   def apply(self):
     delete_children = False
@@ -27,7 +25,7 @@ class SerialDeleted(BaseSerialEvent):
          delete_children = self.info.delete_children
     except:
        delete_children = False
-    serial_key = self.info.serial_data.get("_key")
+    serial_key = self.info.serial_key
     allow_serial_delete = self.tx.collection('Config').get('allow_serial_delete')
     if (allow_serial_delete == None or allow_serial_delete['value'] == False):
        self.notify_results(dict(
@@ -49,10 +47,10 @@ class SerialDeleted(BaseSerialEvent):
           serial_key = serial_key,
           notification = SerialNotificationType.DELETED
        ))
-       self.set_response(dict(
+       self.response = dict(
            message="Serial deleted correctly",
            serial_key=serial_key
-         ))
+         )
     except:
        print(traceback.format_exc())
        self.notify_results(dict(

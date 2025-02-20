@@ -398,12 +398,16 @@ export default {
             user_session_key: this.session_data.session_key,
             timestamp: timestamp(),
             delete_children: delete_children,
-            serial_data: {
-              _key: this.serial._key,
-            },
+            serial_key: this.serial._key,
           };
 
           this.$api.post('event', event);
+          this.$store.dispatch('loadSerials');
+          this.$q.notify({
+            message: this.$t(`Seriale ${this.serial.code} eliminato`),
+            color: 'theme-orange',
+            position: 'top',
+          });
           this.exit();
         });
     },
