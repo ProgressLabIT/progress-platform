@@ -6,7 +6,7 @@ COUNTER_TICK = """
 let c = DOCUMENT(Counter, @counter_key)
 
 // Reset counter if needed (Beginning of year)
-let reset_counter = DATE_NOW() > DATE_TIMESTAMP(c.reset_date)
+let reset_counter = DATE_NOW() > DATE_TIMESTAMP(NOT_NULL(c.reset_date, '9999/12/31'))
 
 // Increment tick and reset_date (if needed)
 let current_tick = reset_counter ? 1 : c.next_tick
