@@ -30,6 +30,13 @@ class StepExecutionData(FlexModel):
   canceled: str | None = None
 
 
+class ExecutionDataUpdate(BaseModel):
+  step_key: str | None = None
+  batch_key: str | None = None
+  execution_record_key: str | None = None
+  form_data: list[FormFieldValue] = []
+
+
 class Batch(FlexModel):
   key: str | None = Field(None, alias="_key")
   job_key: str

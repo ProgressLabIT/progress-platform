@@ -310,6 +310,15 @@ const traceability = {
       }
     },
 
+    SET_STEP_EXECUTION_KEY(state, { stepKey, executionRecordKey }) {
+      console.log('Test')
+      const batchSteps = state.current_batch_data.step_data;
+      const step = batchSteps.find(({ _key }) => _key === stepKey);
+      if (step) {
+        step.execution_record_key = executionRecordKey;
+      }
+    },
+
     UPDATE_JOB(state, job_data) {
       state.working_job_data = {
         /* Use spread to avoid overwriting notes,
