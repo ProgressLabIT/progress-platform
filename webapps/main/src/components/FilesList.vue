@@ -154,6 +154,35 @@ export default {
     showMedia(value) {
       this.show_media = value;
     },
+
+    async ensureFileDataAvailable() {
+      // Check if file is available at its path and delete it if not
+      // This is to ensure that temp files are not stored without file data
+      // This can happen if the page is reloaded, when file is not available, but metadata is still there.
+      if (!this.files) {
+        return;
+      }
+
+      for (const [index, file] of this.files.entries()) {
+        if (!file.path) {
+          this.$emit('deleteFile', index);
+        } else {
+          try {
+            const response = await fetch(file.path, { method: 'HEAD' });
+            if (!response.ok) {
+              this.$emit('deleteFile', index);
+            }
+          } catch (error) {
+            console.warn(`File ${file.name} is not accessible:`, error);
+            this.$emit('deleteFile', index);
+          }
+        }
+      }
+    },
+  },
+
+  mounted() {
+    this.ensureFileDataAvailable();
   },
 };
 </script>
