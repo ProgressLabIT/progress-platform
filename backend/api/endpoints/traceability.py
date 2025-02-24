@@ -224,7 +224,7 @@ async def store_temp_step_data(data: ExecutionDataUpdate):
 
     if record['status'] == StepStatus.DONE.value:
       raise HTTPException(
-        status_code=401,
+        status_code=422,
         detail="Step is already marked as done, use STEP_EDITED event to update step data."
       )
 
