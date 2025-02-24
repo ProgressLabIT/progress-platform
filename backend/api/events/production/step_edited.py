@@ -5,8 +5,11 @@ from models.traceability import *
 
 class StepEditedEvent(BaseProductionEvent):
   class InfoModel(EventInfoModel):
-    batch_key: str
-    step_key: str
+    execution_record_key: str
+    form_data: list[FormFieldValue]
+    job_key: str | None = None
+    batch_key: str | None = None
+    work_session_key: str | None = None
 
   @classmethod
   def get_event_type(cls):
@@ -16,24 +19,28 @@ class StepEditedEvent(BaseProductionEvent):
     return True
 
   def apply(self):
-    self._get_job_data()
-    self.get_active_batch()
-
-    # Save current work session and batch keys in Event.info
-    self.info.work_session_key = self.job.last_work_session_started
-
     # Flag record as canceled
-    match = dict(job_key = self.info.job_key, step_key = self.info.step_key, canceled=None)
-    update = dict(canceled = self.info.event_group)
-    step_data = self.tx.collection('StepExecutionData').update_match(match, update)
+    update = dict(_key = self.info.execution_record_key, canceled = self.info.event_group)
+    step_data = self.tx.collection('StepExecutionData').update(update, return_old=True)['old']
+
+    # Set event metadata
+    self.info.job_key = step_data['job_key']
+    self._get_job_data()
+    self.info.batch_key = self.job.active_batch_key
 
     # Create new StepExecutionData record
-    step_data = StepExecutionData(**vars(self))
-    step_data.batch_key = self.info.active_batch_key
-    step_data.status = StepStatus.DONE
-    step_data.modified = self.info.event_group
-    step_data.completed = self.info.timestamp
-    self.tx.collection('StepExecutionData').insert(step_data)
+    new_step_data = StepExecutionData(
+      form_data = self.info.form_data,
+      job_key = self.info.job_key,
+      batch_key = self.info.batch_key,
+      step_key = step_data['step_key'],
+      user_key = self.info.user_key,
+      work_session_key = self.info.work_session_key,
+      completed = self.info.timestamp,
+      status = StepStatus.DONE,
+      modified = self.info.event_group
+    )
+    self.tx.collection('StepExecutionData').insert(new_step_data)
 
     # Set response
     self.response = dict(

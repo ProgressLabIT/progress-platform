@@ -71,7 +71,13 @@ class BaseSerialEvent:
     batch_data = []
     for field in form_data:
       if field.value!=None:
-        batch_data.append(self._convert_form_field(field=field.model_dump(), work_order_key=self.info.work_order_key, batch_key=self.info.active_batch_key, step_key=self.info.step_key, phase_key=self.info.phase_key))
+        batch_data.append(self._convert_form_field(
+          field=field.model_dump(),
+          work_order_key=self.info.work_order_key,
+          batch_key=self.info.active_batch_key,
+          step_key=self.info.step_key,
+          phase_key=self.info.phase_key
+        ))
     return batch_data
 
 
@@ -102,7 +108,7 @@ class BaseSerialEvent:
     released: datetime | None = None
     ):
     # Get product counter key
-    if len(serial_codes) and len(serial_codes) != quantity:
+    if serial_codes and len(serial_codes) != quantity:
       raise ValueError("Serial codes must be provided for each serial, if provided")
 
     # Define the data to be sent to the serial created event

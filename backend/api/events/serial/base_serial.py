@@ -12,9 +12,9 @@ from utils.serial import Queries
 
 class BaseSerialModel(EventInfoModel):
    # Traceability fields
-   serial_key: Any | None = None
-   code: Any | None = None
-   product_key: Any | None = None
+   serial_key: str | None = None
+   code: str | None = None
+   product_key: str | None = None
 
 
 class BaseSerialEvent(BaseEvent, ABC):

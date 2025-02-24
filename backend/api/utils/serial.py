@@ -422,6 +422,12 @@ class Queries:
     REMOVE bs IN batch_serial
   """
 
+  CLEANUP_COMPONENT_LINKS = """
+    FOR c IN contains
+    FILTER !DOCUMENT(c._from) || !DOCUMENT(c._to)
+    REMOVE c IN contains
+  """
+
   REMOVE_PHASE_DATA_FROM_SERIALS = """
     FOR s IN Serial
     FILTER s._key IN @serial_keys

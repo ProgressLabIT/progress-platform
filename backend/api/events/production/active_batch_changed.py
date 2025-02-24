@@ -5,6 +5,7 @@ from events.wip.wip_booked import WIPBookedEvent
 from events.wip.wip_unbooked import WIPUnbookedEvent
 from models.event import EventInfoModel, EventType
 from models.production import Job
+from models.serial import SerialSelection
 from models.traceability import *
 from utils.serial import Queries as SerialQueries
 
@@ -14,7 +15,7 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
   class InfoModel(EventInfoModel):
     job_key: str
     new_active_batch_qt: int
-    batch_serials: list[str]
+    batch_serials: list[str] | None = None
 
   @classmethod
   def get_event_type(cls):
@@ -112,6 +113,7 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
           )
           # TODO: Use named graph with auto deletion of edges to avoid the following
           self.tx.aql.execute(SerialQueries.CLEANUP_SERIAL_BATCH_LINKS)
+          self.tx.aql.execute(SerialQueries.CLEANUP_COMPONENT_LINKS)
 
       else:
         # Has serials but not first phase. Update wip and batch_serial records
@@ -126,5 +128,12 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
     self.response = dict(
       message=f"Active batch { self.info.active_batch_key } has been correctly updated with quantity { self.info.new_active_batch_qt }",
       job_data=self.job,
-      batch_data=self.get_batch_execution_data()
+      batch_data=self.get_batch_execution_data(),
     )
+
+    if self.job.traceability_level is not None:
+      self.response['batch_serials'] = [SerialSelection(**s) for s in self.tx.aql.execute(
+        SerialQueries.GET_BATCH_SERIALS,
+        bind_vars=dict(batch_key=self.job.active_batch_key)
+      )]
+

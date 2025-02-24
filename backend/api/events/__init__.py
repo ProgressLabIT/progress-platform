@@ -32,6 +32,7 @@ from events.production.active_batch_changed import ActiveBatchChangedEvent
 from events.production.base_production import BaseProductionEvent
 from events.production.batch_completed import BatchCompletedEvent
 from events.production.batch_created import BatchCreatedEvent
+from events.production.batch_released import BatchReleasedEvent
 from events.production.job_back_online import JobBackOnlineEvent
 from events.production.job_closed import JobClosedEvent
 from events.production.job_paused import JobPausedEvent
@@ -50,7 +51,6 @@ from events.production.work_order_events import (
 
 #SERIAL EVENTS
 from events.serial.base_serial import BaseSerialEvent
-from events.serial.serial_batch_confirmed import SerialBatchConfirmedEvent
 from events.serial.serial_booked import SerialBooked
 from events.serial.serial_created import SerialCreatedEvent
 from events.serial.serial_data_updated import SerialDataUpdatedEvent
