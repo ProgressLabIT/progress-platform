@@ -114,7 +114,7 @@ const updateField = debounce((field, value) => {
     },
   });
   // Do not autosave with step already marked as done, i.e. during step edit
-  if (batchStep.value?.status !== 'done') {
+  if (!stepEditMode.value) {
     api.post(`batch/temp-data`, {
       execution_record_key: batchStep.value?.execution_record_key,
       step_key: stepKey.value,
