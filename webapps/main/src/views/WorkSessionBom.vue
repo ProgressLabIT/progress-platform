@@ -39,17 +39,17 @@
                 color="theme-green"
               />
               <q-icon
+                v-else-if="props.row.traceability_mandatory"
+                name="mdi-asterisk-circle-outline"
+                color="theme-red"
+              />
+              <q-icon
                 v-else-if="
                   job.active_batch_qt &&
                   props.row.declared_serials.length < props.row.batch_qt
                 "
                 name="mdi-circle-outline"
                 color="theme-white"
-              />
-              <q-icon
-                v-else-if="props.row.traceability_mandatory"
-                name="mdi-asterisk-circle-outline"
-                color="theme-red"
               />
             </span>
             <q-btn
