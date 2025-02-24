@@ -37,11 +37,11 @@
         <q-item-section>
           <q-item-label class="highlight">
             {{
-              scope.opt.label || '(' + $t('serial_code_to_be_assigned') + ')'
+              scope.opt.code || '(' + $t('serial_code_to_be_assigned') + ')'
             }}
           </q-item-label>
           <q-item-label caption lines="2">
-            {{ 'ID ' + scope.opt.value }}
+            {{ 'ID ' + scope.opt._key }}
           </q-item-label>
         </q-item-section>
       </q-item>
