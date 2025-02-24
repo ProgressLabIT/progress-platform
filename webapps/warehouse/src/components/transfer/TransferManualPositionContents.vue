@@ -127,7 +127,7 @@ function getColor(item) {
     position: 'red'
   }
   const color = colorMap[item.type]
-  return transfer.contents.find(c => c._id === item._id) ? `bg-theme-${color}` : `bg-${color}-backdrop`
+  return transfer.contents.find(c => c._key === item._key) ? `bg-theme-${color}` : `bg-${color}-backdrop`
 }
 
 async function searchContents() {
@@ -147,8 +147,8 @@ async function searchContents() {
 }
 
 function toggleItem(item) {
-  if (transfer.contents.find(c => c._id === item._id)) {
-    transfer.contents = transfer.contents.filter(c => c._id !== item._id);
+  if (transfer.contents.find(c => c._key === item._key)) {
+    transfer.contents = transfer.contents.filter(c => c._key !== item._key);
   } else {
     if (['position', 'product'].includes(item.type)) {
       cardItem.value = item;
@@ -168,7 +168,7 @@ function selectItemQuantity() {
 }
 
 function getItemSelectedQty(item) {
-  return transfer.contents.find(c => c._id === item._id)?.quantity || 0;
+  return transfer.contents.find(c => c._key === item._key)?.quantity || 0;
 }
 
 function changeStartPosition() {
@@ -191,7 +191,7 @@ function toggleAll(select = true) {
   if (select) {
     // Add all items that aren't already in contents
     list.value.forEach(item => {
-      if (!transfer.contents.find(c => c._id === item._id)) {
+      if (!transfer.contents.find(c => c._key === item._key)) {
         // if (['position', 'product'].includes(item.type)) {
         //   // Skip positions/products as they need quantity input
         //   return;
@@ -202,7 +202,7 @@ function toggleAll(select = true) {
   } else {
     // Remove all items from current list
     transfer.contents = transfer.contents.filter(
-      content => !list.value.find(item => item._id === content._id)
+      content => !list.value.find(item => item._key === content._key)
     );
   }
 }
