@@ -54,12 +54,12 @@ class Queries:
       FOR step IN job.step_sequence
       LET step_data = KEEP(step, '_key', 'type')
       LET execution_data = FIRST(
-        FOR s IN StepExecutionData
+        FOR x IN StepExecutionData
         FILTER
-          s.batch_key == batch._key
-          && s.step_key == step._key
-          && s.canceled == null
-        RETURN KEEP(s, 'status', 'form_data')
+          x.batch_key == batch._key
+          && x.step_key == step._key
+          && x.canceled == null
+        RETURN KEEP(x, 'status', 'form_data', '_key')
       )
       LET step_done = execution_data ? execution_data.status == 'done' : false
       LET step_critical = execution_data ? execution_data.status == 'critical' : false
@@ -67,7 +67,8 @@ class Queries:
       RETURN MERGE(step_data, {
         done: step_done,
         critical: step_critical,
-        form_data: form_data
+        form_data: form_data,
+        execution_record_key: execution_data._key
       })
     )
     RETURN MERGE(batch, { step_data: batch_step_data })
