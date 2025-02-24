@@ -156,20 +156,18 @@ export default {
     },
 
     async ensureFileDataAvailable() {
-      // Check if file is available at its path and delete it if not
-      // This is to ensure that temp files are not stored without file data
+      // Check if temporary files stored in blob URLs are available
       // This can happen if the page is reloaded, when file is not available, but metadata is still there.
+
       if (!this.files) {
         return;
       }
 
       for (const [index, file] of this.files.entries()) {
-        if (!file.path) {
-          this.$emit('deleteFile', index);
-        } else {
+        if (file.temp && file.path?.startsWith('blob:')) {
           try {
-            const response = await fetch(file.path, { method: 'HEAD' });
-            if (!response.ok) {
+            const response = await fetch(file.path);
+            if (!response.ok || !(await response.blob())) {
               this.$emit('deleteFile', index);
             }
           } catch (error) {
