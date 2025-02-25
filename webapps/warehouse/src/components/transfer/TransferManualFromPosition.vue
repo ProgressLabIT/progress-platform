@@ -30,6 +30,7 @@
 
     <q-btn
       color="primary"
+      outline
       :label="$t('select_root_position')"
       @click="selectRootPosition()"
     />
