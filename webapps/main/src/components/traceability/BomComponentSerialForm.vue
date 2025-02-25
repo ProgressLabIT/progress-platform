@@ -47,6 +47,7 @@
                   :filter_used="true"
                   :filtered_values="booked_serials"
                   :disable="disableSerialField(serial)"
+                  :inventory_in_position_key="bom_line?.consumption_options?.consumption_position_key"
                   @select="(selection) => onSerialSelection(selection, serial._id)"
                 >
                 </BaseAutocompleteSerial>
@@ -300,20 +301,20 @@ export default {
 
       if (Array.isArray(selectedSerials)) {
         for (const serial of selectedSerials) {
-          temp_booked_serials.push(serial.label);
+          temp_booked_serials.push(serial);
         }
       } else if (selectedSerials) {
-        temp_booked_serials.push(selectedSerials.label);
+        temp_booked_serials.push(selectedSerials);
       }
 
       for (const serial of this.batch_serials) {
         if (this.serialModel[serial._id] && selected_key !== serial._id) {
           if (Array.isArray(this.serialModel[serial._id])) {
             for (const serial_to of this.serialModel[serial._id]) {
-              temp_booked_serials.push(serial_to.label);
+              temp_booked_serials.push(serial_to);
             }
           } else {
-            temp_booked_serials.push(this.serialModel[serial._id].label);
+            temp_booked_serials.push(this.serialModel[serial._id]);
           }
         }
       }

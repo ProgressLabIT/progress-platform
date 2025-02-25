@@ -4,27 +4,26 @@
     use-input
     filled
     :multiple="multiple"
-    :use-chips="multiple"
     :max-values="selection_qt || 1"
     :loading="loading"
     :label-slot="!!label"
     :dense="dense"
     :hint="hint"
+    :use-chips="multiple"
     :placeholder="placeholder_computed"
     :clearable="clearable"
     :options="options"
-    :display-value="value?.code"
     :option-value="keyOnly ? '_key' : null"
     :model-value="value"
     input-debounce="300"
     input-class="text-uppercase"
     :emit-value="keyOnly"
     :map-options="keyOnly"
-    @input-value="makeInputUppercase"
     @filter="filter"
+    @remove="remove"
     @update:model-value="
       (selection) => {
-        $emit('select', selection);
+        emit('select', selection);
       }
     "
   >
@@ -32,16 +31,16 @@
       <q-item
         v-bind="scope.itemProps"
         :id="scope.opt.label"
-        :disable="filtered_values && filtered_values.includes(scope.opt.label)"
+        :disable="filtered_values && filtered_values.includes(scope.opt.code)"
       >
         <q-item-section>
           <q-item-label class="highlight">
             {{
-              scope.opt.code || '(' + $t('serial_code_to_be_assigned') + ')'
+              scope.opt.label || '(' + $t('serial_code_to_be_assigned') + ')'
             }}
           </q-item-label>
           <q-item-label caption lines="2">
-            {{ 'ID ' + scope.opt._key }}
+            {{ 'ID ' + scope.opt.value }}
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -54,7 +53,7 @@
     </template>
 
     <template #no-option="{ inputValue }">
-      <q-item v-if="!can_create">
+      <q-item v-if="!can_create || inventory_in_position_key">
         <q-item-section class="text-low">
           {{ $t('serial_field.noData') }}
         </q-item-section>
@@ -103,11 +102,12 @@
       >
       </SerialForm>
     </template>
+
   </q-select>
 </template>
 
 <script setup>
-import { ref, computed, watch, useTemplateRef } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { api } from '@/boot/axios';
 import SerialForm from 'app/src/components/traceability/SerialForm.vue';
 
@@ -115,97 +115,102 @@ const props = defineProps({
   value: {
     type: [Object, String],
     default: null,
-    },
+  },
 
-    label: {
-      type: String,
-      default: '',
-    },
+  label: {
+    type: String,
+    default: '',
+  },
 
-    keyOnly: {
-      type: Boolean,
-      default: false,
-    },
+  keyOnly: {
+    type: Boolean,
+    default: false,
+  },
 
-    dense: {
-      type: Boolean,
-      default: false,
-    },
+  dense: {
+    type: Boolean,
+    default: false,
+  },
 
-    clearable: {
-      type: Boolean,
-      default: true,
-    },
+  clearable: {
+    type: Boolean,
+    default: true,
+  },
 
-    placeholder: {
-      type: String,
-      default: null,
-    },
+  placeholder: {
+    type: String,
+    default: null,
+  },
 
-    work_order_key: {
-      type: String,
-      default: undefined,
-    },
+  work_order_key: {
+    type: String,
+    default: undefined,
+  },
 
-    product_key: {
-      type: String,
-      default: undefined,
-    },
+  product_key: {
+    type: String,
+    default: undefined,
+  },
 
-    batch_key: {
-      type: String,
-      default: undefined,
-    },
+  batch_key: {
+    type: String,
+    default: undefined,
+  },
 
-    can_create: {
-      type: Boolean,
-      default: false,
-    },
+  can_create: {
+    type: Boolean,
+    default: false,
+  },
 
-    can_search: {
-      type: Boolean,
-      default: true,
-    },
+  can_search: {
+    type: Boolean,
+    default: true,
+  },
 
-    selection_qt: {
-      type: Number,
-      default: 1,
-    },
+  selection_qt: {
+    type: Number,
+    default: 1,
+  },
 
-    filter_used: {
-      type: Boolean,
-      default: false,
-    },
+  filter_used: {
+    type: Boolean,
+    default: false,
+  },
 
-    initial_values: {
-      type: Object,
-      default: null,
-    },
+  inventory_in_position_key: {
+    type: String,
+    default: undefined,
+  },
 
-    filtered_values: {
-      type: Object,
-      default: null,
-    },
+  initial_values: {
+    type: Object,
+    default: null,
+  },
 
-    hint: {
-      type: String,
-      default: '',
-    },
+  filtered_values: {
+    type: Object,
+    default: null,
+  },
 
-    minChars: {
-      type: Number,
+  hint: {
+    type: String,
+    default: '',
+  },
+
+  minChars: {
+    type: Number,
     default: 0,
   },
 });
 
-defineEmits(['select']);
-const selectRef = useTemplateRef('selectRef')
+const emit = defineEmits(['select', 'remove']);
+const selectRef = ref(null);
 
 
 const loading = ref(false);
 const create_serial_form = ref(false);
 const options = ref([]);
-const last_research = ref(undefined);
+// const last_research = ref(undefined);
 const code_free = ref(false); // Serial code for product is taken (false) or not (true)
 
 const placeholder_computed = computed(() => {
@@ -225,13 +230,9 @@ initialize();
 function initialize() {
   create_serial_form.value = false;
   if (props.work_order_key || props.product_key) {
-    loadSerials();
-    last_research.value = '';
+    loadOptions();
+    // last_research.value = '';
   }
-};
-
-function makeInputUppercase(value) {
-  selectRef.value.updateInputValue(value.toUpperCase());
 };
 
 function loadSerials(search_value) {
@@ -259,23 +260,59 @@ function loadSerials(search_value) {
           code_free.value = true;
         }
         api.get('serial-selection', { params }).then((resp) => {
-          options.value = resp.data;
+          options.value = resp.data.map((item) => ({
+            label: item.serial_code,
+            value: item._key,
+            _key: item._key,
+            code: item.code,
+          }));
           addInitialValues(search_value);
           loading.value = false;
         });
       });
   } else {
     api.get('serial-selection', { params }).then((resp) => {
-      options.value = resp.data;
+      options.value = resp.data.map((item) => ({
+        label: item.serial_code,
+        value: item._key,
+        _key: item._key,
+        code: item.code,
+      }));
       addInitialValues(search_value);
       loading.value = false;
     });
   }
 };
 
+function loadInventory(search_value) {
+  api.get('inventory', { params: {
+    product_key: props.product_key,
+    root_position_key: props.inventory_in_position_key,
+    serial_search: search_value,
+    limit: 100,
+  }}).then((resp) => {
+    options.value = resp.data.map((item) => ({
+      _key: item.serial_key,
+      code: item.serial_code,
+      label: item.serial_code,
+      value: item._key,
+    }));
+  });
+}
+
+
+function loadOptions(search_value) {
+  if (props.inventory_in_position_key) {
+    loadInventory(search_value);
+  } else {
+    loadSerials(search_value);
+  }
+}
+
+
 function closeCreateForm() {
   create_serial_form.value = false;
-  loadSerials(last_research.value);
+  // loadSerials(last_research.value);
 };
 
 function addInitialValues(search_value) {
@@ -301,10 +338,15 @@ function addValue(search_value, serial) {
   }
 };
 
+function remove(value) {
+  emit('remove', value);
+}
+
 function filter(value, update, abort) {
-  if (last_research.value === value) {
-    update();
-  } else if (!props.can_search && props.initial_values) {
+  //   if (last_research.value === value) {
+  //   update();
+  // } else
+  if (!props.can_search && props.initial_values) {
     update(() => {
       addInitialValues(value);
     });
@@ -312,7 +354,7 @@ function filter(value, update, abort) {
     abort();
   } else {
     update(() => {
-      loadSerials(value);
+      loadOptions(value);
     });
   }
 };

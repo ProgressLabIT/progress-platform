@@ -360,9 +360,7 @@
             :disable="!editMode"
             @update:model-value="updateField('manage_inventory', $event)"
           />
-        </q-card-section>
-        <q-card-section class="col scroll">
-          <q-toggle
+          <!-- <q-toggle
             filled
             clearable
             emit-value
@@ -373,7 +371,7 @@
             @update:model-value="
               updateField('allow_negative_inventory', $event)
             "
-          />
+          /> -->
         </q-card-section>
       </q-card>
     </div>
