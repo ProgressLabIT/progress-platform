@@ -161,6 +161,11 @@ function reset() {
   document.getElementById('search-input').focus()
 }
 
+function back() {
+  transfer.stage = 'start';
+  transfer.contents = [];
+}
+
 function setDestination(pos) {
   transfer.destinationPosition = pos;
   transfer.stage = 'confirm';
