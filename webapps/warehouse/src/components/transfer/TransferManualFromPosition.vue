@@ -135,7 +135,7 @@ function searchPositions() {
 function selectPosition(position) {
   // If position is a container, open dialog to select whole container or contents
   if (position.fixed == true) {
-    selectContents(position);
+    selectContents({ _key: position._key, code: position.code });
     return
   }
   else {

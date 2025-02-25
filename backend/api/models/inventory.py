@@ -213,7 +213,7 @@ class InventoryMovementNew(FlexModel):
       raise ValueError("A new movement must include a product or container position")
     if self.serial_key is not None and (abs(self.qt_planned) > 1 or abs(self.qt_confirmed) > 1):
       raise ValueError("A serial movement must have a quantity of +/-1")
-    if self.position_from == self.position_to and self.type != InventoryMovementType.ADJUSTMENT:
+    if self.position_from == self.position_to and self.movement_type != InventoryMovementType.ADJUSTMENT:
       raise ValueError("A movement must have a different position from and to")
     return self
 

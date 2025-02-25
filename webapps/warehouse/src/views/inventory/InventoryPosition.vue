@@ -53,11 +53,16 @@
         <q-chip class="highlight text-body2" color="theme-grey">{{ selectedPosition.code }}</q-chip>
       </div>
 
+      <SearchOrScan
+        v-model="filter"
+        @update:model-value="loadPositionContents(selectedPosition._key)"
+        class="q-mb-md"
+      />
+
       <div class="text-h6" v-if="positionContents.length === 0">{{ $t('no_contents') }}</div>
 
       <template v-else>
         <div class="text-h6 q-mb-md">{{ $t('contents') }}</div>
-        <SearchOrScan v-model="filter" @update:model-value="loadPositionContents" />
         <q-scroll-area class="col q-mb-md">
           <q-list>
             <q-item
@@ -213,8 +218,8 @@ function searchPositions() {
   }
 }
 
-async function loadPositionContents() {
-  const response = await api.get(`/position/${selectedPosition.value._key}`, { params: { search: filter.value } });
+async function loadPositionContents(position_key) {
+  const response = await api.get(`/position/${position_key}`, { params: { search: filter.value } });
   positionContents.value = response.data;
 }
 
@@ -253,10 +258,10 @@ onMounted(() => {
 
 function selectItem(item) {
   if (item.type === 'position') {
-    selectPosition(item);
+    selectPosition({ _key: item.position_key, code: item.code });
   }
   else {
-    adjustQuantity(item);
+    adjustQuantity({ _key: item.product_key, code: item.product_code, quantity: item.quantity });
   }
 }
 

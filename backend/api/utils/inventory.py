@@ -29,7 +29,7 @@ class Queries:
 
   GET_POSITION_CONTENTS = """
     FOR v, e IN 1..1 INBOUND CONCAT('Position/', @position_key) is_in_position OPTIONS { uniqueVertices: "path" }
-    LET position = (IS_SAME_COLLECTION(Position, v) && v.fixed == false) ? MERGE({ type: 'position' }, v) : null
+    LET position = (IS_SAME_COLLECTION(Position, v)) ? MERGE({ type: 'position' }, v) : null
     LET product = IS_SAME_COLLECTION(Product, v) ? MERGE({ type: 'product', quantity: e.quantity }, v) : null
     LET serial = e.serial_key ? FIRST(
       FOR s IN Serial
@@ -46,6 +46,7 @@ class Queries:
       type: result.type,
       code: result.code,
       position_key: result.type == 'position' ? v._key : null,
+      position_fixed: result.type == 'position' ? v.fixed : null,
       product_code: result.type == 'position' ? null : v.code,
       product_key: result.type == 'position' ? null : v._key,
       quantity: e.quantity,
