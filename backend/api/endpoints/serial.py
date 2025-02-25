@@ -30,9 +30,7 @@ def get_serial_batch(
   batch_key: str | None = None,
   filter_empty: bool = False
 ):
-  bind_vars = dict(
-    from_id = f'Batch/{batch_key}'
-  )
+  bind_vars = dict(batch_key = batch_key)
   batch_serials = []
   for serial in [e for e in db.aql.execute(Queries.GET_ALL_SERIALS_IN_BATCH, bind_vars=bind_vars)]:
     if serial['code'] or not filter_empty:
@@ -68,9 +66,9 @@ def get_serial_parents(
       )
     )
 
-@router.get('/serial-childs',
+@router.get('/serial-children',
     dependencies=[Depends(auth.verify_token)])
-def get_serial_childs(
+def get_serial_children(
   serial_key: str | None = None,
 ):
   try:
@@ -194,8 +192,7 @@ def get_serial_selection(
   include_unreleased: bool = False,
   limit: int = 100
 ):
-  all_serials = []
-  for serial in [e for e in db.aql.execute(Queries.GET_ALL_SERIALS, bind_vars=dict(
+  return [e for e in db.aql.execute(Queries.GET_ALL_SERIALS, bind_vars=dict(
       search = search,
       wo_key = wo_key,
       product_key = product_key,
@@ -203,16 +200,7 @@ def get_serial_selection(
       limit = limit,
       filter_used = filter_used,
       include_unreleased = include_unreleased
-    ))]:
-    if serial['code']:
-      all_serials.append(dict(
-          value= serial['_key'],
-          _key= serial['_key'],
-          label= serial['code'],
-          wo_key= serial['wo_key'],
-          product_key= serial['product_key'],
-      ))
-  return all_serials
+    ))]
 
 
 # ---------------------------------------------

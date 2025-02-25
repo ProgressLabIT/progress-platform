@@ -66,7 +66,7 @@
         v-if="cardItem.type === 'position'"
         :position="cardItem"
         @select-contents="changeStartPosition"
-        @select-container="transferContainer(cardItem)"
+        @select-container="transferContainer"
       />
       <!-- Select product quantity -->
       <template v-else>
@@ -105,14 +105,14 @@ const list = ref([]);
 const cardItem = ref(null);
 const itemQuantity = ref(1);
 
-function getPositionContents(position, search = null) {
-  api.get(`position/${position._key}`, { params: { search } }).then((resp) => {
+function getPositionContents(position_key, search = null) {
+  api.get(`position/${position_key}`, { params: { search } }).then((resp) => {
     results.value = resp.data;
     list.value = resp.data;
   });
 }
 
-getPositionContents(transfer.startPosition);
+getPositionContents(transfer.startPosition._key);
 
 const contentIcon = {
   product: 'mdi-apps',
@@ -150,10 +150,24 @@ function toggleItem(item) {
   if (transfer.contents.find(c => c._key === item._key)) {
     transfer.contents = transfer.contents.filter(c => c._key !== item._key);
   } else {
-    if (['position', 'product'].includes(item.type)) {
-      cardItem.value = item;
-    } else {
-      transfer.contents.push(item);
+    switch (item.type) {
+      case 'position':
+        if (item.position_fixed) {
+          cardItem.value = item;
+          changeStartPosition();
+        }
+        else {
+          cardItem.value = item;
+        }
+        break;
+      case 'product':
+        cardItem.value = item;
+        break;
+      case 'serial':
+        transfer.contents.push(item);
+        break;
+      default:
+        break;
     }
   }
 }
@@ -172,25 +186,26 @@ function getItemSelectedQty(item) {
 }
 
 function changeStartPosition() {
-  transfer.startPosition = cardItem.value;
+  transfer.startPosition = { _key: cardItem.value.position_key, code: cardItem.value.position_code };
   transfer.contents = [];
-  getPositionContents(cardItem.value);
+  getPositionContents(cardItem.value.position_key);
   cardItem.value = null;
+  filter.value = null;
 }
 
-function transferContainer(item) {
+function transferContainer() {
   transfer.contents.push({
-    ...item,
+    ...cardItem.value,
     type: 'position',
-    position_key: item._key,
+    position_key: cardItem.value.position_key,
   });
   cardItem.value = null;
 }
 
 function toggleAll(select = true) {
   if (select) {
-    // Add all items that aren't already in contents
-    list.value.forEach(item => {
+    // Add all items that aren't already in contents, excluding fixed positions
+    list.value.filter(item => !item.position_fixed).forEach(item => {
       if (!transfer.contents.find(c => c._key === item._key)) {
         // if (['position', 'product'].includes(item.type)) {
         //   // Skip positions/products as they need quantity input

@@ -154,6 +154,33 @@ export default {
     showMedia(value) {
       this.show_media = value;
     },
+
+    async ensureFileDataAvailable() {
+      // Check if temporary files stored in blob URLs are available
+      // This can happen if the page is reloaded, when file is not available, but metadata is still there.
+
+      if (!this.files) {
+        return;
+      }
+
+      for (const [index, file] of this.files.entries()) {
+        if (file.temp && file.path?.startsWith('blob:')) {
+          try {
+            const response = await fetch(file.path);
+            if (!response.ok || !(await response.blob())) {
+              this.$emit('deleteFile', index);
+            }
+          } catch (error) {
+            console.warn(`File ${file.name} is not accessible:`, error);
+            this.$emit('deleteFile', index);
+          }
+        }
+      }
+    },
+  },
+
+  mounted() {
+    this.ensureFileDataAvailable();
   },
 };
 </script>

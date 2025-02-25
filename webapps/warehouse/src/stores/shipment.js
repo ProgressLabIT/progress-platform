@@ -43,7 +43,7 @@ export const useShipmentStore = defineStore('shipment', {
       for (const item of this.selectedInventory) {
         const inventoryItem = this.inventory.find(i => i._key === item._key);
         movements.push({
-          position_from: `Position/${inventoryItem.path.slice(-1)[0].position_key}`,
+          position_from: inventoryItem.path.slice(-1)[0].position_key,
           serial_key: inventoryItem.serial_key,
           product_key: this.product._key,
           qt_planned: item.selected,
@@ -55,20 +55,18 @@ export const useShipmentStore = defineStore('shipment', {
       for (const movement of movements) {
         try {
           await sendEvent({
-            event_type: 'ADD_MOVEMENT',
+            event_type: 'MOVEMENT_COMPLETED',
             event_data: {
-              movement: {
-                ...movement,
-                position_to: 'Position/OUT',
-                status: 'completed',
-                type: 'shipment',
-                start: now,
-                end: now
-              }
+              ...movement,
+              position_to: 'OUT',
+              status: 'completed',
+              movement_type: 'shipment',
+              start: now,
+              end: now
             },
           });
           Notify.create({
-            message: 'Movimento registrato',
+            message: 'Movimenti registrati',
             position: 'top',
             color: 'theme-green',
             timeout: 1500,

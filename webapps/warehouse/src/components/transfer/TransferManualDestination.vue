@@ -43,14 +43,21 @@
 
     <q-space />
     <q-btn
+      v-if="!startPositionKeys.includes('IN')"
       color="primary"
+      outline
+      :label="$t('select_root_position')"
+      @click="setDestination({code: 'IN', _key: 'IN'})"
+    />
+    <q-btn
+      color="theme-blue"
       :label="$t('position_create')"
       @click="showCreateContainerBottomSheet = true"
     />
     <q-btn
       color="theme-grey"
       :label="$t('back')"
-      @click="transfer.stage = 'start'"
+      @click="back"
     />
 
     <SlideUpCard
@@ -152,6 +159,11 @@ function reset() {
   filter.value = '';
   results.value = [];
   document.getElementById('search-input').focus()
+}
+
+function back() {
+  transfer.stage = 'start';
+  transfer.contents = [];
 }
 
 function setDestination(pos) {

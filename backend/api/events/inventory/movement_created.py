@@ -1,0 +1,44 @@
+import traceback
+
+from events.inventory.base_inventory import BaseInventoryEvent, BaseInventoryModel
+from models.inventory import *
+from models.event import EventType
+from models.event import EventModel
+from typing import List
+
+from utils.exceptions import (
+  InventoryMovementException
+)
+
+class MovementCreatedModel(BaseInventoryModel):
+    event_type: str = EventType.MOVEMENT_CREATED.name
+
+class MovementCreatedEvent(BaseInventoryEvent):
+  event_data: MovementCreatedModel
+
+  def set_model(self, base_model: EventModel):
+   self.info = MovementCreatedModel(**base_model.model_dump())
+
+  def validate_event(self):
+    return super().validate_event()
+
+  def apply(self):
+    try:
+      # TODO: allow inserting movements by product/serial code
+      movement_data=self.info.movement
+      self.adjust_inventory()
+      new_movement_record = InventoryMovement(**movement_data.model_dump())
+      movement_key = self.tx.collection('movement').insert(new_movement_record)['_key']
+      self.notify_results(dict(
+         movement_key = movement_key,
+         notification = InventoryNotificationType.MOVEMENT_ADDED,
+         message="Movement created correctly",
+      ))
+    except Exception as e:
+      print(traceback.format_exc())
+      self.notify_results(dict(
+         notification = InventoryNotificationErrorCode.EXCEPTION,
+         error_code = InventoryNotificationType.ERROR,
+         error = traceback.format_exc()
+      ))
+      raise InventoryMovementException(f'Cannot add movements', e, traceback.format_exc())

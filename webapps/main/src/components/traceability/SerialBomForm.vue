@@ -13,7 +13,6 @@
       class="surface1 q-pa-md"
       style="min-width: 600px; max-width: 800px"
     >
-      <q-form ref="serial-form">
         <!-- FORM TITLE -->
         <q-card-section>
           <div class="row justify-between items-center">
@@ -33,65 +32,76 @@
           {{ $t('serial_field.noData') }}
         </NoDataAlert>
 
-        <template v-else>
+        <q-card-section v-else class="column q-gutter-y-md">
           <template
-            v-for="component in bom_components"
+            v-for="component in bom_components.filter(c => c.traceability_level !== null)"
             :key="component.component_key"
           >
-            <BaseAutocompleteSerial
-              v-if="component.traceability_level !== null"
-              v-model="
-                serialModel[getComponentLineKey(component.component_key)]
-              "
-              :initial_values="
-                initalModel[getComponentLineKey(component.component_key)]
-              "
-              :label="
-                $capitalize([$t('serial'), component.component_code, '-', component.component_description].join(' '))
-              "
-              :hint="$t('serial_autocomplete_hint', { minChars: 3 })"
-              :loading="loading"
-              :product_key="component.component_key"
-              :can_create="true"
-              :selection_qt="qt[component.component_key]"
-              :filter_used="true"
-              :filtered_values="booked_serials[component.component_key]"
-              :disable="
-                ((serialModel[getComponentLineKey(component.component_key)]
-                  ?.length >= qt[component.component_key] ||
-                  (qt[component.component_key] === 1 &&
+            <div class="row q-mb-md">
+              <div class="col">
+                <BaseAutocompleteSerial
+                  v-if="component.traceability_level !== null"
+                  v-model="
                     serialModel[getComponentLineKey(component.component_key)]
-                      ?._key)) &&
-                  !replace_serials[
-                    getComponentLineKey(component.component_key)
-                  ]) ||
-                phase_key !== component.phase_key
-              "
-              @select="
-                (selection) =>
-                  onSerialSelection(
-                    selection,
-                    component.component_key,
-                    getComponentLineKey(component.component_key),
-                  )
-              "
-            >
-            </BaseAutocompleteSerial>
-            <q-btn
-              v-if="
-                component.traceability_level !== null &&
-                !replace_serials[getComponentLineKey(component.component_key)]
-              "
-              flat
-              round
-              icon="mdi-pencil"
-              :disable="phase_key !== component.phase_key"
-              @click="
-                replace_serials[getComponentLineKey(component.component_key)] =
-                  true
-              "
-            />
+                  "
+                  :initial_values="
+                    initalModel[getComponentLineKey(component.component_key)]
+                  "
+                  :label="
+                    $capitalize([$t('serial'), component.component_code, '-', component.component_description].join(' '))
+                  "
+                  :hint="$t('serial_autocomplete_hint', { minChars: 3 })"
+                  :loading="loading"
+                  :product_key="component.component_key"
+                  :can_create="true"
+                  :selection_qt="qt[component.component_key]"
+                  :filter_used="true"
+                  :filtered_values="booked_serials[component.component_key]"
+                  :disable="
+                    ((serialModel[getComponentLineKey(component.component_key)]
+                      ?.length >= qt[component.component_key] ||
+                      (qt[component.component_key] === 1 &&
+                        serialModel[getComponentLineKey(component.component_key)]
+                          ?._key)) &&
+                      !replace_serials[
+                        getComponentLineKey(component.component_key)
+                      ]) ||
+                    phase_key !== component.phase_key
+                  "
+                  @select="
+                    (selection) =>
+                      onSerialSelection(
+                        selection,
+                        component.component_key,
+                        getComponentLineKey(component.component_key),
+                      )
+                  "
+                >
+                </BaseAutocompleteSerial>
+              </div>
+              <div
+                v-if="
+                  component.traceability_level !== null &&
+                  !replace_serials[getComponentLineKey(component.component_key)]
+                "
+                class="col-auto q-ml-md"
+              >
+                <q-btn
+                  flat
+                  round
+                  icon="mdi-pencil"
+                  :disable="phase_key !== component.phase_key"
+                  @click="
+                    replace_serials[getComponentLineKey(component.component_key)] =
+                      true
+                  "
+                />
+              </div>
+            </div>
+
             <q-input
+              class="q-mt-sm"
+              label="Ragione della modifica"
               v-if="
                 replace_serials[getComponentLineKey(component.component_key)] &&
                 phase_key === component.phase_key
@@ -102,11 +112,10 @@
                 ]
               "
               filled
-              dense
             />
-            <!-- FORM BODY -->
+            <q-separator class="q-my-md" />
           </template>
-        </template>
+        </q-card-section>
 
         <!-- FORM ACTIONS    navigation -->
         <q-card-section>
@@ -146,7 +155,6 @@
             </q-btn>
           </div>
         </q-card-section>
-      </q-form>
     </q-card>
   </BaseDialog>
 </template>
@@ -310,7 +318,7 @@ export default {
           }
         }
 
-        for (const child of serial.childs) {
+        for (const child of serial.children) {
           const key = [serial._id, child.product_key].join(' ');
           if (!this.serialModel[key]) {
             this.serialModel[key] = [];
@@ -334,8 +342,8 @@ export default {
           }
 
           this.initialValues.push({
-            from_serial: serial._key,
-            to_serial: child._key,
+            parent_serial_key: serial._key,
+            child_serial_key: child._key,
             wo_key: child.wo_key,
             reason: null,
             replaced: true,
@@ -400,8 +408,8 @@ export default {
         wo_key: this.wo_key,
         component_key: component_key,
         batch_key: this.batch_key,
-        from_serial: serial_from._key,
-        to_serial: serial_to._key,
+        parent_serial_key: serial_from._key,
+        child_serial_key: serial_to._key,
         reason: null,
         replaced: false,
       });
@@ -484,10 +492,13 @@ export default {
         timestamp: timestamp(),
         wo_key: this.wo_key,
         batch_key: this.batch_key,
-        serial_link_data: link_data,
       };
-
-      await this.$api.post('event', event);
+      for (const link of link_data) {
+        await this.$api.post('event', {
+          ...event,
+          ...link,
+        });
+      }
       this.saving = false;
       this.$emit('close');
     },

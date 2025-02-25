@@ -58,7 +58,7 @@
         :rows-per-page-options="[0]"
         :virtual-scroll-sticky-size-start="48"
       >
-        <template #body-cell-traceability_mandatory="props">
+        <!-- <template #body-cell-traceability_mandatory="props">
           <q-td :props="props">
             <q-toggle
               v-if="props.row.traceability_level"
@@ -66,6 +66,27 @@
               :disable="!editMode"
               @update:model-value="
                 (value) => toggleMandatoryTraceability(props.rowIndex, value)
+              "
+            />
+          </q-td>
+        </template> -->
+
+        <template #body-cell-manage_inventory="props">
+          <q-td class="text-center">
+            <q-btn
+              v-if="config.enableInventoryManagement"
+              icon="mdi-dots-vertical"
+              round
+              flat
+              color="low"
+              size="sm"
+              :disable="!editMode"
+              @click="
+                editConsumptionOptions(
+                  props.row,
+                  props.row.consumption_options,
+                  props.rowIndex,
+                )
               "
             />
           </q-td>
@@ -163,12 +184,12 @@
             >
             </q-input>
 
-            <q-toggle
+            <!-- <q-toggle
               v-if="new_line_product?.traceability_level"
               v-model="new_line_traceability_mandatory"
-              class="col-2"
+              class="col-1"
               :label="$t('traceability.mandatory')"
-            />
+            /> -->
           </div>
         </q-card-section>
         <div class="row q-col-gutter-md q-pa-md">
@@ -193,15 +214,89 @@
         </div>
       </q-card>
     </BaseDialog>
+
+    <BaseDialog :show="!!consumption_options">
+      <q-card style="max-width: 700px" class="surface1 q-pa-md q-gutter-y-md">
+        <q-card-section class="display text-h3 highlight">
+          {{ $t('warehouse.bom_options') }}
+        </q-card-section>
+
+        <q-card-section class="column q-gutter-md">
+          <q-input
+            v-model="consumption_options.minimum_quantity"
+            v-model.number="consumption_options.minimum_quantity"
+            dense
+            filled
+            type="number"
+            step="1"
+            min="1"
+            :label="$t('warehouse.consumption_options.minimum_quantity')"
+          >
+          </q-input>
+
+          <q-toggle
+            v-model="consumption_options.minimum_quantity_if_negative"
+            :label="
+              $t(
+                'warehouse.consumption_options.minimum_quantity_if_negative',
+              )
+            "
+          />
+        </q-card-section>
+
+        <q-card-section class="column q-gutter-md">
+          <BaseAutocompletePositions
+            :model-value="consumption_options.consumption_position_key"
+            :label="$t('warehouse.consumption_options.consumption_position_key')"
+            :dense="true"
+            @select="
+              (selection) =>
+                (consumption_options.consumption_position_key = selection._key)
+            "
+          />
+
+          <q-toggle
+            v-model="consumption_options.consumption_position_mandatory"
+            :label="
+              $t('warehouse.consumption_options.consumption_position_mandatory')
+            "
+          />
+        </q-card-section>
+
+        <div class="row q-col-gutter-md q-pa-md">
+          <div class="col-6">
+            <q-btn
+              class="full-width"
+              color="theme-blue"
+              :label="$t('save')"
+              @click="saveConsumptionOptions()"
+            >
+            </q-btn>
+          </div>
+          <div class="col-6">
+            <q-btn
+              class="full-width"
+              color="theme-grey"
+              :label="$t('cancel')"
+              @click="consumption_options = null"
+            >
+            </q-btn>
+          </div>
+        </div>
+      </q-card>
+    </BaseDialog>
   </div>
 </template>
 
 <script>
+import { cloneDeep } from 'lodash';
 import { mapState } from 'vuex';
 
 import { api } from '@/boot/axios.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
+import { useConfigStore } from '@/stores/config';
+import BaseAutocompletePositions from 'components/BaseAutocompletePositions.vue';
 import BaseAutocompleteProduct from 'components/BaseAutocompleteProduct.vue';
 // import { throttle as _throttle } from 'lodash';
 
@@ -211,9 +306,17 @@ export default {
   components: {
     BaseDialog,
     BaseAutocompleteProduct,
+    BaseAutocompletePositions,
   },
 
   emits: ['changesSaved', 'changesCanceled'],
+
+  setup() {
+    const { config } = useConfigStore();
+    return {
+      config,
+    };
+  },
 
   data() {
     return {
@@ -221,12 +324,15 @@ export default {
       table_height: '83vh',
       delete_lines: [],
       show_product_catalog: false,
+      consumption_options: null,
+      consumption_options_rowIndex: null,
       catalog_loading: false,
       product_catalog: [],
       new_line_product: {},
       new_line_phase: {},
       new_line_qt: null,
-      new_line_traceability_mandatory: null,
+      // new_line_traceability_mandatory: null,
+      new_line_consumption_options: null,
       show_cancel_confirmation: false,
       show_save_confirmation: false,
       saving: false,
@@ -244,7 +350,7 @@ export default {
 
     table_headers() {
       // TODO: refactor into mixin / composition function, used also in WorkSessionBom
-      return [
+      let columns = [
         {
           name: 'component_code',
           field: 'component_code',
@@ -268,13 +374,26 @@ export default {
           name: 'qt',
           field: 'qt',
           label: this.$t('quantity.short').toUpperCase(),
+          align: 'left',
         },
-        {
-          name: 'traceability_mandatory',
-          field: 'traceability_mandatory',
-          label: this.$t('traceability.mandatory').toUpperCase(),
-        },
+        // {
+        //   name: 'traceability_mandatory',
+        //   field: 'traceability_mandatory',
+        //   label: this.$t('traceability.mandatory').toUpperCase(),
+        //   align: 'center',
+        // },
       ];
+
+      if (this.config.enableInventoryManagement) {
+        columns.push({
+          name: 'manage_inventory',
+          field: 'manage_inventory',
+          label: this.$t('warehouse.bom_options').toUpperCase(),
+          align: 'center',
+        });
+      }
+
+      return columns;
     },
 
     editMode: {
@@ -323,7 +442,8 @@ export default {
       this.new_line_product = null;
       this.new_line_qt = null;
       this.new_line_phase = null;
-      this.new_line_traceability_mandatory = null;
+      // this.new_line_traceability_mandatory = null;
+      this.new_line_consumption_options = null;
     },
   },
 
@@ -386,11 +506,11 @@ export default {
 
     loadProduct(selection) {
       this.new_line_product = selection;
-      if (this.new_line_product?.traceability_level) {
-        this.new_line_traceability_mandatory = true;
-      } else {
-        this.new_line_traceability_mandatory = null;
-      }
+      // if (this.new_line_product?.traceability_level) {
+      //   this.new_line_traceability_mandatory = true;
+      // } else {
+      //   this.new_line_traceability_mandatory = null;
+      // }
     },
 
     updateItemQt(table_key, qt) {
@@ -406,6 +526,31 @@ export default {
       );
       this.$store.commit('UPDATE_TEMP_BOM', new_bom);
       this.delete_lines = [];
+    },
+
+    async editConsumptionOptions(row, options, rowIndex) {
+      if (!options) {
+        options = {
+          preferred_position_key: null,
+          preferred_position_mandatory: false,
+          mandatory_quantity: row.qt,
+          all_or_minimum_in_case_negative: false,
+        };
+      }
+      this.consumption_options_rowIndex = rowIndex;
+      this.consumption_options = options;
+    },
+
+    async saveConsumptionOptions() {
+      let temp_item = this.temp_bom[this.consumption_options_rowIndex];
+      temp_item.consumption_options = cloneDeep(this.consumption_options);
+      this.temp_bom = this.temp_bom.toSpliced(
+        this.consumption_options_rowIndex,
+        1,
+        temp_item,
+      );
+      this.consumption_options = null;
+      this.consumption_options_rowIndex = null;
     },
 
     async addItem() {
@@ -428,7 +573,8 @@ export default {
           component_key: this.new_line_product._key,
           component_code: this.new_line_product.code,
           component_description: this.new_line_product.description,
-          traceability_mandatory: this.new_line_traceability_mandatory,
+          // traceability_mandatory: this.new_line_traceability_mandatory,
+          consumption_options: this.new_line_consumption_options,
           qt: this.new_line_qt,
           phase_name: this.new_line_phase?.alias ?? null,
           phase_key: this.new_line_phase?._key ?? null,
@@ -443,11 +589,11 @@ export default {
       }
     },
 
-    toggleMandatoryTraceability(lineIndex, value) {
-      let temp_item = this.temp_bom[lineIndex];
-      temp_item.traceability_mandatory = value;
-      this.temp_bom = this.temp_bom.toSpliced(lineIndex, 1, temp_item);
-    },
+    // toggleMandatoryTraceability(lineIndex, value) {
+    //   let temp_item = this.temp_bom[lineIndex];
+    //   temp_item.traceability_mandatory = value;
+    //   this.temp_bom = this.temp_bom.toSpliced(lineIndex, 1, temp_item);
+    // },
 
     cancelChanges() {
       this.temp_bom = [...this.saved_bom];

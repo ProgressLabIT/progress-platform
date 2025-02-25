@@ -1,7 +1,14 @@
 from models.inventory import InventoryMovementReferences
 
-
 class Queries:
+
+  PRODUCTS_INVENTORY_CONFIG = """
+    RETURN MERGE(
+      FOR p IN Product
+      FILTER p._key IN @product_keys
+      RETURN { [p._key]: p.manage_inventory }
+    )
+  """
 
   SEARCH_POSITIONS = """
     LET start = CONCAT('Position/', NOT_NULL(@is_in_position, 'IN'))
@@ -22,7 +29,7 @@ class Queries:
 
   GET_POSITION_CONTENTS = """
     FOR v, e IN 1..1 INBOUND CONCAT('Position/', @position_key) is_in_position OPTIONS { uniqueVertices: "path" }
-    LET position = (IS_SAME_COLLECTION(Position, v) && v.fixed == false) ? MERGE({ type: 'position' }, v) : null
+    LET position = (IS_SAME_COLLECTION(Position, v)) ? MERGE({ type: 'position' }, v) : null
     LET product = IS_SAME_COLLECTION(Product, v) ? MERGE({ type: 'product', quantity: e.quantity }, v) : null
     LET serial = e.serial_key ? FIRST(
       FOR s IN Serial
@@ -39,6 +46,7 @@ class Queries:
       type: result.type,
       code: result.code,
       position_key: result.type == 'position' ? v._key : null,
+      position_fixed: result.type == 'position' ? v.fixed : null,
       product_code: result.type == 'position' ? null : v.code,
       product_key: result.type == 'position' ? null : v._key,
       quantity: e.quantity,
@@ -255,8 +263,8 @@ class Queries:
 
     // SERIAL FILTERS
     FILTER @serial_keys ? m.serial_key IN @serial_keys : true
-    LET serial_search_context = FIRST(FOR s IN Serial FILTER s._key == m.serial_key RETURN s.code)
-    FILTER @serial_search ? CONTAINS(LOWER(serial_search_context), LOWER(@serial_search)) : true
+    LET serial_code = FIRST(FOR s IN Serial FILTER s._key == m.serial_key RETURN s.code)
+    FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
 
     // POSITION FILTERS
 

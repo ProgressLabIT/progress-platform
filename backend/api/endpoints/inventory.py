@@ -1,13 +1,10 @@
 import traceback
 import uuid
-
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Depends
 
-from events import Event
-from managers.inventory_event_manager import InventoryEventManager
-from models.event import EventModel
+from events import BaseEvent
 from models.inventory import *
 from models.product import ProductBaseData
 from utils.api import APIResponse
@@ -15,7 +12,7 @@ from utils.inventory import Queries, merge_references
 from utils.counter import _generate_counter
 from utils.db import db, model_to_db_dict
 from utils import auth
-
+from events.inventory.movement_created import MovementCreatedModel
 
 router = APIRouter()
 
@@ -390,14 +387,17 @@ def create_movement_list(new_movement_list: MovementListNew):
         references = merge_references(list_references=new_movement_list.references, movement_references=m.references),
         extra = getattr(m, 'extra', new_movement_list.extra)
       )
-      event = Event(EventModel(
-        event_type = 'ADD_MOVEMENT',
+
+      event = MovementCreatedModel(
         movement = movement_info,
         event_group = str(uuid.uuid4()),
         user_key = 'FAKE',
-        primary= False
-      ))
-      event.save(tx=tx)
+        primary= False,
+        tx = tx
+      )
+      event.save()
+      detail = event.response
+
     # Create the movement list
     tx.commit_transaction()
 

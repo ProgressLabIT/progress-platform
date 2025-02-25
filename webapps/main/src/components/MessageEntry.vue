@@ -144,13 +144,12 @@ export default {
 
   methods: {
     updateMessage(content) {
-      const message_data = {
-        ...this.message,
-        content,
-      };
       this.sendEvent({
         event_type: 'MESSAGE_UPDATED',
-        event_data: { message_data },
+        event_data: {
+          message_key: this.message._key,
+          content,
+        },
       }).then(() => {
         this.$emit('change');
       });
@@ -161,7 +160,7 @@ export default {
       this.sendEvent({
         event_type: 'MESSAGE_DELETED',
         event_data: {
-          message_data: { ...this.message },
+          message_key: this.message._key,
         },
       }).then(() => {
         this.$emit('change');

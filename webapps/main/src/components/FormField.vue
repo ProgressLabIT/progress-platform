@@ -11,7 +11,7 @@
       filled
       stack-label
       autogrow
-      input-debounce="100"
+      input-debounce="300"
       hide-bottom-space
     >
       <template #label>
@@ -31,7 +31,7 @@
       filled
       stack-label
       hide-bottom-space
-      input-debounce="100"
+      input-debounce="300"
     >
       <template #label>
         {{ field.label ?? field.default_label }}

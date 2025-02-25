@@ -30,11 +30,19 @@ class StepExecutionData(FlexModel):
   canceled: str | None = None
 
 
+class ExecutionDataUpdate(BaseModel):
+  step_key: str | None = None
+  batch_key: str | None = None
+  execution_record_key: str | None = None
+  form_data: list[FormFieldValue] = []
+
+
 class Batch(FlexModel):
   key: str | None = Field(None, alias="_key")
   job_key: str
-  work_order_key: str
   phase_key: str
+  work_order_key: str
+  product_key: str | None = None
 
   start: datetime
   end: datetime | None = None
@@ -83,7 +91,7 @@ class WorkSession(FlexModel):
 
 class WIP(ArangoEdge):
   # _from & _to refer to process phases or specific jobs
-  batch_key: str
+  batch_key: str # batch that produced the wip
   wo_key: str
   product_key: str
   serial_key: str | None = None

@@ -35,11 +35,16 @@
               <template
                 v-if="['created', 'start', 'end'].includes(column.name)"
               >
-                {{
-                  props.row[column.name] === null
+                <span>
+                  {{
+                    props.row[column.name] === null
                     ? '-'
                     : $shortDateString(props.row[column.name], $i18n.locale)
-                }}
+                  }}
+                  <q-tooltip delay="500" self="bottom middle" anchor="top middle">
+                    {{ props.row[column.name].slice(11, 19) }}
+                  </q-tooltip>
+                </span>
               </template>
 
               <template v-else-if="column.name === 'type'">

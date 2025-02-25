@@ -138,12 +138,9 @@ function confirm() {
       timestamp: now,
       event_data: {
         user_key: session_data.user._key,
-        movement: {
-          ...update,
-          user_key: session_data.user._key,
-          start: now,
-          end: update.qt_confirmed === update.qt_planned ? now : null,
-        }
+        ...update,
+        start: now,
+        end: update.qt_confirmed === update.qt_planned ? now : null,
       }
     })
     .then(() => {

@@ -1,5 +1,3 @@
-from models.production import Job
-from models.traceability import StepStatus
 
 class Queries:
 
@@ -40,8 +38,8 @@ class Queries:
       start: @start,
       active: true,
       canceled: null,
-      forced: null,
-      end: null
+      forced: @forced,
+      end: @end
     }
 
     INSERT new_ws INTO WorkSession RETURN NEW
@@ -56,12 +54,12 @@ class Queries:
       FOR step IN job.step_sequence
       LET step_data = KEEP(step, '_key', 'type')
       LET execution_data = FIRST(
-        FOR s IN StepExecutionData
+        FOR x IN StepExecutionData
         FILTER
-          s.batch_key == batch._key
-          && s.step_key == step._key
-          && s.canceled == null
-        RETURN KEEP(s, 'status', 'form_data')
+          x.batch_key == batch._key
+          && x.step_key == step._key
+          && x.canceled == null
+        RETURN KEEP(x, 'status', 'form_data', '_key')
       )
       LET step_done = execution_data ? execution_data.status == 'done' : false
       LET step_critical = execution_data ? execution_data.status == 'critical' : false
@@ -69,7 +67,8 @@ class Queries:
       RETURN MERGE(step_data, {
         done: step_done,
         critical: step_critical,
-        form_data: form_data
+        form_data: form_data,
+        execution_record_key: execution_data._key
       })
     )
     RETURN MERGE(batch, { step_data: batch_step_data })
@@ -368,6 +367,25 @@ class Queries:
     )
 
     RETURN { upstream_free_wip, downstream_free_wip, next_phase_key, previous_phase_key }
+  """
+
+
+  ALL_BATCH_STEPS_DONE = """
+    LET steps = DOCUMENT(Job, @job_key).step_sequence[*]._key
+
+    LET steps_done = (
+      FOR s IN steps
+      LET done = NOT_NULL(FIRST(
+        FOR x IN StepExecutionData
+          FILTER
+            x.batch_key == @batch_key
+            && x.step_key == s
+            && !x.canceled
+          RETURN x.status == 'done'
+        ), false)
+      RETURN done
+    )
+    RETURN steps_done[? ALL FILTER CURRENT == true]
   """
 
 # ------------- END OF QUERIES CLASS ----------------------------------

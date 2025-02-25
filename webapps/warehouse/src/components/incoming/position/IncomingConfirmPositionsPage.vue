@@ -87,7 +87,7 @@ function confirm() {
   if (incoming.product.traceability_level) {
     for (const serialCode of incoming.serials) {
       movements.push({
-        position_to: `Position/${incoming.positions[0]._key}`,
+        position_to: incoming.positions[0]._key,
         serial_code: serialCode,
         qt_planned: 1,
         qt_confirmed: 1,
@@ -97,7 +97,7 @@ function confirm() {
   else {
     for (const position of incoming.positions) {
       movements.push({
-        position_to: `Position/${position._key}`,
+        position_to: position._key,
         qt_planned: position.quantity,
         qt_confirmed: position.quantity,
       });
@@ -105,18 +105,16 @@ function confirm() {
   }
   for (const movement of movements) {
     sendEvent({
-      event_type: 'ADD_MOVEMENT',
+      event_type: 'MOVEMENT_COMPLETED',
       event_data: {
-        movement: {
           ...movement,
           product_key: incoming.product._key,
-          position_from: 'Position/OUT',
+          position_from: 'OUT',
           status: 'completed',
-          type: 'receipt',
+          movement_type: 'receipt',
           user_key: session_data.user._key,
           start: now,
           end: now
-        }
       },
     })
     .then(() => {
@@ -126,6 +124,7 @@ function confirm() {
         color: 'theme-green',
         timeout: 1500,
       });
+      incoming.$reset();
     })
     .catch((err) => {
       Notify.create({
@@ -139,7 +138,6 @@ function confirm() {
       });
     });
   }
-  incoming.$reset();
 }
 
 

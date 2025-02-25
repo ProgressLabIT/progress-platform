@@ -272,13 +272,6 @@ export default {
       return null;
     },
 
-    batchSerialToSerial(batch_serials) {
-      return {
-        _key: batch_serials.serial_key,
-        code: batch_serials.serial_code,
-      };
-    },
-
     async ensureBatchSerialCounter() {
       let missing_counter = false;
 
@@ -302,11 +295,10 @@ export default {
           return false;
         }
 
-        const user = this.session_data.user._key;
         let promises = [];
         updated_serials.forEach(async (serial) => {
           promises.push(
-            this.postSerialUpdate(this.batchSerialToSerial(serial), user),
+            this.postSerialUpdate(serial),
           );
         });
 
@@ -330,17 +322,13 @@ export default {
       }
     },
 
-    async postSerialUpdate(serial, user) {
-      serial.updated_by = `User/${user}`; // temporarily hardcoding DB id
+    async postSerialUpdate(serial) {
       const event = {
         event_type: 'SERIAL_UPDATED',
-        user_key: user,
+        user_key: this.session_data.user._key,
         user_session_key: this.session_data.session_key,
         timestamp: timestamp(),
-        serial_data: {
-          ...serial,
-          ignore_code_protection: true
-        }
+        ...serial,
       };
       await this.$api.post('event', event);
     },
@@ -367,8 +355,8 @@ export default {
       const has_bom = !!this.job?.wo_bom?.length;
 
       const all_serials_filled_in = this.job.wo_bom.every((bom_line) => {
-        const traceability_mandatory =
-          !!bom_line.traceability_level && bom_line.traceability_mandatory;
+        // const traceability_mandatory =
+        //   !!bom_line.traceability_level && bom_line.traceability_mandatory;
 
         const same_phase = bom_line?.phase_key == this.job?.phase_key;
 
@@ -376,7 +364,7 @@ export default {
         const serials_required = (bom_line?.qt ?? 0) * this.job.active_batch_qt;
 
         const bom_line_pass =
-          !traceability_mandatory ||
+          // !traceability_mandatory ||
           serials_declared === serials_required ||
           !same_phase;
         return bom_line_pass;
@@ -392,14 +380,13 @@ export default {
           const type = this.$store.getters.getCustomFieldByKey(
             field.custom_field_key,
           )?.type;
-          const field_not_mandatory = !field.mandatory;
           const field_filled_in =
             type === 'ternary'
               ? // ternary field can be true or false, but must be filled in
                 [true, false].includes(value)
               : // All other values must not be false, null/undefined or empty string.
-                !!value;
-          return field_not_mandatory || field_filled_in;
+                ![null, undefined, '', []].includes(value);
+          return !field.mandatory || field_filled_in;
         },
       );
       return all_mandatory_fields_filled;

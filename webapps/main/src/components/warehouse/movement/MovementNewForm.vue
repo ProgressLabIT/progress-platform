@@ -426,7 +426,7 @@ function createMovement() {
   };
 
   sendEvent({
-    event_type: 'ADD_MOVEMENT',
+    event_type: 'MOVEMENT_CREATED',
     event_data: {
       movement: movement,
     },

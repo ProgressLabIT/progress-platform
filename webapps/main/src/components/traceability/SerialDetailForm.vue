@@ -27,11 +27,11 @@
 
       <q-space></q-space>
 
-      <q-chip
+      <!-- <q-chip
         :color="serialAvailable ? 'theme-green' : 'theme-grey'"
         class="smaller text-uppercase highlight">
         {{ serialAvailable ? $t('available') : $t('unavailable') }}
-      </q-chip>
+      </q-chip> -->
 
       <q-btn
         v-if="printAvailable"

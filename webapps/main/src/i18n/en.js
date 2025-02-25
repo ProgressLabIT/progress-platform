@@ -884,6 +884,7 @@ export default {
     stock: 'Stock',
     missions: 'Missions',
     movements: 'Movements',
+    movementLists: 'Lists',
     inventory: 'Inventory',
     labelPrintTemplates: 'Label print templates',
     printersLibrary: 'Printers',
@@ -995,6 +996,16 @@ export default {
   week: 'Week',
   day: 'Day',
   warehouse: {
+    title: 'Warehouse',
+    manage: 'Manage inventory',
+    allow_negative: 'Allow negative values',
+    bom_options: 'Consumption options',
+    consumption_options: {
+      consumption_position_key: 'Default consumption position',
+      consumption_position_mandatory: 'Consume only from default position',
+      mandatory_quantity: 'Minimum consumption quantity',
+      mandatory_quantity_if_negative: 'Consume only minimum quantity if inventory below zero',
+    },
     position: {
       add: 'Add positions',
       new: 'Create a new position',

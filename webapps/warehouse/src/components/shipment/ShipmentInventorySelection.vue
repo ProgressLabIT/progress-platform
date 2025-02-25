@@ -57,15 +57,7 @@
             <q-icon v-else name="mdi-apps" size="xs"/>
           </div>
 
-        <!-- WAREHOUSE PATH -->
-        <div class="col column">
-          <div v-if="item.serial_key" class="col-auto highlight text-right">
-            {{ item.serial_code }}
-          </div>
-          <div v-else class="col-auto highlight text-right">
-            {{ shipment.inventorySelectedQt(item._key) }} / {{ item.quantity }}
-            </div>
-          </div>
+          <!-- WAREHOUSE PATH -->
           <div class="row items-center full-height q-gutter-x-sm" style="min-width: 0">
             <template
               v-for="(position, index) in item.path"
@@ -81,6 +73,15 @@
               class="col-auto"
             />
             </template>
+          </div>
+
+          <div class="col column">
+            <div v-if="item.serial_key" class="col-auto highlight text-right">
+              {{ item.serial_code }}
+            </div>
+            <div v-else class="col-auto highlight text-right">
+              {{ shipment.inventorySelectedQt(item._key) }} / {{ item.quantity }}
+            </div>
           </div>
         </div>
       </q-card>

@@ -32,6 +32,12 @@ def get_config():
 @router.patch('/config',
     dependencies=[Depends(auth.verify_token)])
 def update_config(config: dict):
+
+  default_values = {
+    'default_production_position': 'IN',
+    'default_consumption_position': 'IN'
+  }
+
   try:
     tx = db.begin_transaction(write=['Config', 'Queue'])
 
@@ -39,7 +45,10 @@ def update_config(config: dict):
     to_update = []
     for key, value in config.items():
       if value is None:
-        continue
+        if not key in default_values:
+          continue
+        else:
+          value = default_values[key]
 
       target = to_update if db.collection('Config').has(key) else to_insert
 

@@ -4,18 +4,12 @@ from typing import Any
 from typing import Annotated
 
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints, field_serializer
 
 from models.base_models import ArangoDocument, ArangoEdge, FlexModel
 #from utils.counter import _generate_counter
 from utils.dt import timestamp
 
-
-class InventoryCommandType(str, Enum):
-  ADD_MOVEMENT = 'ADD_MOVEMENT'
-  UPDATE_MOVEMENT = 'UPDATE_MOVEMENT'
-  DELETE_MOVEMENT = 'DELETE_MOVEMENT'
-  CLOSE_LIST = 'CLOSE_LIST'
 
 class InventoryNotificationType(str, Enum):
   ERROR = 'ERROR'
@@ -103,7 +97,7 @@ class InventoryPathItem(BaseModel):
   position_code: str | None = None
 
 class InventorySearchResult(BaseModel):
-  key: str = Field(..., alias='_key')
+  key: str = Field(..., alias='_key') # Inventory record (is_in_position edge) key
   product_code: str | None = None
   position_code: str | None = None
   path: list[InventoryPathItem] | None = []
@@ -162,7 +156,7 @@ class InventoryMovementReferences(BaseModel):
   job_key: str | None = None
   batch_key: str | None = None
   event_key: str | None = None
-  event_group_key: str | None = None
+  event_group: str | None = None
   transfer_doc: str | None = None
   sales_doc: str | None = None
   purchase_doc: str | None = None
@@ -173,9 +167,9 @@ class InventoryMovementReferences(BaseModel):
 class InventoryMovementNew(FlexModel):
   model_config = ConfigDict(populate_by_name=True)
 
-  position_from: str = Field(..., alias='_from')
-  position_to: str | None = Field(..., alias='_to')
-  type: InventoryMovementType | None = None
+  position_from: str | None = Field(None, serialization_alias='_from')
+  position_to: str | None = Field(None, serialization_alias='_to')
+  movement_type: InventoryMovementType = Field(..., serialization_alias='type')
   status: MovementStatus | None = MovementStatus.COMPLETED
   product_key: str | None = None
   product_code: str | None = None
@@ -183,6 +177,7 @@ class InventoryMovementNew(FlexModel):
   serial_code: str | None = None
   qt_planned: float | None = 1
   qt_confirmed: float | None = 0
+  created: datetime | None = Field(default_factory=timestamp)
   start: datetime | None = None
   end: datetime | None = None
   movement_list_key: str | None = None # link to MovementList document, if present
@@ -193,11 +188,19 @@ class InventoryMovementNew(FlexModel):
   extra: Any = None
 
   @model_validator(mode='before')
-  def set_default_values(cls, values):
-    if values.get('position_from') is None:
-      values['_from'] = 'Position/OUT' if values.get('type') == InventoryMovementType.RECEIPT.value else 'Position/IN'
-    if values.get('position_to') is None:
-      values['_to'] = 'Position/OUT' if values.get('type') == InventoryMovementType.SHIPMENT.value else 'Position/IN'
+  def set_implicit_values(cls, values):
+    match values.get('movement_type', None):
+      case InventoryMovementType.PRODUCTION.value:
+        values['position_from'] = 'NULL'
+      case InventoryMovementType.CONSUMPTION.value:
+        values['position_to'] = 'NULL'
+      case InventoryMovementType.SHIPMENT.value:
+        values['position_to'] = 'OUT'
+      case InventoryMovementType.RECEIPT.value:
+        values['position_from'] = 'OUT'
+      case _:
+        pass
+
     if values.get('status') in [MovementStatus.STARTED.value, MovementStatus.COMPLETED.value] and values.get('start', None) is None:
       values['start'] = timestamp()
     if values.get('status') == MovementStatus.COMPLETED.value and values.get('end', None) is None:
@@ -210,9 +213,17 @@ class InventoryMovementNew(FlexModel):
       raise ValueError("A new movement must include a product or container position")
     if self.serial_key is not None and (abs(self.qt_planned) > 1 or abs(self.qt_confirmed) > 1):
       raise ValueError("A serial movement must have a quantity of +/-1")
-    if self.position_from == self.position_to and self.type != InventoryMovementType.ADJUSTMENT:
+    if self.position_from == self.position_to and self.movement_type != InventoryMovementType.ADJUSTMENT:
       raise ValueError("A movement must have a different position from and to")
     return self
+
+  @field_serializer('position_from')
+  def serialize_position_from(self, position_from, _info):
+    return f'Position/{position_from}'
+
+  @field_serializer('position_to')
+  def serialize_position_to(self, position_to, _info):
+    return f'Position/{position_to}'
 
 
 class InventoryMovement(ArangoDocument): # edge collection movement
@@ -231,7 +242,7 @@ class InventoryMovement(ArangoDocument): # edge collection movement
   qt_confirmed: float | None = 0
 
   status: MovementStatus | None = MovementStatus.PLANNED
-  created: datetime = Field(default_factory=timestamp)
+  created: datetime | None = None
   start: datetime | None = None
   end: datetime | None = None
 
@@ -310,6 +321,8 @@ class InventoryMovementSearchParameters(BaseModel):
   limit: int | None = 500
   offset: int | None = 0
   search_graph: bool | None = True
+
+
 class InventoryMovementSearchResults(InventoryMovement):
   position_from_key: str | None = None
   position_from_code: str | None = None

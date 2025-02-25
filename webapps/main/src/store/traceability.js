@@ -1,12 +1,14 @@
 import { cloneDeep } from 'lodash';
 import { DateTime as DT } from 'luxon';
 import { api } from '@/boot/axios';
+import { sendEvent } from '@/composables/event';
+import { timestamp } from '@/lib/TimeHandling';
 
-function createEmptyBatch(state, startDT, job) {
+function createEmptyBatch(state, job) {
   const job_key = job._key;
   const new_batch = {
     job_key,
-    start: startDT.toISO(),
+    start: timestamp(),
   };
 
   const procedure = state.working_job_data.step_sequence;
@@ -114,45 +116,6 @@ async function getFormData(state, rootGetters, batchStep) {
   return formData;
 }
 
-function createEvent(
-  state,
-  session_state,
-  {
-    event_type,
-    timestamp,
-    step_key = null,
-    form_data = [],
-    completed_batch_qt = null,
-    step_changed_qt = null,
-    batch_serials = null,
-    new_active_batch_qt = null,
-  },
-) {
-  const user_key = session_state.user._key;
-  const job = state.working_job_data;
-  const serials = batch_serials ? batch_serials : state.batch_serials;
-
-  const event = {
-    event_type,
-    user_key,
-    user_session_key: session_state.session_key,
-    job_key: job._key,
-    product_key: job.product_key,
-    work_order_key: job.wo_key,
-    phase_key: job.phase_key,
-    active_batch_key: job.active_batch_key,
-    project_code: job.project_code,
-    step_key,
-    form_data,
-    completed_batch_qt,
-    timestamp, // ISO format
-    batch_serials: serials,
-    step_changed_qt: step_changed_qt,
-    new_active_batch_qt,
-  };
-
-  return event;
-}
 
 function getCurrentWorkSession(state) {
   const ws_count = state.work_session_list.length;
@@ -310,6 +273,15 @@ const traceability = {
       }
     },
 
+    SET_STEP_EXECUTION_KEY(state, { stepKey, executionRecordKey }) {
+      console.log('Test')
+      const batchSteps = state.current_batch_data.step_data;
+      const step = batchSteps.find(({ _key }) => _key === stepKey);
+      if (step) {
+        step.execution_record_key = executionRecordKey;
+      }
+    },
+
     UPDATE_JOB(state, job_data) {
       state.working_job_data = {
         /* Use spread to avoid overwriting notes,
@@ -331,6 +303,15 @@ const traceability = {
 
     UPDATE_BATCH_SERIALS(state, batch_serials) {
       state.current_batch_serials = batch_serials;
+      // Remove declared component serials from job bom data if quantity has been decreased
+      // for (const bom_line of state.working_job_data.wo_bom) {
+      //   const component_qt = state.current_batch_data.qt_total * bom_line.qt;
+      //   if (bom_line.declared_serials.length > component_qt) {
+      //     bom_line.declared_serials = bom_line.declared_serials.filter(
+      //       (serial) => batch_serials.includes(serial),
+      //     );
+      //   }
+      // }
     },
 
     UPDATE_BATCH_FAKED_SERIALS(state, batch_serials) {
@@ -382,18 +363,14 @@ const traceability = {
       });
     },
 
-    async startJob({ commit, state, rootState }, { batch_serials = null }) {
-      const now = DT.utc();
-
-      // Create Event
-      const event = createEvent(state, rootState.session, {
+    async startJob({ commit, state }, { batch_serials = null }) {
+      sendEvent({
         event_type: 'JOB_STARTED',
-        batch_serials: batch_serials,
-        timestamp: now.toISO(),
-      });
-
-      // Post event and save new data
-      api.post('event', event).then((resp) => {
+        event_data: {
+          job_key: state.working_job_data._key,
+          batch_serials: batch_serials,
+        },
+      }).then((resp) => {
         const { new_work_session_data, batch_data, job_data } =
           resp.data.detail;
 
@@ -407,52 +384,35 @@ const traceability = {
       });
     },
 
-    async pauseJob({ commit, state, rootState }) {
+    async pauseJob({ commit, state }) {
       const now = DT.utc();
       const work_session = getClosedWorkSessionData(state, now);
 
-      const event = createEvent(state, rootState.session, {
+      await sendEvent({
         event_type: 'JOB_PAUSED',
-        timestamp: now.toISO(),
+        event_data: {
+          job_key: state.working_job_data._key,
+        },
       });
 
-      await api.post('event', event);
       commit('CLOSE_WORK_SESSION', work_session);
       commit('SET_HEARTBEAT', false);
     },
 
-    async forcePauseJob({ state, rootState }, { job }) {
-      const now = DT.utc();
-
-      let event = createEvent(state, rootState.session, {
-        event_type: 'JOB_PAUSED',
-        timestamp: now.toISO(),
-      });
-
-      event = {
-        ...event,
-        job_key: job._key,
-        product_key: job.product_key,
-        work_order_key: job.wo_key,
-        phase_key: job.phase_key,
-        active_batch_key: job.active_batch_key,
-        project_code: job.project_code,
-      };
-
-      await api.post('event', event);
+    async forcePauseJob(ctx, { job }) {
+      await sendEvent({event_type: 'JOB_PAUSED', job_key: job._key});
     },
 
-    async resumeJob({ commit, state, rootState }, { batch_serials }) {
-      const now = DT.utc();
-      // const new_work_session = createWorkSession(state, rootState.session, now)
+    async resumeJob({ commit, state }, { batch_serials }) {
 
-      const event = createEvent(state, rootState.session, {
+      const { data } = await sendEvent({
         event_type: 'JOB_RESUMED',
-        timestamp: now.toISO(),
-        batch_serials,
+        event_data: {
+          job_key: state.working_job_data._key,
+          batch_serials,
+        },
       });
 
-      const { data } = await api.post('event', event);
       if (data?.detail) {
         const { job_data, batch_data } = data.detail;
         commit('UPDATE_JOB', job_data);
@@ -464,19 +424,18 @@ const traceability = {
     },
 
     async updateActiveBatch(
-      { commit, state, rootState },
+      { commit, state },
       { newBatchQuantity, batchSerials },
     ) {
-      const now = DT.utc();
-      const event = createEvent(state, rootState.session, {
-        event_type: 'ACTIVE_BATCH_CHANGED',
-        timestamp: now.toISO(),
-        new_active_batch_qt: newBatchQuantity,
-        batch_serials: batchSerials,
-      });
-
       return new Promise((resolve) => {
-        api.post('event', event).then((resp) => {
+        sendEvent({
+          event_type: 'ACTIVE_BATCH_CHANGED',
+          event_data: {
+            job_key: state.working_job_data._key,
+            new_active_batch_qt: newBatchQuantity,
+            batch_serials: batchSerials,
+          },
+        }).then((resp) => {
           const { job_data, batch_data, batch_serials } = resp.data.detail;
           commit('UPDATE_JOB', job_data);
           commit('UPDATE_BATCH', batch_data);
@@ -505,7 +464,7 @@ const traceability = {
         _id: 'components',
         _key: 'components',
         _code: '',
-        childs: batch_components ? batch_components : [],
+        children: batch_components ? batch_components : [],
       });
 
       commit('UPDATE_BATCH_FAKED_SERIALS', batch_serials);
@@ -521,22 +480,20 @@ const traceability = {
       }
     },
 
-    async editStepData({ commit, state, rootState, rootGetters }, { stepKey }) {
+    async editStepData({ commit, state, rootGetters }, { stepKey }) {
       const batchStep = state.current_batch_data.step_data.find(
         ({ _key }) => _key === stepKey,
       );
 
       const formData = await getFormData(state, rootGetters, batchStep);
 
-      const now = DT.utc();
-      const event = createEvent(state, rootState.session, {
+      const { data } = await sendEvent({
         event_type: 'STEP_EDITED',
-        step_key: batchStep._key,
-        timestamp: now.toISO(),
-        form_data: formData,
+        event_data: {
+          execution_record_key: batchStep.execution_record_key,
+          form_data: formData,
+        },
       });
-
-      const { data } = await api.post('event', event);
       const { job_data, batch_data } = data.detail;
       commit('UPDATE_JOB', job_data);
       commit('UPDATE_BATCH', batch_data);
@@ -558,8 +515,8 @@ const traceability = {
     },
 
     async completeStep(
-      { commit, state, rootState, rootGetters },
-      { stepKey, batchQt },
+      { commit, state, rootGetters },
+      { stepKey },
     ) {
       const batchStep = state.current_batch_data.step_data.find(
         ({ _key }) => _key === stepKey,
@@ -567,16 +524,14 @@ const traceability = {
 
       const formData = await getFormData(state, rootGetters, batchStep);
 
-      const now = DT.utc();
-      const event = createEvent(state, rootState.session, {
+      const { data } = await sendEvent({
         event_type: 'STEP_COMPLETED',
-        step_key: batchStep._key,
-        timestamp: now.toISO(),
-        form_data: formData,
-        completed_batch_qt: batchQt,
+        event_data: {
+          batch_key: state.current_batch_data._key,
+          step_key: batchStep._key,
+          form_data: formData,
+        },
       });
-
-      const { data } = await api.post('event', event);
       const { job_data, batch_data } = data.detail;
       commit('UPDATE_JOB', job_data);
       commit('UPDATE_BATCH', batch_data);
@@ -585,31 +540,32 @@ const traceability = {
       }
     },
 
-    declareBatch({ commit, state, rootState }, { batch_qt, send_step_data }) {
+    declareBatch({ commit, state }) {
       return new Promise((resolve) => {
-        let formData = [];
-        if (send_step_data && state.current_batch_data?.step_data) {
-          for (const batchStep of state.current_batch_data.step_data) {
-            formData = formData.concat(cloneDeep(batchStep.form_data));
-          }
-        }
+        const step_data = state.current_batch_data.step_data?.map(
+          (batchStep) => {
+            console.log(batchStep)
+            return {
+              execution_record_key: batchStep.execution_record_key,
+              step_key: batchStep._key,
+              form_data: batchStep.form_data,
+            }
+          },
+        );
+        // TODO: handle files
 
-        //TODO: handle files
-
-        const now = DT.utc();
-        /* INSERT EVENT CREATION HERE */
-        const event = createEvent(state, rootState.session, {
+        sendEvent({
           event_type: 'BATCH_COMPLETED',
-          timestamp: now.toISO(),
-          completed_batch_qt: batch_qt,
-          form_data: formData,
-        });
-
-        api.post('event', event).then((resp) => {
+          event_data: {
+            active_batch_key: state.current_batch_data._key,
+            step_data: step_data,
+            completed_batch_qt: state.current_batch_data.qt_total,
+          },
+        }).then((resp) => {
           let { job_data, batch_data } = resp.data.detail;
 
           if (!batch_data || !('step_data' in batch_data)) {
-            batch_data = createEmptyBatch(state, now, job_data);
+            batch_data = createEmptyBatch(state, job_data);
           }
 
           commit('UPDATE_JOB', job_data);

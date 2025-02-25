@@ -31,6 +31,7 @@
       <!-- ACTIONS -->
       <q-btn
         color="primary"
+        outline
         :label="$t('select_root_position')"
         @click="selectRootPosition()"
       />
@@ -52,11 +53,16 @@
         <q-chip class="highlight text-body2" color="theme-grey">{{ selectedPosition.code }}</q-chip>
       </div>
 
+      <SearchOrScan
+        v-model="filter"
+        @update:model-value="loadPositionContents(selectedPosition._key)"
+        class="q-mb-md"
+      />
+
       <div class="text-h6" v-if="positionContents.length === 0">{{ $t('no_contents') }}</div>
 
       <template v-else>
         <div class="text-h6 q-mb-md">{{ $t('contents') }}</div>
-        <SearchOrScan v-model="filter" @update:model-value="loadPositionContents" />
         <q-scroll-area class="col q-mb-md">
           <q-list>
             <q-item
@@ -212,8 +218,8 @@ function searchPositions() {
   }
 }
 
-async function loadPositionContents() {
-  const response = await api.get(`/position/${selectedPosition.value._key}`, { params: { search: filter.value } });
+async function loadPositionContents(position_key) {
+  const response = await api.get(`/position/${position_key}`, { params: { search: filter.value } });
   positionContents.value = response.data;
 }
 
@@ -252,10 +258,10 @@ onMounted(() => {
 
 function selectItem(item) {
   if (item.type === 'position') {
-    selectPosition(item);
+    selectPosition({ _key: item.position_key, code: item.code });
   }
   else {
-    adjustQuantity(item);
+    adjustQuantity({ _key: item.product_key, code: item.product_code, quantity: item.quantity });
   }
 }
 
@@ -272,18 +278,18 @@ function unselectItem() {
 function confirmQuantity() {
   const now = timestamp();
   sendEvent({
-    event_type: 'ADD_MOVEMENT',
-    event_data: { movement: {
-      position_from: `Position/${selectedPosition.value._key}`,
-      position_to: `Position/${selectedPosition.value._key}`,
+    event_type: 'MOVEMENT_COMPLETED',
+    event_data: {
+      position_from: selectedPosition.value._key,
+      position_to: selectedPosition.value._key,
       product_key: selectedItem.value._key,
       qt_planned: adjustmentQuantity.value,
       qt_confirmed: adjustmentQuantity.value,
       status: 'completed',
-      type: 'adjustment',
+      movement_type: 'adjustment',
       start: now,
       end: now,
-    }}
+    }
   })
   .then(() => {
     unselectItem();

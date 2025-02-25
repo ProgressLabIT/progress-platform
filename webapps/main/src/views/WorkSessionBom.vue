@@ -28,33 +28,43 @@
       </template>
       <template #body-cell-serials="props">
         <q-td :props="props">
-          <span v-if="props.row.traceability_mandatory" class="q-mr-sm">
-            <q-icon
-              v-if="
-                job.active_batch_qt &&
-                props.row.batch_qt === props.row.declared_serials.length
-              "
-              name="mdi-check-circle"
-              color="theme-green"
-            />
-            <q-icon
-              v-else
-              name="mdi-asterisk-circle-outline"
-              color="theme-red"
-            />
-          </span>
-          <q-btn
-            v-if="props.value !== null && props.row.traceability_level !== null"
-            size="sm"
-            color="theme-blue"
-            :loading="loading"
-            :disable="!job.active_batch_key || !job.active"
-            @click="serial_form_bom_line = props.row"
-          >
-            {{
-              props.row.phase_key === job.phase_key ? $t('edit') : $t('view')
-            }}
-          </q-btn>
+          <template v-if="props.row.traceability_level !== null">
+            <span class="q-mr-sm">
+              <q-icon
+                v-if="
+                  job.active_batch_qt &&
+                  props.row.declared_serials.length === props.row.batch_qt
+                "
+                name="mdi-check-circle"
+                color="theme-green"
+              />
+              <q-icon
+                v-else-if="props.row.traceability_level"
+                name="mdi-asterisk-circle-outline"
+                color="theme-red"
+              />
+              <!-- <q-icon
+                v-else-if="
+                  job.active_batch_qt &&
+                  props.row.declared_serials.length < props.row.batch_qt
+                "
+                name="mdi-circle-outline"
+                color="theme-white"
+              /> -->
+            </span>
+            <q-btn
+              v-if="props.value !== null && props.row.traceability_level !== null"
+              size="sm"
+              color="theme-blue"
+              :loading="loading"
+              :disable="!job.active_batch_key || !job.active"
+              @click="serial_form_bom_line = props.row"
+            >
+              {{
+                props.row.phase_key === job.phase_key ? $t('edit') : $t('view')
+              }}
+            </q-btn>
+          </template>
         </q-td>
       </template>
     </q-table>

@@ -85,6 +85,8 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
   wo_docs: list[ProductDoc] = []
   wo_bom: list[BomLineRead] = []
 
+  output_position_key: str | None = 'IN'
+
 
 class RequiredAvailableQt(FlexModel):
   required: float | None = None

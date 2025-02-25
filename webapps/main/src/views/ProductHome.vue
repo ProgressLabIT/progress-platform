@@ -337,8 +337,9 @@
         />
       </q-card>
 
-      <!-- PRODUCTION NOTES -->
+      <!-- WAREHOUSE  -->
       <q-card
+        v-if="config.enableInventoryManagement"
         square
         class="surface2 q-mt-md q-px-sm q-pt-sm q-pb-md column no-wrap"
         style="max-height: 100%"
@@ -346,25 +347,31 @@
         <q-card-section
           class="text-h5 display weight-bold text-uppercase col-auto"
         >
-          {{ $t('notes_production') }}
+          {{ $t('warehouse.title') }}
         </q-card-section>
         <q-card-section class="col scroll">
-          <div v-if="!editMode" style="white-space: pre-line">
-            {{ temp_notes }}
-          </div>
-          <q-input
-            v-else
+          <q-toggle
             filled
-            dense
-            autogrow
-            :readonly="!editMode"
-            :model-value="temp_notes"
-            style="max-height: 100%"
+            clearable
+            emit-value
+            map-options
+            :model-value="product.manage_inventory || false"
+            :label="$t('warehouse.manage')"
+            :disable="!editMode"
+            @update:model-value="updateField('manage_inventory', $event)"
+          />
+          <!-- <q-toggle
+            filled
+            clearable
+            emit-value
+            map-options
+            :model-value="product.allow_negative_inventory || false"
+            :label="$t('warehouse.allow_negative')"
+            :disable="!editMode"
             @update:model-value="
-              (value) => updateField('production_notes', value)
+              updateField('allow_negative_inventory', $event)
             "
-          >
-          </q-input>
+          /> -->
         </q-card-section>
       </q-card>
     </div>
@@ -485,6 +492,37 @@
             <q-icon name="mdi-plus" />
           </q-btn>
         </q-card>
+
+        <!-- PRODUCTION NOTES -->
+        <q-card
+          square
+          class="surface2 q-mt-md q-px-sm q-pt-sm q-pb-md column no-wrap"
+          style="max-height: 100%"
+        >
+          <q-card-section
+            class="text-h5 display weight-bold text-uppercase col-auto"
+          >
+            {{ $t('notes_production') }}
+          </q-card-section>
+          <q-card-section class="col scroll">
+            <div v-if="!editMode" style="white-space: pre-line">
+              {{ temp_notes }}
+            </div>
+            <q-input
+              v-else
+              filled
+              dense
+              autogrow
+              :readonly="!editMode"
+              :model-value="temp_notes"
+              style="max-height: 100%"
+              @update:model-value="
+                (value) => updateField('production_notes', value)
+              "
+            >
+            </q-input>
+          </q-card-section>
+        </q-card>
       </div>
 
       <!-- DOCUMENT VIEWER -->
@@ -534,6 +572,7 @@ import MediaViewer from '@/components/MediaViewer.vue';
 import TagChips from '@/components/TagChips.vue';
 import TagInput from '@/components/TagInput.vue';
 import AddCustomFieldDialog from '@/components/process-steps/AddCustomFieldDialog.vue';
+import { useConfigStore } from '@/stores/config';
 import MassCopyToProductDialog from '../components/MassCopyToProductDialog.vue';
 import CounterSearch from '../components/settings/counters/CounterSearch.vue';
 
@@ -558,6 +597,8 @@ export default {
     const { t } = useI18n();
     const store = useStore();
     const route = useRoute();
+
+    const { config } = useConfigStore();
 
     function openMassCopyDialog() {
       const sourceProduct = store.getters.productData(route.params.product_key);
@@ -597,6 +638,7 @@ export default {
 
     return {
       openMassCopyDialog,
+      config,
     };
   },
 

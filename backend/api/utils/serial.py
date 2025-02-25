@@ -9,18 +9,18 @@ class Queries:
 
   GET_ALL_SERIALS_IN_BATCH = """
     FOR edge IN batch_serial
-      FILTER edge._from == @from_id
+      FILTER edge._from == CONCAT('Batch/', @batch_key)
       LET serial = DOCUMENT(Serial, edge._to)
 
-      LET childs = (
+      LET children = (
           FOR linked_serial IN contains
               FILTER linked_serial.wo_key == serial.wo_key
-              && (linked_serial._from == serial.id || linked_serial.from_serial == serial._key)
+              && linked_serial._from == serial._id
               && linked_serial.replaced == false
               RETURN DOCUMENT(Serial, linked_serial._to)
           )
       SORT serial.code, serial._key
-      RETURN MERGE(serial, { childs: childs })
+      RETURN MERGE(serial, { children })
   """
 
   GET_ALL_COMPONENTS_IN_BATCH = """
@@ -92,7 +92,6 @@ class Queries:
       && (@include_unreleased ? true : s.released != null)
       && (@batch_key ? s._key IN batch_serials : true)
       && s.deleted == false
-      && s.available IN [null, true] //keep null for backwards compatibility
 
       LET used = (
         FOR linked_serial IN contains
@@ -421,6 +420,12 @@ class Queries:
     FOR bs IN batch_serial
     FILTER !DOCUMENT(bs._from) || !DOCUMENT(bs._to)
     REMOVE bs IN batch_serial
+  """
+
+  CLEANUP_COMPONENT_LINKS = """
+    FOR c IN contains
+    FILTER !DOCUMENT(c._from) || !DOCUMENT(c._to)
+    REMOVE c IN contains
   """
 
   REMOVE_PHASE_DATA_FROM_SERIALS = """

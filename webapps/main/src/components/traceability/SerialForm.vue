@@ -34,12 +34,15 @@
             @select="(selection) => loadProduct(selection)"
           />
 
-          <q-field
-            v-if="force_serial_code"
-            :label="force_serial_code"
+          <q-input
+            filled
+            :label="$capitalize($t('serial'))"
+            :disable="force_serial_code !== null"
             stack-label
-          >
-          </q-field>
+            input-class="uppercase"
+            :model-value="serial_code"
+            @update:model-value="(value) => serial_code = value.toUpperCase()"
+          />
         </q-card-section>
 
         <!-- SERIAL DATA -->
@@ -92,7 +95,7 @@
               v-if="form_step === 'select_product' && has_fields"
               color="theme-blue"
               :label="$t('next')"
-              :disable="!links.product"
+              :disable="!links.product || serial_code === null"
               @click="startSteps()"
             >
             </q-btn>
@@ -100,6 +103,7 @@
               v-if="form_step === 'select_product' && !has_fields"
               color="theme-orange"
               :label="$t('save')"
+              :disable="serial_code === null"
               :loading="saving"
               @click="
                 () => {
@@ -194,6 +198,7 @@ export default {
       form_step: 'select_product',
       confirmed: false,
       phase_data: null,
+      serial_code: null,
       counter_key: null,
       links: {
         product: null,
@@ -231,6 +236,12 @@ export default {
 
       if (this.auto_link_product != null) {
         this.loadProduct(this.auto_link_product);
+      }
+
+      this.serial_code = null;
+
+      if (this.force_serial_code) {
+        this.serial_code = this.force_serial_code;
       }
     },
 
@@ -496,33 +507,15 @@ export default {
         });
       }
 
-      let serial_data = {
-        data: data,
-      };
-
-      const user = this.session_data.user._key;
-
-      serial_data.created_by = `User/${user}`; // temporarily hardcoding DB id
-
-      if (this.links.product) {
-        serial_data.product_key = this.links.product._key;
-      }
-
-      if (this.counter_key) {
-        serial_data.counter_key = this.counter_key;
-      }
-      serial_data.user_key = this.session_data.user._key;
-
-      if (this.force_serial_code) {
-        serial_data.code = this.force_serial_code;
-      }
-
       const event = {
         event_type: 'SERIAL_CREATED',
-        user_key: user,
+        user_key: this.session_data.user._key,
         user_session_key: this.session_data.session_key,
         timestamp: timestamp(),
-        serial_data,
+        product_key: this.links.product._key,
+        code: this.serial_code,
+        counter_key: this.counter_key,
+        data
       };
 
       this.$api.post('event', event).then((resp) => {

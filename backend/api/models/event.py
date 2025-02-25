@@ -1,28 +1,25 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Set
+from typing import Any
 
-from pydantic import Field
-
-from models.collaboration import Message
-from models.form import FormFieldValue
-from models.base_models import ArangoDocument
+from arango.database import TransactionDatabase
+from pydantic import BaseModel, ConfigDict, Field
 from utils.dt import timestamp
-from models.serial import SerialLink
-from models.inventory import *
+
 
 class EventType(str, Enum):
+
   # Production Events
-  JOB_STARTED = 'JOB_STARTED'
-  JOB_PAUSED = 'JOB_PAUSED'
-  JOB_PAUSED_OFFLINE = 'JOB_PAUSED_OFFLINE'
-  JOB_RESUMED = 'JOB_RESUMED'
-  JOB_BACK_ONLINE = 'JOB_BACK_ONLINE'
   ACTIVE_BATCH_CHANGED = 'ACTIVE_BATCH_CHANGED'
+  BATCH_COMPLETED = 'BATCH_COMPLETED'
+  BATCH_RELEASED = 'BATCH_RELEASED'
   STEP_COMPLETED = 'STEP_COMPLETED'
   STEP_EDITED = 'STEP_EDITED'
-  BATCH_COMPLETED = 'BATCH_COMPLETED'
-  JOB_RESET = 'JOB_RESET'
+  JOB_STARTED = 'JOB_STARTED'
+  JOB_PAUSED = 'JOB_PAUSED'
+  JOB_RESUMED = 'JOB_RESUMED'
+  JOB_CLOSED = 'JOB_CLOSED'
+
 
   # Issue Events
   ISSUE_CREATED = 'ISSUE_CREATED'
@@ -36,78 +33,100 @@ class EventType(str, Enum):
 
   # Admin Events
   # e.g. WorkSession time Forced, etc.
-  TIME_OVERRIDE_REQUESTED = 'TIME_OVERRIDE_REQUESTED'
-  PROGRESS_OVERRIDE_REQUESTED = 'PROGRESS_OVERRIDE_REQUESTED'
+  BATCH_CREATED = 'BATCH_CREATED'
   BATCH_CANCELED = 'BATCH_CANCELED'
-  STEP_CANCELED = 'STEP_CANCELED'
-  STEP_MODIFIED = 'STEP_MODIFIED'
+  JOB_RESET = 'JOB_RESET'
+  JOB_PAUSED_OFFLINE = 'JOB_PAUSED_OFFLINE'
+  JOB_BACK_ONLINE = 'JOB_BACK_ONLINE'
+  PROGRESS_OVERRIDE_REQUESTED = 'PROGRESS_OVERRIDE_REQUESTED'
+  TIME_OVERRIDE_REQUESTED = 'TIME_OVERRIDE_REQUESTED'
+  #STEP_CANCELED = 'STEP_CANCELED'
+  #STEP_MODIFIED = 'STEP_MODIFIED'
 
-  # Serial Events
+  ## Serial Events
+  SERIAL_BOOKED = 'SERIAL_BOOKED'
   SERIAL_CREATED = 'SERIAL_CREATED'
-  SERIAL_UPDATED = 'SERIAL_UPDATED'
   SERIAL_DELETED = 'SERIAL_DELETED'
   SERIAL_LINKED = 'SERIAL_LINKED'
+  SERIAL_UNLINKED = 'SERIAL_UNLINKED'
+  SERIAL_UPDATED = 'SERIAL_UPDATED'
+  SERIAL_BATCH_CONFIRMED = 'SERIAL_BATCH_CONFIRMED'
+  SERIAL_DATA_UPDATED = 'SERIAL_DATA_UPDATED'
+  SERIAL_RELEASED = 'SERIAL_RELEASED'
 
-  #Inventory Events
-  ADD_MOVEMENT = 'ADD_MOVEMENT'
-  UPDATE_MOVEMENT = 'UPDATE_MOVEMENT'
-  DELETE_MOVEMENT = 'DELETE_MOVEMENT'
+  ##Inventory Events
+  MOVEMENT_COMPLETED = 'MOVEMENT_COMPLETED'
+  MOVEMENT_DELETED = 'MOVEMENT_DELETED'
+  INVENTORY_PRODUCED = 'INVENTORY_PRODUCED'
+  INVENTORY_CONSUMED = 'INVENTORY_CONSUMED'
+  MOVEMENT_CREATED = 'MOVEMENT_CREATED'
   MOVEMENT_UPDATED = 'MOVEMENT_UPDATED'
-  WAREHOUSE_LIST_CREATED = 'WAREHOUSE_LIST_CREATED'
+  MOVEMENT_CANCELED = 'MOVEMENT_CANCELED'
+  INVENTORY_CHANGED = 'INVENTORY_CHANGED'
   WAREHOUSE_LIST_CLOSED = 'WAREHOUSE_LIST_CLOSED'
+  WAREHOUSE_LIST_CREATED = 'WAREHOUSE_LIST_CREATED'
 
+  #Work Order
+  WORK_ORDER_CREATED = 'WORK_ORDER_CREATED'
+  WORK_ORDER_CLOSED = 'WORK_ORDER_CLOSED'
+  WORK_ORDER_STARTED = 'WORK_ORDER_STARTED'
+  WORK_ORDER_UPDATED = 'WORK_ORDER_UPDATED' # Change of quantity, dates, reopening/admin events, etc.
+  WORK_ORDER_CANCELED = 'WORK_ORDER_CANCELED' # TODO: Add to endopint
+  #Work Session
+  WORK_SESSION_STARTED = 'WORK_SESSION_STARTED'
+  WORK_SESSION_CLOSED = 'WORK_SESSION_CLOSED'
+  WORK_SESSION_CREATED = 'WORK_SESSION_CREATED'
+  WORK_SESSION_CANCELED = 'WORK_SESSION_CANCELED'
 
-class EventModel(ArangoDocument):
-  """fields marked with a comment are event attributes, the rest could be refactored into a generic "data" field, which can be defined with additional models specific for the event type."""
-  event_type: EventType #
-  user_key: str #
+  #WIP
+  WIP_BOOKED = 'WIP_BOOKED'
+  WIP_UNBOOKED = 'WIP_UNBOOKED'
+  WIP_REMOVED = 'WIP_REMOVED'
+  WIP_DECLARED = 'WIP_DECLARED'
+
+  #Queue
+  QUEUE_UPDATED = 'QUEUE_UPDATED'
+
+class EventInfoModel(BaseModel):
+  """
+  Event info model to be extended by the event class
+  """
+  model_config = ConfigDict(extra='allow', populate_by_name=True)
+
+  event_key: str | None = Field(None, alias='_key')
+  event_type: EventType
   event_group: str | None = None #
-  user_session_key: str | None = None #
-  timestamp: datetime = Field(default_factory=timestamp) #
   primary: bool = True
+  user_key: str | None = None
+  user_session_key: str | None = None
+  timestamp: datetime | None = Field(default_factory=timestamp)
   description: str | None = None # optional descriptive field for auditing reasons
 
-  # Production Fields
-  work_session_key: str | None = None
-  work_session_end: datetime | None = None
-  job_key: str | None = None
-  product_key: str | None = None
-  work_order_key: str | None = None
-  phase_key: str | None = None
-  next_phase_key: str | None = None
-  active_batch_key: str | None = None
-  active_batch_qt: float | None = None
-  step_key: str | None = None
-  completed_batch_key: str | None = None
-  completed_batch_qt: float | None = None
-  new_active_batch_qt: float | None = None
-  new_batch_key: str | None = None
-  project_code: str | None = None
-  message_key: str | None = None
-  step_changed_qt: float | None = None
-  form_data: list[FormFieldValue] = []
+  # Override model_dump to exclude extra fields when saving events
+  # so we don't store data from parent event in each child
+  def model_dump(self, exclude_extra: bool = False, **kwargs) -> dict[str, Any]:
+    if exclude_extra is True:
+      kwargs["exclude"] = list(kwargs.get("exclude", [])) + list(self.model_extra.keys())
+    return super().model_dump(**kwargs)
 
-  # Quality Fields
-  issue_data: Any | None = None
-  message_data: Message | None = None
+class EventModel(BaseModel):
+  model_config = ConfigDict(arbitrary_types_allowed=True, extra='allow')
+  tx: TransactionDatabase | None = Field(None, exclude=True)
+  info: Any # model to be set at the event class level as a subclass of EventInfoModel
 
-  # Admin fields
-  new_job_duration: int | None = None # milliseconds
-  new_job_qt_completed: float | None = None
-  new_job_qt_released: float | None = None
-  should_adjust_duration: bool | None = None
 
-  # Traceability fields
-  serial_key: Any | None = None
-  serial_data: Any | None = None
-  batch_serials: Set[str] | None = None # prevent duplicated entries from client
-  serial_link_data: list[SerialLink] | None = None
-  delete_children: bool | None = False
-
-  # Inventory fields
-  movement: InventoryMovementNew | InventoryMovementUpdate | None = None
-  movement_list: MovementListNew | None = None
-  movement_list_key: str | None = None
-  movement_key: str | None = None
-  supplier_key: Any | None = None
+# class SerialNotificationEventModel(ArangoDocument):
+#   event_type: str | EventType | None = None #
+#   user_key: str | None = None #
+#   event_group: str | None = None #
+#   user_session_key: str | None = None #
+#   timestamp: datetime = Field(default_factory=timestamp) #
+#   primary: bool = True
+#   description: str | None = None # optional descriptive field for auditing reasons
+#   # Traceability fields
+#   serial_key: Any | None = None
+#   serial_data: Any | None = None
+#   batch_serials: Set[str] | None = None # prevent duplicated entries from client
+#   serial_link_data: list[SerialLink] | None = None
+#   delete_children: bool | None = False
 

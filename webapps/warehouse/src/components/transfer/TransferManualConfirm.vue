@@ -77,14 +77,14 @@ function saveTransfer() {
       return;
     }
     movements.push({
-      position_from: `Position/${position_from_key}`,
-      position_to: `Position/${transfer.destinationPosition._key}`,
+      position_from: position_from_key,
+      position_to: transfer.destinationPosition._key,
       product_key: item.type === 'position' ? null : item.product_key,
       serial_key: item.type === 'serial' ? item.serial_key : null,
       qt_planned: item.type === 'product' ? item.quantity : 1,
       qt_confirmed: item.type === 'product' ? item.quantity : 1,
       status: 'completed',
-      type: 'transfer',
+      movement_type: 'transfer',
       user_key: session_data.user._key,
       start: now,
       end: now,
@@ -93,8 +93,8 @@ function saveTransfer() {
 
   for (const movement of movements) {
     sendEvent({
-      event_type: 'ADD_MOVEMENT',
-      event_data: {movement},
+      event_type: 'MOVEMENT_COMPLETED',
+      event_data: {...movement},
     })
     .then(() => {
       Notify.create({

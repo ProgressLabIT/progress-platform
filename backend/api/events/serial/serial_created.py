@@ -1,0 +1,71 @@
+import traceback
+from datetime import datetime
+from pydantic import Field
+
+from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
+from models.event import EventType
+from models.form import SerialFormFieldValue
+from models.serial import Serial, SerialNotificationErrorCode, SerialNotificationType
+from utils.counter import _generate_counter
+from utils.dt import timestamp
+from utils.exceptions import SerialCodeAlreadyPresent, SerialNotCreatedError
+
+
+class SerialCreatedEvent(BaseSerialEvent):
+
+  class InfoModel(BaseSerialModel):
+    data: list[SerialFormFieldValue] | None = None
+    code: str | None = None
+    wo_key: str | None = None
+    product_key: str | None = None
+    counter_key: str | None = None
+    released: datetime | None = Field(default_factory=timestamp)
+
+  @classmethod
+  def get_event_type(cls) -> EventType:
+    return EventType.SERIAL_CREATED
+
+  def apply(self):
+    #tx = self.tx.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
+    if self.info.code != None and not self.verify_serial_code_free(None, self.info.product_key, self.info.code):
+      self.notify_results(dict(
+        serial = self.info.code,
+        notification = SerialNotificationType.ERROR,
+        error_code = SerialNotificationErrorCode.SERIAL_ALREADY_PRESENT,
+        error = 'Serial already present'
+      ))
+      raise SerialCodeAlreadyPresent('Cannot create serial, serial code already used')
+
+    if self.info.released and self.info.counter_key is None and self.info.code is None:
+      raise ValueError('Cannot release serial without code or counter')
+
+    try:
+      if self.info.counter_key and self.info.code is None:
+        # Generate serial code from counter
+        self.info.code = _generate_counter(self.tx, self.info.counter_key)
+
+      if self.info.released and self.info.code is None:
+        raise ValueError('Cannot release serial without code')
+
+      new_serial = Serial(**self.info.model_dump())
+      serial_key = self.tx.collection('Serial').insert(new_serial.model_dump(by_alias=True))['_key']
+
+      self.notify_results(dict(
+        serial_key = serial_key,
+        serial = self.info.code,
+        notification = SerialNotificationType.CREATED
+      ))
+
+      self.response = dict(
+        message="Serial created correctly",
+        serial_key=serial_key
+      )
+
+    except Exception as e:
+      print(traceback.format_exc())
+      self.notify_results(dict(
+        notification = SerialNotificationType.ERROR,
+        error_code = SerialNotificationErrorCode.EXCEPTION,
+        error = traceback.format_exc()
+      ))
+      raise SerialNotCreatedError('Cannot create serial') from e
