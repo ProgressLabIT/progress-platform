@@ -9,7 +9,7 @@ from utils.exceptions import InventoryMovementException
 class InventoryChangedEvent(BaseInventoryEvent):
 
   class InfoModel(EventInfoModel):
-    position_id: str
+    position_key: str
     product_key: str
     serial_key: str | None = None
     quantity_change: float
@@ -21,7 +21,7 @@ class InventoryChangedEvent(BaseInventoryEvent):
   def apply(self):
     match_criteria = dict(
       _from=f'Product/{self.info.product_key}',
-      _to=self.info.position_id,
+      _to=f'Position/{self.info.position_key}',
       serial_key=self.info.serial_key
     )
     try:
@@ -53,5 +53,5 @@ class InventoryChangedEvent(BaseInventoryEvent):
         return False
       else:
         self._get_product()
-        position = self.tx.collection('Position').get(self.info.position_id)
-        raise InventoryMovementException(f"Not enough inventory for product {self.product.code} in position {position['code']}")
+        position = self.tx.collection('Position').get(self.info.position_key)
+        raise InventoryMovementException(f"No inventory for product {self.product.code} in position {position['code']}")

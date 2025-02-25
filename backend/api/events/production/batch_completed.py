@@ -26,6 +26,7 @@ class BatchCompletedEvent(BaseProductionEvent):
     active_batch_key: str
     completed_batch_qt: float
     step_data: list[ExecutionDataUpdate] | None = None
+    batch_serial_keys: list[str] | None = None
 
   @classmethod
   def get_event_type(cls):
@@ -72,6 +73,26 @@ class BatchCompletedEvent(BaseProductionEvent):
     return serial_data
 
 
+  def _get_component_serials(self):
+    query = """
+    // if product has no traceability, batch_serials will be empty, so use batch as source
+    LET source = LENGTH(@batch_serial_keys)
+      ? @batch_serial_keys[* RETURN CONCAT('Serial/', CURRENT)]
+      : [CONCAT('Batch/', @batch_key)]
+    RETURN MERGE(
+      FOR s IN source
+        FOR c, e IN 1..1 OUTBOUND s contains
+        FILTER !e.replaced
+        LET serial_key = c._ke
+        COLLECT component_key = c.product_key INTO component_serials
+        RETURN { [component_key]: component_serials[*].c._key }
+      )
+    """
+    return self.tx.aql.execute(query, bind_vars=dict(
+      batch_serial_keys=self.info.batch_serial_keys,
+      batch_key=self.info.active_batch_key
+    )).next()
+
   def _process_inventory_changes(self):
     # Check if warehouse management is enabled
     warehouse_enabled = self.tx.collection('Config').get('enable_inventory_management')
@@ -103,31 +124,57 @@ class BatchCompletedEvent(BaseProductionEvent):
       bind_vars=dict(product_keys=product_keys)
     ).next()
 
+    batch_qt = self.info.completed_batch_qt
+
     # Generate production movement
-    if inventory_config.get(self.job.product_key, False):
-      output_qt = self.info.completed_batch_qt
+    if inventory_config.get(self.job.product_key, False) and self.job.last_phase:
       production_position_key = self.tx.collection('WorkOrder').get(self.info.work_order_key).get('output_position_key', 'IN')
 
       MovementCompletedEvent.create_as_child(self, dict(
         position_to = production_position_key,
         product_key = self.job.product_key,
-        qt_confirmed = output_qt,
-        qt_planned = output_qt,
+        qt_confirmed = batch_qt,
+        qt_planned = batch_qt,
         movement_type = InventoryMovementType.PRODUCTION,
         references = references,
       ))
 
     # Generate consumption movements
+    component_serials_map = self._get_component_serials()
+
     for line in bom:
+      # Ensure warehouse management is enabled for component
       if inventory_config.get(line.component_key, False):
-        MovementCompletedEvent.create_as_child(self, dict(
-          position_from = line.consumption_options.consumption_position_key,
-          product_key = line.component_key,
-          qt_confirmed = line.qt * output_qt,
-          qt_planned = line.qt * output_qt,
-          movement_type = InventoryMovementType.CONSUMPTION,
-          references = references,
-        ))
+
+        consumption_qt = line.qt * batch_qt
+
+        # If traceability is enabled, generate movements for each serial
+        if line.traceability_level is not None:
+          line_serials = component_serials_map.get(line.component_key, [])
+          if len(line_serials) != consumption_qt:
+            raise ValueError("The number of serials provided does not match the batch quantity.")
+
+          for serial_key in line_serials:
+            MovementCompletedEvent.create_as_child(self, dict(
+              position_from = line.consumption_options.consumption_position_key,
+              product_key = line.component_key,
+              qt_confirmed = 1,
+              qt_planned = 1,
+              movement_type = InventoryMovementType.CONSUMPTION,
+              references = references,
+              serial_key = serial_key,
+            ))
+
+        # If traceability is not enabled, generate movement for the batch
+        else:
+          MovementCompletedEvent.create_as_child(self, dict(
+            position_from = line.consumption_options.consumption_position_key,
+            product_key = line.component_key,
+            qt_confirmed = line.qt * batch_qt,
+            qt_planned = line.qt * batch_qt,
+            movement_type = InventoryMovementType.CONSUMPTION,
+            references = references,
+          ))
 
 
 
@@ -158,7 +205,7 @@ class BatchCompletedEvent(BaseProductionEvent):
     handle_serials = self.job.traceability_level is not None
 
     if handle_serials:
-      batch_serial_keys = [s['_key'] for s in self.tx.aql.execute(
+      self.info.batch_serial_keys = [s['_key'] for s in self.tx.aql.execute(
         SerialQueries.GET_BATCH_SERIALS,
         bind_vars=dict(batch_key=self.info.active_batch_key)
       )]

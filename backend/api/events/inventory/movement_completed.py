@@ -16,15 +16,15 @@ class MovementCompletedEvent(BaseInventoryEvent):
     movement_key: str | None = None
     movement_type: InventoryMovementType
     product_key: str
-    serial_key: str | None = None
-    serial_code: str | None = Field(None, exclude=True) # Necessary for receipts not planned in advance
     qt_planned: float
     qt_confirmed: float
+    serial_key: str | None = None
+    serial_code: str | None = Field(None, exclude=True) # Necessary for receipts not planned in advance
     position_from: str | None = None
     position_to: str | None = None
     movement_list_key: str | None = None
     movement_list_item: float | None = None
-    references: InventoryMovementReferences | None = None
+    references: InventoryMovementReferences | None = Field(default_factory=InventoryMovementReferences)
     reason: str | None = None
     extra: Any = None
 
@@ -88,18 +88,18 @@ class MovementCompletedEvent(BaseInventoryEvent):
 
   def _handle_production(self):
     InventoryChangedEvent.create_as_child(self, dict(
-      position_id = self.movement.position_to,
-      product_key = self.movement.product_key,
-      serial_key = self.movement.serial_key,
-      quantity_change = self.movement.qt_confirmed
+      position_key = self.info.position_to,
+      product_key = self.info.product_key,
+      serial_key = self.info.serial_key,
+      quantity_change = self.info.qt_confirmed
     ))
 
   def _handle_consumption(self):
     InventoryChangedEvent.create_as_child(self, dict(
-      position_id = self.movement.position_from,
-      product_key = self.movement.product_key,
-      serial_key = self.movement.serial_key,
-      quantity_change = -self.movement.qt_confirmed
+      position_key = self.info.position_from,
+      product_key = self. info.product_key,
+      serial_key = self.info.serial_key,
+      quantity_change = -self.info.qt_confirmed
     ))
 
   def _handle_receipt(self):
@@ -128,10 +128,10 @@ class MovementCompletedEvent(BaseInventoryEvent):
 
     # SCENARIO 2: Receipt of product without traceability.
     InventoryChangedEvent.create_as_child(self, dict(
-      position_id = self.movement.position_to,
-      product_key = self.movement.product_key,
-      serial_key = self.movement.serial_key,
-      quantity_change = self.movement.qt_confirmed
+      position_key = self.info.position_to,
+      product_key = self.info.product_key,
+      serial_key = self.info.serial_key,
+      quantity_change = self.info.qt_confirmed
     ))
 
 
@@ -173,9 +173,9 @@ class MovementCompletedEvent(BaseInventoryEvent):
 
     # Serial exists and is not in inventory, add to inventory
     InventoryChangedEvent.create_as_child(self, dict(
-      position_id = self.movement.position_to,
-      product_key = self.movement.product_key,
-      serial_key = self.movement.serial_key,
+      position_key = self.info.position_to,
+      product_key = self.info.product_key,
+      serial_key = self.info.serial_key,
       quantity_change = 1
     ))
 
@@ -196,10 +196,10 @@ class MovementCompletedEvent(BaseInventoryEvent):
 
     try:
       InventoryChangedEvent.create_as_child(self, dict(
-        position_id = self.movement.position_from,
-        product_key = self.movement.product_key,
-        serial_key = self.movement.serial_key,
-        quantity_change = -self.movement.qt_confirmed
+        position_key = self.info.position_from,
+        product_key = self.info.product_key,
+        serial_key = self.info.serial_key,
+        quantity_change = -self.info.qt_confirmed
       ))
     except InventoryMovementException as e:
       raise InventoryMovementException(f'Cannot ship product {self.product.code} from provided position, not enough inventory available') from e
@@ -209,10 +209,10 @@ class MovementCompletedEvent(BaseInventoryEvent):
     self._get_product()
     try:
       InventoryChangedEvent.create_as_child(self, dict(
-        position_id = self.movement.position_to,
-        product_key = self.movement.product_key,
-        serial_key = self.movement.serial_key,
-        quantity_change = self.movement.qt_confirmed
+        position_key = self.info.position_to,
+        product_key = self.info.product_key,
+        serial_key = self.info.serial_key,
+        quantity_change = self.info.qt_confirmed
       ))
     except InventoryMovementException as e:
       raise InventoryMovementException(f'Cannot adjust inventory for product {self.product.code} in the provided position.') from e
@@ -236,10 +236,10 @@ class MovementCompletedEvent(BaseInventoryEvent):
     # Update start position inventory
     try:
       InventoryChangedEvent.create_as_child(self, dict(
-        position_id = self.movement.position_from,
-        product_key = self.movement.product_key,
-        serial_key = self.movement.serial_key,
-        quantity_change = -self.movement.qt_confirmed
+        position_key = self.info.position_from,
+        product_key = self.info.product_key,
+        serial_key = self.info.serial_key,
+        quantity_change = -self.info.qt_confirmed
       ))
     except InventoryMovementException as e:
       self._get_product()
@@ -247,9 +247,9 @@ class MovementCompletedEvent(BaseInventoryEvent):
 
     # Update destination position inventory
     InventoryChangedEvent.create_as_child(self, dict(
-      position_id = self.movement.position_to,
-      product_key = self.movement.product_key,
-      serial_key = self.movement.serial_key,
-      quantity_change = self.movement.qt_confirmed
+      position_key = self.info.position_to,
+      product_key = self.info.product_key,
+      serial_key = self.info.serial_key,
+      quantity_change = self.info.qt_confirmed
     ))
 

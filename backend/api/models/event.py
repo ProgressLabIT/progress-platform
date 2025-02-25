@@ -91,15 +91,16 @@ class EventInfoModel(BaseModel):
   """
   Event info model to be extended by the event class
   """
-  model_config = ConfigDict(extra='allow')
+  model_config = ConfigDict(extra='allow', populate_by_name=True)
 
+  event_key: str | None = Field(None, alias='_key')
   event_type: EventType
+  event_group: str | None = None #
   primary: bool = True
   user_key: str | None = None
   user_session_key: str | None = None
   timestamp: datetime | None = Field(default_factory=timestamp)
   description: str | None = None # optional descriptive field for auditing reasons
-  event_group: str | None = None #
 
   # Override model_dump to exclude extra fields when saving events
   # so we don't store data from parent event in each child

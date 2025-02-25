@@ -27,7 +27,7 @@ class BaseInventoryEvent(BaseEvent, ABC):
     ]
 
   def _save_movement(self):
-    self.info.references.event_key = self.event_key
+    self.info.references.event_key = self.info.event_key
     self.info.references.event_group = self.info.event_group
     movement_data = InventoryMovementNew(**self.info.model_dump()).model_dump(by_alias=True)
     movement_record = self.tx.collection('movement').insert(movement_data, return_new=True)['new']
