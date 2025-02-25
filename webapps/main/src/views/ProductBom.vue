@@ -58,7 +58,7 @@
         :rows-per-page-options="[0]"
         :virtual-scroll-sticky-size-start="48"
       >
-        <template #body-cell-traceability_mandatory="props">
+        <!-- <template #body-cell-traceability_mandatory="props">
           <q-td :props="props">
             <q-toggle
               v-if="props.row.traceability_level"
@@ -69,7 +69,7 @@
               "
             />
           </q-td>
-        </template>
+        </template> -->
 
         <template #body-cell-manage_inventory="props">
           <q-td class="text-center">
@@ -184,12 +184,12 @@
             >
             </q-input>
 
-            <q-toggle
+            <!-- <q-toggle
               v-if="new_line_product?.traceability_level"
               v-model="new_line_traceability_mandatory"
               class="col-1"
               :label="$t('traceability.mandatory')"
-            />
+            /> -->
           </div>
         </q-card-section>
         <div class="row q-col-gutter-md q-pa-md">
@@ -331,7 +331,7 @@ export default {
       new_line_product: {},
       new_line_phase: {},
       new_line_qt: null,
-      new_line_traceability_mandatory: null,
+      // new_line_traceability_mandatory: null,
       new_line_consumption_options: null,
       show_cancel_confirmation: false,
       show_save_confirmation: false,
@@ -376,12 +376,12 @@ export default {
           label: this.$t('quantity.short').toUpperCase(),
           align: 'left',
         },
-        {
-          name: 'traceability_mandatory',
-          field: 'traceability_mandatory',
-          label: this.$t('traceability.mandatory').toUpperCase(),
-          align: 'center',
-        },
+        // {
+        //   name: 'traceability_mandatory',
+        //   field: 'traceability_mandatory',
+        //   label: this.$t('traceability.mandatory').toUpperCase(),
+        //   align: 'center',
+        // },
       ];
 
       if (this.config.enableInventoryManagement) {
@@ -442,7 +442,7 @@ export default {
       this.new_line_product = null;
       this.new_line_qt = null;
       this.new_line_phase = null;
-      this.new_line_traceability_mandatory = null;
+      // this.new_line_traceability_mandatory = null;
       this.new_line_consumption_options = null;
     },
   },
@@ -506,11 +506,11 @@ export default {
 
     loadProduct(selection) {
       this.new_line_product = selection;
-      if (this.new_line_product?.traceability_level) {
-        this.new_line_traceability_mandatory = true;
-      } else {
-        this.new_line_traceability_mandatory = null;
-      }
+      // if (this.new_line_product?.traceability_level) {
+      //   this.new_line_traceability_mandatory = true;
+      // } else {
+      //   this.new_line_traceability_mandatory = null;
+      // }
     },
 
     updateItemQt(table_key, qt) {
@@ -573,7 +573,7 @@ export default {
           component_key: this.new_line_product._key,
           component_code: this.new_line_product.code,
           component_description: this.new_line_product.description,
-          traceability_mandatory: this.new_line_traceability_mandatory,
+          // traceability_mandatory: this.new_line_traceability_mandatory,
           consumption_options: this.new_line_consumption_options,
           qt: this.new_line_qt,
           phase_name: this.new_line_phase?.alias ?? null,
@@ -589,11 +589,11 @@ export default {
       }
     },
 
-    toggleMandatoryTraceability(lineIndex, value) {
-      let temp_item = this.temp_bom[lineIndex];
-      temp_item.traceability_mandatory = value;
-      this.temp_bom = this.temp_bom.toSpliced(lineIndex, 1, temp_item);
-    },
+    // toggleMandatoryTraceability(lineIndex, value) {
+    //   let temp_item = this.temp_bom[lineIndex];
+    //   temp_item.traceability_mandatory = value;
+    //   this.temp_bom = this.temp_bom.toSpliced(lineIndex, 1, temp_item);
+    // },
 
     cancelChanges() {
       this.temp_bom = [...this.saved_bom];

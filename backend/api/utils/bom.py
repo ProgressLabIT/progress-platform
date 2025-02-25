@@ -17,7 +17,6 @@ class Queries:
           phase_key: phase._key,
           phase_name: phase.alias,
           traceability_level: v.traceability_level,
-          traceability_mandatory: e.traceability_mandatory,
           consumption_options: e.consumption_options,
           qt: e.qt,
           extra: e.extra
@@ -59,7 +58,7 @@ def define_bom_line_for_db(bom_line_in: BomLineWriteIn):
     component_id = f"Product/{bom_line_in.component_key}",
     phase_id = f"Phase/{bom_line_in.phase_key}",
     qt = bom_line_in.qt,
-    traceability_mandatory = bom_line_in.traceability_mandatory,
+    # traceability_mandatory = bom_line_in.traceability_mandatory,
     consumption_options = bom_line_in.consumption_options,
     traceability_level = bom_line_in.traceability_level,
     extra = bom_line_in.extra

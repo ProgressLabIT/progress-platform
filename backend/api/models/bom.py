@@ -18,7 +18,7 @@ class BomLineRead(FlexModel):
   qt: float
   phase_key: str | None = None
   phase_name: str | None = None
-  traceability_mandatory: bool | None = False
+  # traceability_mandatory: bool | None = False
   traceability_level: str | None = None
   consumption_options: BomLineConsumptionOptions | None = Field(default_factory=BomLineConsumptionOptions)
   extra: Any = None
@@ -37,7 +37,7 @@ class BomLineWriteIn(FlexModel):
   qt: float
   phase_key: str | None = None
   type: str = 'BomLine'
-  traceability_mandatory: bool | None = None
+  # traceability_mandatory: bool | None = None
   traceability_level: str | None = None
   consumption_options: BomLineConsumptionOptions | None = None
   extra: Any = None
@@ -45,7 +45,7 @@ class BomLineWriteIn(FlexModel):
 class BomLineWriteOut(FlexModel):
   component_id: str = Field(..., alias="_to")
   qt: float
-  traceability_mandatory: bool | None = None
+  # traceability_mandatory: bool | None = None
   traceability_level: str | None = None
   consumption_options: BomLineConsumptionOptions | None = None
   phase_id: str = Field(..., alias="_from")

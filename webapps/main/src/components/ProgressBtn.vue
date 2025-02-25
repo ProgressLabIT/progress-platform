@@ -355,8 +355,8 @@ export default {
       const has_bom = !!this.job?.wo_bom?.length;
 
       const all_serials_filled_in = this.job.wo_bom.every((bom_line) => {
-        const traceability_mandatory =
-          !!bom_line.traceability_level && bom_line.traceability_mandatory;
+        // const traceability_mandatory =
+        //   !!bom_line.traceability_level && bom_line.traceability_mandatory;
 
         const same_phase = bom_line?.phase_key == this.job?.phase_key;
 
@@ -364,7 +364,7 @@ export default {
         const serials_required = (bom_line?.qt ?? 0) * this.job.active_batch_qt;
 
         const bom_line_pass =
-          !traceability_mandatory ||
+          // !traceability_mandatory ||
           serials_declared === serials_required ||
           !same_phase;
         return bom_line_pass;
