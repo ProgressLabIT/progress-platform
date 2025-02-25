@@ -64,6 +64,13 @@
 
     <div class="col-auto q-gutter-y-md row justify-center">
       <q-btn
+        outline
+        color="theme-blue"
+        :label="$t('select_root_position')"
+        class="col"
+        @click="selectRootPosition"
+      />
+      <q-btn
         color="theme-blue"
         :label="$t('position_create')"
         :disable="tempPositions.length >= incoming.refQuantity"
@@ -218,6 +225,11 @@ function adjustQuantityPerPosition() {
 function selectNewContainers(containers) {
   tempPositions.value = [...tempPositions.value, ...containers];
   next();
+}
+
+function selectRootPosition() {
+  incoming.positions = [{_key: 'IN', code: 'IN', quantity: incoming.refQuantity}];
+  incoming.stage = 'confirm';
 }
 
 function next() {
