@@ -25,12 +25,12 @@
         @update:model-value="filterResults"
       />
       <q-input
-        v-if="shipment.product?.type === 'serial'"
+        v-if="shipment.product?.traceability_level"
         v-model="serialFilter"
         filled
         dense
         label="Filtro seriale"
-        class="col-6"
+        class="col"
         :debounce="300"
         @update:model-value="filterResults"
       />
@@ -140,7 +140,7 @@ function getColor(item) {
 }
 
 async function filterResults() {
-  shipment.loadInventory(positionFilter.value, serialFilter.value);
+  shipment.loadInventory({ positionSearch: positionFilter.value, serialSearch: serialFilter.value });
 }
 
 

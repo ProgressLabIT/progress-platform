@@ -24,13 +24,11 @@ export const useShipmentStore = defineStore('shipment', {
     }
   },
   actions: {
-    loadInventory(positionSearch, serialSearch) {
-      Loading.show();
+    loadInventory(params) {
       api.get(`/inventory`, { params: {
         product_key: this.product._key,
-        position_search: positionSearch,
-        serial_search: serialSearch,
-      }}).then((resp) => {
+        ...params,
+      } }).then((resp) => {
         this.inventory = resp.data;
         Loading.hide();
       });
