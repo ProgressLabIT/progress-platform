@@ -113,32 +113,36 @@ class Queries:
 
     LET start = @root_position_key ? DOCUMENT(Position, @root_position_key) : DOCUMENT('Position/IN')
     FOR path IN 1..99 INBOUND K_PATHS start TO product._id is_in_position
-        FILTER @position_search ? path.vertices[? ANY FILTER CONTAINS(LOWER(CURRENT.code), LOWER(@position_search))] : true
-        LET inventory = LAST(path.edges)
-        FILTER @owned ? inventory.owned : true
-        FILTER @serial_keys ? inventory.serial_key IN @serial_keys : true
-        LET serial_code = DOCUMENT(Serial, inventory.serial_key).code
-        FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
-        LIMIT @offset || 0, @limit || null
-        LET p = (
-            FOR vertex IN SHIFT(POP(path.vertices)) // Exclude root position IN and final product vertex
-            RETURN {
-              position_key: vertex._key,
-              position_code: vertex.code
-            }
-          )
-
+      LET inventory = LAST(path.edges)
+      FILTER @owned ? inventory.owned : true
+      FILTER @serial_keys ? inventory.serial_key IN @serial_keys : true
+      LET serial_code = DOCUMENT(Serial, inventory.serial_key).code
+      FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
+      LIMIT @offset || 0, @limit || null
+      LET p = (
+        FOR vertex IN SHIFT(POP(path.vertices)) // Exclude root position IN and final product vertex
         RETURN {
-          // Show root position in case the product is there (no path)
-          path: LENGTH(p) == 0 ? [{ position_key: start._key, position_code: start.code }] : p,
-          quantity: inventory.quantity,
-          serial_key: inventory.serial_key,
-          product_key: product._key,
-          product_code: product.code,
-          product_desc: product.description,
-          serial_code,
-          value: inventory.value,
-          _key: inventory._key
+          position_key: vertex._key,
+          position_code: vertex.code
+        }
+      )
+
+      LET shown_path = LENGTH(p) == 0 ? [{ position_key: start._key, position_code: start.code }] : p
+      FILTER @position_search
+        ? shown_path[? ANY FILTER CONTAINS(LOWER(CURRENT.position_code), LOWER(@position_search))]
+        : true
+
+      RETURN {
+        // Show root position in case the product is there (no path)
+        path: shown_path,
+        quantity: inventory.quantity,
+        serial_key: inventory.serial_key,
+        product_key: product._key,
+        product_code: product.code,
+        product_desc: product.description,
+        serial_code,
+        value: inventory.value,
+        _key: inventory._key
     }
   """
 
