@@ -1,23 +1,42 @@
 <template>
-  <div class="col column q-pb-sm">
+  <div class="col column q-pb-sm q-col-gutter-y-sm">
     <div class="text-h2 col-auto">
       {{ transfer.product.code }}
     </div>
-    <div class="text-h6 col-auto q-mt-sm">
-      {{ shownInventory.length ? 'Materiale disponibile' : 'Nessun materiale disponibile' }}
+    <div class="text-body2">
+      {{ transfer.product.description }}
     </div>
 
-    <SearchOrScan
-      v-model="inventoryFilter"
-      v-if="inventory.length > 0"
-      class="q-my-md"
-      label="Filtra per seriale o posizione"
-    />
+    <div class="row q-col-gutter-sm" v-if="inventory.length > 0">
+      <q-input
+        v-model="positionFilter"
+        filled
+        dense
+        label="Filtro posizione"
+        class="col"
+        :debounce="300"
+        @update:model-value="loadInventory"
+      />
+      <q-input
+        v-if="transfer.product?.traceability_level"
+        v-model="serialFilter"
+        filled
+        dense
+        label="Filtro seriale"
+        class="col"
+        :debounce="300"
+        @update:model-value="loadInventory"
+      />
+    </div>
+
+    <div class="text-h6 col-auto q-mt-sm">
+      {{ inventory.length ? 'Materiale disponibile' : 'Nessun materiale disponibile' }}
+    </div>
 
     <q-scroll-area class="col">
       <q-list>
         <q-item
-          v-for="item in shownInventory"
+          v-for="item in inventory"
           :key="item._key"
           clickable
           class="content-card q-my-sm q-pa-md text-body1"
@@ -79,9 +98,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import QuantitySelector from '@/components/QuantitySelector.vue';
-import SearchOrScan from '@/components/SearchOrScan.vue';
 import SlideUpCard from '@/components/SlideUpCard.vue';
 import { useTransferStore } from '@/stores/transfer';
 import { api } from 'app/src/boot/axios';
@@ -91,16 +109,10 @@ const transfer = useTransferStore();
 
 const { t } = useI18n();
 
-const inventoryFilter = ref('');
+const positionFilter = ref('');
+const serialFilter = ref('');
 
 const inventory = ref([]);
-
-const shownInventory = computed(() => {
-  return inventory.value.filter(item => {
-    const searchContext = item.product_code + ' ' + item.serial_code + ' ' + item.path.map(p => p.position_code).join(' ');
-    return searchContext.toLowerCase().includes(inventoryFilter.value.toLowerCase());
-  });
-});
 
 const cardItem = ref(null);
 
@@ -110,12 +122,19 @@ function loadInventory() {
   api.get(`/inventory`, {
     params: {
       product_key: transfer.product._key,
+      position_search: positionFilter.value,
+      serial_search: serialFilter.value,
     },
   }).then(response => {
     inventory.value = response.data.map(item => ({
       ...item,
       type: item.serial_key ? 'serial' : 'product' // no position option is available when selecting specific product
     }));
+    if (inventory.value.length === 1) {
+      if (transfer.product?.traceability_level && inventory.value[0].serial_code === serialFilter.value) {
+        toggleSerial(inventory.value[0]);
+      }
+    }
   });
 }
 
