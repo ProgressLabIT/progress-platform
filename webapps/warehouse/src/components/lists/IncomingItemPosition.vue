@@ -1,6 +1,4 @@
 <template>
-
-
     <!-- ITEM CODE & DESCRIPTION -->
     <div class="row">
       <div class="col-8">
@@ -77,12 +75,22 @@
     <div class="col-auto">
       <q-btn
         color="theme-blue"
+        outline
+        :label="$t('select_root_position')"
+        class="full-width"
+        @click="selectRootPosition"
+      />
+    </div>
+    <div class="col-auto q-mt-md">
+      <q-btn
+        color="theme-blue"
         :label="$t('position_create')"
         :disable="maxNewPositions <= 0"
         class="full-width"
         @click="openCreateContainerForm"
       />
     </div>
+
 
 
     <SlideUpCard
@@ -195,6 +203,12 @@ function toggleSelection(position) {
     }
   }
   adjustQuantityPerPosition();
+}
+
+function selectRootPosition() {
+  tempPositions.value.push({_key: 'IN', code: 'IN'});
+  adjustQuantityPerPosition();
+  $emit('next');
 }
 
 function adjustQuantityPerPosition() {
