@@ -34,6 +34,12 @@ class BaseInventoryEvent(BaseEvent, ABC):
     return InventoryMovement(**movement_record)
 
 
+  def _ensure_position_id(self, position_string):
+    if position_string.startswith('Position/'):
+      return position_string
+    else:
+      return f"Position/{position_string}"
+
   def _get_production_position(self):
     wo = self.tx.collection('WorkOrder').get(self.info.references.work_order_key)
     return wo['output_position_key']

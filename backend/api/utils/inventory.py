@@ -388,23 +388,4 @@ class Queries:
   """
 
 
-def merge_references(
-  list_references: InventoryMovementReferences,
-  movement_references: InventoryMovementReferences
-  ) -> InventoryMovementReferences:
-  """
-  Add references from list if not present in the movement.
-  This implies an important assumption: movement references do NOT conflict with the list references.
-  TODO: enforce consistency either at the model level or in this function.
-  """
-
-  merged = dict()
-  for attr in InventoryMovementReferences.__fields__.keys():
-    list_attr = getattr(list_references, attr, None)
-    movement_attr = getattr(movement_references, attr, None)
-    merged[attr] = movement_attr if movement_attr is not None else list_attr
-
-  return InventoryMovementReferences(**merged)
-
-
 

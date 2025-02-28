@@ -192,12 +192,16 @@ class InventoryMovementNew(FlexModel):
     match values.get('movement_type', None):
       case InventoryMovementType.PRODUCTION.value:
         values['position_from'] = 'NULL'
+        values['position_to'] = values.get('position_to', 'IN')
       case InventoryMovementType.CONSUMPTION.value:
         values['position_to'] = 'NULL'
+        values['position_from'] = values.get('position_from', 'IN')
       case InventoryMovementType.SHIPMENT.value:
         values['position_to'] = 'OUT'
+        values['position_from'] = values.get('position_from', 'IN')
       case InventoryMovementType.RECEIPT.value:
         values['position_from'] = 'OUT'
+        values['position_to'] = values.get('position_to', 'IN')
       case _:
         pass
 
@@ -209,21 +213,26 @@ class InventoryMovementNew(FlexModel):
 
   @model_validator(mode='after')
   def validate(self):
+    # Ensure a movement has a product reference or container position
     if self.product_key is None and self.product_code is None and self.position_from is None:
       raise ValueError("A new movement must include a product or container position")
-    if self.serial_key is not None and (abs(self.qt_planned) > 1 or abs(self.qt_confirmed) > 1):
+
+    # Ensure a confirmed serial movement has a quantity of +/-1
+    if self.serial_key is not None and self.status == MovementStatus.COMPLETED and (abs(self.qt_planned) > 1 or abs(self.qt_confirmed) > 1):
       raise ValueError("A serial movement must have a quantity of +/-1")
+
+    # Ensure every non-adjustment movement has a different position from and to
     if self.position_from == self.position_to and self.movement_type != InventoryMovementType.ADJUSTMENT:
       raise ValueError("A movement must have a different position from and to")
     return self
 
   @field_serializer('position_from')
   def serialize_position_from(self, position_from, _info):
-    return f'Position/{position_from}'
+    return position_from if position_from.startswith('Position/') else f'Position/{position_from}'
 
   @field_serializer('position_to')
   def serialize_position_to(self, position_to, _info):
-    return f'Position/{position_to}'
+    return position_to if position_to.startswith('Position/') else f'Position/{position_to}'
 
 
 class InventoryMovement(ArangoDocument): # edge collection movement
@@ -356,25 +365,33 @@ class MovementList(ArangoDocument):
   status: MovementStatus | None = MovementStatus.PLANNED
   extra: Any = None
   references: InventoryMovementReferences | None = None
-  type: InventoryMovementType | None = None
+  type: InventoryMovementType
 
 
 class MovementListNew(MovementList):
-  movements: list[InventoryMovementNew] | None = Field(None, exlcude=True)
-  by_code: bool | None = Field(False, exclude=True)
+  movements: list[InventoryMovementNew]
+  by_code: bool | None = False
 
   @model_validator(mode='before')
   def validate(cls, values):
+    # Ensure the list contains at least one movement
     if values.get('movements') is None or len(values.get('movements')) == 0:
       raise ValueError("A movement list must have at least one movement")
 
+    # Ensure the list has a valid type
+    if values.get('type', None) not in [t.value for t in InventoryMovementType]:
+      raise ValueError("A movement list must have a valid type: valid types are: " + ", ".join([t.value for t in InventoryMovementType]))
+
     items_product = {}
     for movement in values.get('movements'):
-      if movement.get('type') is not None and movement.get('type') != values.get('type'):
-        raise ValueError("All movements in a movement list must be of the same type")
-      if movement.get('type') is None:
-        movement['type'] = values['type']
 
+      # Ensure all movements in the list are of the same type
+      if movement.get('movement_type') is not None and movement.get('movement_type') != values.get('type'):
+        raise ValueError("All movements in a movement list must be of the same type")
+      if movement.get('movement_type') is None:
+        movement['movement_type'] = values['type']
+
+      # Ensure all movements have a product reference
       product_ref = 'product_code' if values.get('by_code') else 'product_key'
       if movement.get(product_ref) is None:
         raise ValueError(f"{product_ref} is required for all movements. Missing for movement {movement}")
@@ -383,6 +400,7 @@ class MovementListNew(MovementList):
       by_code = values.get('by_code')
       list_item = movement.get('movement_list_item')
       movement_serial = movement.get('serial_code' if by_code else 'serial_key')
+
       if items_product.get(list_item) is not None:
         if items_product.get(list_item).get('product') != movement.get(product_ref):
           raise ValueError(f"Cannot have multiple products with the same movement list item {list_item}")
@@ -390,5 +408,8 @@ class MovementListNew(MovementList):
           raise ValueError(f"Cannot have the same serial number or no serial number in multiple movements with in the same list item (Item: {list_item})")
       else:
         items_product[list_item] = dict(product=movement.get(product_ref), serials=[movement_serial])
+
+
+
 
     return values

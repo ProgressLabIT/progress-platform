@@ -18,15 +18,16 @@ class SerialCreatedEvent(BaseSerialEvent):
     code: str | None = None
     wo_key: str | None = None
     product_key: str | None = None
-    counter_key: str | None = None
+    counter_key: str | None = Field(None, exclude=True)
     released: datetime | None = Field(default_factory=timestamp)
+
 
   @classmethod
   def get_event_type(cls) -> EventType:
     return EventType.SERIAL_CREATED
 
   def apply(self):
-    #tx = self.tx.begin_transaction(write=['Serial', 'Counter', 'batch_serial'], read=[])
+    # Ensure serial code is available if provided
     if self.info.code != None and not self.verify_serial_code_free(None, self.info.product_key, self.info.code):
       self.notify_results(dict(
         serial = self.info.code,
@@ -36,16 +37,21 @@ class SerialCreatedEvent(BaseSerialEvent):
       ))
       raise SerialCodeAlreadyPresent('Cannot create serial, serial code already used')
 
+    # Fetch counter key if code is not provided and must be generated (serial is released)
     if self.info.released and self.info.counter_key is None and self.info.code is None:
-      raise ValueError('Cannot release serial without code or counter')
+      product = self.tx.collection('Product').get(self.info.product_key)
+      if not product.get('traceability_level', False):
+        raise ValueError(f"Cannot create serial for product {product['code']}. Traceability is not enabled.")
+
+      self.info.counter_key = product.get('counter_key', None)
+      if self.info.counter_key is None:
+        raise ValueError('Cannot release serial without code or counter')
+
 
     try:
       if self.info.counter_key and self.info.code is None:
         # Generate serial code from counter
         self.info.code = _generate_counter(self.tx, self.info.counter_key)
-
-      if self.info.released and self.info.code is None:
-        raise ValueError('Cannot release serial without code')
 
       new_serial = Serial(**self.info.model_dump())
       serial_key = self.tx.collection('Serial').insert(new_serial.model_dump(by_alias=True))['_key']

@@ -6,7 +6,7 @@ from events.inventory.base_inventory import BaseInventoryEvent
 from events.inventory.inventory_changed import InventoryChangedEvent
 from events.serial.serial_created import SerialCreatedEvent
 from models.event import EventInfoModel, EventType
-from models.inventory import InventoryMovementType, InventoryMovementReferences, MovementStatus
+from models.inventory import InventoryMovementType, InventoryMovementReferences, MovementStatus, InventoryMovement
 from utils.dt import timestamp
 from utils.exceptions import InventoryMovementException
 
@@ -83,7 +83,18 @@ class MovementCompletedEvent(BaseInventoryEvent):
     self.handlers[self.info.movement_type]()
 
   def _update_movement(self):
-    pass
+    update = dict(
+      _key=self.info.movement_key,
+      _from=self._ensure_position_id(self.info.position_from),
+      _to=self._ensure_position_id(self.info.position_to),
+      qt_planned=self.info.qt_planned,
+      qt_confirmed=self.info.qt_confirmed,
+      status=MovementStatus.COMPLETED,
+      start=self.info.start,
+      end=self.info.timestamp
+    )
+    updated_movement = self.tx.collection('movement').update(update, return_new=True)['new']
+    return InventoryMovement(**updated_movement)
 
 
   def _handle_production(self):

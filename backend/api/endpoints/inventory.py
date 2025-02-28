@@ -8,11 +8,12 @@ from events import BaseEvent
 from models.inventory import *
 from models.product import ProductBaseData
 from utils.api import APIResponse
-from utils.inventory import Queries, merge_references
+from utils.inventory import Queries
 from utils.counter import _generate_counter
 from utils.db import db, model_to_db_dict
 from utils import auth
-from events.inventory.movement_created import MovementCreatedModel
+from models.event import EventInfoModel
+from events.inventory.warehouse_list_created import WarehouseListCreatedEvent
 
 router = APIRouter()
 
@@ -338,77 +339,25 @@ async def search_movement_lists(
 
 @router.post('/movement-list',
     dependencies=[Depends(auth.verify_token)])
-def create_movement_list(new_movement_list: MovementListNew):
+def create_movement_list(new_movement_list: dict):
   """Must include data about all the related movements"""
   try:
-    tx = db.begin_transaction(write=['MovementList', 'movement', 'Serial', 'Event'])
+    event = WarehouseListCreatedEvent(
+      info=EventInfoModel(
+        event_type=WarehouseListCreatedEvent.get_event_type(),
+        new_movement_list=new_movement_list
+      ).model_dump()
+    )
+    event.save()
+    movement_list_key = event.response
 
-    # Ensure no duplicate codes for lists of the same type
-    list_code_exists = tx.collection('MovementList').find(dict(code=new_movement_list.code, type=new_movement_list.type)).count()
-    if list_code_exists:
-      raise HTTPException(status_code=409, detail=f"List of type '{new_movement_list.type.value}' with code '{new_movement_list.code}' already exists.")
-
-    # MovementListNew model has the `movements` and `by_code` attributes set with export=False
-    # so they won't be included in the list DB record
-    new_list_key = tx.collection('MovementList').insert(new_movement_list.model_dump())['_key']
-
-    # Fetch product keys if by code
-    if new_movement_list.by_code:
-      product_codes = [m.product_code for m in new_movement_list.movements]
-      try:
-        products_key_map = tx.aql.execute("""
-          RETURN MERGE(
-            FOR p IN Product
-            FILTER p.code IN @codes
-            RETURN {[p.code]: p._key}
-          )""",
-          bind_vars=dict(codes=product_codes)
-        ).next()
-      except StopIteration:
-        raise HTTPException(status_code=404, detail="Could not find any product with the codes provided")
-
-      for movement in new_movement_list.movements:
-        product_key = products_key_map.get(movement.product_code, None)
-        if product_key is None:
-          raise HTTPException(status_code=404, detail=f"Could not find product with code {movement.product_code}")
-        movement.product_key = product_key
-
-    # Create the movements
-    for m in new_movement_list.movements:
-      movement_info = InventoryMovementNew(
-        type = new_movement_list.type,
-        serial_code = m.serial_code,
-        serial_key = m.serial_key,
-        qt_planned = m.qt_planned,
-        movement_list_key = new_list_key,
-        movement_list_item = m.movement_list_item,
-        product_key = m.product_key,
-        status = MovementStatus.PLANNED,
-        references = merge_references(list_references=new_movement_list.references, movement_references=m.references),
-        extra = getattr(m, 'extra', new_movement_list.extra)
-      )
-
-      event = MovementCreatedModel(
-        movement = movement_info,
-        event_group = str(uuid.uuid4()),
-        user_key = 'FAKE',
-        primary= False,
-        tx = tx
-      )
-      event.save()
-      detail = event.response
-
-    # Create the movement list
-    tx.commit_transaction()
-
-    return APIResponse(message="Movement list created successfully")
+    return APIResponse(message="Movement list created successfully", detail=dict(movement_list_key=movement_list_key))
 
   except Exception as e:
-    tx.abort_transaction()
     raise HTTPException(
       status_code=500,
       detail=traceback.format_exc()
-    )
+    ) from e
 
 
 # ===============================================

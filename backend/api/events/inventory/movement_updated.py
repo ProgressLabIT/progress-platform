@@ -1,127 +1,90 @@
 import traceback
 
+from pydantic import Field
+
 from events.inventory.base_inventory import BaseInventoryEvent, BaseInventoryModel
-from models.event import EventType
-from models.event import EventModel
+from events.inventory.movement_completed import MovementCompletedEvent
+from models.event import EventType, EventInfoModel
 from models.inventory import *
 from utils.inventory import Queries
+from utils.exceptions import InventoryMovementException
 
-from utils.exceptions import (
-  InventoryMovementException
-)
+class MovementUpdatedEvent(BaseInventoryEvent):
+  """Used for updating planned movement"""
 
-class MovementUpdatedModel(BaseInventoryModel):
-    event_type: str = EventType.MOVEMENT_UPDATED.name
+  class InfoModel(EventInfoModel):
+    movement_key: str = Field(..., alias='_key')
+    qt_confirmed: float
+    qt_planned: float
+    split_into: list[MovementSplitData] | None = []
+    position_from: str | None = None
+    position_to: str | None = None
 
-class MovementUpdated(BaseInventoryEvent):
-  event_data: MovementUpdatedModel
+  @classmethod
+  def get_event_type(cls):
+    return EventType.MOVEMENT_UPDATED
 
-  def set_model(self, base_model: EventModel):
-    self.info = MovementUpdatedModel(**base_model.model_dump())
+  @classmethod
+  def get_tx_collections(cls):
+    return ['movement', 'is_in_position']
+
 
   def apply(self):
-    """Used for updating planned movement"""
+    original_movement = self.tx.collection('movement').get(self.info.movement_key)
+
+    # Check if the movement exists and is not completed
+    if original_movement is None:
+      raise InventoryMovementException(f'Cannot find movement to update')
+    if original_movement['status'] == MovementStatus.COMPLETED:
+      raise InventoryMovementException(f'Cannot update completed movement')
+
     try:
-      movement_data=self.info.movement
-      if len(movement_data.split_into) > 0:
-        # TODO: use multiple events to confirm the initial movement
-        # and automatically generate transfers for the splits
-        # If the split is for the whole movement, delete the original movement
-        # TODO: confirm whole quantity and generate transfers
-        if movement_data.qt_confirmed >= movement_data.qt_planned:
-          self.tx.collection('movement').delete(movement_data.key)
+      # Handle split movements
+      # TODO: consider using multiple events to confirm the initial movement
+      # and automatically generate transfers for the splits
+      if len(self.info.split_into) > 0:
+        if self.info.qt_confirmed >= self.info.qt_planned:
+          # If the split is for the whole movement, delete the original movement
+          self.tx.collection('movement').delete(self.info.movement_key)
         else:
           # If the split is for a partial movement, subtract the quantity from the original movement
-          # TODO: confirm partial quantity and generate transfers
-          movement_data.qt_planned = movement_data.qt_planned - movement_data.qt_confirmed
-          movement_data.qt_confirmed = 0
-          self.tx.collection('movement').update(movement_data.model_dump(by_alias=True))
+          self.tx.collection('movement').update(dict(
+            _key=self.info.movement_key,
+            qt_planned=self.info.qt_planned - self.info.qt_confirmed,
+            qt_confirmed=0
+          ))
         # Create new completed movements for the splits
-        # TODO: transform into related transfer movements with linked events
-        new_movements = []
-        for split in movement_data.split_into:
-          data = movement_data.model_dump()
-          data.update(split.model_dump(), status=MovementStatus.COMPLETED)
-          new_movements.append(InventoryMovementNew(**data))
-          new_records = [m.model_dump(by_alias=True) for m in new_movements]
-        test = self.tx.collection('movement').insert_many(new_records)
-      else:
-        self.tx.collection('movement').update(movement_data.model_dump(by_alias=True))
-        new_movements = [movement_data]
-      if movement_data.type == InventoryMovementType.RECEIPT:
-        for movement in new_movements:
-          if movement.serial_key is not None:
-            # For serialized items, always create new inventory record if not already present
-            existing_inventory = self.tx.collection('is_in_position').find(dict(
-              _from=f'Product/{movement.product_key}',
-              serial_key=movement.serial_key
-            )).count() > 0
-            if existing_inventory:
-                raise InventoryMovementException("Serial already in inventory")
-            else:
-              self.tx.collection('is_in_position').insert(Inventory(
-                owned=True,
-                product_id="Product/" + movement.product_key,
-                position_id=movement.position_to,
-                serial_key=movement.serial_key,
-                quantity=1
-              ).model_dump(by_alias=True))
-          else:
-            # For non-serialized items, check if inventory exists and update quantity
-            try:
-              existing_inventory = self.tx.collection('is_in_position').find(dict(
-                _from=f'Product/{movement.product_key}',
-                _to=movement.position_to,
-                serial_key=None
-              )).next()
-              final_qty = existing_inventory['quantity'] + movement.qt_confirmed
-              self.tx.collection('is_in_position').update(dict(
-                _key=existing_inventory['_key'],
-                quantity=final_qty
-              ))
-            except StopIteration:
-              # No existing inventory found, create new record
-              self.tx.collection('is_in_position').insert(Inventory(
-                owned=True,
-                product_id="Product/" + movement.product_key,
-                position_id=movement.position_to,
-                quantity=movement.qt_confirmed
-              ).model_dump(by_alias=True))
-      if movement_data.type == InventoryMovementType.SHIPMENT:
-        for movement in new_movements:
-          if movement.serial_key is not None:
-            self.tx.collection('is_in_position').delete_match(dict(
-              _from=f'Product/{movement.product_key}',
-              _to=movement.position_from, # the position from is the one where the product is shipped, _to in the inventory record
-              serial_key=movement.serial_key
-            ))
-          else:
-            try:
-              existing_inventory = self.tx.collection('is_in_position').find(dict(
-                _from=f'Product/{movement.product_key}',
-                _to=movement.position_from,
-                serial_key=None
-              )).next()
-              final_qty = existing_inventory['quantity'] - movement.qt_confirmed
-              if final_qty == 0:
-                self.tx.collection('is_in_position').delete(existing_inventory['_key'])
-              else:
-                self.tx.collection('is_in_position').update(dict(
-                  _key=existing_inventory['_key'],
-                  quantity=final_qty
-                ))
-            except StopIteration:
-              # No existing inventory found, create new record
-              raise InventoryMovementException(f'Cannot find product inventory to ship')
-      # Update list status
-      #if movement_data.movement_list_key is not None:
-      #  self.tx.aql.execute(
-      #    Queries.UPDATE_MOVEMENT_LIST,
-      #    bind_vars=dict(list_key=movement_data.movement_list_key)
-      #  )
-      # ADD OTHER TYPES OF MOVEMENTS
+        for split in self.info.split_into:
+          MovementCompletedEvent.create_as_child(self, dict(
+            movement_type=original_movement['type'],
+            product_key=original_movement['product_key'],
+            qt_planned=split.qt_planned,
+            qt_confirmed=split.qt_confirmed,
+            position_from=split.position_from,
+            position_to=split.position_to,
+            serial_key=split.serial_key,
+            serial_code=split.serial_code,
+            references=original_movement['references'],
+            reason=original_movement['reason'],
+            extra=original_movement['extra']
+          ))
+
+      # No split, only update the original movement
+      elif self.info.qt_confirmed >= self.info.qt_planned:
+        MovementCompletedEvent.create_as_child(self, dict(
+          movement_key=self.info.movement_key,
+          movement_type=original_movement['type'],
+          product_key=original_movement['product_key'],
+          qt_planned=self.info.qt_planned,
+          qt_confirmed=self.info.qt_confirmed,
+          position_from=self.info.position_from,
+          position_to=self.info.position_to
+        ))
+
+
+
       self.notify_results(dict(
-         movement_key = movement_data.key,
+         movement_key = self.info.movement_key,
          notification = InventoryNotificationType.MOVEMENT_UPDATED,
          message="Movement confirmed correctly",
       ))

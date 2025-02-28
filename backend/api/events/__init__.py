@@ -23,9 +23,9 @@ from events.inventory.inventory_changed import InventoryChangedEvent
 from events.inventory.movement_completed import MovementCompletedEvent
 from events.inventory.movement_created import MovementCreatedEvent
 from events.inventory.movement_deleted import MovementDeleted
-from events.inventory.movement_updated import MovementUpdated
+from events.inventory.movement_updated import MovementUpdatedEvent
 from events.inventory.warehouse_list_closed import WarehouseListClosed
-from events.inventory.warehouse_list_created import WarehouseListCreated
+from events.inventory.warehouse_list_created import WarehouseListCreatedEvent
 from events.production.active_batch_changed import ActiveBatchChangedEvent
 
 #PRODUCTION EVENTS
@@ -65,10 +65,6 @@ from events.wip.wip_declared import WIPDeclaredEvent
 from events.wip.wip_removed import WIPRemovedEvent
 from events.wip.wip_unbooked import WIPUnbookedEvent
 
-#Work Order
-from events.work_order.base_work_order import BaseWorkOrder
-from events.work_order.work_order_closed import WorkOrderClosed
-from events.work_order.work_order_started import WorkOrderStarted
 
 #Work Session
 from events.work_session.work_session_canceled import WorkSessionCanceledEvent
