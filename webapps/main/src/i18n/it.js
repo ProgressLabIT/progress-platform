@@ -718,6 +718,10 @@ export default {
       message:
         "Stai disattivando l'ordinamento indipendente. Tutte le code di lavoro che erano state rese indipendenti verranno reimpostate all'ordine della coda di lavoro. Confermi?",
     },
+    defaultProductionPosition: 'Posizione versamento produzione di default',
+    defaultConsumptionPosition: 'Posizione consumo di default',
+    productLabelTemplate: 'Etichetta prodotto',
+    positionLabelTemplate: 'Etichetta posizione',
   },
   session: {
     alerts: {

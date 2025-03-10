@@ -708,6 +708,10 @@ export default {
       message:
         'You are turning off independent reordering. All job queues which were made independent will be reset to the work order queue order. Do you confirm?',
     },
+    defaultProductionPosition: 'Default production position',
+    defaultConsumptionPosition: 'Default consumption position',
+    productLabelTemplate: 'Product label template',
+    positionLabelTemplate: 'Position label template',
   },
   session: {
     alerts: {

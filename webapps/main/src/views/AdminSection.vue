@@ -39,6 +39,5 @@ const adminViews = [
   'formFieldLibrary',
   'counterLibrary',
   'flowLibrary',
-  'warehouseSettings',
 ];
 </script>

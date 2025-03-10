@@ -34,17 +34,17 @@
         @select="(position) => (configModel.defaultConsumptionPosition = position)"
       />
       <!-- Product label template -->
-      <BaseAutocompleteTemplate
+      <!-- <BaseAutocompleteTemplate
         :label="$t('settings.productLabelTemplate')"
         :value="configModel.productLabelTemplate"
-        key-only
+        key-onlyx
         clearable
         :disable="!editMode"
         :dense="false"
         @select="(template) => (configModel.productLabelTemplate = template)"
-      />
+      /> -->
       <!-- Position label template -->
-      <BaseAutocompleteTemplate
+      <!-- <BaseAutocompleteTemplate
         :label="$t('settings.positionLabelTemplate')"
         :value="configModel.positionLabelTemplate"
         clearable
@@ -52,7 +52,7 @@
         :dense="false"
         :disable="!editMode"
           @select="(template) => (configModel.positionLabelTemplate = template)"
-        />
+        /> -->
       </template>
     </div>
   </SettingsSection>
@@ -64,7 +64,6 @@ import { ref } from 'vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import { useConfigStore } from '@/stores/config';
 import SettingsSection from '@/components/SettingsSection.vue';
-import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
 
 const { isLoading, config, updateAppConfig } = useConfigStore();
