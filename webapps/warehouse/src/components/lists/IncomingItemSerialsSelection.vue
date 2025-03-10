@@ -18,9 +18,9 @@
   </div>
 
 
-    <div class="col-auto text-h3 q-mt-md q-mb-sm">
-      Inserisci seriali
-    </div>
+  <div class="col-auto text-h3 q-mt-md q-mb-sm">
+    Inserisci seriali
+  </div>
 
 
 
@@ -50,7 +50,10 @@
   </div>
 
   <!-- SERIALS -->
-  <div class="row col-auto items-center q-mt-md q-mb-sm q-gutter-x-sm">
+  <div
+    v-if="lists.selectedItem.use_serials"
+    class="row col-auto items-center q-mt-md q-mb-sm q-gutter-x-sm"
+  >
     <div class="text-h6">
       Selezionati
     </div>
@@ -61,7 +64,7 @@
     <q-btn color="theme-grey" size="xs" padding="xs md" icon="mdi-checkbox-multiple-blank-outline" @click="() => toggleAll(false)" />
     <q-btn color="theme-blue" size="xs" padding="xs md" icon="mdi-checkbox-multiple-marked" @click="() => toggleAll(true)" />
 
-    </div>
+  </div>
   <q-scroll-area class="col q-mt-md">
     <div class="col-auto row q-gutter-sm">
       <q-card
@@ -89,6 +92,11 @@ const lists = useListsStore()
 
 const newSerialCode = ref('');
 
+const serialsProvided = computed(() => {
+  // Assumption: if one serial is provided, all must be provided
+  return lists.selectedItem.movements.some(m => m.serial_code || m.serial_key)
+})
+
 function resetInput() {
   newSerialCode.value = ''
   document.getElementById('serial-input').focus()
@@ -109,6 +117,7 @@ function toggleAll(select) {
     lists.selectedItem.qt_confirmed = 0
   }
 }
+
 
 function toggleItem(serialCode) {
   const match = lists.selectedItem.movements.find(m => m.serial_code == serialCode)
@@ -137,12 +146,36 @@ function toggleItem(serialCode) {
     }
   }
   else {
-    Notify.create({
-      position: 'top',
-      color: 'theme-orange',
-      message: `Seriale ${serialCode} non presente fra quelli previsti`,
-      timeout: 2000
-    })
+    if (serialsProvided.value) {
+      // Allow only serials among the provided ones
+      Notify.create({
+        position: 'top',
+        color: 'theme-orange',
+        message: `Seriale ${serialCode} non presente fra quelli previsti`,
+        timeout: 2000
+      })
+    }
+    else {
+      const ref = lists.selectedItem.movements[0]
+      // Allow any serial if no serial is provided
+      lists.selectedItem.movements.push({
+        serial_code: serialCode,
+        movement_type: ref.type,
+        product_key: ref.product_key,
+        position_from: ref.position_from,
+        position_to: ref.position_to,
+        qt_planned: 1,
+        qt_confirmed: 1,
+        status: 'planned' // will be completed when the movement is confirmed
+      })
+      lists.selectedItem.qt_confirmed += 1
+      Notify.create({
+        position: 'top',
+        color: 'theme-green',
+        message: `Seriale ${serialCode} aggiunto`,
+        timeout: 1500
+      })
+    }
   }
 }
 

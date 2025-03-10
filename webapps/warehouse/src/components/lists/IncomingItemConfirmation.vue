@@ -1,4 +1,4 @@
-<template>
+  <template>
     <!-- ITEM CODE & DESCRIPTION -->
     <div class="row col-auto">
       <div class="col-8">

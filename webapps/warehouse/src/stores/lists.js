@@ -10,7 +10,8 @@ export const useListsStore = defineStore('lists', {
     headers: [],
     movements: [],
     selectedItem: undefined,
-    tempQuantity: 0
+    tempQuantity: 0,
+    productTraceabilityMap: {}
   }),
   getters: {
     byPartner: (state) => {
@@ -26,7 +27,7 @@ export const useListsStore = defineStore('lists', {
         const listItems = Object.entries(listMovementsByItem).map(([item, movements]) => {
           const qt_planned = movements.reduce((sum, mov) => sum += mov.qt_planned, 0)
           const qt_confirmed = movements.reduce((sum, mov) => sum += mov.qt_confirmed, 0)
-          const type = movements[0].serial_code || movements[0].serial_key ? 'serial' : 'quantity'
+          const type = movements[0].use_serials ? 'serial' : 'quantity'
           return {
             item,
             product_code: movements[0].product_code,
@@ -56,7 +57,7 @@ export const useListsStore = defineStore('lists', {
       }
     },
     itemSerials: (state) => {
-      return state.selectedItem?.movements?.filter(m => m.serial_key && m.qt_confirmed == 1 && m.status == 'planned').sort((a, b) => a.serial_code.localeCompare(b.serial_code))
+      return state.selectedItem?.movements?.filter(m => (m.serial_key || m.serial_code) && m.qt_confirmed == 1 && m.status == 'planned').sort((a, b) => a.serial_code.localeCompare(b.serial_code))
     },
     movementQuantity: (state) => {
       return state?.selectedItem?.type === 'serial'
@@ -76,7 +77,17 @@ export const useListsStore = defineStore('lists', {
           // fetch movements and group them by list and product
           const params = new URLSearchParams()
           this.headers.forEach(l => params.append('list_key', l._key))
-          this.movements = (await api.get('/movement', { params })).data
+          const movement_data = (await api.get('/movement', { params })).data
+          const productKeys = [...new Set(movement_data.map(m => m.product_key))]
+          this.productTraceabilityMap = await productKeys.reduce(async (result, productKey) => {
+            const product = (await api.get(`/product/${productKey}`)).data
+            result[productKey] = !!product.traceability_level
+            return result
+          }, {})
+          this.movements = movement_data.map(m => ({
+            ...m,
+            use_serials: this.productTraceabilityMap[m.product_key]
+          }))
         }
         nav.loading = false;
       }
