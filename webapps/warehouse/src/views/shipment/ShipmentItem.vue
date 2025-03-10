@@ -102,8 +102,8 @@ function prepareMovementUpdates() {
       const movement = lists.selectedItem.movements.find(m => m.serial_code === inventory.serial_code);
       updates.push({
         ...movement,
-        position_from: `Position/${inventory.path.slice(-1)[0].position_key}`,
-        _from: `Position/${inventory.path.slice(-1)[0].position_key}`,
+        movement_key: movement._key,
+        position_from: inventory.path.slice(-1)[0].position_key,
         status: 'completed',
         qt_confirmed: 1,
       });
@@ -113,12 +113,13 @@ function prepareMovementUpdates() {
   else {
     const movementComplete = lists.tempQuantity + lists.selectedItem.qt_confirmed === lists.selectedItem.qt_planned
     const splitData = shipment.selectedInventory.map(position => ({
-      position_from: `Position/${position.path.slice(-1)[0].position_key}`,
+      position_from: position.path.slice(-1)[0].position_key,
       qt_confirmed: position.selected,
       serial_key: position.serial_key
     }));
     updates.push({
       ...lists.selectedItem.movements[0],
+      movement_key: lists.selectedItem.movements[0]._key,
       qt_confirmed: shipment.shipmentQuantity,
       split_into: splitData,
       status: movementComplete ? 'completed' : 'started'

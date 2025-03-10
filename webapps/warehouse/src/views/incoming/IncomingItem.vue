@@ -128,8 +128,8 @@ function prepareMovementUpdates() {
     for (let movement of lists.selectedItem.movements.filter(m => m.qt_confirmed === 1 && m.status !== 'completed')) {
       updates.push({
         ...movement,
-        position_to: `Position/${positionsTo.value[0]._key}`,
-        _to: `Position/${positionsTo.value[0]._key}`,
+        movement_key: movement._key,
+        position_to: positionsTo.value[0]._key,
         status: 'completed',
       });
     }
@@ -137,11 +137,12 @@ function prepareMovementUpdates() {
   // Quantity
   else {
     const splitData = positionsTo.value.map(position => ({
-      position_to: `Position/${position._key}`,
+      position_to: position._key,
       qt_confirmed: position.quantity,
     }));
     updates.push({
       ...lists.selectedItem.movements[0],
+      movement_key: lists.selectedItem.movements[0]._key,
       qt_confirmed: lists.movementQuantity,
       split_into: splitData,
       status: movementComplete ? 'completed' : 'started'
