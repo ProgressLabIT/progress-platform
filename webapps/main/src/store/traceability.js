@@ -188,28 +188,9 @@ const traceability = {
       state.user_session = session_data;
     },
 
-    LOAD_WORKING_JOB_DATA(state, { job_data, batch_data, batch_serials }) {
+    LOAD_WORKING_JOB_DATA(state, { job_data, batch_data }) {
       state.working_job_data = job_data;
-      let prev_data = state.current_batch_data?.step_data;
-      let prev_data_key = state.current_batch_data?._key;
       state.current_batch_data = batch_data;
-      state.current_batch_serials = batch_serials;
-      if (
-        prev_data &&
-        prev_data_key &&
-        state.current_batch_data?._key === prev_data_key
-      ) {
-        for (const prev_obj of prev_data) {
-          let prev_job_state = state.current_batch_data.step_data.find(
-            (obj) => {
-              return obj._key === prev_obj._key;
-            },
-          );
-          if (prev_job_state && prev_job_state.form_data) {
-            prev_job_state.form_data = prev_obj.form_data;
-          }
-        }
-      }
     },
 
     START_JOB(state, { batch_data, job_data, batch_serials }) {
