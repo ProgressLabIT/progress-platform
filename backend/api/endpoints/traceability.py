@@ -200,18 +200,22 @@ async def store_temp_step_data(data: ExecutionDataUpdate):
   without setting the step as done
   """
   execution_data = db.collection('StepExecutionData')
+
+  # Ensure context is provided
   if data.execution_record_key is None and data.step_key is None:
     raise HTTPException(
       status_code=422,
       detail="Either execution_record_key or the combination of batch_key and step_key must be provided"
     )
 
+  # Ensure form data is provided
   if len(data.form_data) == 0:
     raise HTTPException(
       status_code=422,
       detail="Form data must be provided"
     )
 
+  # Get existing record or create a new one
   try:
     if data.execution_record_key:
       record = execution_data.get(data.execution_record_key)
@@ -235,10 +239,25 @@ async def store_temp_step_data(data: ExecutionDataUpdate):
     execution_data.update(record)
 
   except StopIteration: # No existing record found, create a new one
+    # Get form fields for the step
+    form_fields = db.collection('Step').get(data.step_key)['form_fields']
+
+    # Make sure to include all form fields, even if they are not provided in the form data
+    form_data = []
+    for field in form_fields:
+      field_data = FormFieldValue(
+        form_field_key = field['_key'],
+        custom_field_key = field['custom_field_key'],
+      )
+      for new_field in data.form_data:
+        if field['_key'] == new_field.form_field_key:
+          field_data.value = new_field.value
+      form_data.append(field_data)
+
     record = execution_data.insert(StepExecutionData(
       batch_key = data.batch_key,
       step_key = data.step_key,
-      form_data = data.form_data
+      form_data = form_data
     ))
 
   return APIResponse(message="Step data stored", detail=dict(
