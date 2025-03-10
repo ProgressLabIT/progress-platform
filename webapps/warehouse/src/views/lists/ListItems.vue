@@ -24,7 +24,6 @@
       :key="i.product_code"
       v-touch-hold.mouse="() => showItemReferences = i"
       class="surface1 q-pa-md q-mb-sm row items-start text-body1 col-auto"
-      :class="i.qt_planned <= i.qt_confirmed ? 'theme-green' : 'surface1'"
       :style="i.qt_planned <= i.qt_confirmed ? 'opacity: 0.5' : ''"
       @click.stop="() => i.qt_planned > i.qt_confirmed ? selectItem(i) : null"
     >
@@ -144,7 +143,12 @@ onBeforeRouteLeave(() => {
   nav.dynamicBreadcrumb = []
 })
 
-const listItems = computed(() => lists.movementsByListAndItem[props.listKey]);
+const listItems = computed(() => {
+  const items = lists.movementsByListAndItem[props.listKey];
+  const openItems = items.filter(i => i.qt_planned > i.qt_confirmed);
+  const closedItems = items.filter(i => i.qt_planned <= i.qt_confirmed);
+  return [...openItems, ...closedItems]
+});
 
 function selectItem(item) {
   lists.selectedItem = JSON.parse(JSON.stringify(item))
