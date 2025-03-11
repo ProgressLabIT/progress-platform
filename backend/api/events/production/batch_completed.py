@@ -68,6 +68,7 @@ class BatchCompletedEvent(BaseProductionEvent):
           custom_field_key = field.custom_field_key,
           value = field.value,
           step_key = step.step_key,
+          batch_key = self.info.active_batch_key,
           phase_key = self.job.phase_key,
         ))
     return serial_data
@@ -230,7 +231,7 @@ class BatchCompletedEvent(BaseProductionEvent):
       # Save step data into batch serials if needed
       if handle_serials:
         serial_data = self._convert_step_data_to_serial_data()
-        for serial_key in batch_serial_keys:
+        for serial_key in self.info.batch_serial_keys:
           SerialUpdatedEvent.create_as_child(self, dict(
             serial_key = serial_key,
             serial_data = serial_data,
@@ -360,7 +361,7 @@ class BatchCompletedEvent(BaseProductionEvent):
 
       if handle_serials:
         # update batch serials data
-        for serial_key in batch_serial_keys:
+        for serial_key in self.info.batch_serial_keys:
           SerialReleasedEvent.create_as_child(self, dict(serial_key = serial_key))
 
     # If next_phase, generate a WIP record and update job input availability state
