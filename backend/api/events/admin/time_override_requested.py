@@ -2,23 +2,26 @@ from events.admin.base_admin import BaseAdmin, Queries
 from utils.dt import timestamp
 from utils.exceptions import JobIsActiveError, JobIsNotStartedError
 from models.production import Job, WorkStatus
+from models.event import EventType, EventInfoModel
 from models.traceability import Batch, WorkSession
 
 class TimeOverrideRequested(BaseAdmin):
 
-  @classmethod
-  def get_write_collections(self):
-    return list(set(super().get_write_collections() + ['Batch', 'WorkSession']))
+  class InfoModel(EventInfoModel):
+    job_key: str
+    new_job_duration: int| None = None # milliseconds
 
   @classmethod
-  def get_read_collections(self):
-    return list(set(super().get_read_collections() + ['User', 'Batch']))
+  def get_tx_collections(self):
+    return ['Batch', 'Job', 'WorkOrder', 'WorkSession']
 
+  @classmethod
+  def get_event_type(cls):
+    return EventType.TIME_OVERRIDE_REQUESTED
 
   def apply(self):
-    job_key = self.job_key
 
-    self.job = Job(**self.tx.document(f'Job/{job_key}'))
+    self.job = Job(**self.tx.collection('Job').get(self.info.job_key))
 
     if self.job.active:
       raise JobIsActiveError("You can't override processing time while the job is still active")
@@ -26,15 +29,11 @@ class TimeOverrideRequested(BaseAdmin):
     if self.job.stage == WorkStatus.CREATED:
       raise JobIsNotStartedError("You can't override processing time if the job hasn't started yet")
 
-    # Store work order key for later update
-    if not 'work_order_key' in self:
-      self.work_order_key = self.job.wo_key
-
     # Cancel existing job work sessions, while fetching data
     # for calculation of weighted average hourly cost
     self.tx.aql.execute(
       Queries.CANCEL_JOB_WORK_SESSIONS,
-      bind_vars=dict(job_key=job_key, event_id=self.id)
+      bind_vars=dict(job_key=self.info.job_key, event_key=self.event_key)
     )
 
     # Define hourly cost as defined for the operator
@@ -42,17 +41,17 @@ class TimeOverrideRequested(BaseAdmin):
     hourly_cost = operator_data.get('hourly_cost', 0)
 
     # Get job batches to update
-    match = dict(job_key=job_key, canceled=None)
+    match = dict(job_key=self.info.job_key, canceled=None)
     cursor = self.tx.collection('Batch').find(match)
     job_batches = [Batch(**b) for b in cursor]
 
     # Define new duration, either the one provided or using unit standard time for phase
-    if hasattr(self, 'new_job_duration'):
-      new_job_duration = self.new_job_duration
+    if self.info.new_job_duration is not None:
+      new_job_duration = self.info.new_job_duration
     else: #
       new_job_duration = self.job.parameters.std_processing_time * self.job.qt_completed
 
-    # Insert manual work session for each batch of the job
+    # Insert forced work session for each batch of the job
     new_work_sessions = []
     batch_updates = []
 
@@ -68,19 +67,19 @@ class TimeOverrideRequested(BaseAdmin):
 
       batch_update = dict(
         _key = b.key,
-        forced = self.id
+        forced = self.event_key
       )
 
       batch_updates.append(batch_update)
 
       forced_work_session = WorkSession(
         batch_key = b.key,
-        job_key = job_key,
-        work_order_key = self.work_order_key,
+        job_key = self.info.job_key,
+        work_order_key = self.job.wo_key,
         phase_key = self.job.phase_key,
         product_key = self.job.product_key,
         duration = batch_duration,
-        forced = self.id,
+        forced = self.event_key,
         hourly_cost = hourly_cost
       )
 

@@ -12,7 +12,7 @@ class Queries:
   CANCEL_JOB_WORK_SESSIONS = """
     FOR ws IN WorkSession
     FILTER ws.job_key == @job_key && ws.canceled == null
-    UPDATE ws WITH { canceled: @event_id } IN WorkSession
+    UPDATE ws WITH { canceled: @event_key } IN WorkSession
     RETURN NEW
   """
   NON_CANCELED_BATCHES_BY_JOB = """
