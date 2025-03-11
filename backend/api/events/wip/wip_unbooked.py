@@ -22,7 +22,7 @@ class WIPUnbookedEvent(BaseProductionEvent):
         return
 
     booked_wips_cursor = self.tx.collection('wip').find(dict(
-      _to=f'Job/{self.job_key}',
+      _to=f'Job/{self.info.job_key}',
     ))
     booked_wips = [WIP(**wip) for wip in booked_wips_cursor]
     booked_wips = sorted(booked_wips, key=lambda wip: wip.quantity)
@@ -32,7 +32,7 @@ class WIPUnbookedEvent(BaseProductionEvent):
         # Unbook entire batch for job
         self.tx.collection('wip').update(dict(
           _key = wip.key,
-          _to = f'Phase/{self.phase_key}'
+          _to = f'Phase/{self.info.phase_key}'
         ))
         self.info.quantity -= wip.quantity
         if self.info.quantity == 0:
@@ -49,7 +49,7 @@ class WIPUnbookedEvent(BaseProductionEvent):
         # Add free wip record with partially unbooked batch
         new_wip = WIP(
           from_doc=wip.from_doc,
-          to_doc=f'Phase/{self.phase_key}',
+          to_doc=f'Phase/{self.info.phase_key}',
           wo_key=wip.wo_key,
           batch_key=wip.batch_key,
           product_key=wip.product_key,
@@ -65,5 +65,5 @@ class WIPUnbookedEvent(BaseProductionEvent):
         raise WipNotAvailableError(f"Not enough booked wip available to unbook. Needed { self.info.quantity } more")
 
     # Update input availability for jobs in this phase
-    self.update_wip_availability_for_phases(phase_keys=[self.phase_key])
+    self.update_wip_availability_for_phases(phase_keys=[self.info.phase_key])
 

@@ -1,22 +1,36 @@
 from events.admin.base_admin import BaseAdmin
-from utils.dt import timestamp
+from events.wip.wip_unbooked import WIPUnbookedEvent
+from events.serial.serial_updated import SerialUpdatedEvent
+from models.event import EventInfoModel, EventType
 from utils.exceptions import JobIsActiveError, JobHasNoActiveBatchError
-
-from utils.production import Queries as ProductionQueries
-from utils.traceability import Queries as TraceabilityQueries
 from utils.serial import Queries as SerialQueries
+from utils.traceability import Queries as TraceabilityQueries
 
 
 class BatchCanceled(BaseAdmin):
 
-  @classmethod
-  def get_write_collections(self):
-    return list(set(super().get_write_collections() + ['Batch', 'StepExecutionData', 'WorkSession', 'batch_serial', 'Serial']))
+  class InfoModel(EventInfoModel):
+    job_key: str
 
   @classmethod
-  def get_read_collections(self):
-    return super().get_read_collections()
+  def get_tx_collections(self):
+    return [
+      'Batch',
+      'batch_serial',
+      'contains',
+      'is_in_position',
+      'Job',
+      'movement',
+      'Serial',
+      'StepExecutionData',
+      'wip',
+      'WorkOrder',
+      'WorkSession'
+    ]
 
+  @classmethod
+  def get_event_type(self):
+    return EventType.BATCH_CANCELED
 
   def apply(self):
     self._get_job_data()
@@ -33,31 +47,26 @@ class BatchCanceled(BaseAdmin):
       _key = batch_key,
       active = False,
       end = self.info.timestamp,
-      canceled = self.id
+      canceled = self.event_key
     )
     self.tx.collection('Batch').update(batch_update)
 
     # Cancel StepExecutionData & WorkSession records
     match = dict(batch_key = batch_key, canceled = None)
-    update = dict(canceled = self.id)
+    update = dict(canceled = self.event_key)
     self.tx.collection('StepExecutionData').update_match(match, update)
     self.tx.collection('WorkSession').update_match(match, update)
 
     # Free booked wip
     if not self.job.first_phase:
-      wip_match = dict(_to=f'Job/{self.job.key}', active=True)
-      wip_update = dict(_to=f'Phase/{self.job.phase_key}', active=False)
-      self.tx.collection('wip').update_match(wip_match, wip_update)
-      self.tx.aql.execute(
-        TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
-        bind_vars=dict(
-          wo_key = self.job.wo_key,
-          phase_keys = [self.job.phase_key]
-        )
-      )
+      WIPUnbookedEvent.create_as_child(self, dict(
+        job_key = self.job.key,
+        quantity = self.job.active_batch_qt
+      ))
+
+
     elif self.job.traceability_level:
-      # self.job.first_phase = True
-      # Remove incomplete serials and the relative link.
+      # First phase: remove incomplete serials and the relative link.
       # TODO: use a named graph to avoid deleting links explicitly
       self.tx.aql.execute("""
         FOR serial IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
@@ -65,7 +74,7 @@ class BatchCanceled(BaseAdmin):
       """, bind_vars=dict(batch_key=batch_key))
 
     if self.job.traceability_level: # both first and following phases
-      # Remove obsolete batch_serial records and reset phase serial data
+      # Remove obsolete batch_serial records and reset serial data for the phase
       # Remember that serials documents have already been removed
       serials_cursor = self.tx.aql.execute("""
         FOR s, bs IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
@@ -76,15 +85,14 @@ class BatchCanceled(BaseAdmin):
 
       batch_serial_keys = [serial_key for serial_key in serials_cursor]
 
-      self.tx.aql.execute(
-        SerialQueries.REMOVE_PHASE_DATA_FROM_SERIALS,
-        bind_vars = dict(
-          serial_keys = batch_serial_keys,
-          phase_keys = [self.job.phase_key]
-        )
-      )
+      for serial_key in batch_serial_keys:
+        SerialUpdatedEvent.create_as_child(self, dict(
+          serial_key = serial_key,
+          remove_data_from_phases = [self.job.phase_key]
+        ))
 
     # Update Job, removing progress from steps, if any, of former active batch
+    # No need to use UPDATE_JOB_PROGRESS query here, as there is no partial batch progress from completed steps
     job_update = dict(
       _key = self.job.key,
       active_batch_key = None,

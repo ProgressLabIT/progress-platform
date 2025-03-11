@@ -3,20 +3,18 @@ from datetime import datetime
 from pydantic import Field
 
 from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
+from models.event import EventModel, EventType
 from models.form import SerialFormFieldValue
 from models.serial import  SerialNotificationType, SerialNotificationErrorCode
-import traceback
-from models.event import EventType
-from utils.exceptions import (
-  SerialNotUpdatedError
-)
-from models.event import EventModel
+from utils.serial import Queries as SerialQueries
+from utils.exceptions import (SerialNotUpdatedError)
 
 class SerialUpdatedEvent(BaseSerialEvent):
   class InfoModel(BaseSerialModel):
     serial_key: str
     serial_code: str | None = None # Set code if provided
     serial_data: list[SerialFormFieldValue] | None = None # Set data if provided
+    remove_data_from_phases: list[str] | None = None # Set phase keys to remove data from if provided
     released: datetime | None = None # Set released date if provided
 
   @classmethod
@@ -75,15 +73,30 @@ class SerialUpdatedEvent(BaseSerialEvent):
     # ===================================================================
     # UPDATE SERIAL
     # ===================================================================
-    if len(serial_update.keys()) > 1: # Only update if there are changes to be made
-      self.tx.collection('Serial').update(serial_update)
+
+    self.response = dict(
+      message="No changes to be made to serial",
+      serial_key=self.info.serial_key
+    )
+
+    # Remove data from phases if provided
+    if self.info.remove_data_from_phases:
+      self.tx.aql.execute(
+        SerialQueries.REMOVE_PHASE_DATA_FROM_SERIAL,
+        bind_vars = dict(
+          serial_key = self.info.serial_key,
+          phase_keys = self.info.remove_data_from_phases
+        )
+      )
       self.response = dict(
         message="Serial updated correctly",
         serial_key=self.info.serial_key
       )
-    else:
+
+    if len(serial_update.keys()) > 1: # Only update if there are other changes to be made
+      self.tx.collection('Serial').update(serial_update)
       self.response = dict(
-        message="No changes to be made to serial",
+        message="Serial updated correctly",
         serial_key=self.info.serial_key
       )
 

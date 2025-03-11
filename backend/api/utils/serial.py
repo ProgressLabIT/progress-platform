@@ -428,13 +428,13 @@ class Queries:
     REMOVE c IN contains
   """
 
-  REMOVE_PHASE_DATA_FROM_SERIALS = """
+  REMOVE_PHASE_DATA_FROM_SERIAL = """
     FOR s IN Serial
-    FILTER s._key IN @serial_keys
+    FILTER s._key == @serial_key
     LET new_serial_data = (
       FOR form_field IN s.data
       RETURN form_field.phase_key IN @phase_keys
-        ? MERGE(form_field, { value: null })
+        ? MERGE(form_field, { value: null, batch_key: null })
         : form_field
     )
     UPDATE s WITH { data: new_serial_data } IN Serial
