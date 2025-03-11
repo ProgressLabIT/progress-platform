@@ -76,28 +76,31 @@ const session = {
   },
 
   actions: {
-    async logout({ commit, dispatch, state, rootState }) {
+    async logout({ commit, dispatch, state, rootState }, { from401 = false }) {
       const is_working =
         rootState.traceability.working_job_data.active || false;
-      if (is_working) {
-        try {
-          await dispatch('pauseJob');
-        } catch {
-          /*
-          Some edge cases caused by unknown bugs may leave active work sessions
-          in the Vuex store, triggering the pauseJob action, which will cause error
-          because there are no active work sessions in the backend
-          */
+      if (!from401) {
+        // Handle user triggered logout
+        if (is_working) {
+          try {
+            await dispatch('pauseJob');
+          } catch {
+            /*
+            Some edge cases caused by unknown bugs may leave active work sessions
+            in the Vuex store, triggering the pauseJob action, which will cause error
+            because there are no active work sessions in the backend
+            */
+          }
+          try {
+            await api.delete(`session/${state.session_key}`);
+          } catch {
+            /*force deleting session even if not present*/
+          }
         }
       }
-      try {
-        await api.delete(`session/${state.session_key}`);
-      } catch {
-        /*force deleting session even if not present*/
-      }
       await commit('CLOSE_USER_SESSION');
-      await this.$router.push({ name: 'login' });
       VueCookies.remove('Authorization');
+      await this.$router.push({ name: 'login' });
     },
 
     unlockSession({ commit }) {

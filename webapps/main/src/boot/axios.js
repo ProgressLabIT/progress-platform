@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { boot } from 'quasar/wrappers';
+import { Notify } from 'quasar';
+import { i18n } from '@/boot/i18n';
 
 // Be careful when using SSR for cross-request state pollution
 // due to creating a Singleton instance here;
@@ -36,12 +38,18 @@ export default boot(({ app, store }) => {
     (error) => {
       if (error) {
         if (error.response.status === 401) {
+          // Do not trigger logout if the request is to whoami or session endpoints
           if (
             error.config.url !== 'whoami' &&
             !error.config.url.includes('session')
           ) {
-            //originalRequest._retry = true;
-            store.dispatch('logout');
+            store.dispatch('logout', { from401: true });
+            Notify.create({
+              message: i18n.global.t('login_page.session_terminated'),
+              color: 'theme-orange',
+              icon: 'mdi-alert',
+              position: 'top',
+            });
           }
           return error;
           //return app.router.push('/login');

@@ -8,6 +8,7 @@ export default {
   login_page: {
     login_first: 'Perform login to display this page',
     not_authorized: 'User is not authorized for this page',
+    session_terminated: 'Your session has been terminated, please log in again'
   },
   active: 'active',
   add: 'add',

@@ -10,6 +10,7 @@ export default {
       "Per visualizzare questa pagina è necessario fare prima l'accesso",
     not_authorized:
       "L'utente non ha le autorizzazioni necessarie per accedere a questa pagina",
+    session_terminated: 'La tua sessione è stata terminata, effettua nuovamente il login'
   },
   active: 'attivo',
   active_qt: 'qt in lavorazione',

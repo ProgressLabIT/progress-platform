@@ -290,7 +290,8 @@ export default {
   },
 
   beforeRouteLeave(to, _from, next) {
-    if (this.j.active && !this.can_leave) {
+    const isSessionActive = this.$store.state.session.session_key;
+    if (this.j.active && !this.can_leave && isSessionActive) {
       this.exit_destination = to;
       this.show_exit_alert = true;
       next(false);
