@@ -829,7 +829,6 @@ export default {
         });
       }
 
-      console.log(resp);
       this.$store
         .dispatch('forcePauseJob', { job: job_data })
         .then(async () => {

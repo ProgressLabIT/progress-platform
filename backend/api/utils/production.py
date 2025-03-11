@@ -114,7 +114,7 @@ class Queries:
   """
 
 
-  GET_WORK_SESSION = """
+  GET_ACTIVE_WORK_SESSION_FOR_JOB = """
     LET ws_key = FIRST(
       FOR j IN Job
       FILTER j._key == @job_key

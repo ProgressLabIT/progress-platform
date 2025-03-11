@@ -668,12 +668,12 @@ async def get_job_data(job_key: str):
 
 @router.get('/work-session',
     dependencies=[Depends(auth.verify_token)])
-async def get_job_data(job_key: str):
+async def get_active_work_session_for_job(job_key: str):
 
   bind_vars = dict(job_key = job_key)
 
   try:
-    job_data = db.aql.execute(Queries.GET_WORK_SESSION, bind_vars=bind_vars).next()
+    ws = db.aql.execute(Queries.GET_ACTIVE_WORK_SESSION_FOR_JOB, bind_vars=bind_vars).next()
 
   except:
     status_code=500
@@ -687,7 +687,7 @@ async def get_job_data(job_key: str):
 
   response=dict(
     message=f"Retrieved session for Job/{job_key}",
-    detail=job_data
+    detail=ws
   )
 
   return APIResponse(**response)

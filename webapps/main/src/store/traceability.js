@@ -381,7 +381,7 @@ const traceability = {
     },
 
     async forcePauseJob(ctx, { job }) {
-      await sendEvent({event_type: 'JOB_PAUSED', job_key: job._key});
+      await sendEvent({event_type: 'JOB_PAUSED', event_data: {job_key: job._key}});
     },
 
     async resumeJob({ commit, state }, { batch_serials }) {
