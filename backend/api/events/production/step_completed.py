@@ -72,27 +72,24 @@ class StepCompletedEvent(BaseProductionEvent):
       for serial_key in batch_serials:
         serial_data = [SerialFormFieldValue(
           **f.model_dump(),
-          serial_key=serial_key
+          serial_key=serial_key,
+          batch_key = self.info.active_batch_key,
+          phase_key = self.job.phase_key,
+          step_key = self.info.step_key,
         ) for f in self.info.form_data]
 
-        SerialUpdatedEvent.create_as_child(
-          self,
-          dict(
-            serial_key=serial_key,
-            serial_data=serial_data,
-          )
-        )
+        SerialUpdatedEvent.create_as_child(self, dict(
+          serial_key=serial_key,
+          serial_data=serial_data,
+        ))
 
     # if last step complete batch
     if self._check_all_batch_steps_done():
-      BatchCompletedEvent.create_as_child(
-        self,
-        dict(
-          batch_serials=self.info.batch_serials,
-          completed_batch_qt=self.batch.qt_total,
-          active_batch_key=self.batch.key,
-        ),
-      )
+      BatchCompletedEvent.create_as_child(self, dict(
+        batch_serials=self.info.batch_serials,
+        completed_batch_qt=self.batch.qt_total,
+        active_batch_key=self.batch.key,
+      ))
 
     else:
       self.update_job_step_progress()
@@ -113,6 +110,5 @@ class StepCompletedEvent(BaseProductionEvent):
 
     if new_job_data['active_batch_key'] is not None:
       self.batch = Batch(**self.tx.collection('Batch').get(new_job_data['active_batch_key']))
-
-    self.response['batch_data'] = self.get_batch_execution_data()
+      self.response['batch_data'] = self.get_batch_execution_data()
 
