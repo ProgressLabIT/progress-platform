@@ -8,7 +8,7 @@ from models.production import Job
 from models.serial import SerialSelection
 from models.traceability import *
 from utils.serial import Queries as SerialQueries
-
+from utils.production import Queries as ProductionQueries
 
 class ActiveBatchChangedEvent(BaseProductionEvent):
 
@@ -125,9 +125,10 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
     # ================================================
     # RESPONSE
     # ================================================
+    new_job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.info.job_key)).next()
     self.response = dict(
       message=f"Active batch { self.info.active_batch_key } has been correctly updated with quantity { self.info.new_active_batch_qt }",
-      job_data=self.job,
+      job_data=new_job_data,
       batch_data=self.get_batch_execution_data(),
     )
 
