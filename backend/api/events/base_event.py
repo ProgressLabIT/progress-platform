@@ -158,7 +158,7 @@ class BaseEvent(ABC):
     """
     Store the event in the database.
     """
-    record = self.info.model_dump(exclude_extra=True)
+    record = self.info.model_dump(exclude_extra=True, by_alias=True)
     # update with data modified through the apply method
     if hasattr(self, 'event_key'):
       record.update(dict(_key=self.event_key))

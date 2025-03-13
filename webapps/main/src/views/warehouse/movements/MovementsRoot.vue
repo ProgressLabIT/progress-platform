@@ -27,9 +27,38 @@
           :id="props.row._key"
           :key="props.row._key"
           :props="props"
-          :style="props.row.closed ? 'opacity: .5' : ''"
+          :style="props.row.reverted ? 'opacity: .5; text-decoration: line-through;' : ''"
           @dblclick="showMovementDetails(props.row._key)"
         >
+
+          <!-- Movement reversal context menu -->
+          <q-popup-proxy
+            context-menu
+            auto-close
+            v-if="props.row.qt_confirmed > 0"
+          >
+            <q-list dense>
+              <q-item :clickable="!props.row.reverted" @click="() => {
+                if (!props.row.reverted) {
+                  revert_movement_key = props.row._key
+                }
+              }">
+                <q-item-section side >
+                  <q-item-label>
+                    <q-icon name="mdi-undo-variant" size="xs"/>
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section class="text-uppercase">
+                  <q-item-label v-if="!props.row.reverted">
+                    {{ $t('revert_movement', { key: props.row._key }) }}
+                  </q-item-label>
+                  <q-item-label v-else>{{ $t('movement_reverted_by', { key: props.row.reverted }) }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-popup-proxy>
+
+          <!-- Movement details -->
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
               <template
@@ -41,7 +70,7 @@
                     ? '-'
                     : $shortDateString(props.row[column.name], $i18n.locale)
                   }}
-                  <q-tooltip delay="500" self="bottom middle" anchor="top middle">
+                  <q-tooltip :delay="500" self="bottom middle" anchor="top middle">
                     {{ props.row[column.name].slice(11, 19) }}
                   </q-tooltip>
                 </span>
@@ -68,6 +97,14 @@
       </template>
     </q-table>
 
+    <BasePrompt
+      :show="revert_movement_key !== null"
+      width="40%"
+      :prompt="$t('revert_movement', { key: revert_movement_key })"
+      :helpText="$t('movement_revert_reason_help')"
+      @update="(reason) => revertMovement(reason)"
+      @close="revert_movement_key = null"
+    />
   </div>
 </template>
 
@@ -75,9 +112,17 @@
 import { ref } from 'vue';
 import queryModel from '@/lib/queryModelFactory.js';
 import { useMovementColumns } from 'app/src/composables/warehouse';
+import eventMixin from '@/mixins/event.js';
+import BasePrompt from '@/components/BasePrompt.vue';
 
 export default {
   name: 'MovementsRoot',
+
+  mixins: [eventMixin],
+
+  components: {
+    BasePrompt
+  },
 
   setup() {
     const pagination = ref({
@@ -94,7 +139,8 @@ export default {
       'shipment': 'mdi-export',
       'adjustment': 'mdi-plus-minus-variant',
       'production': 'mdi-package-variant-closed-plus',
-      'consumption': 'mdi-package-variant-closed-minus'
+      'consumption': 'mdi-package-variant-closed-minus',
+      'reversal': 'mdi-undo-variant'
     }
 
     const statusIconMap = {
@@ -120,6 +166,7 @@ export default {
       events: NaN,
       limit: 200,
       offset: 0,
+      revert_movement_key: null
     };
   },
 
@@ -214,6 +261,35 @@ export default {
           movement: 'top',
         });
       }
+    },
+
+    revertMovement(reason) {
+      this.sendEvent({
+        event_type: 'MOVEMENT_REVERTED',
+        event_data: {
+          original_movement_key: this.revert_movement_key,
+          reason
+        }
+      }).then(() => {
+        this.$q.notify({
+          message: this.$t('movement.revert_success'),
+          color: 'theme-green',
+          position: 'top',
+          timeout: 1500
+        });
+        this.revert_movement_key = null;
+        this.refreshMovements();
+      }).catch(error => {
+        this.$q.notify({
+          message: error.response?.data?.message || this.$t('movement.revert_error'),
+          color: 'theme-orange',
+          position: 'top',
+          timeout: 0,
+          actions: [
+            { label: 'Close', textColor: 'white', handler: () => undefined }
+          ]
+        });
+      });
     },
 
     formatDate(date, endOfDay = false) {

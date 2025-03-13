@@ -150,13 +150,13 @@ class InventoryMovementType(str, Enum):
   PRODUCTION = 'production'
   CONSUMPTION = 'consumption'
   ADJUSTMENT = 'adjustment'
+  REVERSAL = 'reversal'
 
 class InventoryMovementReferences(BaseModel):
   work_order_key: str | None = None
   job_key: str | None = None
   batch_key: str | None = None
-  event_key: str | None = None
-  event_group: str | None = None
+  origin_movement_key: str | None = None
   transfer_doc: str | None = None
   sales_doc: str | None = None
   purchase_doc: str | None = None
@@ -222,7 +222,7 @@ class InventoryMovementNew(FlexModel):
       raise ValueError("A serial movement must have a quantity of +/-1")
 
     # Ensure every non-adjustment movement has a different position from and to
-    if self.position_from == self.position_to and self.movement_type != InventoryMovementType.ADJUSTMENT:
+    if self.position_from == self.position_to and self.movement_type not in [InventoryMovementType.ADJUSTMENT, InventoryMovementType.REVERSAL]:
       raise ValueError("A movement must have a different position from and to")
     return self
 
@@ -254,6 +254,7 @@ class InventoryMovement(ArangoDocument): # edge collection movement
   created: datetime | None = None
   start: datetime | None = None
   end: datetime | None = None
+  reverted: str | None = None # link to the movement that is the reversal of this movement
 
   movement_list_key: str | None = None # link to MovementList document, if present
   movement_list_item: float | None = None # "row" number in the movement list

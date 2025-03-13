@@ -299,6 +299,7 @@ export default {
         'production',
         'consumption',
         'adjustment',
+        'reversal',
       ],
       status_options: ['planned', 'started', 'completed', 'canceled'],
       showFilter: false,

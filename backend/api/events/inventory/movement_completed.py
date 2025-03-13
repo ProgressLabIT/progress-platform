@@ -66,11 +66,6 @@ class MovementCompletedEvent(BaseInventoryEvent):
     }
 
 
-  @property
-  def event_first(self):
-    return True
-
-
   def apply(self):
     self.info.end = self.info.timestamp
     if self.info.movement_key is None:
@@ -79,8 +74,11 @@ class MovementCompletedEvent(BaseInventoryEvent):
     else:
       self.movement = self._update_movement()
 
-    self.info.movement_key = self.movement.key
     self.handlers[self.info.movement_type]()
+
+    self.info.movement_key = self.movement.key
+    self.response = self.movement
+
 
   def _update_movement(self):
     update = dict(
@@ -263,4 +261,3 @@ class MovementCompletedEvent(BaseInventoryEvent):
       serial_key = self.info.serial_key,
       quantity_change = self.info.qt_confirmed
     ))
-

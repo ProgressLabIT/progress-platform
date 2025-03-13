@@ -1,7 +1,7 @@
 #ADMIN EVENTS
 from events.admin.base_admin import BaseAdmin
 from events.admin.batch_canceled import BatchCanceled
-from events.admin.job_reset import JobReset
+from events.admin.job_reset import JobResetEvent
 from events.admin.progress_override_requested import ProgressOverrideRequested
 from events.admin.time_override_requested import TimeOverrideRequested
 from events.base_event import BaseEvent
@@ -24,6 +24,7 @@ from events.inventory.movement_completed import MovementCompletedEvent
 from events.inventory.movement_created import MovementCreatedEvent
 from events.inventory.movement_deleted import MovementDeleted
 from events.inventory.movement_updated import MovementUpdatedEvent
+from events.inventory.movement_reverted import MovementRevertedEvent
 from events.inventory.warehouse_list_closed import WarehouseListClosed
 from events.inventory.warehouse_list_created import WarehouseListCreatedEvent
 from events.production.active_batch_changed import ActiveBatchChangedEvent

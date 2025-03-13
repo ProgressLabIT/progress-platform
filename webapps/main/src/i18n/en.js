@@ -676,6 +676,9 @@ export default {
   rename: 'rename',
   report: 'Reports',
   restore: 'restore',
+  revert_movement: 'revert movement {key}',
+  movement_reverted_by: 'movement reverted by {key}',
+  movement_revert_reason_help: 'Explain the reason for reverting the movement',
   resume: 'resume',
   save: 'save',
   save_or_cancel_before_change: 'Save or cancel changes before',
@@ -1039,6 +1042,8 @@ export default {
       end_to: 'End To',
       movement_type: 'Movement type',
       status: 'Status',
+      revert_success: 'Movement reverted successfully',
+      revert_error: 'Error reverting movement'
     },
     inventory: {
       position: 'Position',

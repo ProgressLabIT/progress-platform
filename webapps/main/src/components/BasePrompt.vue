@@ -11,6 +11,10 @@
           {{ prompt ?? $t('update') }}
         </div>
 
+        <div v-if="helpText" class="text-body2 q-mt-sm">
+          {{ helpText }}
+        </div>
+
         <q-input
           v-model="value"
           autofocus
@@ -65,6 +69,10 @@ export default {
       default: '300px',
     },
     prompt: {
+      type: String,
+      default: undefined,
+    },
+    helpText: {
       type: String,
       default: undefined,
     },
