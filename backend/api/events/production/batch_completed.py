@@ -104,7 +104,7 @@ class BatchCompletedEvent(BaseProductionEvent):
     references = InventoryMovementReferences(
       work_order_key = self.info.work_order_key,
       job_key = self.info.job_key,
-      batch_key = self.info.active_batch_key,
+      batch_key = self.info.active_batch_key
     )
 
     # Get product keys for all relevant products
@@ -131,14 +131,28 @@ class BatchCompletedEvent(BaseProductionEvent):
     if inventory_config.get(self.job.product_key, False) and self.job.last_phase:
       production_position_key = self.tx.collection('WorkOrder').get(self.info.work_order_key).get('output_position_key', 'IN')
 
-      MovementCompletedEvent.create_as_child(self, dict(
+      base_production_data = dict(
         position_to = production_position_key,
         product_key = self.job.product_key,
-        qt_confirmed = batch_qt,
-        qt_planned = batch_qt,
         movement_type = InventoryMovementType.PRODUCTION,
         references = references,
-      ))
+      )
+
+      if self.info.batch_serial_keys:
+        for serial_key in self.info.batch_serial_keys:
+          MovementCompletedEvent.create_as_child(self, dict(
+            **base_production_data,
+            qt_confirmed = 1,
+            qt_planned = 1,
+            serial_key = serial_key,
+          ))
+
+      else:
+        MovementCompletedEvent.create_as_child(self, dict(
+          **base_production_data,
+          qt_confirmed = batch_qt,
+          qt_planned = batch_qt,
+        ))
 
     # Generate consumption movements
     component_serials_map = self._get_component_serials()
@@ -261,7 +275,7 @@ class BatchCompletedEvent(BaseProductionEvent):
     # ===================================================================
     # NO REMAINING QUANTITY TO DO (LAST BATCH) -> CLOSE JOB
     # ===================================================================
-    if self.job.qt_completed >= self.job.qt_planned:
+    if self.job.qt_completed + self.info.completed_batch_qt >= self.job.qt_planned:
       # Event will take care of closing the job
       self.job = JobClosedEvent.create_as_child(self, dict(
         job_key = self.info.job_key,
@@ -356,7 +370,8 @@ class BatchCompletedEvent(BaseProductionEvent):
         batch_key=self.info.active_batch_key,
         product_key=self.info.product_key,
         work_order_key=self.info.work_order_key,
-        qt_released=self.info.completed_batch_qt
+        qt_released=self.info.completed_batch_qt,
+        serial_keys=self.info.batch_serial_keys,
       ))
 
       if handle_serials:
