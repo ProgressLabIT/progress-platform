@@ -7,6 +7,7 @@ class BatchReleasedEvent(BaseEvent):
     product_key: str
     work_order_key: str
     qt_released: float
+    serial_keys: list[str] | None = None
 
   @classmethod
   def get_event_type(cls):
