@@ -15,7 +15,7 @@ class MovementRevertedEvent(BaseInventoryEvent):
   class InfoModel(EventInfoModel):
     original_movement_key: str
     inverse_movement_key: str | None = None
-    partial_quantity: float | None = None
+    quantity_to_revert: float | None = None
     reason: str | None = None
 
   @classmethod
@@ -38,8 +38,8 @@ class MovementRevertedEvent(BaseInventoryEvent):
     if movement_to_revert.qt_confirmed == 0:
       raise ValueError(f'Movement {self.info.original_movement_key} has no confirmed quantity to revert')
 
-    if self.info.partial_quantity and self.info.partial_quantity > movement_to_revert.qt_confirmed:
-      raise ValueError(f"Can't revert partial quantity {self.info.partial_quantity} for movement {self.info.original_movement_key}, it's greater than the movement quantity {movement_to_revert.qt_confirmed}")
+    if self.info.quantity_to_revert and self.info.quantity_to_revert > movement_to_revert.qt_confirmed:
+      raise ValueError(f"Can't revert partial quantity {self.info.quantity_to_revert} for movement {self.info.original_movement_key}, it's greater than the movement quantity {movement_to_revert.qt_confirmed}")
 
     references = movement_to_revert.references.copy() if movement_to_revert.references is not None else InventoryMovementReferences()
     references.origin_movement_key = self.info.original_movement_key
@@ -47,7 +47,7 @@ class MovementRevertedEvent(BaseInventoryEvent):
     # All movement except adjustment are reverted by inverting positions.
     # Adjustments must be handled inverting the quantity
     movement_sign = -1 if movement_to_revert.type == InventoryMovementType.ADJUSTMENT else 1
-    movement_abs_qt = self.info.partial_quantity if self.info.partial_quantity else movement_to_revert.qt_confirmed
+    movement_abs_qt = self.info.quantity_to_revert if self.info.quantity_to_revert is not None else movement_to_revert.qt_confirmed
     movement_qt = movement_abs_qt * movement_sign
 
     # Create inverse movement
