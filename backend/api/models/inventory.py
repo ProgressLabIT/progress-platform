@@ -254,7 +254,7 @@ class InventoryMovement(ArangoDocument): # edge collection movement
   created: datetime | None = None
   start: datetime | None = None
   end: datetime | None = None
-  reverted: str | None = None # link to the movement that is the reversal of this movement
+  inverse_movement_key: str | None = None # link to the movement that is the reversal of this movement
 
   movement_list_key: str | None = None # link to MovementList document, if present
   movement_list_item: float | None = None # "row" number in the movement list

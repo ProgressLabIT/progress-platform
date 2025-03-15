@@ -15,6 +15,7 @@ class MovementRevertedEvent(BaseInventoryEvent):
   class InfoModel(EventInfoModel):
     original_movement_key: str
     inverse_movement_key: str | None = None
+    partial_quantity: float | None = None
     reason: str | None = None
 
   @classmethod
@@ -31,17 +32,14 @@ class MovementRevertedEvent(BaseInventoryEvent):
     if not movement_to_revert:
       raise ValueError(f'Movement {self.info.original_movement_key} not found')
 
-    if movement_to_revert.reverted:
+    if movement_to_revert.inverse_movement_key:
       raise ValueError(f'Movement {self.info.original_movement_key} has already been reverted')
 
     if movement_to_revert.qt_confirmed == 0:
       raise ValueError(f'Movement {self.info.original_movement_key} has no confirmed quantity to revert')
 
-    # Mark original movement as reverted
-    self.tx.collection('movement').update({
-      '_key': self.info.original_movement_key,
-      'reverted': self.event_key
-    })
+    if self.info.partial_quantity and self.info.partial_quantity > movement_to_revert.qt_confirmed:
+      raise ValueError(f"Can't revert partial quantity {self.info.partial_quantity} for movement {self.info.original_movement_key}, it's greater than the movement quantity {movement_to_revert.qt_confirmed}")
 
     references = movement_to_revert.references.copy() if movement_to_revert.references is not None else InventoryMovementReferences()
     references.origin_movement_key = self.info.original_movement_key
@@ -49,6 +47,8 @@ class MovementRevertedEvent(BaseInventoryEvent):
     # All movement except adjustment are reverted by inverting positions.
     # Adjustments must be handled inverting the quantity
     movement_sign = -1 if movement_to_revert.type == InventoryMovementType.ADJUSTMENT else 1
+    movement_abs_qt = self.info.partial_quantity if self.info.partial_quantity else movement_to_revert.qt_confirmed
+    movement_qt = movement_abs_qt * movement_sign
 
     # Create inverse movement
     inverse = InventoryMovementNew(
@@ -58,7 +58,7 @@ class MovementRevertedEvent(BaseInventoryEvent):
       movement_type=InventoryMovementType.REVERSAL,
       serial_key=movement_to_revert.serial_key,
       qt_planned=0,
-      qt_confirmed=movement_to_revert.qt_confirmed * movement_sign,
+      qt_confirmed=movement_qt,
       references=references,
       reason=self.info.reason,
       created=self.info.timestamp,
@@ -67,9 +67,17 @@ class MovementRevertedEvent(BaseInventoryEvent):
       user_key=self.info.user_key
     )
 
+
     new_movement = self.tx.collection('movement').insert(inverse.model_dump(by_alias=True), return_new=True)['new']
     new_movement_key = new_movement['_key']
     self.info.inverse_movement_key = new_movement_key
+
+    # Update original movement
+    self.tx.collection('movement').update(dict(
+      _key=self.info.original_movement_key,
+      inverse_movement_key=self.info.inverse_movement_key
+    ))
+
 
     # Handle inventory changes based on original movement type
     # Will raise an InventoryMovementException if the inventory is not available when trying to reduce quantity
@@ -80,7 +88,7 @@ class MovementRevertedEvent(BaseInventoryEvent):
           position_key=movement_to_revert.position_to.split('/')[-1],
           product_key=movement_to_revert.product_key,
           serial_key=movement_to_revert.serial_key,
-          quantity_change=-movement_to_revert.qt_confirmed
+          quantity_change=-movement_qt
         ))
 
       case InventoryMovementType.CONSUMPTION:
@@ -89,7 +97,7 @@ class MovementRevertedEvent(BaseInventoryEvent):
           position_key=movement_to_revert.position_from.split('/')[-1],
           product_key=movement_to_revert.product_key,
           serial_key=movement_to_revert.serial_key,
-          quantity_change=movement_to_revert.qt_confirmed
+          quantity_change=movement_qt
         ))
 
       case InventoryMovementType.RECEIPT:
@@ -98,7 +106,7 @@ class MovementRevertedEvent(BaseInventoryEvent):
           position_key=movement_to_revert.position_to.split('/')[-1],
           product_key=movement_to_revert.product_key,
           serial_key=movement_to_revert.serial_key,
-          quantity_change=-movement_to_revert.qt_confirmed
+          quantity_change=-movement_qt
         ))
 
       case InventoryMovementType.SHIPMENT:
@@ -107,7 +115,7 @@ class MovementRevertedEvent(BaseInventoryEvent):
           position_key=movement_to_revert.position_from.split('/')[-1],
           product_key=movement_to_revert.product_key,
           serial_key=movement_to_revert.serial_key,
-          quantity_change=movement_to_revert.qt_confirmed
+          quantity_change=movement_qt
         ))
 
       case InventoryMovementType.TRANSFER:
@@ -121,14 +129,14 @@ class MovementRevertedEvent(BaseInventoryEvent):
           position_key=movement_to_revert.position_to.split('/')[-1],
           product_key=movement_to_revert.product_key,
           serial_key=movement_to_revert.serial_key,
-          quantity_change=-movement_to_revert.qt_confirmed
+          quantity_change=-movement_qt
         ))
         # Then add back to original position
         InventoryChangedEvent.create_as_child(self, dict(
           position_key=movement_to_revert.position_from.split('/')[-1],
           product_key=movement_to_revert.product_key,
           serial_key=movement_to_revert.serial_key,
-          quantity_change=movement_to_revert.qt_confirmed
+          quantity_change=movement_qt
         ))
 
 
@@ -138,7 +146,7 @@ class MovementRevertedEvent(BaseInventoryEvent):
           position_key=movement_to_revert.position_to.split('/')[-1], # position_to/position_from is the same for adjustments
           product_key=movement_to_revert.product_key,
           serial_key=movement_to_revert.serial_key,
-          quantity_change=-movement_to_revert.qt_confirmed
+          quantity_change=-movement_qt
         ))
 
       case _:
