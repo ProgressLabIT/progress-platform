@@ -27,7 +27,6 @@
           :id="props.row._key"
           :key="props.row._key"
           :props="props"
-          :style="props.row.reverted ? 'opacity: .5; text-decoration: line-through;' : ''"
           @dblclick="showMovementDetails(props.row._key)"
         >
 
@@ -38,21 +37,17 @@
             v-if="props.row.qt_confirmed > 0"
           >
             <q-list dense>
-              <q-item :clickable="!props.row.reverted" @click="() => {
-                if (!props.row.reverted) {
-                  revert_movement_key = props.row._key
-                }
-              }">
+              <q-item clickable @click="handleContextMenuClick(props.row)">
                 <q-item-section side >
                   <q-item-label>
                     <q-icon name="mdi-undo-variant" size="xs"/>
                   </q-item-label>
                 </q-item-section>
                 <q-item-section class="text-uppercase">
-                  <q-item-label v-if="!props.row.reverted">
+                  <q-item-label v-if="!props.row.inverse_movement_key">
                     {{ $t('revert_movement', { key: props.row._key }) }}
                   </q-item-label>
-                  <q-item-label v-else>{{ $t('movement_reverted_by', { key: props.row.reverted }) }}</q-item-label>
+                  <q-item-label v-else>{{ $t('movement_reverted_by', { key: props.row.inverse_movement_key }) }}</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -82,6 +77,7 @@
 
               <template v-else-if="column.name === 'status'">
                 <q-icon :name="statusIconMap[props.row.status]" size="15px"/>
+                <q-icon v-if="props.row.inverse_movement_key" name="mdi-undo-variant" size="xs"/>
               </template>
 
               <template v-else-if="column.name === 'quantity'">
@@ -260,6 +256,21 @@ export default {
           timeout: 1500,
           movement: 'top',
         });
+      }
+    },
+
+    handleContextMenuClick(movement) {
+      if (!movement.inverse_movement_key) {
+        this.revert_movement_key = movement._key;
+      }
+      else {
+        navigator.clipboard.writeText(movement.inverse_movement_key);
+        this.$q.notify({
+          message: 'movimento copiato',
+          color: 'theme-green',
+          position: 'top',
+          timeout: 1500
+        })
       }
     },
 
