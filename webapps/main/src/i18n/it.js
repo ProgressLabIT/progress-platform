@@ -1060,6 +1060,7 @@ export default {
       end_to: 'Fine A',
       movement_type: 'Tipo di movimento',
       status: 'Stato',
+      label: 'Movimento | Movimenti',
     },
     inventory: {
       position: 'Posizione',

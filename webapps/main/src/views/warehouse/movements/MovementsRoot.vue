@@ -31,26 +31,59 @@
         >
 
           <!-- Movement reversal context menu -->
-          <q-popup-proxy
-            context-menu
-            auto-close
-            v-if="props.row.qt_confirmed > 0"
-          >
+          <q-popup-proxy context-menu>
+
+            <div class="q-pa-md ">
+              <div class="text-h4 highlight">
+                {{ $t('warehouse.movement.label') }} {{ props.row._key }}
+              </div>
+              <div v-if="props.row.reason !== null" class="q-mt-md">
+                {{ props.row.reason }}
+              </div>
+            </div>
+
+
+            <q-separator />
+
             <q-list dense>
-              <q-item clickable @click="handleContextMenuClick(props.row)">
-                <q-item-section side >
-                  <q-item-label>
-                    <q-icon name="mdi-undo-variant" size="xs"/>
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section class="text-uppercase">
-                  <q-item-label v-if="!props.row.inverse_movement_key">
-                    {{ $t('revert_movement', { key: props.row._key }) }}
-                  </q-item-label>
-                  <q-item-label v-else>{{ $t('movement_reverted_by', { key: props.row.inverse_movement_key }) }}</q-item-label>
-                </q-item-section>
-              </q-item>
+              <template v-if="props.row.qt_confirmed > 0 && props.row.movement_type !== 'reversal'">
+                <q-item clickable @click="handleContextMenuClick(props.row)" class="text-theme-blue">
+                  <q-item-section side >
+                    <q-item-label>
+                      <q-icon name="mdi-undo-variant" size="xs" :color="props.row.inverse_movement_key ? 'text-high' : 'theme-blue'"/>
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section class="text-uppercase" :class="props.row.inverse_movement_key ? 'text-high' : 'theme-blue'">
+                    <q-item-label v-if="!props.row.inverse_movement_key">
+                      {{ $t('revert_movement') }}
+                    </q-item-label>
+                    <template v-else>
+                      <q-item-label>{{ $t('movement_reverted_by', { key: props.row.inverse_movement_key }) }}</q-item-label>
+                      <q-item-label caption class="text-low smaller">(Click to copy canceled movement key)</q-item-label>
+                    </template>
+                  </q-item-section>
+                </q-item>
+                <q-separator />
+              </template>
+
+              <template v-if="Object.values(props.row.references).filter(ref => ref !== null).length > 0">
+                <q-item-label header>Riferimenti</q-item-label>
+
+                <q-item v-for="[ref_type, ref_key] in Object.entries(props.row.references).filter(([_, ref]) => ref !== null)" :key="ref_type">
+                  <q-item-section>
+                    <q-item-label class="text-uppercase text-h6 weight-bold text-low">
+                      {{ ref_type }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-item-label class="weight-bold">
+                      {{ ref_key || '-' }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
             </q-list>
+
           </q-popup-proxy>
 
           <!-- Movement details -->

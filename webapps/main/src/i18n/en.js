@@ -1043,7 +1043,8 @@ export default {
       movement_type: 'Movement type',
       status: 'Status',
       revert_success: 'Movement reverted successfully',
-      revert_error: 'Error reverting movement'
+      revert_error: 'Error reverting movement',
+      label: 'Movement',
     },
     inventory: {
       position: 'Position',
