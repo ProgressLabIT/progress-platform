@@ -107,6 +107,7 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
             batch_key = self.batch.key,
             to_delete = abs(active_batch_qt_delta)
           )
+          # Serials may not have a code yet in first phase, so we delete them based on creation date
           cursor = self.tx.aql.execute(
             SerialQueries.DELETE_BATCH_SERIALS,
             bind_vars=bind_vars
@@ -116,7 +117,9 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
           self.tx.aql.execute(SerialQueries.CLEANUP_COMPONENT_LINKS)
 
       else:
-        # Has serials but not first phase. Update wip and batch_serial records
+        # Has serials but not first phase.
+        # The WIPBookedEvent deletes all serial wip and rebooks the requested serials,
+        # so we don't need to unbook them first.
         WIPBookedEvent.create_as_child(self, dict(
           **shared_event_data,
           quantity=self.info.new_active_batch_qt,

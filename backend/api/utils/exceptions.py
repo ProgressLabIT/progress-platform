@@ -33,7 +33,9 @@ class JobHasNoAssigneeError(Exception): pass
 
 class WipNotAvailableError(Exception): pass
 
-class QuantityOverrideForSerialsNotAllowed(Exception): pass
+class QuantityIncreaseWithTraceabilityNotAllowed(Exception): pass
+
+class MissingSerialKeysError(Exception): pass
 
 class SerialNotDeletedError(Exception): pass
 class SerialNotUpdatedError(Exception): pass
