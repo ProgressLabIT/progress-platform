@@ -2,7 +2,7 @@
 from events.admin.base_admin import BaseAdmin
 from events.admin.batch_canceled import BatchCanceled
 from events.admin.job_reset import JobResetEvent
-from events.admin.progress_override_requested import ProgressOverrideRequested
+from events.admin.progress_override_requested import ProgressOverrideRequestedEvent
 from events.admin.time_override_requested import TimeOverrideRequested
 from events.base_event import BaseEvent
 

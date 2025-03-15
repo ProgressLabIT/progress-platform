@@ -9,11 +9,11 @@ from collections import deque
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 
-class ProgressOverrideRequested(BaseAdmin):
+class ProgressOverrideRequestedEvent(BaseAdmin):
 
   class InfoModel(EventInfoModel):
     job_key: str
-    new_job_qt_completed: int
+    new_job_qt_completed: float
     should_adjust_duration: bool | None = True
     quantity_change: int | None = None
 
@@ -155,7 +155,7 @@ class ProgressOverrideRequested(BaseAdmin):
     if not self.job.last_phase:
         self._remove_downstream_wip_for_canceled_batches(canceled_batches_keys)
 
-    # Create compensating batch if needed (keeping this in the main method as requested)
+    # Create compensating batch if needed
     if remaining_qt < 0:
         # Create compensating batch with appropriate duration
         new_batch_key, batch_value = self._create_forced_traceability_records(
