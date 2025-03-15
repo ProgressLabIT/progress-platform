@@ -32,257 +32,24 @@ class ProgressOverrideRequested(BaseAdmin):
 
   def apply(self):
     """
-    Handles:
-    - the cancelling of obsolete batches and worksessions
-    - the creation of forced batches and work sessions
-    - the redistribution of work sessions with new durations
-    - the handling (adding/removing) of wip from previous phase and to next phase
+    Handles progress override requests, including traceability records and WIP management.
     """
-
-    # ------------------------------------------------------------------------------------------------
-    # Set self.job, self.wip, self.quantity_change and raise errors if needed
-    # ------------------------------------------------------------------------------------------------
+    # Validate job state and calculate total duration
     self._validate_job_state()
+    self._calculate_and_store_total_duration()
 
-    # ------------------------------------------------------------------------------------------------
-    # Calculate and store total duration for later use
-    # ------------------------------------------------------------------------------------------------
-    self.total_duration = self.tx.aql.execute(
-        """
-        RETURN SUM(
-            FOR ws IN WorkSession
-            FILTER ws.job_key == @job_key && ws.canceled == null
-            RETURN ws.duration
-        )
-        """,
-        bind_vars=dict(job_key=self.job.key)
-    ).next()
-
-    # ------------------------------------------------------------------------------------------------
-    # Quantity increase
-    # ------------------------------------------------------------------------------------------------
-
+    # Handle either quantity increase or decrease
     if self.info.quantity_change > 0:
-        """
-        If total duration should change, then we simply create a new batch with the new quantity and duration
-
-        If total duration shouldn't change, then we need to cancel all work sessions and recreate them with the new durations
-        1. Cancel all work sessions
-        2. Distribute total processing time evenly in each batch
-        3. Create a new work session for each existing batch with the split duration
-        """
-
-        new_work_session_duration = None # Will be calculated in _create_forced_traceability_records if not set
-        if not self.info.should_adjust_duration:
-            new_work_session_duration = self._handle_time_redistribution()
-
-        # Create forced batch, work session and wip
-        self._create_forced_traceability_records(quantity=self.info.quantity_change, duration=new_work_session_duration)
-
-        # Delete free wip from previous phase to current (if not first phase)
-        if not self.job.first_phase:
-            remaining_wip_to_remove = abs(self.info.quantity_change)
-            wip_records = deque(self.wip['upstream_free_wip'])
-            records_to_delete = deque()
-
-            while remaining_wip_to_remove:
-                current_wip = wip_records.popleft()
-
-                if current_wip['quantity'] <= remaining_wip_to_remove:
-                    records_to_delete.append(current_wip)
-                    remaining_wip_to_remove -= current_wip['quantity']
-                else:
-                    leftover_wip = current_wip['quantity'] - remaining_wip_to_remove
-                    wip_update = dict(_key=current_wip['_key'], quantity=leftover_wip)
-                    self.tx.collection('wip').update(wip_update)
-                    remaining_wip_to_remove = 0
-
-            self.tx.collection('wip').delete_many(records_to_delete)
-
-
-    # ------------------------------------------------------------------------------------------------
-    # Quantity decrease
-    # ------------------------------------------------------------------------------------------------
-
+        self._handle_quantity_increase()
     else:
-        """
-        1. Cancel full batches until reaching the required quantity or more
-        2. Cancel the relative work sessions
-        4. If we canceled more than required, create a forced batch/work session/wip to compensate
-        3. Delete wip to next phase related to canceled batches (if not last phase)
-        5. Add free wip from previous phase to current (If not first phase)
-        """
-        # ------------------------------------------------------------------------------------------------
-        # 1. Cancel full batches until reaching the required quantity or more
-        # ------------------------------------------------------------------------------------------------
-        job_batches = deque(Batch(**b) for b in self.tx.aql.execute(
-            Queries.NON_CANCELED_BATCHES_BY_JOB,
-            bind_vars=dict(job_key=self.job.key)
-        ))
-        remaining_qt_to_remove = abs(self.info.quantity_change)
-        batches_to_cancel = deque()
+        self._handle_quantity_decrease()
 
-        # Here we cancel only full batches, one at a time, picking from the latest completed batches.
-        # Remaining_qt_to_remove can become negative, will compensate later on
-        while remaining_qt_to_remove > 0:
-            current_batch = job_batches.popleft()
-            current_batch.canceled = self.event_key
-            batches_to_cancel.append(current_batch)
-            remaining_qt_to_remove -= current_batch.qt_pass
-
-        avg_unit_processing_time = None
-
-        # If we end up canceling all batches, calculate the average unit processing time before executing the canceling query
-        if not job_batches:
-            avg_unit_processing_time = self._calculate_avg_unit_processing_time()
-
-        batch_updates = [b.model_dump(by_alias=True) for b in batches_to_cancel]
-        self.tx.collection('Batch').update_many(batch_updates)
-        canceled_batches_keys = [b.key for b in batches_to_cancel]
-
-        # If more quantity is canceled than desired, we'll create a forced batch/work session/wip to compensate later on,
-        # after the work sessions and wip for next phase have been canceled
-
-
-        # ------------------------------------------------------------------------------------------------
-        # 2. Cancel the work sessions
-        # ------------------------------------------------------------------------------------------------
-        # If total duration should change, then we need to cancel only the work sessions of the canceled batches
-
-        new_session_duration = None # Will be calculated in _create_forced_traceability_records if not set
-
-        if self.info.should_adjust_duration:
-            # 3. Flag the work sessions of the canceled batches with `canceled: true`
-            self.tx.aql.execute(
-                """
-                FOR ws IN WorkSession
-                FILTER ws.batch_key IN @canceled_batches_keys
-                UPDATE ws WITH { canceled: @event_key } in WorkSession
-                """,
-                bind_vars = dict(
-                    canceled_batches_keys = canceled_batches_keys,
-                    event_key = self.event_key
-                )
-            )
-        else:
-            # If total duration shouldn't change, then we need to cancel all work sessions and recreate them with the new durations
-            # new_session_duration will be zero if no excess quantity was canceled
-            new_session_duration = self._handle_time_redistribution()
-
-        # ------------------------------------------------------------------------------------------------
-        # 4. Delete wip to next phase related to canceled batches (if not last phase)
-        # ------------------------------------------------------------------------------------------------
-        if not self.job.last_phase:
-            self.tx.aql.execute(
-                """
-                FOR w IN wip
-                FILTER
-                    w.batch_key IN @canceled_batches_keys
-                    && PARSE_IDENTIFIER(w._to).collection == 'Phase'
-                REMOVE w IN wip
-                """,
-                bind_vars = dict(canceled_batches_keys=canceled_batches_keys)
-            )
-
-        # ------------------------------------------------------------------------------------------------
-        # 5. If we canceled more than required, create a forced batch/work session/wip to compensate
-        # ------------------------------------------------------------------------------------------------
-        if remaining_qt_to_remove < 0:
-            new_batch_key, batch_value = self._create_forced_traceability_records(
-                quantity=abs(remaining_qt_to_remove),
-                duration=new_session_duration,
-                unit_processing_time=avg_unit_processing_time
-            )
-
-            # Update potential booked wip from canceled batches
-            self.tx.aql.execute(
-                """
-                FOR w IN wip
-                FILTER
-                    w.batch_key IN @canceled_batches_keys
-                    && PARSE_IDENTIFIER(w._to).collection == "Job"
-                UPDATE w WITH { batch_key: @new_batch_key } in wip
-                """,
-                bind_vars = dict(
-                    canceled_batches_keys = canceled_batches_keys,
-                    new_batch_key = new_batch_key
-                )
-            )
-
-        # ------------------------------------------------------------------------------------------------
-        # 6. Add free wip from previous phase to current (If not first phase)
-        # ------------------------------------------------------------------------------------------------
-        # New wip must be associated to batches from the previous phase,
-        # starting from the last completed and going backwards
-        if not self.job.first_phase:
-            batches_from_previous_phase = deque(Batch(**b) for b in self.tx.aql.execute(
-                """
-                FOR b IN Batch
-                FILTER
-                    b.work_order_key == @work_order_key
-                    && b.phase_key == @phase_key
-                    && b.canceled == null
-                SORT b.end DESC
-                RETURN b
-                """,
-                bind_vars = dict(
-                    work_order_key = self.job.wo_key,
-                    phase_key = self.wip['previous_phase_key']
-                )
-            ))
-            wip_to_add = abs(self.info.quantity_change)
-
-            while wip_to_add:
-                wip_batch = batches_from_previous_phase.popleft()
-                # Wip quantity can be less than batch quantity
-                wip_quantity = min([wip_to_add, wip_batch.qt_pass])
-
-                new_wip = WIP(
-                    _from = f"Phase/{self.wip['previous_phase_key']}",
-                    _to = f"Phase/{self.job.phase_key}",
-                    batch_key = wip_batch.key,
-                    wo_key = self.job.wo_key,
-                    product_key = self.job.product_key,
-                    quantity = wip_quantity,
-                    value = wip_batch.value * wip_quantity / wip_batch.qt_pass,
-                    active = False,
-                )
-                self.tx.collection('wip').insert(new_wip)
-                wip_to_add -= wip_quantity
-
-    # ------------------------------------------------------------------------------------------------
-    # Update job status
-    # ------------------------------------------------------------------------------------------------
+    # Update job status and batch available states
     self._handle_job_status()
-
-
-    # ------------------------------------------------------------------------------------------------
-    # Update batch available state for current and next phase (if present)
-    # ------------------------------------------------------------------------------------------------
-    wip_phases = [self.job.phase_key]
-
-    if not self.job.last_phase:
-        wip_phases.append(self.wip['next_phase_key'])
-
-    self.tx.aql.execute(
-        TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
-        bind_vars=dict(
-            wo_key = self.job.wo_key,
-            phase_keys = wip_phases
-        )
-    )
-
-
-    # ------------------------------------------------------------------------------------------------
-    # END OF APPLY LOGIC
-    # ------------------------------------------------------------------------------------------------
-
-
-
-
+    self._update_batch_available_states()
 
   # =================================================================================================
-  # HELPER METHODS
+  # LOGIC SECTIONS
   # =================================================================================================
 
   def _validate_job_state(self):
@@ -340,6 +107,324 @@ class ProgressOverrideRequested(BaseAdmin):
 
     if self.info.quantity_change < 0 and abs(self.info.quantity_change) > self.free_wip_qt_downstream and not self.job.last_phase:
         raise WipNotAvailableError("You can't reduce the released quantity of this phase below that already completed/started/booked from the following phase")
+
+  # =================================================================================================
+
+  def _calculate_and_store_total_duration(self):
+    self.total_duration = self.tx.aql.execute(
+        """
+        RETURN SUM(
+            FOR ws IN WorkSession
+            FILTER ws.job_key == @job_key && ws.canceled == null
+            RETURN ws.duration
+        )
+        """,
+        bind_vars=dict(job_key=self.job.key)
+    ).next()
+
+  # =================================================================================================
+
+  def _handle_quantity_increase(self):
+    """Handles creation of new records and WIP management for quantity increases"""
+    # Calculate duration if needed
+    new_work_session_duration = None
+    if not self.info.should_adjust_duration:
+        new_work_session_duration = self._handle_time_redistribution()
+
+    # Create forced traceability records
+    self._create_forced_traceability_records(
+        quantity=self.info.quantity_change,
+        duration=new_work_session_duration
+    )
+
+    # Handle upstream WIP
+    if not self.job.first_phase:
+        self._remove_upstream_wip_for_quantity_increase()
+
+  # =================================================================================================
+
+  def _handle_quantity_decrease(self):
+    """Handles record cancellation and WIP management for quantity decreases"""
+    # Cancel batches and get metadata
+    canceled_batches_keys, remaining_qt, avg_processing_time = self._cancel_batches_for_quantity_decrease()
+
+    # Handle work sessions based on duration adjustment preference
+    new_session_duration = self._handle_work_sessions_for_decrease(canceled_batches_keys)
+
+    # Handle downstream WIP
+    if not self.job.last_phase:
+        self._remove_downstream_wip_for_canceled_batches(canceled_batches_keys)
+
+    # Create compensating batch if needed (keeping this in the main method as requested)
+    if remaining_qt < 0:
+        # Create compensating batch with appropriate duration
+        new_batch_key, batch_value = self._create_forced_traceability_records(
+            quantity=abs(remaining_qt),
+            duration=new_session_duration,
+            unit_processing_time=avg_processing_time
+        )
+
+        # Update booked WIP references
+        self._update_booked_wip_references(canceled_batches_keys, new_batch_key)
+
+    # Handle upstream WIP for quantity decrease
+    if not self.job.first_phase:
+        self._add_upstream_wip_for_quantity_decrease()
+
+  # =================================================================================================
+
+  def _handle_job_status(self):
+    """
+    Updates job status based on the new quantity completed.
+    This method handles both increase and decrease cases:
+
+    For increase:
+    - Sets job as STARTED if it was CREATED
+    - Sets job as CLOSED if completed equals planned
+    - Removes from queue if closed
+
+    For decrease:
+    - Sets job as STARTED if it was CLOSED
+    - Sets job as CREATED if new quantity is 0
+    - Adds back to queue if reopening
+    """
+
+    new_job_progress = round(100 * self.info.new_job_qt_completed / self.job.qt_planned)
+
+    self.job_update = dict(
+        _key=self.job.key,
+        qt_completed=self.info.new_job_qt_completed,
+        qt_released=self.info.new_job_qt_completed,
+        progress=new_job_progress,
+        forced=self.event_key
+    )
+
+    if self.info.quantity_change > 0:
+        # Set job as started if not already
+        if self.job.stage == WorkStatus.CREATED:
+            self.job_update['stage'] = WorkStatus.STARTED
+            self.job_update['start'] = self.info.timestamp
+
+        # Set job as closed and remove it from queues if necessary
+        if self.info.new_job_qt_completed == self.job.qt_planned:
+            self.job_update['stage'] = WorkStatus.CLOSED
+            self.job_update['end'] = self.info.timestamp
+            self.tx.aql.execute(
+                ProductionQueries.REMOVE_JOB_FROM_QUEUE,
+                bind_vars=dict(
+                    target_key=self.job.assigned_to,
+                    job_key=self.job.key
+                )
+            )
+    else:  # quantity_change < 0
+        # Reopen job if it was closed
+        if self.job.stage == WorkStatus.CLOSED:
+            self.job_update['stage'] = WorkStatus.STARTED
+            self.job_update['end'] = None
+            # Readd job to queue and reorder
+            self.tx.aql.execute(
+                ProductionQueries.ADD_JOB_TO_QUEUE,
+                bind_vars=dict(
+                    job_key=self.job.key,
+                    target_key=self.job.assigned_to
+                )
+            )
+            self.tx.aql.execute(
+                ProductionQueries.REORDER_JOB_QUEUES,
+                bind_vars=dict(
+                    site_key='0',
+                    target_key=self.job.assigned_to
+                )
+            )
+
+        # Reset to created if quantity is 0
+        if self.info.new_job_qt_completed == 0:
+            self.job_update['stage'] = WorkStatus.CREATED
+
+    # Update job status
+    self.tx.collection('Job').update(self.job_update)
+
+  # =================================================================================================
+
+  def _update_batch_available_states(self):
+    """Updates batch available states for current and next phases"""
+    wip_phases = [self.job.phase_key]
+
+    if not self.job.last_phase:
+        wip_phases.append(self.wip['next_phase_key'])
+
+    self.tx.aql.execute(
+        TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
+        bind_vars=dict(
+            wo_key = self.job.wo_key,
+            phase_keys = wip_phases
+        )
+    )
+
+  # =================================================================================================
+  # HELPER METHODS
+  # =================================================================================================
+
+  def _remove_upstream_wip_for_quantity_increase(self):
+    """Removes WIP from previous phase for quantity increases"""
+    remaining_wip_to_remove = abs(self.info.quantity_change)
+    wip_records = deque(self.wip['upstream_free_wip'])
+    records_to_delete = deque()
+
+    while remaining_wip_to_remove:
+        current_wip = wip_records.popleft()
+
+        if current_wip['quantity'] <= remaining_wip_to_remove:
+            records_to_delete.append(current_wip)
+            remaining_wip_to_remove -= current_wip['quantity']
+        else:
+            leftover_wip = current_wip['quantity'] - remaining_wip_to_remove
+            wip_update = dict(_key=current_wip['_key'], quantity=leftover_wip)
+            self.tx.collection('wip').update(wip_update)
+            remaining_wip_to_remove = 0
+
+    self.tx.collection('wip').delete_many(records_to_delete)
+
+  # =================================================================================================
+
+  def _cancel_batches_for_quantity_decrease(self):
+    """
+    Cancels batches to account for a quantity decrease.
+
+    - Cancels batches from newest to oldest until required quantity is reached
+    - Returns data needed for downstream operations
+
+    Returns:
+        tuple: (canceled_batch_keys, remaining_quantity, avg_processing_time)
+            - canceled_batch_keys: List of keys for canceled batches
+            - remaining_quantity: Negative if we canceled more than needed, 0 or positive otherwise
+            - avg_processing_time: Average unit processing time (if all batches were canceled)
+    """
+    # Get non-canceled batches ordered by recency
+    job_batches = deque(Batch(**b) for b in self.tx.aql.execute(
+        Queries.NON_CANCELED_BATCHES_BY_JOB,
+        bind_vars=dict(job_key=self.job.key)
+    ))
+
+    remaining_qt_to_remove = abs(self.info.quantity_change)
+    batches_to_cancel = deque()
+
+    # Cancel batches until we reach or exceed the target quantity
+    while remaining_qt_to_remove > 0:
+        current_batch = job_batches.popleft()
+        current_batch.canceled = self.event_key
+        batches_to_cancel.append(current_batch)
+        remaining_qt_to_remove -= current_batch.qt_pass
+
+    # Calculate average processing time if all batches were canceled
+    avg_unit_processing_time = None
+    if not job_batches:
+        avg_unit_processing_time = self._calculate_avg_unit_processing_time()
+
+    # Update batches in database
+    batch_updates = [b.model_dump(by_alias=True) for b in batches_to_cancel]
+    self.tx.collection('Batch').update_many(batch_updates)
+
+    canceled_batch_keys = [b.key for b in batches_to_cancel]
+
+    return canceled_batch_keys, remaining_qt_to_remove, avg_unit_processing_time
+
+  # =================================================================================================
+
+  def _handle_work_sessions_for_decrease(self, canceled_batches_keys):
+    """Handles work session updates for quantity decreases"""
+    new_session_duration = None
+
+    if self.info.should_adjust_duration:
+        # Flag the work sessions of the canceled batches with `canceled: true`
+        self.tx.aql.execute(
+            """
+            FOR ws IN WorkSession
+            FILTER ws.batch_key IN @canceled_batches_keys
+            UPDATE ws WITH { canceled: @event_key } in WorkSession
+            """,
+            bind_vars = dict(
+                canceled_batches_keys = canceled_batches_keys,
+                event_key = self.event_key
+            )
+        )
+    else:
+        # If total duration shouldn't change, redistribute durations
+        new_session_duration = self._handle_time_redistribution()
+
+    return new_session_duration
+
+  # =================================================================================================
+
+  def _remove_downstream_wip_for_canceled_batches(self, canceled_batches_keys):
+    """Removes downstream WIP for canceled batches"""
+    self.tx.aql.execute(
+        """
+        FOR w IN wip
+        FILTER
+            w.batch_key IN @canceled_batches_keys
+            && PARSE_IDENTIFIER(w._to).collection == 'Phase'
+        REMOVE w IN wip
+        """,
+        bind_vars = dict(canceled_batches_keys=canceled_batches_keys)
+    )
+
+  # =================================================================================================
+
+  def _update_booked_wip_references(self, canceled_batches_keys, new_batch_key):
+    """Updates WIP records pointing to canceled batches but booked to jobs"""
+    self.tx.aql.execute(
+        """
+        FOR w IN wip
+        FILTER
+            w.batch_key IN @canceled_batches_keys
+            && PARSE_IDENTIFIER(w._to).collection == "Job"
+        UPDATE w WITH { batch_key: @new_batch_key } in wip
+        """,
+        bind_vars = dict(
+            canceled_batches_keys = canceled_batches_keys,
+            new_batch_key = new_batch_key
+        )
+    )
+
+  # =================================================================================================
+
+  def _add_upstream_wip_for_quantity_decrease(self):
+    """Adds WIP from previous phase for quantity decreases"""
+    batches_from_previous_phase = deque(Batch(**b) for b in self.tx.aql.execute(
+        """
+        FOR b IN Batch
+        FILTER
+            b.work_order_key == @work_order_key
+            && b.phase_key == @phase_key
+            && b.canceled == null
+        SORT b.end DESC
+        RETURN b
+        """,
+        bind_vars = dict(
+            work_order_key = self.job.wo_key,
+            phase_key = self.wip['previous_phase_key']
+        )
+    ))
+    wip_to_add = abs(self.info.quantity_change)
+
+    while wip_to_add:
+        wip_batch = batches_from_previous_phase.popleft()
+        # Wip quantity can be less than batch quantity
+        wip_quantity = min([wip_to_add, wip_batch.qt_pass])
+
+        new_wip = WIP(
+            _from = f"Phase/{self.wip['previous_phase_key']}",
+            _to = f"Phase/{self.job.phase_key}",
+            batch_key = wip_batch.key,
+            wo_key = self.job.wo_key,
+            product_key = self.job.product_key,
+            quantity = wip_quantity,
+            value = wip_batch.value * wip_quantity / wip_batch.qt_pass,
+            active = False,
+        )
+        self.tx.collection('wip').insert(new_wip)
+        wip_to_add -= wip_quantity
 
   # =================================================================================================
 
@@ -442,79 +527,6 @@ class ProgressOverrideRequested(BaseAdmin):
       self.tx.collection('wip').insert(new_wip)
 
     return new_batch_key, batch_value
-
-  # =================================================================================================
-
-  def _handle_job_status(self):
-    """
-    Updates job status based on the new quantity completed.
-    This method handles both increase and decrease cases:
-
-    For increase:
-    - Sets job as STARTED if it was CREATED
-    - Sets job as CLOSED if completed equals planned
-    - Removes from queue if closed
-
-    For decrease:
-    - Sets job as STARTED if it was CLOSED
-    - Sets job as CREATED if new quantity is 0
-    - Adds back to queue if reopening
-    """
-
-    new_job_progress = round(100 * self.info.new_job_qt_completed / self.job.qt_planned)
-
-    self.job_update = dict(
-        _key=self.job.key,
-        qt_completed=self.info.new_job_qt_completed,
-        qt_released=self.info.new_job_qt_completed,
-        progress=new_job_progress,
-        forced=self.event_key
-    )
-
-    if self.info.quantity_change > 0:
-        # Set job as started if not already
-        if self.job.stage == WorkStatus.CREATED:
-            self.job_update['stage'] = WorkStatus.STARTED
-            self.job_update['start'] = self.info.timestamp
-
-        # Set job as closed and remove it from queues if necessary
-        if self.info.new_job_qt_completed == self.job.qt_planned:
-            self.job_update['stage'] = WorkStatus.CLOSED
-            self.job_update['end'] = self.info.timestamp
-            self.tx.aql.execute(
-                ProductionQueries.REMOVE_JOB_FROM_QUEUE,
-                bind_vars=dict(
-                    target_key=self.job.assigned_to,
-                    job_key=self.job.key
-                )
-            )
-    else:  # quantity_change < 0
-        # Reopen job if it was closed
-        if self.job.stage == WorkStatus.CLOSED:
-            self.job_update['stage'] = WorkStatus.STARTED
-            self.job_update['end'] = None
-            # Readd job to queue and reorder
-            self.tx.aql.execute(
-                ProductionQueries.ADD_JOB_TO_QUEUE,
-                bind_vars=dict(
-                    job_key=self.job.key,
-                    target_key=self.job.assigned_to
-                )
-            )
-            self.tx.aql.execute(
-                ProductionQueries.REORDER_JOB_QUEUES,
-                bind_vars=dict(
-                    site_key='0',
-                    target_key=self.job.assigned_to
-                )
-            )
-
-        # Reset to created if quantity is 0
-        if self.info.new_job_qt_completed == 0:
-            self.job_update['stage'] = WorkStatus.CREATED
-
-    # Update job status
-    self.tx.collection('Job').update(self.job_update)
 
   # =================================================================================================
 
