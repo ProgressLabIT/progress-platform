@@ -256,7 +256,7 @@ export default {
           this.replace_serials_reason[serial._id] = null;
         }
         for (const child of serial.children) {
-          if (child.product_key === this.component_key) {
+          if (child.product_key === this.component_key && child.batch_key === this.batch_key) {
             let serial_link = {
               _key: child._key,
               label: child.code,

@@ -115,7 +115,7 @@
         >
         </q-radio>
       </div>
-      <div class="col-auto">
+      <div class="col-auto" v-if="requiresComponentSerials">
         <q-btn
           size="md"
           padding="lg xl"
@@ -273,6 +273,10 @@ export default {
     traceability_enabled() {
       return !!this.$store.state.traceability.working_job_data
         .traceability_level;
+    },
+
+    requiresComponentSerials() {
+      return this.job.active && this.job.active_batch_qt && this.job.wo_bom.some(i => i.traceability_level);
     },
   },
 
