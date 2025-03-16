@@ -19,10 +19,10 @@ class SerialLinkedEvent(BaseSerialEvent):
   class InfoModel(EventInfoModel):
     child_serial_key: str
     parent_serial_key: str | None = None
-    wo_key: str | None = None,
-    component_key: str | None = None,
-    job_key: str | None = None,
-    batch_key: str | None = None,
+    wo_key: str | None = None
+    component_key: str | None = None
+    job_key: str | None = None
+    batch_key: str | None = None
 
   @classmethod
   def get_event_type(cls):
