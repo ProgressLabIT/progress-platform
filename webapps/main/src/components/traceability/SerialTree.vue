@@ -68,10 +68,12 @@
 <script>
 import { Dialog } from 'quasar';
 import SerialComponentLinkEditDialog from '@/components/traceability/SerialComponentLinkEditDialog.vue';
-import { timestamp } from '@/lib/TimeHandling.js';
+import sendEvent from '@/mixins/event.js';
 
 export default {
   name: 'SerialTree',
+
+  mixins: [sendEvent],
 
   props: {
     mini_state: {
@@ -206,32 +208,31 @@ export default {
     },
 
     editComponentLink(node) {
-      Promise.all([
-        this.$store.dispatch('appendSerial', {
-          serial_key: node.parent_key,
-        }),
-
-        this.$store.dispatch('appendSerial', {
-          serial_key: node.key,
-        }),
-      ]).then((values) => {
-        this.showEditComponentLink(node, values[0], values[1]);
+      // Add serial parent and child to store, then show dialog
+      const promises = [
+        this.$store.dispatch('appendSerial', {serial_key: node.parent_key}),
+      ]
+      if (node.key) {
+        // fetch data only if there's a linked serial
+        promises.push(this.$store.dispatch('appendSerial', {serial_key: node.key}))
+      }
+      Promise.all(promises).then((values) => {
+        this.showEditComponentLink(node, values[0])
       });
     },
 
-    showEditComponentLink(node, parent_serial, serial) {
+    showEditComponentLink(node, parentSerial) {
       let serialModel = {
-        _key: serial._key,
-        label: serial.code,
-        product_key: serial.product_key,
-        wo_key: parent_serial.wo_key,
-        value: serial._key,
+        _key: node.key,
+        label: node.label,
+        product_key: node.product_key,
+        wo_key: parentSerial.wo_key,
+        value: node.key,
         reason: '',
       };
 
       let initial_values = [];
       initial_values.push(serialModel);
-
       Dialog.create({
         component: SerialComponentLinkEditDialog,
         componentProps: {
@@ -239,53 +240,45 @@ export default {
           serial: serialModel,
           initial_values: initial_values,
         },
-      }).onOk((new_values) => {
-        this.saveNewComponentLink(node, parent_serial, serial, new_values);
+      }).onOk((newValues) => {
+        this.saveNewComponentLink(node, newValues);
       });
     },
 
-    async saveNewComponentLink(node, parent_serial, serial, new_values) {
-      if (new_values) {
-        let link_data = [];
-        link_data.push({
-          wo_key: parent_serial.wo_key,
-          component_key: serial.product_key,
-          from_serial: node.parent_key,
-          to_serial: serial._key,
-          reason: new_values.reason,
-          replaced: true,
-          link_serial_directly: true,
-        });
+    async saveNewComponentLink(node, newValues) {
+      const sharedEventData = {
+        component_key: node.product_key,
+        parent_serial_key: node.parent_key,
+      };
 
-        link_data.push({
-          wo_key: parent_serial.wo_key,
-          component_key: serial.product_key,
-          batch_key: this.batch_key,
-          from_serial: node.parent_key,
-          to_serial: new_values._key,
-          reason: null,
-          replaced: false,
-          link_serial_directly: true,
-        });
-
-        const event = {
-          event_type: 'SERIAL_LINKED',
-          user_key: this.session_data.session_key,
-          timestamp: timestamp(),
-          wo_key: serial.wo_key,
-          serial_link_data: link_data,
-        };
-
-        await this.$api.post('event', event).then(() => {
-          this.nodes = [];
-          this.getSerialHierarcy();
-          setTimeout(() => {
-            if (this.$refs.serialNodes) {
-              this.$refs.serialNodes.expandAll();
+      if (newValues) {
+        if (node.key) {
+          await this.sendEvent({
+            event_type: 'SERIAL_UNLINKED',
+            event_data: {
+              ...sharedEventData,
+              child_serial_key: node.key,
+              reason: newValues.reason,
             }
-          }, 500);
+          });
+        }
+
+        // Link new serial to parent
+        await this.sendEvent({
+          event_type: 'SERIAL_LINKED',
+          event_data: {
+            ...sharedEventData,
+            child_serial_key: newValues._key,
+            reason: newValues.reason,
+          }
         });
-        //this.$emit('close');
+        this.nodes = [];
+        this.getSerialHierarcy();
+        setTimeout(() => {
+          if (this.$refs.serialNodes) {
+            this.$refs.serialNodes.expandAll();
+          }
+        }, 500);
       }
     },
   },
