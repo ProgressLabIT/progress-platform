@@ -10,8 +10,8 @@ from typing import Dict, List, Union
 from models.form import CustomField
 from models.serial import SerialSelection, Serial
 from utils.db import db
-
-from utils.serial import Queries
+from utils.bom import get_bom_from_db
+from utils.serial import Queries, get_children, get_bom_components_requiring_traceability, search_children
 
 router = APIRouter()
 
@@ -87,11 +87,10 @@ def get_serial_children(
       )
     )
 
-@router.get('/serial-hierarchy'
-#, dependencies=[Depends(auth.verify_token)]
-)
+@router.get('/serial-hierarchy', dependencies=[Depends(auth.verify_token)])
 def get_serial_hierarchy(
   serial_key: str | None = None,
+  include_expected_components: bool = True,
 ):
   try:
     bind_vars = dict(
@@ -113,7 +112,7 @@ def get_serial_hierarchy(
       if (starting_serial in serials):
          serial_children = []
          if (not serials[starting_serial]['replaced'] == True):
-           serial_children = get_children(serial_key=starting_serial, serials=serials, level=0)
+           serial_children = get_children(serial_key=starting_serial, serials=serials, level=0, include_expected=include_expected_components, db=db)
          merged_serial = dict()
          merged_serial.update(serials[starting_serial])
          if (len(serial_children)>0):
@@ -137,34 +136,6 @@ def get_serial_hierarchy(
         error=traceback.format_exc()
       )
     )
-
-def get_children(serial_key, serials, level):
-  children = []
-  if level > 15:
-    return children
-  level += 1
-  for serial in serials:
-    if serials[serial]['from'] == serial_key:
-      child_key = serials[serial]['to']
-      merged_serial = dict()
-      merged_serial.update(serials[child_key])
-      serial_children = []
-      if (not serials[serial]['replaced'] == True):
-        serial_children = get_children(serial_key=child_key, serials=serials, level=level)
-      if (len(serial_children)>0):
-        merged_serial['children'] = serial_children
-      children.append(merged_serial)
-
-  return children
-
-def search_children(serial_key, children):
-  found = False
-  for child in children:
-    if (child['serial_key'] == serial_key):
-      found = True
-    elif 'children' in child:
-      found = found or search_children(serial_key, child['children'])
-  return found
 
 @router.get('/wip-serial',
     dependencies=[Depends(auth.verify_token)])
@@ -273,7 +244,7 @@ async def search_serials(
   product_key: Union[List[str], None] = Query(default=None),
   product_code_search: str | None = None,
   work_order_search: str | None = None,
-  limit: int | None = None,
+  limit: int | None = 200,
   serial_deleted: bool = False,
   offset: int | None = None,
   filter_unreleased: bool = False,
