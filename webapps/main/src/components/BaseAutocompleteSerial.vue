@@ -261,10 +261,10 @@ function loadSerials(search_value) {
         }
         api.get('serial-selection', { params }).then((resp) => {
           options.value = resp.data.map((item) => ({
-            label: item.serial_code,
+            label: item.serial_code || item.code,
             value: item._key,
             _key: item._key,
-            code: item.code,
+            code: item.serial_code || item.code,
           }));
           addInitialValues(search_value);
           loading.value = false;
@@ -273,10 +273,10 @@ function loadSerials(search_value) {
   } else {
     api.get('serial-selection', { params }).then((resp) => {
       options.value = resp.data.map((item) => ({
-        label: item.serial_code,
+        label: item.serial_code || item.code,
         value: item._key,
         _key: item._key,
-        code: item.code,
+        code: item.serial_code || item.code,
       }));
       addInitialValues(search_value);
       loading.value = false;
@@ -293,8 +293,8 @@ function loadInventory(search_value) {
   }}).then((resp) => {
     options.value = resp.data.map((item) => ({
       _key: item.serial_key,
-      code: item.serial_code,
-      label: item.serial_code,
+      code: item.serial_code || item.code,
+      label: item.serial_code || item.code,
       value: item._key,
     }));
   });
