@@ -8,6 +8,7 @@ from models.event import EventModel
 from models.inventory import *
 from models.product import ProductFull
 from utils.exceptions import InventoryMovementException
+from utils.inventory import Queries as InventoryQueries
 
 
 class BaseInventoryModel(EventModel):
@@ -26,10 +27,29 @@ class BaseInventoryEvent(BaseEvent, ABC):
       'movement'
     ]
 
+
+  def _ensure_inventory_management_enabled(self):
+    warehouse_enabled = self.tx.collection('Config').get('enable_inventory_management')
+    if warehouse_enabled is None or not warehouse_enabled.get('value', False):
+      raise ValueError("Inventory management is not enabled")
+
+
+  def _get_product_inventory_config(self, product_keys):
+    products_inventory_config = self.tx.aql.execute(
+      InventoryQueries.PRODUCTS_INVENTORY_CONFIG,
+      bind_vars=dict(product_keys=product_keys)
+    ).next()
+    return products_inventory_config
+
+
   def _save_movement(self):
     movement_data = InventoryMovementNew(**self.info.model_dump()).model_dump(by_alias=True)
     movement_record = self.tx.collection('movement').insert(movement_data, return_new=True)['new']
     return InventoryMovement(**movement_record)
+
+
+
+
 
 
   def _ensure_position_id(self, position_string):

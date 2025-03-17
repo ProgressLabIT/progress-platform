@@ -1,16 +1,19 @@
 import traceback
 
 from events.serial.base_serial import BaseSerialEvent
+from events.inventory.base_inventory import BaseInventoryEvent
+from events.inventory.movement_completed import MovementCompletedEvent
 from models.event import EventInfoModel, EventType
+from models.inventory import InventoryMovementType, InventoryMovementReferences, MovementStatus
 from models.serial import (
   SerialLink,
   SerialNotificationErrorCode,
   SerialNotificationType,
 )
 from utils.exceptions import SerialNotLinkedError
+from utils.inventory import Queries as InventoryQueries
 
-
-class SerialLinkedEvent(BaseSerialEvent):
+class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
   """
   This event is used to link components to their parent, using the `contains` edge collection.
   The parent can be a specific product serial or batch in case of work order without traceability enabled.
@@ -23,6 +26,17 @@ class SerialLinkedEvent(BaseSerialEvent):
     component_key: str | None = None
     job_key: str | None = None
     batch_key: str | None = None
+    process_inventory: bool | None = True
+
+  @classmethod
+  def get_tx_collections(cls):
+    return [
+      'contains',
+      'is_in_position',
+      'movement',
+      'Serial'
+    ]
+
 
   @classmethod
   def get_event_type(cls):
@@ -63,6 +77,9 @@ class SerialLinkedEvent(BaseSerialEvent):
           _to=f'Serial/{self.info.child_serial_key}'
         ))
 
+      if self.info.process_inventory:
+        self._process_inventory()
+
     except Exception as e:
       print(traceback.format_exc())
       self.notify_results(dict(
@@ -79,3 +96,35 @@ class SerialLinkedEvent(BaseSerialEvent):
       message="Serial linked correctly"
     )
 
+
+  def _process_inventory(self):
+    # Validate configurations
+    self._ensure_inventory_management_enabled()
+
+    inventory_management_enabled_for_component = self.tx.aql.execute("""
+      FOR s IN Serial
+      FILTER s._key == @serial_key
+      RETURN NOT_NULL(DOCUMENT(Product, s.product_key).manage_inventory, false)
+    """, bind_vars=dict(serial_key=self.info.child_serial_key)).next()
+
+    if not inventory_management_enabled_for_component:
+      raise ValueError("Can't update inventory, inventory management is not enabled for this product")
+    # Get serial position
+    try:
+      serial_inventory = self.tx.collection('is_in_position').find(dict(serial_key=self.info.child_serial_key)).next()
+    except StopIteration:
+      raise ValueError('Serial is not in inventory')
+
+    consumption_position_key = serial_inventory['_to'].split('/')[-1]
+
+    # Create movement completed event
+    MovementCompletedEvent.create_as_child(self, dict(
+      product_key=self.info.component_key,
+      serial_key=self.info.child_serial_key,
+      qt_planned=1,
+      qt_confirmed=1,
+      position_from=consumption_position_key,
+      movement_type=InventoryMovementType.CONSUMPTION,
+      status=MovementStatus.COMPLETED,
+      reason=f"Serial linked to {self.info.parent_serial_key}" if self.info.parent_serial_key else f"Serial linked to batch {self.info.batch_key}"
+    ))

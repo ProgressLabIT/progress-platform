@@ -1,11 +1,14 @@
 import traceback
 
 from events.serial.base_serial import BaseSerialEvent
+from events.inventory.base_inventory import BaseInventoryEvent
+from events.inventory.movement_completed import MovementCompletedEvent
 from models.event import EventInfoModel, EventType
+from models.inventory import InventoryMovementType
 from models.serial import SerialNotificationErrorCode, SerialNotificationType
 
 
-class SerialUnlinkedEvent(BaseSerialEvent):
+class SerialUnlinkedEvent(BaseSerialEvent, BaseInventoryEvent):
   """
   This event is used to unlink components from their parent.
   """
@@ -15,6 +18,18 @@ class SerialUnlinkedEvent(BaseSerialEvent):
     parent_serial_key: str | None = None
     batch_key: str | None = None,
     reason: str | None = None
+    process_inventory: bool | None = True
+
+
+  @classmethod
+  def get_tx_collections(cls):
+    return [
+      'contains',
+      'is_in_position',
+      'movement',
+      'Serial'
+    ]
+
 
   @classmethod
   def get_event_type(cls):
@@ -47,6 +62,9 @@ class SerialUnlinkedEvent(BaseSerialEvent):
         error=traceback.format_exc()
       ))
 
+    if self.info.process_inventory:
+      self._process_inventory()
+
     self.notify_results(dict(
       notification=SerialNotificationType.UPDATED
     ))
@@ -54,3 +72,40 @@ class SerialUnlinkedEvent(BaseSerialEvent):
       message=f"Serial {self.info.child_serial_key} unlinked from parent {self.info.parent_serial_key}."
     )
 
+  def _process_inventory(self):
+    self._ensure_inventory_management_enabled()
+
+    inventory_management_enabled_for_component = self.tx.aql.execute("""
+      FOR s IN Serial
+      FILTER s._key == @serial_key
+      RETURN NOT_NULL(DOCUMENT(Product, s.product_key).manage_inventory, false)
+    """, bind_vars=dict(serial_key=self.info.child_serial_key)).next()
+
+    if not inventory_management_enabled_for_component:
+      raise ValueError("Can't update inventory, inventory management is not enabled for this product")
+
+    # Get last consumption movement for serial
+    try:
+      last_serial_consumption_position = self.tx.aql.execute("""
+        FOR m IN movement
+        FILTER
+          m.serial_key == @serial_key
+          && m.movement_type == 'consumption'
+        SORT m.timestamp DESC
+        LIMIT 1
+        RETURN m
+      """, bind_vars=dict(serial_key=self.info.child_serial_key)).next()['_from'].split('/')[-1]
+    except StopIteration:
+      last_serial_consumption_position = 'IN'
+
+
+    MovementCompletedEvent.create_as_child(self, dict(
+      product_key=self.info.component_key,
+      serial_key=self.info.child_serial_key,
+      movement_type=InventoryMovementType.REVERSAL,
+      position_from='NULL',
+      position_to=last_serial_consumption_position,
+      qt_planned=0,
+      qt_confirmed=1,
+      reason=f"Serial unlinked from {self.info.parent_serial_key}" if self.info.parent_serial_key else f"Serial unlinked from batch {self.info.batch_key}"
+    ))
