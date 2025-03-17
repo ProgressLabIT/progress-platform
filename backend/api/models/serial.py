@@ -31,7 +31,7 @@ class SerialLink(ArangoEdge):
   wo_key: str | None = None,
   component_key: str | None = None,
   batch_key: str | None = None,
-  replaced: bool = False
+  replaced: bool | None = False
   reason: str | None = None
 
 class SerialNotificationType(str, Enum):
