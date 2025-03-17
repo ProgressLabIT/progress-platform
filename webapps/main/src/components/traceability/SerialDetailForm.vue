@@ -16,7 +16,7 @@
       </div>
       <q-input
         v-else
-        :model-value="serial.code"
+        :model-value="serial?.code"
         dense
         filled
         :label="$t('serial.code')"
@@ -81,10 +81,10 @@
       <q-tab-panels v-model="tab" class="transparent">
         <!-- SERIAL FORM DATA -->
         <q-tab-panel name="form">
-          <template v-if="serial.data.length > 0">
+          <template v-if="serial?.data?.length > 0">
             <div class="column col scroll q-pt-sm">
               <FormField
-                v-for="field in serial.data"
+                v-for="field in serial?.data"
                 :key="field._key"
                 :field="field"
                 :root-path="`/media/serial/${serial_key}/${field._key}`"

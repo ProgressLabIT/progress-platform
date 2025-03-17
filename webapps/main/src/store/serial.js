@@ -34,12 +34,15 @@ const serial = {
       state.serials = temp_serials;
     },
     APPEND_SERIALS(state, serials) {
-      if (state.serials) {
-        for (const serial of serials) {
+      if (!state.serials) {
+        state.serials = serials;
+        return;
+      }
+
+      for (const serial of serials) {
+        if (!state.serials.some(s => s._key === serial._key)) {
           state.serials.push(serial);
         }
-      } else {
-        state.serials = serials;
       }
     },
     LOAD_SERIAL_FIELDS(state, serial_fields) {

@@ -140,7 +140,8 @@ export default {
       }, 1000);
     },
 
-    showSerialDetails(serialKey) {
+    async showSerialDetails(serialKey) {
+      await this.$store.dispatch('appendSerial', {serial_key: serialKey});
       const to_route = {
         name: 'serialDetail',
         params: { serialKey },

@@ -170,7 +170,7 @@ export default {
     user_can_delete() {
       return (
         this.$store.getters.hasPermission('production') &&
-        !this.$store.getters.getSerialData(this.serialKey).deleted &&
+        !this.$store.getters.getSerialData(this.serialKey)?.deleted &&
         this.config.allowSerialDelete
       );
     },
@@ -362,7 +362,7 @@ export default {
     async onSerialSelection(selected_key) {
       // Fetch data from server is serial data is not present
       if (!this.$store.getters.getSerialData(selected_key)) {
-        this.$store
+        await this.$store
           .dispatch('appendSerial', {
             serial_key: selected_key,
           })
