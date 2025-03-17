@@ -129,7 +129,8 @@ class BatchCompletedEvent(BaseProductionEvent):
 
     # Generate production movement
     if inventory_config.get(self.job.product_key, False) and self.job.last_phase:
-      production_position_key = self.tx.collection('WorkOrder').get(self.info.work_order_key).get('output_position_key', 'IN')
+      default_production_position_key = self.tx.collection('Config').get('default_production_position').get('value', 'IN')
+      production_position_key = self.tx.collection('WorkOrder').get(self.info.work_order_key).get('output_position_key', default_production_position_key)
 
       base_production_data = dict(
         position_to = production_position_key,
