@@ -135,8 +135,13 @@ function getClosedWorkSessionData(state, endDT) {
 
 async function sendHeartBeat(state) {
   const job_key = state.working_job_data._key;
-  const hb_resp = await api.post(`/job/${job_key}/heartbeat`);
-  if (hb_resp.response?.status === 401) {
+  try {
+    const hb_resp = await api.post(`/job/${job_key}/heartbeat`);
+    if (hb_resp.response?.status === 401) {
+      clearInterval(state.heartbeat);
+    }
+  } catch (error) {
+    console.error('Error sending heartbeat:', error);
     clearInterval(state.heartbeat);
   }
 }
@@ -345,13 +350,15 @@ const traceability = {
     },
 
     async startJob({ commit, state }, { batch_serials = null }) {
-      sendEvent({
-        event_type: 'JOB_STARTED',
-        event_data: {
-          job_key: state.working_job_data._key,
-          batch_serials: batch_serials,
-        },
-      }).then((resp) => {
+      try {
+        const resp = await sendEvent({
+          event_type: 'JOB_STARTED',
+          event_data: {
+            job_key: state.working_job_data._key,
+            batch_serials: batch_serials,
+          },
+        });
+
         const { new_work_session_data, batch_data, job_data } =
           resp.data.detail;
 
@@ -362,53 +369,66 @@ const traceability = {
           batch_serials,
         });
         commit('SET_HEARTBEAT', true);
-      });
+      } catch (error) {
+        console.error('Error starting job:', error);
+      }
     },
 
     async pauseJob({ commit, state }) {
       const now = DT.utc();
       const work_session = getClosedWorkSessionData(state, now);
 
-      await sendEvent({
-        event_type: 'JOB_PAUSED',
-        event_data: {
-          job_key: state.working_job_data._key,
-        },
-      });
+      try {
+        await sendEvent({
+          event_type: 'JOB_PAUSED',
+          event_data: {
+            job_key: state.working_job_data._key,
+          },
+        });
 
-      commit('CLOSE_WORK_SESSION', work_session);
-      commit('SET_HEARTBEAT', false);
+        commit('CLOSE_WORK_SESSION', work_session);
+        commit('SET_HEARTBEAT', false);
+      } catch (error) {
+        console.error('Error pausing job:', error);
+      }
     },
 
     async forcePauseJob(ctx, { job }) {
-      await sendEvent({event_type: 'JOB_PAUSED', event_data: {job_key: job._key}});
+      try {
+        await sendEvent({event_type: 'JOB_PAUSED', event_data: {job_key: job._key}});
+      } catch (error) {
+        console.error('Error force pausing job:', error);
+      }
     },
 
     async resumeJob({ commit, state }, { batch_serials }) {
+      try {
+        const { data } = await sendEvent({
+          event_type: 'JOB_RESUMED',
+          event_data: {
+            job_key: state.working_job_data._key,
+            batch_serials,
+          },
+        });
 
-      const { data } = await sendEvent({
-        event_type: 'JOB_RESUMED',
-        event_data: {
-          job_key: state.working_job_data._key,
-          batch_serials,
-        },
-      });
-
-      if (data?.detail) {
-        const { job_data, batch_data } = data.detail;
-        commit('UPDATE_JOB', job_data);
-        if (batch_data) {
-          commit('RESUME_BATCH', batch_data);
+        if (data?.detail) {
+          const { job_data, batch_data } = data.detail;
+          commit('UPDATE_JOB', job_data);
+          if (batch_data) {
+            commit('RESUME_BATCH', batch_data);
+          }
         }
+        commit('SET_HEARTBEAT', true);
+      } catch (error) {
+        console.error('Error resuming job:', error);
       }
-      commit('SET_HEARTBEAT', true);
     },
 
     async updateActiveBatch(
       { commit, state },
       { newBatchQuantity, batchSerials },
     ) {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         sendEvent({
           event_type: 'ACTIVE_BATCH_CHANGED',
           event_data: {
@@ -422,6 +442,9 @@ const traceability = {
           commit('UPDATE_BATCH', batch_data);
           commit('UPDATE_BATCH_SERIALS', batch_serials);
           resolve();
+        }).catch((error) => {
+          console.error('Error updating active batch:', error);
+          reject(error);
         });
       });
     },
@@ -466,20 +489,24 @@ const traceability = {
         ({ _key }) => _key === stepKey,
       );
 
-      const formData = await getFormData(state, rootGetters, batchStep);
+      try {
+        const formData = await getFormData(state, rootGetters, batchStep);
 
-      const { data } = await sendEvent({
-        event_type: 'STEP_EDITED',
-        event_data: {
-          execution_record_key: batchStep.execution_record_key,
-          form_data: formData,
-        },
-      });
-      const { job_data, batch_data } = data.detail;
-      commit('UPDATE_JOB', job_data);
-      commit('UPDATE_BATCH', batch_data);
-      if (job_data.status === 'closed') {
-        commit('SET_HEARTBEAT', false);
+        const { data } = await sendEvent({
+          event_type: 'STEP_EDITED',
+          event_data: {
+            execution_record_key: batchStep.execution_record_key,
+            form_data: formData,
+          },
+        });
+        const { job_data, batch_data } = data.detail;
+        commit('UPDATE_JOB', job_data);
+        commit('UPDATE_BATCH', batch_data);
+        if (job_data.status === 'closed') {
+          commit('SET_HEARTBEAT', false);
+        }
+      } catch (error) {
+        console.error('Error editing step data:', error);
       }
     },
 
@@ -503,26 +530,30 @@ const traceability = {
         ({ _key }) => _key === stepKey,
       );
 
-      const formData = await getFormData(state, rootGetters, batchStep);
+      try {
+        const formData = await getFormData(state, rootGetters, batchStep);
 
-      const { data } = await sendEvent({
-        event_type: 'STEP_COMPLETED',
-        event_data: {
-          batch_key: state.current_batch_data._key,
-          step_key: batchStep._key,
-          form_data: formData,
-        },
-      });
-      const { job_data, batch_data } = data.detail;
-      commit('UPDATE_JOB', job_data);
-      commit('UPDATE_BATCH', batch_data);
-      if (job_data.status === 'closed') {
-        commit('SET_HEARTBEAT', false);
+        const { data } = await sendEvent({
+          event_type: 'STEP_COMPLETED',
+          event_data: {
+            batch_key: state.current_batch_data._key,
+            step_key: batchStep._key,
+            form_data: formData,
+          },
+        });
+        const { job_data, batch_data } = data.detail;
+        commit('UPDATE_JOB', job_data);
+        commit('UPDATE_BATCH', batch_data);
+        if (job_data.status === 'closed') {
+          commit('SET_HEARTBEAT', false);
+        }
+      } catch (error) {
+        console.error('Error completing step:', error);
       }
     },
 
     declareBatch({ commit, state }) {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         const step_data = state.current_batch_data.step_data?.map(
           (batchStep) => {
             console.log(batchStep)
@@ -556,6 +587,9 @@ const traceability = {
             commit('SET_HEARTBEAT', false);
           }
           resolve();
+        }).catch((error) => {
+          console.error('Error declaring batch:', error);
+          reject(error);
         });
       });
     },

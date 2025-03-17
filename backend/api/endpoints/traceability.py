@@ -41,7 +41,8 @@ async def record_event(event_data: EventInfoModel):
     SerialNotUpdatedError,
     SerialNotLinkedError,
     SerialNotCreatedError,
-    SerialCodeAlreadyPresent
+    SerialCodeAlreadyPresent,
+    InventoryMovementException
   ) as e:
     print(e)
     raise HTTPException(

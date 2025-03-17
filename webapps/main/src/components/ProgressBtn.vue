@@ -54,10 +54,12 @@ import { mapState } from 'vuex';
 import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 import SerialBatchDeclareSerialNumber from '@/components/job/SerialBatchDeclareSerialNumber.vue';
 import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue';
-import { timestamp } from '@/lib/TimeHandling.js';
+import eventMixin from '@/mixins/event.js';
 
 export default {
   name: 'ProgressBtn',
+
+  mixins: [eventMixin],
 
   data() {
     return {
@@ -323,14 +325,10 @@ export default {
     },
 
     async postSerialUpdate(serial) {
-      const event = {
+      await this.sendEvent({
         event_type: 'SERIAL_UPDATED',
-        user_key: this.session_data.user._key,
-        user_session_key: this.session_data.session_key,
-        timestamp: timestamp(),
-        ...serial,
-      };
-      await this.$api.post('event', event);
+        event_data: serial
+      });
     },
 
     async decleareSerialNoForBatch() {
@@ -433,27 +431,31 @@ export default {
 
       // Missing mandatory fields has already been ensured
       if (can_proceed) {
-        await this.$store.dispatch('completeStep', {
-          stepKey: this.current_step_key,
-        });
+        try {
+          await this.$store.dispatch('completeStep', {
+            stepKey: this.current_step_key,
+          });
 
-        if (current_step_was_last) {
-          if (current_batch_was_last || !this.job.next_batch_available) {
-            this.$router.push({ name: 'userJobs' });
-            return;
-          } else {
-            if (this.traceability_enabled && !this.job.first_phase) {
-              // Select new serials and start new batch
-              const selected_serials = await this.selectSerialBatch();
-              await this.$store.dispatch('resumeJob', {
-                batch_serials: selected_serials,
-              });
+          if (current_step_was_last) {
+            if (current_batch_was_last || !this.job.next_batch_available) {
+              this.$router.push({ name: 'userJobs' });
+              return;
+            } else {
+              if (this.traceability_enabled && !this.job.first_phase) {
+                // Select new serials and start new batch
+                const selected_serials = await this.selectSerialBatch();
+                await this.$store.dispatch('resumeJob', {
+                  batch_serials: selected_serials,
+                });
+              }
             }
           }
+          // Go to first step that is not done.
+          // This works with both force_order mode active or not
+          this.goToNextUndoneStep();
+        } catch (error) {
+          console.error('Error completing step:', error);
         }
-        // Go to first step that is not done.
-        // This works with both force_order mode active or not
-        this.goToNextUndoneStep();
       }
     },
 
@@ -515,24 +517,27 @@ export default {
       }
 
       if (can_proceed) {
-        await this.$store.dispatch('declareBatch', {
-          batch_qt: this.job.active_batch_qt,
-          send_step_data: !this.job.parameters.step_check,
-        });
+        try {
+          await this.$store.dispatch('declareBatch', {
+            batch_qt: this.job.active_batch_qt,
+            send_step_data: !this.job.parameters.step_check,
+          });
 
-        //if (this.traceability_enabled && !this.job.first_phase) {
-        //  // Select new serials and start new batch
-        //  const selected_serials = await this.selectSerialBatch();
-        //  await this.$store.dispatch('resumeJob', {
-        //    batch_serials: selected_serials,
-        //  });
-        //}
+          if (this.traceability_enabled && !this.job.first_phase) {
+            // Select new serials and start new batch
+            const selected_serials = await this.selectSerialBatch();
+            await this.$store.dispatch('resumeJob', {
+              batch_serials: selected_serials,
+            });
+          }
 
-        if (
-          current_batch_was_last ||
-          (!this.job.next_batch_available && !this.job.active_batch_qt)
-        ) {
-          this.$router.push({ name: 'userJobs' });
+          if (current_batch_was_last ||
+            (!this.job.next_batch_available && !this.job.active_batch_qt)
+            ) {
+            this.$router.push({ name: 'userJobs' });
+          }
+        } catch (error) {
+          console.error('Error declaring batch:', error);
         }
       }
     },
