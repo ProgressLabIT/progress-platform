@@ -73,7 +73,8 @@ class SerialUnlinkedEvent(BaseSerialEvent, BaseInventoryEvent):
     )
 
   def _process_inventory(self):
-    self._ensure_inventory_management_enabled()
+    if not self._ensure_inventory_management_enabled():
+      return
 
     inventory_management_enabled_for_component = self.tx.aql.execute("""
       FOR s IN Serial

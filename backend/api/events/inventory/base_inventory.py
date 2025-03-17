@@ -31,7 +31,8 @@ class BaseInventoryEvent(BaseEvent, ABC):
   def _ensure_inventory_management_enabled(self):
     warehouse_enabled = self.tx.collection('Config').get('enable_inventory_management')
     if warehouse_enabled is None or not warehouse_enabled.get('value', False):
-      raise ValueError("Inventory management is not enabled")
+      return False
+    return True
 
 
   def _get_product_inventory_config(self, product_keys):
