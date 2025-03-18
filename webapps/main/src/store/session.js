@@ -76,7 +76,8 @@ const session = {
   },
 
   actions: {
-    async logout({ commit, dispatch, state, rootState }, { from401 = false }) {
+    async logout({ commit, dispatch, state, rootState }, options = {}) {
+      const { from401 = false } = options;
       const is_working =
         rootState.traceability.working_job_data.active || false;
       if (!from401) {
