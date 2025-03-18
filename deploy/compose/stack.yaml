@@ -32,14 +32,10 @@ services:
         constraints:
           - node.role == manager
 
-  app:
-    image: registry.gitlab.com/progresslab/progress-platform/app:${VERSION}
-    volumes:
-      - media:/usr/share/nginx/html/media
-    depends_on:
-      - api
-    ports:
-      - "80"
+  db:
+    image: arangodb:3.11
+    environment:
+      - ARANGO_ROOT_PASSWORD=${DB_ROOT_PWD}
     networks:
       - progress
     deploy:
@@ -47,11 +43,21 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
-        - "traefik.http.services.app.loadbalancer.server.port=80"
-        - "traefik.http.routers.app.rule=HostRegexp(`{anyhost:.*}`)"
+        - "traefik.http.services.db.loadbalancer.server.port=8529"
+        - "traefik.http.routers.db.rule=HostRegexp(`{anyhost:.*}`) && PathPrefix(`/_db`)"
+        - "traefik.http.routers.db.middlewares=db_root"
+        - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
+        - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
+
+  broker:
+    networks:
+      - progress
 
   api:
     image: registry.gitlab.com/progresslab/progress-platform/api:${VERSION}
+    depends_on:
+      - db
+      - broker
     secrets:
       - progress_admin_pwd
       - progress_api_db_pwd
@@ -85,10 +91,15 @@ services:
         - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
         - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
 
-  db:
-    image: arangodb:3.11
-    environment:
-      - ARANGO_ROOT_PASSWORD=${DB_ROOT_PWD}
+
+  app:
+    image: registry.gitlab.com/progresslab/progress-platform/app:${VERSION}
+    volumes:
+      - media:/usr/share/nginx/html/media
+    depends_on:
+      - api
+    ports:
+      - "80"
     networks:
       - progress
     deploy:
@@ -96,18 +107,18 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
-        - "traefik.http.services.db.loadbalancer.server.port=8529"
-        - "traefik.http.routers.db.rule=HostRegexp(`{anyhost:.*}`) && PathPrefix(`/_db`)"
-        - "traefik.http.routers.db.middlewares=db_root"
-        - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
-        - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
+        - "traefik.http.services.app.loadbalancer.server.port=80"
+        - "traefik.http.routers.app.rule=HostRegexp(`{anyhost:.*}`)"
 
-  broker:
-    networks:
-      - progress
 
   warehouse:
     image: registry.gitlab.com/progresslab/progress-platform/warehouse:${VERSION}
+    volumes:
+      - media:/usr/share/nginx/html/media
+    depends_on:
+      - api
+    ports:
+      - "80"
     networks:
       - progress
     deploy:
@@ -119,3 +130,5 @@ services:
         - "traefik.http.routers.warehouse.rule=HostRegexp(`{anyhost:.*}`) && PathPrefix(`/wh`)"
         - "traefik.http.routers.warehouse.middlewares=strip_warehouse_prefix"
         - "traefik.http.middlewares.strip_warehouse_prefix.stripprefix.prefixes=/wh"
+
+
