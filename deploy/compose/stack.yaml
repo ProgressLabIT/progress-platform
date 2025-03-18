@@ -105,3 +105,17 @@ services:
   broker:
     networks:
       - progress
+
+  warehouse:
+    image: registry.gitlab.com/progresslab/progress-platform/warehouse:${VERSION}
+    networks:
+      - progress
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=progress"
+        - "traefik.http.services.warehouse.loadbalancer.server.port=80"
+        - "traefik.http.routers.warehouse.rule=HostRegexp(`{anyhost:.*}`) && PathPrefix(`/wh`)"
+        - "traefik.http.routers.warehouse.middlewares=strip_warehouse_prefix"
+        - "traefik.http.middlewares.strip_warehouse_prefix.stripprefix.prefixes=/wh"

@@ -59,6 +59,13 @@ build:webapp:
     DOCKERFILE: webapp.prod.Dockerfile
   <<: *service-template
 
+build:warehouse:
+  variables:
+    SERVICE: warehouse
+    BUILD_DIR: webapps/warehouse
+    DOCKERFILE: Dockerfile
+  <<: *service-template
+
 build:api:
   variables:
     SERVICE: api
