@@ -55,6 +55,8 @@ services:
 
   api:
     image: registry.gitlab.com/progresslab/progress-platform/api:${VERSION}
+    volumes:
+      - /opt/progress/config/api.env:/api/.env
     depends_on:
       - db
       - broker
