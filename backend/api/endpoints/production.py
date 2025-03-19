@@ -32,7 +32,7 @@ router = APIRouter()
 async def create_work_order(new_wo: WorkOrderNew):
 
   # Initialize transaction
-  tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'Counter'], read=['Phase', 'Product'])
+  tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'Counter'], read=['Phase', 'Product', 'Config'])
   wo_coll = tx.collection('WorkOrder')
   product_coll = tx.collection('Product')
 
