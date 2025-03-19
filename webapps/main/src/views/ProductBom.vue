@@ -216,13 +216,13 @@
     </BaseDialog>
 
     <BaseDialog :show="!!consumption_options">
-      <q-card style="max-width: 700px" class="surface1 q-pa-md q-gutter-y-md">
+      <q-card style="min-width: 500px; max-width: 700px" class="surface1 q-pa-md">
         <q-card-section class="display text-h3 highlight">
           {{ $t('warehouse.bom_options') }}
         </q-card-section>
 
         <q-card-section class="column q-gutter-md">
-          <q-input
+          <!-- <q-input
             v-model="consumption_options.minimum_quantity"
             v-model.number="consumption_options.minimum_quantity"
             dense
@@ -241,26 +241,24 @@
                 'warehouse.consumption_options.minimum_quantity_if_negative',
               )
             "
-          />
-        </q-card-section>
+          /> -->
 
-        <q-card-section class="column q-gutter-md">
           <BaseAutocompletePositions
             :model-value="consumption_options.consumption_position_key"
             :label="$t('warehouse.consumption_options.consumption_position_key')"
-            :dense="true"
+            key-only
             @select="
-              (selection) =>
-                (consumption_options.consumption_position_key = selection._key)
+              (positionKey) =>
+                (consumption_options.consumption_position_key = positionKey)
             "
           />
 
-          <q-toggle
+          <!-- <q-toggle
             v-model="consumption_options.consumption_position_mandatory"
             :label="
               $t('warehouse.consumption_options.consumption_position_mandatory')
             "
-          />
+          /> -->
         </q-card-section>
 
         <div class="row q-col-gutter-md q-pa-md">

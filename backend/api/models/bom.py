@@ -5,7 +5,7 @@ from pydantic import Field, field_validator
 from models.base_models import FlexModel
 
 class BomLineConsumptionOptions(FlexModel):
-  consumption_position_key: str | None = 'IN'
+  consumption_position_key: str | None = None
   consumption_position_mandatory: bool | None = False
   minimum_quantity_if_negative: bool | None = False
   minimum_quantity: float | None = None

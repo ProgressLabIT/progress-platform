@@ -157,11 +157,12 @@ class BatchCompletedEvent(BaseProductionEvent):
 
     # Generate consumption movements
     component_serials_map = self._get_component_serials()
+    default_consumption_position_key = self.tx.collection('Config').get('default_consumption_position').get('value', 'IN')
 
     for line in bom:
       # Ensure warehouse management is enabled for component
       if inventory_config.get(line.component_key, False):
-
+        consumption_position_key = line.consumption_options.consumption_position_key or default_consumption_position_key
         consumption_qt = line.qt * batch_qt
 
         # If traceability is enabled, generate movements for each serial
@@ -172,7 +173,7 @@ class BatchCompletedEvent(BaseProductionEvent):
 
           for serial_key in line_serials:
             MovementCompletedEvent.create_as_child(self, dict(
-              position_from = line.consumption_options.consumption_position_key,
+              position_from = consumption_position_key,
               product_key = line.component_key,
               qt_confirmed = 1,
               qt_planned = 1,
@@ -184,7 +185,7 @@ class BatchCompletedEvent(BaseProductionEvent):
         # If traceability is not enabled, generate movement for the batch
         else:
           MovementCompletedEvent.create_as_child(self, dict(
-            position_from = line.consumption_options.consumption_position_key,
+            position_from = consumption_position_key,
             product_key = line.component_key,
             qt_confirmed = line.qt * batch_qt,
             qt_planned = line.qt * batch_qt,
