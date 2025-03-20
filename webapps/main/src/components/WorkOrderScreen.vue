@@ -41,7 +41,7 @@
           <router-view v-if="vuex_ready" v-slot="{ Component }">
             <keep-alive>
               <div class="full-height relative-position q-pl-sm">
-                <component :is="Component" v-bind="{ wo_data }" />
+                <component :is="Component" v-bind="{ wo_data }" @refresh="get_wo_data" />
               </div>
             </keep-alive>
           </router-view>
@@ -79,6 +79,7 @@ export default {
       show_modal: true,
       tabs: [
         'workOrderJobs',
+        'workOrderBom',
         'workOrderIssues',
         'workOrderNotes',
         'workOrderMessages',

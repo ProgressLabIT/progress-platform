@@ -32,6 +32,7 @@ class BomLineRead(FlexModel):
 
 
 class BomLineWriteIn(FlexModel):
+  bom_line_key: str | None = None
   component_key: str | None = None
   component_code: str | None = None
   qt: float

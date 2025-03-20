@@ -9,7 +9,7 @@
     :options="options"
     option-label="code"
     :model-value="value"
-    input-debounce="200"
+    input-debounce="400"
     :option-value="keyOnly ? '_key' : null"
     :emit-value="keyOnly"
     :map-options="keyOnly"

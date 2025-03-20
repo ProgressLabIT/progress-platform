@@ -928,6 +928,7 @@ export default {
     qt_rebalance_title: 'assign the new workload',
     short: 'wo',
     tabs: {
+      workOrderBom: 'Material',
       workOrderHistory: 'history',
       workOrderJobs: 'jobs',
       workOrderIssues: 'issues',

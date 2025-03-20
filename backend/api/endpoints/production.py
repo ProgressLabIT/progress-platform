@@ -6,9 +6,11 @@ from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from utils import auth
 from fastapi.encoders import jsonable_encoder
 
+from models.bom import BomLineRead
 from models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
+from utils.bom import define_bom_line_for_db
 from utils.counter import _generate_counter
 from utils.db import db
 from utils.dt import timestamp
@@ -176,6 +178,7 @@ async def update_work_order(
   new_due_date: datetime | date | None = Body(None),
   new_from_date: datetime | date | None = Body(None),
   new_project_code: str | None = Body(None),
+  new_bom: list[BomLineRead] | None = Body(None),
   notes: str | None = Body(None)
   ):
 
@@ -201,6 +204,9 @@ async def update_work_order(
 
     if new_project_code or new_from_date:
       tx.collection('Job').update_match(job_match, job_update)
+
+    if new_bom:
+      wo_update['wo_bom'] = new_bom
 
     updated_wo_data = tx.collection('WorkOrder').update(wo_update, return_new=True)['new']
 

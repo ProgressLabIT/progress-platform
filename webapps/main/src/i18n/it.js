@@ -942,6 +942,7 @@ export default {
     qt_rebalance_title: 'distribuisci il nuovo carico di lavoro',
     short: 'op',
     tabs: {
+      workOrderBom: 'Materiali',
       workOrderHistory: 'storico',
       workOrderJobs: 'lavori',
       workOrderIssues: 'segnalazioni',
