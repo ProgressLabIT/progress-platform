@@ -92,7 +92,6 @@ class Queries:
       && (@include_unreleased ? true : s.released != null)
       && (@batch_key ? s._key IN batch_serials : true)
       && s.deleted == false
-      && s.available IN [null, true] //keep null for backwards compatibility
 
       LET used = (
         FOR linked_serial IN contains
