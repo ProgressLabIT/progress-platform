@@ -21,6 +21,19 @@
         <div class="column full-height q-col-gutter-md">
           <div class="col-auto">
             <q-select
+              :label="$capitalize($t('project'))"
+              filled
+              use-input
+              dense
+              clearable
+              :options="project_options"
+              :model-value="project_filter"
+              @filter="filterProjects"
+              @update:model-value="(value) => (project_filter = value)"
+            />
+          </div>
+          <div class="col-auto">
+            <q-select
               :label="$t('work_order.short').toUpperCase()"
               filled
               use-input
@@ -189,9 +202,11 @@ export default {
       product_filter: undefined,
       phase_filter: undefined,
       wo_filter: undefined,
+      project_filter: undefined,
       wo_options: [],
       phase_options: [],
       product_options: [],
+      project_options: [],
       show_options: false,
     };
   },
@@ -239,6 +254,10 @@ export default {
           label: this.$capitalize(this.$t('unassigned')),
         },
       };
+    },
+
+    projects() {
+      return [...new Set(this.jobList.map((j) => j.project_code).filter((p) => !!p))];
     },
 
     products() {
@@ -290,6 +309,7 @@ export default {
   methods: {
     match(job) {
       return (
+        (this.project_filter ? job.project_code === this.project_filter : true) &&
         (this.wo_filter ? job.wo_code === this.wo_filter : true) &&
         (this.phase_filter ? job.phase_alias === this.phase_filter : true) &&
         (this.product_filter
@@ -303,6 +323,7 @@ export default {
       this.wo_options = this.work_orders;
       this.phase_options = this.phases;
       this.product_options = this.products;
+      this.project_options = this.projects;
     },
 
     goToSelectedJob(job_key) {
@@ -318,6 +339,14 @@ export default {
       this.phase_filter = undefined;
       this.product_filter = undefined;
       this.started_only = false;
+    },
+
+    filterProjects(value, update) {
+      update(() => {
+        this.project_options = this.projects.filter((p) =>
+          p.toUpperCase().includes(value.toUpperCase()),
+        );
+      });
     },
 
     filterWos(value, update) {
