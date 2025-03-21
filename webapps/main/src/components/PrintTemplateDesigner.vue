@@ -118,11 +118,13 @@ import { Designer } from '@pdfme/ui';
 import { cloneDeep } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useStore } from 'vuex';
 import { api } from '@/boot/axios';
 import BaseActionCard from '@/components/BaseActionCard.vue';
 import BaseAutocompleteCustomField from '@/components/BaseAutocompleteCustomField.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
+
 
 const props = defineProps({
   show: {
@@ -137,10 +139,14 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'saved']);
 
+// Load custom fields on mount
+const store = useStore();
+
 watch(
   () => props.show,
   (show) => {
     if (show) {
+      store.dispatch('getCustomFields');
       initTemplate();
       setTimeout(initDesigner, 500);
     }
