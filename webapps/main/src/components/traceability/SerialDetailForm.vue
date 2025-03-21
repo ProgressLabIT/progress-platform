@@ -203,6 +203,15 @@ export default {
     };
   },
 
+  watch: {
+    serial_key: {
+      immediate: true,
+      handler() {
+        this.getHistory();
+      },
+    },
+  },
+
   computed: {
     serial() {
       return this.$store.getters.getSerialData(this.serial_key);
