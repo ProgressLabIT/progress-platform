@@ -417,7 +417,6 @@ def create_job_record(
     next_batch_available = True if first_phase else False,
     step_sequence = _get_procedure_for_new_job(tx, phase_key),
     job_docs = wo_data.wo_docs,
-    job_bom = [x for x in wo_data.wo_bom if x.phase_key == phase_key],
     assigned_to = assigned_to,
     notes = kwargs.get('notes', None),
     traceability_level = wo_data.traceability_level,

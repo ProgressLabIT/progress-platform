@@ -100,6 +100,10 @@ class BatchCompletedEvent(BaseProductionEvent):
     if warehouse_enabled is None or not warehouse_enabled.get('value', False):
       return
 
+    # Get work order data
+    # _get_job_data() already set self.info.work_order_key
+    wo_data = self.get_work_order_data()
+
     # Set references for all inventory movements
     references = InventoryMovementReferences(
       work_order_key = self.info.work_order_key,
@@ -113,7 +117,7 @@ class BatchCompletedEvent(BaseProductionEvent):
     product_keys = [self.job.product_key]
 
     # Get components for current phase
-    bom = [line for line in self.job.job_bom if line.phase_key == self.info.phase_key]
+    bom = [line for line in wo_data.wo_bom if line.phase_key == self.info.phase_key]
 
     # Add components to list
     for line in bom:
@@ -130,7 +134,7 @@ class BatchCompletedEvent(BaseProductionEvent):
     # Generate production movement
     if inventory_config.get(self.job.product_key, False) and self.job.last_phase:
       default_production_position_key = self.tx.collection('Config').get('default_production_position').get('value', 'IN')
-      production_position_key = self.tx.collection('WorkOrder').get(self.info.work_order_key).get('output_position_key', default_production_position_key)
+      production_position_key = wo_data.output_position_key or default_production_position_key
 
       base_production_data = dict(
         position_to = production_position_key,

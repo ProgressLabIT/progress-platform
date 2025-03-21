@@ -332,6 +332,10 @@ export default {
         .traceability_level;
     },
 
+    job_bom() {
+      return this.j.wo_bom.filter((line) => line.phase_key == this.j.phase_key)
+    },
+
     links() {
       return [
         {
@@ -350,7 +354,7 @@ export default {
           route_name: 'jobBom',
           text: this.$t('material', 2),
           icon: 'mdi-file-tree',
-          item_count: this.j.job_bom.length + '/' + this.j.wo_bom.length,
+          item_count: this.job_bom.length + '/' + this.j.wo_bom.length,
         },
         {
           route_name: 'jobIssues',

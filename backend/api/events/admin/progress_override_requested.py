@@ -5,7 +5,7 @@ from utils.dt import timestamp
 from utils.inventory import Queries as InventoryQueries
 from models.inventory import InventoryMovementType, InventoryMovementReferences
 from models.event import EventInfoModel, EventType
-from models.production import Job, WorkStatus
+from models.production import Job, WorkOrderFull, WorkStatus
 from models.traceability import WIP, Batch, WorkSession
 from utils.exceptions import (
   JobHasNoAssigneeError,
@@ -90,7 +90,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
         JobHasActiveBatchError: If job has an active batch
         QuantityOverrideForSerialsNotAllowed: If trying to increase progress with traceability enabled
     """
-    # Get and store job data
+    # Get and store job and
     self.job = Job(**self.tx.collection('Job').get(self.info.job_key))
 
     # Check job assignment
@@ -138,6 +138,8 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     if warehouse_enabled is None or not warehouse_enabled.get('value', False):
       self.handle_inventory = False
     else:
+      wo = WorkOrderFull(**self.tx.collection('WorkOrder').get(self.job.wo_key))
+      self.job_bom = [line for line in wo.wo_bom if line.phase_key == self.job.phase_key]
       self.handle_inventory = True
 
 
@@ -319,7 +321,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
       product_keys = [self.job.product_key]
 
       # Add components to list
-      for line in self.job.job_bom:
+      for line in self.job_bom:
         product_keys.append(line.component_key)
 
       # Get inventory config for all relevant products
@@ -390,7 +392,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     # Generate consumption movements
     component_serials_map = self._get_component_serials(batch_key)
 
-    for line in self.job.job_bom:
+    for line in self.job_bom:
       # Ensure warehouse management is enabled for component
       if self.job_inventory_config.get(line.component_key, False):
 
@@ -454,7 +456,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
       ))
 
     # revert consumption movements
-    for line in self.job.job_bom:
+    for line in self.job_bom:
       if self.job_inventory_config.get(line.component_key, False):
         MovementCompletedEvent.create_as_child(self, dict(
           position_from = 'NULL',

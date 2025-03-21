@@ -244,22 +244,20 @@ export default {
       if (!this.job?.wo_bom) {
         this.refreshBom();
       }
-      return Object.hasOwn(this.job, this.bom_type) && this.job?.wo_bom
-        ? this.job.wo_bom
-            .filter((i) => {
-              return this.bom_type === 'wo_bom'
-                ? true
-                : i.phase_key === this.job.phase_key;
-            })
-            .map((i) => {
-              // line quantity is per item
-              return {
-                ...i,
-                batch_qt: i.qt * this.job.active_batch_qt,
-                job_qt: i.qt * this.job.qt_planned,
-              };
-            })
-        : [];
+      return (this.job.wo_bom || [])
+        .filter((i) => {
+          return this.bom_type === 'wo_bom'
+            ? true
+            : i.phase_key === this.job.phase_key;
+        })
+        .map((i) => {
+          // line quantity is per item
+          return {
+            ...i,
+            batch_qt: i.qt * this.job.active_batch_qt,
+            job_qt: i.qt * this.job.qt_planned,
+          };
+        })
     },
 
     display_qt() {
