@@ -171,20 +171,24 @@ class BatchCompletedEvent(BaseProductionEvent):
 
         # If traceability is enabled, generate movements for each serial
         if line.traceability_level is not None:
-          line_serials = component_serials_map.get(line.component_key, [])
-          if len(line_serials) != consumption_qt:
-            raise ValueError("The number of serials provided does not match the batch quantity.")
+          continue
+          # DO NOT GENERATE MOVEMENTS FOR COMPONENT SERIALS (at least for now)
+          # They are already generated in the serial_linked event
 
-          for serial_key in line_serials:
-            MovementCompletedEvent.create_as_child(self, dict(
-              position_from = consumption_position_key,
-              product_key = line.component_key,
-              qt_confirmed = 1,
-              qt_planned = 1,
-              movement_type = InventoryMovementType.CONSUMPTION,
-              references = references,
-              serial_key = serial_key,
-            ))
+          # line_serials = component_serials_map.get(line.component_key, [])
+          # if len(line_serials) != consumption_qt:
+          #   raise ValueError("The number of serials provided does not match the batch quantity.")
+
+          # for serial_key in line_serials:
+          #   MovementCompletedEvent.create_as_child(self, dict(
+          #     position_from = consumption_position_key,
+          #     product_key = line.component_key,
+          #     qt_confirmed = 1,
+          #     qt_planned = 1,
+          #     movement_type = InventoryMovementType.CONSUMPTION,
+          #     references = references,
+          #     serial_key = serial_key,
+          #   ))
 
         # If traceability is not enabled, generate movement for the batch
         else:
