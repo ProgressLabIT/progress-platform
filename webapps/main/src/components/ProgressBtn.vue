@@ -409,9 +409,10 @@ export default {
           return;
         }
 
+        const serialCodeOk = await this.ensureBatchSerialCounter();
         if (
           this.traceability_enabled &&
-          !(await this.ensureBatchSerialCounter())
+          !serialCodeOk
         ) {
           window.alert(this.$t('declare_all_serials'));
           return;
