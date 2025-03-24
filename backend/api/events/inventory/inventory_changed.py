@@ -31,7 +31,7 @@ class InventoryChangedEvent(BaseInventoryEvent):
       if final_qty < 0:
         self._get_product()
         position = self.tx.collection('Position').get(self.info.position_key)
-        raise InventoryMovementException(f'Cannot reduce inventory for product {self.product.code} in position {position["code"]} of quantity {quantity_change}: only {current_record["quantity"]} left.')
+        raise InventoryMovementException(f'Cannot reduce inventory for product {self.product.code} in position {position["code"]} of quantity {self.info.quantity_change}: only {current_record["quantity"]} left.')
 
       elif final_qty == 0:
         self.tx.collection('is_in_position').delete(current_record['_key'])
