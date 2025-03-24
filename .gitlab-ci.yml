@@ -1,6 +1,6 @@
 workflow:
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/'
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.(a|b|rc)?[0-9]+$/'
       when: always
     - when: never
 
@@ -35,20 +35,17 @@ version-info:
   image: docker:stable
   needs:
     - version-info
-  rules:
-    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.0$/' # build also in case the version is the first in the branch
-    - changes:
-        - $BUILD_DIR/**/*
   script:
     - cd $BUILD_DIR
     - >
       docker build
       --pull
-      -t $IMAGE_NAME:$BRANCH_VERSION-latest
+      -t $CI_REGISTRY_IMAGE/$SERVICE:$BRANCH_VERSION-latest
       -f $DOCKERFILE
       .
     - docker tag $CI_REGISTRY_IMAGE/$SERVICE:$BRANCH_VERSION-latest $CI_REGISTRY_IMAGE/$SERVICE:$VERSION
-    - docker push $CI_REGISTRY_IMAGE/$SERVICE:$BRANCH_VERSION-latest $CI_REGISTRY_IMAGE/$SERVICE:$VERSION
+    - docker push $CI_REGISTRY_IMAGE/$SERVICE:$BRANCH_VERSION-latest
+    - docker push $CI_REGISTRY_IMAGE/$SERVICE:$VERSION
 
 
 build:webapp:
@@ -56,6 +53,13 @@ build:webapp:
     SERVICE: app
     BUILD_DIR: webapps/main
     DOCKERFILE: webapp.prod.Dockerfile
+  <<: *service-template
+
+build:warehouse:
+  variables:
+    SERVICE: warehouse
+    BUILD_DIR: webapps/warehouse
+    DOCKERFILE: Dockerfile
   <<: *service-template
 
 build:api:
