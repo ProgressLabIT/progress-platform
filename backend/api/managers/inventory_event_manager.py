@@ -306,7 +306,6 @@ class InventoryEventManager:
           code=serial_code,
           created=self.event.info.timestamp,
           released=self.event.info.timestamp,
-          available=self.event.info.movement.status == MovementStatus.COMPLETED,
           user_key=self.event.info.user_key,
         ))['_key']
         self.event.info.movement.serial_key = new_serial_key
