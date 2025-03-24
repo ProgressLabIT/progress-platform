@@ -8,10 +8,9 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 from models.form import CustomField
-from models.serial import SerialSelection, Serial
+from models.serial import SerialSelection, Serial, SerialTreeNode
 from utils.db import db
-from utils.bom import get_bom_from_db
-from utils.serial import Queries, get_children, get_bom_components_requiring_traceability, search_children
+from utils.serial import Queries, get_children, get_bom_components_requiring_traceability, search_children, get_serial_child_nodes
 
 router = APIRouter()
 
@@ -89,44 +88,33 @@ def get_serial_children(
 
 @router.get('/serial-hierarchy', dependencies=[Depends(auth.verify_token)])
 def get_serial_hierarchy(
-  serial_key: str | None = None,
+  serial_key: str,
   include_expected_components: bool = True,
 ):
+
   try:
-    bind_vars = dict(
-      serial_id = f'Serial/{serial_key}'
-    )
-    serials = {}
-    starting_serials = set()
-    for serial in [e for e in db.aql.execute(Queries.GET_SERIAL_HIERARCHY, bind_vars=bind_vars)]:
-      serials[serial['serial_id']] = serial
-      if serial['from'] != None:
-        starting_serials.add(serial['from'])
+    # Get the root ancestor of the serial
+    bind_vars = dict(serial_id = f'Serial/{serial_key}')
+    root_node = db.aql.execute(Queries.GET_SERIAL_ROOT_ANCESTOR, bind_vars=bind_vars).next()
+    if root_node['serial_key'] is None: # no ancestor found, so we're at the root
+      serial = db.collection('Serial').get(serial_key)
+      product = db.collection('Product').get(serial['product_key'])
+      root_node = SerialTreeNode(
+        serial_key = serial_key,
+        product_key = product['_key'],
+        serial_code = serial['code'],
+        product_code = product['code'],
+        product_description = product['description'],
+      )
 
-    for serial in serials:
-      if serials[serial]['to'] != None:
-        starting_serials.discard(serials[serial]['to'])
+    serial_children = list(db.aql.execute(
+      Queries.GET_SERIAL_CHILDREN,
+      bind_vars=dict(serial_id = f'Serial/{root_node.serial_key}')
+    ))
 
-    serial_hierarchy = []
-    for starting_serial in starting_serials:
-      if (starting_serial in serials):
-         serial_children = []
-         if (not serials[starting_serial]['replaced'] == True):
-           serial_children = get_children(serial_key=starting_serial, serials=serials, level=0, include_expected=include_expected_components, db=db)
-         merged_serial = dict()
-         merged_serial.update(serials[starting_serial])
-         if (len(serial_children)>0):
-           merged_serial['children'] = serial_children
-         serial_hierarchy.append(merged_serial)
-
-    filtered_hierarchy = []
-    for hierarchy in serial_hierarchy:
-      if (hierarchy['serial_key'] == serial_key):
-        filtered_hierarchy.append(hierarchy)
-      elif ('children' in hierarchy and search_children(serial_key, hierarchy['children'])):
-          filtered_hierarchy.append(hierarchy)
-
-    return filtered_hierarchy
+    # build_serial_tree is a recursive function that returns the next tree level
+    root_node.children = get_serial_child_nodes(root_node, serial_children)
+    return [root_node]
 
   except Exception:
     raise HTTPException(

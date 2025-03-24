@@ -1,5 +1,9 @@
 import traceback
+
+from models.bom import BomLineRead
+from models.serial import SerialTreeNode
 from utils.bom import get_bom_from_db
+from utils.db import db
 
 class Queries:
 
@@ -66,11 +70,34 @@ class Queries:
           }
   """
 
+
+  GET_SERIAL_ROOT_ANCESTOR = """
+    // The root ancestor is the last vertex of the longest path in the inbound contains chain
+    LET ancestors = (
+      FOR v, e, p IN 0..9999 INBOUND @serial_id contains
+      FILTER
+        v.deleted == false
+        && e.replaced == false
+      SORT length(p.vertices) DESC
+      RETURN p.vertices[-1]
+    )
+    LET root = ancestors[0]
+    LET product = DOCUMENT(Product, root.product_key)
+    RETURN  {
+      serial_key: root._key,
+      product_key: root.product_key,
+      serial_code: root.code,
+      product_code: product.code,
+      product_description: product.description
+    }
+  """
+
   GET_SERIAL_CHILDREN = """
       LET start = @serial_id
-        FOR v, e IN 1..@level OUTBOUND start contains
+        FOR v, e IN 1..999 OUTBOUND start contains
             LET product = DOCUMENT(Product, v.product_key)
             RETURN merge({
+                parent_key: PARSE_IDENTIFIER(e._from).key,
                 serial_key: v._key,
                 replaced: e.replaced,
                 serial_code: v.code,
@@ -442,84 +469,8 @@ class Queries:
     UPDATE s WITH { data: new_serial_data } IN Serial
   """
 
-def get_children(serial_key, serials, level, include_expected=True, db=None):
-  """
-  Build hierarchy of children for a given serial.
-  Includes both actual recorded children and expected components from BOM.
-  """
-  children = []
-  if level > 15:
-    return children
-  level += 1
 
-  # Track components with valid (non-replaced) links
-  valid_component_keys = set()
-  all_component_keys = set()
-
-  # First, get the actual recorded children
-  for serial in serials:
-    if serials[serial]['from'] == serial_key:
-      child_key = serials[serial]['to']
-      child_product_key = serials[child_key].get('product_key')
-      is_replaced = serials[serial].get('replaced', False)
-
-      # Track all component product keys regardless of replaced status
-      if child_product_key:
-        all_component_keys.add(child_product_key)
-        # Only non-replaced links count as valid
-        if not is_replaced:
-          valid_component_keys.add(child_product_key)
-
-      # Include all children in the result, even replaced ones
-      merged_serial = dict()
-      merged_serial.update(serials[child_key])
-
-      # Get child's children only if the link isn't replaced
-      serial_children = []
-      if not is_replaced:
-        serial_children = get_children(serial_key=child_key, serials=serials, level=level, include_expected=include_expected, db=db)
-        if len(serial_children) > 0:
-          merged_serial['children'] = serial_children
-
-      # Mark replaced serials
-      if is_replaced:
-        merged_serial['is_replaced'] = True
-
-      children.append(merged_serial)
-
-  # If BOM-based expansion is enabled, add expected components from the product BOM
-  if include_expected and serial_key in serials and db:
-    current_serial = serials[serial_key]
-    product_key = current_serial.get('product_key')
-
-    if product_key:
-      # Get BOM components for this product
-      bom_components = get_bom_components_requiring_traceability(product_key, db)
-
-      # Add placeholder entries for components that have no valid links
-      for component in bom_components:
-        if component.component_key not in valid_component_keys:
-          # Create a placeholder entry for the expected but missing component
-          placeholder = {
-            'serial_key': None,  # No serial exists yet
-            'serial_id': None,
-            'code': None,
-            'product_key': component.component_key,
-            'product_code': component.component_code,
-            'product_description': component.component_description,
-            'is_placeholder': True,  # Mark as a placeholder
-            'phase_key': component.phase_key,
-            'phase_name': component.phase_name,
-            'traceability_level': component.traceability_level
-          }
-          children.append(placeholder)
-
-  # Sort children by product code before returning
-  children.sort(key=lambda x: x.get('product_code', '') if x.get('product_code') else '')
-
-  return children
-
-def get_bom_components_requiring_traceability(product_key, db):
+def get_bom_components_requiring_traceability(product_key: str) -> list[BomLineRead]:
   """
   Get components from the product BOM that require traceability
   """
@@ -545,3 +496,39 @@ def search_children(serial_key, children):
     elif 'children' in child:
       found = found or search_children(serial_key, child['children'])
   return found
+
+
+def get_serial_child_nodes(parent: SerialTreeNode, serial_list: list[dict]) -> list[SerialTreeNode]:
+  components = get_bom_components_requiring_traceability(parent.product_key)
+  children = []
+  try:
+    for component in components:
+      child_node = SerialTreeNode(
+        product_key=component.component_key,
+        product_code=component.component_code,
+        product_description=component.component_description
+      )
+
+      child_serial = next(
+        ( s for s in serial_list
+          if s['product_key'] == component.component_key
+          and s['parent_key'] == parent.serial_key
+        ),
+        None
+      )
+
+      if child_serial:
+        # Add serial data to the child node
+        child_node.serial_key = child_serial['serial_key']
+        child_node.serial_code = child_serial['serial_code']
+        # Recursively build the child node's children
+        child_node.children = get_serial_child_nodes(child_node, serial_list)
+
+      # Add the child node to the start node's children
+      children.append(child_node)
+    return children
+
+  except Exception:
+    traceback.print_exc()
+    raise
+
