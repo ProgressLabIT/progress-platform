@@ -283,7 +283,9 @@ export default {
         .then((resp) => (this.history = resp.data));
 
       // Get inventory availability
-      this.$api.get('inventory', { params: { serial_key: this.serial_key } })
+      const params = new URLSearchParams();
+      params.append('serial_keys', this.serial_key);
+      this.$api.get('inventory', { params })
       .then((resp) => {
         this.serialAvailable = resp.data.length > 0
       })
