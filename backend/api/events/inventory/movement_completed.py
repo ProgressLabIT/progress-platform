@@ -215,15 +215,12 @@ class MovementCompletedEvent(BaseInventoryEvent):
 
   def _handle_adjustment(self):
     self._get_product()
-    try:
-      InventoryChangedEvent.create_as_child(self, dict(
-        position_key = self.info.position_to,
-        product_key = self.info.product_key,
-        serial_key = self.info.serial_key,
-        quantity_change = self.info.qt_confirmed
-      ))
-    except InventoryMovementException as e:
-      raise InventoryMovementException(f'Cannot adjust inventory for product {self.product.code} in the provided position.') from e
+    InventoryChangedEvent.create_as_child(self, dict(
+      position_key = self.info.position_to,
+      product_key = self.info.product_key,
+      serial_key = self.info.serial_key,
+      quantity_change = self.info.qt_confirmed
+    ))
 
 
   def _handle_transfer_production_consumption_reversal(self):
@@ -249,17 +246,13 @@ class MovementCompletedEvent(BaseInventoryEvent):
     # the product is moved, and the inventory record (is_in_position) is updated
 
     # Update start position inventory
-    try:
-      if self.info.position_from != 'NULL':
-        InventoryChangedEvent.create_as_child(self, dict(
-          position_key = self.info.position_from,
-          product_key = self.info.product_key,
-          serial_key = self.info.serial_key,
-          quantity_change = -self.info.qt_confirmed
-        ))
-    except InventoryMovementException as e:
-      self._get_product()
-      raise InventoryMovementException(f'Cannot pick product {self.product.code} from desired position: not enough inventory available') from e
+    if self.info.position_from != 'NULL':
+      InventoryChangedEvent.create_as_child(self, dict(
+        position_key = self.info.position_from,
+        product_key = self.info.product_key,
+        serial_key = self.info.serial_key,
+        quantity_change = -self.info.qt_confirmed
+      ))
 
     # Update destination position inventory
     if self.info.position_to != 'NULL':
