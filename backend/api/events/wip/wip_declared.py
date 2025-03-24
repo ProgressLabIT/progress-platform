@@ -49,7 +49,7 @@ class WIPDeclaredEvent(BaseProductionEvent):
       new_wip_data = [WIP(
         _from=f'Phase/{self.info.phase_key}',
         _to=f'Phase/{self.next_phase_key}',
-        batch_key=self.info.active_batch_key,
+        batch_key=self.info.batch_key,
         wo_key=self.info.work_order_key,
         product_key=self.info.product_key,
         quantity=self.info.quantity
