@@ -46,7 +46,7 @@ class WIPDeclaredEvent(BaseProductionEvent):
       ) for s in serial_to_declare]
 
     else:
-      new_wip_data = [WIP(
+      new_wip_data = [dict(
         _from=f'Phase/{self.info.phase_key}',
         _to=f'Phase/{self.next_phase_key}',
         batch_key=self.info.batch_key,

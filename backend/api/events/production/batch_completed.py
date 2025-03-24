@@ -281,11 +281,11 @@ class BatchCompletedEvent(BaseProductionEvent):
     # ===================================================================
     # NO REMAINING QUANTITY TO DO (LAST BATCH) -> CLOSE JOB
     # ===================================================================
-    if self.job.qt_completed + self.info.completed_batch_qt >= self.job.qt_planned:
+    if new_job_qt_completed >= self.job.qt_planned:
       # Event will take care of closing the job
       self.job = JobClosedEvent.create_as_child(self, dict(
         job_key = self.info.job_key,
-        completed_qt = self.job.qt_completed,
+        completed_qt = new_job_qt_completed,
       ))
 
       # SET RESPONSE
