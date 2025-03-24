@@ -182,6 +182,7 @@ export default {
       context: 'serial',
       contextData: props.serial_key,
     });
+
     return {
       config,
       openPrintDialog,
@@ -200,16 +201,8 @@ export default {
       current_step: 0,
       data_column_width: 65,
       events: NaN,
+      serialAvailable: false,
     };
-  },
-
-  watch: {
-    serial_key: {
-      immediate: true,
-      handler() {
-        this.getHistory();
-      },
-    },
   },
 
   computed: {
@@ -228,10 +221,6 @@ export default {
       return this.$capitalize(
         this.$formatDateTime(this.serial?.created, this.$i18n.locale, config),
       );
-    },
-
-    serialAvailable() {
-      return [true, false].includes(this.serial.available) ? this.serial.available : true
     },
 
     form_fields() {
@@ -258,9 +247,19 @@ export default {
     },
   },
 
+  watch: {
+    serial_key: {
+      immediate: true,
+      handler() {
+        this.getInfo();
+      },
+    },
+  },
+
+
   created() {
     this.$store.dispatch('loadUsers');
-    this.getHistory();
+    this.getInfo();
     let eventURL =
       this.$api.defaults.baseURL + '/notification/serial-notification';
     this.events = new EventSource(eventURL, {
@@ -278,16 +277,28 @@ export default {
   },
 
   methods: {
-    getHistory() {
+    getInfo() {
+      // Get history
       this.$api
         .get('event', { params: { serial_key: this.serial_key } })
         .then((resp) => (this.history = resp.data));
+
+      // Get inventory availability
+      const params = new URLSearchParams();
+      params.append('serial_keys', this.serial_key);
+      this.$api.get('inventory', { params })
+      .then((resp) => {
+        this.serialAvailable = resp.data.length > 0
+      })
+      .catch((err) => {
+        console.log(err.response.data.message);
+      });
     },
 
     handleMessage(message) {
       let event = JSON.parse(message.data);
       if (event?.serial_key === this.serial_key) {
-        this.getHistory();
+        this.getInfo();
       }
     },
 
