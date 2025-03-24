@@ -61,10 +61,6 @@ class SerialTreeNode(BaseModel):
   product_key: str | None = None
   serial_code: str | None = None
   product_code: str | None = None
+  replaced: bool | None = None
   product_description: str | None = None
-  children: list["SerialTreeNode"] = Field(default_factory=list)
-
-  model_config = {
-    "arbitrary_types_allowed": True,
-    "populate_by_name": True,
-  }
+  children: list["SerialTreeNode"] = []

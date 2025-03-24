@@ -83,7 +83,7 @@ class SerialUnlinkedEvent(BaseSerialEvent, BaseInventoryEvent):
     """, bind_vars=dict(serial_key=self.info.child_serial_key)).next()
 
     if not inventory_management_enabled_for_component:
-      raise ValueError("Can't update inventory, inventory management is not enabled for this product")
+      return
 
     # Get last consumption movement for serial
     try:

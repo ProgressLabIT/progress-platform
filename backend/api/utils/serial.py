@@ -503,29 +503,36 @@ def get_serial_child_nodes(parent: SerialTreeNode, serial_list: list[dict]) -> l
   children = []
   try:
     for component in components:
-      child_node = SerialTreeNode(
+      bom_node_base_data = dict(
         product_key=component.component_key,
         product_code=component.component_code,
         product_description=component.component_description
       )
 
-      child_serial = next(
-        ( s for s in serial_list
-          if s['product_key'] == component.component_key
-          and s['parent_key'] == parent.serial_key
-        ),
-        None
-      )
+      child_serials = [s for s in serial_list
+        if s['product_key'] == component.component_key
+        and s['parent_key'] == parent.serial_key
+      ]
 
-      if child_serial:
-        # Add serial data to the child node
-        child_node.serial_key = child_serial['serial_key']
-        child_node.serial_code = child_serial['serial_code']
-        # Recursively build the child node's children
-        child_node.children = get_serial_child_nodes(child_node, serial_list)
+      if len(child_serials) > 0:
+        for child_serial in child_serials:
+          child_node = SerialTreeNode(
+            **bom_node_base_data,
+            # Add serial data to the child node
+            serial_key = child_serial['serial_key'],
+            serial_code = child_serial['serial_code'],
+            replaced = child_serial['replaced']
+          )
+          # Recursively build the child node's children
+          if not child_serial['replaced']:
+            child_node.children = get_serial_child_nodes(child_node, serial_list)
 
-      # Add the child node to the start node's children
-      children.append(child_node)
+          # Add the child node to the start node's children
+          children.append(child_node)
+
+      else:
+        children.append(SerialTreeNode(**bom_node_base_data))
+
     return children
 
   except Exception:

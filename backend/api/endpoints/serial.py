@@ -10,7 +10,7 @@ from typing import Dict, List, Union
 from models.form import CustomField
 from models.serial import SerialSelection, Serial, SerialTreeNode
 from utils.db import db
-from utils.serial import Queries, get_children, get_bom_components_requiring_traceability, search_children, get_serial_child_nodes
+from utils.serial import Queries, get_bom_components_requiring_traceability, search_children, get_serial_child_nodes
 
 router = APIRouter()
 
@@ -95,8 +95,8 @@ def get_serial_hierarchy(
   try:
     # Get the root ancestor of the serial
     bind_vars = dict(serial_id = f'Serial/{serial_key}')
-    root_node = db.aql.execute(Queries.GET_SERIAL_ROOT_ANCESTOR, bind_vars=bind_vars).next()
-    if root_node['serial_key'] is None: # no ancestor found, so we're at the root
+    root_node = SerialTreeNode(**db.aql.execute(Queries.GET_SERIAL_ROOT_ANCESTOR, bind_vars=bind_vars).next())
+    if root_node.serial_key is None: # no ancestor found, so we're at the root
       serial = db.collection('Serial').get(serial_key)
       product = db.collection('Product').get(serial['product_key'])
       root_node = SerialTreeNode(

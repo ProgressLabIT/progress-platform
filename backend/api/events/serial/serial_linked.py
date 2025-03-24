@@ -109,7 +109,8 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
     """, bind_vars=dict(serial_key=self.info.child_serial_key)).next()
 
     if not inventory_management_enabled_for_component:
-      raise ValueError("Can't update inventory, inventory management is not enabled for this product")
+      return
+
     # Get serial position
     try:
       serial_inventory = self.tx.collection('is_in_position').find(dict(serial_key=self.info.child_serial_key)).next()
