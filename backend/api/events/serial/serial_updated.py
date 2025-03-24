@@ -52,13 +52,14 @@ class SerialUpdatedEvent(BaseSerialEvent):
     # Update code if provided
     if self.info.serial_code:
       # Prevent code change if it's protected. Not applicable if serial hasn't been assigned a code yet
-      changing_existing_code = self.original.code is not None and self.original.code != self.info.serial_code
-      if changing_existing_code:
-        can_change_code = self.tx.collection('Config').get('allow_serial_code_edit')
-        if not can_change_code:
-          raise SerialNotUpdatedError(f'Changing serial code is not allowed')
+      if (
+        self.original['code'] is not None and
+        self.original['code'] != self.info.serial_code and
+        not self.tx.collection('Config').get('allow_serial_code_edit').get('value', True)
+      ):
+        raise SerialNotUpdatedError(f'Changing serial code is not allowed')
 
-        serial_update['code'] = self.info.serial_code
+      serial_update['code'] = self.info.serial_code
 
     # Update data if provided
     if self.info.serial_data:
@@ -67,7 +68,7 @@ class SerialUpdatedEvent(BaseSerialEvent):
     # Update released date if provided
     if self.info.released:
       serial_update['released'] = self.info.released
-      if self.original.released is None: # should always be None if released is set, but just in case...
+      if self.original['released'] is None: # should always be None if released is set, but just in case...
         SerialReleasedEvent.create_as_child(self, dict(serial_key=self.info.serial_key))
 
     # ===================================================================
