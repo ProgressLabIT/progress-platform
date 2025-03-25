@@ -2,17 +2,21 @@ from events.inventory.base_inventory import BaseInventoryEvent
 from utils.dt import timestamp
 from models.inventory import *
 from events.inventory.base_inventory import BaseInventoryEvent, BaseInventoryModel
-from models.event import EventType
-from models.event import EventModel
-
-class WarehouseListClosedModel(BaseInventoryModel):
-    event_type: str = EventType.WAREHOUSE_LIST_CLOSED.name
+from models.event import EventInfoModel, EventType
 
 class WarehouseListClosed(BaseInventoryEvent):
-  event_data: WarehouseListClosedModel
 
-  def set_model(self, base_model: EventModel):
-    self.info = WarehouseListClosedModel(**base_model.model_dump())
+  class InfoModel(EventInfoModel):
+    movement_list_key: str
+
+  @classmethod
+  def get_event_type(cls):
+    return EventType.WAREHOUSE_LIST_CLOSED
+
+  @classmethod
+  def get_tx_collections(cls):
+    return ['MovementList', 'movement']
+
 
   def apply(self):
     self.tx.collection('MovementList').update(dict(
