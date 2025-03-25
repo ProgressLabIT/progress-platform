@@ -17,6 +17,8 @@
       </div>
     </div>
 
+    <SearchOrScan v-model="productSearch" label="Filtra prodotti" class="q-mt-md" />
+
     <q-scroll-area class="col q-my-md">
 
     <q-card
@@ -121,6 +123,7 @@ import { useNavStore } from 'app/src/stores/navigation';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import IncomingItem from 'app/src/views/incoming/IncomingItem.vue';
 import ShipmentItem from 'app/src/views/shipment/ShipmentItem.vue';
+import SearchOrScan from 'app/src/components/SearchOrScan.vue';
 const lists = useListsStore();
 const { t: $t } = useI18n();
 const nav = useNavStore();
@@ -138,6 +141,8 @@ if (list === undefined) {
   $router.push({ name: $route.matched.some(m => m.name === 'ShipmentRoot') ? 'ShipmentHome' : 'IncomingHome'})
 }
 
+const productSearch = ref('');
+
 nav.dynamicBreadcrumb = [list?.code]
 onBeforeRouteLeave(() => {
   nav.dynamicBreadcrumb = []
@@ -147,7 +152,7 @@ const listItems = computed(() => {
   const items = lists.movementsByListAndItem[props.listKey];
   const openItems = items.filter(i => i.qt_planned > i.qt_confirmed);
   const closedItems = items.filter(i => i.qt_planned <= i.qt_confirmed);
-  return [...openItems, ...closedItems]
+  return [...openItems, ...closedItems].filter(i => i.product_code.toLowerCase().includes(productSearch.value.toLowerCase()))
 });
 
 function selectItem(item) {
