@@ -39,6 +39,7 @@ class WOBomLine(FlexModel):
   phase_key: str | None = None
   phase_name: str | None = None
   consumption_options: BomLineConsumptionOptions | None = Field(default_factory=BomLineConsumptionOptions)
+  traceability_level: str | None = None
   extra: Any = None
 
 
