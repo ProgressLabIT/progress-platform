@@ -31,6 +31,17 @@ class BomLineRead(FlexModel):
     return v
 
 
+class WOBomLine(FlexModel):
+  component_key: str
+  component_code: str
+  component_description: str
+  qt: float
+  phase_key: str | None = None
+  phase_name: str | None = None
+  consumption_options: BomLineConsumptionOptions | None = Field(default_factory=BomLineConsumptionOptions)
+  extra: Any = None
+
+
 class BomLineWriteIn(FlexModel):
   bom_line_key: str | None = None
   component_key: str | None = None

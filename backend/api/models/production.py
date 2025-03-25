@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import model_validator, BaseModel, Field, PositiveFloat, field_validator, ValidationInfo
 
-from models.bom import BomLineRead
+from models.bom import WOBomLine
 from models.process import PhaseParameters, StepWithMediaInfo
 from models.product import ProductDoc
 from models.product import TraceabilityLevel
@@ -83,7 +83,7 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
 
   phase_sequence: list[str] = []
   wo_docs: list[ProductDoc] = []
-  wo_bom: list[BomLineRead] = []
+  wo_bom: list[WOBomLine] = []
 
   output_position_key: str | None = 'IN'
 
@@ -155,7 +155,7 @@ class Job(FlexModel):
   last_online: datetime | None = None
 
   job_docs: list[ProductDoc] = []
-  wo_bom: list[BomLineRead] = []
+  wo_bom: list[WOBomLine] = []
 
   forced: str | None = None
 

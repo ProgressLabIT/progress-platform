@@ -30,7 +30,7 @@
       ref="wo-bom-table"
       v-model:selected="deleteLines"
       square
-      row-key="bom_line_key"
+      row-key="table_key"
       class="my-sticky-header-table col text-body1 q-mt-md"
       card-class="surface1 no-shadow"
       wrap-cells
@@ -52,8 +52,8 @@
             :model-value="props.row.consumption_options?.consumption_position_key"
             :label="$t('warehouse.inventory.position')"
             :disable="!editMode"
-            dense
             key-only
+            dense
             @select="(positionKey) => udpateBomLinePosition(props.row, positionKey)"
           />
         </q-td>
@@ -114,6 +114,7 @@
             <q-select
               v-model="newLinePhase"
               class="col-4"
+              filled
               use-input
               dense
               input-debounce="0"
@@ -121,7 +122,7 @@
               :label="$capitalize($t('phase.short'))"
               option-label="alias"
               popup-content-class="text-capitalize"
-              @filter="filterOperations"
+              @filter="filterPhases"
             >
             </q-select>
 
@@ -130,8 +131,8 @@
               :model-value="newLineProduct"
               :label="$capitalize($t('code') + ' / ' + $t('description'))"
               input-class="text-capitalize"
+              filled
               class="col-6"
-              :filled="false"
               :loading="catalogLoading"
               use-input
               :dense="true"
@@ -142,6 +143,7 @@
               v-model="newLineQt"
               v-model.number="newLineQt"
               dense
+              filled
               class="col-2"
               type="number"
               step="1"
@@ -221,8 +223,8 @@ const tempBom = ref([]);
 // Get phase name and key from job list to populate the dropdown
 const processPhases = computed(() => {
   return Array.from(new Set(props.wo_data.jobs.map((job) => ({
-    phase_key: job.phase_key,
-    phase_alias: job.phase_alias,
+    _key: job.phase_key,
+    alias: job.phase_alias,
   }))));
 });
 
@@ -239,7 +241,7 @@ const tableHeaders = computed(() => {
       field: 'component_description',
       label: t('description').toUpperCase(),
       align: 'left',
-      style: 'width: 50%',
+      style: 'width: 35%',
     },
     {
       name: 'phase_name',
@@ -327,7 +329,7 @@ const udpateBomLinePosition = (line, positionKey) => {
   });
 };
 
-const filterOperations = (value, update) => {
+const filterPhases = (value, update) => {
   if (value === '') {
     update(() => {
       filteredProcess.value = [...processPhases.value];
