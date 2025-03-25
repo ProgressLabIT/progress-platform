@@ -13,6 +13,7 @@
     :option-value="keyOnly ? '_key' : null"
     :emit-value="keyOnly"
     :map-options="keyOnly"
+    @focus="loadPositions"
     @filter="filter"
     @update:model-value="(selection) => $emit('select', selection)"
   >
@@ -79,19 +80,7 @@ export default {
     };
   },
 
-  computed: {},
-
-  created() {
-    this.initialize();
-  },
-
   methods: {
-    initialize() {
-      if (this.loadData) {
-        this.loadPositions();
-      }
-    },
-
     loadPositions(search_value) {
       this.loading = true;
       let params = {};
