@@ -51,9 +51,8 @@ class WarehouseListCreatedEvent(BaseInventoryEvent):
     # ===============================================
     list_code_exists = self.tx.collection('MovementList').find(dict(code=self.info.new_movement_list.code, type=self.info.new_movement_list.type)).count()
     if list_code_exists:
-      raise HTTPException(
-        status_code=409,
-        detail=f"List of type '{self.info.new_movement_list.type.value}' with code '{self.info.new_movement_list.code}' already exists."
+      raise ValueError(
+        f"List of type '{self.info.new_movement_list.type.value}' with code '{self.info.new_movement_list.code}' already exists."
       )
 
     # ===============================================
@@ -78,12 +77,12 @@ class WarehouseListCreatedEvent(BaseInventoryEvent):
           bind_vars=dict(codes=product_codes)
         ).next()
       except StopIteration:
-        raise HTTPException(status_code=404, detail="Could not find any product with the codes provided")
+        raise ValueError("Could not find any product with the codes provided")
 
       for movement in self.info.new_movement_list.movements:
         product_key = products_key_map.get(movement.product_code, None)
         if product_key is None:
-          raise HTTPException(status_code=404, detail=f"Could not find product with code {movement.product_code}")
+          raise ValueError(f"Could not find product with code {movement.product_code}")
         movement.product_key = product_key
 
     # ===============================================

@@ -353,6 +353,12 @@ def create_movement_list(new_movement_list: dict):
 
     return APIResponse(message="Movement list created successfully", detail=dict(movement_list_key=movement_list_key))
 
+  except ValueError as e:
+    raise HTTPException(
+      status_code=400,
+      detail=str(e)
+    ) from e
+
   except Exception as e:
     raise HTTPException(
       status_code=500,
