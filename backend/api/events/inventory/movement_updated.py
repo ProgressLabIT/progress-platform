@@ -56,6 +56,7 @@ class MovementUpdatedEvent(BaseInventoryEvent):
         # Create new completed movements for the splits
         for split in self.info.split_into:
           MovementCompletedEvent.create_as_child(self, dict(
+            movement_key=None,
             movement_type=original_movement['type'],
             product_key=original_movement['product_key'],
             qt_planned=split.qt_planned,
