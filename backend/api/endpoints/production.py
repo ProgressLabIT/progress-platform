@@ -179,6 +179,7 @@ async def update_work_order(
   new_from_date: datetime | date | None = Body(None),
   new_project_code: str | None = Body(None),
   new_bom: list[WOBomLine] | None = Body(None),
+  new_output_position_key: str | None = Body(None),
   notes: str | None = Body(None)
   ):
 
@@ -207,6 +208,9 @@ async def update_work_order(
 
     if new_bom:
       wo_update['wo_bom'] = new_bom
+
+    if new_output_position_key:
+      wo_update['output_position_key'] = new_output_position_key
 
     updated_wo_data = tx.collection('WorkOrder').update(wo_update, return_new=True)['new']
 

@@ -1054,5 +1054,6 @@ export default {
       serial: 'Serial',
       owned: 'Owned',
     },
+    output_position: 'Output position',
   },
 };

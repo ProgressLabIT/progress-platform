@@ -4,11 +4,22 @@
       <div class="col-4">
         <q-input
           v-model="searchText"
-          :label="$t('search')"
+          :label="$capitalize($t('search'))"
           filled
           dense
           placeholder="Codice o Descrizione"
           append-icon="mdi-magnify"
+        />
+      </div>
+
+      <div class="col-3">
+        <BaseAutocompletePositions
+          :model-value="outputPositionKey"
+          :label="$t('warehouse.output_position')"
+          :disable="!editMode"
+          key-only
+          dense
+          @select="(positionKey) => udpateBomLinePosition(props.row, positionKey)"
         />
       </div>
       <q-btn v-if="!editMode" size="sm" color="theme-blue" @click="toggleEdit">
@@ -218,7 +229,7 @@ const newLineConsumptionOptions = ref(null);
 const saving = ref(false);
 const filteredProcess = ref(null);
 const tempBom = ref([]);
-
+const outputPositionKey = ref(props.wo_data.output_position_key);
 
 // Get phase name and key from job list to populate the dropdown
 const processPhases = computed(() => {
@@ -400,6 +411,7 @@ const saveChanges = () => {
 
   api.patch(`work-order/${props.wo_data._key}`, {
     new_bom: tempBom.value,
+    new_output_position_key: outputPositionKey.value,
   }).then(() => {
     emit('refresh');
     editMode.value = false;

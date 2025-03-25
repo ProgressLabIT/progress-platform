@@ -1070,5 +1070,6 @@ export default {
       serial: 'Matricola',
       owned: 'Posseduto',
     },
+    output_position: 'Posizione di versamento',
   },
 };
