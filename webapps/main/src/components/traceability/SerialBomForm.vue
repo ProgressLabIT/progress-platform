@@ -4,7 +4,7 @@
     @close="
       {
         saving = false;
-        $emit('close');
+        emit('close');
       }
     "
   >
@@ -17,7 +17,7 @@
         <q-card-section>
           <div class="row justify-between items-center">
             <div class="text-h2 display highlight text-center">
-              {{ $t('serial') + ' #' + serial_labels[index] }}
+              {{ t('serial') + ' #' + serial_labels[index] }}
             </div>
             <div
               v-if="!batch_serials[index]?.code ?? false"
@@ -29,7 +29,7 @@
         </q-card-section>
 
         <NoDataAlert v-if="!bom_components">
-          {{ $t('serial_field.noData') }}
+          {{ t('serial_field.noData') }}
         </NoDataAlert>
 
         <q-card-section v-else class="column q-gutter-y-md">
@@ -48,9 +48,9 @@
                     initalModel[getComponentLineKey(component.component_key)]
                   "
                   :label="
-                    $capitalize([$t('serial'), component.component_code, '-', component.component_description].join(' '))
+                    $capitalize([t('serial'), component.component_code, '-', component.component_description].join(' '))
                   "
-                  :hint="$t('serial_autocomplete_hint', { minChars: 3 })"
+                  :hint="t('serial_autocomplete_hint', { minChars: 3 })"
                   :loading="loading"
                   :product_key="component.component_key"
                   :can_create="true"
@@ -139,7 +139,7 @@
             <q-btn
               v-if="batch_serials"
               color="theme-orange"
-              :label="$t('save')"
+              :label="t('save')"
               :loading="saving"
               @click="
                 () => {
@@ -151,7 +151,7 @@
 
             <q-space />
 
-            <q-btn color="theme-grey" :label="$t('cancel')" @click="cancel">
+            <q-btn color="theme-grey" :label="t('cancel')" @click="cancel">
             </q-btn>
           </div>
         </q-card-section>
@@ -159,349 +159,330 @@
   </BaseDialog>
 </template>
 
-<script>
-import { mapState } from 'vuex';
+<script setup>
+import { ref, computed, watch } from 'vue';
+import { useStore } from 'vuex';
+import { useI18n } from 'vue-i18n';
 import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
-
 import { timestamp } from '@/lib/TimeHandling.js';
-
-export default {
-  name: 'SerialBomForm',
-
-  components: {
-    BaseDialog,
-    BaseAutocompleteSerial,
-    NoDataAlert,
+import { api } from '@/boot/axios';
+const props = defineProps({
+  show: {
+    type: Boolean,
+    default: true,
   },
-
-  props: {
-    show: {
-      type: Boolean,
-      default: true,
-    },
-    traceability_enabled: {
-      type: Boolean,
-      default: true,
-    },
-    batch_key: {
-      type: String,
-      required: true,
-    },
-    wo_key: {
-      type: String,
-      required: true,
-    },
-    phase_key: {
-      type: String,
-      required: true,
-    },
-
-    bom_components: {
-      type: Object,
-      default: null,
-    },
+  traceability_enabled: {
+    type: Boolean,
+    default: true,
   },
-
-  emits: ['close'],
-
-  data() {
-    return {
-      saving: false,
-      enableSave: false,
-      serialModel: [],
-      initalModel: [],
-      qt: [],
-      initialValues: [],
-      serial_ids: [],
-      serial_labels: [],
-      batch_serials: [],
-      replace_serials: [],
-      booked_serials: [],
-      replace_serials_reason: [],
-      loading: false,
-      index: 0,
-    };
+  batch_key: {
+    type: String,
+    required: true,
   },
-
-  computed: {
-    ...mapState({
-      faked_batch_serials: (state) =>
-        state.traceability.current_batch_faked_serials,
-    }),
-    session_data() {
-      return this.$store.state.session;
-    },
+  wo_key: {
+    type: String,
+    required: true,
   },
-
-  watch: {
-    show: {
-      handler() {
-        this.index = 0;
-        this.initFormData();
-        if (!this.show) {
-          return;
-        }
-        if (this.traceability_enabled) {
-          this.getBatchSerials();
-        } else {
-          this.fakeBatchSerials();
-        }
-      },
-    },
+  phase_key: {
+    type: String,
+    required: true,
   },
+  bom_components: {
+    type: Object,
+    default: null,
+  },
+});
 
-  methods: {
-    getComponentLineKey(component_key) {
-      return [this.serial_ids[this.index], component_key].join(' ');
+const emit = defineEmits(['close']);
+const store = useStore();
+const { t } = useI18n();
+
+const saving = ref(false);
+const enableSave = ref(false);
+const serialModel = ref([]);
+const initalModel = ref([]);
+const qt = ref([]);
+const initialValues = ref([]);
+const serial_ids = ref([]);
+const serial_labels = ref([]);
+const batch_serials = ref([]);
+const replace_serials = ref([]);
+const booked_serials = ref([]);
+const replace_serials_reason = ref([]);
+const loading = ref(false);
+const index = ref(0);
+
+const faked_batch_serials = computed(() => store.state.traceability.current_batch_faked_serials);
+const session_data = computed(() => store.state.session);
+
+const getComponentLineKey = (component_key) => {
+  return [serial_ids.value[index.value], component_key].join(' ');
+};
+
+const getBatchSerials = async () => {
+  loading.value = true;
+  const { data: batch_serials_data } = await api.get('serial-batch', {
+    params: {
+      batch_key: props.batch_key,
     },
+  });
 
-    async getBatchSerials() {
-      this.loading = true;
-      const { data: batch_serials } = await this.$api.get('serial-batch', {
-        params: {
-          batch_key: this.batch_key,
-        },
-      });
+  batch_serials.value = batch_serials_data;
+  fillInitialData();
+  loading.value = false;
+};
 
-      this.batch_serials = batch_serials;
-      this.fillInitialData();
+const fakeBatchSerials = async () => {
+  loading.value = true;
 
-      this.loading = false;
-    },
+  await store.dispatch('fakeBatchSerials', {
+    batch_key: props.batch_key,
+  });
 
-    async fakeBatchSerials() {
-      this.loading = true;
+  batch_serials.value = faked_batch_serials.value;
+  fillInitialData();
+  loading.value = false;
+};
 
-      await this.$store.dispatch('fakeBatchSerials', {
-        batch_key: this.batch_key,
-      });
+const initFormData = async () => {
+  saving.value = false;
+  enableSave.value = false;
+};
 
-      this.batch_serials = this.faked_batch_serials;
+const fillInitialData = () => {
+  serialModel.value = [];
+  initalModel.value = [];
+  initialValues.value = [];
+  serial_ids.value = [];
+  qt.value = [];
+  replace_serials.value = [];
+  booked_serials.value = [];
 
-      this.fillInitialData();
+  for (const component of props.bom_components) {
+    if (props.traceability_enabled) {
+      qt.value[component.component_key] = component.qt;
+    } else {
+      qt.value[component.component_key] = component.batch_qt;
+    }
+  }
 
-      this.loading = false;
-    },
+  for (const serial of batch_serials.value) {
+    serial_ids.value.push(serial._id);
+    serial_labels.value.push(serial?.code || serial._key);
 
-    async initFormData() {
-      this.saving = false;
-      this.enableSave = false;
-    },
-
-    fillInitialData() {
-      this.serialModel = [];
-      this.initalModel = [];
-      this.initialValues = [];
-      this.serial_ids = [];
-      this.qt = [];
-      this.replace_serials = [];
-      this.booked_serials = [];
-      for (const component of this.bom_components) {
-        if (this.traceability_enabled) {
-          this.qt[component.component_key] = component.qt;
-        } else {
-          this.qt[component.component_key] = component.batch_qt;
-        }
+    for (const component of props.bom_components) {
+      const key = [serial._id, component.component_key].join(' ');
+      if (!serialModel.value[key]) {
+        serialModel.value[key] = [];
+        initalModel.value[key] = [];
+        replace_serials.value[key] = false;
+        replace_serials_reason.value[key] = null;
       }
-      for (const serial of this.batch_serials) {
-        this.serial_ids.push(serial._id);
-        this.serial_labels.push(serial?.code || serial._key);
-        for (const component of this.bom_components) {
-          const key = [serial._id, component.component_key].join(' ');
-          if (!this.serialModel[key]) {
-            this.serialModel[key] = [];
-            this.initalModel[key] = [];
-            this.replace_serials[key] = false;
-            this.replace_serials_reason[key] = null;
-          }
-        }
+    }
 
-        for (const child of serial.children) {
-          const key = [serial._id, child.product_key].join(' ');
-          if (!this.serialModel[key]) {
-            this.serialModel[key] = [];
-            this.initalModel[key] = [];
-            this.replace_serials[key] = false;
-            this.replace_serials_reason[key] = null;
-          }
-          let serial_link = {
-            _key: child._key,
-            label: child.code,
-            product_key: child.product_key,
-            wo_key: child.wo_key,
-            value: child._key,
-          };
-          if (this.qt[child.product_key] > 1) {
-            this.serialModel[key].push(serial_link);
-            this.initalModel[key].push(serial_link);
-          } else {
-            this.serialModel[key] = serial_link;
-            this.initalModel[key] = serial_link;
-          }
-
-          this.initialValues.push({
-            parent_serial_key: serial._key,
-            child_serial_key: child._key,
-            wo_key: child.wo_key,
-            reason: null,
-            replaced: true,
-            component_key: child.product_key,
-            batch_key: this.batch_key,
-          });
-          if (!this.booked_serials[child.product_key]) {
-            this.booked_serials[child.product_key] = [];
-          }
-          this.booked_serials[child.product_key].push(child.code);
-        }
-      }
-    },
-
-    onSerialSelection(selectedSerials, component_key, selected_key) {
-      let temp_booked_serials = [];
-
-      if (Array.isArray(selectedSerials)) {
-        for (const serial of selectedSerials) {
-          temp_booked_serials.push(serial.label);
-        }
-      } else if (selectedSerials) {
-        temp_booked_serials.push(selectedSerials.label);
+    for (const child of serial.children) {
+      const key = [serial._id, child.product_key].join(' ');
+      if (!serialModel.value[key]) {
+        serialModel.value[key] = [];
+        initalModel.value[key] = [];
+        replace_serials.value[key] = false;
+        replace_serials_reason.value[key] = null;
       }
 
-      for (const serial_from of this.batch_serials) {
-        for (const component of this.bom_components) {
-          if (component?.component_key === component_key) {
-            const key = [serial_from._id, component.component_key].join(' ');
-            if (this.serialModel[key] && selected_key !== key) {
-              if (Array.isArray(this.serialModel[key])) {
-                for (const serial_to of this.serialModel[key]) {
-                  temp_booked_serials.push(serial_to.label);
-                }
-              } else {
-                temp_booked_serials.push(this.serialModel[key].label);
-              }
-            }
-          }
-        }
-      }
-      this.booked_serials[component_key] = temp_booked_serials;
-    },
+      let serial_link = {
+        _key: child._key,
+        label: child.code,
+        product_key: child.product_key,
+        wo_key: child.wo_key,
+        value: child._key,
+      };
 
-    cancel() {
-      this.initFormData();
-      this.$emit('close');
-    },
-
-    ensureAndSave(
-      link_data,
-      serial_consumed,
-      component_key,
-      serial_from,
-      serial_to,
-    ) {
-      if (serial_consumed.find((str) => str === serial_to._key)) {
-        return false;
+      if (qt.value[child.product_key] > 1) {
+        serialModel.value[key].push(serial_link);
+        initalModel.value[key].push(serial_link);
+      } else {
+        serialModel.value[key] = serial_link;
+        initalModel.value[key] = serial_link;
       }
-      serial_consumed.push(serial_to._key);
-      link_data.push({
-        wo_key: this.wo_key,
-        component_key: component_key,
-        batch_key: this.batch_key,
-        parent_serial_key: serial_from._key,
-        child_serial_key: serial_to._key,
+
+      initialValues.value.push({
+        parent_serial_key: serial._key,
+        child_serial_key: child._key,
+        wo_key: child.wo_key,
         reason: null,
-        replaced: false,
+        replaced: true,
+        component_key: child.product_key,
+        batch_key: props.batch_key,
       });
-      return true;
-    },
 
-    async save() {
-      this.saving = true;
+      if (!booked_serials.value[child.product_key]) {
+        booked_serials.value[child.product_key] = [];
+      }
+      booked_serials.value[child.product_key].push(child.code);
+    }
+  }
+};
 
-      let link_data = [];
-      let initial_values = this.initialValues;
-      let serial_consumed = [];
-      for (const serial_from of this.batch_serials) {
-        for (const component of this.bom_components) {
-          const key = [serial_from._id, component.component_key].join(' ');
-          if (this.serialModel[key]) {
-            if (Array.isArray(this.serialModel[key])) {
-              for (const serial_to of this.serialModel[key]) {
-                if (
-                  !this.ensureAndSave(
-                    link_data,
-                    serial_consumed,
-                    component.component_key,
-                    serial_from,
-                    serial_to,
-                  )
-                ) {
-                  window.alert(this.$t('serial_field.component_reused'));
-                  this.saving = false;
-                  return;
-                }
-              }
-            } else {
-              if (
-                !this.ensureAndSave(
-                  link_data,
-                  serial_consumed,
-                  component.component_key,
-                  serial_from,
-                  this.serialModel[key],
-                )
-              ) {
-                window.alert(this.$t('serial_field.component_reused'));
-                this.saving = false;
-                return;
-              }
+const onSerialSelection = (selectedSerials, component_key, selected_key) => {
+  let temp_booked_serials = [];
+
+  if (Array.isArray(selectedSerials)) {
+    for (const serial of selectedSerials) {
+      temp_booked_serials.push(serial.label);
+    }
+  } else if (selectedSerials) {
+    temp_booked_serials.push(selectedSerials.label);
+  }
+
+  for (const serial_from of batch_serials.value) {
+    for (const component of props.bom_components) {
+      if (component?.component_key === component_key) {
+        const key = [serial_from._id, component.component_key].join(' ');
+        if (serialModel.value[key] && selected_key !== key) {
+          if (Array.isArray(serialModel.value[key])) {
+            for (const serial_to of serialModel.value[key]) {
+              temp_booked_serials.push(serial_to.label);
             }
+          } else {
+            temp_booked_serials.push(serialModel.value[key].label);
           }
         }
       }
+    }
+  }
+  booked_serials.value[component_key] = temp_booked_serials;
+};
 
-      for (const inital_data of initial_values) {
-        const found = link_data.some(
-          (el) =>
-            el.from_serial === inital_data.from_serial &&
-            el.to_serial === inital_data.to_serial,
-        );
-        if (!found) {
-          const serial_key = [
-            'Serial/' + inital_data.from_serial,
-            inital_data.component_key,
-          ].join(' ');
-          let reason = this.replace_serials_reason[serial_key];
-          if (!reason) {
-            window.alert(this.$t('serial_field.missing_reason'));
-            this.saving = false;
+const cancel = () => {
+  initFormData();
+  emit('close');
+};
+
+const ensureAndSave = (
+  link_data,
+  serial_consumed,
+  component_key,
+  serial_from,
+  serial_to,
+) => {
+  if (serial_consumed.find((str) => str === serial_to._key)) {
+    return false;
+  }
+  serial_consumed.push(serial_to._key);
+  link_data.push({
+    wo_key: props.wo_key,
+    component_key: component_key,
+    batch_key: props.batch_key,
+    parent_serial_key: serial_from._key,
+    child_serial_key: serial_to._key,
+    reason: null,
+    replaced: false,
+  });
+  return true;
+};
+
+const save = async () => {
+  saving.value = true;
+
+  let link_data = [];
+  let initial_values = initialValues.value;
+  let serial_consumed = [];
+
+  for (const serial_from of batch_serials.value) {
+    for (const component of props.bom_components) {
+      const key = [serial_from._id, component.component_key].join(' ');
+      if (serialModel.value[key]) {
+        if (Array.isArray(serialModel.value[key])) {
+          for (const serial_to of serialModel.value[key]) {
+            if (
+              !ensureAndSave(
+                link_data,
+                serial_consumed,
+                component.component_key,
+                serial_from,
+                serial_to,
+              )
+            ) {
+              window.alert(t('serial_field.component_reused'));
+              saving.value = false;
+              return;
+            }
+          }
+        } else {
+          if (
+            !ensureAndSave(
+              link_data,
+              serial_consumed,
+              component.component_key,
+              serial_from,
+              serialModel.value[key],
+            )
+          ) {
+            window.alert(t('serial_field.component_reused'));
+            saving.value = false;
             return;
           }
-
-          link_data.push({
-            ...inital_data,
-            reason: reason,
-          });
         }
       }
+    }
+  }
 
-      const event = {
-        event_type: 'SERIAL_LINKED',
-        user_key: this.session_data.session_key,
-        timestamp: timestamp(),
-        wo_key: this.wo_key,
-        batch_key: this.batch_key,
-      };
-      for (const link of link_data) {
-        await this.$api.post('event', {
-          ...event,
-          ...link,
-        });
+  for (const inital_data of initial_values) {
+    const found = link_data.some(
+      (el) =>
+        el.from_serial === inital_data.from_serial &&
+        el.to_serial === inital_data.to_serial,
+    );
+    if (!found) {
+      const serial_key = [
+        'Serial/' + inital_data.from_serial,
+        inital_data.component_key,
+      ].join(' ');
+      let reason = replace_serials_reason.value[serial_key];
+      if (!reason) {
+        window.alert(t('serial_field.missing_reason'));
+        saving.value = false;
+        return;
       }
-      this.saving = false;
-      this.$emit('close');
-    },
-  },
+
+      link_data.push({
+        ...inital_data,
+        reason: reason,
+      });
+    }
+  }
+
+  const event = {
+    event_type: 'SERIAL_LINKED',
+    user_key: session_data.value.session_key,
+    timestamp: timestamp(),
+    wo_key: props.wo_key,
+    batch_key: props.batch_key,
+  };
+
+  for (const link of link_data) {
+    await api.post('event', {
+      ...event,
+      ...link,
+    });
+  }
+
+  saving.value = false;
+  emit('close');
 };
+
+watch(() => props.show, (newVal) => {
+  index.value = 0;
+  initFormData();
+  if (!newVal) {
+    return;
+  }
+  if (props.traceability_enabled) {
+    getBatchSerials();
+  } else {
+    fakeBatchSerials();
+  }
+});
 </script>
