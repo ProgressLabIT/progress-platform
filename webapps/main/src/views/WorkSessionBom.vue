@@ -18,7 +18,7 @@
     >
       <template v-if="!bom.length" #top-row>
         <div class="text-low absolute-center">
-          {{ $t('no_data') }}
+          {{ t('no_data') }}
         </div>
       </template>
       <template #body-cell-description="props">
@@ -61,7 +61,7 @@
               @click="serial_form_bom_line = props.row"
             >
               {{
-                props.row.phase_key === job.phase_key ? $t('edit') : $t('view')
+                props.row.phase_key === job.phase_key ? t('edit') : t('view')
               }}
             </q-btn>
           </template>
@@ -92,26 +92,26 @@
     >
       <div class="col">
         <span class="q-mr-3">
-          {{ $capitalize($t('bom.quantity_type.radio_label')) }}
+          {{ $capitalize(t('bom.quantity_type.radio_label')) }}
         </span>
         <q-radio
           v-for="qt_type in qt_types"
           :key="qt_type"
           v-model="quantity_type"
           :val="qt_type"
-          :label="$t('bom.quantity_type.' + qt_type).toUpperCase()"
+          :label="t('bom.quantity_type.' + qt_type).toUpperCase()"
         >
         </q-radio>
         <q-space />
         <span class="q-mr-3">
-          {{ $capitalize($t('bom.bom_type.radio_label')) }}
+          {{ $capitalize(t('bom.bom_type.radio_label')) }}
         </span>
         <q-radio
           v-for="b_type in bom_types"
           :key="b_type"
           v-model="bom_type"
           :val="b_type"
-          :label="$t('bom.bom_type.' + b_type).toUpperCase()"
+          :label="t('bom.bom_type.' + b_type).toUpperCase()"
         >
         </q-radio>
       </div>
@@ -124,7 +124,7 @@
           :disable="!job.active_batch_key"
           @click="show_all_serial_form = true"
         >
-          {{ $t('serial_field.bom_component') }}
+          {{ t('serial_field.bom_component') }}
         </q-btn>
       </div>
     </div>
@@ -145,151 +145,115 @@
       "
     >
     </SerialBomForm>
-
-    <!-- INSERT HEREoa DIALOG FOR COMPONENT LOT REGISTRATION -->
-    <!-- <BaseModalForm :show="show_lot_input" @cancel="show_lot_input = false">
-        <template v-slot:title>
-          REGISTRAZIONE LOTTI MATERIALI
-        </template>
-
-        <template v-slot:form>
-          <v-container>
-            <v-row v-for="item in components" :key="item" align="center">
-              <v-col cols="4">{{ item }}</v-col>
-              <v-col cols="6" offset="2">
-                <v-autocomplete :items="lots">
-                </v-autocomplete>
-              </v-col>
-            </v-row>
-          </v-container>
-        </template>
-      </BaseModalForm> -->
   </div>
 </template>
 
-<script>
-// import BaseModalForm from '@/components/BaseModalForm.vue'
+<script setup>
+import { ref, computed, defineProps, useStore } from 'vue';
 import BomComponentSerialForm from 'app/src/components/traceability/BomComponentSerialForm.vue';
 import SerialBomForm from 'app/src/components/traceability/SerialBomForm.vue';
+import { useI18n } from 'vue-i18n';
 
-export default {
-  name: 'WorkSessionBom',
-
-  components: {
-    //  BaseModalForm,
-    BomComponentSerialForm,
-    SerialBomForm,
+const props = defineProps({
+  job: {
+    type: Object,
+    required: true,
   },
+});
 
-  props: {
-    job: {
-      type: Object,
-      required: true,
+const store = useStore();
+const { t, capitalize: $capitalize } = useI18n();
+const quantity_type = ref('job');
+const qt_types = ['item', 'batch', 'job'];
+const bom_type = ref('job_bom');
+const bom_types = ['job_bom', 'wo_bom'];
+const serial_form_bom_line = ref(null);
+const show_all_serial_form = ref(false);
+const loading = ref(false);
+
+const columns = computed(() => {
+  // TODO: refactor into mixin / composition function, used also in ProductBoM
+  return [
+    {
+      name: 'code',
+      field: 'component_code',
+      sortable: true,
+      label: t('code').toUpperCase(),
+      align: 'left',
     },
-  },
-
-  data() {
-    return {
-      quantity_type: 'job',
-      qt_types: ['item', 'batch', 'job'],
-      bom_type: 'job_bom',
-      bom_types: ['job_bom', 'wo_bom'],
-      show_lot_input: false,
-      serial_form_bom_line: null,
-      show_all_serial_form: false,
-      loading: false,
-    };
-  },
-
-  computed: {
-    columns() {
-      // TODO: refactor into mixin / composition function, used also in ProductBoM
-      return [
-        {
-          name: 'code',
-          field: 'component_code',
-          sortable: true,
-          label: this.$t('code').toUpperCase(),
-          align: 'left',
-        },
-        {
-          name: 'description',
-          field: 'component_description',
-          sortable: true,
-          label: this.$t('description').toUpperCase(),
-          align: 'left',
-        },
-        {
-          name: 'phase_name',
-          sortable: true,
-          field: 'phase_name',
-          label: this.$t('phase.short', 1).toUpperCase(),
-          align: 'left',
-        },
-        {
-          name: 'qt',
-          sortable: true,
-          field: this.display_qt,
-          label: this.$t('quantity.short').toUpperCase(),
-        },
-        {
-          name: 'serials',
-          field: 'serials',
-          label: this.$t('serial', 2).toUpperCase(),
-        },
-      ];
+    {
+      name: 'description',
+      field: 'component_description',
+      sortable: true,
+      label: t('description').toUpperCase(),
+      align: 'left',
     },
-
-    bom() {
-      if (!this.job?.wo_bom) {
-        this.refreshBom();
-      }
-      return (this.job.wo_bom || [])
-        .filter((i) => {
-          return this.bom_type === 'wo_bom'
-            ? true
-            : i.phase_key === this.job.phase_key;
-        })
-        .map((i) => {
-          // line quantity is per item
-          return {
-            ...i,
-            batch_qt: i.qt * this.job.active_batch_qt,
-            job_qt: i.qt * this.job.qt_planned,
-          };
-        })
+    {
+      name: 'phase_name',
+      sortable: true,
+      field: 'phase_name',
+      label: t('phase.short', 1).toUpperCase(),
+      align: 'left',
     },
+    {
+      name: 'qt',
+      sortable: true,
+      field: display_qt.value,
+      label: t('quantity.short').toUpperCase(),
+    },
+    {
+      name: 'serials',
+      field: 'serials',
+      label: t('serial', 2).toUpperCase(),
+    },
+  ];
+});
 
-    display_qt() {
+const display_qt = computed(() => {
+  return {
+    item: 'qt',
+    batch: 'batch_qt',
+    job: 'job_qt',
+  }[quantity_type.value];
+});
+
+const bom = computed(() => {
+  if (!props.job?.wo_bom) {
+    refreshBom();
+  }
+  return (props.job.wo_bom || [])
+    .filter((i) => {
+      return bom_type.value === 'wo_bom'
+        ? true
+        : i.phase_key === props.job.phase_key;
+    })
+    .map((i) => {
+      // line quantity is per item
       return {
-        item: 'qt',
-        batch: 'batch_qt',
-        job: 'job_qt',
-      }[this.quantity_type];
-    },
+        ...i,
+        batch_qt: i.qt * props.job.active_batch_qt,
+        job_qt: i.qt * props.job.qt_planned,
+      };
+    });
+});
 
-    traceability_enabled() {
-      return !!this.$store.state.traceability.working_job_data
-        .traceability_level;
-    },
+const traceability_enabled = computed(() => {
+  return !!store.state.traceability.working_job_data.traceability_level;
+});
 
-    requiresComponentSerials() {
-      return this.job.active && this.job.active_batch_qt && this.job.wo_bom.some(i => i.traceability_level);
-    },
-  },
+const requiresComponentSerials = computed(() => {
+  return props.job.active && props.job.active_batch_qt && props.job.wo_bom.some(i => i.traceability_level);
+});
 
-  methods: {
-    refreshBom() {
-      this.loading = true;
-      this.refreshWO();
-    },
+async function refreshWO() {
+  await store.dispatch('loadWorkingJobData', props.job._key);
+  loading.value = false;
+}
 
-    async refreshWO() {
-      await this.$store.dispatch('loadWorkingJobData', this.job._key);
-      this.loading = false;
-    },
-  },
-};
+function refreshBom() {
+  loading.value = true;
+  refreshWO();
+}
 </script>
 
 <style lang="sass">
