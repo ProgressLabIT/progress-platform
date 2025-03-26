@@ -2,9 +2,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Annotated
 
-from models.base_models import ArangoDocument, ArangoEdge
+from models.base_models import ArangoDocument, FlexModel
 from models.form import SerialFormFieldValue
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator
 from utils.dt import timestamp
 
 
@@ -27,12 +27,25 @@ class SerialSelection(BaseModel):
    counter_key: str | None = Field(None, validation_alias='counter_key')
    active: bool = False
 
-class SerialLink(ArangoEdge):
-  wo_key: str | None = None,
-  component_key: str | None = None,
-  batch_key: str | None = None,
+class SerialLink(FlexModel):
+  parent_serial_key: str = Field(..., alias='_from')
+  child_serial_key: str = Field(..., alias='_to')
+  key: str | None = Field(None, alias='_key')
+  wo_key: str | None = None
+  phase_key: str | None = None
+  component_key: str | None = None
+  batch_key: str | None = None
+  confirmed: bool | None = False
   replaced: bool | None = False
   reason: str | None = None
+
+  @field_serializer('parent_serial_key', 'child_serial_key')
+  def generate_serial_id(self, serial_key, _info):
+    return f'Serial/{serial_key}'
+
+  @field_validator('parent_serial_key', 'child_serial_key', mode="after")
+  def parse_serial_key(cls, v):
+    return v.split('/')[-1]
 
 class SerialNotificationType(str, Enum):
   CREATED = 'CREATED'

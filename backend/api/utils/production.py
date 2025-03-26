@@ -92,17 +92,24 @@ class Queries:
     FILTER j._key == @job_key
 
     LET wo_bom = (
-      FOR bom_component IN DOCUMENT(WorkOrder, j.wo_key).wo_bom
+      FOR bom_line IN DOCUMENT(WorkOrder, j.wo_key).wo_bom
 
       LET declared_serials = (
-        FOR linked_serial IN contains
-          FILTER linked_serial.replaced == false
-          && linked_serial.component_key == bom_component.component_key
-          && linked_serial.wo_key == j.wo_key
-          && (linked_serial.batch_key == j.active_batch_key || linked_serial._from == CONCAT('Batch/', j.active_batch_key))
-          return linked_serial
+        FOR c IN contains
+          FILTER !c.replaced
+          && c.component_key == bom_line.component_key
+          && c.phase_key == bom_line.phase_key
+          && c.batch_key == j.active_batch_key
+          RETURN {
+            _key: c._key,
+            phase_key: c.phase_key,
+            component_key: c.component_key,
+            parent_serial_key: PARSE_IDENTIFIER(c._from).key,
+            child_serial_key: PARSE_IDENTIFIER(c._to).key,
+            batch_key: j.active_batch_key
+          }
       )
-      RETURN MERGE(bom_component, { declared_serials })
+      RETURN MERGE(bom_line, { declared_serials })
     )
 
     LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == j._id RETURN 1)

@@ -93,18 +93,18 @@ class Queries:
   """
 
   GET_SERIAL_CHILDREN = """
-      LET start = @serial_id
-        FOR v, e IN 1..999 OUTBOUND start contains
-            LET product = DOCUMENT(Product, v.product_key)
-            RETURN merge({
-                parent_key: PARSE_IDENTIFIER(e._from).key,
-                serial_key: v._key,
-                replaced: e.replaced,
-                serial_code: v.code,
-                product_key: product._key,
-                product_code: product.code,
-                product_description: product.description
-      })
+    LET start = @serial_id
+    FOR v, e IN 1..999 OUTBOUND start contains
+    LET product = DOCUMENT(Product, v.product_key)
+    RETURN merge({
+      parent_key: PARSE_IDENTIFIER(e._from).key,
+      serial_key: v._key,
+      replaced: e.replaced,
+      serial_code: v.code,
+      product_key: product._key,
+      product_code: product.code,
+      product_description: product.description
+    })
   """
 
 

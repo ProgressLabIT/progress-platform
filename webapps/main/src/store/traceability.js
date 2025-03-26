@@ -1,5 +1,6 @@
 import { cloneDeep } from 'lodash';
 import { DateTime as DT } from 'luxon';
+import { Notify } from 'quasar';
 import { api } from '@/boot/axios';
 import { sendEvent } from '@/composables/event';
 import { timestamp } from '@/lib/TimeHandling';
@@ -157,6 +158,7 @@ const traceability = {
     current_step_media_index: null,
     heartbeat: null,
     batch_serials: [],
+    bom_serials: [],
     current_batch_serials: {},
     current_batch_faked_serials: {},
   },
@@ -260,7 +262,6 @@ const traceability = {
     },
 
     SET_STEP_EXECUTION_KEY(state, { stepKey, executionRecordKey }) {
-      console.log('Test')
       const batchSteps = state.current_batch_data.step_data;
       const step = batchSteps.find(({ _key }) => _key === stepKey);
       if (step) {
@@ -289,19 +290,24 @@ const traceability = {
 
     UPDATE_BATCH_SERIALS(state, batch_serials) {
       state.current_batch_serials = batch_serials;
-      // Remove declared component serials from job bom data if quantity has been decreased
-      // for (const bom_line of state.working_job_data.wo_bom) {
-      //   const component_qt = state.current_batch_data.qt_total * bom_line.qt;
-      //   if (bom_line.declared_serials.length > component_qt) {
-      //     bom_line.declared_serials = bom_line.declared_serials.filter(
-      //       (serial) => batch_serials.includes(serial),
-      //     );
-      //   }
-      // }
     },
 
     UPDATE_BATCH_FAKED_SERIALS(state, batch_serials) {
       state.current_batch_faked_serials = batch_serials;
+    },
+
+    SET_BOM_SERIALS(state, bom_serials) {
+      state.bom_serials = bom_serials;
+    },
+
+    UPDATE_BOM_LINE_COMPONENT_SERIALS(state, {phaseKey, componentKey, lineSerialLinks}) {
+      const toKeep = state.bom_serials.filter(serial =>
+        serial.phase_key !== phaseKey
+        || serial.component_key !== componentKey
+        || serial.batch_key !== state.current_batch_data._key
+      );
+      const toAdd = lineSerialLinks;
+      state.bom_serials = [...toKeep, ...toAdd];
     },
   },
 
@@ -520,6 +526,30 @@ const traceability = {
         batch_data = batch_resp.data.detail;
       }
       commit('UPDATE_BATCH', batch_data);
+    },
+
+    async saveSerialLinks({ dispatch, state }, { batch_key, serial_links }) {
+      return new Promise((resolve, reject) => {
+        api.put(`/batch/${batch_key}/serial-temp-links`, serial_links)
+        .then(async () => {
+          await dispatch('loadWorkingJobData', { job_key: state.working_job_data._key });
+          Notify.create({
+            message: 'Serial links saved',
+            color: 'theme-green',
+            position: 'top',
+          });
+          resolve();
+        })
+        .catch((error) => {
+          console.error('Error saving serial links:', error);
+          Notify.create({
+            message: error.response.data.detail,
+            color: 'theme-red',
+            position: 'top',
+          });
+          reject(error);
+        });
+      });
     },
 
     async completeStep(

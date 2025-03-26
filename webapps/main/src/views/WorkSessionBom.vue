@@ -5,7 +5,7 @@
       ref="bom"
       class="my-sticky-header-table col"
       card-class="surface1 shadow-0"
-      row-key="_key"
+      row-key="line_key"
       virtual-scroll
       :loading="loading"
       :rows="bom"
@@ -136,7 +136,8 @@
       :phase_key="job.phase_key"
       mode="new"
       :traceability_enabled="traceability_enabled"
-      :bom_components="bom"
+      :bom="bom"
+      @reset="initBomSerials"
       @close="
         () => {
           show_all_serial_form = false;
@@ -149,10 +150,11 @@
 </template>
 
 <script setup>
-import { ref, computed, defineProps, useStore } from 'vue';
+import { ref, computed, defineProps } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useStore } from 'vuex';
 import BomComponentSerialForm from 'app/src/components/traceability/BomComponentSerialForm.vue';
 import SerialBomForm from 'app/src/components/traceability/SerialBomForm.vue';
-import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
   job: {
@@ -162,7 +164,7 @@ const props = defineProps({
 });
 
 const store = useStore();
-const { t, capitalize: $capitalize } = useI18n();
+const { t } = useI18n();
 const quantity_type = ref('job');
 const qt_types = ['item', 'batch', 'job'];
 const bom_type = ref('job_bom');
@@ -170,6 +172,12 @@ const bom_types = ['job_bom', 'wo_bom'];
 const serial_form_bom_line = ref(null);
 const show_all_serial_form = ref(false);
 const loading = ref(false);
+
+function initBomSerials() {
+  store.commit('SET_BOM_SERIALS', props.job.wo_bom.flatMap(line => line.declared_serials));
+}
+
+initBomSerials();
 
 const columns = computed(() => {
   // TODO: refactor into mixin / composition function, used also in ProductBoM
@@ -231,6 +239,7 @@ const bom = computed(() => {
       // line quantity is per item
       return {
         ...i,
+        line_key: i.phase_key + '_' + i.component_key,
         batch_qt: i.qt * props.job.active_batch_qt,
         job_qt: i.qt * props.job.qt_planned,
       };

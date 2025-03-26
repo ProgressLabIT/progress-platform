@@ -3,22 +3,23 @@
     ref="selectRef"
     use-input
     filled
-    :multiple="multiple"
-    :max-values="selection_qt || 1"
-    :loading="loading"
-    :label-slot="!!label"
-    :dense="dense"
-    :hint="hint"
-    :use-chips="multiple"
-    :placeholder="placeholder_computed"
+    input-class="text-uppercase"
+    input-debounce="300"
     :clearable="clearable"
+    :dense="dense"
+    :emit-value="keyOnly"
+    :hint="hint"
+    :label-slot="!!label"
+    :loading="loading"
+    :map-options="keyOnly"
+    :max-values="selection_qt || 1"
+    :model-value="value"
+    :multiple="multiple"
     :options="options"
     :option-value="keyOnly ? '_key' : null"
-    :model-value="value"
-    input-debounce="300"
-    input-class="text-uppercase"
-    :emit-value="keyOnly"
-    :map-options="keyOnly"
+    :option-label="keyOnly ? 'code' : null"
+    :placeholder="placeholder_computed"
+    :use-chips="multiple"
     @filter="filter"
     @remove="remove"
     @update:model-value="
@@ -30,17 +31,17 @@
     <template #option="scope">
       <q-item
         v-bind="scope.itemProps"
-        :id="scope.opt.label"
-        :disable="filtered_values && filtered_values.includes(scope.opt.code)"
+        :id="scope.opt.code"
+        :disable="filtered_values && filtered_values.includes(scope.opt._key)"
       >
         <q-item-section>
           <q-item-label class="highlight">
             {{
-              scope.opt.label || '(' + $t('serial_code_to_be_assigned') + ')'
+              scope.opt.code || '(' + $t('serial_code_to_be_assigned') + ')'
             }}
           </q-item-label>
           <q-item-label caption lines="2">
-            {{ 'ID ' + scope.opt.value }}
+            {{ 'ID ' + scope.opt._key }}
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -201,6 +202,11 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+
+  usedSerials: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const emit = defineEmits(['select', 'remove']);
@@ -231,7 +237,7 @@ function initialize() {
   create_serial_form.value = false;
   if (props.work_order_key || props.product_key) {
     loadOptions();
-    // last_research.value = '';
+    loading.value = false;
   }
 };
 
@@ -261,8 +267,6 @@ function loadSerials(search_value) {
         }
         api.get('serial-selection', { params }).then((resp) => {
           options.value = resp.data.map((item) => ({
-            label: item.serial_code || item.code,
-            value: item._key,
             _key: item._key,
             code: item.serial_code || item.code,
           }));
@@ -273,8 +277,6 @@ function loadSerials(search_value) {
   } else {
     api.get('serial-selection', { params }).then((resp) => {
       options.value = resp.data.map((item) => ({
-        label: item.serial_code || item.code,
-        value: item._key,
         _key: item._key,
         code: item.serial_code || item.code,
       }));
@@ -294,8 +296,6 @@ function loadInventory(search_value) {
     options.value = resp.data.map((item) => ({
       _key: item.serial_key,
       code: item.serial_code || item.code,
-      label: item.serial_code || item.code,
-      value: item._key,
     }));
   });
 }
