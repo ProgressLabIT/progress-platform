@@ -7,7 +7,7 @@
       {{ transfer.product.description }}
     </div>
 
-    <div class="row q-col-gutter-sm" v-if="inventory.length > 0">
+    <div class="row q-col-gutter-sm">
       <q-input
         v-model="positionFilter"
         filled
