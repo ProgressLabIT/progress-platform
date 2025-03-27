@@ -74,13 +74,14 @@ class MovementCompletedEvent(BaseInventoryEvent):
 
     self.requires_serial = getattr(self.product, 'traceability_level', False)
 
+    self.handlers[self.info.movement_type]()
+
     if self.info.movement_key is None:
       self.info.created = self.info.start = self.info.timestamp
       self.movement = self._save_movement()
     else:
       self.movement = self._update_movement()
 
-    self.handlers[self.info.movement_type]()
 
     self.info.movement_key = self.movement.key
     self.response = self.movement

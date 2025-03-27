@@ -54,7 +54,6 @@ from events.production.work_order_events import (
 from events.serial.base_serial import BaseSerialEvent
 from events.serial.serial_booked import SerialBooked
 from events.serial.serial_created import SerialCreatedEvent
-from events.serial.serial_data_updated import SerialDataUpdatedEvent
 from events.serial.serial_deleted import SerialDeleted
 from events.serial.serial_linked import SerialLinkedEvent
 from events.serial.serial_unlinked import SerialUnlinkedEvent
@@ -72,6 +71,9 @@ from events.wip.wip_unbooked import WIPUnbookedEvent
 from events.work_session.work_session_canceled import WorkSessionCanceledEvent
 from events.work_session.work_session_closed import WorkSessionClosedEvent
 from events.work_session.work_session_created import WorkSessionCreatedEvent
+
+
+# Registration util
 from utils.event import register_event_class
 
 # Get all classes defined in this module's namespace

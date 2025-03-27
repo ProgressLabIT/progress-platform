@@ -300,11 +300,12 @@ const traceability = {
       state.bom_serials = bom_serials;
     },
 
-    UPDATE_BOM_LINE_COMPONENT_SERIALS(state, {phaseKey, componentKey, lineSerialLinks}) {
+    UPDATE_BOM_LINE_COMPONENT_SERIALS(state, {phaseKey, componentKey, lineSerialLinks, parentSerialKey}) {
       const toKeep = state.bom_serials.filter(serial =>
         serial.phase_key !== phaseKey
         || serial.component_key !== componentKey
         || serial.batch_key !== state.current_batch_data._key
+        || serial.parent_serial_key !== parentSerialKey
       );
       const toAdd = lineSerialLinks;
       state.bom_serials = [...toKeep, ...toAdd];
@@ -349,6 +350,7 @@ const traceability = {
       );
 
       commit('LOAD_WORKING_JOB_DATA', { job_data, batch_data, batch_serials });
+      commit('SET_BOM_SERIALS', job_data.wo_bom.flatMap(line => line.declared_serials));
       await dispatch('getIssues', {
         work_order_key: job_data.wo_key,
         with_links: true,
@@ -528,11 +530,11 @@ const traceability = {
       commit('UPDATE_BATCH', batch_data);
     },
 
-    async saveSerialLinks({ dispatch, state }, { batch_key, serial_links }) {
+    async saveSerialLinks({ dispatch, state }) {
       return new Promise((resolve, reject) => {
-        api.put(`/batch/${batch_key}/serial-temp-links`, serial_links)
+        api.put(`/batch/${state.current_batch_data._key}/serial-temp-links`, state.bom_serials)
         .then(async () => {
-          await dispatch('loadWorkingJobData', { job_key: state.working_job_data._key });
+          await dispatch('loadWorkingJobData', state.working_job_data._key);
           Notify.create({
             message: 'Serial links saved',
             color: 'theme-green',
@@ -579,6 +581,7 @@ const traceability = {
         }
       } catch (error) {
         console.error('Error completing step:', error);
+        throw error;
       }
     },
 

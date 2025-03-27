@@ -32,8 +32,7 @@
             <div class="row q-mb-md">
               <div class="col">
                 <BaseAutocompleteSerial
-                  v-model="serialModel[serial._id]"
-                  :initial_values="initialModel[serial._id]"
+                  :value="getLineSerials(serial._key)"
                   :label="
                     $capitalize(
                       [$t('serial'), serial?.code || serial._key].join(' '),
@@ -43,40 +42,17 @@
                   :product_key="component_key"
                   :loading="loading"
                   :can_create="true"
-                  :selection_qt="component_per_product"
+                  :selection_qt="bom_line.qt"
                   :filter_used="true"
-                  :filtered_values="booked_serials"
-                  :disable="disableSerialField(serial)"
+                  key-only
+                  :filtered_values="usedSerialsKeys"
                   :inventory_in_position_key="bom_line?.consumption_options?.consumption_position_key"
-                  @select="(selection) => onSerialSelection(selection, serial._id)"
+                  @select="(selection) => emit('select', {selection, bomLine: props.bom_line, parentSerialKey: serial._key})"
                 >
                 </BaseAutocompleteSerial>
               </div>
-              <div
-                v-if="
-                  !replace_serials[serial._id] &&
-                  phase_key === bom_line?.phase_key
-                "
-                class="col-auto q-ml-md"
-              >
-                <q-btn
-                  flat
-                  round
-                  icon="mdi-pencil"
-                  :disable="phase_key !== bom_line?.phase_key"
-                  @click="replace_serials[serial._id] = true"
-                />
-              </div>
             </div>
-            <q-input
-              class="q-mt-sm"
-              v-if="replace_serials[serial._id]"
-              v-model="replace_serials_reason[serial._id]"
-              label="Ragione della modifica"
-              filled
-            />
             <q-separator class="q-my-md" />
-
           </template>
         </q-card-section>
 
@@ -88,11 +64,7 @@
               color="theme-orange"
               :label="$t('save')"
               :loading="saving"
-              @click="
-                () => {
-                  save();
-                }
-              "
+              @click="save"
             >
             </q-btn>
 
@@ -114,7 +86,6 @@ import { useI18n } from 'vue-i18n';
 import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
-import { timestamp } from '@/lib/TimeHandling.js';
 
 const { t: $t } = useI18n();
 
@@ -144,39 +115,34 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  usedSerials: {
+    type: Array,
+    default: () => [],
+  },
 });
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'select', 'reset']);
 
 // Store setup
 const store = useStore();
 
 // Reactive state
 const saving = ref(false);
-const enableSave = ref(false);
-const serialModel = ref([]);
-const initialModel = ref([]);
-const initialValues = ref([]);
 const batch_serials = ref([]);
-const replace_serials = ref([]);
-const replace_serials_reason = ref([]);
 const loading = ref(false);
-const booked_serials = ref([]);
 
 // Computed properties
 const faked_batch_serials = computed(() => store.state.traceability.current_batch_faked_serials);
-const session_data = computed(() => store.state.session);
 const component_code = computed(() => props.bom_line.component_code);
 const component_key = computed(() => props.bom_line.component_key);
-const component_per_product = computed(() => {
-  if (props.traceability_enabled) {
-    return props.bom_line.qt;
-  } else {
-    return props.bom_line?.batch_qt;
-  }
-});
+
+const serialLinks = computed(() => store.state.traceability.bom_serials);
+const usedSerialsKeys = computed(() => serialLinks.value.map(serial => serial.child_serial_key));
+
 
 // Methods
+
+// Get all output serials for the current batch
 const getBatchSerials = async () => {
   if (!props.batch_key) {return};
   loading.value = true;
@@ -184,9 +150,24 @@ const getBatchSerials = async () => {
     params: { batch_key: props.batch_key },
   });
   batch_serials.value = serials;
-  fillInitialData();
   loading.value = false;
 };
+
+// Get all serials for the current bom line
+function getLineSerials(parentSerialKey) {
+  const lineLinks = serialLinks.value.filter(link =>
+    link.phase_key == props.phase_key
+    && link.component_key == component_key.value
+    && link.batch_key == props.batch_key
+    && link.parent_serial_key == parentSerialKey
+  )
+  // Return array of serial keys if qt > 1 (multiple selection),
+  // otherwise return single serial key
+  return props.bom_line.qt > 1
+    ? lineLinks.map(link => link.child_serial_key)
+    : lineLinks[0]?.child_serial_key;
+}
+
 
 const fakeBatchSerials = async () => {
   loading.value = true;
@@ -194,203 +175,30 @@ const fakeBatchSerials = async () => {
     batch_key: props.batch_key,
   });
   batch_serials.value = faked_batch_serials.value;
-  fillInitialData();
   loading.value = false;
 };
 
-const initFormData = () => {
+const save = async () => {
+  saving.value = true;
+  await store.dispatch('saveSerialLinks')
   saving.value = false;
-  enableSave.value = false;
-};
-
-const fillInitialData = () => {
-  serialModel.value = [];
-  initialModel.value = [];
-  initialValues.value = [];
-  replace_serials.value = [];
-  booked_serials.value = [];
-  for (const serial of batch_serials.value) {
-    if (!serialModel.value[serial._id]) {
-      serialModel.value[serial._id] = [];
-      initialModel.value[serial._id] = [];
-      replace_serials.value[serial._id] = false;
-      replace_serials_reason.value[serial._id] = null;
-    }
-    for (const child of serial.children) {
-      if (child.product_key === component_key.value && child.batch_key === props.batch_key) {
-        let serial_link = {
-          _key: child._key,
-          label: child.code,
-          product_key: child.product_key,
-          wo_key: child.wo_key,
-          value: child._key,
-        };
-        if (component_per_product.value > 1) {
-          serialModel.value[serial._id].push(serial_link);
-          initialModel.value[serial._id].push(serial_link);
-        } else {
-          serialModel.value[serial._id] = serial_link;
-          initialModel.value[serial._id] = serial_link;
-        }
-        booked_serials.value.push(child.code);
-        initialValues.value.push({
-          parent_serial_key: serial._key,
-          child_serial_key: child._key,
-          wo_key: child.wo_key,
-          component_key: child.product_key,
-          batch_key: props.batch_key,
-          replaced: true,
-          reason: null,
-        });
-      }
-    }
-  }
-};
-
-const disableSerialField = (serial) => {
-  const full_quantity_recorded =
-    component_per_product.value === 1
-      ? serialModel.value[serial._id] && serialModel.value[serial._id]?._key
-      : serialModel.value[serial._id]?.length >= component_per_product.value;
-  const not_replaced = !replace_serials.value[serial._id];
-  const different_phase = props.phase_key !== props.bom_line?.phase_key;
-  return (full_quantity_recorded && not_replaced) || different_phase;
-};
-
-const onSerialSelection = (selectedSerials, selected_key) => {
-  let temp_booked_serials = new Array();
-
-  if (Array.isArray(selectedSerials)) {
-    for (const serial of selectedSerials) {
-      temp_booked_serials.push(serial);
-    }
-  } else if (selectedSerials) {
-    temp_booked_serials.push(selectedSerials);
-  }
-
-  for (const serial of batch_serials.value) {
-    if (serialModel.value[serial._id] && selected_key !== serial._id) {
-      if (Array.isArray(serialModel.value[serial._id])) {
-        for (const serial_to of serialModel.value[serial._id]) {
-          temp_booked_serials.push(serial_to);
-        }
-      } else {
-        temp_booked_serials.push(serialModel.value[serial._id]);
-      }
-    }
-  }
-
-  booked_serials.value = temp_booked_serials;
-};
-
-const cancel = () => {
-  initFormData();
   emit('close');
 };
 
-const ensureAndSave = (link_data, serial_consumed, parent_serial, child_serial) => {
-  if (serial_consumed.value.find((str) => str === child_serial._key)) {
-    return false;
-  }
-  serial_consumed.value.push(child_serial._key);
-  link_data.push({
-    parent_serial_key: parent_serial._key,
-    child_serial_key: child_serial._key,
-    wo_key: props.wo_key,
-    component_key: component_key.value,
-    batch_key: props.batch_key,
-    replaced: false,
-  });
-  return true;
+
+
+const cancel = () => {
+  emit('reset');
+  emit('close');
 };
 
 
 /* ================================
-            SAVE
+WATCH
 ================================ */
-
-const save = async () => {
-  saving.value = true;
-
-  let link_data = [];
-  let serial_consumed = [];
-  let initial_values = initialValues.value;
-  for (const parent_serial of batch_serials.value) {
-    if (serialModel.value[parent_serial._id]) {
-      if (Array.isArray(serialModel.value[parent_serial._id])) {
-        for (const child_serial of serialModel.value[parent_serial._id]) {
-          if (
-            !ensureAndSave(
-              link_data,
-              serial_consumed,
-              parent_serial,
-              child_serial,
-            )
-          ) {
-            window.alert($t('serial_field.component_reused'));
-            saving.value = false;
-            return;
-          }
-        }
-      } else {
-        if (
-          !ensureAndSave(
-            link_data,
-            serial_consumed,
-            parent_serial,
-            serialModel.value[parent_serial._id],
-          )
-        ) {
-          window.alert($t('serial_field.component_reused'));
-          saving.value = false;
-          return;
-        }
-      }
-    }
-  }
-
-  for (const inital_data of initial_values) {
-    const found = link_data.some(
-      (el) =>
-        el.parent_serial_key === inital_data.parent_serial_key &&
-        el.child_serial_key === inital_data.child_serial_key,
-    );
-    if (!found) {
-      let reason =
-        replace_serials_reason.value['Serial/' + inital_data.parent_serial_key];
-      if (!reason) {
-        window.alert($t('serial_field.missing_reason'));
-        saving.value = false;
-        return;
-      }
-
-      link_data.push({
-        ...inital_data,
-        reason: reason,
-      });
-    }
-  }
-
-  const event = {
-    event_type: 'SERIAL_LINKED',
-    user_key: session_data.value.session_key,
-    timestamp: timestamp(),
-    wo_key: props.wo_key,
-    batch_key: props.batch_key,
-  };
-  for (const link of link_data) {
-    await api.post('event', {
-      ...event,
-      ...link,
-    });
-  }
-  saving.value = false;
-  emit('close');
-};
 
 // Watch
 watch(() => props.show, () => {
-  initFormData();
   if (!props.show) {return};
   if (props.traceability_enabled) {
     getBatchSerials();

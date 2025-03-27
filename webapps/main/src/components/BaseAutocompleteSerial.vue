@@ -108,7 +108,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { api } from '@/boot/axios';
 import SerialForm from 'app/src/components/traceability/SerialForm.vue';
 
@@ -202,11 +202,6 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
-
-  usedSerials: {
-    type: Array,
-    default: () => [],
-  },
 });
 
 const emit = defineEmits(['select', 'remove']);
@@ -225,10 +220,6 @@ const placeholder_computed = computed(() => {
 
 const multiple = computed(() => {
   return props.selection_qt != null && props.selection_qt > 1;
-});
-
-watch(props.initial_values, () => {
-  initialize();
 });
 
 initialize();

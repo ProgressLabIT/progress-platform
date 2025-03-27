@@ -456,6 +456,7 @@ export default {
           this.goToNextUndoneStep();
         } catch (error) {
           console.error('Error completing step:', error);
+          return
         }
       }
     },

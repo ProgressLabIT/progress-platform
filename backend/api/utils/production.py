@@ -381,7 +381,7 @@ def create_wo_record(tx, wo: WorkOrderNew):
   new_wo_record = WorkOrderFull(
     **wo.model_dump(),
     wo_docs = get_product_docs(wo.product_key),
-    wo_bom = get_bom_from_db(tx, wo.product_key),
+    wo_bom = [line.model_dump() for line in get_bom_from_db(tx, wo.product_key)],
     output_position_key = _get_default_production_position(tx)
   )
   prepped = jsonable_encoder(new_wo_record, by_alias=True)

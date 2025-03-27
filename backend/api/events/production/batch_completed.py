@@ -1,9 +1,11 @@
+from functools import cached_property
 
 from events.inventory.movement_completed import MovementCompletedEvent
 from events.production.base_production import BaseProductionEvent
 from events.production.batch_created import BatchCreatedEvent
 from events.production.batch_released import BatchReleasedEvent
 from events.production.job_closed import JobClosedEvent
+from events.serial.serial_linked import SerialLinkedEvent
 from events.serial.serial_updated import SerialUpdatedEvent
 from events.serial.serial_released import SerialReleasedEvent
 from events.wip.wip_declared import WIPDeclaredEvent
@@ -32,6 +34,11 @@ class BatchCompletedEvent(BaseProductionEvent):
   def get_event_type(cls):
     return EventType.BATCH_COMPLETED
 
+
+  # =================================================================
+  # HELPER METHODS
+  # =================================================================
+
   def _store_batch_execution_data(self):
     step_execution_data = [StepExecutionData(
       key = step.execution_record_key,
@@ -59,6 +66,8 @@ class BatchCompletedEvent(BaseProductionEvent):
       overwrite_mode='update'
     )
 
+  # =================================================================
+
   def _convert_step_data_to_serial_data(self):
     serial_data = []
     for step in self.info.step_data:
@@ -73,74 +82,84 @@ class BatchCompletedEvent(BaseProductionEvent):
         ))
     return serial_data
 
+  # =================================================================
 
-  def _get_component_serials(self):
+  @cached_property
+  def batch_component_serials_map(self):
     query = """
-    // if product has no traceability, batch_serials will be empty, so use batch as source
-    LET source = LENGTH(@batch_serial_keys)
-      ? @batch_serial_keys[* RETURN CONCAT('Serial/', CURRENT)]
-      : [CONCAT('Batch/', @batch_key)]
     RETURN MERGE(
-      FOR s IN source
-        FOR c, e IN 1..1 OUTBOUND s contains
-        FILTER !e.replaced
-        LET serial_key = c._ke
-        COLLECT component_key = c.product_key INTO component_serials
-        RETURN { [component_key]: component_serials[*].c._key }
-      )
+      FOR c IN contains
+      FILTER c.batch_key == @batch_key
+      LET parent_serial_key = PARSE_IDENTIFIER(c._from).key
+      LET child_serial_key = PARSE_IDENTIFIER(c._to).key
+      COLLECT component_key = DOCUMENT(c._to).product_key
+      INTO component_link = { parent_serial_key, child_serial_key }
+      RETURN { [component_key]: component_link }
+    )
     """
     return self.tx.aql.execute(query, bind_vars=dict(
-      batch_serial_keys=self.info.batch_serial_keys,
       batch_key=self.info.active_batch_key
     )).next()
 
+  # =================================================================
+
+  @cached_property
+  def warehouse_management_enabled(self):
+    warehouse_management_enabled = self.tx.collection('Config').get('enable_inventory_management')
+    return warehouse_management_enabled is not None and warehouse_management_enabled.get('value', False)
+
+
+  # =================================================================
+
   def _process_inventory_changes(self):
     # Check if warehouse management is enabled
-    warehouse_enabled = self.tx.collection('Config').get('enable_inventory_management')
-    if warehouse_enabled is None or not warehouse_enabled.get('value', False):
+    if not self.warehouse_management_enabled:
       return
 
     # Get work order data
     # _get_job_data() already set self.info.work_order_key
-    wo_data = self.get_work_order_data()
+    self.wo_data = self.get_work_order_data()
 
     # Set references for all inventory movements
-    references = InventoryMovementReferences(
+    self.movement_references = InventoryMovementReferences(
       work_order_key = self.info.work_order_key,
       job_key = self.info.job_key,
       batch_key = self.info.active_batch_key
     )
 
     # Get product keys for all relevant products
-
     # Init list with output product
     product_keys = [self.job.product_key]
 
     # Get components for current phase
-    bom = [line for line in wo_data.wo_bom if line.phase_key == self.info.phase_key]
+    self.bom = [line for line in self.wo_data.wo_bom if line.phase_key == self.info.phase_key]
 
     # Add components to list
-    for line in bom:
+    for line in self.bom:
       product_keys.append(line.component_key)
 
     # Get inventory config for all relevant products
-    inventory_config = self.tx.aql.execute(
+    self.inventory_config = self.tx.aql.execute(
       InventoryQueries.PRODUCTS_INVENTORY_CONFIG,
       bind_vars=dict(product_keys=product_keys)
     ).next()
 
-    batch_qt = self.info.completed_batch_qt
+    self._process_output()
+    self._process_consumption()
 
+  # =================================================================
+
+  def _process_output(self):
     # Generate production movement
-    if inventory_config.get(self.job.product_key, False) and self.job.last_phase:
+    if self.inventory_config.get(self.job.product_key, False) and self.job.last_phase:
       default_production_position_key = self.tx.collection('Config').get('default_production_position').get('value', 'IN')
-      production_position_key = wo_data.output_position_key or default_production_position_key
+      production_position_key = self.wo_data.output_position_key or default_production_position_key
 
       base_production_data = dict(
         position_to = production_position_key,
         product_key = self.job.product_key,
         movement_type = InventoryMovementType.PRODUCTION,
-        references = references,
+        references = self.movement_references,
       )
 
       if self.info.batch_serial_keys:
@@ -155,53 +174,55 @@ class BatchCompletedEvent(BaseProductionEvent):
       else:
         MovementCompletedEvent.create_as_child(self, dict(
           **base_production_data,
-          qt_confirmed = batch_qt,
-          qt_planned = batch_qt,
+          qt_confirmed = self.info.completed_batch_qt,
+          qt_planned = self.info.completed_batch_qt,
         ))
 
+  # =================================================================
+
+  def _process_consumption(self):
     # Generate consumption movements
-    component_serials_map = self._get_component_serials()
     default_consumption_position_key = self.tx.collection('Config').get('default_consumption_position').get('value', 'IN')
 
-    for line in bom:
+    for line in self.bom:
       # Ensure warehouse management is enabled for component
-      if inventory_config.get(line.component_key, False):
+      if self.inventory_config.get(line.component_key, False):
         consumption_position_key = line.consumption_options.consumption_position_key or default_consumption_position_key
-        consumption_qt = line.qt * batch_qt
+        consumption_qt = line.qt * self.info.completed_batch_qt
 
         # If traceability is enabled, generate movements for each serial
         if line.traceability_level is not None:
-          continue
-          # DO NOT GENERATE MOVEMENTS FOR COMPONENT SERIALS (at least for now)
-          # They are already generated in the serial_linked event
 
-          # line_serials = component_serials_map.get(line.component_key, [])
-          # if len(line_serials) != consumption_qt:
-          #   raise ValueError("The number of serials provided does not match the batch quantity.")
+          line_serials = [link['child_serial_key'] for link in self.batch_component_serials_map.get(line.component_key, [])]
+          if len(line_serials) != consumption_qt:
+            raise ValueError("The number of serials provided does not match the batch quantity.")
 
-          # for serial_key in line_serials:
-          #   MovementCompletedEvent.create_as_child(self, dict(
-          #     position_from = consumption_position_key,
-          #     product_key = line.component_key,
-          #     qt_confirmed = 1,
-          #     qt_planned = 1,
-          #     movement_type = InventoryMovementType.CONSUMPTION,
-          #     references = references,
-          #     serial_key = serial_key,
-          #   ))
+          for serial_key in line_serials:
+            MovementCompletedEvent.create_as_child(self, dict(
+              position_from = consumption_position_key,
+              product_key = line.component_key,
+              qt_confirmed = 1,
+              qt_planned = 1,
+              movement_type = InventoryMovementType.CONSUMPTION,
+              references = self.movement_references,
+              serial_key = serial_key,
+            ))
 
         # If traceability is not enabled, generate movement for the batch
         else:
           MovementCompletedEvent.create_as_child(self, dict(
             position_from = consumption_position_key,
             product_key = line.component_key,
-            qt_confirmed = line.qt * batch_qt,
-            qt_planned = line.qt * batch_qt,
+            qt_confirmed = consumption_qt,
+            qt_planned = consumption_qt,
             movement_type = InventoryMovementType.CONSUMPTION,
-            references = references,
+            references = self.movement_references,
           ))
 
-
+  # *******************************************************************
+  # *******************************************************************
+  # *******************************************************************
+  # *******************************************************************
 
   def apply(self):
     # ===================================================================
@@ -229,11 +250,28 @@ class BatchCompletedEvent(BaseProductionEvent):
     # Check if traceability is enabled and fetch batch serial keys
     handle_serials = self.job.traceability_level is not None
 
+    # ===================================================================
+    # HANDLE TRACEABILITY
+    # ===================================================================
     if handle_serials:
+      # Fetch batch serial keys
       self.info.batch_serial_keys = [s['_key'] for s in self.tx.aql.execute(
         SerialQueries.GET_BATCH_SERIALS,
         bind_vars=dict(batch_key=self.info.active_batch_key)
       )]
+
+      # Link components if present
+      for component_key, component_serials in self.batch_component_serials_map.items():
+        for component_serial in component_serials:
+          SerialLinkedEvent.create_as_child(self, dict(
+            parent_serial_key = component_serial['parent_serial_key'],
+            child_serial_key = component_serial['child_serial_key'],
+            batch_key = self.info.active_batch_key,
+            wo_key = self.info.work_order_key,
+            job_key = self.info.job_key,
+            phase_key = self.info.phase_key,
+            process_inventory = False,
+          ))
 
 
     # ===================================================================

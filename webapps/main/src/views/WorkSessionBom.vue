@@ -77,6 +77,7 @@
       :phase_key="job.phase_key"
       :traceability_enabled="traceability_enabled"
       mode="new"
+      @select="updateSerialSelection"
       @close="
         () => {
           serial_form_bom_line = null;
@@ -137,6 +138,7 @@
       mode="new"
       :traceability_enabled="traceability_enabled"
       :bom="bom"
+      @select="updateSerialSelection"
       @reset="initBomSerials"
       @close="
         () => {
@@ -172,12 +174,6 @@ const bom_types = ['job_bom', 'wo_bom'];
 const serial_form_bom_line = ref(null);
 const show_all_serial_form = ref(false);
 const loading = ref(false);
-
-function initBomSerials() {
-  store.commit('SET_BOM_SERIALS', props.job.wo_bom.flatMap(line => line.declared_serials));
-}
-
-initBomSerials();
 
 const columns = computed(() => {
   // TODO: refactor into mixin / composition function, used also in ProductBoM
@@ -253,6 +249,39 @@ const traceability_enabled = computed(() => {
 const requiresComponentSerials = computed(() => {
   return props.job.active && props.job.active_batch_qt && props.job.wo_bom.some(i => i.traceability_level);
 });
+
+// Utility function to create a serial link
+const createSerialLink = ({childSerialKey, parentSerialKey, componentKey}) => ({
+  child_serial_key: childSerialKey,
+  parent_serial_key: parentSerialKey,
+  wo_key: props.job.wo_key,
+  job_key: props.job._key,
+  component_key: componentKey,
+  batch_key: props.job.active_batch_key,
+  phase_key: props.job.phase_key,
+})
+
+// Update serial selection for a bom line
+const updateSerialSelection = ({selection, bomLine, parentSerialKey}) => {
+  console.log('updateSerialSelection', {selection, bomLine, parentSerialKey})
+
+  let newSerialLinks
+  if (selection === null) {
+    newSerialLinks = []
+  } else if (bomLine.qt > 1) {
+    newSerialLinks = selection.map(childSerialKey => createSerialLink({childSerialKey, parentSerialKey, componentKey: bomLine.component_key}))
+  } else {
+    newSerialLinks = [createSerialLink({childSerialKey: selection, parentSerialKey, componentKey: bomLine.component_key})]
+  }
+
+  // Update store
+  store.commit('UPDATE_BOM_LINE_COMPONENT_SERIALS', {
+    phaseKey: bomLine.phase_key,
+    componentKey: bomLine.component_key,
+    lineSerialLinks: newSerialLinks,
+    parentSerialKey,
+  });
+};
 
 async function refreshWO() {
   await store.dispatch('loadWorkingJobData', props.job._key);

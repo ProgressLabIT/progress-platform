@@ -40,7 +40,6 @@
           <div class="row q-mb-md">
               <div class="col">
                 <BaseAutocompleteSerial
-                  v-if="line.traceability_level !== null"
                   :value="line.serials"
                   :label="
                     $capitalize([t('serial'), line.component_code, '-', line.component_description].join(' '))
@@ -55,7 +54,7 @@
                   key-only
                   :inventory_in_position_key="line.consumption_options?.consumption_position_key"
                   :filtered_values="usedSerialsKeys"
-                  @select="(selection) => onSerialSelection(selection, line)"
+                  @select="(selection) => emit('select', {selection, bomLine: line, parentSerialKey: batchSerials[index]._key})"
                 >
                 </BaseAutocompleteSerial>
               </div>
@@ -125,21 +124,13 @@ const props = defineProps({
     type: String,
     required: true,
   },
-  wo_key: {
-    type: String,
-    required: true,
-  },
-  phase_key: {
-    type: String,
-    required: true,
-  },
   bom: {
     type: Object,
     default: null,
   },
 });
 
-const emit = defineEmits(['close', 'reset', 'save']);
+const emit = defineEmits(['close', 'reset', 'save', 'select']);
 const store = useStore();
 const { t } = useI18n();
 
@@ -201,54 +192,9 @@ const fakeBatchSerials = async () => {
   loading.value = false;
 };
 
-// Utility function to create a serial link
-const createSerialLink = ({childSerialKey, parentSerialKey, componentKey}) => ({
-  child_serial_key: childSerialKey,
-  parent_serial_key: parentSerialKey,
-  wo_key: props.wo_key,
-  component_key: componentKey,
-  batch_key: props.batch_key,
-  phase_key: props.phase_key,
-})
-
-// Update serial selection for a bom line
-const onSerialSelection = (selection, bomLine) => {
-  console.log('onSerialSelection', {selection, bomLine});
-  // Hold on to serials linked from other batches/bom lines/parent serials
-  const parentSerialKey = batchSerials.value[index.value]._key
-  const serialsToKeep = serialLinks.value.filter(link =>
-    link.batch_key !== props.batch_key
-    || link.parent_serial_key !== parentSerialKey
-    || link.component_key !== bomLine.component_key
-    || link.phase_key !== bomLine.phase_key
-  );
-
-  // Handle serials linked for current batch
-  let newSerialLinks
-  if (selection === null) {
-    newSerialLinks = []
-  } else if (bomLine.qt > 1) {
-    newSerialLinks = selection.map(childSerialKey => createSerialLink({childSerialKey, parentSerialKey, componentKey: bomLine.component_key}))
-  } else {
-    newSerialLinks = [createSerialLink({childSerialKey: selection, parentSerialKey, componentKey: bomLine.component_key})]
-  }
-
-  // Update store
-  const lineSerialLinks = [...serialsToKeep, ...newSerialLinks]
-  store.commit('UPDATE_BOM_LINE_COMPONENT_SERIALS', {
-    phaseKey: bomLine.phase_key,
-    componentKey: bomLine.component_key,
-    lineSerialLinks,
-  });
-
-};
-
 const save = async () => {
   saving.value = true;
-  await store.dispatch('saveSerialLinks', {
-    batch_key: props.batch_key,
-    serial_links: serialLinks.value,
-  });
+  await store.dispatch('saveSerialLinks')
   saving.value = false;
   emit('close');
 };

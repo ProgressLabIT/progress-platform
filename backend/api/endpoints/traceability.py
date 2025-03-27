@@ -8,7 +8,7 @@ from models.traceability import *
 
 from utils.exceptions import *
 from utils.api import APIResponse
-from models.serial import SerialSelection
+from models.serial import SerialSelection, SerialLink
 from models.form import FormFieldValue
 from utils.db import db
 from utils.dt import timestamp
@@ -264,3 +264,50 @@ async def store_temp_step_data(data: ExecutionDataUpdate):
   return APIResponse(message="Step data stored", detail=dict(
     execution_record_key = record['_key']
   ))
+
+
+
+@router.put('/batch/{batch_key}/serial-temp-links', dependencies=[Depends(auth.verify_token)])
+def create_temporary_link(batch_key: str, links: list[SerialLink]):
+  """
+  Replace batch temporary component serial links with the provided ones
+  """
+  # Check if batch_key is valid
+  if not db.collection('Batch').has(batch_key):
+    raise HTTPException(
+      status_code=404,
+      detail=f"Batch {batch_key} not found"
+    )
+  # Check if all links are valid
+  for link in links:
+    for serial_key in [link.parent_serial_key, link.child_serial_key]:
+      if not db.collection('Serial').has(serial_key):
+        raise HTTPException(
+          status_code=404,
+          detail=f"Serial {serial_key} not found"
+        )
+  # Check if all links are temporary
+  for link in links:
+    if link.confirmed:
+      raise HTTPException(
+        status_code=403,
+        detail="Cannot create confirmed link via this endpoint. Use SerialLinkedEvent instead."
+      )
+  # Check if all links are for the given batch
+  for link in links:
+    if link.batch_key != batch_key:
+      raise HTTPException(
+        status_code=403,
+        detail=f"Link {link.parent_serial_key} -> {link.child_serial_key} Not related to batch {batch_key}"
+      )
+
+  # Delete all existing temporary links for these serials
+  db.collection('contains').delete_match(dict(batch_key=batch_key))
+
+  # Create the new temporary links
+  new_links = [link.model_dump(by_alias=True, exclude={'key'}) for link in links]
+  new_link_records = db.collection('contains').insert_many(new_links)
+
+  return APIResponse(
+    message="Temporary serial links updated successfully",
+  )

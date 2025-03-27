@@ -76,6 +76,17 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
     # WITH TRACEABILITY
     # ------------------------------------------------
     else:
+      # Clean up temporary component serial links, removing those linked
+      # to serials that are no longer in the batch
+      self.tx.aql.execute("""
+        FOR c IN contains
+        FILTER
+          !c.confirmed
+          && c.batch_key == @batch_key
+          && PARSE_IDENTIFIER(c._from).key NOT IN @batch_serials
+        REMOVE c IN contains
+      """, bind_vars=dict(batch_key=self.batch.key, batch_serials=self.info.batch_serials))
+
       if self.job.first_phase:
         # Create or delete serials and batch_serial records as needed
 

@@ -24,8 +24,9 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
     parent_serial_key: str | None = None
     wo_key: str | None = None
     component_key: str | None = None
-    job_key: str | None = None
     batch_key: str | None = None
+    phase_key: str | None = None
+    job_key: str | None = None
     process_inventory: bool | None = True
 
   @classmethod
@@ -45,16 +46,25 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
   def apply(self):
 
     try:
-      # Ensure serial is not already linked
+      # Handle existing links
       cursor = self.tx.collection('contains').find(dict(_to=f'Serial/{self.info.child_serial_key}'))
       if cursor.count() > 0:
         # ignore if the link is the same as already recorded
+        record = cursor.next()
         parent_id = f"Serial/{self.info.parent_serial_key}" if self.info.parent_serial_key else f"Batch/{self.info.batch_key}"
-        if cursor.next()['_from'] == parent_id:
-          self.response = dict(message="Link already exists")
-          return
+        if record['_from'] == parent_id:
+          if record.get('confirmed', True):
+            # if the link is already confirmed, ignore
+            self.response = dict(message="Link already exists")
+            return
+          else:
+            # if the link is temporary, confirm it
+            self.tx.collection('contains').update(record, dict(confirmed=True))
+            self.response = dict(message="Temporary link confirmed")
+            return
         else:
-          raise ValueError('Cannot link serials: multiple usage of the same component')
+          # if the link is to a different parent, raise an error
+          raise ValueError('Cannot link serials: component already linked to a different parent')
 
       # Link to batch
       if self.info.parent_serial_key is None:
@@ -65,6 +75,7 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
         else:
           self.tx.collection('contains').update(SerialLink(
             **self.info.model_dump(),
+            confirmed=True,
             _from=f'Batch/{self.info.batch_key}',
             _to=f'Serial/{self.info.child_serial_key}'
           ))
@@ -73,6 +84,7 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
       else:
         self.tx.collection('contains').insert(SerialLink(
           **self.info.model_dump(),
+          confirmed=True,
           _from=f'Serial/{self.info.parent_serial_key}',
           _to=f'Serial/{self.info.child_serial_key}'
         ))

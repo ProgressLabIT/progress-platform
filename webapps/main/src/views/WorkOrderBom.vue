@@ -4,7 +4,7 @@
       <div class="col-4">
         <q-input
           v-model="searchText"
-          :label="$capitalize($t('search'))"
+          :label="capitalize($t('search'))"
           filled
           dense
           placeholder="Codice o Descrizione"
@@ -130,7 +130,7 @@
               dense
               input-debounce="0"
               :options="filteredProcess"
-              :label="$capitalize($t('phase.short'))"
+              :label="capitalize($t('phase.short'))"
               option-label="alias"
               popup-content-class="text-capitalize"
               @filter="filterPhases"
@@ -140,7 +140,7 @@
             <!-- PRODUCT -->
             <BaseAutocompleteProduct
               :model-value="newLineProduct"
-              :label="$capitalize($t('code') + ' / ' + $t('description'))"
+              :label="capitalize($t('code') + ' / ' + $t('description'))"
               input-class="text-capitalize"
               filled
               class="col-6"
@@ -193,7 +193,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-
+import { capitalize } from '@/boot/filters';
 import { api } from '@/boot/axios.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
@@ -202,7 +202,7 @@ import BaseAutocompletePositions from 'components/BaseAutocompletePositions.vue'
 import BaseAutocompleteProduct from 'components/BaseAutocompleteProduct.vue';
 
 // Setup store and route
-const { t, capitalize } = useI18n();
+const { t } = useI18n();
 const { config } = useConfigStore();
 
 // Define emits
@@ -388,6 +388,7 @@ const addItem = () => {
       qt: newLineQt.value,
       phase_name: newLinePhase.value?.alias ?? null,
       phase_key: newLinePhase.value?._key ?? null,
+      traceability_level: newLineProduct.value.traceability_level,
       table_key:
         newLineProduct.value._key + (newLinePhase.value?._key ?? null),
     };

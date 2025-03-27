@@ -34,6 +34,7 @@ class SerialLink(FlexModel):
   wo_key: str | None = None
   phase_key: str | None = None
   component_key: str | None = None
+  job_key: str | None = None
   batch_key: str | None = None
   confirmed: bool | None = False
   replaced: bool | None = False
