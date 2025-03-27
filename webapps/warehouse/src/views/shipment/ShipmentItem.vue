@@ -152,17 +152,6 @@ function confirm() {
         timeout: 1500,
       });
     })
-    .catch((err) => {
-      Notify.create({
-        position: 'top',
-        timeout: 0,
-        message: err,
-        color: 'theme-orange',
-        actions: [
-          { label: 'Close', textColor: 'white', handler: () => undefined }
-        ]
-      });
-    });
     router.push({ name: 'ShipmentList', params: { listKey: router.currentRoute.value.params.listKey }})
     lists.loadLists('shipment');
     shipment.$reset()

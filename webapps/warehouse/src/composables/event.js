@@ -1,7 +1,7 @@
 import { timestamp } from '@/lib/TimeHandling.js';
-import store from '@/store/index.js';
+import store from '@/store';
 import { api } from '../boot/axios';
-
+import { Notify } from 'quasar';
 
 export function sendEvent({ event_type, event_data }) {
   return new Promise((resolve, reject) => {
@@ -12,15 +12,18 @@ export function sendEvent({ event_type, event_data }) {
       timestamp: timestamp(),
       ...event_data,
     };
-    api.post('event', event)
-      .then((resp) => {
-        // Check for HTTP status code
-        if (resp.status >= 200 && resp.status < 300) {
-          resolve(resp); // Successful response
-        } else {
-          reject(new Error(`HTTP Error: ${resp.status}`));
-        }
-      })
-      .catch((err) => reject(err));
+    api
+      .post('event', event)
+      .then((resp) => resolve(resp))
+      .catch((err) => {
+        Notify.create({
+          message: err.response.data.detail.message,
+          color: 'theme-red',
+          timeout: 0,
+          position: 'top',
+          actions: [{ label: 'CLOSE', color: 'white', handler: () => {} }],
+        });
+        reject(err);
+      });
   });
 }
