@@ -12,7 +12,7 @@
         />
       </div>
 
-      <div class="col-3">
+      <div class="col-3" v-if="config.enableInventoryManagement">
         <BaseAutocompletePositions
           :model-value="outputPositionKey"
           :label="$t('warehouse.output_position')"
@@ -60,6 +60,7 @@
       <template #body-cell-manage_inventory="props">
         <q-td class="text-center">
           <BaseAutocompletePositions
+            v-if="props.row.manage_inventory"
             :model-value="props.row.consumption_options?.consumption_position_key"
             :label="$t('warehouse.inventory.position')"
             :disable="!editMode"

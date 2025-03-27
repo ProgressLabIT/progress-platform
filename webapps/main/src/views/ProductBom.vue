@@ -341,7 +341,7 @@ export default {
 
   computed: {
     ...mapState({
-      // product_metadata: state => state.product.temp,
+      product_metadata: state => state.product.temp,
       saved_bom: (state) => state.bom.saved,
       saved_process: (state) => state.process.saved,
     }),
@@ -382,7 +382,7 @@ export default {
         // },
       ];
 
-      if (this.config.enableInventoryManagement) {
+      if (this.config.enableInventoryManagement && this.product_metadata.manage_inventory) {
         columns.push({
           name: 'manage_inventory',
           field: 'manage_inventory',
@@ -405,10 +405,6 @@ export default {
 
     product_key() {
       return this.$route.params.product_key;
-    },
-
-    product_metadata() {
-      return this.$store.getters.productData(this.product_key);
     },
 
     temp_bom: {

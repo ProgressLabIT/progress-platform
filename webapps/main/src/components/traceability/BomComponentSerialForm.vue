@@ -46,6 +46,7 @@
                   :filter_used="true"
                   key-only
                   :filtered_values="usedSerialsKeys"
+                  :manage_inventory="bom_line.manage_inventory"
                   :inventory_in_position_key="bom_line?.consumption_options?.consumption_position_key"
                   @select="(selection) => emit('select', {selection, bomLine: props.bom_line, parentSerialKey: serial._key})"
                 >

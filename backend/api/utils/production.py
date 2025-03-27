@@ -58,12 +58,18 @@ class Queries:
         RETURN MERGE( j, { assigned_to: operator, processing_time, processing_cost, issue_count } )
       )
 
+      // Dynamically add component inventory management config to wo_bom
+      LET wo_bom = (FOR b IN wo.wo_bom
+        LET manage_inventory = FIRST(FOR p IN Product FILTER p._key == b.component_key RETURN p.manage_inventory)
+        RETURN MERGE(b, { manage_inventory })
+      )
+
       LET processing_time = SUM(jobs[*].processing_time)
       LET processing_cost = SUM(jobs[*].processing_cost)
       LET total_cost = processing_cost + wo.material_cost
 
       // Return enriched wo data
-      RETURN MERGE(wo, { jobs, processing_time, processing_cost, total_cost })
+      RETURN MERGE(wo, { jobs, processing_time, processing_cost, total_cost, wo_bom })
   """
 
 
@@ -109,7 +115,8 @@ class Queries:
             batch_key: j.active_batch_key
           }
       )
-      RETURN MERGE(bom_line, { declared_serials })
+      LET manage_inventory = FIRST(FOR p IN Product FILTER p._key == bom_line.component_key RETURN p.manage_inventory)
+      RETURN MERGE(bom_line, { declared_serials, manage_inventory })
     )
 
     LET issue_count = COUNT(FOR i IN issue_rel FILTER i._to == j._id RETURN 1)

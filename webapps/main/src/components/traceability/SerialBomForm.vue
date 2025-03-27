@@ -52,6 +52,7 @@
                   :used-serials="usedSerialsKeys"
                   :filter_used="true"
                   key-only
+                  :manage_inventory="line.manage_inventory"
                   :inventory_in_position_key="line.consumption_options?.consumption_position_key"
                   :filtered_values="usedSerialsKeys"
                   @select="(selection) => emit('select', {selection, bomLine: line, parentSerialKey: batchSerials[index]._key})"

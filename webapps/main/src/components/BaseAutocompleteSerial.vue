@@ -178,6 +178,11 @@ const props = defineProps({
     default: false,
   },
 
+  manage_inventory: {
+    type: Boolean,
+    default: false,
+  },
+
   inventory_in_position_key: {
     type: String,
     default: undefined,
@@ -293,7 +298,7 @@ function loadInventory(search_value) {
 
 
 function loadOptions(search_value) {
-  if (props.inventory_in_position_key) {
+  if (props.manage_inventory !== false) {
     loadInventory(search_value);
   } else {
     loadSerials(search_value);
