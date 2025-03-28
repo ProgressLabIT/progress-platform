@@ -147,6 +147,7 @@ async function searchContents() {
 }
 
 function toggleItem(item) {
+  // if item is already in contents, remove it
   if (transfer.contents.find(c => c._key === item._key)) {
     transfer.contents = transfer.contents.filter(c => c._key !== item._key);
   } else {
@@ -186,7 +187,8 @@ function getItemSelectedQty(item) {
 }
 
 function changeStartPosition() {
-  transfer.startPosition = { _key: cardItem.value.position_key, code: cardItem.value.position_code };
+  // Card has been populated with inventory record: the _key of the new start position is NOT the _key of the inventory record
+  transfer.startPosition = { _key: cardItem.value.position_key, code: cardItem.value.code };
   transfer.contents = [];
   getPositionContents(cardItem.value.position_key);
   cardItem.value = null;
