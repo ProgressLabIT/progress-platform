@@ -51,10 +51,9 @@
                   :selection_qt="line.qt"
                   :used-serials="usedSerialsKeys"
                   :filter_used="true"
-                  key-only
-                  :manage_inventory="line.manage_inventory"
+                  :inventory_only="line.manage_inventory"
                   :inventory_in_position_key="line.consumption_options?.consumption_position_key"
-                  :filtered_values="usedSerialsKeys"
+                  :usedSerials="usedSerialsKeys"
                   @select="(selection) => emit('select', {selection, bomLine: line, parentSerialKey: batchSerials[index]._key})"
                 >
                 </BaseAutocompleteSerial>
@@ -142,7 +141,7 @@ const index = ref(0);
 
 const faked_batch_serials = computed(() => store.state.traceability.current_batch_faked_serials);
 const serialLinks = computed(() => store.state.traceability.bom_serials);
-const usedSerialsKeys = computed(() => serialLinks.value.map(serial => serial.child_serial_key));
+const usedSerialsKeys = computed(() => serialLinks.value.map(serial => serial._key));
 
 const formLines = computed(() => props.bom.filter(c => c.traceability_level !== null).map(line => ({
   ...line,
@@ -161,8 +160,8 @@ function getLineSerials(bomLine) {
   // Return array of serial keys if qt > 1 (multiple selection),
   // otherwise return single serial key
   return bomLine.qt > 1
-    ? lineLinks.map(link => link.child_serial_key)
-    : lineLinks[0]?.child_serial_key;
+    ? lineLinks
+    : lineLinks[0]
 }
 
 // Get all output serials for the current batch

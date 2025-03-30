@@ -5,7 +5,7 @@
       ref="serialNodes"
       v-model:selected="selected"
       :nodes="nodes"
-      node-key="key"
+      node-key="_key"
       :loading="loading"
       @lazy-load="({ node, done }) => lazyLoad(node, done)"
     >
@@ -13,14 +13,14 @@
       <template #default-header="prop">
         <div
           class="row items-center full-width justify-between q-pr-xl"
-          @mouseenter="over_key = prop.node.key"
+          @mouseenter="over_key = prop.node._key"
           @mouseleave="over_key = null"
         >
           <div
             :class="{
-              'text-disabled': prop.node.replaced && prop.node.key !== selected,
-              'text-weight-bold text-high': prop.node.key === selected,
-              'text-low': !prop.node.replaced && prop.node.key !== selected,
+              'text-disabled': prop.node.replaced && prop.node._key !== selected,
+              'text-weight-bold text-high': prop.node._key === selected,
+              'text-low': !prop.node.replaced && prop.node._key !== selected,
             }"
           >
             {{ prop.node.product_code }}
@@ -32,7 +32,7 @@
           </div>
           <q-btn
             v-if="prop.node.parent_key && !prop.node.replaced && !edit_mode"
-            v-show="over_key === prop.node.key"
+            v-show="over_key === prop.node._key"
             flat
             round
             size="xs"
@@ -54,11 +54,11 @@
       <template #default-body="prop">
         <div
           :class="{
-            'text-weight-bold': prop.node.key === selected,
+            'text-weight-bold': prop.node._key === selected,
             'text-disabled': prop.node.replaced,
           }"
         >
-          # {{ prop.node.label }}
+          # {{ prop.node.code }}
         </div>
       </template>
     </q-tree>
@@ -116,7 +116,7 @@ export default {
     selected: {
       handler(serial_key) {
         if (!serial_key) {
-          this.selected = this.nodes[0].key;
+          this.selected = this.nodes[0]._key;
         }
         this.$emit('select', this.selected);
       },
@@ -164,7 +164,6 @@ export default {
     },
 
     convertNode(node, parent_key) {
-      let label = node?.serial_code || node.serial_key;
       let children_data = [];
       let expandable = false;
       if (node?.children) {
@@ -172,10 +171,10 @@ export default {
         expandable = true;
       }
       return {
-        key: node.serial_key,
+        _key: node.serial_key,
         parent_key: parent_key,
-        label: label,
-        //lazy: false,
+        code: node.serial_code,
+        lazy: false,
         expandable: expandable,
         selectable: this.edit_mode ? false : true,
         children: children_data,
@@ -213,9 +212,9 @@ export default {
       const promises = [
         this.$store.dispatch('appendSerial', {serial_key: node.parent_key}),
       ]
-      if (node.key) {
+      if (node._key) {
         // fetch data only if there's a linked serial
-        promises.push(this.$store.dispatch('appendSerial', {serial_key: node.key}))
+        promises.push(this.$store.dispatch('appendSerial', {serial_key: node._key}))
       }
       Promise.all(promises).then((values) => {
         this.showEditComponentLink(node, values[0])
@@ -224,23 +223,20 @@ export default {
 
     showEditComponentLink(node, parentSerial) {
       let serialModel = {
-        _key: node.key,
-        label: node.label,
+        _key: node._key,
+        code: node.code,
         product_key: node.product_key,
         wo_key: parentSerial.wo_key,
-        value: node.key,
         reason: '',
       };
 
-      let initial_values = [];
-      initial_values.push(serialModel);
       Dialog.create({
         component: SerialComponentLinkEditDialog,
         componentProps: {
           node: node,
           serial: serialModel,
-          initial_values: initial_values,
         },
+
       }).onOk((newValues) => {
         this.saveNewComponentLink(node, newValues);
       });
@@ -253,25 +249,37 @@ export default {
       };
 
       if (newValues) {
-        if (node.key) {
+        if (node._key) {
           await this.sendEvent({
             event_type: 'SERIAL_UNLINKED',
             event_data: {
               ...sharedEventData,
-              child_serial_key: node.key,
+              child_serial_key: node._key,
               reason: newValues.reason,
+              process_inventory: newValues.processInventory.oldLink
             }
           });
+        }
+
+        const event_data = {
+          ...sharedEventData,
+          child_serial_key: newValues._key,
+          reason: newValues.reason,
+          process_inventory: newValues.processInventory.newLink
+        }
+
+        if (newValues.used) {
+          event_data.replace_existing = true;
+        }
+
+        if (!newValues.available) {
+          event_data.process_inventory = false;
         }
 
         // Link new serial to parent
         await this.sendEvent({
           event_type: 'SERIAL_LINKED',
-          event_data: {
-            ...sharedEventData,
-            child_serial_key: newValues._key,
-            reason: newValues.reason,
-          }
+          event_data,
         });
         this.nodes = [];
         this.getSerialHierarcy();

@@ -1016,6 +1016,14 @@ export default {
       code_already_used: 'La matricola "{name}" è già usata',
     },
   },
+  serial_used_confirmation: 'Matricola già in uso',
+  serial_used_confirmation_message: 'Questa matricola è già in uso. Procedendo verrà rimosso il collegamento con il padre attuale. Vuoi procedere?',
+  serial_not_available_confirmation: 'Matricola non in giacenza',
+  serial_not_available_confirmation_message: 'Questa matricola non è disponibile in magazzino. Procedendo verrà creato il collegamento senza generare movimenti di magazzino. Vuoi procedere?',
+  serial_link_process_inventory: {
+    new_link: 'Genera movimento di consumo per il nuovo seriale collegato',
+    old_link: 'Genera movimento di rientro del precedente seriale'
+  },
   serial_code_to_be_assigned: 'Codice da assegnare',
   year: 'Anno',
   month: 'Mese',

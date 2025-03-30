@@ -7,7 +7,6 @@
     input-debounce="300"
     :clearable="clearable"
     :dense="dense"
-    :emit-value="keyOnly"
     :hint="hint"
     :label-slot="!!label"
     :loading="loading"
@@ -16,8 +15,8 @@
     :model-value="value"
     :multiple="multiple"
     :options="options"
-    :option-value="keyOnly ? '_key' : null"
-    :option-label="keyOnly ? 'code' : null"
+    option-value="_key'"
+    option-label="code"
     :placeholder="placeholder_computed"
     :use-chips="multiple"
     @filter="filter"
@@ -31,8 +30,8 @@
     <template #option="scope">
       <q-item
         v-bind="scope.itemProps"
-        :id="scope.opt.code"
-        :disable="filtered_values && filtered_values.includes(scope.opt._key)"
+        :id="scope.opt._key"
+        :disable="(usedSerials || []).includes(scope.opt._key)"
       >
         <q-item-section>
           <q-item-label class="highlight">
@@ -43,6 +42,12 @@
           <q-item-label caption lines="2">
             {{ 'ID ' + scope.opt._key }}
           </q-item-label>
+        </q-item-section>
+        <q-item-section side v-if="!props.inventory_only">
+          <div class="row items-center">
+            <q-icon v-if="!scope.opt.available" size="xs" name="mdi-package-variant-closed-remove" />
+            <q-icon v-if="scope.opt.used" size="xs" name="mdi-link-variant" />
+          </div>
         </q-item-section>
       </q-item>
     </template>
@@ -114,7 +119,7 @@ import SerialForm from 'app/src/components/traceability/SerialForm.vue';
 
 const props = defineProps({
   value: {
-    type: [Object, String],
+    type: Object,
     default: null,
   },
 
@@ -178,7 +183,7 @@ const props = defineProps({
     default: false,
   },
 
-  manage_inventory: {
+  inventory_only: {
     type: Boolean,
     default: false,
   },
@@ -193,8 +198,8 @@ const props = defineProps({
     default: null,
   },
 
-  filtered_values: {
-    type: Object,
+  usedSerials: {
+    type: Array,
     default: null,
   },
 
@@ -209,14 +214,14 @@ const props = defineProps({
   },
 });
 
+
+console.log(props.value);
+
 const emit = defineEmits(['select', 'remove']);
 const selectRef = ref(null);
-
-
 const loading = ref(false);
 const create_serial_form = ref(false);
 const options = ref([]);
-// const last_research = ref(undefined);
 const code_free = ref(false); // Serial code for product is taken (false) or not (true)
 
 const placeholder_computed = computed(() => {
@@ -237,14 +242,16 @@ function initialize() {
   }
 };
 
-function loadSerials(search_value) {
+function loadOptions(search_value) {
   loading.value = true;
   code_free.value = false;
   let params = {
     wo_key: props.work_order_key,
     product_key: props.product_key,
     batch_key: props.batch_key,
-    filter_used: props.filter_used,
+    free_only: props.filter_used,
+    inventory_only: props.inventory_only,
+    inventory_in_position_key: props.inventory_in_position_key,
     search: search_value,
     limit: 100,
   };
@@ -265,8 +272,9 @@ function loadSerials(search_value) {
           options.value = resp.data.map((item) => ({
             _key: item._key,
             code: item.serial_code || item.code,
+            free: item.free,
+            available: item.available,
           }));
-          addInitialValues(search_value);
           loading.value = false;
         });
       });
@@ -275,35 +283,38 @@ function loadSerials(search_value) {
       options.value = resp.data.map((item) => ({
         _key: item._key,
         code: item.serial_code || item.code,
+        free: item.free,
+        available: item.available,
       }));
-      addInitialValues(search_value);
       loading.value = false;
     });
   }
 };
 
-function loadInventory(search_value) {
-  api.get('inventory', { params: {
-    product_key: props.product_key,
-    root_position_key: props.inventory_in_position_key,
-    serial_search: search_value,
-    limit: 100,
-  }}).then((resp) => {
-    options.value = resp.data.map((item) => ({
-      _key: item.serial_key,
-      code: item.serial_code || item.code,
-    }));
-  });
-}
+// function loadInventory(search_value) {
+//   api.get('inventory', { params: {
+//     product_key: props.product_key,
+//     root_position_key: props.inventory_in_position_key,
+//     serial_search: search_value,
+//     limit: 100,
+//   }}).then((resp) => {
+//     options.value = resp.data.map((item) => ({
+//       _key: item.serial_key,
+//       code: item.serial_code || item.code,
+//       free: true,
+//       available: true,
+//     }));
+//   });
+// }
 
 
-function loadOptions(search_value) {
-  if (props.manage_inventory !== false) {
-    loadInventory(search_value);
-  } else {
-    loadSerials(search_value);
-  }
-}
+// function loadOptions(search_value) {
+//   if (props.inventory_only !== false) {
+//     loadInventory(search_value);
+//   } else {
+//     loadSerials(search_value);
+//   }
+// }
 
 
 function closeCreateForm() {
@@ -311,28 +322,17 @@ function closeCreateForm() {
   // loadSerials(last_research.value);
 };
 
-function addInitialValues(search_value) {
-  if (props.initial_values) {
-    if (Array.isArray(props.initial_values)) {
-      for (const serial of props.initial_values) {
-        addValue(search_value, serial);
-      }
-    } else {
-      addValue(search_value, props.initial_values);
-    }
-  }
-};
 
-function addValue(search_value, serial) {
-  if (
-    (!search_value ||
-      search_value === '' ||
-      serial.label.includes(search_value)) &&
-    options.value.filter((value) => value._key == serial._key).length === 0
-  ) {
-    options.value.push(serial);
-  }
-};
+// function addValue(search_value, serial) {
+//   if (
+//     (!search_value ||
+//       search_value === '' ||
+//       serial.label.includes(search_value)) &&
+//     options.value.filter((value) => value._key == serial._key).length === 0
+//   ) {
+//     options.value.push(serial);
+//   }
+// };
 
 function remove(value) {
   emit('remove', value);
@@ -344,7 +344,6 @@ function filter(value, update, abort) {
   // } else
   if (!props.can_search && props.initial_values) {
     update(() => {
-      addInitialValues(value);
     });
   } else if (value.length < props.minChars && !props.product_key) {
     abort();

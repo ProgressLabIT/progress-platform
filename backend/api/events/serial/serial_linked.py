@@ -3,6 +3,7 @@ import traceback
 from events.serial.base_serial import BaseSerialEvent
 from events.inventory.base_inventory import BaseInventoryEvent
 from events.inventory.movement_completed import MovementCompletedEvent
+from events.serial.serial_unlinked import SerialUnlinkedEvent
 from models.event import EventInfoModel, EventType
 from models.inventory import InventoryMovementType, InventoryMovementReferences, MovementStatus
 from models.serial import (
@@ -28,6 +29,7 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
     phase_key: str | None = None
     job_key: str | None = None
     process_inventory: bool | None = True
+    replace_existing: bool | None = None
 
   @classmethod
   def get_tx_collections(cls):
@@ -35,7 +37,9 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
       'contains',
       'is_in_position',
       'movement',
-      'Serial'
+      'Serial',
+      'is_in_position',
+      'movement',
     ]
 
 
@@ -63,8 +67,17 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
             self.response = dict(message="Temporary link confirmed")
             return
         else:
-          # if the link is to a different parent, raise an error
-          raise ValueError('Cannot link serials: component already linked to a different parent')
+          if self.info.replace_existing:
+            # Unlink from previous parent. No need to process inventory as it will be linked again
+            self.info.process_inventory = False
+            SerialUnlinkedEvent.create_as_child(self, dict(
+              child_serial_key=self.info.child_serial_key,
+              parent_serial_key=self.info.parent_serial_key,
+              process_inventory=False,
+            ))
+          else:
+            # if the link is to a different parent, raise an error
+            raise ValueError('Cannot link serials: component already linked to a different parent')
 
       # Link to batch
       if self.info.parent_serial_key is None:

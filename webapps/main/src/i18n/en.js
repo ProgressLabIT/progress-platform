@@ -998,6 +998,14 @@ export default {
       hint: 'Click or press {key} to create',
       code_already_used: 'Serial "{name}" already in use',
     },
+    serial_used_confirmation: 'Serial already in use',
+    serial_used_confirmation_message: 'This serial is already in use. Proceeding will unlink it from the current parent product. Do you want to continue?',
+    serial_not_available_confirmation: 'Serial not available in inventory',
+    serial_not_available_confirmation_message: 'This serial is not available. Proceeding link the component without generating any warehouse movement. Do you want to continue?',
+    serial_link_process_inventory: {
+      new_link: 'Generate consumption movement for the new linked serial',
+      old_link: 'Generate return movement for the previous serial'
+    },
   },
   serial_code_to_be_assigned: 'Code to be assigned',
   year: 'Year',

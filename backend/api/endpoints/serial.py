@@ -147,19 +147,23 @@ def get_serial_selection(
   wo_key: str | None = None,
   product_key: str | None = None,
   batch_key: str | None = None,
-  filter_used: bool = False,
+  free_only: bool = False,
+  inventory_only: bool = False,
+  inventory_in_position_key: str | None = None,
   include_unreleased: bool = False,
   limit: int = 100
 ):
   return [e for e in db.aql.execute(Queries.GET_ALL_SERIALS, bind_vars=dict(
-      search = search,
-      wo_key = wo_key,
-      product_key = product_key,
-      batch_key = batch_key,
-      limit = limit,
-      filter_used = filter_used,
-      include_unreleased = include_unreleased
-    ))]
+    search = search,
+    wo_key = wo_key,
+    product_key = product_key,
+    batch_key = batch_key,
+    limit = limit,
+    free_only = free_only,
+    inventory_only = inventory_only,
+    inventory_in_position_key = inventory_in_position_key,
+    include_unreleased = include_unreleased
+  ))]
 
 
 # ---------------------------------------------

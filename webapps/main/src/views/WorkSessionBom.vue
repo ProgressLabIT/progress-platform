@@ -251,8 +251,9 @@ const requiresComponentSerials = computed(() => {
 });
 
 // Utility function to create a serial link
-const createSerialLink = ({childSerialKey, parentSerialKey, componentKey}) => ({
-  child_serial_key: childSerialKey,
+const createSerialLink = ({childSerial, parentSerialKey, componentKey}) => ({
+  _key: childSerial._key,
+  code: childSerial.code,
   parent_serial_key: parentSerialKey,
   wo_key: props.job.wo_key,
   job_key: props.job._key,
@@ -269,9 +270,9 @@ const updateSerialSelection = ({selection, bomLine, parentSerialKey}) => {
   if (selection === null) {
     newSerialLinks = []
   } else if (bomLine.qt > 1) {
-    newSerialLinks = selection.map(childSerialKey => createSerialLink({childSerialKey, parentSerialKey, componentKey: bomLine.component_key}))
+    newSerialLinks = selection.map(childSerial => createSerialLink({childSerial, parentSerialKey, componentKey: bomLine.component_key}))
   } else {
-    newSerialLinks = [createSerialLink({childSerialKey: selection, parentSerialKey, componentKey: bomLine.component_key})]
+    newSerialLinks = [createSerialLink({childSerial: selection, parentSerialKey, componentKey: bomLine.component_key})]
   }
 
   // Update store

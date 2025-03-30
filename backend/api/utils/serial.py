@@ -122,17 +122,25 @@ class Queries:
       && (@batch_key ? s._key IN batch_serials : true)
       && s.deleted == false
 
-      LET used = (
-        FOR linked_serial IN contains
-            FILTER linked_serial._to == s._id
-            && linked_serial.replaced == false
-            RETURN linked_serial
-        )
+    LET used = COUNT(
+      FOR linked_serial IN contains
+      FILTER linked_serial._to == s._id
+      && linked_serial.replaced == false
+      RETURN 1
+    ) > 0
 
-      FILTER @filter_used?(s.quantity == null ||  count(used) < s.quantity):true
+    LET available = used ? false : COUNT(
+      FOR inventory IN is_in_position
+      FILTER inventory.serial_key == s._key
+      FILTER @inventory_in_position_key ? PARSE_IDENTIFIER(inventory._to).key == @inventory_in_position_key : true
+      RETURN 1
+    ) > 0
+
+    FILTER @free_only ? !used : true
+    FILTER @inventory_only ? available : true
 
     LIMIT @limit
-    RETURN merge( { used: count(used) } , s)
+    RETURN merge(s, { used, available })
   """
 
   GET_SERIALS_IN_PRODUCT = """

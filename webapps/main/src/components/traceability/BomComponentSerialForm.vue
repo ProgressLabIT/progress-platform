@@ -44,9 +44,8 @@
                   :can_create="true"
                   :selection_qt="bom_line.qt"
                   :filter_used="true"
-                  key-only
-                  :filtered_values="usedSerialsKeys"
-                  :manage_inventory="bom_line.manage_inventory"
+                  :used-serials="usedSerialsKeys"
+                  :inventory_only="bom_line.manage_inventory"
                   :inventory_in_position_key="bom_line?.consumption_options?.consumption_position_key"
                   @select="(selection) => emit('select', {selection, bomLine: props.bom_line, parentSerialKey: serial._key})"
                 >
@@ -138,7 +137,7 @@ const component_code = computed(() => props.bom_line.component_code);
 const component_key = computed(() => props.bom_line.component_key);
 
 const serialLinks = computed(() => store.state.traceability.bom_serials);
-const usedSerialsKeys = computed(() => serialLinks.value.map(serial => serial.child_serial_key));
+const usedSerialsKeys = computed(() => serialLinks.value.map(serial => serial._key));
 
 
 // Methods
@@ -165,8 +164,8 @@ function getLineSerials(parentSerialKey) {
   // Return array of serial keys if qt > 1 (multiple selection),
   // otherwise return single serial key
   return props.bom_line.qt > 1
-    ? lineLinks.map(link => link.child_serial_key)
-    : lineLinks[0]?.child_serial_key;
+    ? lineLinks
+    : lineLinks[0]
 }
 
 

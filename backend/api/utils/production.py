@@ -106,13 +106,15 @@ class Queries:
           && c.component_key == bom_line.component_key
           && c.phase_key == bom_line.phase_key
           && c.batch_key == j.active_batch_key
+          LET component_serial = DOCUMENT(c._to)
           RETURN {
-            _key: c._key,
+            _key: component_serial._key,
+            code: component_serial.code,
             phase_key: c.phase_key,
             component_key: c.component_key,
             parent_serial_key: PARSE_IDENTIFIER(c._from).key,
-            child_serial_key: PARSE_IDENTIFIER(c._to).key,
-            batch_key: j.active_batch_key
+            batch_key: j.active_batch_key,
+            link_key: c._key
           }
       )
       LET manage_inventory = FIRST(FOR p IN Product FILTER p._key == bom_line.component_key RETURN p.manage_inventory)
