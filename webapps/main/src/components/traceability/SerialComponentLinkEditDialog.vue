@@ -33,7 +33,7 @@
         <div class="col-6">
           <q-checkbox
             v-model="processInventory.newLink"
-            :disable="selectedSerial?.available === false"
+            :disable="selectedSerial?.available === false || selectedSerial === null"
             :label="$t('serial_link_process_inventory.new_link')"
           />
         </div>
@@ -158,12 +158,10 @@ function save() {
 }
 
 function onSelect(serial) {
-  console.log('onSelect', serial);
   selectedSerial.value = serial;
   if (!selectedSerial.value?.available) {
     processInventory.newLink = false;
   }
-  console.log('selectedSerial', selectedSerial.value);
 }
 </script>
 

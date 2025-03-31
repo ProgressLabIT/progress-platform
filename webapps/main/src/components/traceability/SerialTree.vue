@@ -242,37 +242,37 @@ export default {
       });
     },
 
-    async saveNewComponentLink(node, newValues) {
+    async saveNewComponentLink(node, newSerial) {
       const sharedEventData = {
         component_key: node.product_key,
         parent_serial_key: node.parent_key,
       };
 
-      if (newValues) {
-        if (node._key) {
-          await this.sendEvent({
-            event_type: 'SERIAL_UNLINKED',
-            event_data: {
-              ...sharedEventData,
-              child_serial_key: node._key,
-              reason: newValues.reason,
-              process_inventory: newValues.processInventory.oldLink
-            }
-          });
-        }
+      if (node._key) {
+        await this.sendEvent({
+          event_type: 'SERIAL_UNLINKED',
+          event_data: {
+            ...sharedEventData,
+            child_serial_key: node._key,
+            reason: newSerial.reason,
+            process_inventory: newSerial.processInventory.oldLink
+          }
+        });
+      }
 
+      if (newSerial._key) {
         const event_data = {
           ...sharedEventData,
-          child_serial_key: newValues._key,
-          reason: newValues.reason,
-          process_inventory: newValues.processInventory.newLink
+          child_serial_key: newSerial._key,
+          reason: newSerial.reason,
+          process_inventory: newSerial.processInventory.newLink
         }
 
-        if (newValues.used) {
+        if (newSerial.used) {
           event_data.replace_existing = true;
         }
 
-        if (!newValues.available) {
+        if (!newSerial.available) {
           event_data.process_inventory = false;
         }
 
@@ -281,14 +281,16 @@ export default {
           event_type: 'SERIAL_LINKED',
           event_data,
         });
-        this.nodes = [];
-        this.getSerialHierarcy();
-        setTimeout(() => {
-          if (this.$refs.serialNodes) {
-            this.$refs.serialNodes.expandAll();
-          }
-        }, 500);
       }
+
+      // Refresh the tree
+      this.nodes = [];
+      this.getSerialHierarcy();
+      setTimeout(() => {
+        if (this.$refs.serialNodes) {
+          this.$refs.serialNodes.expandAll();
+        }
+      }, 500);
     },
   },
 };
