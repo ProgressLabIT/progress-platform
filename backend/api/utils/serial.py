@@ -538,7 +538,8 @@ def get_serial_child_nodes(parent: SerialTreeNode, serial_list: list[dict]) -> l
           # Add the child node to the start node's children
           children.append(child_node)
 
-      else:
+      # If there are no active child serials, add an empty node for the component
+      if sum(1 for child in child_serials if not child['replaced']) == 0:
         children.append(SerialTreeNode(**bom_node_base_data))
 
     return children
