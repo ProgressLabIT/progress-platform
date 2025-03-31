@@ -10,7 +10,7 @@ class BatchCreatedEvent(BaseProductionEvent):
     phase_key: str
     work_order_key: str
     product_key: str
-    batch_serials: list[str] | None = None # Can be list of serial keys or serial codes
+    batch_serials: list[str] | None = [] # Can be list of serial keys or serial codes
 
   @staticmethod
   def get_event_type() -> EventType:
