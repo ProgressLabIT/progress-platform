@@ -382,7 +382,7 @@ export default {
               ? // ternary field can be true or false, but must be filled in
                 [true, false].includes(value)
               : // All other values must not be false, null/undefined or empty string.
-                ![null, undefined, '', []].includes(value);
+                ![null, undefined, '', [], false].includes(value);
           return !field.mandatory || field_filled_in;
         },
       );
