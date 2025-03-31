@@ -9,6 +9,7 @@ class Queries:
     FOR v,e IN 2..2 OUTBOUND DOCUMENT('Product', @product_key) requires
       FILTER e.type == 'BomLine'
       LET phase = DOCUMENT(e._from)
+      FILTER !phase.trashed
       LET consumption_position_key = NOT_NULL(
         e.consumption_options.consumption_position_key,
         FIRST(FOR p IN Product FILTER p._key == v._key RETURN v.default_consumption_position_key),
