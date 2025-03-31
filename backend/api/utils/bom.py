@@ -5,9 +5,16 @@ from models.bom import *
 class Queries:
 
   GET_PRODUCT_BOM = """
+    LET default_consumption_position_key = DOCUMENT(Config, 'default_consumption_position').value
     FOR v,e IN 2..2 OUTBOUND DOCUMENT('Product', @product_key) requires
       FILTER e.type == 'BomLine'
       LET phase = DOCUMENT(e._from)
+      LET consumption_position_key = NOT_NULL(
+        e.consumption_options.consumption_position_key,
+        FIRST(FOR p IN Product FILTER p._key == v._key RETURN v.default_consumption_position_key),
+        default_consumption_position_key
+      )
+      LET consumption_options = MERGE(NOT_NULL(e.consumption_options, {}), { consumption_position_key })
       SORT v.code, phase.alias
       RETURN {
           component_key: v._key,
@@ -17,9 +24,9 @@ class Queries:
           phase_key: phase._key,
           phase_name: phase.alias,
           traceability_level: v.traceability_level,
-          consumption_options: e.consumption_options,
           qt: e.qt,
-          extra: e.extra
+          extra: e.extra,
+          consumption_options
       }
   """
 
