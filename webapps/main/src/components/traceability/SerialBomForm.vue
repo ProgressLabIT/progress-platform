@@ -132,6 +132,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'reset', 'save', 'select']);
 const store = useStore();
+const job = computed(() => store.state.traceability.working_job_data);
 const { t } = useI18n();
 
 const saving = ref(false);
@@ -143,7 +144,7 @@ const faked_batch_serials = computed(() => store.state.traceability.current_batc
 const serialLinks = computed(() => store.state.traceability.bom_serials);
 const usedSerialsKeys = computed(() => serialLinks.value.map(serial => serial._key));
 
-const formLines = computed(() => props.bom.filter(c => c.traceability_level !== null).map(line => ({
+const formLines = computed(() => props.bom.filter(c => c.traceability_level !== null && c.phase_key === job.value.phase_key).map(line => ({
   ...line,
   serials: getLineSerials(line),
 })));

@@ -28,7 +28,7 @@
       </template>
       <template #body-cell-serials="props">
         <q-td :props="props">
-          <template v-if="props.row.traceability_level !== null">
+          <template v-if="props.row.traceability_level !== null && props.row.phase_key === job.phase_key">
             <span class="q-mr-sm">
               <q-icon
                 v-if="
@@ -131,7 +131,8 @@
     </div>
 
     <SerialBomForm
-      :show="show_all_serial_form === true"
+      v-if="show_all_serial_form"
+      :show="show_all_serial_form"
       :batch_key="job.active_batch_key ? job.active_batch_key : null"
       :wo_key="job.wo_key"
       :phase_key="job.phase_key"
@@ -247,7 +248,7 @@ const traceability_enabled = computed(() => {
 });
 
 const requiresComponentSerials = computed(() => {
-  return props.job.active && props.job.active_batch_qt && props.job.wo_bom.some(i => i.traceability_level);
+  return props.job.active && props.job.active_batch_qt && props.job.wo_bom.some(i => i.traceability_level && i.phase_key === props.job.phase_key);
 });
 
 // Utility function to create a serial link
