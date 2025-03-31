@@ -18,4 +18,8 @@ class SerialReleasedEvent(BaseSerialEvent):
     return EventType.SERIAL_RELEASED
 
   def apply(self):
-    pass
+    # Update released date
+    self.tx.collection('Serial').update(dict(
+      _key=self.info.serial_key,
+      released=timestamp()
+    ))

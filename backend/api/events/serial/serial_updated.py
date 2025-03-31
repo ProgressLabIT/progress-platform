@@ -15,7 +15,6 @@ class SerialUpdatedEvent(BaseSerialEvent):
     serial_code: str | None = None # Set code if provided
     serial_data: list[SerialFormFieldValue] | None = None # Set data if provided
     remove_data_from_phases: list[str] | None = None # Set phase keys to remove data from if provided
-    released: datetime | None = None # Set released date if provided
 
   @classmethod
   def get_event_type(cls):
@@ -65,11 +64,6 @@ class SerialUpdatedEvent(BaseSerialEvent):
     if self.info.serial_data:
       serial_update['data'] = self._merge_serial_data()
 
-    # Update released date if provided
-    if self.info.released:
-      serial_update['released'] = self.info.released
-      if self.original['released'] is None: # should always be None if released is set, but just in case...
-        SerialReleasedEvent.create_as_child(self, dict(serial_key=self.info.serial_key))
 
     # ===================================================================
     # UPDATE SERIAL
