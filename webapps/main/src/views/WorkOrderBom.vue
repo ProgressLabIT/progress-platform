@@ -13,7 +13,7 @@
       </div>
 
       <div class="col-3" v-if="config.enableInventoryManagement">
-        <BaseAutocompletePositions
+        <BaseAutocompletePosition
           :model-value="outputPositionKey"
           :label="$t('warehouse.output_position')"
           :disable="!editMode"
@@ -59,7 +59,7 @@
 
       <template #body-cell-manage_inventory="props">
         <q-td class="text-center">
-          <BaseAutocompletePositions
+          <BaseAutocompletePosition
             v-if="props.row.manage_inventory"
             :model-value="props.row.consumption_options?.consumption_position_key"
             :label="$t('warehouse.inventory.position')"
@@ -199,8 +199,8 @@ import { api } from '@/boot/axios.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useConfigStore } from '@/stores/config';
-import BaseAutocompletePositions from 'components/BaseAutocompletePositions.vue';
-import BaseAutocompleteProduct from 'components/BaseAutocompleteProduct.vue';
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
+import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
 
 // Setup store and route
 const { t } = useI18n();

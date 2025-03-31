@@ -243,7 +243,7 @@
             "
           /> -->
 
-          <BaseAutocompletePositions
+          <BaseAutocompletePosition
             :model-value="consumption_options.consumption_position_key"
             :label="$t('warehouse.consumption_options.consumption_position_key')"
             key-only
@@ -294,8 +294,8 @@ import { api } from '@/boot/axios.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useConfigStore } from '@/stores/config';
-import BaseAutocompletePositions from 'components/BaseAutocompletePositions.vue';
-import BaseAutocompleteProduct from 'components/BaseAutocompleteProduct.vue';
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
+import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
 // import { throttle as _throttle } from 'lodash';
 
 export default {
@@ -304,7 +304,7 @@ export default {
   components: {
     BaseDialog,
     BaseAutocompleteProduct,
-    BaseAutocompletePositions,
+    BaseAutocompletePosition,
   },
 
   emits: ['changesSaved', 'changesCanceled'],

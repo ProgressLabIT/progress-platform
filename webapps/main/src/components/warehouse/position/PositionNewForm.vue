@@ -71,7 +71,7 @@
 <script>
 import BaseModalForm from '@/components/BaseModalForm.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
-import BaseAutocompletePosition from '@/components/warehouse/position/BaseAutocompletePosition.vue';
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
 
 export default {
   name: 'PositionNewForm',

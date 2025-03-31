@@ -8,7 +8,7 @@
     <div class="column q-col-gutter-xs">
 
     <!-- ROOT POSITION -->
-      <BaseAutocompletePositions
+      <BaseAutocompletePosition
         dense
         filled
         class="q-mb-md col"
@@ -64,7 +64,7 @@
 </template>
 
 <script setup>
-import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import { useInventoryFilters } from 'app/src/composables/warehouse';
 import { useRouter } from 'vue-router';

@@ -16,7 +16,7 @@
 
     <template v-if="configModel.enableInventoryManagement">
       <!-- Default production position -->
-      <BaseAutocompletePositions
+      <BaseAutocompletePosition
         :label="$t('settings.defaultProductionPosition')"
         :value="configModel.defaultProductionPosition"
         key-only
@@ -25,7 +25,7 @@
         @select="(position) => (configModel.defaultProductionPosition = position)"
       />
       <!-- Default consumption position -->
-      <BaseAutocompletePositions
+      <BaseAutocompletePosition
         :label="$t('settings.defaultConsumptionPosition')"
         :value="configModel.defaultConsumptionPosition"
         key-only
@@ -64,7 +64,7 @@ import { ref } from 'vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import { useConfigStore } from '@/stores/config';
 import SettingsSection from '@/components/SettingsSection.vue';
-import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
 
 const { isLoading, config, updateAppConfig } = useConfigStore();
 

@@ -28,7 +28,7 @@
       <template v-if="movement_type">
         <!-- POSITION -->
         <div class="row items-baseline q-col-gutter-md">
-          <BaseAutocompletePositions
+          <BaseAutocompletePosition
             dense
             class="q-mb-md col"
             :load-data="false"
@@ -134,7 +134,7 @@
 import { Notify } from 'quasar';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
-import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
 import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseModalForm from '@/components/BaseModalForm.vue';

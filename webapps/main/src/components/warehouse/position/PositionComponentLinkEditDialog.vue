@@ -44,7 +44,7 @@
 import { useDialogPluginComponent } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BaseAutocompletePosition from '@/components/warehouse/position/BaseAutocompletePosition.vue';
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
 
 const { t: $t } = useI18n({ useScope: 'global' });
 

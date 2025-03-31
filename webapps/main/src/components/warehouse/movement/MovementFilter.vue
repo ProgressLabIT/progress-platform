@@ -205,7 +205,7 @@
     </div>
 
     <div class="row items-baseline q-col-gutter-md">
-      <BaseAutocompletePositions
+      <BaseAutocompletePosition
         dense
         filled
         class="q-mb-md col"
@@ -220,7 +220,7 @@
     </div>
 
     <div class="row items-baseline q-col-gutter-md">
-      <BaseAutocompletePositions
+      <BaseAutocompletePosition
         dense
         filled
         class="q-mb-md col"
@@ -268,7 +268,7 @@
 </template>
 
 <script>
-import BaseAutocompletePositions from '@/components/BaseAutocompletePositions.vue';
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import queryModel from '@/lib/queryModelFactory.js';
 
@@ -277,7 +277,7 @@ export default {
 
   components: {
     FilterDrawer,
-    BaseAutocompletePositions,
+    BaseAutocompletePosition,
   },
 
   props: {
