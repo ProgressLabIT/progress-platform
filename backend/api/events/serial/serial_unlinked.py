@@ -54,13 +54,14 @@ class SerialUnlinkedEvent(BaseSerialEvent, BaseInventoryEvent):
         raise ValueError('No serial found to unlink')
       if updates_count > 1:
         raise ValueError('Multiple serials found to unlink')
-    except:
+    except Exception as e:
       print(traceback.format_exc())
       self.notify_results(dict(
         notification=SerialNotificationType.ERROR,
         error_code=SerialNotificationErrorCode.EXCEPTION,
         error=traceback.format_exc()
       ))
+      raise
 
     if self.info.process_inventory:
       self._process_inventory()
