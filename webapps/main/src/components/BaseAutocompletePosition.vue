@@ -5,7 +5,8 @@
     :loading="loading"
     :label-slot="!!label"
     :dense="dense"
-    :hint="$t('warehouse.position.position_autocomplete_hint')"
+    :hint="hint"
+    :hide-bottom-space="!hint"
     :placeholder="placeholder_computed"
     :clearable="clearable"
     :options="options"
@@ -69,6 +70,11 @@ export default {
     placeholder: {
       type: String,
       default: null,
+    },
+
+    hint: {
+      type: String,
+      default: undefined,
     },
   },
 
