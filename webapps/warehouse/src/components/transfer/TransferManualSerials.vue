@@ -8,7 +8,7 @@
     <div class="row q-col-gutter-sm">
       <div class="col-6">
         <SearchOrScan
-          v-model="filter"
+          v-model="serialCodeFilter"
           label="Seriale"
           @update:model-value="search"
         />
@@ -21,6 +21,7 @@
           input-class="text-uppercase"
           label="Prodotto"
           v-model="productCodeFilter"
+          @update:model-value="search"
         >
           <template #append>
             <q-icon name="mdi-filter" />
@@ -109,7 +110,7 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const transfer = useTransferStore();
-const filter = ref('');
+const serialCodeFilter = ref('');
 const productCodeFilter = ref('');
 const results = ref([]);
 const message = ref('scan_serial')
@@ -117,47 +118,44 @@ const { t } = useI18n();
 
 
 function search() {
-  if (!filter.value) {
-    reset();
-    return;
-  }
-  else if (filter.value) {
-    api.get('inventory', { params: { serial_search: filter.value }})
-    .then(response => {
-      if (response.data.length === 0) {
-        results.value = [];
-        message.value = 'no_results';
+  api.get('inventory', { params: {
+    serial_search: serialCodeFilter.value,
+    product_search: productCodeFilter.value
+  }})
+  .then(response => {
+    if (response.data.length === 0) {
+      results.value = [];
+      message.value = 'no_results';
+    } else {
+      // Map inventory results to match expected model
+      if (response.data.length === 1 && response.data[0].serial_code === serialCodeFilter.value) {
+        // if only one result, toggle it and notify the user
+        const serial = response.data[0];
+        const action = toggleItem(serial);
+        Notify.create({
+          message: action === 'added' ? t('serial_added') : t('serial_removed'),
+          caption: serial.serial_code,
+          position: 'top',
+          color: action === 'added' ? 'theme-green' : 'theme-orange',
+          icon: action === 'added' ? 'mdi-check' : 'mdi-close',
+          timeout: 1500,
+        });
+        serialCodeFilter.value = '';
+        reset();
       } else {
-        // Map inventory results to match expected model
-        if (response.data.length === 1 && response.data[0].serial_code === filter.value) {
-          // if only one result, toggle it and notify the user
-          const serial = response.data[0];
-          const action = toggleItem(serial);
-          Notify.create({
-            message: action === 'added' ? t('serial_added') : t('serial_removed'),
-            caption: serial.serial_code,
-            position: 'top',
-            color: action === 'added' ? 'theme-green' : 'theme-orange',
-            icon: action === 'added' ? 'mdi-check' : 'mdi-close',
-            timeout: 1500,
-          });
-          filter.value = '';
-          reset();
-        } else {
-          // show search results
-          results.value = response.data;
-        }
+        // show search results
+        results.value = response.data;
       }
-    })
-    .catch(error => {
-      Notify.create({
-        message: error.response.data.message,
-        position: 'top',
-        color: 'red',
-        icon: 'error',
-      });
+    }
+  })
+  .catch(error => {
+    Notify.create({
+      message: error.response.data.message,
+      position: 'top',
+      color: 'red',
+      icon: 'error',
     });
-  }
+  });
 }
 
 const serialList = computed(() => {
