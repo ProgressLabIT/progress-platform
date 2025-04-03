@@ -20,85 +20,85 @@ const productionRoutes = [
                 path: 'new',
                 name: 'newWorkOrder',
                 component: () => import('@/views/WorkOrderNew.vue'),
-              },
-              {
-                path: ':wo_key',
-                name: 'workOrderScreen',
-                redirect: { name: 'workOrderJobs' },
-                component: () => import('@/components/WorkOrderScreen.vue'),
-                props: true,
-                children: [
-                  {
-                    path: 'job-list',
-                    name: 'workOrderJobs',
-                    component: () => import('@/views/WorkOrderJobs.vue'),
-                  },
-                  {
-                    path: 'bom',
-                    name: 'workOrderBom',
-                    component: () => import('@/views/WorkOrderBom.vue'),
-                    props: true,
-                  },
-                  {
-                    path: 'history',
-                    name: 'workOrderHistory',
-                    component: () => import('@/views/WorkOrderHistory.vue'),
-                  },
-                  {
-                    path: 'issues',
-                    name: 'workOrderIssues',
-                    component: () => import('@/views/IssueList.vue'),
-                    props: true,
-                    children: [
-                      {
-                        path: ':issueKey',
-                        name: 'workOrderIssueDetail',
-                        component: () => import('@/components/IssueDetail.vue'),
-                        props: true,
-                      },
-                    ],
-                  },
-                  {
-                    path: 'notes',
-                    name: 'workOrderNotes',
-                    component: () => import('@/views/WorkOrderNotes.vue'),
-                  },
-                  {
-                    path: 'messages',
-                    name: 'workOrderMessages',
-                    component: () => import('@/components/MessageThread.vue'),
-                    props: (route) => ({
-                      context_key: route.params.wo_key,
-                      context: 'work_order',
-                    }),
-                  },
-                  {
-                    path: 'traceability',
-                    name: 'workOrderTraceability',
-                    component: () =>
-                      import(
-                        '@/components/workorderscreen/WorkOrderTraceability.vue'
-                      ),
-                    props: (route) => ({
-                      context_key: route.params.wo_key,
-                      context: 'work_order',
-                    }),
-                  },
-                ],
-              },
+              }
             ],
           },
           {
-            path: 'job/:department?',
-            name: 'jobList',
-            component: () => import('@/components/JobList.vue'),
-          },
-          {
-            path: 'workorder/archive',
-            name: 'workOrderArchive',
-            component: () => import('@/components/WorkOrderArchive.vue'),
+            path: 'workorder/:wo_key',
+            name: 'workOrderScreen',
+            redirect: { name: 'workOrderJobs' },
+            component: () => import('@/components/WorkOrderScreen.vue'),
+            props: true,
+            children: [
+              {
+                path: 'job-list',
+                name: 'workOrderJobs',
+                component: () => import('@/views/WorkOrderJobs.vue'),
+              },
+              {
+                path: 'bom',
+                name: 'workOrderBom',
+                component: () => import('@/views/WorkOrderBom.vue'),
+                props: true,
+              },
+              {
+                path: 'history',
+                name: 'workOrderHistory',
+                component: () => import('@/views/WorkOrderHistory.vue'),
+              },
+              {
+                path: 'issues',
+                name: 'workOrderIssues',
+                component: () => import('@/views/IssueList.vue'),
+                props: true,
+                children: [
+                  {
+                    path: ':issueKey',
+                    name: 'workOrderIssueDetail',
+                    component: () => import('@/components/IssueDetail.vue'),
+                    props: true,
+                  },
+                ],
+              },
+              {
+                path: 'notes',
+                name: 'workOrderNotes',
+                component: () => import('@/views/WorkOrderNotes.vue'),
+              },
+              {
+                path: 'messages',
+                name: 'workOrderMessages',
+                component: () => import('@/components/MessageThread.vue'),
+                props: (route) => ({
+                  context_key: route.params.wo_key,
+                  context: 'work_order',
+                }),
+              },
+              {
+                path: 'traceability',
+                name: 'workOrderTraceability',
+                component: () =>
+                  import(
+                    '@/components/workorderscreen/WorkOrderTraceability.vue'
+                  ),
+                props: (route) => ({
+                  context_key: route.params.wo_key,
+                  context: 'work_order',
+                }),
+              },
+            ],
           },
         ],
+      },
+      {
+        path: 'job/:department?',
+        name: 'jobList',
+        component: () => import('@/components/JobList.vue'),
+      },
+      {
+        path: 'workorder/archive',
+        name: 'workOrderArchive',
+        component: () => import('@/components/WorkOrderArchive.vue'),
       },
     ],
   },
