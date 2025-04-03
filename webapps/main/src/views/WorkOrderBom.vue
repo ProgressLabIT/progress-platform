@@ -156,8 +156,6 @@
               filled
               class="col-2"
               type="number"
-              step="1"
-              min="1"
               :label="$t('quantity.short')"
             >
             </q-input>
@@ -190,7 +188,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { capitalize } from '@/boot/filters';
 import { api } from '@/boot/axios.js';
@@ -224,7 +222,6 @@ const productCatalog = ref([]);
 const newLineProduct = ref({});
 const newLinePhase = ref({});
 const newLineQt = ref(null);
-const newLineConsumptionOptions = ref({ output_position_key: null });
 const saving = ref(false);
 const filteredProcess = ref(null);
 const tempBom = ref([]);
@@ -289,6 +286,8 @@ async function fetchInitialPositions() {
   let initialPositionKeys = new Set([
     ...props.wo_data.wo_bom.filter((i) => i.consumption_options?.consumption_position_key).map((i) => i.consumption_options?.consumption_position_key),
     props.wo_data.output_position_key,
+    config.defaultConsumptionPosition,
+    config.defaultProductionPosition,
   ]);
 
   const params = new URLSearchParams();
@@ -349,7 +348,6 @@ watch(showProductCatalog, () => {
   newLineProduct.value = null;
   newLineQt.value = null;
   newLinePhase.value = null;
-  newLineConsumptionOptions.value = { output_position_key: null };
 });
 
 watch(props.wo_data, initTempBom, { deep: true });
@@ -433,23 +431,24 @@ const addItem = () => {
     );
   });
 
-  if (!newLineQt.value || newLineQt.value <= 0) {
-    window.alert(capitalize(t('bom.alerts.quantity_negative')));
-  } else if (!isDuplicate) {
-    const newLine = {
+  if (!isDuplicate) {
+    const newLine = reactive({
+      manage_inventory: newLineProduct.value.manage_inventory,
       component_key: newLineProduct.value._key,
       component_code: newLineProduct.value.code,
       component_description: newLineProduct.value.description,
-      consumption_options: newLineConsumptionOptions.value || {},
+      consumption_options: {
+        consumption_position_key: config.defaultConsumptionPosition || 'IN',
+      },
       qt: newLineQt.value,
       phase_name: newLinePhase.value?.alias ?? null,
       phase_key: newLinePhase.value?._key ?? null,
       traceability_level: newLineProduct.value.traceability_level,
       table_key:
         newLineProduct.value._key + (newLinePhase.value?._key ?? null),
-    };
+    });
 
-    tempBom.value = [...tempBom.value, newLine];
+    tempBom.value.push(newLine);
     showProductCatalog.value = false;
   } else {
     window.alert(capitalize(t('bom.alerts.line_exists')));
