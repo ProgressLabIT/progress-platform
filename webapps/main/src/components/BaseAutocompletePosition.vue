@@ -17,7 +17,7 @@
     :emit-value="keyOnly"
     :map-options="keyOnly"
     @filter="filter"
-    @update:model-value="(selection) => $emit('select', selection)"
+    @update:model-value="(selection) => emit('select', selection)"
   >
     <template #option="scope">
       <q-item v-bind="scope.itemProps">
@@ -37,105 +37,84 @@
   </q-select>
 </template>
 
-<script>
-export default {
-  name: 'BaseAutocompletPosition',
+<script setup>
+import { ref, computed } from 'vue';
+import { api } from '@/boot/axios';
 
-  props: {
-    value: {
-      type: [Object, String],
-      default: null,
-    },
-
-    label: {
-      type: String,
-      default: '',
-    },
-
-    keyOnly: {
-      type: Boolean,
-      default: false,
-    },
-
-    dense: {
-      type: Boolean,
-      default: false,
-    },
-
-    clearable: {
-      type: Boolean,
-      default: true,
-    },
-
-    placeholder: {
-      type: String,
-      default: null,
-    },
-
-    hint: {
-      type: String,
-      default: undefined,
-    },
+const props = defineProps({
+  value: {
+    type: [Object, String],
+    default: null,
   },
-
-  emits: ['select'],
-
-  data() {
-    return {
-      loading: false,
-      origin_list: [],
-      options: [],
-      last_research: undefined,
-    };
+  label: {
+    type: String,
+    default: '',
   },
-
-  computed: {
-    placeholder_computed() {
-      return this.value ? null : this.placeholder;
-    },
+  keyOnly: {
+    type: Boolean,
+    default: false,
   },
-
-  created() {
-    this.initialize();
+  dense: {
+    type: Boolean,
+    default: false,
   },
-
-  methods: {
-    initialize() {
-      if (this.loadData) {
-        this.loadPositions();
-      }
-    },
-
-    loadPositions(search_value) {
-      this.loading = true;
-      let params = {};
-
-      if (search_value) {
-        params.search = search_value;
-        this.last_research = search_value;
-      }
-      params.limit = 100;
-      params.open = true;
-
-      this.$api
-        .get('position', {
-          params,
-        })
-        .then((resp) => {
-          this.options = resp.data;
-          this.loading = false;
-        });
-    },
-
-    filter(value, update) {
-      if (this.last_research === value) {
-        update();
-      } else {
-        update(() => {
-          this.loadPositions(value);
-        });
-      }
-    },
+  clearable: {
+    type: Boolean,
+    default: true,
   },
+  placeholder: {
+    type: String,
+    default: null,
+  },
+  hint: {
+    type: String,
+    default: undefined,
+  },
+});
+
+const emit = defineEmits(['select']);
+
+const loading = ref(false);
+const options = ref([]);
+const last_research = ref(undefined);
+
+const placeholder_computed = computed(() => {
+  return props.value ? null : props.placeholder;
+});
+
+if (props.loadData) {
+  loadPositions();
+}
+
+
+const loadPositions = (search_value) => {
+  loading.value = true;
+  let params = {};
+
+  if (search_value) {
+    params.search = search_value;
+    last_research.value = search_value;
+  }
+  params.limit = 100;
+  params.open = true;
+
+  api
+    .get('position', {
+      params,
+    })
+    .then((resp) => {
+      options.value = resp.data;
+      loading.value = false;
+    });
+};
+
+const filter = (value, update) => {
+  if (last_research.value === value) {
+    update();
+  } else {
+    update(() => {
+      loadPositions(value);
+    });
+  }
 };
 </script>
