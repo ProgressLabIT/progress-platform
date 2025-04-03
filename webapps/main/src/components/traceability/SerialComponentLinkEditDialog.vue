@@ -19,9 +19,8 @@
           "
           :hint="$t('serial_autocomplete_hint', { minChars: 3 })"
           :product_key="start_node.product_key"
-          :can_create="true"
+          :can_create="false"
           :selection_qt="1"
-          :filter_used="true"
           @select="onSelect"
         >
         </BaseAutocompleteSerial>

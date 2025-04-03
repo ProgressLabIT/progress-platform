@@ -77,7 +77,7 @@ import { ref, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { Dialog } from 'quasar'
 import SerialComponentLinkEditDialog from '@/components/traceability/SerialComponentLinkEditDialog.vue'
-import sendEvent from '@/mixins/event.js'
+import { sendEvent } from '@/composables/event'
 import { api } from '@/boot/axios'
 
 const props = defineProps({

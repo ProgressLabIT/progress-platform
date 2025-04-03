@@ -44,9 +44,9 @@
           </q-item-label>
         </q-item-section>
         <q-item-section side v-if="!props.inventory_only">
-          <div class="row items-center">
-            <q-icon v-if="!scope.opt.available" size="xs" name="mdi-package-variant-closed-remove" />
+          <div class="row items-center q-gutter-x-sm">
             <q-icon v-if="scope.opt.used" size="xs" name="mdi-link-variant" />
+            <q-icon v-if="!scope.opt.available" size="xs" name="mdi-package-variant-closed-remove" />
           </div>
         </q-item-section>
       </q-item>
@@ -272,7 +272,7 @@ function loadOptions(search_value) {
           options.value = resp.data.map((item) => ({
             _key: item._key,
             code: item.serial_code || item.code,
-            free: item.free,
+            used: item.used,
             available: item.available,
           }));
           loading.value = false;
@@ -283,7 +283,7 @@ function loadOptions(search_value) {
       options.value = resp.data.map((item) => ({
         _key: item._key,
         code: item.serial_code || item.code,
-        free: item.free,
+        used: item.used,
         available: item.available,
       }));
       loading.value = false;
