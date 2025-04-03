@@ -382,8 +382,11 @@ def _get_procedure_for_new_job(tx, phase_key):
   return job_steps
 
 
-def _get_default_production_position(tx):
-  return tx.collection('Config').get('default_production_position').get('value', 'IN')
+def _get_production_position(tx, wo: WorkOrderNew):
+  if wo.output_position_key:
+    return wo.output_position_key
+  else:
+    return tx.collection('Config').get('default_production_position').get('value', 'IN')
 
 
 def _define_wo_bom(tx, wo: WorkOrderNew):
@@ -428,7 +431,7 @@ def create_wo_record(tx, wo: WorkOrderNew):
   input_data.update(
     wo_docs = get_product_docs(wo.product_key),
     wo_bom = _define_wo_bom(tx, wo),
-    output_position_key = _get_default_production_position(tx)
+    output_position_key = _get_production_position(tx, wo)
   )
   new_wo_record = WorkOrderFull(**input_data)
   prepped = jsonable_encoder(new_wo_record, by_alias=True)

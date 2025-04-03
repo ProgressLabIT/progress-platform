@@ -52,7 +52,7 @@ class WorkOrderNew(BaseModel):
   start_from: datetime | date | None = None
   due_by: datetime | date | None = None
   wo_bom: list[WOBomLineInput] = []
-  output_position_key: str | None = 'IN'
+  output_position_key: str | None = None
   traceability_level: TraceabilityLevel | None = None
   serialcode_on_batchstart: bool = False
   notes: str | None = None
