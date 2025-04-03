@@ -35,6 +35,7 @@ class WOBomLineInput(FlexModel):
   component_key: str
   qt: float
   phase_key: str | None = None
+  consumption_options: BomLineConsumptionOptions | None = Field(default_factory=BomLineConsumptionOptions)
   extra: Any = None
 
 class WOBomLine(FlexModel):
