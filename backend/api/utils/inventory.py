@@ -17,6 +17,7 @@ class Queries:
 
     FILTER
       IS_SAME_COLLECTION('Position', v)
+      && (@position_keys ? v._key IN @position_keys : true)
       && (@contains_position ? @contains_position IN p.vertices[*]._key : true)
       && (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%') : true)
       && (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)

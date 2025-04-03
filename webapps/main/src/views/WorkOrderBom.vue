@@ -14,12 +14,11 @@
 
       <div class="col-3" v-if="config.enableInventoryManagement">
         <BaseAutocompletePosition
-          :model-value="outputPositionKey"
+          :value="outputPositionData"
           :label="$t('warehouse.output_position')"
           :disable="!editMode"
-          key-only
           dense
-          @select="(positionKey) => udpateBomLinePosition(props.row, positionKey)"
+          @select="(position) => udpateBomOutputPosition(position)"
         />
       </div>
       <q-btn v-if="!editMode" size="sm" color="theme-blue" @click="toggleEdit">
@@ -61,10 +60,9 @@
         <q-td class="text-center">
           <BaseAutocompletePosition
             v-if="props.row.manage_inventory"
-            :model-value="props.row.consumption_options?.consumption_position_key"
+            :value="props.row.consumption_options?.consumption_position_data"
             :label="$t('warehouse.inventory.position')"
             :disable="!editMode"
-            key-only
             dense
             @select="(positionKey) => udpateBomLinePosition(props.row, positionKey)"
           />
@@ -201,7 +199,7 @@ import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useConfigStore } from '@/stores/config';
 import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
-
+import { cloneDeep } from 'lodash';
 // Setup store and route
 const { t } = useI18n();
 const { config } = useConfigStore();
@@ -226,11 +224,16 @@ const productCatalog = ref([]);
 const newLineProduct = ref({});
 const newLinePhase = ref({});
 const newLineQt = ref(null);
-const newLineConsumptionOptions = ref(null);
+const newLineConsumptionOptions = ref({ output_position_key: null });
 const saving = ref(false);
 const filteredProcess = ref(null);
 const tempBom = ref([]);
+const editMode = ref(false);
 const outputPositionKey = ref(props.wo_data.output_position_key);
+const outputPositionData = computed(() => {
+  return getPositionData(outputPositionKey.value);
+});
+const positionsData = ref([]);
 
 // Get phase name and key from job list to populate the dropdown
 const processPhases = computed(() => {
@@ -281,15 +284,44 @@ const tableHeaders = computed(() => {
   return columns;
 });
 
-const editMode = ref(false);
 
-function initTempBom() {
-  tempBom.value = props.wo_data.wo_bom.map((i) => {
-    return { ...i, table_key: i.component_key + i.phase_key };
+async function fetchInitialPositions() {
+  let initialPositionKeys = new Set([
+    ...props.wo_data.wo_bom.filter((i) => i.consumption_options?.consumption_position_key).map((i) => i.consumption_options?.consumption_position_key),
+    props.wo_data.output_position_key,
+  ]);
+
+  const params = new URLSearchParams();
+  initialPositionKeys.forEach((i) => {
+    params.append('position_keys', i);
+  });
+
+  positionsData.value = (await api.get('position', { params })).data;
+}
+
+
+function getPositionData(positionKey) {
+  const positionData = positionsData?.value?.find((i) => i._key === positionKey);
+  return positionData;
+}
+
+async function init() {
+  await fetchInitialPositions();
+  initTempBom();
+}
+
+
+async function initTempBom() {
+  tempBom.value = cloneDeep(props.wo_data.wo_bom).map((i) => {
+    return {
+      ...i,
+      table_key: i.component_key + i.phase_key,
+    };
   });
 }
 
-initTempBom();
+init();
+
 
 const filteredBom = computed(() => {
   const fieldsToSearch = [
@@ -297,7 +329,17 @@ const filteredBom = computed(() => {
     'component_description',
     'phase_name',
   ];
-  return tempBom.value.filter((line) => {
+  const bom = tempBom.value.map((line) => {
+    return {
+      ...line,
+      consumption_options: {
+        ...line.consumption_options,
+        // TODO: this is a hack to get the position data to the table
+        consumption_position_data: line.consumption_position_data ?? getPositionData(line.consumption_options?.consumption_position_key),
+      },
+    };
+  });
+  return bom.filter((line) => {
     return multiMatch(searchText.value, line, fieldsToSearch);
   });
 });
@@ -307,7 +349,7 @@ watch(showProductCatalog, () => {
   newLineProduct.value = null;
   newLineQt.value = null;
   newLinePhase.value = null;
-  newLineConsumptionOptions.value = null;
+  newLineConsumptionOptions.value = { output_position_key: null };
 });
 
 watch(props.wo_data, initTempBom, { deep: true });
@@ -332,10 +374,23 @@ const openItemSearch = () => {
   catalogLoading.value = false;
 };
 
-const udpateBomLinePosition = (line, positionKey) => {
+function addPositionData(position) {
+  if (position !== null && !positionsData.value.some((i) => i._key === position._key)) {
+    positionsData.value.push(position);
+  }
+}
+
+const udpateBomOutputPosition = (position) => {
+  addPositionData(position);
+  outputPositionKey.value = position?._key;
+};
+
+const udpateBomLinePosition = (line, position) => {
+  addPositionData(position);
   tempBom.value = tempBom.value.map((i) => {
     if (i.component_key === line.component_key && i.phase_key === line.phase_key) {
-      i.consumption_options.consumption_position_key = positionKey;
+      // If position is null, position?._key is undefined, so we need to set it to null or it will not be sent to the backend
+      i.consumption_options.consumption_position_key = position?._key ?? null;
     }
     return i;
   });

@@ -68,6 +68,7 @@ class PositionLink(ArangoEdge):  #edge is_in_position
 
 class PositionSearchParams(BaseModel):
   search: str | None = None
+  position_keys: list[str] | None = None
   has_product_key: list[str] | None = None
   has_product_code: list[str] | None = None
   is_in_position: str | None = None
