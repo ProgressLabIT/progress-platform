@@ -402,7 +402,12 @@ def _define_wo_bom(tx, wo: WorkOrderNew):
     for line in wo.wo_bom:
       product = next((p for p in product_data if p['_key'] == line.component_key), None)
       phase = next((p for p in phase_data if p['_key'] == line.phase_key), None)
+
+      # Set default consumption position key if not provided
       consumption_position_key = product.get('default_consumption_position_key', default_consumption_position_key)
+      if line.consumption_options.consumption_position_key is None:
+        line.consumption_options.consumption_position_key = consumption_position_key
+
       bom.append(dict(
         **line.model_dump(),
         component_code = product['code'],
@@ -410,9 +415,9 @@ def _define_wo_bom(tx, wo: WorkOrderNew):
         manage_inventory = product.get('manage_inventory', False),
         traceability_level = product.get('traceability_level', None),
         phase_name = phase['alias'],
-        consumption_options = dict(consumption_position_key=consumption_position_key)
       ))
     return bom
+
   else:
     return [line.model_dump() for line in get_bom_from_db(tx, wo.product_key)]
 
