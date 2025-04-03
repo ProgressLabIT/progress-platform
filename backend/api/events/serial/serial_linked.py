@@ -72,7 +72,7 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
             self.info.process_inventory = False
             SerialUnlinkedEvent.create_as_child(self, dict(
               child_serial_key=self.info.child_serial_key,
-              parent_serial_key=self.info.parent_serial_key,
+              parent_serial_key=record['_from'].split('/')[-1],
               process_inventory=False,
             ))
           else:
