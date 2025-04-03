@@ -31,6 +31,12 @@ class BomLineRead(FlexModel):
     return v
 
 
+class WOBomLineInput(FlexModel):
+  component_key: str
+  qt: float
+  phase_key: str | None = None
+  extra: Any = None
+
 class WOBomLine(FlexModel):
   component_key: str
   component_code: str

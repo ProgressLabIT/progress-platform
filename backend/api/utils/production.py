@@ -386,13 +386,46 @@ def _get_default_production_position(tx):
   return tx.collection('Config').get('default_production_position').get('value', 'IN')
 
 
+def _define_wo_bom(tx, wo: WorkOrderNew):
+  if wo.wo_bom:
+
+    product_data = tx.collection('Product').get_many([line.component_key for line in wo.wo_bom])
+    phase_data = tx.collection('Phase').get_many([line.phase_key for line in wo.wo_bom])
+
+    alien_phases = set(phase['_key'] for phase in phase_data) - set(wo.phase_sequence)
+    if len(alien_phases):
+      raise ValueError('Bom references phases that do not belong to the work order')
+
+    default_consumption_position_key = tx.collection('Config').get('default_consumption_position').get('value', 'IN')
+
+    bom = []
+    for line in wo.wo_bom:
+      product = next((p for p in product_data if p['_key'] == line.component_key), None)
+      phase = next((p for p in phase_data if p['_key'] == line.phase_key), None)
+      consumption_position_key = product.get('default_consumption_position_key', default_consumption_position_key)
+      bom.append(dict(
+        **line.model_dump(),
+        component_code = product['code'],
+        component_description = product.get('description', ''),
+        manage_inventory = product.get('manage_inventory', False),
+        traceability_level = product.get('traceability_level', None),
+        phase_name = phase['alias'],
+        consumption_options = dict(consumption_position_key=consumption_position_key)
+      ))
+    return bom
+  else:
+    return [line.model_dump() for line in get_bom_from_db(tx, wo.product_key)]
+
+
+
 def create_wo_record(tx, wo: WorkOrderNew):
-  new_wo_record = WorkOrderFull(
-    **wo.model_dump(),
+  input_data = wo.model_dump()
+  input_data.update(
     wo_docs = get_product_docs(wo.product_key),
-    wo_bom = [line.model_dump() for line in get_bom_from_db(tx, wo.product_key)],
+    wo_bom = _define_wo_bom(tx, wo),
     output_position_key = _get_default_production_position(tx)
   )
+  new_wo_record = WorkOrderFull(**input_data)
   prepped = jsonable_encoder(new_wo_record, by_alias=True)
   db_resp = tx.collection('WorkOrder').insert(prepped)
   new_wo_record.id = db_resp['_id']

@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import model_validator, BaseModel, Field, PositiveFloat, field_validator, ValidationInfo
 
-from models.bom import WOBomLine
+from models.bom import WOBomLine, WOBomLineInput
 from models.process import PhaseParameters, StepWithMediaInfo
 from models.product import ProductDoc
 from models.product import TraceabilityLevel
@@ -51,11 +51,11 @@ class WorkOrderNew(BaseModel):
   project_code: str | None = None
   start_from: datetime | date | None = None
   due_by: datetime | date | None = None
-  notes: str | None = None
-
+  wo_bom: list[WOBomLineInput] = []
+  output_position_key: str | None = 'IN'
   traceability_level: TraceabilityLevel | None = None
   serialcode_on_batchstart: bool = False
-
+  notes: str | None = None
   extra: Any = None
 
   @model_validator(mode="before")
@@ -74,6 +74,7 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
   on_time: bool = True
   critical: bool = False
   progress: int = Field(0, ge=0)
+  wo_bom: list[WOBomLine] = []
 
   created: datetime = Field(default_factory=timestamp)
   start: datetime | None = None
@@ -83,9 +84,6 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
 
   phase_sequence: list[str] = []
   wo_docs: list[ProductDoc] = []
-  wo_bom: list[WOBomLine] = []
-
-  output_position_key: str | None = 'IN'
 
 
 class RequiredAvailableQt(FlexModel):
