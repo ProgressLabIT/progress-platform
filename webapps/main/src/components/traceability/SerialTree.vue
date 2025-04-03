@@ -9,7 +9,6 @@
       :loading="loading"
       @lazy-load="({ node, done }) => lazyLoad(node, done)"
     >
-      <!-- @update:model-value="(selection) => $emit('select', selection)" -->
       <template #default-header="prop">
         <div
           class="row items-center full-width justify-between q-pr-xl"
@@ -65,235 +64,193 @@
   </div>
 </template>
 
-<script>
-import { Dialog } from 'quasar';
-import SerialComponentLinkEditDialog from '@/components/traceability/SerialComponentLinkEditDialog.vue';
-import sendEvent from '@/mixins/event.js';
+<script setup>
+import { ref, computed, watch } from 'vue'
+import { useStore } from 'vuex'
+import { Dialog } from 'quasar'
+import SerialComponentLinkEditDialog from '@/components/traceability/SerialComponentLinkEditDialog.vue'
+import sendEvent from '@/mixins/event.js'
+import { api } from '@/boot/axios'
 
-export default {
-  name: 'SerialTree',
-
-  mixins: [sendEvent],
-
-  props: {
-    mini_state: {
-      type: Boolean,
-      default: false,
-    },
-    edit_mode: {
-      type: Boolean,
-      default: false,
-    },
-    serial_key: {
-      type: String,
-      required: true,
-    },
+const props = defineProps({
+  mini_state: {
+    type: Boolean,
+    default: false,
   },
-
-  emits: ['select', 'noNodes'],
-
-  data() {
-    return {
-      drawer: true,
-      loading: false,
-      selected: null,
-      over_key: null,
-      nodes_data: [],
-    };
+  edit_mode: {
+    type: Boolean,
+    default: false,
   },
-
-  computed: {
-    session_data() {
-      return this.$store.state.session;
-    },
-
-    nodes() {
-      return this.nodes_data.map((n) => this.convertNode(n, undefined));
-    },
+  serial_key: {
+    type: String,
+    required: true,
   },
+})
 
-  watch: {
-    selected: {
-      handler(serial_key) {
-        if (!serial_key) {
-          this.selected = this.nodes[0]._key;
-        }
-        this.$emit('select', this.selected);
+const emit = defineEmits(['select', 'noNodes'])
+
+const store = useStore()
+const loading = ref(false)
+const selected = ref(null)
+const over_key = ref(null)
+const nodes_data = ref([])
+const serialNodes = ref(null)
+
+
+const nodes = computed(() => nodes_data.value.map((n) => convertNode(n, undefined)))
+
+getSerialHierarcy()
+setTimeout(() => {
+  if (serialNodes.value) {
+    serialNodes.value.expandAll()
+  }
+}, 500)
+
+watch(selected, (serial_key) => {
+  if (!serial_key) {
+    selected.value = nodes.value[0]._key
+  }
+  emit('select', selected.value)
+})
+
+async function lazyLoad(node, done) {
+  let children = await getChildren(node.key)
+  setTimeout(() => {
+    done(children)
+  }, 1000)
+}
+
+function getChildren(node, parent_key) {
+  let child_data = []
+
+  for (const child_node of node) {
+    child_data.push(convertNode(child_node, parent_key))
+  }
+
+  return child_data
+}
+
+function convertNode(node, parent_key) {
+  let children_data = []
+  let expandable = false
+  if (node?.children) {
+    children_data = getChildren(node.children, node.serial_key)
+    expandable = true
+  }
+  return {
+    _key: node.serial_key,
+    parent_key: parent_key,
+    code: node.serial_code,
+    lazy: false,
+    expandable: expandable,
+    selectable: props.edit_mode ? false : true,
+    children: children_data,
+    replaced: node.replaced,
+    product_key: node.product_key,
+    product_code: node.product_code,
+    product_description: node.product_description,
+  }
+}
+
+async function getSerialHierarcy() {
+  loading.value = true
+
+  const { data } = await api.get('serial-hierarchy', {
+    params: {
+      serial_key: props.serial_key,
+    },
+  })
+
+  selected.value = props.serial_key
+  nodes_data.value = data
+
+  if (!nodes_data.value.length) {
+    emit('noNodes', selected.value)
+  }
+
+  loading.value = false
+}
+
+function editComponentLink(node) {
+  const promises = [
+    store.dispatch('appendSerial', { serial_key: node.parent_key }),
+  ]
+  if (node._key) {
+    promises.push(store.dispatch('appendSerial', { serial_key: node._key }))
+  }
+  Promise.all(promises).then((values) => {
+    showEditComponentLink(node, values[0])
+  })
+}
+
+function showEditComponentLink(node, parentSerial) {
+  let serialModel = {
+    _key: node._key,
+    code: node.code,
+    product_key: node.product_key,
+    wo_key: parentSerial.wo_key,
+    reason: '',
+  }
+
+  Dialog.create({
+    component: SerialComponentLinkEditDialog,
+    componentProps: {
+      node: node,
+      serial: serialModel,
+    },
+  }).onOk((newValues) => {
+    saveNewComponentLink(node, newValues)
+  })
+}
+
+async function saveNewComponentLink(node, newSerial) {
+  const sharedEventData = {
+    component_key: node.product_key,
+    parent_serial_key: node.parent_key,
+  }
+
+  if (node._key) {
+    await sendEvent({
+      event_type: 'SERIAL_UNLINKED',
+      event_data: {
+        ...sharedEventData,
+        child_serial_key: node._key,
+        reason: newSerial.reason,
+        process_inventory: newSerial.processInventory.oldLink,
       },
-    },
-  },
+    })
+  }
 
-  created() {
-    this.getSerialHierarcy();
-    setTimeout(() => {
-      if (this.$refs.serialNodes) {
-        this.$refs.serialNodes.expandAll();
-      }
-    }, 500);
-  },
+  if (newSerial._key) {
+    const event_data = {
+      ...sharedEventData,
+      child_serial_key: newSerial._key,
+      reason: newSerial.reason,
+      process_inventory: newSerial.processInventory.newLink,
+    }
 
-  methods: {
-    async lazyLoad(node, done) {
-      let children = await this.getChildren(node.key);
-      setTimeout(() => {
-        done(children);
-      }, 1000);
-    },
+    if (newSerial.used) {
+      event_data.replace_existing = true
+    }
 
-    async showSerialDetails(serialKey) {
-      await this.$store.dispatch('appendSerial', {serial_key: serialKey});
-      const to_route = {
-        name: 'serialDetail',
-        params: { serialKey },
-        query: {
-          back_to: this.$route.name,
-          ...this.$route.query,
-        },
-      };
-      this.$router.push(to_route);
-    },
+    if (!newSerial.available) {
+      event_data.process_inventory = false
+    }
 
-    getChildren(node, parent_key) {
-      let child_data = [];
+    await sendEvent({
+      event_type: 'SERIAL_LINKED',
+      event_data,
+    })
+  }
 
-      for (const child_node of node) {
-        child_data.push(this.convertNode(child_node, parent_key));
-      }
-
-      return child_data;
-    },
-
-    convertNode(node, parent_key) {
-      let children_data = [];
-      let expandable = false;
-      if (node?.children) {
-        children_data = this.getChildren(node.children, node.serial_key);
-        expandable = true;
-      }
-      return {
-        _key: node.serial_key,
-        parent_key: parent_key,
-        code: node.serial_code,
-        lazy: false,
-        expandable: expandable,
-        selectable: this.edit_mode ? false : true,
-        children: children_data,
-        replaced: node.replaced,
-        product_key: node.product_key,
-        product_code: node.product_code,
-        product_description: node.product_description,
-      };
-    },
-
-    async getSerialHierarcy() {
-      this.loading = true;
-
-      const { data } = await this.$api.get('serial-hierarchy', {
-        params: {
-          serial_key: this.serial_key,
-        },
-      });
-
-      this.selected = this.serial_key;
-
-      this.selected = this.serial_key;
-
-      this.nodes_data = data;
-
-      if (!this.nodes_data.length) {
-        this.$emit('noNodes', this.selected);
-      }
-
-      this.loading = false;
-    },
-
-    editComponentLink(node) {
-      // Add serial parent and child to store, then show dialog
-      const promises = [
-        this.$store.dispatch('appendSerial', {serial_key: node.parent_key}),
-      ]
-      if (node._key) {
-        // fetch data only if there's a linked serial
-        promises.push(this.$store.dispatch('appendSerial', {serial_key: node._key}))
-      }
-      Promise.all(promises).then((values) => {
-        this.showEditComponentLink(node, values[0])
-      });
-    },
-
-    showEditComponentLink(node, parentSerial) {
-      let serialModel = {
-        _key: node._key,
-        code: node.code,
-        product_key: node.product_key,
-        wo_key: parentSerial.wo_key,
-        reason: '',
-      };
-
-      Dialog.create({
-        component: SerialComponentLinkEditDialog,
-        componentProps: {
-          node: node,
-          serial: serialModel,
-        },
-
-      }).onOk((newValues) => {
-        this.saveNewComponentLink(node, newValues);
-      });
-    },
-
-    async saveNewComponentLink(node, newSerial) {
-      const sharedEventData = {
-        component_key: node.product_key,
-        parent_serial_key: node.parent_key,
-      };
-
-      if (node._key) {
-        await this.sendEvent({
-          event_type: 'SERIAL_UNLINKED',
-          event_data: {
-            ...sharedEventData,
-            child_serial_key: node._key,
-            reason: newSerial.reason,
-            process_inventory: newSerial.processInventory.oldLink
-          }
-        });
-      }
-
-      if (newSerial._key) {
-        const event_data = {
-          ...sharedEventData,
-          child_serial_key: newSerial._key,
-          reason: newSerial.reason,
-          process_inventory: newSerial.processInventory.newLink
-        }
-
-        if (newSerial.used) {
-          event_data.replace_existing = true;
-        }
-
-        if (!newSerial.available) {
-          event_data.process_inventory = false;
-        }
-
-        // Link new serial to parent
-        await this.sendEvent({
-          event_type: 'SERIAL_LINKED',
-          event_data,
-        });
-      }
-
-      // Refresh the tree
-      this.nodes = [];
-      this.getSerialHierarcy();
-      setTimeout(() => {
-        if (this.$refs.serialNodes) {
-          this.$refs.serialNodes.expandAll();
-        }
-      }, 500);
-    },
-  },
-};
+  nodes_data.value = []
+  getSerialHierarcy()
+  setTimeout(() => {
+    if (serialNodes.value) {
+      serialNodes.value.expandAll()
+    }
+  }, 500)
+}
 </script>
 
 <style lang="sass">
