@@ -315,7 +315,7 @@
                         flat
                         round
                         size="10px"
-                        icon="d"
+                        icon="mdi-delete"
                         class="hover-red"
                         @click.stop="deleteTemplate(index)"
                       >
