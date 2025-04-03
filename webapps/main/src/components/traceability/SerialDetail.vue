@@ -25,13 +25,13 @@
     <template #content>
       <q-splitter
         v-model="data_column_width"
-        class="fit q-pt-sm"
+        class="full-width full-height q-pt-sm"
         separator-class="text-disabled"
       >
         <template #before>
-          <div class="row full-height">
-            <template v-if="!mini_state">
-              <div class="col-auto full-height">
+          <div class="row full-width full-height">
+            <div v-if="!mini_state" class="col-auto column full-height" style="min-width: 300px;">
+              <q-scroll-area class="col">
                 <SerialTree
                   :serial_key="serialKey"
                   :mini_state="mini_state"
@@ -39,10 +39,10 @@
                   @select="(selected_key) => onSerialSelection(selected_key)"
                   @no-nodes="no_hierarchy = true"
                 />
-              </div>
+              </q-scroll-area>
               <q-separator vertical></q-separator>
-            </template>
-            <div class="col column q-py-md">
+            </div>
+            <div class="col column q-py-md full-height">
               <div class="col">
                 <SerialDetailForm
                   :serial_key="serialKey"

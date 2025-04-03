@@ -12,8 +12,6 @@
       <template #default-header="prop">
         <div
           class="row items-center full-width justify-between q-pr-xl"
-          @mouseenter="over_key = prop.node._key"
-          @mouseleave="over_key = null"
         >
           <div
             :class="{
@@ -21,25 +19,35 @@
               'text-weight-bold text-high': prop.node._key === selected,
               'text-low': !prop.node.replaced && prop.node._key !== selected,
             }"
+            style="position: relative;"
           >
             {{ prop.node.product_code }}
-          </div>
-          <div class="absolute-right q-py-xs">
-            <q-badge v-if="prop.node.replaced" color="theme-grey" outline>
+            <q-badge
+              v-if="prop.node.replaced"
+              color="theme-grey"
+              outline
+            >
               <q-icon name="mdi-link-off" size="12px" />
             </q-badge>
           </div>
-          <q-btn
-            v-if="prop.node.parent_key && !prop.node.replaced && !edit_mode"
-            v-show="over_key === prop.node._key"
-            flat
-            round
-            size="xs"
-            class="absolute-right"
-            @click.stop="editComponentLink(prop.node)"
-          >
-            <q-icon name="mdi-pencil" size="xs" />
-          </q-btn>
+
+          <q-menu context-menu auto-close>
+            <q-list>
+              <q-item
+                clickable
+                @click="editComponentLink(prop.node)">
+                <q-item-section>
+                  <q-item-label>
+                    Modifica componente
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-icon name="mdi-pencil" size="xs" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+
           <q-tooltip
             v-if="prop.node.product_description"
             anchor="bottom middle"
@@ -92,7 +100,6 @@ const emit = defineEmits(['select', 'noNodes'])
 const store = useStore()
 const loading = ref(false)
 const selected = ref(null)
-const over_key = ref(null)
 const nodes_data = ref([])
 const serialNodes = ref(null)
 
