@@ -247,12 +247,13 @@ def search_inventory_journal(params: Annotated[InventoryMovementSearchParameters
 @router.get('/movement/latest-positions',
     dependencies=[Depends(auth.verify_token)])
 def get_recent_movement_positions(
-  position_type: Annotated[PositionType, Query(...)],
+  user_key: str | None = None,
+  position_type: Annotated[PositionType | None, Query()] = None,
   movement_type: Annotated[InventoryMovementType | None, Query()] = None,
   limit: int | None = 10
 ):
   try:
-    bind_vars = dict(limit=limit, movement_type=movement_type, position_type=position_type)
+    bind_vars = dict(limit=limit, movement_type=movement_type, position_type=position_type, user_key=user_key)
     results = db.aql.execute(Queries.GET_RECENT_POSITIONS, bind_vars=bind_vars)
     return [Position(**p) for p in results]
 
@@ -265,11 +266,12 @@ def get_recent_movement_positions(
 @router.get('/movement/latest-products',
     dependencies=[Depends(auth.verify_token)])
 def get_recent_movement_products(
+  user_key: Annotated[str | None, Query()] = None,
   type: Annotated[InventoryMovementType | None, Query()] = None,
   limit: int | None = 10
 ):
   try:
-    bind_vars = dict(limit=limit, type=type)
+    bind_vars = dict(limit=limit, type=type, user_key=user_key)
     results = db.aql.execute(Queries.GET_RECENT_MOVEMENT_PRODUCTS, bind_vars=bind_vars)
     return [ProductBaseData(**p) for p in results]
 
