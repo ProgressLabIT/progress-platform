@@ -95,6 +95,7 @@ services:
   app:
     image: registry.gitlab.com/progresslab/progress-platform/app:${VERSION}
     volumes:
+      - /opt/progress/config/appConfig.js:/usr/share/nginx/html/config.js
       - media:/usr/share/nginx/html/media
     depends_on:
       - api
@@ -114,6 +115,7 @@ services:
   warehouse:
     image: registry.gitlab.com/progresslab/progress-platform/warehouse:${VERSION}
     volumes:
+      - /opt/progress/config/appConfig.js:/usr/share/nginx/html/config.js
       - media:/usr/share/nginx/html/media
     depends_on:
       - api

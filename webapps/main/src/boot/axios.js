@@ -3,24 +3,29 @@ import { boot } from 'quasar/wrappers';
 import { Notify } from 'quasar';
 import { i18n } from '@/boot/i18n';
 
-// Be careful when using SSR for cross-request state pollution
-// due to creating a Singleton instance here;
-// If any client changes this (global) instance, it might be a
-// good idea to move this instance creation inside of the
-// "export default () => {}" function below (which runs individually
-// for each client)
-
-const domain =
-  window.location.hostname === 'localhost'
+// Default configuration
+const DEFAULT_CONFIG = {
+  baseURL: window.location.hostname === 'localhost'
     ? 'http://0.0.0.0:8000'
-    : 'http://' + window.location.hostname;
+    : 'http://' + window.location.hostname,
+  basePath: '/api'
+};
 
-const api_base_path = '/api';
+// Get configuration from window.API_CONFIG or fallback to defaults
+const getConfig = () => {
+  if (window.API_CONFIG) {
+    return {
+      baseURL: window.API_CONFIG.baseURL || DEFAULT_CONFIG.baseURL,
+      basePath: window.API_CONFIG.basePath || DEFAULT_CONFIG.basePath
+    };
+  }
+  console.warn('API_CONFIG not found, using default configuration');
+  return DEFAULT_CONFIG;
+};
 
-//axios.defaults.withCredentials = true;
-
+const config = getConfig();
 const api = axios.create({
-  baseURL: domain + api_base_path,
+  baseURL: config.baseURL + config.basePath,
 });
 
 export default boot(({ app, store }) => {
