@@ -27,41 +27,44 @@
     </div>
 
     <!-- Serial items -->
-    <template v-if="shipment.product.traceability_level">
-      <template v-for="item in serialItems" :key="item._key">
-        <div class="row items-center q-col-gutter-x-sm q-mt-sm">
-          <div class="col text-h4">
-            {{ getPositionPath(item) }}
+    <q-scroll-area class="col full-width">
+      <template v-if="shipment.product.traceability_level">
+        <template v-for="item in serialItems" :key="item._key">
+          <div class="row items-center q-col-gutter-x-sm q-mt-sm">
+            <div class="col text-h4">
+              {{ getPositionPath(item) }}
+            </div>
+            <div class="col-auto">
+              <q-card
+                flat
+                class="bg-theme-green q-pa-sm highlight"
+              >
+                {{ item.serial_code }}
+              </q-card>
+            </div>
           </div>
-          <div class="col-auto">
-            <q-card
-              flat
-              class="bg-theme-green q-pa-sm highlight"
-            >
-              {{ item.serial_code }}
-            </q-card>
-          </div>
-        </div>
+        </template>
       </template>
-    </template>
 
-    <!-- Non-serial items -->
-    <template v-else>
-      <template v-for="item in nonSerialItems" :key="item._key">
-        <div class="row items-center q-col-gutter-x-sm q-mt-sm">
-          <div class="col text-h4">
-            {{ getPositionPath(item) }}
+      <!-- Non-serial items -->
+      <template v-else>
+        <template v-for="item in nonSerialItems" :key="item._key">
+          <div class="row items-center q-col-gutter-x-sm q-mt-sm">
+            <div class="col text-h4">
+              {{ getPositionPath(item) }}
+            </div>
+            <div class="col-auto text-h3 text-right">
+              {{ item.selected }}
+            </div>
           </div>
-          <div class="col-auto text-h3 text-right">
-            {{ item.selected }}
-          </div>
-        </div>
-      </template>
-    </template>
+          </template>
+        </template>
+      </q-scroll-area>
+
 
     <q-icon name="mdi-arrow-down-thin" size="lg" class="q-mt-md"/>
 
-    <div class="text-h3 q-mt-md">
+    <div class="text-h3 q-mt-md q-mb-xl">
       OUT
     </div>
 

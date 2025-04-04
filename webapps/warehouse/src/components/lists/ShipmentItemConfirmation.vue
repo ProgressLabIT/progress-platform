@@ -16,6 +16,7 @@
       </div>
     </div>
 
+
     <!-- Source positions and quantities/serials -->
     <div class="row items-center justify-between q-mt-lg q-mb-md">
       <div class="text-h6">
@@ -26,30 +27,35 @@
       </div>
     </div>
 
-    <!-- Serial items -->
-    <template v-for="item in shipment.selectedInventory" :key="item._key">
-      <div class="row items-center q-col-gutter-x-sm q-mt-sm">
-        <div class="col text-h4">
-          {{ item.path.slice(-1)[0].position_code }}
-        </div>
-        <div class="col-auto">
-          <q-card
-            v-if="sendingSerials"
-            flat
-            class="bg-theme-green q-pa-sm highlight"
-          >
-            {{ item.serial_code }}
-          </q-card>
-          <div v-else class="col-auto text-h3 text-right">
-            {{ item.selected }}
+     <q-scroll-area class="col full-width">
+
+      <!-- Contents -->
+      <template v-for="item in shipment.selectedInventory" :key="item._key">
+        <div class="row items-center q-col-gutter-x-sm q-mt-sm">
+          <div class="col text-h4">
+            {{ item.path.slice(-1)[0].position_code }}
+          </div>
+          <div class="col-auto">
+            <q-card
+              v-if="sendingSerials"
+              flat
+              class="bg-theme-green q-pa-sm highlight"
+            >
+              {{ item.serial_code }}
+            </q-card>
+            <div v-else class="col-auto text-h3 text-right">
+              {{ item.selected }}
+            </div>
           </div>
         </div>
-      </div>
-    </template>
+      </template>
+
+    </q-scroll-area>
+
 
     <q-icon name="mdi-arrow-down-thin" size="lg" class="q-mt-md"/>
 
-    <div class="text-h3 q-mt-md">
+    <div class="text-h3 q-mt-md q-mb-xl">
       OUT
     </div>
 
