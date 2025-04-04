@@ -127,7 +127,7 @@ class Queries:
       FILTER @serial_keys ? inventory.serial_key IN @serial_keys : true
       LET serial_code = DOCUMENT(Serial, inventory.serial_key).code
       FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
-      LIMIT @offset || 0, @limit || null
+
       LET p = (
         FOR vertex IN SHIFT(POP(path.vertices)) // Exclude root position IN and final product vertex
         RETURN {
@@ -140,6 +140,8 @@ class Queries:
       FILTER @position_search
         ? shown_path[? ANY FILTER CONTAINS(LOWER(CURRENT.position_code), LOWER(@position_search))]
         : true
+
+      LIMIT @offset || 0, @limit || null
 
       RETURN {
         // Show root position in case the product is there (no path)
