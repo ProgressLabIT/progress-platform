@@ -21,17 +21,17 @@ const productionRoutes = [
                 name: 'newWorkOrder',
                 component: () => import('@/views/WorkOrderNew.vue'),
               },
-              {
-                path: 'job/:department?',
-                name: 'jobList',
-                component: () => import('@/components/JobList.vue'),
-              },
-              {
-                path: 'workorder/archive',
-                name: 'workOrderArchive',
-                component: () => import('@/components/WorkOrderArchive.vue'),
-              },
             ],
+          },
+          {
+            path: 'job/:department?',
+            name: 'jobList',
+            component: () => import('@/components/JobList.vue'),
+          },
+          {
+            path: 'workorder/archive',
+            name: 'workOrderArchive',
+            component: () => import('@/components/WorkOrderArchive.vue'),
           },
           {
             path: 'workorder/:wo_key',
