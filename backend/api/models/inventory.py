@@ -215,8 +215,9 @@ class InventoryMovementNew(FlexModel):
   @model_validator(mode='after')
   def validate(self):
     # Ensure a movement has a product reference or container position
-    if self.product_key is None and self.product_code is None and self.position_from is None:
-      raise ValueError("A new movement must include a product or container position")
+    if self.product_key is None and self.product_code is None:
+      if not(self.movement_type == InventoryMovementType.TRANSFER and self.position_from is not None):
+        raise ValueError("A new movement must include a product or container position")
 
     # Ensure a confirmed serial movement has a quantity of +/-1
     if self.serial_key is not None and self.status == MovementStatus.COMPLETED and (abs(self.qt_planned) > 1 or abs(self.qt_confirmed) > 1):
