@@ -15,7 +15,7 @@ class MovementCompletedEvent(BaseInventoryEvent):
   class InfoModel(EventInfoModel):
     movement_key: str | None = None
     movement_type: InventoryMovementType
-    product_key: str
+    product_key: str | None = None # Not present in container transfer
     qt_planned: float
     qt_confirmed: float
     serial_key: str | None = None
