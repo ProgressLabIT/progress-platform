@@ -1,5 +1,5 @@
 from events.admin.base_admin import BaseAdmin, Queries
-from events.inventory.movement_reverted import MovementRevertedEvent
+from events.inventory.movement_reversed import MovementReversedEvent
 from events.inventory.movement_completed import MovementCompletedEvent
 from utils.dt import timestamp
 from utils.inventory import Queries as InventoryQueries

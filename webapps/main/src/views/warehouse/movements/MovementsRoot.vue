@@ -309,7 +309,7 @@ export default {
 
     revertMovement(reason) {
       this.sendEvent({
-        event_type: 'MOVEMENT_REVERTED',
+        event_type: 'MOVEMENT_REVERSED',
         event_data: {
           original_movement_key: this.revert_movement_key,
           reason

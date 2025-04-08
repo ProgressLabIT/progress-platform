@@ -24,7 +24,7 @@ from events.inventory.movement_completed import MovementCompletedEvent
 from events.inventory.movement_created import MovementCreatedEvent
 from events.inventory.movement_deleted import MovementDeleted
 from events.inventory.movement_updated import MovementUpdatedEvent
-from events.inventory.movement_reverted import MovementRevertedEvent
+from events.inventory.movement_reversed import MovementReversedEvent
 from events.inventory.warehouse_list_closed import WarehouseListClosed
 from events.inventory.warehouse_list_created import WarehouseListCreatedEvent
 from events.production.active_batch_changed import ActiveBatchChangedEvent
