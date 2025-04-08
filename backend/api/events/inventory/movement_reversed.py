@@ -78,6 +78,8 @@ class MovementReversedEvent(BaseInventoryEvent):
       position_to=movement_to_revert.position_from,
       product_key=movement_to_revert.product_key,
       movement_type=InventoryMovementType.REVERSAL,
+      movement_list_key=movement_to_revert.movement_list_key,
+      movement_list_item=movement_to_revert.movement_list_item,
       serial_key=movement_to_revert.serial_key,
       qt_planned=0,
       qt_confirmed=movement_qt,
