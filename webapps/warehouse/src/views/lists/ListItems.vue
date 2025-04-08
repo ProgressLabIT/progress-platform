@@ -23,7 +23,7 @@
 
     <q-card
       v-for="i in listItems"
-      :key="i.product_code"
+      :key="i.item"
       v-touch-hold.mouse="() => showItemReferences = i"
       class="surface1 q-pa-md q-mb-sm row items-start text-body1 col-auto"
       :style="i.qt_planned <= i.qt_confirmed ? 'opacity: 0.5' : ''"
@@ -152,7 +152,8 @@ const listItems = computed(() => {
   const items = lists.movementsByListAndItem[props.listKey];
   const openItems = items.filter(i => i.qt_planned > i.qt_confirmed);
   const closedItems = items.filter(i => i.qt_planned <= i.qt_confirmed);
-  return [...openItems, ...closedItems].filter(i => i.product_code.toLowerCase().includes(productSearch.value.toLowerCase()))
+  return [...openItems, ...closedItems]
+    .filter(i => productSearch.value ? i.product_code.toLowerCase().includes(productSearch.value.toLowerCase()) : true)
 });
 
 function selectItem(item) {
