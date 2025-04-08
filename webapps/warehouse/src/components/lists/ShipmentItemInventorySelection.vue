@@ -193,7 +193,17 @@ function isDisabled(item) {
 }
 
 const shownSerials = computed(() => {
-  return requestedSerials.value.filter(s => s.serial_code.toLowerCase().includes(serialSearch.value.toLowerCase()));
+  return requestedSerials.value.filter(s => {
+    if (serialSearch.value) {
+      return s.serial_code.toLowerCase().includes(serialSearch.value?.toLowerCase());
+    }
+    else if (positionSearch.value) {
+      return s.path.some(p => p.position_code.toLowerCase().includes(positionSearch?.value?.toLowerCase()));
+    }
+    else {
+      return true;
+    }
+  });
 });
 
 const selectedSerials = computed(() => {

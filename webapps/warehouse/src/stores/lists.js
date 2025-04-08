@@ -79,11 +79,11 @@ export const useListsStore = defineStore('lists', {
           this.headers.forEach(l => params.append('list_key', l._key))
           const movement_data = (await api.get('/movement', { params })).data
           const productKeys = [...new Set(movement_data.map(m => m.product_key))]
-          this.productTraceabilityMap = await productKeys.reduce(async (result, productKey) => {
-            const product = (await api.get(`/product/${productKey}`)).data
-            result[productKey] = !!product.traceability_level
-            return result
-          }, {})
+          const traceabilityPromises = productKeys.map(async productKey => {
+            const { data: product } = await api.get(`/product/${productKey}`)
+            return [productKey, !!product.traceability_level]
+          })
+          this.productTraceabilityMap = Object.fromEntries(await Promise.all(traceabilityPromises))
           this.movements = movement_data.map(m => ({
             ...m,
             use_serials: this.productTraceabilityMap[m.product_key]
