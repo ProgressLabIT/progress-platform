@@ -69,6 +69,10 @@ class BaseInventoryEvent(BaseEvent, ABC):
     ))
 
   def _get_product(self):
+    if self.info.product_key is None:
+      self.product = None
+      return
+
     try:
       self.product = ProductFull(**self.tx.collection('Product').get(self.info.product_key))
     except StopIteration:

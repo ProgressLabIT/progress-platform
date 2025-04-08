@@ -48,6 +48,16 @@ class MovementCompletedEvent(BaseInventoryEvent):
         values['end'] = values.get('timestamp')
       return values
 
+    @model_validator(mode='after')
+    def validate_product_key(self):
+      if self.product_key is not None or (
+        self.movement_type == InventoryMovementType.TRANSFER
+        and self.position_from is not None
+        and self.position_to is not None
+      ):
+        return self
+      else:
+        raise InventoryMovementException(f'Product key is required for this movement')
 
 
   @classmethod
@@ -85,6 +95,7 @@ class MovementCompletedEvent(BaseInventoryEvent):
 
     self.info.movement_key = self.movement.key
     self.response = self.movement
+
 
 
   def _update_movement(self):
@@ -238,8 +249,8 @@ class MovementCompletedEvent(BaseInventoryEvent):
       position = self.tx.collection('Position').get(self.info.position_from)
       if position['fixed']:
         raise InventoryMovementException(f'Cannot transfer fixed position')
-      match = dict(_from=self.info.position_from)
-      update = dict(_to=self.info.position_to)
+      match = dict(_from=self._ensure_position_id(self.info.position_from))
+      update = dict(_to=self._ensure_position_id(self.info.position_to))
       self.tx.collection('is_in_position').update_match(match, update)
       return
 
