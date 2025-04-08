@@ -22,9 +22,12 @@
       </div>
     </div>
 
-    <!-- ITEMS WITH TRACEABILITY AND SERIALS SPECIFIED -->
-    <div class="col column" v-if="requestedSerials.length > 0">
-      <div class="row items-center q-gutter-x-xs">
+    <div class="col column q-col-gutter-y-md">
+      <!-- ------------------------------------------------------------ -->
+      <!-- CONTENT HEADER -->
+      <!-- ------------------------------------------------------------ -->
+      <!-- ITEMS WITH TRACEABILITY AND SERIALS SPECIFIED -->
+      <div class="row items-center q-gutter-x-xs" v-if="requestedSerials.length > 0">
         <div class="text-h2 col-auto">
           Seriali richiesti
         </div>
@@ -33,92 +36,84 @@
         <q-btn color="theme-blue" size="xs" padding="xs md" icon="mdi-checkbox-multiple-marked" @click="() => toggleAll(true)" />
       </div>
 
-      <SearchOrScan
-        v-model="serialFilter"
-        class="q-my-md"
-        label="Scansiona o ricerca posizione"
-        @update:model-value="filterSerials"
-      />
-
-      <q-scroll-area class="col">
-        <q-list>
-          <q-item
-            v-for="item in shownSerials"
-            :key="item.serial_key"
-            :clickable="item.available"
-            :disabled="!item.available"
-            class="content-card q-my-sm q-pa-md text-body1"
-            :class="backgroundClass(item)"
-            @click="onItemClick(item)"
-          >
-            <q-item-section side>
-              <q-icon name="mdi-cube-scan" :color="item.available ? 'high' : 'low'" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>
-                {{  item.serial_code }}
-              </q-item-label>
-              <q-item-label caption>
-                {{ item.path.map(p => p.position_code).join(' → ') || 'Non disponibile' }}
-              </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-icon :name="item.icon.name" :color="item.icon.color"/>
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-scroll-area>
-    </div>
-
-    <!-- OTHER ITEMS -->
-    <div class="col column" v-else>
-      <div class="text-h2 col-auto">
+      <!-- OTHER ITEMS -->
+      <div class="text-h2 col-auto" v-else>
         Materiale disponibile
       </div>
 
-      <SearchOrScan
-        v-model="inventoryFilter"
-        class="q-my-md"
-        label="Filtra per seriale o posizione"
-        @update:model-value="filterInventory"
-      />
+      <!-- ------------------------------------------------------------ -->
+      <!-- FILTERS -->
+      <!-- ------------------------------------------------------------ -->
+      <div class="row q-col-gutter-x-md col-auto">
+        <q-input
+          v-if="lists.selectedItem.type === 'serial'"
+          v-model="serialSearch"
+          for="serial-search"
+          filled
+          dense
+          clearable
+          class="col"
+          :debounce="500"
+          label="Scansiona o ricerca seriale"
+          @update:model-value="filterItems"
+        />
+        <q-input
+          v-model="positionSearch"
+          for="position-search"
+          filled
+          dense
+          clearable
+          :debounce="500"
+          class="col"
+          label="Scansiona o ricerca posizione"
+          @update:model-value="filterItems"
+        />
+      </div>
 
+
+      <!-- ------------------------------------------------------------ -->
+      <!-- INVENTORY OPTIONS -->
+      <!-- ------------------------------------------------------------ -->
       <q-scroll-area class="col">
         <q-list>
           <q-item
-            v-for="item in shownInventory"
-            :key="item._key"
-            clickable
-            :disabled="isDisabled(item)"
+            v-for="item in filteredItems"
+            :key="item.serial_key"
+            :clickable="item.available || requestedSerials.length === 0"
+            :disabled="!item.available && requestedSerials.length > 0"
             class="content-card q-my-sm q-pa-md text-body1"
             :class="backgroundClass(item)"
             @click="onItemClick(item)"
           >
             <q-item-section side>
-              <q-icon :name="lists.selectedItem.type === 'serial' ? 'mdi-cube-scan' : 'mdi-apps'" />
+              <q-icon
+                :name="lists.selectedItem.type === 'serial' ? 'mdi-cube-scan' : 'mdi-apps'"
+                :color="(item.available || lists.selectedItem.type !== 'serial') ? 'high' : 'low'"
+              />
             </q-item-section>
             <q-item-section>
               <q-item-label>
-                {{  item.serial_code ? item.serial_code : item.product_code }}
+                {{  item.serial_code ?? item.product_code }}
               </q-item-label>
               <q-item-label caption>
-                {{ item.path.map(p => p.position_code).join(' → ') || 'IN' }}
+                {{ item.path.map(p => p.position_code).join(' → ') || (requestedSerials.length > 0 ? 'Non disponibile' : 'IN') }}
               </q-item-label>
             </q-item-section>
-            <q-item-section side v-if="item.serial_code">
+            <q-item-section side v-if="!isDisabled(item)">
               <q-icon
-                v-if="!isDisabled(item)"
+                v-if="lists.selectedItem.type === 'serial'"
                 :name="selectedSerials.includes(item.serial_code) ? 'mdi-check-circle' : 'mdi-circle-outline'"
                 :color="selectedSerials.includes(item.serial_code) ? 'white' : 'low'"
               />
-            </q-item-section>
-            <q-item-section side v-else class="highlight">
-              {{ shipment.inventorySelectedQt(item._key) }} / {{ item.quantity }}
+              <q-item-label v-else class="highlight">
+                {{ shipment.inventorySelectedQt(item._key) }} / {{ item.quantity }}
+              </q-item-label>
             </q-item-section>
           </q-item>
         </q-list>
       </q-scroll-area>
     </div>
+
 
     <q-space></q-space>
 
@@ -148,7 +143,6 @@ import { useShipmentStore } from '@/stores/shipment';
 import { useListsStore } from 'stores/lists';
 import QuantitySelector from '@/components/QuantitySelector.vue';
 import SlideUpCard from '@/components/SlideUpCard.vue';
-import SearchOrScan from '@/components/SearchOrScan.vue';
 import { Notify } from 'quasar';
 // import { useRouter } from 'vue-router';
 
@@ -160,9 +154,8 @@ const lists = useListsStore();
 shipment.product = { _key: lists.selectedItem.product_key };
 shipment.loadInventory();
 
-const inventoryFilter = ref('');
-const serialFilter = ref('');
-
+const serialSearch = ref(undefined);
+const positionSearch = ref(undefined);
 
 const itemMovements = computed(() => lists.selectedItem.movements);
 
@@ -200,25 +193,17 @@ function isDisabled(item) {
 }
 
 const shownSerials = computed(() => {
-  return requestedSerials.value.filter(s => s.serial_code.toLowerCase().includes(serialFilter.value.toLowerCase()));
+  return requestedSerials.value.filter(s => s.serial_code.toLowerCase().includes(serialSearch.value.toLowerCase()));
 });
 
 const selectedSerials = computed(() => {
   return shipment.selectedInventory.map(i => i.serial_code);
 });
 
-
-function getInventoryFilterContext(item) {
-  const positions = item.path.map(p => p.position_code).join(' ') || 'IN'
-  const serial = item.serial_code
-  return `${serial} ${positions}`
-}
-
-const shownInventory = computed(() => {
-  if (inventoryFilter.value) {
-    return shipment.inventory.filter(i => getInventoryFilterContext(i).toLowerCase().includes(inventoryFilter.value.toLowerCase()));
-  }
-  return shipment.inventory;
+const filteredItems = computed(() => {
+  return requestedSerials.value.length > 0
+    ? shownSerials.value
+    : shipment.inventory;
 });
 
 const cardItem = ref(null);
@@ -230,23 +215,38 @@ const maxSelectableQuantity = computed(() => {
   return Math.min(lists.selectedItem.qt_planned - lists.selectedItem.qt_confirmed - shipment.shipmentQuantity + inventorySelected, inventoryMax);
 });
 
-function filterSerials(value) {
-  if (shownSerials.value.length === 1 && shownSerials.value[0].serial_code === value) {
-    toggleSerial(value);
-    resetInput();
+function filterItems() {
+  if (requestedSerials.value.length > 0) {
+    return
+  }
+  else {
+    shipment.loadInventory({
+      position_search: positionSearch.value,
+      serial_search: serialSearch.value
+    })
   }
 }
 
-function filterInventory(value) {
-  if (shownInventory.value.length === 1 && shownInventory.value[0].path.map(p => p.position_code).some(p => p === value)) {
-    onItemClick(shownInventory.value[0]);
-    resetInput();
-  }
-}
+// function filterSerials(value) {
+
+//   if (shownSerials.value.length === 1 && shownSerials.value[0].serial_code === value) {
+//     toggleSerial(value);
+//     resetInput();
+//   }
+// }
+
+// function filterInventory(value) {
+//   if (shownInventory.value.length === 1 && shownInventory.value[0].path.map(p => p.position_code).some(p => p === value)) {
+//     onItemClick(shownInventory.value[0]);
+//     resetInput();
+//   }
+// }
 
 function resetInput() {
-  serialFilter.value = ''
-  document.getElementById('search-input').focus()
+  serialSearch.value = ''
+  positionSearch.value = ''
+  const focusRef = lists.selectedItem.type === 'serial' ? 'serial-search' : 'position-search'
+  document.getElementById(focusRef).focus()
 }
 
 function backgroundClass(item) {
@@ -286,7 +286,6 @@ function selectSerial(inventoryItem) {
     selected: 1
   });
   lists.tempQuantity += 1;
-  resetInput()
 }
 
 function toggleSerial(inventoryItem) {
@@ -294,7 +293,6 @@ function toggleSerial(inventoryItem) {
 
   if (inventoryMatch !== -1) {
     shipment.selectedInventory.splice(inventoryMatch, 1);
-    resetInput()
   }
   else {
     if (requestedSerials.value.length === 0) {
