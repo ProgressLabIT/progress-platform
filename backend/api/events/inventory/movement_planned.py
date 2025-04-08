@@ -24,6 +24,10 @@ class MovementPlannedEvent(BaseInventoryEvent):
 
   def _handle_serial(self):
 
+    if self.info.serial_code is None and self.info.serial_key is None:
+      # Accept planned movements without serial code or key. Serials will be selected when confirming the movement
+      return
+
     serial_collection = self.tx.collection('Serial')
 
     # ===============================================
@@ -82,9 +86,9 @@ class MovementPlannedEvent(BaseInventoryEvent):
     # Check if product has traceability enabled
     self.product = self.tx.collection('Product').get(self.info.product_key)
     if self.product.get('traceability_level', False):
-      # TEMPORARY: Prevent planning receipts for products with traceability enabled without serial code or key
-      if self.info.serial_code is None and self.info.serial_key is None:
-        raise InventoryMovementException(f"Can't plan receipt for product {self.product['code']}. Traceability is enabled but no serial code or key provided")
+      # # TEMPORARY: Prevent planning receipts for products with traceability enabled without serial code or key
+      # if self.info.serial_code is None and self.info.serial_key is None:
+      #   raise InventoryMovementException(f"Can't plan receipt for product {self.product['code']}. Traceability is enabled but no serial code or key provided")
 
       self._handle_serial()
 
