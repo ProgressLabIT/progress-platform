@@ -70,14 +70,16 @@ class MovementCompletedEvent(BaseInventoryEvent):
       InventoryMovementType.RECEIPT: self._handle_receipt,
       InventoryMovementType.SHIPMENT: self._handle_shipment,
       InventoryMovementType.ADJUSTMENT: self._handle_adjustment,
-      InventoryMovementType.TRANSFER: self._handle_transfer_production_consumption_reversal,
-      InventoryMovementType.PRODUCTION: self._handle_transfer_production_consumption_reversal,
-      InventoryMovementType.CONSUMPTION: self._handle_transfer_production_consumption_reversal,
-      InventoryMovementType.REVERSAL: self._handle_transfer_production_consumption_reversal
+      InventoryMovementType.TRANSFER: self._handle_transfer_production_consumption,
+      InventoryMovementType.PRODUCTION: self._handle_transfer_production_consumption,
+      InventoryMovementType.CONSUMPTION: self._handle_transfer_production_consumption
     }
 
 
   def apply(self):
+    if self.info.movement_type == InventoryMovementType.REVERSAL:
+      raise InventoryMovementException('Use MOVEMENT_REVERSED event to undo movements.')
+
     self.info.end = self.info.timestamp
 
     self._get_product()
@@ -235,7 +237,7 @@ class MovementCompletedEvent(BaseInventoryEvent):
     ))
 
 
-  def _handle_transfer_production_consumption_reversal(self):
+  def _handle_transfer_production_consumption(self):
     # CONTAINER TRANSFER ======================================================
     # the product is not moved, only the position hierarchy is changed
     is_container_transfer = (
