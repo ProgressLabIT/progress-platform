@@ -46,7 +46,7 @@
             <q-separator />
 
             <q-list dense>
-              <template v-if="props.row.qt_confirmed > 0 && props.row.movement_type !== 'reversal'">
+              <template v-if="isReversible(props.row)">
                 <q-item clickable @click="handleContextMenuClick(props.row)" class="text-theme-blue">
                   <q-item-section side >
                     <q-item-label>
@@ -305,6 +305,11 @@ export default {
           timeout: 1500
         })
       }
+    },
+
+    isReversible(movement) {
+      const isContainerTransfer = movement.type === 'transfer' && movement.product_key === null;
+      return movement.qt_confirmed > 0 && movement.type !== 'reversal' && !isContainerTransfer;
     },
 
     revertMovement(reason) {
