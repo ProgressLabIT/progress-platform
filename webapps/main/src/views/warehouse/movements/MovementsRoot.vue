@@ -309,7 +309,7 @@ export default {
 
     isReversible(movement) {
       const isContainerTransfer = movement.type === 'transfer' && movement.product_key === null;
-      return movement.qt_confirmed > 0 && movement.type !== 'reversal' && !isContainerTransfer;
+      return movement.qt_confirmed !== 0 && movement.type !== 'reversal' && !isContainerTransfer;
     },
 
     revertMovement(reason) {
