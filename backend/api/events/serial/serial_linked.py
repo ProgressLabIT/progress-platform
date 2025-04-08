@@ -51,7 +51,7 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
 
     try:
       # Handle existing links
-      cursor = self.tx.collection('contains').find(dict(_to=f'Serial/{self.info.child_serial_key}'))
+      cursor = self.tx.collection('contains').find(dict(_to=f'Serial/{self.info.child_serial_key}', replaced=False))
       if cursor.count() > 0:
         # ignore if the link is the same as already recorded
         record = cursor.next()
