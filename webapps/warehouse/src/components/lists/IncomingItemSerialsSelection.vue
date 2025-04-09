@@ -63,7 +63,6 @@
     <q-space></q-space>
     <q-btn color="theme-grey" size="xs" padding="xs md" icon="mdi-checkbox-multiple-blank-outline" @click="() => toggleAll(false)" />
     <q-btn color="theme-blue" size="xs" padding="xs md" icon="mdi-checkbox-multiple-marked" @click="() => toggleAll(true)" />
-
   </div>
   <q-scroll-area class="col q-mt-md">
     <div class="col-auto row q-gutter-sm">
@@ -92,10 +91,10 @@ const lists = useListsStore()
 
 const newSerialCode = ref('');
 
-const serialsProvided = computed(() => {
-  // Assumption: if one serial is provided, all must be provided
-  return lists.selectedItem.movements.some(m => m.serial_code || m.serial_key)
-})
+// Assumption: if one serial is provided, all must be provided
+// Do not use computed, as movements will be updated with new serials as they get added
+const serialsProvided = lists.selectedItem.movements.filter(m => m.serial_code).map(m => m.serial_code)
+
 
 function resetInput() {
   newSerialCode.value = ''
@@ -104,7 +103,11 @@ function resetInput() {
 
 const availableSerials = computed(() => {
   return lists.selectedItem.movements
-    .filter(m => m.status == 'planned' && !lists.itemSerials.some(s => s.serial_code == m.serial_code))
+    .filter((m) => {
+      return m.status == 'planned'
+        && m.serial_code
+        && !lists.itemSerials.some(s => s.serial_code == m.serial_code)
+    })
     .sort((a, b) => a.serial_code.localeCompare(b.serial_code))
 })
 
@@ -120,6 +123,15 @@ function toggleAll(select) {
 
 
 function toggleItem(serialCode) {
+  if (!serialCode?.length) {
+    Notify.create({
+      position: 'top',
+      color: 'theme-orange',
+      message: `Seriale non valido`,
+      timeout: 1500
+    })
+    return
+  }
   const match = lists.selectedItem.movements.find(m => m.serial_code == serialCode)
   if (match) {
     if (match.qt_confirmed === 1) {
@@ -146,7 +158,7 @@ function toggleItem(serialCode) {
     }
   }
   else {
-    if (serialsProvided.value) {
+    if (serialsProvided.length && !serialsProvided.includes(serialCode)) {
       // Allow only serials among the provided ones
       Notify.create({
         position: 'top',
@@ -159,6 +171,7 @@ function toggleItem(serialCode) {
       const ref = lists.selectedItem.movements[0]
       // Allow any serial if no serial is provided
       lists.selectedItem.movements.push({
+        movement_key: ref._key,
         serial_code: serialCode,
         movement_type: ref.type,
         product_key: ref.product_key,

@@ -149,7 +149,8 @@ onBeforeRouteLeave(() => {
 })
 
 const listItems = computed(() => {
-  const items = lists.movementsByListAndItem[props.listKey];
+  // Sort items placing completed ones at the end
+  const items = lists.movementsByListAndItem[props.listKey] ?? [];
   const openItems = items.filter(i => i.qt_planned > i.qt_confirmed);
   const closedItems = items.filter(i => i.qt_planned <= i.qt_confirmed);
   return [...openItems, ...closedItems]
@@ -211,5 +212,5 @@ function closeList() {
   .onCancel(() => {
     console.log('canceled')
   })
-  }
+}
 </script>

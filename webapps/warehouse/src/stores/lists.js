@@ -28,6 +28,10 @@ export const useListsStore = defineStore('lists', {
           const qt_planned = movements.reduce((sum, mov) => sum += mov.qt_planned, 0)
           const qt_confirmed = movements.reduce((sum, mov) => sum += mov.qt_confirmed, 0)
           const type = movements[0].use_serials ? 'serial' : 'quantity'
+
+          const plannedMovements = movements.filter(m => m.status == 'planned')
+          const serialsProvided = plannedMovements.length > 0 && plannedMovements.every(m => m.serial_code !== null)
+
           return {
             item,
             product_code: movements[0].product_code,
@@ -37,6 +41,7 @@ export const useListsStore = defineStore('lists', {
             listKey: movements[0].movement_list_key,
             reference: list.type == 'receipt' ? movements[0].references.purchase_doc : movements[0].references.sales_doc,
             type,
+            serialsProvided,
             qt_planned,
             qt_confirmed,
             movements
@@ -57,7 +62,9 @@ export const useListsStore = defineStore('lists', {
       }
     },
     itemSerials: (state) => {
-      return state.selectedItem?.movements?.filter(m => (m.serial_key || m.serial_code) && m.qt_confirmed == 1 && m.status == 'planned').sort((a, b) => a.serial_code.localeCompare(b.serial_code))
+      return state.selectedItem?.movements
+        ?.filter(m => (m.serial_key || m.serial_code) && m.qt_confirmed == 1 && m.status == 'planned')
+        ?.sort((a, b) => a.serial_code.localeCompare(b.serial_code))
     },
     movementQuantity: (state) => {
       return state?.selectedItem?.type === 'serial'

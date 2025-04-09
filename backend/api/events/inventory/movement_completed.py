@@ -81,6 +81,7 @@ class MovementCompletedEvent(BaseInventoryEvent):
       raise InventoryMovementException('Use MOVEMENT_REVERSED event to undo movements.')
 
     self.info.end = self.info.timestamp
+    self.info.status = MovementStatus.COMPLETED
 
     self._get_product()
 

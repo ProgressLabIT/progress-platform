@@ -97,7 +97,8 @@ function prepareMovementUpdates() {
   // It's either a single position for 1:N serials or 1:N positions for a single product qt_confirmed
   const updates = [];
   // Serials
-  if (lists.selectedItem.type === 'serial') {
+  if (lists.selectedItem.type === 'serial' && lists.selectedItem.serialsProvided) {
+    // Planned movements may have no serial code. If there are planned movement with the serial code provided, use it.
     for (let inventory of shipment.selectedInventory) {
       const movement = lists.selectedItem.movements.find(m => m.serial_code === inventory.serial_code);
       updates.push({
@@ -109,20 +110,20 @@ function prepareMovementUpdates() {
       });
     }
   }
-  // Quantity
+  // Movements with no traceability or without specified serial codes
   else {
-    const movementComplete = lists.tempQuantity + lists.selectedItem.qt_confirmed === lists.selectedItem.qt_planned
     const splitData = shipment.selectedInventory.map(position => ({
       position_from: position.path.slice(-1)[0].position_key,
       qt_confirmed: position.selected,
       serial_key: position.serial_key
     }));
+    // Find the planned movement to use as reference
+    const referenceMovement = lists.selectedItem.movements.find(m => m.status === 'planned')
     updates.push({
-      ...lists.selectedItem.movements[0],
-      movement_key: lists.selectedItem.movements[0]._key,
+      ...referenceMovement,
+      movement_key: referenceMovement._key,
       qt_confirmed: shipment.shipmentQuantity,
       split_into: splitData,
-      status: movementComplete ? 'completed' : 'started'
     });
   }
   return updates

@@ -51,6 +51,7 @@ class MovementUpdatedEvent(BaseInventoryEvent):
           self.tx.collection('movement').update(dict(
             _key=self.info.movement_key,
             qt_planned=self.info.qt_planned - self.info.qt_confirmed,
+            status=MovementStatus.PLANNED,
             qt_confirmed=0
           ))
         # Create new completed movements for the splits
