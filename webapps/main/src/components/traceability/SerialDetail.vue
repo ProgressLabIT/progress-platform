@@ -30,8 +30,7 @@
       >
         <template #before>
           <div class="row full-width full-height">
-            <div v-if="!mini_state" class="col-auto column full-height" style="min-width: 300px;">
-              <q-scroll-area class="col">
+            <div v-if="!mini_state" class="col-auto column full-height scroll">
                 <SerialTree
                   :serial_key="serialKey"
                   :mini_state="mini_state"
@@ -39,9 +38,7 @@
                   @select="(selected_key) => onSerialSelection(selected_key)"
                   @no-nodes="no_hierarchy = true"
                 />
-              </q-scroll-area>
-              <q-separator vertical></q-separator>
-            </div>
+              </div>
             <div class="col column q-py-md full-height">
               <div class="col">
                 <SerialDetailForm

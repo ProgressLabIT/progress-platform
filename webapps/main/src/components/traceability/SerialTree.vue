@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!mini_state" class="q-pa-md q-gutter-sm">
+  <div v-if="!mini_state" class="q-pa-md">
     <q-tree
       id="serial-tree"
       ref="serialNodes"
