@@ -310,7 +310,8 @@ export default {
         serial_data.data = form_data;
       }
 
-      if (this.missingMandatoryValues(this.serial.data)) {
+      if (this.serial.released && this.missingMandatoryValues(this.serial.data)) {
+        // Enable updating partial data if serial is not released
         window.alert(this.$t('fill_mandatory_fields'));
         this.saving = false;
         return;
