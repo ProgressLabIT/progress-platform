@@ -614,7 +614,7 @@ export default {
       this.$store
         .dispatch('getSerials', {
           ...this.filters,
-          filter_unreleased: true,
+          filter_unreleased: false,
           offset: this.offset,
           sort_by: this.sort_by,
           sorting_order: this.sorting_order,
