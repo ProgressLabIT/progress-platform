@@ -326,7 +326,8 @@ export default {
         user_session_key: this.session_data.session_key,
         timestamp: timestamp(),
         serial_key: serial_data._key,
-        ...serial_data,
+        serial_code: serial_data.code,
+        serial_data: serial_data.data
       };
 
       await this.$api.post('event', event);
