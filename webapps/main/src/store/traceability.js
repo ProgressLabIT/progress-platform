@@ -531,12 +531,15 @@ const traceability = {
     },
 
     async saveSerialLinks({ dispatch, state }) {
-      return new Promise((resolve, reject) => {
-        api.put(`/batch/${state.current_batch_data._key}/serial-temp-links`, state.bom_serials.map(i => ({
+      const batchLinks = state.bom_serials
+        .filter(l => l.batch_key === state.current_batch_data._key)
+        .map(i => ({
           ...i,
           _key: i.link_key,
           child_serial_key: i._key,
-        })))
+        }));
+      return new Promise((resolve, reject) => {
+        api.put(`/batch/${state.current_batch_data._key}/serial-temp-links`, batchLinks)
         .then(async () => {
           await dispatch('loadWorkingJobData', state.working_job_data._key);
           Notify.create({
