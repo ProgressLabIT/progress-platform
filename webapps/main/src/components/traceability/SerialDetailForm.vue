@@ -145,248 +145,168 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
 import { usePrintDialog } from '@/lib/print';
 import { useConfigStore } from '@/stores/config';
+import { useStore } from 'vuex';
+import { api as $api } from '@/boot/axios';
+import { capitalize } from '@/boot/filters';
+import { formatDateTime } from '@/lib/TimeHandling';
 
-export default {
-  name: 'SerialDetailForm',
-
-  components: {
-    BaseUserAvatar,
-    FormField,
+const props = defineProps({
+  // from router
+  serial_key: {
+    type: String,
+    required: true,
   },
-
-  props: {
-    // from router
-    serial_key: {
-      type: String,
-      required: true,
-    },
-
-    edit_mode: {
-      type: Boolean,
-      required: true,
-    },
+  edit_mode: {
+    type: Boolean,
+    required: true,
   },
+});
 
-  emits: ['exit'],
+defineEmits(['exit']);
 
-  setup(props) {
-    const { config } = storeToRefs(useConfigStore());
+// Store and router setup
+const store = useStore();
+const router = useRouter();
+const route = useRoute();
+const { t:$t, locale } = useI18n();
 
-    const { open: openPrintDialog, isAvailable } = usePrintDialog({
-      context: 'serial',
-      contextData: props.serial_key,
+// Config store
+const { config } = storeToRefs(useConfigStore());
+
+// Print dialog
+const { open: openPrintDialog, isAvailable: printAvailable } = usePrintDialog({
+  context: 'serial',
+  contextData: props.serial_key,
+});
+
+// Reactive data
+const tab = ref('form');
+const history = ref([]);
+const base_path = ref('/media/user/');
+const events = ref(null);
+const serialAvailable = ref(false);
+
+// Computed properties
+const serial = computed(() => store.getters.getSerialData(props.serial_key));
+
+const serial_created_time_string = computed(() => {
+  const config = {
+    year: '2-digit',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  };
+  return capitalize(formatDateTime(serial.value?.created, locale.value, config));
+});
+
+const can_edit = computed(() => !store.getters.getSerialData(props.serial_key).deleted);
+
+// Methods
+const getInfo = () => {
+  // Get history
+  $api
+    .get('event', { params: { serial_key: props.serial_key } })
+    .then((resp) => (history.value = resp.data));
+
+  // Get inventory availability
+  const params = new URLSearchParams();
+  params.append('serial_keys', props.serial_key);
+  $api.get('inventory', { params })
+    .then((resp) => {
+      serialAvailable.value = resp.data.length > 0;
+    })
+    .catch((err) => {
+      console.log(err.response.data.message);
     });
-
-    return {
-      config,
-      openPrintDialog,
-      printAvailable: isAvailable,
-    };
-  },
-
-  data() {
-    return {
-      tab: 'form',
-      history: [],
-      loading: false,
-      recording: false,
-      base_path: '/media/user/',
-      current_phase: 0,
-      current_step: 0,
-      data_column_width: 65,
-      events: NaN,
-      serialAvailable: false,
-    };
-  },
-
-  computed: {
-    serial() {
-      return this.$store.getters.getSerialData(this.serial_key);
-    },
-
-    serial_created_time_string() {
-      const config = {
-        year: '2-digit',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      };
-      return this.$capitalize(
-        this.$formatDateTime(this.serial?.created, this.$i18n.locale, config),
-      );
-    },
-
-    form_fields() {
-      const form_template = this.form_template ?? [];
-      return form_template.map((field) => ({
-        ...field,
-        value: this.serial.data.find(
-          ({ form_field_key }) => form_field_key === field._key,
-        )?.value,
-      }));
-    },
-
-    created_by() {
-      const user_key = this.serial.created_by.split('/')[1];
-      return this.$store.getters.user_data(user_key);
-    },
-
-    session_data() {
-      return this.$store.state.session;
-    },
-
-    can_edit() {
-      return !this.$store.getters.getSerialData(this.serial_key).deleted;
-    },
-  },
-
-  watch: {
-    serial_key: {
-      immediate: true,
-      handler() {
-        this.getInfo();
-      },
-    },
-  },
-
-
-  created() {
-    this.$store.dispatch('loadUsers');
-    this.getInfo();
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/serial-notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
-    });
-    this.events.addEventListener('serial-notification', (event) => {
-      this.handleMessage(event);
-    });
-  },
-
-  beforeUnmount() {
-    if (this.events) {
-      this.events.close();
-    }
-  },
-
-  methods: {
-    getInfo() {
-      // Get history
-      this.$api
-        .get('event', { params: { serial_key: this.serial_key } })
-        .then((resp) => (this.history = resp.data));
-
-      // Get inventory availability
-      const params = new URLSearchParams();
-      params.append('serial_keys', this.serial_key);
-      this.$api.get('inventory', { params })
-      .then((resp) => {
-        this.serialAvailable = resp.data.length > 0
-      })
-      .catch((err) => {
-        console.log(err.response.data.message);
-      });
-    },
-
-    handleMessage(message) {
-      let event = JSON.parse(message.data);
-      if (event?.serial_key === this.serial_key) {
-        this.getInfo();
-      }
-    },
-
-    getAvatarSrc(user) {
-      return (
-        this.base_path + (user.name + user.surname).replace(/\s+/g, '') + '.jpg'
-      );
-    },
-
-    getUserData(event) {
-      const user = this.$store.getters.user_data(event.user_key);
-      return {
-        ...user,
-        full_name: user.name + ' ' + user.surname,
-        src: this.getAvatarSrc(user),
-      };
-    },
-
-    getHumanDate(timestamp) {
-      const config = {
-        year: '2-digit',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        second: '2-digit',
-        weekday: 'short',
-      };
-      return this.$capitalize(
-        this.$formatDateTime(timestamp, this.$i18n.locale, config),
-      );
-    },
-
-    notify({ message, color = 'theme-green' }) {
-      this.$q.notify({
-        message,
-        color,
-        timeout: '1500',
-        position: 'top',
-      });
-    },
-
-    getFieldType(field) {
-      return this.$store.getters.getCustomFieldByKey(field.custom_field_key)
-        ?.type;
-    },
-
-    missingMandatoryValues(form_data) {
-      let missing_mandatory_fields = false;
-      if (!form_data) {
-        return missing_mandatory_fields;
-      }
-      form_data.forEach((field) => {
-        let type = this.getFieldType(field);
-        if (
-          type !== 'ternary' &&
-          field.mandatory &&
-          (!field.value || field.value === null || field.value === '')
-        ) {
-          missing_mandatory_fields = true;
-        }
-      });
-      return missing_mandatory_fields;
-    },
-
-    goToWorkOrderPage() {
-      this.$router.push({
-        name: 'workOrderScreen',
-        params: {
-          wo_key: this.serial.wo_key,
-        },
-        query: {
-          back_to: this.$route.name,
-          ...this.$route.query,
-        },
-      });
-    },
-
-    goToProductPage() {
-      this.$router.push({
-        name: 'productHome',
-        params: {
-          product_key: this.serial.product_key,
-        },
-      });
-    },
-  },
 };
+
+const handleMessage = (message) => {
+  let event = JSON.parse(message.data);
+  if (event?.serial_key === props.serial_key) {
+    getInfo();
+  }
+};
+
+const getAvatarSrc = (user) => {
+  return base_path.value + (user.name + user.surname).replace(/\s+/g, '') + '.jpg';
+};
+
+const getUserData = (event) => {
+  const user = store.getters.user_data(event.user_key);
+  return {
+    ...user,
+    full_name: user.name + ' ' + user.surname,
+    src: getAvatarSrc(user),
+  };
+};
+
+const getHumanDate = (timestamp) => {
+  const config = {
+    year: '2-digit',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    weekday: 'short',
+  };
+  return capitalize(formatDateTime(timestamp, locale.value, config));
+};
+
+const goToWorkOrderPage = () => {
+  router.push({
+    name: 'workOrderScreen',
+    params: {
+      wo_key: serial.value.wo_key,
+    },
+    query: {
+      back_to: route.name,
+      ...route.query,
+    },
+  });
+};
+
+const goToProductPage = () => {
+  router.push({
+    name: 'productHome',
+    params: {
+      product_key: serial.value.product_key,
+    },
+  });
+};
+
+// Watchers and lifecycle hooks
+watch(() => props.serial_key, () => {
+  getInfo();
+}, { immediate: true });
+
+onMounted(() => {
+  store.dispatch('loadUsers');
+  getInfo();
+  let eventURL = $api.defaults.baseURL + '/notification/serial-notification';
+  events.value = new EventSource(eventURL, {
+    withCredentials: false,
+  });
+  events.value.addEventListener('serial-notification', (event) => {
+    handleMessage(event);
+  });
+});
+
+onBeforeUnmount(() => {
+  if (events.value) {
+    events.value.close();
+  }
+});
 </script>
 
 <style lang="sass" scoped>
