@@ -2,7 +2,7 @@ import traceback
 
 from events.serial.base_serial import BaseSerialEvent
 from events.inventory.base_inventory import BaseInventoryEvent
-from events.inventory.movement_completed import MovementCompletedEvent
+from events.inventory.movement_reversed import MovementReversedEvent
 from models.event import EventInfoModel, EventType
 from models.inventory import InventoryMovementType
 from models.serial import SerialNotificationErrorCode, SerialNotificationType
@@ -88,26 +88,20 @@ class SerialUnlinkedEvent(BaseSerialEvent, BaseInventoryEvent):
 
     # Get last consumption movement for serial
     try:
-      last_serial_consumption_position = self.tx.aql.execute("""
+      last_serial_consumption_movement = self.tx.aql.execute("""
         FOR m IN movement
         FILTER
           m.serial_key == @serial_key
-          && m.movement_type == 'consumption'
+          && m.type == 'consumption'
         SORT m.timestamp DESC
         LIMIT 1
         RETURN m
-      """, bind_vars=dict(serial_key=self.info.child_serial_key)).next()['_from'].split('/')[-1]
+      """, bind_vars=dict(serial_key=self.info.child_serial_key)).next()
     except StopIteration:
-      last_serial_consumption_position = 'IN'
+      raise ValueError('No consumption movement found for serial')
 
 
-    MovementCompletedEvent.create_as_child(self, dict(
-      product_key=self.info.component_key,
-      serial_key=self.info.child_serial_key,
-      movement_type=InventoryMovementType.REVERSAL,
-      position_from='NULL',
-      position_to=last_serial_consumption_position,
-      qt_planned=0,
-      qt_confirmed=1,
+    MovementReversedEvent.create_as_child(self, dict(
+      original_movement_key=last_serial_consumption_movement['_key'],
       reason=f"Serial unlinked from {self.info.parent_serial_key}" if self.info.parent_serial_key else f"Serial unlinked from batch {self.info.batch_key}"
     ))
