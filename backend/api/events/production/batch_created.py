@@ -10,7 +10,7 @@ class BatchCreatedEvent(BaseProductionEvent):
     phase_key: str
     work_order_key: str
     product_key: str
-    batch_serials: list[str] | None = [] # Can be list of serial keys or serial codes
+    new_batch_serials: list[str] | None = [] # Can be list of serial keys or serial codes
 
   @staticmethod
   def get_event_type() -> EventType:
@@ -65,7 +65,7 @@ class BatchCreatedEvent(BaseProductionEvent):
         work_order_key=self.info.work_order_key,
         quantity=batch_qt,
         batch_key=self.info.new_batch_key,
-        batch_serials=self.info.batch_serials
+        batch_serials=self.info.new_batch_serials
       ))
     elif use_serials:
       product = self.tx.collection('Product').get(self.info.product_key)
@@ -80,7 +80,7 @@ class BatchCreatedEvent(BaseProductionEvent):
         batch_key=self.info.new_batch_key,
         wo_key=self.info.work_order_key,
         product_key=self.info.product_key,
-        serial_codes=self.info.batch_serials,
+        serial_codes=self.info.new_batch_serials,
         released=None
       )
 

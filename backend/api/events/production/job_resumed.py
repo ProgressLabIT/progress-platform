@@ -25,7 +25,7 @@ class JobResumedEvent(BaseProductionEvent):
         job_key = self.info.job_key,
         work_order_key = self.info.work_order_key,
         phase_key = self.info.phase_key,
-        batch_serials = self.info.batch_serials,
+        new_batch_serials = self.info.batch_serials,
       ))
 
     self.work_session = WorkSessionCreatedEvent.create_as_child(self, dict(
