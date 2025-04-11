@@ -49,33 +49,35 @@
   />
   </div>
 
-  <!-- SERIALS -->
-  <div
-    v-if="lists.selectedItem.use_serials"
-    class="row col-auto items-center q-mt-md q-mb-sm q-gutter-x-sm"
-  >
+  <div class="row col-auto items-center q-mt-md q-mb-sm q-gutter-x-sm">
     <div class="text-h6">
       Selezionati
     </div>
     <q-chip size="xs" color="theme-grey">
-      <div class="smaller highlight">{{ lists.itemSerials.length }} / {{ lists.selectedItem.qt_planned }}</div>
+      <div class="smaller highlight">{{ lists.tempSerials.length }} / {{ lists.selectedItem.qt_planned - movementsCompleted.length }}</div>
     </q-chip>
-    <q-space></q-space>
-    <q-btn color="theme-grey" size="xs" padding="xs md" icon="mdi-checkbox-multiple-blank-outline" @click="() => toggleAll(false)" />
-    <q-btn color="theme-blue" size="xs" padding="xs md" icon="mdi-checkbox-multiple-marked" @click="() => toggleAll(true)" />
+
+    <!-- SELECT/UNSELECT ALL - ONLY WITH SERIALS PROVIDED -->
+    <template v-if="lists.selectedItem.serialsProvided">
+      <q-space></q-space>
+      <q-btn color="theme-grey" size="xs" padding="xs md" icon="mdi-checkbox-multiple-blank-outline" @click="() => toggleAll(false)" />
+      <q-btn color="theme-blue" size="xs" padding="xs md" icon="mdi-checkbox-multiple-marked" @click="() => toggleAll(true)" />
+    </template>
   </div>
+
+  <!-- SERIALS LIST -->
   <q-scroll-area class="col q-mt-md">
     <div class="col-auto row q-gutter-sm">
       <q-card
-        v-for="serial in lists.itemSerials.concat(availableSerials)"
-        :key="serial._key"
+        v-for="serial in shownSerials"
+        :key="serial"
         flat
-        :bordered="serial.qt_confirmed === 0"
+        :bordered="serialsProvided.includes(serial) && !lists.tempSerials.includes(serial)"
         class="q-pa-sm"
-        :class="{ 'bg-theme-green highlight': serial.qt_confirmed === 1 }"
-        @click="toggleItem(serial.serial_code)"
+        :class="{'bg-theme-green highlight': lists.tempSerials.includes(serial)}"
+        @click="toggleItem(serial)"
       >
-        {{ serial.serial_code }}
+        {{ serial }}
       </q-card>
     </div>
   </q-scroll-area>
@@ -85,6 +87,7 @@
 import { ref, computed } from 'vue';
 import { useListsStore } from 'app/src/stores/lists';
 import { Notify } from 'quasar';
+import {api} from '@/boot/axios'
 
 const lists = useListsStore()
 
@@ -93,7 +96,15 @@ const newSerialCode = ref('');
 
 // Assumption: if one serial is provided, all must be provided
 // Do not use computed, as movements will be updated with new serials as they get added
-const serialsProvided = lists.selectedItem.movements.filter(m => m.serial_code).map(m => m.serial_code)
+const serialsProvided = lists.selectedItem.movements
+  .filter(m => m.serial_code && m.status == 'planned' && m._key)
+  .map(m => m.serial_code)
+  .toSorted()
+const movementsCompleted = lists.selectedItem.movements.filter(m => m.status === 'completed')
+
+const shownSerials = computed(() => {
+  return serialsProvided?.length ? serialsProvided : lists.tempSerials
+})
 
 
 function resetInput() {
@@ -101,28 +112,35 @@ function resetInput() {
   document.getElementById('serial-input').focus()
 }
 
-const availableSerials = computed(() => {
-  return lists.selectedItem.movements
-    .filter((m) => {
-      return m.status == 'planned'
-        && m.serial_code
-        && !lists.itemSerials.some(s => s.serial_code == m.serial_code)
-    })
-    .sort((a, b) => a.serial_code.localeCompare(b.serial_code))
-})
-
 function toggleAll(select) {
   if (select) {
-    lists.selectedItem.movements.forEach(m => m.qt_confirmed = 1)
-    lists.selectedItem.qt_confirmed = lists.selectedItem.movements.length
+    lists.tempSerials = [...serialsProvided]
+    lists.selectedItem.qt_confirmed = serialsProvided.length + movementsCompleted.length
+    Notify.create({
+      position: 'top',
+      color: 'theme-green',
+      message: `${lists.tempSerials.length} seriali selezionati`,
+      timeout: 1500
+    })
   } else {
-    lists.selectedItem.movements.forEach(m => m.qt_confirmed = 0)
-    lists.selectedItem.qt_confirmed = 0
+    lists.tempSerials = []
+    lists.selectedItem.qt_confirmed = movementsCompleted.length
+    Notify.create({
+      position: 'top',
+      color: 'theme-grey',
+      message: `Seriali rimossi`,
+      timeout: 1500
+    })
   }
 }
 
+async function isInInventory(serialCode) {
+  const { data: inventory } = await api.get(`/inventory`, { params: { serial_code: serialCode, product_key: lists.selectedItem.product_key } })
+  return inventory.some(i => i.serial_code === serialCode)
+}
 
-function toggleItem(serialCode) {
+async function toggleItem(serialCode) {
+  // If no serial code is provided, notify the user
   if (!serialCode?.length) {
     Notify.create({
       position: 'top',
@@ -132,64 +150,52 @@ function toggleItem(serialCode) {
     })
     return
   }
-  const match = lists.selectedItem.movements.find(m => m.serial_code == serialCode)
-  if (match) {
-    if (match.qt_confirmed === 1) {
-      match.qt_confirmed = 0
-      lists.selectedItem.qt_confirmed -= 1
-      resetInput()
-      Notify.create({
-        position: 'top',
-        color: 'theme-grey',
-        message: `Seriale ${serialCode} rimosso`,
-        timeout: 1500
-      })
-    }
-    else {
-      match.qt_confirmed = 1
-      lists.selectedItem.qt_confirmed += 1
-      resetInput()
-      Notify.create({
-        position: 'top',
-        color: 'theme-green',
-        message: `Seriale ${serialCode} aggiunto`,
-        timeout: 1500
-      })
-    }
+
+
+  // If the serial code is already selected, unselect it
+  if (lists.tempSerials.includes(serialCode)) {
+    // Remove selected serial
+    lists.tempSerials.splice(lists.tempSerials.indexOf(serialCode), 1)
+    lists.selectedItem.qt_confirmed -= 1
+    Notify.create({
+      position: 'top',
+      color: 'theme-grey',
+      message: `Seriale ${serialCode} rimosso`,
+      timeout: 1500
+    })
+  }
+
+  // Check if the serial is already in inventory
+  else if (await isInInventory(serialCode)) {
+    Notify.create({
+      position: 'top',
+      color: 'theme-grey',
+      message: `Seriale ${serialCode} già presente nel magazzino`,
+      timeout: 1500
+    })
+  }
+
+  // Handle the case where serials are provided
+  else if (serialsProvided.length && !serialsProvided.includes(serialCode)) {
+    // Allow only serials among the provided ones
+    Notify.create({
+      position: 'top',
+      color: 'theme-orange',
+      message: `Seriale ${serialCode} non presente fra quelli previsti`,
+      timeout: 1500
+    })
   }
   else {
-    if (serialsProvided.length && !serialsProvided.includes(serialCode)) {
-      // Allow only serials among the provided ones
-      Notify.create({
-        position: 'top',
-        color: 'theme-orange',
-        message: `Seriale ${serialCode} non presente fra quelli previsti`,
-        timeout: 2000
-      })
-    }
-    else {
-      const ref = lists.selectedItem.movements[0]
-      // Allow any serial if no serial is provided
-      lists.selectedItem.movements.push({
-        movement_key: ref._key,
-        serial_code: serialCode,
-        movement_type: ref.type,
-        product_key: ref.product_key,
-        position_from: ref.position_from,
-        position_to: ref.position_to,
-        qt_planned: 1,
-        qt_confirmed: 1,
-        status: 'planned' // will be completed when the movement is confirmed
-      })
-      lists.selectedItem.qt_confirmed += 1
-      Notify.create({
-        position: 'top',
-        color: 'theme-green',
-        message: `Seriale ${serialCode} aggiunto`,
-        timeout: 1500
-      })
-    }
+    lists.tempSerials.push(serialCode)
+    lists.selectedItem.qt_confirmed += 1
+    Notify.create({
+      position: 'top',
+      color: 'theme-green',
+      message: `Seriale ${serialCode} aggiunto`,
+      timeout: 1500
+    })
   }
+  resetInput()
 }
 
 

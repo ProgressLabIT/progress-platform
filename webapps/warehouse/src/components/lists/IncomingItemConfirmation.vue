@@ -27,16 +27,16 @@
     </div>
 
     <div
-      v-if="lists.itemSerials.length"
+      v-if="lists.tempSerials.length"
       class="row col-auto q-gutter-sm q-mt-md"
     >
       <q-badge
-        v-for="serial in lists.itemSerials"
+        v-for="serial in lists.tempSerials.sort()"
         :key="serial"
         color="theme-green"
         class="text-body2 q-py-xs q-px-sm highlight"
       >
-        {{ serial.serial_code }}
+        {{ serial }}
       </q-badge>
     </div>
 

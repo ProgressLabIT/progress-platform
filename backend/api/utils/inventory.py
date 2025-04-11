@@ -274,7 +274,7 @@ class Queries:
 
     // SERIAL FILTERS
     FILTER @serial_keys ? m.serial_key IN @serial_keys : true
-    LET serial_code = FIRST(FOR s IN Serial FILTER s._key == m.serial_key RETURN s.code)
+    LET serial_code = NOT_NULL(m.serial_code, FIRST(FOR s IN Serial FILTER s._key == m.serial_key RETURN s.code))
     FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
 
     // POSITION FILTERS
@@ -329,7 +329,7 @@ class Queries:
     FILTER @work_order_search ? CONTAINS(LOWER(wo.wo_code), LOWER(@work_order_search)) : true
 
 
-    SORT m.created DESC
+    SORT m.end DESC, m.start DESC
 
     LIMIT @offset, @limit || null
 
@@ -339,7 +339,7 @@ class Queries:
       position_from_code: DOCUMENT(Position, m._from).code,
       position_to_key: PARSE_IDENTIFIER(m._to).key,
       position_to_code: DOCUMENT(Position, m._to).code,
-      serial_code: m.serial_key ? FIRST(FOR s IN Serial FILTER s._key == m.serial_key RETURN s.code) : null,
+      serial_code,
       product_code: product.code,
       product_description: product.description
     })

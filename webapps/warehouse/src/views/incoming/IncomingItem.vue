@@ -125,12 +125,33 @@ function prepareMovementUpdates() {
   const movementComplete = lists.selectedItem.qt_confirmed + lists.movementQuantity === lists.selectedItem.qt_planned
   // Serials
   if (lists.selectedItem.type == 'serial') {
-    for (let movement of lists.selectedItem.movements.filter(m => m.qt_confirmed === 1 && m.status !== 'completed')) {
-      updates.push({
-        ...movement,
-        movement_key: movement._key,
+    // If serials are provided, complete the existing movements
+    if (lists.selectedItem.serialsProvided) {
+      for (let serial of lists.tempSerials) {
+        const movement = lists.getMovementBySerial({ serialCode: serial, productCode: lists.selectedItem.product_code})
+        updates.push({
+          ...movement,
+          movement_key: movement._key,
+          position_to: positionsTo.value[0]._key,
+          qt_confirmed: 1,
+          status: 'completed',
+        });
+      }
+    }
+    // If serials are not provided, split the planned movement without serial
+    else {
+      const splitData = lists.tempSerials.map(serial => ({
         position_to: positionsTo.value[0]._key,
-        status: 'completed',
+        qt_confirmed: 1,
+        serial_code: serial
+      }));
+      const referenceMovement = lists.selectedItem.movements.find(m => m.status === 'planned' && m.serial_key === null)
+      updates.push({
+        ...referenceMovement,
+        movement_key: referenceMovement._key,
+        qt_confirmed: lists.movementQuantity,
+        split_into: splitData,
+        status: movementComplete ? 'completed' : 'started'
       });
     }
   }
@@ -140,9 +161,10 @@ function prepareMovementUpdates() {
       position_to: position._key,
       qt_confirmed: position.quantity,
     }));
+    const referenceMovement = lists.selectedItem.movements.find(m => m.status === 'planned' && m._key !== null)
     updates.push({
-      ...lists.selectedItem.movements[0],
-      movement_key: lists.selectedItem.movements[0]._key,
+      ...referenceMovement,
+      movement_key: referenceMovement._key,
       qt_confirmed: lists.movementQuantity,
       split_into: splitData,
       status: movementComplete ? 'completed' : 'started'

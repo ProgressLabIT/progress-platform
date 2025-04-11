@@ -11,6 +11,7 @@ export const useListsStore = defineStore('lists', {
     movements: [],
     selectedItem: undefined,
     tempQuantity: 0,
+    tempSerials: [],
     productTraceabilityMap: {}
   }),
   getters: {
@@ -68,7 +69,7 @@ export const useListsStore = defineStore('lists', {
     },
     movementQuantity: (state) => {
       return state?.selectedItem?.type === 'serial'
-      ? state.selectedItem.movements.reduce((sum, m) => sum += m.qt_confirmed, 0)
+      ? state.tempSerials.length
       : state.tempQuantity
     }
   },

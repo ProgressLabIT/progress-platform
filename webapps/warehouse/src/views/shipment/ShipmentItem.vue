@@ -112,10 +112,10 @@ function prepareMovementUpdates() {
   }
   // Movements with no traceability or without specified serial codes
   else {
-    const splitData = shipment.selectedInventory.map(position => ({
-      position_from: position.path.slice(-1)[0].position_key,
-      qt_confirmed: position.selected,
-      serial_key: position.serial_key
+    const splitData = shipment.selectedInventory.map(inventory => ({
+      position_from: inventory.path.slice(-1)[0].position_key,
+      qt_confirmed: inventory.selected,
+      serial_key: inventory.serial_key
     }));
     // Find the planned movement to use as reference
     const referenceMovement = lists.selectedItem.movements.find(m => m.status === 'planned')
