@@ -26,7 +26,7 @@ class MovementUpdatedEvent(BaseInventoryEvent):
 
   @classmethod
   def get_tx_collections(cls):
-    return ['movement', 'is_in_position']
+    return ['movement', 'is_in_position', 'Serial']
 
 
   def apply(self):
