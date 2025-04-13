@@ -41,6 +41,8 @@ import { computed } from 'vue';
 import { useStore } from 'vuex';
 import FormField from '@/components/FormField.vue';
 import { usePrintDialog } from '@/lib/print';
+import { api } from '@/boot/axios';
+import { debounce } from 'lodash';
 
 /**
  * @typedef {{
@@ -73,6 +75,9 @@ const props = defineProps({
 const store = useStore();
 
 const batchStep = computed(() => store.getters.getBatchStep(props.step._key));
+const batchKey = computed(() => store.state.traceability.current_batch_data._key);
+const stepKey = computed(() => props.step._key);
+
 
 // TODO: unify and centralize form data handling with IssueForm
 // TODO: add file handling like in IssueForm
@@ -97,7 +102,8 @@ const formDataIndexByFieldKey = computed(() => {
   });
   return indexByKey;
 });
-function updateField(field, value) {
+
+const updateField = debounce((field, value) => {
   store.commit('UPDATE_STEP_FORM_DATA', {
     stepKey: props.step._key,
     index: formDataIndexByFieldKey.value[field._key],
@@ -107,7 +113,21 @@ function updateField(field, value) {
       value,
     },
   });
-}
+  // Do not autosave with step already marked as done, i.e. during step edit
+  if (batchStep.value?.status !== 'done') {
+    api.post(`batch/temp-data`, {
+      execution_record_key: batchStep.value?.execution_record_key,
+      step_key: stepKey.value,
+      batch_key: batchKey.value,
+      form_data: formData.value,
+    }).then(({ data }) => {
+      store.commit('SET_STEP_EXECUTION_KEY', {
+        stepKey: stepKey.value,
+        executionRecordKey: data.detail.execution_record_key,
+      });
+    });
+  }
+}, 500);
 
 const isJobActive = computed(
   () => store.state.traceability.working_job_data.active,

@@ -10,6 +10,7 @@ from models.event import EventModel, EventType
 from utils.exceptions import *
 from utils.api import APIResponse
 from models.serial import SerialSelection
+from models.form import FormFieldValue
 from utils.db import db
 from utils.dt import timestamp
 from utils.serial import Queries as SerialQueries
@@ -187,3 +188,75 @@ async def get_wip_availability_for_job(job_key: str):
     free_wip_qt_downstream = free_wip_qt_downstream,
     free_wip_qt_upstream = free_wip_qt_upstream
   )
+
+
+@router.post('/batch/temp-data', dependencies=[Depends(auth.verify_token)])
+async def store_temp_step_data(data: ExecutionDataUpdate):
+  """
+  Creates or updates a step execution data record with the given form data
+  without setting the step as done
+  """
+  execution_data = db.collection('StepExecutionData')
+
+  # Ensure context is provided
+  if data.execution_record_key is None and data.step_key is None:
+    raise HTTPException(
+      status_code=422,
+      detail="Either execution_record_key or the combination of batch_key and step_key must be provided"
+    )
+
+  # Ensure form data is provided
+  if len(data.form_data) == 0:
+    raise HTTPException(
+      status_code=422,
+      detail="Form data must be provided"
+    )
+
+  # Get existing record or create a new one
+  try:
+    if data.execution_record_key:
+      record = execution_data.get(data.execution_record_key)
+    else:
+      record = execution_data.find(dict(
+        batch_key = data.batch_key,
+        step_key = data.step_key,
+        canceled = None
+      )).next()
+
+    if record['status'] == StepStatus.DONE.value:
+      raise HTTPException(
+        status_code=422,
+        detail="Step is already marked as done, use STEP_EDITED event to update step data."
+      )
+
+    for field in record['form_data']:
+      for new_field in data.form_data:
+        if field['form_field_key'] == new_field.form_field_key:
+          field['value'] = new_field.value
+    execution_data.update(record)
+
+  except StopIteration: # No existing record found, create a new one
+    # Get form fields for the step
+    form_fields = db.collection('Step').get(data.step_key)['form_fields']
+
+    # Make sure to include all form fields, even if they are not provided in the form data
+    form_data = []
+    for field in form_fields:
+      field_data = FormFieldValue(
+        form_field_key = field['_key'],
+        custom_field_key = field['custom_field_key'],
+      )
+      for new_field in data.form_data:
+        if field['_key'] == new_field.form_field_key:
+          field_data.value = new_field.value
+      form_data.append(field_data)
+
+    record = execution_data.insert(StepExecutionData(
+      batch_key = data.batch_key,
+      step_key = data.step_key,
+      form_data = form_data
+    ))
+
+  return APIResponse(message="Step data stored", detail=dict(
+    execution_record_key = record['_key']
+  ))
