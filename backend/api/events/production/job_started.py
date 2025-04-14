@@ -41,7 +41,8 @@ class JobStartedEvent(BaseProductionEvent):
       job_key = self.info.job_key,
       phase_key = self.info.phase_key,
       work_order_key = self.info.work_order_key,
-      product_key = self.info.product_key
+      product_key = self.info.product_key,
+      new_batch_serials = self.info.batch_serials
     ))
 
     self.info.batch_key = self.batch.key

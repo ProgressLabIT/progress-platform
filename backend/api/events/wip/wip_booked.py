@@ -30,7 +30,7 @@ class WIPBookedEvent(BaseProductionEvent):
       if len(self.info.batch_serials) == self.info.quantity:
         self.book_wip_serials()
       else:
-        raise ValueError("The number of serials provided does not match the requested quantity. Provided quantity: {quantity}. Provided serials: {self.batch_serials}")
+        raise ValueError(f"The number of serials provided does not match the requested quantity. Provided quantity: {self.info.quantity}. Provided serials: {self.info.batch_serials}")
 
     # Traceability
     else:
