@@ -1,7 +1,8 @@
 workflow:
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^release\/.*$/
-      if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.(a|b|rc)?[0-9]+$/'
+      when: always
+    - when: never
 
 services:
   - docker:dind
@@ -16,97 +17,61 @@ default:
 version-info:
   stage: .pre
   image: alpine:latest
+  before_script: []  # Override the default docker login since we don't need it (and alpine doesn't have docker)
   script:
     - |
       # Extract version from tag
       echo "VERSION=${CI_COMMIT_TAG#v}" >> build.env
       # Extract version from branch name (e.g., release/0.9 -> 0.9)
-      echo "BRANCH_VERSION=${CI_COMMIT_BRANCH#release/}" >> build.env
+      MAJOR_MINOR=$(echo ${CI_COMMIT_TAG#v} | cut -d'.' -f1,2)
+      echo "BRANCH_VERSION=$MAJOR_MINOR" >> build.env
   artifacts:
     reports:
       dotenv: build.env
 
-# Build Webapp image and push it to registry.
-build:webapp:
+
+.service-template: &service-template
   stage: build
   image: docker:stable
   needs:
     - version-info
-  variables:
-    WEBAPP_ROOT: webapps/main
-    WEBAPP_DOCKERFILE: webapp.prod.Dockerfile
-    IMAGE_NAME: $CI_REGISTRY_IMAGE/app
-  rules:
-    - changes:
-        - webapps/main/**/*
   script:
-    - cd $WEBAPP_ROOT
+    - cd $BUILD_DIR
     - >
       docker build
       --pull
-      -t $IMAGE_NAME:$BRANCH_VERSION-latest
-      -f $WEBAPP_DOCKERFILE
+      -t $CI_REGISTRY_IMAGE/$SERVICE:$BRANCH_VERSION-latest
+      -f $DOCKERFILE
       .
-    - docker push $IMAGE_NAME:$BRANCH_VERSION-latest
+    - docker tag $CI_REGISTRY_IMAGE/$SERVICE:$BRANCH_VERSION-latest $CI_REGISTRY_IMAGE/$SERVICE:$VERSION
+    - docker push $CI_REGISTRY_IMAGE/$SERVICE:$BRANCH_VERSION-latest
+    - docker push $CI_REGISTRY_IMAGE/$SERVICE:$VERSION
+
+
+build:webapp:
+  variables:
+    SERVICE: app
+    BUILD_DIR: webapps/main
+    DOCKERFILE: webapp.prod.Dockerfile
+  <<: *service-template
+
+build:warehouse:
+  variables:
+    SERVICE: warehouse
+    BUILD_DIR: webapps/warehouse
+    DOCKERFILE: Dockerfile
+  <<: *service-template
 
 build:api:
-  stage: build
-  image: docker:stable
-  needs:
-    - version-info
   variables:
-    API_ROOT: backend/api
-    API_DOCKERFILE: Dockerfile
-    IMAGE_NAME: $CI_REGISTRY_IMAGE/api
-  rules:
-    - changes:
-        - backend/api/**/*
-  script:
-    - cd $API_ROOT
-    - >
-      docker build
-      --pull
-      -t $IMAGE_NAME:$BRANCH_VERSION-latest
-      -f $API_DOCKERFILE
-      .
-    - docker push $IMAGE_NAME:$BRANCH_VERSION-latest
+    SERVICE: api
+    BUILD_DIR: backend/api
+    DOCKERFILE: Dockerfile
+  <<: *service-template
 
 build:workflow:
-  stage: build
-  image: docker:stable
-  needs:
-    - version-info
   variables:
-    WF_ROOT: backend/workflow
-    WF_DOCKERFILE: Dockerfile
-    IMAGE_NAME: $CI_REGISTRY_IMAGE/wf-sys-agent
-  rules:
-    - changes:
-        - backend/workflow/**/*
-  script:
-    - cd $WF_ROOT
-    - >
-      docker build
-      --pull
-      -t $IMAGE_NAME:$BRANCH_VERSION-latest
-      -f $WF_DOCKERFILE
-      .
-    - docker push $IMAGE_NAME:$BRANCH_VERSION-latest
-
-tag-version:
-  stage: build
-  image: docker:stable
-  needs:
-    - version-info
-  variables:
-    SERVICES: >- # the dash strips newlines at the end avoid potential errors in the loop below
-      app
-      api
-      wf-sys-agent
-  script:
-    - |
-      for SERVICE in $SERVICES; do
-        docker pull $CI_REGISTRY_IMAGE/$SERVICE:$BRANCH_VERSION-latest
-        docker tag $CI_REGISTRY_IMAGE/$SERVICE:$BRANCH_VERSION-latest $CI_REGISTRY_IMAGE/$SERVICE:$VERSION
-        docker push $CI_REGISTRY_IMAGE/$SERVICE:$VERSION
-      done
+    SERVICE: wf-sys-agent
+    BUILD_DIR: backend/workflow
+    DOCKERFILE: Dockerfile
+  <<: *service-template
