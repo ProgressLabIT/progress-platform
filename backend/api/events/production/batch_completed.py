@@ -40,6 +40,7 @@ class BatchCompletedEvent(BaseProductionEvent):
   # =================================================================
 
   def _store_batch_execution_data(self):
+    # This is necessary only if `step_check` is not active, since if it is, data is stored in `StepCompletedEvent`
     step_execution_data = [StepExecutionData(
       key = step.execution_record_key,
       job_key = self.info.job_key,
@@ -68,15 +69,20 @@ class BatchCompletedEvent(BaseProductionEvent):
 
   # =================================================================
 
-  def _convert_step_data_to_serial_data(self):
+  def _prepare_serial_data(self):
+    batch_data = self.tx.aql.execute(
+      TraceabilityQueries.GET_BATCH_EXECUTION_DATA,
+      bind_vars=dict(batch_key=self.info.active_batch_key)
+    ).next()
+
     serial_data = []
-    for step in self.info.step_data:
-      for field in step.form_data:
+    for step in batch_data['step_data']:
+      for field in step['form_data']:
         serial_data.append(SerialFormFieldValue(
-          form_field_key = field.form_field_key,
-          custom_field_key = field.custom_field_key,
-          value = field.value,
-          step_key = step.step_key,
+          form_field_key = field['form_field_key'],
+          custom_field_key = field['custom_field_key'],
+          value = field['value'],
+          step_key = step['_key'],
           batch_key = self.info.active_batch_key,
           phase_key = self.job.phase_key,
         ))
@@ -100,6 +106,42 @@ class BatchCompletedEvent(BaseProductionEvent):
     return self.tx.aql.execute(query, bind_vars=dict(
       batch_key=self.info.active_batch_key
     )).next()
+
+  # =================================================================
+
+  def _handle_batch_serials(self):
+    # Fetch batch serial keys
+    self.info.batch_serial_keys = [s['_key'] for s in self.tx.aql.execute(
+      SerialQueries.GET_BATCH_SERIALS,
+      bind_vars=dict(batch_key=self.info.active_batch_key)
+    )]
+
+    # Link components if present
+    for component_key, component_serials in self.batch_component_serials_map.items():
+      for component_serial in component_serials:
+        SerialLinkedEvent.create_as_child(self, dict(
+          parent_serial_key = component_serial['parent_serial_key'],
+          child_serial_key = component_serial['child_serial_key'],
+          batch_key = self.info.active_batch_key,
+          wo_key = self.info.work_order_key,
+          job_key = self.info.job_key,
+          phase_key = self.info.phase_key,
+          process_inventory = False,
+        ))
+
+    # Save step data into batch serials if needed
+    serial_data = self._prepare_serial_data()
+    if len(serial_data) > 0:
+      for serial_key in self.info.batch_serial_keys:
+        SerialUpdatedEvent.create_as_child(self, dict(
+          serial_key = serial_key,
+          serial_data = serial_data,
+        ))
+
+    if self.job.last_phase:
+      # Release serials
+      for serial_key in self.info.batch_serial_keys:
+        SerialReleasedEvent.create_as_child(self, dict(serial_key = serial_key))
 
   # =================================================================
 
@@ -247,31 +289,16 @@ class BatchCompletedEvent(BaseProductionEvent):
     # Increment job completed quantity
     new_job_qt_completed = self.job.qt_completed + self.batch.qt_total
 
-    # Check if traceability is enabled and fetch batch serial keys
-    handle_serials = self.job.traceability_level is not None
-
     # ===================================================================
-    # HANDLE TRACEABILITY
+    # STORE BATCH EXECUTION DATA
     # ===================================================================
-    if handle_serials:
-      # Fetch batch serial keys
-      self.info.batch_serial_keys = [s['_key'] for s in self.tx.aql.execute(
-        SerialQueries.GET_BATCH_SERIALS,
-        bind_vars=dict(batch_key=self.info.active_batch_key)
-      )]
 
-      # Link components if present
-      for component_key, component_serials in self.batch_component_serials_map.items():
-        for component_serial in component_serials:
-          SerialLinkedEvent.create_as_child(self, dict(
-            parent_serial_key = component_serial['parent_serial_key'],
-            child_serial_key = component_serial['child_serial_key'],
-            batch_key = self.info.active_batch_key,
-            wo_key = self.info.work_order_key,
-            job_key = self.info.job_key,
-            phase_key = self.info.phase_key,
-            process_inventory = False,
-          ))
+    if self.info.step_data:
+      if not self.job.parameters.step_check:
+        # Do this only if `step_check` is not active / Require to use `StepCompletedEvent` if it is
+        self._store_batch_execution_data()
+      else:
+        raise ValueError("Step check is active for the job. Use `StepCompletedEvent` to store step data.")
 
 
     # ===================================================================
@@ -284,20 +311,10 @@ class BatchCompletedEvent(BaseProductionEvent):
 
 
     # ===================================================================
-    # STORE BATCH EXECUTION DATA
+    # HANDLE TRACEABILITY
     # ===================================================================
-
-    if self.info.step_data:
-      self._store_batch_execution_data()
-
-      # Save step data into batch serials if needed
-      if handle_serials:
-        serial_data = self._convert_step_data_to_serial_data()
-        for serial_key in self.info.batch_serial_keys:
-          SerialUpdatedEvent.create_as_child(self, dict(
-            serial_key = serial_key,
-            serial_data = serial_data,
-          ))
+    if self.job.traceability_level is not None:
+      self._handle_batch_serials()
 
 
     # ===================================================================
@@ -421,11 +438,6 @@ class BatchCompletedEvent(BaseProductionEvent):
         qt_released=self.info.completed_batch_qt,
         serial_keys=self.info.batch_serial_keys,
       ))
-
-      if handle_serials:
-        # update batch serials data
-        for serial_key in self.info.batch_serial_keys:
-          SerialReleasedEvent.create_as_child(self, dict(serial_key = serial_key))
 
     # If next_phase, generate a WIP record and update job input availability state
     else:

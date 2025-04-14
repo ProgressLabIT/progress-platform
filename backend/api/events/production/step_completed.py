@@ -61,28 +61,6 @@ class StepCompletedEvent(BaseProductionEvent):
 
     self.tx.collection("StepExecutionData").insert(step_data, overwrite=True)
 
-    if self.info.form_data and self.job.traceability_level:
-      batch_serials = [s['_key'] for s in self.tx.aql.execute(
-        SerialQueries.GET_BATCH_SERIALS,
-        bind_vars=dict(batch_key=self.info.active_batch_key)
-      )]
-
-      self.info.batch_serials = batch_serials
-
-      for serial_key in batch_serials:
-        serial_data = [SerialFormFieldValue(
-          **f.model_dump(),
-          serial_key=serial_key,
-          batch_key = self.info.active_batch_key,
-          phase_key = self.job.phase_key,
-          step_key = self.info.step_key,
-        ) for f in self.info.form_data]
-
-        SerialUpdatedEvent.create_as_child(self, dict(
-          serial_key=serial_key,
-          serial_data=serial_data,
-        ))
-
     # if last step complete batch
     if self._check_all_batch_steps_done():
       BatchCompletedEvent.create_as_child(self, dict(
