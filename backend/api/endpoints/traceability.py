@@ -278,14 +278,19 @@ def create_temporary_link(batch_key: str, links: list[SerialLink]):
       status_code=404,
       detail=f"Batch {batch_key} not found"
     )
+
+  # If all links are for the batch, connect to the batch
+  connect_to_batch = set(link.parent_serial_key for link in links) in [set(['components']), set([None])]
+
   # Check if all links are valid
-  for link in links:
-    for serial_key in [link.parent_serial_key, link.child_serial_key]:
-      if not db.collection('Serial').has(serial_key):
-        raise HTTPException(
-          status_code=404,
-          detail=f"Serial {serial_key} not found"
-        )
+  serial_keys = set(link.parent_serial_key for link in links) | set(link.child_serial_key for link in links) - set([None, 'components'])
+  for serial_key in serial_keys:
+    if not db.collection('Serial').has(serial_key):
+      raise HTTPException(
+        status_code=404,
+        detail=f"Serial {serial_key} not found"
+      )
+
   # Check if all links are temporary
   for link in links:
     if link.confirmed:
@@ -303,6 +308,10 @@ def create_temporary_link(batch_key: str, links: list[SerialLink]):
 
   # Delete all existing temporary links for these serials
   db.collection('contains').delete_match(dict(batch_key=batch_key))
+
+  if connect_to_batch:
+    for link in links:
+      link.parent_serial_key = f'Batch/{batch_key}'
 
   # Create the new temporary links
   new_links = [link.model_dump(by_alias=True, exclude={'key'}) for link in links]
