@@ -93,6 +93,8 @@ export default {
   create_order: 'create order',
   created_max: 'Created (max)',
   created_min: 'Created (min)',
+  released_max: 'Released (max)',
+  released_min: 'Released (min)',
   creation_date: 'creation date',
   critical: 'critical',
   date_format: 'YYYY/MM/DD',
@@ -1064,4 +1066,5 @@ export default {
     },
     output_position: 'Output position',
   },
+  release_date: 'release date',
 };

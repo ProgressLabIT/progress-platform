@@ -88,6 +88,15 @@ export function useSerialColumns() {
       style: 'max-width: 5vw',
       format: (val) => (val ? shortDateString(val) : '-'),
     },
+    {
+      name: 'released',
+      field: 'released',
+      sortable: true,
+      align: 'right',
+      label: t('release_date').toUpperCase(),
+      style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
+    },
     // {
     //   name: 'available',
     //   field: 'available',

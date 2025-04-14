@@ -240,6 +240,8 @@ async def search_serials(
   serial_deleted: bool = False,
   offset: int | None = None,
   filter_unreleased: bool = False,
+  time_released_from: datetime | None = None,
+  time_released_to: datetime | None = None,
   sort_by: str | None = 'created',
   sorting_order: str | None = 'desc',
   ):
@@ -267,7 +269,9 @@ async def search_serials(
     deleted = serial_deleted,
     fields = fields,
     sort_by = sort_by,
-    sorting_order = sorting_order
+    sorting_order = sorting_order,
+    time_released_from = time_released_from,
+    time_released_to = time_released_to
   )
   try:
     cursor = db.aql.execute(Queries.FIND_SERIALS, bind_vars=bind_vars)

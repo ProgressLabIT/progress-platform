@@ -196,61 +196,23 @@
         </template>
       </q-input>
 
+      <!-- RELEASED DATE RANGE -->
+      <div class="row q-col-gutter-sm q-mb-md">
+        <div class="col">
+          <BaseDatePicker v-model="time_released_from" :label="$t('released_min')" />
+        </div>
+        <div class="col">
+          <BaseDatePicker v-model="time_released_to" :label="$t('released_max')" />
+        </div>
+      </div>
+
       <!-- OPENED DATE RANGE -->
       <div class="row q-col-gutter-sm q-mb-md">
         <div class="col">
-          <q-input
-            v-model="time_created_from"
-            filled
-            dense
-            clearable
-            debounce="1000"
-            mask="date"
-            :label="$t('created_min')"
-          >
-            <template #append>
-              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-date v-model="time_created_from" minimal>
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
+          <BaseDatePicker v-model="time_created_from" :label="$t('created_min')" />
         </div>
         <div class="col">
-          <q-input
-            v-model="time_created_to"
-            filled
-            dense
-            clearable
-            mask="date"
-            debounce="1000"
-            :label="$t('created_max')"
-          >
-            <template #append>
-              <q-icon name="mdi-calendar" size="xs" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-date v-model="time_created_to" minimal>
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
+          <BaseDatePicker v-model="time_created_to" :label="$t('created_max')" />
         </div>
       </div>
 
@@ -374,6 +336,7 @@ import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js';
 import { XLSXDownload, XLSXGetData } from '@/lib/xlsxDownload';
 import SerialForm from 'app/src/components/traceability/SerialForm.vue';
 import { useSerialColumns } from 'app/src/composables/traceability';
+import BaseDatePicker from '@/components/BaseDatePicker.vue';
 
 export default {
   name: 'TraceabilityRoot',
@@ -383,6 +346,7 @@ export default {
     SerialForm,
     FormField,
     FilterDrawer,
+    BaseDatePicker,
   },
 
   setup() {
@@ -462,6 +426,8 @@ export default {
         'created_by',
         'time_created_from',
         'time_created_to',
+        'time_released_from',
+        'time_released_to',
         'product_code_search',
         //'serial_deleted',
       ],
@@ -497,8 +463,10 @@ export default {
     product_code_search: queryModel(String, 'product_code_search', null),
     work_order_search: queryModel(String, 'work_order_search', null),
     created_by: queryModel(String, 'opened_by', null),
-    time_created_from: queryModel(String, 'opened_min', null),
-    time_created_to: queryModel(String, 'opened_max', null),
+    time_created_from: queryModel(String, 'created_min', null),
+    time_created_to: queryModel(String, 'created_max', null),
+    time_released_from: queryModel(String, 'released_min', null),
+    time_released_to: queryModel(String, 'released_max', null),
     //serial_deleted: queryModel(Boolean, 'deleted', false),
 
     max_shown() {

@@ -96,6 +96,8 @@ export default {
   create_order: 'crea ordine',
   created_max: 'Creato (max)',
   created_min: 'Creato (min)',
+  released_max: 'Rilasciato (max)',
+  released_min: 'Rilasciato (min)',
   creation_date: 'data creazione',
   critical: 'critico',
   date_format: 'AAAA/MM/GG',
@@ -1080,4 +1082,5 @@ export default {
     },
     output_position: 'Posizione di versamento',
   },
+  release_date: 'data rilascio',
 };

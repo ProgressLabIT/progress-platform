@@ -253,8 +253,8 @@ const requiresComponentSerials = computed(() => {
 
 // Utility function to create a serial link
 const createSerialLink = ({childSerial, parentSerialKey, componentKey}) => ({
-  _key: childSerial._key,
-  code: childSerial.code,
+  _key: childSerial?._key,
+  code: childSerial?.code,
   parent_serial_key: parentSerialKey,
   wo_key: props.job.wo_key,
   job_key: props.job._key,
