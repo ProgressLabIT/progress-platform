@@ -156,7 +156,7 @@ function getLineSerials(bomLine) {
     link.phase_key == bomLine.phase_key
     && link.component_key == bomLine.component_key
     && link.batch_key == props.batch_key
-    && link.parent_serial_key == batchSerials.value[index.value]._key
+    && link.parent_serial_key == batchSerials.value[index.value]?._key
   )
   // Return array of serial keys if qt > 1 (multiple selection),
   // otherwise return single serial key
