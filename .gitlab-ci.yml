@@ -7,12 +7,6 @@ workflow:
 services:
   - docker:dind
 
-# Login to GitLab container Registry for push and pull operations
-default:
-  before_script:
-    # - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.com
-
 # Just extract version info
 version-info:
   stage: .pre
@@ -36,6 +30,7 @@ version-info:
   needs:
     - version-info
   script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.com
     - cd $BUILD_DIR
     - >
       docker build
