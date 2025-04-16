@@ -239,9 +239,10 @@ class Queries:
     FOR m IN movement
     FILTER @movement_type ? m.type == @movement_type : true
     FILTER @user_key ? m.user_key == @user_key : true
-    SORT m.created DESC
     COLLECT position = DOCUMENT(m[@position_type == 'from' ? '_from' : '_to'])
+    AGGREGATE end = MAX(m.end)
     FILTER position != null
+    SORT end DESC
     LIMIT @limit
     RETURN position
   """
@@ -251,9 +252,10 @@ class Queries:
     FILTER m.product_key != null
     FILTER @type ? m.type == @type : true
     FILTER @user_key ? m.user_key == @user_key : true
-    SORT m.created DESC
     COLLECT product = DOCUMENT(Product, m.product_key)
+    AGGREGATE end = MAX(m.end)
     FILTER product != null
+    SORT end DESC
     LIMIT @limit
     RETURN product
   """
