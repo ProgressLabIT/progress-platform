@@ -29,7 +29,7 @@ class Queries:
       FILTER @tag == null || @tag IN tags[*]._key
 
       // keep only required attributes
-      LET result = @details ? product : KEEP(product, ["_key", "code", "description", "active", "traceability_level", "serialcode_on_batchstart"])
+      LET result = @details ? product : KEEP(product, ["_key", "code", "description", "active", "traceability_level", "serial_code_on_creation"])
 
       SORT result.code
       LIMIT @offset, @limit

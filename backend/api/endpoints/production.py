@@ -96,8 +96,8 @@ async def create_work_order(new_wo: WorkOrderNew):
     if product_data.traceability_level:
       new_wo.traceability_level = product_data.traceability_level
 
-    if product_data.serialcode_on_batchstart:
-      new_wo.serialcode_on_batchstart = product_data.serialcode_on_batchstart
+    if product_data.serial_code_on_creation:
+      new_wo.serial_code_on_creation = product_data.serial_code_on_creation
 
     new_wo_record = create_wo_record(tx, new_wo)
 

@@ -69,7 +69,7 @@ class BatchCreatedEvent(BaseProductionEvent):
       ))
     elif use_serials:
       product = self.tx.collection('Product').get(self.info.product_key)
-      start_with_code = product.get('serialcode_on_batchstart', False)
+      start_with_code = product.get('serial_code_on_creation', False)
       counter_key = product.get('counter_key', None)
       if start_with_code and (self.info.new_batch_serials is None or len(self.info.new_batch_serials) == 0) and counter_key is None:
         raise ValueError("You must provide serial codes or define counter to start a new batch for this product")

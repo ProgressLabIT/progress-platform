@@ -94,7 +94,7 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
           # Create serials
           counter_key = None
 
-          if self.job.serialcode_on_batchstart:
+          if self.job.serial_code_on_creation:
             try:
               counter_key = self.tx.collection('Product').get(self.job.product_key).get('counter_key', None)
             except AttributeError:

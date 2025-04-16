@@ -54,7 +54,7 @@ class WorkOrderNew(BaseModel):
   wo_bom: list[WOBomLineInput] = []
   output_position_key: str | None = None
   traceability_level: TraceabilityLevel | None = None
-  serialcode_on_batchstart: bool = False
+  serial_code_on_creation: bool = False
   notes: str | None = None
   extra: Any = None
 
@@ -142,7 +142,7 @@ class Job(FlexModel):
   next_batch_available: bool | None = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders
 
   traceability_level: str | None = None
-  serialcode_on_batchstart: bool = False
+  serial_code_on_creation: bool = False
   # current_step: int | None = None
 
   on_time: bool = True

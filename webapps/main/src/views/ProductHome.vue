@@ -222,11 +222,11 @@
             clearable
             emit-value
             map-options
-            :model-value="!!product.serialcode_on_batchstart"
-            :label="$t('traceability.serialcode_on_batchstart')"
+            :model-value="!!product.serial_code_on_creation"
+            :label="$t('traceability.serial_code_on_creation')"
             :disable="!editMode"
             @update:model-value="
-              (value) => updateField('serialcode_on_batchstart', value)
+              (value) => updateField('serial_code_on_creation', value)
             "
           />
         </q-card-section>

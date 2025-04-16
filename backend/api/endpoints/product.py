@@ -120,7 +120,7 @@ async def create_product(
   description: str = Form(''),
   image: UploadFile = File(None),
   traceability_level: str = Form(''),
-  serialcode_on_batchstart: bool = False,
+  serial_code_on_creation: bool = False,
   counter_key: str = Form(''),
 ):
   # Map form data
@@ -131,7 +131,7 @@ async def create_product(
       description=description,
       created=timestamp(),
       traceability_level='form_only' if len(traceability_level) else None,
-      serialcode_on_batchstart=serialcode_on_batchstart,
+      serial_code_on_creation=serial_code_on_creation,
       counter_key=counter_key
     )
 

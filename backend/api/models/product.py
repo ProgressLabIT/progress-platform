@@ -34,14 +34,14 @@ class ProductBaseData(FlexModel):
   key: str | None = Field(None, alias="_key")
   code: str
   description: str | None = None
-  active: bool = True
-  image: bool = False # to be replaced with Object Storage url in the future
+  active: bool | None = True
+  image: bool | None = False # to be replaced with Object Storage url in the future
   tags: List[Tag] | None= []
   counter_key: str | None = None
   traceability_level: TraceabilityLevel | None = None
-  manage_inventory: bool = False
-  allow_negative_inventory: bool = False
-  serialcode_on_batchstart: bool = False
+  manage_inventory: bool | None = False
+  allow_negative_inventory: bool | None = False
+  serial_code_on_creation: bool | None = False
 
 
 class ProductMetadataField(BaseModel):

@@ -477,7 +477,7 @@ def create_job_record(
     assigned_to = assigned_to,
     notes = kwargs.get('notes', None),
     traceability_level = wo_data.traceability_level,
-    serialcode_on_batchstart = wo_data.serialcode_on_batchstart
+    serial_code_on_creation = wo_data.serial_code_on_creation
   )
 
   prepped = jsonable_encoder(new_job_data, by_alias=True)
