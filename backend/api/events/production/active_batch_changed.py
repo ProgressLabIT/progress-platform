@@ -57,7 +57,7 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
     # NO TRACEABILITY
     # ------------------------------------------------
     if not self.job.traceability_level:
-      # No need to update wip
+      # No need to update wip if first phase
       if not self.job.first_phase:
         if active_batch_qt_delta > 0:
           WIPBookedEvent.create_as_child(self, dict(

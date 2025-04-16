@@ -37,22 +37,23 @@ class SerialCreatedEvent(BaseSerialEvent):
       ))
       raise SerialCodeAlreadyPresent('Cannot create serial, serial code already used')
 
-    # Fetch counter key if code is not provided and must be generated (serial is released)
-    if self.info.released and self.info.counter_key is None and self.info.code is None:
-      product = self.tx.collection('Product').get(self.info.product_key)
-      if not product.get('traceability_level', False):
-        raise ValueError(f"Cannot create serial for product {product['code']}. Traceability is not enabled.")
+    # Handle code if serial is released or must be generated at creation
+    product = self.tx.collection('Product').get(self.info.product_key)
 
-      self.info.counter_key = product.get('counter_key', None)
-      if self.info.counter_key is None:
-        raise ValueError('Cannot release serial without code or counter')
+    if not product.get('traceability_level', False):
+      raise ValueError(f"Cannot create serial for product {product['code']}. Traceability is not enabled.")
 
+    needs_code = self.info.released or product.get('serial_code_on_creation', False)
 
-    try:
-      if self.info.counter_key and self.info.code is None:
-        # Generate serial code from counter
+    if needs_code:
+      if self.info.code is None:
+        self.info.counter_key = product.get('counter_key', None)
+        if self.info.counter_key is None:
+          raise ValueError('Cannot create/release serial. No code or counter provided.')
+
         self.info.code = _generate_counter(self.tx, self.info.counter_key)
 
+    try:
       new_serial = Serial(**self.info.model_dump())
       serial_key = self.tx.collection('Serial').insert(new_serial.model_dump(by_alias=True))['_key']
 
