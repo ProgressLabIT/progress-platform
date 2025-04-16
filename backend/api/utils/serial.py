@@ -512,6 +512,7 @@ def get_serial_child_nodes(parent: SerialTreeNode, serial_list: list[dict]) -> l
   components = get_bom_components_requiring_traceability(parent.product_key)
   children = []
   try:
+    # First, handle BOM components
     for component in components:
       bom_node_base_data = dict(
         product_key=component.component_key,
@@ -543,6 +544,28 @@ def get_serial_child_nodes(parent: SerialTreeNode, serial_list: list[dict]) -> l
       # If there are no active child serials, add an empty node for the component
       if sum(1 for child in child_serials if not child['replaced']) == 0:
         children.append(SerialTreeNode(**bom_node_base_data))
+
+    # Then, handle non-BOM serials that are children of this parent
+    bom_component_keys = [comp.component_key for comp in components]
+    non_bom_serials = [
+      s for s in serial_list
+      if s['parent_key'] == parent.serial_key and
+      s['product_key'] not in bom_component_keys
+    ]
+
+    for serial in non_bom_serials:
+      child_node = SerialTreeNode(
+        product_key=serial['product_key'],
+        product_code=serial['product_code'],
+        product_description=serial['product_description'],
+        serial_key=serial['serial_key'],
+        serial_code=serial['serial_code'],
+        replaced=serial['replaced'],
+        extra_bom=True
+      )
+      if not serial['replaced']:
+        child_node.children = get_serial_child_nodes(child_node, serial_list)
+      children.append(child_node)
 
     return children
 

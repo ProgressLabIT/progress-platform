@@ -10,10 +10,8 @@
       @lazy-load="({ node, done }) => lazyLoad(node, done)"
     >
       <template #default-header="prop">
-        <div
-          class="row items-center full-width justify-between q-pr-xl"
-        >
           <div
+            class="q-mr-md"
             :class="{
               'text-disabled': prop.node.replaced && prop.node._key !== selected,
               'text-weight-bold text-high': prop.node._key === selected,
@@ -22,15 +20,23 @@
             style="position: relative;"
           >
             {{ prop.node.product_code }}
-            <q-badge
-              v-if="prop.node.replaced"
-              color="theme-grey"
-              outline
-            >
-              <q-icon name="mdi-link-off" size="12px" />
-            </q-badge>
           </div>
+          <q-badge
+            v-if="prop.node.extra_bom"
+            color="low"
+            outline
+          >
+            <q-icon name="mdi-playlist-plus" size="12px" />
+          </q-badge>
+          <q-badge
+            v-if="prop.node.replaced"
+            color="theme-grey"
+            outline
+          >
+            <q-icon name="mdi-link-off" size="12px" />
+          </q-badge>
 
+          <!-- NODE CONTEXT MENU -->
           <q-menu context-menu auto-close>
             <q-list>
               <q-item
@@ -55,13 +61,12 @@
           >
             {{ prop.node.product_description }}
           </q-tooltip>
-        </div>
       </template>
 
       <template #default-body="prop">
         <div
           :class="{
-            'text-weight-bold': prop.node._key === selected,
+            'text-theme-blue': prop.node._key === selected,
             'text-disabled': prop.node.replaced,
           }"
         >
@@ -153,6 +158,7 @@ function convertNode(node, parent_key) {
     selectable: props.edit_mode ? false : true,
     children: children_data,
     replaced: node.replaced,
+    extra_bom: node.extra_bom,
     product_key: node.product_key,
     product_code: node.product_code,
     product_description: node.product_description,
