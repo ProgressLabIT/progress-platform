@@ -81,7 +81,7 @@ class BatchCompletedEvent(BaseProductionEvent):
         serial_data.append(SerialFormFieldValue(
           form_field_key = field['form_field_key'],
           custom_field_key = field['custom_field_key'],
-          value = field['value'],
+          value = field.get('value', None),
           step_key = step['_key'],
           batch_key = self.info.active_batch_key,
           phase_key = self.job.phase_key,
