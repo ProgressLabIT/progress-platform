@@ -91,7 +91,7 @@ class WorkSession(FlexModel):
 
 class WIP(ArangoEdge):
   # _from & _to refer to process phases or specific jobs
-  batch_key: str # batch that produced the wip
+  batch_key: str | None = None # batch that produced the wip
   wo_key: str
   product_key: str
   serial_key: str | None = None
