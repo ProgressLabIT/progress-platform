@@ -100,6 +100,7 @@ class InventoryPathItem(BaseModel):
 class InventorySearchResult(BaseModel):
   key: str = Field(..., alias='_key') # Inventory record (is_in_position edge) key
   product_code: str | None = None
+  product_description: str | None = None
   position_code: str | None = None
   path: list[InventoryPathItem] | None = []
   serial_code: str | None = None

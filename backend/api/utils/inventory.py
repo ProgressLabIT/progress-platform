@@ -150,7 +150,7 @@ class Queries:
         serial_key: inventory.serial_key,
         product_key: product._key,
         product_code: product.code,
-        product_desc: product.description,
+        product_description: product.description,
         serial_code,
         value: inventory.value,
         _key: inventory._key

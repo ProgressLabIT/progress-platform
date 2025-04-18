@@ -263,6 +263,14 @@ export function useInventoryColumns() {
       style: 'max-width: 10vw',
     },
     {
+      name: 'product_description',
+      field: 'product_description',
+      sortable: true,
+      label: t('description').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 40vw',
+    },
+    {
       name: 'position',
       field: 'path',
       sortable: true,
