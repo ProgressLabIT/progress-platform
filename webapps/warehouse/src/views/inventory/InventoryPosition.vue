@@ -292,8 +292,8 @@ function confirmQuantity() {
     }
   })
   .then(() => {
+    loadPositionContents(selectedPosition.value._key);
     unselectItem();
-    loadPositionContents();
     Notify.create({
       message: 'Quantità aggiornata',
       color: 'theme-green',
