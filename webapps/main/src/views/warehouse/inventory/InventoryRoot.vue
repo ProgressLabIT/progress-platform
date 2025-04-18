@@ -238,8 +238,13 @@ export default {
   thead tr:first-child th /* bg color is important for th; just specify one */
     background-color: var(--bg-color)
 
-  thead
-    inventory: sticky
+  thead tr th
+    position: sticky
     z-index: 1
+  /* this will be the loading indicator */
+  thead tr:last-child th
+    /* height of all previous header rows */
+    top: 48px
+  thead tr:first-child th
     top: 0
 </style>
