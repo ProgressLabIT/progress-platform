@@ -54,7 +54,7 @@
                   :inventory_only="line.manage_inventory"
                   :inventory_in_position_key="line.consumption_options?.consumption_position_key"
                   :usedSerials="usedSerialsKeys"
-                  @select="(selection) => emit('select', {selection, bomLine: line, parentSerialKey: batchSerials[index]._key})"
+                  @select="(selection) => onSelect(selection, line)"
                 >
                 </BaseAutocompleteSerial>
               </div>
@@ -156,7 +156,7 @@ function getLineSerials(bomLine) {
     link.phase_key == bomLine.phase_key
     && link.component_key == bomLine.component_key
     && link.batch_key == props.batch_key
-    && link.parent_serial_key == batchSerials.value[index.value]?._key
+    && link.parent_serial_key == (batchSerials.value[index.value]?._key ?? 'components')
   )
   // Return array of serial keys if qt > 1 (multiple selection),
   // otherwise return single serial key
@@ -192,6 +192,10 @@ const fakeBatchSerials = async () => {
   batchSerials.value = faked_batch_serials.value;
   loading.value = false;
 };
+
+const onSelect = (selection, bomLine) => {
+  emit('select', {selection: selection, bomLine: bomLine, parentSerialKey: batchSerials.value[index.value]?._key ?? 'components'})
+}
 
 const save = async () => {
   saving.value = true;
