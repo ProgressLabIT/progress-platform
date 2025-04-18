@@ -22,7 +22,7 @@
     <!-- NAVIGATION -->
     <q-space></q-space>
     <div class="col-auto">
-      <div class="row full-width q-gutter-y-md">
+      <div class="row full-width q-gutter-y-sm">
         <q-btn
           color="theme-grey"
           label="INDIETRO"

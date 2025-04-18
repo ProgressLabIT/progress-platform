@@ -1,5 +1,5 @@
 <template>
-  <div class="col column full-width q-gutter-y-lg">
+  <div class="col column">
     <!-- ITEM CODE & DESCRIPTION -->
     <div class="col-auto column full-width">
       <div class="row">
@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <div class="col-auto">
+    <div class="col-auto q-mt-md">
       <div class="text-h3 q-mb-xs">
         {{ $t('destination') }}</div>
       <!-- POSITION SEARCH -->
@@ -28,41 +28,47 @@
     </div>
 
     <!-- SELECTED POSITIONS -->
-    <div class="col-auto">
-      <div class="text-h6 q-mb-xs">POSIZIONI SELEZIONATE</div>
+    <div class="col-auto q-mt-md">
+      <div class="text-h6 q-mb-sm">POSIZIONI SELEZIONATE</div>
       <div class="row col-auto q-col-gutter-x-sm">
         <div
           v-for="selected in tempPositions"
           :key="selected._key"
           class="col-auto"
         >
-          <q-chip
-            clickable
-            color="theme-blue"
-            class="text-body1 text-white weight-bold"
+          <q-card
+            flat
+            class="q-pa-sm bg-theme-green highlight text-body2"
             @click="toggleSelection(selected)"
           >
             {{ selected.code }}
-          </q-chip>
+          </q-card>
         </div>
       </div>
     </div>
 
     <!-- AVAILABLE POSITIONS -->
-    <div class="text-h6 col-auto">POSIZIONI {{ positionResultsType }}</div>
-    <q-scroll-area class="col">
-      <div class="row full-width q-col-gutter-xs">
-        <div v-for="pos in availablePositions" :key="pos._key" class="col-auto">
-          <q-chip clickable outline class="text-body1" @click="toggleSelection(pos)">
+    <div class="text-h6 col-auto q-mt-lg">POSIZIONI {{ positionResultsType }}</div>
+    <q-scroll-area class="col q-mt-md">
+      <div class="row q-col-gutter-sm">
+        <div
+          v-for="pos in availablePositions"
+          :key="pos._key"
+          class="col-auto"
+        >
+          <q-card
+            flat
+            bordered
+            class="q-pa-sm transparent text-body2"
+            @click="toggleSelection(pos)"
+          >
             {{ pos.code }}
-          </q-chip>
+          </q-card>
         </div>
       </div>
     </q-scroll-area>
-
-    <q-space></q-space>
-
-    <div class="col-auto q-gutter-y-md row justify-center">
+    <!-- <q-space></q-space> -->
+    <div class="col-auto q-gutter-y-sm row justify-center q-mt-md">
       <q-btn
         outline
         color="theme-blue"

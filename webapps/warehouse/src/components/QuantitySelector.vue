@@ -52,7 +52,7 @@
 
     <!-- ±10/100 -->
     <template v-if="showButtons">
-      <div class="full-width row q-mt-md">
+      <div class="full-width row">
         <div class="col">
           <q-btn
             color="theme-blue"
