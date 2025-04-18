@@ -47,14 +47,14 @@ class WorkOrderNew(BaseModel):
   product_description: str | None = None
   phase_sequence: list[str] = []
   qt_planned: PositiveFloat
-  priority: bool = False
+  priority: bool | None = False
   project_code: str | None = None
   start_from: datetime | date | None = None
   due_by: datetime | date | None = None
   wo_bom: list[WOBomLineInput] = []
   output_position_key: str | None = None
   traceability_level: TraceabilityLevel | None = None
-  serial_code_on_creation: bool = False
+  serial_code_on_creation: bool | None = False
   notes: str | None = None
   extra: Any = None
 
@@ -69,12 +69,12 @@ class WorkOrderNew(BaseModel):
 
 class WorkOrderFull(ArangoDocument, WorkOrderNew):
   status: WorkStatus = WorkStatus.CREATED
-  qt_completed: float = 0
-  active: bool = False
-  on_time: bool = True
-  critical: bool = False
-  progress: int = Field(0, ge=0)
-  wo_bom: list[WOBomLine] = []
+  qt_completed: float | None = 0
+  active: bool | None = False
+  on_time: bool | None = True
+  critical: bool | None = False
+  progress: int | None = Field(0, ge=0)
+  wo_bom: list[WOBomLine] | None = None
 
   created: datetime = Field(default_factory=timestamp)
   start: datetime | None = None
@@ -142,18 +142,18 @@ class Job(FlexModel):
   next_batch_available: bool | None = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders
 
   traceability_level: str | None = None
-  serial_code_on_creation: bool = False
+  serial_code_on_creation: bool | None = False
   # current_step: int | None = None
 
-  on_time: bool = True
+  on_time: bool | None = True
   estimated_remaining_time: timedelta | None = None
   estimated_completion: datetime | None = None
 
   last_work_session_started: str | None = None
   last_online: datetime | None = None
 
-  job_docs: list[ProductDoc] = []
-  wo_bom: list[WOBomLine] = []
+  job_docs: list[ProductDoc] | None = []
+  wo_bom: list[WOBomLine] | None = []
 
   forced: str | None = None
 
