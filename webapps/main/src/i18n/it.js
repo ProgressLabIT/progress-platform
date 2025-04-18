@@ -1076,7 +1076,7 @@ export default {
     inventory: {
       position: 'Posizione',
       product_code: 'Codice prodotto',
-      quantity: 'Quantita',
+      quantity: 'Quantità',
       serial: 'Matricola',
       owned: 'Posseduto',
     },

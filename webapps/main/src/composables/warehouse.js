@@ -279,19 +279,19 @@ export function useInventoryColumns() {
       style: 'max-width: 40vw',
     },
     {
-      name: 'serial',
-      field: 'serial_code',
-      sortable: true,
-      label: t('warehouse.inventory.serial').toUpperCase(),
-      align: 'left',
-      style: 'max-width: 10vw',
-    },
-    {
       name: 'quantity',
       field: 'quantity',
       sortable: true,
       label: t('warehouse.inventory.quantity').toUpperCase(),
-      align: 'left',
+      align: 'right',
+      style: 'max-width: 10vw',
+    },
+    {
+      name: 'serial',
+      field: 'serial_code',
+      sortable: true,
+      label: t('warehouse.inventory.serial').toUpperCase(),
+      align: 'right',
       style: 'max-width: 10vw',
     },
 

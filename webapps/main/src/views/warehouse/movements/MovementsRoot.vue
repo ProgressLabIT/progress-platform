@@ -15,7 +15,6 @@
       table-class="text-high"
       card-class="background no-shadow"
       virtual-scroll
-      binary-state-sort
       :virtual-scroll-item-size="48"
       :virtual-scroll-sticky-size-start="48"
       :rows-per-page-options="[0]"
@@ -438,10 +437,6 @@ export default {
   thead tr th
     position: sticky
     z-index: 1
-  /* this will be the loading indicator */
-  thead tr:last-child th
-    /* height of all previous header rows */
-    top: 48px
   thead tr:first-child th
     top: 0
 </style>

@@ -242,9 +242,6 @@ export default {
     position: sticky
     z-index: 1
   /* this will be the loading indicator */
-  thead tr:last-child th
-    /* height of all previous header rows */
-    top: 48px
   thead tr:first-child th
     top: 0
 </style>
