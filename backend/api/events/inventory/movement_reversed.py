@@ -158,7 +158,7 @@ class MovementReversedEvent(BaseInventoryEvent):
           position_key=movement_to_revert.position_to.split('/')[-1], # position_to/position_from is the same for adjustments
           product_key=movement_to_revert.product_key,
           serial_key=movement_to_revert.serial_key,
-          quantity_change=-movement_qt
+          quantity_change=movement_qt
         ))
 
       case _:
