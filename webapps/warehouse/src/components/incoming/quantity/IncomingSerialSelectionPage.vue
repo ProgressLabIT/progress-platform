@@ -65,20 +65,29 @@
 
   </q-scroll-area>
 
+  <div class="row q-gutter-sm">
     <q-btn
       :disable="incoming.serials.length === 0 || loading"
       color="theme-blue"
       :label="$t('next')"
-      class="col-auto full-width"
+      class="col"
       @click="next"
     />
     <q-btn
       color="grey"
       :label="$t('back')"
-      class="col-auto full-width"
+      class="col"
       :disable="loading"
       @click="back"
     />
+    <q-btn
+      color="theme-blue"
+      :label="$t('print_label')"
+      unelevated
+      class="col-12"
+      @click="printProductLabel(incoming.product.code, incoming.product.description)"
+    />
+  </div>
 
   </div>
 </template>
@@ -89,6 +98,7 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { api } from '@/boot/axios';
 import { useIncomingStore } from '@/stores/incoming';
+import { printProductLabel } from 'app/src/lib/print';
 
 const incoming = useIncomingStore();
 const newSerialCode = ref('');
