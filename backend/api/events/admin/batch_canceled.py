@@ -1,6 +1,7 @@
 from events.admin.base_admin import BaseAdmin
 from events.wip.wip_unbooked import WIPUnbookedEvent
 from events.serial.serial_updated import SerialUpdatedEvent
+from events.serial.serial_unlinked import SerialUnlinkedEvent
 from models.event import EventInfoModel, EventType
 from utils.exceptions import JobIsActiveError, JobHasNoActiveBatchError
 from utils.serial import Queries as SerialQueries
@@ -73,6 +74,7 @@ class BatchCanceled(BaseAdmin):
         REMOVE serial IN Serial
       """, bind_vars=dict(batch_key=batch_key))
 
+
     if self.job.traceability_level: # both first and following phases
       # Remove obsolete batch_serial records and reset serial data for the phase
       # Remember that serials documents have already been removed
@@ -89,6 +91,36 @@ class BatchCanceled(BaseAdmin):
         SerialUpdatedEvent.create_as_child(self, dict(
           serial_key = serial_key,
           remove_data_from_phases = [self.job.phase_key]
+        ))
+
+      # Remove component links related to the batch
+      batch_serial_components_keys = self.tx.aql.execute("""
+        FOR s IN @batch_serial_keys
+        FOR c IN 1..1 OUTBOUND CONCAT('Serial/', s) contains
+        FILTER c.batch_key == @batch_key
+        RETURN { parent_serial_key = s, child_serial_key = c._key }
+      """, bind_vars=dict(batch_key=batch_key, batch_serial_keys=batch_serial_keys))
+
+      for component in batch_serial_components_keys:
+        SerialUnlinkedEvent.create_as_child(self, dict(
+          serial_key = component['child_serial_key'],
+          parent_serial_key = component['parent_serial_key'],
+          reason = 'Batch canceled',
+        ))
+
+
+    else: # Cancel batch components
+      batch_serial_components_keys = self.tx.aql.execute("""
+        FOR c IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) contains
+        FILTER c.batch_key == @batch_key
+        RETURN c._key
+      """, bind_vars=dict(batch_key=batch_key))
+
+      for component_key in batch_serial_components_keys:
+        SerialUnlinkedEvent.create_as_child(self, dict(
+          serial_key = component_key,
+          batch_key = batch_key,
+          reason = 'Batch canceled',
         ))
 
     # Update Job, removing progress from steps, if any, of former active batch
