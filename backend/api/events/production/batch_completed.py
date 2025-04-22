@@ -302,19 +302,19 @@ class BatchCompletedEvent(BaseProductionEvent):
 
 
     # ===================================================================
+    # HANDLE TRACEABILITY
+    # ===================================================================
+    if self.job.traceability_level is not None:
+      self._handle_batch_serials()
+
+
+    # ===================================================================
     # GENERATE PRODUCTION/CONSUMPTION MOVEMENTS
     # ===================================================================
     # Put here to avoid proceeding if there is some inventory issue
     # Will be skipped if warehouse management is not enabled
     # ===================================================================
     self._process_inventory_changes()
-
-
-    # ===================================================================
-    # HANDLE TRACEABILITY
-    # ===================================================================
-    if self.job.traceability_level is not None:
-      self._handle_batch_serials()
 
 
     # ===================================================================
