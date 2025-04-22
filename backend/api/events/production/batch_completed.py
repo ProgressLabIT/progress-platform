@@ -34,6 +34,195 @@ class BatchCompletedEvent(BaseProductionEvent):
   def get_event_type(cls):
     return EventType.BATCH_COMPLETED
 
+  # ===================================================================
+  # MAIN LOGIC
+  # ===================================================================
+
+  def apply(self):
+    # ===================================================================
+    # VALIDATE DATA AND SET CONTEXT
+    # ===================================================================
+    self.batch = Batch(**self.tx.collection('Batch').get(self.info.active_batch_key))
+
+    # Validate batch quantity
+    if self.batch.qt_total != self.info.completed_batch_qt:
+      raise ValueError("Active batch quantity does not match the completed quantity provided. Update the active batch first.")
+
+    self.info.job_key = self.batch.job_key
+    self._get_job_data()
+
+    # Validate job status
+    if self.job.stage == 'closed':
+      raise ValueError("Job is already closed")
+
+    # save into a variable since self.job gets updated in the process
+    is_next_batch_available = self.job.next_batch_available
+
+    # Increment job completed quantity
+    new_job_qt_completed = self.job.qt_completed + self.batch.qt_total
+
+    # ===================================================================
+    # STORE BATCH EXECUTION DATA
+    # ===================================================================
+
+    if self.info.step_data:
+      if not self.job.parameters.step_check:
+        # Do this only if `step_check` is not active / Require to use `StepCompletedEvent` if it is
+        self._store_batch_execution_data()
+      else:
+        raise ValueError("Step check is active for the job. Use `StepCompletedEvent` to store step data.")
+
+
+    # ===================================================================
+    # HANDLE TRACEABILITY
+    # ===================================================================
+    if self.job.traceability_level is not None:
+      self._handle_batch_serials()
+
+
+    # ===================================================================
+    # GENERATE PRODUCTION/CONSUMPTION MOVEMENTS
+    # ===================================================================
+    # Put here to avoid proceeding if there is some inventory issue
+    # Will be skipped if warehouse management is not enabled
+    # ===================================================================
+    self._process_inventory_changes()
+
+
+    # ===================================================================
+    # CLOSE WORK SESSION
+    # ===================================================================
+    WorkSessionClosedEvent.create_as_child(self, dict(
+      work_session_end = self.info.timestamp,
+      work_session_key = self.info.work_session_key
+    ))
+
+    # ===================================================================
+    # UPDATE BATCH RECORD
+    # ===================================================================
+    self.tx.aql.execute(
+      TraceabilityQueries.COMPLETE_BATCH, bind_vars=dict(
+        batch_key=self.info.active_batch_key,
+        qt_pass=self.info.completed_batch_qt,
+        end=self.info.timestamp
+      )
+    )
+
+
+    # ===================================================================
+    # NO REMAINING QUANTITY TO DO (LAST BATCH) -> CLOSE JOB
+    # ===================================================================
+    if new_job_qt_completed >= self.job.qt_planned:
+      # Event will take care of closing the job
+      self.job = JobClosedEvent.create_as_child(self, dict(
+        job_key = self.info.job_key,
+        completed_qt = new_job_qt_completed,
+      ))
+
+      # SET RESPONSE
+      self.response = dict(
+        message = f"Batch {self.info.active_batch_key} and Job {self.info.job_key} completed.",
+        job_data = self.job
+      )
+
+    # ===================================================================
+    # JOB HAS REMAINING QUANTITY -> UPDATE JOB AND CREATE NEW BATCH IF NEEDED
+    # ===================================================================
+    else:
+      new_progress = round(100 * new_job_qt_completed / self.job.qt_planned)
+
+      job_update = dict(
+        _key = self.info.job_key,
+        active_batch_key = None,
+        active_batch_qt = 0,
+        qt_completed = new_job_qt_completed,
+        qt_released = new_job_qt_completed,
+        progress = new_progress,
+        active = False
+      )
+
+      # Auto new batch ignored if serials must be selected for new batch. Clients must select new serials to start the new one
+      # The batch_serials event property could be confused with the ones of the batch being declared.
+      create_new_batch = (
+        self.job.parameters.auto_new_batch
+        and is_next_batch_available
+        and not (self.job.traceability_level and not self.job.first_phase)
+      )
+
+      if create_new_batch:
+        self.batch = BatchCreatedEvent.create_as_child(self, dict(
+          # batch_serials is not needed since auto new batch works only without serials
+          job_key = self.info.job_key,
+          work_order_key = self.info.work_order_key,
+          phase_key = self.info.phase_key,
+          product_key = self.info.product_key,
+        ))
+        self.work_session = WorkSessionCreatedEvent.create_as_child(self, dict(
+          job_key = self.info.job_key,
+          batch_key = self.batch.key,
+          work_order_key = self.info.work_order_key,
+          phase_key = self.info.phase_key,
+          product_key = self.info.product_key,
+        ))
+
+        # Update job with new batch/work session data
+        job_update.update(dict(
+          active_batch_qt = self.batch.qt_total,
+          active_batch_key = self.batch.key,
+          last_work_session_started = self.work_session.key,
+          active = True
+        ))
+
+      # Store job update
+      self.job = Job(**self.tx.collection('Job').update(job_update, check_rev=False, return_new=True)['new'])
+
+
+      # SET RESPONSE
+      self.response = dict(
+        message = f"Batch {self.batch.key} completed.",
+        job_data = self.job,
+        batch_data = dict(),
+      )
+
+      # Update response with batch execution data if new batch is created
+      if create_new_batch:
+        self.response['batch_data'] = self.get_batch_execution_data()
+        new_job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.info.job_key)).next()
+        if ('wo_bom' in new_job_data):
+          setattr(self.job, 'wo_bom', new_job_data['wo_bom'])
+
+
+    # ===================================================================
+    # HANDLE WIP AND NOTIFY RELEASED PIECES
+    # ===================================================================
+
+    if not self.job.first_phase:
+      WIPRemovedEvent.create_as_child(self, dict(
+        job_key=self.info.job_key,
+        quantity=self.info.completed_batch_qt,
+      ))
+
+    if self.job.last_phase:
+      BatchReleasedEvent.create_as_child(self, dict(
+        batch_key=self.info.active_batch_key,
+        product_key=self.info.product_key,
+        work_order_key=self.info.work_order_key,
+        qt_released=self.info.completed_batch_qt,
+        serial_keys=self.info.batch_serial_keys,
+      ))
+
+    # If next_phase, generate a WIP record and update job input availability state
+    else:
+      WIPDeclaredEvent.create_as_child(self, dict(
+        job_key=self.info.job_key,
+        batch_key=self.info.active_batch_key,
+        quantity=self.info.completed_batch_qt,
+        work_order_key=self.info.work_order_key,
+        phase_key=self.info.phase_key,
+        product_key=self.info.product_key,
+      ))
+
+
 
   # =================================================================
   # HELPER METHODS
@@ -260,194 +449,3 @@ class BatchCompletedEvent(BaseProductionEvent):
             movement_type = InventoryMovementType.CONSUMPTION,
             references = self.movement_references,
           ))
-
-  # *******************************************************************
-  # *******************************************************************
-  # *******************************************************************
-  # *******************************************************************
-
-  def apply(self):
-    # ===================================================================
-    # VALIDATE DATA AND SET CONTEXT
-    # ===================================================================
-    self.batch = Batch(**self.tx.collection('Batch').get(self.info.active_batch_key))
-
-    # Validate batch quantity
-    if self.batch.qt_total != self.info.completed_batch_qt:
-      raise ValueError("Active batch quantity does not match the completed quantity provided. Update the active batch first.")
-
-    self.info.job_key = self.batch.job_key
-    self._get_job_data()
-
-    # Validate job status
-    if self.job.stage == 'closed':
-      raise ValueError("Job is already closed")
-
-    # save into a variable since self.job gets updated in the process
-    is_next_batch_available = self.job.next_batch_available
-
-    # Increment job completed quantity
-    new_job_qt_completed = self.job.qt_completed + self.batch.qt_total
-
-    # ===================================================================
-    # STORE BATCH EXECUTION DATA
-    # ===================================================================
-
-    if self.info.step_data:
-      if not self.job.parameters.step_check:
-        # Do this only if `step_check` is not active / Require to use `StepCompletedEvent` if it is
-        self._store_batch_execution_data()
-      else:
-        raise ValueError("Step check is active for the job. Use `StepCompletedEvent` to store step data.")
-
-
-    # ===================================================================
-    # HANDLE TRACEABILITY
-    # ===================================================================
-    if self.job.traceability_level is not None:
-      self._handle_batch_serials()
-
-
-    # ===================================================================
-    # GENERATE PRODUCTION/CONSUMPTION MOVEMENTS
-    # ===================================================================
-    # Put here to avoid proceeding if there is some inventory issue
-    # Will be skipped if warehouse management is not enabled
-    # ===================================================================
-    self._process_inventory_changes()
-
-
-    # ===================================================================
-    # CLOSE WORK SESSION
-    # ===================================================================
-    WorkSessionClosedEvent.create_as_child(self, dict(
-      work_session_end = self.info.timestamp,
-      work_session_key = self.info.work_session_key
-    ))
-
-    # ===================================================================
-    # UPDATE BATCH RECORD
-    # ===================================================================
-    self.tx.aql.execute(
-      TraceabilityQueries.COMPLETE_BATCH, bind_vars=dict(
-        batch_key=self.info.active_batch_key,
-        qt_pass=self.info.completed_batch_qt,
-        end=self.info.timestamp
-      )
-    )
-
-
-    # ===================================================================
-    # NO REMAINING QUANTITY TO DO (LAST BATCH) -> CLOSE JOB
-    # ===================================================================
-    if new_job_qt_completed >= self.job.qt_planned:
-      # Event will take care of closing the job
-      self.job = JobClosedEvent.create_as_child(self, dict(
-        job_key = self.info.job_key,
-        completed_qt = new_job_qt_completed,
-      ))
-
-      # SET RESPONSE
-      self.response = dict(
-        message = f"Batch {self.info.active_batch_key} and Job {self.info.job_key} completed.",
-        job_data = self.job
-      )
-
-    # ===================================================================
-    # JOB HAS REMAINING QUANTITY -> UPDATE JOB AND CREATE NEW BATCH IF NEEDED
-    # ===================================================================
-    else:
-      new_progress = round(100 * new_job_qt_completed / self.job.qt_planned)
-
-      job_update = dict(
-        _key = self.info.job_key,
-        active_batch_key = None,
-        active_batch_qt = 0,
-        qt_completed = new_job_qt_completed,
-        qt_released = new_job_qt_completed,
-        progress = new_progress,
-        active = False
-      )
-
-      # Auto new batch ignored if serials must be selected for new batch. Clients must select new serials to start the new one
-      # The batch_serials event property could be confused with the ones of the batch being declared.
-      create_new_batch = (
-        self.job.parameters.auto_new_batch
-        and is_next_batch_available
-        and not (self.job.traceability_level and not self.job.first_phase)
-      )
-
-      if create_new_batch:
-        self.batch = BatchCreatedEvent.create_as_child(self, dict(
-          # batch_serials is not needed since auto new batch works only without serials
-          job_key = self.info.job_key,
-          work_order_key = self.info.work_order_key,
-          phase_key = self.info.phase_key,
-          product_key = self.info.product_key,
-        ))
-        self.work_session = WorkSessionCreatedEvent.create_as_child(self, dict(
-          job_key = self.info.job_key,
-          batch_key = self.batch.key,
-          work_order_key = self.info.work_order_key,
-          phase_key = self.info.phase_key,
-          product_key = self.info.product_key,
-        ))
-
-        # Update job with new batch/work session data
-        job_update.update(dict(
-          active_batch_qt = self.batch.qt_total,
-          active_batch_key = self.batch.key,
-          last_work_session_started = self.work_session.key,
-          active = True
-        ))
-
-      # Store job update
-      self.job = Job(**self.tx.collection('Job').update(job_update, check_rev=False, return_new=True)['new'])
-
-
-      # SET RESPONSE
-      self.response = dict(
-        message = f"Batch {self.batch.key} completed.",
-        job_data = self.job,
-        batch_data = dict(),
-      )
-
-      # Update response with batch execution data if new batch is created
-      if create_new_batch:
-        self.response['batch_data'] = self.get_batch_execution_data()
-        new_job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.info.job_key)).next()
-        if ('wo_bom' in new_job_data):
-          setattr(self.job, 'wo_bom', new_job_data['wo_bom'])
-
-
-    # ===================================================================
-    # HANDLE WIP AND NOTIFY RELEASED PIECES
-    # ===================================================================
-
-    if not self.job.first_phase:
-      WIPRemovedEvent.create_as_child(self, dict(
-        job_key=self.info.job_key,
-        quantity=self.info.completed_batch_qt,
-      ))
-
-    if self.job.last_phase:
-      BatchReleasedEvent.create_as_child(self, dict(
-        batch_key=self.info.active_batch_key,
-        product_key=self.info.product_key,
-        work_order_key=self.info.work_order_key,
-        qt_released=self.info.completed_batch_qt,
-        serial_keys=self.info.batch_serial_keys,
-      ))
-
-    # If next_phase, generate a WIP record and update job input availability state
-    else:
-      WIPDeclaredEvent.create_as_child(self, dict(
-        job_key=self.info.job_key,
-        batch_key=self.info.active_batch_key,
-        quantity=self.info.completed_batch_qt,
-        work_order_key=self.info.work_order_key,
-        phase_key=self.info.phase_key,
-        product_key=self.info.product_key,
-      ))
-
-
