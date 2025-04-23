@@ -105,7 +105,7 @@ class Message(ArangoDocument):
   sender: str = Field(..., alias="_from") # ID of creator (User/Machine/etc.)
   recipient: str = Field(..., alias="_to") # related issue or user
   content: str | None = None
-  created: datetime = Field(default_factory=timestamp)
+  created: datetime | None = Field(default_factory=timestamp)
   updated: datetime | None = None
   deleted: datetime | None = None
 
