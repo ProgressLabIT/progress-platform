@@ -2,6 +2,7 @@ from events.admin.base_admin import BaseAdmin
 from events.wip.wip_unbooked import WIPUnbookedEvent
 from events.serial.serial_updated import SerialUpdatedEvent
 from events.serial.serial_unlinked import SerialUnlinkedEvent
+from events.serial.serial_deleted import SerialDeletedEvent
 from models.event import EventInfoModel, EventType
 from utils.exceptions import JobIsActiveError, JobHasNoActiveBatchError
 from utils.serial import Queries as SerialQueries
@@ -60,54 +61,15 @@ class BatchCanceled(BaseAdmin):
 
     # Free booked wip
     if not self.job.first_phase:
+      # No need to specify serials as all the serial wip assigned to the job
+      # (i.e. belonging to the active batch) will be unbooked
       WIPUnbookedEvent.create_as_child(self, dict(
         job_key = self.job.key,
         quantity = self.job.active_batch_qt
       ))
 
-
-    elif self.job.traceability_level:
-      # First phase: remove incomplete serials and the relative link.
-      # TODO: use a named graph to avoid deleting links explicitly
-      self.tx.aql.execute("""
-        FOR serial IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
-        REMOVE serial IN Serial
-      """, bind_vars=dict(batch_key=batch_key))
-
-
     if self.job.traceability_level: # both first and following phases
-      # Remove obsolete batch_serial records and reset serial data for the phase
-      # Remember that serials documents have already been removed
-      serials_cursor = self.tx.aql.execute("""
-        FOR s, bs IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
-        REMOVE bs IN batch_serial
-        LET removed = OLD
-        RETURN PARSE_IDENTIFIER(OLD._to).key
-      """, bind_vars=dict(batch_key=batch_key))
-
-      batch_serial_keys = [serial_key for serial_key in serials_cursor]
-
-      for serial_key in batch_serial_keys:
-        SerialUpdatedEvent.create_as_child(self, dict(
-          serial_key = serial_key,
-          remove_data_from_phases = [self.job.phase_key]
-        ))
-
-      # Remove component links related to the batch
-      batch_serial_components_keys = self.tx.aql.execute("""
-        FOR s IN @batch_serial_keys
-        FOR c IN 1..1 OUTBOUND CONCAT('Serial/', s) contains
-        FILTER c.batch_key == @batch_key
-        RETURN { parent_serial_key = s, child_serial_key = c._key }
-      """, bind_vars=dict(batch_key=batch_key, batch_serial_keys=batch_serial_keys))
-
-      for component in batch_serial_components_keys:
-        SerialUnlinkedEvent.create_as_child(self, dict(
-          serial_key = component['child_serial_key'],
-          parent_serial_key = component['parent_serial_key'],
-          reason = 'Batch canceled',
-        ))
-
+      self._handle_traceability()
 
     else: # Cancel batch components
       batch_serial_components_keys = self.tx.aql.execute("""
@@ -138,3 +100,41 @@ class BatchCanceled(BaseAdmin):
       job_update['start'] = None
 
     self.tx.collection('Job').update(job_update)
+
+  # ================================
+
+  def _handle_traceability(self):
+    # Remove obsolete batch_serial records and reset serial data for the phase
+    # Remember that serials documents have already been removed
+    serials_cursor = self.tx.aql.execute("""
+      FOR s, bs IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
+      REMOVE bs IN batch_serial
+      LET removed = OLD
+      RETURN PARSE_IDENTIFIER(OLD._to).key
+    """, bind_vars=dict(batch_key=self.info.active_batch_key))
+
+    batch_serial_keys = [serial_key for serial_key in serials_cursor]
+
+    # Remove component links related to the batch
+    batch_serial_components_keys = self.tx.aql.execute("""
+      FOR s IN @batch_serial_keys
+      FOR c IN 1..1 OUTBOUND CONCAT('Serial/', s) contains
+      FILTER c.batch_key == @batch_key
+      RETURN { parent_serial_key: s, child_serial_key: c._key }
+    """, bind_vars=dict(batch_key=self.info.active_batch_key, batch_serial_keys=batch_serial_keys))
+
+    for component in batch_serial_components_keys:
+      SerialUnlinkedEvent.create_as_child(self, dict(
+        serial_key = component['child_serial_key'],
+        parent_serial_key = component['parent_serial_key'],
+        reason = 'Batch canceled',
+      ))
+
+    if self.job.first_phase:
+      # Delete partial serials
+      for serial_key in batch_serial_keys:
+        SerialDeletedEvent.create_as_child(self, dict(serial_key=serial_key))
+
+    else:
+      pass
+      # No need to do anything here, as step data gets saved in the serial only when the batch is completed
