@@ -1,14 +1,18 @@
+from datetime import datetime
+
 from pydantic import Field
 
 from events.collaboration.base_collaboration import BaseCollaboration
 from models.collaboration import Message
 from models.event import EventType, EventInfoModel
+from utils.dt import timestamp
 
 class MessagePostedEvent(BaseCollaboration):
 
   class InfoModel(EventInfoModel):
     sender: str = Field(..., serialization_alias='_from')
     recipient: str = Field(..., serialization_alias='_to')
+    created: datetime | None = Field(default_factory=timestamp)
     content: str
 
   @classmethod
