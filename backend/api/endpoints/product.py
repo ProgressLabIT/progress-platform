@@ -122,6 +122,7 @@ async def create_product(
   traceability_level: str = Form(''),
   serial_code_on_creation: bool = False,
   counter_key: str = Form(''),
+  manage_inventory: bool = Form(False)
 ):
   # Map form data
   try:
@@ -132,7 +133,8 @@ async def create_product(
       created=timestamp(),
       traceability_level='form_only' if len(traceability_level) else None,
       serial_code_on_creation=serial_code_on_creation,
-      counter_key=counter_key
+      counter_key=counter_key,
+      manage_inventory=manage_inventory
     )
 
   except Exception as e:
