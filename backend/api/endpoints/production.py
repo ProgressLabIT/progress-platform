@@ -332,7 +332,7 @@ async def get_wo_data(wo_key: str):
     status_code=500
     response = dict(
       status=status_code,
-      message=f"There has been a problem while deleting the work order",
+      message=f"There has been a problem while fetching the work order",
       error=traceback.format_exc()
     )
     raise HTTPException(
