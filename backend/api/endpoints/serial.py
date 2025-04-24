@@ -91,7 +91,9 @@ def get_serial_hierarchy(
   serial_key: str,
   include_expected_components: bool = True,
 ):
-
+  """
+  Get the serial hierarchy, from the root ancestor (the one with no parent) to all descendants of the given serial.
+  """
   try:
     # Get the root ancestor of the serial
     bind_vars = dict(serial_id = f'Serial/{serial_key}')
