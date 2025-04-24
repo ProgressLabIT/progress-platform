@@ -29,6 +29,8 @@ class BatchCompletedEvent(BaseProductionEvent):
     completed_batch_qt: float
     step_data: list[ExecutionDataUpdate] | None = None
     batch_serial_keys: list[str] | None = None
+    job_key: str | None = None
+    work_order_key: str | None = None
 
   @classmethod
   def get_event_type(cls):
@@ -49,6 +51,7 @@ class BatchCompletedEvent(BaseProductionEvent):
       raise ValueError("Active batch quantity does not match the completed quantity provided. Update the active batch first.")
 
     self.info.job_key = self.batch.job_key
+    self.info.work_order_key = self.batch.work_order_key
     self._get_job_data()
 
     # Validate job status
