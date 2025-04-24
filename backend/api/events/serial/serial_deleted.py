@@ -9,7 +9,7 @@ from utils.exceptions import (
 )
 
 
-class SerialDeleted(BaseSerialEvent):
+class SerialDeletedEvent(BaseSerialEvent):
   class InfoModel(BaseSerialModel):
     soft: bool = True
     delete_children: bool | None = False
@@ -18,13 +18,11 @@ class SerialDeleted(BaseSerialEvent):
   def get_event_type(cls):
     return EventType.SERIAL_DELETED
 
+  @property
+  def event_first(self):
+    return True
+
   def apply(self):
-    delete_children = False
-    try:
-      if (self.info.delete_children):
-         delete_children = self.info.delete_children
-    except:
-       delete_children = False
     serial_key = self.info.serial_key
     allow_serial_delete = self.tx.collection('Config').get('allow_serial_delete')
     if (allow_serial_delete == None or allow_serial_delete['value'] == False):
@@ -36,7 +34,7 @@ class SerialDeleted(BaseSerialEvent):
        ))
        raise SerialNotDeletedError(f'Serial {serial_key} cannot be deleted because it is not allowed by configuration')
     try:
-       if delete_children:
+       if self.info.delete_children:
           children = [i for i in self.tx.aql.execute(Queries.GET_SERIAL_CHILDREN, bind_vars=dict(
              serial_id = f'Serial/{serial_key}',
              level = 15))]
@@ -63,7 +61,7 @@ class SerialDeleted(BaseSerialEvent):
 
   def do_delete(self, serial_key):
     if self.info.soft:
-       self.tx.collection('Serial').update(dict(_key=serial_key, deleted=True))
+       self.tx.collection('Serial').update(dict(_key=serial_key, deleted=self.info.event_key))
     else:
        self.tx.collection('Serial').delete(serial_key)
     self.tx.collection('contains').delete_match(filters=dict(_from=f'Serial/{serial_key}'))

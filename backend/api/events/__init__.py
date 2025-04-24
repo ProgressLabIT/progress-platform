@@ -54,7 +54,7 @@ from events.production.work_order_events import (
 from events.serial.base_serial import BaseSerialEvent
 from events.serial.serial_booked import SerialBooked
 from events.serial.serial_created import SerialCreatedEvent
-from events.serial.serial_deleted import SerialDeleted
+from events.serial.serial_deleted import SerialDeletedEvent
 from events.serial.serial_linked import SerialLinkedEvent
 from events.serial.serial_unlinked import SerialUnlinkedEvent
 from events.serial.serial_released import SerialReleasedEvent
