@@ -118,17 +118,10 @@ class BatchCanceled(BaseAdmin):
     # Remove component links related to the batch
     batch_serial_components_keys = self.tx.aql.execute("""
       FOR s IN @batch_serial_keys
-      FOR c IN 1..1 OUTBOUND CONCAT('Serial/', s) contains
-      FILTER c.batch_key == @batch_key
-      RETURN { parent_serial_key: s, child_serial_key: c._key }
-    """, bind_vars=dict(batch_key=self.info.active_batch_key, batch_serial_keys=batch_serial_keys))
-
-    for component in batch_serial_components_keys:
-      SerialUnlinkedEvent.create_as_child(self, dict(
-        serial_key = component['child_serial_key'],
-        parent_serial_key = component['parent_serial_key'],
-        reason = 'Batch canceled',
-      ))
+      FOR c, e IN 1..1 OUTBOUND CONCAT('Serial/', s) contains
+      FILTER e.batch_key == @batch_key
+      REMOVE e IN contains
+    """, bind_vars=dict(batch_key=self.job.active_batch_key, batch_serial_keys=batch_serial_keys))
 
     if self.job.first_phase:
       # Delete partial serials
