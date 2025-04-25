@@ -17,6 +17,11 @@ const inventoryRoutes = [
         component: () => import('app/src/views/inventory/InventoryProduct.vue'),
       },
       {
+        path: 'serial',
+        name: 'InventorySerial',
+        component: () => import('app/src/views/inventory/InventorySerial.vue'),
+      },
+      {
         path: 'position',
         name: 'InventoryPosition',
         component: () => import('app/src/views/inventory/InventoryPosition.vue'),
