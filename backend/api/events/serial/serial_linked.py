@@ -63,7 +63,8 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
             return
           else:
             # if the link is temporary, confirm it
-            self.tx.collection('contains').update(record, dict(confirmed=True))
+            record['confirmed'] = True
+            self.tx.collection('contains').update(record)
             self.response = dict(message="Temporary link confirmed")
             return
         else:
