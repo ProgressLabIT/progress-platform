@@ -118,6 +118,7 @@ class InventoryGraphSearchParams(BaseModel):
   root_position_key: str | None = None
   product_key: str | None = None
   product_search: str | None = None
+  serials_only: bool | None = False
   serial_search: str | None = None
   serial_keys: list[str] | None = None
   position_search: str | None = None

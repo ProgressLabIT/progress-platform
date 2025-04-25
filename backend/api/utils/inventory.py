@@ -124,6 +124,7 @@ class Queries:
     FOR path IN 1..99 INBOUND K_PATHS start TO product._id is_in_position
       LET inventory = LAST(path.edges)
       FILTER @owned ? inventory.owned : true
+      FILTER @serials_only ? inventory.serial_key != null : true
       FILTER @serial_keys ? inventory.serial_key IN @serial_keys : true
       LET serial_code = DOCUMENT(Serial, inventory.serial_key).code
       FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
