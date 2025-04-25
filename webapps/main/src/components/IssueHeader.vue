@@ -9,10 +9,15 @@
           {{ issue.issue_type_name || $t('issue') }}
         </span>
         <span class="smaller text-body2 text-uppercase low-text q-ml-md">
-          <span class="q-mr-sm">
+          <span>
             {{ issue.phase_alias }}
           </span>
-          <span>#{{ issue._key }}</span>
+          <span class="q-mx-sm">
+            #{{ issue._key }}
+          </span>
+          <span>
+            {{ $formatDateTime(issue.created) }}
+          </span>
         </span>
         <div class="col q-ml-xl">
           <q-btn
