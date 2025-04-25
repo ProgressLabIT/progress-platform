@@ -55,17 +55,17 @@ class SerialCreatedEvent(BaseSerialEvent):
 
     try:
       new_serial = Serial(**self.info.model_dump())
-      serial_key = self.tx.collection('Serial').insert(new_serial.model_dump(by_alias=True))['_key']
+      self.info.serial_key = self.tx.collection('Serial').insert(new_serial.model_dump(by_alias=True))['_key']
 
       self.notify_results(dict(
-        serial_key = serial_key,
+        serial_key = self.info.serial_key,
         serial = self.info.code,
         notification = SerialNotificationType.CREATED
       ))
 
       self.response = dict(
         message="Serial created correctly",
-        serial_key=serial_key
+        serial_key=self.info.serial_key
       )
 
     except Exception as e:
